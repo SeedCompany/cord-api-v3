@@ -1,6 +1,7 @@
 import { gql } from 'apollo-server-core';
-import { generate, isValid } from 'shortid';
+import { isValid } from 'shortid';
 import { createPerson, getUserFromSession } from '.';
+import { generateId } from '../../src/common';
 import { CreateFieldZone, FieldZone } from '../../src/components/field-zone';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
@@ -10,7 +11,7 @@ export async function createZone(
   input: Partial<CreateFieldZone> = {}
 ) {
   const fieldZone: CreateFieldZone = {
-    name: 'Zone' + generate(),
+    name: 'Zone' + (await generateId()),
     directorId:
       input.directorId ||
       (await getUserFromSession(app)).id ||

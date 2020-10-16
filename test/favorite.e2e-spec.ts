@@ -1,8 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
-import { generate } from 'shortid';
-import { BaseNodeLabel } from '../src/common';
+import { BaseNodeLabel, generateId } from '../src/common';
 import { Favorite } from '../src/components/favorites';
 import {
   addFavorite,
@@ -63,7 +62,7 @@ describe.skip('Favorite e2e', () => {
     await Promise.all(
       times(numOrgs).map(async () => {
         const org = await createOrganization(app, {
-          name: generate() + ' Inc',
+          name: (await generateId()) + ' Inc',
         });
         await addFavorite(app, org.id);
       })

@@ -3,6 +3,7 @@ import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
+  generateId,
   getHighestSensitivity,
   InputException,
   ISession,
@@ -248,6 +249,7 @@ export class ProjectService {
 
       createProject.call(
         createBaseNode,
+        await generateId(),
         `Project:${input.type}Project`,
         secureProps,
         {

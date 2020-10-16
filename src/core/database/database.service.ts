@@ -10,9 +10,9 @@ import {
 import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
 import { cloneDeep, Many, upperFirst, without } from 'lodash';
 import { DateTime, Duration } from 'luxon';
-import { generate } from 'shortid';
 import { assert } from 'ts-essentials';
 import {
+  generateId,
   InputException,
   ISession,
   isSecured,
@@ -1021,7 +1021,7 @@ export class DatabaseService {
     aclEditProp?: string;
     sgName: string;
   }) {
-    const id = generate();
+    const id = await generateId();
     const createdAt = DateTime.local();
     const nodeName = upperFirst(nodevar);
     const aclEditPropName = aclEditProp || `canEdit${nodeName}`;
@@ -1040,7 +1040,7 @@ export class DatabaseService {
             [
               node('rootSG', 'RootSecurityGroup', {
                 name: sgName + ' root',
-                id: generate(),
+                id: await generateId(),
               }),
               relation('out', '', 'member'),
               node('requestingUser'),
@@ -1050,7 +1050,7 @@ export class DatabaseService {
         : [
             [
               node('adminSG', 'SecurityGroup', {
-                id: generate(),
+                id: await generateId(),
 
                 name: sgName + ' admin',
               }),
@@ -1059,7 +1059,7 @@ export class DatabaseService {
             ],
             [
               node('readerSG', 'SecurityGroup', {
-                id: generate(),
+                id: await generateId(),
 
                 name: sgName + ' users',
               }),

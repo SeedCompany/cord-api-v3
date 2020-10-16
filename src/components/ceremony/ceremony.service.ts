@@ -1,6 +1,7 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import {
+  generateId,
   InputException,
   ISession,
   NotFoundException,
@@ -91,7 +92,7 @@ export class CeremonyService {
       const query = this.db
         .query()
         .call(matchRequestingUser, session)
-        .call(createBaseNode, 'Ceremony', secureProps)
+        .call(createBaseNode, await generateId(), 'Ceremony', secureProps)
         .return('node.id as id');
 
       const result = await query.first();

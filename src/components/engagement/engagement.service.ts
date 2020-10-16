@@ -1,10 +1,10 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { generate } from 'shortid';
 import { MergeExclusive } from 'type-fest';
 import {
   DuplicateException,
+  generateId,
   InputException,
   ISession,
   NotFoundException,
@@ -149,7 +149,7 @@ export class EngagementService {
     });
 
     // Initial LanguageEngagement
-    const id = generate();
+    const id = await generateId();
     const createdAt = DateTime.local();
     const pnp = await this.files.createDefinedFile(
       `PNP`,
@@ -343,7 +343,7 @@ export class EngagementService {
       countryOfOriginId,
       userId: session.userId,
     });
-    const id = generate();
+    const id = await generateId();
     const createdAt = DateTime.local();
     const growthPlan = await this.files.createDefinedFile(
       `Growth Plan`,

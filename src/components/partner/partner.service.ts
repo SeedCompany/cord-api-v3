@@ -2,6 +2,7 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
+  generateId,
   InputException,
   ISession,
   NotFoundException,
@@ -135,7 +136,7 @@ export class PartnerService {
           id: input.organizationId,
         }),
       ])
-      .call(createBaseNode, 'Partner', secureProps)
+      .call(createBaseNode, await generateId(), 'Partner', secureProps)
       .create([
         node('node'),
         relation('out', '', 'organization', { active: true, createdAt }),

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import {
   DuplicateException,
+  generateId,
   ISession,
   NotFoundException,
   ServerException,
@@ -112,7 +113,7 @@ export class FundingAccountService {
       const query = this.db
         .query()
         .call(matchRequestingUser, session)
-        .call(createBaseNode, 'FundingAccount', secureProps)
+        .call(createBaseNode, await generateId(), 'FundingAccount', secureProps)
         .return('node.id as id');
 
       const result = await query.first();

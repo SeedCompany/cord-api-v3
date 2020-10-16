@@ -1,7 +1,12 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { ISession, NotFoundException, ServerException } from '../../../common';
+import {
+  generateId,
+  ISession,
+  NotFoundException,
+  ServerException,
+} from '../../../common';
 import {
   ConfigService,
   createBaseNode,
@@ -87,7 +92,7 @@ export class EducationService {
           id: userId,
         }),
       ])
-      .call(createBaseNode, 'Education', secureProps)
+      .call(createBaseNode, await generateId(), 'Education', secureProps)
       .create([
         node('user'),
         relation('out', '', 'education', { active: true, createdAt }),

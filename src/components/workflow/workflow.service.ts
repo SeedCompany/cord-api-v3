@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { generate } from 'shortid';
 import {
+  generateId,
   ISession,
   NotFoundException,
   ServerException,
@@ -36,7 +36,7 @@ export class WorkflowService {
     input: CreateWorkflow
   ): Promise<Workflow> {
     try {
-      const workflowId = generate();
+      const workflowId = await generateId();
 
       const result = await this.db
         .query()
@@ -78,7 +78,7 @@ export class WorkflowService {
               startingState: true,
             }),
             node('state', 'State', {
-              id: generate(),
+              id: await generateId(),
               value: input.startingStateName,
             }),
           ],
@@ -161,7 +161,7 @@ export class WorkflowService {
   // the stateName is stored in the (:State)'s 'value' property (consistent with (:Property)s on (:BaseNode)s )  // addStateToWorkflow
   async addState(session: ISession, input: AddState): Promise<State> {
     try {
-      const stateId = generate();
+      const stateId = await generateId();
       const result = await this.db
         .query()
         .match([

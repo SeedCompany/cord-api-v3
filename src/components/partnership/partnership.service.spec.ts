@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DateTime } from 'luxon';
-import { generate } from 'shortid';
 import { ISession } from '../../common';
 import { CoreModule, DatabaseService, LoggerModule } from '../../core';
 import { AuthenticationModule } from '../authentication/authentication.module';
@@ -18,8 +17,8 @@ import { PartnershipModule } from './partnership.module';
 import { PartnershipService } from './partnership.service';
 
 const partnerId = 'ASDF23FQ';
-const projectId = generate();
-const id = generate();
+const projectId = 'ASDF23Fb';
+const id = 'ASDF23Fa';
 const createTestPartnership: Partial<Partnership> = {
   id,
   createdAt: DateTime.local(),

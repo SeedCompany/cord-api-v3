@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-import { generate, isValid } from 'shortid';
-import { CalendarDate } from '../../src/common';
+import { isValid } from 'shortid';
+import { CalendarDate, generateId } from '../../src/common';
 import {
   CreateEthnologueLanguage,
   CreateLanguage,
@@ -22,8 +22,8 @@ export async function createLanguage(
     ...input.ethnologue,
   };
   const language: CreateLanguage = {
-    name: faker.address.country() + '' + generate(),
-    displayName: faker.company.companyName() + '' + generate(),
+    name: faker.address.country() + '' + (await generateId()),
+    displayName: faker.company.companyName() + '' + (await generateId()),
     displayNamePronunciation: faker.random.word(),
     isDialect: faker.random.boolean(),
     populationOverride: faker.random.number(),
@@ -71,7 +71,7 @@ export async function createLanguage(
 }
 
 export async function createLanguageMinimal(app: TestApp) {
-  const languageName = faker.address.country() + '' + generate();
+  const languageName = faker.address.country() + '' + (await generateId());
   const result = await app.graphql.mutate(
     gql`
       mutation createLanguage($input: CreateLanguageInput!) {
@@ -87,7 +87,7 @@ export async function createLanguageMinimal(app: TestApp) {
       input: {
         language: {
           name: languageName,
-          displayName: faker.company.companyName() + '' + generate(),
+          displayName: faker.company.companyName() + '' + (await generateId()),
         },
       },
     }

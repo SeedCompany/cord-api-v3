@@ -29,7 +29,7 @@ describe('Authentication e2e', () => {
   it('Check Email Existence and Reset Password', async () => {
     const sendEmail = spyOn(app.get(EmailService), 'send');
 
-    const fakeUser = generateRegisterInput();
+    const fakeUser = await generateRegisterInput();
     const email = fakeUser.email;
     // create user first
     await registerUser(app, fakeUser);
@@ -89,7 +89,7 @@ describe('Authentication e2e', () => {
   });
 
   it('login user', async () => {
-    const fakeUser = generateRegisterInput();
+    const fakeUser = await generateRegisterInput();
     const user = await registerUser(app, fakeUser);
     const _logout = await logout(app);
 
@@ -126,7 +126,7 @@ describe('Authentication e2e', () => {
   });
 
   it('should return true after password changed', async () => {
-    const fakeUser = generateRegisterInput();
+    const fakeUser = await generateRegisterInput();
 
     const user = await registerUser(app, fakeUser);
     await login(app, { email: fakeUser.email, password: fakeUser.password });

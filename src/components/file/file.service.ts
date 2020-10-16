@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { AWSError } from 'aws-sdk';
-import { generate } from 'shortid';
 import {
   DuplicateException,
+  generateId,
   InputException,
   ISession,
   NotFoundException,
@@ -190,7 +190,7 @@ export class FileService {
   }
 
   async requestUpload(): Promise<RequestUploadOutput> {
-    const id = generate();
+    const id = await generateId();
     const url = await this.bucket.getSignedUrlForPutObject(`temp/${id}`);
     return { id, url };
   }

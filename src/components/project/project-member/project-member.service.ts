@@ -3,9 +3,9 @@ import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { difference } from 'lodash';
 import { DateTime } from 'luxon';
-import { generate } from 'shortid';
 import {
   DuplicateException,
+  generateId,
   InputException,
   ISession,
   NotFoundException,
@@ -90,7 +90,7 @@ export class ProjectMemberService {
     { userId, projectId, ...input }: CreateProjectMember,
     session: ISession
   ): Promise<ProjectMember> {
-    const id = generate();
+    const id = await generateId();
     const createdAt = DateTime.local();
 
     if (await this.getPMByProjectAndUser(projectId, userId)) {

@@ -2,6 +2,7 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import {
   DuplicateException,
+  generateId,
   ISession,
   NotFoundException,
   ServerException,
@@ -95,7 +96,12 @@ export class SongService {
       const result = await this.db
         .query()
         .call(matchRequestingUser, session)
-        .call(createBaseNode, ['Song', 'Producible'], secureProps)
+        .call(
+          createBaseNode,
+          await generateId(),
+          ['Song', 'Producible'],
+          secureProps
+        )
         .return('node.id as id')
         .first();
 

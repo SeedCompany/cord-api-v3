@@ -1,5 +1,6 @@
 import { gql } from 'apollo-server-core';
-import { generate, isValid } from 'shortid';
+import { isValid } from 'shortid';
+import { generateId } from '../../src/common';
 import { Budget, CreateBudget } from '../../src/components/budget/dto';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
@@ -9,7 +10,7 @@ export async function createBudget(
   input: Partial<CreateBudget> = {}
 ) {
   const budget: CreateBudget = {
-    projectId: generate(),
+    projectId: await generateId(),
     ...input,
   };
 

@@ -2,7 +2,6 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { isValid } from 'shortid';
 import { firstLettersOfWords } from '../src/common';
-import { RegisterInput } from '../src/components/authentication';
 import { Powers } from '../src/components/authorization/dto/powers';
 import { SecuredTimeZone } from '../src/components/timezone';
 import { UpdateUser, User, UserStatus } from '../src/components/user';
@@ -35,7 +34,7 @@ describe('User e2e', () => {
   });
 
   it('read one user by id', async () => {
-    const fakeUser = generateRegisterInput();
+    const fakeUser = await generateRegisterInput();
 
     const user = await registerUser(app, fakeUser);
     await login(app, { email: fakeUser.email, password: fakeUser.password });
@@ -74,9 +73,7 @@ describe('User e2e', () => {
   });
 
   it('create user with required input fields', async () => {
-    const user: RegisterInput = {
-      ...generateRequireFieldsRegisterInput(),
-    };
+    const user = await generateRequireFieldsRegisterInput();
 
     const result = await app.graphql.mutate(
       gql`
@@ -113,7 +110,7 @@ describe('User e2e', () => {
 
   it('update user', async () => {
     // create user first
-    const newUser = generateRegisterInput();
+    const newUser = await generateRegisterInput();
     await createSession(app);
     const user = await registerUser(app, newUser);
     await login(app, { email: newUser.email, password: newUser.password });
@@ -513,7 +510,7 @@ describe('User e2e', () => {
   });
 
   it('read user avatar', async () => {
-    const fakeUser = generateRegisterInput();
+    const fakeUser = await generateRegisterInput();
     const newUser = await registerUser(app, fakeUser);
 
     const result = await app.graphql.query(

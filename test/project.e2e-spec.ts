@@ -2,10 +2,10 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { orderBy, times } from 'lodash';
 import { DateTime } from 'luxon';
-import { generate } from 'shortid';
 import {
   CalendarDate,
   DuplicateException,
+  generateId,
   Sensitivity,
   ServerException,
 } from '../src/common';
@@ -498,19 +498,19 @@ describe('Project e2e', () => {
   it('List of projects sorted by Sensitivity', async () => {
     //Create three projects, each beginning with lower or upper-cases.
     await createProject(app, {
-      name: 'High Sensitivity Proj ' + generate(),
+      name: 'High Sensitivity Proj ' + (await generateId()),
       type: ProjectType.Internship,
       sensitivity: Sensitivity.High,
     });
 
     await createProject(app, {
-      name: 'Low Sensitivity Proj ' + generate(),
+      name: 'Low Sensitivity Proj ' + (await generateId()),
       type: ProjectType.Internship,
       sensitivity: Sensitivity.Low,
     });
 
     await createProject(app, {
-      name: 'Med Sensitivity Proj ' + generate(),
+      name: 'Med Sensitivity Proj ' + (await generateId()),
       type: ProjectType.Internship,
       sensitivity: Sensitivity.Medium,
     });

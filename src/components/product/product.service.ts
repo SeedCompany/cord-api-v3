@@ -6,6 +6,7 @@ import { difference } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
+  generateId,
   InputException,
   ISession,
   NotFoundException,
@@ -183,6 +184,7 @@ export class ProductService {
       .call(matchRequestingUser, session)
       .call(
         createBaseNode,
+        await generateId(),
         [
           'Product',
           input.produces

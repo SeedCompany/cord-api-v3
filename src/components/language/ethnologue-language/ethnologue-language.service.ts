@@ -1,7 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { pickBy } from 'lodash';
-import { ISession, NotFoundException, ServerException } from '../../../common';
+import {
+  generateId,
+  ISession,
+  NotFoundException,
+  ServerException,
+} from '../../../common';
 import {
   ConfigService,
   createBaseNode,
@@ -81,6 +86,7 @@ export class EthnologueLanguageService {
       .call(matchRequestingUser, session)
       .call(
         createBaseNode,
+        await generateId(),
         'EthnologueLanguage',
         secureProps,
         {},

@@ -2,9 +2,9 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { compact } from 'lodash';
 import { DateTime } from 'luxon';
-import { generate } from 'shortid';
 import {
   DuplicateException,
+  generateId,
   ISession,
   NotFoundException,
   ServerException,
@@ -148,7 +148,7 @@ export class UserService {
   };
 
   async create(input: CreatePerson, _session?: ISession): Promise<string> {
-    const id = generate();
+    const id = await generateId();
     const createdAt = DateTime.local();
 
     const query = this.db.query();

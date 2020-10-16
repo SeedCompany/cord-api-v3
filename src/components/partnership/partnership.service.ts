@@ -4,6 +4,7 @@ import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/rel
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
+  generateId,
   InputException,
   ISession,
   NotFoundException,
@@ -195,6 +196,7 @@ export class PartnershipService {
         .call(matchRequestingUser, session)
         .call(
           createBaseNode,
+          await generateId(),
           'Partnership',
           secureProps,
           {},

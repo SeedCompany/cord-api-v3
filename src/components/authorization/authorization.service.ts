@@ -2,9 +2,9 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { difference, union, without } from 'lodash';
-import { generate } from 'shortid';
 import {
   DbBaseNodeLabel,
+  generateId,
   ISession,
   ServerException,
   UnauthenticatedException,
@@ -267,7 +267,7 @@ export class AuthorizationService {
       .match([node('baseNode', 'BaseNode', { id: baseNodeId })])
       .merge([
         node('sg', 'SecurityGroup', {
-          id: generate(),
+          id: await generateId(),
           role: role.name,
         }),
         relation('out', '', 'baseNode'),
@@ -464,7 +464,7 @@ export class AuthorizationService {
         .raw(
           `
           call apoc.periodic.iterate(
-            "MATCH (u:User {id:'${id}'}), (sg:SecurityGroup {role:'${role}'}) RETURN u, sg", 
+            "MATCH (u:User {id:'${id}'}), (sg:SecurityGroup {role:'${role}'}) RETURN u, sg",
             "MERGE (u)<-[:member]-(sg)", {batchSize:1000})
           yield batches, total return batches, total
       `
@@ -769,16 +769,16 @@ export class AuthorizationService {
       .query()
       .raw(
         `
-    match 
+    match
       (project:Project {id:$id})
     with {} as ids, project
 
     optional match
       (project)-[:budget {active:true}]->(budget:Budget)-[:record{active:true}]->(budgetRecord:BudgetRecord)
-    with 
-      project, 
+    with
+      project,
       ids,
-      apoc.map.setKey(ids, "budgets", collect(distinct budget.id)) as id1, 
+      apoc.map.setKey(ids, "budgets", collect(distinct budget.id)) as id1,
       apoc.map.setKey(ids, "budgetRecords", collect(distinct budgetRecord.id)) as id2
     with apoc.map.mergeList([ids, id1, id2]) as ids, project
 
@@ -787,7 +787,7 @@ export class AuthorizationService {
     with
       project,
       ids,
-      apoc.map.setKey(ids, "partnerships", collect(distinct partnership.id)) as id1, 
+      apoc.map.setKey(ids, "partnerships", collect(distinct partnership.id)) as id1,
       apoc.map.setKey(ids, "partners", collect(distinct partner.id)) as id2,
       apoc.map.setKey(ids, "organizations", collect(distinct organization.id)) as id3
     with apoc.map.mergeList([ids, id1, id2, id3]) as ids, project
@@ -805,7 +805,7 @@ export class AuthorizationService {
     with
       project,
       ids,
-      apoc.map.setKey(ids, "languageEngagements", collect(distinct languageEngagement.id)) as id1 
+      apoc.map.setKey(ids, "languageEngagements", collect(distinct languageEngagement.id)) as id1
     with apoc.map.mergeList([ids, id1]) as ids, project
 
     optional match
@@ -821,7 +821,7 @@ export class AuthorizationService {
     with
       project,
       ids,
-      apoc.map.setKey(ids, "members", collect(distinct member.id)) as id1, 
+      apoc.map.setKey(ids, "members", collect(distinct member.id)) as id1,
       apoc.map.setKey(ids, "users", collect(distinct user.id)) as id2
     with apoc.map.mergeList([ids, id1, id2]) as ids, project
 
@@ -830,7 +830,7 @@ export class AuthorizationService {
     with
       project,
       ids,
-      apoc.map.setKey(ids, "products", collect(distinct product.id)) as id1, 
+      apoc.map.setKey(ids, "products", collect(distinct product.id)) as id1,
       apoc.map.setKey(ids, "produces", collect(distinct produces.id)) as id2
     with apoc.map.mergeList([ids, id1, id2]) as ids, project
 

@@ -1,6 +1,7 @@
 import { gql } from 'apollo-server-core';
-import { generate, isValid } from 'shortid';
+import { isValid } from 'shortid';
 import { createPerson } from '.';
+import { generateId } from '../../src/common';
 import {
   CreateFieldRegion,
   FieldRegion,
@@ -15,7 +16,7 @@ export async function createRegion(
   input: Partial<CreateFieldRegion> = {}
 ) {
   const fieldRegion: CreateFieldRegion = {
-    name: 'Region' + generate(),
+    name: 'Region' + (await generateId()),
     fieldZoneId: input.fieldZoneId || (await createZone(app)).id,
     directorId:
       input.directorId ||

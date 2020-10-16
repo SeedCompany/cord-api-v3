@@ -1,7 +1,8 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
-import { generate, isValid } from 'shortid';
+import { isValid } from 'shortid';
+import { generateId } from '../src/common';
 import { FundingAccount } from '../src/components/funding-account';
 import {
   createFundingAccount,
@@ -108,8 +109,11 @@ describe('FundingAccount e2e', () => {
     // create a bunch of funding accounts
     const numFundingAccounts = 2;
     await Promise.all(
-      times(numFundingAccounts).map(() =>
-        createFundingAccount(app, { name: generate() + ' Funding' })
+      times(numFundingAccounts).map(
+        async () =>
+          await createFundingAccount(app, {
+            name: (await generateId()) + ' Funding',
+          })
       )
     );
 

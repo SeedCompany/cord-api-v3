@@ -3,6 +3,7 @@ import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
+  generateId,
   ISession,
   NotFoundException,
   ServerException,
@@ -110,7 +111,7 @@ export class FieldZoneService {
           id: directorId,
         }),
       ])
-      .call(createBaseNode, 'FieldZone', secureProps)
+      .call(createBaseNode, await generateId(), 'FieldZone', secureProps)
       .create([
         node('node'),
         relation('out', '', 'director', { active: true, createdAt }),
