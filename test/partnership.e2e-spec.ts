@@ -452,4 +452,23 @@ describe('Partnership e2e', () => {
       `FinancialReportingType ${FinancialReportingType.Funded} cannot be assigned to this partnership`
     );
   });
+
+  it('should throw error if partnership is already created with same project and partner', async () => {
+    const partner = await createPartner(app);
+    const project = await createProject(app);
+
+    await createPartnership(app, {
+      partnerId: partner.id,
+      projectId: project.id,
+    });
+
+    await expect(
+      createPartnership(app, {
+        partnerId: partner.id,
+        projectId: project.id,
+      })
+    ).rejects.toThrowError(
+      'Partnership for this project and partner already exists'
+    );
+  });
 });
