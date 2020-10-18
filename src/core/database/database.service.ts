@@ -384,6 +384,7 @@ export class DatabaseService {
       result = await update.first();
     } catch (e) {
       this.logger.error('Neo4jError ', e);
+      throw new ServerException('Failed to update property', e);
     }
 
     if (!result) {
