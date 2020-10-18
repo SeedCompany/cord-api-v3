@@ -92,7 +92,7 @@ export class Transaction implements QueryConnection {
    */
   async close() {
     if (this.session) {
-      await new Promise((resolve) => this.session?.close(resolve));
+      await this.session?.close();
       this.session = null;
     }
   }
