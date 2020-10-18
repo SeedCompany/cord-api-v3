@@ -90,16 +90,6 @@ describe('Project e2e', () => {
     );
   });
 
-  it('should have project step', async () => {
-    const project = await createProject(app);
-    expect(project.step.value).toBe(ProjectStep.EarlyConversations);
-  });
-
-  it('should have project status', async () => {
-    const project = await createProject(app);
-    expect(project.status).toBe(ProjectStatus.InDevelopment);
-  });
-
   it('create & read project by id', async () => {
     const project = await createProject(app);
 
@@ -811,34 +801,6 @@ describe('Project e2e', () => {
       queryProject.project.partnerships.items.length
     ).toBeGreaterThanOrEqual(numPartnerships);
     expect(queryProject.project.partnerships.total).toBe(numPartnerships);
-  });
-
-  it('Should have default status as Pending for first budget with project creation', async () => {
-    const type = ProjectType.Translation;
-    const project = await createProject(app, { type });
-
-    const queryProject = await app.graphql.query(
-      gql`
-        query project($id: ID!) {
-          project(id: $id) {
-            ...project
-            budget {
-              value {
-                id
-                status
-              }
-              canRead
-              canEdit
-            }
-          }
-        }
-        ${fragments.project}
-      `,
-      {
-        id: project.id,
-      }
-    );
-    expect(queryProject.project.budget.value.status).toBe('Pending');
   });
 
   it('Should have a current budget when made active', async () => {
