@@ -24,7 +24,12 @@ export class ParameterTransformer {
       throw new Error('Use Luxon DateTime instead');
     }
 
-    if (isNeoDateTime(value) || isNeoDate(value) || isNeoDuration(value)) {
+    if (
+      value instanceof Neo.types.Integer ||
+      isNeoDateTime(value) ||
+      isNeoDate(value) ||
+      isNeoDuration(value)
+    ) {
       return value;
     }
 
