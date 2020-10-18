@@ -1,11 +1,11 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { FundingAccountModule } from '../funding-account/funding-account.module';
 import { LocationResolver } from './location.resolver';
 import { LocationService } from './location.service';
 
 @Module({
-  imports: [AuthorizationModule, FundingAccountModule],
+  imports: [forwardRef(() => AuthorizationModule), FundingAccountModule],
   providers: [LocationResolver, LocationService],
   exports: [LocationService],
 })

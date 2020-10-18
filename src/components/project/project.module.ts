@@ -22,11 +22,11 @@ import { ProjectService } from './project.service';
     ProjectMemberModule,
     forwardRef(() => BudgetModule),
     forwardRef(() => PartnershipModule),
-    UserModule,
+    forwardRef(() => UserModule),
     LocationModule,
     FileModule,
     EngagementModule,
-    AuthorizationModule,
+    forwardRef(() => AuthorizationModule),
     PartnerModule,
   ],
   providers: [

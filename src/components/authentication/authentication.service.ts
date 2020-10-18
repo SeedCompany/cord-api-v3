@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import { node, relation } from 'cypher-query-builder';
 import { sign, verify } from 'jsonwebtoken';
@@ -36,6 +36,7 @@ export class AuthenticationService {
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
     private readonly email: EmailService,
+    @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
     @Logger('authentication:service') private readonly logger: ILogger
   ) {}
