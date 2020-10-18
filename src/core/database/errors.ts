@@ -1,7 +1,7 @@
-import { v1 as Neo } from 'neo4j-driver';
+import { Neo4jError } from 'neo4j-driver';
 import { LogEntry, LogLevel } from '../logger';
 
-declare module 'neo4j-driver/types/v1' {
+declare module 'neo4j-driver' {
   interface Neo4jError {
     logProps?: LogEntry;
   }
@@ -16,7 +16,7 @@ const defineLogEntry = (obj: unknown, logEntry: LogEntry) => {
   });
 };
 
-export class SyntaxError extends Neo.Neo4jError {
+export class SyntaxError extends Neo4jError {
   static readonly code = 'Neo.ClientError.Statement.SyntaxError' as const;
 
   constructor(message: string) {
@@ -29,7 +29,7 @@ export class SyntaxError extends Neo.Neo4jError {
     });
   }
 
-  static fromNeo(e: Neo.Neo4jError) {
+  static fromNeo(e: Neo4jError) {
     if (e instanceof SyntaxError) {
       return e;
     }
@@ -39,14 +39,14 @@ export class SyntaxError extends Neo.Neo4jError {
   }
 }
 
-export class ConstraintError extends Neo.Neo4jError {
+export class ConstraintError extends Neo4jError {
   static readonly code = 'Neo.ClientError.Schema.ConstraintValidationFailed' as const;
   constructor(message: string) {
     super(message);
     this.name = this.constructor.name;
   }
 
-  static fromNeo(e: Neo.Neo4jError) {
+  static fromNeo(e: Neo4jError) {
     if (e instanceof ConstraintError) {
       return e;
     }
@@ -74,7 +74,7 @@ export class UniquenessError extends ConstraintError {
     });
   }
 
-  static fromNeo(e: Neo.Neo4jError) {
+  static fromNeo(e: Neo4jError) {
     if (e instanceof UniquenessError) {
       return e;
     }
@@ -91,8 +91,8 @@ export class UniquenessError extends ConstraintError {
   }
 }
 
-export const isNeo4jError = (e: unknown): e is Neo.Neo4jError =>
-  e instanceof Neo.Neo4jError;
+export const isNeo4jError = (e: unknown): e is Neo4jError =>
+  e instanceof Neo4jError;
 
 export const createBetterError = (e: Error) => {
   if (!isNeo4jError(e)) {
@@ -111,7 +111,7 @@ export const createBetterError = (e: Error) => {
 };
 
 const uniqueMsgRegex = /^Node\((\d+)\) already exists with label `(\w+)` and property `(.+)` = '(.+)'$/;
-const getUniqueFailureInfo = (e: Neo.Neo4jError) => {
+const getUniqueFailureInfo = (e: Neo4jError) => {
   const matches = uniqueMsgRegex.exec(e.message);
   if (!matches) {
     throw new Error(

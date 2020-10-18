@@ -1,7 +1,7 @@
 import { FactoryProvider } from '@nestjs/common/interfaces';
 import { stripIndent } from 'common-tags';
 import { Connection } from 'cypher-query-builder';
-import Session from 'neo4j-driver/types/v1/session';
+import { Session } from 'neo4j-driver';
 import { ConfigService } from '..';
 import { jestSkipFileInExceptionSource } from '../jest-skip-source-file';
 import { ILogger, LoggerToken, LogLevel } from '../logger';

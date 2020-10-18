@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { mapValues } from 'lodash';
 import { DateTime, Duration } from 'luxon';
-import { v1 as Neo } from 'neo4j-driver';
+import * as Neo from 'neo4j-driver';
 import { CalendarDate } from '../../common';
 import { isNeoDate, isNeoDateTime, isNeoDuration } from './transformer';
 
