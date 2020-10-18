@@ -15,13 +15,13 @@ import * as handlers from './handlers';
 @Module({
   imports: [
     FileModule,
-    forwardRef(() => AuthorizationModule),
+    AuthorizationModule,
     EducationModule,
     LocationModule,
     forwardRef(() => PartnershipModule),
     forwardRef(() => OrganizationModule),
     UnavailabilityModule,
-    forwardRef(() => UserModule),
+    UserModule,
   ],
   providers: [
     BudgetResolver,

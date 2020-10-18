@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import {
   DuplicateException,
@@ -47,7 +47,6 @@ export class LiteracyMaterialService {
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
     private readonly scriptureRefService: ScriptureReferenceService,
-    @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService
   ) {}
 

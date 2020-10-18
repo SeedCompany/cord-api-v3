@@ -5,6 +5,7 @@ import { intersection } from 'lodash';
 import { ServerException, UnauthorizedException } from '../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import { Role } from '../authorization';
+import { AuthorizationService } from '../authorization/authorization.service';
 import { User, UserService } from '../user';
 import {
   Project,
@@ -37,6 +38,7 @@ export interface EmailNotification {
 export class ProjectRules {
   constructor(
     private readonly db: DatabaseService,
+    private readonly authorizationService: AuthorizationService,
     private readonly userService: UserService,
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService,

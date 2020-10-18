@@ -15,9 +15,9 @@ import { LanguageEngagementResolver } from './language-engagement.resolver';
 
 @Module({
   imports: [
-    forwardRef(() => AuthorizationModule),
+    AuthorizationModule,
     FileModule,
-    forwardRef(() => UserModule),
+    UserModule,
     CeremonyModule,
     ProductModule,
     LanguageModule,

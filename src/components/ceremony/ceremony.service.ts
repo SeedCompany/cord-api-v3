@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import {
   InputException,
@@ -54,7 +54,6 @@ export class CeremonyService {
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
-    @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
     @Logger('ceremony:service') private readonly logger: ILogger
   ) {}

@@ -106,7 +106,6 @@ export class EngagementService {
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService,
     private readonly eventBus: IEventBus,
-    @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
     @Logger(`engagement.service`) private readonly logger: ILogger
   ) {}

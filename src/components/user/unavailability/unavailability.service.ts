@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
 import { ISession, NotFoundException, ServerException } from '../../../common';
 import {
@@ -33,7 +33,6 @@ export class UnavailabilityService {
     @Logger('unavailability:service') private readonly logger: ILogger,
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
-    @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService
   ) {}
 
