@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { FilmModule } from '../film/film.module';
 import { LiteracyMaterialModule } from '../literacy-material/literacy-material.module';
@@ -10,7 +10,7 @@ import { ProductService } from './product.service';
 
 @Module({
   imports: [
-    AuthorizationModule,
+    forwardRef(() => AuthorizationModule),
     FilmModule,
     LiteracyMaterialModule,
     StoryModule,

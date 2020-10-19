@@ -11,9 +11,9 @@ import { UserService } from './user.service';
 @Module({
   imports: [
     forwardRef(() => AuthenticationModule),
-    AuthorizationModule,
+    forwardRef(() => AuthorizationModule),
     EducationModule,
-    OrganizationModule,
+    forwardRef(() => OrganizationModule),
     UnavailabilityModule,
     TimeZoneModule,
   ],

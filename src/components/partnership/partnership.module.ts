@@ -9,10 +9,10 @@ import { PartnershipService } from './partnership.service';
 
 @Module({
   imports: [
-    AuthorizationModule,
+    forwardRef(() => AuthorizationModule),
     FileModule,
     forwardRef(() => BudgetModule),
-    ProjectModule,
+    forwardRef(() => ProjectModule),
     PartnerModule,
   ],
   providers: [PartnershipResolver, PartnershipService],

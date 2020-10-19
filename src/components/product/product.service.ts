@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import type { Node } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
@@ -76,6 +76,7 @@ export class ProductService {
     private readonly song: SongService,
     private readonly literacyMaterial: LiteracyMaterialService,
     private readonly scriptureRefService: ScriptureReferenceService,
+    @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
     @Logger('product:service') private readonly logger: ILogger
   ) {}

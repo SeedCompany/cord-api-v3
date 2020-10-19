@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import {
   contains,
   hasLabel,
@@ -37,6 +37,7 @@ export class FileRepository {
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
     @Logger('file:repository') private readonly logger: ILogger,
+    @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService
   ) {}
 
