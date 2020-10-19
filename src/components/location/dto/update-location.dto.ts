@@ -26,6 +26,9 @@ export abstract class UpdateLocation {
   @Length(3, 3)
   @Transform(toUpper)
   readonly isoAlpha3?: string;
+
+  @IdField({ nullable: true })
+  readonly fundingAccountId?: string;
 }
 
 @InputType()

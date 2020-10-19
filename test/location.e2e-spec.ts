@@ -4,6 +4,7 @@ import { times } from 'lodash';
 import { generate, isValid } from 'shortid';
 import { Location } from '../src/components/location';
 import {
+  createFundingAccount,
   createLocation,
   createSession,
   createTestApp,
@@ -124,5 +125,36 @@ describe('Location e2e', () => {
     `);
 
     expect(locations.items.length).toBeGreaterThanOrEqual(numLocations);
+  });
+
+  it('update location with funding account', async () => {
+    const fundingAccount = await createFundingAccount(app);
+    const st = await createLocation(app, {
+      fundingAccountId: fundingAccount.id,
+    });
+    const newFundingAccount = await createFundingAccount(app);
+    const result = await app.graphql.mutate(
+      gql`
+        mutation updateLocation($input: UpdateLocationInput!) {
+          updateLocation(input: $input) {
+            location {
+              ...location
+            }
+          }
+        }
+        ${fragments.location}
+      `,
+      {
+        input: {
+          location: {
+            id: st.id,
+            fundingAccountId: newFundingAccount.id,
+          },
+        },
+      }
+    );
+    const updated = result.updateLocation.location;
+    expect(updated).toBeTruthy();
+    expect(updated.fundingAccount.value.id).toBe(newFundingAccount.id);
   });
 });
