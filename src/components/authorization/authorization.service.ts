@@ -452,7 +452,7 @@ export class AuthorizationService {
         throw new ServerException('user id of project member not found');
       }
       // get the member's roles on the project
-      const roles = await this.unsecureGetRoles(id);
+      const roles = await this.unsecureGetProjectRoles(id);
       // iterate through the member's role's and grant them permissions
       for (const roleName of roles) {
         const role = this.getRoleByName(roleName);
@@ -897,7 +897,7 @@ export class AuthorizationService {
     return result2?.id;
   }
 
-  async unsecureGetRoles(id: string): Promise<string[]> {
+  async unsecureGetProjectRoles(id: string): Promise<string[]> {
     const result = await this.db
       .query()
       .match([
@@ -909,5 +909,23 @@ export class AuthorizationService {
       .first();
 
     return result?.roles;
+  }
+
+  async getUserRoleObjects(id: string): Promise<DbRole[]> {
+    const roleQuery = await this.db
+      .query()
+      .match([
+        node('user', 'User', { id }),
+        relation('out', '', 'roles', { active: true }),
+        node('role', 'Property'),
+      ])
+      .raw(`RETURN collect(role.value) as roles`)
+      .first();
+
+    const roles = roleQuery?.roles.map((role: string) => {
+      return everyRole.find((roleObj) => role === roleObj.name);
+    });
+
+    return roles;
   }
 }
