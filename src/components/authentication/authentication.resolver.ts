@@ -122,7 +122,8 @@ export class AuthenticationResolver {
     await this.authService.login(input, session);
     const loggedInSession = await this.updateSession(req);
     const user = await this.userService.readOne(userId, loggedInSession);
-    return { user };
+    const powers = await this.authorizationService.readPower(loggedInSession);
+    return { user, powers };
   }
 
   private async updateSession(req: Request) {
