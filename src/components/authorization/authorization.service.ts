@@ -29,7 +29,6 @@ import { DbOrganization } from '../organization/model';
 import { DbPartner } from '../partner/model';
 import { DbPartnership } from '../partnership/model';
 import { DbProduct } from '../product/model';
-import { ProjectMemberService, ProjectService } from '../project';
 import { DbProject } from '../project/model';
 import { DbProjectMember } from '../project/project-member/model';
 import { DbSong } from '../song/model';
@@ -63,15 +62,26 @@ import {
  *   a. assign that user membership to all SGs for their new role.
  */
 
+export interface ProjectChildIds {
+  budgets: string[];
+  budgetRecords: string[];
+  ceremonies: string[];
+  internshipEngagements: string[];
+  langaugeEngagements: string[];
+  members: string[];
+  organizations: string[];
+  partnerships: string[];
+  partners: string[];
+  produces: string[];
+  products: string[];
+  users: string[];
+}
+
 @Injectable()
 export class AuthorizationService {
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
-    // @Inject(forwardRef(() => ProjectService))
-    private readonly projectService: ProjectService,
-    // @Inject(forwardRef(() => ProjectMemberService))
-    private readonly projectMemberService: ProjectMemberService,
     @Logger('authorization:service') private readonly logger: ILogger
   ) {}
 
@@ -377,58 +387,52 @@ export class AuthorizationService {
 
     if (labels.includes('Budget')) {
       // other project members may need access to this node
-      const projectId = await this.projectService.unsecureGetProjectIdByBudgetId(
-        baseNodeId
-      );
+      const projectId = await this.unsecureGetProjectIdByBudgetId(baseNodeId);
 
       await this.addProjectMembersToNewBaseNodeSg(projectId, baseNodeId);
     } else if (labels.includes('BudgetRecord')) {
       // other project members may need access to this node
-      const projectId = await this.projectService.unsecureGetProjectIdByBudgetRecordId(
+      const projectId = await this.unsecureGetProjectIdByBudgetRecordId(
         baseNodeId
       );
 
       await this.addProjectMembersToNewBaseNodeSg(projectId, baseNodeId);
     } else if (labels.includes('Ceremony')) {
       // other project members may need access to this node
-      const projectId = await this.projectService.unsecureGetProjectIdByCeremonyId(
-        baseNodeId
-      );
+      const projectId = await this.unsecureGetProjectIdByCeremonyId(baseNodeId);
 
       await this.addProjectMembersToNewBaseNodeSg(projectId, baseNodeId);
     } else if (labels.includes('Engagement')) {
       // other project members may need access to this node
-      const projectId = await this.projectService.unsecureGetProjectIdByEngagementId(
+      const projectId = await this.unsecureGetProjectIdByEngagementId(
         baseNodeId
       );
 
       await this.addProjectMembersToNewBaseNodeSg(projectId, baseNodeId);
     } else if (labels.includes('Partnership')) {
       // other project members may need access to this node
-      const projectId = await this.projectService.unsecureGetProjectIdByPartnershipId(
+      const projectId = await this.unsecureGetProjectIdByPartnershipId(
         baseNodeId
       );
 
       await this.addProjectMembersToNewBaseNodeSg(projectId, baseNodeId);
     } else if (labels.includes('ProjectMember')) {
       // other project members may need access to this node
-      const projectId = await this.projectService.unsecureGetProjectIdByProjectMemberId(
+      const projectId = await this.unsecureGetProjectIdByProjectMemberId(
         baseNodeId
       );
 
       await this.addProjectMembersToNewBaseNodeSg(projectId, baseNodeId);
     } else if (labels.includes('Producible')) {
       // other project members may need access to this node
-      const projectId = await this.projectService.unsecureGetProjectIdByProducibleId(
+      const projectId = await this.unsecureGetProjectIdByProducibleId(
         baseNodeId
       );
 
       await this.addProjectMembersToNewBaseNodeSg(projectId, baseNodeId);
     } else if (labels.includes('Product')) {
       // other project members may need access to this node
-      const projectId = await this.projectService.unsecureGetProjectIdByProductId(
-        baseNodeId
-      );
+      const projectId = await this.unsecureGetProjectIdByProductId(baseNodeId);
 
       await this.addProjectMembersToNewBaseNodeSg(projectId, baseNodeId);
     }
@@ -439,17 +443,13 @@ export class AuthorizationService {
     baseNodeId: string
   ) {
     // get all ids of a project's children
-    const ids = await this.projectService.unsecureGetAllProjectBaseNodeIds(
-      projectId
-    );
+    const ids = await this.unsecureGetAllProjectBaseNodeIds(projectId);
     // iterate through project members to assign them rights to this new base node
     for (const id of ids.members) {
       // get the member's userId
-      const userId = await this.projectMemberService.unsecureGetUserIdByProjectMemberId(
-        id
-      );
+      const userId = await this.unsecureGetUserIdByProjectMemberId(id);
       // get the member's roles on the project
-      const roles = await this.projectMemberService.unsecureGetRoles(id);
+      const roles = await this.unsecureGetRoles(id);
       // iterate through the member's role's and grant them permissions
       for (const roleName of roles) {
         const role = this.getRoleByName(roleName);
@@ -679,5 +679,232 @@ export class AuthorizationService {
       return [];
     }
     return result.powers;
+  }
+
+  async unsecureGetProjectIdByBudgetId(id: string): Promise<string> {
+    const result = await this.db
+      .query()
+      .match([
+        node('project', 'Project'),
+        relation('out', '', 'budget', { active: true }),
+        node('', 'Budget', { id }),
+      ])
+      .raw(`RETURN project.id as id`)
+      .first();
+
+    return result?.id;
+  }
+
+  async unsecureGetProjectIdByBudgetRecordId(id: string): Promise<string> {
+    const result = await this.db
+      .query()
+      .match([
+        node('project', 'Project'),
+        relation('out', '', 'budget', { active: true }),
+        node('', 'Budget'),
+        relation('out', '', 'record', { active: true }),
+        node('', 'BudgetRecord', { id }),
+      ])
+      .raw(`RETURN project.id as id`)
+      .first();
+
+    return result?.id;
+  }
+
+  async unsecureGetProjectIdByCeremonyId(id: string): Promise<string> {
+    const result = await this.db
+      .query()
+      .match([
+        node('project', 'Project'),
+        relation('out', '', 'engagement', { active: true }),
+        node('', 'Engagement'),
+        relation('out', '', 'ceremony', { active: true }),
+        node('', 'Ceremony', { id }),
+      ])
+      .raw(`RETURN project.id as id`)
+      .first();
+
+    return result?.id;
+  }
+
+  async unsecureGetProjectIdByEngagementId(id: string): Promise<string> {
+    const result = await this.db
+      .query()
+      .match([
+        node('project', 'Project'),
+        relation('out', '', 'engagement', { active: true }),
+        node('', 'Engagement', { id }),
+      ])
+      .raw(`RETURN project.id as id`)
+      .first();
+
+    return result?.id;
+  }
+
+  async unsecureGetProjectIdByPartnershipId(id: string): Promise<string> {
+    const result = await this.db
+      .query()
+      .match([
+        node('project', 'Project'),
+        relation('out', '', 'partnership', { active: true }),
+        node('', 'Partnership', { id }),
+      ])
+      .raw(`RETURN project.id as id`)
+      .first();
+
+    return result?.id;
+  }
+
+  async unsecureGetProjectIdByProjectMemberId(id: string): Promise<string> {
+    const result = await this.db
+      .query()
+      .match([
+        node('project', 'Project'),
+        relation('out', '', 'member', { active: true }),
+        node('', 'ProjectMember', { id }),
+      ])
+      .raw(`RETURN project.id as id`)
+      .first();
+
+    return result?.id;
+  }
+
+  async unsecureGetProjectIdByProducibleId(id: string): Promise<string> {
+    const result = await this.db
+      .query()
+      .match([
+        node('project', 'Project'),
+        relation('out', '', 'engagement', { active: true }),
+        node('', 'LanguageEngagement'),
+        relation('out', '', 'product', { active: true }),
+        node('', 'Product'),
+        relation('out', '', 'produces', { active: true }),
+        node('', 'Producible', { id }),
+      ])
+      .raw(`RETURN project.id as id`)
+      .first();
+
+    return result?.id;
+  }
+
+  async unsecureGetProjectIdByProductId(id: string): Promise<string> {
+    const result = await this.db
+      .query()
+      .match([
+        node('project', 'Project'),
+        relation('out', '', 'engagement', { active: true }),
+        node('', 'LanguageEngagement'),
+        relation('out', '', 'product', { active: true }),
+        node('', 'Product', { id }),
+      ])
+      .raw(`RETURN project.id as id`)
+      .first();
+
+    return result?.id;
+  }
+
+  async unsecureGetAllProjectBaseNodeIds(id: string): Promise<ProjectChildIds> {
+    const result = await this.db
+      .query()
+      .raw(
+        `
+    match 
+      (project:Project {id:$id})
+    with {} as ids, project
+
+    optional match
+      (project)-[:budget]->(budget:Budget)-[:record]->(budgetRecord:BudgetRecord)
+    with 
+      project, 
+      ids,
+      apoc.map.setKey(ids, "budgets", collect(distinct budget.id)) as id1, 
+      apoc.map.setKey(ids, "budgetRecords", collect(distinct budgetRecord.id)) as id2
+    with apoc.map.mergeList([ids, id1, id2]) as ids, project
+
+    optional match
+      (project)-[:partnership]->(partnership:Partnership)-[:partner]->(partner:Partner)-[:organization]->(organization:Organization)
+    with
+      project,
+      ids,
+      apoc.map.setKey(ids, "partnerships", collect(distinct partnership.id)) as id1, 
+      apoc.map.setKey(ids, "partners", collect(distinct partner.id)) as id2,
+      apoc.map.setKey(ids, "organizations", collect(distinct organization.id)) as id3
+    with apoc.map.mergeList([ids, id1, id2, id3]) as ids, project
+
+    optional match
+      (project)-[:engagement]->(internshipEngagement:InternshipEngagement)
+    with
+      project,
+      ids,
+      apoc.map.setKey(ids, "internshipEngagements", collect(distinct internshipEngagement.id)) as id1
+    with apoc.map.mergeList([ids, id1]) as ids, project
+
+    optional match
+      (project)-[:engagement]->(languageEngagement:LanguageEngagement)
+    with
+      project,
+      ids,
+      apoc.map.setKey(ids, "languageEngagements", collect(distinct languageEngagement.id)) as id1 
+    with apoc.map.mergeList([ids, id1]) as ids, project
+
+    optional match
+      (project)-[:engagement]->(:Engagement)-[:ceremony]->(ceremony:Ceremony)
+    with
+      project,
+      ids,
+      apoc.map.setKey(ids, "ceremonies", collect(distinct ceremony.id)) as id1
+    with apoc.map.mergeList([ids, id1]) as ids, project
+
+    optional match
+      (project)-[:member]->(member:ProjectMember)-[:user]->(user:User)
+    with
+      project,
+      ids,
+      apoc.map.setKey(ids, "members", collect(distinct member.id)) as id1, 
+      apoc.map.setKey(ids, "users", collect(distinct user.id)) as id2
+    with apoc.map.mergeList([ids, id1, id2]) as ids, project
+
+    optional match
+      (project)-[:engagement]->(:Engagement)-[:product]->(product:Product)-[:produces]->(produces:Producible)
+    with
+      project,
+      ids,
+      apoc.map.setKey(ids, "products", collect(distinct product.id)) as id1, 
+      apoc.map.setKey(ids, "produces", collect(distinct produces.id)) as id2
+    with apoc.map.mergeList([ids, id1, id2]) as ids, project
+
+    return ids
+    `,
+        { id }
+      )
+      .first();
+    return result?.ids;
+  }
+
+  async unsecureGetUserIdByProjectMemberId(id: string): Promise<string> {
+    const result = await this.db
+      .query()
+      .match([
+        node('user', 'User'),
+        relation('in', '', 'user', { acitve: true }),
+        node('', 'ProjectMember', { id }),
+      ])
+      .raw('RETURN user.id as id')
+      .first();
+    return result?.id;
+  }
+
+  async unsecureGetRoles(id: string): Promise<string[]> {
+    const result = await this.db
+      .query()
+      .match([
+        node('projectMember', 'ProjectMember', { id }),
+        relation('out', '', 'roles', { active: true }),
+        node('role', 'Property'),
+      ])
+      .raw(`RETURN collect(role.value) as roles`)
+      .first();
+
+    return result?.roles;
   }
 }
