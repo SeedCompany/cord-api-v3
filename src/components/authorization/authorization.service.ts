@@ -448,6 +448,10 @@ export class AuthorizationService {
     for (const id of ids.members) {
       // get the member's userId
       const userId = await this.unsecureGetUserIdByProjectMemberId(id);
+
+      if (userId === undefined) {
+        throw new ServerException('user id of project member not found');
+      }
       // get the member's roles on the project
       const roles = await this.unsecureGetRoles(id);
       // iterate through the member's role's and grant them permissions
@@ -813,7 +817,7 @@ export class AuthorizationService {
     with {} as ids, project
 
     optional match
-      (project)-[:budget]->(budget:Budget)-[:record]->(budgetRecord:BudgetRecord)
+      (project)-[:budget {active:true}]->(budget:Budget)-[:record{active:true}]->(budgetRecord:BudgetRecord)
     with 
       project, 
       ids,
@@ -822,7 +826,7 @@ export class AuthorizationService {
     with apoc.map.mergeList([ids, id1, id2]) as ids, project
 
     optional match
-      (project)-[:partnership]->(partnership:Partnership)-[:partner]->(partner:Partner)-[:organization]->(organization:Organization)
+      (project)-[:partnership{active:true}]->(partnership:Partnership)-[:partner{active:true}]->(partner:Partner)-[:organization{active:true}]->(organization:Organization)
     with
       project,
       ids,
@@ -832,7 +836,7 @@ export class AuthorizationService {
     with apoc.map.mergeList([ids, id1, id2, id3]) as ids, project
 
     optional match
-      (project)-[:engagement]->(internshipEngagement:InternshipEngagement)
+      (project)-[:engagement{active:true}]->(internshipEngagement:InternshipEngagement)
     with
       project,
       ids,
@@ -840,7 +844,7 @@ export class AuthorizationService {
     with apoc.map.mergeList([ids, id1]) as ids, project
 
     optional match
-      (project)-[:engagement]->(languageEngagement:LanguageEngagement)
+      (project)-[:engagement{active:true}]->(languageEngagement:LanguageEngagement)
     with
       project,
       ids,
@@ -848,7 +852,7 @@ export class AuthorizationService {
     with apoc.map.mergeList([ids, id1]) as ids, project
 
     optional match
-      (project)-[:engagement]->(:Engagement)-[:ceremony]->(ceremony:Ceremony)
+      (project)-[:engagement{active:true}]->(:Engagement)-[:ceremony{active:true}]->(ceremony:Ceremony)
     with
       project,
       ids,
@@ -856,7 +860,7 @@ export class AuthorizationService {
     with apoc.map.mergeList([ids, id1]) as ids, project
 
     optional match
-      (project)-[:member]->(member:ProjectMember)-[:user]->(user:User)
+      (project)-[:member{active:true}]->(member:ProjectMember)-[:user{active:true}]->(user:User)
     with
       project,
       ids,
@@ -865,7 +869,7 @@ export class AuthorizationService {
     with apoc.map.mergeList([ids, id1, id2]) as ids, project
 
     optional match
-      (project)-[:engagement]->(:Engagement)-[:product]->(product:Product)-[:produces]->(produces:Producible)
+      (project)-[:engagement{active:true}]->(:Engagement)-[:product{active:true}]->(product:Product)-[:produces{active:true}]->(produces:Producible)
     with
       project,
       ids,
@@ -882,16 +886,16 @@ export class AuthorizationService {
   }
 
   async unsecureGetUserIdByProjectMemberId(id: string): Promise<string> {
-    const result = await this.db
+    const result = this.db
       .query()
       .match([
         node('user', 'User'),
-        relation('in', '', 'user', { acitve: true }),
+        relation('in', '', 'user', { active: true }),
         node('', 'ProjectMember', { id }),
       ])
-      .raw('RETURN user.id as id')
-      .first();
-    return result?.id;
+      .raw('RETURN user.id as id');
+    const result2 = await result.first();
+    return result2?.id;
   }
 
   async unsecureGetRoles(id: string): Promise<string[]> {
@@ -902,7 +906,7 @@ export class AuthorizationService {
         relation('out', '', 'roles', { active: true }),
         node('role', 'Property'),
       ])
-      .raw(`RETURN collect(role.value) as roles`)
+      .raw(`RETURN role.value as roles`)
       .first();
 
     return result?.roles;
