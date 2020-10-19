@@ -1,5 +1,6 @@
 import {
   Args,
+  ID,
   Mutation,
   Parent,
   Query,
@@ -7,6 +8,7 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { firstLettersOfWords, IdArg, ISession, Session } from '../../common';
+import { LocationListInput, SecuredLocationList } from '../location';
 import {
   CreateOrganizationInput,
   CreateOrganizationOutput,
@@ -65,6 +67,20 @@ export class OrganizationResolver {
     return this.orgs.list(input, session);
   }
 
+  @ResolveField(() => SecuredLocationList)
+  async locations(
+    @Session() session: ISession,
+    @Parent() organization: Organization,
+    @Args({
+      name: 'input',
+      type: () => LocationListInput,
+      defaultValue: LocationListInput.defaultVal,
+    })
+    input: LocationListInput
+  ): Promise<SecuredLocationList> {
+    return this.orgs.listLocations(organization.id, input, session);
+  }
+
   @Mutation(() => UpdateOrganizationOutput, {
     description: 'Update an organization',
   })
@@ -85,6 +101,30 @@ export class OrganizationResolver {
   ): Promise<boolean> {
     await this.orgs.delete(id, session);
     return true;
+  }
+
+  @Mutation(() => Organization, {
+    description: 'Add a location to a organization',
+  })
+  async addLocationToOrganization(
+    @Session() session: ISession,
+    @Args('organizationId', { type: () => ID }) organizationId: string,
+    @Args('locationId', { type: () => ID }) locationId: string
+  ): Promise<Organization> {
+    await this.orgs.addLocation(organizationId, locationId, session);
+    return this.orgs.readOne(organizationId, session);
+  }
+
+  @Mutation(() => Organization, {
+    description: 'Remove a location from a organization',
+  })
+  async removeLocationFromOrganization(
+    @Session() session: ISession,
+    @Args('organizationId', { type: () => ID }) organizationId: string,
+    @Args('locationId', { type: () => ID }) locationId: string
+  ): Promise<Organization> {
+    await this.orgs.removeLocation(organizationId, locationId, session);
+    return this.orgs.readOne(organizationId, session);
   }
 
   @Query(() => Boolean, {

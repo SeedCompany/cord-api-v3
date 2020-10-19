@@ -37,6 +37,12 @@ import {
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
 import {
+  Location,
+  LocationListInput,
+  LocationService,
+  SecuredLocationList,
+} from '../location';
+import {
   CreateOrganization,
   Organization,
   OrganizationListInput,
@@ -57,7 +63,8 @@ export class OrganizationService {
     private readonly config: ConfigService,
     private readonly db: DatabaseService,
     @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService
+    private readonly authorizationService: AuthorizationService,
+    private readonly locationService: LocationService
   ) {}
 
   @OnIndex()
@@ -290,6 +297,100 @@ export class OrganizationService {
       );
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
+  }
+
+  async addLocation(
+    organizationId: string,
+    locationId: string,
+    session: ISession
+  ): Promise<void> {
+    try {
+      await this.removeLocation(organizationId, locationId, session);
+      await this.db
+        .query()
+        .matchNode('organization', 'Organization', { id: organizationId })
+        .matchNode('location', 'Location', { id: locationId })
+        .create([
+          node('organization'),
+          relation('out', '', 'locations', {
+            active: true,
+            createdAt: DateTime.local(),
+          }),
+          node('location'),
+        ])
+        .run();
+    } catch (e) {
+      throw new ServerException('Could not add location to organization', e);
+    }
+  }
+
+  async removeLocation(
+    organizationId: string,
+    locationId: string,
+    _session: ISession
+  ): Promise<void> {
+    try {
+      await this.db
+        .query()
+        .matchNode('organization', 'Organization', { id: organizationId })
+        .matchNode('location', 'Location', { id: locationId })
+        .match([
+          [
+            node('organization'),
+            relation('out', 'rel', 'locations', { active: true }),
+            node('location'),
+          ],
+        ])
+        .setValues({
+          'rel.active': false,
+        })
+        .run();
+    } catch (e) {
+      throw new ServerException(
+        'Could not remove location from organization',
+        e
+      );
+    }
+  }
+
+  async listLocations(
+    organizationId: string,
+    _input: LocationListInput,
+    session: ISession
+  ): Promise<SecuredLocationList> {
+    const result = await this.db
+      .query()
+      .matchNode('organization', 'Organization', { id: organizationId })
+      .match([
+        node('organization'),
+        relation('out', '', 'locations', { active: true }),
+        node('location'),
+      ])
+      .return({
+        location: [{ id: 'id' }],
+      })
+      .run();
+
+    // const canCreateLocation = await this.authorizationService.checkPower(
+    //   Powers.CreateLocation,
+    //   session.userId
+    // );
+
+    const items = await Promise.all(
+      result.map(
+        async (location): Promise<Location> => {
+          return await this.locationService.readOne(location.id, session);
+        }
+      )
+    );
+
+    return {
+      items: items,
+      total: items.length,
+      hasMore: false,
+      canCreate: true, // TODO
+      canRead: true, // TODO
+    };
   }
 
   async checkAllOrgs(session: ISession): Promise<boolean> {
