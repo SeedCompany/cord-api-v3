@@ -182,7 +182,7 @@ export class AuthorizationService {
       return new DbDirectory();
     } else if (labels.includes('Education')) {
       return new DbEducation();
-    } else if (labels.includes('EthnologuLanguage')) {
+    } else if (labels.includes('EthnologueLanguage')) {
       return new DbEthnologueLanguage();
     } else if (labels.includes('FieldRegion')) {
       return new DbFieldRegion();
@@ -399,9 +399,8 @@ export class AuthorizationService {
       await this.addProjectMembersToNewBaseNodeSg(projectId, baseNodeId);
     } else if (labels.includes('Ceremony')) {
       // other project members may need access to this node
-      const projectId = await this.unsecureGetProjectIdByCeremonyId(baseNodeId);
-
-      await this.addProjectMembersToNewBaseNodeSg(projectId, baseNodeId);
+      //const projectId = await this.unsecureGetProjectIdByCeremonyId(baseNodeId);
+      //await this.addProjectMembersToNewBaseNodeSg(projectId, baseNodeId);
     } else if (labels.includes('Engagement')) {
       // other project members may need access to this node
       const projectId = await this.unsecureGetProjectIdByEngagementId(
