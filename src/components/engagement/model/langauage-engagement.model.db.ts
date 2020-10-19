@@ -1,8 +1,9 @@
+import { DbBaseNodeLabel } from '../../../common';
 import { DbEngagement } from './engagement.model.db';
 
 export class DbLanguageEngagement extends DbEngagement {
   // eslint-disable-next-line @typescript-eslint/naming-convention
-  __className = 'DbLanguageEngagement';
+  __className = DbBaseNodeLabel.LanguageEngagement;
   firstScripture: any = null;
   language: any = null;
   lukePartnership: any = null;

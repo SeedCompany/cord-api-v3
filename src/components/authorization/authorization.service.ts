@@ -1,8 +1,10 @@
+/* eslint-disable no-case-declarations */
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { difference, union, without } from 'lodash';
 import { generate } from 'shortid';
 import {
+  DbBaseNodeLabel,
   ISession,
   ServerException,
   UnauthenticatedException,
@@ -110,10 +112,10 @@ export class AuthorizationService {
       });
 
       // add all admins to this SG
-      await this.addAllUsersToSgByTheUsersGlobalRole(
-        adminSgId,
-        Administrator.name
-      );
+      // await this.addAllUsersToSgByTheUsersGlobalRole(
+      //   adminSgId,
+      //   Administrator.name
+      // );
 
       // for (const role of everyRole) {
       //   await this.addAllUsersToSgByTheUsersGlobalRole(adminSgId, role.name);
@@ -322,119 +324,86 @@ export class AuthorizationService {
     // the base node type is, we can just apply the role
 
     const globalRoles = [
-      {
-        role: ProjectManager,
-        sgId: await this.mergeSecurityGroupForRole(
-          baseNodeId,
-          ProjectManager,
-          baseNodeObj
-        ),
-      },
-      {
-        role: RegionalDirector,
-        sgId: await this.mergeSecurityGroupForRole(
-          baseNodeId,
-          RegionalDirector,
-          baseNodeObj
-        ),
-      },
-      {
-        role: FieldOperationsDirector,
-        sgId: await this.mergeSecurityGroupForRole(
-          baseNodeId,
-          FieldOperationsDirector,
-          baseNodeObj
-        ),
-      },
-      {
-        role: FinancialAnalyst,
-        sgId: await this.mergeSecurityGroupForRole(
-          baseNodeId,
-          FinancialAnalyst,
-          baseNodeObj
-        ),
-      },
-      {
-        role: Controller,
-        sgId: await this.mergeSecurityGroupForRole(
-          baseNodeId,
-          Controller,
-          baseNodeObj
-        ),
-      },
+      Administrator,
+      ProjectManager,
+      RegionalDirector,
+      FieldOperationsDirector,
+      FinancialAnalyst,
+      Controller,
     ];
 
-    for (const role of globalRoles) {
-      const sgId = await this.mergeSecurityGroupForRole(
-        baseNodeId,
-        role.role,
-        baseNodeObj
-      );
-      await this.addAllUsersToSgByTheUsersGlobalRole(sgId, role.role.name);
-    }
+    await Promise.all(
+      globalRoles.map(async (role) => {
+        const sgId = await this.mergeSecurityGroupForRole(
+          baseNodeId,
+          role,
+          baseNodeObj
+        );
+        await this.addAllUsersToSgByTheUsersGlobalRole(sgId, role.name);
+      })
+    );
 
     // create the rest of the SGs needed for each role,
     // just don't add all users to them like the global roles
-    const globalRolesArray = globalRoles.map((i) => i.role);
-    const nonGlobalRoles = difference(everyRole, globalRolesArray);
+    const nonGlobalRoles = difference(everyRole, globalRoles);
 
-    const labels = await this.getLabels(baseNodeId);
+    await Promise.all(
+      nonGlobalRoles.map(async (role) => {
+        await this.mergeSecurityGroupForRole(baseNodeId, role, baseNodeObj);
+      })
+    );
 
-    for (const role of nonGlobalRoles) {
-      const baseNodeObj = this.getBaseNodeObjUsingLabel(labels);
-      await this.mergeSecurityGroupForRole(baseNodeId, role, baseNodeObj);
+    const projectChildNodes = [
+      DbBaseNodeLabel.Budget,
+      DbBaseNodeLabel.BudgetRecord,
+      DbBaseNodeLabel.Ceremony,
+      DbBaseNodeLabel.Engagement,
+      DbBaseNodeLabel.Partnership,
+      DbBaseNodeLabel.ProjectMember,
+      DbBaseNodeLabel.Producible,
+      DbBaseNodeLabel.Product,
+    ];
+
+    if (projectChildNodes.includes(baseNodeObj.__className)) {
+      const projectId = await this.unsecureGetProjectIdFromAnyProjectChildNode(
+        baseNodeId
+      );
+      if (projectId !== undefined) {
+        await this.addProjectMembersToNewBaseNodeSg(projectId, baseNodeId);
+      }
     }
+  }
 
-    if (labels.includes('Budget')) {
-      // other project members may need access to this node
-      const projectId = await this.unsecureGetProjectIdByBudgetId(baseNodeId);
+  async unsecureGetProjectIdFromAnyProjectChildNode(
+    id: string
+  ): Promise<string> {
+    const result = await this.db
+      .query()
+      .match([
+        node('project', 'Project'),
+        relation(
+          'out',
+          '',
+          [
+            'budget',
+            'record',
+            'engagement',
+            'ceremony',
+            'member',
+            'partner',
+            'partnership',
+            'produces',
+            'product',
+          ],
+          { active: true },
+          [1, 3]
+        ),
+        node('', 'BaseNode', { id }),
+      ])
+      .raw(`RETURN project.id as id`)
+      .first();
 
-      await this.addProjectMembersToNewBaseNodeSg(projectId, baseNodeId);
-    } else if (labels.includes('BudgetRecord')) {
-      // other project members may need access to this node
-      const projectId = await this.unsecureGetProjectIdByBudgetRecordId(
-        baseNodeId
-      );
-
-      await this.addProjectMembersToNewBaseNodeSg(projectId, baseNodeId);
-    } else if (labels.includes('Ceremony')) {
-      // other project members may need access to this node
-      //const projectId = await this.unsecureGetProjectIdByCeremonyId(baseNodeId);
-      //await this.addProjectMembersToNewBaseNodeSg(projectId, baseNodeId);
-    } else if (labels.includes('Engagement')) {
-      // other project members may need access to this node
-      const projectId = await this.unsecureGetProjectIdByEngagementId(
-        baseNodeId
-      );
-
-      await this.addProjectMembersToNewBaseNodeSg(projectId, baseNodeId);
-    } else if (labels.includes('Partnership')) {
-      // other project members may need access to this node
-      const projectId = await this.unsecureGetProjectIdByPartnershipId(
-        baseNodeId
-      );
-
-      await this.addProjectMembersToNewBaseNodeSg(projectId, baseNodeId);
-    } else if (labels.includes('ProjectMember')) {
-      // other project members may need access to this node
-      const projectId = await this.unsecureGetProjectIdByProjectMemberId(
-        baseNodeId
-      );
-
-      await this.addProjectMembersToNewBaseNodeSg(projectId, baseNodeId);
-    } else if (labels.includes('Producible')) {
-      // other project members may need access to this node
-      const projectId = await this.unsecureGetProjectIdByProducibleId(
-        baseNodeId
-      );
-
-      await this.addProjectMembersToNewBaseNodeSg(projectId, baseNodeId);
-    } else if (labels.includes('Product')) {
-      // other project members may need access to this node
-      const projectId = await this.unsecureGetProjectIdByProductId(baseNodeId);
-
-      await this.addProjectMembersToNewBaseNodeSg(projectId, baseNodeId);
-    }
+    return result?.id;
   }
 
   private async addProjectMembersToNewBaseNodeSg(
@@ -444,29 +413,32 @@ export class AuthorizationService {
     // get all ids of a project's children
     const ids = await this.unsecureGetAllProjectBaseNodeIds(projectId);
     // iterate through project members to assign them rights to this new base node
-    for (const id of ids.members) {
-      // get the member's userId
-      const userId = await this.unsecureGetUserIdByProjectMemberId(id);
 
-      if (userId === undefined) {
-        throw new ServerException('user id of project member not found');
-      }
-      // get the member's roles on the project
-      const roles = await this.unsecureGetProjectRoles(id);
-      // iterate through the member's role's and grant them permissions
-      for (const roleName of roles) {
-        const role = this.getRoleByName(roleName);
-        if (role === undefined) {
-          this.logger.error('project member role not found');
-          continue;
+    await Promise.all(
+      ids.members.map(async (id) => {
+        // get the member's userId
+        const userId = await this.unsecureGetUserIdByProjectMemberId(id);
+
+        if (userId === undefined) {
+          throw new ServerException('user id of project member not found');
         }
-        // get the SG id for the role
-        const sgId = await this.mergeSecurityGroupForRole(baseNodeId, role);
+        // get the member's roles on the project
+        const roles = await this.unsecureGetProjectRoles(id);
+        // iterate through the member's role's and grant them permissions
+        for (const roleName of roles) {
+          const role = this.getRoleByName(roleName);
+          if (role === undefined) {
+            this.logger.error('project member role not found');
+            continue;
+          }
+          // get the SG id for the role
+          const sgId = await this.mergeSecurityGroupForRole(baseNodeId, role);
 
-        // add the user to the SG
-        await this.addUserToSg(userId, sgId);
-      }
-    }
+          // add the user to the SG
+          await this.addUserToSg(userId, sgId);
+        }
+      })
+    );
   }
 
   private async addUserToSg(userId: string, sgId: string) {
@@ -506,20 +478,6 @@ export class AuthorizationService {
         await this.grantPower(power, id);
       }
     }
-  }
-
-  private async getLabels(id: string): Promise<string[]> {
-    const result = await this.db
-      .query()
-      .match([node('baseNode', 'BaseNode', { id })])
-      .raw('return labels(baseNode) as labels')
-      .first();
-
-    if (result === undefined) {
-      throw new ServerException('baseNode not found');
-    }
-
-    return result.labels;
   }
 
   private async addAllUsersToSgByTheUsersGlobalRole(sgId: string, role: Role) {

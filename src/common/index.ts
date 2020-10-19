@@ -21,4 +21,4 @@ export * from './types';
 export * from './validators';
 export * from './name-field';
 export * from './id-field';
-export * from './base-node.enum';
+export * from './base-node-labels.enum';

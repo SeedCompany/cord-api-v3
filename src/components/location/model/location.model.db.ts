@@ -1,8 +1,9 @@
+import { DbBaseNodeLabel } from '../../../common';
 import { DbBaseNode } from '../../authorization/model/db-base-node.model';
 
 export class DbLocation extends DbBaseNode {
   // eslint-disable-next-line @typescript-eslint/naming-convention
-  __className = 'DbLocation';
+  __className = DbBaseNodeLabel.Location;
   name: any = null;
   type: any = null;
   sensitivity: any = null;

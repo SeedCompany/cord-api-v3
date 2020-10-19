@@ -90,7 +90,7 @@ describe('Project e2e', () => {
     );
   });
 
-  it.only('create & read project by id', async () => {
+  it('create & read project by id', async () => {
     const project = await createProject(app);
 
     const result = await app.graphql.query(

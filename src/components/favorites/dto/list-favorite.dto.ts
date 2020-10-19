@@ -2,8 +2,8 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import {
-  BaseNodeEnum,
   PaginatedList,
+  SearchableBaseNodeLabels,
   SecuredList,
   SortablePaginationInput,
 } from '../../../common';
@@ -11,11 +11,11 @@ import { Favorite } from './favorite';
 
 @InputType()
 export abstract class FavoriteFilters {
-  @Field(() => BaseNodeEnum, {
+  @Field(() => SearchableBaseNodeLabels, {
     description: 'Only items matching this node',
     nullable: true,
   })
-  readonly baseNode?: BaseNodeEnum;
+  readonly baseNode?: SearchableBaseNodeLabels;
 }
 
 const defaultFilters = {};
