@@ -1,5 +1,6 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { MinLength } from 'class-validator';
+import { Powers } from '../../authorization/dto/powers';
 import { CreatePerson, User } from '../../user';
 
 @InputType()
@@ -16,4 +17,7 @@ export abstract class RegisterInput extends CreatePerson {
 export abstract class RegisterOutput {
   @Field()
   readonly user: User;
+
+  @Field(() => [Powers])
+  readonly powers: Powers[];
 }
