@@ -334,6 +334,33 @@ export class ProjectMemberService {
     ]);
   }
 
+  async unsecureGetUserIdByProjectMemberId(id: string): Promise<string> {
+    const result = await this.db
+      .query()
+      .match([
+        node('user', 'User'),
+        relation('in', '', 'user', { acitve: true }),
+        node('', 'ProjectMember', { id }),
+      ])
+      .raw('RETURN user.id as id')
+      .first();
+    return result?.id;
+  }
+
+  async unsecureGetRoles(id: string): Promise<string[]> {
+    const result = await this.db
+      .query()
+      .match([
+        node('projectMember', 'ProjectMember', { id }),
+        relation('out', '', 'roles', { active: true }),
+        node('role', 'Property'),
+      ])
+      .raw(`RETURN collect(role.value) as roles`)
+      .first();
+
+    return result?.roles;
+  }
+
   // when a new user is added to a project, all the project admins need to have access
   // to some of that user's properties in order to know about that user
   // async addProjectAdminsToUserSg(projectId: string, userId: string) {
