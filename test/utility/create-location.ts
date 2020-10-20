@@ -1,5 +1,6 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
+import countries from 'iso-3166-1/dist/iso-3166';
 import { isValidId, Sensitivity } from '../../src/common';
 import {
   CreateLocation,
@@ -17,7 +18,7 @@ export async function createLocation(
     name: faker.random.word() + ' ' + faker.random.uuid(),
     type: LocationType.County,
     sensitivity: Sensitivity.High,
-    isoAlpha3: faker.helpers.replaceSymbols('???'),
+    isoAlpha3: faker.random.arrayElement(countries).alpha3,
     ...input,
   };
 

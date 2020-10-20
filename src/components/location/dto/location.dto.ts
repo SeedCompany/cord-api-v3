@@ -5,6 +5,7 @@ import {
   SecuredEnum,
   SecuredProperty,
   SecuredString,
+  SecuredStringNullable,
   Sensitivity,
 } from '../../../common';
 import { LocationType } from './location-type.enum';
@@ -28,7 +29,7 @@ export class Location extends Resource {
   readonly sensitivity: Sensitivity;
 
   @Field()
-  readonly isoAlpha3: SecuredString;
+  readonly isoAlpha3: SecuredStringNullable;
 
   readonly fundingAccount: Secured<string>;
 }

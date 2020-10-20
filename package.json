@@ -51,6 +51,7 @@
     "got": "^11.5.0",
     "graphql": "^15.3.0",
     "html-to-text": "^5.1.1",
+    "iso-3166-1": "^2.0.1",
     "js-yaml": "^3.14.0",
     "jsonwebtoken": "^8.5.1",
     "lazy-get-decorator": "^2.2.0",
