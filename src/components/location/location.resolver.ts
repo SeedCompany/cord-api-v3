@@ -6,6 +6,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
+import { whereAlpha3 } from 'iso-3166-1';
 import { IdArg, ISession, Session } from '../../common';
 import {
   FundingAccountService,
@@ -20,6 +21,7 @@ import {
   UpdateLocationInput,
   UpdateLocationOutput,
 } from './dto';
+import { IsoCountry } from './dto/iso-country.dto';
 import { LocationService } from './location.service';
 
 @Resolver(Location)
@@ -67,6 +69,19 @@ export class LocationResolver {
       value,
       ...rest,
     };
+  }
+
+  @ResolveField(() => IsoCountry, {
+    nullable: true,
+    description:
+      "An ISO 3166-1 country, looked up by the `Location`'s `isoAlpha3` code",
+  })
+  async isoCountry(@Parent() location: Location): Promise<IsoCountry | null> {
+    const { value, canRead } = location.isoAlpha3;
+    if (!value || !canRead) {
+      return null;
+    }
+    return whereAlpha3(value) ?? null;
   }
 
   @Mutation(() => CreateLocationOutput, {
