@@ -1,13 +1,13 @@
 import { ValidationOptions } from 'class-validator';
-import { isValid } from 'shortid';
+import { isValidId } from '../generate-id';
 import { ValidateBy } from './validateBy';
 
-export const IsShortId = (validationOptions?: ValidationOptions) =>
+export const IsId = (validationOptions?: ValidationOptions) =>
   ValidateBy(
     {
-      name: 'IsShortId',
+      name: 'IsId',
       validator: {
-        validate: isValid,
+        validate: isValidId,
         defaultMessage: () =>
           validationOptions?.each
             ? 'Each value in $property must be a valid ID'

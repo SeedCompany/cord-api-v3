@@ -2,8 +2,7 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { some } from 'lodash';
 import { DateTime, Interval } from 'luxon';
-import { generate } from 'shortid';
-import { InputException } from '../src/common';
+import { generateId, InputException } from '../src/common';
 import { Powers } from '../src/components/authorization/dto/powers';
 import {
   CreateInternshipEngagement,
@@ -853,7 +852,7 @@ describe('Engagement e2e', () => {
     internshipProject = await createProject(app, {
       type: ProjectType.Internship,
     });
-    const invalidId = generate();
+    const invalidId = await generateId();
     await expect(
       createInternshipEngagement(app, {
         projectId: invalidId,
@@ -899,7 +898,7 @@ describe('Engagement e2e', () => {
   });
 
   it('translation engagement creation fails and lets you know why if your ids are bad', async () => {
-    const invalidId = generate();
+    const invalidId = await generateId();
     await expect(
       createLanguageEngagement(app, {
         projectId: invalidId,

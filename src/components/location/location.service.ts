@@ -3,6 +3,7 @@ import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
+  generateId,
   ISession,
   NotFoundException,
   Sensitivity,
@@ -128,7 +129,7 @@ export class LocationService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .call(createBaseNode, 'Location', secureProps)
+      .call(createBaseNode, await generateId(), 'Location', secureProps)
       .return('node.id as id');
 
     const result = await query.first();

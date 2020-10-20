@@ -1,5 +1,5 @@
 import { gql } from 'apollo-server-core';
-import { isValid } from 'shortid';
+import { isValidId } from '../../src/common';
 import {
   CreateProjectMember,
   ProjectMember,
@@ -41,6 +41,6 @@ export async function createProjectMember(
   const actual: ProjectMember = result.createProjectMember.projectMember;
 
   expect(actual).toBeTruthy();
-  expect(isValid(actual.id)).toBe(true);
+  expect(isValidId(actual.id)).toBe(true);
   return actual;
 }

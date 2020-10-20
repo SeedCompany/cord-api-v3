@@ -1,6 +1,11 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
-import { ISession, NotFoundException, ServerException } from '../../../common';
+import {
+  generateId,
+  ISession,
+  NotFoundException,
+  ServerException,
+} from '../../../common';
 import {
   ConfigService,
   createBaseNode,
@@ -73,6 +78,7 @@ export class UnavailabilityService {
         ])
         .call(
           createBaseNode,
+          await generateId(),
           'Unavailability',
           secureProps,
           {},

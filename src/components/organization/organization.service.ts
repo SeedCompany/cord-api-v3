@@ -2,9 +2,9 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { range } from 'lodash';
 import { DateTime } from 'luxon';
-import { generate } from 'shortid';
 import {
   DuplicateException,
+  generateId,
   ISession,
   NotFoundException,
   ServerException,
@@ -75,7 +75,12 @@ export class OrganizationService {
   }
 
   // assumes 'root' cypher variable is declared in query
-  createSG(query: Query, cypherIdentifier: string, label?: string) {
+  private readonly createSG = (
+    query: Query,
+    cypherIdentifier: string,
+    id: string,
+    label?: string
+  ) => {
     const labels = ['SecurityGroup'];
     if (label) {
       labels.push(label);
@@ -85,9 +90,9 @@ export class OrganizationService {
     query.create([
       node('root'),
       relation('in', '', 'member'),
-      node(cypherIdentifier, labels, { createdAt, id: generate() }),
+      node(cypherIdentifier, labels, { createdAt, id }),
     ]);
-  }
+  };
 
   async create(
     input: CreateOrganization,
@@ -138,9 +143,13 @@ export class OrganizationService {
         }),
       ])
       .call(matchRequestingUser, session)
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      .call(this.createSG, 'orgSG', 'OrgPublicSecurityGroup')
-      .call(createBaseNode, 'Organization', secureProps)
+      .call(
+        this.createSG,
+        'orgSG',
+        await generateId(),
+        'OrgPublicSecurityGroup'
+      )
+      .call(createBaseNode, await generateId(), 'Organization', secureProps)
       .return('node.id as id');
 
     const result = await query.first();

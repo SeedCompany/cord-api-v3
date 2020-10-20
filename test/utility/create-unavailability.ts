@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { DateTime } from 'luxon';
-import { isValid } from 'shortid';
+import { isValidId } from '../../src/common';
 import {
   CreateUnavailability,
   Unavailability,
@@ -44,7 +44,7 @@ export async function createUnavailability(
   const actual: Unavailability = result.createUnavailability.unavailability;
   expect(actual).toBeTruthy();
 
-  expect(isValid(actual.id)).toBe(true);
+  expect(isValidId(actual.id)).toBe(true);
 
   return actual;
 }

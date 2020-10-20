@@ -1,6 +1,5 @@
 import { gql } from 'apollo-server-core';
-import { isValid } from 'shortid';
-import { CalendarDate } from '../../src/common';
+import { CalendarDate, isValidId } from '../../src/common';
 import { PartnerType } from '../../src/components/partner';
 import {
   CreatePartnership,
@@ -50,7 +49,7 @@ export async function createPartnership(
   const actual: Partnership = result.createPartnership.partnership;
   expect(actual).toBeTruthy();
 
-  expect(isValid(actual.id)).toBe(true);
+  expect(isValidId(actual.id)).toBe(true);
   expect(actual.agreementStatus.value).toBe(partnership.agreementStatus);
   expect(actual.mouStatus.value).toBe(partnership.mouStatus);
   expect(actual.types.value).toEqual(

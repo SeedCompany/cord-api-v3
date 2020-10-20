@@ -1,6 +1,6 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-import { generate, isValid } from 'shortid';
+import { generateId, isValidId } from '../../src/common';
 import { CreatePerson, User } from '../../src/components/user';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
@@ -13,11 +13,11 @@ export async function createPerson(
     email: faker.internet.email(),
     realFirstName: faker.name.firstName(),
     realLastName: faker.name.lastName(),
-    displayFirstName: faker.name.firstName() + generate(),
-    displayLastName: faker.name.lastName() + generate(),
+    displayFirstName: faker.name.firstName() + (await generateId()),
+    displayLastName: faker.name.lastName() + (await generateId()),
     phone: faker.phone.phoneNumber(),
     timezone: 'America/Chicago',
-    about: 'about detail' + generate(),
+    about: 'about detail' + (await generateId()),
     ...input,
   };
 
@@ -42,7 +42,7 @@ export async function createPerson(
   const actual: User = result.createPerson.user;
   expect(actual).toBeTruthy();
 
-  expect(isValid(actual.id)).toBe(true);
+  expect(isValidId(actual.id)).toBe(true);
   expect(actual.email.value).toBe(person.email);
 
   return actual;

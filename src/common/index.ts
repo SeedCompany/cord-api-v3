@@ -5,6 +5,7 @@ export * from './editable.interface';
 export * from './exceptions';
 export * from './firstLettersOfWords';
 export * from './fiscal-year';
+export * from './generate-id';
 export * from './id.arg';
 export { DateField, DateTimeField } from './luxon.graphql';
 export * from './order.enum';

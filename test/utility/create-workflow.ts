@@ -1,6 +1,6 @@
 import { gql } from 'apollo-server-express';
 import * as faker from 'faker';
-import { isValid } from 'shortid';
+import { isValidId } from '../../src/common';
 import { CreateWorkflow, Workflow } from '../../src/components/workflow/dto';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
@@ -36,7 +36,7 @@ export async function createWorkflow(
 
   const actual: Workflow = result.createWorkflow.workflow;
   expect(actual).toBeTruthy();
-  expect(isValid(actual.id)).toBe(true);
+  expect(isValidId(actual.id)).toBe(true);
   expect(actual.stateIdentifier).toBe(workflow.stateIdentifier);
   expect(actual.startingState.id).toBeTruthy();
   expect(actual.startingState.value).toBe(workflow.startingStateName);

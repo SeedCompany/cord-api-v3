@@ -11,7 +11,12 @@ import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern'
 import { AnyConditions } from 'cypher-query-builder/dist/typings/clauses/where-utils';
 import { isEmpty } from 'lodash';
 import { DateTime } from 'luxon';
-import { ISession, NotFoundException, ServerException } from '../../common';
+import {
+  generateId,
+  ISession,
+  NotFoundException,
+  ServerException,
+} from '../../common';
 import {
   collect,
   ConfigService,
@@ -265,7 +270,12 @@ export class FileRepository {
     const createFile = this.db
       .query()
       .call(matchRequestingUser, session)
-      .call(createBaseNode, ['Directory', 'FileNode'], props)
+      .call(
+        createBaseNode,
+        await generateId(),
+        ['Directory', 'FileNode'],
+        props
+      )
       .return('node.id as id')
       .asResult<{ id: string }>();
 
@@ -308,7 +318,7 @@ export class FileRepository {
     const createFile = this.db
       .query()
       .call(matchRequestingUser, session)
-      .call(createBaseNode, ['File', 'FileNode'], props)
+      .call(createBaseNode, await generateId(), ['File', 'FileNode'], props)
       .return('node.id as id')
       .asResult<{ id: string }>();
 
@@ -363,15 +373,7 @@ export class FileRepository {
     const createFile = this.db
       .query()
       .call(matchRequestingUser, session)
-      .call(
-        createBaseNode,
-        ['FileVersion', 'FileNode'],
-        props,
-        {},
-        undefined,
-        undefined,
-        input.id
-      )
+      .call(createBaseNode, input.id, ['FileVersion', 'FileNode'], props)
       .return('node.id as id')
       .asResult<{ id: string }>();
 

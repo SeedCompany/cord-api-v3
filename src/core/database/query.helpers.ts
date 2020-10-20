@@ -11,7 +11,6 @@ import {
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { isFunction } from 'lodash';
 import { DateTime } from 'luxon';
-import { generate } from 'shortid';
 import {
   entries,
   ISession,
@@ -73,12 +72,12 @@ export interface Property {
 // add baseNodeProps and editableProps
 export function createBaseNode(
   query: Query,
+  id: string,
   label: string | string[],
   props: Property[],
   baseNodeProps?: { owningOrgId?: string | undefined; type?: string },
-  editableProps?: string[],
-  isRootuser?: boolean,
-  id: string = generate()
+  _editableProps?: string[],
+  _isRootuser?: boolean
 ) {
   const createdAt = DateTime.local();
 

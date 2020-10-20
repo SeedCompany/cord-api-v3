@@ -1,6 +1,6 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-import { isValid } from 'shortid';
+import { isValidId } from '../src/common';
 import { FieldZone } from '../src/components/field-zone';
 import { User } from '../src/components/user';
 import {
@@ -72,7 +72,7 @@ describe('Field Zone e2e', () => {
     );
 
     expect(actual.id).toBe(fieldZone.id);
-    expect(isValid(actual.id)).toBe(true);
+    expect(isValidId(actual.id)).toBe(true);
     expect(actual.name).toEqual(fieldZone.name);
     expect(actual.director.canEdit).toBe(true);
   });

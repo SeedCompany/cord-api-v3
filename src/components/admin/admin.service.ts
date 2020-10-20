@@ -2,8 +2,11 @@ import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { generate } from 'shortid';
-import { ServerException, UnauthenticatedException } from '../../common';
+import {
+  generateId,
+  ServerException,
+  UnauthenticatedException,
+} from '../../common';
 import { ConfigService, DatabaseService } from '../../core';
 import { AuthenticationService } from '../authentication';
 import { Powers } from '../authorization/dto/powers';
@@ -293,7 +296,7 @@ export class AdminService implements OnApplicationBootstrap {
         }
       } else {
         // create org
-        const orgSgId = generate();
+        const orgSgId = await generateId();
         const createdAt = DateTime.local();
         const createOrgResult = await this.db
           .query()

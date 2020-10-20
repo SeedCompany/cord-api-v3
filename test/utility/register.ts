@@ -1,6 +1,6 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-import { generate, isValid } from 'shortid';
+import { generateId, isValidId } from '../../src/common';
 import { RegisterInput } from '../../src/components/authentication';
 import { Powers } from '../../src/components/authorization/dto/powers';
 import { Role } from '../../src/components/project';
@@ -10,27 +10,23 @@ import { fragments } from './fragments';
 import { grantPower } from './grant-power';
 import { login } from './login';
 
-export const generateRegisterInput = (): RegisterInput => ({
-  email: faker.internet.email(),
-  realFirstName: faker.name.firstName(),
-  realLastName: faker.name.lastName(),
-  displayFirstName: faker.name.firstName() + generate(),
-  displayLastName: faker.name.lastName() + generate(),
-  password: faker.internet.password(10),
+export const generateRegisterInput = async (): Promise<RegisterInput> => ({
+  ...(await generateRequireFieldsRegisterInput()),
   phone: faker.phone.phoneNumber(),
-  timezone: 'America/Chicago',
   about: 'about detail',
   status: UserStatus.Active,
   roles: [Role.ProjectManager, Role.Consultant],
   title: faker.name.title(),
 });
 
-export const generateRequireFieldsRegisterInput = (): RegisterInput => ({
+export const generateRequireFieldsRegisterInput = async (): Promise<
+  RegisterInput
+> => ({
   email: faker.internet.email(),
   realFirstName: faker.name.firstName(),
   realLastName: faker.name.lastName(),
-  displayFirstName: faker.name.firstName() + generate(),
-  displayLastName: faker.name.lastName() + generate(),
+  displayFirstName: faker.name.firstName() + (await generateId()),
+  displayLastName: faker.name.lastName() + (await generateId()),
   password: faker.internet.password(10),
   timezone: 'America/Chicago',
 });
@@ -40,7 +36,7 @@ export async function registerUser(
   input: Partial<RegisterInput> = {}
 ) {
   const user: RegisterInput = {
-    ...generateRegisterInput(),
+    ...(await generateRegisterInput()),
     ...input,
   };
 
@@ -63,7 +59,7 @@ export async function registerUser(
   const actual: User = result.register.user;
   expect(actual).toBeTruthy();
 
-  expect(isValid(actual.id)).toBe(true);
+  expect(isValidId(actual.id)).toBe(true);
   expect(actual.email.value).toBe(user.email);
 
   return actual;

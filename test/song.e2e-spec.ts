@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
-import { isValid } from 'shortid';
+import { isValidId } from '../src/common';
 import { ScriptureRange } from '../src/components/scripture/dto';
 import { Song } from '../src/components/song/dto';
 import {
@@ -57,7 +57,7 @@ describe('Song e2e', () => {
       }
     );
     expect(actual.id).toBe(song.id);
-    expect(isValid(actual.id)).toBe(true);
+    expect(isValidId(actual.id)).toBe(true);
     expect(actual.name.value).toBe(song.name.value);
     expect(actual.scriptureReferences.value).toEqual(
       expect.arrayContaining(song.scriptureReferences.value)

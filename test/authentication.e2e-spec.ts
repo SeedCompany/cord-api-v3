@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
-import { isValid } from 'shortid';
+import { isValidId } from '../src/common';
 import { SecuredTimeZone } from '../src/components/timezone';
 import { User } from '../src/components/user';
 import { EmailService } from '../src/core/email';
@@ -29,7 +29,7 @@ describe('Authentication e2e', () => {
   it('Check Email Existence and Reset Password', async () => {
     const sendEmail = spyOn(app.get(EmailService), 'send');
 
-    const fakeUser = generateRegisterInput();
+    const fakeUser = await generateRegisterInput();
     const email = fakeUser.email;
     // create user first
     await registerUser(app, fakeUser);
@@ -89,7 +89,7 @@ describe('Authentication e2e', () => {
   });
 
   it('login user', async () => {
-    const fakeUser = generateRegisterInput();
+    const fakeUser = await generateRegisterInput();
     const user = await registerUser(app, fakeUser);
     const _logout = await logout(app);
 
@@ -110,7 +110,7 @@ describe('Authentication e2e', () => {
 
     const actual: User = result.user;
     expect(actual).toBeTruthy();
-    expect(isValid(actual.id)).toBe(true);
+    expect(isValidId(actual.id)).toBe(true);
     expect(actual.email.value).toBe(fakeUser.email);
     expect(actual.realFirstName.value).toBe(fakeUser.realFirstName);
     expect(actual.realLastName.value).toBe(fakeUser.realLastName);
@@ -126,7 +126,7 @@ describe('Authentication e2e', () => {
   });
 
   it('should return true after password changed', async () => {
-    const fakeUser = generateRegisterInput();
+    const fakeUser = await generateRegisterInput();
 
     const user = await registerUser(app, fakeUser);
     await login(app, { email: fakeUser.email, password: fakeUser.password });

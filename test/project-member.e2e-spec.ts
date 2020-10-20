@@ -2,8 +2,7 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { DateTime, Interval } from 'luxon';
-import { isValid } from 'shortid';
-import { NotFoundException } from '../src/common';
+import { isValidId, NotFoundException } from '../src/common';
 import { ProjectMember, Role } from '../src/components/project';
 import { User } from '../src/components/user';
 import {
@@ -89,7 +88,7 @@ describe('ProjectMember e2e', () => {
 
     const actual: ProjectMember = result.projectMember;
     expect(actual.id).toBe(projectMember.id);
-    expect(isValid(actual.id)).toBe(true);
+    expect(isValidId(actual.id)).toBe(true);
     expect(actual.user.value?.id).toBe(member.id);
   });
 

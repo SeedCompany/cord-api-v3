@@ -5,6 +5,7 @@ import { DateTime } from 'luxon';
 import {
   CalendarDate,
   DuplicateException,
+  generateId,
   InputException,
   ISession,
   NotFoundException,
@@ -246,6 +247,7 @@ export class LanguageService {
         .call(matchRequestingUser, session)
         .call(
           createBaseNode,
+          await generateId(),
           'Language',
           secureProps,
           {},

@@ -2,6 +2,7 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
+  generateId,
   InputException,
   ISession,
   NotFoundException,
@@ -122,7 +123,7 @@ export class BudgetService {
             id: this.config.rootAdmin.id,
           }),
         ])
-        .call(createBaseNode, 'Budget', secureProps)
+        .call(createBaseNode, await generateId(), 'Budget', secureProps)
         .return('node.id as id');
 
       const result = await createBudget.first();
@@ -201,7 +202,12 @@ export class BudgetService {
       const createBudgetRecord = this.db
         .query()
         .call(matchRequestingUser, session);
-      createBudgetRecord.call(createBaseNode, 'BudgetRecord', secureProps);
+      createBudgetRecord.call(
+        createBaseNode,
+        await generateId(),
+        'BudgetRecord',
+        secureProps
+      );
       createBudgetRecord.return('node.id as id');
 
       const result = await createBudgetRecord.first();

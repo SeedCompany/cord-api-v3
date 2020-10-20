@@ -1,8 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { orderBy, times } from 'lodash';
-import { generate, isValid } from 'shortid';
-import { InputException } from '../src/common';
+import { generateId, InputException, isValidId } from '../src/common';
 import { Powers } from '../src/components/authorization/dto/powers';
 import { Organization } from '../src/components/organization';
 import {
@@ -52,7 +51,7 @@ describe('Organization e2e', () => {
       }
     );
     expect(actual.id).toBe(org.id);
-    expect(isValid(actual.id)).toBe(true);
+    expect(isValidId(actual.id)).toBe(true);
     expect(actual.name.value).toBe(org.name.value);
     expect(actual.address.value).toBe(org.address.value);
   });
@@ -87,7 +86,7 @@ describe('Organization e2e', () => {
       }
     );
     expect(actual.id).toBe(org.id);
-    expect(isValid(actual.id)).toBe(true);
+    expect(isValidId(actual.id)).toBe(true);
     expect(actual.name.value).toBe(org.name.value);
   });
 
@@ -496,8 +495,9 @@ describe('Organization e2e', () => {
     // create a bunch of orgs
     const numOrgs = 2;
     await Promise.all(
-      times(numOrgs).map(() =>
-        createOrganization(app, { name: generate() + ' Inc' })
+      times(numOrgs).map(
+        async () =>
+          await createOrganization(app, { name: (await generateId()) + ' Inc' })
       )
     );
 
@@ -646,8 +646,9 @@ describe('Organization e2e', () => {
     // create a bunch of orgs
     const numOrgs = 2;
     await Promise.all(
-      times(numOrgs).map(() =>
-        createOrganization(app, { name: generate() + ' Inc' })
+      times(numOrgs).map(
+        async () =>
+          await createOrganization(app, { name: (await generateId()) + ' Inc' })
       )
     );
 

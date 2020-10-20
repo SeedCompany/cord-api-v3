@@ -1,8 +1,8 @@
 import { gql } from 'apollo-server-core';
-import { isValid } from 'shortid';
 import {
   CalendarDate,
   fiscalYears,
+  isValidId,
   NotFoundException,
   Secured,
 } from '../src/common';
@@ -81,7 +81,7 @@ describe('Budget e2e', () => {
     );
 
     expect(actual.id).toBe(budget.id);
-    expect(isValid(actual.id)).toBe(true);
+    expect(isValidId(actual.id)).toBe(true);
     expect(actual.status).toEqual(budget.status);
   });
 

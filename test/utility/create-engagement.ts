@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { DateTime } from 'luxon';
-import { isValid } from 'shortid';
+import { isValidId } from '../../src/common';
 import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,
@@ -60,7 +60,7 @@ export async function createLanguageEngagement(
     result.createLanguageEngagement.engagement;
 
   expect(actual).toBeTruthy();
-  expect(isValid(actual.id)).toBe(true);
+  expect(isValidId(actual.id)).toBe(true);
   expect(actual.modifiedAt).toBeTruthy();
   return actual;
 }
@@ -110,7 +110,7 @@ export async function createInternshipEngagement(
     result.createInternshipEngagement.engagement;
 
   expect(actual).toBeTruthy();
-  expect(isValid(actual.id)).toBe(true);
+  expect(isValidId(actual.id)).toBe(true);
 
   return actual;
 }
@@ -149,7 +149,7 @@ export async function createInternshipEngagementWithMinimumValues(
     result.createInternshipEngagement.engagement;
 
   expect(actual).toBeTruthy();
-  expect(isValid(actual.id)).toBe(true);
+  expect(isValidId(actual.id)).toBe(true);
 
   return actual;
 }

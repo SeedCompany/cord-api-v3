@@ -1,7 +1,6 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-import { isValid } from 'shortid';
-import { Sensitivity } from '../../src/common';
+import { isValidId, Sensitivity } from '../../src/common';
 import {
   CreateLocation,
   Location,
@@ -43,7 +42,7 @@ export async function createLocation(
   const actual: Location = result.createLocation.location;
   expect(actual).toBeTruthy();
 
-  expect(isValid(actual.id)).toBe(true);
+  expect(isValidId(actual.id)).toBe(true);
   expect(actual.name.value).toBe(location.name);
   expect(actual.type.value).toBe(location.type);
 
