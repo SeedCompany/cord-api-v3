@@ -866,7 +866,7 @@ export class AuthorizationService {
       .raw(`RETURN role.value as roles`)
       .first();
 
-    return result?.roles;
+    return result?.roles ?? [];
   }
 
   async getUserRoleObjects(id: string): Promise<DbRole[]> {
