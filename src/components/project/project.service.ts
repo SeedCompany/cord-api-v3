@@ -947,11 +947,6 @@ export class ProjectService {
       })
       .run();
 
-    // const canCreateLocation = await this.authorizationService.checkPower(
-    //   Powers.CreateLocation,
-    //   session.userId
-    // );
-
     const items = await Promise.all(
       result.map(
         async (location): Promise<Location> => {
@@ -964,8 +959,8 @@ export class ProjectService {
       items: items,
       total: items.length,
       hasMore: false,
-      canCreate: true,
-      canRead: true,
+      canCreate: true, // TODO
+      canRead: true, // TODO
     };
   }
 
