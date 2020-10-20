@@ -19,7 +19,6 @@ import { CreatePartnership } from '../src/components/partnership';
 import {
   CreateProject,
   Project,
-  ProjectStatus,
   ProjectStep,
   ProjectType,
   Role,

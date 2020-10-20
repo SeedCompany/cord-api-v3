@@ -1,3 +1,4 @@
+/* eslint-disable @seedcompany/no-unused-vars */
 import { gql } from 'apollo-server-core';
 import { FieldRegion } from '../src/components/field-region';
 import { FieldZone } from '../src/components/field-zone';
