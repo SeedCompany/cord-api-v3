@@ -30,7 +30,7 @@ describe.skip('Workflow e2e', () => {
     await loginAsAdmin(app);
     // sg = await createSecurityGroup(app);
 
-    user = await registerUserWithPower(app, Powers.CreateOrganization);
+    user = await registerUserWithPower(app, [Powers.CreateOrganization]);
 
     await loginAsAdmin(app);
     await app.graphql.mutate(

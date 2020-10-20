@@ -34,7 +34,10 @@ describe('Product e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUserWithPower(app, Powers.CreateLanguage);
+    await registerUserWithPower(app, [
+      Powers.CreateLanguage,
+      Powers.CreateEthnologueLanguage,
+    ]);
     story = await createStory(app);
     film = await createFilm(app);
 

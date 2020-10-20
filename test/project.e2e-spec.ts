@@ -761,7 +761,7 @@ describe('Project e2e', () => {
   });
 
   it('List view of partnerships by projectId', async () => {
-    await registerUserWithPower(app, Powers.CreateOrganization);
+    await registerUserWithPower(app, [Powers.CreateOrganization]);
     //create 2 partnerships in a project
     const numPartnerships = 2;
     const type = ProjectType.Translation;
