@@ -6,7 +6,6 @@ export enum Powers {
   CreateBudget = 'CreateBudget',
   CreateBudgetRecord = 'CreateBudgetRecord',
   CreateCeremony = 'CreateCeremony',
-  CreateCountry = 'CreateCountry',
   CreateDirectory = 'CreateDirectory',
   CreateEducation = 'CreateEducation',
   CreateEthnologueLanguage = 'CreateEthnologueLanguage',

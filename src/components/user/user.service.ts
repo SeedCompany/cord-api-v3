@@ -213,6 +213,7 @@ export class UserService {
       Powers.CreateInternshipEngagement,
       Powers.CreateLanguageEngagement,
       Powers.CreateLiteracyMaterial,
+      Powers.CreateLocation,
       Powers.CreatePartnership,
       Powers.CreateProduct,
       Powers.CreateProject,

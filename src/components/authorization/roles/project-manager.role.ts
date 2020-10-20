@@ -141,6 +141,7 @@ export const ProjectManager = new DbRole({
         { propertyName: 'name',                       permission: { read, }, },
         { propertyName: 'sensitivity',                permission: { read, }, },
         { propertyName: 'hasExternalFirstScripture',  permission: { read, }, },
+        { propertyName: 'locations',                  permission: { read, }, },
     ]}),
     new DbBaseNodeGrant<DbLanguageEngagement>({
       __className: 'DbLanguageEngagement',

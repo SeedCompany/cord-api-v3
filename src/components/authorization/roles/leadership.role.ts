@@ -163,6 +163,7 @@ export const Leadership = new DbRole({
         { propertyName: 'name',                       permission: { read, write, }, },
         { propertyName: 'sensitivity',                permission: { read, write, }, },
         { propertyName: 'hasExternalFirstScripture',  permission: { read, write, }, },
+        { propertyName: 'locations',                  permission: { read, write, }, },
     ]}),
     new DbBaseNodeGrant<DbLanguageEngagement>({
       __className: 'DbLanguageEngagement',
