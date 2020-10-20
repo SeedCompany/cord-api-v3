@@ -371,11 +371,6 @@ export class OrganizationService {
       })
       .run();
 
-    // const canCreateLocation = await this.authorizationService.checkPower(
-    //   Powers.CreateLocation,
-    //   session.userId
-    // );
-
     const items = await Promise.all(
       result.map(
         async (location): Promise<Location> => {
