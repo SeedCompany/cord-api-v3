@@ -1,11 +1,6 @@
 import { Transformer } from 'cypher-query-builder';
 import { DateTime, Duration, FixedOffsetZone } from 'luxon';
-import { v1 as Neo } from 'neo4j-driver';
-import {
-  Date as NeoDate,
-  DateTime as NeoDateTime,
-  Duration as NeoDuration,
-} from 'neo4j-driver/types/v1';
+import * as Neo from 'neo4j-driver';
 import { CalendarDate } from '../../common';
 
 // @ts-expect-error Convert private methods to protected
@@ -16,13 +11,13 @@ class PatchedTransformer extends Transformer {
   }
 }
 
-export const isNeoDate = (value: unknown): value is NeoDate =>
+export const isNeoDate = (value: unknown): value is Neo.Date =>
   Neo.isDate(value as any);
 
-export const isNeoDateTime = (value: unknown): value is NeoDateTime =>
+export const isNeoDateTime = (value: unknown): value is Neo.DateTime =>
   Neo.isDateTime(value as any);
 
-export const isNeoDuration = (value: unknown): value is NeoDuration =>
+export const isNeoDuration = (value: unknown): value is Neo.Duration =>
   Neo.isDuration(value as any);
 
 export class MyTransformer extends PatchedTransformer {
@@ -40,13 +35,13 @@ export class MyTransformer extends PatchedTransformer {
     return super.transformValue(value);
   }
 
-  protected transformDate(date: NeoDate) {
-    const plain: NeoDate<number> = this.transformValue({ ...date });
+  protected transformDate(date: Neo.Date) {
+    const plain: Neo.Date<number> = this.transformValue({ ...date });
     return CalendarDate.fromObject(plain);
   }
 
-  protected transformDateTime(dt: NeoDateTime) {
-    const plain: NeoDateTime<number> = this.transformValue({ ...dt });
+  protected transformDateTime(dt: Neo.DateTime) {
+    const plain: Neo.DateTime<number> = this.transformValue({ ...dt });
     const { nanosecond, timeZoneOffsetSeconds, timeZoneId, ...rest } = plain;
     const zone = timeZoneOffsetSeconds
       ? FixedOffsetZone.instance(timeZoneOffsetSeconds / 60)
@@ -58,8 +53,8 @@ export class MyTransformer extends PatchedTransformer {
     });
   }
 
-  private transformDuration(duration: NeoDuration) {
-    const plain: NeoDuration<number> = this.transformValue({ ...duration });
+  private transformDuration(duration: Neo.Duration) {
+    const plain: Neo.Duration<number> = this.transformValue({ ...duration });
     const { nanoseconds, ...rest } = plain;
     return Duration.fromObject({ ...rest, milliseconds: nanoseconds / 1e6 });
   }

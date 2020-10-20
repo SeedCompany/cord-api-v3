@@ -1,8 +1,6 @@
 import { DateTime } from 'luxon';
-import { v1 as Neo } from 'neo4j-driver';
+import * as Neo from 'neo4j-driver';
 import { inspect, InspectOptions } from 'util';
-
-const { Date: NeoDate, DateTime: NeoDateTime } = Neo.types;
 
 declare module 'luxon' {
   interface DateTime {
@@ -13,12 +11,12 @@ declare module 'luxon' {
 
 // eslint-disable-next-line @typescript-eslint/unbound-method
 DateTime.prototype.toNeo4JDate = function (this: DateTime) {
-  return new NeoDate(this.year, this.month, this.day);
+  return new Neo.types.Date(this.year, this.month, this.day);
 };
 
 // eslint-disable-next-line @typescript-eslint/unbound-method
 DateTime.prototype.toNeo4JDateTime = function (this: DateTime) {
-  return new NeoDateTime(
+  return new Neo.types.DateTime(
     this.year,
     this.month,
     this.day,

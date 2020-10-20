@@ -3,7 +3,7 @@
 import { stripIndent } from 'common-tags';
 import { Connection, Query, Transformer } from 'cypher-query-builder';
 import { Dictionary } from 'lodash';
-import { Transaction as NeoTransaction, Session } from 'neo4j-driver/types/v1';
+import { Transaction as NeoTransaction, Session } from 'neo4j-driver';
 import { Observable } from 'rxjs';
 import { ILogger } from '../logger';
 
@@ -92,7 +92,7 @@ export class Transaction implements QueryConnection {
    */
   async close() {
     if (this.session) {
-      await new Promise((resolve) => this.session?.close(resolve));
+      await this.session?.close();
       this.session = null;
     }
   }

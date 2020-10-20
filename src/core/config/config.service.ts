@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 import { LazyGetter as Lazy } from 'lazy-get-decorator';
 import { Duration } from 'luxon';
-import { Config as Neo4JDriverConfig } from 'neo4j-driver/types/v1';
+import { Config as Neo4JDriverConfig } from 'neo4j-driver';
 import { join } from 'path';
 import { LogLevel } from '../logger';
 import { EnvironmentService } from './environment.service';

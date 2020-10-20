@@ -15,6 +15,6 @@ export class DatabaseModule implements OnApplicationShutdown {
   constructor(private readonly db: Connection) {}
 
   async onApplicationShutdown() {
-    this.db.close();
+    await this.db.close();
   }
 }
