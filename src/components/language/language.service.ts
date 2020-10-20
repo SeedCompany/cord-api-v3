@@ -147,6 +147,11 @@ export class LanguageService {
       session.userId
     );
 
+    await this.authorizationService.checkPower(
+      Powers.CreateEthnologueLanguage,
+      session.userId
+    );
+
     try {
       const ethnologueId = await this.ethnologueLanguageService.create(
         input?.ethnologue,
