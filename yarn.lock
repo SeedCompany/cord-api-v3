@@ -4082,6 +4082,7 @@ __metadata:
     graphql: ^15.3.0
     html-to-text: ^5.1.1
     husky: ^4.2.5
+    iso-3166-1: ^2.0.1
     jest: ^26.1.0
     js-yaml: ^3.14.0
     jsonwebtoken: ^8.5.1
@@ -7469,6 +7470,13 @@ fsevents@^1.2.7:
   version: 2.0.0
   resolution: "isexe@npm:2.0.0"
   checksum: 7b437980bb77881a146fba85cfbdf01edc2b148673e9c2722a1e49661fea73adf524430a80fdbfb8ce9f60d43224e682c657c45030482bd39e0c488fc29b4afe
+  languageName: node
+  linkType: hard
+
+"iso-3166-1@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "iso-3166-1@npm:2.0.1"
+  checksum: 91324f4f4482d0f65f19a8d7f75ef009b79498ca8eb182e244a64a16dc44e31333aa696ac6ee7ade68d94ee6f89a3f3477a147608d03fb74f7ec6a9ed2f508bc
   languageName: node
   linkType: hard
 
