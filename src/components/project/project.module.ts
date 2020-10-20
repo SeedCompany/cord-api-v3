@@ -26,7 +26,7 @@ import { ProjectService } from './project.service';
     LocationModule,
     FileModule,
     EngagementModule,
-    AuthorizationModule,
+    forwardRef(() => AuthorizationModule),
     PartnerModule,
   ],
   providers: [

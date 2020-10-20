@@ -1,3 +1,4 @@
+import { DbBaseNodeLabel } from '../../../common';
 import { Role } from '../dto';
 import { Powers } from '../dto/powers';
 import { AnyBaseNode } from './any-base-node.type';
@@ -21,7 +22,7 @@ export class DbRole {
 
   getPermissionsOnProperty<AnyBaseNode>(
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    __className: string,
+    __className: DbBaseNodeLabel,
     prop: keyof AnyBaseNode
   ): DbPermission | undefined {
     const grant = this.grants.find(

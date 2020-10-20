@@ -30,7 +30,7 @@ describe('Partnership e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUserWithPower(app, Powers.CreateOrganization);
+    await registerUserWithPower(app, [Powers.CreateOrganization]);
 
     project = await createProject(app);
   });

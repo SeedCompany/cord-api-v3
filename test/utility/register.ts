@@ -71,13 +71,15 @@ export async function registerUser(
 
 export async function registerUserWithPower(
   app: TestApp,
-  power: Powers,
+  powers: Powers[],
   input: Partial<RegisterInput> = {}
 ): Promise<User> {
   const password: string = input.password || faker.internet.password();
   const user = await registerUser(app, { ...input, password });
 
-  await grantPower(app, user.id, power);
+  for (const power of powers) {
+    await grantPower(app, user.id, power);
+  }
   await login(app, { email: user.email.value, password });
 
   return user;

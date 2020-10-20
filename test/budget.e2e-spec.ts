@@ -29,7 +29,7 @@ describe('Budget e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUserWithPower(app, Powers.CreateOrganization);
+    await registerUserWithPower(app, [Powers.CreateOrganization]);
     project = await createProject(app);
     await createPartnership(app, {
       projectId: project.id,

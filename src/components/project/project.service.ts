@@ -117,6 +117,7 @@ export class ProjectService {
     private readonly partnerService: PartnerService,
     private readonly config: ConfigService,
     private readonly eventBus: IEventBus,
+    @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
     private readonly projectRules: ProjectRules,
     @Logger('project:service') private readonly logger: ILogger

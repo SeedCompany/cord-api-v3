@@ -16,7 +16,7 @@ import * as handlers from './handlers';
 @Module({
   imports: [
     FileModule,
-    AuthorizationModule,
+    forwardRef(() => AuthorizationModule),
     EducationModule,
     LocationModule,
     forwardRef(() => PartnershipModule),

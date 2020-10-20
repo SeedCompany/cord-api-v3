@@ -253,7 +253,9 @@ describe('User e2e', () => {
   });
 
   it('assign organization to user', async () => {
-    const newUser = await registerUserWithPower(app, Powers.CreateOrganization);
+    const newUser = await registerUserWithPower(app, [
+      Powers.CreateOrganization,
+    ]);
     const org = await createOrganization(app);
     const result = await app.graphql.mutate(
       gql`
@@ -273,7 +275,9 @@ describe('User e2e', () => {
   });
 
   it('remove organization from user', async () => {
-    const newUser = await registerUserWithPower(app, Powers.CreateOrganization);
+    const newUser = await registerUserWithPower(app, [
+      Powers.CreateOrganization,
+    ]);
     const org = await createOrganization(app);
 
     // assign organization to user
@@ -310,7 +314,9 @@ describe('User e2e', () => {
   });
 
   it('assign primary organization to user', async () => {
-    const newUser = await registerUserWithPower(app, Powers.CreateOrganization);
+    const newUser = await registerUserWithPower(app, [
+      Powers.CreateOrganization,
+    ]);
     const org = await createOrganization(app);
     const result = await app.graphql.mutate(
       gql`
@@ -337,7 +343,9 @@ describe('User e2e', () => {
   });
 
   it('remove primary organization from user', async () => {
-    const newUser = await registerUserWithPower(app, Powers.CreateOrganization);
+    const newUser = await registerUserWithPower(app, [
+      Powers.CreateOrganization,
+    ]);
     const org = await createOrganization(app);
 
     // assign primary organization to user
@@ -383,7 +391,9 @@ describe('User e2e', () => {
   });
 
   it('read one users organizations', async () => {
-    const newUser = await registerUserWithPower(app, Powers.CreateOrganization);
+    const newUser = await registerUserWithPower(app, [
+      Powers.CreateOrganization,
+    ]);
     const org = await createOrganization(app);
     const result = await app.graphql.mutate(
       gql`
@@ -527,7 +537,9 @@ describe('User e2e', () => {
 
   // skipping because we will be refactoring how we do search
   it('list users with organizations', async () => {
-    const newUser = await registerUserWithPower(app, Powers.CreateOrganization);
+    const newUser = await registerUserWithPower(app, [
+      Powers.CreateOrganization,
+    ]);
     const org = await createOrganization(app);
 
     const result = await app.graphql.mutate(

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { compact } from 'lodash';
 import { DateTime } from 'luxon';
@@ -113,6 +113,7 @@ export class UserService {
     private readonly unavailabilities: UnavailabilityService,
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
+    @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
     @Logger('user:service') private readonly logger: ILogger
   ) {}
@@ -236,6 +237,26 @@ export class UserService {
       .match(node('publicSg', 'PublicSecurityGroup'))
 
       .create([node('publicSg'), relation('out', '', 'member'), node('user')])
+      .create([
+        node('publicSg'),
+        relation('out', '', 'permission'),
+        node('', 'Permission', {
+          property: 'displayFirstName',
+          read: true,
+        }),
+        relation('out', '', 'baseNode'),
+        node('user'),
+      ])
+      .create([
+        node('publicSg'),
+        relation('out', '', 'permission'),
+        node('', 'Permission', {
+          property: 'displayLastName',
+          read: true,
+        }),
+        relation('out', '', 'baseNode'),
+        node('user'),
+      ])
       .return('user')
       .first();
 

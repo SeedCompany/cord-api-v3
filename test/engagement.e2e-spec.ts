@@ -62,7 +62,10 @@ describe('Engagement e2e', () => {
 
     await createSession(app);
 
-    user = await registerUserWithPower(app, Powers.CreateLanguage);
+    user = await registerUserWithPower(app, [
+      Powers.CreateLanguage,
+      Powers.CreateEthnologueLanguage,
+    ]);
     language = await createLanguage(app);
     location = await createLocation(app);
     intern = await getUserFromSession(app);
@@ -370,7 +373,10 @@ describe('Engagement e2e', () => {
     internshipProject = await createProject(app, {
       type: ProjectType.Internship,
     });
-    const mentor = await registerUserWithPower(app, Powers.CreateLanguage);
+    const mentor = await registerUserWithPower(app, [
+      Powers.CreateLanguage,
+      Powers.CreateEthnologueLanguage,
+    ]);
     const internshipEngagement = await createInternshipEngagementWithMinimumValues(
       app,
       {
@@ -975,7 +981,10 @@ describe('Engagement e2e', () => {
     const project = await createProject(app, {
       type: ProjectType.Internship,
     });
-    const intern = await registerUserWithPower(app, Powers.CreateLanguage);
+    const intern = await registerUserWithPower(app, [
+      Powers.CreateLanguage,
+      Powers.CreateEthnologueLanguage,
+    ]);
 
     await createInternshipEngagement(app, {
       projectId: project.id,

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { difference } from 'lodash';
@@ -61,6 +61,7 @@ export class ProjectMemberService {
     private readonly userService: UserService,
     private readonly eventBus: IEventBus,
     @Logger('project:member:service') private readonly logger: ILogger,
+    @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService
   ) {}
 

@@ -77,6 +77,7 @@ export class PartnershipService {
     private readonly projectService: ProjectService,
     private readonly partnerService: PartnerService,
     private readonly eventBus: IEventBus,
+    @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
     @Logger('partnership:service') private readonly logger: ILogger
   ) {}

@@ -1,8 +1,9 @@
+import { DbBaseNodeLabel } from '../../../common';
 import { DbBaseNode } from '../../authorization/model/db-base-node.model';
 
 export class DbLanguage extends DbBaseNode {
   // eslint-disable-next-line @typescript-eslint/naming-convention
-  __className = 'DbLanguage';
+  __className = DbBaseNodeLabel.Language;
   displayName: any = null;
   displayNamePronunciation: any = null;
   isDialect: any = null;

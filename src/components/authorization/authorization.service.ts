@@ -1,8 +1,10 @@
+/* eslint-disable no-case-declarations */
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { union, without } from 'lodash';
+import { difference, union, without } from 'lodash';
 import { generate } from 'shortid';
 import {
+  DbBaseNodeLabel,
   ISession,
   ServerException,
   UnauthenticatedException,
@@ -37,7 +39,15 @@ import { DbEducation, DbUnavailability, DbUser } from '../user/model';
 import { Role } from './dto';
 import { Powers } from './dto/powers';
 import { DbRole, OneBaseNode } from './model';
-import { Administrator, everyRole } from './roles';
+import {
+  Administrator,
+  Controller,
+  everyRole,
+  FieldOperationsDirector,
+  FinancialAnalyst,
+  ProjectManager,
+  RegionalDirector,
+} from './roles';
 
 /**
  * powers can exist on a security group or a user node
@@ -54,6 +64,21 @@ import { Administrator, everyRole } from './roles';
  *   a. assign that user membership to all SGs for their new role.
  */
 
+export interface ProjectChildIds {
+  budgets: string[];
+  budgetRecords: string[];
+  ceremonies: string[];
+  internshipEngagements: string[];
+  langaugeEngagements: string[];
+  members: string[];
+  organizations: string[];
+  partnerships: string[];
+  partners: string[];
+  produces: string[];
+  products: string[];
+  users: string[];
+}
+
 @Injectable()
 export class AuthorizationService {
   constructor(
@@ -69,9 +94,9 @@ export class AuthorizationService {
   ) {
     // get or create the role's Admin SG for this base node
     const adminSgId = await this.mergeSecurityGroupForRole(
-      baseNodeObj,
       baseNodeId,
-      Administrator
+      Administrator,
+      baseNodeObj
     );
     if (adminSgId) {
       // merge member to it
@@ -86,12 +111,18 @@ export class AuthorizationService {
         userId: creatorUserId,
       });
 
-      for (const role of everyRole) {
-        await this.addAllUsersToSgByTheUsersGlobalRole(adminSgId, role.name);
-      }
+      // add all admins to this SG
+      // await this.addAllUsersToSgByTheUsersGlobalRole(
+      //   adminSgId,
+      //   Administrator.name
+      // );
+
+      // for (const role of everyRole) {
+      //   await this.addAllUsersToSgByTheUsersGlobalRole(adminSgId, role.name);
+      // }
 
       // run all rules for all roles on this base node
-      // await this.runPostBaseNodeCreationRules(baseNodeObj, baseNodeId);
+      await this.runPostBaseNodeCreationRules(baseNodeObj, baseNodeId);
 
       return true;
     } else {
@@ -134,7 +165,7 @@ export class AuthorizationService {
 
       for (const role of everyRole) {
         const baseNodeObj = this.getBaseNodeObjUsingLabel(idQuery.labels);
-        await this.mergeSecurityGroupForRole(baseNodeObj, idQuery.id, role);
+        await this.mergeSecurityGroupForRole(idQuery.id, role, baseNodeObj);
       }
     }
 
@@ -153,7 +184,7 @@ export class AuthorizationService {
       return new DbDirectory();
     } else if (labels.includes('Education')) {
       return new DbEducation();
-    } else if (labels.includes('EthnologuLanguage')) {
+    } else if (labels.includes('EthnologueLanguage')) {
       return new DbEthnologueLanguage();
     } else if (labels.includes('FieldRegion')) {
       return new DbFieldRegion();
@@ -202,17 +233,18 @@ export class AuthorizationService {
   }
 
   private async mergeSecurityGroupForRole(
-    baseNodeObj: OneBaseNode,
     baseNodeId: string,
-    role: DbRole
+    role: DbRole,
+    baseNodeObj?: OneBaseNode
   ): Promise<string> {
     /**
      * this creates or merges with the specific SG needed for a given role
+     * returns the SG id
      */
     const checkSg = await this.db
       .query()
       .match([
-        node('sg', 'SecurityGroup', { role }),
+        node('sg', 'SecurityGroup', { role: role.name }),
         relation('out', '', 'baseNode'),
         node('baseNode', 'BaseNode', { id: baseNodeId }),
       ])
@@ -222,6 +254,11 @@ export class AuthorizationService {
 
     if (checkSg?.id) {
       return checkSg.id;
+    }
+
+    // SG for role does not exist, baseNodeObj must be supplied
+    if (baseNodeObj === undefined) {
+      throw new ServerException('base node object not supplied');
     }
 
     // create SG with all role's perms
@@ -270,81 +307,153 @@ export class AuthorizationService {
     return result.id;
   }
 
-  // private async runPostBaseNodeCreationRules(
-  //   baseNodeObj: OneBaseNode,
-  //   baseNodeId: string
-  // ) {
-  //   /**
-  //    * Remember, this is only run at base node creation,
-  //    * not every rule in the role def applies
-  //    */
+  private async runPostBaseNodeCreationRules(
+    baseNodeObj: OneBaseNode,
+    baseNodeId: string
+  ) {
+    /**
+     * Remember, this is only run at base node creation,
+     * not every rule in the role def applies
+     */
 
-  //   // after a base node is created, only the admin SG is created.
-  //   // this function will create the remaining needed base nodes.
+    // after a base node is created, only the admin SG is created.
+    // this function will create the remaining needed base nodes.
 
-  //   // certain roles are 'global' in the sense that they get some form
-  //   // of access to each base node. because of that, we don't care what
-  //   // the base node type is, we can just apply the role
+    // certain roles are 'global' in the sense that they get some form
+    // of access to each base node. because of that, we don't care what
+    // the base node type is, we can just apply the role
 
-  //   const globalRoles = [
-  //     {
-  //       role: ProjectManager,
-  //       sgId: await this.mergeSecurityGroupForRole(
-  //         baseNodeObj,
-  //         baseNodeId,
-  //         ProjectManager
-  //       ),
-  //     },
-  //     {
-  //       role: RegionalDirector,
-  //       sgId: await this.mergeSecurityGroupForRole(
-  //         baseNodeObj,
-  //         baseNodeId,
-  //         RegionalDirector
-  //       ),
-  //     },
-  //     {
-  //       role: FieldOperationsDirector,
-  //       sgId: await this.mergeSecurityGroupForRole(
-  //         baseNodeObj,
-  //         baseNodeId,
-  //         FieldOperationsDirector
-  //       ),
-  //     },
-  //     {
-  //       role: FinancialAnalyst,
-  //       sgId: await this.mergeSecurityGroupForRole(
-  //         baseNodeObj,
-  //         baseNodeId,
-  //         FinancialAnalyst
-  //       ),
-  //     },
-  //     {
-  //       role: Controller,
-  //       sgId: await this.mergeSecurityGroupForRole(
-  //         baseNodeObj,
-  //         baseNodeId,
-  //         Controller
-  //       ),
-  //     },
-  //   ];
+    const globalRoles = [
+      Administrator,
+      ProjectManager,
+      RegionalDirector,
+      FieldOperationsDirector,
+      FinancialAnalyst,
+      Controller,
+    ];
 
-  //   for (const role of globalRoles) {
-  //     const sgId = await this.mergeSecurityGroupForRole(
-  //       baseNodeObj,
-  //       baseNodeId,
-  //       role.role
-  //     );
-  //     await this.addAllUsersToSgByTheUsersGlobalRole(sgId, role.role.name);
-  //   }
+    await Promise.all(
+      globalRoles.map(async (role) => {
+        const sgId = await this.mergeSecurityGroupForRole(
+          baseNodeId,
+          role,
+          baseNodeObj
+        );
+        await this.addAllUsersToSgByTheUsersGlobalRole(sgId, role.name);
+      })
+    );
 
-  //   // create the rest of the SGs needed for each role
-  //   const labels = await this.getLabels(baseNodeId);
-  //   for (const role of everyRole) {
-  //     const baseNodeObj = this.getBaseNodeObjUsingLabel(labels);
-  //     await this.mergeSecurityGroupForRole(baseNodeObj, baseNodeId, role);
-  //   }
-  // }
+    // create the rest of the SGs needed for each role,
+    // just don't add all users to them like the global roles
+    const nonGlobalRoles = difference(everyRole, globalRoles);
+
+    await Promise.all(
+      nonGlobalRoles.map(async (role) => {
+        await this.mergeSecurityGroupForRole(baseNodeId, role, baseNodeObj);
+      })
+    );
+
+    const projectChildNodes = [
+      DbBaseNodeLabel.Budget,
+      DbBaseNodeLabel.BudgetRecord,
+      DbBaseNodeLabel.Ceremony,
+      DbBaseNodeLabel.Engagement,
+      DbBaseNodeLabel.Partnership,
+      DbBaseNodeLabel.ProjectMember,
+      DbBaseNodeLabel.Producible,
+      DbBaseNodeLabel.Product,
+    ];
+
+    if (projectChildNodes.includes(baseNodeObj.__className)) {
+      const projectId = await this.unsecureGetProjectIdFromAnyProjectChildNode(
+        baseNodeId
+      );
+      if (projectId !== undefined) {
+        await this.addProjectMembersToNewBaseNodeSg(projectId, baseNodeId);
+      }
+    }
+  }
+
+  async unsecureGetProjectIdFromAnyProjectChildNode(
+    id: string
+  ): Promise<string> {
+    const result = await this.db
+      .query()
+      .match([
+        node('project', 'Project'),
+        relation(
+          'out',
+          '',
+          [
+            'budget',
+            'record',
+            'engagement',
+            'ceremony',
+            'member',
+            'partner',
+            'partnership',
+            'produces',
+            'product',
+          ],
+          { active: true },
+          [1, 3]
+        ),
+        node('', 'BaseNode', { id }),
+      ])
+      .raw(`RETURN project.id as id`)
+      .first();
+
+    return result?.id;
+  }
+
+  private async addProjectMembersToNewBaseNodeSg(
+    projectId: string,
+    baseNodeId: string
+  ) {
+    // get all ids of a project's children
+    const ids = await this.unsecureGetAllProjectBaseNodeIds(projectId);
+    // iterate through project members to assign them rights to this new base node
+
+    await Promise.all(
+      ids.members.map(async (id) => {
+        // get the member's userId
+        const userId = await this.unsecureGetUserIdByProjectMemberId(id);
+
+        if (userId === undefined) {
+          throw new ServerException('user id of project member not found');
+        }
+        // get the member's roles on the project
+        const roles = await this.unsecureGetProjectRoles(id);
+        // iterate through the member's role's and grant them permissions
+        for (const roleName of roles) {
+          const role = this.getRoleByName(roleName);
+          if (role === undefined) {
+            this.logger.error('project member role not found');
+            continue;
+          }
+          // get the SG id for the role
+          const sgId = await this.mergeSecurityGroupForRole(baseNodeId, role);
+
+          // add the user to the SG
+          await this.addUserToSg(userId, sgId);
+        }
+      })
+    );
+  }
+
+  private async addUserToSg(userId: string, sgId: string) {
+    await this.db
+      .query()
+      .match([node('user', 'User', { id: userId })])
+      .match([node('sg', 'SecurityGroup', { id: sgId })])
+      .merge([node('user'), relation('in', '', 'member'), node('sg')])
+      .run();
+  }
+
+  private getRoleByName(name: string): DbRole | undefined {
+    const role = everyRole.find((i) => name === i.name);
+    return role;
+  }
 
   async roleAddedToUser(id: string, roles: string[]) {
     // todo: this only applies to global roles, the only kind we have until next week
@@ -355,7 +464,7 @@ export class AuthorizationService {
         .raw(
           `
           call apoc.periodic.iterate(
-            "MATCH (u:User {id:'${id}'}), (sg:SecurityGroup {role:'Administrator'}) RETURN u, sg", 
+            "MATCH (u:User {id:'${id}'}), (sg:SecurityGroup {role:'${role}'}) RETURN u, sg", 
             "MERGE (u)<-[:member]-(sg)", {batchSize:1000})
           yield batches, total return batches, total
       `
@@ -370,20 +479,6 @@ export class AuthorizationService {
       }
     }
   }
-
-  // private async getLabels(id: string): Promise<string[]> {
-  //   const result = await this.db
-  //     .query()
-  //     .match([node('baseNode', 'BaseNode', { id })])
-  //     .raw('return labels(baseNode) as labels')
-  //     .first();
-
-  //   if (result === undefined) {
-  //     throw new ServerException('baseNode not found');
-  //   }
-
-  //   return result.labels;
-  // }
 
   private async addAllUsersToSgByTheUsersGlobalRole(sgId: string, role: Role) {
     // grab all users who have a given user-role and add them as members to the new sg
@@ -545,5 +640,250 @@ export class AuthorizationService {
       return [];
     }
     return result.powers;
+  }
+
+  async unsecureGetProjectIdByBudgetId(id: string): Promise<string> {
+    const result = await this.db
+      .query()
+      .match([
+        node('project', 'Project'),
+        relation('out', '', 'budget', { active: true }),
+        node('', 'Budget', { id }),
+      ])
+      .raw(`RETURN project.id as id`)
+      .first();
+
+    return result?.id;
+  }
+
+  async unsecureGetProjectIdByBudgetRecordId(id: string): Promise<string> {
+    const result = await this.db
+      .query()
+      .match([
+        node('project', 'Project'),
+        relation('out', '', 'budget', { active: true }),
+        node('', 'Budget'),
+        relation('out', '', 'record', { active: true }),
+        node('', 'BudgetRecord', { id }),
+      ])
+      .raw(`RETURN project.id as id`)
+      .first();
+
+    return result?.id;
+  }
+
+  async unsecureGetProjectIdByCeremonyId(id: string): Promise<string> {
+    const result = await this.db
+      .query()
+      .match([
+        node('project', 'Project'),
+        relation('out', '', 'engagement', { active: true }),
+        node('', 'Engagement'),
+        relation('out', '', 'ceremony', { active: true }),
+        node('', 'Ceremony', { id }),
+      ])
+      .raw(`RETURN project.id as id`)
+      .first();
+
+    return result?.id;
+  }
+
+  async unsecureGetProjectIdByEngagementId(id: string): Promise<string> {
+    const result = await this.db
+      .query()
+      .match([
+        node('project', 'Project'),
+        relation('out', '', 'engagement', { active: true }),
+        node('', 'Engagement', { id }),
+      ])
+      .raw(`RETURN project.id as id`)
+      .first();
+
+    return result?.id;
+  }
+
+  async unsecureGetProjectIdByPartnershipId(id: string): Promise<string> {
+    const result = await this.db
+      .query()
+      .match([
+        node('project', 'Project'),
+        relation('out', '', 'partnership', { active: true }),
+        node('', 'Partnership', { id }),
+      ])
+      .raw(`RETURN project.id as id`)
+      .first();
+
+    return result?.id;
+  }
+
+  async unsecureGetProjectIdByProjectMemberId(id: string): Promise<string> {
+    const result = await this.db
+      .query()
+      .match([
+        node('project', 'Project'),
+        relation('out', '', 'member', { active: true }),
+        node('', 'ProjectMember', { id }),
+      ])
+      .raw(`RETURN project.id as id`)
+      .first();
+
+    return result?.id;
+  }
+
+  async unsecureGetProjectIdByProducibleId(id: string): Promise<string> {
+    const result = await this.db
+      .query()
+      .match([
+        node('project', 'Project'),
+        relation('out', '', 'engagement', { active: true }),
+        node('', 'LanguageEngagement'),
+        relation('out', '', 'product', { active: true }),
+        node('', 'Product'),
+        relation('out', '', 'produces', { active: true }),
+        node('', 'Producible', { id }),
+      ])
+      .raw(`RETURN project.id as id`)
+      .first();
+
+    return result?.id;
+  }
+
+  async unsecureGetProjectIdByProductId(id: string): Promise<string> {
+    const result = await this.db
+      .query()
+      .match([
+        node('project', 'Project'),
+        relation('out', '', 'engagement', { active: true }),
+        node('', 'LanguageEngagement'),
+        relation('out', '', 'product', { active: true }),
+        node('', 'Product', { id }),
+      ])
+      .raw(`RETURN project.id as id`)
+      .first();
+
+    return result?.id;
+  }
+
+  async unsecureGetAllProjectBaseNodeIds(id: string): Promise<ProjectChildIds> {
+    const result = await this.db
+      .query()
+      .raw(
+        `
+    match 
+      (project:Project {id:$id})
+    with {} as ids, project
+
+    optional match
+      (project)-[:budget {active:true}]->(budget:Budget)-[:record{active:true}]->(budgetRecord:BudgetRecord)
+    with 
+      project, 
+      ids,
+      apoc.map.setKey(ids, "budgets", collect(distinct budget.id)) as id1, 
+      apoc.map.setKey(ids, "budgetRecords", collect(distinct budgetRecord.id)) as id2
+    with apoc.map.mergeList([ids, id1, id2]) as ids, project
+
+    optional match
+      (project)-[:partnership{active:true}]->(partnership:Partnership)-[:partner{active:true}]->(partner:Partner)-[:organization{active:true}]->(organization:Organization)
+    with
+      project,
+      ids,
+      apoc.map.setKey(ids, "partnerships", collect(distinct partnership.id)) as id1, 
+      apoc.map.setKey(ids, "partners", collect(distinct partner.id)) as id2,
+      apoc.map.setKey(ids, "organizations", collect(distinct organization.id)) as id3
+    with apoc.map.mergeList([ids, id1, id2, id3]) as ids, project
+
+    optional match
+      (project)-[:engagement{active:true}]->(internshipEngagement:InternshipEngagement)
+    with
+      project,
+      ids,
+      apoc.map.setKey(ids, "internshipEngagements", collect(distinct internshipEngagement.id)) as id1
+    with apoc.map.mergeList([ids, id1]) as ids, project
+
+    optional match
+      (project)-[:engagement{active:true}]->(languageEngagement:LanguageEngagement)
+    with
+      project,
+      ids,
+      apoc.map.setKey(ids, "languageEngagements", collect(distinct languageEngagement.id)) as id1 
+    with apoc.map.mergeList([ids, id1]) as ids, project
+
+    optional match
+      (project)-[:engagement{active:true}]->(:Engagement)-[:ceremony{active:true}]->(ceremony:Ceremony)
+    with
+      project,
+      ids,
+      apoc.map.setKey(ids, "ceremonies", collect(distinct ceremony.id)) as id1
+    with apoc.map.mergeList([ids, id1]) as ids, project
+
+    optional match
+      (project)-[:member{active:true}]->(member:ProjectMember)-[:user{active:true}]->(user:User)
+    with
+      project,
+      ids,
+      apoc.map.setKey(ids, "members", collect(distinct member.id)) as id1, 
+      apoc.map.setKey(ids, "users", collect(distinct user.id)) as id2
+    with apoc.map.mergeList([ids, id1, id2]) as ids, project
+
+    optional match
+      (project)-[:engagement{active:true}]->(:Engagement)-[:product{active:true}]->(product:Product)-[:produces{active:true}]->(produces:Producible)
+    with
+      project,
+      ids,
+      apoc.map.setKey(ids, "products", collect(distinct product.id)) as id1, 
+      apoc.map.setKey(ids, "produces", collect(distinct produces.id)) as id2
+    with apoc.map.mergeList([ids, id1, id2]) as ids, project
+
+    return ids
+    `,
+        { id }
+      )
+      .first();
+    return result?.ids;
+  }
+
+  async unsecureGetUserIdByProjectMemberId(id: string): Promise<string> {
+    const result = this.db
+      .query()
+      .match([
+        node('user', 'User'),
+        relation('in', '', 'user', { active: true }),
+        node('', 'ProjectMember', { id }),
+      ])
+      .raw('RETURN user.id as id');
+    const result2 = await result.first();
+    return result2?.id;
+  }
+
+  async unsecureGetProjectRoles(id: string): Promise<string[]> {
+    const result = await this.db
+      .query()
+      .match([
+        node('projectMember', 'ProjectMember', { id }),
+        relation('out', '', 'roles', { active: true }),
+        node('role', 'Property'),
+      ])
+      .raw(`RETURN role.value as roles`)
+      .first();
+
+    return result?.roles ?? [];
+  }
+
+  async getUserRoleObjects(id: string): Promise<DbRole[]> {
+    const roleQuery = await this.db
+      .query()
+      .match([
+        node('user', 'User', { id }),
+        relation('out', '', 'roles', { active: true }),
+        node('role', 'Property'),
+      ])
+      .raw(`RETURN collect(role.value) as roles`)
+      .first();
+
+    const roles = roleQuery?.roles.map((role: string) => {
+      return everyRole.find((roleObj) => role === roleObj.name);
+    });
+
+    return roles;
   }
 }

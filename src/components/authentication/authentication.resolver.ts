@@ -1,3 +1,4 @@
+import { forwardRef, Inject } from '@nestjs/common';
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { Request, Response } from 'express';
 import { DateTime } from 'luxon';
@@ -21,6 +22,7 @@ import { SessionPipe } from './session.pipe';
 export class AuthenticationResolver {
   constructor(
     private readonly authService: AuthenticationService,
+    @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
     private readonly userService: UserService,
     private readonly config: ConfigService,

@@ -1,6 +1,6 @@
 import { forwardRef, Global, Module, Provider } from '@nestjs/common';
 import { SESSION_PIPE_TOKEN } from '../../common/session';
-import { AuthorizationService } from '../authorization/authorization.service';
+import { AuthorizationModule } from '../authorization/authorization.module';
 import { UserModule } from '../user/user.module';
 import { AuthenticationResolver } from './authentication.resolver';
 import { AuthenticationService } from './authentication.service';
@@ -13,11 +13,13 @@ const ProvideSessionPipe: Provider = {
 
 @Global()
 @Module({
-  imports: [forwardRef(() => UserModule)],
+  imports: [
+    forwardRef(() => UserModule),
+    forwardRef(() => AuthorizationModule),
+  ],
   providers: [
     AuthenticationResolver,
     AuthenticationService,
-    AuthorizationService,
     SessionPipe,
     ProvideSessionPipe,
   ],

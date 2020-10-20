@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
@@ -60,6 +60,7 @@ export class BudgetService {
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
     private readonly files: FileService,
+    @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
     @Logger('budget:service') private readonly logger: ILogger
   ) {}
