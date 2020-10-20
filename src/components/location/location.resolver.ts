@@ -7,6 +7,7 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { whereAlpha3 } from 'iso-3166-1';
+import countries from 'iso-3166-1/dist/iso-3166';
 import { IdArg, ISession, Session } from '../../common';
 import {
   FundingAccountService,
@@ -82,6 +83,13 @@ export class LocationResolver {
       return null;
     }
     return whereAlpha3(value) ?? null;
+  }
+
+  @Query(() => [IsoCountry], {
+    description: 'A list of ISO 3166-1 countries',
+  })
+  async isoCountries(): Promise<IsoCountry[]> {
+    return countries;
   }
 
   @Mutation(() => CreateLocationOutput, {
