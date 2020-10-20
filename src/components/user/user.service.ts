@@ -237,6 +237,26 @@ export class UserService {
       .match(node('publicSg', 'PublicSecurityGroup'))
 
       .create([node('publicSg'), relation('out', '', 'member'), node('user')])
+      .create([
+        node('publicSg'),
+        relation('out', '', 'permission'),
+        node('', 'Permission', {
+          property: 'displayFirstName',
+          read: true,
+        }),
+        relation('out', '', 'baseNode'),
+        node('user'),
+      ])
+      .create([
+        node('publicSg'),
+        relation('out', '', 'permission'),
+        node('', 'Permission', {
+          property: 'displayLastName',
+          read: true,
+        }),
+        relation('out', '', 'baseNode'),
+        node('user'),
+      ])
       .return('user')
       .first();
 
