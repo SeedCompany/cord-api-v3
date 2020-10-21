@@ -28,6 +28,7 @@ import {
 import {
   calculateTotalAndPaginateList,
   collect,
+  defaultSorter,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -492,17 +493,11 @@ export class LanguageService {
     const query = this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode('Language')])
-      .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
-        sort in this.securedProperties
-          ? q
-              .match([
-                node('node'),
-                relation('out', '', sort),
-                node('prop', 'Property'),
-              ])
-              .with('*')
-              .orderBy('toLower(prop.value)', order)
-          : q.with('*').orderBy(`toLower(node.${sort})`, order)
+      .call(
+        calculateTotalAndPaginateList,
+        input,
+        this.securedProperties,
+        defaultSorter
       );
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));

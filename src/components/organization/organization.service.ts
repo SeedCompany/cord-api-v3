@@ -23,6 +23,7 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
+  defaultSorter,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -280,17 +281,12 @@ export class OrganizationService {
             ]
           : []),
       ])
-      .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
-        sort in this.securedProperties
-          ? q
-              .match([
-                node('node'),
-                relation('out', '', sort),
-                node('prop', 'Property'),
-              ])
-              .with('*')
-              .orderBy(sortBy, order)
-          : q.with('*').orderBy(`node.${sort}`, order)
+      .call(
+        calculateTotalAndPaginateList,
+        input,
+        this.securedProperties,
+        defaultSorter,
+        sortBy
       );
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));

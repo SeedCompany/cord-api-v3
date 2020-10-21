@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { node } from 'cypher-query-builder';
 import {
   DuplicateException,
   generateId,
@@ -20,6 +20,7 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
+  defaultSorter,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -42,6 +43,11 @@ import {
 import { DbStory } from './model';
 @Injectable()
 export class StoryService {
+  private readonly securedProperties = {
+    name: true,
+    scriptureReferences: true,
+  };
+
   constructor(
     @Logger('story:service') private readonly logger: ILogger,
     private readonly db: DatabaseService,
@@ -165,10 +171,7 @@ export class StoryService {
     const securedProps = parseSecuredProperties(
       result.propList,
       result.permList,
-      {
-        name: true,
-        scriptureReferences: true,
-      }
+      this.securedProperties
     );
 
     return {
@@ -217,15 +220,11 @@ export class StoryService {
     const query = this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode('Story')])
-      .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
-        q
-          .match([
-            node('node'),
-            relation('out', '', sort),
-            node('prop', 'Property'),
-          ])
-          .with('*')
-          .orderBy('prop.value', order)
+      .call(
+        calculateTotalAndPaginateList,
+        input,
+        this.securedProperties,
+        defaultSorter
       );
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
