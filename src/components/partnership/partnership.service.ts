@@ -585,7 +585,7 @@ export class PartnershipService {
     if (!availableTypes?.includes(type)) {
       throw new InputException(
         `FinancialReportingType ${type} cannot be assigned to this partnership`,
-        'input.financialReportingType'
+        'partnership.financialReportingType'
       );
     }
   }
