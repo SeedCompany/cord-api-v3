@@ -2077,7 +2077,7 @@
 									"});\r",
 									"\r",
 									"pm.test(\"Verify that language error message is correct\", function () {\r",
-									"    var error_language_message = jsonData.errors[0].extensions.errors.id.IsShortId;  \r",
+									"    var error_language_message = jsonData.errors[0].extensions.errors.id.IsId;  \r",
 									"    pm.expect(error_language_message).to.eql(\"Invalid ID\");\r",
 									"});"
 								],
@@ -2321,7 +2321,7 @@
 									"});\r",
 									"\r",
 									"pm.test(\"Verify that language error message is correct\", function () {\r",
-									"    var error_language_message = jsonData.errors[0].extensions.errors.id.IsShortId;  \r",
+									"    var error_language_message = jsonData.errors[0].extensions.errors.id.IsId;  \r",
 									"    pm.expect(error_language_message).to.eql(\"Invalid ID\");\r",
 									"});"
 								],
@@ -2821,7 +2821,7 @@
 									"});\r",
 									"\r",
 									"pm.test(\"Verify that error message is correct\", function () {\r",
-									"    var error_message = jsonData.errors[0].extensions.errors['literacyMaterial.id'].IsShortId;\r",
+									"    var error_message = jsonData.errors[0].extensions.errors['literacyMaterial.id'].IsId;\r",
 									"    pm.expect(error_message).to.eql(\"Invalid ID\");\r",
 									"});"
 								],
@@ -5643,7 +5643,7 @@
 									"});\r",
 									"\r",
 									"pm.test(\"Verify that education error message is correct\", function () {\r",
-									"    var error_education_message = jsonData.errors[0].extensions.errors.id.IsShortId;  \r",
+									"    var error_education_message = jsonData.errors[0].extensions.errors.id.IsId;  \r",
 									"    pm.expect(error_education_message).to.eql(\"Invalid ID\");\r",
 									"});"
 								],
@@ -5882,7 +5882,7 @@
 									"});\r",
 									"\r",
 									"pm.test(\"Verify that partnership ID error message is correct\", function () {\r",
-									"    var error_partnershipId = jsonData.errors[0].extensions.errors.id.IsShortId;\r",
+									"    var error_partnershipId = jsonData.errors[0].extensions.errors.id.IsId;\r",
 									"    pm.expect(error_partnershipId).to.eql(\"Invalid ID\");\r",
 									"});\r",
 									"\r",

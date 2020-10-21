@@ -444,7 +444,7 @@
 									"});",
 									"",
 									"pm.test(\"Verify that education error message is correct\", function () {",
-									"    var errors = jsonData.errors[0].extensions.errors['education.userId'].IsShortId;",
+									"    var errors = jsonData.errors[0].extensions.errors['education.userId'].IsId;",
 									"    pm.expect(errors).to.eql(\"Invalid ID\");",
 									"});"
 								],
@@ -1406,7 +1406,7 @@
 									"});",
 									"",
 									"pm.test(\"Verify that education error message is correct\", function () {",
-									"    var errors = jsonData.errors[0].extensions.errors['education.userId'].IsShortId;  ",
+									"    var errors = jsonData.errors[0].extensions.errors['education.userId'].IsId;  ",
 									"    pm.expect(errors).to.eql(\"Invalid ID\");",
 									"});"
 								],
@@ -1661,7 +1661,7 @@
 									"});",
 									"",
 									"pm.test(\"Verify that education error message is correct\", function () {",
-									"    var error_education_message = jsonData.errors[0].extensions.errors.id.IsShortId;  ",
+									"    var error_education_message = jsonData.errors[0].extensions.errors.id.IsId;  ",
 									"    pm.expect(error_education_message).to.eql(\"Invalid ID\");",
 									"});"
 								],
@@ -1904,7 +1904,7 @@
 									"});",
 									"",
 									"pm.test(\"Verify that language error message is correct\", function () {",
-									"    var error_language_message = jsonData.errors[0].extensions.errors.id.IsShortId;  ",
+									"    var error_language_message = jsonData.errors[0].extensions.errors.id.IsId;  ",
 									"    pm.expect(error_language_message).to.eql(\"Invalid ID\");",
 									"});"
 								],
@@ -2273,7 +2273,7 @@
 									"});",
 									"",
 									"pm.test(\"Verify that error languageId message is correct\", function () {",
-									"    var error_message = jsonData.errors[0].extensions.errors['education.id'].IsShortId;",
+									"    var error_message = jsonData.errors[0].extensions.errors['education.id'].IsId;",
 									"    pm.expect(error_message).to.include(\"Invalid ID\");",
 									"});",
 									""
@@ -3212,7 +3212,7 @@
 									"});",
 									"",
 									"pm.test(\"Verify that error languageID message is correct\", function () {",
-									"    var error_message = jsonData.errors[0].extensions.errors['education.id'].IsShortId;  ",
+									"    var error_message = jsonData.errors[0].extensions.errors['education.id'].IsId;  ",
 									"    pm.expect(error_message).to.include(\"Invalid ID\");",
 									"});",
 									""
@@ -4562,7 +4562,7 @@
 									"//Test Specific",
 									"pm.test(\"Verify that error message is correct\", function () {",
 									"    var error_message = jsonData.errors[0].message;  ",
-									"    pm.expect(error_message).to.include(\"Variable `DESC` not defined\");",
+									"    pm.expect(error_message).to.include(\"Invalid input\");",
 									"});",
 									"",
 									"pm.test(\"Verify that error code is InternalServerError\", function () {",
@@ -5538,7 +5538,7 @@
 									"});",
 									"",
 									"pm.test(\"Verify that education error message is correct\", function () {",
-									"    var error_education_message = jsonData.errors[0].extensions.errors.id.IsShortId;  ",
+									"    var error_education_message = jsonData.errors[0].extensions.errors.id.IsId;  ",
 									"    pm.expect(error_education_message).to.eql(\"Invalid ID\");",
 									"});"
 								],
@@ -5752,7 +5752,7 @@
 									"});",
 									"",
 									"pm.test(\"Verify that language error message is correct\", function () {",
-									"    var error_education_message = jsonData.errors[0].extensions.errors.id.IsShortId;  ",
+									"    var error_education_message = jsonData.errors[0].extensions.errors.id.IsId;  ",
 									"    pm.expect(error_education_message).to.eql(\"Invalid ID\");",
 									"});"
 								],

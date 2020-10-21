@@ -5440,7 +5440,7 @@
 									"});\r",
 									"\r",
 									"pm.test(\"Verify that education error message is correct\", function () {\r",
-									"    var error_education_message = jsonData.errors[0].extensions.errors.id.IsShortId;  \r",
+									"    var error_education_message = jsonData.errors[0].extensions.errors.id.IsId;  \r",
 									"    pm.expect(error_education_message).to.eql(\"Invalid ID\");\r",
 									"});"
 								],
@@ -5682,7 +5682,7 @@
 									"});\r",
 									"\r",
 									"pm.test(\"Verify that education error message is correct\", function () {\r",
-									"    var error_education_message = jsonData.errors[0].extensions.errors.id.IsShortId;  \r",
+									"    var error_education_message = jsonData.errors[0].extensions.errors.id.IsId;  \r",
 									"    pm.expect(error_education_message).to.eql(\"Invalid ID\");\r",
 									"});"
 								],
@@ -7597,7 +7597,7 @@
 									"pm.test(\"Verify that items are sorted by 'createdAt' and orderd by 'ASC' order \", function () {\r",
 									"\r",
 									"    var responseBody = jsonData.data.products.items;\r",
-									"    var expectedSortedOrder = lodash.orderBy(responseBody, ['createdAt'], ['asc'])\r",
+									"    var expectedSortedOrder = lodash.orderBy(responseBody,item => item.createdAt.toLowerCase(), ['createdAt'], ['asc'])\r",
 									"    pm.expect(responseBody).to.eql(expectedSortedOrder);\r",
 									"});"
 								],
@@ -7682,9 +7682,11 @@
 									"pm.test(\"Verify that items are sorted by 'createdAt' and orderd by 'DESC' order \", function () {\r",
 									"\r",
 									"    var responseBody = jsonData.data.products.items;\r",
-									"    var expectedSortedOrder = lodash.orderBy(responseBody, ['createdAt'], ['desc'])\r",
+									"    var expectedSortedOrder = lodash.orderBy(responseBody, item => item.createdAt.toLowerCase(),['createdAt'], ['desc'])\r",
 									"    pm.expect(responseBody).to.eql(expectedSortedOrder);\r",
-									"});"
+									"});\r",
+									"\r",
+									""
 								],
 								"type": "text/javascript"
 							}
@@ -9687,7 +9689,7 @@
 									"});\r",
 									"\r",
 									"pm.test(\"Verify that education error message is correct\", function () {\r",
-									"    var error_education_message = jsonData.errors[0].extensions.errors.id.IsShortId;  \r",
+									"    var error_education_message = jsonData.errors[0].extensions.errors.id.IsId;  \r",
 									"    pm.expect(error_education_message).to.eql(\"Invalid ID\");\r",
 									"});"
 								],
@@ -9901,7 +9903,7 @@
 									"});\r",
 									"\r",
 									"pm.test(\"Verify that language error message is correct\", function () {\r",
-									"    var error_education_message = jsonData.errors[0].extensions.errors.id.IsShortId;  \r",
+									"    var error_education_message = jsonData.errors[0].extensions.errors.id.IsId;  \r",
 									"    pm.expect(error_education_message).to.eql(\"Invalid ID\");\r",
 									"});"
 								],

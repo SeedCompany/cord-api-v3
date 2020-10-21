@@ -2222,7 +2222,7 @@
 									"});\r",
 									"\r",
 									"pm.test(\"Verify that language error message is correct\", function () {\r",
-									"    var error_language_message = jsonData.errors[0].extensions.errors.id.IsShortId;\r",
+									"    var error_language_message = jsonData.errors[0].extensions.errors.id.IsId;\r",
 									"    pm.expect(error_language_message).to.eql(\"Invalid ID\");\r",
 									"});"
 								],
@@ -2466,7 +2466,7 @@
 									"});\r",
 									"\r",
 									"pm.test(\"Verify that language error message is correct\", function () {\r",
-									"    var error_language_message = jsonData.errors[0].extensions.errors.id.IsShortId;  \r",
+									"    var error_language_message = jsonData.errors[0].extensions.errors.id.IsId;  \r",
 									"    pm.expect(error_language_message).to.eql(\"Invalid ID\");\r",
 									"});"
 								],
@@ -2953,7 +2953,7 @@
 									"});\r",
 									"\r",
 									"pm.test(\"Verify that film error message is correct\", function () {\r",
-									"    var error_film_message = jsonData.errors[0].extensions.errors['film.id'].IsShortId;  \r",
+									"    var error_film_message = jsonData.errors[0].extensions.errors['film.id'].IsId;  \r",
 									"    pm.expect(error_film_message).to.eql(\"Invalid ID\");\r",
 									"});"
 								],
@@ -3364,7 +3364,7 @@
 									"});\r",
 									"\r",
 									"pm.test(\"Verify that error filmID message is correct\", function () {\r",
-									"    var error_message = jsonData.errors[0].extensions.errors['film.id'].IsShortId;  \r",
+									"    var error_message = jsonData.errors[0].extensions.errors['film.id'].IsId;  \r",
 									"    pm.expect(error_message).to.include(\"Invalid ID\");\r",
 									"});\r",
 									""
@@ -5638,7 +5638,7 @@
 									"});\r",
 									"\r",
 									"pm.test(\"Verify that language error message is correct\", function () {\r",
-									"    var error_language_message = jsonData.errors[0].extensions.errors.id.IsShortId;  \r",
+									"    var error_language_message = jsonData.errors[0].extensions.errors.id.IsId;  \r",
 									"    pm.expect(error_language_message).to.eql(\"Invalid ID\");\r",
 									"});"
 								],
