@@ -502,6 +502,8 @@ export class ProjectService {
           relation('out', '', 'baseNode'),
           node('project', 'Project', { id: input.id }),
         ])
+        .with('project')
+        .limit(1)
         .match([node('location', 'Location', { id: input.primaryLocationId })])
         .optionalMatch([
           node('project'),
@@ -509,7 +511,8 @@ export class ProjectService {
           node(''),
         ])
         .setValues({ 'oldRel.active': false })
-        .with('project')
+        .with('project, location')
+        .limit(1)
         .create([
           node('project'),
           relation('out', '', 'primaryLocation', {
@@ -517,6 +520,45 @@ export class ProjectService {
             createdAt,
           }),
           node('location'),
+        ]);
+
+      await query.run();
+    }
+
+    if (input.fieldRegionId) {
+      const createdAt = DateTime.local();
+      const query = this.db
+        .query()
+        .match([
+          node('user', 'User', { id: session.userId }),
+          relation('in', '', 'member'),
+          node('', 'SecurityGroup'),
+          relation('out', '', 'permission'),
+          node('', 'Permission', {
+            property: 'fieldRegion',
+            edit: true,
+          }),
+          relation('out', '', 'baseNode'),
+          node('project', 'Project', { id: input.id }),
+        ])
+        .with('project')
+        .limit(1)
+        .match([node('region', 'FieldRegion', { id: input.fieldRegionId })])
+        .optionalMatch([
+          node('project'),
+          relation('out', 'oldRel', 'fieldRegion', { active: true }),
+          node(''),
+        ])
+        .setValues({ 'oldRel.active': false })
+        .with('project, region')
+        .limit(1)
+        .create([
+          node('project'),
+          relation('out', '', 'fieldRegion', {
+            active: true,
+            createdAt,
+          }),
+          node('region'),
         ]);
 
       await query.run();
