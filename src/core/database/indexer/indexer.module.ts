@@ -50,6 +50,17 @@ export class IndexerModule implements OnModuleInit {
           : statement
       );
       for (const statement of statements) {
+        if (
+          serverInfo.edition === 'community' &&
+          statement.toUpperCase().includes('IS UNIQUE')
+        ) {
+          this.logger.debug(
+            'Skipping constraint not supported on Neo4j Community Edition',
+            { constraint: statement }
+          );
+          continue;
+        }
+
         try {
           await this.db.query().raw(statement).run();
         } catch (e) {
