@@ -8,7 +8,6 @@ import {
   ISession,
   ServerException,
   UnauthenticatedException,
-  UnauthorizedException,
 } from '../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import { DbBudget } from '../budget/model';
@@ -38,6 +37,7 @@ import { DbStory } from '../story/model';
 import { DbEducation, DbUnavailability, DbUser } from '../user/model';
 import { Role } from './dto';
 import { Powers } from './dto/powers';
+import { MissingPowerException } from './missing-power.exception';
 import { DbRole, OneBaseNode } from './model';
 import {
   Administrator,
@@ -540,7 +540,8 @@ export class AuthorizationService {
     }
 
     if (!hasPower) {
-      throw new UnauthorizedException(
+      throw new MissingPowerException(
+        power,
         `user ${id ? id : 'anon'} does not have the requested power: ${power}`
       );
     }
@@ -566,7 +567,8 @@ export class AuthorizationService {
 
     const requestingUserPowers = await this.readPowerByUserId(session.userId);
     if (!requestingUserPowers.includes(Powers.GrantPower)) {
-      throw new UnauthorizedException(
+      throw new MissingPowerException(
+        Powers.GrantPower,
         'user does not have the power to grant power to others'
       );
     }
@@ -585,7 +587,8 @@ export class AuthorizationService {
 
     const requestingUserPowers = await this.readPowerByUserId(session.userId);
     if (!requestingUserPowers.includes(Powers.GrantPower)) {
-      throw new UnauthorizedException(
+      throw new MissingPowerException(
+        Powers.GrantPower,
         'user does not have the power to remove power from others'
       );
     }
@@ -633,13 +636,10 @@ export class AuthorizationService {
       .unionAll()
       .match([node('sg', 'SecurityGroup', { id })])
       .raw('return sg.powers as powers')
-      .asResult<{ powers: Powers[] }>()
+      .asResult<{ powers?: Powers[] }>()
       .first();
 
-    if (!result) {
-      return [];
-    }
-    return result.powers;
+    return result?.powers ?? [];
   }
 
   async unsecureGetProjectIdByBudgetId(id: string): Promise<string> {
