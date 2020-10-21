@@ -73,9 +73,6 @@ export class LocationService {
 
       // LOCATION TYPE NODE
       'CREATE CONSTRAINT ON (n:LocationType) ASSERT EXISTS(n.value)',
-
-      // ISO-3166-3 NODE
-      'CREATE CONSTRAINT ON (n:IsoAlpha3) ASSERT n.value IS UNIQUE',
     ];
   }
 
