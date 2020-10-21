@@ -1,4 +1,6 @@
 import { Field, InputType } from '@nestjs/graphql';
+import { Type } from 'class-transformer';
+import { ValidateNested } from 'class-validator';
 import { IdField } from '../../../common';
 
 @InputType()
@@ -16,5 +18,7 @@ export class AssignOrganizationToUser {
 @InputType()
 export abstract class AssignOrganizationToUserInput {
   @Field()
+  @Type(() => AssignOrganizationToUser)
+  @ValidateNested()
   readonly request: AssignOrganizationToUser;
 }
