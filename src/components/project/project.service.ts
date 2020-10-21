@@ -486,6 +486,42 @@ export class ProjectService {
 
     // TODO: re-connect the locationId node when locations are hooked up
 
+    if (input.primaryLocationId) {
+      const createdAt = DateTime.local();
+      const query = this.db
+        .query()
+        .match([
+          node('user', 'User', { id: session.userId }),
+          relation('in', '', 'member'),
+          node('', 'SecurityGroup'),
+          relation('out', '', 'permission'),
+          node('', 'Permission', {
+            property: 'primaryLocation',
+            edit: true,
+          }),
+          relation('out', '', 'baseNode'),
+          node('project', 'Project', { id: input.id }),
+        ])
+        .match([node('location', 'Location', { id: input.primaryLocationId })])
+        .optionalMatch([
+          node('project'),
+          relation('out', 'oldRel', 'primaryLocation', { active: true }),
+          node(''),
+        ])
+        .setValues({ 'oldRel.active': false })
+        .with('project')
+        .create([
+          node('project'),
+          relation('out', '', 'primaryLocation', {
+            active: true,
+            createdAt,
+          }),
+          node('location'),
+        ]);
+
+      await query.run();
+    }
+
     const result = await this.db.sgUpdateProperties({
       session,
       object: currentProject,
