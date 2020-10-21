@@ -1960,7 +1960,7 @@
 									"});",
 									"",
 									"pm.test(\"Verify that language error message is correct\", function () {",
-									"    var error_language_message = jsonData.errors[0].extensions.errors.id.IsShortId;  ",
+									"    var error_language_message = jsonData.errors[0].extensions.errors.id.IsId;  ",
 									"    pm.expect(error_language_message).to.eql(\"Invalid ID\");",
 									"});"
 								],
@@ -2204,7 +2204,7 @@
 									"});",
 									"",
 									"pm.test(\"Verify that language error message is correct\", function () {",
-									"    var error_language_message = jsonData.errors[0].extensions.errors.id.IsShortId;  ",
+									"    var error_language_message = jsonData.errors[0].extensions.errors.id.IsId;  ",
 									"    pm.expect(error_language_message).to.eql(\"Invalid ID\");",
 									"});"
 								],
@@ -2691,7 +2691,7 @@
 									"});",
 									"",
 									"pm.test(\"Verify that song error message is correct\", function () {",
-									"    var error_song_message = jsonData.errors[0].extensions.errors['song.id'].IsShortId;  ",
+									"    var error_song_message = jsonData.errors[0].extensions.errors['song.id'].IsId;  ",
 									"    pm.expect(error_song_message).to.eql(\"Invalid ID\");",
 									"});"
 								],
@@ -3102,7 +3102,7 @@
 									"});",
 									"",
 									"pm.test(\"Verify that error song ID message is correct\", function () {",
-									"    var error_message = jsonData.errors[0].extensions.errors['song.id'].IsShortId;  ",
+									"    var error_message = jsonData.errors[0].extensions.errors['song.id'].IsId;  ",
 									"    pm.expect(error_message).to.include(\"Invalid ID\");",
 									"});",
 									""
@@ -5327,7 +5327,7 @@
 									"});\r",
 									"\r",
 									"pm.test(\"Verify that language error message is correct\", function () {\r",
-									"    var error_language_message = jsonData.errors[0].extensions.errors.id.IsShortId;  \r",
+									"    var error_language_message = jsonData.errors[0].extensions.errors.id.IsId;  \r",
 									"    pm.expect(error_language_message).to.eql(\"Invalid ID\");\r",
 									"});"
 								],

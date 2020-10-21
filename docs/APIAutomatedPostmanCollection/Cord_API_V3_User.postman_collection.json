@@ -902,7 +902,7 @@
 									"});",
 									"",
 									"pm.test(\"Verify that userid error message is correct\", function () {",
-									"    var error_userId = jsonData.errors[0].extensions.errors['user.id'].IsShortId;  ",
+									"    var error_userId = jsonData.errors[0].extensions.errors['user.id'].IsId;  ",
 									"    pm.expect(error_userId).to.eql(\"Invalid ID\");",
 									"});",
 									"",
@@ -3122,7 +3122,7 @@
 									"});",
 									"",
 									"pm.test(\"Verify that userid error message is correct\", function () {",
-									"    var error_userId = jsonData.errors[0].extensions.errors['user.id'].IsShortId;  ",
+									"    var error_userId = jsonData.errors[0].extensions.errors['user.id'].IsId;  ",
 									"    pm.expect(error_userId).to.eql(\"Invalid ID\");",
 									"});",
 									"",
@@ -3734,7 +3734,7 @@
 									"});",
 									"",
 									"pm.test(\"Verify that user error message is correct\", function () {",
-									"    var error_user_message = jsonData.errors[0].extensions.errors.id.IsShortId;",
+									"    var error_user_message = jsonData.errors[0].extensions.errors.id.IsId;",
 									"    pm.expect(error_user_message).to.eql(\"Invalid ID\");",
 									"});"
 								],
@@ -3941,7 +3941,7 @@
 									"});",
 									"",
 									"pm.test(\"Verify that user error message is correct\", function () {",
-									"    var error_user_message = jsonData.errors[0].extensions.errors.id.IsShortId;",
+									"    var error_user_message = jsonData.errors[0].extensions.errors.id.IsId;",
 									"    pm.expect(error_user_message).to.eql(\"Invalid ID\");",
 									"});",
 									""
@@ -4292,7 +4292,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query users($input: UserListInput) {\r\n  users(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n\r\n        hasMore\r\n        total\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query users($input: UserListInput) {\r\n  users(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      unavailabilities {\r\n        total\r\n        hasMore\r\n        canCreate\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n      }\r\n      organizations {\r\n        total\r\n        hasMore\r\n        canCreate\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n      }\r\n      education {\r\n        total\r\n        hasMore\r\n        canCreate\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"id\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
 							},
 							"options": {
@@ -6097,7 +6097,7 @@
 									"});",
 									"",
 									"pm.test(\"Verify that user error message is correct\", function () {",
-									"    var error_user_message = jsonData.errors[0].extensions.errors.id.IsShortId;",
+									"    var error_user_message = jsonData.errors[0].extensions.errors.id.IsId;",
 									"    pm.expect(error_user_message).to.eql(\"Invalid ID\");",
 									"});"
 								],
@@ -6330,7 +6330,7 @@
 									"});",
 									"",
 									"pm.test(\"Verify that user error message is correct\", function () {",
-									"    var error_user_message = jsonData.errors[0].extensions.errors.id.IsShortId;",
+									"    var error_user_message = jsonData.errors[0].extensions.errors.id.IsId;",
 									"    pm.expect(error_user_message).to.eql(\"Invalid ID\");",
 									"});"
 								],

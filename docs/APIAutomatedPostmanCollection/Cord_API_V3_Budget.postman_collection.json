@@ -498,7 +498,7 @@
 									"});",
 									"",
 									"pm.test(\"Verify that minLength message is correct\", function () {",
-									"    var minLength_message = jsonData.errors[0].extensions.errors['budget.projectId'].IsShortId;  ",
+									"    var minLength_message = jsonData.errors[0].extensions.errors['budget.projectId'].IsId;  ",
 									"    pm.expect(minLength_message).to.eql(\"Invalid ID\");",
 									"});"
 								],
@@ -742,7 +742,7 @@
 									"});",
 									"",
 									"pm.test(\"Verify that minLength message is correct\", function () {",
-									"    var minLength_message = jsonData.errors[0].extensions.errors['budget.projectId'].IsShortId;  ",
+									"    var minLength_message = jsonData.errors[0].extensions.errors['budget.projectId'].IsId;  ",
 									"    pm.expect(minLength_message).to.eql(\"Invalid ID\");",
 									"});"
 								],
@@ -924,7 +924,7 @@
 									"});",
 									"",
 									"pm.test(\"Verify that budget error message is correct\", function () {",
-									"    var error_budget_message = jsonData.errors[0].extensions.errors.id.IsShortId;  ",
+									"    var error_budget_message = jsonData.errors[0].extensions.errors.id.IsId;  ",
 									"    pm.expect(error_budget_message).to.eql(\"Invalid ID\");",
 									"});"
 								],
@@ -1091,7 +1091,7 @@
 									"});",
 									"",
 									"pm.test(\"Verify that budget error message is correct\", function () {",
-									"    var error_budget_message = jsonData.errors[0].extensions.errors.id.IsShortId;  ",
+									"    var error_budget_message = jsonData.errors[0].extensions.errors.id.IsId;  ",
 									"    pm.expect(error_budget_message).to.eql(\"Invalid ID\");",
 									"});"
 								],
@@ -1518,7 +1518,7 @@
 									"});",
 									"",
 									"pm.test(\"Verify that minLength message is correct\", function () {",
-									"    var minLength_message = jsonData.errors[0].extensions.errors['budget.id'].IsShortId;  ",
+									"    var minLength_message = jsonData.errors[0].extensions.errors['budget.id'].IsId;  ",
 									"    pm.expect(minLength_message).to.eql(\"Invalid ID\");",
 									"});"
 								],
@@ -2013,7 +2013,7 @@
 									"});",
 									"",
 									"pm.test(\"Verify that minLength message is correct\", function () {",
-									"    var minLength_message = jsonData.errors[0].extensions.errors['budget.id'].IsShortId;  ",
+									"    var minLength_message = jsonData.errors[0].extensions.errors['budget.id'].IsId;  ",
 									"    pm.expect(minLength_message).to.eql(\"Invalid ID\");",
 									"});"
 								],
@@ -4024,7 +4024,7 @@
 									"});",
 									"",
 									"pm.test(\"Verify that budget error message is correct\", function () {",
-									"    var error_budget_message = jsonData.errors[0].extensions.errors.id.IsShortId;",
+									"    var error_budget_message = jsonData.errors[0].extensions.errors.id.IsId;",
 									"    pm.expect(error_budget_message).to.eql(\"Invalid ID\");",
 									"});"
 								],
@@ -4238,7 +4238,7 @@
 									"});",
 									"",
 									"pm.test(\"Verify that budget error message is correct\", function () {",
-									"    var error_budget_message = jsonData.errors[0].extensions.errors.id.IsShortId;  ",
+									"    var error_budget_message = jsonData.errors[0].extensions.errors.id.IsId;  ",
 									"    pm.expect(error_budget_message).to.eql(\"Invalid ID\");",
 									"});"
 								],

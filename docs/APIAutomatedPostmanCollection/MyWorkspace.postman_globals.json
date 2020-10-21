@@ -2,6 +2,11 @@
 	"id": "919ca3c3-14d9-4cef-8a44-44aaa5380bc6",
 	"values": [
 		{
+			"key": "responseTime",
+			"value": "10000",
+			"enabled": true
+		},
+		{
 			"key": "timeStamp",
 			"value": "0872020031657",
 			"enabled": true
@@ -99,11 +104,6 @@
 		{
 			"key": "rootDirectoryid",
 			"value": "i4QqbWcNl8",
-			"enabled": true
-		},
-		{
-			"key": "responseTime",
-			"value": "10000",
 			"enabled": true
 		},
 		{
@@ -1074,10 +1074,45 @@
 			"key": "financialReportingTypesArray",
 			"value": "",
 			"enabled": true
+		},
+		{
+			"key": "orgAddress",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "powerArray",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "userpower",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "",
+			"value": "",
+			"enabled": false
+		},
+		{
+			"key": "defaultPowersArray",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "noOfDefaultPowers",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "timezoneDefault",
+			"value": "",
+			"enabled": true
 		}
 	],
 	"name": "MyWorkspace Globals",
 	"_postman_variable_scope": "globals",
-	"_postman_exported_at": "2020-10-16T13:21:53.942Z",
+	"_postman_exported_at": "2020-10-21T13:29:08.143Z",
 	"_postman_exported_using": "Postman/7.34.0"
 }
