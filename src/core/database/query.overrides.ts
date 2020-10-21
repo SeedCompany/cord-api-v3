@@ -1,5 +1,6 @@
 import { Query } from 'cypher-query-builder';
 import { Except } from 'type-fest';
+import { LogLevel } from '../logger';
 
 // Work around `Dictionary` return type
 export type QueryWithResult<R> = Except<Query, 'run' | 'first'> & {
@@ -36,6 +37,8 @@ declare module 'cypher-query-builder/dist/typings/query' {
      * Must be called directly before run()/first().
      */
     asResult: <R>() => QueryWithResult<R>;
+
+    logIt: (level?: LogLevel) => this;
   }
 }
 
@@ -53,4 +56,20 @@ Query.prototype.call = function call<
 
 Query.prototype.asResult = function asResult<R>(this: Query) {
   return (this as unknown) as QueryWithResult<R>;
+};
+
+Query.prototype.logIt = function logIt(this: Query, level = LogLevel.NOTICE) {
+  const orig = this.buildQueryObject.bind(this);
+  this.buildQueryObject = function buildQueryObject() {
+    const result = orig();
+    Object.defineProperty(result.params, 'logIt', {
+      value: level,
+      configurable: true,
+      writable: true,
+      enumerable: false,
+    });
+    return result;
+  };
+
+  return this;
 };
