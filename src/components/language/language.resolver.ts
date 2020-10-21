@@ -1,6 +1,6 @@
 import {
   Args,
-  ID,
+  ArgsType,
   Mutation,
   Parent,
   Query,
@@ -11,6 +11,7 @@ import { stripIndent } from 'common-tags';
 import {
   firstLettersOfWords,
   IdArg,
+  IdField,
   ISession,
   SecuredDate,
   SecuredInt,
@@ -28,6 +29,15 @@ import {
   UpdateLanguageOutput,
 } from './dto';
 import { LanguageService } from './language.service';
+
+@ArgsType()
+class ModifyLocationArgs {
+  @IdField()
+  languageId: string;
+
+  @IdField()
+  locationId: string;
+}
 
 @Resolver(Language)
 export class LanguageResolver {
@@ -163,11 +173,10 @@ export class LanguageResolver {
   })
   async addLocationToLanguage(
     @Session() session: ISession,
-    @Args('languageId', { type: () => ID }) languageId: string,
-    @Args('locationId', { type: () => ID }) locationId: string
+    @Args() { languageId, locationId }: ModifyLocationArgs
   ): Promise<Language> {
     await this.langService.addLocation(languageId, locationId, session);
-    return this.langService.readOne(languageId, session);
+    return await this.langService.readOne(languageId, session);
   }
 
   @Mutation(() => Language, {
@@ -175,11 +184,10 @@ export class LanguageResolver {
   })
   async removeLocationFromLanguage(
     @Session() session: ISession,
-    @Args('languageId', { type: () => ID }) languageId: string,
-    @Args('locationId', { type: () => ID }) locationId: string
+    @Args() { languageId, locationId }: ModifyLocationArgs
   ): Promise<Language> {
     await this.langService.removeLocation(languageId, locationId, session);
-    return this.langService.readOne(languageId, session);
+    return await this.langService.readOne(languageId, session);
   }
 
   @Query(() => Boolean, {

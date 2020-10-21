@@ -1,13 +1,19 @@
 import {
   Args,
-  ID,
+  ArgsType,
   Mutation,
   Parent,
   Query,
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { firstLettersOfWords, IdArg, ISession, Session } from '../../common';
+import {
+  firstLettersOfWords,
+  IdArg,
+  IdField,
+  ISession,
+  Session,
+} from '../../common';
 import { LocationListInput, SecuredLocationList } from '../location';
 import {
   CreateOrganizationInput,
@@ -19,6 +25,15 @@ import {
   UpdateOrganizationOutput,
 } from './dto';
 import { OrganizationService } from './organization.service';
+
+@ArgsType()
+class ModifyLocationArgs {
+  @IdField()
+  organizationId: string;
+
+  @IdField()
+  locationId: string;
+}
 
 @Resolver(Organization)
 export class OrganizationResolver {
@@ -108,11 +123,10 @@ export class OrganizationResolver {
   })
   async addLocationToOrganization(
     @Session() session: ISession,
-    @Args('organizationId', { type: () => ID }) organizationId: string,
-    @Args('locationId', { type: () => ID }) locationId: string
+    @Args() { organizationId, locationId }: ModifyLocationArgs
   ): Promise<Organization> {
     await this.orgs.addLocation(organizationId, locationId, session);
-    return this.orgs.readOne(organizationId, session);
+    return await this.orgs.readOne(organizationId, session);
   }
 
   @Mutation(() => Organization, {
@@ -120,11 +134,10 @@ export class OrganizationResolver {
   })
   async removeLocationFromOrganization(
     @Session() session: ISession,
-    @Args('organizationId', { type: () => ID }) organizationId: string,
-    @Args('locationId', { type: () => ID }) locationId: string
+    @Args() { organizationId, locationId }: ModifyLocationArgs
   ): Promise<Organization> {
     await this.orgs.removeLocation(organizationId, locationId, session);
-    return this.orgs.readOne(organizationId, session);
+    return await this.orgs.readOne(organizationId, session);
   }
 
   @Query(() => Boolean, {

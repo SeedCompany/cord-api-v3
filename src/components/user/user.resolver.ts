@@ -1,13 +1,19 @@
 import {
   Args,
-  ID,
+  ArgsType,
   Mutation,
   Parent,
   Query,
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { firstLettersOfWords, IdArg, ISession, Session } from '../../common';
+import {
+  firstLettersOfWords,
+  IdArg,
+  IdField,
+  ISession,
+  Session,
+} from '../../common';
 import { LocationListInput, SecuredLocationList } from '../location';
 import {
   OrganizationListInput,
@@ -32,6 +38,15 @@ import {
   UnavailabilityListInput,
 } from './unavailability';
 import { fullName, UserService } from './user.service';
+
+@ArgsType()
+class ModifyLocationArgs {
+  @IdField()
+  userId: string;
+
+  @IdField()
+  locationId: string;
+}
 
 @Resolver(User)
 export class UserResolver {
@@ -187,11 +202,10 @@ export class UserResolver {
   })
   async addLocationToUser(
     @Session() session: ISession,
-    @Args('userId', { type: () => ID }) userId: string,
-    @Args('locationId', { type: () => ID }) locationId: string
+    @Args() { userId, locationId }: ModifyLocationArgs
   ): Promise<User> {
     await this.userService.addLocation(userId, locationId, session);
-    return this.userService.readOne(userId, session);
+    return await this.userService.readOne(userId, session);
   }
 
   @Mutation(() => User, {
@@ -199,11 +213,10 @@ export class UserResolver {
   })
   async removeLocationFromUser(
     @Session() session: ISession,
-    @Args('userId', { type: () => ID }) userId: string,
-    @Args('locationId', { type: () => ID }) locationId: string
+    @Args() { userId, locationId }: ModifyLocationArgs
   ): Promise<User> {
     await this.userService.removeLocation(userId, locationId, session);
-    return this.userService.readOne(userId, session);
+    return await this.userService.readOne(userId, session);
   }
 
   @Query(() => Boolean, {
