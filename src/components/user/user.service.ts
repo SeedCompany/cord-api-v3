@@ -638,7 +638,7 @@ export class UserService {
   async assignOrganizationToUser(
     request: AssignOrganizationToUser,
     session: ISession
-  ): Promise<boolean> {
+  ): Promise<void> {
     //TO DO: Refactor session in the future
     const querySession = this.db.query();
     if (session.userId) {
@@ -721,15 +721,14 @@ export class UserService {
     const result = await queryCreate.first();
 
     if (!result) {
-      return false;
+      throw new ServerException('Failed to assign organzation to user');
     }
-    return true;
   }
 
   async removeOrganizationFromUser(
     request: RemoveOrganizationFromUser,
     _session: ISession
-  ): Promise<boolean> {
+  ): Promise<void> {
     const removeOrg = this.db
       .query()
       .match([
@@ -781,9 +780,8 @@ export class UserService {
     }
 
     if (!resultOrg) {
-      return false;
+      throw new ServerException('Failed to assign organzation to user');
     }
-    return true;
   }
 
   async checkUserConsistency(session: ISession): Promise<boolean> {

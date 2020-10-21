@@ -180,10 +180,8 @@ export class UserResolver {
     @Session() session: ISession,
     @Args('input') input: AssignOrganizationToUserInput
   ): Promise<boolean> {
-    return await this.userService.assignOrganizationToUser(
-      input.request,
-      session
-    );
+    await this.userService.assignOrganizationToUser(input.request, session);
+    return true;
   }
 
   @Mutation(() => Boolean, {
@@ -193,9 +191,7 @@ export class UserResolver {
     @Session() session: ISession,
     @Args('input') input: RemoveOrganizationFromUserInput
   ): Promise<boolean> {
-    return await this.userService.removeOrganizationFromUser(
-      input.request,
-      session
-    );
+    await this.userService.removeOrganizationFromUser(input.request, session);
+    return true;
   }
 }
