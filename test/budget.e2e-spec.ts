@@ -1,4 +1,5 @@
 import { gql } from 'apollo-server-core';
+import { times } from 'lodash';
 import {
   CalendarDate,
   fiscalYears,
@@ -141,5 +142,31 @@ describe('Budget e2e', () => {
         id: budget.id,
       }
     );
+  });
+
+  it('List budget nodes', async () => {
+    // create 2 products
+    const numBudgets = 2;
+    await Promise.all(
+      times(numBudgets).map(() => createBudget(app, { projectId: project.id }))
+    );
+
+    const { budgets } = await app.graphql.query(
+      gql`
+        query budgets {
+          budgets {
+            items {
+              ...budget
+            }
+            hasMore
+            total
+          }
+        }
+        ${fragments.budget}
+      `,
+      {}
+    );
+
+    expect(budgets.items.length).toBeGreaterThanOrEqual(numBudgets);
   });
 });
