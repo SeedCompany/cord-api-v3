@@ -20,6 +20,7 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
+  defaultSorter,
   matchPermList,
   matchPropList,
   permissionsOfNode,
@@ -275,17 +276,11 @@ export class LocationService {
     const query = this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode(label)])
-      .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
-        sort in this.securedProperties
-          ? q
-              .match([
-                node('node'),
-                relation('out', '', sort),
-                node('prop', 'Property'),
-              ])
-              .with('*')
-              .orderBy('prop.value', order)
-          : q.with('*').orderBy(`node.${sort}`, order)
+      .call(
+        calculateTotalAndPaginateList,
+        input,
+        this.securedProperties,
+        defaultSorter
       );
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));

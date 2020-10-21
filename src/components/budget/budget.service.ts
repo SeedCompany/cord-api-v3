@@ -21,6 +21,7 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
+  defaultSorter,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -526,17 +527,11 @@ export class BudgetService {
             ]
           : []),
       ])
-      .call(calculateTotalAndPaginateList, listInput, (q, sort, order) =>
-        sort in this.securedProperties
-          ? q
-              .match([
-                node('node'),
-                relation('out', '', sort),
-                node('prop', 'Property'),
-              ])
-              .with('*')
-              .orderBy('prop.value', order)
-          : q.with('*').orderBy(`node.${sort}`, order)
+      .call(
+        calculateTotalAndPaginateList,
+        listInput,
+        this.securedProperties,
+        defaultSorter
       );
 
     return await runListQuery(query, listInput, (id) =>
@@ -564,17 +559,11 @@ export class BudgetService {
             ]
           : []),
       ])
-      .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
-        sort in this.securedProperties
-          ? q
-              .match([
-                node('node'),
-                relation('out', '', sort),
-                node('prop', 'Property'),
-              ])
-              .with('*')
-              .orderBy('prop.value', order)
-          : q.with('*').orderBy(`node.${sort}`, order)
+      .call(
+        calculateTotalAndPaginateList,
+        input,
+        this.securedProperties,
+        defaultSorter
       );
 
     return await runListQuery(query, input, (id) =>

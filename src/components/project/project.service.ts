@@ -643,18 +643,22 @@ export class ProjectService {
       .match([requestingUser(session), ...permissionsOfNode(label)])
       .with('distinct(node) as node')
       .call(projectListFilter, filter)
-      .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
-        q
-          .match([
-            node('node'),
-            relation('out', '', sort, { active: true }),
-            node('prop', 'Property'),
-          ])
-          .with([
-            '*',
-            ...(input.sort === 'sensitivity' ? [sensitivityCase] : []),
-          ])
-          .orderBy(sortBy, order)
+      .call(
+        calculateTotalAndPaginateList,
+        input,
+        this.securedProperties,
+        (q, sort, order) =>
+          q
+            .match([
+              node('node'),
+              relation('out', '', sort, { active: true }),
+              node('prop', 'Property'),
+            ])
+            .with([
+              '*',
+              ...(input.sort === 'sensitivity' ? [sensitivityCase] : []),
+            ])
+            .orderBy(sortBy, order)
       );
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
