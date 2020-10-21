@@ -204,7 +204,7 @@ export class AuthenticationService {
       .raw(
         `
       MATCH
-        (token:Token)-[r]-()
+        (token:Token {value: $token})-[r]-()
       DELETE
         r
       RETURN
