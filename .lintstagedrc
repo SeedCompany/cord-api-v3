@@ -1,2 +1,2 @@
-"{src,tools}/**/*.{ts,tsx}":
+"{src,tools,test}/**/*.{ts,tsx}":
   - eslint --ext .ts,.tsx --fix --max-warnings 0
