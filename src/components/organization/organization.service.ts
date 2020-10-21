@@ -265,7 +265,7 @@ export class OrganizationService {
     session: ISession
   ): Promise<OrganizationListOutput> {
     const orgSortMap: Partial<Record<typeof input.sort, string>> = {
-      name: 'lower(prop.value)',
+      name: 'toLower(prop.value)',
     };
     const sortBy = orgSortMap[input.sort] ?? 'prop.value';
     const query = this.db

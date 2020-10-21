@@ -549,7 +549,7 @@ export class ProjectService {
   ): Promise<ProjectListOutput> {
     const label = `${filter.type ?? ''}Project`;
     const projectSortMap: Partial<Record<typeof input.sort, string>> = {
-      name: 'lower(prop.value)',
+      name: 'toLower(prop.value)',
       sensitivity: 'sensitivityValue',
     };
 
