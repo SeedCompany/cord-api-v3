@@ -486,6 +486,84 @@ export class ProjectService {
 
     // TODO: re-connect the locationId node when locations are hooked up
 
+    if (input.primaryLocationId) {
+      const createdAt = DateTime.local();
+      const query = this.db
+        .query()
+        .match([
+          node('user', 'User', { id: session.userId }),
+          relation('in', '', 'member'),
+          node('', 'SecurityGroup'),
+          relation('out', '', 'permission'),
+          node('', 'Permission', {
+            property: 'primaryLocation',
+            edit: true,
+          }),
+          relation('out', '', 'baseNode'),
+          node('project', 'Project', { id: input.id }),
+        ])
+        .with('project')
+        .limit(1)
+        .match([node('location', 'Location', { id: input.primaryLocationId })])
+        .optionalMatch([
+          node('project'),
+          relation('out', 'oldRel', 'primaryLocation', { active: true }),
+          node(''),
+        ])
+        .setValues({ 'oldRel.active': false })
+        .with('project, location')
+        .limit(1)
+        .create([
+          node('project'),
+          relation('out', '', 'primaryLocation', {
+            active: true,
+            createdAt,
+          }),
+          node('location'),
+        ]);
+
+      await query.run();
+    }
+
+    if (input.fieldRegionId) {
+      const createdAt = DateTime.local();
+      const query = this.db
+        .query()
+        .match([
+          node('user', 'User', { id: session.userId }),
+          relation('in', '', 'member'),
+          node('', 'SecurityGroup'),
+          relation('out', '', 'permission'),
+          node('', 'Permission', {
+            property: 'fieldRegion',
+            edit: true,
+          }),
+          relation('out', '', 'baseNode'),
+          node('project', 'Project', { id: input.id }),
+        ])
+        .with('project')
+        .limit(1)
+        .match([node('region', 'FieldRegion', { id: input.fieldRegionId })])
+        .optionalMatch([
+          node('project'),
+          relation('out', 'oldRel', 'fieldRegion', { active: true }),
+          node(''),
+        ])
+        .setValues({ 'oldRel.active': false })
+        .with('project, region')
+        .limit(1)
+        .create([
+          node('project'),
+          relation('out', '', 'fieldRegion', {
+            active: true,
+            createdAt,
+          }),
+          node('region'),
+        ]);
+
+      await query.run();
+    }
+
     const result = await this.db.sgUpdateProperties({
       session,
       object: currentProject,
