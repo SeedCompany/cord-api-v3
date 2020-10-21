@@ -636,13 +636,10 @@ export class AuthorizationService {
       .unionAll()
       .match([node('sg', 'SecurityGroup', { id })])
       .raw('return sg.powers as powers')
-      .asResult<{ powers: Powers[] }>()
+      .asResult<{ powers?: Powers[] }>()
       .first();
 
-    if (!result) {
-      return [];
-    }
-    return result.powers;
+    return result?.powers ?? [];
   }
 
   async unsecureGetProjectIdByBudgetId(id: string): Promise<string> {
