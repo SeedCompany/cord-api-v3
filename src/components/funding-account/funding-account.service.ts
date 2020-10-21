@@ -57,21 +57,21 @@ export class FundingAccountService {
   @OnIndex()
   async createIndexes() {
     return [
-      'CREATE CONSTRAINT ON (n:FundingAccount) ASSERT EXISTS(n.id)',
-      'CREATE CONSTRAINT ON (n:FundingAccount) ASSERT n.id IS UNIQUE',
-      'CREATE CONSTRAINT ON (n:FundingAccount) ASSERT EXISTS(n.createdAt)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:FundingAccount) ASSERT EXISTS(n.id)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:FundingAccount) ASSERT n.id IS UNIQUE',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:FundingAccount) ASSERT EXISTS(n.createdAt)',
 
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON ()-[r:name]-() ASSERT EXISTS(r.active)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
 
-      'CREATE CONSTRAINT ON (n:FundingAccountName) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:FundingAccountName) ASSERT n.value IS UNIQUE',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:FundingAccountName) ASSERT EXISTS(n.value)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:FundingAccountName) ASSERT n.value IS UNIQUE',
 
-      'CREATE CONSTRAINT ON ()-[r:accountNumber]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:accountNumber]-() ASSERT EXISTS(r.createdAt)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON ()-[r:accountNumber]-() ASSERT EXISTS(r.active)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON ()-[r:accountNumber]-() ASSERT EXISTS(r.createdAt)',
 
-      'CREATE CONSTRAINT ON (n:FundingAccountNumber) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:FundingAccountNumber) ASSERT n.value IS UNIQUE',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:FundingAccountNumber) ASSERT EXISTS(n.value)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:FundingAccountNumber) ASSERT n.value IS UNIQUE',
     ];
   }
 

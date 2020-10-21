@@ -54,16 +54,16 @@ export class StoryService {
   @OnIndex()
   async createIndexes() {
     return [
-      'CREATE CONSTRAINT ON (n:Story) ASSERT EXISTS(n.id)',
-      'CREATE CONSTRAINT ON (n:Story) ASSERT n.id IS UNIQUE',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:Story) ASSERT EXISTS(n.id)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:Story) ASSERT n.id IS UNIQUE',
 
-      'CREATE CONSTRAINT ON (n:Story) ASSERT EXISTS(n.createdAt)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:Story) ASSERT EXISTS(n.createdAt)',
 
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON ()-[r:name]-() ASSERT EXISTS(r.active)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
 
-      'CREATE CONSTRAINT ON (n:StoryName) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:StoryName) ASSERT n.value IS UNIQUE',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:StoryName) ASSERT EXISTS(n.value)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:StoryName) ASSERT n.value IS UNIQUE',
     ];
   }
 

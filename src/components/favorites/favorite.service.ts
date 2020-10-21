@@ -30,8 +30,8 @@ export class FavoriteService {
   @OnIndex()
   async createIndexes() {
     return [
-      'CREATE CONSTRAINT ON ()-[r:favorite]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:favorite]-() ASSERT EXISTS(r.createdAt)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON ()-[r:favorite]-() ASSERT EXISTS(r.active)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON ()-[r:favorite]-() ASSERT EXISTS(r.createdAt)',
     ];
   }
 

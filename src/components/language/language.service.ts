@@ -96,47 +96,47 @@ export class LanguageService {
   async createIndexes() {
     return [
       // LANGUAGE NODE
-      'CREATE CONSTRAINT ON (n:Language) ASSERT EXISTS(n.id)',
-      'CREATE CONSTRAINT ON (n:Language) ASSERT n.id IS UNIQUE',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:Language) ASSERT EXISTS(n.id)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:Language) ASSERT n.id IS UNIQUE',
 
-      'CREATE CONSTRAINT ON (n:Language) ASSERT EXISTS(n.createdAt)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:Language) ASSERT EXISTS(n.createdAt)',
 
       // NAME REL
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON ()-[r:name]-() ASSERT EXISTS(r.active)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
 
       // NAME NODE
-      'CREATE CONSTRAINT ON (n:LanguageName) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:LanguageName) ASSERT n.value IS UNIQUE',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:LanguageName) ASSERT EXISTS(n.value)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:LanguageName) ASSERT n.value IS UNIQUE',
 
       // DISPLAYNAME REL
-      'CREATE CONSTRAINT ON ()-[r:displayName]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:displayName]-() ASSERT EXISTS(r.createdAt)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON ()-[r:displayName]-() ASSERT EXISTS(r.active)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON ()-[r:displayName]-() ASSERT EXISTS(r.createdAt)',
 
       // DISPLAYNAME NODE
-      'CREATE CONSTRAINT ON (n:LanguageDisplayName) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:LanguageDisplayName) ASSERT n.value IS UNIQUE',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:LanguageDisplayName) ASSERT EXISTS(n.value)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:LanguageDisplayName) ASSERT n.value IS UNIQUE',
 
       // RODNUMBER REL
-      'CREATE CONSTRAINT ON ()-[r:rodNumber]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:rodNumber]-() ASSERT EXISTS(r.createdAt)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON ()-[r:rodNumber]-() ASSERT EXISTS(r.active)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON ()-[r:rodNumber]-() ASSERT EXISTS(r.createdAt)',
 
       // RODNUMBER NODE
-      'CREATE CONSTRAINT ON (n:LanguageRodNumber) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:LanguageRodNumber) ASSERT n.value IS UNIQUE',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:LanguageRodNumber) ASSERT EXISTS(n.value)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:LanguageRodNumber) ASSERT n.value IS UNIQUE',
 
       // ETHNOLOGUELANGUAGE REL
-      'CREATE CONSTRAINT ON ()-[r:ethnologue]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:ethnologue]-() ASSERT EXISTS(r.createdAt)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON ()-[r:ethnologue]-() ASSERT EXISTS(r.active)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON ()-[r:ethnologue]-() ASSERT EXISTS(r.createdAt)',
 
       // ETHNOLOGUELANGUAGE NODE
-      'CREATE CONSTRAINT ON (n:EthnologueLanguage) ASSERT EXISTS(n.id)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:EthnologueLanguage) ASSERT EXISTS(n.id)',
 
-      'CREATE CONSTRAINT ON (n:EthnologueLanguage) ASSERT EXISTS(n.createdAt)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:EthnologueLanguage) ASSERT EXISTS(n.createdAt)',
 
       // PROPERTY NODE
-      //'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.value)',
-      //'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.active)',
+      //'CREATE CONSTRAINT IF NOT EXISTS ON (n:Property) ASSERT EXISTS(n.value)',
+      //'CREATE CONSTRAINT IF NOT EXISTS ON (n:Property) ASSERT EXISTS(n.active)',
     ];
   }
 

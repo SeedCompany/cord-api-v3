@@ -59,17 +59,17 @@ export class FieldZoneService {
   async createIndexes() {
     return [
       // FIELD ZONE NODE
-      'CREATE CONSTRAINT ON (n:FieldZone) ASSERT EXISTS(n.id)',
-      'CREATE CONSTRAINT ON (n:FieldZone) ASSERT n.id IS UNIQUE',
-      'CREATE CONSTRAINT ON (n:FieldZone) ASSERT EXISTS(n.createdAt)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:FieldZone) ASSERT EXISTS(n.id)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:FieldZone) ASSERT n.id IS UNIQUE',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:FieldZone) ASSERT EXISTS(n.createdAt)',
 
       // FIELD ZONE NAME REL
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON ()-[r:name]-() ASSERT EXISTS(r.active)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
 
       // FIELD ZONE NAME NODE
-      'CREATE CONSTRAINT ON (n:FieldZoneName) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:FieldZoneName) ASSERT n.value IS UNIQUE',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:FieldZoneName) ASSERT EXISTS(n.value)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:FieldZoneName) ASSERT n.value IS UNIQUE',
     ];
   }
 

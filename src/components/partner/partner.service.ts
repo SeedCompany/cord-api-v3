@@ -69,10 +69,10 @@ export class PartnerService {
   @OnIndex()
   async createIndexes() {
     return [
-      'CREATE CONSTRAINT ON (n:Partner) ASSERT EXISTS(n.id)',
-      'CREATE CONSTRAINT ON (n:Partner) ASSERT n.id IS UNIQUE',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:Partner) ASSERT EXISTS(n.id)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:Partner) ASSERT n.id IS UNIQUE',
 
-      'CREATE CONSTRAINT ON (n:Partner) ASSERT EXISTS(n.createdAt)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:Partner) ASSERT EXISTS(n.createdAt)',
     ];
   }
 

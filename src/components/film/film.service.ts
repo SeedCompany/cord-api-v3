@@ -54,15 +54,15 @@ export class FilmService {
   @OnIndex()
   async createIndexes() {
     return [
-      'CREATE CONSTRAINT ON (n:Film) ASSERT EXISTS(n.id)',
-      'CREATE CONSTRAINT ON (n:Film) ASSERT n.id IS UNIQUE',
-      'CREATE CONSTRAINT ON (n:Film) ASSERT EXISTS(n.createdAt)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:Film) ASSERT EXISTS(n.id)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:Film) ASSERT n.id IS UNIQUE',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:Film) ASSERT EXISTS(n.createdAt)',
 
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON ()-[r:name]-() ASSERT EXISTS(r.active)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
 
-      'CREATE CONSTRAINT ON (n:FilmName) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:FilmName) ASSERT n.value IS UNIQUE',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:FilmName) ASSERT EXISTS(n.value)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:FilmName) ASSERT n.value IS UNIQUE',
     ];
   }
 

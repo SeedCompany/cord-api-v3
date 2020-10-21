@@ -62,15 +62,15 @@ export class OrganizationService {
   @OnIndex()
   async createIndexes() {
     return [
-      'CREATE CONSTRAINT ON (n:Organization) ASSERT EXISTS(n.id)',
-      'CREATE CONSTRAINT ON (n:Organization) ASSERT n.id IS UNIQUE',
-      'CREATE CONSTRAINT ON (n:Organization) ASSERT EXISTS(n.createdAt)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:Organization) ASSERT EXISTS(n.id)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:Organization) ASSERT n.id IS UNIQUE',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:Organization) ASSERT EXISTS(n.createdAt)',
 
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON ()-[r:name]-() ASSERT EXISTS(r.active)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
 
-      'CREATE CONSTRAINT ON (n:OrgName) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:OrgName) ASSERT n.value IS UNIQUE',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:OrgName) ASSERT EXISTS(n.value)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:OrgName) ASSERT n.value IS UNIQUE',
     ];
   }
 
@@ -265,7 +265,7 @@ export class OrganizationService {
     session: ISession
   ): Promise<OrganizationListOutput> {
     const orgSortMap: Partial<Record<typeof input.sort, string>> = {
-      name: 'lower(prop.value)',
+      name: 'toLower(prop.value)',
     };
     const sortBy = orgSortMap[input.sort] ?? 'prop.value';
     const query = this.db

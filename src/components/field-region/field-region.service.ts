@@ -61,17 +61,17 @@ export class FieldRegionService {
   async createIndexes() {
     return [
       // FIELD REGION NODE
-      'CREATE CONSTRAINT ON (n:FieldRegion) ASSERT EXISTS(n.id)',
-      'CREATE CONSTRAINT ON (n:FieldRegion) ASSERT n.id IS UNIQUE',
-      'CREATE CONSTRAINT ON (n:FieldRegion) ASSERT EXISTS(n.createdAt)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:FieldRegion) ASSERT EXISTS(n.id)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:FieldRegion) ASSERT n.id IS UNIQUE',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:FieldRegion) ASSERT EXISTS(n.createdAt)',
 
       // FIELD REGION NAME REL
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON ()-[r:name]-() ASSERT EXISTS(r.active)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
 
       // FIELD REGION NAME NODE
-      'CREATE CONSTRAINT ON (n:FieldRegionName) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:FieldRegionName) ASSERT n.value IS UNIQUE',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:FieldRegionName) ASSERT EXISTS(n.value)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:FieldRegionName) ASSERT n.value IS UNIQUE',
     ];
   }
 

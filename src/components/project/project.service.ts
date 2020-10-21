@@ -127,15 +127,15 @@ export class ProjectService {
   @OnIndex()
   async createIndexes() {
     return [
-      'CREATE CONSTRAINT ON (n:Project) ASSERT EXISTS(n.id)',
-      'CREATE CONSTRAINT ON (n:Project) ASSERT n.id IS UNIQUE',
-      'CREATE CONSTRAINT ON (n:Project) ASSERT EXISTS(n.createdAt)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:Project) ASSERT EXISTS(n.id)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:Project) ASSERT n.id IS UNIQUE',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:Project) ASSERT EXISTS(n.createdAt)',
 
-      'CREATE CONSTRAINT ON ()-[r:step]-() ASSERT EXISTS(r.createdAt)',
-      'CREATE CONSTRAINT ON ()-[r:status]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:status]-() ASSERT EXISTS(r.createdAt)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON ()-[r:step]-() ASSERT EXISTS(r.createdAt)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON ()-[r:status]-() ASSERT EXISTS(r.active)',
+      'CREATE CONSTRAINT IF NOT EXISTS ON ()-[r:status]-() ASSERT EXISTS(r.createdAt)',
 
-      'CREATE CONSTRAINT ON (n:ProjectName) ASSERT n.value IS UNIQUE',
+      'CREATE CONSTRAINT IF NOT EXISTS ON (n:ProjectName) ASSERT n.value IS UNIQUE',
     ];
   }
 
@@ -549,7 +549,7 @@ export class ProjectService {
   ): Promise<ProjectListOutput> {
     const label = `${filter.type ?? ''}Project`;
     const projectSortMap: Partial<Record<typeof input.sort, string>> = {
-      name: 'lower(prop.value)',
+      name: 'toLower(prop.value)',
       sensitivity: 'sensitivityValue',
     };
 
