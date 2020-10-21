@@ -139,6 +139,23 @@ export class DatabaseService {
     return this.db.query();
   }
 
+  async getServerInfo() {
+    const info = await this.db
+      .query()
+      .raw(
+        `call dbms.components()
+         yield name, versions, edition
+         unwind versions as version
+         return name, version, edition`
+      )
+      .asResult<{ name: string; version: string; edition: string }>()
+      .first();
+    if (!info) {
+      throw new ServerException('Unable to determine server info');
+    }
+    return info;
+  }
+
   async readProperties<TObject extends Resource>({
     id,
     session,

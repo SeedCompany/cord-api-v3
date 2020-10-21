@@ -2,6 +2,7 @@ import { DiscoveryModule, DiscoveryService } from '@golevelup/nestjs-discovery';
 import { Module, OnModuleInit } from '@nestjs/common';
 import { Neo4jError } from 'neo4j-driver';
 import { ConfigService } from '../..';
+import { many } from '../../../common';
 import { ILogger, Logger } from '../../logger';
 import { DatabaseService } from '../database.service';
 import { DB_INDEX_KEY } from './indexer.constants';
@@ -27,6 +28,9 @@ export class IndexerModule implements OnModuleInit {
     );
     this.logger.debug('Discovered indexers', { count: discovered.length });
 
+    const serverInfo = await this.db.getServerInfo();
+    const isV4 = serverInfo.version.startsWith('4');
+
     const indexers = discovered.map((h) => h.discoveredMethod);
     for (const { handler, methodName, parentClass } of indexers) {
       this.logger.debug('Running indexer', {
@@ -37,11 +41,14 @@ export class IndexerModule implements OnModuleInit {
         db: this.db,
         logger: this.logger,
       });
-      const statements = maybeStatements
-        ? Array.isArray(maybeStatements)
-          ? maybeStatements
-          : [maybeStatements]
-        : [];
+      const statements = many<string>(maybeStatements ?? []).map((statement) =>
+        isV4
+          ? statement.replace(
+              'CREATE CONSTRAINT ON ',
+              'CREATE CONSTRAINT IF NOT EXISTS ON'
+            )
+          : statement
+      );
       for (const statement of statements) {
         try {
           await this.db.query().raw(statement).run();
