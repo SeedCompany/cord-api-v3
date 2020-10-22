@@ -1,16 +1,5 @@
 import { registerEnumType } from '@nestjs/graphql';
 
-export enum SearchableBaseNodeLabels {
-  Project = 'Project',
-  Language = 'Language',
-  Organization = 'Organization',
-  Location = 'Location',
-  Film = 'Film',
-  Story = 'Story',
-  LiteracyMaterial = 'LiteracyMaterial',
-  User = 'User',
-}
-
 export enum BaseNodeLabel {
   Budget = 'Budget',
   BudgetRecord = 'BudgetRecord',
@@ -77,8 +66,4 @@ export enum DbBaseNodeLabel {
 
 registerEnumType(BaseNodeLabel, {
   name: 'BaseNodeLabel',
-});
-
-registerEnumType(SearchableBaseNodeLabels, {
-  name: 'SearchableBaseNodeLabels',
 });

@@ -6,7 +6,6 @@ import { AuthorizationModule } from './components/authorization/authorization.mo
 import { BudgetModule } from './components/budget/budget.module';
 import { CeremonyModule } from './components/ceremony/ceremony.module';
 import { EngagementModule } from './components/engagement/engagement.module';
-import { FavoriteModule } from './components/favorites/favorite.module';
 import { FieldRegionModule } from './components/field-region/field-region.module';
 import { FieldZoneModule } from './components/field-zone/field-zone.module';
 import { FileModule } from './components/file/file.module';
@@ -47,7 +46,6 @@ import { CoreModule, LoggerModule } from './core';
     ProjectModule,
     LocationModule,
     OrganizationModule,
-    FavoriteModule,
     ScriptureModule,
     SongModule,
     StoryModule,
