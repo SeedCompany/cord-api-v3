@@ -6,4 +6,5 @@ export class DbOrganization extends DbBaseNode {
   __className = DbBaseNodeLabel.Organization;
   name: any = null;
   address: any = null;
+  locations: any = null;
 }

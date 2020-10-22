@@ -210,6 +210,7 @@ export const RegionalDirector = new DbRole({
       properties: [
         { propertyName: 'name',                       permission: { read, write, }, },
         { propertyName: 'address',                    permission: { read, write, }, },
+        { propertyName: 'locations',                  permission: { read, write, }, },
     ]}),
     new DbBaseNodeGrant<DbPartner>({
       __className: 'DbPartner',
@@ -297,6 +298,7 @@ export const RegionalDirector = new DbRole({
         { propertyName: 'education',                  permission: { read, write, }, },
         { propertyName: 'organization',               permission: { read, write, }, },
         { propertyName: 'unavailability',             permission: { read, write, }, },
+        { propertyName: 'locations',                  permission: { read, write, }, },
     ]}),
     new DbBaseNodeGrant<DbUnavailability>({
       __className: 'DbUnavailability',

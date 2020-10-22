@@ -1,12 +1,20 @@
 import {
   Args,
+  ArgsType,
   Mutation,
   Parent,
   Query,
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { firstLettersOfWords, IdArg, ISession, Session } from '../../common';
+import {
+  firstLettersOfWords,
+  IdArg,
+  IdField,
+  ISession,
+  Session,
+} from '../../common';
+import { LocationListInput, SecuredLocationList } from '../location';
 import {
   OrganizationListInput,
   SecuredOrganizationList,
@@ -30,6 +38,15 @@ import {
   UnavailabilityListInput,
 } from './unavailability';
 import { fullName, UserService } from './user.service';
+
+@ArgsType()
+class ModifyLocationArgs {
+  @IdField()
+  userId: string;
+
+  @IdField()
+  locationId: string;
+}
 
 @Resolver(User)
 export class UserResolver {
@@ -135,6 +152,20 @@ export class UserResolver {
     return this.userService.listEducations(id, input, session);
   }
 
+  @ResolveField(() => SecuredLocationList)
+  async locations(
+    @Session() session: ISession,
+    @Parent() user: User,
+    @Args({
+      name: 'input',
+      type: () => LocationListInput,
+      defaultValue: LocationListInput.defaultVal,
+    })
+    input: LocationListInput
+  ): Promise<SecuredLocationList> {
+    return this.userService.listLocations(user.id, input, session);
+  }
+
   @Mutation(() => CreatePersonOutput, {
     description: 'Create a person',
   })
@@ -164,6 +195,28 @@ export class UserResolver {
   async deleteUser(@Session() session: ISession, @IdArg() id: string) {
     await this.userService.delete(id, session);
     return true;
+  }
+
+  @Mutation(() => User, {
+    description: 'Add a location to a user',
+  })
+  async addLocationToUser(
+    @Session() session: ISession,
+    @Args() { userId, locationId }: ModifyLocationArgs
+  ): Promise<User> {
+    await this.userService.addLocation(userId, locationId, session);
+    return await this.userService.readOne(userId, session);
+  }
+
+  @Mutation(() => User, {
+    description: 'Remove a location from a user',
+  })
+  async removeLocationFromUser(
+    @Session() session: ISession,
+    @Args() { userId, locationId }: ModifyLocationArgs
+  ): Promise<User> {
+    await this.userService.removeLocation(userId, locationId, session);
+    return await this.userService.readOne(userId, session);
   }
 
   @Query(() => Boolean, {

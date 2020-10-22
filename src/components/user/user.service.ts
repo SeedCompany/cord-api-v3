@@ -41,6 +41,11 @@ import { Role } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
 import {
+  LocationListInput,
+  LocationService,
+  SecuredLocationList,
+} from '../location';
+import {
   OrganizationListInput,
   OrganizationService,
   SecuredOrganizationList,
@@ -116,6 +121,7 @@ export class UserService {
     private readonly config: ConfigService,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
+    private readonly locationService: LocationService,
     @Logger('user:service') private readonly logger: ILogger
   ) {}
 
@@ -604,6 +610,88 @@ export class UserService {
       ...result,
       canRead: user.canRead,
       canCreate: user.canEdit,
+    };
+  }
+
+  async addLocation(
+    userId: string,
+    locationId: string,
+    session: ISession
+  ): Promise<void> {
+    try {
+      await this.removeLocation(userId, locationId, session);
+      await this.db
+        .query()
+        .matchNode('user', 'User', { id: userId })
+        .matchNode('location', 'Location', { id: locationId })
+        .create([
+          node('user'),
+          relation('out', '', 'locations', {
+            active: true,
+            createdAt: DateTime.local(),
+          }),
+          node('location'),
+        ])
+        .run();
+    } catch (e) {
+      throw new ServerException('Could not add location to user', e);
+    }
+  }
+
+  async removeLocation(
+    userId: string,
+    locationId: string,
+    _session: ISession
+  ): Promise<void> {
+    try {
+      await this.db
+        .query()
+        .matchNode('user', 'User', { id: userId })
+        .matchNode('location', 'Location', { id: locationId })
+        .match([
+          [
+            node('user'),
+            relation('out', 'rel', 'locations', { active: true }),
+            node('location'),
+          ],
+        ])
+        .setValues({
+          'rel.active': false,
+        })
+        .run();
+    } catch (e) {
+      throw new ServerException('Could not remove location from user', e);
+    }
+  }
+
+  async listLocations(
+    userId: string,
+    input: LocationListInput,
+    session: ISession
+  ): Promise<SecuredLocationList> {
+    const query = this.db
+      .query()
+      .match([
+        requestingUser(session),
+        ...permissionsOfNode('Location'),
+        relation('in', '', 'otherLocations', { active: true }),
+        node('user', 'User', {
+          id: userId,
+        }),
+      ])
+      .call(
+        calculateTotalAndPaginateList,
+        input,
+        this.locationService.securedProperties,
+        defaultSorter
+      );
+
+    return {
+      ...(await runListQuery(query, input, (id) =>
+        this.locationService.readOne(id, session)
+      )),
+      canRead: true, // TODO
+      canCreate: true, // TODO
     };
   }
 

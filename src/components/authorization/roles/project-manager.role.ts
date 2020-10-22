@@ -188,6 +188,7 @@ export const ProjectManager = new DbRole({
       properties: [
         { propertyName: 'name',                       permission: { read, }, },
         { propertyName: 'address',                    permission: { read, }, },
+        { propertyName: 'locations',                  permission: { read, }, },
     ]}),
     new DbBaseNodeGrant<DbPartner>({
       __className: 'DbPartner',
@@ -275,6 +276,7 @@ export const ProjectManager = new DbRole({
         { propertyName: 'education',                  permission: { read, }, },
         { propertyName: 'organization',               permission: { read, }, },
         { propertyName: 'unavailability',             permission: { read, }, },
+        { propertyName: 'locations',                  permission: { read, }, },
     ]}),
     new DbBaseNodeGrant<DbUnavailability>({
       __className: 'DbUnavailability',
