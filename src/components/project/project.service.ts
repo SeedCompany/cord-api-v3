@@ -28,6 +28,7 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
+  defaultSorter,
   matchPermList,
   matchPropList,
   permissionsOfNode,
@@ -874,13 +875,89 @@ export class ProjectService {
     };
   }
 
-  async listOtherLocations(
-    _projectId: string,
-    _input: LocationListInput,
+  async addOtherLocation(
+    projectId: string,
+    locationId: string,
+    session: ISession
+  ): Promise<void> {
+    try {
+      await this.removeOtherLocation(projectId, locationId, session);
+      await this.db
+        .query()
+        .matchNode('project', 'Project', { id: projectId })
+        .matchNode('location', 'Location', { id: locationId })
+        .create([
+          node('project'),
+          relation('out', '', 'otherLocations', {
+            active: true,
+            createdAt: DateTime.local(),
+          }),
+          node('location'),
+        ])
+        .run();
+    } catch (e) {
+      throw new ServerException('Could not add other location to project', e);
+    }
+  }
+
+  async removeOtherLocation(
+    projectId: string,
+    locationId: string,
     _session: ISession
+  ): Promise<void> {
+    try {
+      await this.db
+        .query()
+        .matchNode('project', 'Project', { id: projectId })
+        .matchNode('location', 'Location', { id: locationId })
+        .match([
+          [
+            node('project'),
+            relation('out', 'rel', 'otherLocations', { active: true }),
+            node('location'),
+          ],
+        ])
+        .setValues({
+          'rel.active': false,
+        })
+        .run();
+    } catch (e) {
+      throw new ServerException(
+        'Could not remove other location from project',
+        e
+      );
+    }
+  }
+
+  async listOtherLocations(
+    projectId: string,
+    input: LocationListInput,
+    session: ISession
   ): Promise<SecuredLocationList> {
-    // TODO
-    return ([] as unknown) as SecuredLocationList;
+    const query = this.db
+      .query()
+      .match([
+        requestingUser(session),
+        ...permissionsOfNode('Location'),
+        relation('in', '', 'otherLocations', { active: true }),
+        node('project', 'Project', {
+          id: projectId,
+        }),
+      ])
+      .call(
+        calculateTotalAndPaginateList,
+        input,
+        this.locationService.securedProperties,
+        defaultSorter
+      );
+
+    return {
+      ...(await runListQuery(query, input, (id) =>
+        this.locationService.readOne(id, session)
+      )),
+      canRead: true, // TODO
+      canCreate: true, // TODO
+    };
   }
 
   async currentBudget(

@@ -1,5 +1,6 @@
 import {
   Args,
+  ArgsType,
   Mutation,
   Parent,
   Query,
@@ -9,6 +10,7 @@ import {
 import {
   firstLettersOfWords,
   IdArg,
+  IdField,
   ISession,
   SecuredString,
   Session,
@@ -39,6 +41,15 @@ import {
   SecuredProjectMemberList,
 } from './project-member/dto';
 import { ProjectService } from './project.service';
+
+@ArgsType()
+class ModifyOtherLocationArgs {
+  @IdField()
+  projectId: string;
+
+  @IdField()
+  locationId: string;
+}
 
 @Resolver(IProject)
 export class ProjectResolver {
@@ -252,6 +263,32 @@ export class ProjectResolver {
   ): Promise<boolean> {
     await this.projectService.delete(id, session);
     return true;
+  }
+
+  @Mutation(() => IProject, {
+    description: 'Add a location to a project',
+  })
+  async addOtherLocationToProject(
+    @Session() session: ISession,
+    @Args() { projectId, locationId }: ModifyOtherLocationArgs
+  ): Promise<Project> {
+    await this.projectService.addOtherLocation(projectId, locationId, session);
+    return await this.projectService.readOne(projectId, session);
+  }
+
+  @Mutation(() => IProject, {
+    description: 'Remove a location from a project',
+  })
+  async removeOtherLocationFromProject(
+    @Session() session: ISession,
+    @Args() { projectId, locationId }: ModifyOtherLocationArgs
+  ): Promise<Project> {
+    await this.projectService.removeOtherLocation(
+      projectId,
+      locationId,
+      session
+    );
+    return await this.projectService.readOne(projectId, session);
   }
 
   @Query(() => Boolean, {
