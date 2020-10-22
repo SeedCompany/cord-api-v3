@@ -145,7 +145,7 @@ export class FundingAccountService {
     this.logger.info('readOne', { id, userId: session.userId });
 
     if (!id) {
-      throw new NotFoundException('no id given');
+      throw new NotFoundException('Invalid: Blank ID');
     }
 
     if (!session.userId) {
