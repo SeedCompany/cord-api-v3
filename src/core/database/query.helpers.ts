@@ -1,16 +1,6 @@
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { entries, ISession, Resource } from '../../common';
-import { collect, count, mapping, matchPermList, matchPropList } from './query';
-import { hasMore as newHasMore } from './results';
-
-/** @deprecated */
-const oldMapping = mapping;
-/** @deprecated */
-const oldCollect = collect;
-/** @deprecated */
-const oldCount = count;
-export { oldMapping as mapping, oldCollect as collect, oldCount as count };
 
 // CREATE clauses //////////////////////////////////////////////////////
 
@@ -124,15 +114,6 @@ export function matchRequestingUser(
     }),
   ]);
 }
-
-/** @deprecated */
-export const hasMore = newHasMore;
-
-/** @deprecated */
-export const getPermList = matchPermList;
-
-/** @deprecated */
-export const getPropList = matchPropList;
 
 //DELETE service
 export const setBaseNodeLabelsAndIdDeleted = (

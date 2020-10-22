@@ -14,8 +14,6 @@ import {
 import {
   ConfigService,
   DatabaseService,
-  getPermList,
-  getPropList,
   ILogger,
   Logger,
   matchRequestingUser,
@@ -27,6 +25,8 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
+  matchPermList,
+  matchPropList,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -300,8 +300,8 @@ export class UserService {
       .query()
       .call(matchRequestingUser, { userId })
       .match([node('node', 'User', { id })])
-      .call(getPermList, 'node')
-      .call(getPropList, 'permList')
+      .call(matchPermList, 'node')
+      .call(matchPropList, 'permList')
       .return('propList, permList, node')
       .asResult<StandardReadResult<DbPropsOfDto<User>>>();
 

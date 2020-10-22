@@ -25,11 +25,11 @@ import {
 import { ILogger, Logger } from '..';
 import { ConfigService } from '../config/config.service';
 import {
-  hasMore,
   setBaseNodeLabelsAndIdDeleted,
   setPropLabelsAndValuesDeleted,
   UniqueProperties,
 } from './query.helpers';
+import { hasMore } from './results';
 
 export const property = (
   prop: string,

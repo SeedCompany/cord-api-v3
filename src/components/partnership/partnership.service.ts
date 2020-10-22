@@ -14,8 +14,6 @@ import {
   ConfigService,
   createBaseNode,
   DatabaseService,
-  getPermList,
-  getPropList,
   IEventBus,
   ILogger,
   Logger,
@@ -25,6 +23,8 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
+  matchPermList,
+  matchPropList,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -278,8 +278,8 @@ export class PartnershipService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Partnership', { id })])
-      .call(getPermList, 'requestingUser')
-      .call(getPropList, 'permList')
+      .call(matchPermList)
+      .call(matchPropList, 'permList')
       .match([
         node('node'),
         relation('in', '', 'partnership'),
