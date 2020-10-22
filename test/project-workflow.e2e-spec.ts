@@ -32,12 +32,16 @@ import {
   login,
   registerUser,
   registerUserWithPower,
+  runAsAdmin,
   TestApp,
   updateProject,
 } from './utility';
 import { resetDatabase } from './utility/reset-database';
 import { createProduct } from './utility/create-product';
-import { changeProjectStep } from './utility/transition-project';
+import {
+  changeProjectStep,
+  stepsFromEarlyConversationToBeforeActive,
+} from './utility/transition-project';
 
 describe('Project-Workflow e2e', () => {
   let app: TestApp;
@@ -87,7 +91,6 @@ describe('Project-Workflow e2e', () => {
       roles: [Role.FinancialAnalyst, Role.Controller],
       password: password,
     });
-
     await login(app, { email: projectManager.email.value, password });
   });
   afterAll(async () => {
@@ -134,7 +137,11 @@ describe('Project-Workflow e2e', () => {
   });
 
   describe('Workflow', () => {
-    it('should test project workflow', async () => {
+    beforeEach(async () => {
+      await login(app, { email: projectManager.email.value, password });
+    });
+
+    it('should test create project workflow', async () => {
       /**
        * Step1. Create Project
        *  */
@@ -239,10 +246,13 @@ describe('Project-Workflow e2e', () => {
       await createProduct(app, {
         engagementId: languageEngagement.id,
       });
+    });
 
+    it('should test project workflow', async () => {
       /**
        * Step2. Approval Workflow
        *  */
+      const project = await createProject(app);
       await changeProjectStep(
         app,
         project.id,
@@ -334,7 +344,7 @@ describe('Project-Workflow e2e', () => {
       await login(app, { email: financialAnalyst.email.value, password });
       await changeProjectStep(app, project.id, ProjectStep.Completed);
 
-      result = await app.graphql.query(
+      const result = await app.graphql.query(
         gql`
           query project($id: ID!) {
             project(id: $id) {
@@ -349,6 +359,70 @@ describe('Project-Workflow e2e', () => {
       );
       expect(result.project.step.value).toBe(ProjectStep.Completed);
       expect(result.project.status).toBe(ProjectStatus.Completed);
+    });
+
+    it('should test project suspension workflow', async () => {
+      const project = await createProject(app);
+      await runAsAdmin(app, async () => {
+        for (const next of stepsFromEarlyConversationToBeforeActive) {
+          await changeProjectStep(app, project.id, next);
+        }
+      });
+
+      // Login as Controller
+      await login(app, {
+        email: financialAnalystController.email.value,
+        password,
+      });
+      await changeProjectStep(app, project.id, ProjectStep.Active);
+
+      // Login as Director
+      await login(app, { email: director.email.value, password });
+      const stepsFromActiveToPendingReactivationApproval = [
+        ProjectStep.DiscussingChangeToPlan,
+        ProjectStep.DiscussingSuspension,
+        ProjectStep.PendingSuspensionApproval,
+        ProjectStep.Suspended,
+        ProjectStep.DiscussingReactivation,
+        ProjectStep.PendingReactivationApproval,
+      ];
+
+      for (const next of stepsFromActiveToPendingReactivationApproval) {
+        await changeProjectStep(app, project.id, next);
+      }
+      await changeProjectStep(app, project.id, ProjectStep.ActiveChangedPlan);
+    });
+
+    it('should test project termination workflow', async () => {
+      const project = await createProject(app);
+      await runAsAdmin(app, async () => {
+        for (const next of stepsFromEarlyConversationToBeforeActive) {
+          await changeProjectStep(app, project.id, next);
+        }
+      });
+
+      // Login as Controller
+      await login(app, {
+        email: financialAnalystController.email.value,
+        password,
+      });
+      await changeProjectStep(app, project.id, ProjectStep.Active);
+
+      // Login as Director
+      await login(app, { email: director.email.value, password });
+      const stepsFromActiveToPendingTerminationApproval = [
+        ProjectStep.DiscussingChangeToPlan,
+        ProjectStep.DiscussingSuspension,
+        ProjectStep.PendingSuspensionApproval,
+        ProjectStep.Suspended,
+        ProjectStep.DiscussingTermination,
+        ProjectStep.PendingTerminationApproval,
+      ];
+
+      for (const next of stepsFromActiveToPendingTerminationApproval) {
+        await changeProjectStep(app, project.id, next);
+      }
+      await changeProjectStep(app, project.id, ProjectStep.Terminated);
     });
   });
 });
