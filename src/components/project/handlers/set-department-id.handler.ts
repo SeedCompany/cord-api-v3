@@ -27,32 +27,11 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
     }
   }
 
-  private async getDepartmentIdPrefixForProject(project: Project) {
-    // TODO: validate if active property lives on relationship or BaseNode
-    const accountNumber = await this.db
-      .query()
-      .raw(
-        `
-        MATCH (:Project {id: $projectId})-[:primaryLocation {active: true}]-()-[:fundingAccount {active: true}]-()-[:accountNumber {active:true}]-(accountNumberNode:Property)
-        RETURN accountNumberNode.value
-        `,
-        { projectId: project.id }
-      )
-      .first();
-
-    if (!accountNumber) {
-      throw new ServerException(
-        `Unable to find accountNumber associated with project: ${project.id}`
-      );
-    }
-    return accountNumber['accountNumberNode.value'];
-  }
-
   private async assignDepartmentIdForProject(project: Project) {
     const departmentIdPrefix = await this.getDepartmentIdPrefixForProject(
       project
     );
-    await this.db
+    const res = await this.db
       .query()
       .raw(
         //TODO: determine if schema update should be applied to allow for transaction locks.
@@ -72,6 +51,32 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
         `,
         { departmentIdPrefix: departmentIdPrefix, projectId: project.id }
       )
-      .run();
+      .asResult<{ departmentId: string }>()
+      .first();
+    if (!res) {
+      throw new ServerException('Unable to assign department ID');
+    }
+  }
+
+  private async getDepartmentIdPrefixForProject(project: Project) {
+    const res = await this.db
+      .query()
+      .raw(
+        `
+        MATCH (:Project {id: $projectId})-[:primaryLocation {active: true}]
+              -()-[:fundingAccount {active: true}]
+              -()-[:accountNumber {active: true}]-(node:Property)
+        RETURN node.value as prefix
+      `,
+        { projectId: project.id }
+      )
+      .asResult<{ prefix: string }>()
+      .first();
+    if (!res) {
+      throw new ServerException(
+        `Unable to find accountNumber associated with project: ${project.id}`
+      );
+    }
+    return res.prefix;
   }
 }
