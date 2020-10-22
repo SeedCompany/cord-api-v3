@@ -219,6 +219,7 @@ export class ProjectMemberService {
         ...securedProps.roles,
         value: securedProps.roles.value ?? [],
       },
+      canDelete: true, // TODO
     };
   }
 

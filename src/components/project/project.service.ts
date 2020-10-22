@@ -458,6 +458,7 @@ export class ProjectService {
         ...securedProps.fieldRegion,
         value: result.fieldRegionId,
       },
+      canDelete: true, // TODO
     };
   }
 

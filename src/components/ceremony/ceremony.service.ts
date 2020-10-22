@@ -150,6 +150,7 @@ export class CeremonyService {
       ...parseBaseNodeProperties(result.node),
       ...securedProps,
       type: parsedProps.type,
+      canDelete: true, // TODO
     };
   }
 

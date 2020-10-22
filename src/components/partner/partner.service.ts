@@ -280,6 +280,7 @@ export class PartnerService {
         ...secured.financialReportingTypes,
         value: secured.financialReportingTypes.value || [],
       },
+      canDelete: true, // TODO
     };
   }
 

@@ -211,6 +211,7 @@ export class FieldRegionService {
         ...secured.fieldZone,
         value: result.fieldZoneId,
       },
+      canDelete: true, // TODO
     };
   }
 

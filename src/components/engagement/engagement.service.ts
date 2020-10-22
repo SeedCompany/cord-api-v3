@@ -731,6 +731,7 @@ export class EngagementService {
         ...securedProperties.mentor,
         value: result.mentorId,
       },
+      canDelete: true, // TODO
     };
   }
 

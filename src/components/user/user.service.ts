@@ -326,6 +326,7 @@ export class UserService {
         ...securedProps.roles,
         value: rolesValue,
       },
+      canDelete: true, // TODO
     };
   }
 

@@ -333,6 +333,7 @@ export class BudgetService {
       ...securedProps,
       status: props.status,
       records: records.items,
+      canDelete: false,
     };
   }
 
@@ -399,6 +400,7 @@ export class BudgetService {
     return {
       ...parseBaseNodeProperties(result.node),
       ...securedProps,
+      canDelete: false,
     };
   }
 
