@@ -23,7 +23,7 @@ rules:
       filter: __typename
       format: ~
     - selector: property
-      format: [camelCase, PascalCase, snake_case]
+      format: [camelCase, PascalCase]
       leadingUnderscore: forbid
     - selector: enumMember
       format: [PascalCase, UPPER_CASE]

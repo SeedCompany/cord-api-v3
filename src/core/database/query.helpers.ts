@@ -131,6 +131,7 @@ export const setBaseNodeLabelsAndIdDeleted = (
     .with('*, node.id as nodeId')
     .set({
       variables: {
+        // eslint-disable-next-line @typescript-eslint/naming-convention
         'node.deleted_id': 'nodeId',
       },
     })
