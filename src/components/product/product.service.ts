@@ -5,7 +5,6 @@ import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/rel
 import { difference } from 'lodash';
 import { DateTime } from 'luxon';
 import {
-  DuplicateException,
   generateId,
   InputException,
   ISession,
@@ -88,21 +87,6 @@ export class ProductService {
     session: ISession
   ): Promise<AnyProduct> {
     const createdAt = DateTime.local();
-    // create product
-    const mediums_set = new Set(input.mediums);
-    if (input.mediums?.length !== mediums_set.size) {
-      throw new DuplicateException(
-        'product.mediums',
-        'Mediums has duplicate values'
-      );
-    }
-    const purposes_set = new Set(input.purposes);
-    if (input.purposes?.length !== purposes_set.size) {
-      throw new DuplicateException(
-        'product.purposes',
-        'Purposes has duplicate values'
-      );
-    }
     const secureProps: Property[] = [
       {
         key: 'mediums',

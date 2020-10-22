@@ -1,7 +1,8 @@
 import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
+import { uniq } from 'lodash';
 import { ScriptureRangeInput } from '../../scripture';
 import { ProductMedium } from './product-medium';
 import { ProductMethodology } from './product-methodology';
@@ -52,9 +53,11 @@ export abstract class CreateProduct {
   readonly scriptureReferencesOverride?: ScriptureRangeInput[];
 
   @Field(() => [ProductMedium], { nullable: true })
+  @Transform(uniq)
   readonly mediums?: ProductMedium[] = [];
 
   @Field(() => [ProductPurpose], { nullable: true })
+  @Transform(uniq)
   readonly purposes?: ProductPurpose[] = [];
 
   @Field(() => ProductMethodology, { nullable: true })
