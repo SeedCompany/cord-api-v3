@@ -8,6 +8,7 @@ import {
   FinancialReportingType,
   Partnership,
   PartnershipAgreementStatus,
+  UpdatePartnershipInput,
 } from '../src/components/partnership';
 import { Project } from '../src/components/project/dto';
 import {
@@ -81,26 +82,23 @@ describe('Partnership e2e', () => {
       Object.values(PartnershipAgreementStatus)
     );
     const newMouStatus = sample(Object.values(PartnershipAgreementStatus));
-    const newTypes = [sample(Object.values(PartnerType)), PartnerType.Managing];
+    const newTypes = [PartnerType.Managing];
+
+    const input: UpdatePartnershipInput = {
+      partnership: {
+        id: partnership.id,
+        agreementStatus: partnership.agreementStatus.canEdit
+          ? newAgreementStatus
+          : undefined,
+        mouStatus: partnership.mouStatus.canEdit ? newMouStatus : undefined,
+        types: partnership.types.canEdit ? newTypes : undefined,
+      },
+    };
 
     const result = await app.graphql.query(
       gql`
-        mutation updatePartnership(
-          $id: ID!
-          $agreementStatus: PartnershipAgreementStatus!
-          $mouStatus: PartnershipAgreementStatus!
-          $types: [PartnerType!]!
-        ) {
-          updatePartnership(
-            input: {
-              partnership: {
-                id: $id
-                agreementStatus: $agreementStatus
-                mouStatus: $mouStatus
-                types: $types
-              }
-            }
-          ) {
+        mutation updatePartnership($input: UpdatePartnershipInput!) {
+          updatePartnership(input: $input) {
             partnership {
               ...partnership
             }
@@ -108,24 +106,21 @@ describe('Partnership e2e', () => {
         }
         ${fragments.partnership}
       `,
-      {
-        id: partnership.id,
-        agreementStatus: newAgreementStatus,
-        mouStatus: newMouStatus,
-        types: newTypes,
-      }
+      { input }
     );
-
     expect(result.updatePartnership.partnership.id).toBe(partnership.id);
-    expect(result.updatePartnership.partnership.agreementStatus.value).toBe(
-      newAgreementStatus
-    );
-    expect(result.updatePartnership.partnership.mouStatus.value).toBe(
-      newMouStatus
-    );
-    expect(result.updatePartnership.partnership.types.value).toEqual(
-      expect.arrayContaining(newTypes)
-    );
+    partnership.agreementStatus.canEdit &&
+      expect(result.updatePartnership.partnership.agreementStatus.value).toBe(
+        newAgreementStatus
+      );
+    partnership.mouStatus.canEdit &&
+      expect(result.updatePartnership.partnership.mouStatus.value).toBe(
+        newMouStatus
+      );
+    partnership.types.canEdit &&
+      expect(result.updatePartnership.partnership.types.value).toEqual(
+        expect.arrayContaining(newTypes)
+      );
   });
 
   it.skip('delete partnership', async () => {
