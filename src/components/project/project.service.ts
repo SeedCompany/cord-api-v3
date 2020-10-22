@@ -590,7 +590,7 @@ export class ProjectService {
 
   async delete(id: string, session: ISession): Promise<void> {
     await this.authorizationService.checkPower(
-      Powers.DeleteLanguage,
+      Powers.DeleteProject,
       session.userId
     );
 
