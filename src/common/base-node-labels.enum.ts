@@ -1,37 +1,3 @@
-import { registerEnumType } from '@nestjs/graphql';
-
-export enum BaseNodeLabel {
-  Budget = 'Budget',
-  BudgetRecord = 'BudgetRecord',
-  Ceremony = 'Ceremony',
-  Directory = 'Directory',
-  Education = 'Education',
-  Engagement = 'Engagement',
-  EthnologueLanguage = 'EthnologueLanguage',
-  FieldRegion = 'FieldRegion',
-  FieldZone = 'FieldZone',
-  File = 'File',
-  FileVersion = 'FileVersion',
-  Film = 'Film',
-  FundingAccount = 'FundingAccount',
-  InternshipEngagement = 'InternshipEngagement',
-  Language = 'Language',
-  LanguageEngagement = 'LanguageEngagement',
-  LiteracyMaterial = 'LiteracyMaterial',
-  Location = 'Location',
-  Organization = 'Organization',
-  Partner = 'Partner',
-  Partnership = 'Partnership',
-  Project = 'Project',
-  ProjectMember = 'ProjectMember',
-  Producible = 'Producible',
-  Product = 'Product',
-  Song = 'Song',
-  Story = 'Story',
-  Unavailability = 'Unavailability',
-  User = 'User',
-}
-
 export enum DbBaseNodeLabel {
   Budget = 'DbBudget',
   BudgetRecord = 'DbBudgetRecord',
@@ -63,7 +29,3 @@ export enum DbBaseNodeLabel {
   Unavailability = 'DbUnavailability',
   User = 'DbUser',
 }
-
-registerEnumType(BaseNodeLabel, {
-  name: 'BaseNodeLabel',
-});
