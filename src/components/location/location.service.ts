@@ -45,7 +45,7 @@ import { DbLocation } from './model';
 
 @Injectable()
 export class LocationService {
-  private readonly securedProperties = {
+  readonly securedProperties = {
     name: true,
     fundingAccount: true,
     isoAlpha3: true,

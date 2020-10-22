@@ -1,6 +1,6 @@
 import {
   Args,
-  ID,
+  ArgsType,
   Mutation,
   Parent,
   Query,
@@ -10,6 +10,7 @@ import {
 import {
   firstLettersOfWords,
   IdArg,
+  IdField,
   ISession,
   SecuredString,
   Session,
@@ -40,6 +41,15 @@ import {
   SecuredProjectMemberList,
 } from './project-member/dto';
 import { ProjectService } from './project.service';
+
+@ArgsType()
+class ModifyOtherLocationArgs {
+  @IdField()
+  projectId: string;
+
+  @IdField()
+  locationId: string;
+}
 
 @Resolver(IProject)
 export class ProjectResolver {
@@ -260,11 +270,10 @@ export class ProjectResolver {
   })
   async addOtherLocationToProject(
     @Session() session: ISession,
-    @Args('projectId', { type: () => ID }) projectId: string,
-    @Args('locationId', { type: () => ID }) locationId: string
+    @Args() { projectId, locationId }: ModifyOtherLocationArgs
   ): Promise<Project> {
     await this.projectService.addOtherLocation(projectId, locationId, session);
-    return this.projectService.readOne(projectId, session);
+    return await this.projectService.readOne(projectId, session);
   }
 
   @Mutation(() => IProject, {
@@ -272,15 +281,14 @@ export class ProjectResolver {
   })
   async removeOtherLocationFromProject(
     @Session() session: ISession,
-    @Args('projectId', { type: () => ID }) projectId: string,
-    @Args('locationId', { type: () => ID }) locationId: string
+    @Args() { projectId, locationId }: ModifyOtherLocationArgs
   ): Promise<Project> {
     await this.projectService.removeOtherLocation(
       projectId,
       locationId,
       session
     );
-    return this.projectService.readOne(projectId, session);
+    return await this.projectService.readOne(projectId, session);
   }
 
   @Query(() => Boolean, {

@@ -51,7 +51,6 @@ import {
 } from '../engagement';
 import { FileService, SecuredDirectory } from '../file';
 import {
-  Location,
   LocationListInput,
   LocationService,
   SecuredLocationList,
@@ -931,36 +930,38 @@ export class ProjectService {
 
   async listOtherLocations(
     projectId: string,
-    _input: LocationListInput,
+    input: LocationListInput,
     session: ISession
   ): Promise<SecuredLocationList> {
-    const result = await this.db
+    const query = this.db
       .query()
-      .matchNode('project', 'Project', { id: projectId })
       .match([
-        node('project'),
-        relation('out', '', 'otherLocations', { active: true }),
-        node('location'),
+        requestingUser(session),
+        ...permissionsOfNode('Location'),
+        relation('in', '', 'otherLocations', { active: true }),
+        node('project', 'Project', {
+          id: projectId,
+        }),
       ])
-      .return({
-        location: [{ id: 'id' }],
-      })
-      .run();
-
-    const items = await Promise.all(
-      result.map(
-        async (location): Promise<Location> => {
-          return await this.locationService.readOne(location.id, session);
-        }
-      )
-    );
+      .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
+        sort in this.locationService.securedProperties
+          ? q
+              .match([
+                node('node'),
+                relation('out', '', sort),
+                node('prop', 'Property'),
+              ])
+              .with('*')
+              .orderBy('prop.value', order)
+          : q.with('*').orderBy(`node.${sort}`, order)
+      );
 
     return {
-      items: items,
-      total: items.length,
-      hasMore: false,
-      canCreate: true, // TODO
+      ...(await runListQuery(query, input, (id) =>
+        this.locationService.readOne(id, session)
+      )),
       canRead: true, // TODO
+      canCreate: true, // TODO
     };
   }
 
