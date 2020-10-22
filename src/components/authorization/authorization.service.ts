@@ -103,6 +103,15 @@ export class AuthorizationService {
     baseNodeId: string,
     creatorUserId: string
   ) {
+    await this.db
+      .query()
+      .raw(
+        `
+      CALL cord.processNewBaseNode("${baseNodeId}", "${creatorUserId}")
+        `
+      )
+      .run();
+
     // get or create the role's Admin SG for this base node
     if (!projectChildNodes.includes(baseNodeObj.__className)) {
       const adminSgId = await this.mergeSecurityGroupForRole(
@@ -124,16 +133,6 @@ export class AuthorizationService {
         userId: creatorUserId,
       });
     }
-
-    // add all admins to this SG
-    // await this.addAllUsersToSgByTheUsersGlobalRole(
-    //   adminSgId,
-    //   Administrator.name
-    // );
-
-    // for (const role of everyRole) {
-    //   await this.addAllUsersToSgByTheUsersGlobalRole(adminSgId, role.name);
-    // }
 
     // run all rules for all roles on this base node
     await this.runPostBaseNodeCreationRules(baseNodeObj, baseNodeId);
