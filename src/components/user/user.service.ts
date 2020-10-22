@@ -41,7 +41,6 @@ import { Role } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
 import {
-  Location,
   LocationListInput,
   LocationService,
   SecuredLocationList,
@@ -667,36 +666,32 @@ export class UserService {
 
   async listLocations(
     userId: string,
-    _input: LocationListInput,
+    input: LocationListInput,
     session: ISession
   ): Promise<SecuredLocationList> {
-    const result = await this.db
+    const query = this.db
       .query()
-      .matchNode('user', 'User', { id: userId })
       .match([
-        node('user'),
-        relation('out', '', 'locations', { active: true }),
-        node('location'),
+        requestingUser(session),
+        ...permissionsOfNode('Location'),
+        relation('in', '', 'otherLocations', { active: true }),
+        node('user', 'User', {
+          id: userId,
+        }),
       ])
-      .return({
-        location: [{ id: 'id' }],
-      })
-      .run();
-
-    const items = await Promise.all(
-      result.map(
-        async (location): Promise<Location> => {
-          return await this.locationService.readOne(location.id, session);
-        }
-      )
-    );
+      .call(
+        calculateTotalAndPaginateList,
+        input,
+        this.locationService.securedProperties,
+        defaultSorter
+      );
 
     return {
-      items: items,
-      total: items.length,
-      hasMore: false,
-      canCreate: true, // TODO
+      ...(await runListQuery(query, input, (id) =>
+        this.locationService.readOne(id, session)
+      )),
       canRead: true, // TODO
+      canCreate: true, // TODO
     };
   }
 
