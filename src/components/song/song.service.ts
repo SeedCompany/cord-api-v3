@@ -182,6 +182,7 @@ export class SongService {
         ...securedProps.scriptureReferences,
         value: scriptureReferences,
       },
+      canDelete: true, // TODO
     };
   }
 

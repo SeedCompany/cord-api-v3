@@ -151,6 +151,7 @@ export class EducationService {
     return {
       ...parseBaseNodeProperties(result.node),
       ...secured,
+      canDelete: true, // TODO
     };
   }
 

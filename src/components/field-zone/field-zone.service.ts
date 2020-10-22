@@ -184,6 +184,7 @@ export class FieldZoneService {
         ...secured.director,
         value: result.directorId,
       },
+      canDelete: true, // TODO
     };
   }
 

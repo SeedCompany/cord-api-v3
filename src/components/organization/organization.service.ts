@@ -231,6 +231,7 @@ export class OrganizationService {
     return {
       ...parseBaseNodeProperties(result.node),
       ...secured,
+      canDelete: true, // TODO
     };
   }
 
@@ -456,6 +457,7 @@ export class OrganizationService {
         canRead: false,
         canEdit: false,
       },
+      canDelete: true, // TODO
     });
 
     return isGood;

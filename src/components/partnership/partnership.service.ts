@@ -352,6 +352,7 @@ export class PartnershipService {
         ...securedProps.partner,
         value: result.partnerId,
       },
+      canDelete: true, // TODO
     };
   }
 

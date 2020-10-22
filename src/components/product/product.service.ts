@@ -325,6 +325,7 @@ export class ProductService {
           ...rest.purposes,
           value: rest.purposes.value ?? [],
         },
+        canDelete: true, // TODO
       };
     }
 
@@ -367,6 +368,7 @@ export class ProductService {
         ...scriptureReferencesOverride,
         value: !isOverriding.value ? null : scriptureReferencesValue,
       },
+      canDelete: true, // TODO
     };
   }
 

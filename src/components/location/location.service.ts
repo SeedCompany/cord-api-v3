@@ -214,6 +214,7 @@ export class LocationService {
         value: result.fundingAccountId,
       },
       sensitivity: secured.sensitivity.value || Sensitivity.High,
+      canDelete: true, // TODO
     };
   }
 

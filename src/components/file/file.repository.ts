@@ -248,6 +248,7 @@ export class FileRepository {
       mimeType: result.mimeType as string,
       createdAt: fv.properties.createdAt,
       createdById: result.createdById as string,
+      canDelete: true, // TODO
     };
   }
 

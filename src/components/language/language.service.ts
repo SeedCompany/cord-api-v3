@@ -371,6 +371,7 @@ export class LanguageService {
       ...securedProps,
       sensitivity: props.sensitivity,
       ethnologue,
+      canDelete: true, // TODO
     };
   }
 

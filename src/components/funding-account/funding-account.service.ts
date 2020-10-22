@@ -176,6 +176,7 @@ export class FundingAccountService {
     return {
       ...parseBaseNodeProperties(result.node),
       ...secured,
+      canDelete: true, // TODO
     };
   }
 

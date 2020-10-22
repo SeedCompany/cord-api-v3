@@ -192,6 +192,7 @@ export class LiteracyMaterialService {
         ...securedProps.scriptureReferences,
         value: scriptureReferences,
       },
+      canDelete: true, // TODO
     };
   }
 
