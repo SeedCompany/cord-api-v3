@@ -353,6 +353,11 @@ export const project = gql`
         }
       }
     }
+    primaryLocation {
+      value {
+        id
+      }
+    }
     mouStart {
       value
       canRead
