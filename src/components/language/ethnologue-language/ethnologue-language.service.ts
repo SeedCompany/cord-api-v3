@@ -15,13 +15,8 @@ import {
   Logger,
   matchRequestingUser,
   matchSession,
-  matchUserPermissionsIn,
   Property,
 } from '../../../core';
-import {
-  addAllSecurePropertiesSimpleEdit,
-  addAllSecurePropertiesSimpleRead,
-} from '../../../core/database/query.helpers';
 import {
   DbPropsOfDto,
   parseSecuredProperties,
@@ -160,78 +155,6 @@ export class EthnologueLanguageService {
         population: true,
       }),
     };
-  }
-
-  async readInList(ids: string[], session: ISession): Promise<any> {
-    if (!session.userId) {
-      session.userId = this.config.anonUser.id;
-    }
-
-    const props = ['code', 'provisionalCode', 'name', 'population'];
-
-    const queryRead = this.db
-      .query()
-      .call(matchRequestingUser, session)
-      .call(matchUserPermissionsIn, 'EthnologueLanguage', ids)
-      .call(addAllSecurePropertiesSimpleRead, ...props)
-      .with([
-        `{${props
-          .map(
-            (
-              prop
-            ) => `${prop}: {value: coalesce(${prop}.value), canRead: coalesce(${prop}ReadPerm.read, false)
-        }`
-          )
-          .join(', ')}, ethnologueId: node.id, createdAt: node.createdAt}
-        as item`,
-      ])
-      .with(['collect(distinct item) as items'])
-      .return('items');
-
-    const result = await queryRead.run();
-
-    const queryEdit = this.db
-      .query()
-      .call(matchRequestingUser, session)
-      .call(matchUserPermissionsIn, 'EthnologueLanguage', ids)
-      .call(addAllSecurePropertiesSimpleEdit, ...props)
-      .with([
-        `{${props
-          .map(
-            (
-              prop
-            ) => `${prop}: {value: coalesce(${prop}.value), canEdit: coalesce(${prop}EditPerm.edit, false)
-        }`
-          )
-          .join(', ')}, ethnologueId: node.id, createdAt: node.createdAt}
-        as item`,
-      ])
-      .with(['collect(distinct item) as items'])
-      .return('items');
-
-    const resultEdit = await queryEdit.run();
-    let items = result?.[0] && [...result[0].items];
-
-    const itemsEdit = resultEdit?.[0]?.items;
-
-    items = items.map((item: any) => {
-      const data = { ...item };
-      const edit = itemsEdit.find(
-        (i: any) => i.ethnologueId === item.ethnologueId
-      );
-
-      if (edit) {
-        Object.keys(edit).forEach((key) => {
-          if (edit[key].canEdit) {
-            data[key].canEdit = edit[key].canEdit;
-          }
-        });
-      }
-
-      return data;
-    });
-
-    return items || [];
   }
 
   async update(id: string, input: UpdateEthnologueLanguage, session: ISession) {
