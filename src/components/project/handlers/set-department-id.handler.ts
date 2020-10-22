@@ -18,7 +18,16 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
     }
 
     try {
-      await this.assignDepartmentIdForProject(event.updated);
+      const departmentId = await this.assignDepartmentIdForProject(
+        event.updated
+      );
+      event.updated = {
+        ...event.updated,
+        departmentId: {
+          ...event.updated.departmentId,
+          value: event.updated.departmentId.canRead ? departmentId : undefined,
+        },
+      };
     } catch (exception) {
       throw new ServerException(
         'Could not set departmentId on project',
@@ -56,6 +65,7 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
     if (!res) {
       throw new ServerException('Unable to assign department ID');
     }
+    return res.departmentId;
   }
 
   private async getDepartmentIdPrefixForProject(project: Project) {
