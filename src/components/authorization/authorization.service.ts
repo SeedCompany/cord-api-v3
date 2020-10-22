@@ -79,6 +79,17 @@ export interface ProjectChildIds {
   users: string[];
 }
 
+const projectChildNodes = [
+  DbBaseNodeLabel.Budget,
+  DbBaseNodeLabel.BudgetRecord,
+  DbBaseNodeLabel.Ceremony,
+  DbBaseNodeLabel.Engagement,
+  DbBaseNodeLabel.Partnership,
+  DbBaseNodeLabel.ProjectMember,
+  DbBaseNodeLabel.Producible,
+  DbBaseNodeLabel.Product,
+];
+
 @Injectable()
 export class AuthorizationService {
   constructor(
@@ -93,12 +104,14 @@ export class AuthorizationService {
     creatorUserId: string
   ) {
     // get or create the role's Admin SG for this base node
-    const adminSgId = await this.mergeSecurityGroupForRole(
-      baseNodeId,
-      Administrator,
-      baseNodeObj
-    );
-    if (adminSgId) {
+    if (!projectChildNodes.includes(baseNodeObj.__className)) {
+      const adminSgId = await this.mergeSecurityGroupForRole(
+        baseNodeId,
+        Administrator,
+        baseNodeObj
+      );
+
+      if (!adminSgId) throw new ServerException('failed to create SG for role');
       // merge member to it
       await this.db
         .query()
@@ -110,24 +123,22 @@ export class AuthorizationService {
         securityGroup: adminSgId,
         userId: creatorUserId,
       });
-
-      // add all admins to this SG
-      // await this.addAllUsersToSgByTheUsersGlobalRole(
-      //   adminSgId,
-      //   Administrator.name
-      // );
-
-      // for (const role of everyRole) {
-      //   await this.addAllUsersToSgByTheUsersGlobalRole(adminSgId, role.name);
-      // }
-
-      // run all rules for all roles on this base node
-      await this.runPostBaseNodeCreationRules(baseNodeObj, baseNodeId);
-
-      return true;
-    } else {
-      throw new ServerException('failed to create SG for role');
     }
+
+    // add all admins to this SG
+    // await this.addAllUsersToSgByTheUsersGlobalRole(
+    //   adminSgId,
+    //   Administrator.name
+    // );
+
+    // for (const role of everyRole) {
+    //   await this.addAllUsersToSgByTheUsersGlobalRole(adminSgId, role.name);
+    // }
+
+    // run all rules for all roles on this base node
+    await this.runPostBaseNodeCreationRules(baseNodeObj, baseNodeId);
+
+    return true;
   }
 
   async createSGsForEveryRoleForAllBaseNodes(session: ISession) {
@@ -352,17 +363,6 @@ export class AuthorizationService {
         await this.mergeSecurityGroupForRole(baseNodeId, role, baseNodeObj);
       })
     );
-
-    const projectChildNodes = [
-      DbBaseNodeLabel.Budget,
-      DbBaseNodeLabel.BudgetRecord,
-      DbBaseNodeLabel.Ceremony,
-      DbBaseNodeLabel.Engagement,
-      DbBaseNodeLabel.Partnership,
-      DbBaseNodeLabel.ProjectMember,
-      DbBaseNodeLabel.Producible,
-      DbBaseNodeLabel.Product,
-    ];
 
     if (projectChildNodes.includes(baseNodeObj.__className)) {
       const projectId = await this.unsecureGetProjectIdFromAnyProjectChildNode(
