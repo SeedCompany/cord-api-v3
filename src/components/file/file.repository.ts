@@ -18,19 +18,17 @@ import {
   ServerException,
 } from '../../common';
 import {
-  collect,
   ConfigService,
-  count,
   createBaseNode,
   DatabaseService,
-  hasMore,
   ILogger,
   Logger,
-  mapping,
   matchRequestingUser,
   matchSession,
   Property,
 } from '../../core';
+import { collect, count, mapping } from '../../core/database/query';
+import { hasMore } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { BaseNode, FileListInput, FileNodeType, FileVersion } from './dto';
 import { DbDirectory, DbFile } from './model';

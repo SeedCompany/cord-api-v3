@@ -14,8 +14,6 @@ import {
 import {
   ConfigService,
   DatabaseService,
-  getPermList,
-  getPropList,
   IEventBus,
   ILogger,
   Logger,
@@ -26,6 +24,8 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
+  matchPermList,
+  matchPropList,
   permissionsOfNode,
   requestingUser,
 } from '../../../core/database/query';
@@ -182,8 +182,8 @@ export class ProjectMemberService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'ProjectMember', { id })])
-      .call(getPermList, 'requestingUser')
-      .call(getPropList, 'permList')
+      .call(matchPermList)
+      .call(matchPropList, 'permList')
       .match([node('node'), relation('out', '', 'user'), node('user', 'User')])
       .return('node, permList, propList, user.id as userId')
       .asResult<
