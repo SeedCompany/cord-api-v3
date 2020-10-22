@@ -28,6 +28,7 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
+  defaultSorter,
   matchPermList,
   matchPropList,
   permissionsOfNode,
@@ -943,17 +944,11 @@ export class ProjectService {
           id: projectId,
         }),
       ])
-      .call(calculateTotalAndPaginateList, input, (q, sort, order) =>
-        sort in this.locationService.securedProperties
-          ? q
-              .match([
-                node('node'),
-                relation('out', '', sort),
-                node('prop', 'Property'),
-              ])
-              .with('*')
-              .orderBy('prop.value', order)
-          : q.with('*').orderBy(`node.${sort}`, order)
+      .call(
+        calculateTotalAndPaginateList,
+        input,
+        this.locationService.securedProperties,
+        defaultSorter
       );
 
     return {
