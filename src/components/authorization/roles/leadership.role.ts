@@ -33,7 +33,11 @@ const write = true;
 
 export const Leadership = new DbRole({
   name: Role.Leadership,
-  powers: [...(Object.keys(Powers) as Powers[])],
+  powers: [
+    Powers.CreateEducation,
+    Powers.CreateUnavailability,
+    Powers.CreateUser,
+  ],
   grants: [
     new DbBaseNodeGrant<DbBudget>({
       __className: 'DbBudget',
