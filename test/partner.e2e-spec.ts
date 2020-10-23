@@ -1,11 +1,11 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-import { times } from 'lodash';
-import { InputException } from '../src/common';
+import { DuplicateException, InputException } from '../src/common';
 import { Powers } from '../src/components/authorization/dto/powers';
 import { Partner, PartnerType } from '../src/components/partner';
 import { FinancialReportingType } from '../src/components/partnership';
 import {
+  createOrganization,
   createPartner,
   createPerson,
   createSession,
@@ -29,7 +29,8 @@ describe('Partner e2e', () => {
   });
 
   it('create & read partner by id', async () => {
-    const partner = await createPartner(app);
+    const org = await createOrganization(app);
+    const partner = await createPartner(app, { organizationId: org.id });
     expect(partner.id).toBeDefined();
     expect(partner.organization).toBeDefined();
     expect(partner.pointOfContact).toBeDefined();
@@ -37,7 +38,8 @@ describe('Partner e2e', () => {
   });
 
   it('update partner', async () => {
-    const pt = await createPartner(app);
+    const org = await createOrganization(app);
+    const pt = await createPartner(app, { organizationId: org.id });
     const person = await createPerson(app);
     const types = [PartnerType.Funding, PartnerType.Managing];
     const financialReportingTypes = [FinancialReportingType.FieldEngaged];
@@ -88,7 +90,8 @@ describe('Partner e2e', () => {
   });
 
   it('delete partner', async () => {
-    const pt = await createPartner(app);
+    const org = await createOrganization(app);
+    const pt = await createPartner(app, { organizationId: org.id });
     const result = await app.graphql.mutate(
       gql`
         mutation deletePartner($id: ID!) {
@@ -104,9 +107,11 @@ describe('Partner e2e', () => {
   });
 
   it('list view of partners', async () => {
+    const org1 = await createOrganization(app);
+    const org2 = await createOrganization(app);
+    await createPartner(app, { organizationId: org1.id });
+    await createPartner(app, { organizationId: org2.id });
     const numPartners = 2;
-    await Promise.all(times(numPartners).map(() => createPartner(app)));
-
     const { partners } = await app.graphql.query(gql`
       query {
         partners(input: { count: 25, page: 1 }) {
@@ -123,23 +128,39 @@ describe('Partner e2e', () => {
     expect(partners.items.length).toBeGreaterThanOrEqual(numPartners);
   });
 
+  it('should throw error if try to create duplicate partners for organization', async () => {
+    const org = await createOrganization(app);
+    await createPartner(app, { organizationId: org.id });
+    await expect(
+      createPartner(app, { organizationId: org.id })
+    ).rejects.toThrowError(
+      new DuplicateException(
+        'organization.id',
+        'Partner for organization already exists.'
+      )
+    );
+  });
+
   it('should throw error if the pmcEntityCode is not invalid format', async () => {
+    const org = await createOrganization(app);
     await expect(
-      createPartner(app, { pmcEntityCode: 'AA1' })
+      createPartner(app, { pmcEntityCode: 'AA1', organizationId: org.id })
     ).rejects.toThrowError(new InputException('Input validation failed'));
 
     await expect(
-      createPartner(app, { pmcEntityCode: 'ABc' })
+      createPartner(app, { pmcEntityCode: 'ABc', organizationId: org.id })
     ).rejects.toThrowError(new InputException('Input validation failed'));
 
     await expect(
-      createPartner(app, { pmcEntityCode: 'AAAA' })
+      createPartner(app, { pmcEntityCode: 'AAAA', organizationId: org.id })
     ).rejects.toThrowError(new InputException('Input validation failed'));
   });
 
   it('should throw error if types & financialReportingType are mismatched', async () => {
+    const org = await createOrganization(app);
     await expect(
       createPartner(app, {
+        organizationId: org.id,
         types: [PartnerType.Funding],
         financialReportingTypes: [FinancialReportingType.Funded],
       })
