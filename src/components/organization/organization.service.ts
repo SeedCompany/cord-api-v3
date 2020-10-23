@@ -302,23 +302,15 @@ export class OrganizationService {
   async addLocation(
     organizationId: string,
     locationId: string,
-    session: ISession
+    _session: ISession
   ): Promise<void> {
     try {
-      await this.removeLocation(organizationId, locationId, session);
-      await this.db
-        .query()
-        .matchNode('organization', 'Organization', { id: organizationId })
-        .matchNode('location', 'Location', { id: locationId })
-        .create([
-          node('organization'),
-          relation('out', '', 'locations', {
-            active: true,
-            createdAt: DateTime.local(),
-          }),
-          node('location'),
-        ])
-        .run();
+      await this.locationService.addLocationToNode(
+        'Organization',
+        organizationId,
+        'locations',
+        locationId
+      );
     } catch (e) {
       throw new ServerException('Could not add location to organization', e);
     }
@@ -330,21 +322,12 @@ export class OrganizationService {
     _session: ISession
   ): Promise<void> {
     try {
-      await this.db
-        .query()
-        .matchNode('organization', 'Organization', { id: organizationId })
-        .matchNode('location', 'Location', { id: locationId })
-        .match([
-          [
-            node('organization'),
-            relation('out', 'rel', 'locations', { active: true }),
-            node('location'),
-          ],
-        ])
-        .setValues({
-          'rel.active': false,
-        })
-        .run();
+      await this.locationService.removeLocationFromNode(
+        'Organization',
+        organizationId,
+        'locations',
+        locationId
+      );
     } catch (e) {
       throw new ServerException(
         'Could not remove location from organization',
@@ -358,30 +341,13 @@ export class OrganizationService {
     input: LocationListInput,
     session: ISession
   ): Promise<SecuredLocationList> {
-    const query = this.db
-      .query()
-      .match([
-        requestingUser(session),
-        ...permissionsOfNode('Location'),
-        relation('in', '', 'otherLocations', { active: true }),
-        node('organization', 'Organization', {
-          id: organizationId,
-        }),
-      ])
-      .call(
-        calculateTotalAndPaginateList,
-        input,
-        this.locationService.securedProperties,
-        defaultSorter
-      );
-
-    return {
-      ...(await runListQuery(query, input, (id) =>
-        this.locationService.readOne(id, session)
-      )),
-      canRead: true, // TODO
-      canCreate: true, // TODO
-    };
+    return await this.locationService.listLocationsFromNode(
+      'Organization',
+      organizationId,
+      'locations',
+      input,
+      session
+    );
   }
 
   async checkAllOrgs(session: ISession): Promise<boolean> {

@@ -44,7 +44,6 @@ import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
 import { EngagementService } from '../engagement';
 import {
-  Location,
   LocationListInput,
   LocationService,
   SecuredLocationList,
@@ -505,38 +504,17 @@ export class LanguageService {
   }
 
   async listLocations(
-    language: Language,
-    _input: LocationListInput,
+    languageId: string,
+    input: LocationListInput,
     session: ISession
   ): Promise<SecuredLocationList> {
-    const result = await this.db
-      .query()
-      .matchNode('language', 'Language', { id: language.id })
-      .match([
-        node('language'),
-        relation('out', '', 'locations', { active: true }),
-        node('location'),
-      ])
-      .return({
-        location: [{ id: 'id' }],
-      })
-      .run();
-
-    const items = await Promise.all(
-      result.map(
-        async (location): Promise<Location> => {
-          return await this.locationService.readOne(location.id, session);
-        }
-      )
+    return await this.locationService.listLocationsFromNode(
+      'Language',
+      languageId,
+      'locations',
+      input,
+      session
     );
-
-    return {
-      items: items,
-      total: items.length,
-      hasMore: false,
-      canCreate: true, // TODO
-      canRead: true, // TODO
-    };
   }
 
   async listProjects(
@@ -646,23 +624,15 @@ export class LanguageService {
   async addLocation(
     languageId: string,
     locationId: string,
-    session: ISession
+    _session: ISession
   ): Promise<void> {
     try {
-      await this.removeLocation(languageId, locationId, session);
-      await this.db
-        .query()
-        .matchNode('language', 'Language', { id: languageId })
-        .matchNode('location', 'Location', { id: locationId })
-        .create([
-          node('language'),
-          relation('out', '', 'locations', {
-            active: true,
-            createdAt: DateTime.local(),
-          }),
-          node('location'),
-        ])
-        .run();
+      await this.locationService.addLocationToNode(
+        'Language',
+        languageId,
+        'locations',
+        locationId
+      );
     } catch (e) {
       throw new ServerException('Could not add location to language', e);
     }
@@ -674,23 +644,14 @@ export class LanguageService {
     _session: ISession
   ): Promise<void> {
     try {
-      await this.db
-        .query()
-        .matchNode('language', 'Language', { id: languageId })
-        .matchNode('location', 'Location', { id: locationId })
-        .match([
-          [
-            node('language'),
-            relation('out', 'rel', 'locations', { active: true }),
-            node('location'),
-          ],
-        ])
-        .setValues({
-          'rel.active': false,
-        })
-        .run();
+      await this.locationService.removeLocationFromNode(
+        'Language',
+        languageId,
+        'locations',
+        locationId
+      );
     } catch (e) {
-      throw new ServerException('Could not remove language from location', e);
+      throw new ServerException('Could not remove location from language', e);
     }
   }
 
