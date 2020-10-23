@@ -33,7 +33,14 @@ const write = true;
 
 export const Liason = new DbRole({
   name: Role.Liason,
-  powers: [...(Object.keys(Powers) as Powers[])],
+  powers: [
+    Powers.CreateDirectory,
+    Powers.CreateEducation,
+    Powers.CreateFile,
+    Powers.CreateFileVersion,
+    Powers.CreateUnavailability,
+    Powers.CreateUser,
+  ],
   grants: [
     new DbBaseNodeGrant<DbBudget>({
       __className: 'DbBudget',
