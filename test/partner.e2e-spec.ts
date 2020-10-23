@@ -135,7 +135,7 @@ describe('Partner e2e', () => {
       createPartner(app, { organizationId: org.id })
     ).rejects.toThrowError(
       new DuplicateException(
-        'organization.id',
+        'partner.organizationId',
         'Partner for organization already exists.'
       )
     );

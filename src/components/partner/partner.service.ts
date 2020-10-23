@@ -100,7 +100,7 @@ export class PartnerService {
     const checkPartner = await partnerByOrgQ.first();
     if (checkPartner) {
       throw new DuplicateException(
-        'organization.id',
+        'partner.organizationId',
         'Partner for organization already exists.'
       );
     }
