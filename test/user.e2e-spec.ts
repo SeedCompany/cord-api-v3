@@ -56,7 +56,7 @@ describe('User e2e', () => {
     expect(actual).toBeTruthy();
 
     expect(isValidId(actual.id)).toBe(true);
-    expect(actual.email.value).toBe(fakeUser.email);
+    expect(actual.email.value).toBe(fakeUser.email.toLowerCase());
     expect(actual.realFirstName.value).toBe(fakeUser.realFirstName);
     expect(actual.realLastName.value).toBe(fakeUser.realLastName);
     expect(actual.displayFirstName.value).toBe(fakeUser.displayFirstName);
@@ -94,7 +94,7 @@ describe('User e2e', () => {
     expect(actual).toBeTruthy();
 
     expect(isValidId(actual.id)).toBe(true);
-    expect(actual.email.value).toBe(user.email);
+    expect(actual.email.value).toBe(user.email.toLowerCase());
     expect(actual.realFirstName.value).toBe(user.realFirstName);
     expect(actual.realLastName.value).toBe(user.realLastName);
     expect(actual.displayFirstName.value).toBe(user.displayFirstName);
@@ -585,5 +585,15 @@ describe('User e2e', () => {
     );
     expect(user.organizations).toBeTruthy();
     expect(user.organizations.items.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('should test Email is not case sensitive', async () => {
+    const email = faker.internet.email().toUpperCase();
+    const password = faker.internet.password(10);
+    const user = await registerUser(app, { email, password });
+    expect(user.email.value).toBe(email.toLowerCase());
+
+    await login(app, { email: email.toLowerCase(), password });
+    await login(app, { email, password });
   });
 });

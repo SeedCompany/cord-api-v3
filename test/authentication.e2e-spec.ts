@@ -56,7 +56,7 @@ describe('Authentication e2e', () => {
         e.token as token
       `,
         {
-          email: email,
+          email: email.toLowerCase(),
         }
       )
       .first();
@@ -111,7 +111,7 @@ describe('Authentication e2e', () => {
     const actual: User = result.user;
     expect(actual).toBeTruthy();
     expect(isValidId(actual.id)).toBe(true);
-    expect(actual.email.value).toBe(fakeUser.email);
+    expect(actual.email.value).toBe(fakeUser.email.toLowerCase());
     expect(actual.realFirstName.value).toBe(fakeUser.realFirstName);
     expect(actual.realLastName.value).toBe(fakeUser.realLastName);
     expect(actual.displayFirstName.value).toBe(fakeUser.displayFirstName);

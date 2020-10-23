@@ -1,7 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Transform, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { uniq } from 'lodash';
+import { toLower, uniq } from 'lodash';
 import { IsEmail, IsIanaTimezone, NameField } from '../../../common';
 import { Role } from '../../authorization';
 import { UserStatus } from './user-status.enum';
@@ -11,6 +11,7 @@ import { User } from './user.dto';
 export abstract class CreatePerson {
   @Field()
   @IsEmail()
+  @Transform(toLower)
   readonly email: string;
 
   @NameField()

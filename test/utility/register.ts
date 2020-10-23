@@ -60,7 +60,7 @@ export async function registerUser(
   expect(actual).toBeTruthy();
 
   expect(isValidId(actual.id)).toBe(true);
-  expect(actual.email.value).toBe(user.email);
+  expect(actual.email.value).toBe(user.email.toLowerCase());
 
   return actual;
 }
