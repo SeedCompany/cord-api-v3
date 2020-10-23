@@ -33,7 +33,14 @@ const write = true;
 
 export const Intern = new DbRole({
   name: Role.Intern,
-  powers: [...(Object.keys(Powers) as Powers[])],
+  powers: [
+    Powers.CreateDirectory,
+    Powers.CreateEducation,
+    Powers.CreateFile,
+    Powers.CreateFileVersion,
+    Powers.CreateUnavailability,
+    Powers.CreateUser,
+  ],
   grants: [
     new DbBaseNodeGrant<DbBudget>({
       __className: 'DbBudget',
