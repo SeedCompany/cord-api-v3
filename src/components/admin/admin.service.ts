@@ -7,7 +7,7 @@ import {
   ServerException,
   UnauthenticatedException,
 } from '../../common';
-import { ConfigService, DatabaseService } from '../../core';
+import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import { AuthenticationService } from '../authentication';
 import { Powers } from '../authorization/dto/powers';
 import { Role } from '../project';
@@ -17,7 +17,8 @@ export class AdminService implements OnApplicationBootstrap {
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
-    private readonly authentication: AuthenticationService
+    private readonly authentication: AuthenticationService,
+    @Logger('admin:service') private readonly logger: ILogger
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
@@ -112,9 +113,7 @@ export class AdminService implements OnApplicationBootstrap {
       .query()
       .match([
         [
-          node('user', 'User', {
-            id: this.config.rootAdmin.id,
-          }),
+          node('user', 'User'),
           relation('out', '', 'email', {
             active: true,
           }),
@@ -123,10 +122,13 @@ export class AdminService implements OnApplicationBootstrap {
           }),
         ],
       ])
-      .return('user')
+      .raw('RETURN user.id as id')
       .first();
 
     if (result) {
+      // set id to root user id
+      this.config.setRootAdminId(result.id);
+      this.logger.notice(`root admin id`, { id: result.id });
       return true;
     } else {
       return false;
@@ -164,10 +166,14 @@ export class AdminService implements OnApplicationBootstrap {
         roles: Object.values(Role),
       });
 
+      // update config with new root admin id
+      this.config.setRootAdminId(adminUser);
+      this.logger.notice('root user id: ' + adminUser);
+
       if (!adminUser) {
         throw new ServerException('Could not create root admin user');
       } else {
-        // set root admin id to config value, give all powers
+        // give all powers
         const powers = Object.keys(Powers);
         await this.db
           .query()
@@ -176,10 +182,7 @@ export class AdminService implements OnApplicationBootstrap {
               id: adminUser,
             }),
           ])
-          .setValues(
-            { user: { id: this.config.rootAdmin.id, powers: powers } },
-            true
-          )
+          .setValues({ user: { powers: powers } }, true)
           .run();
       }
     } else if (await argon2.verify(findRoot.pash, password)) {
