@@ -756,8 +756,8 @@ describe('Project e2e', () => {
     );
 
     // Remember the project Owner is also a team member so that should be +1
-    expect(queryProject.project.team.items.length).toBe(numProjectMembers);
-    expect(queryProject.project.team.total).toBe(numProjectMembers);
+    expect(queryProject.project.team.items.length).toBe(numProjectMembers + 1);
+    expect(queryProject.project.team.total).toBe(numProjectMembers + 1);
   });
 
   it('List view of partnerships by projectId', async () => {

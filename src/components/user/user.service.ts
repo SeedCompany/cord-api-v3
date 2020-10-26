@@ -294,6 +294,8 @@ export class UserService {
         //
       }
     }
+    input.roles &&
+      (await this.authorizationService.roleAddedToUser(id, input.roles));
 
     return result.id;
   }
