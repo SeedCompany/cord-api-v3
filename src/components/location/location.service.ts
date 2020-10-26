@@ -39,6 +39,7 @@ import {
   Location,
   LocationListInput,
   LocationListOutput,
+  SecuredLocationList,
   UpdateLocation,
 } from './dto';
 import { DbLocation } from './model';
@@ -285,5 +286,87 @@ export class LocationService {
       );
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
+  }
+
+  async addLocationToNode(
+    label: string,
+    id: string,
+    rel: string,
+    locationId: string
+  ) {
+    try {
+      await this.removeLocationFromNode(label, id, rel, locationId);
+      await this.db
+        .query()
+        .matchNode('node', label, { id })
+        .matchNode('location', 'Location', { id: locationId })
+        .create([
+          node('node'),
+          relation('out', '', rel, {
+            active: true,
+            createdAt: DateTime.local(),
+          }),
+          node('location'),
+        ])
+        .run();
+    } catch (e) {
+      throw new ServerException(`Could not add location to ${label}`, e);
+    }
+  }
+
+  async removeLocationFromNode(
+    label: string,
+    id: string,
+    rel: string,
+    locationId: string
+  ) {
+    try {
+      await this.db
+        .query()
+        .matchNode('node', label, { id })
+        .matchNode('location', 'Location', { id: locationId })
+        .match([
+          [
+            node('node'),
+            relation('out', 'rel', rel, { active: true }),
+            node('location'),
+          ],
+        ])
+        .setValues({
+          'rel.active': false,
+        })
+        .run();
+    } catch (e) {
+      throw new ServerException(`Could not remove location from ${label}`, e);
+    }
+  }
+
+  async listLocationsFromNode(
+    label: string,
+    id: string,
+    rel: string,
+    input: LocationListInput,
+    session: ISession
+  ): Promise<SecuredLocationList> {
+    const query = this.db
+      .query()
+      .match([
+        requestingUser(session),
+        ...permissionsOfNode('Location'),
+        relation('in', '', rel, { active: true }),
+        node(`${label.toLowerCase()}`, label, { id }),
+      ])
+      .call(
+        calculateTotalAndPaginateList,
+        input,
+        this.securedProperties,
+        defaultSorter
+      );
+
+    return {
+      ...(await runListQuery(query, input, (id) => this.readOne(id, session))),
+      canRead: true, // TODO
+      canCreate: true, // TODO
+    };
   }
 }

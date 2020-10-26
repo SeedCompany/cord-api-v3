@@ -617,23 +617,15 @@ export class UserService {
   async addLocation(
     userId: string,
     locationId: string,
-    session: ISession
+    _session: ISession
   ): Promise<void> {
     try {
-      await this.removeLocation(userId, locationId, session);
-      await this.db
-        .query()
-        .matchNode('user', 'User', { id: userId })
-        .matchNode('location', 'Location', { id: locationId })
-        .create([
-          node('user'),
-          relation('out', '', 'locations', {
-            active: true,
-            createdAt: DateTime.local(),
-          }),
-          node('location'),
-        ])
-        .run();
+      await this.locationService.addLocationToNode(
+        'User',
+        userId,
+        'locations',
+        locationId
+      );
     } catch (e) {
       throw new ServerException('Could not add location to user', e);
     }
@@ -645,21 +637,12 @@ export class UserService {
     _session: ISession
   ): Promise<void> {
     try {
-      await this.db
-        .query()
-        .matchNode('user', 'User', { id: userId })
-        .matchNode('location', 'Location', { id: locationId })
-        .match([
-          [
-            node('user'),
-            relation('out', 'rel', 'locations', { active: true }),
-            node('location'),
-          ],
-        ])
-        .setValues({
-          'rel.active': false,
-        })
-        .run();
+      await this.locationService.removeLocationFromNode(
+        'User',
+        userId,
+        'locations',
+        locationId
+      );
     } catch (e) {
       throw new ServerException('Could not remove location from user', e);
     }
@@ -670,30 +653,13 @@ export class UserService {
     input: LocationListInput,
     session: ISession
   ): Promise<SecuredLocationList> {
-    const query = this.db
-      .query()
-      .match([
-        requestingUser(session),
-        ...permissionsOfNode('Location'),
-        relation('in', '', 'otherLocations', { active: true }),
-        node('user', 'User', {
-          id: userId,
-        }),
-      ])
-      .call(
-        calculateTotalAndPaginateList,
-        input,
-        this.locationService.securedProperties,
-        defaultSorter
-      );
-
-    return {
-      ...(await runListQuery(query, input, (id) =>
-        this.locationService.readOne(id, session)
-      )),
-      canRead: true, // TODO
-      canCreate: true, // TODO
-    };
+    return await this.locationService.listLocationsFromNode(
+      'User',
+      userId,
+      'locations',
+      input,
+      session
+    );
   }
 
   async checkEmail(email: string): Promise<boolean> {
