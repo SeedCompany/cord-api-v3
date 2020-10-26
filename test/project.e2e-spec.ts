@@ -25,6 +25,7 @@ import {
 } from '../src/components/project';
 import { User } from '../src/components/user/dto/user.dto';
 import {
+  createFundingAccount,
   createInternshipEngagement,
   createLanguage,
   createLanguageEngagement,
@@ -805,7 +806,13 @@ describe('Project e2e', () => {
 
   it('Should have a current budget when made active', async () => {
     await runAsAdmin(app, async () => {
-      const project = await createProject(app);
+      const fundingAccount = await createFundingAccount(app);
+      const location = await createLocation(app, {
+        fundingAccountId: fundingAccount.id,
+      });
+      const project = await createProject(app, {
+        primaryLocationId: location.id,
+      });
 
       for (const next of stepsFromEarlyConversationToBeforeActive) {
         await changeProjectStep(app, project.id, next);
@@ -816,6 +823,9 @@ describe('Project e2e', () => {
           mutation updateProject($id: ID!, $step: ProjectStep!) {
             updateProject(input: { project: { id: $id, step: $step } }) {
               project {
+                departmentId {
+                  value
+                }
                 budget {
                   value {
                     status
@@ -834,6 +844,9 @@ describe('Project e2e', () => {
 
       expect(result?.updateProject.project.budget.value.status).toBe(
         BudgetStatus.Current
+      );
+      expect(result?.updateProject.project.departmentId.value).toContain(
+        fundingAccount.accountNumber.value
       );
     });
   });
