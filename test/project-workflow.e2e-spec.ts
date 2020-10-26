@@ -248,6 +248,55 @@ describe('Project-Workflow e2e', () => {
       });
     });
 
+    it('should test did not develop project workflow', async () => {
+      /**
+       * Step2. Did not develop workflow
+       *  */
+      const project = await createProject(app);
+      await changeProjectStep(
+        app,
+        project.id,
+        ProjectStep.PendingConceptApproval
+      );
+
+      // Login as Director
+      await login(app, { email: director.email.value, password });
+      await changeProjectStep(
+        app,
+        project.id,
+        ProjectStep.PrepForConsultantEndorsement
+      );
+      await changeProjectStep(
+        app,
+        project.id,
+        ProjectStep.PendingConsultantEndorsement
+      );
+
+      // Login as Consultant Manager
+      await login(app, { email: consultantManager.email.value, password });
+      await changeProjectStep(
+        app,
+        project.id,
+        ProjectStep.PrepForFinancialEndorsement
+      );
+
+      // Login as Director
+      await login(app, { email: director.email.value, password });
+      await changeProjectStep(
+        app,
+        project.id,
+        ProjectStep.PendingFinancialEndorsement
+      );
+
+      // Login as Financial Analyst
+      await login(app, { email: financialAnalyst.email.value, password });
+      await changeProjectStep(app, project.id, ProjectStep.FinalizingProposal);
+
+      // Login as Director
+      await login(app, { email: director.email.value, password });
+      await changeProjectStep(app, project.id, ProjectStep.DidNotDevelop);
+    });
+
     it('should test project workflow', async () => {
       /**
        * Step2. Approval Workflow
