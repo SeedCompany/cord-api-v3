@@ -6,7 +6,7 @@ import { ProjectUpdatedEvent } from '../events';
 type SubscribedEvent = ProjectUpdatedEvent;
 
 @EventsHandler(ProjectUpdatedEvent)
-export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
+export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
   constructor(private readonly db: DatabaseService) {}
 
   async handle(event: SubscribedEvent) {
