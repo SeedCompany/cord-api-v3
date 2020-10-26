@@ -1,6 +1,8 @@
 import { ArgsType, Field, InputType, ObjectType } from '@nestjs/graphql';
+import { Transform } from 'class-transformer';
 import { MinLength } from 'class-validator';
 import { stripIndent } from 'common-tags';
+import { toLower } from 'lodash';
 import { IsEmail } from '../../common';
 import { Powers } from '../authorization/dto/powers';
 import { User } from '../user';
@@ -31,6 +33,7 @@ export abstract class SessionOutput {
 export abstract class LoginInput {
   @Field()
   @IsEmail()
+  @Transform(toLower)
   email: string;
 
   @Field()
@@ -72,5 +75,6 @@ export abstract class ChangePasswordArgs {
 export abstract class ForgotPasswordArgs {
   @Field()
   @IsEmail()
+  @Transform(toLower)
   readonly email: string;
 }
