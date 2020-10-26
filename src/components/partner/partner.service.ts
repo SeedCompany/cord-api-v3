@@ -173,13 +173,6 @@ export class PartnerService {
       throw new ServerException('failed to create partner');
     }
 
-    const dbPartner = new DbPartner();
-    await this.authorizationService.processNewBaseNode(
-      dbPartner,
-      result.id,
-      session.userId as string
-    );
-
     if (input.pointOfContactId) {
       await this.db
         .query()
@@ -199,6 +192,13 @@ export class PartnerService {
         ])
         .run();
     }
+
+    const dbPartner = new DbPartner();
+    await this.authorizationService.processNewBaseNode(
+      dbPartner,
+      result.id,
+      session.userId as string
+    );
 
     this.logger.debug(`partner created`, { id: result.id });
     return await this.readOne(result.id, session);

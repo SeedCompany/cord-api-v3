@@ -346,14 +346,6 @@ export class ProjectService {
         throw new ServerException('failed to create a project');
       }
 
-      const dbProject = new DbProject(); // wip: this will actually be used later. temp using an empty object now.
-
-      await this.authorizationService.processNewBaseNode(
-        dbProject,
-        result.id,
-        session.userId
-      );
-
       await this.projectMembers.create(
         {
           userId: session.userId,
@@ -361,6 +353,14 @@ export class ProjectService {
           roles: [Role.ProjectManager],
         },
         session
+      );
+
+      const dbProject = new DbProject(); // wip: this will actually be used later. temp using an empty object now.
+
+      await this.authorizationService.processNewBaseNode(
+        dbProject,
+        result.id,
+        session.userId
       );
 
       const project = await this.readOne(result.id, session);

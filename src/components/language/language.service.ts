@@ -262,13 +262,6 @@ export class LanguageService {
         throw new ServerException('failed to create language');
       }
 
-      const dbLanguage = new DbLanguage();
-      await this.authorizationService.processNewBaseNode(
-        dbLanguage,
-        resultLanguage.id,
-        session.userId as string
-      );
-
       // connect ethnologueLanguage to language
       await this.db
         .query()
@@ -287,6 +280,13 @@ export class LanguageService {
           node('ethnologueLanguage'),
         ])
         .run();
+
+      const dbLanguage = new DbLanguage();
+      await this.authorizationService.processNewBaseNode(
+        dbLanguage,
+        resultLanguage.id,
+        session.userId as string
+      );
 
       const result = await this.readOne(resultLanguage.id, session);
 

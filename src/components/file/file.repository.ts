@@ -284,18 +284,18 @@ export class FileRepository {
       throw new ServerException('Failed to create directory');
     }
 
+    await this.attachCreator(result.id, session);
+
+    if (parentId) {
+      await this.attachParent(result.id, parentId);
+    }
+
     const dbDirectory = new DbDirectory();
     await this.authorizationService.processNewBaseNode(
       dbDirectory,
       result.id,
       session.userId as string
     );
-
-    await this.attachCreator(result.id, session);
-
-    if (parentId) {
-      await this.attachParent(result.id, parentId);
-    }
 
     return result.id;
   }
@@ -327,18 +327,18 @@ export class FileRepository {
       throw new ServerException('Failed to create file');
     }
 
+    await this.attachCreator(result.id, session);
+
+    if (parentId) {
+      await this.attachParent(result.id, parentId);
+    }
+
     const dbFile = new DbFile();
     await this.authorizationService.processNewBaseNode(
       dbFile,
       result.id,
       session.userId as string
     );
-
-    await this.attachCreator(result.id, session);
-
-    if (parentId) {
-      await this.attachParent(result.id, parentId);
-    }
 
     return result.id;
   }

@@ -113,17 +113,17 @@ export class StoryService {
         throw new ServerException('failed to create a story');
       }
 
+      await this.scriptureRefService.create(
+        result.id,
+        input.scriptureReferences,
+        session
+      );
+
       const dbStory = new DbStory();
       await this.authorizationService.processNewBaseNode(
         dbStory,
         result.id,
         session.userId as string
-      );
-
-      await this.scriptureRefService.create(
-        result.id,
-        input.scriptureReferences,
-        session
       );
 
       this.logger.debug(`story created`, { id: result.id });

@@ -115,17 +115,17 @@ export class SongService {
         throw new ServerException('failed to create a song');
       }
 
+      await this.scriptureRefService.create(
+        result.id,
+        input.scriptureReferences,
+        session
+      );
+
       const dbSong = new DbSong();
       await this.authorizationService.processNewBaseNode(
         dbSong,
         result.id,
         session.userId as string
-      );
-
-      await this.scriptureRefService.create(
-        result.id,
-        input.scriptureReferences,
-        session
       );
 
       this.logger.debug(`song created`, { id: result.id });

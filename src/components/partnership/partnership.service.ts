@@ -216,13 +216,6 @@ export class PartnershipService {
         throw new ServerException('failed to create partnership');
       }
 
-      const dbPartnership = new DbPartnership();
-      await this.authorizationService.processNewBaseNode(
-        dbPartnership,
-        result.id,
-        session.userId as string
-      );
-
       // connect the Partner to the Partnership
       // and connect Partnership to Project
       await this.db
@@ -249,6 +242,13 @@ export class PartnershipService {
         ])
         .return('partnership.id as id')
         .first();
+
+      const dbPartnership = new DbPartnership();
+      await this.authorizationService.processNewBaseNode(
+        dbPartnership,
+        result.id,
+        session.userId as string
+      );
 
       const partnership = await this.readOne(result.id, session);
 

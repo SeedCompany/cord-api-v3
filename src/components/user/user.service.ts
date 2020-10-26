@@ -205,8 +205,6 @@ export class UserService {
     if (!result) {
       throw new ServerException('Failed to create user');
     }
-    const dbUser = new DbUser();
-    await this.authorizationService.processNewBaseNode(dbUser, id, id);
 
     // don't remove this when you remove the above function
     // grant the powers that all users will get
@@ -296,6 +294,9 @@ export class UserService {
     }
     input.roles &&
       (await this.authorizationService.roleAddedToUser(id, input.roles));
+
+    const dbUser = new DbUser();
+    await this.authorizationService.processNewBaseNode(dbUser, id, id);
 
     return result.id;
   }
@@ -459,11 +460,24 @@ export class UserService {
           property: 'education',
           read: true,
         }),
-        // relation('out', '', 'baseNode', { active: true }),
-        // node('user'),
+        relation('out', '', 'baseNode', { active: true }),
+        node('user'),
+      ])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member'),
+        node('', 'SecurityGroup'),
+        relation('out', '', 'permission'),
+        node('canEdit', 'Permission', {
+          property: 'education',
+          edit: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('user'),
       ])
       .return({
-        canRead: [{ read: 'canRead', edit: 'canEdit' }],
+        canRead: [{ read: 'canRead' }],
+        canEdit: [{ edit: 'canEdit' }],
       });
     let user;
     try {
@@ -504,6 +518,7 @@ export class UserService {
     session: ISession
   ): Promise<SecuredOrganizationList> {
     // Just a thought, seemed like a good idea to try to reuse the logic/query there.
+    console.log({ userId });
     const query = this.db
       .query()
       .match(matchSession(session, { withAclEdit: 'canReadOrgs' }))
@@ -517,11 +532,24 @@ export class UserService {
           property: 'organization',
           read: true,
         }),
-        // relation('out', '', 'baseNode', { active: true }),
-        // node('user'),
+        relation('out', '', 'baseNode', { active: true }),
+        node('user'),
+      ])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member'),
+        node('', 'SecurityGroup'),
+        relation('out', '', 'permission'),
+        node('canEdit', 'Permission', {
+          property: 'organization',
+          edit: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('user'),
       ])
       .return({
-        canRead: [{ read: 'canRead', edit: 'canEdit' }],
+        canRead: [{ read: 'canRead' }],
+        canEdit: [{ edit: 'canEdit' }],
       });
     let user;
     try {
@@ -577,11 +605,24 @@ export class UserService {
           property: 'unavailability',
           read: true,
         }),
-        // relation('out', '', 'baseNode', { active: true }),
-        // node('user'),
+        relation('out', '', 'baseNode', { active: true }),
+        node('user'),
+      ])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member'),
+        node('', 'SecurityGroup'),
+        relation('out', '', 'permission'),
+        node('canEdit', 'Permission', {
+          property: 'unavailability',
+          edit: true,
+        }),
+        relation('out', '', 'baseNode', { active: true }),
+        node('user'),
       ])
       .return({
-        canRead: [{ read: 'canRead', edit: 'canEdit' }],
+        canRead: [{ read: 'canRead' }],
+        canEdit: [{ edit: 'canEdit' }],
       });
     let user;
     try {

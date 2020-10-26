@@ -119,17 +119,17 @@ export class LiteracyMaterialService {
         throw new ServerException('failed to create a literacy material');
       }
 
+      await this.scriptureRefService.create(
+        result.id,
+        input.scriptureReferences,
+        session
+      );
+
       const dbLiteracyMaterial = new DbLiteracyMaterial();
       await this.authorizationService.processNewBaseNode(
         dbLiteracyMaterial,
         result.id,
         session.userId as string
-      );
-
-      await this.scriptureRefService.create(
-        result.id,
-        input.scriptureReferences,
-        session
       );
 
       this.logger.debug(`literacy material created`, { id: result.id });

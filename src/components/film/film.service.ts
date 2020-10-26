@@ -112,17 +112,17 @@ export class FilmService {
         throw new ServerException('failed to create a film');
       }
 
+      await this.scriptureRefService.create(
+        result.id,
+        input.scriptureReferences,
+        session
+      );
+
       const dbFilm = new DbFilm();
       await this.authorizationService.processNewBaseNode(
         dbFilm,
         result.id,
         session.userId as string
-      );
-
-      await this.scriptureRefService.create(
-        result.id,
-        input.scriptureReferences,
-        session
       );
 
       this.logger.debug(`flim created`, { id: result.id });
