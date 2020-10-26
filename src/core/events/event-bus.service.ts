@@ -1,7 +1,8 @@
 import { Injectable, Type } from '@nestjs/common';
 // eslint-disable-next-line no-restricted-imports
-import { EventBus, IEvent } from '@nestjs/cqrs';
-import { AnyFn } from '../../common';
+import { EventBus, EventHandlerType, IEvent } from '@nestjs/cqrs';
+import { stripIndent } from 'common-tags';
+import { AnyFn, ServerException } from '../../common';
 import { IEventHandler } from './event-handler.decorator';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -26,6 +27,21 @@ export class SyncEventBus extends EventBus implements IEventBus {
 
   async publishAll<T extends IEvent>(events: T[]): Promise<void> {
     await Promise.all(events.map((e) => this.publish(e)));
+  }
+
+  register(handlers: EventHandlerType[] = []) {
+    const defined = new Set<string>();
+    for (const handler of handlers) {
+      if (defined.has(handler.name)) {
+        throw new ServerException(stripIndent`
+          Event handler "${handler.name}" has already been defined.
+          Event handlers have to have unique class names to be registered correctly.
+      `);
+      }
+      defined.add(handler.name);
+    }
+
+    super.register(handlers);
   }
 
   bind(handler: IEventHandler<IEvent>, name: string) {
