@@ -2,6 +2,7 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
+  DuplicateException,
   generateId,
   InputException,
   ISession,
@@ -82,6 +83,27 @@ export class PartnerService {
       input.financialReportingTypes,
       input.types
     );
+    const partnerByOrgQ = this.db
+      .query()
+      .match([node('node', 'Organization', { id: input.organizationId })])
+      .match([
+        node('node'),
+        relation('in', '', 'organization', { active: true }),
+        node('partner', 'Partner'),
+      ])
+      .return({
+        partner: [{ id: 'partnerId' }],
+      })
+      .asResult<{
+        partnerId: string;
+      }>();
+    const checkPartner = await partnerByOrgQ.first();
+    if (checkPartner) {
+      throw new DuplicateException(
+        'partner.organizationId',
+        'Partner for organization already exists.'
+      );
+    }
 
     const createdAt = DateTime.local();
     const secureProps = [

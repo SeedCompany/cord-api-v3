@@ -29,6 +29,7 @@ import {
   createLanguage,
   createLanguageEngagement,
   createLocation,
+  createOrganization,
   createPartner,
   createPartnership,
   createProject,
@@ -900,6 +901,7 @@ describe('Project e2e', () => {
    * Update Project's mou dates and check if the budget records are created.
    */
   it('should create budget records after updating project with mou dates', async () => {
+    const org = await createOrganization(app);
     const proj = await createProject(app, {
       name: faker.random.uuid() + ' project',
       mouStart: undefined,
@@ -908,8 +910,7 @@ describe('Project e2e', () => {
 
     const partnership: CreatePartnership = {
       projectId: proj.id,
-      partnerId: (await createPartner(app, { organizationId: 'seedcompanyid' }))
-        .id,
+      partnerId: (await createPartner(app, { organizationId: org.id })).id,
       types: [PartnerType.Funding],
     };
 
@@ -972,15 +973,13 @@ describe('Project e2e', () => {
    * After creating a partnership, should be able to query project and get organization
    */
   it('after creating a partnership, should be able to query project and get organization', async () => {
-    const defaultOrganizationId = 'seedcompanyid';
+    const org = await createOrganization(app);
     const project = await createProject(app, {
       name: faker.random.uuid() + ' project',
     });
     const partnership: CreatePartnership = {
       projectId: project.id,
-      partnerId: (
-        await createPartner(app, { organizationId: defaultOrganizationId })
-      ).id,
+      partnerId: (await createPartner(app, { organizationId: org.id })).id,
       types: [PartnerType.Funding],
     };
 
@@ -1029,6 +1028,6 @@ describe('Project e2e', () => {
     );
     const firstBudgetRecordOrganizationId =
       projectQueryResult.project.budget.value.records[0].organization.value.id;
-    expect(firstBudgetRecordOrganizationId).toBe(defaultOrganizationId);
+    expect(firstBudgetRecordOrganizationId).toBe(org.id);
   });
 });
