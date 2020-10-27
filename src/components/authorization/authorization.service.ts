@@ -86,9 +86,12 @@ export class AuthorizationService {
     await this.db
       .query()
       .raw(
-        `
-      CALL cord.processNewBaseNode("${baseNodeId}", "${label}", "${creatorUserId}")
-        `
+        `CALL cord.processNewBaseNode($baseNodeId, $label, $creatorUserId)`,
+        {
+          baseNodeId,
+          label,
+          creatorUserId,
+        }
       )
       .run();
 
