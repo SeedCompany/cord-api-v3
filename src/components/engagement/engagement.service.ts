@@ -152,12 +152,7 @@ export class EngagementService {
     // Initial LanguageEngagement
     const id = await generateId();
     const createdAt = DateTime.local();
-    const pnp = await this.files.createDefinedFile(
-      `PNP`,
-      session,
-      input.pnp,
-      'engagement.pnp'
-    );
+    const pnpId = await generateId();
 
     const createLE = this.db.query().match(matchSession(session));
     if (projectId) {
@@ -218,7 +213,7 @@ export class EngagementService {
         input.paraTextRegistryId || undefined,
         'languageEngagement'
       ),
-      ...property('pnp', pnp || undefined, 'languageEngagement'),
+      ...property('pnp', pnpId || undefined, 'languageEngagement'),
       ...property('statusModifiedAt', undefined, 'languageEngagement'),
       ...property('lastSuspendedAt', undefined, 'languageEngagement'),
       ...property('lastReactivatedAt', undefined, 'languageEngagement'),
@@ -253,6 +248,16 @@ export class EngagementService {
     let le;
     try {
       le = await createLE.first();
+
+      await this.files.createDefinedFile(
+        pnpId,
+        `PNP`,
+        session,
+        id,
+        'pnp',
+        input.pnp,
+        'engagement.pnp'
+      );
     } catch (exception) {
       this.logger.error('could not create Language Engagement ', { exception });
       throw new ServerException(
@@ -346,12 +351,7 @@ export class EngagementService {
     });
     const id = await generateId();
     const createdAt = DateTime.local();
-    const growthPlan = await this.files.createDefinedFile(
-      `Growth Plan`,
-      session,
-      input.growthPlan,
-      'engagement.growthPlan'
-    );
+    const growthPlanId = await generateId();
 
     const createIE = this.db.query().match(matchSession(session));
     if (projectId) {
@@ -424,7 +424,7 @@ export class EngagementService {
       ),
       ...property(
         'growthPlan',
-        growthPlan || undefined,
+        growthPlanId || undefined,
         'internshipEngagement'
       ),
       ...property('statusModifiedAt', undefined, 'internshipEngagement'),
@@ -475,6 +475,16 @@ export class EngagementService {
     let IE;
     try {
       IE = await createIE.first();
+
+      await this.files.createDefinedFile(
+        growthPlanId,
+        `Growth Plan`,
+        session,
+        id,
+        'growthPlan',
+        input.growthPlan,
+        'engagement.growthPlan'
+      );
     } catch (exception) {
       // secondary queries to see what ID is bad
       // check internId

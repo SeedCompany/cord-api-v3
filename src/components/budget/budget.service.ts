@@ -92,12 +92,9 @@ export class BudgetService {
       throw new NotFoundException('project does not exist', 'budget.projectId');
     }
 
-    const universalTemplateFile = await this.files.createDefinedFile(
-      `Universal Budget Template`,
-      session,
-      input.universalTemplateFile,
-      'budget.universalTemplateFile'
-    );
+    const budgetId = await generateId();
+
+    const universalTemplateFileId = await generateId();
 
     const secureProps: Property[] = [
       {
@@ -109,7 +106,7 @@ export class BudgetService {
       },
       {
         key: 'universalTemplateFile',
-        value: universalTemplateFile,
+        value: universalTemplateFileId,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -124,7 +121,7 @@ export class BudgetService {
             id: this.config.rootAdmin.id,
           }),
         ])
-        .call(createBaseNode, await generateId(), 'Budget', secureProps)
+        .call(createBaseNode, budgetId, 'Budget', secureProps)
         .return('node.id as id');
 
       const result = await createBudget.first();
@@ -152,6 +149,16 @@ export class BudgetService {
         id: result.id,
         userId: session.userId,
       });
+
+      await this.files.createDefinedFile(
+        universalTemplateFileId,
+        `Universal Budget Template`,
+        session,
+        budgetId,
+        'universalTemplateFile',
+        input.universalTemplateFile,
+        'budget.universalTemplateFile'
+      );
 
       const dbBudget = new DbBudget();
       await this.authorizationService.processNewBaseNode(

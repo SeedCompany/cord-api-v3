@@ -1,6 +1,5 @@
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { UnauthenticatedException } from '../../../common';
 import { DatabaseService, EventsHandler, IEventHandler } from '../../../core';
 import { AuthorizationService } from '../../authorization/authorization.service';
 import { ProjectCreatedEvent } from '../../project/events';
@@ -41,17 +40,11 @@ export class AttachProjectRootDirectoryHandler
       ])
       .run();
 
-    if (session.userId === undefined) {
-      throw new UnauthenticatedException(
-        'unathenticated user not allowed to create a project'
-      );
-    }
-
     const dbDirectory = new DbDirectory();
     await this.authorizationService.processNewBaseNode(
       dbDirectory,
       rootDir.id,
-      session.userId
+      session.userId!
     );
   }
 }
