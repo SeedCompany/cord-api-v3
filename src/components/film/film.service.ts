@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
 import {
   DuplicateException,
@@ -31,7 +31,6 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
-import { AuthorizationService } from '../authorization/authorization.service';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
   CreateFilm,
@@ -40,7 +39,7 @@ import {
   FilmListOutput,
   UpdateFilm,
 } from './dto';
-import { DbFilm } from './model';
+
 @Injectable()
 export class FilmService {
   private readonly securedProperties = {
@@ -52,9 +51,7 @@ export class FilmService {
     @Logger('film:service') private readonly logger: ILogger,
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
-    private readonly scriptureRefService: ScriptureReferenceService,
-    @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService
+    private readonly scriptureRefService: ScriptureReferenceService
   ) {}
 
   @OnIndex()
@@ -90,8 +87,8 @@ export class FilmService {
       {
         key: 'name',
         value: input.name,
-        isPublic: false,
-        isOrgPublic: false,
+        isPublic: true,
+        isOrgPublic: true,
         label: 'FilmName',
       },
     ];
@@ -116,13 +113,6 @@ export class FilmService {
         result.id,
         input.scriptureReferences,
         session
-      );
-
-      const dbFilm = new DbFilm();
-      await this.authorizationService.processNewBaseNode(
-        dbFilm,
-        result.id,
-        session.userId as string
       );
 
       this.logger.debug(`flim created`, { id: result.id });
