@@ -32,6 +32,7 @@ import { hasMore } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { BaseNode, FileListInput, FileNodeType, FileVersion } from './dto';
 import { DbDirectory, DbFile } from './model';
+import { DbFileVersion } from './model/file-version.model.db';
 
 @Injectable()
 export class FileRepository {
@@ -381,6 +382,13 @@ export class FileRepository {
 
     await this.attachCreator(input.id, session);
     await this.attachParent(input.id, fileId);
+
+    const dbFileVersion = new DbFileVersion();
+    await this.authorizationService.processNewBaseNode(
+      dbFileVersion,
+      result.id,
+      session.userId as string
+    );
   }
 
   private async attachCreator(id: string, session: ISession) {
