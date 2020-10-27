@@ -1109,10 +1109,55 @@
 			"key": "timezoneDefault",
 			"value": "",
 			"enabled": true
+		},
+		{
+			"key": "fieldRegion",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "fieldZone",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "fieldZoneId",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "directorId",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "projectSensitivity",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "projectStep",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "projectStepArray",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "projectStatus_array",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "fieldRegionId",
+			"value": "",
+			"enabled": true
 		}
 	],
 	"name": "MyWorkspace Globals",
 	"_postman_variable_scope": "globals",
-	"_postman_exported_at": "2020-10-21T13:29:08.143Z",
+	"_postman_exported_at": "2020-10-27T13:38:12.156Z",
 	"_postman_exported_using": "Postman/7.34.0"
 }

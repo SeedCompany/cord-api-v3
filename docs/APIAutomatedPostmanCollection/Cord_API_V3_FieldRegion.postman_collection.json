@@ -1,0 +1,72 @@
+{
+	"info": {
+		"_postman_id": "97262ee2-9154-42ae-b3b1-2349da7b59ca",
+		"name": "Cord_API_V3_FieldRegion",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Create fieldRegion Success",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "ed97a745-94c4-4be3-bb8e-2c811de61918",
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "8b6549c9-1e5b-4b48-9f24-c3252a406395",
+						"exec": [
+							"const moment = require('moment');\r",
+							"pm.globals.set(\"timestamp\", moment().format(\"DDMYYYYhhmmss\"));\r",
+							"\r",
+							"pm.globals.set(\"fieldRegion\", \"FieldRegion\" + moment().format(\"DDMYYYYhhmmss\"));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "graphql",
+					"graphql": {
+						"query": "mutation createFieldRegion($input: CreateFieldRegionInput!) {\r\n  createFieldRegion(input: $input) {\r\n    fieldRegion {\r\n      id\r\n      createdAt\r\n      canDelete\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      director {\r\n        value {\r\n          id\r\n          fullName\r\n          firstName\r\n          avatarLetters\r\n          createdAt\r\n          email {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          realFirstName {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          realLastName {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          displayFirstName {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          displayLastName {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          phone {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          about {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          status {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          roles {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          title {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          timezone {\r\n            canRead\r\n            canEdit\r\n            value {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n                name\r\n                zones {\r\n                  name\r\n                  lat\r\n                  long\r\n                  countries {\r\n                    code\r\n                  }\r\n                }\r\n              }\r\n            }\r\n          }\r\n          unavailabilities {\r\n            canRead\r\n            items {\r\n              id\r\n              createdAt\r\n              description {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              start\r\n              end\r\n            }\r\n            total\r\n            hasMore\r\n            canCreate\r\n          }\r\n          organizations {\r\n            canRead\r\n            items {\r\n              id\r\n              createdAt\r\n              name {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              avatarLetters\r\n            }\r\n            total\r\n            hasMore\r\n            canCreate\r\n          }\r\n          education {\r\n            canRead\r\n            items {\r\n              id\r\n              createdAt\r\n              degree {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              major {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              institution {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n            }\r\n            total\r\n            hasMore\r\n            canCreate\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      fieldZone {\r\n        value {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          director {\r\n            value {\r\n              id\r\n              fullName\r\n              firstName\r\n              avatarLetters\r\n              createdAt\r\n              email {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              realFirstName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              realLastName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              displayFirstName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              displayLastName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              phone {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              about {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              status {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              roles {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              title {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              timezone {\r\n                canRead\r\n                canEdit\r\n                value {\r\n                  name\r\n                  lat\r\n                  long\r\n                  countries {\r\n                    code\r\n                    name\r\n                    zones {\r\n                      name\r\n                      lat\r\n                      long\r\n                      countries {\r\n                        code\r\n                      }\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              unavailabilities {\r\n                canRead\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  description {\r\n                    canRead\r\n                    canEdit\r\n                    value\r\n                  }\r\n                  start\r\n                  end\r\n                }\r\n                total\r\n                hasMore\r\n                canCreate\r\n              }\r\n              organizations {\r\n                canRead\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  name {\r\n                    canRead\r\n                    canEdit\r\n                    value\r\n                  }\r\n                  avatarLetters\r\n                }\r\n                total\r\n                hasMore\r\n                canCreate\r\n              }\r\n              education {\r\n                canRead\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  degree {\r\n                    canRead\r\n                    canEdit\r\n                    value\r\n                  }\r\n                  major {\r\n                    canRead\r\n                    canEdit\r\n                    value\r\n                  }\r\n                  institution {\r\n                    canRead\r\n                    canEdit\r\n                    value\r\n                  }\r\n                }\r\n                total\r\n                hasMore\r\n                canCreate\r\n              }\r\n            }\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        value {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          director {\r\n            canEdit\r\n            canRead\r\n            value {\r\n              id\r\n              fullName\r\n              firstName\r\n              avatarLetters\r\n              createdAt\r\n              email {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              realFirstName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              realLastName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              displayFirstName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              displayLastName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              phone {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              about {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              status {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              title {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              roles {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n\r\n              timezone {\r\n                canRead\r\n                canEdit\r\n                value {\r\n                  name\r\n                  lat\r\n                  long\r\n                  countries {\r\n                    code\r\n                    name\r\n                    zones {\r\n                      name\r\n                      lat\r\n                      long\r\n                      countries {\r\n                        code\r\n                      }\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n\r\n              unavailabilities {\r\n                canRead\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  description {\r\n                    canRead\r\n                    canEdit\r\n                    value\r\n                  }\r\n                  start\r\n                  end\r\n                }\r\n                total\r\n                hasMore\r\n                canCreate\r\n              }\r\n              organizations {\r\n                canRead\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  name {\r\n                    canRead\r\n                    canEdit\r\n                    value\r\n                  }\r\n                  avatarLetters\r\n                }\r\n                total\r\n                hasMore\r\n                canCreate\r\n              }\r\n              education {\r\n                canRead\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  degree {\r\n                    canRead\r\n                    canEdit\r\n                    value\r\n                  }\r\n                  major {\r\n                    canRead\r\n                    canEdit\r\n                    value\r\n                  }\r\n                  institution {\r\n                    canRead\r\n                    canEdit\r\n                    value\r\n                  }\r\n                }\r\n                total\r\n                hasMore\r\n                canCreate\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+						"variables": "{\r\n    \"input\": {\r\n        \"fieldRegion\": {\r\n            \"name\": \"{{fieldRegion}}\",\r\n            \"fieldZoneId\": \"{{fieldZoneId}}\",\r\n            \"directorId\": \"{{directorId}}\"\r\n        }\r\n    }\r\n}"
+					},
+					"options": {
+						"graphql": {}
+					}
+				},
+				"url": {
+					"raw": "{{env}}/graphql",
+					"host": [
+						"{{env}}"
+					],
+					"path": [
+						"graphql"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}
