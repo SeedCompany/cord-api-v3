@@ -673,11 +673,12 @@ export class ProjectService {
               relation('out', '', sort, { active: true }),
               node('prop', 'Property'),
             ])
-            .where({ [sortBy]: not(isNull()) })
             .with([
               '*',
               ...(input.sort === 'sensitivity' ? [sensitivityCase] : []),
             ])
+            .where({ [sortBy]: not(isNull()) })
+            .with('*')
             .orderBy(sortBy, order)
       );
 
