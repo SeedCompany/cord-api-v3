@@ -27,7 +27,7 @@ export const generateRequireFieldsRegisterInput = async (): Promise<
   realLastName: faker.name.lastName(),
   displayFirstName: faker.name.firstName() + (await generateId()),
   displayLastName: faker.name.lastName() + (await generateId()),
-  password: 'asdfasdf',
+  password: faker.internet.password(10),
   timezone: 'America/Chicago',
 });
 

@@ -460,7 +460,7 @@ export class UserService {
           property: 'education',
           read: true,
         }),
-        relation('out', '', 'baseNode', { active: true }),
+        relation('out', '', 'baseNode'),
         node('user'),
       ])
       .optionalMatch([
@@ -472,7 +472,7 @@ export class UserService {
           property: 'education',
           edit: true,
         }),
-        relation('out', '', 'baseNode', { active: true }),
+        relation('out', '', 'baseNode'),
         node('user'),
       ])
       .return({
@@ -517,8 +517,6 @@ export class UserService {
     input: OrganizationListInput,
     session: ISession
   ): Promise<SecuredOrganizationList> {
-    // Just a thought, seemed like a good idea to try to reuse the logic/query there.
-    console.log({ userId });
     const query = this.db
       .query()
       .match(matchSession(session, { withAclEdit: 'canReadOrgs' }))
@@ -532,7 +530,7 @@ export class UserService {
           property: 'organization',
           read: true,
         }),
-        relation('out', '', 'baseNode', { active: true }),
+        relation('out', '', 'baseNode'),
         node('user'),
       ])
       .optionalMatch([
@@ -544,7 +542,7 @@ export class UserService {
           property: 'organization',
           edit: true,
         }),
-        relation('out', '', 'baseNode', { active: true }),
+        relation('out', '', 'baseNode'),
         node('user'),
       ])
       .return({
@@ -605,7 +603,7 @@ export class UserService {
           property: 'unavailability',
           read: true,
         }),
-        relation('out', '', 'baseNode', { active: true }),
+        relation('out', '', 'baseNode'),
         node('user'),
       ])
       .optionalMatch([
@@ -617,7 +615,7 @@ export class UserService {
           property: 'unavailability',
           edit: true,
         }),
-        relation('out', '', 'baseNode', { active: true }),
+        relation('out', '', 'baseNode'),
         node('user'),
       ])
       .return({

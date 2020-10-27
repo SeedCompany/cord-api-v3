@@ -386,12 +386,10 @@ describe('User e2e', () => {
     // TODO after #430 is resolved, list orgs and make sure org is removed as primary
   });
 
-  it.only('read one users organizations', async () => {
+  it('read one users organizations', async () => {
     const newUser = await registerUserWithPower(app, [
       Powers.CreateOrganization,
     ]);
-    // troubleshooting
-    await login(app, { email: newUser.email.value, password: 'asdfasdf' });
 
     const org = await createOrganization(app);
     const result = await app.graphql.mutate(
