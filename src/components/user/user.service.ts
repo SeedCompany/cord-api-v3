@@ -428,6 +428,13 @@ export class UserService {
   }
 
   async list(input: UserListInput, session: ISession): Promise<UserListOutput> {
+    const nameSortMap: Partial<Record<typeof input.sort, string>> = {
+      displayFirstName: 'toLower(prop.value)',
+      displayLastName: 'toLower(prop.value)',
+    };
+
+    const sortBy = nameSortMap[input.sort] ?? 'prop.value';
+
     const query = this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode('User')])
@@ -435,7 +442,8 @@ export class UserService {
         calculateTotalAndPaginateList,
         input,
         this.securedProperties,
-        defaultSorter
+        defaultSorter,
+        sortBy
       );
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
