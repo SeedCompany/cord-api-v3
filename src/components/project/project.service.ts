@@ -98,6 +98,7 @@ export class ProjectService {
     mouStart: true,
     mouEnd: true,
     initialMouEnd: true,
+    stepChangedAt: true,
     estimatedSubmission: true,
     type: true,
     primaryLocation: true,
@@ -466,7 +467,6 @@ export class ProjectService {
       type: (result as any)?.node?.properties?.type,
       status: props.status,
       modifiedAt: props.modifiedAt,
-      stepChangedAt: props.stepChangedAt,
       primaryLocation: {
         ...securedProps.primaryLocation,
         value: result.primaryLocationId,
