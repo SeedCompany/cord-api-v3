@@ -288,14 +288,13 @@ export class FileRepository {
 
     if (parentId) {
       await this.attachParent(result.id, parentId);
+      const dbDirectory = new DbDirectory();
+      await this.authorizationService.processNewBaseNode(
+        dbDirectory,
+        result.id,
+        session.userId as string
+      );
     }
-
-    const dbDirectory = new DbDirectory();
-    await this.authorizationService.processNewBaseNode(
-      dbDirectory,
-      result.id,
-      session.userId as string
-    );
 
     return result.id;
   }
@@ -331,14 +330,13 @@ export class FileRepository {
 
     if (parentId) {
       await this.attachParent(result.id, parentId);
+      const dbFile = new DbFile();
+      await this.authorizationService.processNewBaseNode(
+        dbFile,
+        result.id,
+        session.userId as string
+      );
     }
-
-    const dbFile = new DbFile();
-    await this.authorizationService.processNewBaseNode(
-      dbFile,
-      result.id,
-      session.userId as string
-    );
 
     return result.id;
   }
@@ -382,15 +380,15 @@ export class FileRepository {
       throw new ServerException('Failed to create file version');
     }
 
+    await this.attachCreator(input.id, session);
+    await this.attachParent(input.id, fileId);
+
     const dbFileVersion = new DbFileVersion();
     await this.authorizationService.processNewBaseNode(
       dbFileVersion,
       result.id,
       session.userId as string
     );
-
-    await this.attachCreator(input.id, session);
-    await this.attachParent(input.id, fileId);
   }
 
   private async attachCreator(id: string, session: ISession) {
