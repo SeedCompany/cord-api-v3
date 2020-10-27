@@ -403,7 +403,7 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "f3e070d1-0ab5-441e-8128-0babcd90b414",
+								"id": "2254efaf-ee58-4039-84c3-13a938285821",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"const moment = require('moment');",
@@ -488,7 +488,7 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "77c79afd-5857-4720-b940-b225916c1f70",
+								"id": "9f7bad1c-1fac-4bed-844f-723fada5f0b3",
 								"exec": [
 									"const moment = require('moment');\r",
 									"pm.globals.set(\"timestamp\", moment().format(\"DDMMYYYYhhmmss\"));\r",
@@ -509,27 +509,15 @@
 									"var randomNumber = Math.floor(Math.random() * optionsArray.length);\r",
 									"pm.globals.set('locationSensitivity', optionsArray[randomNumber]);\r",
 									"\r",
-									"// generate random id from characters\r",
-									"function makeid(lower, caps, mix, length) {\r",
-									"    var result = '';\r",
-									"    var characters;\r",
-									"    if (lower) {\r",
-									"        characters = 'abcdefghijklmnopqrstuvwxyz';\r",
-									"    } else if (caps) {\r",
-									"        characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';\r",
-									"    } else if (mix) {\r",
-									"        characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';\r",
-									"    } else {\r",
-									"        characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';\r",
-									"    }\r",
-									"    var charactersLength = characters.length;\r",
-									"    for (var i = 0; i < length; i++) {\r",
-									"        result += characters.charAt(Math.floor(Math.random() * charactersLength));\r",
-									"    }\r",
-									"    return result;\r",
-									"}\r",
-									"\r",
-									"pm.globals.set(\"isoAlpha3\", makeid(false, true, false, 3));"
+									"// Taking random value for the isoAlpha3 from pre-defined possible values\r",
+									"var optionsArray = ['ABW',\r",
+									"    'USA',\r",
+									"    'ALA',\r",
+									"    'IND',\r",
+									"    'AUS'];\r",
+									"var randomNumber = Math.floor(Math.random() * optionsArray.length);\r",
+									"pm.globals.set('isoAlpha3', optionsArray[randomNumber]);\r",
+									""
 								],
 								"type": "text/javascript"
 							}
@@ -551,8 +539,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"name\": \"{{locationName}}\",\r\n            \"type\": \"{{locationType}}\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\",\r\n            \"isoAlpha3\": \"55\",\r\n            \"fundingAccountId\": \"{{fundingAccountid}}\"\r\n        }\r\n    }\r\n}"
+								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"name\": \"{{locationName}}\",\r\n            \"type\": \"{{locationType}}\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\",\r\n            \"isoAlpha3\": \"{{isoAlpha3}}\",\r\n            \"fundingAccountId\": \"{{fundingAccountid}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -636,7 +624,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"name\": \"\",\r\n            \"type\": \"{{locationType}}\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\",\r\n            \"isoAlpha3\": \"{{isoAlpha3}}\",\r\n            \"fundingAccountId\": \"{{fundingAccountid}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -716,7 +704,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"type\": \"{{locationType}}\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\",\r\n            \"isoAlpha3\": \"{{isoAlpha3}}\",\r\n            \"fundingAccountId\": \"{{fundingAccountid}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -796,7 +784,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"name\": \"{{locationName}}\",\r\n            \"type\": \"\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\",\r\n            \"isoAlpha3\": \"{{isoAlpha3}}\",\r\n            \"fundingAccountId\": \"{{fundingAccountid}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -876,7 +864,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"name\": \"{{locationName}}\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\",\r\n            \"isoAlpha3\": \"{{isoAlpha3}}\",\r\n            \"fundingAccountId\": \"{{fundingAccountid}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -956,7 +944,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"name\": \"{{locationName}}\",\r\n            \"type\": \"{{locationType}}\",\r\n            \"sensitivity\": \"\",\r\n            \"isoAlpha3\": \"{{isoAlpha3}}\",\r\n            \"fundingAccountId\": \"{{fundingAccountid}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -1036,7 +1024,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"name\": \"{{locationName}}\",\r\n            \"type\": \"{{locationType}}\",\r\n            \"isoAlpha3\": \"{{isoAlpha3}}\",\r\n            \"fundingAccountId\": \"{{fundingAccountid}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -1074,27 +1062,10 @@
 									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
 									"});",
 									"",
-									"//Test Specific",
-									"pm.test(\"Verify that error message is correct\", function () {",
-									"    var error_message = jsonData.errors[0].message;",
-									"    pm.expect(error_message).to.eql(\"Input validation failed\");",
+									"pm.test(\"Verify that isoAlpha3 are null\", function () {",
+									"    var isoAlpha3 = jsonData.data.createLocation.location.isoAlpha3.value;",
+									"    pm.expect(isoAlpha3).to.eql(null);",
 									"});",
-									"",
-									"pm.test(\"Verify that error status is 400\", function () {",
-									"    var error_status = jsonData.errors[0].extensions.status;",
-									"    pm.expect(error_status).to.eql(400);",
-									"});",
-									"",
-									"pm.test(\"Verify that length message is correct\", function () {",
-									"    var length_message = jsonData.errors[0].extensions.errors['location.isoAlpha3'].length;",
-									"    pm.expect(length_message).to.eql(\"isoAlpha3 must be longer than or equal to 3 characters\");",
-									"});",
-									"",
-									"pm.test(\"Verify that isAlpha message is correct\", function () {",
-									"    var isAlpha_message = jsonData.errors[0].extensions.errors['location.isoAlpha3'].isAlpha;",
-									"    pm.expect(isAlpha_message).to.eql(\"isoAlpha3 must contain only letters (a-zA-Z)\");",
-									"});",
-									"",
 									""
 								],
 								"type": "text/javascript"
@@ -1142,7 +1113,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"name\": \"{{locationName}}\",\r\n            \"type\": \"{{locationType}}\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\",\r\n            \"isoAlpha3\": \"\",\r\n            \"fundingAccountId\": \"{{fundingAccountid}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -1237,7 +1208,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"name\": \"{{locationName}}\",\r\n            \"type\": \"{{locationType}}\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\",\r\n            \"fundingAccountId\": \"{{fundingAccountid}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -1287,7 +1258,7 @@
 									"});",
 									"",
 									"pm.test(\"Verify that minLength message is correct\", function () {",
-									"    var fundingAccountId_message = jsonData.errors[0].extensions.errors['location.fundingAccountId'].IsShortId;",
+									"    var fundingAccountId_message = jsonData.errors[0].extensions.errors['location.fundingAccountId'].IsId;",
 									"    pm.expect(fundingAccountId_message).to.eql(\"Invalid ID\");",
 									"});",
 									""
@@ -1322,7 +1293,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"name\": \"{{locationName}}\",\r\n            \"type\": \"{{locationType}}\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\",\r\n            \"isoAlpha3\": \"{{isoAlpha3}}\",\r\n            \"fundingAccountId\": \"\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -1396,27 +1367,15 @@
 									"var randomNumber = Math.floor(Math.random() * optionsArray.length);\r",
 									"pm.globals.set('locationSensitivity', optionsArray[randomNumber]);\r",
 									"\r",
-									"// generate random id from characters\r",
-									"function makeid(lower, caps, mix, length) {\r",
-									"    var result = '';\r",
-									"    var characters;\r",
-									"    if (lower) {\r",
-									"        characters = 'abcdefghijklmnopqrstuvwxyz';\r",
-									"    } else if (caps) {\r",
-									"        characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';\r",
-									"    } else if (mix) {\r",
-									"        characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';\r",
-									"    } else {\r",
-									"        characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';\r",
-									"    }\r",
-									"    var charactersLength = characters.length;\r",
-									"    for (var i = 0; i < length; i++) {\r",
-									"        result += characters.charAt(Math.floor(Math.random() * charactersLength));\r",
-									"    }\r",
-									"    return result;\r",
-									"}\r",
 									"\r",
-									"pm.globals.set(\"isoAlpha3\", makeid(false, true, false, 3));"
+									"// Taking random value for the isoAlpha3 from pre-defined possible values\r",
+									"var optionsArray = ['ABW',\r",
+									"    'USA',\r",
+									"    'ALA',\r",
+									"    'IND',\r",
+									"    'AUS'];\r",
+									"var randomNumber = Math.floor(Math.random() * optionsArray.length);\r",
+									"pm.globals.set('isoAlpha3', optionsArray[randomNumber]);"
 								],
 								"type": "text/javascript"
 							}
@@ -1438,7 +1397,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"name\": \"{{locationName}}\",\r\n            \"type\": \"{{locationType}}\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\",\r\n            \"isoAlpha3\": \"{{isoAlpha3}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -1517,27 +1476,14 @@
 									"var randomNumber = Math.floor(Math.random() * optionsArray.length);\r",
 									"pm.globals.set('locationSensitivity', optionsArray[randomNumber]);\r",
 									"\r",
-									"// generate random id from characters\r",
-									"function makeid(lower, caps, mix, length) {\r",
-									"    var result = '';\r",
-									"    var characters;\r",
-									"    if (lower) {\r",
-									"        characters = 'abcdefghijklmnopqrstuvwxyz';\r",
-									"    } else if (caps) {\r",
-									"        characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';\r",
-									"    } else if (mix) {\r",
-									"        characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';\r",
-									"    } else {\r",
-									"        characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';\r",
-									"    }\r",
-									"    var charactersLength = characters.length;\r",
-									"    for (var i = 0; i < length; i++) {\r",
-									"        result += characters.charAt(Math.floor(Math.random() * charactersLength));\r",
-									"    }\r",
-									"    return result;\r",
-									"}\r",
-									"\r",
-									"pm.globals.set(\"isoAlpha3\", makeid(false, false, true, 5));"
+									"// Taking random value for the isoAlpha3 from pre-defined possible values\r",
+									"var optionsArray = ['ABW',\r",
+									"    'USA',\r",
+									"    'ALA',\r",
+									"    'IND',\r",
+									"    'AUS'];\r",
+									"var randomNumber = Math.floor(Math.random() * optionsArray.length);\r",
+									"pm.globals.set('isoAlpha3', optionsArray[randomNumber]);"
 								],
 								"type": "text/javascript"
 							}
@@ -1559,7 +1505,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"name\": \"{{locationName}}\",\r\n            \"type\": \"{{locationType}}\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -1639,7 +1585,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"name1\": \"{{locationName}}\",\r\n            \"type\": \"{{locationType}}\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\",\r\n            \"isoAlpha3\": \"{{isoAlpha3}}\",\r\n            \"fundingAccountId\": \"{{fundingAccountid}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -1719,7 +1665,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"name\": \"{{locationName}}\",\r\n            \"type1\": \"{{locationType}}\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\",\r\n            \"isoAlpha3\": \"{{isoAlpha3}}\",\r\n            \"fundingAccountId\": \"{{fundingAccountid}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -1799,7 +1745,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"name\": \"{{locationName}}\",\r\n            \"type\": \"{{locationType}}\",\r\n            \"sensitivity1\": \"{{locationSensitivity}}\",\r\n            \"isoAlpha3\": \"{{isoAlpha3}}\",\r\n            \"fundingAccountId\": \"{{fundingAccountid}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -1879,7 +1825,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"name\": \"{{locationName}}\",\r\n            \"type\": \"{{locationType}}\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\",\r\n            \"isoAlpha31\": \"{{isoAlpha3}}\",\r\n            \"fundingAccountId\": \"{{fundingAccountid}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -1959,7 +1905,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"name\": \"{{locationName}}\",\r\n            \"type\": \"{{locationType}}\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\",\r\n            \"isoAlpha3\": \"{{isoAlpha3}}\",\r\n            \"fundingAccountId1\": \"{{fundingAccountid}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -2039,7 +1985,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"name\": \"{{locationName}}\",\r\n            \"type\": \"!@#$%^&8\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\",\r\n            \"isoAlpha3\": \"{{isoAlpha3}}\",\r\n            \"fundingAccountId\": \"{{fundingAccountid}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -2119,7 +2065,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"name\": \"{{locationName}}\",\r\n            \"type\": \"{{locationType}}\",\r\n            \"sensitivity\": \"!@#$%^&*\",\r\n            \"isoAlpha3\": \"{{isoAlpha3}}\",\r\n            \"fundingAccountId\": \"{{fundingAccountid}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -2168,16 +2114,10 @@
 									"    pm.expect(error_status).to.eql(400);",
 									"});",
 									"",
-									"pm.test(\"Verify that length message is correct\", function () {",
-									"    var length_message = jsonData.errors[0].extensions.errors['location.isoAlpha3'].length;",
-									"    pm.expect(length_message).to.eql(\"isoAlpha3 must be shorter than or equal to 3 characters\");",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].extensions.errors['location.isoAlpha3']['ISO-3166-1-Alpha-3'];",
+									"    pm.expect(error_message).to.eql(\"Invalid ISO-3166-1 alpha-3 country code\");",
 									"});",
-									"",
-									"pm.test(\"Verify that isAlpha message is correct\", function () {",
-									"    var isAlpha_message = jsonData.errors[0].extensions.errors['location.isoAlpha3'].isAlpha;",
-									"    pm.expect(isAlpha_message).to.eql(\"isoAlpha3 must contain only letters (a-zA-Z)\");",
-									"});",
-									"",
 									""
 								],
 								"type": "text/javascript"
@@ -2213,7 +2153,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"name\": \"{{locationName}}\",\r\n            \"type\": \"{{locationType}}\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\",\r\n            \"isoAlpha3\": \"@#$%^&\",\r\n            \"fundingAccountId\": \"{{fundingAccountid}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -2263,7 +2203,7 @@
 									"});",
 									"",
 									"pm.test(\"Verify that minLength message is correct\", function () {",
-									"    var fundingAccountId_message = jsonData.errors[0].extensions.errors['location.fundingAccountId'].IsShortId;",
+									"    var fundingAccountId_message = jsonData.errors[0].extensions.errors['location.fundingAccountId'].IsId;",
 									"    pm.expect(fundingAccountId_message).to.eql(\"Invalid ID\");",
 									"});",
 									""
@@ -2298,7 +2238,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"name\": \"{{locationName}}\",\r\n            \"type\": \"{{locationType}}\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\",\r\n            \"isoAlpha3\": \"{{isoAlpha3}}\",\r\n            \"fundingAccountId\": \"@#$%^&*()_\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -2417,7 +2357,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query location($id: ID!) {\r\n  location(id: $id) {\r\n    id\r\n    createdAt\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    type {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    sensitivity\r\n    isoAlpha3 {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    fundingAccount {\r\n      value {\r\n        id\r\n        createdAt\r\n        name {\r\n          value\r\n          canEdit\r\n          canRead\r\n        }\r\n        accountNumber {\r\n          value\r\n          canEdit\r\n          canRead\r\n        }\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query location($id: ID!) {\r\n  location(id: $id) {\r\n    id\r\n    createdAt\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    type {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    sensitivity\r\n    isoAlpha3 {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n    fundingAccount {\r\n      value {\r\n        id\r\n        createdAt\r\n        name {\r\n          value\r\n          canEdit\r\n          canRead\r\n        }\r\n        accountNumber {\r\n          value\r\n          canEdit\r\n          canRead\r\n        }\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"id\": \"{{locationid}}\"\r\n}"
 							},
 							"options": {
@@ -2462,7 +2402,7 @@
 									"});",
 									"",
 									"pm.test(\"Verify that error message is correct\", function () {",
-									"    var error_message = jsonData.errors[0].extensions.errors.id.IsShortId;",
+									"    var error_message = jsonData.errors[0].extensions.errors.id.IsId;",
 									"    pm.expect(error_message).to.eql(\"Invalid ID\");",
 									"});"
 								],
@@ -2486,7 +2426,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query location($id: ID!) {\r\n  location(id: $id) {\r\n    id\r\n    createdAt\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    type {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    sensitivity\r\n    isoAlpha3 {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    fundingAccount {\r\n      value {\r\n        id\r\n        createdAt\r\n        name {\r\n          value\r\n          canEdit\r\n          canRead\r\n        }\r\n        accountNumber {\r\n          value\r\n          canEdit\r\n          canRead\r\n        }\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query location($id: ID!) {\r\n  location(id: $id) {\r\n    id\r\n    createdAt\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    type {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    sensitivity\r\n    isoAlpha3 {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n    fundingAccount {\r\n      value {\r\n        id\r\n        createdAt\r\n        name {\r\n          value\r\n          canEdit\r\n          canRead\r\n        }\r\n        accountNumber {\r\n          value\r\n          canEdit\r\n          canRead\r\n        }\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"id\": \"\"\r\n}"
 							},
 							"options": {
@@ -2556,7 +2496,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query location($id: ID!) {\r\n  location(id: $id) {\r\n    id\r\n    createdAt\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    type {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    sensitivity\r\n    isoAlpha3 {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    fundingAccount {\r\n      value {\r\n        id\r\n        createdAt\r\n        name {\r\n          value\r\n          canEdit\r\n          canRead\r\n        }\r\n        accountNumber {\r\n          value\r\n          canEdit\r\n          canRead\r\n        }\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query location($id: ID!) {\r\n  location(id: $id) {\r\n    id\r\n    createdAt\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    type {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    sensitivity\r\n    isoAlpha3 {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n    fundingAccount {\r\n      value {\r\n        id\r\n        createdAt\r\n        name {\r\n          value\r\n          canEdit\r\n          canRead\r\n        }\r\n        accountNumber {\r\n          value\r\n          canEdit\r\n          canRead\r\n        }\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"id1\": \"{{locationid}}\"\r\n}"
 							},
 							"options": {
@@ -2601,7 +2541,7 @@
 									"});",
 									"",
 									"pm.test(\"Verify that error message is correct\", function () {",
-									"    var error_message = jsonData.errors[0].extensions.errors.id.IsShortId;",
+									"    var error_message = jsonData.errors[0].extensions.errors.id.IsId;",
 									"    pm.expect(error_message).to.eql(\"Invalid ID\");",
 									"});"
 								],
@@ -2625,7 +2565,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query location($id: ID!) {\r\n  location(id: $id) {\r\n    id\r\n    createdAt\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    type {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    sensitivity\r\n    isoAlpha3 {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    fundingAccount {\r\n      value {\r\n        id\r\n        createdAt\r\n        name {\r\n          value\r\n          canEdit\r\n          canRead\r\n        }\r\n        accountNumber {\r\n          value\r\n          canEdit\r\n          canRead\r\n        }\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
+								"query": "query location($id: ID!) {\r\n  location(id: $id) {\r\n    id\r\n    createdAt\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    type {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    sensitivity\r\n    isoAlpha3 {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n    fundingAccount {\r\n      value {\r\n        id\r\n        createdAt\r\n        name {\r\n          value\r\n          canEdit\r\n          canRead\r\n        }\r\n        accountNumber {\r\n          value\r\n          canEdit\r\n          canRead\r\n        }\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"id\": \"@#$%^&*()_\"\r\n}"
 							},
 							"options": {
@@ -2748,27 +2688,14 @@
 									"var randomNumber = Math.floor(Math.random() * optionsArray.length);\r",
 									"pm.globals.set('locationSensitivity', optionsArray[randomNumber]);\r",
 									"\r",
-									"// generate random id from characters\r",
-									"function makeid(lower, caps, mix, length) {\r",
-									"    var result = '';\r",
-									"    var characters;\r",
-									"    if (lower) {\r",
-									"        characters = 'abcdefghijklmnopqrstuvwxyz';\r",
-									"    } else if (caps) {\r",
-									"        characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';\r",
-									"    } else if (mix) {\r",
-									"        characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';\r",
-									"    } else {\r",
-									"        characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';\r",
-									"    }\r",
-									"    var charactersLength = characters.length;\r",
-									"    for (var i = 0; i < length; i++) {\r",
-									"        result += characters.charAt(Math.floor(Math.random() * charactersLength));\r",
-									"    }\r",
-									"    return result;\r",
-									"}\r",
-									"\r",
-									"pm.globals.set(\"isoAlpha3\", makeid(false, true, false, 3));"
+									"// Taking random value for the isoAlpha3 from pre-defined possible values\r",
+									"var optionsArray = ['ABW',\r",
+									"    'USA',\r",
+									"    'ALA',\r",
+									"    'IND',\r",
+									"    'AUS'];\r",
+									"var randomNumber = Math.floor(Math.random() * optionsArray.length);\r",
+									"pm.globals.set('isoAlpha3', optionsArray[randomNumber]);"
 								],
 								"type": "text/javascript"
 							}
@@ -2790,7 +2717,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"id\": \"{{locationid}}\",\r\n            \"name\": \"{{locationName}}\",\r\n            \"type\": \"{{locationType}}\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\",\r\n            \"isoAlpha3\": \"{{isoAlpha3}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -2910,7 +2837,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"id\": \"{{locationid}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -2990,7 +2917,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"name\": \"{{locationName}}\",\r\n            \"type\": \"{{locationType}}\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\",\r\n            \"isoAlpha3\": \"{{isoAlpha3}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -3040,7 +2967,7 @@
 									"});",
 									"",
 									"pm.test(\"Verify that error locationId message is correct\", function () {",
-									"    var error_message = jsonData.errors[0].extensions.errors['location.id'].IsShortId;",
+									"    var error_message = jsonData.errors[0].extensions.errors['location.id'].IsId;",
 									"    pm.expect(error_message).to.include(\"Invalid ID\");",
 									"});",
 									""
@@ -3075,7 +3002,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"id\": \"\",\r\n            \"name\": \"{{locationName}}\",\r\n            \"type\": \"{{locationType}}\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\",\r\n            \"isoAlpha3\": \"{{isoAlpha3}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -3157,7 +3084,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"id\": \"{{locationid}}\",\r\n            \"type\": \"{{locationType}}\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\",\r\n            \"isoAlpha3\": \"{{isoAlpha3}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -3242,7 +3169,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"id\": \"{{locationid}}\",\r\n            \"name\": \"\",\r\n            \"type\": \"{{locationType}}\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\",\r\n            \"isoAlpha3\": \"{{isoAlpha3}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -3324,7 +3251,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"id\": \"{{locationid}}\",\r\n            \"name\": \"{{locationName}}\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\",\r\n            \"isoAlpha3\": \"{{isoAlpha3}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -3404,7 +3331,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"id\": \"{{locationid}}\",\r\n            \"name\": \"{{locationName}}\",\r\n            \"type\": \"\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\",\r\n            \"isoAlpha3\": \"{{isoAlpha3}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -3486,7 +3413,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"id\": \"{{locationid}}\",\r\n            \"name\": \"{{locationName}}\",\r\n            \"type\": \"{{locationType}}\",\r\n            \"isoAlpha3\": \"{{isoAlpha3}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -3566,7 +3493,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"id\": \"{{locationid}}\",\r\n            \"name\": \"{{locationName}}\",\r\n            \"type\": \"{{locationType}}\",\r\n            \"sensitivity\": \"\",\r\n            \"isoAlpha3\": \"{{isoAlpha3}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -3648,7 +3575,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"id\": \"{{locationid}}\",\r\n            \"name\": \"{{locationName}}\",\r\n            \"type\": \"{{locationType}}\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -3687,24 +3614,9 @@
 									"});",
 									"",
 									"//Test Specific",
-									"pm.test(\"Verify that error message is correct\", function () {",
-									"    var error_message = jsonData.errors[0].message;",
-									"    pm.expect(error_message).to.eql(\"Input validation failed\");",
-									"});",
-									"",
-									"pm.test(\"Verify that error status is 400\", function () {",
-									"    var error_status = jsonData.errors[0].extensions.status;",
-									"    pm.expect(error_status).to.eql(400);",
-									"});",
-									"",
-									"pm.test(\"Verify that length message is correct\", function () {",
-									"    var length_message = jsonData.errors[0].extensions.errors['location.isoAlpha3'].length;",
-									"    pm.expect(length_message).to.eql(\"isoAlpha3 must be longer than or equal to 3 characters\");",
-									"});",
-									"",
-									"pm.test(\"Verify that isAlpha message is correct\", function () {",
-									"    var isAlpha_message = jsonData.errors[0].extensions.errors['location.isoAlpha3'].isAlpha;",
-									"    pm.expect(isAlpha_message).to.eql(\"isoAlpha3 must contain only letters (a-zA-Z)\");",
+									"pm.test(\"Verify that isoAlpha3 are null\", function () {",
+									"    var isoAlpha3 = jsonData.data.updateLocation.location.isoAlpha3.value;",
+									"    pm.expect(isoAlpha3).to.eql(null);",
 									"});",
 									"",
 									""
@@ -3739,7 +3651,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"id\": \"{{locationid}}\",\r\n            \"name\": \"{{locationName}}\",\r\n            \"type\": \"{{locationType}}\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\",\r\n            \"isoAlpha3\": \"\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -3819,7 +3731,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"id1\": \"{{locationid}}\",\r\n            \"name\": \"{{locationName}}\",\r\n            \"type\": \"{{locationType}}\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\",\r\n            \"isoAlpha3\": \"{{isoAlpha3}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -3899,7 +3811,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"id\": \"{{locationid}}\",\r\n            \"name1\": \"{{locationName}}\",\r\n            \"type\": \"{{locationType}}\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\",\r\n            \"isoAlpha3\": \"{{isoAlpha3}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -3979,7 +3891,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"id\": \"{{locationid}}\",\r\n            \"name\": \"{{locationName}}\",\r\n            \"type1\": \"{{locationType}}\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\",\r\n            \"isoAlpha3\": \"{{isoAlpha3}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -4059,7 +3971,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"id\": \"{{locationid}}\",\r\n            \"name\": \"{{locationName}}\",\r\n            \"type\": \"{{locationType}}\",\r\n            \"sensitivity1\": \"{{locationSensitivity}}\",\r\n            \"isoAlpha3\": \"{{isoAlpha3}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -4139,7 +4051,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"id\": \"{{locationid}}\",\r\n            \"name\": \"{{locationName}}\",\r\n            \"type\": \"{{locationType}}\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\",\r\n            \"isoAlpha3$$$\": \"{{isoAlpha3}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -4190,7 +4102,7 @@
 									"});",
 									"",
 									"pm.test(\"Verify that location id  message is correct\", function () {",
-									"    var error_message = jsonData.errors[0].extensions.errors['location.id'].IsShortId;",
+									"    var error_message = jsonData.errors[0].extensions.errors['location.id'].IsId;",
 									"    pm.expect(error_message).to.eql(\"Invalid ID\");",
 									"});"
 								],
@@ -4224,7 +4136,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"id\": \"!@#$%^&\",\r\n            \"name\": \"{{locationName}}\",\r\n            \"type\": \"{{locationType}}\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\",\r\n            \"isoAlpha3\": \"{{isoAlpha3}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -4304,7 +4216,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"id\": \"{{locationid}}\",\r\n            \"name\": \"{{locationName}}\",\r\n            \"type\": \"!@#$%^&*9\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\",\r\n            \"isoAlpha3\": \"{{isoAlpha3}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -4384,7 +4296,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation updateLocation($input: UpdateLocationInput!) {\r\n  updateLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"id\": \"{{locationid}}\",\r\n            \"name\": \"{{locationName}}\",\r\n            \"type\": \"{{locationType}}\",\r\n            \"sensitivity\": \"@#$%^&*\",\r\n            \"isoAlpha3\": \"{{isoAlpha3}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -4511,7 +4423,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n    hasMore\r\n  }\r\n}\r\n",
+								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -4628,7 +4540,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n    hasMore\r\n  }\r\n}\r\n",
+								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -4705,7 +4617,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n    hasMore\r\n  }\r\n}\r\n",
+								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -4788,7 +4700,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n    hasMore\r\n  }\r\n}\r\n",
+								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -4876,7 +4788,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n    hasMore\r\n  }\r\n}\r\n",
+								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -4965,7 +4877,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n    hasMore\r\n  }\r\n}\r\n",
+								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -5096,27 +5008,14 @@
 									"var randomNumber = Math.floor(Math.random() * optionsArray.length);\r",
 									"pm.globals.set('locationSensitivity', optionsArray[randomNumber]);\r",
 									"\r",
-									"// generate random id from characters\r",
-									"function makeid(lower, caps, mix, length) {\r",
-									"    var result = '';\r",
-									"    var characters;\r",
-									"    if (lower) {\r",
-									"        characters = 'abcdefghijklmnopqrstuvwxyz';\r",
-									"    } else if (caps) {\r",
-									"        characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';\r",
-									"    } else if (mix) {\r",
-									"        characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';\r",
-									"    } else {\r",
-									"        characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';\r",
-									"    }\r",
-									"    var charactersLength = characters.length;\r",
-									"    for (var i = 0; i < length; i++) {\r",
-									"        result += characters.charAt(Math.floor(Math.random() * charactersLength));\r",
-									"    }\r",
-									"    return result;\r",
-									"}\r",
-									"\r",
-									"pm.globals.set(\"isoAlpha3\", makeid(false, true, false, 3));"
+									"// Taking random value for the isoAlpha3 from pre-defined possible values\r",
+									"var optionsArray = ['ABW',\r",
+									"    'USA',\r",
+									"    'ALA',\r",
+									"    'IND',\r",
+									"    'AUS'];\r",
+									"var randomNumber = Math.floor(Math.random() * optionsArray.length);\r",
+									"pm.globals.set('isoAlpha3', optionsArray[randomNumber]);"
 								],
 								"type": "text/javascript"
 							}
@@ -5138,7 +5037,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"name\": \"{{locationName}}\",\r\n            \"type\": \"{{locationType}}\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\",\r\n            \"isoAlpha3\": \"{{isoAlpha3}}\",\r\n            \"fundingAccountId\": \"{{fundingAccountid}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -5269,27 +5168,14 @@
 									"var randomNumber = Math.floor(Math.random() * optionsArray.length);\r",
 									"pm.globals.set('locationSensitivity', optionsArray[randomNumber]);\r",
 									"\r",
-									"// generate random id from characters\r",
-									"function makeid(lower, caps, mix, length) {\r",
-									"    var result = '';\r",
-									"    var characters;\r",
-									"    if (lower) {\r",
-									"        characters = 'abcdefghijklmnopqrstuvwxyz';\r",
-									"    } else if (caps) {\r",
-									"        characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';\r",
-									"    } else if (mix) {\r",
-									"        characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';\r",
-									"    } else {\r",
-									"        characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';\r",
-									"    }\r",
-									"    var charactersLength = characters.length;\r",
-									"    for (var i = 0; i < length; i++) {\r",
-									"        result += characters.charAt(Math.floor(Math.random() * charactersLength));\r",
-									"    }\r",
-									"    return result;\r",
-									"}\r",
-									"\r",
-									"pm.globals.set(\"isoAlpha3\", makeid(false, true, false, 3));"
+									"// Taking random value for the isoAlpha3 from pre-defined possible values\r",
+									"var optionsArray = ['ABW',\r",
+									"    'USA',\r",
+									"    'ALA',\r",
+									"    'IND',\r",
+									"    'AUS'];\r",
+									"var randomNumber = Math.floor(Math.random() * optionsArray.length);\r",
+									"pm.globals.set('isoAlpha3', optionsArray[randomNumber]);"
 								],
 								"type": "text/javascript"
 							}
@@ -5311,7 +5197,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLocation($input: CreateLocationInput!) {\r\n  createLocation(input: $input) {\r\n    location {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"location\": {\r\n            \"name\": \"{{locationName}}\",\r\n            \"type\": \"{{locationType}}\",\r\n            \"sensitivity\": \"{{locationSensitivity}}\",\r\n            \"isoAlpha3\": \"{{isoAlpha3}}\",\r\n            \"fundingAccountId\": \"{{fundingAccountid}}\"\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
@@ -5391,7 +5277,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n    hasMore\r\n  }\r\n}\r\n",
+								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -5471,7 +5357,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n    hasMore\r\n  }\r\n}\r\n",
+								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -5548,7 +5434,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n    hasMore\r\n  }\r\n}\r\n",
+								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -5631,7 +5517,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n    hasMore\r\n  }\r\n}\r\n",
+								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -5711,7 +5597,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n    hasMore\r\n  }\r\n}\r\n",
+								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -5791,7 +5677,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n    hasMore\r\n  }\r\n}\r\n",
+								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count1\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -5871,7 +5757,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n    hasMore\r\n  }\r\n}\r\n",
+								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page1\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -5951,7 +5837,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n    hasMore\r\n  }\r\n}\r\n",
+								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort1\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -6031,7 +5917,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n    hasMore\r\n  }\r\n}\r\n",
+								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order1\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -6115,7 +6001,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n    hasMore\r\n  }\r\n}\r\n",
+								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": 0,\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -6199,7 +6085,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n    hasMore\r\n  }\r\n}\r\n",
+								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": 159,\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -6284,7 +6170,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n    hasMore\r\n  }\r\n}\r\n",
+								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": 0,\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -6377,7 +6263,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n    hasMore\r\n  }\r\n}\r\n",
+								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"abcd\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -6457,7 +6343,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n    hasMore\r\n  }\r\n}\r\n",
+								"query": "query locationList($input: LocationListInput!) {\r\n  locations(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      type {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      sensitivity\r\n      isoAlpha3 {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      isoCountry {\r\n        country\r\n        alpha2\r\n        alpha3\r\n        numeric\r\n      }\r\n      fundingAccount {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          accountNumber {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"ASCENDING\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -6580,7 +6466,7 @@
 									"});",
 									"",
 									"pm.test(\"Verify that location error message is correct\", function () {",
-									"    var error_location_message = jsonData.errors[0].extensions.errors.id.IsShortId;",
+									"    var error_location_message = jsonData.errors[0].extensions.errors.id.IsId;",
 									"    pm.expect(error_location_message).to.eql(\"Invalid ID\");",
 									"});"
 								],
@@ -6822,7 +6708,7 @@
 									"});",
 									"",
 									"pm.test(\"Verify that location error message is correct\", function () {",
-									"    var error_location_message = jsonData.errors[0].extensions.errors.id.IsShortId;",
+									"    var error_location_message = jsonData.errors[0].extensions.errors.id.IsId;",
 									"    pm.expect(error_location_message).to.eql(\"Invalid ID\");",
 									"});"
 								],

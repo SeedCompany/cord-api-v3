@@ -1,0 +1,93 @@
+{
+	"info": {
+		"_postman_id": "987a91fc-a353-489f-a490-01b6fe52f0ec",
+		"name": "Cord_API_V3_FieldZone",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Create fieldZone Success",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "057cf3b6-eb49-4b1f-a497-7a00da195308",
+						"exec": [
+							"var jsonData = pm.response.json();\r",
+							"const moment = require('moment');\r",
+							"\r",
+							"pm.test(\"Verify that fieldZone ID is not blank or null\", function () {\r",
+							"    var fieldZoneId = jsonData.data.createFieldZone.fieldZone.id;\r",
+							"    pm.expect(fieldZoneId).to.not.eql(null);\r",
+							"    pm.expect(fieldZoneId).to.not.eql(\"\");\r",
+							"\r",
+							"    // Saving data for future use\r",
+							"    pm.globals.set(\"fieldZoneId\", fieldZoneId);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Verify that director ID is not blank or null\", function () {\r",
+							"    var directorId = jsonData.data.createFieldZone.fieldZone.director.value.id;\r",
+							"    pm.expect(directorId).to.not.eql(null);\r",
+							"    pm.expect(directorId).to.not.eql(\"\");\r",
+							"\r",
+							"    // Saving data for future use\r",
+							"    pm.globals.set(\"directorId\", directorId);\r",
+							"});\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "45be2192-9fc5-4ebd-a788-5c28cf9fcaf5",
+						"exec": [
+							"const moment = require('moment');\r",
+							"pm.globals.set(\"timestamp\", moment().format(\"DDMYYYYhhmmss\"));\r",
+							"\r",
+							"pm.globals.set(\"fieldZone\", \"FieldZone\" + moment().format(\"DDMYYYYhhmmss\"));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "graphql",
+					"graphql": {
+						"query": "mutation createFieldZone($input: CreateFieldZoneInput!) {\r\n  createFieldZone(input: $input) {\r\n    fieldZone {\r\n      id\r\n      createdAt\r\n      canDelete\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      director {\r\n        value {\r\n          id\r\n          fullName\r\n          firstName\r\n          avatarLetters\r\n          createdAt\r\n          email {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          realFirstName {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          realLastName {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          displayFirstName {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          displayLastName {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          phone {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          about {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          status {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          roles {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          title {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          timezone {\r\n            canRead\r\n            canEdit\r\n            value {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n                name\r\n                zones {\r\n                  name\r\n                  lat\r\n                  long\r\n                  countries {\r\n                    code\r\n                  }\r\n                }\r\n              }\r\n            }\r\n          }\r\n          unavailabilities {\r\n            canRead\r\n            items {\r\n              id\r\n              createdAt\r\n              description {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              start\r\n              end\r\n            }\r\n            total\r\n            hasMore\r\n            canCreate\r\n          }\r\n          organizations {\r\n            canRead\r\n            items {\r\n              id\r\n              createdAt\r\n              name {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              avatarLetters\r\n            }\r\n            total\r\n            hasMore\r\n            canCreate\r\n          }\r\n          education {\r\n            canRead\r\n            items {\r\n              id\r\n              createdAt\r\n              degree {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              major {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              institution {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n            }\r\n            total\r\n            hasMore\r\n            canCreate\r\n          }\r\n        }\r\n        canRead\r\n        canEdit\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+						"variables": "{\r\n    \"input\": {\r\n        \"fieldZone\": {\r\n            \"name\": \"{{fieldZone}}\",\r\n            \"directorId\": \"{{userid}}\"\r\n        }\r\n    }\r\n}"
+					},
+					"options": {
+						"graphql": {}
+					}
+				},
+				"url": {
+					"raw": "{{env}}/graphql",
+					"host": [
+						"{{env}}"
+					],
+					"path": [
+						"graphql"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}

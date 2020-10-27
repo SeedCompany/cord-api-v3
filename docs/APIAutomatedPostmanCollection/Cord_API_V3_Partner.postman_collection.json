@@ -255,32 +255,32 @@
 									"var userStatusArray = ['Active','Disabled'];\r",
 									"var randomNumber = Math.floor(Math.random()*userStatusArray.length);\r",
 									"// pm.globals.set('userStatus', userStatusArray[randomNumber]);\r",
-									"pm.globals.set(\"userStatus\", \"Active\");\r",
+									"// pm.globals.set(\"userStatus\", \"Active\");\r",
 									"\r",
-									"var userRolesArray = ['BibleTranslationLiaison',\r",
-									"'Consultant',\r",
-									"'ConsultantManager',\r",
-									"'Controller',\r",
-									"'Development',\r",
-									"'ExecutiveDevelopmentRepresentative',\r",
-									"'ExecutiveLeadership',\r",
-									"'FieldOperationsDirector',\r",
-									"'FieldPartner',\r",
-									"'FinancialAnalyst',\r",
-									"'Intern',\r",
-									"'Liaison',\r",
-									"'LeadFinancialAnalyst',\r",
-									"'Mentor',\r",
-									"'OfficeOfThePresident',\r",
-									"'ProjectManager',\r",
-									"'RegionalCommunicationsCoordinator',\r",
-									"'RegionalDirector',\r",
-									"'SupportingProjectManager',\r",
-									"'Translator',\r",
-									"'Writer'\r",
-									"];\r",
-									"var randomNumber = Math.floor(Math.random()*userRolesArray.length);\r",
-									"pm.globals.set('userRoles', userRolesArray[randomNumber]);\r",
+									"// var userRolesArray = ['BibleTranslationLiaison',\r",
+									"// 'Consultant',\r",
+									"// 'ConsultantManager',\r",
+									"// 'Controller',\r",
+									"// 'Development',\r",
+									"// 'ExecutiveDevelopmentRepresentative',\r",
+									"// 'ExecutiveLeadership',\r",
+									"// 'FieldOperationsDirector',\r",
+									"// 'FieldPartner',\r",
+									"// 'FinancialAnalyst',\r",
+									"// 'Intern',\r",
+									"// 'Liaison',\r",
+									"// 'LeadFinancialAnalyst',\r",
+									"// 'Mentor',\r",
+									"// 'OfficeOfThePresident',\r",
+									"// 'ProjectManager',\r",
+									"// 'RegionalCommunicationsCoordinator',\r",
+									"// 'RegionalDirector',\r",
+									"// 'SupportingProjectManager',\r",
+									"// 'Translator',\r",
+									"// 'Writer'\r",
+									"// ];\r",
+									"\r",
+									"pm.globals.set('userRoles', JSON.stringify([\"ProjectManager\"]));\r",
 									""
 								],
 								"type": "text/javascript"
@@ -304,7 +304,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation register($input: RegisterInput!) {\r\n  register(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n    \"input\": {\r\n        \"realFirstName\": \"Piyush\",\r\n        \"realLastName\": \"Patel\",\r\n        \"email\": \"{{login_email}}\",\r\n        \"password\": \"{{login_password}}\",\r\n        \"displayFirstName\": \"{{displayFirstName}}\",\r\n        \"displayLastName\": \"{{displayLastName}}\",\r\n        \"phone\": \"{{phone}}\",\r\n        \"timezone\": \"{{timezone}}\",\r\n        \"status\": \"{{userStatus}}\",\r\n        \"title\": \"{{userTitle}}\",\r\n        \"roles\": \"{{userRoles}}\"\r\n    }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"realFirstName\": \"Piyush\",\r\n        \"realLastName\": \"Patel\",\r\n        \"email\": \"{{login_email}}\",\r\n        \"password\": \"{{login_password}}\",\r\n        \"displayFirstName\": \"{{displayFirstName}}\",\r\n        \"displayLastName\": \"{{displayLastName}}\",\r\n        \"phone\": \"{{phone}}\",\r\n        \"timezone\": \"{{timezone}}\",\r\n        \"status\": \"{{userStatus}}\",\r\n        \"title\": \"{{userTitle}}\",\r\n        \"roles\": {{userRoles}}\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -953,6 +953,78 @@
 					"response": []
 				},
 				{
+					"name": "Pre-req for Create Partner ( Create Org )",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "b38ac7c6-8f5e-4181-95d2-364165cabeba",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"var id = jsonData.data.createOrganization.organization.id;",
+									"pm.globals.set(\"organizationid\", id);",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "05d3899d-4665-484a-bff9-1c7c23f1f149",
+								"exec": [
+									"const moment = require('moment');\r",
+									"\r",
+									"pm.globals.set(\"orgName\", \"OrganizationName_\" + moment().format(\"DDMMYYYYhhmmss\"));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation createOrganization($input: CreateOrganizationInput!) {\r\n  createOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      address {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\n    \"input\": {\n        \"organization\": {\n            \"name\": \"{{orgName}}\",\n            \"address\":\"{{orgAddress}}\"\n        }\n    }\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Create Partner Success with Other Partner Types",
 					"event": [
 						{
@@ -1119,6 +1191,78 @@
 							"graphql": {
 								"query": "mutation createPartner($input: CreatePartnerInput!) {\r\n  createPartner(input: $input) {\r\n    partner {\r\n      id\r\n      createdAt\r\n      modifiedAt\r\n      types {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      financialReportingTypes {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      pmcEntityCode {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      globalInnovationsClient {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      active {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      address {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n\r\n      organization {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          avatarLetters\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      pointOfContact {\r\n        value {\r\n          id\r\n          fullName\r\n          firstName\r\n          avatarLetters\r\n          createdAt\r\n          email {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          realFirstName {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          realLastName {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          displayFirstName {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          displayLastName {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          phone {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          about {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          status {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          title {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          roles {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n\r\n          timezone {\r\n            canRead\r\n            canEdit\r\n            value {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n                name\r\n                zones {\r\n                  name\r\n                  lat\r\n                  long\r\n                  countries {\r\n                    code\r\n                  }\r\n                }\r\n              }\r\n            }\r\n          }\r\n\r\n          unavailabilities {\r\n            canRead\r\n            items {\r\n              id\r\n              createdAt\r\n              description {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              start\r\n              end\r\n            }\r\n            total\r\n            hasMore\r\n            canCreate\r\n          }\r\n          organizations {\r\n            canRead\r\n            items {\r\n              id\r\n              createdAt\r\n              name {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              avatarLetters\r\n            }\r\n            total\r\n            hasMore\r\n            canCreate\r\n          }\r\n          education {\r\n            canRead\r\n            total\r\n            hasMore\r\n            canCreate\r\n            items {\r\n              id\r\n              createdAt\r\n              degree {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              major {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              institution {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n            }\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"partner\": {\r\n            \"organizationId\": \"{{organizationid}}\",\r\n            \"types\": \"{{partnerType}}\",\r\n            \r\n            \"pmcEntityCode\": \"{{pmcEntityCode}}\",\r\n            \"globalInnovationsClient\": false,\r\n            \"active\": false,\r\n            \"address\": \"{{partnerAddress}}\"\r\n        }\r\n    }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Pre-req for Create Partner ( Create Org )",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "66e5d9c8-4f09-4542-9005-365f0a27671b",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"var id = jsonData.data.createOrganization.organization.id;",
+									"pm.globals.set(\"organizationid\", id);",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "ad77522f-8118-4a63-8768-1c72af92bb1d",
+								"exec": [
+									"const moment = require('moment');\r",
+									"\r",
+									"pm.globals.set(\"orgName\", \"OrganizationName_\" + moment().format(\"DDMMYYYYhhmmss\"));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation createOrganization($input: CreateOrganizationInput!) {\r\n  createOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      address {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\n    \"input\": {\n        \"organization\": {\n            \"name\": \"{{orgName}}\",\n            \"address\":\"{{orgAddress}}\"\n        }\n    }\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -1339,6 +1483,78 @@
 					"response": []
 				},
 				{
+					"name": "Pre-req for Create Partner ( Create Org )",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "b728908d-6db4-48d5-a254-1449f291cbb2",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"var id = jsonData.data.createOrganization.organization.id;",
+									"pm.globals.set(\"organizationid\", id);",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "47f949b5-98fb-410f-bcd6-1a37a1cf55fe",
+								"exec": [
+									"const moment = require('moment');\r",
+									"\r",
+									"pm.globals.set(\"orgName\", \"OrganizationName_\" + moment().format(\"DDMMYYYYhhmmss\"));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation createOrganization($input: CreateOrganizationInput!) {\r\n  createOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      address {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\n    \"input\": {\n        \"organization\": {\n            \"name\": \"{{orgName}}\",\n            \"address\":\"{{orgAddress}}\"\n        }\n    }\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Create Partner Success - Array Inputs - unique for financialReportingTypes",
 					"event": [
 						{
@@ -1521,6 +1737,78 @@
 							"graphql": {
 								"query": "mutation createPartner($input: CreatePartnerInput!) {\r\n  createPartner(input: $input) {\r\n    partner {\r\n      id\r\n      createdAt\r\n      modifiedAt\r\n      types {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      financialReportingTypes {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      pmcEntityCode {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      globalInnovationsClient {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      active {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      address {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n\r\n      organization {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          avatarLetters\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      pointOfContact {\r\n        value {\r\n          id\r\n          fullName\r\n          firstName\r\n          avatarLetters\r\n          createdAt\r\n          email {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          realFirstName {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          realLastName {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          displayFirstName {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          displayLastName {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          phone {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          about {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          status {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          title {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          roles {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n\r\n          timezone {\r\n            canRead\r\n            canEdit\r\n            value {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n                name\r\n                zones {\r\n                  name\r\n                  lat\r\n                  long\r\n                  countries {\r\n                    code\r\n                  }\r\n                }\r\n              }\r\n            }\r\n          }\r\n\r\n          unavailabilities {\r\n            canRead\r\n            items {\r\n              id\r\n              createdAt\r\n              description {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              start\r\n              end\r\n            }\r\n            total\r\n            hasMore\r\n            canCreate\r\n          }\r\n          organizations {\r\n            canRead\r\n            items {\r\n              id\r\n              createdAt\r\n              name {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              avatarLetters\r\n            }\r\n            total\r\n            hasMore\r\n            canCreate\r\n          }\r\n          education {\r\n            canRead\r\n            total\r\n            hasMore\r\n            canCreate\r\n            items {\r\n              id\r\n              createdAt\r\n              degree {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              major {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              institution {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n            }\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"partner\": {\r\n            \"organizationId\": \"{{organizationid}}\",\r\n            \"types\": \"Managing\",\r\n            \"financialReportingTypes\": {{financialReportingTypesArray}},\r\n            \"pmcEntityCode\": \"{{pmcEntityCode}}\",\r\n            \"globalInnovationsClient\": false,\r\n            \"active\": false,\r\n            \"address\": \"{{partnerAddress}}\"\r\n        }\r\n    }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Pre-req for Create Partner ( Create Org )",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "ff7bed2d-36c3-4c47-ac5f-36825d1cea83",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"var id = jsonData.data.createOrganization.organization.id;",
+									"pm.globals.set(\"organizationid\", id);",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "ccefa7f6-58b8-4e1f-927a-b09dd9d2afdd",
+								"exec": [
+									"const moment = require('moment');\r",
+									"\r",
+									"pm.globals.set(\"orgName\", \"OrganizationName_\" + moment().format(\"DDMMYYYYhhmmss\"));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation createOrganization($input: CreateOrganizationInput!) {\r\n  createOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      address {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\n    \"input\": {\n        \"organization\": {\n            \"name\": \"{{orgName}}\",\n            \"address\":\"{{orgAddress}}\"\n        }\n    }\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -1916,6 +2204,78 @@
 					"response": []
 				},
 				{
+					"name": "Pre-req for Create Partner ( Create Org )",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "d2bbc264-870e-4900-b117-6e08aa8e1237",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"var id = jsonData.data.createOrganization.organization.id;",
+									"pm.globals.set(\"organizationid\", id);",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "0e7451a8-3e2e-4aa7-bf7a-27c06d521b01",
+								"exec": [
+									"const moment = require('moment');\r",
+									"\r",
+									"pm.globals.set(\"orgName\", \"OrganizationName_\" + moment().format(\"DDMMYYYYhhmmss\"));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation createOrganization($input: CreateOrganizationInput!) {\r\n  createOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      address {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\n    \"input\": {\n        \"organization\": {\n            \"name\": \"{{orgName}}\",\n            \"address\":\"{{orgAddress}}\"\n        }\n    }\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Create Partner Mandatory Field Removed - types",
 					"event": [
 						{
@@ -2059,6 +2419,78 @@
 							"graphql": {
 								"query": "mutation createPartner($input: CreatePartnerInput!) {\r\n  createPartner(input: $input) {\r\n    partner {\r\n      id\r\n      createdAt\r\n      modifiedAt\r\n      types {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      financialReportingTypes {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      pmcEntityCode {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      globalInnovationsClient {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      active {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      address {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n\r\n      organization {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          avatarLetters\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      pointOfContact {\r\n        value {\r\n          id\r\n          fullName\r\n          firstName\r\n          avatarLetters\r\n          createdAt\r\n          email {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          realFirstName {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          realLastName {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          displayFirstName {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          displayLastName {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          phone {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          about {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          status {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          title {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          roles {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n\r\n          timezone {\r\n            canRead\r\n            canEdit\r\n            value {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n                name\r\n                zones {\r\n                  name\r\n                  lat\r\n                  long\r\n                  countries {\r\n                    code\r\n                  }\r\n                }\r\n              }\r\n            }\r\n          }\r\n\r\n          unavailabilities {\r\n            canRead\r\n            items {\r\n              id\r\n              createdAt\r\n              description {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              start\r\n              end\r\n            }\r\n            total\r\n            hasMore\r\n            canCreate\r\n          }\r\n          organizations {\r\n            canRead\r\n            items {\r\n              id\r\n              createdAt\r\n              name {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              avatarLetters\r\n            }\r\n            total\r\n            hasMore\r\n            canCreate\r\n          }\r\n          education {\r\n            canRead\r\n            total\r\n            hasMore\r\n            canCreate\r\n            items {\r\n              id\r\n              createdAt\r\n              degree {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              major {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              institution {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n            }\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"partner\": {\r\n            \"organizationId\": \"{{organizationid}}\",\r\n            \"types\": \"{{partnerType}}\",\r\n            \"financialReportingTypes\": \"\",\r\n            \"pmcEntityCode\": \"{{pmcEntityCode}}\",\r\n            \"globalInnovationsClient\": false,\r\n            \"active\": false,\r\n            \"address\": \"{{partnerAddress}}\"\r\n        }\r\n    }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Pre-req for Create Partner ( Create Org )",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "4916c68c-5e74-4e0d-9dee-181d920bb240",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"var id = jsonData.data.createOrganization.organization.id;",
+									"pm.globals.set(\"organizationid\", id);",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "a2141cf5-8dfc-4653-a7f1-044002646be3",
+								"exec": [
+									"const moment = require('moment');\r",
+									"\r",
+									"pm.globals.set(\"orgName\", \"OrganizationName_\" + moment().format(\"DDMMYYYYhhmmss\"));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation createOrganization($input: CreateOrganizationInput!) {\r\n  createOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      address {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\n    \"input\": {\n        \"organization\": {\n            \"name\": \"{{orgName}}\",\n            \"address\":\"{{orgAddress}}\"\n        }\n    }\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -2270,6 +2702,78 @@
 					"response": []
 				},
 				{
+					"name": "Pre-req for Create Partner ( Create Org )",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "b330816c-14cf-4e7e-b16d-0f41ac877a39",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"var id = jsonData.data.createOrganization.organization.id;",
+									"pm.globals.set(\"organizationid\", id);",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "4bcfa1af-83c8-414f-88b1-4f4b5c3a3722",
+								"exec": [
+									"const moment = require('moment');\r",
+									"\r",
+									"pm.globals.set(\"orgName\", \"OrganizationName_\" + moment().format(\"DDMMYYYYhhmmss\"));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation createOrganization($input: CreateOrganizationInput!) {\r\n  createOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      address {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\n    \"input\": {\n        \"organization\": {\n            \"name\": \"{{orgName}}\",\n            \"address\":\"{{orgAddress}}\"\n        }\n    }\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Create Partner  Not Mandatory Field Removed - pmcEntityCode",
 					"event": [
 						{
@@ -2364,6 +2868,78 @@
 							"graphql": {
 								"query": "mutation createPartner($input: CreatePartnerInput!) {\r\n  createPartner(input: $input) {\r\n    partner {\r\n      id\r\n      createdAt\r\n      modifiedAt\r\n      types {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      financialReportingTypes {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      pmcEntityCode {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      globalInnovationsClient {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      active {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      address {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n\r\n      organization {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          avatarLetters\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      pointOfContact {\r\n        value {\r\n          id\r\n          fullName\r\n          firstName\r\n          avatarLetters\r\n          createdAt\r\n          email {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          realFirstName {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          realLastName {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          displayFirstName {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          displayLastName {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          phone {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          about {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          status {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          title {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          roles {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n\r\n          timezone {\r\n            canRead\r\n            canEdit\r\n            value {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n                name\r\n                zones {\r\n                  name\r\n                  lat\r\n                  long\r\n                  countries {\r\n                    code\r\n                  }\r\n                }\r\n              }\r\n            }\r\n          }\r\n\r\n          unavailabilities {\r\n            canRead\r\n            items {\r\n              id\r\n              createdAt\r\n              description {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              start\r\n              end\r\n            }\r\n            total\r\n            hasMore\r\n            canCreate\r\n          }\r\n          organizations {\r\n            canRead\r\n            items {\r\n              id\r\n              createdAt\r\n              name {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              avatarLetters\r\n            }\r\n            total\r\n            hasMore\r\n            canCreate\r\n          }\r\n          education {\r\n            canRead\r\n            total\r\n            hasMore\r\n            canCreate\r\n            items {\r\n              id\r\n              createdAt\r\n              degree {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              major {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              institution {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n            }\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"partner\": {\r\n            \"organizationId\": \"{{organizationid}}\",\r\n            \"types\": \"{{partnerType}}\",\r\n            \"financialReportingTypes\": \"{{financialReportingTypes}}\",\r\n            \"globalInnovationsClient\": false,\r\n            \"active\": false,\r\n            \"address\": \"{{partnerAddress}}\"\r\n        }\r\n    }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Pre-req for Create Partner ( Create Org )",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "48b43183-eebb-4021-bf07-d533de7bf3e6",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"var id = jsonData.data.createOrganization.organization.id;",
+									"pm.globals.set(\"organizationid\", id);",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "b0c35da9-5c86-4178-b446-a1334b4dba42",
+								"exec": [
+									"const moment = require('moment');\r",
+									"\r",
+									"pm.globals.set(\"orgName\", \"OrganizationName_\" + moment().format(\"DDMMYYYYhhmmss\"));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation createOrganization($input: CreateOrganizationInput!) {\r\n  createOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      address {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\n    \"input\": {\n        \"organization\": {\n            \"name\": \"{{orgName}}\",\n            \"address\":\"{{orgAddress}}\"\n        }\n    }\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -3391,6 +3967,78 @@
 							"graphql": {
 								"query": "mutation createPartner($input: CreatePartnerInput!) {\r\n  createPartner(input: $input) {\r\n    partner {\r\n      id\r\n      createdAt\r\n      modifiedAt\r\n      types {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      financialReportingTypes {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      pmcEntityCode {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      globalInnovationsClient {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      active {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      address {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n\r\n      organization {\r\n        value {\r\n          id\r\n          createdAt\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          avatarLetters\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      pointOfContact {\r\n        value {\r\n          id\r\n          fullName\r\n          firstName\r\n          avatarLetters\r\n          createdAt\r\n          email {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          realFirstName {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          realLastName {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          displayFirstName {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          displayLastName {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          phone {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          about {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          status {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          title {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          roles {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n\r\n          timezone {\r\n            canRead\r\n            canEdit\r\n            value {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n                name\r\n                zones {\r\n                  name\r\n                  lat\r\n                  long\r\n                  countries {\r\n                    code\r\n                  }\r\n                }\r\n              }\r\n            }\r\n          }\r\n\r\n          unavailabilities {\r\n            canRead\r\n            items {\r\n              id\r\n              createdAt\r\n              description {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              start\r\n              end\r\n            }\r\n            total\r\n            hasMore\r\n            canCreate\r\n          }\r\n          organizations {\r\n            canRead\r\n            items {\r\n              id\r\n              createdAt\r\n              name {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              avatarLetters\r\n            }\r\n            total\r\n            hasMore\r\n            canCreate\r\n          }\r\n          education {\r\n            canRead\r\n            total\r\n            hasMore\r\n            canCreate\r\n            items {\r\n              id\r\n              createdAt\r\n              degree {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              major {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              institution {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n            }\r\n          }\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"partner\": {\r\n            \"organizationId\": \"{{organizationid}}\",\r\n            \"types\": \"{{partnerType}}\",\r\n            \"financialReportingTypes\": \"{{financialReportingTypes}}\",\r\n            \"pmcEntityCode\": \"$%^&*(\",\r\n            \"globalInnovationsClient\": false,\r\n            \"active\": false,\r\n            \"address\": \"{{partnerAddress}}\"\r\n        }\r\n    }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Pre-req for Create Partner ( Create Org )",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "969eb329-71bf-4d55-a59b-bed9b352b791",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"var id = jsonData.data.createOrganization.organization.id;",
+									"pm.globals.set(\"organizationid\", id);",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "84922165-6edc-4d54-9173-de4e370befff",
+								"exec": [
+									"const moment = require('moment');\r",
+									"\r",
+									"pm.globals.set(\"orgName\", \"OrganizationName_\" + moment().format(\"DDMMYYYYhhmmss\"));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation createOrganization($input: CreateOrganizationInput!) {\r\n  createOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      address {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\n    \"input\": {\n        \"organization\": {\n            \"name\": \"{{orgName}}\",\n            \"address\":\"{{orgAddress}}\"\n        }\n    }\n}"
 							},
 							"options": {
 								"graphql": {}
