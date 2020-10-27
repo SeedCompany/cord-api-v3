@@ -355,8 +355,7 @@ export class ProjectService {
         session
       );
 
-      const dbProject = new DbProject(); // wip: this will actually be used later. temp using an empty object now.
-
+      const dbProject = new DbProject();
       await this.authorizationService.processNewBaseNode(
         dbProject,
         result.id,
