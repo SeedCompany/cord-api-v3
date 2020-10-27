@@ -1,16 +1,19 @@
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { DatabaseService, EventsHandler, IEventHandler } from '../../../core';
+import { AuthorizationService } from '../../authorization/authorization.service';
 import { EngagementCreatedEvent } from '../../engagement/events';
 import { CeremonyService } from '../ceremony.service';
 import { CeremonyType } from '../dto/type.enum';
+import { DbCeremony } from '../model';
 
 @EventsHandler(EngagementCreatedEvent)
 export class CreateEngagementDefaultCeremonyHandler
   implements IEventHandler<EngagementCreatedEvent> {
   constructor(
     private readonly ceremonies: CeremonyService,
-    private readonly db: DatabaseService
+    private readonly db: DatabaseService,
+    private readonly authorizationService: AuthorizationService
   ) {}
 
   async handle(event: EngagementCreatedEvent) {
@@ -39,6 +42,13 @@ export class CreateEngagementDefaultCeremonyHandler
         node('engagement'),
       ])
       .run();
+
+    const dbCeremony = new DbCeremony();
+    await this.authorizationService.processNewBaseNode(
+      dbCeremony,
+      ceremony.id,
+      session.userId as string
+    );
 
     event.engagement = {
       ...engagement,
