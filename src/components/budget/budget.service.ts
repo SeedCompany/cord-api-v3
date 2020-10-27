@@ -313,7 +313,7 @@ export class BudgetService {
 
     const records = await this.listRecords(
       {
-        sort: 'fiscalYear',
+        sort: 'createdAt',
         order: Order.ASC,
         page: 1,
         count: 25,
