@@ -22,6 +22,7 @@ import {
 } from '../src/components/project';
 import { User } from '../src/components/user';
 import {
+  createFundingAccount,
   createInternshipEngagement,
   createInternshipEngagementWithMinimumValues,
   createLanguage,
@@ -1032,8 +1033,13 @@ describe('Engagement e2e', () => {
   });
 
   it('should update Engagement status to Active if Project becomes Active from InDevelopment', async () => {
+    const fundingAccount = await createFundingAccount(app);
+    const location = await createLocation(app, {
+      fundingAccountId: fundingAccount.id,
+    });
     const project = await createProject(app, {
       step: ProjectStep.EarlyConversations,
+      primaryLocationId: location.id,
     });
     expect(project.status).toBe(ProjectStatus.InDevelopment);
 
@@ -1055,6 +1061,9 @@ describe('Engagement e2e', () => {
             updateProject(input: { project: { id: $id, step: Active } }) {
               project {
                 id
+                departmentId {
+                  value
+                }
                 engagements {
                   items {
                     id
@@ -1074,6 +1083,9 @@ describe('Engagement e2e', () => {
         (e: { id: string }) => e.id === engagement.id
       );
       expect(actual.status).toBe(EngagementStatus.Active);
+      expect(result.updateProject.project.departmentId.value).toContain(
+        fundingAccount.accountNumber.value
+      );
     });
   });
 
