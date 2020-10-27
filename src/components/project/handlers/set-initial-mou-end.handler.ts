@@ -1,0 +1,67 @@
+import { ServerException } from '../../../common';
+import {
+  DatabaseService,
+  EventsHandler,
+  IEventHandler,
+  ILogger,
+  Logger,
+} from '../../../core';
+import { ProjectStatus } from '../dto';
+import { ProjectCreatedEvent, ProjectUpdatedEvent } from '../events';
+import { ProjectService } from '../project.service';
+
+type SubscribedEvent = ProjectCreatedEvent | ProjectUpdatedEvent;
+
+@EventsHandler(ProjectCreatedEvent, ProjectUpdatedEvent)
+export class SetInitialMouEnd implements IEventHandler<SubscribedEvent> {
+  constructor(
+    private readonly db: DatabaseService,
+    private readonly projectService: ProjectService,
+    @Logger('project:set-initial-mou-end') private readonly logger: ILogger
+  ) {}
+
+  async handle(event: SubscribedEvent) {
+    this.logger.debug('Project mutation, set initial mou end', {
+      ...event,
+      event: event.constructor.name,
+    });
+
+    const project = 'project' in event ? event.project : event.updated;
+
+    const shouldUpdateInitialMouEnd =
+      project.status === ProjectStatus.Active &&
+      project.initialMouEnd.value == null &&
+      project.mouEnd.value != null;
+
+    if (!shouldUpdateInitialMouEnd) {
+      return;
+    }
+
+    try {
+      const initialMouEnd = project.mouEnd.value!;
+      const updateInput = {
+        id: project.id,
+        initialMouEnd: initialMouEnd,
+      };
+      const updatedProject = await this.projectService.update(
+        updateInput,
+        event.session
+      );
+
+      if (event instanceof ProjectUpdatedEvent) {
+        event.updated = updatedProject;
+      } else {
+        event.project = updatedProject;
+      }
+    } catch (exception) {
+      this.logger.error(`Could not set initial mou end on project`, {
+        userId: event.session.userId,
+        exception,
+      });
+      throw new ServerException(
+        'Could not set initial mou end on project',
+        exception
+      );
+    }
+  }
+}

@@ -826,6 +826,9 @@ describe('Project e2e', () => {
                 departmentId {
                   value
                 }
+                initialMouEnd {
+                  value
+                }
                 budget {
                   value {
                     status
@@ -847,6 +850,10 @@ describe('Project e2e', () => {
       );
       expect(result?.updateProject.project.departmentId.value).toContain(
         fundingAccount.accountNumber.value
+      );
+      // Ensure the initialMouEnd is updated to mouEnd value
+      expect(result?.updateProject.project.initialMouEnd.value).toBe(
+        project.mouEnd.value
       );
     });
   });

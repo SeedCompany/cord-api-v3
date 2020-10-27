@@ -97,6 +97,7 @@ export class ProjectService {
     step: true,
     mouStart: true,
     mouEnd: true,
+    initialMouEnd: true,
     estimatedSubmission: true,
     type: true,
     primaryLocation: true,
@@ -208,6 +209,12 @@ export class ProjectService {
       {
         key: 'mouEnd',
         value: createInput.mouEnd,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'initialMouEnd',
+        value: undefined,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -579,6 +586,7 @@ export class ProjectService {
         'name',
         'mouStart',
         'mouEnd',
+        'initialMouEnd',
         'estimatedSubmission',
         'status',
         'modifiedAt',

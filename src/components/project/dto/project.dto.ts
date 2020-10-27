@@ -6,6 +6,7 @@ import {
   Resource,
   Secured,
   SecuredDate,
+  SecuredDateNullable,
   SecuredString,
   Sensitivity,
 } from '../../../common';
@@ -59,6 +60,10 @@ class Project extends Resource {
 
   @Field()
   readonly mouEnd: SecuredDate;
+
+  @Field()
+  // this should match project mouEnd, until it becomes active, then this is final.
+  readonly initialMouEnd: SecuredDateNullable;
 
   @Field()
   readonly estimatedSubmission: SecuredDate;
