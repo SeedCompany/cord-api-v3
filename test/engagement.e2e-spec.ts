@@ -1214,4 +1214,44 @@ describe('Engagement e2e', () => {
     expect(actual.statusModifiedAt.value).toBe(actual.modifiedAt);
     expect(actual.lastReactivatedAt.value).toBe(actual.modifiedAt);
   });
+
+  it('should not Create/Delete Engagement if Project status is not InDevelopment', async () => {
+    const fundingAccount = await createFundingAccount(app);
+    const location = await createLocation(app, {
+      fundingAccountId: fundingAccount.id,
+    });
+    const project = await createProject(app, {
+      step: ProjectStep.EarlyConversations,
+      primaryLocationId: location.id,
+    });
+    const engagement = await createLanguageEngagement(app, {
+      projectId: project.id,
+    });
+
+    await runAsAdmin(app, async () => {
+      for (const next of stepsFromEarlyConversationToBeforeActive) {
+        await changeProjectStep(app, project.id, next);
+      }
+      await changeProjectStep(app, project.id, ProjectStep.Active);
+
+      await expect(
+        createLanguageEngagement(app, {
+          projectId: project.id,
+        })
+      ).rejects.toThrowError('The Project status is not in development');
+
+      await expect(
+        app.graphql.mutate(
+          gql`
+            mutation deleteEngagement($id: ID!) {
+              deleteEngagement(id: $id)
+            }
+          `,
+          {
+            id: engagement.id,
+          }
+        )
+      ).rejects.toThrowError('The Project status is not in development');
+    });
+  });
 });
