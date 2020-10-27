@@ -13,6 +13,7 @@ export class DbProject extends DbBaseNode {
   departmentId: any = null;
   mouStart: any = null;
   mouEnd: any = null;
+  initialMouEnd: any = null;
   rootDirectory: any = null;
   member: any = null;
   otherLocations: any = null;

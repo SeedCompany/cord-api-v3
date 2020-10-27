@@ -358,6 +358,11 @@ export const project = gql`
       canRead
       canEdit
     }
+    initialMouEnd {
+      value
+      canRead
+      canEdit
+    }
     estimatedSubmission {
       value
       canRead
