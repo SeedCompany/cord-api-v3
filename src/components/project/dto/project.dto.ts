@@ -65,6 +65,9 @@ class Project extends Resource {
   // this should match project mouEnd, until it becomes active, then this is final.
   readonly initialMouEnd: SecuredDateNullable;
 
+  @DateTimeField()
+  readonly stepChangedAt: DateTime;
+
   @Field()
   readonly estimatedSubmission: SecuredDate;
 

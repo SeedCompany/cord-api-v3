@@ -219,6 +219,12 @@ export class ProjectService {
         isOrgPublic: false,
       },
       {
+        key: 'stepChangedAt',
+        value: createInput.modifiedAt,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
         key: 'estimatedSubmission',
         value: createInput.estimatedSubmission,
         isPublic: false,
@@ -460,6 +466,7 @@ export class ProjectService {
       type: (result as any)?.node?.properties?.type,
       status: props.status,
       modifiedAt: props.modifiedAt,
+      stepChangedAt: props.stepChangedAt,
       primaryLocation: {
         ...securedProps.primaryLocation,
         value: result.primaryLocationId,
