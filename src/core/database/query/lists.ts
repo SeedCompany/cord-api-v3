@@ -1,4 +1,4 @@
-import { node, Query, relation } from 'cypher-query-builder';
+import { isNull, node, not, Query, relation } from 'cypher-query-builder';
 import { Order, SortablePaginationInput } from '../../../common';
 
 type SecuredProperties = Record<string, boolean>;
@@ -60,7 +60,12 @@ export const defaultSorter: Sorter = (
           relation('out', '', sortInput, { active: true }),
           node('prop', 'Property'),
         ])
+        .where({ [sortValSecuredProp]: not(isNull()) })
         .with('*')
         .orderBy(sortValSecuredProp, order)
-    : q.with('*').orderBy(sortValBaseNodeProp, order);
+    : q
+        .with('*')
+        .where({ [sortValBaseNodeProp]: not(isNull()) })
+        .with('*')
+        .orderBy(sortValBaseNodeProp, order);
 };

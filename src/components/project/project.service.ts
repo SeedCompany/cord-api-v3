@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { isNull, node, not, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
@@ -673,6 +673,7 @@ export class ProjectService {
               relation('out', '', sort, { active: true }),
               node('prop', 'Property'),
             ])
+            .where({ [sortBy]: not(isNull()) })
             .with([
               '*',
               ...(input.sort === 'sensitivity' ? [sensitivityCase] : []),
