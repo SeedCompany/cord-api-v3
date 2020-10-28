@@ -49,6 +49,7 @@ import {
   OrganizationService,
   SecuredOrganizationList,
 } from '../organization';
+import { PartnerService } from '../partner';
 import {
   AssignOrganizationToUser,
   CreatePerson,
@@ -115,6 +116,8 @@ export class UserService {
   constructor(
     private readonly educations: EducationService,
     private readonly organizations: OrganizationService,
+    @Inject(forwardRef(() => PartnerService))
+    private readonly partners: PartnerService,
     private readonly unavailabilities: UnavailabilityService,
     private readonly db: DatabaseService,
     private readonly config: ConfigService,

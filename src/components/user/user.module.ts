@@ -3,6 +3,7 @@ import { AuthenticationModule } from '../authentication/authentication.module';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { LocationModule } from '../location/location.module';
 import { OrganizationModule } from '../organization/organization.module';
+import { PartnerModule } from '../partner/partner.module';
 import { TimeZoneModule } from '../timezone';
 import { EducationModule } from './education/education.module';
 import { UnavailabilityModule } from './unavailability/unavailability.module';
@@ -15,6 +16,7 @@ import { UserService } from './user.service';
     forwardRef(() => AuthorizationModule),
     EducationModule,
     forwardRef(() => OrganizationModule),
+    forwardRef(() => PartnerModule),
     UnavailabilityModule,
     TimeZoneModule,
     LocationModule,
