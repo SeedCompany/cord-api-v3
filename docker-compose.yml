@@ -23,6 +23,9 @@ services:
 
   db:
     image: ghcr.io/seedcompany/cord-procedures
+    ports:
+      - 7474:7474
+      - 7687:7687
     networks:
       - cord
     environment:
