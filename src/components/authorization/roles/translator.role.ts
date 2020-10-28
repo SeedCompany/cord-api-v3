@@ -270,6 +270,7 @@ export const Translator = new DbRole({
         { propertyName: 'mouStart',                   permission: { read, write, }, },
         { propertyName: 'mouEnd',                     permission: { read, write, }, },
         { propertyName: 'initialMouEnd',              permission: { read, write, }, },
+        { propertyName: 'stepChangedAt',              permission: { read, write, }, },
         { propertyName: 'rootDirectory',              permission: { read, write, }, },
         { propertyName: 'member',                     permission: { read, write, }, },
         { propertyName: 'otherLocations',             permission: { read, write, }, },
