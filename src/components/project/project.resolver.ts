@@ -25,6 +25,7 @@ import {
   SecuredLocation,
   SecuredLocationList,
 } from '../location';
+import { OrganizationService, SecuredOrganization } from '../organization';
 import { PartnershipListInput, SecuredPartnershipList } from '../partnership';
 import {
   CreateProjectInput,
@@ -56,7 +57,8 @@ export class ProjectResolver {
   constructor(
     private readonly projectService: ProjectService,
     private readonly locationService: LocationService,
-    private readonly fieldRegionService: FieldRegionService
+    private readonly fieldRegionService: FieldRegionService,
+    private readonly organizationService: OrganizationService
   ) {}
 
   @Query(() => IProject, {
@@ -222,6 +224,18 @@ export class ProjectResolver {
     const { value: id, ...rest } = project.fieldRegion;
     const value = id
       ? await this.fieldRegionService.readOne(id, session)
+      : undefined;
+    return { value, ...rest };
+  }
+
+  @ResolveField(() => SecuredOrganization)
+  async owningOrganization(
+    @Parent() project: Project,
+    @Session() session: ISession
+  ): Promise<SecuredOrganization> {
+    const { value: id, ...rest } = project.owningOrganization;
+    const value = id
+      ? await this.organizationService.readOne(id, session)
       : undefined;
     return { value, ...rest };
   }

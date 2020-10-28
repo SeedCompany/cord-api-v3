@@ -55,6 +55,8 @@ class Project extends Resource {
 
   readonly fieldRegion: Secured<string>;
 
+  readonly owningOrganization: Secured<string>;
+
   @Field()
   readonly mouStart: SecuredDate;
 
