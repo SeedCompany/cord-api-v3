@@ -660,7 +660,7 @@ export class ProjectService {
     const query = this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode(label)])
-      .with('distinct(node) as node')
+      .with('distinct(node) as node, requestingUser')
       .call(projectListFilter, filter)
       .call(
         calculateTotalAndPaginateList,
