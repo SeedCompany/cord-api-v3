@@ -45,7 +45,7 @@ export class IndexerModule implements OnModuleInit {
         isV4
           ? statement.replace(
               'CREATE CONSTRAINT ON ',
-              'CREATE CONSTRAINT IF NOT EXISTS ON'
+              'CREATE CONSTRAINT IF NOT EXISTS ON '
             )
           : statement
       );
