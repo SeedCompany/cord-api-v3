@@ -51,9 +51,9 @@ export class ConfigService {
     let url = this.env.string('NEO4J_URL').optional('bolt://localhost');
     const parsed = new URL(url);
     const username =
-      parsed.username || this.env.string('NEO4J_USERNAME').required();
+      parsed.username || this.env.string('NEO4J_USERNAME').optional('neo4j');
     const password =
-      parsed.password || this.env.string('NEO4J_PASSWORD').required();
+      parsed.password || this.env.string('NEO4J_PASSWORD').optional('admin');
     if (parsed.username || parsed.password) {
       parsed.username = '';
       parsed.password = '';
