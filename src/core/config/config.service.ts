@@ -92,6 +92,10 @@ export class ConfigService {
     };
   }
 
+  setRootAdminId(id: string) {
+    this.rootAdmin.id = id;
+  }
+
   passwordSecret = this.env.string('PASSWORD_SECRET').optional();
 
   @Lazy() get rootSecurityGroup() {

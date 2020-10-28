@@ -22,12 +22,13 @@ services:
       NEO4J_PASSWORD: neo4j-password
 
   db:
-    image: neo4j:3.5-enterprise
+    image: ghcr.io/seedcompany/cord-procedures
     networks:
       - cord
     environment:
       NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
       NEO4J_AUTH: neo4j/neo4j-password
+      NEO4JLABS_PLUGINS: '["apoc"]'
 
 networks:
   cord:

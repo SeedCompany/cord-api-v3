@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import { node, relation } from 'cypher-query-builder';
@@ -7,8 +8,9 @@ import {
   ServerException,
   UnauthenticatedException,
 } from '../../common';
-import { ConfigService, DatabaseService } from '../../core';
+import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import { AuthenticationService } from '../authentication';
+import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
 import { Role } from '../project';
 
@@ -17,8 +19,97 @@ export class AdminService implements OnApplicationBootstrap {
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
-    private readonly authentication: AuthenticationService
+    private readonly authentication: AuthenticationService,
+    private readonly authorizationService: AuthorizationService,
+    @Logger('admin:service') private readonly logger: ILogger
   ) {}
+
+  async addRolesToBetaTesters() {
+    await this.authorizationService.roleAddedToUser(
+      '5c3d887b7219425288a3cb18',
+      [Role.ProjectManager, Role.RegionalDirector, Role.FieldOperationsDirector]
+    );
+    await this.authorizationService.roleAddedToUser(
+      '5c3d88787219425288a3cb00',
+      [Role.FinancialAnalyst]
+    );
+    await this.authorizationService.roleAddedToUser(
+      '5c3d88927219425288a3cbbd',
+      [Role.ProjectManager]
+    );
+    await this.authorizationService.roleAddedToUser(
+      '5c3d88967219425288a3cbde',
+      [Role.ProjectManager, Role.Consultant]
+    );
+    await this.authorizationService.roleAddedToUser(
+      '5c41616572194246f451c9f1',
+      [Role.FinancialAnalyst]
+    );
+    await this.authorizationService.roleAddedToUser(
+      '5c3d888d7219425288a3cb9d',
+      [Role.FinancialAnalyst]
+    );
+    await this.authorizationService.roleAddedToUser(
+      '5c3d88a37219425288a3cc36',
+      [Role.ProjectManager]
+    );
+    await this.authorizationService.roleAddedToUser(
+      '5c3d88757219425288a3caef',
+      [Role.ProjectManager]
+    );
+    await this.authorizationService.roleAddedToUser(
+      '5c5dfbd41e560f7f00c0a60f',
+      [Role.ConsultantManager, Role.Consultant]
+    );
+    await this.authorizationService.roleAddedToUser(
+      '5c3d887f7219425288a3cb36',
+      [Role.FinancialAnalyst, Role.Controller]
+    );
+    await this.authorizationService.roleAddedToUser(
+      '5c3d887f7219425288a3cb35',
+      [Role.ProjectManager]
+    );
+    await this.authorizationService.roleAddedToUser(
+      '5c3d88947219425288a3cbd1',
+      [Role.ProjectManager]
+    );
+    await this.authorizationService.roleAddedToUser(
+      '5c3d88767219425288a3caf6',
+      [Role.ProjectManager, Role.RegionalDirector]
+    );
+    await this.authorizationService.roleAddedToUser(
+      '5c3d88807219425288a3cb3b',
+      [Role.ProjectManager, Role.ConsultantManager, Role.Consultant]
+    );
+    await this.authorizationService.roleAddedToUser(
+      '5d7fae2d5ad0b4138837dcb2',
+      [Role.Fundraising]
+    );
+    await this.authorizationService.roleAddedToUser(
+      '5c3d88a07219425288a3cc21',
+      [Role.Marketing]
+    );
+    await this.authorizationService.roleAddedToUser(
+      '5cab92561c65854a8c7ab411',
+      [Role.StaffMember]
+    );
+    await this.authorizationService.roleAddedToUser(
+      '5c3d88a17219425288a3cc29',
+      [Role.Fundraising]
+    );
+    await this.authorizationService.roleAddedToUser(
+      '5c4b45cd7e96a6317139f001',
+      [Role.Marketing]
+    );
+    await this.authorizationService.roleAddedToUser(
+      '5c5daa2425cb4768cdabe655',
+      [Role.ConsultantManager]
+    );
+    await this.authorizationService.roleAddedToUser(
+      '5c3d88907219425288a3cbb1',
+      [Role.ConsultantManager]
+    );
+  }
 
   async onApplicationBootstrap(): Promise<void> {
     // merge root security group
@@ -112,9 +203,7 @@ export class AdminService implements OnApplicationBootstrap {
       .query()
       .match([
         [
-          node('user', 'User', {
-            id: this.config.rootAdmin.id,
-          }),
+          node('user', 'User'),
           relation('out', '', 'email', {
             active: true,
           }),
@@ -123,10 +212,13 @@ export class AdminService implements OnApplicationBootstrap {
           }),
         ],
       ])
-      .return('user')
+      .raw('RETURN user.id as id')
       .first();
 
     if (result) {
+      // set id to root user id
+      this.config.setRootAdminId(result.id);
+      this.logger.notice(`root admin id`, { id: result.id });
       return true;
     } else {
       return false;
@@ -164,10 +256,14 @@ export class AdminService implements OnApplicationBootstrap {
         roles: Object.values(Role),
       });
 
+      // update config with new root admin id
+      this.config.setRootAdminId(adminUser);
+      this.logger.notice('root user id: ' + adminUser);
+
       if (!adminUser) {
         throw new ServerException('Could not create root admin user');
       } else {
-        // set root admin id to config value, give all powers
+        // give all powers
         const powers = Object.keys(Powers);
         await this.db
           .query()
@@ -176,10 +272,7 @@ export class AdminService implements OnApplicationBootstrap {
               id: adminUser,
             }),
           ])
-          .setValues(
-            { user: { id: this.config.rootAdmin.id, powers: powers } },
-            true
-          )
+          .setValues({ user: { powers: powers } }, true)
           .run();
       }
     } else if (await argon2.verify(findRoot.pash, password)) {

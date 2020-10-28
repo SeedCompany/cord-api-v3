@@ -1,15 +1,18 @@
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { DatabaseService, EventsHandler, IEventHandler } from '../../../core';
+import { AuthorizationService } from '../../authorization/authorization.service';
 import { ProjectCreatedEvent } from '../../project/events';
 import { FileService } from '../file.service';
+import { DbDirectory } from '../model';
 
 @EventsHandler(ProjectCreatedEvent)
 export class AttachProjectRootDirectoryHandler
   implements IEventHandler<ProjectCreatedEvent> {
   constructor(
     private readonly files: FileService,
-    private readonly db: DatabaseService
+    private readonly db: DatabaseService,
+    private readonly authorizationService: AuthorizationService
   ) {}
 
   async handle({ project, session }: ProjectCreatedEvent) {
@@ -36,5 +39,12 @@ export class AttachProjectRootDirectoryHandler
         node('dir'),
       ])
       .run();
+
+    const dbDirectory = new DbDirectory();
+    await this.authorizationService.processNewBaseNode(
+      dbDirectory,
+      rootDir.id,
+      session.userId!
+    );
   }
 }

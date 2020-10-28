@@ -136,13 +136,6 @@ export class LocationService {
       throw new ServerException('failed to create location');
     }
 
-    const dbLocation = new DbLocation();
-    await this.authorizationService.processNewBaseNode(
-      dbLocation,
-      result.id,
-      session.userId as string
-    );
-
     if (input.fundingAccountId) {
       await this.db
         .query()
@@ -162,6 +155,13 @@ export class LocationService {
         ])
         .run();
     }
+
+    const dbLocation = new DbLocation();
+    await this.authorizationService.processNewBaseNode(
+      dbLocation,
+      result.id,
+      session.userId as string
+    );
 
     this.logger.debug(`location created`, { id: result.id });
     return await this.readOne(result.id, session);

@@ -152,12 +152,7 @@ export class EngagementService {
     // Initial LanguageEngagement
     const id = await generateId();
     const createdAt = DateTime.local();
-    const pnp = await this.files.createDefinedFile(
-      `PNP`,
-      session,
-      input.pnp,
-      'engagement.pnp'
-    );
+    const pnpId = await generateId();
 
     const createLE = this.db.query().match(matchSession(session));
     if (projectId) {
@@ -218,7 +213,7 @@ export class EngagementService {
         input.paraTextRegistryId || undefined,
         'languageEngagement'
       ),
-      ...property('pnp', pnp || undefined, 'languageEngagement'),
+      ...property('pnp', pnpId || undefined, 'languageEngagement'),
       ...property('statusModifiedAt', undefined, 'languageEngagement'),
       ...property('lastSuspendedAt', undefined, 'languageEngagement'),
       ...property('lastReactivatedAt', undefined, 'languageEngagement'),
@@ -290,6 +285,16 @@ export class EngagementService {
       throw new ServerException('Could not create Language Engagement');
     }
 
+    await this.files.createDefinedFile(
+      pnpId,
+      `PNP`,
+      session,
+      id,
+      'pnp',
+      input.pnp,
+      'engagement.pnp'
+    );
+
     const dbLanguageEngagement = new DbLanguageEngagement();
     await this.authorizationService.processNewBaseNode(
       dbLanguageEngagement,
@@ -346,12 +351,7 @@ export class EngagementService {
     });
     const id = await generateId();
     const createdAt = DateTime.local();
-    const growthPlan = await this.files.createDefinedFile(
-      `Growth Plan`,
-      session,
-      input.growthPlan,
-      'engagement.growthPlan'
-    );
+    const growthPlanId = await generateId();
 
     const createIE = this.db.query().match(matchSession(session));
     if (projectId) {
@@ -424,7 +424,7 @@ export class EngagementService {
       ),
       ...property(
         'growthPlan',
-        growthPlan || undefined,
+        growthPlanId || undefined,
         'internshipEngagement'
       ),
       ...property('statusModifiedAt', undefined, 'internshipEngagement'),
@@ -487,6 +487,7 @@ export class EngagementService {
         exception
       );
     }
+
     if (!IE) {
       if (
         internId &&
@@ -540,6 +541,16 @@ export class EngagementService {
       }
       throw new ServerException('Could not create Internship Engagement');
     }
+
+    await this.files.createDefinedFile(
+      growthPlanId,
+      `Growth Plan`,
+      session,
+      id,
+      'growthPlan',
+      input.growthPlan,
+      'engagement.growthPlan'
+    );
 
     const dbInternshipEngagement = new DbInternshipEngagement();
     await this.authorizationService.processNewBaseNode(

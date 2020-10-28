@@ -390,6 +390,7 @@ describe('User e2e', () => {
     const newUser = await registerUserWithPower(app, [
       Powers.CreateOrganization,
     ]);
+
     const org = await createOrganization(app);
     const result = await app.graphql.mutate(
       gql`
