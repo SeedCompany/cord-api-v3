@@ -104,6 +104,7 @@ export class ProjectService {
     primaryLocation: true,
     marketingLocation: true,
     fieldRegion: true,
+    owningOrganization: true,
   };
 
   constructor(
@@ -267,6 +268,9 @@ export class ProjectService {
           node('marketingLocation', 'Location', { id: marketingLocationId }),
         ]);
       }
+      createProject.match([
+        node('organization', 'Organization', { id: this.config.defaultOrg.id }),
+      ]);
 
       createProject.call(
         createBaseNode,
@@ -323,6 +327,17 @@ export class ProjectService {
           ],
         ]);
       }
+      // TODO: default to add ConfigService.defaultOrg
+      createProject.create([
+        [
+          node('node'),
+          relation('out', '', 'owningOrganization', {
+            active: true,
+            createdAt,
+          }),
+          node('organization'),
+        ],
+      ]);
 
       createProject.return('node.id as id').asResult<{ id: string }>();
       const result = await createProject.first();
@@ -417,6 +432,11 @@ export class ProjectService {
       ])
       .optionalMatch([
         node('node'),
+        relation('out', '', 'owningOrganization', { active: true }),
+        node('organization', 'Organization'),
+      ])
+      .optionalMatch([
+        node('node'),
         relation('out', '', 'engagement', { active: true }),
         node('', 'LanguageEngagement'),
         relation('out', '', 'language', { active: true }),
@@ -431,6 +451,7 @@ export class ProjectService {
         'primaryLocation.id as primaryLocationId',
         'marketingLocation.id as marketingLocationId',
         'fieldRegion.id as fieldRegionId',
+        'organization.id as owningOrganizationId',
         'collect(distinct sensitivity.value) as languageSensitivityList',
       ])
       .asResult<
@@ -438,6 +459,7 @@ export class ProjectService {
           primaryLocationId: string;
           marketingLocationId: string;
           fieldRegionId: string;
+          owningOrganizationId: string;
           languageSensitivityList: Sensitivity[];
         }
       >();
@@ -478,6 +500,10 @@ export class ProjectService {
       fieldRegion: {
         ...securedProps.fieldRegion,
         value: result.fieldRegionId,
+      },
+      owningOrganization: {
+        ...securedProps.owningOrganization,
+        value: result.owningOrganizationId,
       },
       canDelete: true, // TODO
     };

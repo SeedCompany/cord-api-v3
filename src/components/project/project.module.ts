@@ -6,6 +6,7 @@ import { FieldRegionModule } from '../field-region/field-region.module';
 import { FileModule } from '../file/file.module';
 import { LocationModule } from '../location/location.module';
 import { OrganizationService } from '../organization';
+import { OrganizationModule } from '../organization/organization.module';
 import { PartnerModule } from '../partner/partner.module';
 import { PartnershipModule } from '../partnership/partnership.module';
 import { UserModule } from '../user/user.module';
@@ -28,6 +29,7 @@ import { ProjectService } from './project.service';
     EngagementModule,
     forwardRef(() => AuthorizationModule),
     PartnerModule,
+    OrganizationModule,
   ],
   providers: [
     ProjectResolver,
