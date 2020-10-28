@@ -3,9 +3,9 @@ import { node } from 'cypher-query-builder';
 import {
   DuplicateException,
   generateId,
-  ISession,
   NotFoundException,
   ServerException,
+  Session,
 } from '../../common';
 import {
   ConfigService,
@@ -78,7 +78,7 @@ export class FundingAccountService {
 
   async create(
     input: CreateFundingAccount,
-    session: ISession
+    session: Session
   ): Promise<FundingAccount> {
     const checkFundingAccount = await this.db
       .query()
@@ -126,7 +126,7 @@ export class FundingAccountService {
       await this.authorizationService.processNewBaseNode(
         dbFundingAccount,
         result.id,
-        session.userId as string
+        session.userId
       );
 
       this.logger.info(`funding account created`, { id: result.id });
@@ -141,15 +141,11 @@ export class FundingAccountService {
     }
   }
 
-  async readOne(id: string, session: ISession): Promise<FundingAccount> {
+  async readOne(id: string, session: Session): Promise<FundingAccount> {
     this.logger.info('readOne', { id, userId: session.userId });
 
     if (!id) {
       throw new NotFoundException('Invalid: Blank ID');
-    }
-
-    if (!session.userId) {
-      session.userId = this.config.anonUser.id;
     }
 
     const readFundingAccount = this.db
@@ -182,7 +178,7 @@ export class FundingAccountService {
 
   async update(
     input: UpdateFundingAccount,
-    session: ISession
+    session: Session
   ): Promise<FundingAccount> {
     const fundingAccount = await this.readOne(input.id, session);
 
@@ -195,13 +191,13 @@ export class FundingAccountService {
     });
   }
 
-  async delete(_id: string, _session: ISession): Promise<void> {
+  async delete(_id: string, _session: Session): Promise<void> {
     // Not implemented
   }
 
   async list(
     input: FundingAccountListInput,
-    session: ISession
+    session: Session
   ): Promise<FundingAccountListOutput> {
     const label = 'FundingAccount';
 

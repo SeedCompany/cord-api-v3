@@ -6,7 +6,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { IdArg, ISession, Session } from '../../common';
+import { AnonSession, IdArg, LoggedInSession, Session } from '../../common';
 import { SecuredUser, UserService } from '../user';
 import {
   CreateFieldZoneInput,
@@ -30,7 +30,7 @@ export class FieldZoneResolver {
     description: 'Read one field zone by id',
   })
   async fieldZone(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @IdArg() id: string
   ): Promise<FieldZone> {
     return await this.fieldZoneService.readOne(id, session);
@@ -40,7 +40,7 @@ export class FieldZoneResolver {
     description: 'Look up field zones',
   })
   async fieldZones(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Args({
       name: 'input',
       type: () => FieldZoneListInput,
@@ -54,7 +54,7 @@ export class FieldZoneResolver {
   @ResolveField(() => SecuredUser)
   async director(
     @Parent() fieldZone: FieldZone,
-    @Session() session: ISession
+    @AnonSession() session: Session
   ): Promise<SecuredUser> {
     const { value: id, ...rest } = fieldZone.director;
     const value = id ? await this.userService.readOne(id, session) : undefined;
@@ -68,7 +68,7 @@ export class FieldZoneResolver {
     description: 'Create a field zone',
   })
   async createFieldZone(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') { fieldZone: input }: CreateFieldZoneInput
   ): Promise<CreateFieldZoneOutput> {
     const fieldZone = await this.fieldZoneService.create(input, session);
@@ -79,7 +79,7 @@ export class FieldZoneResolver {
     description: 'Update a field zone',
   })
   async updateFieldZone(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') { fieldZone: input }: UpdateFieldZoneInput
   ): Promise<UpdateFieldZoneOutput> {
     const fieldZone = await this.fieldZoneService.update(input, session);
@@ -90,7 +90,7 @@ export class FieldZoneResolver {
     description: 'Delete a field zone',
   })
   async deleteFieldZone(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @IdArg() id: string
   ): Promise<boolean> {
     await this.fieldZoneService.delete(id, session);

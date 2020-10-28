@@ -1,10 +1,10 @@
 import { node, Query, relation } from 'cypher-query-builder';
 import { Term } from 'cypher-query-builder/dist/typings/clauses/term-list-clause';
-import { ISession } from '../../../common';
+import { Session } from '../../../common';
 import { collect } from './cypher-functions';
 import { mapping } from './mapping';
 
-export const requestingUser = (session: ISession) =>
+export const requestingUser = (session: Session) =>
   node('requestingUser', 'User', {
     id: session.userId,
   });

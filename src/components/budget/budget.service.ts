@@ -4,10 +4,10 @@ import { DateTime } from 'luxon';
 import {
   generateId,
   InputException,
-  ISession,
   NotFoundException,
   Order,
   ServerException,
+  Session,
 } from '../../common';
 import {
   ConfigService,
@@ -69,7 +69,7 @@ export class BudgetService {
 
   async create(
     { projectId, ...input }: CreateBudget,
-    session: ISession
+    session: Session
   ): Promise<Budget> {
     this.logger.debug('Creating budget', { projectId });
 
@@ -164,7 +164,7 @@ export class BudgetService {
       await this.authorizationService.processNewBaseNode(
         dbBudget,
         result.id,
-        session.userId as string
+        session.userId
       );
 
       return await this.readOne(result.id, session);
@@ -179,7 +179,7 @@ export class BudgetService {
 
   async createRecord(
     { budgetId, organizationId, ...input }: CreateBudgetRecord,
-    session: ISession
+    session: Session
   ): Promise<BudgetRecord> {
     if (!input.fiscalYear || !organizationId) {
       throw new InputException(
@@ -258,7 +258,7 @@ export class BudgetService {
       await this.authorizationService.processNewBaseNode(
         dbBudgetRecord,
         result.id,
-        session.userId as string
+        session.userId
       );
 
       this.logger.debug(`Created Budget Record`, {
@@ -278,16 +278,11 @@ export class BudgetService {
     }
   }
 
-  async readOne(id: string, session: ISession): Promise<Budget> {
+  async readOne(id: string, session: Session): Promise<Budget> {
     this.logger.debug(`Query readOne Budget: `, {
       id,
       userId: session.userId,
     });
-
-    if (!session.userId) {
-      this.logger.debug('using anon user id');
-      session.userId = this.config.anonUser.id;
-    }
 
     const query = this.db
       .query()
@@ -344,16 +339,11 @@ export class BudgetService {
     };
   }
 
-  async readOneRecord(id: string, session: ISession): Promise<BudgetRecord> {
+  async readOneRecord(id: string, session: Session): Promise<BudgetRecord> {
     this.logger.debug(`Query readOne Budget Record: `, {
       id,
       userId: session.userId,
     });
-
-    if (!session.userId) {
-      this.logger.debug('using anon user id');
-      session.userId = this.config.anonUser.id;
-    }
 
     const query = this.db
       .query()
@@ -413,7 +403,7 @@ export class BudgetService {
 
   async update(
     { universalTemplateFile, ...input }: UpdateBudget,
-    session: ISession
+    session: Session
   ): Promise<Budget> {
     const budget = await this.readOne(input.id, session);
 
@@ -435,7 +425,7 @@ export class BudgetService {
 
   async updateRecord(
     { id, ...input }: UpdateBudgetRecord,
-    session: ISession
+    session: Session
   ): Promise<BudgetRecord> {
     this.logger.debug('Update budget Record, ', { id, userId: session.userId });
 
@@ -488,7 +478,7 @@ export class BudgetService {
     }
   }
 
-  async delete(id: string, session: ISession): Promise<void> {
+  async delete(id: string, session: Session): Promise<void> {
     const budget = await this.readOne(id, session);
 
     // cascade delete each budget record in this budget
@@ -502,7 +492,7 @@ export class BudgetService {
     });
   }
 
-  async deleteRecord(id: string, session: ISession): Promise<void> {
+  async deleteRecord(id: string, session: Session): Promise<void> {
     const br = await this.readOneRecord(id, session);
     await this.db.deleteNode({
       session,
@@ -513,7 +503,7 @@ export class BudgetService {
 
   async list(
     input: Partial<BudgetListInput>,
-    session: ISession
+    session: Session
   ): Promise<BudgetListOutput> {
     const { filter, ...listInput } = {
       ...BudgetListInput.defaultVal,
@@ -550,7 +540,7 @@ export class BudgetService {
 
   async listRecords(
     { filter, ...input }: BudgetRecordListInput,
-    session: ISession
+    session: Session
   ): Promise<BudgetRecordListOutput> {
     const label = 'BudgetRecord';
 
@@ -580,7 +570,7 @@ export class BudgetService {
     );
   }
 
-  async checkBudgetConsistency(session: ISession): Promise<boolean> {
+  async checkBudgetConsistency(session: Session): Promise<boolean> {
     const budgets = await this.db
       .query()
       .match([matchSession(session), [node('budget', 'Budget')]])

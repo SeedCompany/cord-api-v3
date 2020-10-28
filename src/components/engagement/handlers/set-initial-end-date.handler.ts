@@ -1,4 +1,4 @@
-import { CalendarDate, ISession, ServerException } from '../../../common';
+import { CalendarDate, ServerException, Session } from '../../../common';
 import {
   DatabaseService,
   EventsHandler,
@@ -66,7 +66,7 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
   private async updateEngagementInitialEndDate(
     engagement: Engagement,
     initialEndDate: CalendarDate,
-    session: ISession
+    session: Session
   ) {
     const updateInput = {
       id: engagement.id,

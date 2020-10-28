@@ -8,7 +8,7 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { sumBy } from 'lodash';
-import { IdArg, ISession, Session } from '../../common';
+import { AnonSession, IdArg, LoggedInSession, Session } from '../../common';
 import { FileService, SecuredFile } from '../file';
 import { BudgetService } from './budget.service';
 import {
@@ -32,7 +32,7 @@ export class BudgetResolver {
     description: 'Look up a budget by its ID',
   })
   async budget(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @IdArg() id: string
   ): Promise<Budget> {
     return await this.service.readOne(id, session);
@@ -42,7 +42,7 @@ export class BudgetResolver {
     description: 'Look up budgets by projectId',
   })
   async budgets(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Args({
       name: 'input',
       type: () => BudgetListInput,
@@ -63,7 +63,7 @@ export class BudgetResolver {
   })
   async universalTemplateFile(
     @Parent() budget: Budget,
-    @Session() session: ISession
+    @AnonSession() session: Session
   ): Promise<SecuredFile> {
     return await this.files.resolveDefinedFile(
       budget.universalTemplateFile,
@@ -75,7 +75,7 @@ export class BudgetResolver {
     description: 'Create a budget',
   })
   async createBudget(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') { budget: input }: CreateBudgetInput
   ): Promise<CreateBudgetOutput> {
     const budget = await this.service.create(input, session);
@@ -86,7 +86,7 @@ export class BudgetResolver {
     description: 'Update a budget',
   })
   async updateBudget(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') { budget: input }: UpdateBudgetInput
   ): Promise<UpdateBudgetOutput> {
     const budget = await this.service.update(input, session);
@@ -97,7 +97,7 @@ export class BudgetResolver {
     description: 'Delete an budget',
   })
   async deleteBudget(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @IdArg() id: string
   ): Promise<boolean> {
     await this.service.delete(id, session);
@@ -107,7 +107,9 @@ export class BudgetResolver {
   @Query(() => Boolean, {
     description: 'Check Consistency in Budget Nodes',
   })
-  async checkBudgetConsistency(@Session() session: ISession): Promise<boolean> {
+  async checkBudgetConsistency(
+    @LoggedInSession() session: Session
+  ): Promise<boolean> {
     return await this.service.checkBudgetConsistency(session);
   }
 }

@@ -47,7 +47,7 @@ export class CreateEngagementDefaultCeremonyHandler
     await this.authorizationService.processNewBaseNode(
       dbCeremony,
       ceremony.id,
-      session.userId as string
+      session.userId
     );
 
     event.engagement = {

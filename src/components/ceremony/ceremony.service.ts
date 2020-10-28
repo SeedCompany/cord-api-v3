@@ -3,10 +3,9 @@ import { node, relation } from 'cypher-query-builder';
 import {
   generateId,
   InputException,
-  ISession,
   NotFoundException,
   ServerException,
-  UnauthenticatedException,
+  Session,
 } from '../../common';
 import {
   ConfigService,
@@ -60,7 +59,7 @@ export class CeremonyService {
     @Logger('ceremony:service') private readonly logger: ILogger
   ) {}
 
-  async create(input: CreateCeremony, session: ISession): Promise<Ceremony> {
+  async create(input: CreateCeremony, session: Session): Promise<Ceremony> {
     const secureProps: Property[] = [
       {
         key: 'type',
@@ -107,7 +106,7 @@ export class CeremonyService {
       // await this.authorizationService.processNewBaseNode(
       //   dbCeremony,
       //   result.id,
-      //   session.userId as string
+      //   session.userId
       // );
 
       return await this.readOne(result.id, session);
@@ -120,7 +119,7 @@ export class CeremonyService {
     }
   }
 
-  async readOne(id: string, session: ISession): Promise<Ceremony> {
+  async readOne(id: string, session: Session): Promise<Ceremony> {
     this.logger.debug(`Query readOne Ceremony`, { id, userId: session.userId });
     if (!id) {
       throw new InputException('No ceremony id to search for', 'ceremony.id');
@@ -155,10 +154,7 @@ export class CeremonyService {
     };
   }
 
-  async update(input: UpdateCeremony, session: ISession): Promise<Ceremony> {
-    if (!session.userId) {
-      throw new UnauthenticatedException('user not logged in');
-    }
+  async update(input: UpdateCeremony, session: Session): Promise<Ceremony> {
     const object = await this.readOne(input.id, session);
 
     return await this.db.sgUpdateProperties({
@@ -170,7 +166,7 @@ export class CeremonyService {
     });
   }
 
-  async delete(id: string, session: ISession): Promise<void> {
+  async delete(id: string, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
     if (!object) {
@@ -193,7 +189,7 @@ export class CeremonyService {
 
   async list(
     { filter, ...input }: CeremonyListInput,
-    session: ISession
+    session: Session
   ): Promise<CeremonyListOutput> {
     const label = 'Ceremony';
     const query = this.db
@@ -218,7 +214,7 @@ export class CeremonyService {
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 
-  async checkCeremonyConsistency(session: ISession): Promise<boolean> {
+  async checkCeremonyConsistency(session: Session): Promise<boolean> {
     const ceremonies = await this.db
       .query()
       .match([matchSession(session), [node('ceremony', 'Ceremony')]])

@@ -1,5 +1,5 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { IdArg, ISession, Session } from '../../common';
+import { AnonSession, IdArg, LoggedInSession, Session } from '../../common';
 import {
   CreateSongInput,
   CreateSongOutput,
@@ -18,7 +18,10 @@ export class SongResolver {
   @Query(() => Song, {
     description: 'Look up a song by its ID',
   })
-  async song(@Session() session: ISession, @IdArg() id: string): Promise<Song> {
+  async song(
+    @AnonSession() session: Session,
+    @IdArg() id: string
+  ): Promise<Song> {
     return await this.storyService.readOne(id, session);
   }
 
@@ -26,7 +29,7 @@ export class SongResolver {
     description: 'Look up stories',
   })
   async songs(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Args({
       name: 'input',
       type: () => SongListInput,
@@ -41,7 +44,7 @@ export class SongResolver {
     description: 'Create a song',
   })
   async createSong(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') { song: input }: CreateSongInput
   ): Promise<CreateSongOutput> {
     const song = await this.storyService.create(input, session);
@@ -52,7 +55,7 @@ export class SongResolver {
     description: 'Update a song',
   })
   async updateSong(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') { song: input }: UpdateSongInput
   ): Promise<UpdateSongOutput> {
     const song = await this.storyService.update(input, session);
@@ -63,7 +66,7 @@ export class SongResolver {
     description: 'Delete a song',
   })
   async deleteSong(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @IdArg() id: string
   ): Promise<boolean> {
     await this.storyService.delete(id, session);

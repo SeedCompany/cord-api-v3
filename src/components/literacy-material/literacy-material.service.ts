@@ -3,9 +3,9 @@ import { node } from 'cypher-query-builder';
 import {
   DuplicateException,
   generateId,
-  ISession,
   NotFoundException,
   ServerException,
+  Session,
 } from '../../common';
 import {
   ConfigService,
@@ -76,7 +76,7 @@ export class LiteracyMaterialService {
 
   async create(
     input: CreateLiteracyMaterial,
-    session: ISession
+    session: Session
   ): Promise<LiteracyMaterial> {
     const checkLiteracy = await this.db
       .query()
@@ -123,7 +123,7 @@ export class LiteracyMaterialService {
       await this.authorizationService.processNewBaseNode(
         dbLiteracyMaterial,
         result.id,
-        session.userId as string
+        session.userId
       );
 
       await this.scriptureRefService.create(
@@ -146,15 +146,11 @@ export class LiteracyMaterialService {
     }
   }
 
-  async readOne(id: string, session: ISession): Promise<LiteracyMaterial> {
+  async readOne(id: string, session: Session): Promise<LiteracyMaterial> {
     this.logger.debug(`Read literacyMaterial`, {
       id,
       userId: session.userId,
     });
-
-    if (!session.userId) {
-      session.userId = this.config.anonUser.id;
-    }
 
     const readLiteracyMaterial = this.db
       .query()
@@ -198,7 +194,7 @@ export class LiteracyMaterialService {
 
   async update(
     input: UpdateLiteracyMaterial,
-    session: ISession
+    session: Session
   ): Promise<LiteracyMaterial> {
     await this.scriptureRefService.update(input.id, input.scriptureReferences);
 
@@ -213,7 +209,7 @@ export class LiteracyMaterialService {
     });
   }
 
-  async delete(id: string, session: ISession): Promise<void> {
+  async delete(id: string, session: Session): Promise<void> {
     const literacyMaterial = await this.readOne(id, session);
     try {
       await this.db.deleteNode({
@@ -231,7 +227,7 @@ export class LiteracyMaterialService {
 
   async list(
     { filter, ...input }: LiteracyMaterialListInput,
-    session: ISession
+    session: Session
   ): Promise<LiteracyMaterialListOutput> {
     const query = this.db
       .query()

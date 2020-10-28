@@ -3,9 +3,9 @@ import { node } from 'cypher-query-builder';
 import {
   DuplicateException,
   generateId,
-  ISession,
   NotFoundException,
   ServerException,
+  Session,
 } from '../../common';
 import {
   ConfigService,
@@ -73,7 +73,7 @@ export class StoryService {
     ];
   }
 
-  async create(input: CreateStory, session: ISession): Promise<Story> {
+  async create(input: CreateStory, session: Session): Promise<Story> {
     const checkStory = await this.db
       .query()
       .match([node('story', 'StoryName', { value: input.name })])
@@ -117,7 +117,7 @@ export class StoryService {
       await this.authorizationService.processNewBaseNode(
         dbStory,
         result.id,
-        session.userId as string
+        session.userId
       );
 
       await this.scriptureRefService.create(
@@ -137,16 +137,11 @@ export class StoryService {
     }
   }
 
-  async readOne(id: string, session: ISession): Promise<Story> {
+  async readOne(id: string, session: Session): Promise<Story> {
     this.logger.debug(`Read Story`, {
       id,
       userId: session.userId,
     });
-
-    if (!session.userId) {
-      this.logger.debug('using anon user id');
-      session.userId = this.config.anonUser.id;
-    }
 
     const query = this.db
       .query()
@@ -185,7 +180,7 @@ export class StoryService {
     };
   }
 
-  async update(input: UpdateStory, session: ISession): Promise<Story> {
+  async update(input: UpdateStory, session: Session): Promise<Story> {
     await this.scriptureRefService.update(input.id, input.scriptureReferences);
 
     const story = await this.readOne(input.id, session);
@@ -198,7 +193,7 @@ export class StoryService {
     });
   }
 
-  async delete(id: string, session: ISession): Promise<void> {
+  async delete(id: string, session: Session): Promise<void> {
     const story = await this.readOne(id, session);
     try {
       await this.db.deleteNode({
@@ -216,7 +211,7 @@ export class StoryService {
 
   async list(
     { filter, ...input }: StoryListInput,
-    session: ISession
+    session: Session
   ): Promise<StoryListOutput> {
     const query = this.db
       .query()

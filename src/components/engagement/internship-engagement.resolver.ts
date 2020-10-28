@@ -1,5 +1,5 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { ISession, Session } from '../../common';
+import { AnonSession, Session } from '../../common';
 import { FileService, SecuredFile } from '../file';
 import { LocationService } from '../location';
 import { SecuredLocation } from '../location/dto';
@@ -17,7 +17,7 @@ export class InternshipEngagementResolver {
   @ResolveField(() => SecuredFile)
   async growthPlan(
     @Parent() engagement: InternshipEngagement,
-    @Session() session: ISession
+    @AnonSession() session: Session
   ): Promise<SecuredFile> {
     return await this.files.resolveDefinedFile(engagement.growthPlan, session);
   }
@@ -25,7 +25,7 @@ export class InternshipEngagementResolver {
   @ResolveField(() => SecuredUser)
   async intern(
     @Parent() engagement: InternshipEngagement,
-    @Session() session: ISession
+    @AnonSession() session: Session
   ): Promise<SecuredUser> {
     const { value: id, ...rest } = engagement.intern;
     const value = id ? await this.users.readOne(id, session) : undefined;
@@ -38,7 +38,7 @@ export class InternshipEngagementResolver {
   @ResolveField(() => SecuredUser)
   async mentor(
     @Parent() engagement: InternshipEngagement,
-    @Session() session: ISession
+    @AnonSession() session: Session
   ): Promise<SecuredUser> {
     const { value: id, ...rest } = engagement.mentor;
     const value = id ? await this.users.readOne(id, session) : undefined;
@@ -51,7 +51,7 @@ export class InternshipEngagementResolver {
   @ResolveField(() => SecuredLocation)
   async countryOfOrigin(
     @Parent() engagement: InternshipEngagement,
-    @Session() session: ISession
+    @AnonSession() session: Session
   ): Promise<SecuredLocation> {
     const { value: id, ...rest } = engagement.countryOfOrigin;
     const value = id ? await this.locations.readOne(id, session) : undefined;

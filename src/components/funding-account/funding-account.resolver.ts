@@ -1,5 +1,5 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { IdArg, ISession, Session } from '../../common';
+import { AnonSession, IdArg, LoggedInSession, Session } from '../../common';
 import {
   CreateFundingAccountInput,
   CreateFundingAccountOutput,
@@ -19,7 +19,7 @@ export class FundingAccountResolver {
     description: 'Look up a funding account by its ID',
   })
   async fundingAccount(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @IdArg() id: string
   ): Promise<FundingAccount> {
     return await this.fundingAccountService.readOne(id, session);
@@ -29,7 +29,7 @@ export class FundingAccountResolver {
     description: 'Look up funding accounts',
   })
   async fundingAccounts(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Args({
       name: 'input',
       type: () => FundingAccountListInput,
@@ -44,7 +44,7 @@ export class FundingAccountResolver {
     description: 'Create a funding account',
   })
   async createFundingAccount(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') { fundingAccount: input }: CreateFundingAccountInput
   ): Promise<CreateFundingAccountOutput> {
     const fundingAccount = await this.fundingAccountService.create(
@@ -58,7 +58,7 @@ export class FundingAccountResolver {
     description: 'Update a funding account',
   })
   async updateFundingAccount(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') { fundingAccount: input }: UpdateFundingAccountInput
   ): Promise<UpdateFundingAccountOutput> {
     const fundingAccount = await this.fundingAccountService.update(
@@ -72,7 +72,7 @@ export class FundingAccountResolver {
     description: 'Delete a funding account',
   })
   async deleteFundingAccount(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @IdArg() id: string
   ): Promise<boolean> {
     await this.fundingAccountService.delete(id, session);

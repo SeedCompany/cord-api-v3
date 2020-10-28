@@ -6,10 +6,9 @@ import {
   DuplicateException,
   generateId,
   InputException,
-  ISession,
   NotFoundException,
   ServerException,
-  UnauthenticatedException,
+  Session,
 } from '../../common';
 import {
   ConfigService,
@@ -116,11 +115,8 @@ export class EngagementService {
 
   async createLanguageEngagement(
     { languageId, projectId, ...input }: CreateLanguageEngagement,
-    session: ISession
+    session: Session
   ): Promise<LanguageEngagement> {
-    if (!session.userId) {
-      throw new UnauthenticatedException('user not logged in');
-    }
     // LanguageEngagements can only be created on TranslationProjects
     const projectType = await this.getProjectTypeById(projectId);
 
@@ -320,11 +316,8 @@ export class EngagementService {
       countryOfOriginId,
       ...input
     }: CreateInternshipEngagement,
-    session: ISession
+    session: Session
   ): Promise<InternshipEngagement> {
-    if (!session.userId) {
-      throw new UnauthenticatedException('user not logged in');
-    }
     // InternshipEngagements can only be created on InternshipProjects
     const projectType = await this.getProjectTypeById(projectId);
 
@@ -576,17 +569,12 @@ export class EngagementService {
 
   async readOne(
     id: string,
-    session: ISession
+    session: Session
   ): Promise<LanguageEngagement | InternshipEngagement> {
     this.logger.debug('readOne', { id, userId: session.userId });
 
     if (!id) {
       throw new NotFoundException('no id given', 'engagement.id');
-    }
-
-    if (!session.userId) {
-      this.logger.debug('using anon user id');
-      session.userId = this.config.anonUser.id;
     }
 
     const query = this.db
@@ -750,7 +738,7 @@ export class EngagementService {
 
   async updateLanguageEngagement(
     input: UpdateLanguageEngagement,
-    session: ISession
+    session: Session
   ): Promise<LanguageEngagement> {
     if (input.firstScripture) {
       await this.verifyFirstScripture({ engagementId: input.id });
@@ -823,7 +811,7 @@ export class EngagementService {
       countryOfOriginId,
       ...input
     }: UpdateInternshipEngagement,
-    session: ISession
+    session: Session
   ): Promise<InternshipEngagement> {
     const createdAt = DateTime.local();
 
@@ -973,7 +961,7 @@ export class EngagementService {
 
   // DELETE /////////////////////////////////////////////////////////
 
-  async delete(id: string, session: ISession): Promise<void> {
+  async delete(id: string, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
     if (!object) {
@@ -1000,7 +988,7 @@ export class EngagementService {
 
   async list(
     { filter, ...input }: EngagementListInput,
-    session: ISession
+    session: Session
   ): Promise<EngagementListOutput> {
     let label = 'Engagement';
     if (filter.type === 'language') {
@@ -1036,7 +1024,7 @@ export class EngagementService {
   async listProducts(
     engagement: LanguageEngagement,
     input: ProductListInput,
-    session: ISession
+    session: Session
   ): Promise<SecuredProductList> {
     const result = await this.products.list(
       {
@@ -1097,7 +1085,7 @@ export class EngagementService {
 
   async checkEngagementConsistency(
     baseNode: string,
-    session: ISession
+    session: Session
   ): Promise<boolean> {
     const nodes = await this.db
       .query()
@@ -1124,7 +1112,7 @@ export class EngagementService {
   async isLanguageEngagementConsistent(
     nodes: Record<string, any>,
     baseNode: string,
-    session: ISession
+    session: Session
   ): Promise<boolean> {
     const requiredProperties: never[] = []; // add more after discussing
     return (
@@ -1163,7 +1151,7 @@ export class EngagementService {
   async isInternshipEngagementConsistent(
     nodes: Record<string, any>,
     baseNode: string,
-    session: ISession
+    session: Session
   ): Promise<boolean> {
     // right now all properties are optional
     const requiredProperties: never[] = [];

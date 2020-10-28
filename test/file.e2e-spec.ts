@@ -2,6 +2,7 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { startCase, times } from 'lodash';
 import { DateTime, Duration, DurationObject, Settings } from 'luxon';
+import { anonymousSession } from '../src/common/session';
 import { AuthenticationService } from '../src/components/authentication';
 import {
   Directory,
@@ -472,9 +473,11 @@ describe('File e2e', () => {
 
   describe.skip('check consistency', () => {
     const expectConsistency = async (type: FileNodeType, expected = true) => {
-      const session = await app
-        .get(AuthenticationService)
-        .createSession(app.graphql.authToken);
+      const session = anonymousSession(
+        await app
+          .get(AuthenticationService)
+          .createSession(app.graphql.authToken)
+      );
 
       const expecting = expect(
         app.get(FileRepository).checkConsistency(type, session)

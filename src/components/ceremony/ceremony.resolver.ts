@@ -1,5 +1,5 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { IdArg, ISession, Session } from '../../common';
+import { AnonSession, IdArg, LoggedInSession, Session } from '../../common';
 import { CeremonyService } from './ceremony.service';
 import {
   Ceremony,
@@ -17,7 +17,7 @@ export class CeremonyResolver {
     description: 'Look up a ceremony by its ID',
   })
   async ceremony(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @IdArg() id: string
   ): Promise<Ceremony> {
     return await this.service.readOne(id, session);
@@ -27,7 +27,7 @@ export class CeremonyResolver {
     description: 'Look up ceremonies',
   })
   async ceremonies(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Args({
       name: 'input',
       type: () => CeremonyListInput,
@@ -42,7 +42,7 @@ export class CeremonyResolver {
     description: 'Update a ceremony',
   })
   async updateCeremony(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') { ceremony: input }: UpdateCeremonyInput
   ): Promise<UpdateCeremonyOutput> {
     const ceremony = await this.service.update(input, session);
@@ -59,7 +59,7 @@ export class CeremonyResolver {
     description: 'Check Consistency in Ceremony Nodes',
   })
   async checkCeremonyConsistency(
-    @Session() session: ISession
+    @LoggedInSession() session: Session
   ): Promise<boolean> {
     return await this.service.checkCeremonyConsistency(session);
   }

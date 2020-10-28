@@ -12,12 +12,12 @@ import { cloneDeep, Many, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { assert } from 'ts-essentials';
 import {
-  ISession,
   isSecured,
   many,
   Order,
   Resource,
   ServerException,
+  Session,
   UnauthorizedException,
   UnwrapSecured,
   unwrapSecured,
@@ -51,7 +51,7 @@ export const property = (
 ];
 
 export const matchSession = (
-  session: ISession,
+  session: Session,
   {
     // eslint-disable-next-line @seedcompany/no-unused-vars
     withAclEdit,
@@ -113,7 +113,7 @@ export class DatabaseService {
     changes,
     nodevar,
   }: {
-    session: ISession;
+    session: Session;
     object: TObject;
     props: ReadonlyArray<keyof TObject & string>;
     changes: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
@@ -148,7 +148,7 @@ export class DatabaseService {
     value,
     nodevar,
   }: {
-    session: ISession;
+    session: Session;
     object: TObject;
     key: Key;
     value?: UnwrapSecured<TObject[Key]>;
@@ -239,7 +239,7 @@ export class DatabaseService {
     aclEditProp,
     input,
   }: {
-    session: ISession;
+    session: Session;
     props: ReadonlyArray<
       keyof TObject | { secure: boolean; name: keyof TObject; list?: boolean }
     >;
@@ -457,7 +457,7 @@ export class DatabaseService {
     // eslint-disable-next-line @seedcompany/no-unused-vars
     aclEditProp, // example canCreateLangs
   }: {
-    session: ISession;
+    session: Session;
     object: TObject;
     aclEditProp: string;
   }) {
@@ -498,7 +498,7 @@ export class DatabaseService {
     nodevar,
   }: {
     id: string;
-    session: ISession;
+    session: Session;
     props: string[];
     nodevar: string;
   }): Promise<boolean> {
@@ -522,7 +522,7 @@ export class DatabaseService {
     nodevar,
   }: {
     id: string;
-    session: ISession;
+    session: Session;
     prop: string;
     nodevar: string;
   }): Promise<boolean> {
@@ -553,7 +553,7 @@ export class DatabaseService {
     relName,
     srcNodeLabel,
   }: {
-    session: ISession;
+    session: Session;
     id: string;
     relName: string;
     srcNodeLabel: string;
@@ -587,7 +587,7 @@ export class DatabaseService {
     nodevar,
   }: {
     id: string;
-    session: ISession;
+    session: Session;
     props: string[];
     nodevar: string;
   }): Promise<boolean> {
@@ -611,7 +611,7 @@ export class DatabaseService {
     nodevar,
   }: {
     id: string;
-    session: ISession;
+    session: Session;
     prop: string;
     nodevar: string;
   }): Promise<boolean> {

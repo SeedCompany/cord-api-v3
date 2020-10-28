@@ -1,6 +1,6 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { ISession, Session } from '../../common';
+import { AnonSession, Session } from '../../common';
 import { User, UserService } from '../user';
 import { FileNode, IFileNode } from './dto';
 import { FileService } from './file.service';
@@ -20,7 +20,7 @@ export class FileNodeResolver {
   })
   async createdBy(
     @Parent() node: FileNode,
-    @Session() session: ISession
+    @AnonSession() session: Session
   ): Promise<User> {
     return await this.users.readOne(node.createdById, session);
   }
@@ -34,7 +34,7 @@ export class FileNodeResolver {
   })
   async parents(
     @Parent() node: FileNode,
-    @Session() session: ISession
+    @AnonSession() session: Session
   ): Promise<readonly FileNode[]> {
     return await this.service.getParents(node.id, session);
   }

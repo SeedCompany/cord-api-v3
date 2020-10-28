@@ -7,9 +7,9 @@ import { DateTime } from 'luxon';
 import {
   generateId,
   InputException,
-  ISession,
   NotFoundException,
   ServerException,
+  Session,
 } from '../../common';
 import {
   ConfigService,
@@ -84,7 +84,7 @@ export class ProductService {
 
   async create(
     { engagementId, ...input }: CreateProduct,
-    session: ISession
+    session: Session
   ): Promise<AnyProduct> {
     const createdAt = DateTime.local();
     const secureProps: Property[] = [
@@ -245,14 +245,14 @@ export class ProductService {
     await this.authorizationService.processNewBaseNode(
       dbProduct,
       result.id,
-      session.userId as string
+      session.userId
     );
 
     this.logger.debug(`product created`, { id: result.id });
     return await this.readOne(result.id, session);
   }
 
-  async readOne(id: string, session: ISession): Promise<AnyProduct> {
+  async readOne(id: string, session: Session): Promise<AnyProduct> {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
@@ -372,7 +372,7 @@ export class ProductService {
     };
   }
 
-  async update(input: UpdateProduct, session: ISession): Promise<AnyProduct> {
+  async update(input: UpdateProduct, session: Session): Promise<AnyProduct> {
     const {
       produces: inputProducesId,
       scriptureReferences,
@@ -484,7 +484,7 @@ export class ProductService {
     });
   }
 
-  async delete(id: string, session: ISession): Promise<void> {
+  async delete(id: string, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
     if (!object) {
@@ -507,7 +507,7 @@ export class ProductService {
 
   async list(
     { filter, ...input }: ProductListInput,
-    session: ISession
+    session: Session
   ): Promise<ProductListOutput> {
     const label = 'Product';
 
@@ -562,7 +562,7 @@ export class ProductService {
   protected async getProducibleByType(
     id: string,
     type: string,
-    session: ISession
+    session: Session
   ): Promise<Film | Story | Song | LiteracyMaterial> {
     if (type === 'Film') {
       return await this.film.readOne(id, session);

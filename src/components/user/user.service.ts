@@ -5,11 +5,10 @@ import { DateTime } from 'luxon';
 import {
   DuplicateException,
   generateId,
-  ISession,
   NotFoundException,
   SecuredList,
   ServerException,
-  UnauthorizedException,
+  Session,
 } from '../../common';
 import {
   ConfigService,
@@ -154,7 +153,7 @@ export class UserService {
     );
   };
 
-  async create(input: CreatePerson, _session?: ISession): Promise<string> {
+  async create(input: CreatePerson, _session?: Session): Promise<string> {
     const id = await generateId();
     const createdAt = DateTime.local();
 
@@ -301,10 +300,10 @@ export class UserService {
     return result.id;
   }
 
-  async readOne(id: string, { userId }: { userId?: string }): Promise<User> {
-    if (!userId) {
-      userId = this.config.anonUser.id;
-    }
+  async readOne(
+    id: string,
+    { userId }: Pick<Session, 'userId'>
+  ): Promise<User> {
     const query = this.db
       .query()
       .call(matchRequestingUser, { userId })
@@ -339,7 +338,7 @@ export class UserService {
     };
   }
 
-  async update(input: UpdateUser, session: ISession): Promise<User> {
+  async update(input: UpdateUser, session: Session): Promise<User> {
     this.logger.debug('mutation update User', { input, session });
     const user = await this.readOne(input.id, session);
 
@@ -363,13 +362,7 @@ export class UserService {
 
     // Update roles
     if (input.roles) {
-      const hasPower = await this.authorizationService.checkPower(
-        Powers.GrantRole,
-        session.userId
-      );
-      if (!hasPower) {
-        throw new UnauthorizedException('user cannot grant that role');
-      }
+      await this.authorizationService.checkPower(Powers.GrantRole, session);
       await this.db
         .query()
         .match([
@@ -402,7 +395,7 @@ export class UserService {
     return await this.readOne(input.id, session);
   }
 
-  async delete(id: string, session: ISession): Promise<void> {
+  async delete(id: string, session: Session): Promise<void> {
     const user = await this.readOne(id, session);
     // remove EmailAddress label so uniqueness constraint works only for exisiting users
     await this.db
@@ -428,7 +421,7 @@ export class UserService {
     }
   }
 
-  async list(input: UserListInput, session: ISession): Promise<UserListOutput> {
+  async list(input: UserListInput, session: Session): Promise<UserListOutput> {
     const query = this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode('User')])
@@ -445,7 +438,7 @@ export class UserService {
   async listEducations(
     userId: string,
     input: EducationListInput,
-    session: ISession
+    session: Session
   ): Promise<SecuredEducationList> {
     const query = this.db
       .query()
@@ -515,7 +508,7 @@ export class UserService {
   async listOrganizations(
     userId: string,
     input: OrganizationListInput,
-    session: ISession
+    session: Session
   ): Promise<SecuredOrganizationList> {
     const query = this.db
       .query()
@@ -585,7 +578,7 @@ export class UserService {
   async listUnavailabilities(
     userId: string,
     input: UnavailabilityListInput,
-    session: ISession
+    session: Session
   ): Promise<SecuredUnavailabilityList> {
     const query = this.db
       .query()
@@ -655,7 +648,7 @@ export class UserService {
   async addLocation(
     userId: string,
     locationId: string,
-    _session: ISession
+    _session: Session
   ): Promise<void> {
     try {
       await this.locationService.addLocationToNode(
@@ -672,7 +665,7 @@ export class UserService {
   async removeLocation(
     userId: string,
     locationId: string,
-    _session: ISession
+    _session: Session
   ): Promise<void> {
     try {
       await this.locationService.removeLocationFromNode(
@@ -689,7 +682,7 @@ export class UserService {
   async listLocations(
     userId: string,
     input: LocationListInput,
-    session: ISession
+    session: Session
   ): Promise<SecuredLocationList> {
     return await this.locationService.listLocationsFromNode(
       'User',
@@ -725,7 +718,7 @@ export class UserService {
 
   async assignOrganizationToUser(
     request: AssignOrganizationToUser,
-    session: ISession
+    session: Session
   ): Promise<void> {
     //TO DO: Refactor session in the future
     const querySession = this.db.query();
@@ -815,7 +808,7 @@ export class UserService {
 
   async removeOrganizationFromUser(
     request: RemoveOrganizationFromUser,
-    _session: ISession
+    _session: Session
   ): Promise<void> {
     const removeOrg = this.db
       .query()
@@ -872,7 +865,7 @@ export class UserService {
     }
   }
 
-  async checkUserConsistency(session: ISession): Promise<boolean> {
+  async checkUserConsistency(session: Session): Promise<boolean> {
     const users = await this.db
       .query()
       .match([matchSession(session), [node('user', 'User')]])

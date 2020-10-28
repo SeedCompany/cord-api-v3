@@ -1,6 +1,6 @@
-import { ISession } from '../../../common';
+import { Session } from '../../../common';
 import { Engagement } from '../dto';
 
 export class EngagementDeletedEvent {
-  constructor(readonly engagement: Engagement, readonly session: ISession) {}
+  constructor(readonly engagement: Engagement, readonly session: Session) {}
 }

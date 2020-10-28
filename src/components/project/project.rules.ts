@@ -2,7 +2,7 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { intersection } from 'lodash';
-import { ServerException, UnauthorizedException } from '../../common';
+import { ServerException, Session, UnauthorizedException } from '../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import { Role } from '../authorization';
 import { User, UserService } from '../user';
@@ -752,8 +752,12 @@ export class ProjectRules {
 
   async getAvailableTransitions(
     projectId: string,
-    userId?: string
+    session: Session
   ): Promise<ProjectStepTransition[]> {
+    if (session.anonymous) {
+      return [];
+    }
+
     const currentStep = await this.getCurrentStep(projectId);
 
     // get roles that can approve the current step
@@ -763,7 +767,7 @@ export class ProjectRules {
     );
 
     // If current user is not an approver (based on roles) then don't allow any transitions
-    const currentUserRoles = await this.getUserRoles(userId);
+    const currentUserRoles = await this.getUserRoles(session.userId);
     if (intersection(approvers, currentUserRoles).length === 0) {
       return [];
     }
@@ -773,10 +777,10 @@ export class ProjectRules {
 
   async verifyStepChange(
     projectId: string,
-    userId: string | undefined,
+    session: Session,
     nextStep: ProjectStep
   ) {
-    const transitions = await this.getAvailableTransitions(projectId, userId);
+    const transitions = await this.getAvailableTransitions(projectId, session);
 
     const validNextStep = transitions.some(
       (transition) => transition.to === nextStep
@@ -808,11 +812,7 @@ export class ProjectRules {
     return currentStep.step;
   }
 
-  private async getUserRoles(id?: string) {
-    if (!id) {
-      return [];
-    }
-
+  private async getUserRoles(id: string) {
     const userRolesQuery = await this.db
       .query()
       .match([

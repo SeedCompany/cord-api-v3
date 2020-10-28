@@ -1,4 +1,4 @@
-import { ISession } from '../../../common';
+import { Session } from '../../../common';
 import { Project, UpdateProject } from '../dto';
 
 export class ProjectUpdatedEvent {
@@ -6,6 +6,6 @@ export class ProjectUpdatedEvent {
     public updated: Project,
     readonly previous: Project,
     readonly updates: UpdateProject,
-    readonly session: ISession
+    readonly session: Session
   ) {}
 }

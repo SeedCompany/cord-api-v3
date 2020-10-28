@@ -1,5 +1,5 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { IdArg, ISession, Session } from '../../common';
+import { AnonSession, IdArg, LoggedInSession, Session } from '../../common';
 import {
   CreateStoryInput,
   CreateStoryOutput,
@@ -19,7 +19,7 @@ export class StoryResolver {
     description: 'Look up a story by its ID',
   })
   async story(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @IdArg() id: string
   ): Promise<Story> {
     return await this.storyService.readOne(id, session);
@@ -29,7 +29,7 @@ export class StoryResolver {
     description: 'Look up stories',
   })
   async stories(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Args({
       name: 'input',
       type: () => StoryListInput,
@@ -44,7 +44,7 @@ export class StoryResolver {
     description: 'Create a story',
   })
   async createStory(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') { story: input }: CreateStoryInput
   ): Promise<CreateStoryOutput> {
     const story = await this.storyService.create(input, session);
@@ -55,7 +55,7 @@ export class StoryResolver {
     description: 'Update a story',
   })
   async updateStory(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') { story: input }: UpdateStoryInput
   ): Promise<UpdateStoryOutput> {
     const story = await this.storyService.update(input, session);
@@ -66,7 +66,7 @@ export class StoryResolver {
     description: 'Delete a story',
   })
   async deleteStory(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @IdArg() id: string
   ): Promise<boolean> {
     await this.storyService.delete(id, session);
