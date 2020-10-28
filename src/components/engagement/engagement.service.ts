@@ -248,16 +248,6 @@ export class EngagementService {
     let le;
     try {
       le = await createLE.first();
-
-      await this.files.createDefinedFile(
-        pnpId,
-        `PNP`,
-        session,
-        id,
-        'pnp',
-        input.pnp,
-        'engagement.pnp'
-      );
     } catch (exception) {
       this.logger.error('could not create Language Engagement ', { exception });
       throw new ServerException(
@@ -294,6 +284,16 @@ export class EngagementService {
       }
       throw new ServerException('Could not create Language Engagement');
     }
+
+    await this.files.createDefinedFile(
+      pnpId,
+      `PNP`,
+      session,
+      id,
+      'pnp',
+      input.pnp,
+      'engagement.pnp'
+    );
 
     const dbLanguageEngagement = new DbLanguageEngagement();
     await this.authorizationService.processNewBaseNode(
@@ -475,16 +475,6 @@ export class EngagementService {
     let IE;
     try {
       IE = await createIE.first();
-
-      await this.files.createDefinedFile(
-        growthPlanId,
-        `Growth Plan`,
-        session,
-        id,
-        'growthPlan',
-        input.growthPlan,
-        'engagement.growthPlan'
-      );
     } catch (exception) {
       // secondary queries to see what ID is bad
       // check internId
@@ -497,6 +487,7 @@ export class EngagementService {
         exception
       );
     }
+
     if (!IE) {
       if (
         internId &&
@@ -550,6 +541,16 @@ export class EngagementService {
       }
       throw new ServerException('Could not create Internship Engagement');
     }
+
+    await this.files.createDefinedFile(
+      growthPlanId,
+      `Growth Plan`,
+      session,
+      id,
+      'growthPlan',
+      input.growthPlan,
+      'engagement.growthPlan'
+    );
 
     const dbInternshipEngagement = new DbInternshipEngagement();
     await this.authorizationService.processNewBaseNode(
