@@ -1338,7 +1338,12 @@ export class EngagementService {
    * [BUSINESS RULE] Only Projects with a Status of 'In Development' can have Engagements created or deleted.
    */
   protected async verifyProjectStatus(projectId: string, session: ISession) {
-    const project = await this.projectService.readOne(projectId, session);
+    let project;
+    try {
+      project = await this.projectService.readOne(projectId, session);
+    } catch (e) {
+      throw new InputException('projectId is invalid', 'engagement.projectId');
+    }
     if (project.status !== ProjectStatus.InDevelopment) {
       throw new InputException(
         'The Project status is not in development',
