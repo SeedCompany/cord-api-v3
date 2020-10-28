@@ -397,7 +397,7 @@ export class FileRepository {
       ])
       .create([
         node('node'),
-        relation('out', '', attachName, { active: true }),
+        relation('in', '', attachName, { active: true }),
         node('attachNode'),
       ])
       .run();
