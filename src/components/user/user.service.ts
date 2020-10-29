@@ -563,10 +563,13 @@ export class UserService {
       throw new NotFoundException('Could not find user', 'userId');
     }
     if (!user.canRead) {
-      this.logger.warning('Cannot read organization list', {
-        userId,
-      });
-      throw new UnauthenticatedException('cannot read organization list');
+      return {
+        canRead: false,
+        canCreate: false,
+        hasMore: false,
+        total: 0,
+        items: [],
+      };
     }
     const result = await this.organizations.list(
       {
