@@ -179,6 +179,7 @@ export class ProjectService {
         isPublic: false,
         isOrgPublic: false,
         label: 'ProjectName',
+        isDeburrable: true,
       },
       {
         key: 'sensitivity',
@@ -478,7 +479,6 @@ export class ProjectService {
 
   async update(input: UpdateProject, session: ISession): Promise<Project> {
     const currentProject = await this.readOne(input.id, session);
-
     if (input.sensitivity && currentProject.type === ProjectType.Translation)
       throw new InputException(
         'Cannot update sensitivity on Translation Project',
@@ -646,7 +646,7 @@ export class ProjectService {
   ): Promise<ProjectListOutput> {
     const label = `${filter.type ?? ''}Project`;
     const projectSortMap: Partial<Record<typeof input.sort, string>> = {
-      name: 'toLower(prop.value)',
+      name: 'toLower(prop.sortValue)',
       sensitivity: 'sensitivityValue',
     };
 
