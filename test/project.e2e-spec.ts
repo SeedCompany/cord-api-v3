@@ -169,6 +169,8 @@ describe('Project e2e', () => {
   });
 
   it('should throw error if the location id is not valid', async () => {
+    // eslint-disable-next-line no-console
+    console.log('should throw error');
     await expect(
       createProject(app, {
         name: faker.random.uuid(),
@@ -921,6 +923,7 @@ describe('Project e2e', () => {
    * Update Project's mou dates and check if the budget records are created.
    */
   it('should create budget records after updating project with mou dates', async () => {
+    await registerUserWithPower(app, [Powers.CreateOrganization]);
     const org = await createOrganization(app);
     const proj = await createProject(app, {
       name: faker.random.uuid() + ' project',
@@ -993,6 +996,7 @@ describe('Project e2e', () => {
    * After creating a partnership, should be able to query project and get organization
    */
   it('after creating a partnership, should be able to query project and get organization', async () => {
+    await registerUserWithPower(app, [Powers.CreateOrganization]);
     const org = await createOrganization(app);
     const project = await createProject(app, {
       name: faker.random.uuid() + ' project',

@@ -83,7 +83,6 @@ import { DbProject } from './model';
 import {
   ProjectMemberListInput,
   ProjectMemberService,
-  Role,
   SecuredProjectMemberList,
 } from './project-member';
 import { ProjectRules } from './project.rules';
@@ -98,11 +97,13 @@ export class ProjectService {
     mouStart: true,
     mouEnd: true,
     initialMouEnd: true,
+    stepChangedAt: true,
     estimatedSubmission: true,
     type: true,
     primaryLocation: true,
     marketingLocation: true,
     fieldRegion: true,
+    owningOrganization: true,
   };
 
   constructor(
@@ -220,6 +221,12 @@ export class ProjectService {
         isOrgPublic: false,
       },
       {
+        key: 'stepChangedAt',
+        value: createInput.modifiedAt,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
         key: 'estimatedSubmission',
         value: createInput.estimatedSubmission,
         isPublic: false,
@@ -261,6 +268,9 @@ export class ProjectService {
           node('marketingLocation', 'Location', { id: marketingLocationId }),
         ]);
       }
+      createProject.match([
+        node('organization', 'Organization', { id: this.config.defaultOrg.id }),
+      ]);
 
       createProject.call(
         createBaseNode,
@@ -317,6 +327,17 @@ export class ProjectService {
           ],
         ]);
       }
+      // TODO: default to add ConfigService.defaultOrg
+      createProject.create([
+        [
+          node('node'),
+          relation('out', '', 'owningOrganization', {
+            active: true,
+            createdAt,
+          }),
+          node('organization'),
+        ],
+      ]);
 
       createProject.return('node.id as id').asResult<{ id: string }>();
       const result = await createProject.first();
@@ -325,21 +346,20 @@ export class ProjectService {
         throw new ServerException('failed to create a project');
       }
 
-      const dbProject = new DbProject(); // wip: this will actually be used later. temp using an empty object now.
-
-      await this.authorizationService.processNewBaseNode(
-        dbProject,
-        result.id,
-        session.userId
-      );
-
       await this.projectMembers.create(
         {
           userId: session.userId,
           projectId: result.id,
-          roles: [Role.ProjectManager],
+          roles: [],
         },
         session
+      );
+
+      const dbProject = new DbProject();
+      await this.authorizationService.processNewBaseNode(
+        dbProject,
+        result.id,
+        session.userId
       );
 
       const project = await this.readOne(result.id, session);
@@ -411,6 +431,11 @@ export class ProjectService {
       ])
       .optionalMatch([
         node('node'),
+        relation('out', '', 'owningOrganization', { active: true }),
+        node('organization', 'Organization'),
+      ])
+      .optionalMatch([
+        node('node'),
         relation('out', '', 'engagement', { active: true }),
         node('', 'LanguageEngagement'),
         relation('out', '', 'language', { active: true }),
@@ -425,6 +450,7 @@ export class ProjectService {
         'primaryLocation.id as primaryLocationId',
         'marketingLocation.id as marketingLocationId',
         'fieldRegion.id as fieldRegionId',
+        'organization.id as owningOrganizationId',
         'collect(distinct sensitivity.value) as languageSensitivityList',
       ])
       .asResult<
@@ -432,6 +458,7 @@ export class ProjectService {
           primaryLocationId: string;
           marketingLocationId: string;
           fieldRegionId: string;
+          owningOrganizationId: string;
           languageSensitivityList: Sensitivity[];
         }
       >();
@@ -472,6 +499,10 @@ export class ProjectService {
       fieldRegion: {
         ...securedProps.fieldRegion,
         value: result.fieldRegionId,
+      },
+      owningOrganization: {
+        ...securedProps.owningOrganization,
+        value: result.owningOrganizationId,
       },
       canDelete: true, // TODO
     };

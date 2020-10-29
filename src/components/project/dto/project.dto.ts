@@ -7,6 +7,7 @@ import {
   Secured,
   SecuredDate,
   SecuredDateNullable,
+  SecuredDateTime,
   SecuredString,
   Sensitivity,
 } from '../../../common';
@@ -55,6 +56,8 @@ class Project extends Resource {
 
   readonly fieldRegion: Secured<string>;
 
+  readonly owningOrganization: Secured<string>;
+
   @Field()
   readonly mouStart: SecuredDate;
 
@@ -64,6 +67,9 @@ class Project extends Resource {
   @Field()
   // this should match project mouEnd, until it becomes active, then this is final.
   readonly initialMouEnd: SecuredDateNullable;
+
+  @Field()
+  readonly stepChangedAt: SecuredDateTime;
 
   @Field()
   readonly estimatedSubmission: SecuredDate;

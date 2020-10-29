@@ -1,0 +1,14 @@
+# Copy this file to docker-compose.override.yml to use
+version: '3.7'
+services:
+
+  db:
+    # Mount and persist database data
+    #volumes:
+    # - ./data:/var/lib/neo4j/data
+
+    # Change the database connection user/password
+    # Be sure it matches the credentials given to API config
+    #environment:
+    #  NEO4J_AUTH: neo4j/admin
+

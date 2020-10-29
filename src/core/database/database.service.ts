@@ -12,7 +12,6 @@ import { cloneDeep, deburr, Many, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { assert } from 'ts-essentials';
 import {
-  InputException,
   ISession,
   isSecured,
   many,
@@ -20,6 +19,7 @@ import {
   Order,
   Resource,
   ServerException,
+  UnauthorizedException,
   unwrapSecured,
   UnwrapSecured,
 } from '../../common';
@@ -117,7 +117,7 @@ export class DatabaseService {
   }: {
     session: ISession;
     object: TObject;
-    props: ReadonlyArray<keyof TObject>;
+    props: ReadonlyArray<keyof TObject & string>;
     changes: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
     nodevar: string;
   }) {
@@ -187,7 +187,10 @@ export class DatabaseService {
     return false;
   }
 
-  async sgUpdateProperty<TObject extends Resource, Key extends keyof TObject>({
+  async sgUpdateProperty<
+    TObject extends Resource,
+    Key extends keyof TObject & string
+  >({
     session,
     object,
     key,
@@ -257,7 +260,10 @@ export class DatabaseService {
     }
 
     if (!result) {
-      throw new InputException('Could not find object');
+      throw new UnauthorizedException(
+        `You do not have permission to update property: ${key}`,
+        key
+      );
     }
 
     return {

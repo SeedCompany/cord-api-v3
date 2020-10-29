@@ -14,6 +14,7 @@ export class DbProject extends DbBaseNode {
   mouStart: any = null;
   mouEnd: any = null;
   initialMouEnd: any = null;
+  stepChangedAt: any = null;
   rootDirectory: any = null;
   member: any = null;
   otherLocations: any = null;

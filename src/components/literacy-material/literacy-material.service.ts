@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
 import {
   DuplicateException,
@@ -32,7 +32,6 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
-import { AuthorizationService } from '../authorization/authorization.service';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
   CreateLiteracyMaterial,
@@ -41,7 +40,7 @@ import {
   LiteracyMaterialListOutput,
   UpdateLiteracyMaterial,
 } from './dto';
-import { DbLiteracyMaterial } from './model';
+
 @Injectable()
 export class LiteracyMaterialService {
   private readonly securedProperties = {
@@ -53,9 +52,7 @@ export class LiteracyMaterialService {
     @Logger('literacyMaterial:service') private readonly logger: ILogger,
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
-    private readonly scriptureRefService: ScriptureReferenceService,
-    @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService
+    private readonly scriptureRefService: ScriptureReferenceService
   ) {}
 
   @OnIndex()
@@ -96,8 +93,8 @@ export class LiteracyMaterialService {
       {
         key: 'name',
         value: input.name,
-        isPublic: false,
-        isOrgPublic: false,
+        isPublic: true,
+        isOrgPublic: true,
         label: 'LiteracyName',
       },
     ];
@@ -118,13 +115,6 @@ export class LiteracyMaterialService {
       if (!result) {
         throw new ServerException('failed to create a literacy material');
       }
-
-      const dbLiteracyMaterial = new DbLiteracyMaterial();
-      await this.authorizationService.processNewBaseNode(
-        dbLiteracyMaterial,
-        result.id,
-        session.userId as string
-      );
 
       await this.scriptureRefService.create(
         result.id,

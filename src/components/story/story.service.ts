@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
 import {
   DuplicateException,
@@ -31,7 +31,6 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
-import { AuthorizationService } from '../authorization/authorization.service';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
   CreateStory,
@@ -40,7 +39,7 @@ import {
   StoryListOutput,
   UpdateStory,
 } from './dto';
-import { DbStory } from './model';
+
 @Injectable()
 export class StoryService {
   private readonly securedProperties = {
@@ -52,9 +51,7 @@ export class StoryService {
     @Logger('story:service') private readonly logger: ILogger,
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
-    private readonly scriptureRefService: ScriptureReferenceService,
-    @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService
+    private readonly scriptureRefService: ScriptureReferenceService
   ) {}
 
   @OnIndex()
@@ -91,8 +88,8 @@ export class StoryService {
       {
         key: 'name',
         value: input.name,
-        isPublic: false,
-        isOrgPublic: false,
+        isPublic: true,
+        isOrgPublic: true,
         label: 'StoryName',
       },
     ];
@@ -112,13 +109,6 @@ export class StoryService {
       if (!result) {
         throw new ServerException('failed to create a story');
       }
-
-      const dbStory = new DbStory();
-      await this.authorizationService.processNewBaseNode(
-        dbStory,
-        result.id,
-        session.userId as string
-      );
 
       await this.scriptureRefService.create(
         result.id,

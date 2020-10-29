@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { AWSError } from 'aws-sdk';
 import {
   DuplicateException,
@@ -10,6 +10,7 @@ import {
   UnauthorizedException,
 } from '../../common';
 import { ILogger, Logger } from '../../core';
+import { AuthorizationService } from '../authorization/authorization.service';
 import { FileBucket } from './bucket';
 import {
   BaseNode,
@@ -36,13 +37,17 @@ import {
 } from './dto';
 import { FileRepository } from './file.repository';
 import { FilesBucketToken } from './files-bucket.factory';
+import { DbDirectory, DbFile } from './model';
+import { DbFileVersion } from './model/file-version.model.db';
 
 @Injectable()
 export class FileService {
   constructor(
     @Inject(FilesBucketToken) private readonly bucket: FileBucket,
     private readonly repo: FileRepository,
-    @Logger('file:service') private readonly logger: ILogger
+    @Logger('file:service') private readonly logger: ILogger,
+    @Inject(forwardRef(() => AuthorizationService))
+    private readonly authorizationService: AuthorizationService
   ) {}
 
   async getDirectory(id: string, session: ISession): Promise<Directory> {
@@ -186,6 +191,15 @@ export class FileService {
 
     const id = await this.repo.createDirectory(parentId, name, session);
 
+    if (parentId) {
+      const dbDirectory = new DbDirectory();
+      await this.authorizationService.processNewBaseNode(
+        dbDirectory,
+        id,
+        session.userId as string
+      );
+    }
+
     return await this.getDirectory(id, session);
   }
 
@@ -283,6 +297,12 @@ export class FileService {
       session
     );
 
+    await this.authorizationService.processNewBaseNode(
+      new DbFileVersion(),
+      uploadId,
+      session.userId!
+    );
+
     // Skip S3 move if it's not needed
     if (existingUpload.status === 'rejected') {
       await this.bucket.moveObject(`temp/${uploadId}`, uploadId);
@@ -321,7 +341,15 @@ export class FileService {
       }
     }
 
-    const fileId = await this.repo.createFile(parentId, name, session);
+    const fileId = await generateId();
+    await this.repo.createFile(fileId, name, session, parentId);
+
+    await this.authorizationService.processNewBaseNode(
+      new DbFile(),
+      fileId,
+      session.userId!
+    );
+
     this.logger.debug(
       'File matching given name not found, creating a new one',
       {
@@ -334,12 +362,24 @@ export class FileService {
   }
 
   async createDefinedFile(
+    fileId: string,
     name: string,
     session: ISession,
+    baseNodeId: string,
+    propertyName: string,
     initialVersion?: CreateDefinedFileVersionInput,
     field?: string
   ) {
-    const fileId = await this.repo.createFile(undefined, name, session);
+    await this.repo.createFile(fileId, name, session);
+
+    await this.repo.attachBaseNode(fileId, baseNodeId, propertyName + 'Node');
+
+    await this.authorizationService.processNewBaseNode(
+      new DbFile(),
+      fileId,
+      session.userId!
+    );
+
     if (initialVersion) {
       try {
         await this.createFileVersion(
@@ -357,7 +397,6 @@ export class FileService {
         throw e;
       }
     }
-    return fileId;
   }
 
   async updateDefinedFile(

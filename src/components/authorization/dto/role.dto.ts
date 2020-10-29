@@ -36,3 +36,34 @@ registerEnumType(Role, { name: 'Role' });
   description: SecuredEnumList.descriptionFor('roles'),
 })
 export abstract class SecuredRoles extends SecuredEnumList(Role) {}
+
+export type InternalRole =
+  | 'AdministratorRole'
+  | 'BibleTranslationLiaisonRole'
+  | 'ConsultantRole'
+  | 'ConsultantManagerRole'
+  | 'ControllerRole'
+  | 'DevelopmentRole'
+  | 'ExecutiveDevelopmentRepresentativeRole'
+  | 'ExecutiveLeadershipRole'
+  | 'FieldOperationsDirectorRole'
+  | 'FieldPartnerRole'
+  | 'FinancialAnalystOnGlobalRole'
+  | 'FinancialAnalystOnProjectRole'
+  | 'FundraisingRole'
+  | 'InternRole'
+  | 'LeadFinancialAnalystRole'
+  | 'LeadershipRole'
+  | 'LiasonRole'
+  | 'MarketingRole'
+  | 'MentorRole'
+  | 'OfficeOfThePresidentRole'
+  | 'ProjectManagerGlobalRole'
+  | 'ProjectManagerOnProjectRole'
+  | 'RegionalCommunicationsCoordinatorRole'
+  | 'RegionalDirectorGlobalRole'
+  | 'RegionalDirectorOnProjectRole'
+  | 'StaffMemberRole'
+  | 'SupportingProjectManagerRole'
+  | 'TranslatorRole'
+  | 'WriterRole';

@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
 import {
   DuplicateException,
@@ -31,7 +31,6 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
-import { AuthorizationService } from '../authorization/authorization.service';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
   CreateSong,
@@ -40,7 +39,6 @@ import {
   SongListOutput,
   UpdateSong,
 } from './dto';
-import { DbSong } from './model';
 
 @Injectable()
 export class SongService {
@@ -53,9 +51,7 @@ export class SongService {
     @Logger('song:service') private readonly logger: ILogger,
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
-    private readonly scriptureRefService: ScriptureReferenceService,
-    @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService
+    private readonly scriptureRefService: ScriptureReferenceService
   ) {}
 
   @OnIndex()
@@ -92,8 +88,8 @@ export class SongService {
       {
         key: 'name',
         value: input.name,
-        isPublic: false,
-        isOrgPublic: false,
+        isPublic: true,
+        isOrgPublic: true,
         label: 'SongName',
       },
     ];
@@ -114,13 +110,6 @@ export class SongService {
       if (!result) {
         throw new ServerException('failed to create a song');
       }
-
-      const dbSong = new DbSong();
-      await this.authorizationService.processNewBaseNode(
-        dbSong,
-        result.id,
-        session.userId as string
-      );
 
       await this.scriptureRefService.create(
         result.id,

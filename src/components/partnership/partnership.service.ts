@@ -127,18 +127,9 @@ export class PartnershipService {
       partner.financialReportingTypes.value
     );
 
-    const mou = await this.files.createDefinedFile(
-      `MOU`,
-      session,
-      input.mou,
-      'partnership.mou'
-    );
-    const agreement = await this.files.createDefinedFile(
-      `Partner Agreement`,
-      session,
-      input.agreement,
-      'partnership.agreement'
-    );
+    const partnershipId = await generateId();
+    const mouId = await generateId();
+    const agreementId = await generateId();
 
     const secureProps = [
       {
@@ -149,13 +140,13 @@ export class PartnershipService {
       },
       {
         key: 'agreement',
-        value: agreement,
+        value: agreementId,
         isPublic: false,
         isOrgPublic: false,
       },
       {
         key: 'mou',
-        value: mou,
+        value: mouId,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -197,7 +188,7 @@ export class PartnershipService {
         .call(matchRequestingUser, session)
         .call(
           createBaseNode,
-          await generateId(),
+          partnershipId,
           'Partnership',
           secureProps,
           {},
@@ -215,13 +206,6 @@ export class PartnershipService {
       if (!result) {
         throw new ServerException('failed to create partnership');
       }
-
-      const dbPartnership = new DbPartnership();
-      await this.authorizationService.processNewBaseNode(
-        dbPartnership,
-        result.id,
-        session.userId as string
-      );
 
       // connect the Partner to the Partnership
       // and connect Partnership to Project
@@ -249,6 +233,32 @@ export class PartnershipService {
         ])
         .return('partnership.id as id')
         .first();
+
+      await this.files.createDefinedFile(
+        mouId,
+        `MOU`,
+        session,
+        partnershipId,
+        'mou',
+        input.mou,
+        'partnership.mou'
+      );
+
+      await this.files.createDefinedFile(
+        agreementId,
+        `Partner Agreement`,
+        session,
+        partnershipId,
+        'agreement',
+        input.agreement,
+        'partnership.agreement'
+      );
+
+      await this.authorizationService.processNewBaseNode(
+        new DbPartnership(),
+        result.id,
+        session.userId!
+      );
 
       const partnership = await this.readOne(result.id, session);
 

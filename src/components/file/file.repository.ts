@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   contains,
   hasLabel,
@@ -29,19 +29,14 @@ import {
 } from '../../core';
 import { collect, count, mapping } from '../../core/database/query';
 import { hasMore } from '../../core/database/results';
-import { AuthorizationService } from '../authorization/authorization.service';
 import { BaseNode, FileListInput, FileNodeType, FileVersion } from './dto';
-import { DbDirectory, DbFile } from './model';
-import { DbFileVersion } from './model/file-version.model.db';
 
 @Injectable()
 export class FileRepository {
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
-    @Logger('file:repository') private readonly logger: ILogger,
-    @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService
+    @Logger('file:repository') private readonly logger: ILogger
   ) {}
 
   async getBaseNodeById(id: string, session: ISession): Promise<BaseNode> {
@@ -284,13 +279,6 @@ export class FileRepository {
       throw new ServerException('Failed to create directory');
     }
 
-    const dbDirectory = new DbDirectory();
-    await this.authorizationService.processNewBaseNode(
-      dbDirectory,
-      result.id,
-      session.userId as string
-    );
-
     await this.attachCreator(result.id, session);
 
     if (parentId) {
@@ -301,9 +289,10 @@ export class FileRepository {
   }
 
   async createFile(
-    parentId: string | undefined,
+    fileId: string,
     name: string,
-    session: ISession
+    session: ISession,
+    parentId?: string
   ) {
     const props: Property[] = [
       {
@@ -317,7 +306,7 @@ export class FileRepository {
     const createFile = this.db
       .query()
       .call(matchRequestingUser, session)
-      .call(createBaseNode, await generateId(), ['File', 'FileNode'], props)
+      .call(createBaseNode, fileId, ['File', 'FileNode'], props)
       .return('node.id as id')
       .asResult<{ id: string }>();
 
@@ -326,13 +315,6 @@ export class FileRepository {
     if (!result) {
       throw new ServerException('Failed to create file');
     }
-
-    const dbFile = new DbFile();
-    await this.authorizationService.processNewBaseNode(
-      dbFile,
-      result.id,
-      session.userId as string
-    );
 
     await this.attachCreator(result.id, session);
 
@@ -382,15 +364,10 @@ export class FileRepository {
       throw new ServerException('Failed to create file version');
     }
 
-    const dbFileVersion = new DbFileVersion();
-    await this.authorizationService.processNewBaseNode(
-      dbFileVersion,
-      result.id,
-      session.userId as string
-    );
-
     await this.attachCreator(input.id, session);
     await this.attachParent(input.id, fileId);
+
+    return result;
   }
 
   private async attachCreator(id: string, session: ISession) {
@@ -407,6 +384,21 @@ export class FileRepository {
           active: true,
         }),
         node('user'),
+      ])
+      .run();
+  }
+
+  async attachBaseNode(id: string, baseNodeId: string, attachName: string) {
+    await this.db
+      .query()
+      .match([
+        [node('node', 'FileNode', { id })],
+        [node('attachNode', 'BaseNode', { id: baseNodeId })],
+      ])
+      .create([
+        node('node'),
+        relation('in', '', attachName, { active: true }),
+        node('attachNode'),
       ])
       .run();
   }

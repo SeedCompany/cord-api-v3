@@ -42,7 +42,6 @@ import {
   CreateCeremony,
   UpdateCeremony,
 } from './dto';
-import { DbCeremony } from './model';
 
 @Injectable()
 export class CeremonyService {
@@ -99,15 +98,17 @@ export class CeremonyService {
       const result = await query.first();
 
       if (!result) {
-        throw new ServerException('failed to create a budget');
+        throw new ServerException('failed to create a ceremony');
       }
+      // commenting out, not sure if this is the right spot to call auth.
+      // needs to be called after all relationships are made with engagement.
 
-      const dbCeremony = new DbCeremony();
-      await this.authorizationService.processNewBaseNode(
-        dbCeremony,
-        result.id,
-        session.userId as string
-      );
+      // const dbCeremony = new DbCeremony();
+      // await this.authorizationService.processNewBaseNode(
+      //   dbCeremony,
+      //   result.id,
+      //   session.userId as string
+      // );
 
       return await this.readOne(result.id, session);
     } catch (exception) {

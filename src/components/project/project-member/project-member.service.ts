@@ -249,7 +249,7 @@ export class ProjectMemberService {
     roles: Role[] | undefined,
     availableRoles: Role[] | undefined
   ) {
-    if (!roles) {
+    if (!roles || roles.length === 0) {
       return;
     }
     const forbiddenRoles = difference(roles, availableRoles ?? []);

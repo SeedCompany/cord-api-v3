@@ -110,7 +110,7 @@ export class EducationService {
     await this.authorizationService.processNewBaseNode(
       dbEducation,
       result.id,
-      session.userId as string
+      userId
     );
 
     this.logger.debug(`education created`, { id: result.id });

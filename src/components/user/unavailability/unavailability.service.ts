@@ -97,13 +97,6 @@ export class UnavailabilityService {
         throw new ServerException('Could not create unavailability');
       }
 
-      const dbUnavailability = new DbUnavailability();
-      await this.authorizationService.processNewBaseNode(
-        dbUnavailability,
-        createUnavailabilityResult.id,
-        session.userId as string
-      );
-
       this.logger.debug(`Created user unavailability`, {
         id: createUnavailabilityResult.id,
         userId,
@@ -124,6 +117,13 @@ export class UnavailabilityService {
           id: createUnavailabilityResult.id,
         })
         .run();
+
+      const dbUnavailability = new DbUnavailability();
+      await this.authorizationService.processNewBaseNode(
+        dbUnavailability,
+        createUnavailabilityResult.id,
+        userId
+      );
 
       return await this.readOne(createUnavailabilityResult.id, session);
     } catch {
