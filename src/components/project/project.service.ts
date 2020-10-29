@@ -83,7 +83,6 @@ import { DbProject } from './model';
 import {
   ProjectMemberListInput,
   ProjectMemberService,
-  Role,
   SecuredProjectMemberList,
 } from './project-member';
 import { ProjectRules } from './project.rules';
@@ -350,7 +349,7 @@ export class ProjectService {
         {
           userId: session.userId,
           projectId: result.id,
-          roles: [Role.ProjectManager],
+          roles: [],
         },
         session
       );
