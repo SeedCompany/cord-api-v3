@@ -11,6 +11,7 @@ import {
   SecuredString,
   Sensitivity,
 } from '../../../common';
+import { SecuredTags } from '../../language/dto/language.dto';
 import { ProjectStatus } from './status.enum';
 import { SecuredProjectStep } from './step.enum';
 import { ProjectType } from './type.enum';
@@ -76,6 +77,9 @@ class Project extends Resource {
 
   @DateTimeField()
   readonly modifiedAt: DateTime;
+
+  @Field()
+  readonly tags: SecuredTags;
 }
 
 // class name has to match schema name for interface resolvers to work.

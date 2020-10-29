@@ -79,6 +79,7 @@ export class LanguageService {
     signLanguageCode: true,
     sponsorEstimatedEndDate: true,
     hasExternalFirstScripture: true,
+    tags: true,
   };
 
   constructor(
@@ -240,6 +241,12 @@ export class LanguageService {
           isPublic: false,
           isOrgPublic: false,
         },
+        {
+          key: 'tags',
+          value: input.tags,
+          isPublic: false,
+          isOrgPublic: false,
+        },
       ];
 
       const createLanguage = this.db
@@ -368,6 +375,10 @@ export class LanguageService {
     return {
       ...parseBaseNodeProperties(result.node),
       ...securedProps,
+      tags: {
+        ...securedProps.tags,
+        value: securedProps.tags.value as string[],
+      },
       sensitivity: props.sensitivity,
       ethnologue,
       canDelete: true, // TODO
@@ -404,6 +415,7 @@ export class LanguageService {
         'sensitivity',
         'sponsorEstimatedEndDate',
         'hasExternalFirstScripture',
+        'tags',
       ],
       changes: input,
       nodevar: 'language', // not sure if this is right, just trying to get this to compile - michael

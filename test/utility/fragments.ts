@@ -157,6 +157,11 @@ export const language = gql`
       canRead
       canEdit
     }
+    tags {
+      value
+      canRead
+      canEdit
+    }
   }
 `;
 
@@ -364,6 +369,11 @@ export const project = gql`
       canEdit
     }
     estimatedSubmission {
+      value
+      canRead
+      canEdit
+    }
+    tags {
       value
       canRead
       canEdit

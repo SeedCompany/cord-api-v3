@@ -26,4 +26,5 @@ export class DbProject extends DbBaseNode {
   fieldRegion: any = null;
   engagement: any = null;
   sensitivity: any = null;
+  tags: any = null;
 }

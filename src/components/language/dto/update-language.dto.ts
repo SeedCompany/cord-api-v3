@@ -1,5 +1,5 @@
 import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsAlpha,
   IsLowercase,
@@ -9,6 +9,7 @@ import {
   Matches,
   ValidateNested,
 } from 'class-validator';
+import { uniq } from 'lodash';
 import {
   CalendarDate,
   DateField,
@@ -92,6 +93,10 @@ export abstract class UpdateLanguage {
 
   @Field({ nullable: true })
   readonly hasExternalFirstScripture?: boolean;
+
+  @Field(() => [String], { nullable: true })
+  @Transform(uniq)
+  readonly tags?: string[] = [];
 }
 
 @InputType()
