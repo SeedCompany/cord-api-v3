@@ -34,6 +34,7 @@ import { DbProjectMember } from '../project/project-member/model';
 import { DbSong } from '../song/model';
 import { DbStory } from '../story/model';
 import { DbEducation, DbUnavailability, DbUser } from '../user/model';
+import { InternalRole, Role } from './dto';
 import { Powers } from './dto/powers';
 import { MissingPowerException } from './missing-power.exception';
 import { DbRole, OneBaseNode } from './model';
@@ -307,10 +308,27 @@ export class AuthorizationService {
     return result?.id;
   }
 
-  async roleAddedToUser(id: string, roles: string[]) {
+  mapRoleToDbRoles(role: Role): InternalRole[] {
+    switch (role) {
+      case Role.FinancialAnalyst:
+        return [
+          'FinancialAnalystOnGlobalRole',
+          'FinancialAnalystOnProjectRole',
+        ];
+      case Role.ProjectManager:
+        return ['ProjectManagerGlobalRole', 'ProjectManagerOnProjectRole'];
+      case Role.RegionalDirector:
+        return ['RegionalDirectorGlobalRole', 'RegionalDirectorOnProjectRole'];
+      default:
+        return [(role + 'Role') as InternalRole];
+    }
+  }
+
+  async roleAddedToUser(id: string, roles: Role[]) {
     // todo: this only applies to global roles, the only kind we have until next week
     // iterate through all roles and assign to all SGs with that role
-    for (const role of roles) {
+
+    for (const role of roles.flatMap((role) => this.mapRoleToDbRoles(role))) {
       await this.db
         .query()
         .raw(
@@ -324,7 +342,9 @@ export class AuthorizationService {
       `
         )
         .run();
+    }
 
+    for (const role of roles) {
       // match the role to a real role object and grant powers
       const roleObj = everyRole.find((i) => i.name === role);
       if (roleObj === undefined) continue;
