@@ -1,4 +1,3 @@
-import { ServerException } from '../../../common';
 import {
   DatabaseService,
   EventsHandler,
@@ -40,12 +39,9 @@ export class ProjectStepChangedAtHandler
     } catch (e) {
       this.logger.error(`Could not update step changed at on project`, {
         userId: event.session.userId,
-        e,
+        exception: e,
       });
-      throw new ServerException(
-        'Could not update step changed at on project',
-        e
-      );
+      throw e;
     }
   }
 }
