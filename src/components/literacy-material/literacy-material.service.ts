@@ -32,6 +32,7 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { AuthorizationService } from '../authorization/authorization.service';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
   CreateLiteracyMaterial,
@@ -40,6 +41,7 @@ import {
   LiteracyMaterialListOutput,
   UpdateLiteracyMaterial,
 } from './dto';
+import { DbLiteracyMaterial } from './model';
 
 @Injectable()
 export class LiteracyMaterialService {
@@ -52,7 +54,8 @@ export class LiteracyMaterialService {
     @Logger('literacyMaterial:service') private readonly logger: ILogger,
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
-    private readonly scriptureRefService: ScriptureReferenceService
+    private readonly scriptureRefService: ScriptureReferenceService,
+    private readonly authorizationService: AuthorizationService
   ) {}
 
   @OnIndex()
@@ -115,6 +118,13 @@ export class LiteracyMaterialService {
       if (!result) {
         throw new ServerException('failed to create a literacy material');
       }
+
+      const dbLiteracyMaterial = new DbLiteracyMaterial();
+      await this.authorizationService.processNewBaseNode(
+        dbLiteracyMaterial,
+        result.id,
+        session.userId as string
+      );
 
       await this.scriptureRefService.create(
         result.id,
