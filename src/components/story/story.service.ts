@@ -31,6 +31,7 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { AuthorizationService } from '../authorization/authorization.service';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
   CreateStory,
@@ -39,6 +40,7 @@ import {
   StoryListOutput,
   UpdateStory,
 } from './dto';
+import { DbStory } from './model';
 
 @Injectable()
 export class StoryService {
@@ -51,7 +53,8 @@ export class StoryService {
     @Logger('story:service') private readonly logger: ILogger,
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
-    private readonly scriptureRefService: ScriptureReferenceService
+    private readonly scriptureRefService: ScriptureReferenceService,
+    private readonly authorizationService: AuthorizationService
   ) {}
 
   @OnIndex()
@@ -109,6 +112,13 @@ export class StoryService {
       if (!result) {
         throw new ServerException('failed to create a story');
       }
+
+      const dbStory = new DbStory();
+      await this.authorizationService.processNewBaseNode(
+        dbStory,
+        result.id,
+        session.userId as string
+      );
 
       await this.scriptureRefService.create(
         result.id,
