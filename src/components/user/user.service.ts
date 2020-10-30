@@ -7,8 +7,8 @@ import {
   generateId,
   ISession,
   NotFoundException,
+  SecuredList,
   ServerException,
-  UnauthenticatedException,
   UnauthorizedException,
 } from '../../common';
 import {
@@ -493,7 +493,7 @@ export class UserService {
       throw new NotFoundException('Could not find user', 'userId');
     }
     if (!user.canRead) {
-      throw new UnauthenticatedException('cannot read education list');
+      return SecuredList.Redacted;
     }
     const result = await this.educations.list(
       {
@@ -563,13 +563,7 @@ export class UserService {
       throw new NotFoundException('Could not find user', 'userId');
     }
     if (!user.canRead) {
-      return {
-        canRead: false,
-        canCreate: false,
-        hasMore: false,
-        total: 0,
-        items: [],
-      };
+      return SecuredList.Redacted;
     }
     const result = await this.organizations.list(
       {
@@ -639,13 +633,7 @@ export class UserService {
       throw new NotFoundException('Could not find user', 'userId');
     }
     if (!user.canRead) {
-      return {
-        canRead: false,
-        canCreate: false,
-        items: [],
-        total: 0,
-        hasMore: false,
-      };
+      return SecuredList.Redacted;
     }
     const result = await this.unavailabilities.list(
       {
