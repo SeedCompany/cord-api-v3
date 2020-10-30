@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Args, Mutation, Query } from '@nestjs/graphql';
-import { IdArg, ISession, Session } from '../../../common';
+import { AnonSession, IdArg, LoggedInSession, Session } from '../../../common';
 import {
   CreateEducationInput,
   CreateEducationOutput,
@@ -20,7 +20,7 @@ export class EducationResolver {
     description: 'Create an education entry',
   })
   async createEducation(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') { education: input }: CreateEducationInput
   ): Promise<CreateEducationOutput> {
     const education = await this.service.create(input, session);
@@ -31,7 +31,7 @@ export class EducationResolver {
     description: 'Look up an education by its ID',
   })
   async education(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @IdArg() id: string
   ): Promise<Education> {
     return await this.service.readOne(id, session);
@@ -41,7 +41,7 @@ export class EducationResolver {
     description: 'Look up educations by user id',
   })
   async educations(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Args({
       name: 'input',
       type: () => EducationListInput,
@@ -56,7 +56,7 @@ export class EducationResolver {
     description: 'Update an education',
   })
   async updateEducation(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') { education: input }: UpdateEducationInput
   ): Promise<UpdateEducationOutput> {
     const education = await this.service.update(input, session);
@@ -67,7 +67,7 @@ export class EducationResolver {
     description: 'Delete an education',
   })
   async deleteEducation(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @IdArg() id: string
   ): Promise<boolean> {
     await this.service.delete(id, session);
@@ -78,7 +78,7 @@ export class EducationResolver {
     description: 'Check Consistency across Education Nodes',
   })
   async checkEducationConsistency(
-    @Session() session: ISession
+    @AnonSession() session: Session
   ): Promise<boolean> {
     return await this.service.checkEducationConsistency(session);
   }

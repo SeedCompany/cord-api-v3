@@ -1,5 +1,5 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { IdArg, ISession, Session } from '../../../common';
+import { AnonSession, IdArg, LoggedInSession, Session } from '../../../common';
 import {
   CreateUnavailabilityInput,
   CreateUnavailabilityOutput,
@@ -19,7 +19,7 @@ export class UnavailabilityResolver {
     description: 'Look up a unavailability by its ID',
   })
   async unavailability(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @IdArg() id: string
   ): Promise<Unavailability> {
     return await this.service.readOne(id, session);
@@ -29,7 +29,7 @@ export class UnavailabilityResolver {
     description: 'Look up unavailabilities by user id',
   })
   async unavailabilities(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Args({
       name: 'input',
       type: () => UnavailabilityListInput,
@@ -44,7 +44,7 @@ export class UnavailabilityResolver {
     description: 'Create an unavailability',
   })
   async createUnavailability(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') { unavailability: input }: CreateUnavailabilityInput
   ): Promise<CreateUnavailabilityOutput> {
     const unavailability = await this.service.create(input, session);
@@ -55,7 +55,7 @@ export class UnavailabilityResolver {
     description: 'Update an unavailability',
   })
   async updateUnavailability(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') { unavailability: input }: UpdateUnavailabilityInput
   ): Promise<UpdateUnavailabilityOutput> {
     const unavailability = await this.service.update(input, session);
@@ -66,7 +66,7 @@ export class UnavailabilityResolver {
     description: 'Delete an unavailability',
   })
   async deleteUnavailability(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @IdArg() id: string
   ): Promise<boolean> {
     await this.service.delete(id, session);
@@ -77,7 +77,7 @@ export class UnavailabilityResolver {
     description: 'Check Consistency across Unavailability Nodes',
   })
   async checkUnavailabilityConsistency(
-    @Session() session: ISession
+    @AnonSession() session: Session
   ): Promise<boolean> {
     return await this.service.checkUnavailabilityConsistency(session);
   }

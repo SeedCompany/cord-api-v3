@@ -3,9 +3,9 @@ import { node } from 'cypher-query-builder';
 import {
   DuplicateException,
   generateId,
-  ISession,
   NotFoundException,
   ServerException,
+  Session,
 } from '../../common';
 import {
   ConfigService,
@@ -72,7 +72,7 @@ export class FilmService {
     ];
   }
 
-  async create(input: CreateFilm, session: ISession): Promise<Film> {
+  async create(input: CreateFilm, session: Session): Promise<Film> {
     const checkFm = await this.db
       .query()
       .match([node('film', 'FilmName', { value: input.name })])
@@ -116,7 +116,7 @@ export class FilmService {
       await this.authorizationService.processNewBaseNode(
         dbFilm,
         result.id,
-        session.userId as string
+        session.userId
       );
 
       await this.scriptureRefService.create(
@@ -136,15 +136,11 @@ export class FilmService {
     }
   }
 
-  async readOne(id: string, session: ISession): Promise<Film> {
+  async readOne(id: string, session: Session): Promise<Film> {
     this.logger.debug(`Read film`, {
       id,
       userId: session.userId,
     });
-
-    if (!session.userId) {
-      session.userId = this.config.anonUser.id;
-    }
 
     const readFilm = this.db
       .query()
@@ -183,7 +179,7 @@ export class FilmService {
     };
   }
 
-  async update(input: UpdateFilm, session: ISession): Promise<Film> {
+  async update(input: UpdateFilm, session: Session): Promise<Film> {
     await this.scriptureRefService.update(input.id, input.scriptureReferences);
 
     const film = await this.readOne(input.id, session);
@@ -196,7 +192,7 @@ export class FilmService {
     });
   }
 
-  async delete(id: string, session: ISession): Promise<void> {
+  async delete(id: string, session: Session): Promise<void> {
     const film = await this.readOne(id, session);
     try {
       await this.db.deleteNode({
@@ -214,7 +210,7 @@ export class FilmService {
 
   async list(
     { filter, ...input }: FilmListInput,
-    session: ISession
+    session: Session
   ): Promise<FilmListOutput> {
     const query = this.db
       .query()

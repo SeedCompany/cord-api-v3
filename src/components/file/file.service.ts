@@ -4,9 +4,9 @@ import {
   DuplicateException,
   generateId,
   InputException,
-  ISession,
   NotFoundException,
   ServerException,
+  Session,
   UnauthorizedException,
 } from '../../common';
 import { ILogger, Logger } from '../../core';
@@ -50,7 +50,7 @@ export class FileService {
     private readonly authorizationService: AuthorizationService
   ) {}
 
-  async getDirectory(id: string, session: ISession): Promise<Directory> {
+  async getDirectory(id: string, session: Session): Promise<Directory> {
     const node = await this.getFileNode(id, session);
     if (!isDirectory(node)) {
       throw new InputException('Node is not a directory');
@@ -58,7 +58,7 @@ export class FileService {
     return node;
   }
 
-  async getFile(id: string, session: ISession): Promise<File> {
+  async getFile(id: string, session: Session): Promise<File> {
     const node = await this.getFileNode(id, session);
     if (!isFile(node)) {
       throw new InputException('Node is not a file');
@@ -66,7 +66,7 @@ export class FileService {
     return node;
   }
 
-  async getFileVersion(id: string, session: ISession): Promise<FileVersion> {
+  async getFileVersion(id: string, session: Session): Promise<FileVersion> {
     const node = await this.getFileNode(id, session);
     if (!isFileVersion(node)) {
       throw new InputException('Node is not a file version');
@@ -74,7 +74,7 @@ export class FileService {
     return node;
   }
 
-  async getFileNode(id: string, session: ISession): Promise<FileNode> {
+  async getFileNode(id: string, session: Session): Promise<FileNode> {
     this.logger.debug(`getNode`, { id, userId: session.userId });
 
     const base = await this.repo.getBaseNodeById(id, session);
@@ -83,7 +83,7 @@ export class FileService {
 
   private async adaptBaseNodeToFileNode(
     node: BaseNode,
-    session: ISession
+    session: Session
   ): Promise<FileNode> {
     if (node.type === FileNodeType.Directory) {
       return {
@@ -126,7 +126,7 @@ export class FileService {
 
   async getParents(
     nodeId: string,
-    session: ISession
+    session: Session
   ): Promise<readonly FileNode[]> {
     const parents = await this.repo.getParentsById(nodeId, session);
     return await Promise.all(
@@ -137,7 +137,7 @@ export class FileService {
   async listChildren(
     parentId: string,
     input: FileListInput | undefined,
-    session: ISession
+    session: Session
   ): Promise<FileListOutput> {
     const result = await this.repo.getChildrenById(session, parentId, input);
     const items = (
@@ -165,7 +165,7 @@ export class FileService {
   async createDirectory(
     parentId: string | undefined,
     name: string,
-    session: ISession
+    session: Session
   ): Promise<Directory> {
     if (parentId) {
       // Enforce parent exists and is a directory
@@ -196,7 +196,7 @@ export class FileService {
       await this.authorizationService.processNewBaseNode(
         dbDirectory,
         id,
-        session.userId as string
+        session.userId
       );
     }
 
@@ -218,7 +218,7 @@ export class FileService {
    */
   async createFileVersion(
     { parentId, uploadId, name }: CreateFileVersionInput,
-    session: ISession
+    session: Session
   ): Promise<File> {
     const [tempUpload, existingUpload] = await Promise.allSettled([
       this.bucket.headObject(`temp/${uploadId}`),
@@ -300,7 +300,7 @@ export class FileService {
     await this.authorizationService.processNewBaseNode(
       new DbFileVersion(),
       uploadId,
-      session.userId!
+      session.userId
     );
 
     // Skip S3 move if it's not needed
@@ -311,7 +311,7 @@ export class FileService {
     return await this.getFile(fileId, session);
   }
 
-  private async getParentNode(id: string, session: ISession) {
+  private async getParentNode(id: string, session: Session) {
     try {
       return await this.repo.getBaseNodeById(id, session);
     } catch (e) {
@@ -325,7 +325,7 @@ export class FileService {
   private async getOrCreateFileByName(
     parentId: string,
     name: string,
-    session: ISession
+    session: Session
   ) {
     try {
       const node = await this.repo.getBaseNodeByName(parentId, name, session);
@@ -347,7 +347,7 @@ export class FileService {
     await this.authorizationService.processNewBaseNode(
       new DbFile(),
       fileId,
-      session.userId!
+      session.userId
     );
 
     this.logger.debug(
@@ -364,7 +364,7 @@ export class FileService {
   async createDefinedFile(
     fileId: string,
     name: string,
-    session: ISession,
+    session: Session,
     baseNodeId: string,
     propertyName: string,
     initialVersion?: CreateDefinedFileVersionInput,
@@ -377,7 +377,7 @@ export class FileService {
     await this.authorizationService.processNewBaseNode(
       new DbFile(),
       fileId,
-      session.userId!
+      session.userId
     );
 
     if (initialVersion) {
@@ -403,7 +403,7 @@ export class FileService {
     file: DefinedFile,
     field: string,
     input: CreateDefinedFileVersionInput | undefined,
-    session: ISession
+    session: Session
   ) {
     if (!input) {
       return;
@@ -434,7 +434,7 @@ export class FileService {
 
   async resolveDefinedFile(
     input: DefinedFile,
-    session: ISession
+    session: Session
   ): Promise<SecuredFile> {
     const { value: fileId, ...rest } = input;
     if (!rest.canRead || !fileId) {
@@ -456,12 +456,12 @@ export class FileService {
     }
   }
 
-  async rename(input: RenameFileInput, session: ISession): Promise<void> {
+  async rename(input: RenameFileInput, session: Session): Promise<void> {
     const fileNode = await this.repo.getBaseNodeById(input.id, session);
     await this.repo.rename(fileNode, input.name, session);
   }
 
-  async move(input: MoveFileInput, session: ISession): Promise<FileNode> {
+  async move(input: MoveFileInput, session: Session): Promise<FileNode> {
     const fileNode = await this.repo.getBaseNodeById(input.id, session);
 
     if (input.name) {
@@ -473,12 +473,12 @@ export class FileService {
     return await this.getFileNode(input.id, session);
   }
 
-  async delete(id: string, session: ISession): Promise<void> {
+  async delete(id: string, session: Session): Promise<void> {
     const fileNode = await this.repo.getBaseNodeById(id, session);
     await this.repo.delete(fileNode, session);
   }
 
-  async checkConsistency(type: FileNodeType, session: ISession): Promise<void> {
+  async checkConsistency(type: FileNodeType, session: Session): Promise<void> {
     return await this.repo.checkConsistency(type, session);
   }
 }

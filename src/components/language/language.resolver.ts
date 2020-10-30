@@ -9,10 +9,11 @@ import {
 } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import {
+  AnonSession,
   firstLettersOfWords,
   IdArg,
   IdField,
-  ISession,
+  LoggedInSession,
   SecuredDate,
   SecuredInt,
   Session,
@@ -47,7 +48,7 @@ export class LanguageResolver {
     description: 'Look up a language by its ID',
   })
   async language(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @IdArg() id: string
   ): Promise<Language> {
     return await this.langService.readOne(id, session);
@@ -82,7 +83,7 @@ export class LanguageResolver {
 
   @ResolveField(() => SecuredLocationList)
   async locations(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Parent() language: Language,
     @Args({
       name: 'input',
@@ -98,7 +99,7 @@ export class LanguageResolver {
     description: 'The earliest start date from its engagements.',
   })
   async sponsorStartDate(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Parent() language: Language
   ): Promise<SecuredDate> {
     return await this.langService.sponsorStartDate(language, session);
@@ -108,7 +109,7 @@ export class LanguageResolver {
     description: 'The list of projects the language is engagement in.',
   })
   async projects(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Parent() language: Language,
     @Args({
       name: 'input',
@@ -124,7 +125,7 @@ export class LanguageResolver {
     description: 'Look up languages',
   })
   async languages(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Args({
       name: 'input',
       type: () => LanguageListInput,
@@ -139,7 +140,7 @@ export class LanguageResolver {
     description: 'Create a language',
   })
   async createLanguage(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') { language: input }: CreateLanguageInput
   ): Promise<CreateLanguageOutput> {
     const language = await this.langService.create(input, session);
@@ -150,7 +151,7 @@ export class LanguageResolver {
     description: 'Update a language',
   })
   async updateLanguage(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') { language: input }: UpdateLanguageInput
   ): Promise<UpdateLanguageOutput> {
     const language = await this.langService.update(input, session);
@@ -161,7 +162,7 @@ export class LanguageResolver {
     description: 'Delete a language',
   })
   async deleteLanguage(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @IdArg() id: string
   ): Promise<boolean> {
     await this.langService.delete(id, session);
@@ -172,7 +173,7 @@ export class LanguageResolver {
     description: 'Add a location to a language',
   })
   async addLocationToLanguage(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args() { languageId, locationId }: ModifyLocationArgs
   ): Promise<Language> {
     await this.langService.addLocation(languageId, locationId, session);
@@ -183,7 +184,7 @@ export class LanguageResolver {
     description: 'Remove a location from a language',
   })
   async removeLocationFromLanguage(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args() { languageId, locationId }: ModifyLocationArgs
   ): Promise<Language> {
     await this.langService.removeLocation(languageId, locationId, session);
@@ -194,7 +195,7 @@ export class LanguageResolver {
     description: 'Check language node consistency',
   })
   async checkLanguageConsistency(
-    @Session() session: ISession
+    @AnonSession() session: Session
   ): Promise<boolean> {
     return await this.langService.checkLanguageConsistency(session);
   }

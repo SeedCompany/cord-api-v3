@@ -44,7 +44,7 @@ export class AttachProjectRootDirectoryHandler
     await this.authorizationService.processNewBaseNode(
       dbDirectory,
       rootDir.id,
-      session.userId!
+      session.userId
     );
   }
 }

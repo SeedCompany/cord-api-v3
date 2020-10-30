@@ -5,7 +5,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { ISession, Session } from '../../common';
+import { AnonSession, LoggedInSession, Session } from '../../common';
 import { OrganizationService } from '../organization';
 import { SecuredOrganization } from '../organization/dto';
 import { BudgetService } from './budget.service';
@@ -24,7 +24,7 @@ export class BudgetRecordResolver {
 
   @ResolveField(() => SecuredOrganization)
   async organization(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Parent() record: BudgetRecord
   ): Promise<SecuredOrganization> {
     const id = record.organization.value;
@@ -41,7 +41,7 @@ export class BudgetRecordResolver {
     description: 'Update a budgetRecord',
   })
   async updateBudgetRecord(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') { budgetRecord: input }: UpdateBudgetRecordInput
   ): Promise<UpdateBudgetRecordOutput> {
     const budgetRecord = await this.service.updateRecord(input, session);

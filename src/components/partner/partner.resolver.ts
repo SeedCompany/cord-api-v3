@@ -6,7 +6,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { IdArg, ISession, Session } from '../../common';
+import { AnonSession, IdArg, LoggedInSession, Session } from '../../common';
 import { OrganizationService, SecuredOrganization } from '../organization';
 import { SecuredUser, UserService } from '../user';
 import {
@@ -32,7 +32,7 @@ export class PartnerResolver {
     description: 'Look up a partner by its ID',
   })
   async partner(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @IdArg() id: string
   ): Promise<Partner> {
     return await this.partnerService.readOne(id, session);
@@ -42,7 +42,7 @@ export class PartnerResolver {
     description: 'Look up partners',
   })
   async partners(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Args({
       name: 'input',
       type: () => PartnerListInput,
@@ -56,7 +56,7 @@ export class PartnerResolver {
   @ResolveField(() => SecuredOrganization)
   async organization(
     @Parent() partner: Partner,
-    @Session() session: ISession
+    @AnonSession() session: Session
   ): Promise<SecuredOrganization> {
     const { value: id, ...rest } = partner.organization;
     const value = id ? await this.orgService.readOne(id, session) : undefined;
@@ -69,7 +69,7 @@ export class PartnerResolver {
   @ResolveField(() => SecuredUser)
   async pointOfContact(
     @Parent() partner: Partner,
-    @Session() session: ISession
+    @AnonSession() session: Session
   ): Promise<SecuredUser> {
     const { value: id, ...rest } = partner.pointOfContact;
     const value = id ? await this.userService.readOne(id, session) : undefined;
@@ -83,7 +83,7 @@ export class PartnerResolver {
     description: 'Create a partner',
   })
   async createPartner(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') { partner: input }: CreatePartnerInput
   ): Promise<CreatePartnerOutput> {
     const partner = await this.partnerService.create(input, session);
@@ -94,7 +94,7 @@ export class PartnerResolver {
     description: 'Update a partner',
   })
   async updatePartner(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') { partner: input }: UpdatePartnerInput
   ): Promise<UpdatePartnerOutput> {
     const partner = await this.partnerService.update(input, session);
@@ -105,7 +105,7 @@ export class PartnerResolver {
     description: 'Delete a partner',
   })
   async deletePartner(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @IdArg() id: string
   ): Promise<boolean> {
     await this.partnerService.delete(id, session);

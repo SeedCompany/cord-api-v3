@@ -3,9 +3,9 @@ import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   generateId,
-  ISession,
   NotFoundException,
   ServerException,
+  Session,
 } from '../../../common';
 import {
   ConfigService,
@@ -59,7 +59,7 @@ export class EducationService {
 
   async create(
     { userId, ...input }: CreateEducation,
-    session: ISession
+    session: Session
   ): Promise<Education> {
     const createdAt = DateTime.local();
 
@@ -117,15 +117,11 @@ export class EducationService {
     return await this.readOne(result.id, session);
   }
 
-  async readOne(id: string, session: ISession): Promise<Education> {
+  async readOne(id: string, session: Session): Promise<Education> {
     this.logger.debug(`Read Education`, {
       id: id,
       userId: session.userId,
     });
-
-    if (!session.userId) {
-      session.userId = this.config.anonUser.id;
-    }
 
     const query = this.db
       .query()
@@ -155,7 +151,7 @@ export class EducationService {
     };
   }
 
-  async update(input: UpdateEducation, session: ISession): Promise<Education> {
+  async update(input: UpdateEducation, session: Session): Promise<Education> {
     const ed = await this.readOne(input.id, session);
 
     return await this.db.sgUpdateProperties({
@@ -167,13 +163,13 @@ export class EducationService {
     });
   }
 
-  async delete(_id: string, _session: ISession): Promise<void> {
+  async delete(_id: string, _session: Session): Promise<void> {
     // Not Implemented
   }
 
   async list(
     { filter, ...input }: EducationListInput,
-    session: ISession
+    session: Session
   ): Promise<EducationListOutput> {
     const label = 'Education';
 
@@ -201,7 +197,7 @@ export class EducationService {
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 
-  async checkEducationConsistency(session: ISession): Promise<boolean> {
+  async checkEducationConsistency(session: Session): Promise<boolean> {
     const educations = await this.db
       .query()
       .match([matchSession(session), [node('education', 'Education')]])

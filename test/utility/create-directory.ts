@@ -1,6 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { startCase } from 'lodash';
+import { loggedInSession } from '../../src/common/session';
 import { AuthenticationService } from '../../src/components/authentication';
 import { FileService } from '../../src/components/file';
 import { TestApp } from './create-app';
@@ -8,9 +9,10 @@ import { fileNode, RawDirectory } from './fragments';
 
 export async function createRootDirectory(app: TestApp, name?: string) {
   name = name ?? startCase(faker.lorem.words());
-  const session = await app
+  const rawSession = await app
     .get(AuthenticationService)
     .createSession(app.graphql.authToken);
+  const session = loggedInSession(rawSession);
   const actual = await app
     .get(FileService)
     .createDirectory(undefined, name, session);

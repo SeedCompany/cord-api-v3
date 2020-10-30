@@ -2,12 +2,7 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { union, without } from 'lodash';
-import {
-  generateId,
-  ISession,
-  ServerException,
-  UnauthenticatedException,
-} from '../../common';
+import { generateId, ServerException, Session } from '../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import { DbBudget } from '../budget/model';
 import { DbBudgetRecord } from '../budget/model/budget-record.model.db';
@@ -99,8 +94,8 @@ export class AuthorizationService {
     return true;
   }
 
-  async createSGsForEveryRoleForAllBaseNodes(session: ISession) {
-    this.logger.info('begining to create/merge SGs for all base nodes');
+  async createSGsForEveryRoleForAllBaseNodes(session: Session) {
+    this.logger.info('beginning to create/merge SGs for all base nodes');
     if (session.userId !== this.config.rootAdmin.id) {
       return true;
     }
@@ -334,7 +329,7 @@ export class AuthorizationService {
         .raw(
           `
           call apoc.periodic.iterate(
-            "MATCH (u:User {id:'${id}'}), (sg:SecurityGroup {role:'${role}'}) 
+            "MATCH (u:User {id:'${id}'}), (sg:SecurityGroup {role:'${role}'})
             WHERE NOT (u)<-[:member]-(sg)
             RETURN u, sg",
             "MERGE (u)<-[:member]-(sg)", {batchSize:1000})
@@ -354,62 +349,48 @@ export class AuthorizationService {
     }
   }
 
-  async checkPower(power: Powers, id?: string): Promise<boolean> {
-    // if no id is given we check the public sg for public powers
-    let hasPower = false;
+  async checkPower(power: Powers, session: Session): Promise<void> {
+    const id = session.userId;
 
-    if (id === undefined) {
-      const result = await this.db
-        .query()
-        .match([
-          node('sg', 'PublicSecurityGroup', {
-            id: this.config.publicSecurityGroup.id,
-          }),
-        ])
-        .raw(`where '${power}' IN sg.powers`)
-        .raw(`return "${power}" IN sg.powers as hasPower`)
-        .union()
-        .match([
-          node('user', 'User', {
-            id: this.config.anonUser.id,
-          }),
-        ])
-        .raw(`where '${power}' IN user.powers`)
-        .raw(`return "${power}" IN user.powers as hasPower`)
-        .first();
-      hasPower = result?.hasPower ?? false;
-    } else {
-      const query = this.db
-        .query()
-        .match([
-          node('user', 'User', { id }),
-          relation('in', '', 'member'),
-          node('sg', 'SecurityGroup'),
-        ])
-        .raw(`where '${power}' IN sg.powers`)
-        .raw(`return "${power}" IN sg.powers as hasPower`)
-        .union()
-        .match([node('user', 'User', { id })])
-        .raw(`where '${power}' IN user.powers`)
-        .raw(`return "${power}" IN user.powers as hasPower`);
+    const query = this.db
+      .query()
+      .match(
+        // if anonymous we check the public sg for public powers
+        session.anonymous
+          ? [
+              node('user', 'User', { id }),
+              relation('in', '', 'member'),
+              node('sg', 'SecurityGroup'),
+            ]
+          : [
+              node('sg', 'PublicSecurityGroup', {
+                id: this.config.publicSecurityGroup.id,
+              }),
+            ]
+      )
+      .raw('where $power IN sg.powers', { power })
+      .raw('return $power IN sg.powers as hasPower')
+      .union()
+      .match([node('user', 'User', { id })])
+      .raw('where $power IN user.powers')
+      .raw('return $power IN user.powers as hasPower')
+      .asResult<{ hasPower: boolean }>();
 
-      const result = await query.first();
-
-      hasPower = result?.hasPower ?? false;
-    }
+    const result = await query.first();
+    const hasPower = result?.hasPower ?? false;
 
     if (!hasPower) {
       throw new MissingPowerException(
         power,
-        `user ${id ? id : 'anon'} does not have the requested power: ${power}`
+        `user ${
+          session.anonymous ? id : 'anon'
+        } does not have the requested power: ${power}`
       );
     }
-
-    return hasPower;
   }
 
-  async readPower(session: ISession): Promise<Powers[]> {
-    if (!session.userId) {
+  async readPower(session: Session): Promise<Powers[]> {
+    if (session.anonymous) {
       return [];
     }
     return await this.readPowerByUserId(session.userId);
@@ -418,12 +399,8 @@ export class AuthorizationService {
   async createPower(
     userId: string,
     power: Powers,
-    session: ISession
+    session: Session
   ): Promise<void> {
-    if (!session.userId) {
-      throw new UnauthenticatedException('user not logged in');
-    }
-
     const requestingUserPowers = await this.readPowerByUserId(session.userId);
     if (!requestingUserPowers.includes(Powers.GrantPower)) {
       throw new MissingPowerException(
@@ -438,12 +415,8 @@ export class AuthorizationService {
   async deletePower(
     userId: string,
     power: Powers,
-    session: ISession
+    session: Session
   ): Promise<void> {
-    if (!session.userId) {
-      throw new UnauthenticatedException('user not logged in');
-    }
-
     const requestingUserPowers = await this.readPowerByUserId(session.userId);
     if (!requestingUserPowers.includes(Powers.GrantPower)) {
       throw new MissingPowerException(

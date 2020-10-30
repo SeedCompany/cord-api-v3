@@ -1,5 +1,5 @@
 import { Args, Query, Resolver } from '@nestjs/graphql';
-import { ISession, Session } from '../../common';
+import { AnonSession, Session } from '../../common';
 import { SearchInput, SearchOutput } from './dto';
 import { SearchService } from './search.service';
 
@@ -11,7 +11,7 @@ export class SearchResolver {
     description: 'Perform a search across resources',
   })
   async search(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Args({
       name: 'input',
       type: () => SearchInput,

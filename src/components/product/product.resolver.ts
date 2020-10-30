@@ -6,7 +6,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { IdArg, ISession, Session } from '../../common';
+import { AnonSession, IdArg, LoggedInSession, Session } from '../../common';
 import {
   AnyProduct,
   CreateProductInput,
@@ -31,7 +31,7 @@ export class ProductResolver {
     description: 'Read a product by id',
   })
   async product(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @IdArg() id: string
   ): Promise<AnyProduct> {
     return await this.productService.readOne(id, session);
@@ -41,7 +41,7 @@ export class ProductResolver {
     description: 'Look up products',
   })
   async products(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Args({
       name: 'input',
       type: () => ProductListInput,
@@ -84,7 +84,7 @@ export class ProductResolver {
     description: 'Create a product entry',
   })
   async createProduct(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') { product: input }: CreateProductInput
   ): Promise<CreateProductOutput> {
     return {
@@ -96,7 +96,7 @@ export class ProductResolver {
     description: 'Update a product entry',
   })
   async updateProduct(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') { product: input }: UpdateProductInput
   ): Promise<UpdateProductOutput> {
     const product = await this.productService.update(input, session);
@@ -107,7 +107,7 @@ export class ProductResolver {
     description: 'Delete a product entry',
   })
   async deleteProduct(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @IdArg() id: string
   ): Promise<boolean> {
     await this.productService.delete(id, session);

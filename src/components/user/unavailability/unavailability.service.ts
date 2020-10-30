@@ -2,9 +2,9 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
 import {
   generateId,
-  ISession,
   NotFoundException,
   ServerException,
+  Session,
 } from '../../../common';
 import {
   ConfigService,
@@ -44,7 +44,7 @@ export class UnavailabilityService {
 
   async create(
     { userId, ...input }: CreateUnavailability,
-    session: ISession
+    session: Session
   ): Promise<Unavailability> {
     const secureProps = [
       {
@@ -134,10 +134,7 @@ export class UnavailabilityService {
     }
   }
 
-  async readOne(id: string, session: ISession): Promise<Unavailability> {
-    if (!session.userId) {
-      session.userId = this.config.anonUser.id;
-    }
+  async readOne(id: string, session: Session): Promise<Unavailability> {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
@@ -171,7 +168,7 @@ export class UnavailabilityService {
 
   async update(
     input: UpdateUnavailability,
-    session: ISession
+    session: Session
   ): Promise<Unavailability> {
     const unavailability = await this.readOne(input.id, session);
 
@@ -184,7 +181,7 @@ export class UnavailabilityService {
     });
   }
 
-  async delete(id: string, session: ISession): Promise<void> {
+  async delete(id: string, session: Session): Promise<void> {
     this.logger.debug(`mutation delete unavailability`);
     const ua = await this.readOne(id, session);
     if (!ua) {
@@ -202,7 +199,7 @@ export class UnavailabilityService {
 
   async list(
     { page, count, sort, order, filter }: UnavailabilityListInput,
-    session: ISession
+    session: Session
   ): Promise<UnavailabilityListOutput> {
     const result = await this.db.list<Unavailability>({
       session,
@@ -225,7 +222,7 @@ export class UnavailabilityService {
       total: result.total,
     };
   }
-  async checkUnavailabilityConsistency(session: ISession): Promise<boolean> {
+  async checkUnavailabilityConsistency(session: Session): Promise<boolean> {
     const unavailabilities = await this.db
       .query()
       .match([

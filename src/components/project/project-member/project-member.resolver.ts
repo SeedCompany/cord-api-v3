@@ -1,5 +1,5 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { IdArg, ISession, Session } from '../../../common';
+import { AnonSession, IdArg, LoggedInSession, Session } from '../../../common';
 import {
   CreateProjectMemberInput,
   CreateProjectMemberOutput,
@@ -19,7 +19,7 @@ export class ProjectMemberResolver {
     description: 'Create a project member',
   })
   async createProjectMember(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') { projectMember: input }: CreateProjectMemberInput
   ): Promise<CreateProjectMemberOutput> {
     const projectMember = await this.service.create(input, session);
@@ -30,7 +30,7 @@ export class ProjectMemberResolver {
     description: 'Look up a project member by ID',
   })
   async projectMember(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @IdArg() id: string
   ): Promise<ProjectMember> {
     return await this.service.readOne(id, session);
@@ -40,7 +40,7 @@ export class ProjectMemberResolver {
     description: 'Look up project members',
   })
   async projectMembers(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Args({
       name: 'input',
       type: () => ProjectMemberListInput,
@@ -55,7 +55,7 @@ export class ProjectMemberResolver {
     description: 'Update a project member',
   })
   async updateProjectMember(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') { projectMember: input }: UpdateProjectMemberInput
   ): Promise<UpdateProjectMemberOutput> {
     const projectMember = await this.service.update(input, session);
@@ -66,7 +66,7 @@ export class ProjectMemberResolver {
     description: 'Delete a project member',
   })
   async deleteProjectMember(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @IdArg() id: string
   ): Promise<boolean> {
     await this.service.delete(id, session);

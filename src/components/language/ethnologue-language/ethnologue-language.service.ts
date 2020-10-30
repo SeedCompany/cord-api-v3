@@ -3,9 +3,9 @@ import { node, relation } from 'cypher-query-builder';
 import { pickBy } from 'lodash';
 import {
   generateId,
-  ISession,
   NotFoundException,
   ServerException,
+  Session,
 } from '../../../common';
 import {
   ConfigService,
@@ -43,7 +43,7 @@ export class EthnologueLanguageService {
 
   async create(
     input: CreateEthnologueLanguage,
-    session: ISession
+    session: Session
   ): Promise<string> {
     const secureProps: Property[] = [
       {
@@ -99,7 +99,7 @@ export class EthnologueLanguageService {
     await this.authorizationService.processNewBaseNode(
       dbEthnologueLanguage,
       result.id,
-      session.userId as string
+      session.userId
     );
 
     const id = result.id;
@@ -109,11 +109,7 @@ export class EthnologueLanguageService {
     return id;
   }
 
-  async readOne(id: string, session: ISession): Promise<EthnologueLanguage> {
-    if (!session.userId) {
-      session.userId = this.config.anonUser.id;
-    }
-
+  async readOne(id: string, session: Session): Promise<EthnologueLanguage> {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
@@ -157,7 +153,7 @@ export class EthnologueLanguageService {
     };
   }
 
-  async update(id: string, input: UpdateEthnologueLanguage, session: ISession) {
+  async update(id: string, input: UpdateEthnologueLanguage, session: Session) {
     if (!input) return;
 
     // Make a mapping of the fields that we want to set in the db to the inputs

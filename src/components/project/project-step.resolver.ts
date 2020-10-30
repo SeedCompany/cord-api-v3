@@ -1,5 +1,5 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { ISession, ServerException, Session } from '../../common';
+import { AnonSession, ServerException, Session } from '../../common';
 import { ProjectStepTransition, SecuredProjectStep } from './dto';
 import { ProjectRules } from './project.rules';
 
@@ -12,7 +12,7 @@ export class ProjectStepResolver {
   })
   async transitions(
     @Parent() step: SecuredProjectStep & { projectId?: string },
-    @Session() session: ISession
+    @AnonSession() session: Session
   ): Promise<ProjectStepTransition[]> {
     if (!step.projectId) {
       throw new ServerException(
@@ -24,7 +24,7 @@ export class ProjectStepResolver {
     }
     return await this.projectRules.getAvailableTransitions(
       step.projectId,
-      session.userId
+      session
     );
   }
 }

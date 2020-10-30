@@ -6,7 +6,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { IdArg, ISession, Session } from '../../common';
+import { AnonSession, IdArg, LoggedInSession, Session } from '../../common';
 import { FileService, SecuredFile } from '../file';
 import { SecuredPartner } from '../partner/dto';
 import { PartnerService } from '../partner/partner.service';
@@ -33,7 +33,7 @@ export class PartnershipResolver {
     description: 'Create a Partnership entry',
   })
   async createPartnership(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') { partnership: input }: CreatePartnershipInput
   ): Promise<CreatePartnershipOutput> {
     const partnership = await this.service.create(input, session);
@@ -44,7 +44,7 @@ export class PartnershipResolver {
     description: 'Look up a partnership by ID',
   })
   async partnership(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @IdArg() id: string
   ): Promise<Partnership> {
     return await this.service.readOne(id, session);
@@ -55,7 +55,7 @@ export class PartnershipResolver {
   })
   async mou(
     @Parent() partnership: Partnership,
-    @Session() session: ISession
+    @AnonSession() session: Session
   ): Promise<SecuredFile> {
     return await this.files.resolveDefinedFile(partnership.mou, session);
   }
@@ -65,7 +65,7 @@ export class PartnershipResolver {
   })
   async agreement(
     @Parent() partnership: Partnership,
-    @Session() session: ISession
+    @AnonSession() session: Session
   ): Promise<SecuredFile> {
     return await this.files.resolveDefinedFile(partnership.agreement, session);
   }
@@ -74,7 +74,7 @@ export class PartnershipResolver {
   async partner(
     @Parent()
     partnership: Partnership,
-    @Session() session: ISession
+    @AnonSession() session: Session
   ): Promise<SecuredPartner> {
     const { value: id, ...rest } = partnership.partner;
     const value = id ? await this.partners.readOne(id, session) : undefined;
@@ -88,7 +88,7 @@ export class PartnershipResolver {
     description: 'Look up partnerships',
   })
   async partnerships(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Args({
       name: 'input',
       type: () => PartnershipListInput,
@@ -103,7 +103,7 @@ export class PartnershipResolver {
     description: 'Update a Partnership',
   })
   async updatePartnership(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') { partnership: input }: UpdatePartnershipInput
   ): Promise<UpdatePartnershipOutput> {
     const partnership = await this.service.update(input, session);
@@ -114,7 +114,7 @@ export class PartnershipResolver {
     description: 'Delete a Partnership',
   })
   async deletePartnership(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @IdArg() id: string
   ): Promise<boolean> {
     await this.service.delete(id, session);
@@ -125,7 +125,7 @@ export class PartnershipResolver {
     description: 'Check partnership node consistency',
   })
   async checkPartnershipConsistency(
-    @Session() session: ISession
+    @LoggedInSession() session: Session
   ): Promise<boolean> {
     return await this.service.checkPartnershipConsistency(session);
   }

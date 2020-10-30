@@ -6,9 +6,9 @@ import {
   DuplicateException,
   generateId,
   InputException,
-  ISession,
   NotFoundException,
   ServerException,
+  Session,
 } from '../../common';
 import {
   ConfigService,
@@ -86,7 +86,7 @@ export class PartnershipService {
 
   async create(
     { partnerId, projectId, ...input }: CreatePartnership,
-    session: ISession
+    session: Session
   ): Promise<Partnership> {
     const createdAt = DateTime.local();
 
@@ -257,7 +257,7 @@ export class PartnershipService {
       await this.authorizationService.processNewBaseNode(
         new DbPartnership(),
         result.id,
-        session.userId!
+        session.userId
       );
 
       const partnership = await this.readOne(result.id, session);
@@ -276,13 +276,8 @@ export class PartnershipService {
     }
   }
 
-  async readOne(id: string, session: ISession): Promise<Partnership> {
+  async readOne(id: string, session: Session): Promise<Partnership> {
     this.logger.debug('readOne', { id, userId: session.userId });
-
-    if (!session.userId) {
-      this.logger.debug('using anon user id');
-      session.userId = this.config.anonUser.id;
-    }
 
     const query = this.db
       .query()
@@ -366,7 +361,7 @@ export class PartnershipService {
     };
   }
 
-  async update(input: UpdatePartnership, session: ISession) {
+  async update(input: UpdatePartnership, session: Session) {
     // mou start and end are now computed fields and do not get updated directly
     const object = await this.readOne(input.id, session);
     let changes = input;
@@ -438,7 +433,7 @@ export class PartnershipService {
     return event.updated;
   }
 
-  async delete(id: string, session: ISession): Promise<void> {
+  async delete(id: string, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
     if (!object) {
@@ -469,7 +464,7 @@ export class PartnershipService {
 
   async list(
     input: Partial<PartnershipListInput>,
-    session: ISession
+    session: Session
   ): Promise<PartnershipListOutput> {
     const { filter, ...listInput } = {
       ...PartnershipListInput.defaultVal,
@@ -504,7 +499,7 @@ export class PartnershipService {
     );
   }
 
-  async checkPartnershipConsistency(session: ISession): Promise<boolean> {
+  async checkPartnershipConsistency(session: Session): Promise<boolean> {
     const partnerships = await this.db
       .query()
       .match([matchSession(session), [node('partnership', 'Partnership')]])

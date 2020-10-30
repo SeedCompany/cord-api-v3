@@ -4,9 +4,9 @@ import { DateTime } from 'luxon';
 import {
   DuplicateException,
   generateId,
-  ISession,
   NotFoundException,
   ServerException,
+  Session,
 } from '../../common';
 import {
   ConfigService,
@@ -78,7 +78,7 @@ export class FieldRegionService {
 
   async create(
     { fieldZoneId, directorId, ...input }: CreateFieldRegion,
-    session: ISession
+    session: Session
   ): Promise<FieldRegion> {
     const checkName = await this.db
       .query()
@@ -142,22 +142,18 @@ export class FieldRegionService {
     await this.authorizationService.processNewBaseNode(
       dbFieldRegion,
       result.id,
-      session.userId as string
+      session.userId
     );
 
     this.logger.debug(`field region created`, { id: result.id });
     return await this.readOne(result.id, session);
   }
 
-  async readOne(id: string, session: ISession): Promise<FieldRegion> {
+  async readOne(id: string, session: Session): Promise<FieldRegion> {
     this.logger.debug(`Read Field Region`, {
       id: id,
       userId: session.userId,
     });
-
-    if (!session.userId) {
-      session.userId = this.config.anonUser.id;
-    }
 
     const query = this.db
       .query()
@@ -217,7 +213,7 @@ export class FieldRegionService {
 
   async update(
     input: UpdateFieldRegion,
-    session: ISession
+    session: Session
   ): Promise<FieldRegion> {
     const fieldRegion = await this.readOne(input.id, session);
 
@@ -234,13 +230,13 @@ export class FieldRegionService {
     return await this.readOne(input.id, session);
   }
 
-  async delete(_id: string, _session: ISession): Promise<void> {
+  async delete(_id: string, _session: Session): Promise<void> {
     // Not Implemented
   }
 
   async list(
     { filter, ...input }: FieldRegionListInput,
-    session: ISession
+    session: Session
   ): Promise<FieldRegionListOutput> {
     const label = 'FieldRegion';
     const query = this.db
