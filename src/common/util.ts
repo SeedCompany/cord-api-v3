@@ -9,16 +9,21 @@ export const maybeMany = <T>(
   item: Many<T> | null | undefined
 ): readonly T[] | undefined => (item != null ? many(item) : undefined);
 
-export const sleep = (durationOrMs: number | Duration | DurationObject) => {
+export type MsDurationInput = number | Duration | DurationObject;
+export const parseMilliseconds = (durationOrMs: MsDurationInput) => {
   const duration =
     durationOrMs instanceof Duration
       ? durationOrMs
       : Duration.fromObject(
           isNumber(durationOrMs) ? { milliseconds: durationOrMs } : durationOrMs
         );
-  const milliseconds = duration.as('milliseconds');
-  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+  return duration.as('milliseconds');
 };
+
+export const sleep = (durationOrMs: MsDurationInput) =>
+  new Promise((resolve) =>
+    setTimeout(resolve, parseMilliseconds(durationOrMs))
+  );
 
 export const simpleSwitch = <T>(
   key: string,
