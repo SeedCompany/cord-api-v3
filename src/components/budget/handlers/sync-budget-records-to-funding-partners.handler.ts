@@ -80,6 +80,11 @@ export class SyncBudgetRecordsToFundingPartners
     );
     const budget = readSecured(projectsCurrentBudget, 'budget');
 
+    if (!budget) {
+      this.logger.debug('Budget is empty, skipping sync');
+      return;
+    }
+
     if (budget.status !== BudgetStatus.Pending) {
       this.logger.debug('Budget is not pending, skipping sync', budget);
       return;
