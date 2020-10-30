@@ -79,8 +79,7 @@ export class SyncBudgetRecordsToFundingPartners
       event.session
     );
     const budget = readSecured(projectsCurrentBudget, 'budget');
-
-    if (budget.status !== BudgetStatus.Pending) {
+    if (budget?.status !== BudgetStatus.Pending) {
       this.logger.debug('Budget is not pending, skipping sync', budget);
       return;
     }
