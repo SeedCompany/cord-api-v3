@@ -60,7 +60,7 @@ export abstract class UpdateProject {
 
   @Field(() => [String], { nullable: true })
   @Transform(uniq)
-  readonly tags?: string[] = [];
+  readonly tags?: string[];
 }
 
 @InputType()

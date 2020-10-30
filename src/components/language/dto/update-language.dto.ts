@@ -96,7 +96,7 @@ export abstract class UpdateLanguage {
 
   @Field(() => [String], { nullable: true })
   @Transform(uniq)
-  readonly tags?: string[] = [];
+  readonly tags?: string[];
 }
 
 @InputType()

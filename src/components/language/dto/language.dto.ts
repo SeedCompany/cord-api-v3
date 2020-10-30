@@ -12,7 +12,7 @@ import {
 } from '../../../common';
 
 @ObjectType({
-  description: SecuredPropertyList.descriptionFor('roles'),
+  description: SecuredPropertyList.descriptionFor('tags'),
 })
 export abstract class SecuredTags extends SecuredPropertyList(String) {}
 
