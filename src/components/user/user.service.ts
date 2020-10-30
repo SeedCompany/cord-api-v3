@@ -630,6 +630,7 @@ export class UserService {
         ...input,
         filter: {
           ...input.filter,
+          userId,
         },
       },
       session
