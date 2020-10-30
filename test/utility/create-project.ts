@@ -22,6 +22,7 @@ export async function createProject(
     mouStart: CalendarDate.fromISO('1991-01-01'),
     mouEnd: CalendarDate.fromISO('1992-01-01'),
     step: ProjectStep.EarlyConversations,
+    tags: ['tag1', 'tag2'],
     fieldRegionId: input.fieldRegionId || (await createRegion(app)).id,
     ...input,
   };

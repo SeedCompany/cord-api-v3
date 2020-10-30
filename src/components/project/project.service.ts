@@ -100,6 +100,7 @@ export class ProjectService {
     stepChangedAt: true,
     estimatedSubmission: true,
     type: true,
+    tags: true,
     primaryLocation: true,
     marketingLocation: true,
     fieldRegion: true,
@@ -240,6 +241,12 @@ export class ProjectService {
       {
         key: 'departmentId',
         value: null,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'tags',
+        value: createInput.tags,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -487,6 +494,10 @@ export class ProjectService {
       type: (result as any)?.node?.properties?.type,
       status: props.status,
       modifiedAt: props.modifiedAt,
+      tags: {
+        ...securedProps.tags,
+        value: securedProps.tags.value as string[],
+      },
       primaryLocation: {
         ...securedProps.primaryLocation,
         value: result.primaryLocationId,
@@ -623,6 +634,7 @@ export class ProjectService {
         'modifiedAt',
         'step',
         'sensitivity',
+        'tags',
       ],
       changes,
       nodevar: 'project',

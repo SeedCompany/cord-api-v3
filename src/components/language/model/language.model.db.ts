@@ -19,4 +19,5 @@ export class DbLanguage extends DbBaseNode {
   sensitivity: any = null;
   hasExternalFirstScripture: any = null;
   locations: any = null;
+  tags: any = null;
 }

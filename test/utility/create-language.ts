@@ -36,6 +36,7 @@ export async function createLanguage(
       faker.helpers.replaceSymbols('??').toUpperCase() +
       faker.random.number({ min: 10, max: 99 }).toString(),
     sponsorEstimatedEndDate: CalendarDate.fromISO('1991-01-01'),
+    tags: ['tag1', 'tag2'],
     ...input,
   };
 

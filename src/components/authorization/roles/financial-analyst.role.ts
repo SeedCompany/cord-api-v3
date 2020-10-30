@@ -177,6 +177,7 @@ export const FinancialAnalyst = new DbRole({
         { propertyName: 'sensitivity',                permission: { read, write, }, },
         { propertyName: 'hasExternalFirstScripture',  permission: { read, write, }, },
         { propertyName: 'locations',                  permission: { read, write, }, },
+        { propertyName: 'tags',                       permission: { read, write, }, },
     ]}),
     new DbBaseNodeGrant<DbLanguageEngagement>({
       __className: 'DbLanguageEngagement',
@@ -288,6 +289,7 @@ export const FinancialAnalyst = new DbRole({
         { propertyName: 'fieldRegion',                permission: { read, write, }, },
         { propertyName: 'engagement',                 permission: { read, write, }, },
         { propertyName: 'sensitivity',                permission: { read, write, }, },
+        { propertyName: 'tags',                       permission: { read, write, }, },
       ]}),
     new DbBaseNodeGrant<DbProjectMember>({
       __className: 'DbProjectMember',
