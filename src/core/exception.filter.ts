@@ -13,6 +13,7 @@ import {
 import { GqlArgumentsHost, GqlExceptionFilter } from '@nestjs/graphql';
 import { compact, mapValues, uniq } from 'lodash';
 import { Exception, simpleSwitch } from '../common';
+import { ServiceUnavailableError } from './database';
 import { ILogger, Logger, LogLevel } from './logger';
 
 type ExceptionInfo = ReturnType<ExceptionFilter['catchGql']>;
@@ -86,7 +87,12 @@ export class ExceptionFilter implements GqlExceptionFilter {
         ...rest,
       };
     }
-
+    if (ex instanceof ServiceUnavailableError) {
+      return {
+        codes: ['DatabaseConnectionFailure', 'ServiceUnavailable', 'Server'],
+        message: 'Failed to connect to CORD database',
+      };
+    }
     // Fallback to generic Error
     return {
       code: 'InternalServerError',
