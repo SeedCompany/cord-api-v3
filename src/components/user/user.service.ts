@@ -49,7 +49,11 @@ import {
   OrganizationService,
   SecuredOrganizationList,
 } from '../organization';
-import { PartnerService } from '../partner';
+import {
+  PartnerListInput,
+  PartnerService,
+  SecuredPartnerList,
+} from '../partner';
 import {
   AssignOrganizationToUser,
   CreatePerson,
@@ -567,6 +571,65 @@ export class UserService {
         filter: {
           ...input.filter,
           userId: userId,
+        },
+      },
+      session
+    );
+    return {
+      ...result,
+      canRead: user.canRead,
+      canCreate: user.canEdit,
+    };
+  }
+
+  async listPartners(
+    userId: string,
+    input: PartnerListInput,
+    session: ISession
+  ): Promise<SecuredPartnerList> {
+    const query = this.db
+
+      .query()
+      .match([requestingUser(session), ...permissionsOfNode('Partner')])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member'),
+        node('', 'SecurityGroup'),
+        relation('out', '', 'permission'),
+        node('canRead', 'Permission', {
+          property: 'partner',
+          read: true,
+        }),
+      ])
+      .return({
+        canRead: [{ read: 'canRead', edit: 'canEdit' }],
+      });
+    let user;
+    try {
+      user = await query.first();
+    } catch (exception) {
+      this.logger.error(`Could not find partners`, {
+        exception,
+        userId: session.userId,
+      });
+      throw new ServerException('Could not find partner', exception);
+    }
+    if (!user) {
+      throw new NotFoundException('Could not find user', 'userId');
+    }
+
+    //TODO: add back in after the partner permission nodes are available in the DB
+    // if (!user.canRead) {
+    //   this.logger.warning('Cannot read partner list', {
+    //     userId,
+    //   });
+    //   throw new UnauthenticatedException('cannot read partner list');
+    // }
+    const result = await this.partners.list(
+      {
+        ...input,
+        filter: {
+          ...input.filter,
         },
       },
       session

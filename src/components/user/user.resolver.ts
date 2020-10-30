@@ -20,6 +20,7 @@ import {
   OrganizationListInput,
   SecuredOrganizationList,
 } from '../organization';
+import { PartnerListInput, SecuredPartnerList } from '../partner';
 import { SecuredTimeZone, TimeZoneService } from '../timezone';
 import {
   AssignOrganizationToUserInput,
@@ -140,6 +141,20 @@ export class UserResolver {
     input: OrganizationListInput
   ): Promise<SecuredOrganizationList> {
     return this.userService.listOrganizations(id, input, session);
+  }
+
+  @ResolveField(() => SecuredPartnerList)
+  async partners(
+    @Session() session: ISession,
+    @Parent() { id }: User,
+    @Args({
+      name: 'input',
+      type: () => PartnerListInput,
+      defaultValue: PartnerListInput.defaultVal,
+    })
+    input: PartnerListInput
+  ): Promise<SecuredPartnerList> {
+    return this.userService.listPartners(id, input, session);
   }
 
   @ResolveField(() => SecuredEducationList)
