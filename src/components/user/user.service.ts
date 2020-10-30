@@ -639,7 +639,13 @@ export class UserService {
       throw new NotFoundException('Could not find user', 'userId');
     }
     if (!user.canRead) {
-      throw new UnauthenticatedException('cannot read unavailability list');
+      return {
+        canRead: false,
+        canCreate: false,
+        items: [],
+        total: 0,
+        hasMore: false,
+      };
     }
     const result = await this.unavailabilities.list(
       {
