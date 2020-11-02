@@ -9,6 +9,7 @@ import {
   SecuredList,
   ServerException,
   Session,
+  UnauthenticatedException,
 } from '../../common';
 import {
   ConfigService,
@@ -597,7 +598,7 @@ export class UserService {
         node('', 'SecurityGroup'),
         relation('out', '', 'permission'),
         node('canRead', 'Permission', {
-          property: 'partner',
+          property: 'partners',
           read: true,
         }),
       ])
@@ -618,13 +619,12 @@ export class UserService {
       throw new NotFoundException('Could not find user', 'userId');
     }
 
-    //TODO: add back in after the partner permission nodes are available in the DB
-    // if (!user.canRead) {
-    //   this.logger.warning('Cannot read partner list', {
-    //     userId,
-    //   });
-    //   throw new UnauthenticatedException('cannot read partner list');
-    // }
+    if (!user.canRead) {
+      this.logger.warning('Cannot read partner list', {
+        userId,
+      });
+      throw new UnauthenticatedException('cannot read partner list');
+    }
     const result = await this.partners.list(
       {
         ...input,
