@@ -1,3 +1,4 @@
+import { forwardRef, Inject } from '@nestjs/common';
 import {
   Args,
   Mutation,
@@ -25,6 +26,7 @@ export class PartnerResolver {
   constructor(
     private readonly partnerService: PartnerService,
     private readonly orgService: OrganizationService,
+    @Inject(forwardRef(() => UserService))
     private readonly userService: UserService
   ) {}
 

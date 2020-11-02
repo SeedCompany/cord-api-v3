@@ -405,7 +405,18 @@ export class PartnerService {
     const label = 'Partner';
     const query = this.db
       .query()
-      .match([requestingUser(session), ...permissionsOfNode(label)])
+      .match([
+        requestingUser(session),
+        ...permissionsOfNode(label),
+        ...(filter.userId && session.userId
+          ? [
+              relation('out', '', 'organization', { active: true }),
+              node('', 'Organization'),
+              relation('in', '', 'organization', { active: true }),
+              node('user', 'User', { id: filter.userId }),
+            ]
+          : []),
+      ])
       .call(
         calculateTotalAndPaginateList,
         input,

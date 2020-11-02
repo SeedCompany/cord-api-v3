@@ -9,6 +9,7 @@ import {
   SecuredList,
   ServerException,
   Session,
+  UnauthenticatedException,
 } from '../../common';
 import {
   ConfigService,
@@ -49,6 +50,11 @@ import {
   OrganizationService,
   SecuredOrganizationList,
 } from '../organization';
+import {
+  PartnerListInput,
+  PartnerService,
+  SecuredPartnerList,
+} from '../partner';
 import {
   AssignOrganizationToUser,
   CreatePerson,
@@ -115,6 +121,8 @@ export class UserService {
   constructor(
     private readonly educations: EducationService,
     private readonly organizations: OrganizationService,
+    @Inject(forwardRef(() => PartnerService))
+    private readonly partners: PartnerService,
     private readonly unavailabilities: UnavailabilityService,
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
@@ -564,6 +572,65 @@ export class UserService {
         filter: {
           ...input.filter,
           userId: userId,
+        },
+      },
+      session
+    );
+    return {
+      ...result,
+      canRead: user.canRead,
+      canCreate: user.canEdit,
+    };
+  }
+
+  async listPartners(
+    userId: string,
+    input: PartnerListInput,
+    session: Session
+  ): Promise<SecuredPartnerList> {
+    const query = this.db
+
+      .query()
+      .match([requestingUser(session), ...permissionsOfNode('Partner')])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member'),
+        node('', 'SecurityGroup'),
+        relation('out', '', 'permission'),
+        node('canRead', 'Permission', {
+          property: 'partners',
+          read: true,
+        }),
+      ])
+      .return({
+        canRead: [{ read: 'canRead', edit: 'canEdit' }],
+      });
+    let user;
+    try {
+      user = await query.first();
+    } catch (exception) {
+      this.logger.error(`Could not find partners`, {
+        exception,
+        userId: session.userId,
+      });
+      throw new ServerException('Could not find partner', exception);
+    }
+    if (!user) {
+      throw new NotFoundException('Could not find user', 'userId');
+    }
+
+    if (!user.canRead) {
+      this.logger.warning('Cannot read partner list', {
+        userId,
+      });
+      throw new UnauthenticatedException('cannot read partner list');
+    }
+    const result = await this.partners.list(
+      {
+        ...input,
+        filter: {
+          ...input.filter,
+          userId,
         },
       },
       session

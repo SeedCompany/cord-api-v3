@@ -11,6 +11,7 @@ import { Partner } from './partner.dto';
 @InputType()
 export abstract class PartnerFilters {
   readonly organizationId?: string;
+  readonly userId?: string;
 }
 
 const defaultFilters = {};
