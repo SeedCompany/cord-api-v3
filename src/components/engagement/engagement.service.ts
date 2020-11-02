@@ -42,6 +42,7 @@ import {
   ProductService,
   SecuredProductList,
 } from '../product';
+import { ProjectStatus } from '../project';
 import { ProjectType } from '../project/dto/type.enum';
 import { ProjectService } from '../project/project.service';
 import {
@@ -137,6 +138,7 @@ export class EngagementService {
     if (input.firstScripture) {
       await this.verifyFirstScripture({ languageId });
     }
+    await this.verifyProjectStatus(projectId, session);
 
     this.logger.debug('Mutation create language engagement ', {
       input,
@@ -334,6 +336,7 @@ export class EngagementService {
         'Engagement for this project and person already exists'
       );
     }
+    await this.verifyProjectStatus(projectId, session);
 
     this.logger.debug('Mutation create internship engagement ', {
       input,
@@ -968,6 +971,21 @@ export class EngagementService {
       throw new NotFoundException('Could not find engagement', 'engagement.id');
     }
 
+    const result = await this.db
+      .query()
+      .match([
+        node('engagement', 'Engagement', { id }),
+        relation('in', '', 'engagement'),
+        node('project', 'Project'),
+      ])
+      .return('project.id as projectId')
+      .asResult<{ projectId: string }>()
+      .first();
+
+    if (result) {
+      await this.verifyProjectStatus(result.projectId, session);
+    }
+
     try {
       await this.db.deleteNode({
         session,
@@ -1289,6 +1307,7 @@ export class EngagementService {
       );
     }
   }
+
   protected async verifyFirstScriptureWithEngagement(query: Query) {
     const engagementResult = await query
       .match([
@@ -1310,6 +1329,24 @@ export class EngagementService {
       throw new InputException(
         'firstScripture can not be set to true if it is not the only engagement for the language that has firstScripture=true',
         'languageEngagement.firstScripture'
+      );
+    }
+  }
+
+  /**
+   * [BUSINESS RULE] Only Projects with a Status of 'In Development' can have Engagements created or deleted.
+   */
+  protected async verifyProjectStatus(projectId: string, session: ISession) {
+    let project;
+    try {
+      project = await this.projectService.readOne(projectId, session);
+    } catch (e) {
+      throw new InputException('projectId is invalid', 'engagement.projectId');
+    }
+    if (project.status !== ProjectStatus.InDevelopment) {
+      throw new InputException(
+        'The Project status is not in development',
+        'project.status'
       );
     }
   }
