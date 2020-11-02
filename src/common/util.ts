@@ -66,3 +66,14 @@ export const iterate = <T>(
   }
   return res;
 };
+
+/**
+ * Work around `in` operator not narrowing type
+ * https://github.com/microsoft/TypeScript/issues/21732
+ */
+export function has<K extends string | number | symbol, T>(
+  key: K,
+  obj: T
+): obj is T & Record<K, unknown> {
+  return key in obj;
+}

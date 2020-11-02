@@ -1,3 +1,5 @@
+import { has } from '../util';
+
 /**
  * The base of all of our exceptions.
  * Don't throw this, but rather a sub-class instead.
@@ -21,4 +23,17 @@ export class ServerException extends Exception {
 
 export abstract class ClientException extends Exception {
   readonly status: number = 400;
+}
+
+export const hasPrevious = (e: Error): e is Error & { previous: Error } =>
+  has('previous', e) && e.previous instanceof Error;
+
+export function getPreviousList(ex: Error, includeSelf: boolean) {
+  const previous: Error[] = includeSelf ? [ex] : [];
+  let current = ex;
+  while (hasPrevious(current)) {
+    current = current.previous;
+    previous.push(current);
+  }
+  return previous;
 }
