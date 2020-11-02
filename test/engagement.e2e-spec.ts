@@ -1,4 +1,5 @@
 import { gql } from 'apollo-server-core';
+import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { some } from 'lodash';
 import { DateTime, Interval } from 'luxon';
@@ -42,6 +43,7 @@ import {
   uploadFileContents,
 } from './utility';
 import { createProduct } from './utility/create-product';
+import { resetDatabase } from './utility/reset-database';
 import {
   changeProjectStep,
   stepsFromEarlyConversationToBeforeActive,
@@ -56,9 +58,11 @@ describe('Engagement e2e', () => {
   let user: User;
   let intern: Partial<User>;
   let mentor: Partial<User>;
+  let db: Connection;
 
   beforeAll(async () => {
     app = await createTestApp();
+    db = app.get(Connection);
 
     await createSession(app);
 
@@ -73,6 +77,7 @@ describe('Engagement e2e', () => {
   });
 
   afterAll(async () => {
+    await resetDatabase(db);
     await app.close();
   });
 

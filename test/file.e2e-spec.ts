@@ -1,4 +1,5 @@
 import { gql } from 'apollo-server-core';
+import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { startCase, times } from 'lodash';
 import { DateTime, Duration, DurationObject, Settings } from 'luxon';
@@ -39,6 +40,7 @@ import {
   RawFileNode,
   RawFileVersion,
 } from './utility/fragments';
+import { resetDatabase } from './utility/reset-database';
 
 export async function uploadFile(
   app: TestApp,
@@ -104,15 +106,18 @@ describe('File e2e', () => {
   let root: Directory;
   let me: User;
   const myPassword = faker.internet.password();
+  let db: Connection;
 
   beforeAll(async () => {
     app = await createTestApp();
+    db = app.get(Connection);
     bucket = app.get(FilesBucketToken);
     await createSession(app);
     me = await registerUser(app, { password: myPassword });
   });
 
   afterAll(async () => {
+    await resetDatabase(db);
     await app.close();
   });
 

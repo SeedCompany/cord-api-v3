@@ -1,5 +1,6 @@
 /* eslint-disable @seedcompany/no-unused-vars */
 import { gql } from 'apollo-server-core';
+import { Connection } from 'cypher-query-builder';
 import { FieldRegion } from '../src/components/field-region';
 import { FieldZone } from '../src/components/field-zone';
 import { Location } from '../src/components/location';
@@ -21,6 +22,7 @@ import {
   registerUser,
   TestApp,
 } from './utility';
+import { resetDatabase } from './utility/reset-database';
 
 describe('Project e2e', () => {
   let app: TestApp;
@@ -30,9 +32,11 @@ describe('Project e2e', () => {
   let fieldZone: FieldZone;
   let fieldRegion: FieldRegion;
   let location: Location;
+  let db: Connection;
 
   beforeAll(async () => {
     app = await createTestApp();
+    db = app.get(Connection);
     await createSession(app);
     director = await registerUser(app);
     fieldZone = await createZone(app, { directorId: director.id });
@@ -45,6 +49,7 @@ describe('Project e2e', () => {
     mentor = await getUserFromSession(app);
   });
   afterAll(async () => {
+    await resetDatabase(db);
     await app.close();
   });
 
