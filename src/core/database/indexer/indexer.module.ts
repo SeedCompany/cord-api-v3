@@ -1,4 +1,8 @@
-import { DiscoveryModule, DiscoveryService } from '@golevelup/nestjs-discovery';
+import {
+  DiscoveredMethodWithMeta,
+  DiscoveryModule,
+  DiscoveryService,
+} from '@golevelup/nestjs-discovery';
 import { Module, OnModuleInit } from '@nestjs/common';
 import { Neo4jError } from 'neo4j-driver';
 import { ConfigService } from '../..';
@@ -28,6 +32,23 @@ export class IndexerModule implements OnModuleInit {
     );
     this.logger.debug('Discovered indexers', { count: discovered.length });
 
+    const finishing = this.db.runOnceUntilCompleteAfterConnecting(() =>
+      this.doIndexing(discovered)
+    );
+    // Wait for indexing to finish when running tests, else just let it run in
+    // background and allow webserver to start.
+    if (this.config.jest) {
+      await finishing;
+    } else {
+      finishing.catch((exception) => {
+        this.logger.error('Failed to apply indexes', {
+          exception,
+        });
+      });
+    }
+  }
+
+  async doIndexing(discovered: Array<DiscoveredMethodWithMeta<unknown>>) {
     const serverInfo = await this.db.getServerInfo();
     const isV4 = serverInfo.version.startsWith('4');
 
