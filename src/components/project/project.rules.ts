@@ -884,8 +884,13 @@ export class ProjectRules {
   private async getPreviousSteps(id: string): Promise<ProjectStep[]> {
     const result = await this.db
       .query()
-      .match(node('node', 'Project', { id }))
-      // TODO rest of query
+      .match([
+        node('node', 'Project', { id }),
+        relation('out', '', 'step', { active: false }),
+        node('prop', 'Property'),
+      ])
+      .return('prop.value as steps')
+      .orderBy('prop.createdAt', 'DESC')
       .asResult<{ steps: ProjectStep[] }>()
       .first();
     if (!result) {
