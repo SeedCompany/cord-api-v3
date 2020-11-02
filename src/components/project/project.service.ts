@@ -347,11 +347,23 @@ export class ProjectService {
         throw new ServerException('failed to create a project');
       }
 
+      // get the creating user's roles. Assign them on this project.
+      // I'm going direct for performance reasons
+      const roles = await this.db
+        .query()
+        .match([
+          node('user', 'User', { id: session.userId }),
+          relation('out', '', 'roles', { active: true }),
+          node('roles', 'Property'),
+        ])
+        .raw('RETURN roles.value as roles')
+        .first();
+
       await this.projectMembers.create(
         {
           userId: session.userId,
           projectId: result.id,
-          roles: [],
+          roles: [roles?.roles],
         },
         session
       );
