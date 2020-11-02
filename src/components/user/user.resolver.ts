@@ -145,7 +145,7 @@ export class UserResolver {
 
   @ResolveField(() => SecuredPartnerList)
   async partners(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Parent() { id }: User,
     @Args({
       name: 'input',

@@ -585,7 +585,7 @@ export class UserService {
   async listPartners(
     userId: string,
     input: PartnerListInput,
-    session: ISession
+    session: Session
   ): Promise<SecuredPartnerList> {
     const query = this.db
 
