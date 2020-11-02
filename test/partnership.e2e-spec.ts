@@ -201,7 +201,7 @@ describe('Partnership e2e', () => {
     );
   });
 
-  it.skip('List view of partnerships', async () => {
+  it('List view of partnerships', async () => {
     // create 2 partnerships
     const numPartnerships = 2;
     await Promise.all(times(numPartnerships).map(() => createPartnership(app)));
