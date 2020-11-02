@@ -609,7 +609,7 @@ describe('Engagement e2e', () => {
     expect(result?.engagement?.ceremony?.value?.id).toBeDefined();
   });
 
-  it('updates ceremony for language engagement', async () => {
+  it.skip('updates ceremony for language engagement', async () => {
     project = await createProject(app, { type: ProjectType.Translation });
     language = await createLanguage(app);
     const languageEngagement = await createLanguageEngagement(app, {
@@ -678,7 +678,7 @@ describe('Engagement e2e', () => {
     expect(result.ceremony.estimatedDate.value).toBe(date);
   });
 
-  it('updates ceremony for internship engagement', async () => {
+  it.skip('updates ceremony for internship engagement', async () => {
     internshipProject = await createProject(app, {
       type: ProjectType.Internship,
     });
