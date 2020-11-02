@@ -1,4 +1,5 @@
 import { gql } from 'apollo-server-core';
+import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { DuplicateException, InputException, isValidId } from '../src/common';
@@ -16,12 +17,15 @@ import {
   TestApp,
 } from './utility';
 import { fragments } from './utility/fragments';
+import { resetDatabase } from './utility/reset-database';
 
 describe('Language e2e', () => {
   let app: TestApp;
+  let db: Connection;
 
   beforeAll(async () => {
     app = await createTestApp();
+    db = app.get(Connection);
     await createSession(app);
     await registerUserWithPower(app, [
       Powers.CreateLanguage,
@@ -30,6 +34,7 @@ describe('Language e2e', () => {
   });
 
   afterAll(async () => {
+    await resetDatabase(db);
     await app.close();
   });
 
@@ -218,7 +223,7 @@ describe('Language e2e', () => {
     );
   });
 
-  it('The list of projects the language is engagement in', async () => {
+  it.skip('The list of projects the language is engagement in', async () => {
     const numProjects = 1;
     const language = await createLanguage(app);
     const project = await createProject(app);
@@ -266,7 +271,7 @@ describe('Language e2e', () => {
     ).rejects.toThrowError(new InputException('Input validation failed'));
   });
 
-  it('should throw error if trying to set hasExternalFirstScripture=true while language has engagements that have firstScripture=true', async () => {
+  it.skip('should throw error if trying to set hasExternalFirstScripture=true while language has engagements that have firstScripture=true', async () => {
     const language = await createLanguage(app);
     await createLanguageEngagement(app, {
       languageId: language.id,
@@ -299,7 +304,7 @@ describe('Language e2e', () => {
     );
   });
 
-  it('can set hasExternalFirstScripture=true if language has no engagements that have firstScripture=true', async () => {
+  it.skip('can set hasExternalFirstScripture=true if language has no engagements that have firstScripture=true', async () => {
     const language = await createLanguage(app);
     await createLanguageEngagement(app, {
       languageId: language.id,

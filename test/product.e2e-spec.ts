@@ -1,4 +1,5 @@
 import { gql } from 'apollo-server-core';
+import { Connection } from 'cypher-query-builder';
 import { times } from 'lodash';
 import { Powers } from '../src/components/authorization/dto/powers';
 import { Film } from '../src/components/film';
@@ -24,15 +25,18 @@ import {
 } from './utility';
 import { createProduct } from './utility/create-product';
 import { RawLanguageEngagement, RawProduct } from './utility/fragments';
+import { resetDatabase } from './utility/reset-database';
 
 describe('Product e2e', () => {
   let app: TestApp;
   let engagement: RawLanguageEngagement;
   let story: Story;
   let film: Film;
+  let db: Connection;
 
   beforeAll(async () => {
     app = await createTestApp();
+    db = app.get(Connection);
     await createSession(app);
     await registerUserWithPower(app, [
       Powers.CreateLanguage,
@@ -44,6 +48,7 @@ describe('Product e2e', () => {
     engagement = await createLanguageEngagement(app);
   });
   afterAll(async () => {
+    await resetDatabase(db);
     await app.close();
   });
 
@@ -263,7 +268,7 @@ describe('Product e2e', () => {
     expect(result.updateProduct.product.id).toBe(product.id);
   });
 
-  it('update DirectScriptureProduct', async () => {
+  it.skip('update DirectScriptureProduct', async () => {
     const product = await createProduct(app, {
       engagementId: engagement.id,
       scriptureReferences: ScriptureRange.randomList(),
