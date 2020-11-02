@@ -11,6 +11,7 @@ import {
   PartnershipAgreementStatus,
   UpdatePartnershipInput,
 } from '../src/components/partnership';
+import { Role } from '../src/components/project';
 import { Project } from '../src/components/project/dto';
 import {
   createPartner,
@@ -35,7 +36,9 @@ describe('Partnership e2e', () => {
     app = await createTestApp();
     db = app.get(Connection);
     await createSession(app);
-    await registerUserWithPower(app, [Powers.CreateOrganization]);
+    await registerUserWithPower(app, [Powers.CreateOrganization], {
+      roles: [Role.Controller],
+    });
 
     project = await createProject(app);
   });
