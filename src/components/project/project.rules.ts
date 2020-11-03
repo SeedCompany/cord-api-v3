@@ -20,7 +20,7 @@ type EmailAddress = string;
 interface StepRule {
   approvers: Role[];
   transitions: ProjectStepTransition[];
-  getNotifiers: () => MaybeAsync<EmailAddress[]>;
+  getNotifiers: () => MaybeAsync<ReadonlyArray<EmailAddress | string>>;
 }
 
 export interface EmailNotification {
@@ -814,10 +814,16 @@ export class ProjectRules {
   ): Promise<EmailNotification[]> {
     // notify everyone
     const { getNotifiers } = await this.getStepRule(step, projectId);
-    const userIds = await getNotifiers();
+    const userIdsAndEmailAddresses = await getNotifiers();
+
+    const recipientIds = this.configService.email.notifyDistributionLists
+      ? userIdsAndEmailAddresses
+      : userIdsAndEmailAddresses.filter(
+          (idOrEmail) => !idOrEmail.includes('@')
+        );
 
     const notifications = await Promise.all(
-      userIds.map((recipientId) =>
+      recipientIds.map((recipientId) =>
         this.getEmailNotificationObject(
           changedById,
           projectId,
