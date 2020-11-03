@@ -11,4 +11,5 @@ export class DbLanguageEngagement extends DbEngagement {
   pnp: any = null;
   sentPrintingDate: any = null;
   product: any = null;
+  historicGoal: any = null;
 }
