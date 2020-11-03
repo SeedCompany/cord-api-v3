@@ -889,8 +889,9 @@ export class ProjectRules {
         relation('out', '', 'step', { active: false }),
         node('prop', 'Property'),
       ])
-      .return('prop.value as steps')
+      .with('prop')
       .orderBy('prop.createdAt', 'DESC')
+      .raw(`RETURN collect(prop.value) as steps`)
       .asResult<{ steps: ProjectStep[] }>()
       .first();
     if (!result) {
