@@ -3,7 +3,7 @@ import { Order, SortablePaginationInput } from '../../../common';
 
 type SecuredProperties = Record<string, boolean>;
 
-type Sorter = (
+export type Sorter = (
   query: Query,
   sortInput: string,
   order: Order,
