@@ -290,6 +290,7 @@ export const Controller = new DbRole({
         { propertyName: 'engagement',                 permission: { read, write, }, },
         { propertyName: 'sensitivity',                permission: { read, write, }, },
         { propertyName: 'tags',                       permission: { read, write, }, },
+        { propertyName: 'financialReportReceivedAt',  permission: { read, write, }, },
       ]}),
     new DbBaseNodeGrant<DbProjectMember>({
       __className: 'DbProjectMember',

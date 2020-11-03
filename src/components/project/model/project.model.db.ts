@@ -27,4 +27,5 @@ export class DbProject extends DbBaseNode {
   engagement: any = null;
   sensitivity: any = null;
   tags: any = null;
+  financialReportReceivedAt: any = null;
 }
