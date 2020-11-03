@@ -1632,13 +1632,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/retry@npm:^0.12.0":
-  version: 0.12.0
-  resolution: "@types/retry@npm:0.12.0"
-  checksum: 0755164f2c8d615a0385609c478aaa20b17e55bc8b16d5d56ffe6a5d30b0a9845d49452a2e8903ec7c43fa361f19daf5e68c60e7381ad10a95dd3d0bb5c9f7fd
-  languageName: node
-  linkType: hard
-
 "@types/serve-static@npm:*":
   version: 1.13.3
   resolution: "@types/serve-static@npm:1.13.3"
@@ -4103,7 +4096,6 @@ __metadata:
     nanoid: ^3.1.12
     neo4j-driver: ^4.1.2
     open: ^7.0.4
-    p-retry: ^4.2.0
     pkg-up: ^3.1.0
     prettier: ^2.0.5
     react: ^16.13.1
@@ -10618,16 +10610,6 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"p-retry@npm:^4.2.0":
-  version: 4.2.0
-  resolution: "p-retry@npm:4.2.0"
-  dependencies:
-    "@types/retry": ^0.12.0
-    retry: ^0.12.0
-  checksum: bf106e5424a598a26423d0efc43b67c48de42b8b007dc0f788b65832d3d907180bc607207f9ecbc35b3195b0f561bd0e09fc44fe8efe13558c572ff6f2ce12bf
-  languageName: node
-  linkType: hard
-
 "p-try@npm:^1.0.0":
   version: 1.0.0
   resolution: "p-try@npm:1.0.0"
@@ -11732,7 +11714,7 @@ resolve@^1.17.0:
   languageName: node
   linkType: hard
 
-"retry@npm:0.12.0, retry@npm:^0.12.0":
+"retry@npm:0.12.0":
   version: 0.12.0
   resolution: "retry@npm:0.12.0"
   checksum: 51f2fddddb2f157a0738c53c515682813a881df566da36992f3cf0a975ea84a19434c5abbc682056e97351540bcc7ea38fce2622d0b191c3b5cc1020b71ea0f2

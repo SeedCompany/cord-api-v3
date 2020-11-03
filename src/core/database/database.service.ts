@@ -22,8 +22,7 @@ import {
   UnwrapSecured,
   unwrapSecured,
 } from '../../common';
-import { ILogger, Logger, ServiceUnavailableError } from '..';
-import { AbortError, retry, RetryOptions } from '../../common/retry';
+import { ILogger, Logger } from '..';
 import { ConfigService } from '../config/config.service';
 import {
   setBaseNodeLabelsAndIdDeleted,
@@ -85,37 +84,6 @@ export class DatabaseService {
     private readonly config: ConfigService,
     @Logger('database:service') private readonly logger: ILogger
   ) {}
-
-  /**
-   * This will run the function after connecting to the database.
-   * If connection to database fails while executing function it will keep
-   * retrying (after another successful connection) until the function finishes.
-   */
-  async runOnceUntilCompleteAfterConnecting(run: () => Promise<void>) {
-    await this.waitForConnection(
-      {
-        forever: true,
-        minTimeout: { seconds: 10 },
-        maxTimeout: { minutes: 5 },
-      },
-      run
-    );
-  }
-
-  /**
-   * Wait for database connection.
-   * Optionally run a function in retry context after connecting.
-   */
-  async waitForConnection(options?: RetryOptions, then?: () => Promise<void>) {
-    await retry(async () => {
-      try {
-        await this.getServerInfo();
-        await then?.();
-      } catch (e) {
-        throw e instanceof ServiceUnavailableError ? e : new AbortError(e);
-      }
-    }, options);
-  }
 
   query(): Query {
     return this.db.query();

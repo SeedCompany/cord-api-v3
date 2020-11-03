@@ -9,21 +9,16 @@ export const maybeMany = <T>(
   item: Many<T> | null | undefined
 ): readonly T[] | undefined => (item != null ? many(item) : undefined);
 
-export type MsDurationInput = number | Duration | DurationObject;
-export const parseMilliseconds = (durationOrMs: MsDurationInput) => {
+export const sleep = (durationOrMs: number | Duration | DurationObject) => {
   const duration =
     durationOrMs instanceof Duration
       ? durationOrMs
       : Duration.fromObject(
           isNumber(durationOrMs) ? { milliseconds: durationOrMs } : durationOrMs
         );
-  return duration.as('milliseconds');
+  const milliseconds = duration.as('milliseconds');
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
 };
-
-export const sleep = (durationOrMs: MsDurationInput) =>
-  new Promise((resolve) =>
-    setTimeout(resolve, parseMilliseconds(durationOrMs))
-  );
 
 export const simpleSwitch = <T>(
   key: string,
@@ -66,14 +61,3 @@ export const iterate = <T>(
   }
   return res;
 };
-
-/**
- * Work around `in` operator not narrowing type
- * https://github.com/microsoft/TypeScript/issues/21732
- */
-export function has<K extends string | number | symbol, T>(
-  key: K,
-  obj: T
-): obj is T & Record<K, unknown> {
-  return key in obj;
-}

@@ -2,12 +2,7 @@ import { forwardRef, Inject } from '@nestjs/common';
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { Request, Response } from 'express';
 import { DateTime } from 'luxon';
-import {
-  AnonSession,
-  LoggedInSession,
-  Session,
-  UnauthenticatedException,
-} from '../../common';
+import { AnonSession, LoggedInSession, Session } from '../../common';
 import { anonymousSession, loggedInSession } from '../../common/session';
 import { ConfigService, ILogger, Logger } from '../../core';
 import { AuthorizationService } from '../authorization/authorization.service';
@@ -60,9 +55,9 @@ export class AuthenticationResolver {
     try {
       rawSession = await this.authService.createSession(token);
     } catch (exception) {
-      if (!(exception instanceof UnauthenticatedException)) {
-        throw exception;
-      }
+      // if (!(e instanceof UnauthenticatedException)) {
+      //   throw e;
+      // }
       this.logger.debug(
         'Failed to use existing session token, creating new one.',
         { exception }

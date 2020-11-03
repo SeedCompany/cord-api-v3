@@ -39,24 +39,6 @@ export class SyntaxError extends Neo4jError {
   }
 }
 
-export class ServiceUnavailableError extends Neo4jError {
-  static readonly code = 'ServiceUnavailable' as const;
-
-  constructor(message: string) {
-    super(message);
-    this.name = this.constructor.name;
-  }
-
-  static fromNeo(e: Neo4jError) {
-    if (e instanceof ServiceUnavailableError) {
-      return e;
-    }
-    const ex = new this(e.message);
-    ex.stack = e.stack;
-    return ex;
-  }
-}
-
 export class ConstraintError extends Neo4jError {
   static readonly code = 'Neo.ClientError.Schema.ConstraintValidationFailed' as const;
   constructor(message: string) {
@@ -115,9 +97,6 @@ export const isNeo4jError = (e: unknown): e is Neo4jError =>
 export const createBetterError = (e: Error) => {
   if (!isNeo4jError(e)) {
     return e;
-  }
-  if (e.code === ServiceUnavailableError.code) {
-    return ServiceUnavailableError.fromNeo(e);
   }
   if (e.code === ConstraintError.code) {
     if (e.message.includes('already exists with label')) {
