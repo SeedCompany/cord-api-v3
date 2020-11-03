@@ -44,7 +44,7 @@ describe('Partnership e2e', () => {
     await app.close();
   });
 
-  it.skip('create & read partnership by id', async () => {
+  it('create & read partnership by id', async () => {
     const partnership = await createPartnership(app);
 
     const result = await app.graphql.query(
@@ -161,7 +161,7 @@ describe('Partnership e2e', () => {
     );
   });
 
-  it.skip('update mou overrides partnership', async () => {
+  it('update mou overrides partnership', async () => {
     const partnership = await createPartnership(app);
 
     const mouStartOverride = '1981-01-01';
@@ -206,7 +206,7 @@ describe('Partnership e2e', () => {
     );
   });
 
-  it.skip('List view of partnerships', async () => {
+  it('List view of partnerships', async () => {
     // create 2 partnerships
     const numPartnerships = 2;
     await Promise.all(times(numPartnerships).map(() => createPartnership(app)));
@@ -327,7 +327,7 @@ describe('Partnership e2e', () => {
     ).rejects.toThrowError(new NotFoundException('Could not find partner'));
   });
 
-  it.skip('should create partnership without mou dates but returns project mou dates if exists', async () => {
+  it('should create partnership without mou dates but returns project mou dates if exists', async () => {
     const partnership = await createPartnership(app, {
       mouStartOverride: undefined,
       mouEndOverride: undefined,
