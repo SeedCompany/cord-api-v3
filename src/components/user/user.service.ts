@@ -9,7 +9,6 @@ import {
   SecuredList,
   ServerException,
   Session,
-  UnauthenticatedException,
 } from '../../common';
 import {
   ConfigService,
@@ -458,7 +457,7 @@ export class UserService {
   ): Promise<SecuredEducationList> {
     const query = this.db
       .query()
-      .match(matchSession(session, { withAclEdit: 'canReadEducationList' })) // Michel Query Refactor Will Fix This
+      .match(matchSession(session)) // Michel Query Refactor Will Fix This
       .match([node('user', 'User', { id: userId })])
       .optionalMatch([
         node('requestingUser'),
@@ -528,7 +527,7 @@ export class UserService {
   ): Promise<SecuredOrganizationList> {
     const query = this.db
       .query()
-      .match(matchSession(session, { withAclEdit: 'canReadOrgs' }))
+      .match(matchSession(session))
       .match([node('user', 'User', { id: userId })])
       .optionalMatch([
         node('requestingUser'),
@@ -597,9 +596,9 @@ export class UserService {
     session: Session
   ): Promise<SecuredPartnerList> {
     const query = this.db
-
       .query()
-      .match([requestingUser(session), ...permissionsOfNode('Partner')])
+      .match(matchSession(session)) // Michel Query Refactor Will Fix This
+      .match([node('user', 'User', { id: userId })])
       .optionalMatch([
         node('requestingUser'),
         relation('in', '', 'member'),
@@ -609,10 +608,26 @@ export class UserService {
           property: 'partners',
           read: true,
         }),
+        relation('out', '', 'baseNode'),
+        node('user'),
+      ])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', '', 'member'),
+        node('', 'SecurityGroup'),
+        relation('out', '', 'permission'),
+        node('canEdit', 'Permission', {
+          property: 'partners',
+          edit: true,
+        }),
+        relation('out', '', 'baseNode'),
+        node('user'),
       ])
       .return({
-        canRead: [{ read: 'canRead', edit: 'canEdit' }],
+        canRead: [{ read: 'canRead' }],
+        canEdit: [{ edit: 'canEdit' }],
       });
+
     let user;
     try {
       user = await query.first();
@@ -631,7 +646,7 @@ export class UserService {
       this.logger.warning('Cannot read partner list', {
         userId,
       });
-      throw new UnauthenticatedException('cannot read partner list');
+      return SecuredList.Redacted;
     }
     const result = await this.partners.list(
       {

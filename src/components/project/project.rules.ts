@@ -827,7 +827,7 @@ export class ProjectRules {
       )
     );
 
-    this.logger.info('notifying: ', notifications);
+    this.logger.debug('notifying: ', notifications);
 
     return notifications;
   }
