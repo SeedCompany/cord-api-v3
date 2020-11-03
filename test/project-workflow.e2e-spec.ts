@@ -1,12 +1,12 @@
 /* eslint-disable @seedcompany/no-unused-vars */
 import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
-import { FieldRegion } from '../src/components/field-region';
-import { FieldZone } from '../src/components/field-zone';
-import { Location } from '../src/components/location';
 import * as faker from 'faker';
 import { CalendarDate, Sensitivity } from '../src/common';
 import { Powers } from '../src/components/authorization/dto/powers';
+import { FieldRegion } from '../src/components/field-region';
+import { FieldZone } from '../src/components/field-zone';
+import { Location } from '../src/components/location';
 import { PartnerType } from '../src/components/partner';
 import {
   Project,
@@ -18,6 +18,7 @@ import {
 import { User } from '../src/components/user/dto/user.dto';
 import {
   createBudget,
+  createFundingAccount,
   createLanguageEngagement,
   createLocation,
   createPartner,
@@ -36,8 +37,8 @@ import {
   TestApp,
   updateProject,
 } from './utility';
-import { resetDatabase } from './utility/reset-database';
 import { createProduct } from './utility/create-product';
+import { resetDatabase } from './utility/reset-database';
 import {
   changeProjectStep,
   stepsFromEarlyConversationToBeforeActive,
@@ -165,13 +166,27 @@ describe('Project-Workflow e2e', () => {
       // Enter location and field region
       const location = await createLocation(app);
       const fieldRegion = await createRegion(app);
-      let result = await updateProject(app, {
+      await updateProject(app, {
         id: project.id,
         primaryLocationId: location.id,
         fieldRegionId: fieldRegion.id,
       });
-      expect(result.primaryLocation.value.id).toBe(location.id);
-      expect(result.fieldRegion.value.id).toBe(fieldRegion.id);
+
+      let result = await app.graphql.query(
+        gql`
+          query project($id: ID!) {
+            project(id: $id) {
+              ...project
+            }
+          }
+          ${fragments.project}
+        `,
+        {
+          id: project.id,
+        }
+      );
+      expect(result.project.primaryLocation.value.id).toBe(location.id);
+      expect(result.project.fieldRegion.value.id).toBe(fieldRegion.id);
 
       // Enter MOU dates
       await login(app, { email: director.email.value, password });
@@ -288,8 +303,11 @@ describe('Project-Workflow e2e', () => {
         ProjectStep.PendingFinancialEndorsement
       );
 
-      // Login as Financial Analyst
-      await login(app, { email: financialAnalyst.email.value, password });
+      // Login as Financial Analyst Controller
+      await login(app, {
+        email: financialAnalystController.email.value,
+        password,
+      });
       await changeProjectStep(app, project.id, ProjectStep.FinalizingProposal);
 
       // Login as Director
@@ -301,7 +319,14 @@ describe('Project-Workflow e2e', () => {
       /**
        * Step2. Approval Workflow
        *  */
-      const project = await createProject(app);
+      const fundingAccount = await createFundingAccount(app);
+      const location = await createLocation(app, {
+        fundingAccountId: fundingAccount.id,
+      });
+      const project = await createProject(app, {
+        primaryLocationId: location.id,
+      });
+
       await changeProjectStep(
         app,
         project.id,
@@ -337,8 +362,11 @@ describe('Project-Workflow e2e', () => {
         ProjectStep.PendingFinancialEndorsement
       );
 
-      // Login as Financial Analyst
-      await login(app, { email: financialAnalyst.email.value, password });
+      // Login as Financial Analyst Controller
+      await login(app, {
+        email: financialAnalystController.email.value,
+        password,
+      });
       await changeProjectStep(app, project.id, ProjectStep.FinalizingProposal);
 
       // Login as Project Manager
@@ -389,8 +417,11 @@ describe('Project-Workflow e2e', () => {
         ProjectStep.FinalizingCompletion
       );
 
-      // Login as Financial Analyst
-      await login(app, { email: financialAnalyst.email.value, password });
+      // Login as Financial Analyst Controller
+      await login(app, {
+        email: financialAnalystController.email.value,
+        password,
+      });
       await changeProjectStep(app, project.id, ProjectStep.Completed);
 
       const result = await app.graphql.query(
@@ -411,7 +442,14 @@ describe('Project-Workflow e2e', () => {
     });
 
     it('should test project suspension workflow', async () => {
-      const project = await createProject(app);
+      const fundingAccount = await createFundingAccount(app);
+      const location = await createLocation(app, {
+        fundingAccountId: fundingAccount.id,
+      });
+      const project = await createProject(app, {
+        primaryLocationId: location.id,
+      });
+
       await runAsAdmin(app, async () => {
         for (const next of stepsFromEarlyConversationToBeforeActive) {
           await changeProjectStep(app, project.id, next);
@@ -443,7 +481,14 @@ describe('Project-Workflow e2e', () => {
     });
 
     it('should test project termination workflow', async () => {
-      const project = await createProject(app);
+      const fundingAccount = await createFundingAccount(app);
+      const location = await createLocation(app, {
+        fundingAccountId: fundingAccount.id,
+      });
+      const project = await createProject(app, {
+        primaryLocationId: location.id,
+      });
+
       await runAsAdmin(app, async () => {
         for (const next of stepsFromEarlyConversationToBeforeActive) {
           await changeProjectStep(app, project.id, next);
