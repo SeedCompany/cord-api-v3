@@ -21,11 +21,11 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
-  defaultSorter,
   matchPermList,
   matchPropList,
   permissionsOfNode,
   requestingUser,
+  Sorter,
 } from '../../core/database/query';
 import {
   DbPropsOfDto,
@@ -418,11 +418,47 @@ export class PartnerService {
         calculateTotalAndPaginateList,
         input,
         this.securedProperties,
-        defaultSorter
+        this.orgNameSorter
       );
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
+
+  private readonly orgNameSorter: Sorter = (
+    q,
+    sortInput,
+    order,
+    securedProperties,
+    sortValInput
+  ) => {
+    // If the user inputs orgName as the sort value, then match the organization node for the sortValue match
+    const orgProperties = ['name'];
+    let nodeName = 'node';
+    if (orgProperties.includes(sortInput)) {
+      q.match([
+        node(nodeName),
+        relation('out', '', 'organization', { active: true }),
+        node('organization', 'Organization'),
+      ]);
+      nodeName = 'organization';
+    }
+    //The properties that are stored as strings
+    const stringProperties = ['name'];
+    const sortInputIsString = stringProperties.includes(sortInput);
+
+    //if the sortInput, e.g. name, is a string type, check to see if a custom sortVal is given.  If not, coerse the default prop.value to lower case in the orderBy clause
+    const sortValSecuredProp =
+      sortValInput ||
+      (sortInputIsString ? 'toLower(prop.value)' : 'prop.value');
+    q.with('*')
+      .match([
+        node(nodeName),
+        relation('out', '', sortInput, { active: true }),
+        node('prop', 'Property'),
+      ])
+      .with('*')
+      .orderBy(sortValSecuredProp, order);
+  };
 
   protected verifyFinancialReportingType(
     financialReportingTypes: FinancialReportingType[] | undefined,
