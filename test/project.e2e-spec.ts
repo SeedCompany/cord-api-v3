@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
-import { orderBy, times } from 'lodash';
+import { compact, orderBy, times } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   CalendarDate,
@@ -506,6 +506,7 @@ describe('Project e2e', () => {
   });
 
   it('List of projects sorted by Sensitivity', async () => {
+    await registerUser(app);
     //Create three projects, each beginning with lower or upper-cases.
     await createProject(app, {
       name: 'High Sensitivity Proj ' + (await generateId()),
@@ -543,25 +544,44 @@ describe('Project e2e', () => {
           input: {
             sort: 'sensitivity',
             order,
+            filter: {
+              type: ProjectType.Internship,
+            },
           },
         }
       );
+    const getSortedSensitivities = (projects: any) => {
+      let sensitivity = '';
+
+      const sensitivities = projects.items.map((item: any) => {
+        if (item.sensitivity !== sensitivity) {
+          return (sensitivity = item.sensitivity);
+        }
+        return undefined;
+      });
+
+      return compact(sensitivities);
+    };
 
     const { projects: ascendingProjects } = await getSensitivitySortedProjects(
       'ASC'
     );
 
-    expect(ascendingProjects.items[0].sensitivity).toEqual(Sensitivity.Low);
-    expect(ascendingProjects.items[1].sensitivity).toEqual(Sensitivity.Medium);
-    expect(ascendingProjects.items[2].sensitivity).toEqual(Sensitivity.High);
+    expect(getSortedSensitivities(ascendingProjects)).toEqual([
+      Sensitivity.Low,
+      Sensitivity.Medium,
+      Sensitivity.High,
+    ]);
 
     const { projects: descendingProjects } = await getSensitivitySortedProjects(
       'DESC'
     );
 
-    expect(descendingProjects.items[0].sensitivity).toEqual(Sensitivity.High);
-    expect(descendingProjects.items[1].sensitivity).toEqual(Sensitivity.Medium);
-    expect(descendingProjects.items[2].sensitivity).toEqual(Sensitivity.Low);
+    expect(getSortedSensitivities(descendingProjects)).toEqual([
+      Sensitivity.High,
+      Sensitivity.Medium,
+      Sensitivity.Low,
+    ]);
   });
 
   it('List view of my projects', async () => {
