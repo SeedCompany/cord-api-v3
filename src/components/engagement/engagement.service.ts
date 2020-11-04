@@ -88,6 +88,7 @@ export class EngagementService {
     paraTextRegistryId: true,
     pnp: true,
     language: true,
+    historicGoal: true,
 
     //Internship Specific
     position: true,
@@ -212,6 +213,11 @@ export class EngagementService {
         'languageEngagement'
       ),
       ...property('pnp', pnpId || undefined, 'languageEngagement'),
+      ...property(
+        'historicGoal',
+        input.historicGoal || undefined,
+        'languageEngagement'
+      ),
       ...property('statusModifiedAt', undefined, 'languageEngagement'),
       ...property('lastSuspendedAt', undefined, 'languageEngagement'),
       ...property('lastReactivatedAt', undefined, 'languageEngagement'),
@@ -777,6 +783,7 @@ export class EngagementService {
           'startDateOverride',
           'endDateOverride',
           'paraTextRegistryId',
+          'historicGoal',
           'modifiedAt',
           'status',
           'initialEndDate',

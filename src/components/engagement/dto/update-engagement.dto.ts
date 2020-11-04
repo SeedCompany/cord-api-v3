@@ -49,6 +49,9 @@ export abstract class UpdateLanguageEngagement extends UpdateEngagement {
 
   @Field({ nullable: true })
   readonly pnp?: CreateDefinedFileVersionInput;
+
+  @Field({ nullable: true })
+  readonly historicGoal?: string;
 }
 
 @InputType()

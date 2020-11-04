@@ -210,6 +210,7 @@ export const FieldOperationsDirector = new DbRole({
         { propertyName: 'lukePartnership',            permission: { read, write, }, },
         { propertyName: 'paraTextRegistryId',         permission: { read, write, }, },
         { propertyName: 'pnp',                        permission: { read, write, }, },
+        { propertyName: 'historicGoal',               permission: { read, write, }, },
         { propertyName: 'sentPrintingDate',           permission: { read, write, }, },
         { propertyName: 'startDate',                  permission: { read, write, }, },
         { propertyName: 'startDateOverride',          permission: { read, write, }, },
