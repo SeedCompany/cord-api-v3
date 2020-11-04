@@ -26,21 +26,22 @@ import { NullLoggerService } from './null-logger.service';
 import { ProxyLoggerService } from './proxy-logger.service';
 import { LoggerOptions, WinstonLoggerService } from './winston-logger.service';
 
+const buffer = new BufferLoggerService();
+const proxy = new ProxyLoggerService();
+proxy.setLogger(buffer);
+export const bootstrapLogger = new NestLoggerAdapterService(proxy);
+
 @Global()
 @Module({
   providers: [
     LevelMatcherProvider,
     NamedLoggerService,
-    BufferLoggerService,
-    ProxyLoggerService,
+    { provide: BufferLoggerService, useValue: buffer },
+    { provide: ProxyLoggerService, useValue: proxy },
     WinstonLoggerService,
     {
       provide: ILogger,
-      useFactory: (proxy: ProxyLoggerService, buffer: BufferLoggerService) => {
-        proxy.setLogger(buffer);
-        return proxy;
-      },
-      inject: [ProxyLoggerService, BufferLoggerService],
+      useExisting: ProxyLoggerService,
     },
     {
       provide: NestLogger,
