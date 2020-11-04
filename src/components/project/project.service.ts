@@ -721,7 +721,7 @@ export class ProjectService {
     const query = this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode(label)])
-      .with('distinct(node) as node') // PR 1448 breaks project lists on at least admin roles
+      .with('distinct(node) as node, requestingUser')
       .call(projectListFilter, filter)
       .call(
         calculateTotalAndPaginateList,

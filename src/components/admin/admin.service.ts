@@ -112,15 +112,13 @@ export class AdminService implements OnApplicationBootstrap {
   }
 
   async onApplicationBootstrap(): Promise<void> {
-    const finishing = this.db.runOnceUntilCompleteAfterConnecting(() =>
-      this.setupRootObjects()
-    );
+    const finishing = this.db.runOnceUntilCompleteAfterConnecting(() => this.setupRootObjects());
     // Wait for root object setup when running tests, else just let it run in
     // background and allow webserver to start.
     if (this.config.jest) {
       await finishing;
     } else {
-      finishing.catch((exception) => {
+      finishing.catch(exception => {
         this.logger.error('Failed to setup root objects', {
           exception,
         });
@@ -270,7 +268,7 @@ export class AdminService implements OnApplicationBootstrap {
         realLastName: 'root',
         phone: 'root',
         about: 'root',
-        roles: [Role.Administrator], // do not give root all the roles
+        roles: Object.values(Role),
       });
 
       // update config with new root admin id
