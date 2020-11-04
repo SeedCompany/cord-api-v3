@@ -170,7 +170,8 @@ export class ConfigService {
   static logging = {
     defaultLevel: LogLevel.INFO,
     levels: {
-      'nest,nest:*': LogLevel.DEBUG,
+      'nest,nest:*,-nest:loader': LogLevel.DEBUG,
+      'nest:loader': LogLevel.WARNING,
       'config:environment': LogLevel.INFO,
       version: LogLevel.DEBUG,
     },
