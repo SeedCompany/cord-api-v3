@@ -546,6 +546,17 @@ export class ProjectService {
     // TODO: re-connect the locationId node when locations are hooked up
 
     if (input.primaryLocationId) {
+      const location = await this.locationService.readOne(
+        input.primaryLocationId,
+        session
+      );
+
+      if (!location.fundingAccount.value)
+        throw new InputException(
+          'Cannot connect location without a funding account',
+          'project.primaryLocationId'
+        );
+
       const createdAt = DateTime.local();
       const query = this.db
         .query()
