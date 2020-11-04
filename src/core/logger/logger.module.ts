@@ -17,6 +17,7 @@ import {
   timestamp,
 } from './formatters';
 import { LevelMatcherProvider } from './level-matcher.provider';
+import { loggerNames, LoggerToken } from './logger.decorator';
 import { ILogger } from './logger.interface';
 import { NamedLoggerService } from './named-logger.service';
 import { NestLoggerAdapterService } from './nest-logger-adapter.service';
@@ -39,8 +40,6 @@ import { LoggerOptions, WinstonLoggerService } from './winston-logger.service';
   ],
 })
 export class LoggerModule {
-  static loggerNames: string[] = new Array<string>();
-
   static forTest(): DynamicModule {
     const module = LoggerModule.forRoot();
     module.providers?.push({
@@ -67,7 +66,9 @@ export class LoggerModule {
       ),
     };
 
-    const namedLoggerProviders = this.loggerNames.map(namedLoggerProvider);
+    const namedLoggerProviders = Array.from(loggerNames).map(
+      namedLoggerProvider
+    );
     return {
       module: LoggerModule,
       providers: [
@@ -81,17 +82,6 @@ export class LoggerModule {
     };
   }
 }
-
-/**
- * Creates the token for a named logger
- * @param name The name of the logger
- */
-export const LoggerToken = (name: string) => {
-  if (!LoggerModule.loggerNames.includes(name)) {
-    LoggerModule.loggerNames.push(name);
-  }
-  return `Logger(${name})`;
-};
 
 const namedLoggerProvider = (name: string): Provider<ILogger> => ({
   provide: LoggerToken(name),
