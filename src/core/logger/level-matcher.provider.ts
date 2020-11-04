@@ -1,8 +1,9 @@
 import { Provider } from '@nestjs/common';
 import { promises as fs } from 'fs';
 import { load } from 'js-yaml';
-import { ConfigService } from '..';
-import { pickBy } from 'lodash';
+import { ConfigService, LogLevel } from '..';
+import { identity, pickBy } from 'lodash';
+import { mapFromList } from '../../common';
 import { LevelMatcher } from './level-matcher';
 
 export const LevelMatcherProvider: Provider<Promise<LevelMatcher>> = {
@@ -16,15 +17,31 @@ export const LevelMatcherProvider: Provider<Promise<LevelMatcher>> = {
       // Completely optional. Logging is iffy since this is for the logger
     }
     const defaults = ConfigService.logging;
-    const overrides: Partial<typeof defaults> = rawYaml
+    const yamlOverrides: Partial<typeof defaults> = rawYaml
       ? pickBy(load(rawYaml, { filename: path }))
       : {};
 
-    // TODO Handle DEBUG key
-    const config = {
-      ...defaults,
-      ...overrides,
+    const envDefault = process.env.LOG_LEVEL_DEFAULT as LogLevel | undefined;
+    // env levels take the form of a,b=level;c,d=level
+    const envLevels: Record<string, LogLevel> = mapFromList(
+      (process.env.LOG_LEVELS || '').split(';').flatMap((pair) => {
+        const matched = /\s*([\w\s,-:*]+)=\s*(\w+)\s*/.exec(pair);
+        return matched ? [[matched[1], matched[2]]] : [];
+      }),
+      identity
+    );
+
+    const declaredLevels = {
+      ...yamlOverrides.levels,
+      ...envLevels,
     };
-    return new LevelMatcher(config.levels, config.defaultLevel);
+    const levels =
+      Object.keys(declaredLevels).length === 0
+        ? defaults.levels
+        : declaredLevels;
+
+    const defaultLevel =
+      envDefault ?? yamlOverrides.defaultLevel ?? defaults.defaultLevel;
+    return new LevelMatcher(levels, defaultLevel);
   },
 };

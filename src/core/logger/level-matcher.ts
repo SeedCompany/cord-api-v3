@@ -57,26 +57,34 @@ export class LevelMatcher {
   private cached: Record<string, LogLevel> = {};
 
   constructor(
-    levelMap: Record<string, LogLevel>,
+    levelMap: Record<string, string | undefined>,
     private readonly defaultLevel: LogLevel
   ) {
-    for (const [namespaces, level] of Object.entries(levelMap)) {
-      const matcher: MatcherConfig = {
-        include: [],
-        exclude: [],
-        level,
-      };
-      for (const namespace of namespaces.split(/[\s,]+/)) {
-        const exclude = namespace.startsWith('-');
-        const regPart = namespace.replace(/\*/g, '.*?');
-        if (exclude) {
-          matcher.exclude.push(new RegExp(`^${regPart.substr(1)}$`));
-        } else {
-          matcher.include.push(new RegExp(`^${regPart}$`));
+    this.matchers = Object.entries(levelMap).flatMap(
+      ([namespaces, rawLevel]) => {
+        const level = parseLevel(rawLevel);
+        if (!level || !namespaces) {
+          return [];
         }
+
+        const matcher: MatcherConfig = {
+          include: [],
+          exclude: [],
+          level,
+        };
+        for (const namespace of namespaces.split(/[\s,]+/)) {
+          const exclude = namespace.startsWith('-');
+          const regPart = namespace.replace(/\*/g, '.*?');
+          if (exclude) {
+            matcher.exclude.push(new RegExp(`^${regPart.substr(1)}$`));
+          } else {
+            matcher.include.push(new RegExp(`^${regPart}$`));
+          }
+        }
+
+        return [matcher];
       }
-      this.matchers.push(matcher);
-    }
+    );
   }
 
   isEnabled(name: string, level: LogLevel): boolean {
@@ -101,3 +109,23 @@ export class LevelMatcher {
     return this.defaultLevel;
   }
 }
+
+const parseLevel = (level?: string): LogLevel | undefined => {
+  if (!level?.trim()) {
+    return undefined;
+  }
+  level = level.trim().toLowerCase();
+
+  const levels = Object.values(LogLevel) as string[];
+  if (levels.includes(level)) {
+    return level as LogLevel;
+  }
+
+  for (const knownLevel of levels) {
+    if (knownLevel.includes(level) || level.includes(knownLevel)) {
+      return knownLevel as LogLevel;
+    }
+  }
+
+  return undefined;
+};
