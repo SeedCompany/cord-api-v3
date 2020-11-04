@@ -100,6 +100,7 @@ export class ProjectService {
     estimatedSubmission: true,
     type: true,
     tags: true,
+    financialReportReceivedAt: true,
     primaryLocation: true,
     marketingLocation: true,
     fieldRegion: true,
@@ -242,6 +243,12 @@ export class ProjectService {
       {
         key: 'tags',
         value: createInput.tags,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'financialReportReceivedAt',
+        value: createInput.financialReportReceivedAt,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -637,6 +644,7 @@ export class ProjectService {
         'step',
         'sensitivity',
         'tags',
+        'financialReportReceivedAt',
       ],
       changes,
       nodevar: 'project',
