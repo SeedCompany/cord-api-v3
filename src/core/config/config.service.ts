@@ -171,7 +171,7 @@ export class ConfigService {
     defaultLevel: LogLevel.INFO,
     levels: {
       'nest,nest:*,-nest:loader': LogLevel.DEBUG,
-      'nest:loader': LogLevel.WARNING,
+      'nest:loader,nest:router': LogLevel.WARNING,
       'config:environment': LogLevel.INFO,
       version: LogLevel.DEBUG,
     },
