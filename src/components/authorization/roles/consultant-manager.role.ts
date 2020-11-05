@@ -318,6 +318,7 @@ export const ConsultantManager = new DbRole({
         { propertyName: 'organization',               permission: { read, write, }, },
         { propertyName: 'unavailability',             permission: { read, write, }, },
         { propertyName: 'locations',                  permission: { read, write, }, },
+        { propertyName: 'knownLanguage',              permission: { read, write, }, },
     ]}),
     new DbBaseNodeGrant<DbUnavailability>({
       __className: 'DbUnavailability',
