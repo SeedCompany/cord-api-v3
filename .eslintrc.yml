@@ -2,10 +2,12 @@ root: true
 plugins:
   - '@seedcompany'
   - typescript-sort-keys
+  - no-only-tests
 extends:
   - plugin:@seedcompany/nestjs
 rules:
   no-console: error
+  no-only-tests/no-only-tests: error
   '@typescript-eslint/naming-convention':
     - warn
     - selector: typeLike
