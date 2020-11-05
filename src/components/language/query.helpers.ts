@@ -3,12 +3,18 @@ import { LanguageFilters } from './dto';
 
 export function languageListFilter(query: Query, filter: LanguageFilters) {
   query
-    .match([
-      ...(filter.sensitivity ? propMatch('sensitivity') : [[node('node')]]),
-    ])
     .call((q) =>
       filter.sensitivity
-        ? q.where({ sensitivity: { value: inArray(filter.sensitivity) } })
+        ? q
+            .match(propMatch('sensitivity'))
+            .where({ sensitivity: { value: inArray(filter.sensitivity) } })
+        : q
+    )
+    .call((q) =>
+      filter.leastOfThese
+        ? q
+            .match(propMatch('leastOfThese'))
+            .where({ leastOfThese: { value: true } })
         : q
     );
 }

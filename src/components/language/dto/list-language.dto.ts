@@ -16,6 +16,12 @@ export abstract class LanguageFilters {
     nullable: true,
   })
   readonly sensitivity?: Sensitivity[];
+
+  @Field({
+    nullable: true,
+    description: 'Is a Least Of These partnership',
+  })
+  readonly leastOfThese?: boolean;
 }
 
 const defaultFilters = {};
