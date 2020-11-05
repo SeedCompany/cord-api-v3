@@ -223,7 +223,7 @@ describe('Language e2e', () => {
     );
   });
 
-  it.skip('The list of projects the language is engagement in', async () => {
+  it('The list of projects the language is engagement in', async () => {
     const numProjects = 1;
     const language = await createLanguage(app);
     const project = await createProject(app);
@@ -271,7 +271,7 @@ describe('Language e2e', () => {
     ).rejects.toThrowError(new InputException('Input validation failed'));
   });
 
-  it.skip('should throw error if trying to set hasExternalFirstScripture=true while language has engagements that have firstScripture=true', async () => {
+  it('should throw error if trying to set hasExternalFirstScripture=true while language has engagements that have firstScripture=true', async () => {
     const language = await createLanguage(app);
     await createLanguageEngagement(app, {
       languageId: language.id,
@@ -304,7 +304,7 @@ describe('Language e2e', () => {
     );
   });
 
-  it.skip('can set hasExternalFirstScripture=true if language has no engagements that have firstScripture=true', async () => {
+  it('can set hasExternalFirstScripture=true if language has no engagements that have firstScripture=true', async () => {
     const language = await createLanguage(app);
     await createLanguageEngagement(app, {
       languageId: language.id,
