@@ -16,6 +16,18 @@ export function languageListFilter(query: Query, filter: LanguageFilters) {
             .match(propMatch('leastOfThese'))
             .where({ leastOfThese: { value: true } })
         : q
+    )
+    .call((q) =>
+      filter.isSignLanguage
+        ? q
+            .match(propMatch('isSignLanguage'))
+            .where({ isSignLanguage: { value: true } })
+        : q
+    )
+    .call((q) =>
+      filter.isDialect
+        ? q.match(propMatch('isDialect')).where({ isDialect: { value: true } })
+        : q
     );
 }
 

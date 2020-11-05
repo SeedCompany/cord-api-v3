@@ -12,7 +12,7 @@ import { Language } from './language.dto';
 @InputType()
 export abstract class LanguageFilters {
   @Field(() => [Sensitivity], {
-    description: 'Only projects with these sensitivities',
+    description: 'Only languages with these sensitivities',
     nullable: true,
   })
   readonly sensitivity?: Sensitivity[];
@@ -22,6 +22,16 @@ export abstract class LanguageFilters {
     description: 'Is a Least Of These partnership',
   })
   readonly leastOfThese?: boolean;
+
+  @Field({
+    nullable: true,
+  })
+  readonly isDialect?: boolean;
+
+  @Field({
+    nullable: true,
+  })
+  readonly isSignLanguage?: boolean;
 }
 
 const defaultFilters = {};
