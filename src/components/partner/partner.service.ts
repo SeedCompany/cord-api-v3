@@ -436,15 +436,7 @@ export class PartnerService {
   ) => {
     // If the user inputs orgName as the sort value, then match the organization node for the sortValue match
     const orgProperties = ['name'];
-    let nodeName = 'node';
-    if (orgProperties.includes(sortInput)) {
-      q.match([
-        node(nodeName),
-        relation('out', '', 'organization', { active: true }),
-        node('organization', 'Organization'),
-      ]);
-      nodeName = 'organization';
-    }
+
     //The properties that are stored as strings
     const stringProperties = ['name'];
     const sortInputIsString = stringProperties.includes(sortInput);
@@ -456,11 +448,28 @@ export class PartnerService {
     const sortValBaseNodeProp = sortInputIsString
       ? `toLower(node.${sortInput})`
       : `node.${sortInput}`;
+
+    if (orgProperties.includes(sortInput)) {
+      return q
+        .match([
+          node('node'),
+          relation('out', '', 'organization', { active: true }),
+          node('organization', 'Organization'),
+        ])
+        .with('*')
+        .match([
+          node('organization'),
+          relation('out', '', sortInput, { active: true }),
+          node('prop', 'Property'),
+        ])
+        .with('*')
+        .orderBy(sortValSecuredProp, order);
+    }
     return sortInput in securedProperties
       ? q
           .with('*')
           .match([
-            node(nodeName),
+            node(node),
             relation('out', '', sortInput, { active: true }),
             node('prop', 'Property'),
           ])
