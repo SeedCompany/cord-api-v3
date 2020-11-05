@@ -6,7 +6,11 @@ import { FieldRegionResolver } from './field-region.resolver';
 import { FieldRegionService } from './field-region.service';
 
 @Module({
-  imports: [forwardRef(() => AuthorizationModule), FieldZoneModule, UserModule],
+  imports: [
+    forwardRef(() => AuthorizationModule),
+    FieldZoneModule,
+    forwardRef(() => UserModule),
+  ],
   providers: [FieldRegionResolver, FieldRegionService],
   exports: [FieldRegionService],
 })

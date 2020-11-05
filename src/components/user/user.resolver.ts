@@ -34,6 +34,10 @@ import {
   UserListInput,
   UserListOutput,
 } from './dto';
+import {
+  KnownLanguage,
+  ModifyKnowLanguageArgs,
+} from './dto/known-language.dto';
 import { EducationListInput, SecuredEducationList } from './education';
 import {
   SecuredUnavailabilityList,
@@ -185,6 +189,14 @@ export class UserResolver {
     return this.userService.listLocations(user.id, input, session);
   }
 
+  @ResolveField(() => [KnownLanguage])
+  async knownLanguages(
+    @AnonSession() session: Session,
+    @Parent() { id }: User
+  ): Promise<KnownLanguage[]> {
+    return await this.userService.listKnownLanguages(id, session);
+  }
+
   @Mutation(() => CreatePersonOutput, {
     description: 'Create a person',
   })
@@ -267,5 +279,37 @@ export class UserResolver {
   ): Promise<boolean> {
     await this.userService.removeOrganizationFromUser(input.request, session);
     return true;
+  }
+
+  @Mutation(() => User, {
+    description: 'Create known language to user',
+  })
+  async createKnowLanguage(
+    @LoggedInSession() session: Session,
+    @Args() { userId, languageId, languageProficiency }: ModifyKnowLanguageArgs
+  ): Promise<User> {
+    await this.userService.createKnowLanguage(
+      userId,
+      languageId,
+      languageProficiency,
+      session
+    );
+    return await this.userService.readOne(userId, session);
+  }
+
+  @Mutation(() => User, {
+    description: 'Delete known language from user',
+  })
+  async deleteKnowLanguage(
+    @LoggedInSession() session: Session,
+    @Args() { userId, languageId, languageProficiency }: ModifyKnowLanguageArgs
+  ): Promise<User> {
+    await this.userService.deleteKnowLanguage(
+      userId,
+      languageId,
+      languageProficiency,
+      session
+    );
+    return await this.userService.readOne(userId, session);
   }
 }

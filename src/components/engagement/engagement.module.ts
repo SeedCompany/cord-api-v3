@@ -17,10 +17,10 @@ import { LanguageEngagementResolver } from './language-engagement.resolver';
   imports: [
     forwardRef(() => AuthorizationModule),
     FileModule,
-    UserModule,
+    forwardRef(() => UserModule),
     CeremonyModule,
     ProductModule,
-    LanguageModule,
+    forwardRef(() => LanguageModule),
     LocationModule,
     forwardRef(() => ProjectModule),
   ],
