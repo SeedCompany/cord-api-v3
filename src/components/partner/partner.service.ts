@@ -453,14 +453,20 @@ export class PartnerService {
     const sortValSecuredProp =
       sortValInput ||
       (sortInputIsString ? 'toLower(prop.value)' : 'prop.value');
-    q.with('*')
-      .match([
-        node(nodeName),
-        relation('out', '', sortInput, { active: true }),
-        node('prop', 'Property'),
-      ])
-      .with('*')
-      .orderBy(sortValSecuredProp, order);
+    const sortValBaseNodeProp = sortInputIsString
+      ? `toLower(node.${sortInput})`
+      : `node.${sortInput}`;
+    return sortInput in securedProperties
+      ? q
+          .with('*')
+          .match([
+            node(nodeName),
+            relation('out', '', sortInput, { active: true }),
+            node('prop', 'Property'),
+          ])
+          .with('*')
+          .orderBy(sortValSecuredProp, order)
+      : q.with('*').orderBy(sortValBaseNodeProp, order);
   };
 
   protected verifyFinancialReportingType(
