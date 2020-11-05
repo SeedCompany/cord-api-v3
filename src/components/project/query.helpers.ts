@@ -9,12 +9,12 @@ import { ProjectFilters } from './dto';
 
 export function projectListFilter(query: Query, filter: ProjectFilters) {
   query
-    .match([...(filter.status ? propMatch('status') : [[node('node')]])])
+    .match([...(filter.status ? propMatch('status') : [node('node')])])
     .call((q) =>
       filter.status ? q.where({ status: { value: inArray(filter.status) } }) : q
     )
     .match([
-      ...(filter.sensitivity ? propMatch('sensitivity') : [[node('node')]]),
+      ...(filter.sensitivity ? propMatch('sensitivity') : [node('node')]),
     ])
     .call((q) =>
       filter.sensitivity
@@ -44,12 +44,8 @@ export function projectListFilter(query: Query, filter: ProjectFilters) {
   }
 }
 
-function propMatch(property: string) {
-  return [
-    [
-      node('node'),
-      relation('out', '', property, { active: true }),
-      node(property, 'Property'),
-    ],
-  ];
-}
+export const propMatch = (property: string) => [
+  node('node'),
+  relation('out', '', property, { active: true }),
+  node(property, 'Property'),
+];

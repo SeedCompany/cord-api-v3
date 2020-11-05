@@ -1,4 +1,5 @@
-import { inArray, node, Query, relation } from 'cypher-query-builder';
+import { inArray, Query } from 'cypher-query-builder';
+import { propMatch } from '../project';
 import { LanguageFilters } from './dto';
 
 export function languageListFilter(query: Query, filter: LanguageFilters) {
@@ -29,14 +30,4 @@ export function languageListFilter(query: Query, filter: LanguageFilters) {
         ? q.match(propMatch('isDialect')).where({ isDialect: { value: true } })
         : q
     );
-}
-
-function propMatch(property: string) {
-  return [
-    [
-      node('node'),
-      relation('out', '', property, { active: true }),
-      node(property, 'Property'),
-    ],
-  ];
 }
