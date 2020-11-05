@@ -353,6 +353,11 @@ export const project = gql`
         }
       }
     }
+    primaryLocation {
+      value {
+        id
+      }
+    }
     mouStart {
       value
       canRead
@@ -503,6 +508,8 @@ export const projectMember = gql`
     modifiedAt
     roles {
       value
+      canRead
+      canEdit
     }
     user {
       value {

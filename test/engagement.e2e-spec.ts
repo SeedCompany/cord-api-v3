@@ -20,6 +20,7 @@ import {
   ProjectStatus,
   ProjectStep,
   ProjectType,
+  Role,
 } from '../src/components/project';
 import { User } from '../src/components/user';
 import {
@@ -29,13 +30,16 @@ import {
   createLanguage,
   createLanguageEngagement,
   createLocation,
+  createPerson,
   createProject,
   createSession,
   createTestApp,
   expectNotFound,
   fragments,
   getUserFromSession,
+  login,
   Raw,
+  registerUser,
   registerUserWithPower,
   requestFileUpload,
   runAsAdmin,
@@ -59,6 +63,7 @@ describe('Engagement e2e', () => {
   let intern: Partial<User>;
   let mentor: Partial<User>;
   let db: Connection;
+  const password = faker.internet.password();
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -66,10 +71,11 @@ describe('Engagement e2e', () => {
 
     await createSession(app);
 
-    user = await registerUserWithPower(app, [
-      Powers.CreateLanguage,
-      Powers.CreateEthnologueLanguage,
-    ]);
+    user = await registerUserWithPower(
+      app,
+      [Powers.CreateLanguage, Powers.CreateEthnologueLanguage],
+      { password }
+    );
     language = await createLanguage(app);
     location = await createLocation(app);
     intern = await getUserFromSession(app);
@@ -374,15 +380,11 @@ describe('Engagement e2e', () => {
     expect(updated.status).toBe(EngagementStatus.Rejected);
   });
 
-  // needs to be updated to use project roles
-  it.skip('updates internship engagement', async () => {
+  it('updates internship engagement', async () => {
     internshipProject = await createProject(app, {
       type: ProjectType.Internship,
     });
-    const mentor = await registerUserWithPower(app, [
-      Powers.CreateLanguage,
-      Powers.CreateEthnologueLanguage,
-    ]);
+    const mentor = await createPerson(app);
     const internshipEngagement = await createInternshipEngagementWithMinimumValues(
       app,
       {
@@ -518,8 +520,7 @@ describe('Engagement e2e', () => {
     expect(result.checkEngagementConsistency).toBeTruthy();
   });
 
-  // needs to be updated to use project roles
-  it.skip('returns the correct products in language engagement', async () => {
+  it('returns the correct products in language engagement', async () => {
     project = await createProject(app);
     language = await createLanguage(app);
     const languageEngagement = await createLanguageEngagement(app, {
@@ -609,7 +610,7 @@ describe('Engagement e2e', () => {
     expect(result?.engagement?.ceremony?.value?.id).toBeDefined();
   });
 
-  it.skip('updates ceremony for language engagement', async () => {
+  it('updates ceremony for language engagement', async () => {
     project = await createProject(app, { type: ProjectType.Translation });
     language = await createLanguage(app);
     const languageEngagement = await createLanguageEngagement(app, {
@@ -633,6 +634,8 @@ describe('Engagement e2e', () => {
     expect(
       languageEngagementRead?.engagement?.ceremony?.value?.id
     ).toBeDefined();
+
+    await registerUser(app, { roles: [Role.FieldOperationsDirector] });
     const date = '2020-05-13';
     await app.graphql.mutate(
       gql`
@@ -676,9 +679,11 @@ describe('Engagement e2e', () => {
     );
     expect(result.ceremony.planned.value).toBeTruthy();
     expect(result.ceremony.estimatedDate.value).toBe(date);
+
+    await login(app, { email: user.email.value, password });
   });
 
-  it.skip('updates ceremony for internship engagement', async () => {
+  it('updates ceremony for internship engagement', async () => {
     internshipProject = await createProject(app, {
       type: ProjectType.Internship,
     });
@@ -706,6 +711,7 @@ describe('Engagement e2e', () => {
       internshipEngagementRead?.engagement?.ceremony?.value?.id
     ).toBeDefined();
 
+    await registerUser(app, { roles: [Role.FieldOperationsDirector] });
     const date = '2020-05-13';
     await app.graphql.mutate(
       gql`
@@ -749,6 +755,8 @@ describe('Engagement e2e', () => {
     );
     expect(result.ceremony.planned.value).toBeTruthy();
     expect(result.ceremony.estimatedDate.value).toBe(date);
+
+    await login(app, { email: user.email.value, password });
   });
 
   it.skip('delete ceremony upon engagement deletion', async () => {
@@ -1039,8 +1047,7 @@ describe('Engagement e2e', () => {
     );
   });
 
-  // needs to be updated to use project roles
-  it.skip('should update Engagement status to Active if Project becomes Active from InDevelopment', async () => {
+  it('should update Engagement status to Active if Project becomes Active from InDevelopment', async () => {
     const fundingAccount = await createFundingAccount(app);
     const location = await createLocation(app, {
       fundingAccountId: fundingAccount.id,

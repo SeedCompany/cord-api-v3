@@ -188,6 +188,44 @@ export class FieldZoneService {
     const fieldZone = await this.readOne(input.id, session);
 
     // update director
+    if (input.directorId) {
+      const createdAt = DateTime.local();
+      const query = this.db
+        .query()
+        .match([
+          node('user', 'User', { id: session.userId }),
+          relation('in', '', 'member'),
+          node('', 'SecurityGroup'),
+          relation('out', '', 'permission'),
+          node('', 'Permission', {
+            property: 'director',
+            edit: true,
+          }),
+          relation('out', '', 'baseNode'),
+          node('fieldZone', 'FieldZone', { id: input.id }),
+        ])
+        .with('fieldZone')
+        .limit(1)
+        .match([node('director', 'User', { id: input.directorId })])
+        .optionalMatch([
+          node('fieldZone'),
+          relation('out', 'oldRel', 'director', { active: true }),
+          node(''),
+        ])
+        .setValues({ 'oldRel.active': false })
+        .with('fieldZone, director')
+        .limit(1)
+        .create([
+          node('fieldZone'),
+          relation('out', '', 'director', {
+            active: true,
+            createdAt,
+          }),
+          node('director'),
+        ]);
+
+      await query.run();
+    }
 
     await this.db.sgUpdateProperties({
       session,

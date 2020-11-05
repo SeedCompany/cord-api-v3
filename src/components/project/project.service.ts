@@ -100,6 +100,7 @@ export class ProjectService {
     estimatedSubmission: true,
     type: true,
     tags: true,
+    financialReportReceivedAt: true,
     primaryLocation: true,
     marketingLocation: true,
     fieldRegion: true,
@@ -242,6 +243,12 @@ export class ProjectService {
       {
         key: 'tags',
         value: createInput.tags,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'financialReportReceivedAt',
+        value: createInput.financialReportReceivedAt,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -546,6 +553,17 @@ export class ProjectService {
     // TODO: re-connect the locationId node when locations are hooked up
 
     if (input.primaryLocationId) {
+      const location = await this.locationService.readOne(
+        input.primaryLocationId,
+        session
+      );
+
+      if (!location.fundingAccount.value)
+        throw new InputException(
+          'Cannot connect location without a funding account',
+          'project.primaryLocationId'
+        );
+
       const createdAt = DateTime.local();
       const query = this.db
         .query()
@@ -637,6 +655,7 @@ export class ProjectService {
         'step',
         'sensitivity',
         'tags',
+        'financialReportReceivedAt',
       ],
       changes,
       nodevar: 'project',
@@ -702,7 +721,7 @@ export class ProjectService {
     const query = this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode(label)])
-      .with('distinct(node) as node') // PR 1448 breaks project lists on at least admin roles
+      .with('distinct(node) as node, requestingUser')
       .call(projectListFilter, filter)
       .call(
         calculateTotalAndPaginateList,

@@ -268,7 +268,7 @@ describe('Product e2e', () => {
     expect(result.updateProduct.product.id).toBe(product.id);
   });
 
-  it.skip('update DirectScriptureProduct', async () => {
+  it('update DirectScriptureProduct', async () => {
     const product = await createProduct(app, {
       engagementId: engagement.id,
       scriptureReferences: ScriptureRange.randomList(),

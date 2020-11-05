@@ -183,6 +183,7 @@ export const Administrator = new DbRole({
         { propertyName: 'lukePartnership',            permission: { read, write, }, },
         { propertyName: 'paraTextRegistryId',         permission: { read, write, }, },
         { propertyName: 'pnp',                        permission: { read, write, }, },
+        { propertyName: 'historicGoal',               permission: { read, write, }, },
         { propertyName: 'sentPrintingDate',           permission: { read, write, }, },
         { propertyName: 'startDate',                  permission: { read, write, }, },
         { propertyName: 'startDateOverride',          permission: { read, write, }, },
@@ -277,6 +278,7 @@ export const Administrator = new DbRole({
         { propertyName: 'engagement',                 permission: { read, write, }, },
         { propertyName: 'sensitivity',                permission: { read, write, }, },
         { propertyName: 'tags',                       permission: { read, write, }, },
+        { propertyName: 'financialReportReceivedAt',  permission: { read, write, }, },
       ]}),
     new DbBaseNodeGrant<DbProjectMember>({
       __className: 'DbProjectMember',

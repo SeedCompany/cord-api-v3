@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
-import { orderBy, times } from 'lodash';
+import { compact, orderBy, times } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   CalendarDate,
@@ -129,7 +129,7 @@ describe('Project e2e', () => {
     );
   });
 
-  it.skip('create project with required fields', async () => {
+  it('create project with required fields', async () => {
     await loginAsAdmin(app);
 
     const project: CreateProject = {
@@ -186,7 +186,7 @@ describe('Project e2e', () => {
     ).rejects.toThrowError(new ServerException('Could not create project'));
   });
 
-  it.skip('create & read project with budget and field region by id', async () => {
+  it('create & read project with budget and field region by id', async () => {
     const proj: CreateProject = {
       name: faker.random.uuid(),
       type: ProjectType.Translation,
@@ -263,7 +263,7 @@ describe('Project e2e', () => {
     );
   });
 
-  it.skip('update project', async () => {
+  it('update project', async () => {
     const project = await createProject(app);
     const namenew = faker.random.word() + ' Project';
 
@@ -288,7 +288,7 @@ describe('Project e2e', () => {
     expect(result.updateProject.project.name.value).toBe(namenew);
   });
 
-  it.skip('delete project', async () => {
+  it('delete project', async () => {
     const project = await createProject(app);
     expect(project.id).toBeTruthy();
     const result = await app.graphql.mutate(
@@ -456,6 +456,7 @@ describe('Project e2e', () => {
       })
     );
   });
+
   it('List view of projects', async () => {
     // create 2 projects
     const numProjects = 2;
@@ -506,6 +507,7 @@ describe('Project e2e', () => {
   });
 
   it('List of projects sorted by Sensitivity', async () => {
+    await registerUser(app);
     //Create three projects, each beginning with lower or upper-cases.
     await createProject(app, {
       name: 'High Sensitivity Proj ' + (await generateId()),
@@ -543,25 +545,44 @@ describe('Project e2e', () => {
           input: {
             sort: 'sensitivity',
             order,
+            filter: {
+              type: ProjectType.Internship,
+            },
           },
         }
       );
+    const getSortedSensitivities = (projects: any) => {
+      let sensitivity = '';
+
+      const sensitivities = projects.items.map((item: any) => {
+        if (item.sensitivity !== sensitivity) {
+          return (sensitivity = item.sensitivity);
+        }
+        return undefined;
+      });
+
+      return compact(sensitivities);
+    };
 
     const { projects: ascendingProjects } = await getSensitivitySortedProjects(
       'ASC'
     );
 
-    expect(ascendingProjects.items[0].sensitivity).toEqual(Sensitivity.Low);
-    expect(ascendingProjects.items[1].sensitivity).toEqual(Sensitivity.Medium);
-    expect(ascendingProjects.items[2].sensitivity).toEqual(Sensitivity.High);
+    expect(getSortedSensitivities(ascendingProjects)).toEqual([
+      Sensitivity.Low,
+      Sensitivity.Medium,
+      Sensitivity.High,
+    ]);
 
     const { projects: descendingProjects } = await getSensitivitySortedProjects(
       'DESC'
     );
 
-    expect(descendingProjects.items[0].sensitivity).toEqual(Sensitivity.High);
-    expect(descendingProjects.items[1].sensitivity).toEqual(Sensitivity.Medium);
-    expect(descendingProjects.items[2].sensitivity).toEqual(Sensitivity.Low);
+    expect(getSortedSensitivities(descendingProjects)).toEqual([
+      Sensitivity.High,
+      Sensitivity.Medium,
+      Sensitivity.Low,
+    ]);
   });
 
   it('List view of my projects', async () => {
@@ -609,13 +630,11 @@ describe('Project e2e', () => {
     );
   });
 
-  it.skip('Project engagement and sensitivity connected to language engagements', async () => {
-    // create 1 engagementsin a project
-    const numEngagements = 1;
-    //const type = ProjectType.Translation;
-
+  it('Project engagement and sensitivity connected to language engagements', async () => {
     await loginAsAdmin(app);
 
+    // create 1 engagementsin a project
+    const numEngagements = 1;
     const project = await createProject(app);
     const language = await createLanguage(app, {
       sensitivity: Sensitivity.Medium,
@@ -653,7 +672,7 @@ describe('Project e2e', () => {
     expect(queryProject.project.sensitivity).toEqual(language.sensitivity);
   });
 
-  it.skip('List view of internship engagement', async () => {
+  it('List view of internship engagement', async () => {
     //create 1 engagements in a project
     const numEngagements = 1;
     const type = ProjectType.Internship;
@@ -694,7 +713,7 @@ describe('Project e2e', () => {
     ).toBeGreaterThanOrEqual(numEngagements);
   });
 
-  it.skip('DB constraint for project.name uniqueness', async () => {
+  it('DB constraint for project.name uniqueness', async () => {
     const projName = 'Fix the world ' + DateTime.local().toString();
     const project = await createProject(app, { name: projName });
     await expect(createProject(app, { name: projName })).rejects.toThrowError(
@@ -717,7 +736,7 @@ describe('Project e2e', () => {
     );
   });
 
-  it.skip('List view of project members by projectId', async () => {
+  it('List view of project members by projectId', async () => {
     //create 2 Project member
     const numProjectMembers = 2;
     const project = await createProject(app);
@@ -812,7 +831,7 @@ describe('Project e2e', () => {
     expect(queryProject.project.partnerships.total).toBe(numPartnerships);
   });
 
-  it.skip('Should have a current budget when made active', async () => {
+  it('Should have a current budget when made active', async () => {
     await runAsAdmin(app, async () => {
       const fundingAccount = await createFundingAccount(app);
       const location = await createLocation(app, {
@@ -928,7 +947,7 @@ describe('Project e2e', () => {
    * It should create Partnership with Funding type before creating Project
    * Update Project's mou dates and check if the budget records are created.
    */
-  it.skip('should create budget records after updating project with mou dates', async () => {
+  it('should create budget records after updating project with mou dates', async () => {
     await registerUserWithPower(app, [Powers.CreateOrganization]);
     const org = await createOrganization(app);
     const proj = await createProject(app, {

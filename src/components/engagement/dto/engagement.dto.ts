@@ -112,6 +112,9 @@ export class LanguageEngagement extends Engagement {
   readonly paraTextRegistryId: SecuredString;
 
   readonly pnp: DefinedFile;
+
+  @Field()
+  readonly historicGoal: SecuredString;
 }
 
 @ObjectType({
