@@ -8,13 +8,12 @@ import {
   relation,
 } from 'cypher-query-builder';
 import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
-import { cloneDeep, deburr, Many, upperFirst } from 'lodash';
+import { cloneDeep, Many, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { assert } from 'ts-essentials';
 import {
   isSecured,
   many,
-  NotFoundException,
   Order,
   Resource,
   ServerException,
@@ -27,7 +26,7 @@ import { ILogger, Logger, ServiceUnavailableError } from '..';
 import { AbortError, retry, RetryOptions } from '../../common/retry';
 import { ConfigService } from '../config/config.service';
 import {
-  SelectedNodeProperties,
+  determineSortValue,
   setBaseNodeLabelsAndIdDeleted,
   setPropLabelsAndValuesDeleted,
   UniqueProperties,
@@ -172,53 +171,6 @@ export class DatabaseService {
     return updated;
   }
 
-  async hasSortValue<TObject extends Resource, Key extends keyof TObject>({
-    session,
-    object,
-    key,
-    nodevar,
-  }: {
-    session: ISession;
-    object: TObject;
-    key: Key;
-    nodevar: string;
-  }): Promise<boolean> {
-    const objNode = await this.db
-      .query()
-      .match([matchSession(session)])
-      .match([
-        node(nodevar, upperFirst(nodevar), {
-          id: object.id,
-        }),
-      ])
-      .match([
-        node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property: key as string,
-          // admin: true,
-          edit: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node(nodevar),
-        relation('out', 'oldToProp', key as string, { active: true }),
-        node('oldPropVar', 'Property'),
-      ])
-      .return('oldPropVar')
-      .first();
-    if (!objNode) {
-      throw new NotFoundException(
-        'Could not find property to update: ' + nodevar
-      );
-    }
-    if (objNode.oldPropVar.properties.sortValue) {
-      return true;
-    }
-    return false;
-  }
-
   async sgUpdateProperty<
     TObject extends Resource,
     Key extends keyof TObject & string
@@ -237,14 +189,11 @@ export class DatabaseService {
     nodevar: string;
   }): Promise<TObject> {
     const createdAt = DateTime.local();
-    let nodePropsToUpdate: SelectedNodeProperties = { createdAt, value };
-    if (await this.hasSortValue({ session, object, key, nodevar })) {
-      nodePropsToUpdate = {
-        createdAt,
-        value: value,
-        sortValue: deburr(value as string), // there should be understanding with the dev that value is already a string upon creation using the isDeburrable Property field
-      };
-    }
+    const nodePropsToUpdate = {
+      createdAt,
+      value,
+      sortValue: determineSortValue(value),
+    };
     const update = this.db
       .query()
       .match([matchSession(session)])

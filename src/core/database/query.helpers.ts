@@ -19,8 +19,9 @@ export interface AllNodeProperties {
   value: any;
   sortValue: string;
 }
-export type NodePropertiesNoSort = Omit<AllNodeProperties, 'sortValue'>;
-export type SelectedNodeProperties = AllNodeProperties | NodePropertiesNoSort;
+
+export const determineSortValue = (value: unknown) =>
+  typeof value === 'string' ? deburr(value) : value;
 
 // assumes 'requestingUser', and 'publicSG' cypher identifiers have been matched
 // add baseNodeProps and editableProps
@@ -58,14 +59,11 @@ export function createBaseNode(
     if (prop.label) {
       labels.push(prop.label);
     }
-    let nodeProps: SelectedNodeProperties = { createdAt, value: prop.value };
-    if (prop.isDeburrable) {
-      nodeProps = {
-        createdAt,
-        value: prop.value,
-        sortValue: deburr(prop.value),
-      };
-    }
+    const nodeProps = {
+      createdAt,
+      value: prop.value,
+      sortValue: determineSortValue(prop.value),
+    };
 
     query.create([
       node('node'),
