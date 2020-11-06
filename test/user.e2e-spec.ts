@@ -185,7 +185,7 @@ describe('User e2e', () => {
     return true;
   });
 
-  it.skip('delete user', async () => {
+  it('delete user', async () => {
     // create user first
     const user = await registerUser(app);
     const result = await app.graphql.query(
@@ -206,7 +206,7 @@ describe('User e2e', () => {
   });
 
   // LIST USERS
-  it.skip('list view of users', async () => {
+  it('list view of users', async () => {
     await registerUser(app);
     await registerUser(app);
     await registerUser(app);
@@ -537,7 +537,6 @@ describe('User e2e', () => {
     expect(actual.avatarLetters).toBe(firstLettersOfWords(actual.fullName));
   });
 
-  // skipping because we will be refactoring how we do search
   it('list users with organizations', async () => {
     const newUser = await registerUserWithPower(app, [
       Powers.CreateOrganization,
