@@ -9,16 +9,18 @@ import { ProjectFilters } from './dto';
 
 export function projectListFilter(query: Query, filter: ProjectFilters) {
   query
-    .match([...(filter.status ? propMatch('status') : [node('node')])])
     .call((q) =>
-      filter.status ? q.where({ status: { value: inArray(filter.status) } }) : q
+      filter.status
+        ? q
+            .match(propMatch('status'))
+            .where({ status: { value: inArray(filter.status) } })
+        : q
     )
-    .match([
-      ...(filter.sensitivity ? propMatch('sensitivity') : [node('node')]),
-    ])
     .call((q) =>
       filter.sensitivity
-        ? q.where({ sensitivity: { value: inArray(filter.sensitivity) } })
+        ? q
+            .match(propMatch('sensitivity'))
+            .where({ sensitivity: { value: inArray(filter.sensitivity) } })
         : q
     );
 
