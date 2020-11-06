@@ -74,7 +74,14 @@ describe('Engagement e2e', () => {
     user = await registerUserWithPower(
       app,
       [Powers.CreateLanguage, Powers.CreateEthnologueLanguage],
-      { password }
+      {
+        password,
+        roles: [
+          Role.ProjectManager,
+          Role.FieldOperationsDirector,
+          Role.Consultant,
+        ],
+      }
     );
     language = await createLanguage(app);
     location = await createLocation(app);
@@ -92,7 +99,7 @@ describe('Engagement e2e', () => {
     const languageEngagement = await createLanguageEngagement(app, {
       languageId: language.id,
       projectId: project.id,
-      status: EngagementStatus.AwaitingDedication,
+      status: EngagementStatus.InDevelopment,
     });
     expect(languageEngagement.modifiedAt).toBeDefined();
     expect(languageEngagement.id).toBeDefined();
@@ -103,7 +110,7 @@ describe('Engagement e2e', () => {
       .toDuration()
       .toFormat('S');
     expect(parseInt(difference)).toBeGreaterThan(0);
-    expect(languageEngagement.status).toBe(EngagementStatus.AwaitingDedication);
+    expect(languageEngagement.status).toBe(EngagementStatus.InDevelopment);
   });
 
   it('create a language engagement with only required fields', async () => {
@@ -333,7 +340,7 @@ describe('Engagement e2e', () => {
     const languageEngagement = await createLanguageEngagement(app, {
       projectId: project.id,
       languageId: language.id,
-      status: EngagementStatus.Rejected,
+      status: EngagementStatus.InDevelopment,
     });
 
     const updateFirstScripture = false;
@@ -377,7 +384,7 @@ describe('Engagement e2e', () => {
     expect(updated.firstScripture.value).toBe(updateFirstScripture);
     expect(updated.lukePartnership.value).toBe(updateLukePartnership);
     expect(updated.paraTextRegistryId.value).toBe(updateParaTextRegistryId);
-    expect(updated.status).toBe(EngagementStatus.Rejected);
+    expect(updated.status).toBe(EngagementStatus.InDevelopment);
   });
 
   it('updates internship engagement', async () => {
@@ -1108,10 +1115,26 @@ describe('Engagement e2e', () => {
    * Whenever an engagement's status gets changed to anything different the statusModifiedAt date should get set to now
    */
   it('should update Engagement statusModifiedAt if status is updated', async () => {
-    const project = await createProject(app, { type: ProjectType.Internship });
+    const fundingAccount = await createFundingAccount(app);
+    const location = await createLocation(app, {
+      fundingAccountId: fundingAccount.id,
+    });
+    const project = await createProject(app, {
+      type: ProjectType.Internship,
+      primaryLocationId: location.id,
+    });
     const engagement = await createInternshipEngagement(app, {
       projectId: project.id,
     });
+    // Update Project status to Active
+    await runAsAdmin(app, async () => {
+      for (const next of stepsFromEarlyConversationToBeforeActive) {
+        await changeProjectStep(app, project.id, next);
+      }
+      await changeProjectStep(app, project.id, ProjectStep.Active);
+    });
+    // Login back to the user
+    await login(app, { email: user.email.value, password });
 
     // Update Engagement status to AwaitingDedication
     const {
@@ -1143,10 +1166,26 @@ describe('Engagement e2e', () => {
    * Whenever an engagement's status gets set to Suspended the lastSuspendedAt date should get set to now
    */
   it('should update Engagement lastSuspendedAt if status gets set to Suspended', async () => {
-    const project = await createProject(app, { type: ProjectType.Internship });
+    const fundingAccount = await createFundingAccount(app);
+    const location = await createLocation(app, {
+      fundingAccountId: fundingAccount.id,
+    });
+    const project = await createProject(app, {
+      type: ProjectType.Internship,
+      primaryLocationId: location.id,
+    });
     const engagement = await createInternshipEngagement(app, {
       projectId: project.id,
     });
+    // Update Project status to Active
+    await runAsAdmin(app, async () => {
+      for (const next of stepsFromEarlyConversationToBeforeActive) {
+        await changeProjectStep(app, project.id, next);
+      }
+      await changeProjectStep(app, project.id, ProjectStep.Active);
+    });
+    // Login back to the user
+    await login(app, { email: user.email.value, password });
 
     // Update Engagement status to Suspended
     const {
@@ -1179,10 +1218,27 @@ describe('Engagement e2e', () => {
    * Whenever an engagement's status gets set to Active after previously being Suspended the lastReactivatedAt date should get set to now
    */
   it('should update Engagement lastReactivatedAt if status gets set to Active from Suspended', async () => {
-    const project = await createProject(app, { type: ProjectType.Internship });
+    const fundingAccount = await createFundingAccount(app);
+    const location = await createLocation(app, {
+      fundingAccountId: fundingAccount.id,
+    });
+    const project = await createProject(app, {
+      type: ProjectType.Internship,
+      primaryLocationId: location.id,
+    });
     const engagement = await createInternshipEngagement(app, {
       projectId: project.id,
     });
+
+    // Update Project status to Active
+    await runAsAdmin(app, async () => {
+      for (const next of stepsFromEarlyConversationToBeforeActive) {
+        await changeProjectStep(app, project.id, next);
+      }
+      await changeProjectStep(app, project.id, ProjectStep.Active);
+    });
+    // Login back to the user
+    await login(app, { email: user.email.value, password });
 
     // Update Engagement status to Suspended
     await app.graphql.mutate(
