@@ -10,6 +10,7 @@ import {
   ProductMethodology,
   ProductPurpose,
 } from '../src/components/product';
+import { Role } from '../src/components/project';
 import { ScriptureRange } from '../src/components/scripture/dto';
 import { Story } from '../src/components/story';
 import {
@@ -38,10 +39,13 @@ describe('Product e2e', () => {
     app = await createTestApp();
     db = app.get(Connection);
     await createSession(app);
-    await registerUserWithPower(app, [
-      Powers.CreateLanguage,
-      Powers.CreateEthnologueLanguage,
-    ]);
+    await registerUserWithPower(
+      app,
+      [Powers.CreateLanguage, Powers.CreateEthnologueLanguage],
+      {
+        roles: [Role.ProjectManager, Role.FieldOperationsDirector],
+      }
+    );
     story = await createStory(app);
     film = await createFilm(app);
 

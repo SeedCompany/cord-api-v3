@@ -29,7 +29,14 @@ describe('ProjectMember e2e', () => {
     app = await createTestApp();
     db = app.get(Connection);
     await createSession(app);
-    user = await registerUser(app, { password });
+    user = await registerUser(app, {
+      password,
+      roles: [
+        Role.ProjectManager,
+        Role.Consultant,
+        Role.FieldOperationsDirector,
+      ],
+    });
   });
   afterAll(async () => {
     await resetDatabase(db);

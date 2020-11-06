@@ -164,7 +164,10 @@ describe('Project-Workflow e2e', () => {
       expect(languageEngagement.id).toBeDefined();
 
       // Enter location and field region
-      const location = await createLocation(app);
+      const fundingAccount = await createFundingAccount(app);
+      const location = await createLocation(app, {
+        fundingAccountId: fundingAccount.id,
+      });
       const fieldRegion = await createRegion(app);
       await updateProject(app, {
         id: project.id,
