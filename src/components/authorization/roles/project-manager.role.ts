@@ -169,6 +169,7 @@ export const ProjectManager = new DbRole({
         { propertyName: 'sensitivity',                permission: { read, }, },
         { propertyName: 'hasExternalFirstScripture',  permission: { read, }, },
         { propertyName: 'locations',                  permission: { read, }, },
+        { propertyName: 'tags',                       permission: { read, }, },
     ]}),
     new DbBaseNodeGrant<DbLanguageEngagement>({
       __className: 'DbLanguageEngagement',
@@ -187,6 +188,7 @@ export const ProjectManager = new DbRole({
         { propertyName: 'lukePartnership',            permission: { read, write, }, },
         { propertyName: 'paraTextRegistryId',         permission: { read, write, }, },
         { propertyName: 'pnp',                        permission: { read, write, }, },
+        { propertyName: 'historicGoal',               permission: { read, write, }, },
         { propertyName: 'sentPrintingDate',           permission: { read, write, }, },
         { propertyName: 'startDate',                  permission: { read, write, }, },
         { propertyName: 'startDateOverride',          permission: { read, write, }, },
@@ -280,6 +282,8 @@ export const ProjectManager = new DbRole({
         { propertyName: 'fieldRegion',                permission: { read, write, }, },
         { propertyName: 'engagement',                 permission: { read, write, }, },
         { propertyName: 'sensitivity',                permission: { read, write, }, },
+        { propertyName: 'tags',                       permission: { read, write, }, },
+        { propertyName: 'financialReportReceivedAt',  permission: { read, write, }, },
       ]}),
     new DbBaseNodeGrant<DbProjectMember>({
       __className: 'DbProjectMember',

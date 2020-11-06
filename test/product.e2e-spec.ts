@@ -1,4 +1,5 @@
 import { gql } from 'apollo-server-core';
+import { Connection } from 'cypher-query-builder';
 import { times } from 'lodash';
 import { Powers } from '../src/components/authorization/dto/powers';
 import { Film } from '../src/components/film';
@@ -9,6 +10,7 @@ import {
   ProductMethodology,
   ProductPurpose,
 } from '../src/components/product';
+import { Role } from '../src/components/project';
 import { ScriptureRange } from '../src/components/scripture/dto';
 import { Story } from '../src/components/story';
 import {
@@ -24,26 +26,33 @@ import {
 } from './utility';
 import { createProduct } from './utility/create-product';
 import { RawLanguageEngagement, RawProduct } from './utility/fragments';
+import { resetDatabase } from './utility/reset-database';
 
 describe('Product e2e', () => {
   let app: TestApp;
   let engagement: RawLanguageEngagement;
   let story: Story;
   let film: Film;
+  let db: Connection;
 
   beforeAll(async () => {
     app = await createTestApp();
+    db = app.get(Connection);
     await createSession(app);
-    await registerUserWithPower(app, [
-      Powers.CreateLanguage,
-      Powers.CreateEthnologueLanguage,
-    ]);
+    await registerUserWithPower(
+      app,
+      [Powers.CreateLanguage, Powers.CreateEthnologueLanguage],
+      {
+        roles: [Role.ProjectManager, Role.FieldOperationsDirector],
+      }
+    );
     story = await createStory(app);
     film = await createFilm(app);
 
     engagement = await createLanguageEngagement(app);
   });
   afterAll(async () => {
+    await resetDatabase(db);
     await app.close();
   });
 

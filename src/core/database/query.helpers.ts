@@ -1,7 +1,7 @@
 import { node, Query, relation } from 'cypher-query-builder';
 import { deburr } from 'lodash';
 import { DateTime } from 'luxon';
-import { entries, ISession, Resource } from '../../common';
+import { entries, Resource, Session } from '../../common';
 
 // CREATE clauses //////////////////////////////////////////////////////
 
@@ -125,7 +125,7 @@ export function matchUserPermissions(
 
 export function matchRequestingUser(
   query: Query,
-  { userId }: Partial<ISession>
+  { userId }: Partial<Session>
 ) {
   query.match([
     node('requestingUser', 'User', {

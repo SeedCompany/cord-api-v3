@@ -6,9 +6,15 @@ import {
   SecuredDate,
   SecuredInt,
   SecuredProperty,
+  SecuredPropertyList,
   SecuredString,
   Sensitivity,
 } from '../../../common';
+
+@ObjectType({
+  description: SecuredPropertyList.descriptionFor('tags'),
+})
+export abstract class SecuredTags extends SecuredPropertyList(String) {}
 
 @ObjectType()
 export class EthnologueLanguage {
@@ -110,6 +116,9 @@ export class Language extends Resource {
 
   @Field()
   readonly hasExternalFirstScripture: SecuredBoolean;
+
+  @Field()
+  readonly tags: SecuredTags;
 }
 
 @ObjectType({

@@ -8,10 +8,11 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import {
+  AnonSession,
   firstLettersOfWords,
   IdArg,
   IdField,
-  ISession,
+  LoggedInSession,
   Session,
 } from '../../common';
 import { LocationListInput, SecuredLocationList } from '../location';
@@ -19,6 +20,7 @@ import {
   OrganizationListInput,
   SecuredOrganizationList,
 } from '../organization';
+import { PartnerListInput, SecuredPartnerList } from '../partner';
 import { SecuredTimeZone, TimeZoneService } from '../timezone';
 import {
   AssignOrganizationToUserInput,
@@ -58,7 +60,10 @@ export class UserResolver {
   @Query(() => User, {
     description: 'Look up a user by its ID',
   })
-  async user(@Session() session: ISession, @IdArg() id: string): Promise<User> {
+  async user(
+    @AnonSession() session: Session,
+    @IdArg() id: string
+  ): Promise<User> {
     return await this.userService.readOne(id, session);
   }
 
@@ -92,7 +97,7 @@ export class UserResolver {
     description: 'Look up users',
   })
   async users(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Args({
       name: 'input',
       type: () => UserListInput,
@@ -112,7 +117,7 @@ export class UserResolver {
 
   @ResolveField(() => SecuredUnavailabilityList)
   async unavailabilities(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Parent() { id }: User,
     @Args({
       name: 'input',
@@ -126,7 +131,7 @@ export class UserResolver {
 
   @ResolveField(() => SecuredOrganizationList)
   async organizations(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Parent() { id }: User,
     @Args({
       name: 'input',
@@ -138,9 +143,23 @@ export class UserResolver {
     return this.userService.listOrganizations(id, input, session);
   }
 
+  @ResolveField(() => SecuredPartnerList)
+  async partners(
+    @AnonSession() session: Session,
+    @Parent() { id }: User,
+    @Args({
+      name: 'input',
+      type: () => PartnerListInput,
+      defaultValue: PartnerListInput.defaultVal,
+    })
+    input: PartnerListInput
+  ): Promise<SecuredPartnerList> {
+    return this.userService.listPartners(id, input, session);
+  }
+
   @ResolveField(() => SecuredEducationList)
   async education(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Parent() { id }: User,
     @Args({
       name: 'input',
@@ -154,7 +173,7 @@ export class UserResolver {
 
   @ResolveField(() => SecuredLocationList)
   async locations(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Parent() user: User,
     @Args({
       name: 'input',
@@ -170,7 +189,7 @@ export class UserResolver {
     description: 'Create a person',
   })
   async createPerson(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') { person: input }: CreatePersonInput
   ): Promise<CreatePersonOutput> {
     const userId = await this.userService.create(input, session);
@@ -182,7 +201,7 @@ export class UserResolver {
     description: 'Update a user',
   })
   async updateUser(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') { user: input }: UpdateUserInput
   ): Promise<UpdateUserOutput> {
     const user = await this.userService.update(input, session);
@@ -192,7 +211,7 @@ export class UserResolver {
   @Mutation(() => Boolean, {
     description: 'Delete a user',
   })
-  async deleteUser(@Session() session: ISession, @IdArg() id: string) {
+  async deleteUser(@LoggedInSession() session: Session, @IdArg() id: string) {
     await this.userService.delete(id, session);
     return true;
   }
@@ -201,7 +220,7 @@ export class UserResolver {
     description: 'Add a location to a user',
   })
   async addLocationToUser(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args() { userId, locationId }: ModifyLocationArgs
   ): Promise<User> {
     await this.userService.addLocation(userId, locationId, session);
@@ -212,7 +231,7 @@ export class UserResolver {
     description: 'Remove a location from a user',
   })
   async removeLocationFromUser(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args() { userId, locationId }: ModifyLocationArgs
   ): Promise<User> {
     await this.userService.removeLocation(userId, locationId, session);
@@ -222,7 +241,9 @@ export class UserResolver {
   @Query(() => Boolean, {
     description: 'Check Consistency across User Nodes',
   })
-  async checkUserConsistency(@Session() session: ISession): Promise<boolean> {
+  async checkUserConsistency(
+    @AnonSession() session: Session
+  ): Promise<boolean> {
     return await this.userService.checkUserConsistency(session);
   }
 
@@ -230,7 +251,7 @@ export class UserResolver {
     description: 'Assign organization OR primaryOrganization to user',
   })
   async assignOrganizationToUser(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') input: AssignOrganizationToUserInput
   ): Promise<boolean> {
     await this.userService.assignOrganizationToUser(input.request, session);
@@ -241,7 +262,7 @@ export class UserResolver {
     description: 'Remove organization OR primaryOrganization from user',
   })
   async removeOrganizationFromUser(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') input: RemoveOrganizationFromUserInput
   ): Promise<boolean> {
     await this.userService.removeOrganizationFromUser(input.request, session);

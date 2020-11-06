@@ -1,4 +1,5 @@
 import { gql } from 'apollo-server-core';
+import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { some } from 'lodash';
 import { DateTime, Interval } from 'luxon';
@@ -19,6 +20,7 @@ import {
   ProjectStatus,
   ProjectStep,
   ProjectType,
+  Role,
 } from '../src/components/project';
 import { User } from '../src/components/user';
 import {
@@ -28,13 +30,16 @@ import {
   createLanguage,
   createLanguageEngagement,
   createLocation,
+  createPerson,
   createProject,
   createSession,
   createTestApp,
   expectNotFound,
   fragments,
   getUserFromSession,
+  login,
   Raw,
+  registerUser,
   registerUserWithPower,
   requestFileUpload,
   runAsAdmin,
@@ -42,6 +47,7 @@ import {
   uploadFileContents,
 } from './utility';
 import { createProduct } from './utility/create-product';
+import { resetDatabase } from './utility/reset-database';
 import {
   changeProjectStep,
   stepsFromEarlyConversationToBeforeActive,
@@ -56,16 +62,20 @@ describe('Engagement e2e', () => {
   let user: User;
   let intern: Partial<User>;
   let mentor: Partial<User>;
+  let db: Connection;
+  const password = faker.internet.password();
 
   beforeAll(async () => {
     app = await createTestApp();
+    db = app.get(Connection);
 
     await createSession(app);
 
-    user = await registerUserWithPower(app, [
-      Powers.CreateLanguage,
-      Powers.CreateEthnologueLanguage,
-    ]);
+    user = await registerUserWithPower(
+      app,
+      [Powers.CreateLanguage, Powers.CreateEthnologueLanguage],
+      { password }
+    );
     language = await createLanguage(app);
     location = await createLocation(app);
     intern = await getUserFromSession(app);
@@ -73,6 +83,7 @@ describe('Engagement e2e', () => {
   });
 
   afterAll(async () => {
+    await resetDatabase(db);
     await app.close();
   });
 
@@ -369,15 +380,11 @@ describe('Engagement e2e', () => {
     expect(updated.status).toBe(EngagementStatus.Rejected);
   });
 
-  // needs to be updated to use project roles
-  it.skip('updates internship engagement', async () => {
+  it('updates internship engagement', async () => {
     internshipProject = await createProject(app, {
       type: ProjectType.Internship,
     });
-    const mentor = await registerUserWithPower(app, [
-      Powers.CreateLanguage,
-      Powers.CreateEthnologueLanguage,
-    ]);
+    const mentor = await createPerson(app);
     const internshipEngagement = await createInternshipEngagementWithMinimumValues(
       app,
       {
@@ -513,8 +520,7 @@ describe('Engagement e2e', () => {
     expect(result.checkEngagementConsistency).toBeTruthy();
   });
 
-  // needs to be updated to use project roles
-  it.skip('returns the correct products in language engagement', async () => {
+  it('returns the correct products in language engagement', async () => {
     project = await createProject(app);
     language = await createLanguage(app);
     const languageEngagement = await createLanguageEngagement(app, {
@@ -628,6 +634,8 @@ describe('Engagement e2e', () => {
     expect(
       languageEngagementRead?.engagement?.ceremony?.value?.id
     ).toBeDefined();
+
+    await registerUser(app, { roles: [Role.FieldOperationsDirector] });
     const date = '2020-05-13';
     await app.graphql.mutate(
       gql`
@@ -671,6 +679,8 @@ describe('Engagement e2e', () => {
     );
     expect(result.ceremony.planned.value).toBeTruthy();
     expect(result.ceremony.estimatedDate.value).toBe(date);
+
+    await login(app, { email: user.email.value, password });
   });
 
   it('updates ceremony for internship engagement', async () => {
@@ -701,6 +711,7 @@ describe('Engagement e2e', () => {
       internshipEngagementRead?.engagement?.ceremony?.value?.id
     ).toBeDefined();
 
+    await registerUser(app, { roles: [Role.FieldOperationsDirector] });
     const date = '2020-05-13';
     await app.graphql.mutate(
       gql`
@@ -744,6 +755,8 @@ describe('Engagement e2e', () => {
     );
     expect(result.ceremony.planned.value).toBeTruthy();
     expect(result.ceremony.estimatedDate.value).toBe(date);
+
+    await login(app, { email: user.email.value, password });
   });
 
   it.skip('delete ceremony upon engagement deletion', async () => {
@@ -1034,8 +1047,7 @@ describe('Engagement e2e', () => {
     );
   });
 
-  // needs to be updated to use project roles
-  it.skip('should update Engagement status to Active if Project becomes Active from InDevelopment', async () => {
+  it('should update Engagement status to Active if Project becomes Active from InDevelopment', async () => {
     const fundingAccount = await createFundingAccount(app);
     const location = await createLocation(app, {
       fundingAccountId: fundingAccount.id,
@@ -1216,5 +1228,45 @@ describe('Engagement e2e', () => {
     expect(actual.status).toBe(EngagementStatus.Active);
     expect(actual.statusModifiedAt.value).toBe(actual.modifiedAt);
     expect(actual.lastReactivatedAt.value).toBe(actual.modifiedAt);
+  });
+
+  it('should not Create/Delete Engagement if Project status is not InDevelopment', async () => {
+    const fundingAccount = await createFundingAccount(app);
+    const location = await createLocation(app, {
+      fundingAccountId: fundingAccount.id,
+    });
+    const project = await createProject(app, {
+      step: ProjectStep.EarlyConversations,
+      primaryLocationId: location.id,
+    });
+    const engagement = await createLanguageEngagement(app, {
+      projectId: project.id,
+    });
+
+    await runAsAdmin(app, async () => {
+      for (const next of stepsFromEarlyConversationToBeforeActive) {
+        await changeProjectStep(app, project.id, next);
+      }
+      await changeProjectStep(app, project.id, ProjectStep.Active);
+
+      await expect(
+        createLanguageEngagement(app, {
+          projectId: project.id,
+        })
+      ).rejects.toThrowError('The Project status is not in development');
+
+      await expect(
+        app.graphql.mutate(
+          gql`
+            mutation deleteEngagement($id: ID!) {
+              deleteEngagement(id: $id)
+            }
+          `,
+          {
+            id: engagement.id,
+          }
+        )
+      ).rejects.toThrowError('The Project status is not in development');
+    });
   });
 });

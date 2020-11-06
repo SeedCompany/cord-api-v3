@@ -13,9 +13,9 @@ import { isEmpty } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   generateId,
-  ISession,
   NotFoundException,
   ServerException,
+  Session,
 } from '../../common';
 import {
   ConfigService,
@@ -39,7 +39,7 @@ export class FileRepository {
     @Logger('file:repository') private readonly logger: ILogger
   ) {}
 
-  async getBaseNodeById(id: string, session: ISession): Promise<BaseNode> {
+  async getBaseNodeById(id: string, session: Session): Promise<BaseNode> {
     return await this.getBaseNodeBy(session, [
       [node('node', 'FileNode', { id })],
       matchName(),
@@ -49,7 +49,7 @@ export class FileRepository {
   async getBaseNodeByName(
     parentId: string,
     name: string,
-    session: ISession
+    session: Session
   ): Promise<BaseNode> {
     return await this.getBaseNodeBy(session, [
       [
@@ -62,7 +62,7 @@ export class FileRepository {
     ]);
   }
 
-  async getParentsById(id: string, session: ISession): Promise<BaseNode[]> {
+  async getParentsById(id: string, session: Session): Promise<BaseNode[]> {
     const query = this.getBaseNodeQuery(session, [
       [
         node('start', 'FileNode', { id }),
@@ -76,7 +76,7 @@ export class FileRepository {
   }
 
   async getChildrenById(
-    session: ISession,
+    session: Session,
     nodeId: string,
     options: FileListInput | undefined
   ) {
@@ -133,7 +133,7 @@ export class FileRepository {
   }
 
   private async getBaseNodeBy(
-    session: ISession,
+    session: Session,
     patterns: Pattern[][]
   ): Promise<BaseNode> {
     const nodes = await this.getBaseNodesBy(session, patterns);
@@ -141,7 +141,7 @@ export class FileRepository {
   }
 
   private async getBaseNodesBy(
-    session: ISession,
+    session: Session,
     patterns: Pattern[][]
   ): Promise<BaseNode[]> {
     const query = this.getBaseNodeQuery(session, patterns);
@@ -149,7 +149,7 @@ export class FileRepository {
     return results;
   }
 
-  private getBaseNodeQuery(session: ISession, patterns: Pattern[][]) {
+  private getBaseNodeQuery(session: Session, patterns: Pattern[][]) {
     this.db.assertPatternsIncludeIdentifier(patterns, 'node', 'name');
 
     const query = this.db
@@ -185,7 +185,7 @@ export class FileRepository {
     return latestVersionResult.fv.properties.id;
   }
 
-  async getVersionDetails(id: string, session: ISession): Promise<FileVersion> {
+  async getVersionDetails(id: string, session: Session): Promise<FileVersion> {
     const matchLatestVersionProp = (q: Query, prop: string, variable = prop) =>
       q
         .with('*')
@@ -250,7 +250,7 @@ export class FileRepository {
   async createDirectory(
     parentId: string | undefined,
     name: string,
-    session: ISession
+    session: Session
   ): Promise<string> {
     const props: Property[] = [
       {
@@ -291,7 +291,7 @@ export class FileRepository {
   async createFile(
     fileId: string,
     name: string,
-    session: ISession,
+    session: Session,
     parentId?: string
   ) {
     const props: Property[] = [
@@ -328,7 +328,7 @@ export class FileRepository {
   async createFileVersion(
     fileId: string,
     input: Pick<FileVersion, 'id' | 'name' | 'mimeType' | 'size'>,
-    session: ISession
+    session: Session
   ) {
     const props: Property[] = [
       {
@@ -370,7 +370,7 @@ export class FileRepository {
     return result;
   }
 
-  private async attachCreator(id: string, session: ISession) {
+  private async attachCreator(id: string, session: Session) {
     await this.db
       .query()
       .match([
@@ -421,7 +421,7 @@ export class FileRepository {
   async rename(
     fileNode: BaseNode,
     newName: string,
-    session: ISession
+    session: Session
   ): Promise<void> {
     try {
       await this.db.sgUpdateProperty({
@@ -437,11 +437,7 @@ export class FileRepository {
     }
   }
 
-  async move(
-    id: string,
-    newParentId: string,
-    session: ISession
-  ): Promise<void> {
+  async move(id: string, newParentId: string, session: Session): Promise<void> {
     try {
       await this.db
         .query()
@@ -470,7 +466,7 @@ export class FileRepository {
     }
   }
 
-  async delete(fileNode: BaseNode, session: ISession): Promise<void> {
+  async delete(fileNode: BaseNode, session: Session): Promise<void> {
     try {
       await this.db.deleteNode({
         session,
@@ -483,7 +479,7 @@ export class FileRepository {
     }
   }
 
-  async checkConsistency(type: FileNodeType, session: ISession): Promise<void> {
+  async checkConsistency(type: FileNodeType, session: Session): Promise<void> {
     const fileNodes = await this.db
       .query()
       .matchNode('fileNode', type)

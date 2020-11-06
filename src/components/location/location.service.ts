@@ -4,10 +4,10 @@ import { DateTime } from 'luxon';
 import {
   DuplicateException,
   generateId,
-  ISession,
   NotFoundException,
   Sensitivity,
   ServerException,
+  Session,
 } from '../../common';
 import {
   ConfigService,
@@ -78,7 +78,7 @@ export class LocationService {
     ];
   }
 
-  async create(input: CreateLocation, session: ISession): Promise<Location> {
+  async create(input: CreateLocation, session: Session): Promise<Location> {
     const checkName = await this.db
       .query()
       .match([node('name', 'LocationName', { value: input.name })])
@@ -160,22 +160,18 @@ export class LocationService {
     await this.authorizationService.processNewBaseNode(
       dbLocation,
       result.id,
-      session.userId as string
+      session.userId
     );
 
     this.logger.debug(`location created`, { id: result.id });
     return await this.readOne(result.id, session);
   }
 
-  async readOne(id: string, session: ISession): Promise<Location> {
+  async readOne(id: string, session: Session): Promise<Location> {
     this.logger.debug(`Read Location`, {
       id: id,
       userId: session.userId,
     });
-
-    if (!session.userId) {
-      session.userId = this.config.anonUser.id;
-    }
 
     const query = this.db
       .query()
@@ -219,7 +215,7 @@ export class LocationService {
     };
   }
 
-  async update(input: UpdateLocation, session: ISession): Promise<Location> {
+  async update(input: UpdateLocation, session: Session): Promise<Location> {
     const location = await this.readOne(input.id, session);
 
     await this.db.sgUpdateProperties({
@@ -266,13 +262,13 @@ export class LocationService {
     return await this.readOne(input.id, session);
   }
 
-  async delete(_id: string, _session: ISession): Promise<void> {
+  async delete(_id: string, _session: Session): Promise<void> {
     // Not Implemented
   }
 
   async list(
     { filter, ...input }: LocationListInput,
-    session: ISession
+    session: Session
   ): Promise<LocationListOutput> {
     const label = 'Location';
     const query = this.db
@@ -346,7 +342,7 @@ export class LocationService {
     id: string,
     rel: string,
     input: LocationListInput,
-    session: ISession
+    session: Session
   ): Promise<SecuredLocationList> {
     const query = this.db
       .query()

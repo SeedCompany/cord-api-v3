@@ -1,5 +1,5 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { IdArg, ISession, Session } from '../../common';
+import { AnonSession, IdArg, LoggedInSession, Session } from '../../common';
 import {
   CreateFilmInput,
   CreateFilmOutput,
@@ -18,7 +18,10 @@ export class FilmResolver {
   @Query(() => Film, {
     description: 'Look up a film by its ID',
   })
-  async film(@Session() session: ISession, @IdArg() id: string): Promise<Film> {
+  async film(
+    @AnonSession() session: Session,
+    @IdArg() id: string
+  ): Promise<Film> {
     return await this.filmService.readOne(id, session);
   }
 
@@ -26,7 +29,7 @@ export class FilmResolver {
     description: 'Look up films',
   })
   async films(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Args({
       name: 'input',
       type: () => FilmListInput,
@@ -41,7 +44,7 @@ export class FilmResolver {
     description: 'Create a film',
   })
   async createFilm(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') { film: input }: CreateFilmInput
   ): Promise<CreateFilmOutput> {
     const film = await this.filmService.create(input, session);
@@ -52,7 +55,7 @@ export class FilmResolver {
     description: 'Update a film',
   })
   async updateFilm(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') { film: input }: UpdateFilmInput
   ): Promise<UpdateFilmOutput> {
     const film = await this.filmService.update(input, session);
@@ -63,7 +66,7 @@ export class FilmResolver {
     description: 'Delete a film',
   })
   async deleteFilm(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @IdArg() id: string
   ): Promise<boolean> {
     await this.filmService.delete(id, session);

@@ -7,7 +7,7 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { IdArg, ISession, Session } from '../../common';
+import { AnonSession, IdArg, LoggedInSession, Session } from '../../common';
 import { User, UserService } from '../user';
 import {
   CreateFileVersionInput,
@@ -31,14 +31,17 @@ export class FileResolver {
   ) {}
 
   @Query(() => File)
-  async file(@IdArg() id: string, @Session() session: ISession): Promise<File> {
+  async file(
+    @IdArg() id: string,
+    @AnonSession() session: Session
+  ): Promise<File> {
     return await this.service.getFile(id, session);
   }
 
   @Query(() => IFileNode)
   async fileNode(
     @IdArg() id: string,
-    @Session() session: ISession
+    @AnonSession() session: Session
   ): Promise<FileNode> {
     return await this.service.getFileNode(id, session);
   }
@@ -48,7 +51,7 @@ export class FileResolver {
   })
   async modifiedBy(
     @Parent() node: File,
-    @Session() session: ISession
+    @AnonSession() session: Session
   ): Promise<User> {
     return await this.users.readOne(node.modifiedById, session);
   }
@@ -57,7 +60,7 @@ export class FileResolver {
     description: 'Return the versions of this file',
   })
   async children(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Parent() node: File,
     @Args({
       name: 'input',
@@ -81,7 +84,7 @@ export class FileResolver {
   })
   async deleteFileNode(
     @IdArg() id: string,
-    @Session() session: ISession
+    @LoggedInSession() session: Session
   ): Promise<boolean> {
     await this.service.delete(id, session);
     return true;
@@ -91,7 +94,7 @@ export class FileResolver {
     description: 'Start the file upload process by requesting an upload',
   })
   async requestFileUpload(
-    @Session() _session: ISession // require authorized
+    @LoggedInSession() _session: Session // require authorized
   ): Promise<RequestUploadOutput> {
     return await this.service.requestUpload();
   }
@@ -107,7 +110,7 @@ export class FileResolver {
   })
   createFileVersion(
     @Args('input') input: CreateFileVersionInput,
-    @Session() session: ISession
+    @LoggedInSession() session: Session
   ): Promise<File> {
     return this.service.createFileVersion(input, session);
   }
@@ -117,7 +120,7 @@ export class FileResolver {
   })
   async renameFileNode(
     @Args('input') input: RenameFileInput,
-    @Session() session: ISession
+    @LoggedInSession() session: Session
   ): Promise<FileNode> {
     await this.service.rename(input, session);
     return await this.service.getFileNode(input.id, session);
@@ -128,7 +131,7 @@ export class FileResolver {
   })
   moveFileNode(
     @Args('input') input: MoveFileInput,
-    @Session() session: ISession
+    @LoggedInSession() session: Session
   ): Promise<FileNode> {
     return this.service.move(input, session);
   }
@@ -139,7 +142,7 @@ export class FileResolver {
   })
   async checkFileConsistency(
     @Args({ name: 'type', type: () => FileNodeType }) type: FileNodeType,
-    @Session() session: ISession
+    @LoggedInSession() session: Session
   ): Promise<boolean> {
     try {
       await this.service.checkConsistency(type, session);

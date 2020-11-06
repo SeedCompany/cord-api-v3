@@ -1,4 +1,5 @@
 import { gql } from 'apollo-server-core';
+import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { firstLettersOfWords, isValidId } from '../src/common';
 import { Powers } from '../src/components/authorization/dto/powers';
@@ -19,16 +20,20 @@ import {
   registerUserWithPower,
   TestApp,
 } from './utility';
+import { resetDatabase } from './utility/reset-database';
 
 describe('User e2e', () => {
   let app: TestApp;
+  let db: Connection;
 
   beforeAll(async () => {
     app = await createTestApp();
+    db = app.get(Connection);
     await createSession(app);
   });
 
   afterAll(async () => {
+    await resetDatabase(db);
     await app.close();
   });
 
@@ -180,7 +185,7 @@ describe('User e2e', () => {
     return true;
   });
 
-  it.skip('delete user', async () => {
+  it('delete user', async () => {
     // create user first
     const user = await registerUser(app);
     const result = await app.graphql.query(
@@ -201,7 +206,7 @@ describe('User e2e', () => {
   });
 
   // LIST USERS
-  it.skip('list view of users', async () => {
+  it('list view of users', async () => {
     await registerUser(app);
     await registerUser(app);
     await registerUser(app);
@@ -532,7 +537,6 @@ describe('User e2e', () => {
     expect(actual.avatarLetters).toBe(firstLettersOfWords(actual.fullName));
   });
 
-  // skipping because we will be refactoring how we do search
   it('list users with organizations', async () => {
     const newUser = await registerUserWithPower(app, [
       Powers.CreateOrganization,

@@ -9,7 +9,7 @@ import { PartnerService } from './partner.service';
   imports: [
     forwardRef(() => AuthorizationModule),
     forwardRef(() => OrganizationModule),
-    UserModule,
+    forwardRef(() => UserModule),
   ],
   providers: [PartnerResolver, PartnerService],
   exports: [PartnerService],

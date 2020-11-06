@@ -12,18 +12,19 @@ import { cloneDeep, deburr, Many, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { assert } from 'ts-essentials';
 import {
-  ISession,
   isSecured,
   many,
   NotFoundException,
   Order,
   Resource,
   ServerException,
+  Session,
   UnauthorizedException,
   unwrapSecured,
   UnwrapSecured,
 } from '../../common';
-import { ILogger, Logger } from '..';
+import { ILogger, Logger, ServiceUnavailableError } from '..';
+import { AbortError, retry, RetryOptions } from '../../common/retry';
 import { ConfigService } from '../config/config.service';
 import {
   SelectedNodeProperties,
@@ -53,7 +54,7 @@ export const property = (
 ];
 
 export const matchSession = (
-  session: ISession,
+  session: Session,
   {
     // eslint-disable-next-line @seedcompany/no-unused-vars
     withAclEdit,
@@ -87,6 +88,37 @@ export class DatabaseService {
     @Logger('database:service') private readonly logger: ILogger
   ) {}
 
+  /**
+   * This will run the function after connecting to the database.
+   * If connection to database fails while executing function it will keep
+   * retrying (after another successful connection) until the function finishes.
+   */
+  async runOnceUntilCompleteAfterConnecting(run: () => Promise<void>) {
+    await this.waitForConnection(
+      {
+        forever: true,
+        minTimeout: { seconds: 10 },
+        maxTimeout: { minutes: 5 },
+      },
+      run
+    );
+  }
+
+  /**
+   * Wait for database connection.
+   * Optionally run a function in retry context after connecting.
+   */
+  async waitForConnection(options?: RetryOptions, then?: () => Promise<void>) {
+    await retry(async () => {
+      try {
+        await this.getServerInfo();
+        await then?.();
+      } catch (e) {
+        throw e instanceof ServiceUnavailableError ? e : new AbortError(e);
+      }
+    }, options);
+  }
+
   query(): Query {
     return this.db.query();
   }
@@ -115,7 +147,7 @@ export class DatabaseService {
     changes,
     nodevar,
   }: {
-    session: ISession;
+    session: Session;
     object: TObject;
     props: ReadonlyArray<keyof TObject & string>;
     changes: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
@@ -197,7 +229,7 @@ export class DatabaseService {
     value,
     nodevar,
   }: {
-    session: ISession;
+    session: Session;
     object: TObject;
     key: Key;
     value?: UnwrapSecured<TObject[Key]>;
@@ -293,7 +325,7 @@ export class DatabaseService {
     aclEditProp,
     input,
   }: {
-    session: ISession;
+    session: Session;
     props: ReadonlyArray<
       keyof TObject | { secure: boolean; name: keyof TObject; list?: boolean }
     >;
@@ -511,7 +543,7 @@ export class DatabaseService {
     // eslint-disable-next-line @seedcompany/no-unused-vars
     aclEditProp, // example canCreateLangs
   }: {
-    session: ISession;
+    session: Session;
     object: TObject;
     aclEditProp: string;
   }) {
@@ -552,7 +584,7 @@ export class DatabaseService {
     nodevar,
   }: {
     id: string;
-    session: ISession;
+    session: Session;
     props: string[];
     nodevar: string;
   }): Promise<boolean> {
@@ -576,7 +608,7 @@ export class DatabaseService {
     nodevar,
   }: {
     id: string;
-    session: ISession;
+    session: Session;
     prop: string;
     nodevar: string;
   }): Promise<boolean> {
@@ -607,7 +639,7 @@ export class DatabaseService {
     relName,
     srcNodeLabel,
   }: {
-    session: ISession;
+    session: Session;
     id: string;
     relName: string;
     srcNodeLabel: string;
@@ -641,7 +673,7 @@ export class DatabaseService {
     nodevar,
   }: {
     id: string;
-    session: ISession;
+    session: Session;
     props: string[];
     nodevar: string;
   }): Promise<boolean> {
@@ -665,7 +697,7 @@ export class DatabaseService {
     nodevar,
   }: {
     id: string;
-    session: ISession;
+    session: Session;
     prop: string;
     nodevar: string;
   }): Promise<boolean> {

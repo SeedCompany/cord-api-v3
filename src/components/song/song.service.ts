@@ -3,9 +3,9 @@ import { node } from 'cypher-query-builder';
 import {
   DuplicateException,
   generateId,
-  ISession,
   NotFoundException,
   ServerException,
+  Session,
 } from '../../common';
 import {
   ConfigService,
@@ -31,6 +31,7 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { AuthorizationService } from '../authorization/authorization.service';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
   CreateSong,
@@ -39,6 +40,7 @@ import {
   SongListOutput,
   UpdateSong,
 } from './dto';
+import { DbSong } from './model';
 
 @Injectable()
 export class SongService {
@@ -51,7 +53,8 @@ export class SongService {
     @Logger('song:service') private readonly logger: ILogger,
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
-    private readonly scriptureRefService: ScriptureReferenceService
+    private readonly scriptureRefService: ScriptureReferenceService,
+    private readonly authorizationService: AuthorizationService
   ) {}
 
   @OnIndex()
@@ -70,7 +73,7 @@ export class SongService {
     ];
   }
 
-  async create(input: CreateSong, session: ISession): Promise<Song> {
+  async create(input: CreateSong, session: Session): Promise<Song> {
     const checkSong = await this.db
       .query()
       .match([node('song', 'SongName', { value: input.name })])
@@ -111,6 +114,13 @@ export class SongService {
         throw new ServerException('failed to create a song');
       }
 
+      const dbSong = new DbSong();
+      await this.authorizationService.processNewBaseNode(
+        dbSong,
+        result.id,
+        session.userId
+      );
+
       await this.scriptureRefService.create(
         result.id,
         input.scriptureReferences,
@@ -128,16 +138,7 @@ export class SongService {
     }
   }
 
-  async readOne(id: string, session: ISession): Promise<Song> {
-    if (!session.userId) {
-      session.userId = this.config.anonUser.id;
-    }
-
-    if (!session.userId) {
-      this.logger.debug('using anon user id');
-      session.userId = this.config.anonUser.id;
-    }
-
+  async readOne(id: string, session: Session): Promise<Song> {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
@@ -175,7 +176,7 @@ export class SongService {
     };
   }
 
-  async update(input: UpdateSong, session: ISession): Promise<Song> {
+  async update(input: UpdateSong, session: Session): Promise<Song> {
     await this.scriptureRefService.update(input.id, input.scriptureReferences);
 
     const song = await this.readOne(input.id, session);
@@ -189,7 +190,7 @@ export class SongService {
     });
   }
 
-  async delete(id: string, session: ISession): Promise<void> {
+  async delete(id: string, session: Session): Promise<void> {
     const song = await this.readOne(id, session);
     try {
       await this.db.deleteNode({
@@ -207,7 +208,7 @@ export class SongService {
 
   async list(
     { filter, ...input }: SongListInput,
-    session: ISession
+    session: Session
   ): Promise<SongListOutput> {
     const query = this.db
       .query()

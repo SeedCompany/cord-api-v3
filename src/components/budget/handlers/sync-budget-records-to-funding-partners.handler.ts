@@ -2,9 +2,9 @@ import { node, relation } from 'cypher-query-builder';
 import { difference } from 'lodash';
 import {
   fiscalYears,
-  ISession,
   NotFoundException,
   Secured,
+  Session,
   UnauthorizedException,
 } from '../../../common';
 import {
@@ -150,7 +150,7 @@ export class SyncBudgetRecordsToFundingPartners
     budget: Budget,
     organizationId: string,
     additions: readonly FiscalYear[],
-    session: ISession
+    session: Session
   ) {
     await Promise.all(
       additions.map((fiscalYear) =>
@@ -170,7 +170,7 @@ export class SyncBudgetRecordsToFundingPartners
     budget: Budget,
     organizationId: string,
     removals: readonly FiscalYear[],
-    session: ISession
+    session: Session
   ) {
     const recordsToDelete = budget.records.filter(
       (record) =>

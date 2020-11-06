@@ -6,7 +6,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { IdArg, ISession, Session } from '../../common';
+import { AnonSession, IdArg, LoggedInSession, Session } from '../../common';
 import {
   CreateDirectoryInput,
   Directory,
@@ -22,7 +22,7 @@ export class DirectoryResolver {
   @Query(() => Directory)
   async directory(
     @IdArg() id: string,
-    @Session() session: ISession
+    @AnonSession() session: Session
   ): Promise<Directory> {
     return await this.service.getDirectory(id, session);
   }
@@ -31,7 +31,7 @@ export class DirectoryResolver {
     description: 'Return the file nodes of this directory',
   })
   async children(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Parent() node: Directory,
     @Args({
       name: 'input',
@@ -45,7 +45,7 @@ export class DirectoryResolver {
 
   @Mutation(() => Directory)
   async createDirectory(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') { parentId, name }: CreateDirectoryInput
   ): Promise<Directory> {
     return await this.service.createDirectory(parentId, name, session);

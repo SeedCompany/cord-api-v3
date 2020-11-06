@@ -1,4 +1,5 @@
 import { gql } from 'apollo-server-core';
+import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { isValidId } from '../src/common';
 import { FieldRegion } from '../src/components/field-region';
@@ -14,6 +15,7 @@ import {
 } from './utility';
 import { createRegion } from './utility/create-region';
 import { createZone } from './utility/create-zone';
+import { resetDatabase } from './utility/reset-database';
 
 describe('Region e2e', () => {
   let app: TestApp;
@@ -21,15 +23,18 @@ describe('Region e2e', () => {
   let newDirector: User;
   let fieldZone: FieldZone;
   const password: string = faker.internet.password();
+  let db: Connection;
 
   beforeAll(async () => {
     app = await createTestApp();
+    db = app.get(Connection);
     await createSession(app);
     director = await registerUser(app, { password });
     fieldZone = await createZone(app, { directorId: director.id });
   });
 
   afterAll(async () => {
+    await resetDatabase(db);
     await app.close();
   });
 

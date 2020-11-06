@@ -7,9 +7,9 @@ import {
   DuplicateException,
   generateId,
   InputException,
-  ISession,
   NotFoundException,
   ServerException,
+  Session,
 } from '../../../common';
 import {
   ConfigService,
@@ -89,7 +89,7 @@ export class ProjectMemberService {
 
   async create(
     { userId, projectId, ...input }: CreateProjectMember,
-    session: ISession
+    session: Session
   ): Promise<ProjectMember> {
     const id = await generateId();
     const createdAt = DateTime.local();
@@ -151,7 +151,7 @@ export class ProjectMemberService {
       await this.authorizationService.processNewBaseNode(
         dbProjectMember,
         memberQuery?.id,
-        session.userId!
+        session.userId
       );
 
       // await this.addProjectAdminsToUserSg(projectId, userId);
@@ -166,7 +166,7 @@ export class ProjectMemberService {
     }
   }
 
-  async readOne(id: string, session: ISession): Promise<ProjectMember> {
+  async readOne(id: string, session: Session): Promise<ProjectMember> {
     this.logger.debug(`read one`, {
       id,
       userId: session.userId,
@@ -225,7 +225,7 @@ export class ProjectMemberService {
 
   async update(
     input: UpdateProjectMember,
-    session: ISession
+    session: Session
   ): Promise<ProjectMember> {
     const object = await this.readOne(input.id, session);
 
@@ -262,7 +262,7 @@ export class ProjectMemberService {
     }
   }
 
-  async delete(id: string, session: ISession): Promise<void> {
+  async delete(id: string, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
     if (!object) {
@@ -289,7 +289,7 @@ export class ProjectMemberService {
 
   async list(
     { filter, ...input }: ProjectMemberListInput,
-    session: ISession
+    session: Session
   ): Promise<ProjectMemberListOutput> {
     const label = 'ProjectMember';
 

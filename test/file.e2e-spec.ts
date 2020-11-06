@@ -1,7 +1,9 @@
 import { gql } from 'apollo-server-core';
+import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { startCase, times } from 'lodash';
 import { DateTime, Duration, DurationObject, Settings } from 'luxon';
+import { anonymousSession } from '../src/common/session';
 import { AuthenticationService } from '../src/components/authentication';
 import {
   Directory,
@@ -38,6 +40,7 @@ import {
   RawFileNode,
   RawFileVersion,
 } from './utility/fragments';
+import { resetDatabase } from './utility/reset-database';
 
 export async function uploadFile(
   app: TestApp,
@@ -103,15 +106,18 @@ describe('File e2e', () => {
   let root: Directory;
   let me: User;
   const myPassword = faker.internet.password();
+  let db: Connection;
 
   beforeAll(async () => {
     app = await createTestApp();
+    db = app.get(Connection);
     bucket = app.get(FilesBucketToken);
     await createSession(app);
     me = await registerUser(app, { password: myPassword });
   });
 
   afterAll(async () => {
+    await resetDatabase(db);
     await app.close();
   });
 
@@ -472,9 +478,11 @@ describe('File e2e', () => {
 
   describe.skip('check consistency', () => {
     const expectConsistency = async (type: FileNodeType, expected = true) => {
-      const session = await app
-        .get(AuthenticationService)
-        .createSession(app.graphql.authToken);
+      const session = anonymousSession(
+        await app
+          .get(AuthenticationService)
+          .createSession(app.graphql.authToken)
+      );
 
       const expecting = expect(
         app.get(FileRepository).checkConsistency(type, session)

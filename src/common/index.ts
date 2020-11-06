@@ -17,7 +17,7 @@ export * from './secured-list';
 export * from './secured-property';
 export * from './sensitivity.enum';
 export * from './util';
-export { ISession, Session } from './session';
+export { Session, LoggedInSession, AnonSession } from './session';
 export * from './types';
 export * from './validators';
 export * from './name-field';

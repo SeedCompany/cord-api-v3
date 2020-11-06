@@ -5,10 +5,9 @@ import {
   DuplicateException,
   generateId,
   InputException,
-  ISession,
   NotFoundException,
   ServerException,
-  UnauthenticatedException,
+  Session,
 } from '../../common';
 import {
   ConfigService,
@@ -78,7 +77,7 @@ export class PartnerService {
     ];
   }
 
-  async create(input: CreatePartner, session: ISession): Promise<Partner> {
+  async create(input: CreatePartner, session: Session): Promise<Partner> {
     this.verifyFinancialReportingType(
       input.financialReportingTypes,
       input.types
@@ -197,14 +196,14 @@ export class PartnerService {
     await this.authorizationService.processNewBaseNode(
       dbPartner,
       result.id,
-      session.userId as string
+      session.userId
     );
 
     this.logger.debug(`partner created`, { id: result.id });
     return await this.readOne(result.id, session);
   }
 
-  async readOnePartnerByOrgId(id: string, session: ISession): Promise<Partner> {
+  async readOnePartnerByOrgId(id: string, session: Session): Promise<Partner> {
     this.logger.debug(`Read Partner by Org Id`, {
       id: id,
       userId: session.userId,
@@ -231,15 +230,11 @@ export class PartnerService {
     return await this.readOne(result.partnerId, session);
   }
 
-  async readOne(id: string, session: ISession): Promise<Partner> {
+  async readOne(id: string, session: Session): Promise<Partner> {
     this.logger.debug(`Read Partner by Partner Id`, {
       id: id,
       userId: session.userId,
     });
-
-    if (!session.userId) {
-      session.userId = this.config.anonUser.id;
-    }
 
     const query = this.db
       .query()
@@ -306,7 +301,7 @@ export class PartnerService {
     };
   }
 
-  async update(input: UpdatePartner, session: ISession): Promise<Partner> {
+  async update(input: UpdatePartner, session: Session): Promise<Partner> {
     const object = await this.readOne(input.id, session);
     let changes = {
       ...input,
@@ -387,10 +382,7 @@ export class PartnerService {
     return await this.readOne(input.id, session);
   }
 
-  async delete(id: string, session: ISession): Promise<void> {
-    if (!session.userId) {
-      throw new UnauthenticatedException('user not logged in');
-    }
+  async delete(id: string, session: Session): Promise<void> {
     const ed = await this.readOne(id, session);
     try {
       await this.db.deleteNode({
@@ -408,12 +400,23 @@ export class PartnerService {
 
   async list(
     { filter, ...input }: PartnerListInput,
-    session: ISession
+    session: Session
   ): Promise<PartnerListOutput> {
     const label = 'Partner';
     const query = this.db
       .query()
-      .match([requestingUser(session), ...permissionsOfNode(label)])
+      .match([
+        requestingUser(session),
+        ...permissionsOfNode(label),
+        ...(filter.userId && session.userId
+          ? [
+              relation('out', '', 'organization', { active: true }),
+              node('', 'Organization'),
+              relation('in', '', 'organization', { active: true }),
+              node('user', 'User', { id: filter.userId }),
+            ]
+          : []),
+      ])
       .call(
         calculateTotalAndPaginateList,
         input,

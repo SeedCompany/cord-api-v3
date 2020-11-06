@@ -1,7 +1,8 @@
 import { Injectable, PipeTransform } from '@nestjs/common';
 import { Request } from 'express';
 import type * as core from 'express-serve-static-core';
-import { ISession, UnauthenticatedException } from '../../common';
+import { UnauthenticatedException } from '../../common';
+import { RawSession } from '../../common/session';
 import { ConfigService } from '../../core';
 import { AuthenticationService } from './authentication.service';
 
@@ -12,18 +13,19 @@ declare module 'express' {
     ReqBody = any,
     ReqQuery = core.Query
   > extends core.Request<P, ResBody, ReqBody, ReqQuery> {
-    session?: ISession;
+    session?: RawSession;
   }
 }
 
 @Injectable()
-export class SessionPipe implements PipeTransform<Request, Promise<ISession>> {
+export class SessionPipe
+  implements PipeTransform<Request, Promise<RawSession>> {
   constructor(
     private readonly auth: AuthenticationService,
     private readonly config: ConfigService
   ) {}
 
-  async transform(request: Request): Promise<ISession> {
+  async transform(request: Request): Promise<RawSession> {
     if (request?.session) {
       return request.session;
     }
@@ -37,7 +39,9 @@ export class SessionPipe implements PipeTransform<Request, Promise<ISession>> {
     return session;
   }
 
-  async createSessionFromRequest(req: Request): Promise<ISession | undefined> {
+  async createSessionFromRequest(
+    req: Request
+  ): Promise<RawSession | undefined> {
     const token =
       this.getTokenFromAuthHeader(req) || this.getTokenFromCookie(req);
 

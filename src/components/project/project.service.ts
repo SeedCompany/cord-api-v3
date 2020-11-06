@@ -6,11 +6,10 @@ import {
   generateId,
   getHighestSensitivity,
   InputException,
-  ISession,
   NotFoundException,
   Sensitivity,
   ServerException,
-  UnauthenticatedException,
+  Session,
 } from '../../common';
 import {
   ConfigService,
@@ -100,6 +99,8 @@ export class ProjectService {
     stepChangedAt: true,
     estimatedSubmission: true,
     type: true,
+    tags: true,
+    financialReportReceivedAt: true,
     primaryLocation: true,
     marketingLocation: true,
     fieldRegion: true,
@@ -150,12 +151,8 @@ export class ProjectService {
       fieldRegionId,
       ...input
     }: CreateProject,
-    session: ISession
+    session: Session
   ): Promise<Project> {
-    if (!session.userId) {
-      throw new UnauthenticatedException('user not logged in');
-    }
-
     if (input.type === ProjectType.Translation && input.sensitivity) {
       throw new InputException(
         'Cannot set sensitivity on tranlation project',
@@ -241,6 +238,18 @@ export class ProjectService {
       {
         key: 'departmentId',
         value: null,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'tags',
+        value: createInput.tags,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'financialReportReceivedAt',
+        value: createInput.financialReportReceivedAt,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -346,11 +355,23 @@ export class ProjectService {
         throw new ServerException('failed to create a project');
       }
 
+      // get the creating user's roles. Assign them on this project.
+      // I'm going direct for performance reasons
+      const roles = await this.db
+        .query()
+        .match([
+          node('user', 'User', { id: session.userId }),
+          relation('out', '', 'roles', { active: true }),
+          node('roles', 'Property'),
+        ])
+        .raw('RETURN roles.value as roles')
+        .first();
+
       await this.projectMembers.create(
         {
           userId: session.userId,
           projectId: result.id,
-          roles: [],
+          roles: [roles?.roles],
         },
         session
       );
@@ -383,7 +404,7 @@ export class ProjectService {
 
   async readOneTranslation(
     id: string,
-    session: ISession
+    session: Session
   ): Promise<TranslationProject> {
     const project = await this.readOne(id, session);
     if (project.type !== ProjectType.Translation) {
@@ -394,7 +415,7 @@ export class ProjectService {
 
   async readOneInternship(
     id: string,
-    session: ISession
+    session: Session
   ): Promise<InternshipProject> {
     const project = await this.readOne(id, session);
     if (project.type !== ProjectType.Internship) {
@@ -403,11 +424,10 @@ export class ProjectService {
     return project as InternshipProject;
   }
 
-  async readOne(id: string, { userId }: { userId?: string }): Promise<Project> {
-    if (!userId) {
-      this.logger.debug('using anon user id');
-      userId = this.config.anonUser.id;
-    }
+  async readOne(
+    id: string,
+    { userId }: Pick<Session, 'userId'>
+  ): Promise<Project> {
     const query = this.db
       .query()
       .call(matchRequestingUser, { userId })
@@ -488,6 +508,10 @@ export class ProjectService {
       type: (result as any)?.node?.properties?.type,
       status: props.status,
       modifiedAt: props.modifiedAt,
+      tags: {
+        ...securedProps.tags,
+        value: securedProps.tags.value as string[],
+      },
       primaryLocation: {
         ...securedProps.primaryLocation,
         value: result.primaryLocationId,
@@ -508,7 +532,7 @@ export class ProjectService {
     };
   }
 
-  async update(input: UpdateProject, session: ISession): Promise<Project> {
+  async update(input: UpdateProject, session: Session): Promise<Project> {
     const currentProject = await this.readOne(input.id, session);
     if (input.sensitivity && currentProject.type === ProjectType.Translation)
       throw new InputException(
@@ -517,11 +541,7 @@ export class ProjectService {
       );
 
     if (input.step) {
-      await this.projectRules.verifyStepChange(
-        input.id,
-        session.userId,
-        input.step
-      );
+      await this.projectRules.verifyStepChange(input.id, session, input.step);
     }
 
     const changes = {
@@ -533,6 +553,17 @@ export class ProjectService {
     // TODO: re-connect the locationId node when locations are hooked up
 
     if (input.primaryLocationId) {
+      const location = await this.locationService.readOne(
+        input.primaryLocationId,
+        session
+      );
+
+      if (!location.fundingAccount.value)
+        throw new InputException(
+          'Cannot connect location without a funding account',
+          'project.primaryLocationId'
+        );
+
       const createdAt = DateTime.local();
       const query = this.db
         .query()
@@ -623,6 +654,8 @@ export class ProjectService {
         'modifiedAt',
         'step',
         'sensitivity',
+        'tags',
+        'financialReportReceivedAt',
       ],
       changes,
       nodevar: 'project',
@@ -638,11 +671,8 @@ export class ProjectService {
     return event.updated;
   }
 
-  async delete(id: string, session: ISession): Promise<void> {
-    await this.authorizationService.checkPower(
-      Powers.DeleteProject,
-      session.userId
-    );
+  async delete(id: string, session: Session): Promise<void> {
+    await this.authorizationService.checkPower(Powers.DeleteProject, session);
 
     const object = await this.readOne(id, session);
     if (!object) {
@@ -673,7 +703,7 @@ export class ProjectService {
 
   async list(
     { filter, ...input }: ProjectListInput,
-    session: ISession
+    session: Session
   ): Promise<ProjectListOutput> {
     const label = `${filter.type ?? ''}Project`;
     const projectSortMap: Partial<Record<typeof input.sort, string>> = {
@@ -691,7 +721,7 @@ export class ProjectService {
     const query = this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode(label)])
-      .with('distinct(node) as node')
+      .with('distinct(node) as node, requestingUser')
       .call(projectListFilter, filter)
       .call(
         calculateTotalAndPaginateList,
@@ -717,7 +747,7 @@ export class ProjectService {
   async listEngagements(
     project: Project,
     input: EngagementListInput,
-    session: ISession
+    session: Session
   ): Promise<SecuredEngagementList> {
     this.logger.debug('list engagements ', {
       projectId: project.id,
@@ -791,7 +821,7 @@ export class ProjectService {
   async listProjectMembers(
     projectId: string,
     input: ProjectMemberListInput,
-    session: ISession
+    session: Session
   ): Promise<SecuredProjectMemberList> {
     const result = await this.projectMembers.list(
       {
@@ -859,7 +889,7 @@ export class ProjectService {
   async listPartnerships(
     projectId: string,
     input: PartnershipListInput,
-    session: ISession
+    session: Session
   ): Promise<SecuredPartnershipList> {
     const result = await this.partnerships.list(
       {
@@ -927,7 +957,7 @@ export class ProjectService {
   async addOtherLocation(
     projectId: string,
     locationId: string,
-    _session: ISession
+    _session: Session
   ): Promise<void> {
     try {
       await this.locationService.addLocationToNode(
@@ -944,7 +974,7 @@ export class ProjectService {
   async removeOtherLocation(
     projectId: string,
     locationId: string,
-    _session: ISession
+    _session: Session
   ): Promise<void> {
     try {
       await this.locationService.removeLocationFromNode(
@@ -964,7 +994,7 @@ export class ProjectService {
   async listOtherLocations(
     projectId: string,
     input: LocationListInput,
-    session: ISession
+    session: Session
   ): Promise<SecuredLocationList> {
     return await this.locationService.listLocationsFromNode(
       'Project',
@@ -977,7 +1007,7 @@ export class ProjectService {
 
   async currentBudget(
     project: Project | { id: string },
-    session: ISession
+    session: Session
   ): Promise<SecuredBudget> {
     const budgets = await this.budgetService.list(
       {
@@ -998,16 +1028,46 @@ export class ProjectService {
       pendingBudget = budgets.items[0];
     }
 
+    const budgetPerms = await this.db
+      .query()
+      .optionalMatch([
+        node('user', 'User', { id: session.userId }),
+        relation('in', '', 'member'),
+        node('', 'SecurityGroup'),
+        relation('out', '', 'permission'),
+        node('canRead', 'Permission', {
+          property: 'budget',
+          read: true,
+        }),
+        relation('out', '', 'baseNode'),
+        node('project', 'Project', { id: project.id }),
+      ])
+      .optionalMatch([
+        node('user'),
+        relation('in', '', 'member'),
+        node('', 'SecurityGroup'),
+        relation('out', '', 'permission'),
+        node('canEdit', 'Permission', {
+          property: 'budget',
+          edit: true,
+        }),
+        relation('out', '', 'baseNode'),
+        node('project'),
+      ])
+      .raw('RETURN canRead.read as canRead, canEdit.edit as canEdit')
+      .first();
+
+    const budgetToReturn = current || pendingBudget;
     return {
-      value: current ? current : pendingBudget,
-      canEdit: true,
-      canRead: true,
+      value: budgetToReturn,
+      canRead: (budgetToReturn && budgetPerms?.canRead) || false,
+      canEdit: budgetPerms?.canEdit || false,
     };
   }
 
   async getRootDirectory(
     projectId: string,
-    session: ISession
+    session: Session
   ): Promise<SecuredDirectory> {
     const rootRef = await this.db
       .query()
@@ -1045,7 +1105,7 @@ export class ProjectService {
     };
   }
 
-  async consistencyChecker(session: ISession): Promise<boolean> {
+  async consistencyChecker(session: Session): Promise<boolean> {
     const projects = await this.db
       .query()
       .match([matchSession(session), [node('project', 'Project')]])

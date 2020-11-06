@@ -6,10 +6,9 @@ import {
   DuplicateException,
   generateId,
   InputException,
-  ISession,
   NotFoundException,
   ServerException,
-  UnauthenticatedException,
+  Session,
 } from '../../common';
 import {
   ConfigService,
@@ -43,6 +42,7 @@ import {
   ProductService,
   SecuredProductList,
 } from '../product';
+import { ProjectStatus } from '../project';
 import { ProjectType } from '../project/dto/type.enum';
 import { ProjectService } from '../project/project.service';
 import {
@@ -88,6 +88,7 @@ export class EngagementService {
     paraTextRegistryId: true,
     pnp: true,
     language: true,
+    historicGoal: true,
 
     //Internship Specific
     position: true,
@@ -116,11 +117,8 @@ export class EngagementService {
 
   async createLanguageEngagement(
     { languageId, projectId, ...input }: CreateLanguageEngagement,
-    session: ISession
+    session: Session
   ): Promise<LanguageEngagement> {
-    if (!session.userId) {
-      throw new UnauthenticatedException('user not logged in');
-    }
     // LanguageEngagements can only be created on TranslationProjects
     const projectType = await this.getProjectTypeById(projectId);
 
@@ -141,6 +139,7 @@ export class EngagementService {
     if (input.firstScripture) {
       await this.verifyFirstScripture({ languageId });
     }
+    await this.verifyProjectStatus(projectId, session);
 
     this.logger.debug('Mutation create language engagement ', {
       input,
@@ -214,6 +213,11 @@ export class EngagementService {
         'languageEngagement'
       ),
       ...property('pnp', pnpId || undefined, 'languageEngagement'),
+      ...property(
+        'historicGoal',
+        input.historicGoal || undefined,
+        'languageEngagement'
+      ),
       ...property('statusModifiedAt', undefined, 'languageEngagement'),
       ...property('lastSuspendedAt', undefined, 'languageEngagement'),
       ...property('lastReactivatedAt', undefined, 'languageEngagement'),
@@ -320,11 +324,8 @@ export class EngagementService {
       countryOfOriginId,
       ...input
     }: CreateInternshipEngagement,
-    session: ISession
+    session: Session
   ): Promise<InternshipEngagement> {
-    if (!session.userId) {
-      throw new UnauthenticatedException('user not logged in');
-    }
     // InternshipEngagements can only be created on InternshipProjects
     const projectType = await this.getProjectTypeById(projectId);
 
@@ -341,6 +342,7 @@ export class EngagementService {
         'Engagement for this project and person already exists'
       );
     }
+    await this.verifyProjectStatus(projectId, session);
 
     this.logger.debug('Mutation create internship engagement ', {
       input,
@@ -576,17 +578,12 @@ export class EngagementService {
 
   async readOne(
     id: string,
-    session: ISession
+    session: Session
   ): Promise<LanguageEngagement | InternshipEngagement> {
     this.logger.debug('readOne', { id, userId: session.userId });
 
     if (!id) {
       throw new NotFoundException('no id given', 'engagement.id');
-    }
-
-    if (!session.userId) {
-      this.logger.debug('using anon user id');
-      session.userId = this.config.anonUser.id;
     }
 
     const query = this.db
@@ -750,7 +747,7 @@ export class EngagementService {
 
   async updateLanguageEngagement(
     input: UpdateLanguageEngagement,
-    session: ISession
+    session: Session
   ): Promise<LanguageEngagement> {
     if (input.firstScripture) {
       await this.verifyFirstScripture({ engagementId: input.id });
@@ -786,6 +783,7 @@ export class EngagementService {
           'startDateOverride',
           'endDateOverride',
           'paraTextRegistryId',
+          'historicGoal',
           'modifiedAt',
           'status',
           'initialEndDate',
@@ -823,7 +821,7 @@ export class EngagementService {
       countryOfOriginId,
       ...input
     }: UpdateInternshipEngagement,
-    session: ISession
+    session: Session
   ): Promise<InternshipEngagement> {
     const createdAt = DateTime.local();
 
@@ -973,11 +971,26 @@ export class EngagementService {
 
   // DELETE /////////////////////////////////////////////////////////
 
-  async delete(id: string, session: ISession): Promise<void> {
+  async delete(id: string, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
     if (!object) {
       throw new NotFoundException('Could not find engagement', 'engagement.id');
+    }
+
+    const result = await this.db
+      .query()
+      .match([
+        node('engagement', 'Engagement', { id }),
+        relation('in', '', 'engagement'),
+        node('project', 'Project'),
+      ])
+      .return('project.id as projectId')
+      .asResult<{ projectId: string }>()
+      .first();
+
+    if (result) {
+      await this.verifyProjectStatus(result.projectId, session);
     }
 
     try {
@@ -1000,7 +1013,7 @@ export class EngagementService {
 
   async list(
     { filter, ...input }: EngagementListInput,
-    session: ISession
+    session: Session
   ): Promise<EngagementListOutput> {
     let label = 'Engagement';
     if (filter.type === 'language') {
@@ -1036,7 +1049,7 @@ export class EngagementService {
   async listProducts(
     engagement: LanguageEngagement,
     input: ProductListInput,
-    session: ISession
+    session: Session
   ): Promise<SecuredProductList> {
     const result = await this.products.list(
       {
@@ -1097,7 +1110,7 @@ export class EngagementService {
 
   async checkEngagementConsistency(
     baseNode: string,
-    session: ISession
+    session: Session
   ): Promise<boolean> {
     const nodes = await this.db
       .query()
@@ -1124,7 +1137,7 @@ export class EngagementService {
   async isLanguageEngagementConsistent(
     nodes: Record<string, any>,
     baseNode: string,
-    session: ISession
+    session: Session
   ): Promise<boolean> {
     const requiredProperties: never[] = []; // add more after discussing
     return (
@@ -1163,7 +1176,7 @@ export class EngagementService {
   async isInternshipEngagementConsistent(
     nodes: Record<string, any>,
     baseNode: string,
-    session: ISession
+    session: Session
   ): Promise<boolean> {
     // right now all properties are optional
     const requiredProperties: never[] = [];
@@ -1301,6 +1314,7 @@ export class EngagementService {
       );
     }
   }
+
   protected async verifyFirstScriptureWithEngagement(query: Query) {
     const engagementResult = await query
       .match([
@@ -1322,6 +1336,24 @@ export class EngagementService {
       throw new InputException(
         'firstScripture can not be set to true if it is not the only engagement for the language that has firstScripture=true',
         'languageEngagement.firstScripture'
+      );
+    }
+  }
+
+  /**
+   * [BUSINESS RULE] Only Projects with a Status of 'In Development' can have Engagements created or deleted.
+   */
+  protected async verifyProjectStatus(projectId: string, session: Session) {
+    let project;
+    try {
+      project = await this.projectService.readOne(projectId, session);
+    } catch (e) {
+      throw new InputException('projectId is invalid', 'engagement.projectId');
+    }
+    if (project.status !== ProjectStatus.InDevelopment) {
+      throw new InputException(
+        'The Project status is not in development',
+        'project.status'
       );
     }
   }

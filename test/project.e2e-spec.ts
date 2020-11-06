@@ -1,6 +1,7 @@
 import { gql } from 'apollo-server-core';
+import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
-import { orderBy, times } from 'lodash';
+import { compact, orderBy, times } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   CalendarDate,
@@ -49,6 +50,7 @@ import {
   runAsAdmin,
   TestApp,
 } from './utility';
+import { resetDatabase } from './utility/reset-database';
 import {
   changeProjectStep,
   stepsFromEarlyConversationToBeforeActive,
@@ -62,9 +64,11 @@ describe('Project e2e', () => {
   let fieldZone: FieldZone;
   let fieldRegion: FieldRegion;
   let location: Location;
+  let db: Connection;
 
   beforeAll(async () => {
     app = await createTestApp();
+    db = app.get(Connection);
     await createSession(app);
     director = await registerUser(app);
     fieldZone = await createZone(app, { directorId: director.id });
@@ -76,7 +80,9 @@ describe('Project e2e', () => {
     intern = await getUserFromSession(app);
     mentor = await getUserFromSession(app);
   });
+
   afterAll(async () => {
+    await resetDatabase(db);
     await app.close();
   });
 
@@ -450,6 +456,7 @@ describe('Project e2e', () => {
       })
     );
   });
+
   it('List view of projects', async () => {
     // create 2 projects
     const numProjects = 2;
@@ -500,6 +507,7 @@ describe('Project e2e', () => {
   });
 
   it('List of projects sorted by Sensitivity', async () => {
+    await registerUser(app);
     //Create three projects, each beginning with lower or upper-cases.
     await createProject(app, {
       name: 'High Sensitivity Proj ' + (await generateId()),
@@ -537,25 +545,44 @@ describe('Project e2e', () => {
           input: {
             sort: 'sensitivity',
             order,
+            filter: {
+              type: ProjectType.Internship,
+            },
           },
         }
       );
+    const getSortedSensitivities = (projects: any) => {
+      let sensitivity = '';
+
+      const sensitivities = projects.items.map((item: any) => {
+        if (item.sensitivity !== sensitivity) {
+          return (sensitivity = item.sensitivity);
+        }
+        return undefined;
+      });
+
+      return compact(sensitivities);
+    };
 
     const { projects: ascendingProjects } = await getSensitivitySortedProjects(
       'ASC'
     );
 
-    expect(ascendingProjects.items[0].sensitivity).toEqual(Sensitivity.Low);
-    expect(ascendingProjects.items[1].sensitivity).toEqual(Sensitivity.Medium);
-    expect(ascendingProjects.items[2].sensitivity).toEqual(Sensitivity.High);
+    expect(getSortedSensitivities(ascendingProjects)).toEqual([
+      Sensitivity.Low,
+      Sensitivity.Medium,
+      Sensitivity.High,
+    ]);
 
     const { projects: descendingProjects } = await getSensitivitySortedProjects(
       'DESC'
     );
 
-    expect(descendingProjects.items[0].sensitivity).toEqual(Sensitivity.High);
-    expect(descendingProjects.items[1].sensitivity).toEqual(Sensitivity.Medium);
-    expect(descendingProjects.items[2].sensitivity).toEqual(Sensitivity.Low);
+    expect(getSortedSensitivities(descendingProjects)).toEqual([
+      Sensitivity.High,
+      Sensitivity.Medium,
+      Sensitivity.Low,
+    ]);
   });
 
   it('List view of my projects', async () => {
@@ -604,12 +631,10 @@ describe('Project e2e', () => {
   });
 
   it('Project engagement and sensitivity connected to language engagements', async () => {
-    // create 1 engagementsin a project
-    const numEngagements = 1;
-    //const type = ProjectType.Translation;
-
     await loginAsAdmin(app);
 
+    // create 1 engagementsin a project
+    const numEngagements = 1;
     const project = await createProject(app);
     const language = await createLanguage(app, {
       sensitivity: Sensitivity.Medium,
@@ -647,7 +672,7 @@ describe('Project e2e', () => {
     expect(queryProject.project.sensitivity).toEqual(language.sensitivity);
   });
 
-  it.skip('List view of internship engagement', async () => {
+  it('List view of internship engagement', async () => {
     //create 1 engagements in a project
     const numEngagements = 1;
     const type = ProjectType.Internship;

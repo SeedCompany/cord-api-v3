@@ -5,10 +5,9 @@ import { DateTime } from 'luxon';
 import {
   DuplicateException,
   generateId,
-  ISession,
   NotFoundException,
   ServerException,
-  UnauthenticatedException,
+  Session,
 } from '../../common';
 import {
   ConfigService,
@@ -103,11 +102,11 @@ export class OrganizationService {
 
   async create(
     input: CreateOrganization,
-    session: ISession
+    session: Session
   ): Promise<Organization> {
     await this.authorizationService.checkPower(
       Powers.CreateOrganization,
-      session.userId
+      session
     );
 
     const checkOrg = await this.db
@@ -169,7 +168,7 @@ export class OrganizationService {
     await this.authorizationService.processNewBaseNode(
       dbOrganization,
       result.id,
-      session.userId as string
+      session.userId
     );
 
     const id = result.id;
@@ -179,15 +178,11 @@ export class OrganizationService {
     return await this.readOne(id, session);
   }
 
-  async readOne(orgId: string, session: ISession): Promise<Organization> {
+  async readOne(orgId: string, session: Session): Promise<Organization> {
     this.logger.debug(`Read Organization`, {
       id: orgId,
       userId: session.userId,
     });
-
-    if (!session.userId) {
-      session.userId = this.config.anonUser.id;
-    }
 
     const query = this.db
       .query()
@@ -237,7 +232,7 @@ export class OrganizationService {
 
   async update(
     input: UpdateOrganization,
-    session: ISession
+    session: Session
   ): Promise<Organization> {
     const organization = await this.readOne(input.id, session);
     return await this.db.sgUpdateProperties({
@@ -249,10 +244,7 @@ export class OrganizationService {
     });
   }
 
-  async delete(id: string, session: ISession): Promise<void> {
-    if (!session.userId) {
-      throw new UnauthenticatedException('user not logged in');
-    }
+  async delete(id: string, session: Session): Promise<void> {
     const ed = await this.readOne(id, session);
     try {
       await this.db.deleteNode({
@@ -270,7 +262,7 @@ export class OrganizationService {
 
   async list(
     { filter, ...input }: OrganizationListInput,
-    session: ISession
+    session: Session
   ): Promise<OrganizationListOutput> {
     const orgSortMap: Partial<Record<typeof input.sort, string>> = {
       name: 'toLower(prop.value)',
@@ -302,7 +294,7 @@ export class OrganizationService {
   async addLocation(
     organizationId: string,
     locationId: string,
-    _session: ISession
+    _session: Session
   ): Promise<void> {
     try {
       await this.locationService.addLocationToNode(
@@ -319,7 +311,7 @@ export class OrganizationService {
   async removeLocation(
     organizationId: string,
     locationId: string,
-    _session: ISession
+    _session: Session
   ): Promise<void> {
     try {
       await this.locationService.removeLocationFromNode(
@@ -339,7 +331,7 @@ export class OrganizationService {
   async listLocations(
     organizationId: string,
     input: LocationListInput,
-    session: ISession
+    session: Session
   ): Promise<SecuredLocationList> {
     return await this.locationService.listLocationsFromNode(
       'Organization',
@@ -350,7 +342,7 @@ export class OrganizationService {
     );
   }
 
-  async checkAllOrgs(session: ISession): Promise<boolean> {
+  async checkAllOrgs(session: Session): Promise<boolean> {
     try {
       const result = await this.db
         .query()
@@ -449,7 +441,7 @@ export class OrganizationService {
     return true;
   }
 
-  async checkOrganizationConsistency(session: ISession): Promise<boolean> {
+  async checkOrganizationConsistency(session: Session): Promise<boolean> {
     const organizations = await this.db
       .query()
       .match([matchSession(session), [node('organization', 'Organization')]])

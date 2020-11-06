@@ -1,4 +1,5 @@
 import { gql } from 'apollo-server-core';
+import { Connection } from 'cypher-query-builder';
 import { sample, times } from 'lodash';
 import { CalendarDate, NotFoundException } from '../src/common';
 import { Powers } from '../src/components/authorization/dto/powers';
@@ -10,6 +11,7 @@ import {
   PartnershipAgreementStatus,
   UpdatePartnershipInput,
 } from '../src/components/partnership';
+import { Role } from '../src/components/project';
 import { Project } from '../src/components/project/dto';
 import {
   createPartner,
@@ -23,19 +25,25 @@ import {
   TestApp,
 } from './utility';
 import { createPartnership } from './utility/create-partnership';
+import { resetDatabase } from './utility/reset-database';
 
 describe('Partnership e2e', () => {
   let app: TestApp;
   let project: Raw<Project>;
+  let db: Connection;
 
   beforeAll(async () => {
     app = await createTestApp();
+    db = app.get(Connection);
     await createSession(app);
-    await registerUserWithPower(app, [Powers.CreateOrganization]);
+    await registerUserWithPower(app, [Powers.CreateOrganization], {
+      roles: [Role.Controller],
+    });
 
     project = await createProject(app);
   });
   afterAll(async () => {
+    await resetDatabase(db);
     await app.close();
   });
 

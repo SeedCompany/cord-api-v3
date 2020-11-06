@@ -2,9 +2,18 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { GraphQLScalarType } from 'graphql';
 import { Class } from 'type-fest';
-import { ListOptions, PaginatedList } from './pagination-list';
+import {
+  ListOptions,
+  PaginatedList,
+  PaginatedListType,
+} from './pagination-list';
 import { Readable } from './readable.interface';
 import { AbstractClassType } from './types';
+
+export type SecuredListType<T> = PaginatedListType<T> & {
+  readonly canRead: boolean;
+  readonly canCreate: boolean;
+};
 
 export function SecuredList<Type, ListItem = Type>(
   itemClass: Class<Type> | AbstractClassType<Type> | GraphQLScalarType,
@@ -13,7 +22,7 @@ export function SecuredList<Type, ListItem = Type>(
   @ObjectType({ isAbstract: true, implements: [Readable] })
   abstract class SecuredListClass
     extends PaginatedList<Type, ListItem>(itemClass, options)
-    implements Readable {
+    implements Readable, SecuredListType<ListItem> {
     @Field({
       description: 'Whether the current user can read the list of items',
     })
@@ -33,3 +42,12 @@ SecuredList.descriptionFor = (value: string) => stripIndent`
   The value is only given if \`canRead\` is \`true\` otherwise it is an empty list.
   The \`can*\` properties are specific to the user making the request.
 `;
+
+const redacted: SecuredListType<any> = {
+  canRead: false,
+  canCreate: false,
+  items: [],
+  total: 0,
+  hasMore: false,
+};
+SecuredList.Redacted = redacted;

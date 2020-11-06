@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import {
   generateId,
-  ISession,
   NotFoundException,
   ServerException,
+  Session,
   UnauthorizedException,
 } from '../../common';
 import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
@@ -32,7 +32,7 @@ export class WorkflowService {
 
   // multiple workflows will be able to be created per one base node.
   async createWorkflow(
-    session: ISession,
+    session: Session,
     input: CreateWorkflow
   ): Promise<Workflow> {
     try {
@@ -121,7 +121,7 @@ export class WorkflowService {
     }
   }
 
-  async deleteWorkflow(session: ISession, workflowId: string): Promise<void> {
+  async deleteWorkflow(session: Session, workflowId: string): Promise<void> {
     try {
       await this.db
         .query()
@@ -159,7 +159,7 @@ export class WorkflowService {
   }
 
   // the stateName is stored in the (:State)'s 'value' property (consistent with (:Property)s on (:BaseNode)s )  // addStateToWorkflow
-  async addState(session: ISession, input: AddState): Promise<State> {
+  async addState(session: Session, input: AddState): Promise<State> {
     try {
       const stateId = await generateId();
       const result = await this.db
@@ -224,7 +224,7 @@ export class WorkflowService {
   }
 
   // updateStateName
-  async updateState(session: ISession, input: UpdateState): Promise<State> {
+  async updateState(session: Session, input: UpdateState): Promise<State> {
     try {
       // get current state and workflow
       const workflow = await this.db
@@ -351,7 +351,7 @@ export class WorkflowService {
   }
 
   // deleteStateFromWorkflow
-  async deleteState(session: ISession, stateId: string): Promise<void> {
+  async deleteState(session: Session, stateId: string): Promise<void> {
     try {
       await this.db
         .query()
@@ -394,7 +394,7 @@ export class WorkflowService {
 
   // we don't need to have a list workflow function when we have a list state function that takes the baseNodeId // listAllStatesOnWorkflow
   async listStates(
-    session: ISession,
+    session: Session,
     baseNodeId: string
   ): Promise<StateListOutput> {
     try {
@@ -443,7 +443,7 @@ export class WorkflowService {
 
   // this will be used to get the next possible states of any state, including the current state  // listNextPossibleStates
   async listNextStates(
-    session: ISession,
+    session: Session,
     stateId: string
   ): Promise<StateListOutput> {
     try {
@@ -490,7 +490,7 @@ export class WorkflowService {
 
   // attachSecurityGroupToState
   async attachSecurityGroup(
-    session: ISession,
+    session: Session,
     input: GroupState
   ): Promise<void> {
     try {
@@ -544,7 +544,7 @@ export class WorkflowService {
 
   // removeSecurityGroupFromState
   async removeSecurityGroup(
-    session: ISession,
+    session: Session,
     input: GroupState
   ): Promise<void> {
     try {
@@ -593,7 +593,7 @@ export class WorkflowService {
   // we are using security groups as notification groups for now
   // attachNotificationGroupToState
   async attachNotificationGroup(
-    session: ISession,
+    session: Session,
     input: GroupState
   ): Promise<void> {
     try {
@@ -646,7 +646,7 @@ export class WorkflowService {
 
   // removeNotificationGroupFromState
   async removeNotificationGroup(
-    session: ISession,
+    session: Session,
     input: GroupState
   ): Promise<void> {
     try {
@@ -692,7 +692,7 @@ export class WorkflowService {
 
   // changeCurrentStateInWorkflow
   async changeCurrentState(
-    session: ISession,
+    session: Session,
     input: ChangeCurrentState
   ): Promise<void> {
     try {
@@ -831,7 +831,7 @@ export class WorkflowService {
   // later we can create an abstracted function that creates and attaches a state to another state
   // addPossibleStateToState
   async addPossibleState(
-    session: ISession,
+    session: Session,
     input: PossibleState
   ): Promise<void> {
     try {
@@ -893,7 +893,7 @@ export class WorkflowService {
 
   // removePossibleStateFromState
   async removePossibleState(
-    session: ISession,
+    session: Session,
     input: PossibleState
   ): Promise<void> {
     try {
@@ -938,7 +938,7 @@ export class WorkflowService {
   // this is so each required field can be queried without inspecting the property name in app code.
   // addRequiredFieldToState
   async addRequiredField(
-    session: ISession,
+    session: Session,
     input: RequiredField
   ): Promise<void> {
     try {
@@ -1015,7 +1015,7 @@ export class WorkflowService {
 
   // listAllRequiredFieldsInAState
   async listRequiredFields(
-    session: ISession,
+    session: Session,
     stateId: string
   ): Promise<RequiredFieldListOutput> {
     try {
@@ -1059,7 +1059,7 @@ export class WorkflowService {
 
   // removeRequiredFieldFromState
   async removeRequiredField(
-    session: ISession,
+    session: Session,
     input: RequiredField
   ): Promise<void> {
     try {

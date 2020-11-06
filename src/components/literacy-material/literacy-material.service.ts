@@ -3,9 +3,9 @@ import { node } from 'cypher-query-builder';
 import {
   DuplicateException,
   generateId,
-  ISession,
   NotFoundException,
   ServerException,
+  Session,
 } from '../../common';
 import {
   ConfigService,
@@ -32,6 +32,7 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { AuthorizationService } from '../authorization/authorization.service';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
   CreateLiteracyMaterial,
@@ -40,6 +41,7 @@ import {
   LiteracyMaterialListOutput,
   UpdateLiteracyMaterial,
 } from './dto';
+import { DbLiteracyMaterial } from './model';
 
 @Injectable()
 export class LiteracyMaterialService {
@@ -52,7 +54,8 @@ export class LiteracyMaterialService {
     @Logger('literacyMaterial:service') private readonly logger: ILogger,
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
-    private readonly scriptureRefService: ScriptureReferenceService
+    private readonly scriptureRefService: ScriptureReferenceService,
+    private readonly authorizationService: AuthorizationService
   ) {}
 
   @OnIndex()
@@ -73,7 +76,7 @@ export class LiteracyMaterialService {
 
   async create(
     input: CreateLiteracyMaterial,
-    session: ISession
+    session: Session
   ): Promise<LiteracyMaterial> {
     const checkLiteracy = await this.db
       .query()
@@ -116,6 +119,13 @@ export class LiteracyMaterialService {
         throw new ServerException('failed to create a literacy material');
       }
 
+      const dbLiteracyMaterial = new DbLiteracyMaterial();
+      await this.authorizationService.processNewBaseNode(
+        dbLiteracyMaterial,
+        result.id,
+        session.userId
+      );
+
       await this.scriptureRefService.create(
         result.id,
         input.scriptureReferences,
@@ -136,15 +146,11 @@ export class LiteracyMaterialService {
     }
   }
 
-  async readOne(id: string, session: ISession): Promise<LiteracyMaterial> {
+  async readOne(id: string, session: Session): Promise<LiteracyMaterial> {
     this.logger.debug(`Read literacyMaterial`, {
       id,
       userId: session.userId,
     });
-
-    if (!session.userId) {
-      session.userId = this.config.anonUser.id;
-    }
 
     const readLiteracyMaterial = this.db
       .query()
@@ -188,7 +194,7 @@ export class LiteracyMaterialService {
 
   async update(
     input: UpdateLiteracyMaterial,
-    session: ISession
+    session: Session
   ): Promise<LiteracyMaterial> {
     await this.scriptureRefService.update(input.id, input.scriptureReferences);
 
@@ -203,7 +209,7 @@ export class LiteracyMaterialService {
     });
   }
 
-  async delete(id: string, session: ISession): Promise<void> {
+  async delete(id: string, session: Session): Promise<void> {
     const literacyMaterial = await this.readOne(id, session);
     try {
       await this.db.deleteNode({
@@ -221,7 +227,7 @@ export class LiteracyMaterialService {
 
   async list(
     { filter, ...input }: LiteracyMaterialListInput,
-    session: ISession
+    session: Session
   ): Promise<LiteracyMaterialListOutput> {
     const query = this.db
       .query()

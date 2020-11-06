@@ -8,10 +8,11 @@ import { Except } from 'type-fest';
 import {
   DuplicateException,
   InputException,
-  ISession,
   ServerException,
+  Session,
   UnauthenticatedException,
 } from '../../common';
+import { RawSession } from '../../common/session';
 import {
   ConfigService,
   DatabaseService,
@@ -68,7 +69,7 @@ export class AuthenticationService {
     return result.token;
   }
 
-  async userFromSession(session: ISession): Promise<User | null> {
+  async userFromSession(session: Session): Promise<User | null> {
     const userRes = await this.db
       .query()
       .match([
@@ -91,7 +92,7 @@ export class AuthenticationService {
     return await this.userService.readOne(userRes.id, session);
   }
 
-  async register(input: RegisterInput, session?: ISession): Promise<string> {
+  async register(input: RegisterInput, session?: Session): Promise<string> {
     // ensure no other tokens are associated with this user
     if (session) {
       await this.logout(session.token);
@@ -131,7 +132,7 @@ export class AuthenticationService {
     return userId;
   }
 
-  async login(input: LoginInput, session: ISession): Promise<string> {
+  async login(input: LoginInput, session: Session): Promise<string> {
     const result1 = await this.db
       .query()
       .raw(
@@ -217,7 +218,7 @@ export class AuthenticationService {
       .run();
   }
 
-  async createSession(token: string): Promise<ISession> {
+  async createSession(token: string): Promise<RawSession> {
     this.logger.debug('Decoding token', { token });
 
     const { iat } = this.decodeJWT(token);
@@ -259,7 +260,7 @@ export class AuthenticationService {
   async changePassword(
     oldPassword: string,
     newPassword: string,
-    session: ISession
+    session: Session
   ): Promise<void> {
     if (!oldPassword)
       throw new InputException('Old Password Required', 'oldPassword');

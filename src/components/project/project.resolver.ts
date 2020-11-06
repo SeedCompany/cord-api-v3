@@ -8,10 +8,11 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import {
+  AnonSession,
   firstLettersOfWords,
   IdArg,
   IdField,
-  ISession,
+  LoggedInSession,
   SecuredString,
   Session,
 } from '../../common';
@@ -66,7 +67,7 @@ export class ProjectResolver {
   })
   async project(
     @IdArg() id: string,
-    @Session() session: ISession
+    @AnonSession() session: Session
   ): Promise<Project> {
     const project = await this.projectService.readOne(id, session);
     // @ts-expect-error hack project id into step object so the lazy transitions
@@ -86,7 +87,7 @@ export class ProjectResolver {
       defaultValue: ProjectListInput.defaultVal,
     })
     input: ProjectListInput,
-    @Session() session: ISession
+    @AnonSession() session: Session
   ): Promise<ProjectListOutput> {
     const list = await this.projectService.list(input, session);
     for (const project of list.items) {
@@ -118,14 +119,14 @@ export class ProjectResolver {
   })
   async budget(
     @Parent() project: Project,
-    @Session() session: ISession
+    @AnonSession() session: Session
   ): Promise<SecuredBudget> {
     return await this.projectService.currentBudget(project, session);
   }
 
   @ResolveField(() => SecuredEngagementList)
   async engagements(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Parent() project: Project,
     @Args({
       name: 'input',
@@ -142,7 +143,7 @@ export class ProjectResolver {
     description: 'The project members',
   })
   async team(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Parent() { id }: Project,
     @Args({
       name: 'input',
@@ -156,7 +157,7 @@ export class ProjectResolver {
 
   @ResolveField(() => SecuredPartnershipList)
   async partnerships(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Parent() { id }: Project,
     @Args({
       name: 'input',
@@ -172,7 +173,7 @@ export class ProjectResolver {
     description: 'The root filesystem directory of this project',
   })
   async rootDirectory(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Parent() { id }: Project
   ): Promise<SecuredDirectory> {
     return await this.projectService.getRootDirectory(id, session);
@@ -181,7 +182,7 @@ export class ProjectResolver {
   @ResolveField(() => SecuredLocation)
   async primaryLocation(
     @Parent() project: Project,
-    @Session() session: ISession
+    @AnonSession() session: Session
   ): Promise<SecuredLocation> {
     const { value: id, ...rest } = project.primaryLocation;
     const value = id
@@ -192,7 +193,7 @@ export class ProjectResolver {
 
   @ResolveField(() => SecuredLocationList)
   async otherLocations(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Parent() { id }: Project,
     @Args({
       name: 'input',
@@ -207,7 +208,7 @@ export class ProjectResolver {
   @ResolveField(() => SecuredLocation)
   async marketingLocation(
     @Parent() project: Project,
-    @Session() session: ISession
+    @AnonSession() session: Session
   ): Promise<SecuredLocation> {
     const { value: id, ...rest } = project.marketingLocation;
     const value = id
@@ -219,7 +220,7 @@ export class ProjectResolver {
   @ResolveField(() => SecuredFieldRegion)
   async fieldRegion(
     @Parent() project: Project,
-    @Session() session: ISession
+    @AnonSession() session: Session
   ): Promise<SecuredFieldRegion> {
     const { value: id, ...rest } = project.fieldRegion;
     const value = id
@@ -231,7 +232,7 @@ export class ProjectResolver {
   @ResolveField(() => SecuredOrganization)
   async owningOrganization(
     @Parent() project: Project,
-    @Session() session: ISession
+    @AnonSession() session: Session
   ): Promise<SecuredOrganization> {
     const { value: id, ...rest } = project.owningOrganization;
     const value = id
@@ -245,7 +246,7 @@ export class ProjectResolver {
   })
   async createProject(
     @Args('input') { project: input }: CreateProjectInput,
-    @Session() session: ISession
+    @LoggedInSession() session: Session
   ): Promise<CreateProjectOutput> {
     const project = await this.projectService.create(input, session);
     // @ts-expect-error hack project id into step object so the lazy transitions
@@ -259,7 +260,7 @@ export class ProjectResolver {
   })
   async updateProject(
     @Args('input') { project: input }: UpdateProjectInput,
-    @Session() session: ISession
+    @LoggedInSession() session: Session
   ): Promise<UpdateProjectOutput> {
     const project = await this.projectService.update(input, session);
     // @ts-expect-error hack project id into step object so the lazy transitions
@@ -273,7 +274,7 @@ export class ProjectResolver {
   })
   async deleteProject(
     @IdArg() id: string,
-    @Session() session: ISession
+    @LoggedInSession() session: Session
   ): Promise<boolean> {
     await this.projectService.delete(id, session);
     return true;
@@ -283,7 +284,7 @@ export class ProjectResolver {
     description: 'Add a location to a project',
   })
   async addOtherLocationToProject(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args() { projectId, locationId }: ModifyOtherLocationArgs
   ): Promise<Project> {
     await this.projectService.addOtherLocation(projectId, locationId, session);
@@ -294,7 +295,7 @@ export class ProjectResolver {
     description: 'Remove a location from a project',
   })
   async removeOtherLocationFromProject(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args() { projectId, locationId }: ModifyOtherLocationArgs
   ): Promise<Project> {
     await this.projectService.removeOtherLocation(
@@ -309,7 +310,7 @@ export class ProjectResolver {
     description: 'Check Consistency in Project Nodes',
   })
   async checkProjectConsistency(
-    @Session() session: ISession
+    @LoggedInSession() session: Session
   ): Promise<boolean> {
     return await this.projectService.consistencyChecker(session);
   }

@@ -15,6 +15,7 @@ import {
   registerUser,
   TestApp,
 } from './utility';
+import { resetDatabase } from './utility/reset-database';
 
 describe('Authentication e2e', () => {
   let app: TestApp;
@@ -24,6 +25,11 @@ describe('Authentication e2e', () => {
     app = await createTestApp();
     await createSession(app);
     db = app.get(Connection);
+  });
+
+  afterAll(async () => {
+    await resetDatabase(db);
+    await app.close();
   });
 
   it('Check Email Existence and Reset Password', async () => {
@@ -151,9 +157,5 @@ describe('Authentication e2e', () => {
       password: newPassword,
     });
     expect(updatedUser.login.user.id).toBe(user.id);
-  });
-
-  afterAll(async () => {
-    await app.close();
   });
 });

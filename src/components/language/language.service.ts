@@ -7,10 +7,10 @@ import {
   DuplicateException,
   generateId,
   InputException,
-  ISession,
   NotFoundException,
   SecuredDate,
   ServerException,
+  Session,
   simpleSwitch,
 } from '../../common';
 import {
@@ -79,6 +79,7 @@ export class LanguageService {
     signLanguageCode: true,
     sponsorEstimatedEndDate: true,
     hasExternalFirstScripture: true,
+    tags: true,
   };
 
   constructor(
@@ -140,17 +141,14 @@ export class LanguageService {
     ];
   }
 
-  async create(input: CreateLanguage, session: ISession): Promise<Language> {
+  async create(input: CreateLanguage, session: Session): Promise<Language> {
     const createdAt = DateTime.local();
 
-    await this.authorizationService.checkPower(
-      Powers.CreateLanguage,
-      session.userId
-    );
+    await this.authorizationService.checkPower(Powers.CreateLanguage, session);
 
     await this.authorizationService.checkPower(
       Powers.CreateEthnologueLanguage,
-      session.userId
+      session
     );
 
     try {
@@ -240,6 +238,12 @@ export class LanguageService {
           isPublic: false,
           isOrgPublic: false,
         },
+        {
+          key: 'tags',
+          value: input.tags,
+          isPublic: false,
+          isOrgPublic: false,
+        },
       ];
 
       const createLanguage = this.db
@@ -285,7 +289,7 @@ export class LanguageService {
       await this.authorizationService.processNewBaseNode(
         dbLanguage,
         resultLanguage.id,
-        session.userId as string
+        session.userId
       );
 
       const result = await this.readOne(resultLanguage.id, session);
@@ -310,11 +314,7 @@ export class LanguageService {
     }
   }
 
-  async readOne(langId: string, session: ISession): Promise<Language> {
-    if (!session.userId) {
-      session.userId = this.config.anonUser.id;
-    }
-
+  async readOne(langId: string, session: Session): Promise<Language> {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
@@ -368,6 +368,10 @@ export class LanguageService {
     return {
       ...parseBaseNodeProperties(result.node),
       ...securedProps,
+      tags: {
+        ...securedProps.tags,
+        value: securedProps.tags.value as string[],
+      },
       sensitivity: props.sensitivity,
       ethnologue,
       canDelete: true, // TODO
@@ -376,7 +380,7 @@ export class LanguageService {
 
   async update(
     { ethnologue: newEthnologue, ...input }: UpdateLanguage,
-    session: ISession
+    session: Session
   ): Promise<Language> {
     if (input.hasExternalFirstScripture) {
       await this.verifyExternalFirstScripture(input.id);
@@ -404,6 +408,7 @@ export class LanguageService {
         'sensitivity',
         'sponsorEstimatedEndDate',
         'hasExternalFirstScripture',
+        'tags',
       ],
       changes: input,
       nodevar: 'language', // not sure if this is right, just trying to get this to compile - michael
@@ -454,11 +459,8 @@ export class LanguageService {
     return await this.readOne(input.id, session);
   }
 
-  async delete(id: string, session: ISession): Promise<void> {
-    await this.authorizationService.checkPower(
-      Powers.DeleteLanguage,
-      session.userId
-    );
+  async delete(id: string, session: Session): Promise<void> {
+    await this.authorizationService.checkPower(Powers.DeleteLanguage, session);
 
     const object = await this.readOne(id, session);
 
@@ -488,7 +490,7 @@ export class LanguageService {
 
   async list(
     { filter, ...input }: LanguageListInput,
-    session: ISession
+    session: Session
   ): Promise<LanguageListOutput> {
     const query = this.db
       .query()
@@ -506,7 +508,7 @@ export class LanguageService {
   async listLocations(
     languageId: string,
     input: LocationListInput,
-    session: ISession
+    session: Session
   ): Promise<SecuredLocationList> {
     return await this.locationService.listLocationsFromNode(
       'Language',
@@ -520,7 +522,7 @@ export class LanguageService {
   async listProjects(
     language: Language,
     input: ProjectListInput,
-    session: ISession
+    session: Session
   ): Promise<SecuredProjectList> {
     const { page, count } = {
       ...ProjectListInput.defaultVal,
@@ -572,7 +574,7 @@ export class LanguageService {
 
   async sponsorStartDate(
     language: Language,
-    session: ISession
+    session: Session
   ): Promise<SecuredDate> {
     const result = await this.db
       .query()
@@ -624,7 +626,7 @@ export class LanguageService {
   async addLocation(
     languageId: string,
     locationId: string,
-    _session: ISession
+    _session: Session
   ): Promise<void> {
     try {
       await this.locationService.addLocationToNode(
@@ -641,7 +643,7 @@ export class LanguageService {
   async removeLocation(
     languageId: string,
     locationId: string,
-    _session: ISession
+    _session: Session
   ): Promise<void> {
     try {
       await this.locationService.removeLocationFromNode(
@@ -655,7 +657,7 @@ export class LanguageService {
     }
   }
 
-  async checkLanguageConsistency(session: ISession): Promise<boolean> {
+  async checkLanguageConsistency(session: Session): Promise<boolean> {
     const languages = await this.db
       .query()
       .match([matchSession(session), [node('lang', 'Language')]])

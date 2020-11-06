@@ -8,12 +8,18 @@ export interface ListOptions {
   itemsDescription?: string;
 }
 
+export interface PaginatedListType<T> {
+  readonly items: readonly T[];
+  readonly total: number;
+  readonly hasMore: boolean;
+}
+
 export function PaginatedList<Type, ListItem = Type>(
   itemClass: Class<Type> | AbstractClassType<Type> | GraphQLScalarType,
   options: ListOptions = {}
 ) {
   @ObjectType({ isAbstract: true })
-  abstract class PaginatedListClass {
+  abstract class PaginatedListClass implements PaginatedListType<ListItem> {
     @Field(() => [itemClass], {
       description:
         options.itemsDescription ||

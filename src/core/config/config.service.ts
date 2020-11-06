@@ -33,6 +33,9 @@ export class ConfigService {
       send,
       open: this.env.boolean('EMAIL_OPEN').optional(!send && !this.jest),
       sesRegion: this.env.string('SES_REGION').optional(),
+      notifyDistributionLists: this.env
+        .boolean('NOTIFY_DISTRIBUTION_LIST')
+        .optional(false),
     };
   }
 

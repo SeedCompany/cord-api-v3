@@ -50,6 +50,9 @@ export abstract class CreateLanguageEngagement extends CreateEngagement {
 
   @Field({ nullable: true })
   readonly pnp?: CreateDefinedFileVersionInput;
+
+  @Field({ nullable: true })
+  readonly historicGoal?: string;
 }
 
 @InputType()

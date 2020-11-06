@@ -4,9 +4,9 @@ import { DateTime } from 'luxon';
 import {
   DuplicateException,
   generateId,
-  ISession,
   NotFoundException,
   ServerException,
+  Session,
 } from '../../common';
 import {
   ConfigService,
@@ -76,7 +76,7 @@ export class FieldZoneService {
 
   async create(
     { directorId, ...input }: CreateFieldZone,
-    session: ISession
+    session: Session
   ): Promise<FieldZone> {
     const checkName = await this.db
       .query()
@@ -130,22 +130,18 @@ export class FieldZoneService {
     await this.authorizationService.processNewBaseNode(
       dbFieldZone,
       result.id,
-      session.userId as string
+      session.userId
     );
 
     this.logger.debug(`field zone created`, { id: result.id });
     return await this.readOne(result.id, session);
   }
 
-  async readOne(id: string, session: ISession): Promise<FieldZone> {
+  async readOne(id: string, session: Session): Promise<FieldZone> {
     this.logger.debug(`Read Field Zone`, {
       id: id,
       userId: session.userId,
     });
-
-    if (!session.userId) {
-      session.userId = this.config.anonUser.id;
-    }
 
     const query = this.db
       .query()
@@ -188,10 +184,48 @@ export class FieldZoneService {
     };
   }
 
-  async update(input: UpdateFieldZone, session: ISession): Promise<FieldZone> {
+  async update(input: UpdateFieldZone, session: Session): Promise<FieldZone> {
     const fieldZone = await this.readOne(input.id, session);
 
     // update director
+    if (input.directorId) {
+      const createdAt = DateTime.local();
+      const query = this.db
+        .query()
+        .match([
+          node('user', 'User', { id: session.userId }),
+          relation('in', '', 'member'),
+          node('', 'SecurityGroup'),
+          relation('out', '', 'permission'),
+          node('', 'Permission', {
+            property: 'director',
+            edit: true,
+          }),
+          relation('out', '', 'baseNode'),
+          node('fieldZone', 'FieldZone', { id: input.id }),
+        ])
+        .with('fieldZone')
+        .limit(1)
+        .match([node('director', 'User', { id: input.directorId })])
+        .optionalMatch([
+          node('fieldZone'),
+          relation('out', 'oldRel', 'director', { active: true }),
+          node(''),
+        ])
+        .setValues({ 'oldRel.active': false })
+        .with('fieldZone, director')
+        .limit(1)
+        .create([
+          node('fieldZone'),
+          relation('out', '', 'director', {
+            active: true,
+            createdAt,
+          }),
+          node('director'),
+        ]);
+
+      await query.run();
+    }
 
     await this.db.sgUpdateProperties({
       session,
@@ -204,13 +238,13 @@ export class FieldZoneService {
     return await this.readOne(input.id, session);
   }
 
-  async delete(_id: string, _session: ISession): Promise<void> {
+  async delete(_id: string, _session: Session): Promise<void> {
     // Not Implemented
   }
 
   async list(
     { filter, ...input }: FieldZoneListInput,
-    session: ISession
+    session: Session
   ): Promise<FieldZoneListOutput> {
     const label = 'FieldZone';
     const query = this.db

@@ -2,7 +2,13 @@ import { forwardRef, Inject } from '@nestjs/common';
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { Request, Response } from 'express';
 import { DateTime } from 'luxon';
-import { ISession, Session } from '../../common';
+import {
+  AnonSession,
+  LoggedInSession,
+  Session,
+  UnauthenticatedException,
+} from '../../common';
+import { anonymousSession, loggedInSession } from '../../common/session';
 import { ConfigService, ILogger, Logger } from '../../core';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { UserService } from '../user';
@@ -50,22 +56,25 @@ export class AuthenticationResolver {
       this.sessionPipe.getTokenFromCookie(req);
 
     let token = existingToken || (await this.authService.createToken());
-    let session;
+    let rawSession;
     try {
-      session = await this.authService.createSession(token);
+      rawSession = await this.authService.createSession(token);
     } catch (exception) {
-      // if (!(e instanceof UnauthenticatedException)) {
-      //   throw e;
-      // }
+      if (!(exception instanceof UnauthenticatedException)) {
+        throw exception;
+      }
       this.logger.debug(
         'Failed to use existing session token, creating new one.',
         { exception }
       );
       token = await this.authService.createToken();
-      session = await this.authService.createSession(token);
+      rawSession = await this.authService.createSession(token);
     }
+    const session = anonymousSession(rawSession);
 
-    const userFromSession = await this.authService.userFromSession(session);
+    const userFromSession = session.anonymous
+      ? null
+      : await this.authService.userFromSession(session);
     const powers = await this.authorizationService.readPower(session);
 
     if (browser) {
@@ -90,13 +99,13 @@ export class AuthenticationResolver {
   })
   async login(
     @Args('input') input: LoginInput,
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Context('request') req: Request
   ): Promise<LoginOutput> {
     const userId = await this.authService.login(input, session);
-    const loggedInSession = await this.updateSession(req);
-    const user = await this.userService.readOne(userId, loggedInSession);
-    const powers = await this.authorizationService.readPower(loggedInSession);
+    const newSession = loggedInSession(await this.updateSession(req));
+    const user = await this.userService.readOne(userId, newSession);
+    const powers = await this.authorizationService.readPower(newSession);
     return { user, powers };
   }
 
@@ -104,7 +113,7 @@ export class AuthenticationResolver {
     description: 'Logout a user',
   })
   async logout(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Context('request') req: Request
   ): Promise<boolean> {
     await this.authService.logout(session.token);
@@ -117,14 +126,14 @@ export class AuthenticationResolver {
   })
   async register(
     @Args('input') input: RegisterInput,
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Context('request') req: Request
   ): Promise<RegisterOutput> {
     const userId = await this.authService.register(input, session);
     await this.authService.login(input, session);
-    const loggedInSession = await this.updateSession(req);
-    const user = await this.userService.readOne(userId, loggedInSession);
-    const powers = await this.authorizationService.readPower(loggedInSession);
+    const newSession = loggedInSession(await this.updateSession(req));
+    const user = await this.userService.readOne(userId, newSession);
+    const powers = await this.authorizationService.readPower(newSession);
     return { user, powers };
   }
 
@@ -139,7 +148,7 @@ export class AuthenticationResolver {
   })
   async changePassword(
     @Args() { oldPassword, newPassword }: ChangePasswordArgs,
-    @Session() session: ISession
+    @LoggedInSession() session: Session
   ): Promise<boolean> {
     await this.authService.changePassword(oldPassword, newPassword, session);
     return true;

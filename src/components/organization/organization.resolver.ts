@@ -8,10 +8,11 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import {
+  AnonSession,
   firstLettersOfWords,
   IdArg,
   IdField,
-  ISession,
+  LoggedInSession,
   Session,
 } from '../../common';
 import { LocationListInput, SecuredLocationList } from '../location';
@@ -43,7 +44,7 @@ export class OrganizationResolver {
     description: 'Create an organization',
   })
   async createOrganization(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') { organization: input }: CreateOrganizationInput
   ): Promise<CreateOrganizationOutput> {
     const organization = await this.orgs.create(input, session);
@@ -54,7 +55,7 @@ export class OrganizationResolver {
     description: 'Look up an organization by its ID',
   })
   async organization(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @IdArg() id: string
   ): Promise<Organization> {
     return await this.orgs.readOne(id, session);
@@ -71,7 +72,7 @@ export class OrganizationResolver {
     description: 'Look up organizations',
   })
   async organizations(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Args({
       name: 'input',
       type: () => OrganizationListInput,
@@ -84,7 +85,7 @@ export class OrganizationResolver {
 
   @ResolveField(() => SecuredLocationList)
   async locations(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Parent() organization: Organization,
     @Args({
       name: 'input',
@@ -100,7 +101,7 @@ export class OrganizationResolver {
     description: 'Update an organization',
   })
   async updateOrganization(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') { organization: input }: UpdateOrganizationInput
   ): Promise<UpdateOrganizationOutput> {
     const organization = await this.orgs.update(input, session);
@@ -111,7 +112,7 @@ export class OrganizationResolver {
     description: 'Delete an organization',
   })
   async deleteOrganization(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @IdArg() id: string
   ): Promise<boolean> {
     await this.orgs.delete(id, session);
@@ -122,7 +123,7 @@ export class OrganizationResolver {
     description: 'Add a location to a organization',
   })
   async addLocationToOrganization(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args() { organizationId, locationId }: ModifyLocationArgs
   ): Promise<Organization> {
     await this.orgs.addLocation(organizationId, locationId, session);
@@ -133,7 +134,7 @@ export class OrganizationResolver {
     description: 'Remove a location from a organization',
   })
   async removeLocationFromOrganization(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args() { organizationId, locationId }: ModifyLocationArgs
   ): Promise<Organization> {
     await this.orgs.removeLocation(organizationId, locationId, session);
@@ -143,7 +144,7 @@ export class OrganizationResolver {
   @Query(() => Boolean, {
     description: 'Check all organization nodes for consistency',
   })
-  async checkOrganizations(@Session() session: ISession): Promise<boolean> {
+  async checkOrganizations(@AnonSession() session: Session): Promise<boolean> {
     return await this.orgs.checkAllOrgs(session);
   }
 
@@ -151,7 +152,7 @@ export class OrganizationResolver {
     description: 'Check Consistency in Organization Nodes',
   })
   async checkOrganizationConsistency(
-    @Session() session: ISession
+    @AnonSession() session: Session
   ): Promise<boolean> {
     return await this.orgs.checkOrganizationConsistency(session);
   }

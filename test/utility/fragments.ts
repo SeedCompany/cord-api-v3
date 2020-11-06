@@ -157,6 +157,11 @@ export const language = gql`
       canRead
       canEdit
     }
+    tags {
+      value
+      canRead
+      canEdit
+    }
   }
 `;
 
@@ -348,6 +353,11 @@ export const project = gql`
         }
       }
     }
+    primaryLocation {
+      value {
+        id
+      }
+    }
     mouStart {
       value
       canRead
@@ -364,6 +374,11 @@ export const project = gql`
       canEdit
     }
     estimatedSubmission {
+      value
+      canRead
+      canEdit
+    }
+    tags {
       value
       canRead
       canEdit
@@ -493,6 +508,8 @@ export const projectMember = gql`
     modifiedAt
     roles {
       value
+      canRead
+      canEdit
     }
     user {
       value {

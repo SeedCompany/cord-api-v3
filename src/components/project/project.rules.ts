@@ -1,8 +1,8 @@
 /* eslint-disable no-case-declarations */
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { intersection } from 'lodash';
-import { ServerException, UnauthorizedException } from '../../common';
+import { first, intersection } from 'lodash';
+import { ServerException, Session, UnauthorizedException } from '../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import { Role } from '../authorization';
 import { User, UserService } from '../user';
@@ -20,7 +20,7 @@ type EmailAddress = string;
 interface StepRule {
   approvers: Role[];
   transitions: ProjectStepTransition[];
-  getNotifiers: () => MaybeAsync<EmailAddress[]>;
+  getNotifiers: () => MaybeAsync<ReadonlyArray<EmailAddress | string>>;
 }
 
 export interface EmailNotification {
@@ -422,14 +422,11 @@ export class ProjectRules {
               type: TransitionType.Neutral,
               label: 'Discuss Suspension',
             },
-            // TODO Dedup these next two. It should be based on whether the project had previously completed changed plan or not.
             {
-              to: ProjectStep.Active,
-              type: TransitionType.Neutral,
-              label: 'Will Not Change Plan',
-            },
-            {
-              to: ProjectStep.ActiveChangedPlan,
+              to: await this.getMostRecentPreviousStep(id, [
+                ProjectStep.Active,
+                ProjectStep.ActiveChangedPlan,
+              ]),
               type: TransitionType.Neutral,
               label: 'Will Not Change Plan',
             },
@@ -459,7 +456,10 @@ export class ProjectRules {
               label: 'Approve Change to Plan',
             },
             {
-              to: ProjectStep.Active, // TODO I think this should be back to ActiveChangedPlan if the project successfully changed plan previously
+              to: await this.getMostRecentPreviousStep(id, [
+                ProjectStep.Active,
+                ProjectStep.ActiveChangedPlan,
+              ]),
               type: TransitionType.Reject,
               label: 'Reject Change to Plan',
             },
@@ -484,14 +484,11 @@ export class ProjectRules {
               type: TransitionType.Neutral,
               label: 'Submit for Approval',
             },
-            // TODO dedup
             {
-              to: ProjectStep.Active,
-              type: TransitionType.Neutral,
-              label: 'Will Not Suspend',
-            },
-            {
-              to: ProjectStep.ActiveChangedPlan,
+              to: await this.getMostRecentPreviousStep(id, [
+                ProjectStep.Active,
+                ProjectStep.ActiveChangedPlan,
+              ]),
               type: TransitionType.Neutral,
               label: 'Will Not Suspend',
             },
@@ -519,14 +516,11 @@ export class ProjectRules {
               type: TransitionType.Approve,
               label: 'Approve Suspension',
             },
-            // TODO dedup
             {
-              to: ProjectStep.Active,
-              type: TransitionType.Reject,
-              label: 'Reject Suspension',
-            },
-            {
-              to: ProjectStep.ActiveChangedPlan,
+              to: await this.getMostRecentPreviousStep(id, [
+                ProjectStep.Active,
+                ProjectStep.ActiveChangedPlan,
+              ]),
               type: TransitionType.Reject,
               label: 'Reject Suspension',
             },
@@ -629,19 +623,13 @@ export class ProjectRules {
               type: TransitionType.Approve,
               label: 'Submit for Approval',
             },
-            // TODO dedup
             {
-              to: ProjectStep.DiscussingReactivation,
-              type: TransitionType.Neutral,
-              label: 'Will Not Terminate',
-            },
-            {
-              to: ProjectStep.Suspended,
-              type: TransitionType.Neutral,
-              label: 'Will Not Terminate',
-            },
-            {
-              to: ProjectStep.Active,
+              to: await this.getMostRecentPreviousStep(id, [
+                ProjectStep.DiscussingReactivation,
+                ProjectStep.Suspended,
+                ProjectStep.Active,
+                ProjectStep.ActiveChangedPlan,
+              ]),
               type: TransitionType.Neutral,
               label: 'Will Not Terminate',
             },
@@ -669,19 +657,13 @@ export class ProjectRules {
               type: TransitionType.Reject,
               label: 'Send Back for Corrections',
             },
-            // TODO Dedup
             {
-              to: ProjectStep.DiscussingReactivation,
-              type: TransitionType.Neutral,
-              label: 'Will Not Terminate',
-            },
-            {
-              to: ProjectStep.Suspended,
-              type: TransitionType.Neutral,
-              label: 'Will Not Terminate',
-            },
-            {
-              to: ProjectStep.Active,
+              to: await this.getMostRecentPreviousStep(id, [
+                ProjectStep.DiscussingReactivation,
+                ProjectStep.Suspended,
+                ProjectStep.Active,
+                ProjectStep.ActiveChangedPlan,
+              ]),
               type: TransitionType.Neutral,
               label: 'Will Not Terminate',
             },
@@ -701,14 +683,11 @@ export class ProjectRules {
             Role.FinancialAnalyst,
           ],
           transitions: [
-            // TODO Dedup
             {
-              to: ProjectStep.Active,
-              type: TransitionType.Neutral,
-              label: 'Still Working',
-            },
-            {
-              to: ProjectStep.ActiveChangedPlan,
+              to: await this.getMostRecentPreviousStep(id, [
+                ProjectStep.Active,
+                ProjectStep.ActiveChangedPlan,
+              ]),
               type: TransitionType.Neutral,
               label: 'Still Working',
             },
@@ -752,8 +731,12 @@ export class ProjectRules {
 
   async getAvailableTransitions(
     projectId: string,
-    userId?: string
+    session: Session
   ): Promise<ProjectStepTransition[]> {
+    if (session.anonymous) {
+      return [];
+    }
+
     const currentStep = await this.getCurrentStep(projectId);
 
     // get roles that can approve the current step
@@ -763,7 +746,7 @@ export class ProjectRules {
     );
 
     // If current user is not an approver (based on roles) then don't allow any transitions
-    const currentUserRoles = await this.getUserRoles(userId);
+    const currentUserRoles = await this.getUserRoles(session.userId);
     if (intersection(approvers, currentUserRoles).length === 0) {
       return [];
     }
@@ -773,10 +756,10 @@ export class ProjectRules {
 
   async verifyStepChange(
     projectId: string,
-    userId: string | undefined,
+    session: Session,
     nextStep: ProjectStep
   ) {
-    const transitions = await this.getAvailableTransitions(projectId, userId);
+    const transitions = await this.getAvailableTransitions(projectId, session);
 
     const validNextStep = transitions.some(
       (transition) => transition.to === nextStep
@@ -808,11 +791,7 @@ export class ProjectRules {
     return currentStep.step;
   }
 
-  private async getUserRoles(id?: string) {
-    if (!id) {
-      return [];
-    }
-
+  private async getUserRoles(id: string) {
     const userRolesQuery = await this.db
       .query()
       .match([
@@ -835,10 +814,16 @@ export class ProjectRules {
   ): Promise<EmailNotification[]> {
     // notify everyone
     const { getNotifiers } = await this.getStepRule(step, projectId);
-    const userIds = await getNotifiers();
+    const userIdsAndEmailAddresses = await getNotifiers();
+
+    const recipientIds = this.configService.email.notifyDistributionLists
+      ? userIdsAndEmailAddresses
+      : userIdsAndEmailAddresses.filter(
+          (idOrEmail) => !idOrEmail.includes('@')
+        );
 
     const notifications = await Promise.all(
-      userIds.map((recipientId) =>
+      recipientIds.map((recipientId) =>
         this.getEmailNotificationObject(
           changedById,
           projectId,
@@ -848,7 +833,7 @@ export class ProjectRules {
       )
     );
 
-    this.logger.info('notifying: ', notifications);
+    this.logger.debug('notifying: ', notifications);
 
     return notifications;
   }
@@ -882,6 +867,43 @@ export class ProjectRules {
       .first();
 
     return emails?.emails;
+  }
+
+  /** Of the given steps which one was the most recent previous step */
+  private async getMostRecentPreviousStep(
+    id: string,
+    steps: ProjectStep[]
+  ): Promise<ProjectStep> {
+    const prevSteps = await this.getPreviousSteps(id);
+    const mostRecentMatchedStep = first(intersection(prevSteps, steps));
+    if (!mostRecentMatchedStep) {
+      throw new ServerException(
+        `The project ${id} has never been in any of these previous steps: ${steps.join(
+          ', '
+        )}`
+      );
+    }
+    return mostRecentMatchedStep;
+  }
+
+  /** A list of the project's previous steps ordered most recent to furthest in the past */
+  private async getPreviousSteps(id: string): Promise<ProjectStep[]> {
+    const result = await this.db
+      .query()
+      .match([
+        node('node', 'Project', { id }),
+        relation('out', '', 'step', { active: false }),
+        node('prop', 'Property'),
+      ])
+      .with('prop')
+      .orderBy('prop.createdAt', 'DESC')
+      .raw(`RETURN collect(prop.value) as steps`)
+      .asResult<{ steps: ProjectStep[] }>()
+      .first();
+    if (!result) {
+      throw new ServerException("Failed to determine project's previous steps");
+    }
+    return result.steps;
   }
 
   private async getEmailNotificationObject(

@@ -12,7 +12,8 @@ import {
 /* eslint-enable no-restricted-imports */
 import { GqlArgumentsHost, GqlExceptionFilter } from '@nestjs/graphql';
 import { compact, mapValues, uniq } from 'lodash';
-import { Exception, simpleSwitch } from '../common';
+import { Exception, getPreviousList, simpleSwitch } from '../common';
+import { ServiceUnavailableError } from './database';
 import { ILogger, Logger, LogLevel } from './logger';
 
 type ExceptionInfo = ReturnType<ExceptionFilter['catchGql']>;
@@ -79,6 +80,22 @@ export class ExceptionFilter implements GqlExceptionFilter {
     if (ex instanceof HttpException) {
       return this.httpException(ex);
     }
+
+    // If the exception or any of the previous ones are a database connection
+    // failure, then return that as the error. This way we can have an "unknown"
+    // failure for the specific action without having to check for this error
+    // in every catch statement (assuming no further logic is done).
+    if (
+      getPreviousList(ex, true).some(
+        (e) => e instanceof ServiceUnavailableError
+      )
+    ) {
+      return {
+        codes: ['DatabaseConnectionFailure', 'ServiceUnavailable', 'Server'],
+        message: 'Failed to connect to CORD database',
+      };
+    }
+
     if (ex instanceof Exception) {
       const { name, message, stack, previous, ...rest } = ex;
       return {

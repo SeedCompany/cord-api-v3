@@ -1,5 +1,5 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { IdArg, ISession, Session } from '../../common';
+import { AnonSession, IdArg, LoggedInSession, Session } from '../../common';
 import {
   CreateLiteracyMaterialInput,
   CreateLiteracyMaterialOutput,
@@ -21,7 +21,7 @@ export class LiteracyMaterialResolver {
     description: 'Look up a literacy material',
   })
   async literacyMaterial(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @IdArg() id: string
   ): Promise<LiteracyMaterial> {
     return await this.literacyMaterialService.readOne(id, session);
@@ -31,7 +31,7 @@ export class LiteracyMaterialResolver {
     description: 'Look up literacy materials',
   })
   async literacyMaterials(
-    @Session() session: ISession,
+    @AnonSession() session: Session,
     @Args({
       name: 'input',
       type: () => LiteracyMaterialListInput,
@@ -46,7 +46,7 @@ export class LiteracyMaterialResolver {
     description: 'Create a literacy material',
   })
   async createLiteracyMaterial(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') { literacyMaterial: input }: CreateLiteracyMaterialInput
   ): Promise<CreateLiteracyMaterialOutput> {
     const literacyMaterial = await this.literacyMaterialService.create(
@@ -60,7 +60,7 @@ export class LiteracyMaterialResolver {
     description: 'Update a literacy material',
   })
   async updateLiteracyMaterial(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @Args('input') { literacyMaterial: input }: UpdateLiteracyMaterialInput
   ): Promise<UpdateLiteracyMaterialOutput> {
     const literacyMaterial = await this.literacyMaterialService.update(
@@ -74,7 +74,7 @@ export class LiteracyMaterialResolver {
     description: 'Delete a literacy material',
   })
   async deleteLiteracyMaterial(
-    @Session() session: ISession,
+    @LoggedInSession() session: Session,
     @IdArg() id: string
   ): Promise<boolean> {
     await this.literacyMaterialService.delete(id, session);
