@@ -36,7 +36,7 @@ import {
 } from './dto';
 import {
   KnownLanguage,
-  ModifyKnowLanguageArgs,
+  ModifyKnownLanguageArgs,
 } from './dto/known-language.dto';
 import { EducationListInput, SecuredEducationList } from './education';
 import {
@@ -284,11 +284,11 @@ export class UserResolver {
   @Mutation(() => User, {
     description: 'Create known language to user',
   })
-  async createKnowLanguage(
+  async createKnownLanguage(
     @LoggedInSession() session: Session,
-    @Args() { userId, languageId, languageProficiency }: ModifyKnowLanguageArgs
+    @Args() { userId, languageId, languageProficiency }: ModifyKnownLanguageArgs
   ): Promise<User> {
-    await this.userService.createKnowLanguage(
+    await this.userService.createKnownLanguage(
       userId,
       languageId,
       languageProficiency,
@@ -300,11 +300,11 @@ export class UserResolver {
   @Mutation(() => User, {
     description: 'Delete known language from user',
   })
-  async deleteKnowLanguage(
+  async deleteKnownLanguage(
     @LoggedInSession() session: Session,
-    @Args() { userId, languageId, languageProficiency }: ModifyKnowLanguageArgs
+    @Args() { userId, languageId, languageProficiency }: ModifyKnownLanguageArgs
   ): Promise<User> {
-    await this.userService.deleteKnowLanguage(
+    await this.userService.deleteKnownLanguage(
       userId,
       languageId,
       languageProficiency,

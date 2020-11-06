@@ -787,14 +787,14 @@ export class UserService {
     );
   }
 
-  async createKnowLanguage(
+  async createKnownLanguage(
     userId: string,
     languageId: string,
     languageProficiency: LanguageProficiency,
     _session: Session
   ): Promise<void> {
     try {
-      await this.deleteKnowLanguage(
+      await this.deleteKnownLanguage(
         userId,
         languageId,
         languageProficiency,
@@ -819,7 +819,7 @@ export class UserService {
     }
   }
 
-  async deleteKnowLanguage(
+  async deleteKnownLanguage(
     userId: string,
     languageId: string,
     languageProficiency: LanguageProficiency,

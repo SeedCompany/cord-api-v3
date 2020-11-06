@@ -11,7 +11,7 @@ export abstract class KnownLanguage {
 }
 
 @ArgsType()
-export abstract class ModifyKnowLanguageArgs {
+export abstract class ModifyKnownLanguageArgs {
   @IdField()
   userId: string;
 
