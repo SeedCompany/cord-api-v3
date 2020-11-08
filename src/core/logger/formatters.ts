@@ -73,7 +73,7 @@ export const exceptionInfo = () =>
     info.exceptions = flatten(info.exception).map(
       (ex): ParsedError => {
         const stack = ex.stack!;
-        const type = stack.slice(0, stack.indexOf(':'));
+        const type = ex.constructor.name || stack.slice(0, stack.indexOf(':'));
         const trace = parseTrace({ stack } as any);
 
         return {
@@ -130,7 +130,7 @@ export const formatException = () =>
     }
     const exs: ParsedError[] = info.exceptions;
 
-    const bad = config.syslog.levels[info.level] > config.syslog.levels.warning;
+    const bad = config.syslog.levels[info.level] < config.syslog.levels.warning;
 
     info[MESSAGE] = exs
       .map((ex, index) => {
