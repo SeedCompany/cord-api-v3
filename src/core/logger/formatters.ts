@@ -17,6 +17,7 @@ interface ParsedError {
   message: string;
   stack: string;
   trace: StackFrame[];
+  other: Record<string, any>;
 }
 
 export const metadata = () =>
@@ -72,15 +73,17 @@ export const exceptionInfo = () =>
 
     info.exceptions = flatten(info.exception).map(
       (ex): ParsedError => {
+        const { name: _, message, stack: __, ...other } = ex;
         const stack = ex.stack!;
         const type = ex.constructor.name || stack.slice(0, stack.indexOf(':'));
         const trace = parseTrace({ stack } as any);
 
         return {
           type,
-          message: ex.message,
+          message,
           stack,
           trace,
+          other,
         };
       }
     );
@@ -91,12 +94,15 @@ export const exceptionInfo = () =>
 const formatMessage = (
   type: string,
   message: string,
+  other: Record<string, any>,
   color: Color,
   extraSpace: boolean
 ) => {
+  const otherStr = printObj(other);
   let msg = `${type}: ${message}\n`;
-  msg = extraSpace ? `\n${msg}\n` : msg;
   msg = color(msg);
+  msg += otherStr ? otherStr + '\n' : '';
+  msg = extraSpace ? `\n${msg}\n` : msg;
   return msg;
 };
 
@@ -139,6 +145,7 @@ export const formatException = () =>
           formatMessage(
             ex.type,
             ex.message,
+            ex.other,
             bad ? red : yellow,
             bad && index === 0
           );
@@ -167,15 +174,17 @@ export const printForCli = () =>
     msg += typeof name === 'string' ? yellow(`[${name}] `) : '';
     msg += info.message;
     msg += ` ${yellow(info.ms)}`;
-    msg +=
-      Object.keys(info.metadata).length > 0
-        ? ` ${prettyPrint(info.metadata, {
-            depth: 2, // 2 default
-            colors: colorsEnabled,
-          })}`
-        : '';
+    msg += printObj(info.metadata);
     return msg;
   });
+
+const printObj = (obj: Record<string, any>) =>
+  Object.keys(obj).length > 0
+    ? ` ${prettyPrint(obj, {
+        depth: 2, // 2 default
+        colors: colorsEnabled,
+      })}`
+    : '';
 
 export const printForJson = () =>
   format.printf((info: LogEntry & { exceptions?: ParsedError[] }) => {
@@ -185,9 +194,10 @@ export const printForJson = () =>
       '@name': getNameFromEntry(info),
       level,
       message,
-      exceptions: exceptions?.map(({ message, type, stack }) => ({
+      exceptions: exceptions?.map(({ message, type, stack, other }) => ({
         type,
         message,
+        ...other,
         stack,
       })),
       ...metadata,
