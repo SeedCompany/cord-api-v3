@@ -163,6 +163,18 @@ export class ConfigService {
   }
 
   /**
+   * @see https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-metadata-endpoint.html
+   */
+  readonly ecsMetadataUri =
+    this.env.string('ECS_CONTAINER_METADATA_URI_V4').optional() ||
+    this.env.string('ECS_CONTAINER_METADATA_URI').optional();
+
+  /** Should logger output as JSON? Defaults to true if running in ECS */
+  readonly jsonLogs = this.env
+    .boolean('JSON_LOGS')
+    .optional(this.ecsMetadataUri);
+
+  /**
    * Default configuration for logging.
    * These can be overridden with logging.yml file at project root
    * This needs to be static to prevent circular dependency.

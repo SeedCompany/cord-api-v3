@@ -6,6 +6,7 @@ import {
   Provider,
 } from '@nestjs/common';
 import { format, transports } from 'winston';
+import { ConfigService } from '../config/config.service';
 import { BufferLoggerService } from './buffer-logger.service';
 import {
   colorize,
@@ -15,6 +16,7 @@ import {
   metadata,
   pid,
   printForCli,
+  printForJson,
   timestamp,
 } from './formatters';
 import { LevelMatcherProvider } from './level-matcher.provider';
@@ -49,21 +51,29 @@ export const bootstrapLogger = new NestLoggerAdapterService(proxy);
     },
     {
       provide: LoggerOptions,
-      // Just CLI for now. We'll handle hooking up to cloudwatch later.
-      useFactory: (): LoggerOptions => ({
-        transports: [new transports.Console()],
-        format: format.combine(
+      useFactory: (config: ConfigService): LoggerOptions => {
+        const formatting = format.combine(
           exceptionInfo(),
           metadata(),
           maskSecrets(),
-          timestamp(),
-          format.ms(),
-          pid(),
-          colorize(),
-          formatException(),
-          printForCli()
-        ),
-      }),
+          ...(config.jsonLogs
+            ? [printForJson()]
+            : [
+                timestamp(),
+                format.ms(),
+                pid(),
+                colorize(),
+                formatException(),
+                printForCli(),
+              ])
+        );
+
+        return {
+          transports: [new transports.Console()],
+          format: formatting,
+        };
+      },
+      inject: [ConfigService],
     },
   ],
 })

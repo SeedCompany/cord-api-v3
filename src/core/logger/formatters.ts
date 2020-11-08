@@ -1,11 +1,12 @@
 import { ppRaw as prettyPrint } from '@patarapolw/prettyprint';
 import { enabled as colorsEnabled, red, yellow } from 'colors/safe';
+import stringify from 'fast-safe-stringify';
 import { identity, mapValues } from 'lodash';
 import { DateTime } from 'luxon';
 import { relative } from 'path';
 import { parse as parseTrace, StackFrame } from 'stack-trace';
 import { MESSAGE } from 'triple-beam';
-import { config, format } from 'winston';
+import { config, format, LogEntry } from 'winston';
 import { Exception } from '../../common/exceptions';
 import { getNameFromEntry } from './logger.interface';
 
@@ -174,4 +175,22 @@ export const printForCli = () =>
           })}`
         : '';
     return msg;
+  });
+
+export const printForJson = () =>
+  format.printf((info: LogEntry & { exceptions?: ParsedError[] }) => {
+    const { level, message, exceptions, metadata } = info;
+
+    const obj = {
+      '@name': getNameFromEntry(info),
+      level,
+      message,
+      exceptions: exceptions?.map(({ message, type, stack }) => ({
+        type,
+        message,
+        stack,
+      })),
+      ...metadata,
+    };
+    return stringify(obj);
   });
