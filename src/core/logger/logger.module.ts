@@ -47,6 +47,24 @@ export const bootstrapLogger = new NestLoggerAdapterService(proxy);
       provide: NestLogger,
       useClass: NestLoggerAdapterService,
     },
+    {
+      provide: LoggerOptions,
+      // Just CLI for now. We'll handle hooking up to cloudwatch later.
+      useFactory: (): LoggerOptions => ({
+        transports: [new transports.Console()],
+        format: format.combine(
+          exceptionInfo(),
+          metadata(),
+          maskSecrets(),
+          timestamp(),
+          format.ms(),
+          pid(),
+          colorize(),
+          formatException(),
+          printForCli()
+        ),
+      }),
+    },
   ],
 })
 export class LoggerModule {
@@ -60,34 +78,12 @@ export class LoggerModule {
   }
 
   static forRoot(): DynamicModule {
-    // Just CLI for now. We'll handle hooking up to cloudwatch later.
-    const options: LoggerOptions = {
-      transports: [new transports.Console()],
-      format: format.combine(
-        exceptionInfo(),
-        metadata(),
-        maskSecrets(),
-        timestamp(),
-        format.ms(),
-        pid(),
-        colorize(),
-        formatException(),
-        printForCli()
-      ),
-    };
-
     const namedLoggerProviders = Array.from(loggerNames).map(
       namedLoggerProvider
     );
     return {
       module: LoggerModule,
-      providers: [
-        {
-          provide: LoggerOptions,
-          useValue: options,
-        },
-        ...namedLoggerProviders,
-      ],
+      providers: namedLoggerProviders,
       exports: namedLoggerProviders,
     };
   }
