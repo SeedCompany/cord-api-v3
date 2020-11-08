@@ -5,9 +5,11 @@ import {
   Logger as NestLogger,
   Provider,
 } from '@nestjs/common';
-import { format, transports } from 'winston';
+import { memoize } from 'lodash';
+import { createLogger, format, transports } from 'winston';
 import { ConfigService } from '../config/config.service';
 import { BufferLoggerService } from './buffer-logger.service';
+import { ExceptionHandler } from './exception-logger';
 import {
   colorize,
   exceptionInfo,
@@ -32,6 +34,14 @@ const buffer = new BufferLoggerService();
 const proxy = new ProxyLoggerService();
 proxy.setLogger(buffer);
 export const bootstrapLogger = new NestLoggerAdapterService(proxy);
+
+// A nice error logger for when the actual logger cannot be created
+ExceptionHandler.getLogger = memoize(() =>
+  createLogger({
+    transports: [new transports.Console()],
+    format: format.combine(exceptionInfo(), formatException(), printForCli()),
+  })
+);
 
 @Global()
 @Module({
@@ -105,6 +115,7 @@ export class LoggerModule {
   ) {
     proxy.setLogger(winston);
     buffer.flushTo(winston);
+    ExceptionHandler.getLogger = () => winston;
   }
 }
 
