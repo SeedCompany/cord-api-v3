@@ -172,7 +172,7 @@ export class ConfigService {
   /** Should logger output as JSON? Defaults to true if running in ECS */
   readonly jsonLogs = this.env
     .boolean('JSON_LOGS')
-    .optional(this.ecsMetadataUri);
+    .optional(!!this.ecsMetadataUri);
 
   /**
    * Default configuration for logging.
