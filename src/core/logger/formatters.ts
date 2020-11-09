@@ -87,6 +87,7 @@ export const exceptionInfo = () =>
         };
       }
     );
+    delete info.exception;
 
     return info;
   })();
