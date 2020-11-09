@@ -5,13 +5,14 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { BaseExceptionFilter } from '@nestjs/core';
 /* eslint-enable no-restricted-imports */
 import { InputException, ServerException } from '../common/exceptions';
 import { ConstraintError } from './database';
 import { ExceptionFilter } from './exception.filter';
 
 describe('ExceptionFilter', () => {
-  const filter = new ExceptionFilter();
+  const filter = new ExceptionFilter(new BaseExceptionFilter());
 
   describe('HttpException', () => {
     it('simple', () => {
