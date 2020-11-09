@@ -53,13 +53,15 @@ interface MatcherConfig {
  * logging.yml file in the project root. See the example file as a starting point.
  */
 export class LevelMatcher {
+  private readonly defaultLevel: LogLevel;
   private readonly matchers: MatcherConfig[] = [];
   private cached: Record<string, LogLevel> = {};
 
   constructor(
     levelMap: Record<string, string | undefined>,
-    private readonly defaultLevel: LogLevel
+    defaultLevel: LogLevel | string
   ) {
+    this.defaultLevel = parseLevel(defaultLevel) ?? LogLevel.INFO;
     this.matchers = Object.entries(levelMap).flatMap(
       ([namespaces, rawLevel]) => {
         const level = parseLevel(rawLevel);
