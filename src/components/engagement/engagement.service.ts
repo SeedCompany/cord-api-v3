@@ -35,6 +35,7 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { Powers } from '../authorization/dto/powers';
 import { CeremonyService } from '../ceremony';
 import { FileService } from '../file';
 import {
@@ -56,6 +57,7 @@ import {
   UpdateInternshipEngagement,
   UpdateLanguageEngagement,
 } from './dto';
+import { DeleteProjectEngagement } from './dto/delete.dto';
 import {
   EngagementCreatedEvent,
   EngagementDeletedEvent,
@@ -682,22 +684,32 @@ export class EngagementService {
       result.permList,
       this.securedProperties
     );
+    let startDate = null;
+    let canReadStartDate = null;
+    let canReadEndDate = null;
+    let endDate = null;
 
-    const project = await this.projectService.readOne(
-      result.projectId,
-      session
-    );
+    try {
+      const project = await this.projectService.readOne(
+        result.projectId,
+        session
+      );
 
-    const canReadStartDate =
-      project.mouStart.canRead && securedProperties.startDateOverride.canRead;
-    const startDate = canReadStartDate
-      ? props.startDateOverride ?? project.mouStart.value
-      : null;
-    const canReadEndDate =
-      project.mouEnd.canRead && securedProperties.endDateOverride.canRead;
-    const endDate = canReadEndDate
-      ? props.endDateOverride ?? project.mouEnd.value
-      : null;
+      canReadStartDate =
+        project.mouStart.canRead && securedProperties.startDateOverride.canRead;
+      startDate = canReadStartDate
+        ? props.startDateOverride ?? project.mouStart.value
+        : null;
+      canReadEndDate =
+        project.mouEnd.canRead && securedProperties.endDateOverride.canRead;
+      endDate = canReadEndDate
+        ? props.endDateOverride ?? project.mouEnd.value
+        : null;
+    } catch (NotFoundException) {
+      this.logger.debug(
+        'Project does not exist for the project engagement. Continuing.'
+      );
+    }
 
     return {
       __typename: result.__typename,
@@ -707,12 +719,12 @@ export class EngagementService {
       modifiedAt: props.modifiedAt,
       startDate: {
         value: startDate,
-        canRead: canReadStartDate,
+        canRead: canReadStartDate == null ? true : canReadStartDate,
         canEdit: false,
       },
       endDate: {
         value: endDate,
-        canRead: canReadEndDate,
+        canRead: canReadEndDate == null ? true : canReadEndDate,
         canEdit: false,
       },
       methodologies: {
@@ -1007,6 +1019,38 @@ export class EngagementService {
       throw new ServerException('Failed to delete partnership', exception);
     }
     await this.eventBus.publish(new EngagementDeletedEvent(object, session));
+  }
+
+  async deleteProjectEngagement(
+    input: DeleteProjectEngagement,
+    session: Session
+  ): Promise<void> {
+    await this.authorizationService.checkPower(
+      Powers.DeleteProjectEngagement,
+      session
+    );
+    const engagement = await this.readOne(input.engagementId, session);
+    if (!engagement) {
+      throw new NotFoundException('Could not find Engagement');
+    }
+
+    const project = await this.projectService.readOne(input.projectId, session);
+    if (!project) {
+      throw new NotFoundException('Could not find Project');
+    }
+    await this.db
+      .query()
+      .match([
+        node('engagement', 'Engagement', { id: engagement.id }),
+        relation('in', 'rel', 'engagement'),
+        node('project', 'Project', { id: project.id }),
+      ])
+      .set({
+        values: {
+          'rel.active': false,
+        },
+      })
+      .run();
   }
 
   // LIST ///////////////////////////////////////////////////////////

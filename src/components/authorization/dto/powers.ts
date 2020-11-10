@@ -36,6 +36,7 @@ export enum Powers {
   CreateZone = 'CreateZone',
   DeleteLanguage = 'DeleteLanguage',
   DeleteProject = 'DeleteProject',
+  DeleteProjectEngagement = 'DeleteProjectEngagement',
   GrantAdministratorRole = 'GrantAdministratorRole',
   GrantConsultantManagerRole = 'GrantConsultantManagerRole',
   GrantConsultantRole = 'GrantConsultantRole',

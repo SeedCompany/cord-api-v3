@@ -23,6 +23,7 @@ import {
   UpdateLanguageEngagementInput,
   UpdateLanguageEngagementOutput,
 } from './dto';
+import { DeleteProjectEngagementInput } from './dto/delete.dto';
 import { EngagementService } from './engagement.service';
 
 @Resolver(IEngagement)
@@ -135,6 +136,17 @@ export class EngagementResolver {
     @LoggedInSession() session: Session
   ): Promise<boolean> {
     await this.service.delete(id, session);
+    return true;
+  }
+
+  @Mutation(() => Boolean, {
+    description: "Delete a project's engagement",
+  })
+  async deleteProjectEngagement(
+    @Args('input') { projectEngagement: input }: DeleteProjectEngagementInput,
+    @LoggedInSession() session: Session
+  ): Promise<boolean> {
+    await this.service.deleteProjectEngagement(input, session);
     return true;
   }
 
