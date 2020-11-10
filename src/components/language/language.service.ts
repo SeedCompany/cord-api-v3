@@ -380,7 +380,7 @@ export class LanguageService {
       },
       sensitivity: props.sensitivity,
       ethnologue,
-      canDelete: true, // TODO
+      canDelete: await this.db.checkDeletePermission(langId, session),
     };
   }
 
