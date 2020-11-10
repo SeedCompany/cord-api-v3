@@ -59,6 +59,7 @@ export class ProjectMemberService {
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
+    @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
     private readonly eventBus: IEventBus,
     @Logger('project:member:service') private readonly logger: ILogger,

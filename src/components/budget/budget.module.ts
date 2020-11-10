@@ -21,9 +21,9 @@ import * as handlers from './handlers';
     LocationModule,
     forwardRef(() => PartnershipModule),
     forwardRef(() => OrganizationModule),
-    ProjectModule,
+    forwardRef(() => ProjectModule),
     UnavailabilityModule,
-    UserModule,
+    forwardRef(() => UserModule),
   ],
   providers: [
     BudgetResolver,

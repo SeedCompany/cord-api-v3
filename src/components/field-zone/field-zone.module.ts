@@ -5,7 +5,10 @@ import { FieldZoneResolver } from './field-zone.resolver';
 import { FieldZoneService } from './field-zone.service';
 
 @Module({
-  imports: [forwardRef(() => AuthorizationModule), UserModule],
+  imports: [
+    forwardRef(() => AuthorizationModule),
+    forwardRef(() => UserModule),
+  ],
   providers: [FieldZoneResolver, FieldZoneService],
   exports: [FieldZoneService],
 })

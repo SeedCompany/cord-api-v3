@@ -37,6 +37,7 @@ export interface EmailNotification {
 export class ProjectRules {
   constructor(
     private readonly db: DatabaseService,
+    @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService,
