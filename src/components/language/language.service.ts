@@ -12,6 +12,7 @@ import {
   ServerException,
   Session,
   simpleSwitch,
+  UnauthorizedException,
 } from '../../common';
 import {
   ConfigService,
@@ -28,7 +29,6 @@ import {
 import {
   calculateTotalAndPaginateList,
   collect,
-  defaultSorter,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -63,6 +63,7 @@ import {
 } from './dto';
 import { EthnologueLanguageService } from './ethnologue-language';
 import { DbLanguage } from './model';
+import { languageListFilter } from './query.helpers';
 
 @Injectable()
 export class LanguageService {
@@ -244,6 +245,12 @@ export class LanguageService {
           isPublic: false,
           isOrgPublic: false,
         },
+        {
+          key: 'canDelete',
+          value: true,
+          isPublic: false,
+          isOrgPublic: false,
+        },
       ];
 
       const createLanguage = this.db
@@ -374,7 +381,7 @@ export class LanguageService {
       },
       sensitivity: props.sensitivity,
       ethnologue,
-      canDelete: true, // TODO
+      canDelete: await this.db.checkDeletePermission(langId, session),
     };
   }
 
@@ -460,13 +467,18 @@ export class LanguageService {
   }
 
   async delete(id: string, session: Session): Promise<void> {
-    await this.authorizationService.checkPower(Powers.DeleteLanguage, session);
-
     const object = await this.readOne(id, session);
 
     if (!object) {
       throw new NotFoundException('Could not find language', 'language.id');
     }
+
+    const canDelete = await this.db.checkDeletePermission(id, session);
+
+    if (!canDelete)
+      throw new UnauthorizedException(
+        'You do not have the permission to delete this Language'
+      );
 
     const baseNodeLabels = ['BaseNode', 'Language'];
 
@@ -492,14 +504,39 @@ export class LanguageService {
     { filter, ...input }: LanguageListInput,
     session: Session
   ): Promise<LanguageListOutput> {
+    const languageSortMap: Partial<Record<typeof input.sort, string>> = {
+      name: 'toLower(prop.value)',
+      sensitivity: 'sensitivityValue',
+    };
+
+    const sortBy = languageSortMap[input.sort] ?? 'prop.value';
+
+    const sensitivityCase = `case prop.value
+        when 'High' then 3
+        when 'Medium' then 2
+        when 'Low' then 1
+      end as sensitivityValue`;
+
     const query = this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode('Language')])
+      .call(languageListFilter, filter)
       .call(
         calculateTotalAndPaginateList,
         input,
         this.securedProperties,
-        defaultSorter
+        (q, sort, order) =>
+          q
+            .match([
+              node('node'),
+              relation('out', '', sort, { active: true }),
+              node('prop', 'Property'),
+            ])
+            .with([
+              '*',
+              ...(input.sort === 'sensitivity' ? [sensitivityCase] : []),
+            ])
+            .orderBy(sortBy, order)
       );
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
