@@ -12,6 +12,7 @@ import {
   ServerException,
   Session,
   simpleSwitch,
+  UnauthorizedException,
 } from '../../common';
 import {
   ConfigService,
@@ -243,6 +244,12 @@ export class LanguageService {
           isPublic: false,
           isOrgPublic: false,
         },
+        {
+          key: 'canDelete',
+          value: true,
+          isPublic: false,
+          isOrgPublic: false,
+        },
       ];
 
       const createLanguage = this.db
@@ -459,13 +466,18 @@ export class LanguageService {
   }
 
   async delete(id: string, session: Session): Promise<void> {
-    await this.authorizationService.checkPower(Powers.DeleteLanguage, session);
-
     const object = await this.readOne(id, session);
 
     if (!object) {
       throw new NotFoundException('Could not find language', 'language.id');
     }
+
+    const canDelete = await this.db.checkDeletePermission(id, session);
+
+    if (!canDelete)
+      throw new UnauthorizedException(
+        'You do not have the permission to delete this Language'
+      );
 
     const baseNodeLabels = ['BaseNode', 'Language'];
 
