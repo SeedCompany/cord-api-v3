@@ -212,35 +212,6 @@ export class UserService {
       throw new ServerException('Failed to create user');
     }
 
-    // don't remove this when you remove the above function
-    // grant the powers that all users will get
-    const grants = [
-      Powers.CreateCeremony,
-      Powers.CreateEducation,
-      Powers.CreateDirectory,
-      Powers.CreateFile,
-      Powers.CreateFileVersion,
-      Powers.CreateFilm,
-      Powers.CreateInternshipEngagement,
-      Powers.CreateLanguageEngagement,
-      Powers.CreateLiteracyMaterial,
-      Powers.CreateLocation,
-      Powers.CreatePartnership,
-      Powers.CreateProduct,
-      Powers.CreateProject,
-      Powers.CreateProjectEngagement,
-      Powers.CreateProjectMember,
-      Powers.CreateSong,
-      Powers.CreateStory,
-      Powers.CreateTranslationEngagement,
-      Powers.CreateUnavailability,
-      Powers.DeleteLanguage,
-      Powers.DeleteProject,
-    ];
-    for (const power of grants) {
-      await this.authorizationService.grantPower(power, id);
-    }
-
     // attach user to publicSG
 
     const attachUserToPublicSg = await this.db
