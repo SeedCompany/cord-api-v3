@@ -119,7 +119,7 @@ describe('Partner e2e', () => {
     const numPartners = 2;
     const { partners } = await app.graphql.query(gql`
       query {
-        partners(input: { count: 25, page: 1 }) {
+        partners(input: { count: 25 }) {
           items {
             ...partner
           }
