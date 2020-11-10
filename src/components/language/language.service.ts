@@ -63,6 +63,7 @@ import {
 } from './dto';
 import { EthnologueLanguageService } from './ethnologue-language';
 import { DbLanguage } from './model';
+import { languageListFilter } from './query.helpers';
 
 @Injectable()
 export class LanguageService {
@@ -519,6 +520,7 @@ export class LanguageService {
     const query = this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode('Language')])
+      .call(languageListFilter, filter)
       .call(
         calculateTotalAndPaginateList,
         input,
