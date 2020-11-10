@@ -307,10 +307,7 @@ describe('Project-Workflow e2e', () => {
       );
 
       // Login as Financial Analyst Controller
-      await login(app, {
-        email: financialAnalystController.email.value,
-        password,
-      });
+      await login(app, { email: financialAnalyst.email.value, password });
       await changeProjectStep(app, project.id, ProjectStep.FinalizingProposal);
 
       // Login as Director
