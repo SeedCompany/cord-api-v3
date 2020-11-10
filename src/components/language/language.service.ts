@@ -28,7 +28,6 @@ import {
 import {
   calculateTotalAndPaginateList,
   collect,
-  defaultSorter,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -492,6 +491,19 @@ export class LanguageService {
     { filter, ...input }: LanguageListInput,
     session: Session
   ): Promise<LanguageListOutput> {
+    const languageSortMap: Partial<Record<typeof input.sort, string>> = {
+      name: 'toLower(prop.value)',
+      sensitivity: 'sensitivityValue',
+    };
+
+    const sortBy = languageSortMap[input.sort] ?? 'prop.value';
+
+    const sensitivityCase = `case prop.value
+        when 'High' then 3
+        when 'Medium' then 2
+        when 'Low' then 1
+      end as sensitivityValue`;
+
     const query = this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode('Language')])
@@ -499,7 +511,18 @@ export class LanguageService {
         calculateTotalAndPaginateList,
         input,
         this.securedProperties,
-        defaultSorter
+        (q, sort, order) =>
+          q
+            .match([
+              node('node'),
+              relation('out', '', sort, { active: true }),
+              node('prop', 'Property'),
+            ])
+            .with([
+              '*',
+              ...(input.sort === 'sensitivity' ? [sensitivityCase] : []),
+            ])
+            .orderBy(sortBy, order)
       );
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
