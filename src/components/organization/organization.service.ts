@@ -8,6 +8,7 @@ import {
   NotFoundException,
   ServerException,
   Session,
+  UnauthorizedException,
 } from '../../common';
 import {
   ConfigService,
@@ -19,6 +20,7 @@ import {
   matchSession,
   OnIndex,
   Property,
+  UniqueProperties,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -140,6 +142,12 @@ export class OrganizationService {
         isPublic: false,
         isOrgPublic: false,
       },
+      {
+        key: 'canDelete',
+        value: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
     ];
     // const baseMetaProps = [];
 
@@ -213,7 +221,7 @@ export class OrganizationService {
     return {
       ...parseBaseNodeProperties(result.node),
       ...secured,
-      canDelete: true, // TODO
+      canDelete: await this.db.checkDeletePermission(orgId, session),
     };
   }
 
@@ -232,16 +240,34 @@ export class OrganizationService {
   }
 
   async delete(id: string, session: Session): Promise<void> {
-    const ed = await this.readOne(id, session);
+    const object = await this.readOne(id, session);
+
+    if (!object) {
+      throw new NotFoundException('Could not find Organization');
+    }
+
+    const canDelete = await this.db.checkDeletePermission(id, session);
+
+    if (!canDelete)
+      throw new UnauthorizedException(
+        'You do not have the permission to delete this Organization'
+      );
+
+    const baseNodeLabels = ['BaseNode', 'Organization'];
+
+    const uniqueProperties: UniqueProperties<Organization> = {
+      name: ['Property', 'OrgName'],
+    };
+
     try {
-      await this.db.deleteNode({
-        session,
-        object: ed,
-        aclEditProp: 'canDeleteOwnUser',
+      await this.db.deleteNodeNew<Organization>({
+        object,
+        baseNodeLabels,
+        uniqueProperties,
       });
-    } catch (e) {
-      this.logger.error('Failed to delete', { id, exception: e });
-      throw new ServerException('Failed to delete');
+    } catch (exception) {
+      this.logger.error('Failed to delete', { id, exception });
+      throw new ServerException('Failed to delete', exception);
     }
 
     this.logger.debug(`deleted organization with id`, { id });
