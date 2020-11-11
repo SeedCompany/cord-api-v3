@@ -13,6 +13,7 @@ import {
 import {
   ConfigService,
   DatabaseService,
+  IEventBus,
   ILogger,
   Logger,
   matchRequestingUser,
@@ -71,6 +72,7 @@ import {
   EducationService,
   SecuredEducationList,
 } from './education';
+import { UserUpdatedEvent } from './events';
 import { DbUser } from './model';
 import {
   SecuredUnavailabilityList,
@@ -132,6 +134,7 @@ export class UserService {
     private readonly authorizationService: AuthorizationService,
     private readonly locationService: LocationService,
     private readonly languageService: LanguageService,
+    private readonly eventBus: IEventBus,
     @Logger('user:service') private readonly logger: ILogger
   ) {}
 
@@ -401,6 +404,10 @@ export class UserService {
         .run();
 
       await this.authorizationService.roleAddedToUser(input.id, input.roles);
+
+      const updated = await this.readOne(input.id, session);
+      const event = new UserUpdatedEvent(updated, user, input, session);
+      await this.eventBus.publish(event);
     }
 
     return await this.readOne(input.id, session);

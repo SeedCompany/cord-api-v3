@@ -39,6 +39,7 @@ import {
 } from '../../../core/database/results';
 import { AuthorizationService } from '../../authorization/authorization.service';
 import { UserService } from '../../user';
+import { ProjectMemberUpdatedEvent } from '../../user/events';
 import {
   CreateProjectMember,
   ProjectMember,
@@ -232,7 +233,7 @@ export class ProjectMemberService {
 
     this.assertValidRoles(input.roles, object.user.value?.roles.value);
 
-    await this.db.sgUpdateProperties({
+    const updated = await this.db.sgUpdateProperties({
       session,
       object,
       props: ['roles', 'modifiedAt'],
@@ -243,6 +244,14 @@ export class ProjectMemberService {
       },
       nodevar: 'projectMember',
     });
+
+    const event = new ProjectMemberUpdatedEvent(
+      updated,
+      object,
+      input,
+      session
+    );
+    await this.eventBus.publish(event);
     return await this.readOne(input.id, session);
   }
 
