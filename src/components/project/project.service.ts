@@ -10,6 +10,7 @@ import {
   Sensitivity,
   ServerException,
   Session,
+  UnauthorizedException,
 } from '../../common';
 import {
   ConfigService,
@@ -41,7 +42,6 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { Powers } from '../authorization/dto/powers';
 import { BudgetService, BudgetStatus, SecuredBudget } from '../budget';
 import {
   EngagementListInput,
@@ -251,6 +251,12 @@ export class ProjectService {
       {
         key: 'financialReportReceivedAt',
         value: createInput.financialReportReceivedAt,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'canDelete',
+        value: true,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -529,7 +535,7 @@ export class ProjectService {
         ...securedProps.owningOrganization,
         value: result.owningOrganizationId,
       },
-      canDelete: true, // TODO
+      canDelete: await this.db.checkDeletePermission(id, { userId }),
     };
   }
 
@@ -673,12 +679,17 @@ export class ProjectService {
   }
 
   async delete(id: string, session: Session): Promise<void> {
-    await this.authorizationService.checkPower(Powers.DeleteProject, session);
-
     const object = await this.readOne(id, session);
     if (!object) {
       throw new NotFoundException('Could not find project');
     }
+
+    const canDelete = await this.db.checkDeletePermission(id, session);
+
+    if (!canDelete)
+      throw new UnauthorizedException(
+        'You do not have the permission to delete this Project'
+      );
 
     const baseNodeLabels = ['BaseNode', 'Project', `${object.type}Project`];
 
