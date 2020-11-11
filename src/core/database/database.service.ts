@@ -455,7 +455,7 @@ export class DatabaseService {
     };
   }
 
-  async checkDeletePermission(id: string, session: Session) {
+  async checkDeletePermission(id: string, session: Partial<Session>) {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
