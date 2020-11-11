@@ -478,11 +478,11 @@ export class DatabaseService {
   async deleteNodeNew<TObject extends Resource>({
     object,
     baseNodeLabels,
-    uniqueProperties,
+    uniqueProperties = {},
   }: {
     object: TObject;
     baseNodeLabels: string[];
-    uniqueProperties: UniqueProperties<TObject>;
+    uniqueProperties?: UniqueProperties<TObject>;
   }) {
     const query = this.db
       .query()
