@@ -9,6 +9,7 @@ import {
   NotFoundException,
   ServerException,
   Session,
+  UnauthorizedException,
 } from '../../common';
 import {
   ConfigService,
@@ -177,6 +178,12 @@ export class PartnershipService {
       {
         key: 'financialReportingType',
         value: input.financialReportingType,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'canDelete',
+        value: true,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -357,7 +364,7 @@ export class PartnershipService {
         ...securedProps.partner,
         value: result.partnerId,
       },
-      canDelete: true, // TODO
+      canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 
@@ -442,23 +449,27 @@ export class PartnershipService {
         'partnership.id'
       );
     }
+    const canDelete = await this.db.checkDeletePermission(id, session);
+
+    if (!canDelete)
+      throw new UnauthorizedException(
+        'You do not have the permission to delete this Partnership'
+      );
 
     await this.eventBus.publish(
       new PartnershipWillDeleteEvent(object, session)
     );
 
+    const baseNodeLabels = ['BaseNode', 'Partnership'];
+
     try {
-      await this.db.deleteNode({
-        session,
+      await this.db.deleteNodeNew({
         object,
-        aclEditProp: 'canDeleteOwnUser',
+        baseNodeLabels,
       });
     } catch (exception) {
-      this.logger.warning('Failed to delete partnership', {
-        exception,
-      });
-
-      throw new ServerException('Failed to delete partnership', exception);
+      this.logger.error('Failed to delete', { id, exception });
+      throw new ServerException('Failed to delete', exception);
     }
   }
 
