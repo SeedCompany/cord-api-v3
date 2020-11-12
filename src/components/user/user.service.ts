@@ -39,6 +39,7 @@ import {
 import { Role } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
+import { LanguageService } from '../language';
 import {
   LocationListInput,
   LocationService,
@@ -57,12 +58,14 @@ import {
 import {
   AssignOrganizationToUser,
   CreatePerson,
+  KnownLanguage,
   RemoveOrganizationFromUser,
   UpdateUser,
   User,
   UserListInput,
   UserListOutput,
 } from './dto';
+import { LanguageProficiency } from './dto/language-proficiency.enum';
 import {
   EducationListInput,
   EducationService,
@@ -128,6 +131,7 @@ export class UserService {
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
     private readonly locationService: LocationService,
+    private readonly languageService: LanguageService,
     @Logger('user:service') private readonly logger: ILogger
   ) {}
 
@@ -752,6 +756,104 @@ export class UserService {
       input,
       session
     );
+  }
+
+  async createKnownLanguage(
+    userId: string,
+    languageId: string,
+    languageProficiency: LanguageProficiency,
+    _session: Session
+  ): Promise<void> {
+    try {
+      await this.deleteKnownLanguage(
+        userId,
+        languageId,
+        languageProficiency,
+        _session
+      );
+      await this.db
+        .query()
+        .matchNode('user', 'User', { id: userId })
+        .matchNode('language', 'Language', { id: languageId })
+        .create([
+          node('user'),
+          relation('out', '', 'knownLanguage', {
+            active: true,
+            createdAt: DateTime.local(),
+            value: languageProficiency,
+          }),
+          node('language'),
+        ])
+        .run();
+    } catch (e) {
+      throw new ServerException('Could not create known language', e);
+    }
+  }
+
+  async deleteKnownLanguage(
+    userId: string,
+    languageId: string,
+    languageProficiency: LanguageProficiency,
+    _session: Session
+  ): Promise<void> {
+    try {
+      await this.db
+        .query()
+        .matchNode('user', 'User', { id: userId })
+        .matchNode('language', 'Language', { id: languageId })
+        .match([
+          [
+            node('user'),
+            relation('out', 'rel', 'knownLanguage', {
+              active: true,
+              value: languageProficiency,
+            }),
+            node('language'),
+          ],
+        ])
+        .setValues({
+          'rel.active': false,
+        })
+        .run();
+    } catch (e) {
+      throw new ServerException('Could not delete known language', e);
+    }
+  }
+
+  async listKnownLanguages(
+    userId: string,
+    session: Session
+  ): Promise<KnownLanguage[]> {
+    const results = await this.db
+      .query()
+      .match([
+        requestingUser(session),
+        ...permissionsOfNode('Language'),
+        relation('in', 'knownLanguageRel', 'knownLanguage', { active: true }),
+        node('user', 'User', { id: userId }),
+      ])
+      .with('collect(distinct user) as users, node, knownLanguageRel')
+      .raw(`unwind users as user`)
+      .return([
+        'knownLanguageRel.value as languageProficiency',
+        'node.id as languageId',
+      ])
+      .asResult<{
+        languageProficiency: LanguageProficiency;
+        languageId: string;
+      }>()
+      .run();
+
+    const knownLanguages = await Promise.all(
+      results.map(async (item) => {
+        return {
+          language: item.languageId,
+          proficiency: item.languageProficiency,
+        };
+      })
+    );
+
+    return knownLanguages as KnownLanguage[];
   }
 
   async checkEmail(email: string): Promise<boolean> {

@@ -141,6 +141,13 @@ export class EngagementService {
     }
     await this.verifyProjectStatus(projectId, session);
 
+    if (input.status && input.status !== EngagementStatus.InDevelopment) {
+      throw new InputException(
+        'The Engagement status should be in development',
+        'engagement.status'
+      );
+    }
+
     this.logger.debug('Mutation create language engagement ', {
       input,
       projectId,
@@ -343,6 +350,13 @@ export class EngagementService {
       );
     }
     await this.verifyProjectStatus(projectId, session);
+
+    if (input.status && input.status !== EngagementStatus.InDevelopment) {
+      throw new InputException(
+        'The Engagement status should be in development',
+        'engagement.status'
+      );
+    }
 
     this.logger.debug('Mutation create internship engagement ', {
       input,
@@ -752,6 +766,9 @@ export class EngagementService {
     if (input.firstScripture) {
       await this.verifyFirstScripture({ engagementId: input.id });
     }
+    if (input.status) {
+      await this.verifyEngagementStatus(input.id, input.status);
+    }
 
     const { pnp, ...rest } = input;
     const changes = {
@@ -824,6 +841,9 @@ export class EngagementService {
     session: Session
   ): Promise<InternshipEngagement> {
     const createdAt = DateTime.local();
+    if (input.status) {
+      await this.verifyEngagementStatus(input.id, input.status);
+    }
 
     const object = (await this.readOne(
       input.id,
@@ -1354,6 +1374,31 @@ export class EngagementService {
       throw new InputException(
         'The Project status is not in development',
         'project.status'
+      );
+    }
+  }
+
+  protected async verifyEngagementStatus(id: string, status: EngagementStatus) {
+    const project = await this.db
+      .query()
+      .match([
+        node('engagement', 'Engagement', { id }),
+        relation('in', '', 'engagement', { active: true }),
+        node('project', 'Project'),
+        relation('out', '', 'status', { active: true }),
+        node('status', 'Property'),
+      ])
+      .return('status.value as status')
+      .asResult<{ status: ProjectStatus }>()
+      .first();
+
+    if (
+      project?.status === ProjectStatus.InDevelopment &&
+      status !== EngagementStatus.InDevelopment
+    ) {
+      throw new InputException(
+        'The Engagement status should be in development',
+        'engagement.status'
       );
     }
   }

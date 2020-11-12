@@ -5,7 +5,10 @@ import { ProjectMemberResolver } from './project-member.resolver';
 import { ProjectMemberService } from './project-member.service';
 
 @Module({
-  imports: [UserModule, forwardRef(() => AuthorizationModule)],
+  imports: [
+    forwardRef(() => UserModule),
+    forwardRef(() => AuthorizationModule),
+  ],
   providers: [ProjectMemberResolver, ProjectMemberService],
   exports: [ProjectMemberService],
 })

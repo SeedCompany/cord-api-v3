@@ -310,6 +310,7 @@ export const ProjectManager = new DbRole({
         { propertyName: 'organization',               permission: { read, }, },
         { propertyName: 'unavailability',             permission: { read, }, },
         { propertyName: 'locations',                  permission: { read, }, },
+        { propertyName: 'knownLanguage',              permission: { read, }, },
     ]}),
     new DbBaseNodeGrant<DbUnavailability>({
       __className: 'DbUnavailability',

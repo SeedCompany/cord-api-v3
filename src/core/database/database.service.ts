@@ -26,6 +26,7 @@ import { ILogger, Logger, ServiceUnavailableError } from '..';
 import { AbortError, retry, RetryOptions } from '../../common/retry';
 import { ConfigService } from '../config/config.service';
 import {
+  matchRequestingUser,
   setBaseNodeLabelsAndIdDeleted,
   setPropLabelsAndValuesDeleted,
   UniqueProperties,
@@ -449,6 +450,26 @@ export class DatabaseService {
       total,
       items,
     };
+  }
+
+  async checkDeletePermission(id: string, session: Session) {
+    const query = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .match(node('node', { id }))
+      .match([
+        node('requestingUser'),
+        relation('in', '', 'member'),
+        node('', 'SecurityGroup'),
+        relation('out', '', 'permission'),
+        node('perm', 'Permission', { read: true, property: 'canDelete' }),
+        relation('out', '', 'baseNode'),
+        node('node'),
+      ])
+      .return('perm');
+
+    const result = await query.first();
+    return !!result;
   }
 
   async deleteNodeNew<TObject extends Resource>({

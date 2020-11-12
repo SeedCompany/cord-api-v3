@@ -16,7 +16,7 @@ import { LocalBucketController } from './local-bucket.controller';
   imports: [
     forwardRef(() => AuthorizationModule),
     forwardRef(() => OrganizationModule),
-    UserModule,
+    forwardRef(() => UserModule),
   ],
   providers: [
     DirectoryResolver,

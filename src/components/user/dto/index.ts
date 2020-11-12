@@ -6,3 +6,5 @@ export * from './check-email.dto';
 export * from './user-status.enum';
 export * from './assign-organization-to-user.dto';
 export * from './remove-organization-from-user.dto';
+export * from './known-language.dto';
+export * from './language-proficiency.enum';
