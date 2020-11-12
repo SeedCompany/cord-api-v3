@@ -73,7 +73,16 @@ describe('Engagement e2e', () => {
 
     user = await registerUserWithPower(
       app,
-      [Powers.CreateLanguage, Powers.CreateEthnologueLanguage],
+      [
+        Powers.CreateLanguage,
+        Powers.CreateEthnologueLanguage,
+        Powers.CreateLocation,
+        Powers.CreateProject,
+        Powers.CreateLanguageEngagement,
+        Powers.CreateInternshipEngagement,
+        Powers.CreateProject,
+        Powers.CreateFundingAccount,
+      ],
       { password }
     );
     language = await createLanguage(app);

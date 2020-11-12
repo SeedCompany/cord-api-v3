@@ -3,13 +3,14 @@ import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { generateId, isValidId } from '../src/common';
+import { Powers } from '../src/components/authorization/dto/powers';
 import { FundingAccount } from '../src/components/funding-account';
 import {
   createFundingAccount,
   createSession,
   createTestApp,
   fragments,
-  registerUser,
+  registerUserWithPower,
   TestApp,
 } from './utility';
 import { resetDatabase } from './utility/reset-database';
@@ -22,7 +23,7 @@ describe('FundingAccount e2e', () => {
     app = await createTestApp();
     db = app.get(Connection);
     await createSession(app);
-    await registerUser(app);
+    await registerUserWithPower(app, [Powers.CreateFundingAccount]);
   });
 
   afterAll(async () => {

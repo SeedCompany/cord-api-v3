@@ -30,6 +30,8 @@ describe('Language e2e', () => {
     await registerUserWithPower(app, [
       Powers.CreateLanguage,
       Powers.CreateEthnologueLanguage,
+      Powers.CreateProject,
+      Powers.CreateLanguageEngagement,
     ]);
   });
 

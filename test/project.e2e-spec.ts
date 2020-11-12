@@ -70,7 +70,9 @@ describe('Project e2e', () => {
     app = await createTestApp();
     db = app.get(Connection);
     await createSession(app);
-    director = await registerUser(app);
+    director = await registerUserWithPower(app, [Powers.DeleteProject], {
+      roles: [Role.ProjectManager],
+    });
     fieldZone = await createZone(app, { directorId: director.id });
     fieldRegion = await createRegion(app, {
       directorId: director.id,
@@ -322,7 +324,11 @@ describe('Project e2e', () => {
   });
 
   it('List of projects sorted by name to be alphabetical, ignoring case sensitivity. Order: ASCENDING', async () => {
-    await registerUser(app, { displayFirstName: 'Tammy' });
+    await registerUserWithPower(
+      app,
+      [Powers.CreateProject, Powers.DeleteProject],
+      { displayFirstName: 'Tammy' }
+    );
     //Create three projects with mixed cases.
     await createProject(app, {
       name: 'a project 2' + faker.random.uuid(),
@@ -390,7 +396,11 @@ describe('Project e2e', () => {
   });
 
   it('List of projects sorted by name to be alphabetical, ignoring case sensitivity. Order: DESCENDING', async () => {
-    await registerUser(app, { displayFirstName: 'Tammy' });
+    await registerUserWithPower(
+      app,
+      [Powers.CreateProject, Powers.DeleteProject],
+      { displayFirstName: 'Tammy' }
+    );
     //Create three projects, each beginning with lower or upper-cases.
     await createProject(app, {
       name: 'a project 2' + faker.random.uuid(),
@@ -507,7 +517,7 @@ describe('Project e2e', () => {
   });
 
   it('List of projects sorted by Sensitivity', async () => {
-    await registerUser(app);
+    await registerUserWithPower(app, [Powers.CreateProject]);
     //Create three projects, each beginning with lower or upper-cases.
     await createProject(app, {
       name: 'High Sensitivity Proj ' + (await generateId()),
@@ -588,6 +598,10 @@ describe('Project e2e', () => {
   it('List view of my projects', async () => {
     const numProjects = 2;
     const type = ProjectType.Translation;
+    await registerUserWithPower(app, [
+      Powers.CreateProject,
+      Powers.DeleteProject,
+    ]);
     await Promise.all(
       times(numProjects).map(
         async () =>
