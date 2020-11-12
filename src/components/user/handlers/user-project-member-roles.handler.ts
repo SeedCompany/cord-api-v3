@@ -6,8 +6,8 @@ import {
   ILogger,
   Logger,
 } from '../../../core';
+import { AuthorizationService } from '../../authorization/authorization.service';
 import { ProjectMemberUpdatedEvent, UserUpdatedEvent } from '../events';
-import { UserService } from '../user.service';
 
 type SubscribedEvent = UserUpdatedEvent | ProjectMemberUpdatedEvent;
 
@@ -15,7 +15,7 @@ type SubscribedEvent = UserUpdatedEvent | ProjectMemberUpdatedEvent;
 export class UserProjectMemberRoles implements IEventHandler<SubscribedEvent> {
   constructor(
     private readonly db: DatabaseService,
-    private readonly userService: UserService,
+    private readonly authorizationService: AuthorizationService,
     @Logger('user:user-project-member-roles') private readonly logger: ILogger
   ) {}
 
@@ -37,5 +37,9 @@ export class UserProjectMemberRoles implements IEventHandler<SubscribedEvent> {
     }
 
     // remove correct powers and permissions
+    await this.authorizationService.roleDeletedFromUser(
+      event.updated.id,
+      removedRoles
+    );
   }
 }

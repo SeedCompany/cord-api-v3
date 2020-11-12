@@ -349,6 +349,33 @@ export class AuthorizationService {
     }
   }
 
+  async roleDeletedFromUser(id: string, roles: Role[]) {
+    for (const role of roles.flatMap((role) => this.mapRoleToDbRoles(role))) {
+      await this.db
+        .query()
+        .raw(
+          `
+          call apoc.periodic.iterate(
+            "MATCH (u:User {id:'${id}'}), (sg:SecurityGroup {role:'${role}'})
+            WHERE (u)<-[rel:member]-(sg)
+            RETURN rel",
+            "DELETE rel", {batchSize:1000})
+          yield batches, total return batches, total
+      `
+        )
+        .run();
+    }
+
+    for (const role of roles) {
+      // match the role to a real role object and grant powers
+      const roleObj = everyRole.find((i) => i.name === role);
+      if (roleObj === undefined) continue;
+      for (const power of roleObj.powers) {
+        await this.removePower(power, id);
+      }
+    }
+  }
+
   async checkPower(power: Powers, session: Session): Promise<void> {
     const id = session.userId;
 
