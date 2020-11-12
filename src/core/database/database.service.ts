@@ -19,13 +19,14 @@ import {
   ServerException,
   Session,
   UnauthorizedException,
-  UnwrapSecured,
   unwrapSecured,
+  UnwrapSecured,
 } from '../../common';
 import { ILogger, Logger, ServiceUnavailableError } from '..';
 import { AbortError, retry, RetryOptions } from '../../common/retry';
 import { ConfigService } from '../config/config.service';
 import {
+  determineSortValue,
   matchRequestingUser,
   setBaseNodeLabelsAndIdDeleted,
   setPropLabelsAndValuesDeleted,
@@ -189,6 +190,11 @@ export class DatabaseService {
     nodevar: string;
   }): Promise<TObject> {
     const createdAt = DateTime.local();
+    const nodePropsToUpdate = {
+      createdAt,
+      value,
+      sortValue: determineSortValue(value),
+    };
     const update = this.db
       .query()
       .match([matchSession(session)])
@@ -223,10 +229,7 @@ export class DatabaseService {
           active: true,
           createdAt,
         }),
-        node('newPropNode', 'Property', {
-          createdAt,
-          value,
-        }),
+        node('newPropNode', 'Property', nodePropsToUpdate),
       ])
       .return('newPropNode');
     let result;

@@ -1,4 +1,5 @@
 import { node, Query, relation } from 'cypher-query-builder';
+import { deburr } from 'lodash';
 import { DateTime } from 'luxon';
 import { entries, Resource, Session } from '../../common';
 
@@ -10,7 +11,17 @@ export interface Property {
   isPublic: boolean;
   isOrgPublic: boolean;
   label?: string;
+  isDeburrable?: boolean;
 }
+
+export interface AllNodeProperties {
+  createdAt: DateTime;
+  value: any;
+  sortValue: string;
+}
+
+export const determineSortValue = (value: unknown) =>
+  typeof value === 'string' ? deburr(value) : value;
 
 // assumes 'requestingUser', and 'publicSG' cypher identifiers have been matched
 // add baseNodeProps and editableProps
@@ -48,10 +59,16 @@ export function createBaseNode(
     if (prop.label) {
       labels.push(prop.label);
     }
+    const nodeProps = {
+      createdAt,
+      value: prop.value,
+      sortValue: determineSortValue(prop.value),
+    };
+
     query.create([
       node('node'),
       relation('out', '', prop.key, { active: true, createdAt }),
-      node('', labels, { createdAt, value: prop.value }),
+      node('', labels, nodeProps),
     ]);
 
     if (prop.isPublic) {
