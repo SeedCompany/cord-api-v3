@@ -50,7 +50,7 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
         WITH collect(distinct(toInteger(right(departmentIdPropertyNode.value, 4)))) as listOfDepartmentIds
         UNWIND [n IN range(1, 9999) WHERE NOT n IN listOfDepartmentIds] as listOfUnusedDepartmentIds
         WITH toString(min(listOfUnusedDepartmentIds)) AS nextIdBase
-        WITH $departmentIdPrefix + substring("0000", 1, 4 - size(nextIdBase)) + nextIdBase as nextId
+        WITH '${departmentIdPrefix}' + substring("0000", 1, 4 - size(nextIdBase)) + nextIdBase as nextId
         MATCH (project:Project {id: $projectId})
         OPTIONAL MATCH (project)-[oldDepartmentIdRelationship:departmentId {active: true}]-(oldDepartmentIdPropertyNode:Property)
         SET oldDepartmentIdRelationship.active = false

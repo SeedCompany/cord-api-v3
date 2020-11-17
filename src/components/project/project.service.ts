@@ -177,6 +177,7 @@ export class ProjectService {
         isPublic: false,
         isOrgPublic: false,
         label: 'ProjectName',
+        isDeburrable: true,
       },
       {
         key: 'sensitivity',
@@ -533,7 +534,6 @@ export class ProjectService {
 
   async update(input: UpdateProject, session: Session): Promise<Project> {
     const currentProject = await this.readOne(input.id, session);
-
     if (input.sensitivity && currentProject.type === ProjectType.Translation)
       throw new InputException(
         'Cannot update sensitivity on Translation Project',
@@ -707,15 +707,36 @@ export class ProjectService {
   ): Promise<ProjectListOutput> {
     const label = `${filter.type ?? ''}Project`;
     const projectSortMap: Partial<Record<typeof input.sort, string>> = {
-      name: 'toLower(prop.value)',
+      name: 'toLower(prop.sortValue)',
       sensitivity: 'sensitivityValue',
     };
 
-    const sensitivityCase = `case prop.value
-    when 'High' then 3
-    when 'Medium' then 2
-    when 'Low' then 1
-    end as sensitivityValue`;
+    // Subquery to get the sensitivity value for a Translation Project.
+    // Get the highest sensitivity of the connected Language Engagement's Language
+    // If an Engagement doesn't exist, then default to 3 (high)
+    const sensitivitySubquery = `call { 
+      with node
+      optional match (node)-[:engagement { active: true }]->(:LanguageEngagement)-[:language { active: true }]->  
+      (:Language)-[:sensitivity { active: true }]->(sensitivityProp:Property)
+      WITH *, case sensitivityProp.value
+        when null then 3
+        when 'High' then 3
+        when 'Medium' then 2
+        when 'Low' then 1
+        end as langSensitivityVal
+      ORDER BY langSensitivityVal desc
+      limit 1
+      return langSensitivityVal
+      }`;
+
+    // In the first case, if the node is a translation project, use the langSensitivityVal from above.
+    // Else use the sensitivity prop value
+    const sensitivityCase = `case
+      when 'TranslationProject' in labels(node) then langSensitivityVal
+      when prop.value = 'High' then 3
+      when prop.value = 'Medium' then 2
+      when prop.value = 'Low' then 1
+      end as sensitivityValue`;
 
     const sortBy = projectSortMap[input.sort] ?? 'prop.value';
     const query = this.db
@@ -729,6 +750,7 @@ export class ProjectService {
         this.securedProperties,
         (q, sort, order) =>
           q
+            .raw(input.sort === 'sensitivity' ? sensitivitySubquery : '')
             .match([
               node('node'),
               relation('out', '', sort, { active: true }),

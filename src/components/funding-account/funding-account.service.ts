@@ -72,7 +72,6 @@ export class FundingAccountService {
       'CREATE CONSTRAINT ON ()-[r:accountNumber]-() ASSERT EXISTS(r.createdAt)',
 
       'CREATE CONSTRAINT ON (n:FundingAccountNumber) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:FundingAccountNumber) ASSERT n.value IS UNIQUE',
     ];
   }
 

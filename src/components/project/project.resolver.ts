@@ -67,7 +67,7 @@ export class ProjectResolver {
   })
   async project(
     @IdArg() id: string,
-    @AnonSession() session: Session
+    @LoggedInSession() session: Session
   ): Promise<Project> {
     const project = await this.projectService.readOne(id, session);
     // @ts-expect-error hack project id into step object so the lazy transitions
