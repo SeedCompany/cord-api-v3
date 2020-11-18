@@ -109,7 +109,6 @@ export class LanguageService {
 
       // NAME NODE
       'CREATE CONSTRAINT ON (n:LanguageName) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:LanguageName) ASSERT n.value IS UNIQUE',
 
       // DISPLAYNAME REL
       'CREATE CONSTRAINT ON ()-[r:displayName]-() ASSERT EXISTS(r.active)',
@@ -117,7 +116,6 @@ export class LanguageService {
 
       // DISPLAYNAME NODE
       'CREATE CONSTRAINT ON (n:LanguageDisplayName) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:LanguageDisplayName) ASSERT n.value IS UNIQUE',
 
       // RODNUMBER REL
       'CREATE CONSTRAINT ON ()-[r:rodNumber]-() ASSERT EXISTS(r.active)',
