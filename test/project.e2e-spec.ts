@@ -86,17 +86,6 @@ describe('Project e2e', () => {
     await app.close();
   });
 
-  it('should have unique name', async () => {
-    const name = faker.random.word() + ' testProject';
-    await createProject(app, { name });
-    await expect(createProject(app, { name })).rejects.toThrowError(
-      new DuplicateException(
-        `project.name`,
-        `Project with this name already exists`
-      )
-    );
-  });
-
   it('create & read project by id', async () => {
     const project = await createProject(app);
 
