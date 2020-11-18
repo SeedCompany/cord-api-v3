@@ -2,11 +2,13 @@ import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import * as cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
-import { ConfigService } from './core';
+import { bootstrapLogger, ConfigService } from './core';
 import 'source-map-support/register';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: bootstrapLogger,
+  });
   const config = app.get(ConfigService);
 
   app.enableCors(config.cors);
