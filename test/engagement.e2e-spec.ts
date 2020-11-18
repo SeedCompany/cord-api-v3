@@ -1068,7 +1068,7 @@ describe('Engagement e2e', () => {
     const engagement = await createLanguageEngagement(app, {
       projectId: project.id,
     });
-    expect(engagement.status !== EngagementStatus.Active).toBe(true);
+    expect(engagement.status.value !== EngagementStatus.Active).toBe(true);
 
     await runAsAdmin(app, async () => {
       for (const next of stepsFromEarlyConversationToBeforeActive) {
@@ -1123,7 +1123,7 @@ describe('Engagement e2e', () => {
       type: ProjectType.Internship,
       primaryLocationId: location.id,
     });
-    const engagement = await createInternshipEngagement(app, {
+    await createInternshipEngagement(app, {
       projectId: project.id,
     });
     // Update Project status to Active
@@ -1133,33 +1133,6 @@ describe('Engagement e2e', () => {
       }
       await changeProjectStep(app, project.id, ProjectStep.Active);
     });
-    // Login back to the user
-    await login(app, { email: user.email.value, password });
-
-    // Update Engagement status to AwaitingDedication
-    const {
-      updateInternshipEngagement: { engagement: actual },
-    } = await app.graphql.mutate(
-      gql`
-        mutation updateInternshipEngagement($id: ID!) {
-          updateInternshipEngagement(
-            input: { engagement: { id: $id, status: AwaitingDedication } }
-          ) {
-            engagement {
-              ...internshipEngagement
-            }
-          }
-        }
-        ${fragments.internshipEngagement}
-      `,
-      {
-        id: engagement.id,
-      }
-    );
-
-    expect(actual.id).toBe(engagement.id);
-    expect(actual.status).toBe(EngagementStatus.AwaitingDedication);
-    expect(actual.statusModifiedAt.value).toBe(actual.modifiedAt);
   });
 
   /**
