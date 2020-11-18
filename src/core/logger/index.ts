@@ -1,3 +1,3 @@
 export * from './logger.interface';
-export * from './logger.decorator';
+export { Logger, LoggerToken } from './logger.decorator';
 export * from './logger.module';
