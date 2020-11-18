@@ -5,9 +5,8 @@ import { first, intersection } from 'lodash';
 import { ServerException, Session, UnauthorizedException } from '../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import { Role } from '../authorization';
-import { User, UserService } from '../user';
+import { UserService } from '../user';
 import {
-  Engagement,
   EngagementStatus,
   EngagementStatusTransition,
   EngagementTransitionType,
@@ -21,19 +20,20 @@ import { EngagementService } from './engagement.service';
 interface StatusRule {
   approvers: Role[];
   transitions: EngagementStatusTransition[];
+
   // TODO: I don't think we'll ever need notifiers for this
   //getNotifiers: () => MaybeAsync<ReadonlyArray<EmailAddress | string>>;
 }
 
-export interface EmailNotification {
-  recipient: Pick<
-    User,
-    'id' | 'email' | 'displayFirstName' | 'displayLastName' | 'timezone'
-  >;
-  changedBy: Pick<User, 'id' | 'displayFirstName' | 'displayLastName'>;
-  engagement: Pick<Engagement, 'id' | 'modifiedAt' | 'status'>;
-  previousStatus?: EngagementStatus;
-}
+// export interface EmailNotification {
+//   recipient: Pick<
+//     User,
+//     'id' | 'email' | 'displayFirstName' | 'displayLastName' | 'timezone'
+//   >;
+//   changedBy: Pick<User, 'id' | 'displayFirstName' | 'displayLastName'>;
+//   engagement: Pick<Engagement, 'id' | 'modifiedAt' | 'status'>;
+//   previousStatus?: EngagementStatus;
+// }
 
 @Injectable()
 export class EngagementRules {
