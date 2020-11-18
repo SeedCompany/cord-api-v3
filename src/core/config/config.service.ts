@@ -115,7 +115,7 @@ export class ConfigService {
 
   @Lazy() get defaultOrg() {
     return {
-      id: 'seedcompanyid',
+      id: '5c4278da9503d5cd78e82f02',
       name: 'Seed Company',
     };
   }
