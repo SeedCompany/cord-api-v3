@@ -33,13 +33,13 @@ export class SetLastStatusDate
         lastReactivatedAt: (undefined as unknown) as DateTime,
       };
 
-      if (updated.status === EngagementStatus.Suspended) {
+      if (updated.status.value === EngagementStatus.Suspended) {
         changes.lastSuspendedAt = modifiedAt;
       }
 
       if (
-        previous.status === EngagementStatus.Suspended &&
-        updated.status === EngagementStatus.Active
+        previous.status.value === EngagementStatus.Suspended &&
+        updated.status.value === EngagementStatus.Active
       ) {
         changes.lastReactivatedAt = modifiedAt;
       }

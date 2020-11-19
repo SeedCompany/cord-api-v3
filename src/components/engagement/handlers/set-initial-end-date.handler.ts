@@ -30,7 +30,7 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
     const engagement = 'engagement' in event ? event.engagement : event.updated;
 
     const shouldUpdateInitialEndDate =
-      engagement.status === EngagementStatus.Active &&
+      engagement.status.value === EngagementStatus.Active &&
       engagement.initialEndDate.value == null &&
       engagement.endDate.value != null;
     if (!shouldUpdateInitialEndDate) {

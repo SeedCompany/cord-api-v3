@@ -1,19 +1,51 @@
-import { registerEnumType } from '@nestjs/graphql';
+import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
+import { SecuredEnum } from '../../../common';
 
 export enum EngagementStatus {
-  Active = 'Active',
-  Completed = 'Completed',
-  Converted = 'Converted',
   InDevelopment = 'InDevelopment',
-  Rejected = 'Rejected',
+  DidNotDevelop = 'DidNotDevelop',
+
+  Active = 'Active',
+
+  DiscussingTermination = 'DiscussingTermination',
+  DiscussingReactivation = 'DiscussingReactivation',
+  DiscussingChangeToPlan = 'DiscussingChangeToPlan',
+  DiscussingSuspension = 'DiscussingSuspension',
+
+  FinalizingCompletion = 'FinalizingCompletion',
+  ActiveChangedPlan = 'ActiveChangedPlan',
   Suspended = 'Suspended',
+
   Terminated = 'Terminated',
-  Unapproved = 'Unapproved',
-  NotRenewed = 'NotRenewed', // Ken says not used
-  AwaitingDedication = 'AwaitingDedication', // Ken says not used
-  Transferred = 'Transferred',
+  Completed = 'Completed',
 }
 
 registerEnumType(EngagementStatus, {
   name: 'EngagementStatus',
 });
+
+@ObjectType({
+  description: SecuredEnum.descriptionFor('an engagement status'),
+})
+export class SecuredEngagementStatus extends SecuredEnum(EngagementStatus) {}
+
+export enum EngagementTransitionType {
+  Neutral = 'Neutral',
+  Approve = 'Approve',
+  Reject = 'Reject',
+}
+registerEnumType(EngagementTransitionType, {
+  name: 'EngagementTransitionType',
+});
+
+@ObjectType()
+export abstract class EngagementStatusTransition {
+  @Field(() => EngagementStatus)
+  to: EngagementStatus;
+
+  @Field()
+  label: string;
+
+  @Field(() => EngagementTransitionType)
+  type: EngagementTransitionType;
+}
