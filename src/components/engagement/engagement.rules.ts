@@ -55,10 +55,7 @@ export class EngagementRules {
     switch (status) {
       case EngagementStatus.InDevelopment:
         return {
-          approvers: [
-            // TODO: not sure what to put here because we're depending on the project that
-            // the engagement is connected to.
-          ],
+          approvers: [Role.Administrator],
           transitions: [
             {
               to: EngagementStatus.Active,
