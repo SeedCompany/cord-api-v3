@@ -115,7 +115,7 @@ export class ConfigService {
 
   @Lazy() get defaultOrg() {
     return {
-      id: 'seedcompanyid',
+      id: '5c4278da9503d5cd78e82f02',
       name: 'Seed Company',
     };
   }
@@ -163,6 +163,18 @@ export class ConfigService {
   }
 
   /**
+   * @see https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-metadata-endpoint.html
+   */
+  readonly ecsMetadataUri =
+    this.env.string('ECS_CONTAINER_METADATA_URI_V4').optional() ||
+    this.env.string('ECS_CONTAINER_METADATA_URI').optional();
+
+  /** Should logger output as JSON? Defaults to true if running in ECS */
+  readonly jsonLogs = this.env
+    .boolean('JSON_LOGS')
+    .optional(!!this.ecsMetadataUri);
+
+  /**
    * Default configuration for logging.
    * These can be overridden with logging.yml file at project root
    * This needs to be static to prevent circular dependency.
@@ -170,7 +182,8 @@ export class ConfigService {
   static logging = {
     defaultLevel: LogLevel.INFO,
     levels: {
-      'nest,nest:*': LogLevel.DEBUG,
+      'nest,nest:*,-nest:loader': LogLevel.DEBUG,
+      'nest:loader,nest:router': LogLevel.WARNING,
       'config:environment': LogLevel.INFO,
       version: LogLevel.DEBUG,
     },

@@ -29,6 +29,8 @@ import {
 import {
   calculateTotalAndPaginateList,
   collect,
+  matchPermList,
+  matchPropList,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -109,7 +111,6 @@ export class LanguageService {
 
       // NAME NODE
       'CREATE CONSTRAINT ON (n:LanguageName) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:LanguageName) ASSERT n.value IS UNIQUE',
 
       // DISPLAYNAME REL
       'CREATE CONSTRAINT ON ()-[r:displayName]-() ASSERT EXISTS(r.active)',
@@ -117,7 +118,6 @@ export class LanguageService {
 
       // DISPLAYNAME NODE
       'CREATE CONSTRAINT ON (n:LanguageDisplayName) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:LanguageDisplayName) ASSERT n.value IS UNIQUE',
 
       // RODNUMBER REL
       'CREATE CONSTRAINT ON ()-[r:rodNumber]-() ASSERT EXISTS(r.active)',
@@ -326,23 +326,8 @@ export class LanguageService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Language', { id: langId })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
-        node('perms', 'Permission'),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ])
-      .with('collect(distinct perms) as permList, node')
-      .match([
-        node('node'),
-        relation('out', 'r', { active: true }),
-        node('props', 'Property'),
-      ])
-      .with('{value: props.value, property: type(r)} as prop, permList, node')
-      .with('collect(prop) as propList, permList, node')
+      .call(matchPermList)
+      .call(matchPropList, 'permList')
       .match([
         node('node'),
         relation('out', '', 'ethnologue'),
@@ -429,9 +414,9 @@ export class LanguageService {
         .match([node('lang', 'Language', { id: input.id })])
         .optionalMatch([
           node('requestingUser'),
-          relation('in', '', 'member'),
-          node('', 'SecurityGroup'),
-          relation('out', '', 'permission'),
+          relation('in', 'memberOfSecurityGroup', 'member'),
+          node('securityGroup', 'SecurityGroup'),
+          relation('out', 'sgPerms', 'permission'),
           node('canReadEthnologueLanguages', 'Permission', {
             property: 'ethnologue',
             read: true,

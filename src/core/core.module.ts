@@ -1,5 +1,5 @@
 import { Global, Module } from '@nestjs/common';
-import { APP_FILTER, APP_PIPE } from '@nestjs/core';
+import { APP_FILTER, APP_PIPE, BaseExceptionFilter } from '@nestjs/core';
 import { GraphQLModule } from '@nestjs/graphql';
 import { AwsS3Factory } from './aws-s3.factory';
 import { ConfigModule } from './config/config.module';
@@ -24,6 +24,7 @@ import { ValidationPipe } from './validation.pipe';
   providers: [
     AwsS3Factory,
     GraphqlLoggingPlugin,
+    BaseExceptionFilter,
     { provide: APP_FILTER, useClass: ExceptionFilter },
     { provide: APP_PIPE, useClass: ValidationPipe },
   ],

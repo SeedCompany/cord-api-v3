@@ -436,26 +436,26 @@ export class UserService {
       .match([node('user', 'User', { id: userId })])
       .optionalMatch([
         node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
+        relation('in', 'memberOfReadSecurityGroup', 'member'),
+        node('readSecurityGroup', 'SecurityGroup'),
+        relation('out', 'sgReadPerms', 'permission'),
         node('canRead', 'Permission', {
           property: 'education',
           read: true,
         }),
-        relation('out', '', 'baseNode'),
+        relation('out', 'readPermsOfBaseNode', 'baseNode'),
         node('user'),
       ])
       .optionalMatch([
         node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
+        relation('in', 'memberOfEditSecurityGroup', 'member'),
+        node('editSecurityGroup', 'SecurityGroup'),
+        relation('out', 'sgEditPerms', 'permission'),
         node('canEdit', 'Permission', {
           property: 'education',
           edit: true,
         }),
-        relation('out', '', 'baseNode'),
+        relation('out', 'editPermsOfBaseNode', 'baseNode'),
         node('user'),
       ])
       .return({
@@ -506,26 +506,26 @@ export class UserService {
       .match([node('user', 'User', { id: userId })])
       .optionalMatch([
         node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
+        relation('in', 'memberOfReadSecurityGroup', 'member'),
+        node('readSecurityGroup', 'SecurityGroup'),
+        relation('out', 'sgReadPerms', 'permission'),
         node('canRead', 'Permission', {
           property: 'organization',
           read: true,
         }),
-        relation('out', '', 'baseNode'),
+        relation('out', 'readPermsOfBaseNode', 'baseNode'),
         node('user'),
       ])
       .optionalMatch([
         node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
+        relation('in', 'memberOfEditSecurityGroup', 'member'),
+        node('editSecurityGroup', 'SecurityGroup'),
+        relation('out', 'sgEditPerms', 'permission'),
         node('canEdit', 'Permission', {
           property: 'organization',
           edit: true,
         }),
-        relation('out', '', 'baseNode'),
+        relation('out', 'editPermsOfBaseNode', 'baseNode'),
         node('user'),
       ])
       .return({
@@ -576,26 +576,26 @@ export class UserService {
       .match([node('user', 'User', { id: userId })])
       .optionalMatch([
         node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
+        relation('in', 'memberOfReadSecurityGroup', 'member'),
+        node('readSecurityGroup', 'SecurityGroup'),
+        relation('out', 'sgReadPerms', 'permission'),
         node('canRead', 'Permission', {
           property: 'partners',
           read: true,
         }),
-        relation('out', '', 'baseNode'),
+        relation('out', 'readPermsOfBaseNode', 'baseNode'),
         node('user'),
       ])
       .optionalMatch([
         node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
+        relation('in', 'memberOfEditSecurityGroup', 'member'),
+        node('editSecurityGroup', 'SecurityGroup'),
+        relation('out', 'sgEditPerms', 'permission'),
         node('canEdit', 'Permission', {
           property: 'partners',
           edit: true,
         }),
-        relation('out', '', 'baseNode'),
+        relation('out', 'editPermsOfBaseNode', 'baseNode'),
         node('user'),
       ])
       .return({
@@ -651,26 +651,26 @@ export class UserService {
       .match([node('user', 'User', { id: userId })])
       .optionalMatch([
         node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
+        relation('in', 'memberOfReadSecurityGroup', 'member'),
+        node('readSecurityGroup', 'SecurityGroup'),
+        relation('out', 'sgReadPerms', 'permission'),
         node('canRead', 'Permission', {
           property: 'unavailability',
           read: true,
         }),
-        relation('out', '', 'baseNode'),
+        relation('out', 'readPermsOfBaseNode', 'baseNode'),
         node('user'),
       ])
       .optionalMatch([
         node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
+        relation('in', 'memberOfEditSecurityGroup', 'member'),
+        node('editSecurityGroup', 'SecurityGroup'),
+        relation('out', 'sgEditPerms', 'permission'),
         node('canEdit', 'Permission', {
           property: 'unavailability',
           edit: true,
         }),
-        relation('out', '', 'baseNode'),
+        relation('out', 'editPermsOfBaseNode', 'baseNode'),
         node('user'),
       ])
       .return({

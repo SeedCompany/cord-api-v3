@@ -17,6 +17,7 @@ import {
   matchSession,
   Property,
 } from '../../../core';
+import { matchPermList, matchPropList } from '../../../core/database/query';
 import {
   DbPropsOfDto,
   parseSecuredProperties,
@@ -114,23 +115,8 @@ export class EthnologueLanguageService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'EthnologueLanguage', { id: id })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
-        node('perms', 'Permission'),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ])
-      .with('collect(distinct perms) as permList, node')
-      .match([
-        node('node'),
-        relation('out', 'r', { active: true }),
-        node('props', 'Property'),
-      ])
-      .with('{value: props.value, property: type(r)} as prop, permList, node')
-      .with('collect(prop) as propList, permList, node')
+      .call(matchPermList)
+      .call(matchPropList, 'permList')
       .return('propList, permList, node')
       .asResult<StandardReadResult<EthLangDbProps>>();
 

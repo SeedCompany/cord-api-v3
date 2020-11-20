@@ -517,8 +517,14 @@ describe('Project e2e', () => {
   });
 
   it('List of projects sorted by Sensitivity', async () => {
-    await registerUserWithPower(app, [Powers.CreateProject]);
-    //Create three projects, each beginning with lower or upper-cases.
+    await registerUserWithPower(app, [
+      Powers.CreateLanguage,
+      Powers.CreateProject,
+      Powers.CreateLanguageEngagement,
+      Powers.CreateEthnologueLanguage,
+    ]);
+
+    //Create three intern projects of different sensitivities
     await createProject(app, {
       name: 'High Sensitivity Proj ' + (await generateId()),
       type: ProjectType.Internship,
@@ -535,6 +541,30 @@ describe('Project e2e', () => {
       name: 'Med Sensitivity Proj ' + (await generateId()),
       type: ProjectType.Internship,
       sensitivity: Sensitivity.Medium,
+    });
+
+    //Create two translation projects, one without langauge engagements and one with 1 med and 1 low sensitivity eng
+    //translation projec without engagements
+    await createProject(app);
+
+    //with engagements, low and med sensitivity, project should eval to med
+    const translationProjectWithEngagements = await createProject(app);
+
+    const medSensitivityLanguage = await createLanguage(app, {
+      sensitivity: Sensitivity.Medium,
+    });
+    const lowSensitivityLanguage = await createLanguage(app, {
+      sensitivity: Sensitivity.Low,
+    });
+
+    await createLanguageEngagement(app, {
+      projectId: translationProjectWithEngagements.id,
+      languageId: lowSensitivityLanguage.id,
+    });
+
+    await createLanguageEngagement(app, {
+      projectId: translationProjectWithEngagements.id,
+      languageId: medSensitivityLanguage.id,
     });
 
     const getSensitivitySortedProjects = async (order: 'ASC' | 'DESC') =>
@@ -555,9 +585,6 @@ describe('Project e2e', () => {
           input: {
             sort: 'sensitivity',
             order,
-            filter: {
-              type: ProjectType.Internship,
-            },
           },
         }
       );
@@ -577,6 +604,8 @@ describe('Project e2e', () => {
     const { projects: ascendingProjects } = await getSensitivitySortedProjects(
       'ASC'
     );
+
+    expect(ascendingProjects.items.length).toBeGreaterThanOrEqual(5);
 
     expect(getSortedSensitivities(ascendingProjects)).toEqual([
       Sensitivity.Low,

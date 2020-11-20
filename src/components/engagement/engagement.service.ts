@@ -23,6 +23,8 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
+  matchPermList,
+  matchPropList,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -56,6 +58,7 @@ import {
   UpdateInternshipEngagement,
   UpdateLanguageEngagement,
 } from './dto';
+import { EngagementRules } from './engagement.rules';
 import {
   EngagementCreatedEvent,
   EngagementDeletedEvent,
@@ -105,6 +108,7 @@ export class EngagementService {
     private readonly products: ProductService,
     private readonly config: ConfigService,
     private readonly files: FileService,
+    private readonly engagementRules: EngagementRules,
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService,
     private readonly eventBus: IEventBus,
@@ -604,24 +608,10 @@ export class EngagementService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Engagement', { id })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
-        node('perms', 'Permission'),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ])
-      .with('collect(distinct perms) as permList, node')
-      .match([
-        node('node'),
-        relation('out', 'r', { active: true }),
-        node('props', 'Property'),
-      ])
-      .with('{value: props.value, property: type(r)} as prop, permList, node')
+      .call(matchPermList)
+      .call(matchPropList, 'permList')
       .with([
-        'collect(prop) as propList',
+        'propList',
         'permList',
         'node',
         `case
@@ -717,7 +707,6 @@ export class EngagementService {
       __typename: result.__typename,
       ...securedProperties,
       ...parseBaseNodeProperties(result.node),
-      status: props.status,
       modifiedAt: props.modifiedAt,
       startDate: {
         value: startDate,
@@ -767,7 +756,11 @@ export class EngagementService {
       await this.verifyFirstScripture({ engagementId: input.id });
     }
     if (input.status) {
-      await this.verifyEngagementStatus(input.id, input.status);
+      await this.engagementRules.verifyStatusChange(
+        input.id,
+        session,
+        input.status
+      );
     }
 
     const { pnp, ...rest } = input;
@@ -842,7 +835,11 @@ export class EngagementService {
   ): Promise<InternshipEngagement> {
     const createdAt = DateTime.local();
     if (input.status) {
-      await this.verifyEngagementStatus(input.id, input.status);
+      await this.engagementRules.verifyStatusChange(
+        input.id,
+        session,
+        input.status
+      );
     }
 
     const object = (await this.readOne(
@@ -1088,28 +1085,28 @@ export class EngagementService {
       .match([
         [
           node('requestingUser'),
-          relation('in', '', 'member'),
-          node('', 'SecurityGroup'),
-          relation('out', '', 'permission'),
+          relation('in', 'memberOfReadSecurityGroup', 'member'),
+          node('readSecurityGroup', 'SecurityGroup'),
+          relation('out', 'sgReadPerms', 'permission'),
           node('canRead', 'Permission', {
             property: 'product',
             read: true,
           }),
-          relation('out', '', 'baseNode'),
+          relation('out', 'readPermsOfBaseNode', 'baseNode'),
           node('eng', 'Engagement', { id: engagement.id }),
         ],
       ])
       .match([
         [
           node('requestingUser'),
-          relation('in', '', 'member'),
-          node('', 'SecurityGroup'),
-          relation('out', '', 'permission'),
+          relation('in', 'memberOfEditSecurityGroup', 'member'),
+          node('editSecurityGroup', 'SecurityGroup'),
+          relation('out', 'sgEditPerms', 'permission'),
           node('canEdit', 'Permission', {
             property: 'product',
             edit: true,
           }),
-          relation('out', '', 'baseNode'),
+          relation('out', 'editPermsOfBaseNode', 'baseNode'),
           node('eng'),
         ],
       ])
@@ -1374,31 +1371,6 @@ export class EngagementService {
       throw new InputException(
         'The Project status is not in development',
         'project.status'
-      );
-    }
-  }
-
-  protected async verifyEngagementStatus(id: string, status: EngagementStatus) {
-    const project = await this.db
-      .query()
-      .match([
-        node('engagement', 'Engagement', { id }),
-        relation('in', '', 'engagement', { active: true }),
-        node('project', 'Project'),
-        relation('out', '', 'status', { active: true }),
-        node('status', 'Property'),
-      ])
-      .return('status.value as status')
-      .asResult<{ status: ProjectStatus }>()
-      .first();
-
-    if (
-      project?.status === ProjectStatus.InDevelopment &&
-      status !== EngagementStatus.InDevelopment
-    ) {
-      throw new InputException(
-        'The Engagement status should be in development',
-        'engagement.status'
       );
     }
   }

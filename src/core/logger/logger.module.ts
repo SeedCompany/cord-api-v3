@@ -5,7 +5,11 @@ import {
   Logger as NestLogger,
   Provider,
 } from '@nestjs/common';
-import { format, transports } from 'winston';
+import { memoize } from 'lodash';
+import { createLogger, format, transports } from 'winston';
+import { ConfigService } from '../config/config.service';
+import { BufferLoggerService } from './buffer-logger.service';
+import { ExceptionHandler } from './exception-logger';
 import {
   colorize,
   exceptionInfo,
@@ -14,33 +18,76 @@ import {
   metadata,
   pid,
   printForCli,
+  printForJson,
   timestamp,
 } from './formatters';
 import { LevelMatcherProvider } from './level-matcher.provider';
+import { loggerNames, LoggerToken } from './logger.decorator';
 import { ILogger } from './logger.interface';
 import { NamedLoggerService } from './named-logger.service';
 import { NestLoggerAdapterService } from './nest-logger-adapter.service';
 import { NullLoggerService } from './null-logger.service';
+import { ProxyLoggerService } from './proxy-logger.service';
 import { LoggerOptions, WinstonLoggerService } from './winston-logger.service';
+
+const buffer = new BufferLoggerService();
+const proxy = new ProxyLoggerService();
+proxy.setLogger(buffer);
+export const bootstrapLogger = new NestLoggerAdapterService(proxy);
+
+// A nice error logger for when the actual logger cannot be created
+ExceptionHandler.getLogger = memoize(() =>
+  createLogger({
+    transports: [new transports.Console()],
+    format: format.combine(exceptionInfo(), formatException(), printForCli()),
+  })
+);
 
 @Global()
 @Module({
   providers: [
     LevelMatcherProvider,
+    NamedLoggerService,
+    { provide: BufferLoggerService, useValue: buffer },
+    { provide: ProxyLoggerService, useValue: proxy },
+    WinstonLoggerService,
     {
       provide: ILogger,
-      useClass: WinstonLoggerService,
+      useExisting: ProxyLoggerService,
     },
     {
       provide: NestLogger,
       useClass: NestLoggerAdapterService,
     },
-    NamedLoggerService,
+    {
+      provide: LoggerOptions,
+      useFactory: (config: ConfigService): LoggerOptions => {
+        const formatting = format.combine(
+          exceptionInfo(),
+          metadata(),
+          maskSecrets(),
+          ...(config.jsonLogs
+            ? [printForJson()]
+            : [
+                timestamp(),
+                format.ms(),
+                pid(),
+                colorize(),
+                formatException(),
+                printForCli(),
+              ])
+        );
+
+        return {
+          transports: [new transports.Console()],
+          format: formatting,
+        };
+      },
+      inject: [ConfigService],
+    },
   ],
 })
 export class LoggerModule {
-  static loggerNames: string[] = new Array<string>();
-
   static forTest(): DynamicModule {
     const module = LoggerModule.forRoot();
     module.providers?.push({
@@ -51,47 +98,26 @@ export class LoggerModule {
   }
 
   static forRoot(): DynamicModule {
-    // Just CLI for now. We'll handle hooking up to cloudwatch later.
-    const options: LoggerOptions = {
-      transports: [new transports.Console()],
-      format: format.combine(
-        exceptionInfo(),
-        metadata(),
-        maskSecrets(),
-        timestamp(),
-        format.ms(),
-        pid(),
-        colorize(),
-        formatException(),
-        printForCli()
-      ),
-    };
-
-    const namedLoggerProviders = this.loggerNames.map(namedLoggerProvider);
+    const namedLoggerProviders = Array.from(loggerNames).map(
+      namedLoggerProvider
+    );
     return {
       module: LoggerModule,
-      providers: [
-        {
-          provide: LoggerOptions,
-          useValue: options,
-        },
-        ...namedLoggerProviders,
-      ],
+      providers: namedLoggerProviders,
       exports: namedLoggerProviders,
     };
   }
-}
 
-/**
- * Creates the token for a named logger
- * @param name The name of the logger
- */
-export const LoggerToken = (name: string) => {
-  if (!LoggerModule.loggerNames.includes(name)) {
-    LoggerModule.loggerNames.push(name);
+  constructor(
+    proxy: ProxyLoggerService,
+    winston: WinstonLoggerService,
+    buffer: BufferLoggerService
+  ) {
+    proxy.setLogger(winston);
+    buffer.flushTo(winston);
+    ExceptionHandler.getLogger = () => winston;
   }
-  return `Logger(${name})`;
-};
+}
 
 const namedLoggerProvider = (name: string): Provider<ILogger> => ({
   provide: LoggerToken(name),
