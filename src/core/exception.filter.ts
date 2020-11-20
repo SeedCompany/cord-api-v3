@@ -18,7 +18,7 @@ import {
 } from '@nestjs/graphql';
 import { compact, mapValues, uniq } from 'lodash';
 import { Exception, getPreviousList, simpleSwitch } from '../common';
-import { ServiceUnavailableError } from './database';
+import { ConnectionTimeoutError, ServiceUnavailableError } from './database';
 import { ILogger, Logger, LogLevel } from './logger';
 
 type ExceptionInfo = ReturnType<ExceptionFilter['catchGql']>;
@@ -102,14 +102,23 @@ export class ExceptionFilter implements GqlExceptionFilter {
     // failure, then return that as the error. This way we can have an "unknown"
     // failure for the specific action without having to check for this error
     // in every catch statement (assuming no further logic is done).
-    if (
-      getPreviousList(ex, true).some(
-        (e) => e instanceof ServiceUnavailableError
-      )
-    ) {
+    const exs = getPreviousList(ex, true);
+    if (exs.some((e) => e instanceof ServiceUnavailableError)) {
       return {
-        codes: ['DatabaseConnectionFailure', 'ServiceUnavailable', 'Server'],
+        codes: [
+          'DatabaseConnectionFailure',
+          'ServiceUnavailable',
+          'Transient',
+          'Database',
+          'Server',
+        ],
         message: 'Failed to connect to CORD database',
+      };
+    }
+    if (exs.some((e) => e instanceof ConnectionTimeoutError)) {
+      return {
+        codes: ['DatabaseTimeoutFailure', 'Transient', 'Database', 'Server'],
+        message: 'Failed to retrieve data from CORD database',
       };
     }
 
