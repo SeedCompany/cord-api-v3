@@ -1,13 +1,14 @@
 import { ppRaw as prettyPrint } from '@patarapolw/prettyprint';
 import { enabled as colorsEnabled, red, yellow } from 'colors/safe';
 import stringify from 'fast-safe-stringify';
-import { identity, mapValues } from 'lodash';
+import { identity } from 'lodash';
 import { DateTime } from 'luxon';
 import { relative } from 'path';
 import { parse as parseTrace, StackFrame } from 'stack-trace';
 import { MESSAGE } from 'triple-beam';
 import { config, format, LogEntry } from 'winston';
 import { Exception } from '../../common/exceptions';
+import { maskSecrets as maskSecretsOfObj } from '../../common/mask-secrets';
 import { getNameFromEntry } from './logger.interface';
 
 type Color = (str: string) => string;
@@ -27,11 +28,7 @@ export const metadata = () =>
 
 export const maskSecrets = () =>
   format((info) => {
-    info.metadata = mapValues(info.metadata, (val: string, key) =>
-      /(password|token|key)/i.exec(key)
-        ? `${'*'.repeat(Math.min(val.slice(0, -3).length, 20)) + val.slice(-3)}`
-        : val
-    );
+    info.metadata = maskSecretsOfObj(info.metadata);
     return info;
   })();
 
