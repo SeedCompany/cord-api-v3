@@ -191,11 +191,11 @@ export class FileRepository {
         .with('*')
         .optionalMatch([
           node('requestingUser'),
-          relation('in', '', 'member'),
-          node('', 'SecurityGroup'),
-          relation('out', '', 'permission'),
+          relation('in', `memberOfSecurityGroupFor${prop}`, 'member'),
+          node(`securityGroupFor${prop}`, 'SecurityGroup'),
+          relation('out', `sgPermsFor${prop}`, 'permission'),
           node('perms', 'Permission'),
-          relation('out', '', 'baseNode'),
+          relation('out', `permsOfBaseNodeFor${prop}`, 'baseNode'),
           node('fv'),
           relation('out', '', prop, { active: true }),
           node(variable, 'Property'),

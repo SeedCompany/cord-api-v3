@@ -194,9 +194,9 @@ export class FieldZoneService {
         .query()
         .match([
           node('user', 'User', { id: session.userId }),
-          relation('in', '', 'member'),
-          node('', 'SecurityGroup'),
-          relation('out', '', 'permission'),
+          relation('in', 'memberOfSecurityGroup', 'member'),
+          node('securityGroup', 'SecurityGroup'),
+          relation('out', 'sgPerms', 'permission'),
           node('', 'Permission', {
             property: 'director',
             edit: true,

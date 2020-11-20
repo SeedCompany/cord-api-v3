@@ -205,15 +205,15 @@ export class DatabaseService {
       ])
       .match([
         node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
+        relation('in', 'memberOfSecurityGroup', 'member'),
+        node('securityGroup', 'SecurityGroup'),
+        relation('out', 'sgPerms', 'permission'),
+        node('perms', 'Permission', {
           property: key as string,
           // admin: true,
           edit: true,
         }),
-        relation('out', '', 'baseNode'),
+        relation('out', 'permsOfBaseNode', 'baseNode'),
         node(nodevar),
         relation('out', 'oldToProp', key as string, { active: true }),
         node('oldPropVar', 'Property'),
@@ -462,11 +462,11 @@ export class DatabaseService {
       .match(node('node', { id }))
       .match([
         node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
+        relation('in', 'memberOfSecurityGroup', 'member'),
+        node('securityGroup', 'SecurityGroup'),
+        relation('out', 'sgPerms', 'permission'),
         node('perm', 'Permission', { read: true, property: 'canDelete' }),
-        relation('out', '', 'baseNode'),
+        relation('out', 'permsOfBaseNode', 'baseNode'),
         node('node'),
       ])
       .return('perm');
