@@ -10,11 +10,11 @@ export const requestingUser = (session: Session) =>
   });
 
 export const permissionsOfNode = (nodeLabel?: string) => [
-  relation('in', '', 'member'),
-  node('', 'SecurityGroup'),
-  relation('out', '', 'permission'),
+  relation('in', 'memberOfSecurityGroup', 'member'),
+  node('security', 'SecurityGroup'),
+  relation('out', 'sgPerms', 'permission'),
   node('perms', 'Permission'),
-  relation('out', '', 'baseNode'),
+  relation('out', 'permsOfBaseNode', 'baseNode'),
   node('node', nodeLabel),
 ];
 

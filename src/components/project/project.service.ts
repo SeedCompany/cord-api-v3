@@ -569,14 +569,14 @@ export class ProjectService {
         .query()
         .match([
           node('user', 'User', { id: session.userId }),
-          relation('in', '', 'member'),
-          node('', 'SecurityGroup'),
-          relation('out', '', 'permission'),
+          relation('in', 'memberOfSecurityGroup', 'member'),
+          node('security', 'SecurityGroup'),
+          relation('out', 'sgPerms', 'permission'),
           node('', 'Permission', {
             property: 'primaryLocation',
             edit: true,
           }),
-          relation('out', '', 'baseNode'),
+          relation('out', 'permsOfBaseNode', 'baseNode'),
           node('project', 'Project', { id: input.id }),
         ])
         .with('project')
@@ -608,14 +608,14 @@ export class ProjectService {
         .query()
         .match([
           node('user', 'User', { id: session.userId }),
-          relation('in', '', 'member'),
-          node('', 'SecurityGroup'),
-          relation('out', '', 'permission'),
+          relation('in', 'memberOfSecurityGroup', 'member'),
+          node('security', 'SecurityGroup'),
+          relation('out', 'sgPerms', 'permission'),
           node('', 'Permission', {
             property: 'fieldRegion',
             edit: true,
           }),
-          relation('out', '', 'baseNode'),
+          relation('out', 'permsOfBaseNode', 'baseNode'),
           node('project', 'Project', { id: input.id }),
         ])
         .with('project')
@@ -714,9 +714,9 @@ export class ProjectService {
     // Subquery to get the sensitivity value for a Translation Project.
     // Get the highest sensitivity of the connected Language Engagement's Language
     // If an Engagement doesn't exist, then default to 3 (high)
-    const sensitivitySubquery = `call { 
+    const sensitivitySubquery = `call {
       with node
-      optional match (node)-[:engagement { active: true }]->(:LanguageEngagement)-[:language { active: true }]->  
+      optional match (node)-[:engagement { active: true }]->(:LanguageEngagement)-[:language { active: true }]->
       (:Language)-[:sensitivity { active: true }]->(sensitivityProp:Property)
       WITH *, case sensitivityProp.value
         when null then 3
@@ -794,28 +794,28 @@ export class ProjectService {
       .match([
         [
           node('requestingUser'),
-          relation('in', '', 'member'),
-          node('', 'SecurityGroup'),
-          relation('out', '', 'permission'),
+          relation('in', 'memberOfReadSecurityGroup', 'member'),
+          node('readSecurityGroup', 'SecurityGroup'),
+          relation('out', 'sgReadPerms', 'permission'),
           node('canReadEngagement', 'Permission', {
             property: 'engagement',
             read: true,
           }),
-          relation('out', '', 'baseNode'),
+          relation('out', 'readPermsOfBaseNode', 'baseNode'),
           node('project', 'Project', { id: project.id }),
         ],
       ])
       .match([
         [
           node('requestingUser'),
-          relation('in', '', 'member'),
-          node('', 'SecurityGroup'),
-          relation('out', '', 'permission'),
+          relation('in', 'memberOfEditSecurityGroup', 'member'),
+          node('editSecurityGroup', 'SecurityGroup'),
+          relation('out', 'sgEditPerms', 'permission'),
           node('canEditEngagement', 'Permission', {
             property: 'engagement',
             edit: true,
           }),
-          relation('out', '', 'baseNode'),
+          relation('out', 'editPermsOfBaseNode', 'baseNode'),
           node('project'),
         ],
       ])
@@ -862,28 +862,28 @@ export class ProjectService {
       .match([
         [
           node('requestingUser'),
-          relation('in', '', 'member'),
-          node('', 'SecurityGroup'),
-          relation('out', '', 'permission'),
+          relation('in', 'memberOfReadSecurityGroup', 'member'),
+          node('readSecurityGroup', 'SecurityGroup'),
+          relation('out', 'sgReadPerms', 'permission'),
           node('canReadTeamMember', 'Permission', {
             property: 'member',
             read: true,
           }),
-          relation('out', '', 'baseNode'),
+          relation('out', 'readPermsOfBaseNode', 'baseNode'),
           node('project', 'Project', { id: projectId }),
         ],
       ])
       .match([
         [
           node('requestingUser'),
-          relation('in', '', 'member'),
-          node('', 'SecurityGroup'),
-          relation('out', '', 'permission'),
+          relation('in', 'memberOfEditSecurityGroup', 'member'),
+          node('editSecurityGroup', 'SecurityGroup'),
+          relation('out', 'sgEditPerms', 'permission'),
           node('canEditTeamMember', 'Permission', {
             property: 'member',
             edit: true,
           }),
-          relation('out', '', 'baseNode'),
+          relation('out', 'editPermsOfBaseNode', 'baseNode'),
           node('project'),
         ],
       ])
@@ -930,28 +930,28 @@ export class ProjectService {
       .match([
         [
           node('requestingUser'),
-          relation('in', '', 'member'),
-          node('', 'SecurityGroup'),
-          relation('out', '', 'permission'),
+          relation('in', 'memberOfReadSecurityGroup', 'member'),
+          node('readSecurityGroup', 'SecurityGroup'),
+          relation('out', 'sgReadPerms', 'permission'),
           node('canReadPartnership', 'Permission', {
             property: 'partnership',
             read: true,
           }),
-          relation('out', '', 'baseNode'),
+          relation('out', 'readPermsOfBaseNode', 'baseNode'),
           node('project', 'Project', { id: projectId }),
         ],
       ])
       .match([
         [
           node('requestingUser'),
-          relation('in', '', 'member'),
-          node('', 'SecurityGroup'),
-          relation('out', '', 'permission'),
+          relation('in', 'memberOfEditSecurityGroup', 'member'),
+          node('editSecurityGroup', 'SecurityGroup'),
+          relation('out', 'sgEditPerms', 'permission'),
           node('canEditPartnership', 'Permission', {
             property: 'partnership',
             edit: true,
           }),
-          relation('out', '', 'baseNode'),
+          relation('out', 'editPermsOfBaseNode', 'baseNode'),
           node('project'),
         ],
       ])
@@ -1054,26 +1054,26 @@ export class ProjectService {
       .query()
       .optionalMatch([
         node('user', 'User', { id: session.userId }),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
+        relation('in', 'memberOfReadSecurityGroup', 'member'),
+        node('readSecurityGroup', 'SecurityGroup'),
+        relation('out', 'sgReadPerms', 'permission'),
         node('canRead', 'Permission', {
           property: 'budget',
           read: true,
         }),
-        relation('out', '', 'baseNode'),
+        relation('out', 'readPermsOfBaseNode', 'baseNode'),
         node('project', 'Project', { id: project.id }),
       ])
       .optionalMatch([
         node('user'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
+        relation('in', 'memberOfEditSecurityGroup', 'member'),
+        node('editSecurityGroup', 'SecurityGroup'),
+        relation('out', 'sgEditPerms', 'permission'),
         node('canEdit', 'Permission', {
           property: 'budget',
           edit: true,
         }),
-        relation('out', '', 'baseNode'),
+        relation('out', 'editPermsOfBaseNode', 'baseNode'),
         node('project'),
       ])
       .raw('RETURN canRead.read as canRead, canEdit.edit as canEdit')
