@@ -155,10 +155,11 @@ export class ProjectService {
   ): Promise<Project> {
     if (input.type === ProjectType.Translation && input.sensitivity) {
       throw new InputException(
-        'Cannot set sensitivity on tranlation project',
+        'Cannot set sensitivity on translation project',
         'project.sensitivity'
       );
     }
+    await this.authorizationService.checkPower(Powers.CreateProject, session);
 
     const createdAt = DateTime.local();
     const step = input.step ?? ProjectStep.EarlyConversations;

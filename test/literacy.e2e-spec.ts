@@ -3,6 +3,7 @@ import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { isValidId } from '../src/common';
+import { Powers } from '../src/components/authorization/dto/powers';
 import { LiteracyMaterial } from '../src/components/literacy-material';
 import { ScriptureRange } from '../src/components/scripture/dto';
 import {
@@ -10,7 +11,7 @@ import {
   createSession,
   createTestApp,
   fragments,
-  registerUser,
+  registerUserWithPower,
   TestApp,
 } from './utility';
 import { resetDatabase } from './utility/reset-database';
@@ -23,7 +24,7 @@ describe('LiteracyMaterial e2e', () => {
     app = await createTestApp();
     db = app.get(Connection);
     await createSession(app);
-    await registerUser(app);
+    await registerUserWithPower(app, [Powers.CreateLiteracyMaterial]);
   });
 
   afterAll(async () => {

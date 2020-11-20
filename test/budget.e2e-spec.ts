@@ -34,7 +34,12 @@ describe('Budget e2e', () => {
     app = await createTestApp();
     db = app.get(Connection);
     await createSession(app);
-    await registerUserWithPower(app, [Powers.CreateOrganization]);
+    await registerUserWithPower(app, [
+      Powers.CreateOrganization,
+      Powers.CreateProject,
+      Powers.CreatePartnership,
+      Powers.CreateBudget,
+    ]);
     project = await createProject(app);
     await createPartnership(app, {
       projectId: project.id,
@@ -139,7 +144,7 @@ describe('Budget e2e', () => {
   });
 
   it('List budget nodes', async () => {
-    // create 2 products
+    // create 2 budgets
     const numBudgets = 2;
     await Promise.all(
       times(numBudgets).map(() => createBudget(app, { projectId: project.id }))
