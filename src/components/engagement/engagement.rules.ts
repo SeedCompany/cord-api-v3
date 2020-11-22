@@ -240,6 +240,11 @@ export class EngagementRules {
               type: EngagementTransitionType.Neutral,
               label: 'Will Not Terminate',
             },
+            {
+              to: EngagementStatus.Terminated,
+              type: EngagementTransitionType.Approve,
+              label: 'Approve Termination',
+            },
           ],
         };
       case EngagementStatus.FinalizingCompletion:
@@ -294,7 +299,6 @@ export class EngagementRules {
     }
 
     const currentStatus = await this.getCurrentStatus(engagementId);
-
     // get roles that can approve the current status
     const { approvers, transitions } = await this.getStatusRule(
       currentStatus,
@@ -365,16 +369,16 @@ export class EngagementRules {
     return userRolesQuery?.roles ?? [];
   }
 
-  /** Of the given statuss which one was the most recent previous status */
+  /** Of the given status which one was the most recent previous status */
   private async getMostRecentPreviousStatus(
     id: string,
-    statuss: EngagementStatus[]
+    status: EngagementStatus[]
   ): Promise<EngagementStatus> {
-    const prevStatuss = await this.getPreviousStatuss(id);
-    const mostRecentMatchedStatus = first(intersection(prevStatuss, statuss));
+    const prevStatus = await this.getPreviousStatus(id);
+    const mostRecentMatchedStatus = first(intersection(prevStatus, status));
     if (!mostRecentMatchedStatus) {
       throw new ServerException(
-        `The engagement ${id} has never been in any of these previous statuss: ${statuss.join(
+        `The engagement ${id} has never been in any of these previous status: ${status.join(
           ', '
         )}`
       );
@@ -382,8 +386,8 @@ export class EngagementRules {
     return mostRecentMatchedStatus;
   }
 
-  /** A list of the engagement's previous statuss ordered most recent to furthest in the past */
-  private async getPreviousStatuss(id: string): Promise<EngagementStatus[]> {
+  /** A list of the engagement's previous status ordered most recent to furthest in the past */
+  private async getPreviousStatus(id: string): Promise<EngagementStatus[]> {
     const result = await this.db
       .query()
       .match([
@@ -393,14 +397,14 @@ export class EngagementRules {
       ])
       .with('prop')
       .orderBy('prop.createdAt', 'DESC')
-      .raw(`RETURN collect(prop.value) as statuss`)
-      .asResult<{ statuss: EngagementStatus[] }>()
+      .raw(`RETURN collect(prop.value) as status`)
+      .asResult<{ status: EngagementStatus[] }>()
       .first();
     if (!result) {
       throw new ServerException(
-        "Failed to determine engagement's previous statuss"
+        "Failed to determine engagement's previous status"
       );
     }
-    return result.statuss;
+    return result.status;
   }
 }
