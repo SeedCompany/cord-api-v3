@@ -148,7 +148,7 @@ export class EngagementService {
     if (input.firstScripture) {
       await this.verifyFirstScripture({ languageId });
     }
-    await this.verifyProjectStatus(projectId, session);
+    // await this.verifyProjectStatus(projectId, session);
 
     if (input.status && input.status !== EngagementStatus.InDevelopment) {
       throw new InputException(
@@ -363,7 +363,7 @@ export class EngagementService {
         'Engagement for this project and person already exists'
       );
     }
-    await this.verifyProjectStatus(projectId, session);
+    // await this.verifyProjectStatus(projectId, session);
 
     if (input.status && input.status !== EngagementStatus.InDevelopment) {
       throw new InputException(
@@ -1045,7 +1045,7 @@ export class EngagementService {
       .first();
 
     if (result) {
-      await this.verifyProjectStatus(result.projectId, session);
+      // await this.verifyProjectStatus(result.projectId, session);
     }
 
     const baseNodeLabels = ['BaseNode', 'Engagement', object.__typename];
