@@ -4,7 +4,6 @@ import { compact } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
-  generateId,
   NotFoundException,
   SecuredList,
   ServerException,
@@ -167,47 +166,50 @@ export class UserService {
   };
 
   async create(input: CreatePerson, _session?: Session): Promise<string> {
-    await this.userRepo.create({
-      ...input,
-    });
-
-    const id = await generateId();
-    const createdAt = DateTime.local();
-
-    const query = this.db.query();
-    query.create([
-      [
-        node('user', ['User', 'BaseNode'], {
-          id,
-          createdAt,
-        }),
-        relation('out', '', 'email', {
-          active: true,
-          createdAt,
-        }),
-        node('email', 'EmailAddress:Property', {
-          value: input.email,
-          createdAt,
-        }),
-      ],
-      ...property('realFirstName', input.realFirstName, 'user'),
-      ...property('realLastName', input.realLastName, 'user'),
-      ...property('displayFirstName', input.displayFirstName, 'user'),
-      ...property('displayLastName', input.displayLastName, 'user'),
-      ...property('phone', input.phone, 'user'),
-      ...property('timezone', input.timezone, 'user'),
-      ...property('about', input.about, 'user'),
-      ...property('status', input.status, 'user'),
-      ...this.roleProperties(input.roles),
-      ...property('title', input.title, 'user'),
-    ]);
-
-    query.return({
-      user: [{ id: 'id' }],
-    });
     let result;
+    let id;
     try {
-      result = await query.first();
+      result = await this.userRepo.create(input);
+      id = result.id;
+
+      this.logger.info(result);
+      // const id = await generateId();
+      // const createdAt = DateTime.local();
+
+      // const query = this.db.query();
+      // query.create([
+      //   [
+      //     node('user', ['User', 'BaseNode'], {
+      //       id,
+      //       createdAt,
+      //     }),
+      //     relation('out', '', 'email', {
+      //       active: true,
+      //       createdAt,
+      //     }),
+      //     node('email', 'EmailAddress:Property', {
+      //       value: input.email,
+      //       createdAt,
+      //     }),
+      //   ],
+      //   ...property('realFirstName', input.realFirstName, 'user'),
+      //   ...property('realLastName', input.realLastName, 'user'),
+      //   ...property('displayFirstName', input.displayFirstName, 'user'),
+      //   ...property('displayLastName', input.displayLastName, 'user'),
+      //   ...property('phone', input.phone, 'user'),
+      //   ...property('timezone', input.timezone, 'user'),
+      //   ...property('about', input.about, 'user'),
+      //   ...property('status', input.status, 'user'),
+      //   ...this.roleProperties(input.roles),
+      //   ...property('title', input.title, 'user'),
+      // ]);
+
+      // query.return({
+      //   user: [{ id: 'id' }],
+      // });
+      // let result;
+
+      // result = await query.first();
     } catch (e) {
       if (e instanceof UniquenessError && e.label === 'EmailAddress') {
         throw new DuplicateException(

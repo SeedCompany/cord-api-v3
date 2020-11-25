@@ -3,9 +3,9 @@ import { Connection } from 'cypher-query-builder';
 import { ConfigModule } from '../config/config.module';
 import { CypherFactory } from './cypher.factory';
 import { DatabaseService } from './database.service';
-import { DbV4 } from './dbv4.service';
 import { IndexerModule } from './indexer/indexer.module';
 import { ParameterTransformer } from './parameter-transformer.service';
+import { DbV4 } from './v4/dbv4.service';
 
 @Module({
   imports: [IndexerModule, ConfigModule],

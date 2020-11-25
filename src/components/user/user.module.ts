@@ -1,5 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { DbV4 } from '../../core/database/dbv4.service';
+import { DbV4 } from '../../core/database/v4/dbv4.service';
 import { AuthenticationModule } from '../authentication/authentication.module';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { LanguageModule } from '../language/language.module';
