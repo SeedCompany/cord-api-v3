@@ -77,6 +77,7 @@ import {
   UnavailabilityListInput,
   UnavailabilityService,
 } from './unavailability';
+import { UserRepository } from './user.repository';
 
 export const fullName = (
   user: Partial<
@@ -132,6 +133,7 @@ export class UserService {
     private readonly authorizationService: AuthorizationService,
     private readonly locationService: LocationService,
     private readonly languageService: LanguageService,
+    private readonly userRepo: UserRepository,
     @Logger('user:service') private readonly logger: ILogger
   ) {}
 
@@ -165,6 +167,10 @@ export class UserService {
   };
 
   async create(input: CreatePerson, _session?: Session): Promise<string> {
+    await this.userRepo.create({
+      ...input,
+    });
+
     const id = await generateId();
     const createdAt = DateTime.local();
 

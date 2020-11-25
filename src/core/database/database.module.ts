@@ -3,13 +3,14 @@ import { Connection } from 'cypher-query-builder';
 import { ConfigModule } from '../config/config.module';
 import { CypherFactory } from './cypher.factory';
 import { DatabaseService } from './database.service';
+import { DbV4 } from './dbv4.service';
 import { IndexerModule } from './indexer/indexer.module';
 import { ParameterTransformer } from './parameter-transformer.service';
 
 @Module({
   imports: [IndexerModule, ConfigModule],
-  providers: [CypherFactory, DatabaseService, ParameterTransformer],
-  exports: [CypherFactory, DatabaseService, IndexerModule],
+  providers: [CypherFactory, DatabaseService, ParameterTransformer, DbV4],
+  exports: [CypherFactory, DatabaseService, IndexerModule, DbV4],
 })
 export class DatabaseModule implements OnApplicationShutdown {
   constructor(private readonly db: Connection) {}

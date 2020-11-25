@@ -126,6 +126,12 @@ export class ConfigService {
     };
   }
 
+  @Lazy() get dbLocalUrl() {
+    return {
+      url: 'http://localhost:8080/',
+    };
+  }
+
   @Lazy() get cors(): CorsOptions {
     // regex is matched against origin which includes protocol and port (no path)
     // `cf\.com$` matches both root cf.com and all subdomains

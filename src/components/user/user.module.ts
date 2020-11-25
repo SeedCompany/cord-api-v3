@@ -1,4 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
+import { DbV4 } from '../../core/database/dbv4.service';
 import { AuthenticationModule } from '../authentication/authentication.module';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { LanguageModule } from '../language/language.module';
@@ -9,6 +10,7 @@ import { TimeZoneModule } from '../timezone';
 import { EducationModule } from './education/education.module';
 import { KnownLanguageResolver } from './known-language.resolver';
 import { UnavailabilityModule } from './unavailability/unavailability.module';
+import { UserRepository } from './user.repository';
 import { UserResolver } from './user.resolver';
 import { UserService } from './user.service';
 
@@ -24,7 +26,19 @@ import { UserService } from './user.service';
     LocationModule,
     forwardRef(() => LanguageModule),
   ],
-  providers: [KnownLanguageResolver, UserResolver, UserService],
-  exports: [UserService, EducationModule, UnavailabilityModule],
+  providers: [
+    KnownLanguageResolver,
+    UserResolver,
+    UserService,
+    UserRepository,
+    DbV4,
+  ],
+  exports: [
+    UserService,
+    EducationModule,
+    UnavailabilityModule,
+    UserRepository,
+    DbV4,
+  ],
 })
 export class UserModule {}
