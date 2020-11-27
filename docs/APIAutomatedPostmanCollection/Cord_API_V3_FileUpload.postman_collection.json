@@ -631,9 +631,7 @@
 								"src": "/C:/Users/shree/Downloads/Sample File_Test_Doc/Test.png"
 							},
 							"options": {
-								"raw": {
-									"language": "text"
-								}
+								"file": {}
 							}
 						},
 						"url": {
@@ -690,9 +688,7 @@
 								"src": "/C:/Users/shree/Downloads/Sample File_Test_Doc/Test PDF.pdf"
 							},
 							"options": {
-								"raw": {
-									"language": "text"
-								}
+								"file": {}
 							}
 						},
 						"url": {
@@ -749,9 +745,7 @@
 								"src": "/C:/Users/shree/Downloads/Sample File_Test_Doc/Test Word 1 mb.doc"
 							},
 							"options": {
-								"raw": {
-									"language": "text"
-								}
+								"file": {}
 							}
 						},
 						"url": {
@@ -808,9 +802,7 @@
 								"src": "/C:/Users/shree/Downloads/Sample File_Test_Doc/Test Video.webm"
 							},
 							"options": {
-								"raw": {
-									"language": "text"
-								}
+								"file": {}
 							}
 						},
 						"url": {
@@ -867,9 +859,7 @@
 								"src": "/C:/Users/shree/Downloads/Sample File_Test_Doc/Audio Test.mp3"
 							},
 							"options": {
-								"raw": {
-									"language": "text"
-								}
+								"file": {}
 							}
 						},
 						"url": {
@@ -926,9 +916,7 @@
 								"src": "/C:/Users/shree/Downloads/Sample File_Test_Doc/Test Text.txt"
 							},
 							"options": {
-								"raw": {
-									"language": "text"
-								}
+								"file": {}
 							}
 						},
 						"url": {
