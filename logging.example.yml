@@ -5,8 +5,6 @@
 
 levels:
   # Only show errors for nest related loggers
-  # Note that we hook into the logger after bootstrap so this won't
-  # suppress those bootstrapping log messages
   nest, nest:*: errors
   # Show info logs up for config logger, but not for the environment service keep that at warning.
   config, -config:environment: info

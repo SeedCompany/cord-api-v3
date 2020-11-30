@@ -2,7 +2,7 @@ import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { times } from 'lodash';
-import { DuplicateException, InputException, isValidId } from '../src/common';
+import { InputException, isValidId } from '../src/common';
 import { Powers } from '../src/components/authorization/dto/powers';
 import {
   createLanguage,
@@ -30,6 +30,8 @@ describe('Language e2e', () => {
     await registerUserWithPower(app, [
       Powers.CreateLanguage,
       Powers.CreateEthnologueLanguage,
+      Powers.CreateProject,
+      Powers.CreateLanguageEngagement,
     ]);
   });
 
@@ -41,17 +43,6 @@ describe('Language e2e', () => {
   it('create a language', async () => {
     const language = await createLanguage(app);
     expect(language.id).toBeDefined();
-  });
-
-  it('should have unique name', async () => {
-    const name = faker.company.companyName();
-    await createLanguage(app, { name });
-    await expect(createLanguage(app, { name })).rejects.toThrowError(
-      new DuplicateException(
-        `language.name`,
-        `name with value ${name} already exists`
-      )
-    );
   });
 
   it('read one language by id', async () => {

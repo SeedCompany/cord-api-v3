@@ -216,35 +216,6 @@ export class UserService {
       throw new ServerException('Failed to create user');
     }
 
-    // don't remove this when you remove the above function
-    // grant the powers that all users will get
-    const grants = [
-      Powers.CreateCeremony,
-      Powers.CreateEducation,
-      Powers.CreateDirectory,
-      Powers.CreateFile,
-      Powers.CreateFileVersion,
-      Powers.CreateFilm,
-      Powers.CreateInternshipEngagement,
-      Powers.CreateLanguageEngagement,
-      Powers.CreateLiteracyMaterial,
-      Powers.CreateLocation,
-      Powers.CreatePartnership,
-      Powers.CreateProduct,
-      Powers.CreateProject,
-      Powers.CreateProjectEngagement,
-      Powers.CreateProjectMember,
-      Powers.CreateSong,
-      Powers.CreateStory,
-      Powers.CreateTranslationEngagement,
-      Powers.CreateUnavailability,
-      Powers.DeleteLanguage,
-      Powers.DeleteProject,
-    ];
-    for (const power of grants) {
-      await this.authorizationService.grantPower(power, id);
-    }
-
     // attach user to publicSG
 
     const attachUserToPublicSg = await this.db
@@ -465,26 +436,26 @@ export class UserService {
       .match([node('user', 'User', { id: userId })])
       .optionalMatch([
         node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
+        relation('in', 'memberOfReadSecurityGroup', 'member'),
+        node('readSecurityGroup', 'SecurityGroup'),
+        relation('out', 'sgReadPerms', 'permission'),
         node('canRead', 'Permission', {
           property: 'education',
           read: true,
         }),
-        relation('out', '', 'baseNode'),
+        relation('out', 'readPermsOfBaseNode', 'baseNode'),
         node('user'),
       ])
       .optionalMatch([
         node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
+        relation('in', 'memberOfEditSecurityGroup', 'member'),
+        node('editSecurityGroup', 'SecurityGroup'),
+        relation('out', 'sgEditPerms', 'permission'),
         node('canEdit', 'Permission', {
           property: 'education',
           edit: true,
         }),
-        relation('out', '', 'baseNode'),
+        relation('out', 'editPermsOfBaseNode', 'baseNode'),
         node('user'),
       ])
       .return({
@@ -535,26 +506,26 @@ export class UserService {
       .match([node('user', 'User', { id: userId })])
       .optionalMatch([
         node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
+        relation('in', 'memberOfReadSecurityGroup', 'member'),
+        node('readSecurityGroup', 'SecurityGroup'),
+        relation('out', 'sgReadPerms', 'permission'),
         node('canRead', 'Permission', {
           property: 'organization',
           read: true,
         }),
-        relation('out', '', 'baseNode'),
+        relation('out', 'readPermsOfBaseNode', 'baseNode'),
         node('user'),
       ])
       .optionalMatch([
         node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
+        relation('in', 'memberOfEditSecurityGroup', 'member'),
+        node('editSecurityGroup', 'SecurityGroup'),
+        relation('out', 'sgEditPerms', 'permission'),
         node('canEdit', 'Permission', {
           property: 'organization',
           edit: true,
         }),
-        relation('out', '', 'baseNode'),
+        relation('out', 'editPermsOfBaseNode', 'baseNode'),
         node('user'),
       ])
       .return({
@@ -605,26 +576,26 @@ export class UserService {
       .match([node('user', 'User', { id: userId })])
       .optionalMatch([
         node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
+        relation('in', 'memberOfReadSecurityGroup', 'member'),
+        node('readSecurityGroup', 'SecurityGroup'),
+        relation('out', 'sgReadPerms', 'permission'),
         node('canRead', 'Permission', {
           property: 'partners',
           read: true,
         }),
-        relation('out', '', 'baseNode'),
+        relation('out', 'readPermsOfBaseNode', 'baseNode'),
         node('user'),
       ])
       .optionalMatch([
         node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
+        relation('in', 'memberOfEditSecurityGroup', 'member'),
+        node('editSecurityGroup', 'SecurityGroup'),
+        relation('out', 'sgEditPerms', 'permission'),
         node('canEdit', 'Permission', {
           property: 'partners',
           edit: true,
         }),
-        relation('out', '', 'baseNode'),
+        relation('out', 'editPermsOfBaseNode', 'baseNode'),
         node('user'),
       ])
       .return({
@@ -680,26 +651,26 @@ export class UserService {
       .match([node('user', 'User', { id: userId })])
       .optionalMatch([
         node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
+        relation('in', 'memberOfReadSecurityGroup', 'member'),
+        node('readSecurityGroup', 'SecurityGroup'),
+        relation('out', 'sgReadPerms', 'permission'),
         node('canRead', 'Permission', {
           property: 'unavailability',
           read: true,
         }),
-        relation('out', '', 'baseNode'),
+        relation('out', 'readPermsOfBaseNode', 'baseNode'),
         node('user'),
       ])
       .optionalMatch([
         node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
+        relation('in', 'memberOfEditSecurityGroup', 'member'),
+        node('editSecurityGroup', 'SecurityGroup'),
+        relation('out', 'sgEditPerms', 'permission'),
         node('canEdit', 'Permission', {
           property: 'unavailability',
           edit: true,
         }),
-        relation('out', '', 'baseNode'),
+        relation('out', 'editPermsOfBaseNode', 'baseNode'),
         node('user'),
       ])
       .return({

@@ -19,6 +19,7 @@ export enum EngagementStatus {
 
   Terminated = 'Terminated',
   Completed = 'Completed',
+  Converted = 'Converted', // this is being used in DOMO & from v2 data. Keep?
 }
 
 registerEnumType(EngagementStatus, {

@@ -352,15 +352,14 @@ export class PartnerService {
         })
         .optionalMatch([
           node('requestingUser'),
-          relation('in', '', 'member'),
-          node('', 'SecurityGroup'),
-          relation('out', '', 'permission'),
+          relation('in', 'memberOfSecurityGroup', 'member'),
+          node('securityGroup', 'SecurityGroup'),
+          relation('out', 'sgPerms', 'permission'),
           node('canReadPointOfContact', 'Permission', {
             property: 'pointOfContact',
-
             read: true,
           }),
-          relation('out', '', 'baseNode'),
+          relation('out', 'permsOfBaseNode', 'baseNode'),
           node('org'),
           relation('out', 'oldPointOfContactRel', 'pointOfContact', {
             active: true,

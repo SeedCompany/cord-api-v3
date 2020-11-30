@@ -48,6 +48,7 @@
     "dotenv-expand": "^5.1.0",
     "execa": "^4.0.3",
     "faker": "^4.1.0",
+    "fast-safe-stringify": "^2.0.7",
     "got": "^11.5.0",
     "graphql": "^15.3.0",
     "html-to-text": "^5.1.1",

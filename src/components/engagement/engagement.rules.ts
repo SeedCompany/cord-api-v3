@@ -55,10 +55,7 @@ export class EngagementRules {
     switch (status) {
       case EngagementStatus.InDevelopment:
         return {
-          approvers: [
-            // TODO: not sure what to put here because we're depending on the project that
-            // the engagement is connected to.
-          ],
+          approvers: [Role.Administrator],
           transitions: [
             {
               to: EngagementStatus.Active,
@@ -147,6 +144,11 @@ export class EngagementRules {
               to: EngagementStatus.DiscussingSuspension,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Suspension',
+            },
+            {
+              to: EngagementStatus.ActiveChangedPlan,
+              type: EngagementTransitionType.Approve,
+              label: 'Approve Change to Plan',
             },
             {
               to: await this.getMostRecentPreviousStatus(id, [
@@ -242,6 +244,11 @@ export class EngagementRules {
               ]),
               type: EngagementTransitionType.Neutral,
               label: 'Will Not Terminate',
+            },
+            {
+              to: EngagementStatus.Terminated,
+              type: EngagementTransitionType.Approve,
+              label: 'Approve Termination',
             },
           ],
         };
@@ -396,14 +403,14 @@ export class EngagementRules {
       ])
       .with('prop')
       .orderBy('prop.createdAt', 'DESC')
-      .raw(`RETURN collect(prop.value) as statuss`)
-      .asResult<{ statuss: EngagementStatus[] }>()
+      .raw(`RETURN collect(prop.value) as status`)
+      .asResult<{ status: EngagementStatus[] }>()
       .first();
     if (!result) {
       throw new ServerException(
-        "Failed to determine engagement's previous statuss"
+        "Failed to determine engagement's previous status"
       );
     }
-    return result.statuss;
+    return result.status;
   }
 }

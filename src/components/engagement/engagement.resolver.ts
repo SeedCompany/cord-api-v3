@@ -39,7 +39,11 @@ export class EngagementResolver {
     @IdArg() id: string,
     @AnonSession() session: Session
   ): Promise<Engagement> {
-    return await this.service.readOne(id, session);
+    const engagement = await this.service.readOne(id, session);
+    // @ts-expect-error hack engagement id into status object
+    // so the lazy transitions field resolver can use it
+    engagement.status.engagementId = engagement.id;
+    return engagement;
   }
 
   @Query(() => EngagementListOutput, {
@@ -55,7 +59,13 @@ export class EngagementResolver {
     input: EngagementListInput,
     @AnonSession() session: Session
   ): Promise<EngagementListOutput> {
-    return this.service.list(input, session);
+    const engagements = await this.service.list(input, session);
+    for (const engagement of engagements.items) {
+      // @ts-expect-error hack engagement id into status object
+      // so the lazy transitions field resolver can use it
+      engagement.status.engagementId = engagement.id;
+    }
+    return engagements;
   }
 
   @ResolveField(() => SecuredCeremony)
@@ -82,6 +92,9 @@ export class EngagementResolver {
       input,
       session
     );
+    // @ts-expect-error hack engagement id into status object
+    // so the lazy transitions field resolver can use it
+    engagement.status.engagementId = engagement.id;
     return { engagement };
   }
 
@@ -96,6 +109,9 @@ export class EngagementResolver {
       input,
       session
     );
+    // @ts-expect-error hack engagement id into status object
+    // so the lazy transitions field resolver can use it
+    engagement.status.engagementId = engagement.id;
     return { engagement };
   }
 
@@ -110,6 +126,9 @@ export class EngagementResolver {
       input,
       session
     );
+    // @ts-expect-error hack engagement id into status object
+    // so the lazy transitions field resolver can use it
+    engagement.status.engagementId = engagement.id;
     return { engagement };
   }
 
@@ -124,6 +143,9 @@ export class EngagementResolver {
       input,
       session
     );
+    // @ts-expect-error hack engagement id into status object
+    // so the lazy transitions field resolver can use it
+    engagement.status.engagementId = engagement.id;
     return { engagement };
   }
 

@@ -107,11 +107,11 @@ export function matchUserPermissions(
 ) {
   query.match([
     node('requestingUser'),
-    relation('in', '', 'member', {}, [1]),
-    node('', 'SecurityGroup'),
-    relation('out', '', 'permission'),
+    relation('in', 'memberOfSecurityGroup', 'member', {}, [1]),
+    node('security', 'SecurityGroup'),
+    relation('out', 'sgPerms', 'permission'),
     node('perms', 'Permission'),
-    relation('out', '', 'baseNode'),
+    relation('out', 'permsOfBaseNode', 'baseNode'),
     label ? node('node', label) : node('node'),
   ]);
   if (id) {
