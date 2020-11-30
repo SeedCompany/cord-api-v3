@@ -778,13 +778,13 @@ export class EngagementService {
       await this.verifyFirstScripture({ engagementId: input.id });
     }
 
-    if (input.status) {
-      await this.engagementRules.verifyStatusChange(
-        input.id,
-        session,
-        input.status
-      );
-    }
+    // if (input.status) {
+    //   await this.engagementRules.verifyStatusChange(
+    //     input.id,
+    //     session,
+    //     input.status
+    //   );
+    // }
 
     const { pnp, paratextRegistryId, paraTextRegistryId, ...rest } = input;
     const changes = pickBy(
@@ -865,13 +865,13 @@ export class EngagementService {
     session: Session
   ): Promise<InternshipEngagement> {
     const createdAt = DateTime.local();
-    if (input.status) {
-      await this.engagementRules.verifyStatusChange(
-        input.id,
-        session,
-        input.status
-      );
-    }
+    // if (input.status) {
+    //   await this.engagementRules.verifyStatusChange(
+    //     input.id,
+    //     session,
+    //     input.status
+    //   );
+    // }
 
     const object = (await this.readOne(
       input.id,
