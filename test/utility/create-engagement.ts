@@ -153,3 +153,25 @@ export async function createInternshipEngagementWithMinimumValues(
 
   return actual;
 }
+
+export async function getCurrentEngagementStatus(app: TestApp, id: string) {
+  const result = await app.graphql.query(
+    gql`
+    query {
+      engagement(id: "${id}"){
+          status {
+            value
+            transitions {
+              to
+              type
+            }
+          }
+      }
+    }
+  `
+  );
+
+  expect(result).toBeTruthy();
+
+  return result.engagement;
+}

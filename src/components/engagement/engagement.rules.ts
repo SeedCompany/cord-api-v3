@@ -146,6 +146,11 @@ export class EngagementRules {
               label: 'Discuss Suspension',
             },
             {
+              to: EngagementStatus.ActiveChangedPlan,
+              type: EngagementTransitionType.Approve,
+              label: 'Approve Change to Plan',
+            },
+            {
               to: await this.getMostRecentPreviousStatus(id, [
                 EngagementStatus.Active,
                 EngagementStatus.ActiveChangedPlan,
@@ -239,6 +244,11 @@ export class EngagementRules {
               ]),
               type: EngagementTransitionType.Neutral,
               label: 'Will Not Terminate',
+            },
+            {
+              to: EngagementStatus.Terminated,
+              type: EngagementTransitionType.Approve,
+              label: 'Approve Termination',
             },
           ],
         };
@@ -393,14 +403,14 @@ export class EngagementRules {
       ])
       .with('prop')
       .orderBy('prop.createdAt', 'DESC')
-      .raw(`RETURN collect(prop.value) as statuss`)
-      .asResult<{ statuss: EngagementStatus[] }>()
+      .raw(`RETURN collect(prop.value) as status`)
+      .asResult<{ status: EngagementStatus[] }>()
       .first();
     if (!result) {
       throw new ServerException(
-        "Failed to determine engagement's previous statuss"
+        "Failed to determine engagement's previous status"
       );
     }
-    return result.statuss;
+    return result.status;
   }
 }
