@@ -575,7 +575,7 @@ export const engagement = gql`
       sentPrintingDate {
         value
       }
-      paraTextRegistryId {
+      paratextRegistryId {
         value
       }
       pnp {

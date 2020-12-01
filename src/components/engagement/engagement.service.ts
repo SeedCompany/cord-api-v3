@@ -1,5 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
+import { pickBy } from 'lodash';
 import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
 import {
@@ -89,7 +90,7 @@ export class EngagementService {
     firstScripture: true,
     lukePartnership: true,
     sentPrintingDate: true,
-    paraTextRegistryId: true,
+    paratextRegistryId: true,
     pnp: true,
     language: true,
     historicGoal: true,
@@ -220,8 +221,8 @@ export class EngagementService {
         'languageEngagement'
       ),
       ...property(
-        'paraTextRegistryId',
-        input.paraTextRegistryId || undefined,
+        'paratextRegistryId',
+        input.paratextRegistryId || input.paraTextRegistryId || undefined,
         'languageEngagement'
       ),
       ...property('pnp', pnpId || undefined, 'languageEngagement'),
@@ -766,11 +767,15 @@ export class EngagementService {
       );
     }
 
-    const { pnp, ...rest } = input;
-    const changes = {
-      ...rest,
-      modifiedAt: DateTime.local(),
-    };
+    const { pnp, paratextRegistryId, paraTextRegistryId, ...rest } = input;
+    const changes = pickBy(
+      {
+        ...rest,
+        paratextRegistryId: paratextRegistryId || paraTextRegistryId,
+        modifiedAt: DateTime.local(),
+      },
+      (val) => val !== undefined
+    );
     const object = (await this.readOne(
       input.id,
       session
@@ -795,7 +800,7 @@ export class EngagementService {
           'communicationsCompleteDate',
           'startDateOverride',
           'endDateOverride',
-          'paraTextRegistryId',
+          'paratextRegistryId',
           'historicGoal',
           'modifiedAt',
           'status',

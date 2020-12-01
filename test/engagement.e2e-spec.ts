@@ -157,7 +157,7 @@ describe('Engagement e2e', () => {
     expect(actual.lastSuspendedAt.value).toBeNull();
     expect(actual.lastReactivatedAt.value).toBeNull();
     expect(actual.statusModifiedAt.value).toBeNull();
-    expect(actual.paraTextRegistryId.value).toBeNull();
+    expect(actual.paratextRegistryId.value).toBeNull();
   });
 
   it('creates a internship engagement', async () => {
@@ -275,8 +275,8 @@ describe('Engagement e2e', () => {
     expect(actual.startDate).toMatchObject(languageEngagement.startDate);
     expect(actual.endDate).toMatchObject(languageEngagement.endDate);
     expect(actual.modifiedAt).toBe(languageEngagement.modifiedAt);
-    expect(actual.paraTextRegistryId).toMatchObject(
-      languageEngagement.paraTextRegistryId
+    expect(actual.paratextRegistryId).toMatchObject(
+      languageEngagement.paratextRegistryId
     );
     expect(actual.pnp).toMatchObject(languageEngagement.pnp);
   });
@@ -348,7 +348,7 @@ describe('Engagement e2e', () => {
 
     const updateFirstScripture = false;
     const updateLukePartnership = false;
-    const updateParaTextRegistryId = faker.random.word();
+    const updateParatextRegistryId = faker.random.word();
 
     const result = await app.graphql.mutate(
       gql`
@@ -369,7 +369,7 @@ describe('Engagement e2e', () => {
             id: languageEngagement.id,
             firstScripture: updateFirstScripture,
             lukePartnership: updateLukePartnership,
-            paraTextRegistryId: updateParaTextRegistryId,
+            paratextRegistryId: updateParatextRegistryId,
           },
         },
       }
@@ -386,7 +386,7 @@ describe('Engagement e2e', () => {
     expect(updated.id).toBe(languageEngagement.id);
     expect(updated.firstScripture.value).toBe(updateFirstScripture);
     expect(updated.lukePartnership.value).toBe(updateLukePartnership);
-    expect(updated.paraTextRegistryId.value).toBe(updateParaTextRegistryId);
+    expect(updated.paratextRegistryId.value).toBe(updateParatextRegistryId);
     expect(updated.status.value).toBe(EngagementStatus.InDevelopment);
   });
 

@@ -109,7 +109,7 @@ export class LanguageEngagement extends Engagement {
   readonly sentPrintingDate: SecuredDateNullable;
 
   @Field()
-  readonly paraTextRegistryId: SecuredString;
+  readonly paratextRegistryId: SecuredString;
 
   readonly pnp: DefinedFile;
 
