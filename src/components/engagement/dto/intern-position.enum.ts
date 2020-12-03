@@ -2,7 +2,7 @@ import { ObjectType, registerEnumType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { SecuredEnum } from '../../../common';
 
-export enum InternPosition {
+export enum InternshipPosition {
   ConsultantInTraining = 'ConsultantInTraining',
   ExegeticalFacilitator = 'ExegeticalFacilitator',
 
@@ -33,12 +33,12 @@ export enum InternshipProgram {
   CapacityBuilding = 'CapacityBuilding',
 }
 
-const Position = InternPosition;
+const Position = InternshipPosition;
 const Domain = InternshipDomain;
 const Program = InternshipProgram;
 
 export const InternshipPositionToDomain: Record<
-  InternPosition,
+  InternshipPosition,
   InternshipDomain | null
 > = {
   [Position.ConsultantInTraining]: null,
@@ -61,7 +61,7 @@ export const InternshipPositionToDomain: Record<
 };
 
 export const InternshipPositionToProgram: Record<
-  InternPosition,
+  InternshipPosition,
   InternshipProgram
 > = {
   [Position.ConsultantInTraining]: Program.QualityAssurance,
@@ -83,27 +83,27 @@ export const InternshipPositionToProgram: Record<
   [Position.ScriptureEngagement]: Program.CapacityBuilding,
 };
 
-registerEnumType(InternPosition, {
-  name: 'InternshipEngagementPosition',
+registerEnumType(InternshipPosition, {
+  name: 'InternshipPosition',
 });
 
 @ObjectType({
   description: SecuredEnum.descriptionFor('an intern position'),
 })
-export class SecuredInternPosition extends SecuredEnum(InternPosition, {
+export class SecuredInternPosition extends SecuredEnum(InternshipPosition, {
   nullable: true,
 }) {}
 
 registerEnumType(InternshipProgram, {
   name: 'InternshipProgram',
   description: stripIndent`
-    An InternshipProgram represents/groups several InternshipEngagementPositions.
+    An InternshipProgram represents/groups several InternshipPositions.
   `,
 });
 
 registerEnumType(InternshipDomain, {
   name: 'InternshipDomain',
   description: stripIndent`
-    An InternshipDomain represents/groups several InternshipEngagementPositions.
+    An InternshipDomain represents/groups several InternshipPositions.
   `,
 });

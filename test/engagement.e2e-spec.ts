@@ -8,8 +8,8 @@ import { Powers } from '../src/components/authorization/dto/powers';
 import {
   CreateInternshipEngagement,
   EngagementStatus,
-  InternPosition,
   InternshipEngagement,
+  InternshipPosition,
   LanguageEngagement,
 } from '../src/components/engagement';
 import { Language } from '../src/components/language';
@@ -402,7 +402,7 @@ describe('Engagement e2e', () => {
         internId: intern.id,
       }
     );
-    const updatePosition = InternPosition.LanguageProgramManager;
+    const updatePosition = InternshipPosition.LanguageProgramManager;
     const updateMethodologies = [
       ProductMethodology.Paratext,
       ProductMethodology.BibleStories,
