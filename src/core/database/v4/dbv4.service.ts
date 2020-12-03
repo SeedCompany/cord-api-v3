@@ -6,7 +6,7 @@ import { ConfigService } from '../../config/config.service';
 export class DbV4 {
   constructor(private readonly config: ConfigService) {}
 
-  async post<ResponseType>(path: string, obj: Record<string, unknown>) {
+  async post<ResponseType>(path: string, obj: Record<string, any>) {
     const data = JSON.stringify(obj);
     const response = await fetch(this.config.dbLocalUrl.url + path, {
       method: 'POST',
