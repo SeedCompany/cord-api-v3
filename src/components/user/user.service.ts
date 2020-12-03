@@ -1,6 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { compact } from 'lodash';
+import { compact, result } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
@@ -18,7 +18,6 @@ import {
   matchSession,
   OnIndex,
   property,
-  UniquenessError,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -35,6 +34,7 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { ErrorCode } from '../../core/database/v4/dto/ErrorCode.enum';
 import { Role } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
@@ -70,7 +70,6 @@ import {
   EducationService,
   SecuredEducationList,
 } from './education';
-import { DbUser } from './model';
 import {
   SecuredUnavailabilityList,
   UnavailabilityListInput,
@@ -166,127 +165,13 @@ export class UserService {
   };
 
   async create(input: CreatePerson, _session?: Session): Promise<string> {
-    let result;
-    let id;
-    try {
-      result = await this.userRepo.create(input);
-      id = result.id;
-
-      this.logger.info(result);
-      // const id = await generateId();
-      // const createdAt = DateTime.local();
-
-      // const query = this.db.query();
-      // query.create([
-      //   [
-      //     node('user', ['User', 'BaseNode'], {
-      //       id,
-      //       createdAt,
-      //     }),
-      //     relation('out', '', 'email', {
-      //       active: true,
-      //       createdAt,
-      //     }),
-      //     node('email', 'EmailAddress:Property', {
-      //       value: input.email,
-      //       createdAt,
-      //     }),
-      //   ],
-      //   ...property('realFirstName', input.realFirstName, 'user'),
-      //   ...property('realLastName', input.realLastName, 'user'),
-      //   ...property('displayFirstName', input.displayFirstName, 'user'),
-      //   ...property('displayLastName', input.displayLastName, 'user'),
-      //   ...property('phone', input.phone, 'user'),
-      //   ...property('timezone', input.timezone, 'user'),
-      //   ...property('about', input.about, 'user'),
-      //   ...property('status', input.status, 'user'),
-      //   ...this.roleProperties(input.roles),
-      //   ...property('title', input.title, 'user'),
-      // ]);
-
-      // query.return({
-      //   user: [{ id: 'id' }],
-      // });
-      // let result;
-
-      // result = await query.first();
-    } catch (e) {
-      if (e instanceof UniquenessError && e.label === 'EmailAddress') {
-        throw new DuplicateException(
-          'person.email',
-          'Email address is already in use',
-          e
-        );
-      }
-      throw new ServerException('Failed to create user', e);
+    const result = await this.userRepo.create(input);
+    if (result.error === ErrorCode.UNIQUENESS_VIOLATION) {
+      throw new DuplicateException(
+        'person.email',
+        'Email address is already in use'
+      );
     }
-    if (!result) {
-      throw new ServerException('Failed to create user');
-    }
-
-    // attach user to publicSG
-
-    const attachUserToPublicSg = await this.db
-      .query()
-      .match(node('user', 'User', { id }))
-      .match(node('publicSg', 'PublicSecurityGroup'))
-
-      .create([node('publicSg'), relation('out', '', 'member'), node('user')])
-      .create([
-        node('publicSg'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property: 'displayFirstName',
-          read: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('user'),
-      ])
-      .create([
-        node('publicSg'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property: 'displayLastName',
-          read: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('user'),
-      ])
-      .return('user')
-      .first();
-
-    if (!attachUserToPublicSg) {
-      this.logger.error('failed to attach user to public securityGroup');
-    }
-
-    if (this.config.defaultOrg.id) {
-      const attachToOrgPublicSg = await this.db
-        .query()
-        .match(node('user', 'User', { id }))
-        .match([
-          node('orgPublicSg', 'OrgPublicSecurityGroup'),
-          relation('out', '', 'organization'),
-          node('defaultOrg', 'Organization', {
-            id: this.config.defaultOrg.id,
-          }),
-        ])
-        .create([
-          node('user'),
-          relation('in', '', 'member'),
-          node('orgPublicSg'),
-        ])
-        .run();
-
-      if (attachToOrgPublicSg) {
-        //
-      }
-    }
-    input.roles &&
-      (await this.authorizationService.roleAddedToUser(id, input.roles));
-
-    const dbUser = new DbUser();
-    await this.authorizationService.processNewBaseNode(dbUser, id, id);
-
     return result.id;
   }
 
@@ -294,38 +179,41 @@ export class UserService {
     id: string,
     { userId }: Pick<Session, 'userId'>
   ): Promise<User> {
-    const query = this.db
-      .query()
-      .call(matchRequestingUser, { userId })
-      .match([node('node', 'User', { id })])
-      .call(matchPermList, 'node')
-      .call(matchPropList, 'permList')
-      .return('propList, permList, node')
-      .asResult<StandardReadResult<DbPropsOfDto<User>>>();
+    const result = await this.userRepo.read({ id, requestorId: id });
+    console.log(result);
+    return result.user;
+    // const query = this.db
+    //   .query()
+    //   .call(matchRequestingUser, { userId })
+    //   .match([node('node', 'User', { id })])
+    //   .call(matchPermList, 'node')
+    //   .call(matchPropList, 'permList')
+    //   .return('propList, permList, node')
+    //   .asResult<StandardReadResult<DbPropsOfDto<User>>>();
 
-    const result = await query.first();
-    if (!result) {
-      throw new NotFoundException('Could not find user', 'user.id');
-    }
+    // const result = await query.first();
+    // if (!result) {
+    //   throw new NotFoundException('Could not find user', 'user.id');
+    // }
 
-    const rolesValue = result.propList
-      .filter((prop) => prop.property === 'roles')
-      .map((prop) => prop.value as Role);
+    // const rolesValue = result.propList
+    //   .filter((prop) => prop.property === 'roles')
+    //   .map((prop) => prop.value as Role);
 
-    const securedProps = parseSecuredProperties(
-      result.propList,
-      result.permList,
-      this.securedProperties
-    );
-    return {
-      ...parseBaseNodeProperties(result.node),
-      ...securedProps,
-      roles: {
-        ...securedProps.roles,
-        value: rolesValue,
-      },
-      canDelete: true, // TODO
-    };
+    // const securedProps = parseSecuredProperties(
+    //   result.propList,
+    //   result.permList,
+    //   this.securedProperties
+    // );
+    // return {
+    //   ...parseBaseNodeProperties(result.node),
+    //   ...securedProps,
+    //   roles: {
+    //     ...securedProps.roles,
+    //     value: rolesValue,
+    //   },
+    //   canDelete: true, // TODO
+    // };
   }
 
   async update(input: UpdateUser, session: Session): Promise<User> {
