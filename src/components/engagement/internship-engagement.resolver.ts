@@ -4,7 +4,11 @@ import { FileService, SecuredFile } from '../file';
 import { LocationService } from '../location';
 import { SecuredLocation } from '../location/dto';
 import { SecuredUser, UserService } from '../user';
-import { InternshipEngagement } from './dto';
+import {
+  InternshipEngagement,
+  InternshipPositionToProgram,
+  SecuredInternshipProgram,
+} from './dto';
 
 @Resolver(InternshipEngagement)
 export class InternshipEngagementResolver {
@@ -58,6 +62,21 @@ export class InternshipEngagementResolver {
     return {
       value,
       ...rest,
+    };
+  }
+
+  @ResolveField(() => SecuredInternshipProgram, {
+    description:
+      'The InternshipProgram based on the currently selected `position`',
+  })
+  async program(
+    @Parent() engagement: InternshipEngagement
+  ): Promise<SecuredInternshipProgram> {
+    const { canRead, value: position } = engagement.position;
+    return {
+      value: canRead && position ? InternshipPositionToProgram[position] : null,
+      canRead,
+      canEdit: false,
     };
   }
 }
