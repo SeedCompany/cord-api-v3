@@ -185,60 +185,66 @@ export class UserService {
   }
 
   async update(input: UpdateUser, session: Session): Promise<User> {
-    this.logger.debug('mutation update User', { input, session });
-    const user = await this.readOne(input.id, session);
-
-    await this.db.sgUpdateProperties({
-      session,
-      object: user,
-      props: [
-        'realFirstName',
-        'realLastName',
-        'displayFirstName',
-        'displayLastName',
-        'phone',
-        'timezone',
-        'about',
-        'status',
-        'title',
-      ],
-      changes: input,
-      nodevar: 'user',
+    const result = await this.dbv4.post<FeUserOut>('api/user/update', {
+      user: input,
+      requestorId: session.userId,
     });
+    return result.user;
 
-    // Update roles
-    if (input.roles) {
-      await this.authorizationService.checkPower(Powers.GrantRole, session);
-      await this.db
-        .query()
-        .match([
-          node('user', ['User', 'BaseNode'], {
-            id: input.id,
-          }),
-          relation('out', 'oldRoleRel', 'roles', { active: true }),
-          node('oldRoles', 'Property'),
-        ])
-        .set({
-          values: {
-            'oldRoleRel.active': false,
-          },
-        })
-        .run();
+    // this.logger.debug('mutation update User', { input, session });
+    // const user = await this.readOne(input.id, session);
 
-      await this.db
-        .query()
-        .match([
-          node('user', ['User', 'BaseNode'], {
-            id: input.id,
-          }),
-        ])
-        .create([...this.roleProperties(input.roles)])
-        .run();
+    // await this.db.sgUpdateProperties({
+    //   session,
+    //   object: user,
+    //   props: [
+    //     'realFirstName',
+    //     'realLastName',
+    //     'displayFirstName',
+    //     'displayLastName',
+    //     'phone',
+    //     'timezone',
+    //     'about',
+    //     'status',
+    //     'title',
+    //   ],
+    //   changes: input,
+    //   nodevar: 'user',
+    // });
 
-      await this.authorizationService.roleAddedToUser(input.id, input.roles);
-    }
+    // // Update roles
+    // if (input.roles) {
+    //   await this.authorizationService.checkPower(Powers.GrantRole, session);
+    //   await this.db
+    //     .query()
+    //     .match([
+    //       node('user', ['User', 'BaseNode'], {
+    //         id: input.id,
+    //       }),
+    //       relation('out', 'oldRoleRel', 'roles', { active: true }),
+    //       node('oldRoles', 'Property'),
+    //     ])
+    //     .set({
+    //       values: {
+    //         'oldRoleRel.active': false,
+    //       },
+    //     })
+    //     .run();
 
-    return await this.readOne(input.id, session);
+    //   await this.db
+    //     .query()
+    //     .match([
+    //       node('user', ['User', 'BaseNode'], {
+    //         id: input.id,
+    //       }),
+    //     ])
+    //     .create([...this.roleProperties(input.roles)])
+    //     .run();
+
+    //   await this.authorizationService.roleAddedToUser(input.id, input.roles);
+    // }
+
+    // return await this.readOne(input.id, session);
   }
 
   async delete(id: string, session: Session): Promise<void> {
