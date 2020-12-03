@@ -1,6 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { compact, result } from 'lodash';
+import { compact } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
@@ -14,7 +14,6 @@ import {
   DatabaseService,
   ILogger,
   Logger,
-  matchRequestingUser,
   matchSession,
   OnIndex,
   property,
@@ -22,19 +21,13 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
-  matchPermList,
-  matchPropList,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
-import {
-  DbPropsOfDto,
-  parseBaseNodeProperties,
-  parseSecuredProperties,
-  runListQuery,
-  StandardReadResult,
-} from '../../core/database/results';
+import { runListQuery } from '../../core/database/results';
+import { DbV4 } from '../../core/database/v4/dbv4.service';
 import { ErrorCode } from '../../core/database/v4/dto/ErrorCode.enum';
+import { CreateOut } from '../../core/database/v4/dto/GenericOut';
 import { Role } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
@@ -54,6 +47,7 @@ import {
   PartnerService,
   SecuredPartnerList,
 } from '../partner';
+import { FeUserOut } from './dbv4';
 import {
   AssignOrganizationToUser,
   CreatePerson,
@@ -70,12 +64,12 @@ import {
   EducationService,
   SecuredEducationList,
 } from './education';
+import { DbUser } from './model';
 import {
   SecuredUnavailabilityList,
   UnavailabilityListInput,
   UnavailabilityService,
 } from './unavailability';
-import { UserRepository } from './user.repository';
 
 export const fullName = (
   user: Partial<
@@ -120,6 +114,7 @@ export class UserService {
   };
 
   constructor(
+    private readonly dbv4: DbV4,
     private readonly educations: EducationService,
     private readonly organizations: OrganizationService,
     @Inject(forwardRef(() => PartnerService))
@@ -131,7 +126,6 @@ export class UserService {
     private readonly authorizationService: AuthorizationService,
     private readonly locationService: LocationService,
     private readonly languageService: LanguageService,
-    private readonly userRepo: UserRepository,
     @Logger('user:service') private readonly logger: ILogger
   ) {}
 
@@ -165,7 +159,11 @@ export class UserService {
   };
 
   async create(input: CreatePerson, _session?: Session): Promise<string> {
-    const result = await this.userRepo.create(input);
+    const result = await this.dbv4.post<CreateOut>(
+      'user/create',
+      input as Partial<DbUser>
+    );
+
     if (result.error === ErrorCode.UNIQUENESS_VIOLATION) {
       throw new DuplicateException(
         'person.email',
@@ -179,41 +177,11 @@ export class UserService {
     id: string,
     { userId }: Pick<Session, 'userId'>
   ): Promise<User> {
-    const result = await this.userRepo.read({ id, requestorId: id });
-    console.log(result);
+    const result = await this.dbv4.post<FeUserOut>('api/user/read', {
+      id,
+      requestorId: userId,
+    });
     return result.user;
-    // const query = this.db
-    //   .query()
-    //   .call(matchRequestingUser, { userId })
-    //   .match([node('node', 'User', { id })])
-    //   .call(matchPermList, 'node')
-    //   .call(matchPropList, 'permList')
-    //   .return('propList, permList, node')
-    //   .asResult<StandardReadResult<DbPropsOfDto<User>>>();
-
-    // const result = await query.first();
-    // if (!result) {
-    //   throw new NotFoundException('Could not find user', 'user.id');
-    // }
-
-    // const rolesValue = result.propList
-    //   .filter((prop) => prop.property === 'roles')
-    //   .map((prop) => prop.value as Role);
-
-    // const securedProps = parseSecuredProperties(
-    //   result.propList,
-    //   result.permList,
-    //   this.securedProperties
-    // );
-    // return {
-    //   ...parseBaseNodeProperties(result.node),
-    //   ...securedProps,
-    //   roles: {
-    //     ...securedProps.roles,
-    //     value: rolesValue,
-    //   },
-    //   canDelete: true, // TODO
-    // };
   }
 
   async update(input: UpdateUser, session: Session): Promise<User> {

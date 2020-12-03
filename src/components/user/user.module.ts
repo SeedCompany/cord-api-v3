@@ -10,7 +10,6 @@ import { TimeZoneModule } from '../timezone';
 import { EducationModule } from './education/education.module';
 import { KnownLanguageResolver } from './known-language.resolver';
 import { UnavailabilityModule } from './unavailability/unavailability.module';
-import { UserRepository } from './user.repository';
 import { UserResolver } from './user.resolver';
 import { UserService } from './user.service';
 
@@ -26,19 +25,7 @@ import { UserService } from './user.service';
     LocationModule,
     forwardRef(() => LanguageModule),
   ],
-  providers: [
-    KnownLanguageResolver,
-    UserResolver,
-    UserService,
-    UserRepository,
-    DbV4,
-  ],
-  exports: [
-    UserService,
-    EducationModule,
-    UnavailabilityModule,
-    UserRepository,
-    DbV4,
-  ],
+  providers: [KnownLanguageResolver, UserResolver, UserService, DbV4],
+  exports: [UserService, EducationModule, UnavailabilityModule, DbV4],
 })
 export class UserModule {}
