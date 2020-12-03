@@ -76,7 +76,7 @@ export async function createInternshipEngagement(
       input.countryOfOriginId || (await createLocation(app)).id,
     internId: input.internId || currentUserId || (await createPerson(app)).id,
     mentorId: input.mentorId || currentUserId || (await createPerson(app)).id,
-    position: InternPosition.AdministrativeSupportSpecialist,
+    position: InternPosition.Administration,
     methodologies: [ProductMethodology.Film],
     disbursementCompleteDate: DateTime.local(),
     communicationsCompleteDate: DateTime.local(),

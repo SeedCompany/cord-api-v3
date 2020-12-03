@@ -3,25 +3,23 @@ import { stripIndent } from 'common-tags';
 import { SecuredEnum } from '../../../common';
 
 export enum InternPosition {
+  ConsultantInTraining = 'ConsultantInTraining',
   ExegeticalFacilitator = 'ExegeticalFacilitator',
-  TranslationConsultantInTraining = 'TranslationConsultantInTraining',
-  AdministrativeSupportSpecialist = 'AdministrativeSupportSpecialist',
-  BusinessSupportSpecialist = 'BusinessSupportSpecialist',
-  CommunicationSpecialistInternal = 'CommunicationSpecialistInternal',
-  CommunicationSpecialistMarketing = 'CommunicationSpecialistMarketing',
-  LanguageProgramManager = 'LanguageProgramManager',
-  LanguageProgramManagerOrFieldOperations = 'LanguageProgramManagerOrFieldOperations',
-  LanguageSoftwareSupportSpecialist = 'LanguageSoftwareSupportSpecialist',
+
   LeadershipDevelopment = 'LeadershipDevelopment',
-  LiteracySpecialist = 'LiteracySpecialist',
-  LukePartnershipFacilitatorOrSpecialist = 'LukePartnershipFacilitatorOrSpecialist',
-  MobilizerOrPartnershipSupportSpecialist = 'MobilizerOrPartnershipSupportSpecialist',
-  OralFacilitatorOrSpecialist = 'OralFacilitatorOrSpecialist',
-  PersonnelOrHrSpecialist = 'PersonnelOrHrSpecialist',
-  ScriptureUseSpecialist = 'ScriptureUseSpecialist',
-  TechnicalSupportSpecialist = 'TechnicalSupportSpecialist',
+  Mobilization = 'Mobilization',
+  Personnel = 'Personnel',
+
+  Communication = 'Communication',
+  Administration = 'Administration',
+  Technology = 'Technology',
+  Finance = 'Finance',
+
+  LanguageProgramManager = 'LanguageProgramManager',
+  Literacy = 'Literacy',
   TranslationFacilitator = 'TranslationFacilitator',
-  Translator = 'Translator',
+  OralityFacilitator = 'OralityFacilitator',
+  ScriptureEngagement = 'ScriptureEngagement',
 }
 
 export enum InternshipDomain {
@@ -43,54 +41,46 @@ export const InternshipPositionToDomain: Record<
   InternPosition,
   InternshipDomain | null
 > = {
-  [Position.TranslationConsultantInTraining]: null,
+  [Position.ConsultantInTraining]: null,
   [Position.ExegeticalFacilitator]: null,
 
   [Position.LeadershipDevelopment]: Domain.Leadership,
-  [Position.MobilizerOrPartnershipSupportSpecialist]: Domain.Leadership,
-  [Position.PersonnelOrHrSpecialist]: Domain.Leadership,
+  [Position.Mobilization]: Domain.Leadership,
+  [Position.Personnel]: Domain.Leadership,
 
-  [Position.CommunicationSpecialistInternal]: Domain.Operations,
-  [Position.CommunicationSpecialistMarketing]: Domain.Operations,
-  [Position.AdministrativeSupportSpecialist]: Domain.Operations,
-  [Position.TechnicalSupportSpecialist]: Domain.Operations,
-  [Position.BusinessSupportSpecialist]: Domain.Operations,
+  [Position.Communication]: Domain.Operations,
+  [Position.Administration]: Domain.Operations,
+  [Position.Technology]: Domain.Operations,
+  [Position.Finance]: Domain.Operations,
 
   [Position.LanguageProgramManager]: Domain.FieldPrograms,
-  [Position.LanguageSoftwareSupportSpecialist]: Domain.FieldPrograms,
-  [Position.LiteracySpecialist]: Domain.FieldPrograms,
-  [Position.LukePartnershipFacilitatorOrSpecialist]: Domain.FieldPrograms,
-  [Position.OralFacilitatorOrSpecialist]: Domain.FieldPrograms,
-  [Position.ScriptureUseSpecialist]: Domain.FieldPrograms,
+  [Position.Literacy]: Domain.FieldPrograms,
   [Position.TranslationFacilitator]: Domain.FieldPrograms,
-  [Position.Translator]: Domain.FieldPrograms,
-  [Position.LanguageProgramManagerOrFieldOperations]: Domain.FieldPrograms,
+  [Position.OralityFacilitator]: Domain.FieldPrograms,
+  [Position.ScriptureEngagement]: Domain.FieldPrograms,
 };
 
 export const InternshipPositionToProgram: Record<
   InternPosition,
   InternshipProgram
 > = {
-  [Position.TranslationConsultantInTraining]: Program.QualityAssurance,
+  [Position.ConsultantInTraining]: Program.QualityAssurance,
   [Position.ExegeticalFacilitator]: Program.QualityAssurance,
 
-  [Position.AdministrativeSupportSpecialist]: Program.CapacityBuilding,
-  [Position.BusinessSupportSpecialist]: Program.CapacityBuilding,
-  [Position.CommunicationSpecialistInternal]: Program.CapacityBuilding,
-  [Position.CommunicationSpecialistMarketing]: Program.CapacityBuilding,
-  [Position.LanguageProgramManager]: Program.CapacityBuilding,
-  [Position.LanguageProgramManagerOrFieldOperations]: Program.CapacityBuilding,
-  [Position.LanguageSoftwareSupportSpecialist]: Program.CapacityBuilding,
   [Position.LeadershipDevelopment]: Program.CapacityBuilding,
-  [Position.LiteracySpecialist]: Program.CapacityBuilding,
-  [Position.LukePartnershipFacilitatorOrSpecialist]: Program.CapacityBuilding,
-  [Position.MobilizerOrPartnershipSupportSpecialist]: Program.CapacityBuilding,
-  [Position.OralFacilitatorOrSpecialist]: Program.CapacityBuilding,
-  [Position.PersonnelOrHrSpecialist]: Program.CapacityBuilding,
-  [Position.ScriptureUseSpecialist]: Program.CapacityBuilding,
-  [Position.TechnicalSupportSpecialist]: Program.CapacityBuilding,
+  [Position.Mobilization]: Program.CapacityBuilding,
+  [Position.Personnel]: Program.CapacityBuilding,
+
+  [Position.Communication]: Program.CapacityBuilding,
+  [Position.Administration]: Program.CapacityBuilding,
+  [Position.Technology]: Program.CapacityBuilding,
+  [Position.Finance]: Program.CapacityBuilding,
+
+  [Position.LanguageProgramManager]: Program.CapacityBuilding,
+  [Position.Literacy]: Program.CapacityBuilding,
   [Position.TranslationFacilitator]: Program.CapacityBuilding,
-  [Position.Translator]: Program.CapacityBuilding,
+  [Position.OralityFacilitator]: Program.CapacityBuilding,
+  [Position.ScriptureEngagement]: Program.CapacityBuilding,
 };
 
 registerEnumType(InternPosition, {
