@@ -1,4 +1,10 @@
-import { Field, ObjectType, ResolveField, Resolver } from '@nestjs/graphql';
+import {
+  Field,
+  ObjectType,
+  Parent,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
 import { values } from 'lodash';
 import {
   InternPosition,
@@ -35,5 +41,26 @@ export class InternshipPositionResolver {
       domain: InternshipPositionToDomain[position],
       program: InternshipPositionToProgram[position],
     }));
+  }
+
+  @ResolveField(() => InternshipDomain, {
+    nullable: true,
+    description: 'The InternshipDomain based on the currently selected `value`',
+  })
+  domain(
+    @Parent() { value: position }: SecuredInternPosition
+  ): InternshipDomain | null {
+    return position ? InternshipPositionToDomain[position] : null;
+  }
+
+  @ResolveField(() => InternshipProgram, {
+    nullable: true,
+    description:
+      'The InternshipProgram based on the currently selected `value`',
+  })
+  program(
+    @Parent() { value: position }: SecuredInternPosition
+  ): InternshipProgram | null {
+    return position ? InternshipPositionToProgram[position] : null;
   }
 }

@@ -111,23 +111,9 @@ registerEnumType(InternshipProgram, {
   `,
 });
 
-@ObjectType({
-  description: SecuredEnum.descriptionFor('an internship program'),
-})
-export class SecuredInternshipProgram extends SecuredEnum(InternshipProgram, {
-  nullable: true,
-}) {}
-
 registerEnumType(InternshipDomain, {
   name: 'InternshipDomain',
   description: stripIndent`
     An InternshipDomain represents/groups several InternshipEngagementPositions.
   `,
 });
-
-@ObjectType({
-  description: SecuredEnum.descriptionFor('an internship domain'),
-})
-export class SecuredInternshipDomain extends SecuredEnum(InternshipDomain, {
-  nullable: true,
-}) {}

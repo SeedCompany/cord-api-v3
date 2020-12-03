@@ -3,13 +3,7 @@ import { AnonSession, Session } from '../../common';
 import { FileService, SecuredFile } from '../file';
 import { LocationService, SecuredLocation } from '../location';
 import { SecuredUser, UserService } from '../user';
-import {
-  InternshipEngagement,
-  InternshipPositionToDomain,
-  InternshipPositionToProgram,
-  SecuredInternshipDomain,
-  SecuredInternshipProgram,
-} from './dto';
+import { InternshipEngagement } from './dto';
 
 @Resolver(InternshipEngagement)
 export class InternshipEngagementResolver {
@@ -63,36 +57,6 @@ export class InternshipEngagementResolver {
     return {
       value,
       ...rest,
-    };
-  }
-
-  @ResolveField(() => SecuredInternshipProgram, {
-    description:
-      'The InternshipProgram based on the currently selected `position`',
-  })
-  async program(
-    @Parent() engagement: InternshipEngagement
-  ): Promise<SecuredInternshipProgram> {
-    const { canRead, value: position } = engagement.position;
-    return {
-      value: canRead && position ? InternshipPositionToProgram[position] : null,
-      canRead,
-      canEdit: false,
-    };
-  }
-
-  @ResolveField(() => SecuredInternshipDomain, {
-    description:
-      'The InternshipDomain based on the currently selected `position`',
-  })
-  async domain(
-    @Parent() engagement: InternshipEngagement
-  ): Promise<SecuredInternshipDomain> {
-    const { canRead, value: position } = engagement.position;
-    return {
-      value: canRead && position ? InternshipPositionToDomain[position] : null,
-      canRead,
-      canEdit: false,
     };
   }
 }
