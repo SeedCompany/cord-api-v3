@@ -2,6 +2,8 @@ import { Field, ObjectType, ResolveField, Resolver } from '@nestjs/graphql';
 import { values } from 'lodash';
 import {
   InternPosition,
+  InternshipDomain,
+  InternshipPositionToDomain,
   InternshipPositionToProgram,
   InternshipProgram,
   SecuredInternPosition,
@@ -11,6 +13,12 @@ import {
 class InternshipPositionOptions {
   @Field(() => InternshipProgram)
   program: InternshipProgram;
+
+  @Field(() => InternshipDomain, {
+    nullable: true,
+  })
+  domain: InternshipDomain | null;
+
   @Field(() => InternPosition)
   position: InternPosition;
 }
@@ -24,6 +32,7 @@ export class InternshipPositionResolver {
   options(): InternshipPositionOptions[] {
     return values(InternPosition).map((position) => ({
       position,
+      domain: InternshipPositionToDomain[position],
       program: InternshipPositionToProgram[position],
     }));
   }

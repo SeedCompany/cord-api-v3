@@ -1,12 +1,13 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { AnonSession, Session } from '../../common';
 import { FileService, SecuredFile } from '../file';
-import { LocationService } from '../location';
-import { SecuredLocation } from '../location/dto';
+import { LocationService, SecuredLocation } from '../location';
 import { SecuredUser, UserService } from '../user';
 import {
   InternshipEngagement,
+  InternshipPositionToDomain,
   InternshipPositionToProgram,
+  SecuredInternshipDomain,
   SecuredInternshipProgram,
 } from './dto';
 
@@ -75,6 +76,21 @@ export class InternshipEngagementResolver {
     const { canRead, value: position } = engagement.position;
     return {
       value: canRead && position ? InternshipPositionToProgram[position] : null,
+      canRead,
+      canEdit: false,
+    };
+  }
+
+  @ResolveField(() => SecuredInternshipDomain, {
+    description:
+      'The InternshipDomain based on the currently selected `position`',
+  })
+  async domain(
+    @Parent() engagement: InternshipEngagement
+  ): Promise<SecuredInternshipDomain> {
+    const { canRead, value: position } = engagement.position;
+    return {
+      value: canRead && position ? InternshipPositionToDomain[position] : null,
       canRead,
       canEdit: false,
     };

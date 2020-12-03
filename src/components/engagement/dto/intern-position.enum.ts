@@ -24,13 +24,48 @@ export enum InternPosition {
   Translator = 'Translator',
 }
 
+export enum InternshipDomain {
+  Leadership = 'Leadership',
+  Operations = 'Operations',
+  FieldPrograms = 'FieldPrograms',
+}
+
 export enum InternshipProgram {
   QualityAssurance = 'QualityAssurance',
   CapacityBuilding = 'CapacityBuilding',
 }
 
 const Position = InternPosition;
+const Domain = InternshipDomain;
 const Program = InternshipProgram;
+
+export const InternshipPositionToDomain: Record<
+  InternPosition,
+  InternshipDomain | null
+> = {
+  [Position.TranslationConsultantInTraining]: null,
+  [Position.ExegeticalFacilitator]: null,
+
+  [Position.LeadershipDevelopment]: Domain.Leadership,
+  [Position.MobilizerOrPartnershipSupportSpecialist]: Domain.Leadership,
+  [Position.PersonnelOrHrSpecialist]: Domain.Leadership,
+
+  [Position.CommunicationSpecialistInternal]: Domain.Operations,
+  [Position.CommunicationSpecialistMarketing]: Domain.Operations,
+  [Position.AdministrativeSupportSpecialist]: Domain.Operations,
+  [Position.TechnicalSupportSpecialist]: Domain.Operations,
+  [Position.BusinessSupportSpecialist]: Domain.Operations,
+
+  [Position.LanguageProgramManager]: Domain.FieldPrograms,
+  [Position.LanguageSoftwareSupportSpecialist]: Domain.FieldPrograms,
+  [Position.LiteracySpecialist]: Domain.FieldPrograms,
+  [Position.LukePartnershipFacilitatorOrSpecialist]: Domain.FieldPrograms,
+  [Position.OralFacilitatorOrSpecialist]: Domain.FieldPrograms,
+  [Position.ScriptureUseSpecialist]: Domain.FieldPrograms,
+  [Position.TranslationFacilitator]: Domain.FieldPrograms,
+  [Position.Translator]: Domain.FieldPrograms,
+  [Position.LanguageProgramManagerOrFieldOperations]: Domain.FieldPrograms,
+};
 
 export const InternshipPositionToProgram: Record<
   InternPosition,
@@ -80,5 +115,19 @@ registerEnumType(InternshipProgram, {
   description: SecuredEnum.descriptionFor('an internship program'),
 })
 export class SecuredInternshipProgram extends SecuredEnum(InternshipProgram, {
+  nullable: true,
+}) {}
+
+registerEnumType(InternshipDomain, {
+  name: 'InternshipDomain',
+  description: stripIndent`
+    An InternshipDomain represents/groups several InternshipEngagementPositions.
+  `,
+});
+
+@ObjectType({
+  description: SecuredEnum.descriptionFor('an internship domain'),
+})
+export class SecuredInternshipDomain extends SecuredEnum(InternshipDomain, {
   nullable: true,
 }) {}
