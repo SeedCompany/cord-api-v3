@@ -56,7 +56,7 @@ export class AuthenticationService {
         id: token,
       }
     );
-    return result.id;
+    return token;
   }
 
   async userFromSession(session: Session): Promise<User | null> {
