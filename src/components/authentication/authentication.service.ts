@@ -21,8 +21,10 @@ import {
   Logger,
   matchRequestingUser,
 } from '../../core';
+import { DbV4 } from '../../core/database/v4/dbv4.service';
 import { ForgotPassword } from '../../core/email/templates';
 import { User, UserService } from '../user';
+import { ApiUserOut } from '../user/dbv4';
 import { LoginInput, ResetPasswordInput } from './authentication.dto';
 import { RegisterInput } from './dto';
 import { NoSessionException } from './no-session.exception';
@@ -34,6 +36,7 @@ interface JwtPayload {
 @Injectable()
 export class AuthenticationService {
   constructor(
+    private readonly dbv4: DbV4,
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
     private readonly email: EmailService,
@@ -44,52 +47,23 @@ export class AuthenticationService {
   async createToken(): Promise<string> {
     const token = this.encodeJWT();
 
-    const result = await this.db
-      .query()
-      .raw(
-        `
-      CREATE
-        (token:Token {
-          active: true,
-          createdAt: datetime(),
-          value: $token
-        })
-      RETURN
-        token.value as token
-      `,
-        {
-          token,
-        }
-      )
-      .first();
-    if (!result) {
-      throw new ServerException('Failed to start session');
-    }
-
-    return result.token;
+    const result = await this.dbv4.post<{ value: string }>(
+      'authentication/token/create',
+      {
+        value: token,
+      }
+    );
+    return result.value;
   }
 
   async userFromSession(session: Session): Promise<User | null> {
-    const userRes = await this.db
-      .query()
-      .match([
-        node('token', 'Token', {
-          active: true,
-          value: session.token,
-        }),
-        relation('in', '', 'token', {
-          active: true,
-        }),
-        node('user', 'User'),
-      ])
-      .return({ user: [{ id: 'id' }] })
-      .first();
-
-    if (!userRes) {
-      return null;
-    }
-
-    return await this.userService.readOne(userRes.id, session);
+    const result = await this.dbv4.post<ApiUserOut>(
+      'api/user/userFromTokenUnsafe',
+      {
+        value: session.token,
+      }
+    );
+    return result.user;
   }
 
   async register(input: RegisterInput, session?: Session): Promise<string> {

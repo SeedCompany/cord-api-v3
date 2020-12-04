@@ -1,1 +1,1 @@
-export * from './FeUserOut.db.dto';
+export * from './ApiUserOut.db.dto';

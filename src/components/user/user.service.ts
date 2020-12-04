@@ -30,7 +30,6 @@ import { ErrorCode } from '../../core/database/v4/dto/ErrorCode.enum';
 import { CreateOut } from '../../core/database/v4/dto/GenericOut';
 import { Role } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { Powers } from '../authorization/dto/powers';
 import { LanguageService } from '../language';
 import {
   LocationListInput,
@@ -47,7 +46,7 @@ import {
   PartnerService,
   SecuredPartnerList,
 } from '../partner';
-import { FeUserOut } from './dbv4';
+import { ApiUserOut } from './dbv4';
 import {
   AssignOrganizationToUser,
   CreatePerson,
@@ -177,7 +176,7 @@ export class UserService {
     id: string,
     { userId }: Pick<Session, 'userId'>
   ): Promise<User> {
-    const result = await this.dbv4.post<FeUserOut>('api/user/read', {
+    const result = await this.dbv4.post<ApiUserOut>('api/user/read', {
       id,
       requestorId: userId,
     });
@@ -185,7 +184,7 @@ export class UserService {
   }
 
   async update(input: UpdateUser, session: Session): Promise<User> {
-    const result = await this.dbv4.post<FeUserOut>('api/user/update', {
+    const result = await this.dbv4.post<ApiUserOut>('api/user/update', {
       user: input,
       requestorId: session.userId,
     });
