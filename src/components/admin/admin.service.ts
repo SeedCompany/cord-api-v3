@@ -1,18 +1,12 @@
 /* eslint-disable prettier/prettier */
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import * as argon2 from 'argon2';
-import { node, relation } from 'cypher-query-builder';
-import { DateTime } from 'luxon';
-import {
-  generateId,
-  ServerException,
-  UnauthenticatedException,
-} from '../../common';
+import { pickBy } from 'lodash';
+import { Except } from 'type-fest';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import { DbV4 } from '../../core/database/v4/dbv4.service';
 import { AuthenticationService } from '../authentication';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { Powers } from '../authorization/dto/powers';
 import { Role } from '../project';
 import { BootstrapIn, BootstrapOut } from './admin.dto';
 
@@ -133,14 +127,28 @@ export class AdminService implements OnApplicationBootstrap {
 
   async setupRootObjects(): Promise<void> {
     this.logger.notice('bootstrapping...');
+    const passwordHash = await argon2.hash(
+      this.config.rootAdmin.password,
+      this.argon2Options
+    );
     const input: BootstrapIn = {
       rootEmail: this.config.rootAdmin.email,
-      rootPash: this.config.rootAdmin.password,
+      rootPash: passwordHash,
       defaultOrgId: this.config.defaultOrg.id,
       defaultOrgName: this.config.defaultOrg.name,
     };
     const result = await this.dbv4.post<BootstrapOut>('admin/bootstrap', input);
     this.config.setRootAdminId(result.rootAdminId);
     this.logger.notice(`root admin id`, { id: result.rootAdminId });
+  }
+
+  private get argon2Options() {
+    const options: Except<argon2.Options, 'raw'> = {
+      secret: this.config.passwordSecret
+        ? Buffer.from(this.config.passwordSecret, 'utf-8')
+        : undefined,
+    };
+    // argon doesn't like undefined values even though the types allow them
+    return pickBy(options, (v) => v !== undefined);
   }
 }
