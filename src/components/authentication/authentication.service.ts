@@ -50,7 +50,7 @@ export class AuthenticationService {
     const token = this.encodeJWT();
 
     const result = await this.dbv4.post<{ id: string }>(
-      'authentication/token/create',
+      'authentication/tokenCreate',
       {
         id: token,
       }
@@ -88,7 +88,7 @@ export class AuthenticationService {
 
   async login(input: LoginInput, session: Session): Promise<string> {
     const result = await this.dbv4.post<PashOut>(
-      'authentication/login/getCreds',
+      'authentication/loginGetCreds',
       {
         token: session.token,
         email: input.email,
@@ -102,13 +102,10 @@ export class AuthenticationService {
       throw new UnauthenticatedException('Invalid credentials');
     }
 
-    const result2 = await this.dbv4.post<IdOut>(
-      'authentication/login/getCreds',
-      {
-        token: session.token,
-        email: input.email,
-      }
-    );
+    const result2 = await this.dbv4.post<IdOut>('authentication/loginConnect', {
+      token: session.token,
+      email: input.email,
+    });
 
     if (!result2 || !result2.id) {
       throw new ServerException('Login failed');
@@ -190,19 +187,11 @@ export class AuthenticationService {
     }
 
     const token = this.encodeJWT();
-    await this.db
-      .query()
-      .raw(
-        `
-      CREATE(et:EmailToken{value:$value, token: $token, createdOn:datetime()})
-      RETURN et as emailToken
-      `,
-        {
-          value: email,
-          token,
-        }
-      )
-      .first();
+
+    await this.dbv4.post<IdOut>('authentication/emailTokenCreate', {
+      email,
+    });
+
     await this.email.send(email, ForgotPassword, {
       token,
     });
