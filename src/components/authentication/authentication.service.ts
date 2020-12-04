@@ -159,42 +159,26 @@ export class AuthenticationService {
     if (!oldPassword)
       throw new InputException('Old Password Required', 'oldPassword');
 
-    const result = await this.db
-      .query()
-      .call(matchRequestingUser, session)
-      .match([
-        node('requestingUser'),
-        relation('out', '', 'password', { active: true }),
-        node('password', 'Property'),
-      ])
-      .return('password.value as passwordHash')
-      .first();
+    const result = await this.dbv4.post<PashOut>(
+      'authentication/pashByUserId',
+      {
+        id: session.userId,
+      }
+    );
 
     if (
-      !result ||
-      !(await argon2.verify(
-        result.passwordHash,
-        oldPassword,
-        this.argon2Options
-      ))
+      !result.error ||
+      !(await argon2.verify(result.pash, oldPassword, this.argon2Options))
     ) {
       throw new UnauthenticatedException('Invalid credentials');
     }
 
     const newPasswordHash = await argon2.hash(newPassword, this.argon2Options);
-    await this.db
-      .query()
-      .call(matchRequestingUser, session)
-      .match([
-        node('requestingUser'),
-        relation('out', '', 'password', { active: true }),
-        node('password', 'Property'),
-      ])
-      .setValues({
-        'password.value': newPasswordHash,
-      })
-      .return('password.value as passwordHash')
-      .first();
+
+    await this.dbv4.post<PashOut>('authentication/setPassword', {
+      id: session.userId,
+      password: newPasswordHash,
+    });
   }
 
   async forgotPassword(email: string): Promise<void> {
