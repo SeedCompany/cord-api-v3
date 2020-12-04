@@ -47,13 +47,13 @@ export class AuthenticationService {
   async createToken(): Promise<string> {
     const token = this.encodeJWT();
 
-    const result = await this.dbv4.post<{ value: string }>(
+    const result = await this.dbv4.post<{ id: string }>(
       'authentication/token/create',
       {
-        value: token,
+        id: token,
       }
     );
-    return result.value;
+    return result.id;
   }
 
   async userFromSession(session: Session): Promise<User | null> {
