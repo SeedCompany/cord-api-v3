@@ -131,7 +131,7 @@ export class AuthenticationService {
     const { iat } = this.decodeJWT(token);
 
     const result = await this.dbv4.post<IdOut>('authentication/verifyToken', {
-      value: token,
+      id: token,
     });
 
     if (!result.success) {
