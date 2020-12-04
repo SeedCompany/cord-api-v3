@@ -1,8 +1,7 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { AnonSession, Session } from '../../common';
 import { FileService, SecuredFile } from '../file';
-import { LocationService } from '../location';
-import { SecuredLocation } from '../location/dto';
+import { LocationService, SecuredLocation } from '../location';
 import { SecuredUser, UserService } from '../user';
 import { InternshipEngagement } from './dto';
 
