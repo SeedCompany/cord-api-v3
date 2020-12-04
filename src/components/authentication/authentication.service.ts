@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import * as argon2 from 'argon2';
-import { node, relation } from 'cypher-query-builder';
 import { sign, verify } from 'jsonwebtoken';
 import { pickBy } from 'lodash';
 import { DateTime } from 'luxon';
@@ -19,7 +18,6 @@ import {
   EmailService,
   ILogger,
   Logger,
-  matchRequestingUser,
 } from '../../core';
 import { DbV4 } from '../../core/database/v4/dbv4.service';
 import { ErrorCode } from '../../core/database/v4/dto/ErrorCode.enum';
@@ -182,24 +180,11 @@ export class AuthenticationService {
   }
 
   async forgotPassword(email: string): Promise<void> {
-    const result = await this.db
-      .query()
-      .raw(
-        `
-        MATCH
-        (email:EmailAddress {
-          value: $email
-        })
-        RETURN
-        email.value as email
-        `,
-        {
-          email: email,
-        }
-      )
-      .first();
+    const result = await this.dbv4.post<IdOut>('authentication/verifyEmail', {
+      email,
+    });
 
-    if (!result) {
+    if (!result.success) {
       this.logger.warning('Email not found; Skipping reset email', { email });
       return;
     }
