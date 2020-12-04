@@ -20,6 +20,11 @@ export enum InternshipPosition {
   TranslationFacilitator = 'TranslationFacilitator',
   OralityFacilitator = 'OralityFacilitator',
   ScriptureEngagement = 'ScriptureEngagement',
+
+  // historic
+  OtherAttached = 'OtherAttached',
+  OtherTranslationCapacity = 'OtherTranslationCapacity',
+  OtherPartnershipCapacity = 'OtherPartnershipCapacity',
 }
 
 export enum InternshipDomain {
@@ -58,6 +63,11 @@ export const InternshipPositionToDomain: Record<
   [Position.TranslationFacilitator]: Domain.FieldPrograms,
   [Position.OralityFacilitator]: Domain.FieldPrograms,
   [Position.ScriptureEngagement]: Domain.FieldPrograms,
+
+  // historic -- best guesses for domains
+  [Position.OtherAttached]: Domain.FieldPrograms,
+  [Position.OtherTranslationCapacity]: Domain.FieldPrograms,
+  [Position.OtherPartnershipCapacity]: Domain.Leadership,
 };
 
 export const InternshipPositionToProgram: Record<
@@ -81,6 +91,11 @@ export const InternshipPositionToProgram: Record<
   [Position.TranslationFacilitator]: Program.CapacityBuilding,
   [Position.OralityFacilitator]: Program.CapacityBuilding,
   [Position.ScriptureEngagement]: Program.CapacityBuilding,
+
+  // historic -- best guesses for programs
+  [Position.OtherAttached]: Program.CapacityBuilding,
+  [Position.OtherTranslationCapacity]: Program.CapacityBuilding,
+  [Position.OtherPartnershipCapacity]: Program.CapacityBuilding,
 };
 
 registerEnumType(InternshipPosition, {
