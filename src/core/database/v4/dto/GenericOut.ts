@@ -6,6 +6,6 @@ export class GenericOut {
   error: ErrorCode;
 }
 
-export class CreateOut extends GenericOut {
+export class IdOut extends GenericOut {
   id: string;
 }

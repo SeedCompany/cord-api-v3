@@ -22,10 +22,14 @@ import {
   matchRequestingUser,
 } from '../../core';
 import { DbV4 } from '../../core/database/v4/dbv4.service';
+import { ErrorCode } from '../../core/database/v4/dto/ErrorCode.enum';
+import { IdOut } from '../../core/database/v4/dto/GenericOut';
 import { ForgotPassword } from '../../core/email/templates';
 import { User, UserService } from '../user';
 import { ApiUserOut } from '../user/dbv4';
+import { DbUser } from '../user/model';
 import { LoginInput, ResetPasswordInput } from './authentication.dto';
+import { PashOut } from './dbv4/PashOut.dto';
 import { RegisterInput } from './dto';
 import { NoSessionException } from './no-session.exception';
 
@@ -67,104 +71,46 @@ export class AuthenticationService {
   }
 
   async register(input: RegisterInput, session?: Session): Promise<string> {
-    // ensure no other tokens are associated with this user
-    if (session) {
-      await this.logout(session.token);
-    }
-
-    let userId;
-    try {
-      userId = await this.userService.create(input, session);
-    } catch (e) {
-      // remap field prop as `email` field is at a different location in register() than createPerson()
-      if (e instanceof DuplicateException && e.field === 'person.email') {
-        throw e.withField('email');
-      }
-      throw e;
-    }
-
     const passwordHash = await argon2.hash(input.password, this.argon2Options);
-    await this.db
-      .query()
-      .match([
-        node('user', 'User', {
-          id: userId,
-        }),
-      ])
-      .create([
-        node('user'),
-        relation('out', '', 'password', {
-          active: true,
-          createdAt: DateTime.local(),
-        }),
-        node('password', 'Property', {
-          value: passwordHash,
-        }),
-      ])
-      .run();
 
-    return userId;
+    const result = await this.dbv4.post<IdOut>('authentication/register', {
+      ...(input as Partial<DbUser>),
+      password: passwordHash,
+    });
+
+    if (result.error === ErrorCode.UNIQUENESS_VIOLATION) {
+      throw new DuplicateException(
+        'person.email',
+        'Email address is already in use'
+      );
+    }
+
+    return result.id;
   }
 
   async login(input: LoginInput, session: Session): Promise<string> {
-    const result1 = await this.db
-      .query()
-      .raw(
-        `
-      MATCH
-        (token:Token {
-          active: true,
-          value: $token
-        })
-      MATCH
-        (:EmailAddress {value: $email})
-        <-[:email {active: true}]-
-        (user:User)
-        -[:password {active: true}]->
-        (password:Property)
-      RETURN
-        password.value as pash
-      `,
-        {
-          token: session.token,
-          email: input.email,
-        }
-      )
-      .first();
+    const result = await this.dbv4.post<PashOut>(
+      'authentication/login/getCreds',
+      {
+        token: session.token,
+        email: input.email,
+      }
+    );
 
     if (
-      !result1 ||
-      !(await argon2.verify(result1.pash, input.password, this.argon2Options))
+      result.error === ErrorCode.ID_NOT_FOUND ||
+      !(await argon2.verify(result.pash, input.password, this.argon2Options))
     ) {
       throw new UnauthenticatedException('Invalid credentials');
     }
 
-    const result2 = await this.db
-      .query()
-      .raw(
-        `
-          MATCH
-            (token:Token {
-              active: true,
-              value: $token
-            }),
-            (:EmailAddress {value: $email})
-            <-[:email {active: true}]-
-            (user:User)
-          OPTIONAL MATCH
-            (token)-[r]-()
-          DELETE r
-          CREATE
-            (user)-[:token {active: true, createdAt: datetime()}]->(token)
-          RETURN
-            user.id as id
-        `,
-        {
-          token: session.token,
-          email: input.email,
-        }
-      )
-      .first();
+    const result2 = await this.dbv4.post<IdOut>(
+      'authentication/login/getCreds',
+      {
+        token: session.token,
+        email: input.email,
+      }
+    );
 
     if (!result2 || !result2.id) {
       throw new ServerException('Login failed');
@@ -174,22 +120,9 @@ export class AuthenticationService {
   }
 
   async logout(token: string): Promise<void> {
-    await this.db
-      .query()
-      .raw(
-        `
-      MATCH
-        (token:Token {value: $token})-[r]-()
-      DELETE
-        r
-      RETURN
-        token.value as token
-      `,
-        {
-          token,
-        }
-      )
-      .run();
+    await this.dbv4.post<void>('authentication/logout', {
+      id: token,
+    });
   }
 
   async createSession(token: string): Promise<RawSession> {
@@ -197,24 +130,11 @@ export class AuthenticationService {
 
     const { iat } = this.decodeJWT(token);
 
-    // check token in db to verify the user id and owning org id.
-    const result = await this.db
-      .query()
-      .match([
-        node('token', 'Token', {
-          active: true,
-          value: token,
-        }),
-      ])
-      .optionalMatch([
-        node('token'),
-        relation('in', '', 'token', { active: true }),
-        node('user', 'User'),
-      ])
-      .return('token, user.id AS userId')
-      .first();
+    const result = await this.dbv4.post<IdOut>('authentication/verifyToken', {
+      value: token,
+    });
 
-    if (!result) {
+    if (!result.success) {
       this.logger.debug('Failed to find active token in database', { token });
       throw new NoSessionException(
         'Session has not been established',
@@ -225,7 +145,7 @@ export class AuthenticationService {
     const session = {
       token,
       issuedAt: DateTime.fromMillis(iat),
-      userId: result.userId,
+      userId: result.id,
     };
     this.logger.debug('Created session', session);
     return session;

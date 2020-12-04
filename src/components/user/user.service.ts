@@ -27,7 +27,7 @@ import {
 import { runListQuery } from '../../core/database/results';
 import { DbV4 } from '../../core/database/v4/dbv4.service';
 import { ErrorCode } from '../../core/database/v4/dto/ErrorCode.enum';
-import { CreateOut } from '../../core/database/v4/dto/GenericOut';
+import { IdOut } from '../../core/database/v4/dto/GenericOut';
 import { Role } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { LanguageService } from '../language';
@@ -158,7 +158,7 @@ export class UserService {
   };
 
   async create(input: CreatePerson, _session?: Session): Promise<string> {
-    const result = await this.dbv4.post<CreateOut>(
+    const result = await this.dbv4.post<IdOut>(
       'user/create',
       input as Partial<DbUser>
     );
