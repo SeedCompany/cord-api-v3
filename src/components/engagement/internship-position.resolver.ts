@@ -5,8 +5,9 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { values } from 'lodash';
+import { difference, values } from 'lodash';
 import {
+  historic,
   InternshipDomain,
   InternshipPosition,
   InternshipPositionToDomain,
@@ -36,7 +37,7 @@ export class InternshipPositionResolver {
       'The available position options for the internship engagement.',
   })
   options(): InternshipPositionOptions[] {
-    return values(InternshipPosition).map((position) => ({
+    return difference(values(InternshipPosition), historic).map((position) => ({
       position,
       domain: InternshipPositionToDomain[position],
       program: InternshipPositionToProgram[position],

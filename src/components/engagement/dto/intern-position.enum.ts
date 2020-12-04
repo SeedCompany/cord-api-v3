@@ -98,6 +98,12 @@ export const InternshipPositionToProgram: Record<
   [Position.OtherPartnershipCapacity]: Program.CapacityBuilding,
 };
 
+export const historic = [
+  Position.OtherAttached,
+  Position.OtherTranslationCapacity,
+  Position.OtherPartnershipCapacity,
+];
+
 registerEnumType(InternshipPosition, {
   name: 'InternshipPosition',
 });
