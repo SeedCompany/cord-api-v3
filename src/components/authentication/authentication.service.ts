@@ -72,7 +72,7 @@ export class AuthenticationService {
   async register(input: RegisterInput, session?: Session): Promise<string> {
     const passwordHash = await argon2.hash(input.password, this.argon2Options);
 
-    const result = await this.dbv4.post<IdOut>('authentication/register', {
+    const result = await this.dbv4.post<IdOut>('user/create', {
       ...(input as Partial<DbUser>),
       password: passwordHash,
     });
