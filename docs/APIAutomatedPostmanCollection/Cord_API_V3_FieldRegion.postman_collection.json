@@ -6,6 +6,289 @@
 	},
 	"item": [
 		{
+			"name": "Pre-req ( Session + Register + Login ) for FieldRegion",
+			"item": [
+				{
+					"name": "Session",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "f7ed6115-462e-406a-b433-dacfc1bd84f9",
+								"exec": [
+									"var response = pm.response.json();\r",
+									"pm.globals.set(\"token\", response.data.session.token);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "# Write your query or mutation here\r\nquery {\r\n  session(browser: false) {\r\n    user {\r\n      id,\r\n      email\r\n      {\r\n        value\r\n      }\r\n      realFirstName\r\n      {\r\n        value\r\n      }\r\n      createdAt\r\n      displayLastName\r\n      {\r\n         value\r\n      }\r\n      \r\n      \r\n      \r\n    },\r\n    token\r\n  }\r\n}",
+								"variables": ""
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Root Register",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "3a73cf04-9a43-44ae-9b88-bea0b87ad160",
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"// This is safe check to prevent failing futher cases If the Root User is already Created\r",
+									"if (jsonData.errors) {\r",
+									"    if (jsonData.errors.length) return;\r",
+									"}\r",
+									"\r",
+									"//Saving data for future use\r",
+									"var id = jsonData.data.register.user.id;\r",
+									"pm.globals.set(\"userid\", id);\r",
+									"\r",
+									"var user = JSON.stringify(jsonData.data.register.user);\r",
+									"pm.globals.set(\"user_data\", user);\r",
+									"\r",
+									"var email = jsonData.data.register.user.email.value;\r",
+									"pm.globals.set(\"email\", email);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "36ab344e-8c73-45d3-b5f1-6afdffb76e8f",
+								"exec": [
+									"const moment = require('moment');\r",
+									"pm.globals.set(\"timestamp\", moment().format(\"DDMYYYYhhmmss\"));\r",
+									"\r",
+									"pm.globals.set(\"realFirstName\", \"FirstName\" + moment().format(\"DDMYYYYhhmmss\"));\r",
+									"pm.globals.set(\"realLastName\", \"LastName\" + moment().format(\"DDMYYYYhhmmss\"));\r",
+									"pm.globals.set(\"email\", \"email\" + moment().format(\"DDMYYYYhhmmss\") + \"@test.com\");\r",
+									"pm.globals.set(\"password\", moment().format(\"DDMYYYYhhmmss\"));\r",
+									"pm.globals.set(\"displayFirstName\", \"DisplayFirstName\" + moment().format(\"DDMYYYYhhmmss\"));\r",
+									"pm.globals.set(\"displayLastName\", \"DisplayLastName\" + moment().format(\"DDMYYYYhhmmss\"));\r",
+									"pm.globals.set(\"phone\", pm.variables.replaceIn('{{$randomPhoneNumber}}'));\r",
+									"\r",
+									"var timezoneObject = {\r",
+									"    \"name\": \"Europe/Andorra\",\r",
+									"    \"lat\": 42.5,\r",
+									"    \"long\": 1.5167,\r",
+									"    \"countries\": [\r",
+									"        {\r",
+									"            \"code\": \"AD\",\r",
+									"            \"name\": \"Andorra\",\r",
+									"            \"zones\": [\r",
+									"                {\r",
+									"                    \"name\": \"Europe/Andorra\",\r",
+									"                    \"lat\": 42.5,\r",
+									"                    \"long\": 1.5167,\r",
+									"                    \"countries\": [\r",
+									"                        {\r",
+									"                            \"code\": \"AD\",\r",
+									"                            \"name\": \"Andorra\"\r",
+									"                        }\r",
+									"                    ]\r",
+									"                }\r",
+									"            ]\r",
+									"        }\r",
+									"    ]\r",
+									"};\r",
+									"pm.globals.set('timezoneObject', JSON.stringify(timezoneObject));\r",
+									"pm.globals.set(\"timezone\", timezoneObject.name);\r",
+									"\r",
+									"pm.globals.set(\"about\", \"I'm Tester\");\r",
+									"\r",
+									"pm.globals.set(\"userTitle\", \"Tester\");\r",
+									"\r",
+									"// Taking random value for the User status from pre-defined possible values\r",
+									"var userStatusArray = ['Active','Disabled'];\r",
+									"var randomNumber = Math.floor(Math.random()*userStatusArray.length);\r",
+									"// pm.globals.set('userStatus', userStatusArray[randomNumber]);\r",
+									"pm.globals.set(\"userStatus\", \"Active\");\r",
+									"\r",
+									"var userRolesArray = ['BibleTranslationLiaison',\r",
+									"'Consultant',\r",
+									"'ConsultantManager',\r",
+									"'Controller',\r",
+									"'Development',\r",
+									"'ExecutiveDevelopmentRepresentative',\r",
+									"'ExecutiveLeadership',\r",
+									"'FieldOperationsDirector',\r",
+									"'FieldPartner',\r",
+									"'FinancialAnalyst',\r",
+									"'Intern',\r",
+									"'Liaison',\r",
+									"'LeadFinancialAnalyst',\r",
+									"'Mentor',\r",
+									"'OfficeOfThePresident',\r",
+									"'ProjectManager',\r",
+									"'RegionalCommunicationsCoordinator',\r",
+									"'RegionalDirector',\r",
+									"'SupportingProjectManager',\r",
+									"'Translator',\r",
+									"'Writer'\r",
+									"];\r",
+									"var randomNumber = Math.floor(Math.random()*userRolesArray.length);\r",
+									"pm.globals.set('userRoles', userRolesArray[randomNumber]);\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation register($input: RegisterInput!) {\r\n  register(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"realFirstName\": \"Piyush\",\r\n        \"realLastName\": \"Patel\",\r\n        \"email\": \"{{login_email}}\",\r\n        \"password\": \"{{login_password}}\",\r\n        \"displayFirstName\": \"{{displayFirstName}}\",\r\n        \"displayLastName\": \"{{displayLastName}}\",\r\n        \"phone\": \"{{phone}}\",\r\n        \"timezone\": \"{{timezone}}\",\r\n        \"status\": \"{{userStatus}}\",\r\n        \"title\": \"{{userTitle}}\",\r\n        \"roles\": \"{{userRoles}}\"\r\n    }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Root Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "97c4eb98-0de4-4504-b015-9d9e632f2a7f",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"var id = jsonData.data.login.user.id;",
+									"pm.globals.set(\"userid\", id);",
+									"",
+									"var email = jsonData.data.login.user.email.value;",
+									"pm.globals.set(\"email\", email);",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "f269e5e3-3d8f-4063-901e-eb5d209d0783",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n   \"input\": {\r\n      \"email\": \"{{login_email}}\",\r\n      \"password\": \"{{login_password}}\"\r\n   }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "bad2423e-3a63-410f-b5a0-61ccf3aa06ef",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "44d8dfaa-7db5-4fcf-ab88-ffea7905c9a5",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
 			"name": "Create fieldRegion Success",
 			"event": [
 				{
