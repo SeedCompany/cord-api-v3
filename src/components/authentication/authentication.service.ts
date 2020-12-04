@@ -21,12 +21,13 @@ import {
 } from '../../core';
 import { DbV4 } from '../../core/database/v4/dbv4.service';
 import { ErrorCode } from '../../core/database/v4/dto/ErrorCode.enum';
-import { IdOut } from '../../core/database/v4/dto/GenericOut';
+import { GenericOut, IdOut } from '../../core/database/v4/dto/GenericOut';
 import { ForgotPassword } from '../../core/email/templates';
 import { User, UserService } from '../user';
 import { ApiUserOut } from '../user/dbv4';
 import { DbUser } from '../user/model';
 import { LoginInput, ResetPasswordInput } from './authentication.dto';
+import { EmailTokenOut } from './dbv4/EmailTokenOut.dto';
 import { PashOut } from './dbv4/PashOut.dto';
 import { RegisterInput } from './dto';
 import { NoSessionException } from './no-session.exception';
@@ -198,19 +199,14 @@ export class AuthenticationService {
   }
 
   async resetPassword({ token, password }: ResetPasswordInput): Promise<void> {
-    const result = await this.db
-      .query()
-      .raw(
-        `
-        MATCH(emailToken: EmailToken{token: $token})
-        RETURN emailToken.value as email, emailToken.token as token, emailToken.createdOn as createdOn
-        `,
-        {
-          token: token,
-        }
-      )
-      .first();
-    if (!result) {
+    const result = await this.dbv4.post<EmailTokenOut>(
+      'authentication/getEmailToken',
+      {
+        id: token,
+      }
+    );
+
+    if (!result.success) {
       throw new InputException('Token is invalid', 'TokenInvalid');
     }
     const createdOn: DateTime = result.createdOn;
@@ -221,30 +217,11 @@ export class AuthenticationService {
 
     const pash = await argon2.hash(password, this.argon2Options);
 
-    await this.db
-      .query()
-      .raw(
-        `
-          MATCH(e:EmailToken {token: $token})
-          DELETE e
-          WITH *
-          MATCH (:EmailAddress {value: $email})<-[:email {active: true}]-(user:User)
-          OPTIONAL MATCH (user)-[oldPasswordRel:password]->(oldPassword)
-          SET oldPasswordRel.active = false
-          WITH user
-          LIMIT 1
-          MERGE (user)-[:password {active: true, createdAt: $createdAt}]->(password:Property)
-          SET password.value = $password
-          RETURN password
-        `,
-        {
-          token,
-          email: result.email,
-          password: pash,
-          createdAt: DateTime.local(),
-        }
-      )
-      .first();
+    await this.dbv4.post<GenericOut>('authentication/resetPassword', {
+      emailToken: token,
+      email: result.email,
+      password: pash,
+    });
   }
 
   private encodeJWT() {
