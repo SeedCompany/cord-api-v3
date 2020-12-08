@@ -30,7 +30,7 @@ export abstract class UpdateEngagement {
   @DateField({ nullable: true })
   readonly endDateOverride?: CalendarDate;
 
-  readonly initialEndDate?: CalendarDate;
+  readonly initialEndDate?: CalendarDate | null;
 
   @Field(() => EngagementStatus, { nullable: true })
   readonly status?: EngagementStatus;
