@@ -28,7 +28,10 @@ export class SetInitialMouEnd implements IEventHandler<SubscribedEvent> {
 
     const project = 'project' in event ? event.project : event.updated;
 
-    if (project.status !== ProjectStatus.InDevelopment) {
+    if (
+      event instanceof ProjectUpdatedEvent && // allow setting initial if creating with non-in-dev status
+      project.status !== ProjectStatus.InDevelopment
+    ) {
       return;
     }
     if (!project.mouEnd.canRead) {

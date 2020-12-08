@@ -34,7 +34,10 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
 
     const engagement = 'engagement' in event ? event.engagement : event.updated;
 
-    if (engagement.status.value !== EngagementStatus.InDevelopment) {
+    if (
+      event instanceof EngagementUpdatedEvent && // allow setting initial if creating with non-in-dev status
+      engagement.status.value !== EngagementStatus.InDevelopment
+    ) {
       return;
     }
     if (!engagement.endDate.canRead) {
