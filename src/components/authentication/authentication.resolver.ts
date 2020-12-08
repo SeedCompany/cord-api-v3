@@ -4,14 +4,18 @@ import { Request, Response } from 'express';
 import { DateTime } from 'luxon';
 import {
   AnonSession,
+  DuplicateException,
   LoggedInSession,
   Session,
   UnauthenticatedException,
 } from '../../common';
 import { anonymousSession, loggedInSession } from '../../common/session';
 import { ConfigService, ILogger, Logger } from '../../core';
+import { DbV4 } from '../../core/database/v4/dbv4.service';
+import { ErrorCode } from '../../core/database/v4/dto/ErrorCode.enum';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { UserService } from '../user';
+import { ApiUserOut } from '../user/dbv4';
 import {
   ChangePasswordArgs,
   ForgotPasswordArgs,
@@ -27,6 +31,7 @@ import { SessionPipe } from './session.pipe';
 @Resolver()
 export class AuthenticationResolver {
   constructor(
+    private readonly dbv4: DbV4,
     private readonly authService: AuthenticationService,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
@@ -129,12 +134,21 @@ export class AuthenticationResolver {
     @AnonSession() session: Session,
     @Context('request') req: Request
   ): Promise<RegisterOutput> {
-    const userId = await this.authService.register(input, session);
-    await this.authService.login(input, session);
+    const result = await this.dbv4.post<ApiUserOut>('authentication/register', {
+      user: input,
+      token: session.token,
+    });
+
+    if (result.error === ErrorCode.UNIQUENESS_VIOLATION) {
+      throw new DuplicateException(
+        'person.email',
+        'Email address is already in use'
+      );
+    }
+
     const newSession = loggedInSession(await this.updateSession(req));
-    const user = await this.userService.readOne(userId, newSession);
     const powers = await this.authorizationService.readPower(newSession);
-    return { user, powers };
+    return { user: result.user, powers };
   }
 
   private async updateSession(req: Request) {
