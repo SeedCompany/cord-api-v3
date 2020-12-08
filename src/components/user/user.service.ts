@@ -168,6 +168,8 @@ export class UserService {
         'person.email',
         'Email address is already in use'
       );
+    } else if (!result.success) {
+      throw new ServerException('something went wrong');
     }
     return result.id;
   }
@@ -180,6 +182,10 @@ export class UserService {
       id,
       requestorId: userId,
     });
+
+    if (result.error === ErrorCode.ID_NOT_FOUND) {
+      throw new NotFoundException('Could not find user', 'user.id');
+    }
     return result.user;
   }
 
