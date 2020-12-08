@@ -4,6 +4,7 @@ import { node, relation } from 'cypher-query-builder';
 import { union, without } from 'lodash';
 import { generateId, ServerException, Session } from '../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
+import { DbV4 } from '../../core/database/v4/dbv4.service';
 import { DbBudget } from '../budget/model';
 import { DbBudgetRecord } from '../budget/model/budget-record.model.db';
 import { DbCeremony } from '../ceremony/model';
@@ -29,7 +30,7 @@ import { DbProjectMember } from '../project/project-member/model';
 import { DbSong } from '../song/model';
 import { DbStory } from '../story/model';
 import { DbEducation, DbUnavailability, DbUser } from '../user/model';
-import { InternalRole, Role } from './dto';
+import { GetPowersOut, InternalRole, Role } from './dto';
 import { Powers } from './dto/powers';
 import { MissingPowerException } from './missing-power.exception';
 import { DbRole, OneBaseNode } from './model';
@@ -68,6 +69,7 @@ export interface ProjectChildIds {
 @Injectable()
 export class AuthorizationService {
   constructor(
+    private readonly dbv4: DbV4,
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
     @Logger('authorization:service') private readonly logger: ILogger
@@ -461,15 +463,12 @@ export class AuthorizationService {
   }
 
   private async readPowerByUserId(id: string): Promise<Powers[]> {
-    const result = await this.db
-      .query()
-      .match([node('user', 'User', { id })])
-      .raw('return user.powers as powers')
-      .unionAll()
-      .match([node('sg', 'SecurityGroup', { id })])
-      .raw('return sg.powers as powers')
-      .asResult<{ powers?: Powers[] }>()
-      .first();
+    const result = await this.dbv4.post<GetPowersOut>(
+      'authorization/getPowers',
+      {
+        id,
+      }
+    );
 
     return result?.powers ?? [];
   }
