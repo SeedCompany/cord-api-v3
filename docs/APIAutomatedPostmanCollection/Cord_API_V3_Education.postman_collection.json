@@ -394,7 +394,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createEducation($input: CreateEducationInput!) {\r\n  createEducation(input: $input) {\r\n    education\r\n    {\r\n      id\r\n      createdAt\r\n      degree\r\n      {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      major\r\n      {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      institution\r\n      {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n  }",
+								"query": "mutation createEducation($input: CreateEducationInput!) {\r\n  createEducation(input: $input) {\r\n    education\r\n    {\r\n      id\r\n      createdAt\r\n      canDelete\r\n      degree\r\n      {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      major\r\n      {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      institution\r\n      {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n  }",
 								"variables": "{\r\n  \"input\": {\r\n    \"education\": {\r\n      \"userId\": \"{{userid}}\",\r\n      \"degree\": \"{{educationDegree}}\",\r\n      \"major\": \"{{educationMajor}}\",\r\n      \"institution\": \"{{educationInstitution}}\"\r\n    }\r\n  }\r\n}"
 							},
 							"options": {
