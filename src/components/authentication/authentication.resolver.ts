@@ -149,8 +149,6 @@ export class AuthenticationResolver {
         'Email address is already in use'
       );
     }
-
-    const newSession = loggedInSession(await this.updateSession(req));
     return { user: result.user, powers: result.powers };
   }
 
