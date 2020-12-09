@@ -455,7 +455,7 @@ export class DatabaseService {
     };
   }
 
-  async checkDeletePermission(id: string, session: Session) {
+  async checkDeletePermission(id: string, session: Partial<Session>) {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
@@ -478,11 +478,11 @@ export class DatabaseService {
   async deleteNodeNew<TObject extends Resource>({
     object,
     baseNodeLabels,
-    uniqueProperties,
+    uniqueProperties = {},
   }: {
     object: TObject;
     baseNodeLabels: string[];
-    uniqueProperties: UniqueProperties<TObject>;
+    uniqueProperties?: UniqueProperties<TObject>;
   }) {
     const query = this.db
       .query()

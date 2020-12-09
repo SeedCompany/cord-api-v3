@@ -9,6 +9,7 @@ import {
   SecuredList,
   ServerException,
   Session,
+  UnauthorizedException,
 } from '../../common';
 import {
   ConfigService,
@@ -20,6 +21,7 @@ import {
   OnIndex,
   property,
   UniquenessError,
+  UniqueProperties,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -194,6 +196,7 @@ export class UserService {
       ...property('status', input.status, 'user'),
       ...this.roleProperties(input.roles),
       ...property('title', input.title, 'user'),
+      ...property('canDelete', true, 'user'),
     ]);
 
     query.return({
@@ -316,7 +319,7 @@ export class UserService {
         ...securedProps.roles,
         value: rolesValue,
       },
-      canDelete: true, // TODO
+      canDelete: await this.db.checkDeletePermission(id, { userId }),
     };
   }
 
@@ -378,28 +381,34 @@ export class UserService {
   }
 
   async delete(id: string, session: Session): Promise<void> {
-    const user = await this.readOne(id, session);
-    // remove EmailAddress label so uniqueness constraint works only for exisiting users
-    await this.db
-      .query()
-      .match([
-        node('user', 'User', { id }),
-        relation('out', '', 'email', { active: true }),
-        node('email', 'EmailAddress'),
-      ])
-      .removeLabels({
-        email: 'EmailAddress',
-      })
-      .first();
+    const object = await this.readOne(id, session);
+
+    if (!object) {
+      throw new NotFoundException('Could not find User');
+    }
+
+    const canDelete = await this.db.checkDeletePermission(id, session);
+
+    if (!canDelete)
+      throw new UnauthorizedException(
+        'You do not have the permission to delete this User'
+      );
+
+    const baseNodeLabels = ['BaseNode', 'User'];
+
+    const uniqueProperties: UniqueProperties<User> = {
+      email: ['Property', 'EmailAddress'],
+    };
+
     try {
-      await this.db.deleteNode({
-        session,
-        object: user,
-        aclEditProp: 'canDeleteOwnUser',
+      await this.db.deleteNodeNew<User>({
+        object,
+        baseNodeLabels,
+        uniqueProperties,
       });
     } catch (exception) {
-      this.logger.error('Could not delete user', { exception });
-      throw new ServerException('Could not delete user', exception);
+      this.logger.error('Failed to delete', { id, exception });
+      throw new ServerException('Failed to delete', exception);
     }
   }
 

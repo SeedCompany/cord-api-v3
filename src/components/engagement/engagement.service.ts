@@ -9,6 +9,7 @@ import {
   NotFoundException,
   ServerException,
   Session,
+  UnauthorizedException,
 } from '../../common';
 import {
   ConfigService,
@@ -240,6 +241,7 @@ export class EngagementService {
         'EngagementStatus'
       ),
       ...property('modifiedAt', createdAt, 'languageEngagement'),
+      ...property('canDelete', true, 'languageEngagement'),
     ]);
     if (projectId) {
       createLE.create([
@@ -455,6 +457,7 @@ export class EngagementService {
         input.status || EngagementStatus.InDevelopment,
         'internshipEngagement'
       ),
+      ...property('canDelete', true, 'internshipEngagement'),
     ]);
     if (projectId) {
       createIE.create([
@@ -742,7 +745,7 @@ export class EngagementService {
         ...securedProperties.mentor,
         value: result.mentorId,
       },
-      canDelete: true, // TODO
+      canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 
@@ -995,6 +998,13 @@ export class EngagementService {
       throw new NotFoundException('Could not find engagement', 'engagement.id');
     }
 
+    const canDelete = await this.db.checkDeletePermission(id, session);
+
+    if (!canDelete)
+      throw new UnauthorizedException(
+        'You do not have the permission to delete this Engagement'
+      );
+
     const result = await this.db
       .query()
       .match([
@@ -1010,19 +1020,20 @@ export class EngagementService {
       await this.verifyProjectStatus(result.projectId, session);
     }
 
-    try {
-      await this.db.deleteNode({
-        session,
-        object,
-        aclEditProp: 'canDeleteOwnUser',
-      });
-    } catch (exception) {
-      this.logger.warning('Failed to delete partnership', {
-        exception,
-      });
+    const baseNodeLabels = ['BaseNode', 'Engagement', object.__typename];
 
-      throw new ServerException('Failed to delete partnership', exception);
+    try {
+      await this.db.deleteNodeNew({
+        object,
+        baseNodeLabels,
+      });
+    } catch (e) {
+      this.logger.warning('Failed to delete Engagement', {
+        exception: e,
+      });
+      throw new ServerException('Failed to delete Engagement');
     }
+
     await this.eventBus.publish(new EngagementDeletedEvent(object, session));
   }
 

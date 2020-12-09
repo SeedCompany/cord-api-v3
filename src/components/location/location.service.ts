@@ -8,6 +8,7 @@ import {
   Sensitivity,
   ServerException,
   Session,
+  UnauthorizedException,
 } from '../../common';
 import {
   ConfigService,
@@ -17,6 +18,7 @@ import {
   Logger,
   matchRequestingUser,
   OnIndex,
+  UniqueProperties,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -122,6 +124,12 @@ export class LocationService {
         isPublic: false,
         isOrgPublic: false,
       },
+      {
+        key: 'canDelete',
+        value: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
     ];
 
     // create location
@@ -211,7 +219,7 @@ export class LocationService {
         value: result.fundingAccountId,
       },
       sensitivity: secured.sensitivity.value || Sensitivity.High,
-      canDelete: true, // TODO
+      canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 
@@ -262,8 +270,36 @@ export class LocationService {
     return await this.readOne(input.id, session);
   }
 
-  async delete(_id: string, _session: Session): Promise<void> {
-    // Not Implemented
+  async delete(id: string, session: Session): Promise<void> {
+    const object = await this.readOne(id, session);
+
+    if (!object) {
+      throw new NotFoundException('Could not find Location');
+    }
+
+    const canDelete = await this.db.checkDeletePermission(id, session);
+
+    if (!canDelete)
+      throw new UnauthorizedException(
+        'You do not have the permission to delete this Location'
+      );
+
+    const baseNodeLabels = ['BaseNode', 'Location'];
+
+    const uniqueProperties: UniqueProperties<Location> = {
+      name: ['Property', 'LocationName'],
+    };
+
+    try {
+      await this.db.deleteNodeNew<Location>({
+        object,
+        baseNodeLabels,
+        uniqueProperties,
+      });
+    } catch (exception) {
+      this.logger.error('Failed to delete', { id, exception });
+      throw new ServerException('Failed to delete', exception);
+    }
   }
 
   async list(

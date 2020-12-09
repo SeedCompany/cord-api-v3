@@ -6,6 +6,7 @@ import {
   NotFoundException,
   ServerException,
   Session,
+  UnauthorizedException,
 } from '../../common';
 import {
   ConfigService,
@@ -15,6 +16,7 @@ import {
   Logger,
   matchRequestingUser,
   OnIndex,
+  UniqueProperties,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -94,6 +96,12 @@ export class StoryService {
         isPublic: true,
         isOrgPublic: true,
         label: 'StoryName',
+      },
+      {
+        key: 'canDelete',
+        value: true,
+        isPublic: false,
+        isOrgPublic: false,
       },
     ];
     try {
@@ -176,7 +184,7 @@ export class StoryService {
         ...securedProps.scriptureReferences,
         value: scriptureReferences,
       },
-      canDelete: true, // TODO
+      canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 
@@ -195,11 +203,27 @@ export class StoryService {
 
   async delete(id: string, session: Session): Promise<void> {
     const story = await this.readOne(id, session);
+    if (!story) {
+      throw new NotFoundException('Could not find Story');
+    }
+    const canDelete = await this.db.checkDeletePermission(id, session);
+
+    if (!canDelete)
+      throw new UnauthorizedException(
+        'You do not have the permission to delete this Story'
+      );
+
+    const baseNodeLabels = ['BaseNode', 'Story', 'Producible'];
+
+    const uniqueProperties: UniqueProperties<Story> = {
+      name: ['Property', 'StoryName'],
+    };
+
     try {
-      await this.db.deleteNode({
-        session,
+      await this.db.deleteNodeNew<Story>({
         object: story,
-        aclEditProp: 'canDeleteOwnUser',
+        baseNodeLabels,
+        uniqueProperties,
       });
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });

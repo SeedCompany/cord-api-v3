@@ -6,6 +6,7 @@ import {
   NotFoundException,
   ServerException,
   Session,
+  UnauthorizedException,
 } from '../../common';
 import {
   ConfigService,
@@ -16,6 +17,7 @@ import {
   matchRequestingUser,
   OnIndex,
   Property,
+  UniqueProperties,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -99,6 +101,12 @@ export class LiteracyMaterialService {
         isPublic: true,
         isOrgPublic: true,
         label: 'LiteracyName',
+      },
+      {
+        key: 'canDelete',
+        value: true,
+        isPublic: false,
+        isOrgPublic: false,
       },
     ];
 
@@ -188,7 +196,7 @@ export class LiteracyMaterialService {
         ...securedProps.scriptureReferences,
         value: scriptureReferences,
       },
-      canDelete: true, // TODO
+      canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 
@@ -211,11 +219,29 @@ export class LiteracyMaterialService {
 
   async delete(id: string, session: Session): Promise<void> {
     const literacyMaterial = await this.readOne(id, session);
+
+    if (!literacyMaterial) {
+      throw new NotFoundException('Could not find Literacy Material');
+    }
+
+    const canDelete = await this.db.checkDeletePermission(id, session);
+
+    if (!canDelete)
+      throw new UnauthorizedException(
+        'You do not have the permission to delete this Literacy Material'
+      );
+
+    const baseNodeLabels = ['BaseNode', 'LiteracyMaterial', 'Producible'];
+
+    const uniqueProperties: UniqueProperties<LiteracyMaterial> = {
+      name: ['Property', 'LiteracyName'],
+    };
+
     try {
-      await this.db.deleteNode({
-        session,
+      await this.db.deleteNodeNew<LiteracyMaterial>({
         object: literacyMaterial,
-        aclEditProp: 'canDeleteOwnUser',
+        baseNodeLabels,
+        uniqueProperties,
       });
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });

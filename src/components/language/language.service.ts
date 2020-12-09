@@ -119,13 +119,13 @@ export class LanguageService {
       // DISPLAYNAME NODE
       'CREATE CONSTRAINT ON (n:LanguageDisplayName) ASSERT EXISTS(n.value)',
 
-      // RODNUMBER REL
-      'CREATE CONSTRAINT ON ()-[r:rodNumber]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:rodNumber]-() ASSERT EXISTS(r.createdAt)',
+      // REGISTRYOFDIALECTSCODE REL
+      'CREATE CONSTRAINT ON ()-[r:registryOfDialectsCode]-() ASSERT EXISTS(r.active)',
+      'CREATE CONSTRAINT ON ()-[r:registryOfDialectsCode]-() ASSERT EXISTS(r.createdAt)',
 
-      // RODNUMBER NODE
-      'CREATE CONSTRAINT ON (n:LanguageRodNumber) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:LanguageRodNumber) ASSERT n.value IS UNIQUE',
+      // REGISTRYOFDIALECTSCODE NODE
+      'CREATE CONSTRAINT ON (n:RegistryOfDialectsCode) ASSERT EXISTS(n.value)',
+      'CREATE CONSTRAINT ON (n:RegistryOfDialectsCode) ASSERT n.value IS UNIQUE',
 
       // ETHNOLOGUELANGUAGE REL
       'CREATE CONSTRAINT ON ()-[r:ethnologue]-() ASSERT EXISTS(r.active)',
@@ -308,7 +308,7 @@ export class LanguageService {
           simpleSwitch(e.label, {
             LanguageName: 'name',
             LanguageDisplayName: 'displayName',
-            LanguageRodNumber: 'rodNumber',
+            RegistryOfDialectsCode: `registryOfDialectsCode`,
           }) ?? e.label;
         throw new DuplicateException(
           `language.${prop}`,
@@ -470,7 +470,7 @@ export class LanguageService {
     const uniqueProperties: UniqueProperties<Language> = {
       name: ['Property', 'LanguageName'],
       displayName: ['Property', 'LanguageDisplayName'],
-      registryOfDialectsCode: ['Property'],
+      registryOfDialectsCode: ['Property', 'RegistryOfDialectsCode'],
     };
 
     try {
