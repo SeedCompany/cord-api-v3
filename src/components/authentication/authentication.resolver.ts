@@ -26,6 +26,7 @@ import {
 } from './authentication.dto';
 import { AuthenticationService } from './authentication.service';
 import { RegisterInput, RegisterOutput } from './dto';
+import { RegisterOut } from './RegisterOut.db.dto';
 import { SessionPipe } from './session.pipe';
 
 @Resolver()
@@ -134,10 +135,13 @@ export class AuthenticationResolver {
     @AnonSession() session: Session,
     @Context('request') req: Request
   ): Promise<RegisterOutput> {
-    const result = await this.dbv4.post<ApiUserOut>('authentication/register', {
-      user: input,
-      token: session.token,
-    });
+    const result = await this.dbv4.post<RegisterOut>(
+      'authentication/register',
+      {
+        user: input,
+        token: session.token,
+      }
+    );
 
     if (result.error === ErrorCode.UNIQUENESS_VIOLATION) {
       throw new DuplicateException(
@@ -147,8 +151,7 @@ export class AuthenticationResolver {
     }
 
     const newSession = loggedInSession(await this.updateSession(req));
-    const powers = await this.authorizationService.readPower(newSession);
-    return { user: result.user, powers };
+    return { user: result.user, powers: result.powers };
   }
 
   private async updateSession(req: Request) {
