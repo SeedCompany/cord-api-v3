@@ -974,7 +974,7 @@ export class EngagementService {
         exception,
       });
       throw new ServerException(
-        'Could not find update InternshipEngagement',
+        'Could not update InternshipEngagement',
         exception
       );
     }
