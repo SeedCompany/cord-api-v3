@@ -8,7 +8,6 @@ import {
 } from '../../../core';
 import { ProjectStatus } from '../dto';
 import { ProjectCreatedEvent, ProjectUpdatedEvent } from '../events';
-import { ProjectService } from '../project.service';
 
 type SubscribedEvent = ProjectCreatedEvent | ProjectUpdatedEvent;
 
@@ -16,7 +15,6 @@ type SubscribedEvent = ProjectCreatedEvent | ProjectUpdatedEvent;
 export class SetInitialMouEnd implements IEventHandler<SubscribedEvent> {
   constructor(
     private readonly db: DatabaseService,
-    private readonly projectService: ProjectService,
     @Logger('project:set-initial-mou-end') private readonly logger: ILogger
   ) {}
 
@@ -52,15 +50,13 @@ export class SetInitialMouEnd implements IEventHandler<SubscribedEvent> {
     }
 
     try {
-      const initialMouEnd = project.mouEnd.value;
-      const updateInput = {
-        id: project.id,
-        initialMouEnd: initialMouEnd || null,
-      };
-      const updatedProject = await this.projectService.update(
-        updateInput,
-        event.session
-      );
+      const updatedProject = await this.db.sgUpdateProperty({
+        object: project,
+        nodevar: 'project',
+        key: 'initialMouEnd',
+        value: project.mouEnd.value || null,
+        session: event.session,
+      });
 
       if (event instanceof ProjectUpdatedEvent) {
         event.updated = updatedProject;
