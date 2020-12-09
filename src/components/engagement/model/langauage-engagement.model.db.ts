@@ -7,7 +7,7 @@ export class DbLanguageEngagement extends DbEngagement {
   firstScripture: any = null;
   language: any = null;
   lukePartnership: any = null;
-  paraTextRegistryId: any = null;
+  paratextRegistryId: any = null;
   pnp: any = null;
   sentPrintingDate: any = null;
   product: any = null;
