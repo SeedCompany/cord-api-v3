@@ -364,7 +364,7 @@ export class PartnershipService {
         ...securedProps.partner,
         value: result.partnerId,
       },
-      canDelete: false, //await this.db.checkDeletePermission(id, session),
+      canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 
@@ -449,7 +449,7 @@ export class PartnershipService {
         'partnership.id'
       );
     }
-    const canDelete = false; // await this.db.checkDeletePermission(id, session);
+    const canDelete = await this.db.checkDeletePermission(id, session);
 
     if (!canDelete)
       throw new UnauthorizedException(

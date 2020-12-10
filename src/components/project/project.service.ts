@@ -685,7 +685,7 @@ export class ProjectService {
       throw new NotFoundException('Could not find project');
     }
 
-    const canDelete = false; // await this.db.checkDeletePermission(id, session);
+    const canDelete = await this.db.checkDeletePermission(id, session);
 
     if (!canDelete)
       throw new UnauthorizedException(

@@ -184,7 +184,7 @@ export class StoryService {
         ...securedProps.scriptureReferences,
         value: scriptureReferences,
       },
-      canDelete: false, //await this.db.checkDeletePermission(id, session),
+      canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 
@@ -206,7 +206,7 @@ export class StoryService {
     if (!story) {
       throw new NotFoundException('Could not find Story');
     }
-    const canDelete = false; // await this.db.checkDeletePermission(id, session);
+    const canDelete = await this.db.checkDeletePermission(id, session);
 
     if (!canDelete)
       throw new UnauthorizedException(

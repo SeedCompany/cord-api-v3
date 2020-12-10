@@ -180,7 +180,7 @@ export class SongService {
         ...securedProps.scriptureReferences,
         value: scriptureReferences,
       },
-      canDelete: false, //await this.db.checkDeletePermission(id, session),
+      canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 
@@ -203,7 +203,7 @@ export class SongService {
     if (!song) {
       throw new NotFoundException('Could not find Song');
     }
-    const canDelete = false; // await this.db.checkDeletePermission(id, session);
+    const canDelete = await this.db.checkDeletePermission(id, session);
 
     if (!canDelete)
       throw new UnauthorizedException(

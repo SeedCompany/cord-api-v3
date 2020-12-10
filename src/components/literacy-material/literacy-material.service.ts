@@ -196,7 +196,7 @@ export class LiteracyMaterialService {
         ...securedProps.scriptureReferences,
         value: scriptureReferences,
       },
-      canDelete: false, //await this.db.checkDeletePermission(id, session),
+      canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 
@@ -224,7 +224,7 @@ export class LiteracyMaterialService {
       throw new NotFoundException('Could not find Literacy Material');
     }
 
-    const canDelete = false; // await this.db.checkDeletePermission(id, session);
+    const canDelete = await this.db.checkDeletePermission(id, session);
 
     if (!canDelete)
       throw new UnauthorizedException(

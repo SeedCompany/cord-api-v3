@@ -179,7 +179,7 @@ export class FundingAccountService {
     return {
       ...parseBaseNodeProperties(result.node),
       ...secured,
-      canDelete: false, //await this.db.checkDeletePermission(id, session),
+      canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 
@@ -205,7 +205,7 @@ export class FundingAccountService {
       throw new NotFoundException('Could not find Funding Account');
     }
 
-    const canDelete = false; // await this.db.checkDeletePermission(id, session);
+    const canDelete = await this.db.checkDeletePermission(id, session);
 
     if (!canDelete)
       throw new UnauthorizedException(

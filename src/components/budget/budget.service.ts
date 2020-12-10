@@ -335,7 +335,7 @@ export class BudgetService {
       ...securedProps,
       status: props.status,
       records: records.items,
-      canDelete: false, //await this.db.checkDeletePermission(id, session),
+      canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 
@@ -382,7 +382,7 @@ export class BudgetService {
     return {
       ...parseBaseNodeProperties(result.node),
       ...securedProps,
-      canDelete: false, //await this.db.checkDeletePermission(id, session),
+      canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 
@@ -470,7 +470,7 @@ export class BudgetService {
       throw new NotFoundException('Could not find Budget');
     }
 
-    const canDelete = false; // await this.db.checkDeletePermission(id, session);
+    const canDelete = await this.db.checkDeletePermission(id, session);
 
     if (!canDelete)
       throw new UnauthorizedException(
@@ -504,7 +504,7 @@ export class BudgetService {
       throw new NotFoundException('Could not find Budget Record');
     }
 
-    const canDelete = false; // await this.db.checkDeletePermission(id, session);
+    const canDelete = await this.db.checkDeletePermission(id, session);
 
     if (!canDelete)
       throw new UnauthorizedException(

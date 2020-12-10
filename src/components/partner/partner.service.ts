@@ -304,7 +304,7 @@ export class PartnerService {
         ...secured.financialReportingTypes,
         value: secured.financialReportingTypes.value || [],
       },
-      canDelete: false, //await this.db.checkDeletePermission(id, session),
+      canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 
@@ -394,7 +394,7 @@ export class PartnerService {
       throw new NotFoundException('Could not find Partner');
     }
 
-    const canDelete = false; // await this.db.checkDeletePermission(id, session);
+    const canDelete = await this.db.checkDeletePermission(id, session);
 
     if (!canDelete)
       throw new UnauthorizedException(
