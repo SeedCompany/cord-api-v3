@@ -155,7 +155,7 @@ describe('Engagement e2e', () => {
     expect(actual.endDate.value).toBe(project.mouEnd.value);
     expect(actual.lastSuspendedAt.value).toBeNull();
     expect(actual.lastReactivatedAt.value).toBeNull();
-    expect(actual.paraTextRegistryId.value).toBeNull();
+    expect(actual.paratextRegistryId.value).toBeNull();
   });
 
   it('creates a internship engagement', async () => {
