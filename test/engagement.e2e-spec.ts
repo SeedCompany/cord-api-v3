@@ -151,7 +151,7 @@ describe('Engagement e2e', () => {
     expect(actual.completeDate.value).toBeNull();
     expect(actual.disbursementCompleteDate.value).toBeNull();
     expect(actual.communicationsCompleteDate.value).toBeNull();
-    expect(actual.startDate.value).toBe(project.mouStart.value);
+    expect(actual.startDate.value).toBe(project.mouStart.value); // bump
     expect(actual.endDate.value).toBe(project.mouEnd.value);
     expect(actual.lastSuspendedAt.value).toBeNull();
     expect(actual.lastReactivatedAt.value).toBeNull();
