@@ -67,6 +67,7 @@ import {
   EngagementUpdatedEvent,
 } from './events';
 import { DbInternshipEngagement, DbLanguageEngagement } from './model';
+import { PnpExtractor } from './pnp-extractor.service';
 
 @Injectable()
 export class EngagementService {
@@ -110,6 +111,7 @@ export class EngagementService {
     private readonly products: ProductService,
     private readonly config: ConfigService,
     private readonly files: FileService,
+    private readonly pnpExtractor: PnpExtractor,
     private readonly engagementRules: EngagementRules,
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService,
@@ -312,6 +314,10 @@ export class EngagementService {
       input.pnp,
       'engagement.pnp'
     );
+    if (input.pnp) {
+      const pnpData = await this.pnpExtractor.extract(input.pnp, session);
+      // TODO persist
+    }
 
     const dbLanguageEngagement = new DbLanguageEngagement();
     await this.authorizationService.processNewBaseNode(
@@ -746,6 +752,7 @@ export class EngagementService {
         ...securedProperties.mentor,
         value: result.mentorId,
       },
+      pnpData: undefined, // TODO
       canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
@@ -787,6 +794,10 @@ export class EngagementService {
       pnp,
       session
     );
+    if (pnp) {
+      const pnpData = await this.pnpExtractor.extract(pnp, session);
+      // TODO persist
+    }
 
     try {
       await this.db.sgUpdateProperties({
