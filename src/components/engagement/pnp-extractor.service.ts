@@ -15,15 +15,14 @@ export class PnpExtractor {
   ): Promise<PnpData> {
     const workbook = await this.downloadWorkbook(input, session);
 
-    const pnp = read(workbook, { type: 'buffer' });
-    const progressSheet = utils.sheet_to_json(pnp.Sheets.Progress, {
+    const progressSheet = utils.sheet_to_json<any>(workbook.Sheets.Progress, {
       header: 'A',
       raw: false,
     });
     let progressPlanned = '';
     let progressActual = '';
     let variance = '';
-    progressSheet.forEach((row: any) => {
+    for (const row of progressSheet) {
       // new version (2020)
       if (row.AL === 'Summary Info ====>') {
         progressPlanned = row.AN;
@@ -42,15 +41,14 @@ export class PnpExtractor {
         progressActual = row.CA;
         variance = row.CB;
       }
-    });
+    }
+
+    const parsePercent = (raw: string) =>
+      raw ? parseFloat(raw.replace('%', '')) : 0.0;
     return {
-      progressPlanned: progressPlanned
-        ? parseFloat(progressPlanned.replace('%', ''))
-        : 0.0,
-      progressActual: progressActual
-        ? parseFloat(progressActual.replace('%', ''))
-        : 0.0,
-      variance: variance ? parseFloat(variance.replace('%', '')) : 0.0,
+      progressPlanned: parsePercent(progressPlanned),
+      progressActual: parsePercent(progressActual),
+      variance: parsePercent(variance),
     };
   }
 
