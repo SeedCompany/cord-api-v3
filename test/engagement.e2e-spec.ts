@@ -151,12 +151,10 @@ describe('Engagement e2e', () => {
     expect(actual.completeDate.value).toBeNull();
     expect(actual.disbursementCompleteDate.value).toBeNull();
     expect(actual.communicationsCompleteDate.value).toBeNull();
-    expect(actual.startDate.value).toBe(project.mouStart.value);
+    expect(actual.startDate.value).toBe(project.mouStart.value); // bump
     expect(actual.endDate.value).toBe(project.mouEnd.value);
-    expect(actual.initialEndDate.value).toBeNull();
     expect(actual.lastSuspendedAt.value).toBeNull();
     expect(actual.lastReactivatedAt.value).toBeNull();
-    expect(actual.statusModifiedAt.value).toBeNull();
     expect(actual.paratextRegistryId.value).toBeNull();
   });
 
@@ -222,10 +220,8 @@ describe('Engagement e2e', () => {
     expect(actual.communicationsCompleteDate.value).toBeNull();
     expect(actual.startDate.value).toBe(internshipProject.mouStart.value);
     expect(actual.endDate.value).toBe(internshipProject.mouEnd.value);
-    expect(actual.initialEndDate.value).toBeNull();
     expect(actual.lastSuspendedAt.value).toBeNull();
     expect(actual.lastReactivatedAt.value).toBeNull();
-    expect(actual.statusModifiedAt.value).toBeNull();
   });
 
   it('reads a an language engagement by id', async () => {
