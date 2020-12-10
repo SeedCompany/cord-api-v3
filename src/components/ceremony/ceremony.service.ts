@@ -157,7 +157,7 @@ export class CeremonyService {
       ...parseBaseNodeProperties(result.node),
       ...securedProps,
       type: parsedProps.type,
-      canDelete: await this.db.checkDeletePermission(id, session),
+      canDelete: false, //await this.db.checkDeletePermission(id, session),
     };
   }
 
@@ -180,7 +180,7 @@ export class CeremonyService {
       throw new NotFoundException('Could not find ceremony', 'ceremony.id');
     }
 
-    const canDelete = await this.db.checkDeletePermission(id, session);
+    const canDelete = false; // await this.db.checkDeletePermission(id, session);
 
     if (!canDelete)
       throw new UnauthorizedException(

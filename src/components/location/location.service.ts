@@ -219,7 +219,7 @@ export class LocationService {
         value: result.fundingAccountId,
       },
       sensitivity: secured.sensitivity.value || Sensitivity.High,
-      canDelete: await this.db.checkDeletePermission(id, session),
+      canDelete: false, //await this.db.checkDeletePermission(id, session),
     };
   }
 
@@ -277,7 +277,7 @@ export class LocationService {
       throw new NotFoundException('Could not find Location');
     }
 
-    const canDelete = await this.db.checkDeletePermission(id, session);
+    const canDelete = false; // await this.db.checkDeletePermission(id, session);
 
     if (!canDelete)
       throw new UnauthorizedException(
