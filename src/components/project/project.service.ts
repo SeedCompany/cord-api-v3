@@ -536,7 +536,7 @@ export class ProjectService {
         ...securedProps.owningOrganization,
         value: result.owningOrganizationId,
       },
-      canDelete: false, // await this.db.checkDeletePermission(id, { userId }),
+      canDelete: await this.db.checkDeletePermission(id, { userId }),
     };
   }
 
