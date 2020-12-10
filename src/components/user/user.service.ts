@@ -319,7 +319,7 @@ export class UserService {
         ...securedProps.roles,
         value: rolesValue,
       },
-      canDelete: false, //await this.db.checkDeletePermission(id, { userId }),
+      canDelete: await this.db.checkDeletePermission(id, { userId }),
     };
   }
 
