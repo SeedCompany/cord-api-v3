@@ -1169,10 +1169,15 @@
 			"key": "projectTags",
 			"value": "",
 			"enabled": true
+		},
+		{
+			"key": "rootEmail",
+			"value": "",
+			"enabled": true
 		}
 	],
 	"name": "MyWorkspace Globals",
 	"_postman_variable_scope": "globals",
-	"_postman_exported_at": "2020-12-04T13:32:52.364Z",
+	"_postman_exported_at": "2020-12-11T14:09:04.132Z",
 	"_postman_exported_using": "Postman/7.36.0"
 }

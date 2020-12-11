@@ -64,8 +64,5 @@ newman run Cord_API_V3_FieldRegion.postman_collection.json -e local.postman_envi
 >> FieldZone
 newman run Cord_API_V3_FieldZone.postman_collection.json -e local.postman_environment.json -g MyWorkspace.postman_globals.json -r htmlextra --delay-request 1000
 
->> FileUpload
-newman run Cord_API_V3_FileUpload.postman_collection.json -e local.postman_environment.json -g MyWorkspace.postman_globals.json -r htmlextra --delay-request 1000
-
 >> FundingAccount
 newman run Cord_API_V3_FundingAccount.postman_collection.json -e local.postman_environment.json -g MyWorkspace.postman_globals.json -r htmlextra --delay-request 1000
