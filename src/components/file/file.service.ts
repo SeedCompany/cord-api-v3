@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { AWSError } from 'aws-sdk';
+import type { AWSError } from 'aws-sdk';
 import {
   DuplicateException,
   generateId,
@@ -107,6 +107,30 @@ export class FileService {
       modifiedAt: version.createdAt,
       modifiedById: version.createdById,
     };
+  }
+
+  /**
+   * Internal API method to download file contents from S3
+   */
+  async downloadFileVersion(versionId: string): Promise<Buffer> {
+    let data;
+    try {
+      const obj = await this.bucket.getObject(versionId);
+      data = obj.Body;
+    } catch (e) {
+      if (e instanceof NotFoundException) {
+        throw e;
+      }
+      if ((e as AWSError).code === 'NotFound') {
+        throw new NotFoundException('Could not find file contents', e);
+      }
+      throw new ServerException('Failed to retrieve file contents', e);
+    }
+    if (!data) {
+      throw new NotFoundException('Could not find file contents');
+    }
+
+    return Buffer.isBuffer(data) ? data : Buffer.from(data);
   }
 
   async getDownloadUrl(node: FileNode): Promise<string> {

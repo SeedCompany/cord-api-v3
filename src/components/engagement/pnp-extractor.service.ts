@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import got from 'got';
 import { read, utils } from 'xlsx';
 import { Session } from '../../common';
 import { CreateDefinedFileVersionInput, FileService } from '../file';
@@ -51,8 +50,7 @@ export class PnpExtractor {
     session: Session
   ) {
     const version = await this.files.getFileVersion(input.uploadId, session);
-    const url = await this.files.getDownloadUrl(version);
-    const buffer = await got.get(url).buffer();
+    const buffer = await this.files.downloadFileVersion(version.id);
     return read(buffer, { type: 'buffer' });
   }
 
