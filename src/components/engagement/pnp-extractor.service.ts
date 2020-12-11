@@ -12,44 +12,50 @@ export class PnpExtractor {
   async extract(
     input: CreateDefinedFileVersionInput,
     session: Session
-  ): Promise<PnpData> {
+  ): Promise<PnpData | null> {
     const workbook = await this.downloadWorkbook(input, session);
 
-    const progressSheet = utils.sheet_to_json<any>(workbook.Sheets.Progress, {
-      header: 'A',
-      raw: false,
-    });
-    let progressPlanned = '';
-    let progressActual = '';
-    let variance = '';
+    const pnp = read(workbook, { type: 'buffer' });
+    const progressSheet: any[] = utils.sheet_to_json(
+      // new standard 2020 version has new sheet "Harvest" which isolates relevant progress data
+      pnp.Sheets.Harvest ?? pnp.Sheets.Progress,
+      {
+        header: 'A',
+        raw: false,
+      }
+    );
+    const parseRawData = (
+      progressPlanned: string,
+      progressActual: string,
+      variance: string
+    ) => {
+      if (!progressPlanned || !progressActual || !variance) return null;
+      const parsePercent = (raw: string) => parseFloat(raw.replace('%', ''));
+      return {
+        progressPlanned: parsePercent(progressPlanned),
+        progressActual: parsePercent(progressActual),
+        variance: parsePercent(variance),
+      };
+    };
     for (const row of progressSheet) {
-      // new version (2020)
-      if (row.AL === 'Summary Info ====>') {
-        progressPlanned = row.AN;
-        progressActual = row.AO;
-        variance = row.AP;
+      // new standard 11/09/2020
+      if (pnp.Sheets.Harvest && /\d/.test(row?.AC)) {
+        return parseRawData(row.AC, row?.AD, row?.AE);
+      }
+      // other 2020 version
+      else if (!pnp.Sheets.Harvest && row?.AL === 'Summary Info ====>') {
+        return parseRawData(row?.AN, row?.AO, row?.AP);
       }
       // row.CK is current year. if current year is greater than 2019 grab data
-      else if (row.CK && parseInt(row.CK) >= 2019) {
-        progressPlanned = row.CT;
-        progressActual = row.CU;
-        variance = row.CV;
+      else if (!pnp.Sheets.Harvest && parseInt(row?.CK) >= 2019) {
+        return parseRawData(row?.CT, row?.CU, row?.CV);
         // 09 version
         // BX is current year
-      } else if (row.BX && parseInt(row.BX) >= 2019) {
-        progressPlanned = row.BZ;
-        progressActual = row.CA;
-        variance = row.CB;
+      } else if (!pnp.Sheets.Harvest && parseInt(row?.BX) >= 2019) {
+        return parseRawData(row?.BZ, row?.CA, row?.CB);
       }
     }
-
-    const parsePercent = (raw: string) =>
-      raw ? parseFloat(raw.replace('%', '')) : 0.0;
-    return {
-      progressPlanned: parsePercent(progressPlanned),
-      progressActual: parsePercent(progressActual),
-      variance: parsePercent(variance),
-    };
+    return null;
   }
 
   private async downloadWorkbook(
