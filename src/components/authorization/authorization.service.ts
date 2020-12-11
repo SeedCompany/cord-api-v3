@@ -2,7 +2,12 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { union, without } from 'lodash';
-import { generateId, ServerException, Session } from '../../common';
+import {
+  DbBaseNodeLabel,
+  generateId,
+  ServerException,
+  Session,
+} from '../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import { DbBudget } from '../budget/model';
 import { DbBudgetRecord } from '../budget/model/budget-record.model.db';
@@ -32,8 +37,27 @@ import { DbEducation, DbUnavailability, DbUser } from '../user/model';
 import { InternalRole, Role } from './dto';
 import { Powers } from './dto/powers';
 import { MissingPowerException } from './missing-power.exception';
-import { DbRole, OneBaseNode } from './model';
-import { everyRole } from './roles';
+import { AnyBaseNode, DbPermission, DbRole, OneBaseNode } from './model';
+import {
+  Administrator,
+  Consultant,
+  ConsultantManager,
+  Controller,
+  everyRole,
+  FieldOperationsDirector,
+  FinancialAnalyst,
+  Fundraising,
+  Intern,
+  Leadership,
+  Liason,
+  Marketing,
+  Mentor,
+  ProjectManager,
+  RegionalCommunicationsCoordinator,
+  RegionalDirector,
+  StaffMember,
+  Translator,
+} from './roles';
 
 /**
  * powers can exist on a security group or a user node
@@ -73,25 +97,81 @@ export class AuthorizationService {
     @Logger('authorization:service') private readonly logger: ILogger
   ) {}
 
+  perm(
+    roles: Role[],
+    baseNode: DbBaseNodeLabel,
+    property: keyof AnyBaseNode,
+    access: 'read' | 'write' | 'create' | 'delete' | 'admin'
+  ): boolean {
+    for (const role of roles) {
+      const dbRole = this.getRole(role);
+      const perm = dbRole.getPermissionsOnProperty(baseNode, property);
+      if (perm === undefined) continue;
+      if (perm[access]) return true;
+    }
+    return false;
+  }
+
   async processNewBaseNode(
     baseNodeObj: OneBaseNode,
     baseNodeId: string,
     creatorUserId: string
   ) {
-    const label = baseNodeObj.__className.substring(2);
-    await this.db
-      .query()
-      .raw(
-        `CALL cord.processNewBaseNode($baseNodeId, $label, $creatorUserId)`,
-        {
-          baseNodeId,
-          label,
-          creatorUserId,
-        }
-      )
-      .run();
+    // const label = baseNodeObj.__className.substring(2);
+    // await this.db
+    //   .query()
+    //   .raw(
+    //     `CALL cord.processNewBaseNode($baseNodeId, $label, $creatorUserId)`,
+    //     {
+    //       baseNodeId,
+    //       label,
+    //       creatorUserId,
+    //     }
+    //   )
+    //   .run();
 
     return true;
+  }
+
+  getRole(role: Role): DbRole {
+    switch (role) {
+      case Role.Administrator:
+        return Administrator;
+      case Role.Consultant:
+        return Consultant;
+      case Role.ConsultantManager:
+        return ConsultantManager;
+      case Role.Controller:
+        return Controller;
+      case Role.FieldOperationsDirector:
+        return FieldOperationsDirector;
+      case Role.FinancialAnalyst:
+        return FinancialAnalyst;
+      case Role.Fundraising:
+        return Fundraising;
+      case Role.Intern:
+        return Intern;
+      case Role.Leadership:
+        return Leadership;
+      case Role.Liason:
+        return Liason;
+      case Role.Marketing:
+        return Marketing;
+      case Role.Mentor:
+        return Mentor;
+      case Role.ProjectManager:
+        return ProjectManager;
+      case Role.RegionalCommunicationsCoordinator:
+        return RegionalCommunicationsCoordinator;
+      case Role.RegionalDirector:
+        return RegionalDirector;
+      case Role.StaffMember:
+        return StaffMember;
+      case Role.Translator:
+        return Translator;
+      default:
+        throw new ServerException('role not found');
+    }
   }
 
   async createSGsForEveryRoleForAllBaseNodes(session: Session) {

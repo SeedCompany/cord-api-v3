@@ -79,6 +79,7 @@ import {
   UnavailabilityListInput,
   UnavailabilityService,
 } from './unavailability';
+import { UserRepository } from './user.repository';
 
 export const fullName = (
   user: Partial<
@@ -123,6 +124,7 @@ export class UserService {
   };
 
   constructor(
+    private readonly userRepo: UserRepository,
     private readonly educations: EducationService,
     private readonly organizations: OrganizationService,
     @Inject(forwardRef(() => PartnerService))
@@ -289,38 +291,39 @@ export class UserService {
     id: string,
     { userId }: Pick<Session, 'userId'>
   ): Promise<User> {
-    const query = this.db
-      .query()
-      .call(matchRequestingUser, { userId })
-      .match([node('node', 'User', { id })])
-      .call(matchPermList, 'node')
-      .call(matchPropList, 'permList')
-      .return('propList, permList, node')
-      .asResult<StandardReadResult<DbPropsOfDto<User>>>();
+    return await this.userRepo.read(id, userId);
+    // const query = this.db
+    //   .query()
+    //   .call(matchRequestingUser, { userId })
+    //   .match([node('node', 'User', { id })])
+    //   .call(matchPermList, 'node')
+    //   .call(matchPropList, 'permList')
+    //   .return('propList, permList, node')
+    //   .asResult<StandardReadResult<DbPropsOfDto<User>>>();
 
-    const result = await query.first();
-    if (!result) {
-      throw new NotFoundException('Could not find user', 'user.id');
-    }
+    // const result = await query.first();
+    // if (!result) {
+    //   throw new NotFoundException('Could not find user', 'user.id');
+    // }
 
-    const rolesValue = result.propList
-      .filter((prop) => prop.property === 'roles')
-      .map((prop) => prop.value as Role);
+    // const rolesValue = result.propList
+    //   .filter((prop) => prop.property === 'roles')
+    //   .map((prop) => prop.value as Role);
 
-    const securedProps = parseSecuredProperties(
-      result.propList,
-      result.permList,
-      this.securedProperties
-    );
-    return {
-      ...parseBaseNodeProperties(result.node),
-      ...securedProps,
-      roles: {
-        ...securedProps.roles,
-        value: rolesValue,
-      },
-      canDelete: await this.db.checkDeletePermission(id, { userId }),
-    };
+    // const securedProps = parseSecuredProperties(
+    //   result.propList,
+    //   result.permList,
+    //   this.securedProperties
+    // );
+    // return {
+    //   ...parseBaseNodeProperties(result.node),
+    //   ...securedProps,
+    //   roles: {
+    //     ...securedProps.roles,
+    //     value: rolesValue,
+    //   },
+    //   canDelete: await this.db.checkDeletePermission(id, { userId }),
+    // };
   }
 
   async update(input: UpdateUser, session: Session): Promise<User> {
