@@ -1,8 +1,8 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import { node, Node, Query, relation } from 'cypher-query-builder';
 import { pickBy } from 'lodash';
 import { DateTime } from 'luxon';
-import { MergeExclusive } from 'type-fest';
+import { Except, MergeExclusive } from 'type-fest';
 import {
   DuplicateException,
   generateId,
@@ -57,6 +57,7 @@ import {
   EngagementStatus,
   InternshipEngagement,
   LanguageEngagement,
+  PnpData,
   UpdateInternshipEngagement,
   UpdateLanguageEngagement,
 } from './dto';
@@ -316,7 +317,7 @@ export class EngagementService {
     );
     if (input.pnp) {
       const pnpData = await this.pnpExtractor.extract(input.pnp, session);
-      // TODO persist
+      await this.savePnpData(id, pnpData);
     }
 
     const dbLanguageEngagement = new DbLanguageEngagement();
@@ -662,6 +663,11 @@ export class EngagementService {
         relation('out', '', 'mentor', { active: true }),
         node('mentor'),
       ])
+      .optionalMatch([
+        node('node'),
+        relation('out', '', 'pnpData', { active: true }),
+        node('pnpData'),
+      ])
       .return([
         'propList, permList, node, project.id as projectId',
         '__typename, ceremony.id as ceremonyId',
@@ -669,10 +675,14 @@ export class EngagementService {
         'intern.id as internId',
         'countryOfOrigin.id as countryOfOriginId',
         'mentor.id as mentorId',
+        'pnpData',
       ])
       .asResult<
         StandardReadResult<
-          DbPropsOfDto<LanguageEngagement & InternshipEngagement>
+          Except<
+            DbPropsOfDto<LanguageEngagement & InternshipEngagement>,
+            'pnpData'
+          >
         > & {
           __typename: string;
           languageId: string;
@@ -681,6 +691,7 @@ export class EngagementService {
           internId: string;
           countryOfOriginId: string;
           mentorId: string;
+          pnpData?: Node<PnpData>;
         }
       >();
 
@@ -752,7 +763,7 @@ export class EngagementService {
         ...securedProperties.mentor,
         value: result.mentorId,
       },
-      pnpData: undefined, // TODO
+      pnpData: result.pnpData?.properties,
       canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
@@ -796,7 +807,7 @@ export class EngagementService {
     );
     if (pnp) {
       const pnpData = await this.pnpExtractor.extract(pnp, session);
-      // TODO persist
+      await this.savePnpData(object.id, pnpData);
     }
 
     try {
@@ -1255,6 +1266,26 @@ export class EngagementService {
         )
       ).every((n) => n)
     );
+  }
+
+  private async savePnpData(id: string, pnpData: PnpData | null) {
+    const query = this.db.query();
+    pnpData
+      ? query
+          .match(node('node', 'LanguageEngagement', { id }))
+          .merge([
+            node('node'),
+            relation('out', 'engPnp', 'pnpData', { active: true }),
+            node('pnp', 'PnpData', pnpData),
+          ])
+      : query
+          .match([
+            node('node', 'LanguageEngagement', { id }),
+            relation('out', 'engPnp', 'pnpData', { active: true }),
+            node('pnp', 'PnpData'),
+          ])
+          .detachDelete('pnp');
+    await query.run();
   }
 
   protected async getProjectTypeById(
