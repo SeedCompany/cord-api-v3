@@ -1,8 +1,8 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import { node, Node, Query, relation } from 'cypher-query-builder';
 import { pickBy } from 'lodash';
 import { DateTime } from 'luxon';
-import { MergeExclusive } from 'type-fest';
+import { Except, MergeExclusive } from 'type-fest';
 import {
   DuplicateException,
   generateId,
@@ -57,6 +57,7 @@ import {
   EngagementStatus,
   InternshipEngagement,
   LanguageEngagement,
+  PnpData,
   UpdateInternshipEngagement,
   UpdateLanguageEngagement,
 } from './dto';
@@ -67,6 +68,7 @@ import {
   EngagementUpdatedEvent,
 } from './events';
 import { DbInternshipEngagement, DbLanguageEngagement } from './model';
+import { PnpExtractor } from './pnp-extractor.service';
 
 @Injectable()
 export class EngagementService {
@@ -110,6 +112,7 @@ export class EngagementService {
     private readonly products: ProductService,
     private readonly config: ConfigService,
     private readonly files: FileService,
+    private readonly pnpExtractor: PnpExtractor,
     private readonly engagementRules: EngagementRules,
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService,
@@ -312,6 +315,10 @@ export class EngagementService {
       input.pnp,
       'engagement.pnp'
     );
+    if (input.pnp) {
+      const pnpData = await this.pnpExtractor.extract(input.pnp, session);
+      await this.savePnpData(id, pnpData);
+    }
 
     const dbLanguageEngagement = new DbLanguageEngagement();
     await this.authorizationService.processNewBaseNode(
@@ -656,6 +663,11 @@ export class EngagementService {
         relation('out', '', 'mentor', { active: true }),
         node('mentor'),
       ])
+      .optionalMatch([
+        node('node'),
+        relation('out', '', 'pnpData', { active: true }),
+        node('pnpData'),
+      ])
       .return([
         'propList, permList, node, project.id as projectId',
         '__typename, ceremony.id as ceremonyId',
@@ -663,10 +675,14 @@ export class EngagementService {
         'intern.id as internId',
         'countryOfOrigin.id as countryOfOriginId',
         'mentor.id as mentorId',
+        'pnpData',
       ])
       .asResult<
         StandardReadResult<
-          DbPropsOfDto<LanguageEngagement & InternshipEngagement>
+          Except<
+            DbPropsOfDto<LanguageEngagement & InternshipEngagement>,
+            'pnpData'
+          >
         > & {
           __typename: string;
           languageId: string;
@@ -675,6 +691,7 @@ export class EngagementService {
           internId: string;
           countryOfOriginId: string;
           mentorId: string;
+          pnpData?: Node<PnpData>;
         }
       >();
 
@@ -746,6 +763,7 @@ export class EngagementService {
         ...securedProperties.mentor,
         value: result.mentorId,
       },
+      pnpData: result.pnpData?.properties,
       canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
@@ -787,6 +805,10 @@ export class EngagementService {
       pnp,
       session
     );
+    if (pnp) {
+      const pnpData = await this.pnpExtractor.extract(pnp, session);
+      await this.savePnpData(object.id, pnpData);
+    }
 
     try {
       await this.db.sgUpdateProperties({
@@ -1244,6 +1266,26 @@ export class EngagementService {
         )
       ).every((n) => n)
     );
+  }
+
+  private async savePnpData(id: string, pnpData: PnpData | null) {
+    const query = this.db.query();
+    pnpData
+      ? query
+          .match(node('node', 'LanguageEngagement', { id }))
+          .merge([
+            node('node'),
+            relation('out', 'engPnp', 'pnpData', { active: true }),
+            node('pnp', 'PnpData', pnpData),
+          ])
+      : query
+          .match([
+            node('node', 'LanguageEngagement', { id }),
+            relation('out', 'engPnp', 'pnpData', { active: true }),
+            node('pnp', 'PnpData'),
+          ])
+          .detachDelete('pnp');
+    await query.run();
   }
 
   protected async getProjectTypeById(

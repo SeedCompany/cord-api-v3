@@ -15,6 +15,7 @@ import * as handlers from './handlers';
 import { InternshipEngagementResolver } from './internship-engagement.resolver';
 import { InternshipPositionResolver } from './internship-position.resolver';
 import { LanguageEngagementResolver } from './language-engagement.resolver';
+import { PnpExtractor } from './pnp-extractor.service';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { LanguageEngagementResolver } from './language-engagement.resolver';
     InternshipPositionResolver,
     EngagementRules,
     EngagementService,
+    PnpExtractor,
     ...Object.values(handlers),
   ],
   exports: [EngagementService],
