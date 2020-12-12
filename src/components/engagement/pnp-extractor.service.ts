@@ -1,29 +1,43 @@
 import { Injectable } from '@nestjs/common';
 import { read, utils } from 'xlsx';
 import { Session } from '../../common';
-import { CreateDefinedFileVersionInput, FileService } from '../file';
+import { ILogger, Logger } from '../../core';
+import {
+  CreateDefinedFileVersionInput,
+  FileService,
+  FileVersion,
+} from '../file';
 import { PnpData } from './dto';
 
 @Injectable()
 export class PnpExtractor {
-  constructor(private readonly files: FileService) {}
+  constructor(
+    private readonly files: FileService,
+    @Logger('pnp:extractor') private readonly logger: ILogger
+  ) {}
 
   async extract(
     input: CreateDefinedFileVersionInput,
     session: Session
   ): Promise<PnpData | null> {
-    const pnp = await this.downloadWorkbook(input, session);
+    const file = await this.files.getFileVersion(input.uploadId, session);
+    const pnp = await this.downloadWorkbook(file);
 
-    const progressSheet = utils.sheet_to_json<any>(
-      // new standard 2020 version has new sheet "Harvest" which isolates relevant progress data
-      pnp.Sheets.Harvest ?? pnp.Sheets.Progress,
-      {
-        header: 'A',
-        raw: false,
-      }
-    );
+    // new standard 2020 version has new sheet "Harvest" which isolates relevant progress data
+    const sheet = pnp.Sheets.Harvest ?? pnp.Sheets.Progress;
+    if (!sheet) {
+      this.logger.warning('Unable to parse pnp file', {
+        name: file.name,
+        id: file.id,
+      });
+      return null;
+    }
 
-    for (const row of progressSheet) {
+    const rows = utils.sheet_to_json<any>(sheet, {
+      header: 'A',
+      raw: false,
+    });
+    for (const row of rows) {
       // new standard 11/09/2020
       if (pnp.Sheets.Harvest && /\d/.test(row?.AC)) {
         return this.parseRawData(row.AC, row?.AD, row?.AE);
@@ -42,15 +56,15 @@ export class PnpExtractor {
       }
     }
 
+    this.logger.warning('Unable to find summary data in pnp file', {
+      name: file.name,
+      id: file.id,
+    });
     return null;
   }
 
-  private async downloadWorkbook(
-    input: CreateDefinedFileVersionInput,
-    session: Session
-  ) {
-    const version = await this.files.getFileVersion(input.uploadId, session);
-    const buffer = await this.files.downloadFileVersion(version.id);
+  private async downloadWorkbook(file: FileVersion) {
+    const buffer = await this.files.downloadFileVersion(file.id);
     return read(buffer, { type: 'buffer' });
   }
 
