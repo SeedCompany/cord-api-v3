@@ -37,23 +37,32 @@ export class PnpExtractor {
       header: 'A',
       raw: false,
     });
-    for (const row of rows) {
-      // new standard 11/09/2020
-      if (pnp.Sheets.Harvest && /\d/.test(row?.AC)) {
-        return this.parseRawData(row.AC, row?.AD, row?.AE);
+    try {
+      for (const row of rows) {
+        // new standard 11/09/2020
+        if (pnp.Sheets.Harvest && /\d/.test(row?.AC)) {
+          return this.parseRawData(row.AC, row?.AD, row?.AE);
+        }
+        // other 2020 version
+        else if (!pnp.Sheets.Harvest && row?.AL === 'Summary Info ====>') {
+          return this.parseRawData(row?.AN, row?.AO, row?.AP);
+        }
+        // row.CK is current year. if current year is greater than 2019 grab data
+        else if (!pnp.Sheets.Harvest && parseInt(row?.CK) >= 2019) {
+          return this.parseRawData(row?.CT, row?.CU, row?.CV);
+          // 09 version
+          // BX is current year
+        } else if (!pnp.Sheets.Harvest && parseInt(row?.BX) >= 2019) {
+          return this.parseRawData(row?.BZ, row?.CA, row?.CB);
+        }
       }
-      // other 2020 version
-      else if (!pnp.Sheets.Harvest && row?.AL === 'Summary Info ====>') {
-        return this.parseRawData(row?.AN, row?.AO, row?.AP);
-      }
-      // row.CK is current year. if current year is greater than 2019 grab data
-      else if (!pnp.Sheets.Harvest && parseInt(row?.CK) >= 2019) {
-        return this.parseRawData(row?.CT, row?.CU, row?.CV);
-        // 09 version
-        // BX is current year
-      } else if (!pnp.Sheets.Harvest && parseInt(row?.BX) >= 2019) {
-        return this.parseRawData(row?.BZ, row?.CA, row?.CB);
-      }
+    } catch (e) {
+      this.logger.warning('Unable to parse summary data in pnp file', {
+        name: file.name,
+        id: file.id,
+        exception: e,
+      });
+      return null;
     }
 
     this.logger.warning('Unable to find summary data in pnp file', {
@@ -74,7 +83,6 @@ export class PnpExtractor {
     variance: string
   ): PnpData | null {
     if (!progressPlanned || !progressActual || !variance) return null;
-    const parsePercent = (raw: string) => parseFloat(raw.replace('%', ''));
     return {
       progressPlanned: parsePercent(progressPlanned),
       progressActual: parsePercent(progressActual),
@@ -82,3 +90,13 @@ export class PnpExtractor {
     };
   }
 }
+
+const parsePercent = (raw: string) => {
+  const num = raw.replace('%', '');
+  if (!isNumeric(num)) {
+    throw new Error(`Could not parse "${raw}" to a float`);
+  }
+  return parseFloat(num);
+};
+
+const isNumeric = (str: string) => !isNaN(parseFloat(str));
