@@ -3,6 +3,7 @@ import { node, relation } from 'cypher-query-builder';
 import { compact } from 'lodash';
 import { DateTime } from 'luxon';
 import {
+  DbBaseNodeLabel,
   DuplicateException,
   generateId,
   NotFoundException,
@@ -34,9 +35,9 @@ import {
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
-  parseSecuredProperties,
+  parseSecuredProperties2,
   runListQuery,
-  StandardReadResult,
+  StandardReadV2Result,
 } from '../../core/database/results';
 import { Role } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
@@ -291,32 +292,28 @@ export class UserService {
     id: string,
     { userId }: Pick<Session, 'userId'>
   ): Promise<User> {
-    // return await this.userRepo.read(id, userId);
     const query = this.db
       .query()
       .call(matchRequestingUser, { userId })
       .call(requestingRoles)
       .match([node('node', 'User', { id })])
       .call(matchPropList, 'requestingRoles')
-      .return('propList, node, requestingRoles')
-      .asResult<StandardReadResult<DbPropsOfDto<User>>>();
+      .return('propList, requestingRoles, node')
+      .asResult<StandardReadV2Result<DbPropsOfDto<User>>>();
 
     const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find user', 'user.id');
     }
 
-    // TODO: use Authorization.perm function and map requestor's perms to permList expected by mapper
-
-    console.log(result);
-
     const rolesValue = result.propList
       .filter((prop) => prop.property === 'roles')
       .map((prop) => prop.value as Role);
 
-    const securedProps = parseSecuredProperties(
+    const securedProps = parseSecuredProperties2(
       result.propList,
-      result.permList,
+      result.requestingRoles,
+      DbBaseNodeLabel.User,
       this.securedProperties
     );
     return {

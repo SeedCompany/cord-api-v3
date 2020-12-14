@@ -2,6 +2,7 @@ import type { Node } from 'cypher-query-builder';
 import type { DateTime } from 'luxon';
 import type { Except } from 'type-fest';
 import type { UnsecuredDto } from '../../../common';
+import { Role } from '../../../components/authorization';
 import type { BaseNode } from './parse-base-node';
 import type { PermListDbResult } from './parse-permissions';
 import type { PropListDbResult } from './parse-props';
@@ -27,6 +28,8 @@ type NativeDbProps<Dto extends Record<string, any>> = {
 
 type NativeDbValue = boolean | string | number | DateTime | null | string[];
 
+export type Nodes<T> = ReadonlyArray<Node<T>>;
+
 /**
  * This is a shortcut for the standard read result based on the given DB props.
  */
@@ -34,4 +37,13 @@ export interface StandardReadResult<DbProps> {
   node: Node<BaseNode>;
   propList: PropListDbResult<DbProps>;
   permList: PermListDbResult<DbProps>;
+}
+
+/**
+ * This is a shortcut for the standard read result based on the given DB props.
+ */
+export interface StandardReadV2Result<DbProps> {
+  node: Node<BaseNode>;
+  propList: PropListDbResult<DbProps>;
+  requestingRoles: Nodes<{ value: Role }>;
 }

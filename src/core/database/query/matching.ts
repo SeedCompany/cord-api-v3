@@ -52,20 +52,3 @@ export const matchPropList = (query: Query, ...withOther: Term[]) =>
       'node',
       ...withOther,
     ]);
-
-export const matchPropList2 = (query: Query) =>
-  query
-    .match([
-      node('node'),
-      relation('out', 'r', { active: true }),
-      node('props', 'Property'),
-    ])
-    .with([
-      collect(
-        mapping({
-          value: 'props.value',
-          property: 'type(r)',
-        }),
-        'propList'
-      ),
-    ]);

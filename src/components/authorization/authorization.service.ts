@@ -5,6 +5,9 @@ import { union, without } from 'lodash';
 import {
   DbBaseNodeLabel,
   generateId,
+  has,
+  many,
+  Many,
   ServerException,
   Session,
 } from '../../common';
@@ -39,25 +42,36 @@ import { Powers } from './dto/powers';
 import { MissingPowerException } from './missing-power.exception';
 import { AnyBaseNode, DbPermission, DbRole, OneBaseNode } from './model';
 import * as Roles from './roles';
-import {
-  Administrator,
-  Consultant,
-  ConsultantManager,
-  Controller,
-  FieldOperationsDirector,
-  FinancialAnalyst,
-  Fundraising,
-  Intern,
-  Leadership,
-  Liason,
-  Marketing,
-  Mentor,
-  ProjectManager,
-  RegionalCommunicationsCoordinator,
-  RegionalDirector,
-  StaffMember,
-  Translator,
-} from './roles';
+
+export const tryFindDbRole = (role: Role) => {
+  if (has(role, Roles)) {
+    const dbRole = Roles[role];
+    if (dbRole instanceof DbRole) {
+      return dbRole;
+    }
+  }
+  return undefined;
+};
+
+export const findDbRole = (role: Role) => {
+  const dbRole = tryFindDbRole(role);
+  if (!dbRole) {
+    throw new ServerException(`Permissions for role "${role}" were not found`);
+  }
+  return dbRole;
+};
+
+export const permissionFor = (
+  roles: Many<Role>,
+  baseNode: DbBaseNodeLabel,
+  property: string,
+  action: keyof DbPermission
+) =>
+  many(roles).some((role) => {
+    const dbRole = findDbRole(role);
+    const perm = dbRole.getPermissionsOnProperty(baseNode, property);
+    return !!perm?.[action];
+  });
 
 /**
  * powers can exist on a security group or a user node
@@ -98,25 +112,12 @@ export class AuthorizationService {
   ) {}
 
   perm(
-    roles: Role[] | Role,
+    roles: Many<Role>,
     baseNode: DbBaseNodeLabel,
     property: keyof AnyBaseNode,
-    access: keyof DbPermission
+    action: keyof DbPermission
   ): boolean {
-    if (Array.isArray(roles)) {
-      for (const role of roles) {
-        const dbRole = this.getRole(role);
-        const perm = dbRole.getPermissionsOnProperty(baseNode, property);
-        if (perm === undefined) continue;
-        if (perm[access]) return true;
-      }
-    } else {
-      const dbRole = this.getRole(roles);
-      const perm = dbRole.getPermissionsOnProperty(baseNode, property);
-      if (perm === undefined) return false;
-      if (perm[access]) return true;
-    }
-    return false;
+    return permissionFor(roles, baseNode, property, action);
   }
 
   async processNewBaseNode(
@@ -124,61 +125,19 @@ export class AuthorizationService {
     baseNodeId: string,
     creatorUserId: string
   ) {
-    // const label = baseNodeObj.__className.substring(2);
-    // await this.db
-    //   .query()
-    //   .raw(
-    //     `CALL cord.processNewBaseNode($baseNodeId, $label, $creatorUserId)`,
-    //     {
-    //       baseNodeId,
-    //       label,
-    //       creatorUserId,
-    //     }
-    //   )
-    //   .run();
-
-    return true;
-  }
-
-  getRole(role: Role): DbRole {
-    switch (role) {
-      case Role.Administrator:
-        return Administrator;
-      case Role.Consultant:
-        return Consultant;
-      case Role.ConsultantManager:
-        return ConsultantManager;
-      case Role.Controller:
-        return Controller;
-      case Role.FieldOperationsDirector:
-        return FieldOperationsDirector;
-      case Role.FinancialAnalyst:
-        return FinancialAnalyst;
-      case Role.Fundraising:
-        return Fundraising;
-      case Role.Intern:
-        return Intern;
-      case Role.Leadership:
-        return Leadership;
-      case Role.Liason:
-        return Liason;
-      case Role.Marketing:
-        return Marketing;
-      case Role.Mentor:
-        return Mentor;
-      case Role.ProjectManager:
-        return ProjectManager;
-      case Role.RegionalCommunicationsCoordinator:
-        return RegionalCommunicationsCoordinator;
-      case Role.RegionalDirector:
-        return RegionalDirector;
-      case Role.StaffMember:
-        return StaffMember;
-      case Role.Translator:
-        return Translator;
-      default:
-        throw new ServerException('role not found');
-    }
+    return;
+    const label = baseNodeObj.__className.substring(2);
+    await this.db
+      .query()
+      .raw(
+        `CALL cord.processNewBaseNode($baseNodeId, $label, $creatorUserId)`,
+        {
+          baseNodeId,
+          label,
+          creatorUserId,
+        }
+      )
+      .run();
   }
 
   async createSGsForEveryRoleForAllBaseNodes(session: Session) {
@@ -214,7 +173,7 @@ export class AuthorizationService {
         continue;
       }
 
-      for (const role of everyRole) {
+      for (const role of Object.values(Roles)) {
         const baseNodeObj = this.getBaseNodeObjUsingLabel(idQuery.labels);
         await this.mergeSecurityGroupForRole(idQuery.id, role, baseNodeObj);
       }
@@ -428,9 +387,9 @@ export class AuthorizationService {
 
     for (const role of roles) {
       // match the role to a real role object and grant powers
-      const roleObj = everyRole.find((i) => i.name === role);
-      if (roleObj === undefined) continue;
-      for (const power of roleObj.powers) {
+      const dbRole = tryFindDbRole(role);
+      if (dbRole === undefined) continue;
+      for (const power of dbRole.powers) {
         await this.grantPower(power, id);
       }
     }
