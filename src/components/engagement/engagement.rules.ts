@@ -373,7 +373,10 @@ export class EngagementRules {
     let i = 0;
     const indexesToSplice: number[] = [];
     transitions.forEach((value) => {
-      if (!value.projectStepRequirements.includes(currentStep)) {
+      if (
+        !value.projectStepRequirements.includes(currentStep) &&
+        value.projectStepRequirements.length > 0
+      ) {
         indexesToSplice.push(i);
       }
       i++;

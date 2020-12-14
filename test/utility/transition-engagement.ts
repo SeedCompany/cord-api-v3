@@ -76,11 +76,11 @@ export const changeLanguageEngagementStatus = async (
   return result.updateLanguageEngagement.engagement;
 };
 
-export const transitionLangEngagementToActive = async (
+export const transitionEngagementToActive = async (
   app: TestApp,
   projectId: string,
   langEngagementId: string
-): Promise<void> => {
+): Promise<any> => {
   await runAsAdmin(app, async () => {
     const fundingAccount = await createFundingAccount(app);
     const location = await createLocation(app, {
@@ -102,4 +102,5 @@ export const transitionLangEngagementToActive = async (
     langEngagementId
   );
   expect(lEngagementStatus.status.value).toBe(EngagementStatus.Active);
+  return lEngagementStatus;
 };

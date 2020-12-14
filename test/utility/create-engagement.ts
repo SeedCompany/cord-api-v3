@@ -159,6 +159,10 @@ export async function getCurrentEngagementStatus(app: TestApp, id: string) {
     gql`
     query {
       engagement(id: "${id}"){
+          modifiedAt
+          statusModifiedAt {
+            value
+          }
           status {
             value
             transitions {

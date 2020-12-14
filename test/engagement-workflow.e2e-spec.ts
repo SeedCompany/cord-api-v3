@@ -38,7 +38,7 @@ import {
 import { resetDatabase } from './utility/reset-database';
 import {
   changeLanguageEngagementStatus,
-  transitionLangEngagementToActive,
+  transitionEngagementToActive,
 } from './utility/transition-engagement';
 import {
   changeProjectStep,
@@ -189,11 +189,7 @@ describe('Project-Workflow e2e', () => {
     const langEngagement = await createLanguageEngagement(app, {
       projectId: transProject.id,
     });
-    await transitionLangEngagementToActive(
-      app,
-      transProject.id,
-      langEngagement.id
-    );
+    await transitionEngagementToActive(app, transProject.id, langEngagement.id);
     await runAsAdmin(app, async function () {
       await changeProjectStep(
         app,
@@ -233,11 +229,7 @@ describe('Project-Workflow e2e', () => {
     const langEngagement = await createLanguageEngagement(app, {
       projectId: transProject.id,
     });
-    await transitionLangEngagementToActive(
-      app,
-      transProject.id,
-      langEngagement.id
-    );
+    await transitionEngagementToActive(app, transProject.id, langEngagement.id);
     await changeLanguageEngagementStatus(
       app,
       langEngagement.id,
