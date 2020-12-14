@@ -98,15 +98,22 @@ export class AuthorizationService {
   ) {}
 
   perm(
-    roles: Role[],
+    roles: Role[] | Role,
     baseNode: DbBaseNodeLabel,
     property: keyof AnyBaseNode,
     access: 'read' | 'write' | 'create' | 'delete' | 'admin'
   ): boolean {
-    for (const role of roles) {
-      const dbRole = this.getRole(role);
+    if (Array.isArray(roles)) {
+      for (const role of roles) {
+        const dbRole = this.getRole(role);
+        const perm = dbRole.getPermissionsOnProperty(baseNode, property);
+        if (perm === undefined) continue;
+        if (perm[access]) return true;
+      }
+    } else {
+      const dbRole = this.getRole(roles);
       const perm = dbRole.getPermissionsOnProperty(baseNode, property);
-      if (perm === undefined) continue;
+      if (perm === undefined) return false;
       if (perm[access]) return true;
     }
     return false;

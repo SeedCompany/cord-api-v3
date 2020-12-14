@@ -9,6 +9,13 @@ export const requestingUser = (session: Session) =>
     id: session.userId,
   });
 
+export const requestingRoles = (query: Query) =>
+  query.optionalMatch([
+    node('requestingUser'),
+    relation('out', '', 'roles', { active: true }),
+    node('requestingRoles', 'Property'),
+  ]);
+
 export const permissionsOfNode = (nodeLabel?: string) => [
   relation('in', 'memberOfSecurityGroup', 'member'),
   node('security', 'SecurityGroup'),

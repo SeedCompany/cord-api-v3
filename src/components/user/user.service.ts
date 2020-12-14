@@ -26,9 +26,9 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
-  matchPermList,
   matchPropList,
   permissionsOfNode,
+  requestingRoles,
   requestingUser,
 } from '../../core/database/query';
 import {
@@ -291,39 +291,43 @@ export class UserService {
     id: string,
     { userId }: Pick<Session, 'userId'>
   ): Promise<User> {
-    return await this.userRepo.read(id, userId);
-    // const query = this.db
-    //   .query()
-    //   .call(matchRequestingUser, { userId })
-    //   .match([node('node', 'User', { id })])
-    //   .call(matchPermList, 'node')
-    //   .call(matchPropList, 'permList')
-    //   .return('propList, permList, node')
-    //   .asResult<StandardReadResult<DbPropsOfDto<User>>>();
+    // return await this.userRepo.read(id, userId);
+    const query = this.db
+      .query()
+      .call(matchRequestingUser, { userId })
+      .call(requestingRoles)
+      .match([node('node', 'User', { id })])
+      .call(matchPropList, 'requestingRoles')
+      .return('propList, node, requestingRoles')
+      .asResult<StandardReadResult<DbPropsOfDto<User>>>();
 
-    // const result = await query.first();
-    // if (!result) {
-    //   throw new NotFoundException('Could not find user', 'user.id');
-    // }
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException('Could not find user', 'user.id');
+    }
 
-    // const rolesValue = result.propList
-    //   .filter((prop) => prop.property === 'roles')
-    //   .map((prop) => prop.value as Role);
+    // TODO: use Authorization.perm function and map requestor's perms to permList expected by mapper
 
-    // const securedProps = parseSecuredProperties(
-    //   result.propList,
-    //   result.permList,
-    //   this.securedProperties
-    // );
-    // return {
-    //   ...parseBaseNodeProperties(result.node),
-    //   ...securedProps,
-    //   roles: {
-    //     ...securedProps.roles,
-    //     value: rolesValue,
-    //   },
-    //   canDelete: await this.db.checkDeletePermission(id, { userId }),
-    // };
+    console.log(result);
+
+    const rolesValue = result.propList
+      .filter((prop) => prop.property === 'roles')
+      .map((prop) => prop.value as Role);
+
+    const securedProps = parseSecuredProperties(
+      result.propList,
+      result.permList,
+      this.securedProperties
+    );
+    return {
+      ...parseBaseNodeProperties(result.node),
+      ...securedProps,
+      roles: {
+        ...securedProps.roles,
+        value: rolesValue,
+      },
+      canDelete: await this.db.checkDeletePermission(id, { userId }),
+    };
   }
 
   async update(input: UpdateUser, session: Session): Promise<User> {
