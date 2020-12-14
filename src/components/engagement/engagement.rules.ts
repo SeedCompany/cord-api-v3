@@ -3,16 +3,14 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { first, intersection } from 'lodash';
 import { ServerException, Session, UnauthorizedException } from '../../common';
-import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
+import { DatabaseService, ILogger, Logger } from '../../core';
 import { Role } from '../authorization';
 import { ProjectRules, ProjectStep } from '../project';
-import { UserService } from '../user';
 import {
   EngagementStatus,
   EngagementStatusTransition,
   EngagementTransitionType,
 } from './dto';
-import { EngagementService } from './engagement.service';
 
 // TODO: Don't think we need notifiers. wiki says none for notifiers for engagment status changes
 // type MaybeAsync<T> = T | Promise<T>;
@@ -40,11 +38,6 @@ interface StatusRule {
 export class EngagementRules {
   constructor(
     private readonly db: DatabaseService,
-    @Inject(forwardRef(() => UserService))
-    private readonly userService: UserService,
-    @Inject(forwardRef(() => EngagementService))
-    private readonly engagementService: EngagementService,
-    private readonly configService: ConfigService,
     @Inject(forwardRef(() => ProjectRules))
     private readonly projectRules: ProjectRules,
     // eslint-disable-next-line @seedcompany/no-unused-vars
@@ -306,11 +299,6 @@ export class EngagementRules {
               type: EngagementTransitionType.Approve,
               label: 'Approve Termination',
               projectStepRequirements: [],
-            },
-            {
-              to: EngagementStatus.Terminated,
-              type: EngagementTransitionType.Approve,
-              label: 'Approve Termination',
             },
           ],
         };

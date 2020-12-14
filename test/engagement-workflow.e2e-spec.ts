@@ -23,15 +23,10 @@ import {
   createInternshipEngagement,
   createLanguageEngagement,
   createLocation,
-  createPartner,
-  createPartnership,
-  createPerson,
   createProject,
-  createProjectMember,
   createRegion,
   createSession,
   createTestApp,
-  fragments,
   getCurrentEngagementStatus,
   login,
   registerUser,
@@ -40,10 +35,8 @@ import {
   TestApp,
   updateProject,
 } from './utility';
-import { createProduct } from './utility/create-product';
 import { resetDatabase } from './utility/reset-database';
 import {
-  changeInternshipEngagementStatus,
   changeLanguageEngagementStatus,
   transitionLangEngagementToActive,
 } from './utility/transition-engagement';
@@ -56,9 +49,6 @@ describe('Project-Workflow e2e', () => {
   let app: TestApp;
   let password: string;
   let director: User;
-  let fieldZone: FieldZone;
-  let fieldRegion: FieldRegion;
-  let location: Location;
   let db: Connection;
   let projectManager: User;
   let consultantManager: User;
@@ -204,6 +194,13 @@ describe('Project-Workflow e2e', () => {
       transProject.id,
       langEngagement.id
     );
+    await runAsAdmin(app, async function () {
+      await changeProjectStep(
+        app,
+        transProject.id,
+        ProjectStep.DiscussingChangeToPlan
+      );
+    });
     await changeLanguageEngagementStatus(
       app,
       langEngagement.id,
@@ -214,6 +211,9 @@ describe('Project-Workflow e2e', () => {
       langEngagement.id,
       EngagementStatus.ActiveChangedPlan
     );
+    await runAsAdmin(app, async function () {
+      await changeProjectStep(app, transProject.id, ProjectStep.Active);
+    });
     await changeLanguageEngagementStatus(
       app,
       langEngagement.id,
@@ -243,6 +243,13 @@ describe('Project-Workflow e2e', () => {
       langEngagement.id,
       EngagementStatus.DiscussingSuspension
     );
+    await runAsAdmin(app, async function () {
+      await changeProjectStep(
+        app,
+        transProject.id,
+        ProjectStep.DiscussingChangeToPlan
+      );
+    });
     await changeLanguageEngagementStatus(
       app,
       langEngagement.id,

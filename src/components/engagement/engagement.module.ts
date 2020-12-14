@@ -5,7 +5,6 @@ import { FileModule } from '../file/file.module';
 import { LanguageModule } from '../language/language.module';
 import { LocationModule } from '../location/location.module';
 import { ProductModule } from '../product/product.module';
-import { ProjectRules } from '../project';
 import { ProjectModule } from '../project/project.module';
 import { UserModule } from '../user/user.module';
 import { EngagementStatusResolver } from './engagement-status.resolver';
@@ -28,7 +27,6 @@ import { PnpExtractor } from './pnp-extractor.service';
     forwardRef(() => LanguageModule),
     LocationModule,
     forwardRef(() => ProjectModule),
-    forwardRef(() => ProjectRules),
   ],
   providers: [
     EngagementResolver,
