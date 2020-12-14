@@ -755,11 +755,23 @@ export class EngagementService {
     if (input.firstScripture) {
       await this.verifyFirstScripture({ engagementId: input.id });
     }
+
     if (input.status) {
+      const projectRes = await this.db
+        .query()
+        .match([
+          node('engagement', 'Engagement', { id: input.id }),
+          relation('in', '', 'engagement'),
+          node('project', 'Project'),
+        ])
+        .return('project.id as projectId')
+        .asResult<{ projectId: string }>()
+        .first();
       await this.engagementRules.verifyStatusChange(
         input.id,
         session,
-        input.status
+        input.status,
+        projectRes?.projectId
       );
     }
 
@@ -835,10 +847,21 @@ export class EngagementService {
   ): Promise<InternshipEngagement> {
     const createdAt = DateTime.local();
     if (input.status) {
+      const projectRes = await this.db
+        .query()
+        .match([
+          node('engagement', 'Engagement', { id: input.id }),
+          relation('in', '', 'engagement'),
+          node('project', 'Project'),
+        ])
+        .return('project.id as projectId')
+        .asResult<{ projectId: string }>()
+        .first();
       await this.engagementRules.verifyStatusChange(
         input.id,
         session,
-        input.status
+        input.status,
+        projectRes?.projectId
       );
     }
 

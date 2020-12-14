@@ -5,6 +5,7 @@ import { first, intersection } from 'lodash';
 import { ServerException, Session, UnauthorizedException } from '../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import { Role } from '../authorization';
+import { ProjectRules, ProjectStep } from '../project';
 import { UserService } from '../user';
 import {
   EngagementStatus,
@@ -44,6 +45,8 @@ export class EngagementRules {
     @Inject(forwardRef(() => EngagementService))
     private readonly engagementService: EngagementService,
     private readonly configService: ConfigService,
+    @Inject(forwardRef(() => ProjectRules))
+    private readonly projectRules: ProjectRules,
     // eslint-disable-next-line @seedcompany/no-unused-vars
     @Logger('engagement:rules') private readonly logger: ILogger
   ) {}
@@ -61,11 +64,13 @@ export class EngagementRules {
               to: EngagementStatus.Active,
               type: EngagementTransitionType.Approve,
               label: 'Project was made active',
+              projectStepRequirements: [ProjectStep.Active],
             },
             {
               to: EngagementStatus.DidNotDevelop,
               type: EngagementTransitionType.Reject,
               label: 'Project did not develop',
+              projectStepRequirements: [ProjectStep.DidNotDevelop],
             },
           ],
         };
@@ -82,21 +87,32 @@ export class EngagementRules {
               to: EngagementStatus.DiscussingChangeToPlan,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Change to Plan',
+              projectStepRequirements: [ProjectStep.DiscussingChangeToPlan],
             },
             {
               to: EngagementStatus.DiscussingSuspension,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Suspension',
+              projectStepRequirements: [
+                ProjectStep.DiscussingChangeToPlan,
+                ProjectStep.DiscussingSuspension,
+              ],
             },
             {
               to: EngagementStatus.DiscussingTermination,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Termination',
+              projectStepRequirements: [
+                ProjectStep.DiscussingChangeToPlan,
+                ProjectStep.DiscussingSuspension,
+                ProjectStep.DiscussingTermination,
+              ],
             },
             {
               to: EngagementStatus.FinalizingCompletion,
               type: EngagementTransitionType.Approve,
               label: 'Finalize Completion',
+              projectStepRequirements: [ProjectStep.Active],
             },
           ],
         };
@@ -113,21 +129,32 @@ export class EngagementRules {
               to: EngagementStatus.DiscussingChangeToPlan,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Change to Plan',
+              projectStepRequirements: [ProjectStep.DiscussingChangeToPlan],
             },
             {
               to: EngagementStatus.DiscussingTermination,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Termination',
+              projectStepRequirements: [
+                ProjectStep.DiscussingChangeToPlan,
+                ProjectStep.DiscussingSuspension,
+                ProjectStep.DiscussingTermination,
+              ],
             },
             {
               to: EngagementStatus.DiscussingSuspension,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Suspension',
+              projectStepRequirements: [
+                ProjectStep.DiscussingChangeToPlan,
+                ProjectStep.DiscussingSuspension,
+              ],
             },
             {
               to: EngagementStatus.FinalizingCompletion,
               type: EngagementTransitionType.Approve,
               label: 'Finalize Completion',
+              projectStepRequirements: [ProjectStep.Active],
             },
           ],
         };
@@ -144,11 +171,16 @@ export class EngagementRules {
               to: EngagementStatus.DiscussingSuspension,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Suspension',
+              projectStepRequirements: [
+                ProjectStep.DiscussingChangeToPlan,
+                ProjectStep.DiscussingSuspension,
+              ],
             },
             {
               to: EngagementStatus.ActiveChangedPlan,
               type: EngagementTransitionType.Approve,
               label: 'Approve Change to Plan',
+              projectStepRequirements: [ProjectStep.DiscussingChangeToPlan],
             },
             {
               to: await this.getMostRecentPreviousStatus(id, [
@@ -157,6 +189,7 @@ export class EngagementRules {
               ]),
               type: EngagementTransitionType.Neutral,
               label: 'Will Not Change Plan',
+              projectStepRequirements: [ProjectStep.DiscussingChangeToPlan],
             },
           ],
         };
@@ -173,6 +206,10 @@ export class EngagementRules {
               to: EngagementStatus.Suspended,
               type: EngagementTransitionType.Approve,
               label: 'Approve Suspension',
+              projectStepRequirements: [
+                ProjectStep.DiscussingChangeToPlan,
+                ProjectStep.DiscussingSuspension,
+              ],
             },
             {
               to: await this.getMostRecentPreviousStatus(id, [
@@ -181,6 +218,20 @@ export class EngagementRules {
               ]),
               type: EngagementTransitionType.Neutral,
               label: 'Will Not Suspend',
+              projectStepRequirements: [
+                ProjectStep.DiscussingChangeToPlan,
+                ProjectStep.DiscussingSuspension,
+              ],
+            },
+            {
+              to: EngagementStatus.DiscussingTermination,
+              type: EngagementTransitionType.Neutral,
+              label: 'Discussing Termination',
+              projectStepRequirements: [
+                ProjectStep.DiscussingChangeToPlan,
+                ProjectStep.DiscussingSuspension,
+                ProjectStep.DiscussingTermination,
+              ],
             },
           ],
         };
@@ -197,11 +248,13 @@ export class EngagementRules {
               to: EngagementStatus.DiscussingReactivation,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Reactivation',
+              projectStepRequirements: [],
             },
             {
               to: EngagementStatus.DiscussingTermination,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Termination',
+              projectStepRequirements: [],
             },
           ],
         };
@@ -218,11 +271,13 @@ export class EngagementRules {
               to: EngagementStatus.ActiveChangedPlan,
               type: EngagementTransitionType.Approve,
               label: 'Approve ReActivation',
+              projectStepRequirements: [],
             },
             {
               to: EngagementStatus.DiscussingTermination,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Termination',
+              projectStepRequirements: [],
             },
           ],
         };
@@ -244,11 +299,13 @@ export class EngagementRules {
               ]),
               type: EngagementTransitionType.Neutral,
               label: 'Will Not Terminate',
+              projectStepRequirements: [],
             },
             {
               to: EngagementStatus.Terminated,
               type: EngagementTransitionType.Approve,
               label: 'Approve Termination',
+              projectStepRequirements: [],
             },
           ],
         };
@@ -269,11 +326,13 @@ export class EngagementRules {
               ]),
               type: EngagementTransitionType.Neutral,
               label: 'Still Working',
+              projectStepRequirements: [],
             },
             {
               to: EngagementStatus.Completed,
               type: EngagementTransitionType.Approve,
               label: 'Complete 🎉',
+              projectStepRequirements: [],
             },
           ],
         };
@@ -297,6 +356,7 @@ export class EngagementRules {
 
   async getAvailableTransitions(
     engagementId: string,
+    projectId: string,
     session: Session
   ): Promise<EngagementStatusTransition[]> {
     if (session.anonymous) {
@@ -317,16 +377,35 @@ export class EngagementRules {
       return [];
     }
 
+    const currentStep = await this.projectRules.getCurrentStep(projectId);
+    let i = 0;
+    const indexesToSplice: number[] = [];
+    transitions.forEach((value) => {
+      if (!value.projectStepRequirements.includes(currentStep)) {
+        indexesToSplice.push(i);
+      }
+      i++;
+    });
+    indexesToSplice.forEach((i) => {
+      transitions.splice(i, 1);
+    });
     return transitions;
   }
 
   async verifyStatusChange(
     engagementId: string,
     session: Session,
-    nextStatus: EngagementStatus
+    nextStatus: EngagementStatus,
+    projectId: string | undefined
   ) {
+    if (projectId === undefined) {
+      throw new ServerException(
+        'No project associated with engagement. Cannot update status'
+      );
+    }
     const transitions = await this.getAvailableTransitions(
       engagementId,
+      projectId,
       session
     );
 
