@@ -6,6 +6,7 @@ import {
   NotFoundException,
   ServerException,
   Session,
+  UnauthorizedException,
 } from '../../common';
 import {
   ConfigService,
@@ -15,6 +16,7 @@ import {
   Logger,
   matchRequestingUser,
   OnIndex,
+  UniqueProperties,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -95,6 +97,12 @@ export class SongService {
         isOrgPublic: true,
         label: 'SongName',
       },
+      {
+        key: 'canDelete',
+        value: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
     ];
 
     try {
@@ -172,7 +180,7 @@ export class SongService {
         ...securedProps.scriptureReferences,
         value: scriptureReferences,
       },
-      canDelete: true, // TODO
+      canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 
@@ -192,11 +200,27 @@ export class SongService {
 
   async delete(id: string, session: Session): Promise<void> {
     const song = await this.readOne(id, session);
+    if (!song) {
+      throw new NotFoundException('Could not find Song');
+    }
+    const canDelete = await this.db.checkDeletePermission(id, session);
+
+    if (!canDelete)
+      throw new UnauthorizedException(
+        'You do not have the permission to delete this Song'
+      );
+
+    const baseNodeLabels = ['BaseNode', 'Song', 'Producible'];
+
+    const uniqueProperties: UniqueProperties<Song> = {
+      name: ['Property', 'SongName'],
+    };
+
     try {
-      await this.db.deleteNode({
-        session,
+      await this.db.deleteNodeNew<Song>({
         object: song,
-        aclEditProp: 'canDeleteOwnUser',
+        baseNodeLabels,
+        uniqueProperties,
       });
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });

@@ -10,10 +10,15 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 /* eslint-enable no-restricted-imports */
-import { GqlArgumentsHost, GqlExceptionFilter } from '@nestjs/graphql';
+import { BaseExceptionFilter } from '@nestjs/core';
+import {
+  GqlArgumentsHost,
+  GqlContextType,
+  GqlExceptionFilter,
+} from '@nestjs/graphql';
 import { compact, mapValues, uniq } from 'lodash';
 import { Exception, getPreviousList, simpleSwitch } from '../common';
-import { ServiceUnavailableError } from './database';
+import { ConnectionTimeoutError, ServiceUnavailableError } from './database';
 import { ILogger, Logger, LogLevel } from './logger';
 
 type ExceptionInfo = ReturnType<ExceptionFilter['catchGql']>;
@@ -21,7 +26,10 @@ type ExceptionInfo = ReturnType<ExceptionFilter['catchGql']>;
 @Catch()
 @Injectable()
 export class ExceptionFilter implements GqlExceptionFilter {
-  constructor(@Logger('nest') private readonly logger?: ILogger) {}
+  constructor(
+    private readonly baseFilter: BaseExceptionFilter,
+    @Logger('nest') private readonly logger?: ILogger
+  ) {}
 
   catch(exception: Error, restHost: ArgumentsHost): any {
     const _host = GqlArgumentsHost.create(restHost); // when needed
@@ -32,6 +40,15 @@ export class ExceptionFilter implements GqlExceptionFilter {
       throw exception;
     }
     this.logIt(ex, exception);
+
+    if (restHost.getType<GqlContextType>() !== 'graphql') {
+      // This is not from a request Apollo Server is handling. Forward to default
+      // exception filter, instead of throwing below which won't be caught.
+      this.baseFilter.catch(exception, restHost);
+      return;
+    }
+
+    // re-throw our result so that Apollo Server picks it up
     const e: Error = Object.assign(new Error(), ex);
     throw e;
   }
@@ -85,14 +102,23 @@ export class ExceptionFilter implements GqlExceptionFilter {
     // failure, then return that as the error. This way we can have an "unknown"
     // failure for the specific action without having to check for this error
     // in every catch statement (assuming no further logic is done).
-    if (
-      getPreviousList(ex, true).some(
-        (e) => e instanceof ServiceUnavailableError
-      )
-    ) {
+    const exs = getPreviousList(ex, true);
+    if (exs.some((e) => e instanceof ServiceUnavailableError)) {
       return {
-        codes: ['DatabaseConnectionFailure', 'ServiceUnavailable', 'Server'],
+        codes: [
+          'DatabaseConnectionFailure',
+          'ServiceUnavailable',
+          'Transient',
+          'Database',
+          'Server',
+        ],
         message: 'Failed to connect to CORD database',
+      };
+    }
+    if (exs.some((e) => e instanceof ConnectionTimeoutError)) {
+      return {
+        codes: ['DatabaseTimeoutFailure', 'Transient', 'Database', 'Server'],
+        message: 'Failed to retrieve data from CORD database',
       };
     }
 

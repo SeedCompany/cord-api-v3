@@ -46,7 +46,7 @@ export abstract class UpdateProject {
   @DateField({ nullable: true })
   readonly mouEnd?: CalendarDate;
 
-  readonly initialMouEnd?: CalendarDate;
+  readonly initialMouEnd?: CalendarDate | null;
 
   @DateField({ nullable: true })
   readonly estimatedSubmission?: CalendarDate;

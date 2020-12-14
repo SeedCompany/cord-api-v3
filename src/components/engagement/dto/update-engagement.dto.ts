@@ -5,7 +5,7 @@ import { CalendarDate, DateField, IdField } from '../../../common';
 import { CreateDefinedFileVersionInput } from '../../file/dto';
 import { ProductMethodology } from '../../product/dto';
 import { InternshipEngagement, LanguageEngagement } from './engagement.dto';
-import { InternPosition } from './intern-position.enum';
+import { InternshipPosition } from './intern-position.enum';
 import { EngagementStatus } from './status.enum';
 
 @InputType({
@@ -30,7 +30,7 @@ export abstract class UpdateEngagement {
   @DateField({ nullable: true })
   readonly endDateOverride?: CalendarDate;
 
-  readonly initialEndDate?: CalendarDate;
+  readonly initialEndDate?: CalendarDate | null;
 
   @Field(() => EngagementStatus, { nullable: true })
   readonly status?: EngagementStatus;
@@ -44,8 +44,14 @@ export abstract class UpdateLanguageEngagement extends UpdateEngagement {
   @Field({ nullable: true })
   readonly lukePartnership?: boolean;
 
-  @Field({ nullable: true })
+  @Field({
+    deprecationReason: 'Not proper case',
+    nullable: true,
+  })
   readonly paraTextRegistryId?: string;
+
+  @Field({ nullable: true })
+  readonly paratextRegistryId?: string;
 
   @Field({ nullable: true })
   readonly pnp?: CreateDefinedFileVersionInput;
@@ -62,8 +68,8 @@ export abstract class UpdateInternshipEngagement extends UpdateEngagement {
   @IdField({ nullable: true })
   readonly countryOfOriginId?: string;
 
-  @Field(() => InternPosition, { nullable: true })
-  readonly position?: InternPosition;
+  @Field(() => InternshipPosition, { nullable: true })
+  readonly position?: InternshipPosition;
 
   @Field(() => [ProductMethodology], { nullable: true })
   readonly methodologies?: ProductMethodology[];

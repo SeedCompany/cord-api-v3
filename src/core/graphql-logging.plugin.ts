@@ -5,6 +5,7 @@ import {
   GraphQLRequestListener,
 } from 'apollo-server-plugin-base';
 import { GraphQLError } from 'graphql';
+import { maskSecrets } from '../common/mask-secrets';
 import { ILogger, Logger } from './logger';
 
 /**
@@ -19,6 +20,15 @@ export class GraphqlLoggingPlugin implements ApolloServerPlugin {
     _context: GraphQLRequestContext
   ): GraphQLRequestListener | void {
     return {
+      executionDidStart: ({ operationName, request }) => {
+        if (operationName === 'IntrospectionQuery') {
+          return;
+        }
+        this.logger.info('Received request', {
+          operation: operationName,
+          ...maskSecrets(request.variables ?? {}),
+        });
+      },
       didEncounterErrors: ({ errors }) => {
         for (const error of errors) {
           this.onError(error);

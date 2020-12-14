@@ -6,6 +6,7 @@ import {
   NotFoundException,
   ServerException,
   Session,
+  UnauthorizedException,
 } from '../../common';
 import {
   ConfigService,
@@ -15,6 +16,7 @@ import {
   Logger,
   matchRequestingUser,
   OnIndex,
+  UniqueProperties,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -72,7 +74,6 @@ export class FundingAccountService {
       'CREATE CONSTRAINT ON ()-[r:accountNumber]-() ASSERT EXISTS(r.createdAt)',
 
       'CREATE CONSTRAINT ON (n:FundingAccountNumber) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:FundingAccountNumber) ASSERT n.value IS UNIQUE',
     ];
   }
 
@@ -107,6 +108,12 @@ export class FundingAccountService {
         isPublic: false,
         isOrgPublic: false,
         label: 'FundingAccountNumber',
+      },
+      {
+        key: 'canDelete',
+        value: true,
+        isPublic: false,
+        isOrgPublic: false,
       },
     ];
 
@@ -172,7 +179,7 @@ export class FundingAccountService {
     return {
       ...parseBaseNodeProperties(result.node),
       ...secured,
-      canDelete: true, // TODO
+      canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 
@@ -191,8 +198,37 @@ export class FundingAccountService {
     });
   }
 
-  async delete(_id: string, _session: Session): Promise<void> {
-    // Not implemented
+  async delete(id: string, session: Session): Promise<void> {
+    const object = await this.readOne(id, session);
+
+    if (!object) {
+      throw new NotFoundException('Could not find Funding Account');
+    }
+
+    const canDelete = await this.db.checkDeletePermission(id, session);
+
+    if (!canDelete)
+      throw new UnauthorizedException(
+        'You do not have the permission to delete this Funding Account'
+      );
+
+    const baseNodeLabels = ['BaseNode', 'FundingAccount'];
+
+    const uniqueProperties: UniqueProperties<FundingAccount> = {
+      name: ['Property', 'FundingAccountName'],
+      accountNumber: ['Property', 'FundingAccountNumber'],
+    };
+
+    try {
+      await this.db.deleteNodeNew({
+        object,
+        baseNodeLabels,
+        uniqueProperties,
+      });
+    } catch (exception) {
+      this.logger.error('Failed to delete', { id, exception });
+      throw new ServerException('Failed to delete', exception);
+    }
   }
 
   async list(

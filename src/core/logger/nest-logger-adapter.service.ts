@@ -17,6 +17,8 @@ export class NestLoggerAdapterService implements INestLogger, OnModuleInit {
     InstanceLoader: 'nest:loader',
     ExceptionsHandler: 'nest:exception',
     NestApplication: 'nest:application',
+    RouterExplorer: 'nest:router:explorer',
+    RoutesResolver: 'nest:router:resolver',
   };
 
   constructor(private readonly logger: ILogger) {}
@@ -40,7 +42,7 @@ export class NestLoggerAdapterService implements INestLogger, OnModuleInit {
 
   log(message: any, context?: string) {
     const name = this.mapName(context);
-    this.logger.debug(message, name);
+    this.logger.info(message, name);
   }
 
   verbose(message: any, context?: string) {

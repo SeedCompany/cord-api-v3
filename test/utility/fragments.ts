@@ -524,8 +524,10 @@ export const engagement = gql`
     id
     createdAt
     modifiedAt
-    status
     # status, // WIP
+    status {
+      value
+    }
     ceremony {
       value {
         id
@@ -573,7 +575,7 @@ export const engagement = gql`
       sentPrintingDate {
         value
       }
-      paraTextRegistryId {
+      paratextRegistryId {
         value
       }
       pnp {

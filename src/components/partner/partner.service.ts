@@ -8,6 +8,7 @@ import {
   NotFoundException,
   ServerException,
   Session,
+  UnauthorizedException,
 } from '../../common';
 import {
   ConfigService,
@@ -145,6 +146,12 @@ export class PartnerService {
       {
         key: 'modifiedAt',
         value: createdAt,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'canDelete',
+        value: true,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -297,7 +304,7 @@ export class PartnerService {
         ...secured.financialReportingTypes,
         value: secured.financialReportingTypes.value || [],
       },
-      canDelete: true, // TODO
+      canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 
@@ -352,15 +359,14 @@ export class PartnerService {
         })
         .optionalMatch([
           node('requestingUser'),
-          relation('in', '', 'member'),
-          node('', 'SecurityGroup'),
-          relation('out', '', 'permission'),
+          relation('in', 'memberOfSecurityGroup', 'member'),
+          node('securityGroup', 'SecurityGroup'),
+          relation('out', 'sgPerms', 'permission'),
           node('canReadPointOfContact', 'Permission', {
             property: 'pointOfContact',
-
             read: true,
           }),
-          relation('out', '', 'baseNode'),
+          relation('out', 'permsOfBaseNode', 'baseNode'),
           node('org'),
           relation('out', 'oldPointOfContactRel', 'pointOfContact', {
             active: true,
@@ -383,16 +389,28 @@ export class PartnerService {
   }
 
   async delete(id: string, session: Session): Promise<void> {
-    const ed = await this.readOne(id, session);
+    const object = await this.readOne(id, session);
+    if (!object) {
+      throw new NotFoundException('Could not find Partner');
+    }
+
+    const canDelete = await this.db.checkDeletePermission(id, session);
+
+    if (!canDelete)
+      throw new UnauthorizedException(
+        'You do not have the permission to delete this Partner'
+      );
+
+    const baseNodeLabels = ['BaseNode', 'Partner'];
+
     try {
-      await this.db.deleteNode({
-        session,
-        object: ed,
-        aclEditProp: 'canDeleteOwnUser',
+      await this.db.deleteNodeNew<Partner>({
+        object,
+        baseNodeLabels,
       });
-    } catch (e) {
-      this.logger.error('Failed to delete', { id, exception: e });
-      throw new ServerException('Failed to delete');
+    } catch (exception) {
+      this.logger.error('Failed to delete', { id, exception });
+      throw new ServerException('Failed to delete', exception);
     }
 
     this.logger.debug(`deleted partner with id`, { id });

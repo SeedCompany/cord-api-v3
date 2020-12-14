@@ -10,6 +10,7 @@ import {
   NotFoundException,
   ServerException,
   Session,
+  UnauthorizedException,
 } from '../../common';
 import {
   ConfigService,
@@ -115,6 +116,12 @@ export class ProductService {
         isPublic: false,
         isOrgPublic: false,
         label: '',
+      },
+      {
+        key: 'canDelete',
+        value: true,
+        isPublic: false,
+        isOrgPublic: false,
       },
     ];
 
@@ -325,7 +332,7 @@ export class ProductService {
           ...rest.purposes,
           value: rest.purposes.value ?? [],
         },
-        canDelete: true, // TODO
+        canDelete: await this.db.checkDeletePermission(id, session),
       };
     }
 
@@ -368,7 +375,7 @@ export class ProductService {
         ...scriptureReferencesOverride,
         value: !isOverriding.value ? null : scriptureReferencesValue,
       },
-      canDelete: true, // TODO
+      canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 
@@ -491,17 +498,29 @@ export class ProductService {
       throw new NotFoundException('Could not find product', 'product.id');
     }
 
+    const canDelete = await this.db.checkDeletePermission(id, session);
+
+    if (!canDelete)
+      throw new UnauthorizedException(
+        'You do not have the permission to delete this Product'
+      );
+
+    const baseNodeLabels = [
+      'BaseNode',
+      'Product',
+      object.produces?.value
+        ? 'DerivativeScriptureProduct'
+        : 'DirectScriptureProduct',
+    ];
+
     try {
-      await this.db.deleteNode({
-        session,
+      await this.db.deleteNodeNew({
         object,
-        aclEditProp: 'canDeleteOwnUser',
+        baseNodeLabels,
       });
     } catch (exception) {
-      this.logger.warning('Failed to delete product', {
-        exception,
-      });
-      throw new ServerException('Failed to delete product', exception);
+      this.logger.error('Failed to delete', { id, exception });
+      throw new ServerException('Failed to delete', exception);
     }
   }
 

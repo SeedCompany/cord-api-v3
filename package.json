@@ -48,6 +48,7 @@
     "dotenv-expand": "^5.1.0",
     "execa": "^4.0.3",
     "faker": "^4.1.0",
+    "fast-safe-stringify": "^2.0.7",
     "got": "^11.5.0",
     "graphql": "^15.3.0",
     "html-to-text": "^5.1.1",
@@ -72,7 +73,8 @@
     "source-map-support": "^0.5.19",
     "tempy": "^0.5.0",
     "ts-essentials": "^7.0.0",
-    "winston": "^3.3.3"
+    "winston": "^3.3.3",
+    "xlsx": "^0.16.9"
   },
   "devDependencies": {
     "@nestjs/cli": "^7.4.1",

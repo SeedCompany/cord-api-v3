@@ -16,6 +16,7 @@ import {
   NotFoundException,
   ServerException,
   Session,
+  UnauthorizedException,
 } from '../../common';
 import {
   ConfigService,
@@ -191,11 +192,11 @@ export class FileRepository {
         .with('*')
         .optionalMatch([
           node('requestingUser'),
-          relation('in', '', 'member'),
-          node('', 'SecurityGroup'),
-          relation('out', '', 'permission'),
+          relation('in', `memberOfSecurityGroupFor${prop}`, 'member'),
+          node(`securityGroupFor${prop}`, 'SecurityGroup'),
+          relation('out', `sgPermsFor${prop}`, 'permission'),
           node('perms', 'Permission'),
-          relation('out', '', 'baseNode'),
+          relation('out', `permsOfBaseNodeFor${prop}`, 'baseNode'),
           node('fv'),
           relation('out', '', prop, { active: true }),
           node(variable, 'Property'),
@@ -259,6 +260,12 @@ export class FileRepository {
         isPublic: false,
         isOrgPublic: false,
       },
+      {
+        key: 'canDelete',
+        value: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
     ];
 
     const createFile = this.db
@@ -298,6 +305,12 @@ export class FileRepository {
       {
         key: 'name',
         value: name,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'canDelete',
+        value: true,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -346,6 +359,12 @@ export class FileRepository {
       {
         key: 'size',
         value: input.size,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'canDelete',
+        value: true,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -467,15 +486,23 @@ export class FileRepository {
   }
 
   async delete(fileNode: BaseNode, session: Session): Promise<void> {
+    const canDelete = await this.db.checkDeletePermission(fileNode.id, session);
+
+    if (!canDelete)
+      throw new UnauthorizedException(
+        'You do not have the permission to delete this File item'
+      );
+
+    const baseNodeLabels = ['BaseNode', fileNode.type];
+
     try {
-      await this.db.deleteNode({
-        session,
+      await this.db.deleteNodeNew({
         object: fileNode,
-        aclEditProp: 'canDeleteOwnUser',
+        baseNodeLabels,
       });
-    } catch (e) {
-      this.logger.error('Failed to delete', { id: fileNode.id, exception: e });
-      throw new ServerException('Failed to delete', e);
+    } catch (exception) {
+      this.logger.error('Failed to delete', { id: fileNode.id, exception });
+      throw new ServerException('Failed to delete', exception);
     }
   }
 

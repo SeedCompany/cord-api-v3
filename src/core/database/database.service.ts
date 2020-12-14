@@ -19,14 +19,14 @@ import {
   ServerException,
   Session,
   UnauthorizedException,
-  UnwrapSecured,
   unwrapSecured,
+  UnwrapSecured,
 } from '../../common';
 import { ILogger, Logger, ServiceUnavailableError } from '..';
 import { AbortError, retry, RetryOptions } from '../../common/retry';
 import { ConfigService } from '../config/config.service';
 import {
-  matchRequestingUser,
+  determineSortValue,
   setBaseNodeLabelsAndIdDeleted,
   setPropLabelsAndValuesDeleted,
   UniqueProperties,
@@ -189,6 +189,11 @@ export class DatabaseService {
     nodevar: string;
   }): Promise<TObject> {
     const createdAt = DateTime.local();
+    const nodePropsToUpdate = {
+      createdAt,
+      value,
+      sortValue: determineSortValue(value),
+    };
     const update = this.db
       .query()
       .match([matchSession(session)])
@@ -199,15 +204,15 @@ export class DatabaseService {
       ])
       .match([
         node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
+        relation('in', 'memberOfSecurityGroup', 'member'),
+        node('securityGroup', 'SecurityGroup'),
+        relation('out', 'sgPerms', 'permission'),
+        node('perms', 'Permission', {
           property: key as string,
           // admin: true,
           edit: true,
         }),
-        relation('out', '', 'baseNode'),
+        relation('out', 'permsOfBaseNode', 'baseNode'),
         node(nodevar),
         relation('out', 'oldToProp', key as string, { active: true }),
         node('oldPropVar', 'Property'),
@@ -223,10 +228,7 @@ export class DatabaseService {
           active: true,
           createdAt,
         }),
-        node('newPropNode', 'Property', {
-          createdAt,
-          value,
-        }),
+        node('newPropNode', 'Property', nodePropsToUpdate),
       ])
       .return('newPropNode');
     let result;
@@ -452,34 +454,36 @@ export class DatabaseService {
     };
   }
 
-  async checkDeletePermission(id: string, session: Session) {
-    const query = this.db
-      .query()
-      .call(matchRequestingUser, session)
-      .match(node('node', { id }))
-      .match([
-        node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
-        node('perm', 'Permission', { read: true, property: 'canDelete' }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ])
-      .return('perm');
+  // eslint-disable-next-line @seedcompany/no-unused-vars
+  async checkDeletePermission(id: string, session: Partial<Session>) {
+    return true;
+    // const query = this.db
+    //   .query()
+    //   .call(matchRequestingUser, session)
+    //   .match(node('node', { id }))
+    //   .match([
+    //     node('requestingUser'),
+    //     relation('in', 'memberOfSecurityGroup', 'member'),
+    //     node('securityGroup', 'SecurityGroup'),
+    //     relation('out', 'sgPerms', 'permission'),
+    //     node('perm', 'Permission', { read: true, property: 'canDelete' }),
+    //     relation('out', 'permsOfBaseNode', 'baseNode'),
+    //     node('node'),
+    //   ])
+    //   .return('perm');
 
-    const result = await query.first();
-    return !!result;
+    // const result = await query.first();
+    // return !!result;
   }
 
   async deleteNodeNew<TObject extends Resource>({
     object,
     baseNodeLabels,
-    uniqueProperties,
+    uniqueProperties = {},
   }: {
     object: TObject;
     baseNodeLabels: string[];
-    uniqueProperties: UniqueProperties<TObject>;
+    uniqueProperties?: UniqueProperties<TObject>;
   }) {
     const query = this.db
       .query()

@@ -270,6 +270,7 @@ describe('Project-Workflow e2e', () => {
       /**
        * Step2. Did not develop workflow
        *  */
+      await login(app, { email: projectManager.email.value, password });
       const project = await createProject(app);
       await changeProjectStep(
         app,
@@ -307,9 +308,11 @@ describe('Project-Workflow e2e', () => {
       );
 
       // Login as Financial Analyst Controller
-      await login(app, {
-        email: financialAnalystController.email.value,
-        password,
+      await login(app, { email: financialAnalyst.email.value, password });
+      await createProjectMember(app, {
+        userId: financialAnalyst.id,
+        projectId: project.id,
+        roles: [Role.FinancialAnalyst],
       });
       await changeProjectStep(app, project.id, ProjectStep.FinalizingProposal);
 

@@ -13,7 +13,8 @@ import {
 import { DefinedFile } from '../../file/dto';
 import { SecuredMethodologies } from '../../product';
 import { SecuredInternPosition } from './intern-position.enum';
-import { EngagementStatus } from './status.enum';
+import { PnpData } from './pnp-data.dto';
+import { SecuredEngagementStatus } from './status.enum';
 
 /**
  * This should be used for TypeScript types as we'll always be passing around
@@ -33,8 +34,8 @@ export type AnyEngagement = MergeExclusive<
 class Engagement extends Resource {
   readonly __typename: string;
 
-  @Field(() => EngagementStatus)
-  readonly status: EngagementStatus; // TODO Workflow
+  @Field(() => SecuredEngagementStatus)
+  readonly status: SecuredEngagementStatus;
 
   readonly ceremony: Secured<string>;
 
@@ -109,9 +110,12 @@ export class LanguageEngagement extends Engagement {
   readonly sentPrintingDate: SecuredDateNullable;
 
   @Field()
-  readonly paraTextRegistryId: SecuredString;
+  readonly paratextRegistryId: SecuredString;
 
   readonly pnp: DefinedFile;
+
+  @Field({ nullable: true })
+  readonly pnpData?: PnpData;
 
   @Field()
   readonly historicGoal: SecuredString;

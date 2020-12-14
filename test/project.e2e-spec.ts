@@ -70,7 +70,9 @@ describe('Project e2e', () => {
     app = await createTestApp();
     db = app.get(Connection);
     await createSession(app);
-    director = await registerUser(app);
+    director = await registerUserWithPower(app, [Powers.DeleteProject], {
+      roles: [Role.ProjectManager],
+    });
     fieldZone = await createZone(app, { directorId: director.id });
     fieldRegion = await createRegion(app, {
       directorId: director.id,
@@ -322,7 +324,11 @@ describe('Project e2e', () => {
   });
 
   it('List of projects sorted by name to be alphabetical, ignoring case sensitivity. Order: ASCENDING', async () => {
-    await registerUser(app, { displayFirstName: 'Tammy' });
+    await registerUserWithPower(
+      app,
+      [Powers.CreateProject, Powers.DeleteProject],
+      { displayFirstName: 'Tammy' }
+    );
     //Create three projects with mixed cases.
     await createProject(app, {
       name: 'a project 2' + faker.random.uuid(),
@@ -390,7 +396,11 @@ describe('Project e2e', () => {
   });
 
   it('List of projects sorted by name to be alphabetical, ignoring case sensitivity. Order: DESCENDING', async () => {
-    await registerUser(app, { displayFirstName: 'Tammy' });
+    await registerUserWithPower(
+      app,
+      [Powers.CreateProject, Powers.DeleteProject],
+      { displayFirstName: 'Tammy' }
+    );
     //Create three projects, each beginning with lower or upper-cases.
     await createProject(app, {
       name: 'a project 2' + faker.random.uuid(),
@@ -507,8 +517,14 @@ describe('Project e2e', () => {
   });
 
   it('List of projects sorted by Sensitivity', async () => {
-    await registerUser(app);
-    //Create three projects, each beginning with lower or upper-cases.
+    await registerUserWithPower(app, [
+      Powers.CreateLanguage,
+      Powers.CreateProject,
+      Powers.CreateLanguageEngagement,
+      Powers.CreateEthnologueLanguage,
+    ]);
+
+    //Create three intern projects of different sensitivities
     await createProject(app, {
       name: 'High Sensitivity Proj ' + (await generateId()),
       type: ProjectType.Internship,
@@ -525,6 +541,30 @@ describe('Project e2e', () => {
       name: 'Med Sensitivity Proj ' + (await generateId()),
       type: ProjectType.Internship,
       sensitivity: Sensitivity.Medium,
+    });
+
+    //Create two translation projects, one without langauge engagements and one with 1 med and 1 low sensitivity eng
+    //translation projec without engagements
+    await createProject(app);
+
+    //with engagements, low and med sensitivity, project should eval to med
+    const translationProjectWithEngagements = await createProject(app);
+
+    const medSensitivityLanguage = await createLanguage(app, {
+      sensitivity: Sensitivity.Medium,
+    });
+    const lowSensitivityLanguage = await createLanguage(app, {
+      sensitivity: Sensitivity.Low,
+    });
+
+    await createLanguageEngagement(app, {
+      projectId: translationProjectWithEngagements.id,
+      languageId: lowSensitivityLanguage.id,
+    });
+
+    await createLanguageEngagement(app, {
+      projectId: translationProjectWithEngagements.id,
+      languageId: medSensitivityLanguage.id,
     });
 
     const getSensitivitySortedProjects = async (order: 'ASC' | 'DESC') =>
@@ -545,9 +585,6 @@ describe('Project e2e', () => {
           input: {
             sort: 'sensitivity',
             order,
-            filter: {
-              type: ProjectType.Internship,
-            },
           },
         }
       );
@@ -567,6 +604,8 @@ describe('Project e2e', () => {
     const { projects: ascendingProjects } = await getSensitivitySortedProjects(
       'ASC'
     );
+
+    expect(ascendingProjects.items.length).toBeGreaterThanOrEqual(5);
 
     expect(getSortedSensitivities(ascendingProjects)).toEqual([
       Sensitivity.Low,
@@ -588,6 +627,10 @@ describe('Project e2e', () => {
   it('List view of my projects', async () => {
     const numProjects = 2;
     const type = ProjectType.Translation;
+    await registerUserWithPower(app, [
+      Powers.CreateProject,
+      Powers.DeleteProject,
+    ]);
     await Promise.all(
       times(numProjects).map(
         async () =>

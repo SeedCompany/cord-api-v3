@@ -1,12 +1,14 @@
 import { ppRaw as prettyPrint } from '@patarapolw/prettyprint';
 import { enabled as colorsEnabled, red, yellow } from 'colors/safe';
-import { identity, mapValues } from 'lodash';
+import stringify from 'fast-safe-stringify';
+import { identity } from 'lodash';
 import { DateTime } from 'luxon';
 import { relative } from 'path';
 import { parse as parseTrace, StackFrame } from 'stack-trace';
 import { MESSAGE } from 'triple-beam';
-import { config, format } from 'winston';
+import { config, format, LogEntry } from 'winston';
 import { Exception } from '../../common/exceptions';
+import { maskSecrets as maskSecretsOfObj } from '../../common/mask-secrets';
 import { getNameFromEntry } from './logger.interface';
 
 type Color = (str: string) => string;
@@ -16,6 +18,7 @@ interface ParsedError {
   message: string;
   stack: string;
   trace: StackFrame[];
+  other: Record<string, any>;
 }
 
 export const metadata = () =>
@@ -25,11 +28,7 @@ export const metadata = () =>
 
 export const maskSecrets = () =>
   format((info) => {
-    info.metadata = mapValues(info.metadata, (val: string, key) =>
-      /(password|token|key)/i.exec(key)
-        ? `${'*'.repeat(Math.min(val.slice(0, -3).length, 20)) + val.slice(-3)}`
-        : val
-    );
+    info.metadata = maskSecretsOfObj(info.metadata);
     return info;
   })();
 
@@ -71,18 +70,21 @@ export const exceptionInfo = () =>
 
     info.exceptions = flatten(info.exception).map(
       (ex): ParsedError => {
+        const { name: _, message, stack: __, ...other } = ex;
         const stack = ex.stack!;
-        const type = stack.slice(0, stack.indexOf(':'));
+        const type = ex.constructor.name || stack.slice(0, stack.indexOf(':'));
         const trace = parseTrace({ stack } as any);
 
         return {
           type,
-          message: ex.message,
+          message,
           stack,
           trace,
+          other,
         };
       }
     );
+    delete info.exception;
 
     return info;
   })();
@@ -90,12 +92,15 @@ export const exceptionInfo = () =>
 const formatMessage = (
   type: string,
   message: string,
+  other: Record<string, any>,
   color: Color,
   extraSpace: boolean
 ) => {
+  const otherStr = printObj(other);
   let msg = `${type}: ${message}\n`;
-  msg = extraSpace ? `\n${msg}\n` : msg;
   msg = color(msg);
+  msg += otherStr ? otherStr + '\n' : '';
+  msg = extraSpace ? `\n${msg}\n` : msg;
   return msg;
 };
 
@@ -129,7 +134,7 @@ export const formatException = () =>
     }
     const exs: ParsedError[] = info.exceptions;
 
-    const bad = config.syslog.levels[info.level] > config.syslog.levels.warning;
+    const bad = config.syslog.levels[info.level] < config.syslog.levels.warning;
 
     info[MESSAGE] = exs
       .map((ex, index) => {
@@ -138,6 +143,7 @@ export const formatException = () =>
           formatMessage(
             ex.type,
             ex.message,
+            ex.other,
             bad ? red : yellow,
             bad && index === 0
           );
@@ -166,12 +172,33 @@ export const printForCli = () =>
     msg += typeof name === 'string' ? yellow(`[${name}] `) : '';
     msg += info.message;
     msg += ` ${yellow(info.ms)}`;
-    msg +=
-      Object.keys(info.metadata).length > 0
-        ? ` ${prettyPrint(info.metadata, {
-            depth: 2, // 2 default
-            colors: colorsEnabled,
-          })}`
-        : '';
+    msg += printObj(info.metadata);
     return msg;
+  });
+
+const printObj = (obj: Record<string, any>) =>
+  Object.keys(obj).length > 0
+    ? ` ${prettyPrint(obj, {
+        depth: 2, // 2 default
+        colors: colorsEnabled,
+      })}`
+    : '';
+
+export const printForJson = () =>
+  format.printf((info: LogEntry & { exceptions?: ParsedError[] }) => {
+    const { level, message, exceptions, metadata } = info;
+
+    const obj = {
+      '@name': getNameFromEntry(info),
+      level,
+      message,
+      exceptions: exceptions?.map(({ message, type, stack, other }) => ({
+        type,
+        message,
+        ...other,
+        stack,
+      })),
+      ...metadata,
+    };
+    return stringify(obj);
   });

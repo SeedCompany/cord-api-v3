@@ -25,7 +25,10 @@ describe('Partner e2e', () => {
     app = await createTestApp();
     db = app.get(Connection);
     await createSession(app);
-    await registerUserWithPower(app, [Powers.CreateOrganization]);
+    await registerUserWithPower(app, [
+      Powers.CreateOrganization,
+      Powers.CreatePartner,
+    ]);
   });
 
   afterAll(async () => {

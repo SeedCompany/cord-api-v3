@@ -7,6 +7,7 @@ import {
   NotFoundException,
   ServerException,
   Session,
+  UnauthorizedException,
 } from '../../common';
 import {
   ConfigService,
@@ -16,6 +17,7 @@ import {
   Logger,
   matchRequestingUser,
   OnIndex,
+  UniqueProperties,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -102,6 +104,12 @@ export class FieldRegionService {
         isPublic: false,
         isOrgPublic: false,
         label: 'FieldRegionName',
+      },
+      {
+        key: 'canDelete',
+        value: true,
+        isPublic: false,
+        isOrgPublic: false,
       },
     ];
 
@@ -207,7 +215,7 @@ export class FieldRegionService {
         ...secured.fieldZone,
         value: result.fieldZoneId,
       },
-      canDelete: true, // TODO
+      canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 
@@ -230,8 +238,36 @@ export class FieldRegionService {
     return await this.readOne(input.id, session);
   }
 
-  async delete(_id: string, _session: Session): Promise<void> {
-    // Not Implemented
+  async delete(id: string, session: Session): Promise<void> {
+    const object = await this.readOne(id, session);
+
+    if (!object) {
+      throw new NotFoundException('Could not find Field Region');
+    }
+
+    const canDelete = await this.db.checkDeletePermission(id, session);
+
+    if (!canDelete)
+      throw new UnauthorizedException(
+        'You do not have the permission to delete this Field Region'
+      );
+
+    const baseNodeLabels = ['BaseNode', 'FieldRegion'];
+
+    const uniqueProperties: UniqueProperties<FieldRegion> = {
+      name: ['Property', 'FieldRegionName'],
+    };
+
+    try {
+      await this.db.deleteNodeNew<FieldRegion>({
+        object,
+        baseNodeLabels,
+        uniqueProperties,
+      });
+    } catch (exception) {
+      this.logger.error('Failed to delete', { id, exception });
+      throw new ServerException('Failed to delete', exception);
+    }
   }
 
   async list(

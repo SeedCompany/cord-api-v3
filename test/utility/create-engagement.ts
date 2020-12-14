@@ -5,7 +5,7 @@ import { isValidId } from '../../src/common';
 import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,
-  InternPosition,
+  InternshipPosition,
 } from '../../src/components/engagement';
 import { ProductMethodology } from '../../src/components/product';
 import { TestApp } from './create-app';
@@ -33,7 +33,7 @@ export async function createLanguageEngagement(
     startDateOverride: DateTime.local(),
     endDateOverride: DateTime.local(),
     completeDate: DateTime.local(),
-    paraTextRegistryId: faker.random.word(),
+    paratextRegistryId: faker.random.word(),
     ...input,
   };
   const result = await app.graphql.mutate(
@@ -76,7 +76,7 @@ export async function createInternshipEngagement(
       input.countryOfOriginId || (await createLocation(app)).id,
     internId: input.internId || currentUserId || (await createPerson(app)).id,
     mentorId: input.mentorId || currentUserId || (await createPerson(app)).id,
-    position: InternPosition.AdministrativeSupportSpecialist,
+    position: InternshipPosition.Administration,
     methodologies: [ProductMethodology.Film],
     disbursementCompleteDate: DateTime.local(),
     communicationsCompleteDate: DateTime.local(),

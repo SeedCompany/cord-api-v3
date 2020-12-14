@@ -1,6 +1,6 @@
 import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
+import { Max, Min, ValidateNested } from 'class-validator';
 import { NameField } from '../../../common';
 import { FundingAccount } from './funding-account.dto';
 
@@ -10,6 +10,8 @@ export abstract class CreateFundingAccount {
   readonly name: string;
 
   @Field(() => Int)
+  @Min(0)
+  @Max(9)
   readonly accountNumber: number;
 }
 
