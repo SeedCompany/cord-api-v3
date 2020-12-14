@@ -38,12 +38,12 @@ import { InternalRole, Role } from './dto';
 import { Powers } from './dto/powers';
 import { MissingPowerException } from './missing-power.exception';
 import { AnyBaseNode, DbPermission, DbRole, OneBaseNode } from './model';
+import * as Roles from './roles';
 import {
   Administrator,
   Consultant,
   ConsultantManager,
   Controller,
-  everyRole,
   FieldOperationsDirector,
   FinancialAnalyst,
   Fundraising,
@@ -800,7 +800,7 @@ export class AuthorizationService {
       .first();
 
     const roles = roleQuery?.roles.map((role: string) => {
-      return everyRole.find((roleObj) => role === roleObj.name);
+      return Object.values(Roles).find((roleObj) => role === roleObj.name);
     });
 
     return roles;

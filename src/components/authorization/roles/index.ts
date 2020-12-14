@@ -15,5 +15,3 @@ export * from './regional-communications-coordinator.role';
 export * from './regional-director.role';
 export * from './staff-member.role';
 export * from './translator.role';
-
-export * from './every-role.array';
