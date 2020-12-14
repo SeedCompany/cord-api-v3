@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DbBaseNodeLabel, NotFoundException } from '../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
+import { matchPropList } from '../../core/database/query';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { User, UserStatus } from './dto';
 
@@ -15,20 +16,16 @@ export class UserRepository {
   ) {}
 
   async read(userId: string, requestingUserId: string): Promise<User> {
-    console.log(userId, requestingUserId);
     const result = await this.db
       .query()
-      .optionalMatch([
+      .match([
         node('requestingUser', 'User', { id: requestingUserId }),
         relation('out', '', 'roles', { active: true }),
         node('role', 'Property'),
       ])
-      .optionalMatch([
-        node('user', 'User', { id: userId }),
-        relation('out', '', 'about', { active: true }),
-        node('about', 'Property'),
-      ])
-      .raw('return collect(role.value) as roles, user, about.value as about')
+      .match([node('node', 'User', { id: userId })])
+      .call(matchPropList)
+      .raw('return propList')
       .first();
 
     console.log(result);
