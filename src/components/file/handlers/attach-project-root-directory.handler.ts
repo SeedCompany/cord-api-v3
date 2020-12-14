@@ -39,12 +39,5 @@ export class AttachProjectRootDirectoryHandler
         node('dir'),
       ])
       .run();
-
-    const dbDirectory = new DbDirectory();
-    await this.authorizationService.processNewBaseNode(
-      dbDirectory,
-      rootDir.id,
-      session.userId
-    );
   }
 }

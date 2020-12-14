@@ -43,13 +43,6 @@ export class CreateEngagementDefaultCeremonyHandler
       ])
       .run();
 
-    const dbCeremony = new DbCeremony();
-    await this.authorizationService.processNewBaseNode(
-      dbCeremony,
-      ceremony.id,
-      session.userId
-    );
-
     event.engagement = {
       ...engagement,
       ceremony: {

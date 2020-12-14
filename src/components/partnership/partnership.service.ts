@@ -261,12 +261,6 @@ export class PartnershipService {
         'partnership.agreement'
       );
 
-      await this.authorizationService.processNewBaseNode(
-        new DbPartnership(),
-        result.id,
-        session.userId
-      );
-
       const partnership = await this.readOne(result.id, session);
 
       await this.eventBus.publish(

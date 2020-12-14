@@ -384,13 +384,6 @@ export class ProjectService {
         session
       );
 
-      const dbProject = new DbProject();
-      await this.authorizationService.processNewBaseNode(
-        dbProject,
-        result.id,
-        session.userId
-      );
-
       const project = await this.readOne(result.id, session);
 
       await this.eventBus.publish(new ProjectCreatedEvent(project, session));

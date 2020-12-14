@@ -120,13 +120,6 @@ export class FilmService {
         throw new ServerException('failed to create a film');
       }
 
-      const dbFilm = new DbFilm();
-      await this.authorizationService.processNewBaseNode(
-        dbFilm,
-        result.id,
-        session.userId
-      );
-
       await this.scriptureRefService.create(
         result.id,
         input.scriptureReferences,

@@ -169,13 +169,6 @@ export class BudgetService {
         'budget.universalTemplateFile'
       );
 
-      const dbBudget = new DbBudget();
-      await this.authorizationService.processNewBaseNode(
-        dbBudget,
-        result.id,
-        session.userId
-      );
-
       return await this.readOne(result.id, session);
     } catch (exception) {
       this.logger.error(`Could not create budget`, {
@@ -268,13 +261,6 @@ export class BudgetService {
         ])
         .return('br');
       await orgQuery.first();
-
-      const dbBudgetRecord = new DbBudgetRecord();
-      await this.authorizationService.processNewBaseNode(
-        dbBudgetRecord,
-        result.id,
-        session.userId
-      );
 
       this.logger.debug(`Created Budget Record`, {
         id: result.id,

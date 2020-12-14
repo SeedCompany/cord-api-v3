@@ -118,13 +118,6 @@ export class UnavailabilityService {
         })
         .run();
 
-      const dbUnavailability = new DbUnavailability();
-      await this.authorizationService.processNewBaseNode(
-        dbUnavailability,
-        createUnavailabilityResult.id,
-        userId
-      );
-
       return await this.readOne(createUnavailabilityResult.id, session);
     } catch {
       this.logger.error(`Could not create unavailability`, {

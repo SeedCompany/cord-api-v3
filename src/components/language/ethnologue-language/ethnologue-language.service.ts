@@ -96,13 +96,6 @@ export class EthnologueLanguageService {
       throw new ServerException('Failed to create ethnologue language');
     }
 
-    const dbEthnologueLanguage = new DbEthnologueLanguage();
-    await this.authorizationService.processNewBaseNode(
-      dbEthnologueLanguage,
-      result.id,
-      session.userId
-    );
-
     const id = result.id;
 
     this.logger.debug(`ethnologue language created`, { id });

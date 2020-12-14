@@ -134,13 +134,6 @@ export class FieldZoneService {
       throw new ServerException('failed to create field zone');
     }
 
-    const dbFieldZone = new DbFieldZone();
-    await this.authorizationService.processNewBaseNode(
-      dbFieldZone,
-      result.id,
-      session.userId
-    );
-
     this.logger.debug(`field zone created`, { id: result.id });
     return await this.readOne(result.id, session);
   }

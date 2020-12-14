@@ -248,13 +248,6 @@ export class ProductService {
       throw new ServerException('failed to create default product');
     }
 
-    const dbProduct = new DbProduct();
-    await this.authorizationService.processNewBaseNode(
-      dbProduct,
-      result.id,
-      session.userId
-    );
-
     this.logger.debug(`product created`, { id: result.id });
     return await this.readOne(result.id, session);
   }

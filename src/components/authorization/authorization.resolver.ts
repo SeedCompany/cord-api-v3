@@ -27,32 +27,4 @@ export class AuthorizationResolver {
   async powers(@AnonSession() session: Session): Promise<Powers[]> {
     return await this.authorizationService.readPower(session);
   }
-
-  @Mutation(() => Boolean)
-  async grantPower(
-    @LoggedInSession() session: Session,
-    @Args() { userId, power }: ModifyPowerArgs
-  ): Promise<boolean> {
-    await this.authorizationService.createPower(userId, power, session);
-    return true;
-  }
-
-  @Mutation(() => Boolean)
-  async deletePower(
-    @LoggedInSession() session: Session,
-    @Args() { userId, power }: ModifyPowerArgs
-  ): Promise<boolean> {
-    await this.authorizationService.deletePower(userId, power, session);
-    return true;
-  }
-
-  @Mutation(() => Boolean)
-  async authorizationSpecial1(
-    @LoggedInSession() session: Session
-  ): Promise<boolean> {
-    await this.authorizationService.createSGsForEveryRoleForAllBaseNodes(
-      session
-    );
-    return true;
-  }
 }

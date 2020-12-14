@@ -129,13 +129,6 @@ export class FundingAccountService {
         throw new ServerException('Failed to create funding account');
       }
 
-      const dbFundingAccount = new DbFundingAccount();
-      await this.authorizationService.processNewBaseNode(
-        dbFundingAccount,
-        result.id,
-        session.userId
-      );
-
       this.logger.info(`funding account created`, { id: result.id });
 
       return await this.readOne(result.id, session);

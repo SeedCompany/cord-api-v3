@@ -313,13 +313,6 @@ export class EngagementService {
       'engagement.pnp'
     );
 
-    const dbLanguageEngagement = new DbLanguageEngagement();
-    await this.authorizationService.processNewBaseNode(
-      dbLanguageEngagement,
-      id,
-      session.userId
-    );
-
     const languageEngagement = (await this.readOne(
       id,
       session
@@ -574,13 +567,6 @@ export class EngagementService {
       'growthPlan',
       input.growthPlan,
       'engagement.growthPlan'
-    );
-
-    const dbInternshipEngagement = new DbInternshipEngagement();
-    await this.authorizationService.processNewBaseNode(
-      dbInternshipEngagement,
-      id,
-      session.userId
     );
 
     const internshipEngagement = (await this.readOne(

@@ -146,13 +146,6 @@ export class FieldRegionService {
       throw new ServerException('failed to create field region');
     }
 
-    const dbFieldRegion = new DbFieldRegion();
-    await this.authorizationService.processNewBaseNode(
-      dbFieldRegion,
-      result.id,
-      session.userId
-    );
-
     this.logger.debug(`field region created`, { id: result.id });
     return await this.readOne(result.id, session);
   }

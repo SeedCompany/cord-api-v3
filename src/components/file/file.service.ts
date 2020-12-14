@@ -191,15 +191,6 @@ export class FileService {
 
     const id = await this.repo.createDirectory(parentId, name, session);
 
-    if (parentId) {
-      const dbDirectory = new DbDirectory();
-      await this.authorizationService.processNewBaseNode(
-        dbDirectory,
-        id,
-        session.userId
-      );
-    }
-
     return await this.getDirectory(id, session);
   }
 
@@ -297,12 +288,6 @@ export class FileService {
       session
     );
 
-    await this.authorizationService.processNewBaseNode(
-      new DbFileVersion(),
-      uploadId,
-      session.userId
-    );
-
     // Skip S3 move if it's not needed
     if (existingUpload.status === 'rejected') {
       await this.bucket.moveObject(`temp/${uploadId}`, uploadId);
@@ -344,12 +329,6 @@ export class FileService {
     const fileId = await generateId();
     await this.repo.createFile(fileId, name, session, parentId);
 
-    await this.authorizationService.processNewBaseNode(
-      new DbFile(),
-      fileId,
-      session.userId
-    );
-
     this.logger.debug(
       'File matching given name not found, creating a new one',
       {
@@ -373,12 +352,6 @@ export class FileService {
     await this.repo.createFile(fileId, name, session);
 
     await this.repo.attachBaseNode(fileId, baseNodeId, propertyName + 'Node');
-
-    await this.authorizationService.processNewBaseNode(
-      new DbFile(),
-      fileId,
-      session.userId
-    );
 
     if (initialVersion) {
       try {

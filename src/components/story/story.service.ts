@@ -121,13 +121,6 @@ export class StoryService {
         throw new ServerException('failed to create a story');
       }
 
-      const dbStory = new DbStory();
-      await this.authorizationService.processNewBaseNode(
-        dbStory,
-        result.id,
-        session.userId
-      );
-
       await this.scriptureRefService.create(
         result.id,
         input.scriptureReferences,

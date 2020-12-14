@@ -164,13 +164,6 @@ export class LocationService {
         .run();
     }
 
-    const dbLocation = new DbLocation();
-    await this.authorizationService.processNewBaseNode(
-      dbLocation,
-      result.id,
-      session.userId
-    );
-
     this.logger.debug(`location created`, { id: result.id });
     return await this.readOne(result.id, session);
   }

@@ -106,13 +106,6 @@ export class EducationService {
       throw new ServerException('failed to create education');
     }
 
-    const dbEducation = new DbEducation();
-    await this.authorizationService.processNewBaseNode(
-      dbEducation,
-      result.id,
-      userId
-    );
-
     this.logger.debug(`education created`, { id: result.id });
     return await this.readOne(result.id, session);
   }

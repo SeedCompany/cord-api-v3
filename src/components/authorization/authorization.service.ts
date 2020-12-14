@@ -242,81 +242,6 @@ export class AuthorizationService {
     throw new ServerException('base node label not found');
   }
 
-  private async mergeSecurityGroupForRole(
-    baseNodeId: string,
-    role: DbRole,
-    baseNodeObj?: OneBaseNode
-  ): Promise<string> {
-    /**
-     * this creates or merges with the specific SG needed for a given role
-     * returns the SG id
-     */
-    const checkSg = await this.db
-      .query()
-      .match([
-        node('sg', 'SecurityGroup', { role: role.name }),
-        relation('out', '', 'baseNode'),
-        node('baseNode', 'BaseNode', { id: baseNodeId }),
-      ])
-      .raw('return sg.id as id')
-      .asResult<{ id: string }>()
-      .first();
-
-    if (checkSg?.id) {
-      return checkSg.id;
-    }
-
-    // SG for role does not exist, baseNodeObj must be supplied
-    if (baseNodeObj === undefined) {
-      throw new ServerException('base node object not supplied');
-    }
-
-    // create SG with all role's perms
-    const createSgQuery = this.db
-      .query()
-      .match([node('baseNode', 'BaseNode', { id: baseNodeId })])
-      .merge([
-        node('sg', 'SecurityGroup', {
-          id: await generateId(),
-          role: role.name,
-        }),
-        relation('out', '', 'baseNode'),
-        node('baseNode'),
-      ]);
-
-    // iterate through the key of the base node and get the permission object for each from the role object
-    for (const key of Object.keys(baseNodeObj)) {
-      const perms = role.getPermissionsOnProperty<typeof baseNodeObj>(
-        baseNodeObj.__className,
-        key as keyof OneBaseNode
-      );
-
-      // write the permission to the db if any of its perms are true
-      createSgQuery.merge([
-        node('sg'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          read: perms?.read ? perms.read : false,
-          edit: perms?.write ? perms.write : false,
-          property: key,
-        }),
-        relation('out', '', 'baseNode'),
-        node('baseNode'),
-      ]);
-    }
-
-    const result = await createSgQuery
-      .raw('return sg.id as id')
-      .asResult<{ id: string }>()
-      .first();
-
-    if (result === undefined) {
-      throw new ServerException('failed to create SG for role');
-    }
-
-    return result.id;
-  }
-
   async unsecureGetProjectIdFromAnyProjectChildNode(
     id: string
   ): Promise<string> {
@@ -349,41 +274,23 @@ export class AuthorizationService {
     return result?.id;
   }
 
-  mapRoleToDbRoles(role: Role): InternalRole[] {
-    switch (role) {
-      case Role.FinancialAnalyst:
-        return [
-          'FinancialAnalystOnGlobalRole',
-          'FinancialAnalystOnProjectRole',
-        ];
-      case Role.ProjectManager:
-        return ['ProjectManagerGlobalRole', 'ProjectManagerOnProjectRole'];
-      case Role.RegionalDirector:
-        return ['RegionalDirectorGlobalRole', 'RegionalDirectorOnProjectRole'];
-      default:
-        return [(role + 'Role') as InternalRole];
+  async readPower(session: Session): Promise<Powers[]> {
+    if (session.anonymous) {
+      return [];
     }
+    return await this.readPowerByUserId(session.userId);
   }
 
-  async roleAddedToUser(id: string, roles: Role[]) {
-    // todo: this only applies to global roles, the only kind we have until next week
-    // iterate through all roles and assign to all SGs with that role
-
-    for (const role of roles.flatMap((role) => this.mapRoleToDbRoles(role))) {
-      await this.db
-        .query()
-        .raw(
-          `
-          call apoc.periodic.iterate(
-            "MATCH (u:User {id:'${id}'}), (sg:SecurityGroup {role:'${role}'})
-            WHERE NOT (u)<-[:member]-(sg)
-            RETURN u, sg",
-            "MERGE (u)<-[:member]-(sg)", {batchSize:1000})
-          yield batches, total return batches, total
-      `
-        )
-        .run();
-    }
+  private async readPowerByUserId(id: string): Promise<Powers[]> {
+    const result = await this.db
+      .query()
+      .match([node('user', 'User', { id })])
+      .raw('return user.powers as powers')
+      .unionAll()
+      .match([node('sg', 'SecurityGroup', { id })])
+      .raw('return sg.powers as powers')
+      .asResult<{ powers?: Powers[] }>()
+      .first();
 
     for (const role of roles) {
       // match the role to a real role object and grant powers
@@ -433,91 +340,6 @@ export class AuthorizationService {
         } does not have the requested power: ${power}`
       );
     }
-  }
-
-  async readPower(session: Session): Promise<Powers[]> {
-    if (session.anonymous) {
-      return [];
-    }
-    return await this.readPowerByUserId(session.userId);
-  }
-
-  async createPower(
-    userId: string,
-    power: Powers,
-    session: Session
-  ): Promise<void> {
-    const requestingUserPowers = await this.readPowerByUserId(session.userId);
-    if (!requestingUserPowers.includes(Powers.GrantPower)) {
-      throw new MissingPowerException(
-        Powers.GrantPower,
-        'user does not have the power to grant power to others'
-      );
-    }
-
-    await this.grantPower(power, userId);
-  }
-
-  async deletePower(
-    userId: string,
-    power: Powers,
-    session: Session
-  ): Promise<void> {
-    const requestingUserPowers = await this.readPowerByUserId(session.userId);
-    if (!requestingUserPowers.includes(Powers.GrantPower)) {
-      throw new MissingPowerException(
-        Powers.GrantPower,
-        'user does not have the power to remove power from others'
-      );
-    }
-
-    await this.removePower(power, userId);
-  }
-
-  async grantPower(power: Powers, userId: string): Promise<void> {
-    const powers = await this.readPowerByUserId(userId);
-
-    const newPowers = union(powers, [power]);
-    await this.updateUserPowers(userId, newPowers);
-  }
-
-  async removePower(power: Powers, userId: string): Promise<void> {
-    const powers = await this.readPowerByUserId(userId);
-
-    const newPowers = without(powers, power);
-    await this.updateUserPowers(userId, newPowers);
-  }
-
-  private async updateUserPowers(
-    userId: string,
-    newPowers: Powers[]
-  ): Promise<void> {
-    const result = await this.db
-      .query()
-      .optionalMatch([node('userOrSg', 'User', { id: userId })])
-      .setValues({ 'userOrSg.powers': newPowers })
-      .with('*')
-      .optionalMatch([node('userOrSg', 'SecurityGroup', { id: userId })])
-      .setValues({ 'userOrSg.powers': newPowers })
-      .run();
-
-    if (!result) {
-      throw new ServerException('Failed to grant power');
-    }
-  }
-
-  private async readPowerByUserId(id: string): Promise<Powers[]> {
-    const result = await this.db
-      .query()
-      .match([node('user', 'User', { id })])
-      .raw('return user.powers as powers')
-      .unionAll()
-      .match([node('sg', 'SecurityGroup', { id })])
-      .raw('return sg.powers as powers')
-      .asResult<{ powers?: Powers[] }>()
-      .first();
-
-    return result?.powers ?? [];
   }
 
   async unsecureGetProjectIdByBudgetId(id: string): Promise<string> {

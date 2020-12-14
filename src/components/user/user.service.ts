@@ -274,16 +274,7 @@ export class UserService {
           node('orgPublicSg'),
         ])
         .run();
-
-      if (attachToOrgPublicSg) {
-        //
-      }
     }
-    input.roles &&
-      (await this.authorizationService.roleAddedToUser(id, input.roles));
-
-    const dbUser = new DbUser();
-    await this.authorizationService.processNewBaseNode(dbUser, id, id);
 
     return result.id;
   }
@@ -377,8 +368,6 @@ export class UserService {
         ])
         .create([...this.roleProperties(input.roles)])
         .run();
-
-      await this.authorizationService.roleAddedToUser(input.id, input.roles);
     }
 
     return await this.readOne(input.id, session);

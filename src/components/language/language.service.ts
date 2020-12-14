@@ -292,13 +292,6 @@ export class LanguageService {
         ])
         .run();
 
-      const dbLanguage = new DbLanguage();
-      await this.authorizationService.processNewBaseNode(
-        dbLanguage,
-        resultLanguage.id,
-        session.userId
-      );
-
       const result = await this.readOne(resultLanguage.id, session);
 
       return result;
