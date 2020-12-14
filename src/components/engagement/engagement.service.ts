@@ -1,7 +1,8 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import { node, Node, Query, relation } from 'cypher-query-builder';
+import { pickBy } from 'lodash';
 import { DateTime } from 'luxon';
-import { MergeExclusive } from 'type-fest';
+import { Except, MergeExclusive } from 'type-fest';
 import {
   DuplicateException,
   generateId,
@@ -9,6 +10,7 @@ import {
   NotFoundException,
   ServerException,
   Session,
+  UnauthorizedException,
 } from '../../common';
 import {
   ConfigService,
@@ -55,6 +57,7 @@ import {
   EngagementStatus,
   InternshipEngagement,
   LanguageEngagement,
+  PnpData,
   UpdateInternshipEngagement,
   UpdateLanguageEngagement,
 } from './dto';
@@ -65,6 +68,7 @@ import {
   EngagementUpdatedEvent,
 } from './events';
 import { DbInternshipEngagement, DbLanguageEngagement } from './model';
+import { PnpExtractor } from './pnp-extractor.service';
 
 @Injectable()
 export class EngagementService {
@@ -88,7 +92,7 @@ export class EngagementService {
     firstScripture: true,
     lukePartnership: true,
     sentPrintingDate: true,
-    paraTextRegistryId: true,
+    paratextRegistryId: true,
     pnp: true,
     language: true,
     historicGoal: true,
@@ -108,6 +112,7 @@ export class EngagementService {
     private readonly products: ProductService,
     private readonly config: ConfigService,
     private readonly files: FileService,
+    private readonly pnpExtractor: PnpExtractor,
     private readonly engagementRules: EngagementRules,
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService,
@@ -219,8 +224,8 @@ export class EngagementService {
         'languageEngagement'
       ),
       ...property(
-        'paraTextRegistryId',
-        input.paraTextRegistryId || undefined,
+        'paratextRegistryId',
+        input.paratextRegistryId || input.paraTextRegistryId || undefined,
         'languageEngagement'
       ),
       ...property('pnp', pnpId || undefined, 'languageEngagement'),
@@ -240,6 +245,7 @@ export class EngagementService {
         'EngagementStatus'
       ),
       ...property('modifiedAt', createdAt, 'languageEngagement'),
+      ...property('canDelete', true, 'languageEngagement'),
     ]);
     if (projectId) {
       createLE.create([
@@ -309,6 +315,10 @@ export class EngagementService {
       input.pnp,
       'engagement.pnp'
     );
+    if (input.pnp) {
+      const pnpData = await this.pnpExtractor.extract(input.pnp, session);
+      await this.savePnpData(id, pnpData);
+    }
 
     const dbLanguageEngagement = new DbLanguageEngagement();
     await this.authorizationService.processNewBaseNode(
@@ -455,6 +465,7 @@ export class EngagementService {
         input.status || EngagementStatus.InDevelopment,
         'internshipEngagement'
       ),
+      ...property('canDelete', true, 'internshipEngagement'),
     ]);
     if (projectId) {
       createIE.create([
@@ -652,6 +663,11 @@ export class EngagementService {
         relation('out', '', 'mentor', { active: true }),
         node('mentor'),
       ])
+      .optionalMatch([
+        node('node'),
+        relation('out', '', 'pnpData', { active: true }),
+        node('pnpData'),
+      ])
       .return([
         'propList, permList, node, project.id as projectId',
         '__typename, ceremony.id as ceremonyId',
@@ -659,10 +675,14 @@ export class EngagementService {
         'intern.id as internId',
         'countryOfOrigin.id as countryOfOriginId',
         'mentor.id as mentorId',
+        'pnpData',
       ])
       .asResult<
         StandardReadResult<
-          DbPropsOfDto<LanguageEngagement & InternshipEngagement>
+          Except<
+            DbPropsOfDto<LanguageEngagement & InternshipEngagement>,
+            'pnpData'
+          >
         > & {
           __typename: string;
           languageId: string;
@@ -671,6 +691,7 @@ export class EngagementService {
           internId: string;
           countryOfOriginId: string;
           mentorId: string;
+          pnpData?: Node<PnpData>;
         }
       >();
 
@@ -742,7 +763,8 @@ export class EngagementService {
         ...securedProperties.mentor,
         value: result.mentorId,
       },
-      canDelete: true, // TODO
+      pnpData: result.pnpData?.properties,
+      canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 
@@ -775,11 +797,15 @@ export class EngagementService {
       );
     }
 
-    const { pnp, ...rest } = input;
-    const changes = {
-      ...rest,
-      modifiedAt: DateTime.local(),
-    };
+    const { pnp, paratextRegistryId, paraTextRegistryId, ...rest } = input;
+    const changes = pickBy(
+      {
+        ...rest,
+        paratextRegistryId: paratextRegistryId || paraTextRegistryId,
+        modifiedAt: DateTime.local(),
+      },
+      (val) => val !== undefined
+    );
     const object = (await this.readOne(
       input.id,
       session
@@ -791,6 +817,10 @@ export class EngagementService {
       pnp,
       session
     );
+    if (pnp) {
+      const pnpData = await this.pnpExtractor.extract(pnp, session);
+      await this.savePnpData(object.id, pnpData);
+    }
 
     try {
       await this.db.sgUpdateProperties({
@@ -804,7 +834,7 @@ export class EngagementService {
           'communicationsCompleteDate',
           'startDateOverride',
           'endDateOverride',
-          'paraTextRegistryId',
+          'paratextRegistryId',
           'historicGoal',
           'modifiedAt',
           'status',
@@ -989,7 +1019,7 @@ export class EngagementService {
         exception,
       });
       throw new ServerException(
-        'Could not find update InternshipEngagement',
+        'Could not update InternshipEngagement',
         exception
       );
     }
@@ -1018,6 +1048,13 @@ export class EngagementService {
       throw new NotFoundException('Could not find engagement', 'engagement.id');
     }
 
+    const canDelete = await this.db.checkDeletePermission(id, session);
+
+    if (!canDelete)
+      throw new UnauthorizedException(
+        'You do not have the permission to delete this Engagement'
+      );
+
     const result = await this.db
       .query()
       .match([
@@ -1033,19 +1070,20 @@ export class EngagementService {
       await this.verifyProjectStatus(result.projectId, session);
     }
 
-    try {
-      await this.db.deleteNode({
-        session,
-        object,
-        aclEditProp: 'canDeleteOwnUser',
-      });
-    } catch (exception) {
-      this.logger.warning('Failed to delete partnership', {
-        exception,
-      });
+    const baseNodeLabels = ['BaseNode', 'Engagement', object.__typename];
 
-      throw new ServerException('Failed to delete partnership', exception);
+    try {
+      await this.db.deleteNodeNew({
+        object,
+        baseNodeLabels,
+      });
+    } catch (e) {
+      this.logger.warning('Failed to delete Engagement', {
+        exception: e,
+      });
+      throw new ServerException('Failed to delete Engagement');
     }
+
     await this.eventBus.publish(new EngagementDeletedEvent(object, session));
   }
 
@@ -1251,6 +1289,26 @@ export class EngagementService {
         )
       ).every((n) => n)
     );
+  }
+
+  private async savePnpData(id: string, pnpData: PnpData | null) {
+    const query = this.db.query();
+    pnpData
+      ? query
+          .match(node('node', 'LanguageEngagement', { id }))
+          .merge([
+            node('node'),
+            relation('out', 'engPnp', 'pnpData', { active: true }),
+            node('pnp', 'PnpData', pnpData),
+          ])
+      : query
+          .match([
+            node('node', 'LanguageEngagement', { id }),
+            relation('out', 'engPnp', 'pnpData', { active: true }),
+            node('pnp', 'PnpData'),
+          ])
+          .detachDelete('pnp');
+    await query.run();
   }
 
   protected async getProjectTypeById(

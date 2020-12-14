@@ -8,6 +8,7 @@ import {
   Order,
   ServerException,
   Session,
+  UnauthorizedException,
 } from '../../common';
 import {
   ConfigService,
@@ -112,6 +113,12 @@ export class BudgetService {
         isPublic: false,
         isOrgPublic: false,
       },
+      {
+        key: 'canDelete',
+        value: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
     ];
 
     try {
@@ -203,6 +210,12 @@ export class BudgetService {
       {
         key: 'amount',
         value: null,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'canDelete',
+        value: true,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -322,7 +335,7 @@ export class BudgetService {
       ...securedProps,
       status: props.status,
       records: records.items,
-      canDelete: false,
+      canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 
@@ -369,7 +382,7 @@ export class BudgetService {
     return {
       ...parseBaseNodeProperties(result.node),
       ...securedProps,
-      canDelete: false,
+      canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 
@@ -453,24 +466,64 @@ export class BudgetService {
   async delete(id: string, session: Session): Promise<void> {
     const budget = await this.readOne(id, session);
 
+    if (!budget) {
+      throw new NotFoundException('Could not find Budget');
+    }
+
+    const canDelete = await this.db.checkDeletePermission(id, session);
+
+    if (!canDelete)
+      throw new UnauthorizedException(
+        'You do not have the permission to delete this Budget'
+      );
+
     // cascade delete each budget record in this budget
     await Promise.all(
       budget.records.map((br) => this.deleteRecord(br.id, session))
     );
-    await this.db.deleteNode({
-      session,
-      object: budget,
-      aclEditProp: 'canCreateBudget',
-    });
+
+    const baseNodeLabels = ['BaseNode', 'Budget'];
+
+    try {
+      await this.db.deleteNodeNew({
+        object: budget,
+        baseNodeLabels,
+      });
+    } catch (e) {
+      this.logger.warning('Failed to delete budget', {
+        exception: e,
+      });
+      throw new ServerException('Failed to delete budget');
+    }
   }
 
   async deleteRecord(id: string, session: Session): Promise<void> {
     const br = await this.readOneRecord(id, session);
-    await this.db.deleteNode({
-      session,
-      object: br,
-      aclEditProp: 'canCreateBudget',
-    });
+
+    if (!br) {
+      throw new NotFoundException('Could not find Budget Record');
+    }
+
+    const canDelete = await this.db.checkDeletePermission(id, session);
+
+    if (!canDelete)
+      throw new UnauthorizedException(
+        'You do not have the permission to delete this Budget Record'
+      );
+
+    const baseNodeLabels = ['BaseNode', 'Budget'];
+
+    try {
+      await this.db.deleteNodeNew({
+        object: br,
+        baseNodeLabels,
+      });
+    } catch (e) {
+      this.logger.warning('Failed to delete Budget Record', {
+        exception: e,
+      });
+      throw new ServerException('Failed to delete Budget Record');
+    }
   }
 
   async list(

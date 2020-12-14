@@ -7,6 +7,7 @@ import {
   NotFoundException,
   ServerException,
   Session,
+  UnauthorizedException,
 } from '../../common';
 import {
   ConfigService,
@@ -16,6 +17,7 @@ import {
   Logger,
   matchRequestingUser,
   OnIndex,
+  UniqueProperties,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -101,6 +103,12 @@ export class FieldZoneService {
         isOrgPublic: false,
         label: 'FieldZoneName',
       },
+      {
+        key: 'canDelete',
+        value: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
     ];
 
     // create field zone
@@ -180,7 +188,7 @@ export class FieldZoneService {
         ...secured.director,
         value: result.directorId,
       },
-      canDelete: true, // TODO
+      canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 
@@ -238,8 +246,36 @@ export class FieldZoneService {
     return await this.readOne(input.id, session);
   }
 
-  async delete(_id: string, _session: Session): Promise<void> {
-    // Not Implemented
+  async delete(id: string, session: Session): Promise<void> {
+    const object = await this.readOne(id, session);
+
+    if (!object) {
+      throw new NotFoundException('Could not find Field Zone');
+    }
+
+    const canDelete = await this.db.checkDeletePermission(id, session);
+
+    if (!canDelete)
+      throw new UnauthorizedException(
+        'You do not have the permission to delete this Field Zone'
+      );
+
+    const baseNodeLabels = ['BaseNode', 'FieldZone'];
+
+    const uniqueProperties: UniqueProperties<FieldZone> = {
+      name: ['Property', 'FieldZoneName'],
+    };
+
+    try {
+      await this.db.deleteNodeNew({
+        object,
+        baseNodeLabels,
+        uniqueProperties,
+      });
+    } catch (exception) {
+      this.logger.error('Failed to delete', { id, exception });
+      throw new ServerException('Failed to delete', exception);
+    }
   }
 
   async list(

@@ -8,8 +8,8 @@ import { Powers } from '../src/components/authorization/dto/powers';
 import {
   CreateInternshipEngagement,
   EngagementStatus,
-  InternPosition,
   InternshipEngagement,
+  InternshipPosition,
   LanguageEngagement,
 } from '../src/components/engagement';
 import { Language } from '../src/components/language';
@@ -151,13 +151,11 @@ describe('Engagement e2e', () => {
     expect(actual.completeDate.value).toBeNull();
     expect(actual.disbursementCompleteDate.value).toBeNull();
     expect(actual.communicationsCompleteDate.value).toBeNull();
-    expect(actual.startDate.value).toBe(project.mouStart.value);
+    expect(actual.startDate.value).toBe(project.mouStart.value); // bump
     expect(actual.endDate.value).toBe(project.mouEnd.value);
-    expect(actual.initialEndDate.value).toBeNull();
     expect(actual.lastSuspendedAt.value).toBeNull();
     expect(actual.lastReactivatedAt.value).toBeNull();
-    expect(actual.statusModifiedAt.value).toBeNull();
-    expect(actual.paraTextRegistryId.value).toBeNull();
+    expect(actual.paratextRegistryId.value).toBeNull();
   });
 
   it('creates a internship engagement', async () => {
@@ -222,10 +220,8 @@ describe('Engagement e2e', () => {
     expect(actual.communicationsCompleteDate.value).toBeNull();
     expect(actual.startDate.value).toBe(internshipProject.mouStart.value);
     expect(actual.endDate.value).toBe(internshipProject.mouEnd.value);
-    expect(actual.initialEndDate.value).toBeNull();
     expect(actual.lastSuspendedAt.value).toBeNull();
     expect(actual.lastReactivatedAt.value).toBeNull();
-    expect(actual.statusModifiedAt.value).toBeNull();
   });
 
   it('reads a an language engagement by id', async () => {
@@ -275,8 +271,8 @@ describe('Engagement e2e', () => {
     expect(actual.startDate).toMatchObject(languageEngagement.startDate);
     expect(actual.endDate).toMatchObject(languageEngagement.endDate);
     expect(actual.modifiedAt).toBe(languageEngagement.modifiedAt);
-    expect(actual.paraTextRegistryId).toMatchObject(
-      languageEngagement.paraTextRegistryId
+    expect(actual.paratextRegistryId).toMatchObject(
+      languageEngagement.paratextRegistryId
     );
     expect(actual.pnp).toMatchObject(languageEngagement.pnp);
   });
@@ -348,7 +344,7 @@ describe('Engagement e2e', () => {
 
     const updateFirstScripture = false;
     const updateLukePartnership = false;
-    const updateParaTextRegistryId = faker.random.word();
+    const updateParatextRegistryId = faker.random.word();
 
     const result = await app.graphql.mutate(
       gql`
@@ -369,7 +365,7 @@ describe('Engagement e2e', () => {
             id: languageEngagement.id,
             firstScripture: updateFirstScripture,
             lukePartnership: updateLukePartnership,
-            paraTextRegistryId: updateParaTextRegistryId,
+            paratextRegistryId: updateParatextRegistryId,
           },
         },
       }
@@ -386,7 +382,7 @@ describe('Engagement e2e', () => {
     expect(updated.id).toBe(languageEngagement.id);
     expect(updated.firstScripture.value).toBe(updateFirstScripture);
     expect(updated.lukePartnership.value).toBe(updateLukePartnership);
-    expect(updated.paraTextRegistryId.value).toBe(updateParaTextRegistryId);
+    expect(updated.paratextRegistryId.value).toBe(updateParatextRegistryId);
     expect(updated.status.value).toBe(EngagementStatus.InDevelopment);
   });
 
@@ -402,7 +398,7 @@ describe('Engagement e2e', () => {
         internId: intern.id,
       }
     );
-    const updatePosition = InternPosition.LanguageProgramManager;
+    const updatePosition = InternshipPosition.LanguageProgramManager;
     const updateMethodologies = [
       ProductMethodology.Paratext,
       ProductMethodology.BibleStories,

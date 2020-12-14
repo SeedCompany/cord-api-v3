@@ -6,6 +6,7 @@ import {
   NotFoundException,
   ServerException,
   Session,
+  UnauthorizedException,
 } from '../../common';
 import {
   ConfigService,
@@ -15,6 +16,7 @@ import {
   Logger,
   matchRequestingUser,
   OnIndex,
+  UniqueProperties,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -93,6 +95,12 @@ export class FilmService {
         isPublic: true,
         isOrgPublic: true,
         label: 'FilmName',
+      },
+      {
+        key: 'canDelete',
+        value: true,
+        isPublic: false,
+        isOrgPublic: false,
       },
     ];
     try {
@@ -175,7 +183,7 @@ export class FilmService {
         ...securedProps.scriptureReferences,
         value: scriptureReferences,
       },
-      canDelete: true, // TODO
+      canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 
@@ -194,11 +202,29 @@ export class FilmService {
 
   async delete(id: string, session: Session): Promise<void> {
     const film = await this.readOne(id, session);
+
+    if (!film) {
+      throw new NotFoundException('Could not find Film');
+    }
+
+    const canDelete = await this.db.checkDeletePermission(id, session);
+
+    if (!canDelete)
+      throw new UnauthorizedException(
+        'You do not have the permission to delete this Film'
+      );
+
+    const baseNodeLabels = ['BaseNode', 'Producible', 'Film'];
+
+    const uniqueProperties: UniqueProperties<Film> = {
+      name: ['Property', 'FilmName'],
+    };
+
     try {
-      await this.db.deleteNode({
-        session,
+      await this.db.deleteNodeNew({
         object: film,
-        aclEditProp: 'canDeleteOwnUser',
+        baseNodeLabels,
+        uniqueProperties,
       });
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });

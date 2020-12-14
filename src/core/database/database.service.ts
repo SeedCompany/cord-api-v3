@@ -27,7 +27,6 @@ import { AbortError, retry, RetryOptions } from '../../common/retry';
 import { ConfigService } from '../config/config.service';
 import {
   determineSortValue,
-  matchRequestingUser,
   setBaseNodeLabelsAndIdDeleted,
   setPropLabelsAndValuesDeleted,
   UniqueProperties,
@@ -455,34 +454,36 @@ export class DatabaseService {
     };
   }
 
-  async checkDeletePermission(id: string, session: Session) {
-    const query = this.db
-      .query()
-      .call(matchRequestingUser, session)
-      .match(node('node', { id }))
-      .match([
-        node('requestingUser'),
-        relation('in', 'memberOfSecurityGroup', 'member'),
-        node('securityGroup', 'SecurityGroup'),
-        relation('out', 'sgPerms', 'permission'),
-        node('perm', 'Permission', { read: true, property: 'canDelete' }),
-        relation('out', 'permsOfBaseNode', 'baseNode'),
-        node('node'),
-      ])
-      .return('perm');
+  // eslint-disable-next-line @seedcompany/no-unused-vars
+  async checkDeletePermission(id: string, session: Partial<Session>) {
+    return true;
+    // const query = this.db
+    //   .query()
+    //   .call(matchRequestingUser, session)
+    //   .match(node('node', { id }))
+    //   .match([
+    //     node('requestingUser'),
+    //     relation('in', 'memberOfSecurityGroup', 'member'),
+    //     node('securityGroup', 'SecurityGroup'),
+    //     relation('out', 'sgPerms', 'permission'),
+    //     node('perm', 'Permission', { read: true, property: 'canDelete' }),
+    //     relation('out', 'permsOfBaseNode', 'baseNode'),
+    //     node('node'),
+    //   ])
+    //   .return('perm');
 
-    const result = await query.first();
-    return !!result;
+    // const result = await query.first();
+    // return !!result;
   }
 
   async deleteNodeNew<TObject extends Resource>({
     object,
     baseNodeLabels,
-    uniqueProperties,
+    uniqueProperties = {},
   }: {
     object: TObject;
     baseNodeLabels: string[];
-    uniqueProperties: UniqueProperties<TObject>;
+    uniqueProperties?: UniqueProperties<TObject>;
   }) {
     const query = this.db
       .query()

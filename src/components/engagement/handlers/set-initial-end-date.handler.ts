@@ -1,4 +1,9 @@
-import { CalendarDate, ServerException, Session } from '../../../common';
+import {
+  CalendarDate,
+  ServerException,
+  Session,
+  UnauthorizedException,
+} from '../../../common';
 import {
   DatabaseService,
   EventsHandler,
@@ -29,16 +34,31 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
 
     const engagement = 'engagement' in event ? event.engagement : event.updated;
 
-    const shouldUpdateInitialEndDate =
-      engagement.status.value === EngagementStatus.Active &&
-      engagement.initialEndDate.value == null &&
-      engagement.endDate.value != null;
-    if (!shouldUpdateInitialEndDate) {
+    if (
+      event instanceof EngagementUpdatedEvent && // allow setting initial if creating with non-in-dev status
+      engagement.status.value !== EngagementStatus.InDevelopment
+    ) {
+      return;
+    }
+    if (!engagement.endDate.canRead) {
+      throw new UnauthorizedException(
+        `Current user cannot read Engagement's end date thus initial end date cannot be set`
+      );
+    }
+    if (!engagement.initialEndDate.canRead) {
+      throw new UnauthorizedException(
+        `Current user cannot read Engagement's initial end date thus initial end date cannot be set`
+      );
+    }
+    if (
+      engagement.initialEndDate.value?.toMillis() ===
+      engagement.endDate.value?.toMillis()
+    ) {
       return;
     }
 
     try {
-      const initialEndDate = engagement.endDate.value!;
+      const initialEndDate = engagement.endDate.value;
 
       const updatedEngagement = await this.updateEngagementInitialEndDate(
         engagement,
@@ -65,12 +85,12 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
 
   private async updateEngagementInitialEndDate(
     engagement: Engagement,
-    initialEndDate: CalendarDate,
+    initialEndDate: CalendarDate | null | undefined,
     session: Session
   ) {
     const updateInput = {
       id: engagement.id,
-      initialEndDate: initialEndDate,
+      initialEndDate: initialEndDate || null,
     };
     // TODO: Refactor to call repository directly instead of engagementService methods
     if (engagement.__typename === this.languageEngagementTypeName) {

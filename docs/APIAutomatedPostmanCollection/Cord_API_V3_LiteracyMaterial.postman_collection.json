@@ -132,30 +132,7 @@
 									"// pm.globals.set('userStatus', userStatusArray[randomNumber]);\r",
 									"pm.globals.set(\"userStatus\", \"Active\");\r",
 									"\r",
-									"var userRolesArray = ['BibleTranslationLiaison',\r",
-									"'Consultant',\r",
-									"'ConsultantManager',\r",
-									"'Controller',\r",
-									"'Development',\r",
-									"'ExecutiveDevelopmentRepresentative',\r",
-									"'ExecutiveLeadership',\r",
-									"'FieldOperationsDirector',\r",
-									"'FieldPartner',\r",
-									"'FinancialAnalyst',\r",
-									"'Intern',\r",
-									"'Liaison',\r",
-									"'LeadFinancialAnalyst',\r",
-									"'Mentor',\r",
-									"'OfficeOfThePresident',\r",
-									"'ProjectManager',\r",
-									"'RegionalCommunicationsCoordinator',\r",
-									"'RegionalDirector',\r",
-									"'SupportingProjectManager',\r",
-									"'Translator',\r",
-									"'Writer'\r",
-									"];\r",
-									"var randomNumber = Math.floor(Math.random()*userRolesArray.length);\r",
-									"pm.globals.set('userRoles', userRolesArray[randomNumber]);\r",
+									"pm.globals.set(\"userRoles\", \"ProjectManager\");\r",
 									""
 								],
 								"type": "text/javascript"
@@ -451,7 +428,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      canDelete\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"literacyMaterial\": {\r\n            \"name\": \"{{literacyMaterialName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
