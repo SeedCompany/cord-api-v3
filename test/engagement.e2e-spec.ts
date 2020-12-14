@@ -401,7 +401,7 @@ describe('Engagement e2e', () => {
     const updatePosition = InternshipPosition.LanguageProgramManager;
     const updateMethodologies = [
       ProductMethodology.Paratext,
-      ProductMethodology.BibleStories,
+      ProductMethodology.StoryTogether,
     ];
 
     const result = await app.graphql.mutate(
