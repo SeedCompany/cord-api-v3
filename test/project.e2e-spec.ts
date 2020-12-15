@@ -157,12 +157,23 @@ describe('Project e2e', () => {
         },
       }
     );
+    const folders = [
+      { name: 'Approval Documents' },
+      { name: 'Consultant Reports' },
+      { name: 'Field Correspondence' },
+      { name: 'Financial Reports' },
+      { name: 'Narrative Reports' },
+      { name: 'Photos' },
+    ];
 
     const actual: Project & {
       engagements: { canRead: boolean; canCreate: boolean };
       partnerships: { canRead: boolean; canCreate: boolean };
       team: { canRead: boolean; canCreate: boolean };
     } = result.createProject.project;
+    const projectFiles =
+      result.createProject.project.rootDirectory.value.children.items;
+    expect(projectFiles).toEqual(folders);
     expect(actual.id).toBeDefined();
     expect(actual.departmentId.value).toBeNull();
     expect(actual.mouStart.value).toBeNull();
