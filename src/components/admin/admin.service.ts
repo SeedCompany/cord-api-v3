@@ -186,20 +186,11 @@ export class AdminService implements OnApplicationBootstrap {
         const createOrgResult = await this.db
           .query()
           .match(
-            node('publicSg', 'PublicSecurityGroup', {
-              id: this.config.publicSecurityGroup.id,
-            })
-          )
-          .match(
             node('rootuser', 'User', {
               id: this.config.rootAdmin.id,
             })
           )
           .create([
-            node('orgSg', ['OrgPublicSecurityGroup', 'SecurityGroup'], {
-              id: orgSgId,
-            }),
-            relation('out', '', 'organization'),
             node('org', ['DefaultOrganization', 'Organization'], {
               id: this.config.defaultOrg.id,
               createdAt,
@@ -209,23 +200,6 @@ export class AdminService implements OnApplicationBootstrap {
               createdAt,
               value: this.config.defaultOrg.name,
             }),
-          ])
-          .with('*')
-          .create([
-            node('publicSg'),
-            relation('out', '', 'permission'),
-            node('perm', 'Permission', {
-              property: 'name',
-              read: true,
-            }),
-            relation('out', '', 'baseNode'),
-            node('org'),
-          ])
-          .with('*')
-          .create([
-            node('orgSg'),
-            relation('out', '', 'member'),
-            node('rootuser'),
           ])
           .return('org.id as id')
           .first();
