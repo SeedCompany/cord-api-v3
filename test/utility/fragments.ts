@@ -329,6 +329,16 @@ export const project = gql`
     createdAt
     type
     sensitivity
+    rootDirectory {
+      value {
+        id
+        children {
+          items {
+            name
+          }
+        }
+      }
+    }
     name {
       value
       canRead

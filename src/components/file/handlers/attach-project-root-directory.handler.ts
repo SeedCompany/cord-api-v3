@@ -46,5 +46,17 @@ export class AttachProjectRootDirectoryHandler
       rootDir.id,
       session.userId
     );
+
+    const folders = [
+      'Approval Documents',
+      'Financial Reports',
+      'Consultant Reports',
+      'Narrative Reports',
+      'Field Correspondence',
+      'Photos',
+    ];
+    for (const folder of folders) {
+      await this.files.createDirectory(rootDir.id, folder, session);
+    }
   }
 }
