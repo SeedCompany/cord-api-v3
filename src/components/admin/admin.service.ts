@@ -42,90 +42,13 @@ export class AdminService implements OnApplicationBootstrap {
   }
 
   async setupRootObjects(): Promise<void> {
-    // merge root security group
-    await this.mergeRootSecurityGroup();
-
-    // merge public security group
-    await this.mergePublicSecurityGroup();
-
-    // merge anon user and connect to public sg
-    await this.mergeAnonUser();
-
     // Root Admin
-
     if (!(await this.doesRootAdminUserAlreadyExist())) {
       await this.createRootAdminUser();
     }
 
-    // Connect Root Security Group and Root Admin
-
-    await this.mergeRootAdminUserToSecurityGroup();
-
-    await this.mergePublicSecurityGroupWithRootSg();
-
     // Default Organization
     await this.mergeDefaultOrg();
-  }
-
-  async mergeRootSecurityGroup() {
-    // merge root security group
-
-    const powers = Object.keys(Powers);
-
-    await this.db
-      .query()
-      .merge([
-        node('sg', 'RootSecurityGroup', {
-          id: this.config.rootSecurityGroup.id,
-        }),
-      ])
-      .onCreate.setLabels({ sg: ['RootSecurityGroup', 'SecurityGroup'] })
-      .setValues({
-        sg: {
-          id: this.config.rootSecurityGroup.id,
-          powers,
-        },
-      })
-      .run();
-  }
-
-  async mergePublicSecurityGroup() {
-    await this.db
-      .query()
-      .merge([
-        node('sg', 'PublicSecurityGroup', {
-          id: this.config.publicSecurityGroup.id,
-        }),
-      ])
-      .onCreate.setLabels({ sg: ['PublicSecurityGroup', 'SecurityGroup'] })
-      .setValues({
-        'sg.id': this.config.publicSecurityGroup.id,
-      })
-      .run();
-  }
-
-  async mergeAnonUser() {
-    const createdAt = DateTime.local();
-    await this.db
-      .query()
-      .merge([
-        node('anon', 'AnonUser', {
-          id: this.config.anonUser.id,
-        }),
-      ])
-      .onCreate.setLabels({ anon: ['AnonUser', 'User', 'BaseNode'] })
-      .setValues({
-        'anon.createdAt': createdAt,
-        'anon.id': this.config.anonUser.id,
-      })
-      .with('*')
-      .match([
-        node('publicSg', 'PublicSecurityGroup', {
-          id: this.config.publicSecurityGroup.id,
-        }),
-      ])
-      .merge([node('publicSg'), relation('out', '', 'member'), node('anon')])
-      .run();
   }
 
   async doesRootAdminUserAlreadyExist(): Promise<boolean> {
@@ -214,67 +137,6 @@ export class AdminService implements OnApplicationBootstrap {
         'Root Email or Password are incorrect'
       );
     }
-  }
-
-  async mergeRootAdminUserToSecurityGroup(): Promise<void> {
-    const makeAdmin = await this.db
-      .query()
-      .match([
-        [
-          node('sg', 'RootSecurityGroup', {
-            id: this.config.rootSecurityGroup.id,
-          }),
-        ],
-      ])
-      .with('*')
-      .match([
-        [
-          node('newRootAdmin', 'User', {
-            id: this.config.rootAdmin.id,
-          }),
-        ],
-      ])
-      .with('*')
-      .merge([
-        [
-          node('sg'),
-          relation('out', 'adminLink', 'member'),
-          node('newRootAdmin'),
-        ],
-      ])
-      // .setValues({ sg: RootSecurityGroup })
-      .return('newRootAdmin')
-      .first();
-
-    if (!makeAdmin) {
-      throw new ServerException(
-        'Could not merge root admin user to security group'
-      );
-    }
-  }
-
-  async mergePublicSecurityGroupWithRootSg(): Promise<void> {
-    await this.db
-      .query()
-      .merge([
-        node('publicSg', ['PublicSecurityGroup', 'SecurityGroup'], {
-          id: this.config.publicSecurityGroup.id,
-        }),
-      ])
-      .onCreate.setValues({
-        publicSg: {
-          id: this.config.publicSecurityGroup.id,
-        },
-      })
-      .setLabels({ publicSg: 'SecurityGroup' })
-      .with('*')
-      .match([
-        node('rootSg', 'RootSecurityGroup', {
-          id: this.config.rootSecurityGroup.id,
-        }),
-      ])
-      .merge([node('publicSg'), relation('out', '', 'member'), node('rootSg')])
-      .run();
   }
 
   async mergeDefaultOrg(): Promise<void> {
