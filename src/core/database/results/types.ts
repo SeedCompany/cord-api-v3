@@ -45,5 +45,5 @@ export interface StandardReadResult<DbProps> {
 export interface StandardReadV2Result<DbProps> {
   node: Node<BaseNode>;
   propList: PropListDbResult<DbProps>;
-  requestingRoles: Nodes<{ value: Role }>;
+  requestingRoles?: Nodes<{ value: Role }>;
 }
