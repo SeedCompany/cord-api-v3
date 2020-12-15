@@ -1,7 +1,7 @@
 import type { Node } from 'cypher-query-builder';
 import type { DateTime } from 'luxon';
 import type { Except } from 'type-fest';
-import type { UnsecuredDto } from '../../../common';
+import type { Many, UnsecuredDto } from '../../../common';
 import { Role } from '../../../components/authorization';
 import type { BaseNode } from './parse-base-node';
 import type { PermListDbResult } from './parse-permissions';
@@ -45,5 +45,5 @@ export interface StandardReadResult<DbProps> {
 export interface StandardReadV2Result<DbProps> {
   node: Node<BaseNode>;
   propList: PropListDbResult<DbProps>;
-  requestingRoles?: Nodes<{ value: Role }>;
+  requestingRoles?: Many<Node<{ value: Role }>>;
 }

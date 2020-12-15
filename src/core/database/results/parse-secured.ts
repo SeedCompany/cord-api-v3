@@ -1,5 +1,7 @@
+import type { Node } from 'cypher-query-builder';
 import { mapValues } from 'lodash';
-import type { DbBaseNodeLabel, Secured } from '../../../common';
+import { many } from '../../../common';
+import type { DbBaseNodeLabel, Many, Secured } from '../../../common';
 import type { Role } from '../../../components/authorization';
 import { permissionFor } from '../../../components/authorization/authorization.service';
 import {
@@ -8,7 +10,6 @@ import {
   PermListDbResult,
 } from './parse-permissions';
 import { parsePropList, PropListDbResult } from './parse-props';
-import { Nodes } from './types';
 
 const propertyDefaults = {
   value: undefined,
@@ -54,13 +55,15 @@ export const parseSecuredProperties2 = <
   PickedKeys extends keyof DbProps
 >(
   propList: PropListDbResult<DbProps> | DbProps,
-  roleNodes: Nodes<{ value: Role }> | undefined,
+  roleNodes: Many<Node<{ value: Role }>> | undefined,
   baseNodeLabel: DbBaseNodeLabel,
   propKeys: Record<PickedKeys, boolean>
 ) => {
   const props = Array.isArray(propList) ? parsePropList(propList) : propList;
 
-  const roles = (roleNodes ?? []).map((n) => n.properties.value);
+  const roles = (roleNodes ? many(roleNodes) : []).map(
+    (n) => n.properties.value
+  );
 
   const merged = mapValues(propKeys, (_, key: PickedKeys & string) => {
     const res = {
