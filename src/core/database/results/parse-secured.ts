@@ -54,13 +54,13 @@ export const parseSecuredProperties2 = <
   PickedKeys extends keyof DbProps
 >(
   propList: PropListDbResult<DbProps> | DbProps,
-  roleNodes: Nodes<{ value: Role }>,
+  roleNodes: Nodes<{ value: Role }> | undefined,
   baseNodeLabel: DbBaseNodeLabel,
   propKeys: Record<PickedKeys, boolean>
 ) => {
   const props = Array.isArray(propList) ? parsePropList(propList) : propList;
 
-  const roles = roleNodes.map((n) => n.properties.value);
+  const roles = (roleNodes ?? []).map((n) => n.properties.value);
 
   const merged = mapValues(propKeys, (_, key: PickedKeys & string) => {
     const res = {
