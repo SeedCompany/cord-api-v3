@@ -12,12 +12,15 @@ export enum ProductMethodology {
 
   // Oral Translation
   Render = 'Render',
+  Audacity = 'Audacity',
+  AdobeAudition = 'AdobeAudition',
   OtherOralTranslation = 'OtherOralTranslation',
 
   // Oral Stories
-  BibleStories = 'BibleStories',
-  BibleStorying = 'BibleStorying',
+  StoryTogether = 'StoryTogether',
+  SeedCompanyMethod = 'SeedCompanyMethod',
   OneStory = 'OneStory',
+  Craft2Tell = 'Craft2Tell',
   OtherOralStories = 'OtherOralStories',
 
   // Visual
@@ -36,12 +39,15 @@ export const MethodologyToApproach: Record<
 
   // Oral Translation
   [ProductMethodology.Render]: ProductApproach.OralTranslation,
+  [ProductMethodology.Audacity]: ProductApproach.OralTranslation,
+  [ProductMethodology.AdobeAudition]: ProductApproach.OralTranslation,
   [ProductMethodology.OtherOralTranslation]: ProductApproach.OralTranslation,
 
   // Oral Stories
-  [ProductMethodology.BibleStories]: ProductApproach.OralStories,
-  [ProductMethodology.BibleStorying]: ProductApproach.OralStories,
+  [ProductMethodology.StoryTogether]: ProductApproach.OralStories,
+  [ProductMethodology.SeedCompanyMethod]: ProductApproach.OralStories,
   [ProductMethodology.OneStory]: ProductApproach.OralStories,
+  [ProductMethodology.Craft2Tell]: ProductApproach.OralStories,
   [ProductMethodology.OtherOralStories]: ProductApproach.OralStories,
 
   // Visual
