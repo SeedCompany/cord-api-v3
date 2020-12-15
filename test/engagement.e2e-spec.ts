@@ -1137,12 +1137,12 @@ describe('Engagement e2e', () => {
         project.id,
         engagement.id
       );
-      expect(actual.modifiedAt).toContain(
-        actual.statusModifiedAt.value.substring(
-          0,
-          actual.statusModifiedAt.value.length - 1
-        )
-      );
+
+      const modAtMillis = DateTime.fromISO(actual.modifiedAt).toMillis();
+      const statusModMillis = DateTime.fromISO(
+        actual.statusModifiedAt.value
+      ).toMillis();
+      expect(modAtMillis).toBe(statusModMillis);
     });
     // Login back to the user
     await login(app, { email: user.email.value, password });
