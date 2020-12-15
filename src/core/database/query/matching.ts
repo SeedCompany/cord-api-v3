@@ -10,11 +10,13 @@ export const requestingUser = (session: Session) =>
   });
 
 export const requestingRoles = (query: Query) =>
-  query.optionalMatch([
-    node('requestingUser'),
-    relation('out', '', 'roles', { active: true }),
-    node('requestingRoles', 'Property'),
-  ]);
+  query
+    .optionalMatch([
+      node('requestingUser'),
+      relation('out', '', 'roles', { active: true }),
+      node('requestingRoles', 'Property'),
+    ])
+    .with(['requestingUser', 'collect(requestingRoles) as requestingRoles']);
 
 export const permissionsOfNode = (nodeLabel?: string) => [
   relation('in', 'memberOfSecurityGroup', 'member'),
