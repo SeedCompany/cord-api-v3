@@ -1,10 +1,8 @@
 /* eslint-disable no-case-declarations */
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { union, without } from 'lodash';
 import {
   DbBaseNodeLabel,
-  generateId,
   has,
   many,
   Many,
@@ -37,7 +35,7 @@ import { DbProjectMember } from '../project/project-member/model';
 import { DbSong } from '../song/model';
 import { DbStory } from '../story/model';
 import { DbEducation, DbUnavailability, DbUser } from '../user/model';
-import { InternalRole, Role } from './dto';
+import { Role } from './dto';
 import { Powers } from './dto/powers';
 import { MissingPowerException } from './missing-power.exception';
 import { AnyBaseNode, DbPermission, DbRole, OneBaseNode } from './model';
@@ -72,21 +70,6 @@ export const permissionFor = (
     const perm = dbRole.getPermissionsOnProperty(baseNode, property);
     return !!perm?.[action];
   });
-
-/**
- * powers can exist on a security group or a user node
- */
-
-/**
- * Authorization events:
- * 1. base node creation
- *   a. assign all global roles membership for the base node
- *   b. assign any per-object roles membership for the base node
- * 2. adding a project member to a project
- *   a. get the member's project role and assign membership for that project
- * 3. assigning a role to a user
- *   a. assign that user membership to all SGs for their new role.
- */
 
 export interface ProjectChildIds {
   budgets: string[];
@@ -138,49 +121,6 @@ export class AuthorizationService {
         }
       )
       .run();
-  }
-
-  async createSGsForEveryRoleForAllBaseNodes(session: Session) {
-    this.logger.info('beginning to create/merge SGs for all base nodes');
-    if (session.userId !== this.config.rootAdmin.id) {
-      return true;
-    }
-    // loop through every base node and create the SGs for each role
-    // we're going to do this in the least memory intensive way,
-    // which is also the slowest/spammiest
-    const baseNodeCountQuery = await this.db
-      .query()
-      .match([node('baseNode', 'BaseNode')])
-      .raw('return count(baseNode) as total')
-      .first();
-
-    if (baseNodeCountQuery === undefined) {
-      return true;
-    }
-
-    this.logger.info('total base nodes: ', baseNodeCountQuery.total);
-    // eslint-disable-next-line no-restricted-syntax
-    for (let i = 0; i < baseNodeCountQuery.total; i++) {
-      const idQuery = await this.db
-        .query()
-        .match([node('baseNode', 'BaseNode')])
-        .raw(`return baseNode.id as id, labels(baseNode) as labels`)
-        .skip(i)
-        .limit(1)
-        .first();
-
-      if (idQuery === undefined) {
-        continue;
-      }
-
-      for (const role of Object.values(Roles)) {
-        const baseNodeObj = this.getBaseNodeObjUsingLabel(idQuery.labels);
-        await this.mergeSecurityGroupForRole(idQuery.id, role, baseNodeObj);
-      }
-    }
-
-    this.logger.info('SG creation complete');
-    return true;
   }
 
   private getBaseNodeObjUsingLabel(labels: string[]): OneBaseNode {
@@ -282,57 +222,16 @@ export class AuthorizationService {
   }
 
   private async readPowerByUserId(id: string): Promise<Powers[]> {
-    const result = await this.db
-      .query()
-      .match([node('user', 'User', { id })])
-      .raw('return user.powers as powers')
-      .unionAll()
-      .match([node('sg', 'SecurityGroup', { id })])
-      .raw('return sg.powers as powers')
-      .asResult<{ powers?: Powers[] }>()
-      .first();
-
-    for (const role of roles) {
-      // match the role to a real role object and grant powers
-      const dbRole = tryFindDbRole(role);
-      if (dbRole === undefined) continue;
-      for (const power of dbRole.powers) {
-        await this.grantPower(power, id);
-      }
-    }
+    const roles = await this.getUserRoleObjects(id);
+    const powers = roles.map((role) => role.powers);
+    return powers.flat();
   }
 
   async checkPower(power: Powers, session: Session): Promise<void> {
     const id = session.userId;
+    const powers = await this.readPowerByUserId(session.userId);
 
-    const query = this.db
-      .query()
-      .match(
-        // if anonymous we check the public sg for public powers
-        session.anonymous
-          ? [
-              node('user', 'User', { id }),
-              relation('in', '', 'member'),
-              node('sg', 'SecurityGroup'),
-            ]
-          : [
-              node('sg', 'PublicSecurityGroup', {
-                id: this.config.publicSecurityGroup.id,
-              }),
-            ]
-      )
-      .raw('where $power IN sg.powers', { power })
-      .raw('return $power IN sg.powers as hasPower')
-      .union()
-      .match([node('user', 'User', { id })])
-      .raw('where $power IN user.powers')
-      .raw('return $power IN user.powers as hasPower')
-      .asResult<{ hasPower: boolean }>();
-
-    const result = await query.first();
-    const hasPower = result?.hasPower ?? false;
-
-    if (!hasPower) {
+    if (!powers.includes(power)) {
       throw new MissingPowerException(
         power,
         `user ${
