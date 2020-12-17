@@ -371,14 +371,10 @@ describe('Engagement e2e', () => {
       }
     );
     const updated = result.updateLanguageEngagement.engagement;
-    const difference = Interval.fromDateTimes(
-      DateTime.fromISO(languageEngagement.modifiedAt.toString()),
-      DateTime.fromISO(updated.modifiedAt)
-    )
-      .toDuration()
-      .toFormat('S');
     expect(updated).toBeTruthy();
-    expect(parseInt(difference)).toBeGreaterThan(0);
+    expect(DateTime.fromISO(updated.modifiedAt).toMillis()).toBeGreaterThan(
+      DateTime.fromISO(languageEngagement.modifiedAt).toMillis()
+    );
     expect(updated.id).toBe(languageEngagement.id);
     expect(updated.firstScripture.value).toBe(updateFirstScripture);
     expect(updated.lukePartnership.value).toBe(updateLukePartnership);
