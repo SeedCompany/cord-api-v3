@@ -1,5 +1,5 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { AnonSession, ServerException, Session } from '../../common';
+import { AnonSession, Session } from '../../common';
 import { EngagementStatusTransition, SecuredEngagementStatus } from './dto';
 import { EngagementRules } from './engagement.rules';
 
@@ -14,12 +14,7 @@ export class EngagementStatusResolver {
     @Parent() status: SecuredEngagementStatus & { engagementId?: string },
     @AnonSession() session: Session
   ): Promise<EngagementStatusTransition[]> {
-    if (!status.engagementId) {
-      throw new ServerException(
-        'Engagement ID should have been provided by Engagement resolver'
-      );
-    }
-    if (!status.canRead || !status.value) {
+    if (!status.canRead || !status.value || !status.engagementId) {
       return [];
     }
     return await this.engagementRules.getAvailableTransitions(
