@@ -291,7 +291,7 @@ const books = [
     chapters: [22, 23, 18, 22],
   },
   {
-    names: generateOrdinalNameVariations(1, 'Samuel Sa Sam'.split(' ')),
+    names: generateOrdinalNameVariations(1, 'Samuel Sam'.split(' ')),
     chapters: [
       28,
       36,
@@ -327,7 +327,7 @@ const books = [
     ],
   },
   {
-    names: generateOrdinalNameVariations(2, 'Samuel Sa Sam'.split(' ')),
+    names: generateOrdinalNameVariations(2, 'Samuel Sam'.split(' ')),
     chapters: [
       27,
       32,
