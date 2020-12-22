@@ -3,7 +3,7 @@ import { Duration, DurationObject } from 'luxon';
 
 export type Many<T> = T | readonly T[];
 export const many = <T>(item: Many<T>): readonly T[] =>
-  Array.isArray(item) ? item : [item];
+  Array.isArray(item) ? item : [item as T];
 
 export const maybeMany = <T>(
   item: Many<T> | null | undefined
