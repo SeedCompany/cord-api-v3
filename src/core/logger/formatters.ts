@@ -2,6 +2,7 @@ import { ppRaw as prettyPrint } from '@patarapolw/prettyprint';
 import { enabled as colorsEnabled, red, yellow } from 'colors/safe';
 import stringify from 'fast-safe-stringify';
 import { identity } from 'lodash';
+import { TransformableInfo as ScuffedTransformableInfo } from 'logform';
 import { DateTime } from 'luxon';
 import { relative } from 'path';
 import { parse as parseTrace, StackFrame } from 'stack-trace';
@@ -10,6 +11,10 @@ import { config, format, LogEntry } from 'winston';
 import { Exception } from '../../common/exceptions';
 import { maskSecrets as maskSecretsOfObj } from '../../common/mask-secrets';
 import { getNameFromEntry } from './logger.interface';
+
+type TransformableInfo = ScuffedTransformableInfo & {
+  [MESSAGE]?: string;
+};
 
 type Color = (str: string) => string;
 
@@ -128,7 +133,7 @@ const formatStackFrame = (t: StackFrame) => {
 };
 
 export const formatException = () =>
-  format((info) => {
+  format((info: TransformableInfo) => {
     if (!info.exceptions) {
       return info;
     }
@@ -159,9 +164,9 @@ export const formatException = () =>
   })();
 
 export const printForCli = () =>
-  format.printf((info) => {
+  format.printf((info: TransformableInfo) => {
     if (info[MESSAGE]) {
-      return info[MESSAGE];
+      return info[MESSAGE]!;
     }
 
     const name = getNameFromEntry(info);
