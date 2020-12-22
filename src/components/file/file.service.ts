@@ -1,5 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import type { AWSError } from 'aws-sdk';
+import { Readable } from 'stream';
 import {
   DuplicateException,
   generateId,
@@ -130,7 +131,22 @@ export class FileService {
       throw new NotFoundException('Could not find file contents');
     }
 
-    return Buffer.isBuffer(data) ? data : Buffer.from(data);
+    if (Buffer.isBuffer(data)) {
+      return data;
+    } else if (data instanceof Uint8Array || typeof data === 'string') {
+      return Buffer.from(data);
+    } else if (data instanceof Readable) {
+      const chunks = [];
+      for await (const chunk of data) {
+        chunks.push(chunk);
+      }
+      return Buffer.concat(chunks);
+    } else if (data instanceof Blob) {
+      return Buffer.from(await data.text());
+    } else {
+      // Shouldn't be hit. S3 types scuffed the Blob type which is why the instanceof above is necessary
+      throw new ServerException("Could not parse S3 object's body");
+    }
   }
 
   async getDownloadUrl(node: FileNode): Promise<string> {
@@ -503,6 +519,6 @@ export class FileService {
   }
 
   async checkConsistency(type: FileNodeType, session: Session): Promise<void> {
-    return await this.repo.checkConsistency(type, session);
+    await this.repo.checkConsistency(type, session);
   }
 }
