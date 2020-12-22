@@ -375,7 +375,7 @@ export class PartnershipService {
 
     // financialReportingType should be subset of its Partner's financialReportingTypes
     const partner = await this.partnerService.readOne(
-      object.partner.value as string,
+      object.partner.value!,
       session
     );
     this.assertFinancialReportingType(
