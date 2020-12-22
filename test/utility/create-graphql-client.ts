@@ -26,7 +26,7 @@ export const createGraphqlClient = async (
   const options: GqlModuleOptions & { context: GqlContextType } = app.get(
     GRAPHQL_MODULE_OPTIONS
   );
-  const { query, mutate } = createTestClient(server);
+  const client = createTestClient(server);
 
   const resetRequest = () => {
     // Session data changes between requests
@@ -42,13 +42,19 @@ export const createGraphqlClient = async (
     obj ? JSON.parse(JSON.stringify(obj)) : obj;
   return {
     query: async (q, variables) => {
-      const result = await query({ query: q, variables: toPlain(variables) });
+      const result = await client.query({
+        query: q,
+        variables: toPlain(variables),
+      });
       resetRequest();
       validateResult(result);
       return result.data;
     },
     mutate: async (mutation, variables) => {
-      const result = await mutate({ mutation, variables: toPlain(variables) });
+      const result = await client.mutate({
+        mutation,
+        variables: toPlain(variables),
+      });
       resetRequest();
       validateResult(result);
       return result.data;

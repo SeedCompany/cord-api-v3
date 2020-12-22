@@ -19,9 +19,7 @@ export const generateRegisterInput = async (): Promise<RegisterInput> => ({
   title: faker.name.title(),
 });
 
-export const generateRequireFieldsRegisterInput = async (): Promise<
-  RegisterInput
-> => ({
+export const generateRequireFieldsRegisterInput = async (): Promise<RegisterInput> => ({
   email: faker.internet.email(),
   realFirstName: faker.name.firstName(),
   realLastName: faker.name.lastName(),

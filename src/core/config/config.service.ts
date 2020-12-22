@@ -1,9 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
+import {
+  EmailModuleOptions,
+  EmailOptionsFactory,
+} from '@seedcompany/nestjs-email';
 import { LazyGetter as Lazy } from 'lazy-get-decorator';
 import { Duration } from 'luxon';
 import { Config as Neo4JDriverConfig } from 'neo4j-driver';
 import { join } from 'path';
+import { FrontendUrlWrapper } from '../email/templates/frontend-url';
 import { LogLevel } from '../logger';
 import { EnvironmentService } from './environment.service';
 
@@ -13,7 +18,7 @@ import { EnvironmentService } from './environment.service';
  * Keys are camelcase, objects can be used, references to usages can be found.
  */
 @Injectable()
-export class ConfigService {
+export class ConfigService implements EmailOptionsFactory {
   port = this.env.number('port').optional(3000);
   hostUrl = this.env
     .string('host_url')
@@ -25,14 +30,22 @@ export class ConfigService {
 
   jwtKey = this.env.string('JWT_AUTH_KEY').optional('cord-field');
 
-  @Lazy() get email() {
+  createEmailOptions(): EmailModuleOptions {
     const send = this.env.boolean('EMAIL_SEND').optional(false);
     return {
       from: this.env.string('EMAIL_FROM').optional('noreply@cordfield.com'),
       replyTo: this.env.string('EMAIL_REPLY_TO').optional() || undefined, // falsy -> undefined
       send,
       open: this.env.boolean('EMAIL_OPEN').optional(!send && !this.jest),
-      sesRegion: this.env.string('SES_REGION').optional(),
+      ses: {
+        region: this.env.string('SES_REGION').optional(),
+      },
+      wrappers: [FrontendUrlWrapper(this.frontendUrl)],
+    };
+  }
+
+  @Lazy() get email() {
+    return {
       notifyDistributionLists: this.env
         .boolean('NOTIFY_DISTRIBUTION_LIST')
         .optional(false),

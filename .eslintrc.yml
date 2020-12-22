@@ -21,10 +21,12 @@ rules:
       format: [camelCase]
       leadingUnderscore: forbid
       # allow `__typename` exception since it's a GQL standard.
-    - selector: property
+      # `property` group selector is precedence is bugged
+      # https://github.com/typescript-eslint/typescript-eslint/issues/2860
+    - selector: [classProperty, objectLiteralProperty, typeProperty]
       filter: __typename
       format: ~
-    - selector: property
+    - selector: [classProperty, objectLiteralProperty, typeProperty]
       format: [camelCase, PascalCase]
       leadingUnderscore: forbid
     - selector: enumMember
