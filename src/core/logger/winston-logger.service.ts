@@ -15,7 +15,8 @@ export class LoggerOptions {
  * Winston implementation of our Logger with a custom level matcher.
  */
 @Injectable()
-export class WinstonLoggerService extends AbstractLogger
+export class WinstonLoggerService
+  extends AbstractLogger
   implements OnModuleDestroy {
   private readonly logger: WinstonLogger;
   private closing = false;
