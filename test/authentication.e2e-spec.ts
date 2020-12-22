@@ -1,10 +1,10 @@
+import { EmailService } from '@seedcompany/nestjs-email';
 import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { isValidId } from '../src/common';
 import { SecuredTimeZone } from '../src/components/timezone';
 import { User } from '../src/components/user';
-import { EmailService } from '../src/core/email';
 import {
   createSession,
   createTestApp,

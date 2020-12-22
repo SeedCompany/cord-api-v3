@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { EmailService } from '@seedcompany/nestjs-email';
 import * as argon2 from 'argon2';
 import { node, relation } from 'cypher-query-builder';
 import { sign, verify } from 'jsonwebtoken';
@@ -16,7 +17,6 @@ import { RawSession } from '../../common/session';
 import {
   ConfigService,
   DatabaseService,
-  EmailService,
   ILogger,
   Logger,
   matchRequestingUser,
