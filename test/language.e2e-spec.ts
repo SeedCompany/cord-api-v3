@@ -34,7 +34,6 @@ describe('Language e2e', () => {
       Powers.CreateLanguageEngagement,
     ]);
   });
-
   afterAll(async () => {
     await resetDatabase(db);
     await app.close();
@@ -263,6 +262,7 @@ describe('Language e2e', () => {
   });
 
   it('should throw error if trying to set hasExternalFirstScripture=true while language has engagements that have firstScripture=true', async () => {
+    await loginAsAdmin(app);
     const language = await createLanguage(app);
     await createLanguageEngagement(app, {
       languageId: language.id,
@@ -296,6 +296,7 @@ describe('Language e2e', () => {
   });
 
   it('can set hasExternalFirstScripture=true if language has no engagements that have firstScripture=true', async () => {
+    await loginAsAdmin(app);
     const language = await createLanguage(app);
     await createLanguageEngagement(app, {
       languageId: language.id,
