@@ -23,7 +23,7 @@ jobs:
           key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}-${{ hashFiles('.yarnrc.yml') }}
 
       - name: Install dependencies
-        run: yarn install
+        run: yarn install --immutable && yarn dedupe --check
         if: steps.yarn-cache.outputs.cache-hit != 'true'
 
       - name: Check TypeScript
