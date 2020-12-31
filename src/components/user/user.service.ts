@@ -497,6 +497,9 @@ export class UserService {
       },
       session
     );
+    if (user.canEdit === null) {
+      user.canEdit = false;
+    }
     return {
       ...result,
       canRead: user.canRead,
@@ -715,6 +718,9 @@ export class UserService {
       },
       session
     );
+    if (user.canEdit === null) {
+      user.canEdit = false;
+    }
     return {
       ...result,
       canRead: user.canRead,
