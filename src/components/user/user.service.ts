@@ -497,13 +497,10 @@ export class UserService {
       },
       session
     );
-    if (user.canEdit === null) {
-      user.canEdit = false;
-    }
     return {
       ...result,
       canRead: user.canRead,
-      canCreate: user.canEdit,
+      canCreate: user.canEdit ?? false,
     };
   }
 
@@ -570,13 +567,11 @@ export class UserService {
       },
       session
     );
-    if (user.canEdit === null) {
-      user.canEdit = false;
-    }
+
     return {
       ...result,
       canRead: user.canRead,
-      canCreate: user.canEdit,
+      canCreate: user.canEdit ?? false,
     };
   }
 
@@ -718,13 +713,11 @@ export class UserService {
       },
       session
     );
-    if (user.canEdit === null) {
-      user.canEdit = false;
-    }
+
     return {
       ...result,
       canRead: user.canRead,
-      canCreate: user.canEdit,
+      canCreate: user.canEdit ?? false,
     };
   }
 
