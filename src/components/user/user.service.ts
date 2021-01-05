@@ -500,7 +500,7 @@ export class UserService {
     return {
       ...result,
       canRead: user.canRead,
-      canCreate: user.canEdit,
+      canCreate: user.canEdit ?? false,
     };
   }
 
@@ -567,10 +567,11 @@ export class UserService {
       },
       session
     );
+
     return {
       ...result,
       canRead: user.canRead,
-      canCreate: user.canEdit,
+      canCreate: user.canEdit ?? false,
     };
   }
 
@@ -712,10 +713,11 @@ export class UserService {
       },
       session
     );
+
     return {
       ...result,
       canRead: user.canRead,
-      canCreate: user.canEdit,
+      canCreate: user.canEdit ?? false,
     };
   }
 
