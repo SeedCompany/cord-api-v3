@@ -1,12 +1,10 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
-import { difference } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
   generateId,
-  InputException,
   NotFoundException,
   ServerException,
   Session,
@@ -44,7 +42,6 @@ import {
   ProjectMember,
   ProjectMemberListInput,
   ProjectMemberListOutput,
-  Role,
   UpdateProjectMember,
 } from './dto';
 import { DbProjectMember } from './model';
@@ -102,8 +99,8 @@ export class ProjectMemberService {
       );
     }
 
-    const user = await this.userService.readOne(userId, session);
-    this.assertValidRoles(input.roles, user.roles.value);
+    // const user = await this.userService.readOne(userId, session);
+    // this.assertValidRoles(input.roles, user.roles.value);
 
     try {
       const createProjectMember = this.db
@@ -230,7 +227,7 @@ export class ProjectMemberService {
   ): Promise<ProjectMember> {
     const object = await this.readOne(input.id, session);
 
-    this.assertValidRoles(input.roles, object.user.value?.roles.value);
+    // this.assertValidRoles(input.roles, object.user.value?.roles.value);
 
     await this.db.sgUpdateProperties({
       session,
@@ -246,22 +243,22 @@ export class ProjectMemberService {
     return await this.readOne(input.id, session);
   }
 
-  private assertValidRoles(
-    roles: Role[] | undefined,
-    availableRoles: Role[] | undefined
-  ) {
-    if (!roles || roles.length === 0) {
-      return;
-    }
-    const forbiddenRoles = difference(roles, availableRoles ?? []);
-    if (forbiddenRoles.length) {
-      const forbiddenRolesStr = forbiddenRoles.join(', ');
-      throw new InputException(
-        `Role(s) ${forbiddenRolesStr} cannot be assigned to this project member`,
-        'input.roles'
-      );
-    }
-  }
+  // private assertValidRoles(
+  //   roles: Role[] | undefined,
+  //   availableRoles: Role[] | undefined
+  // ) {
+  //   if (!roles || roles.length === 0) {
+  //     return;
+  //   }
+  //   const forbiddenRoles = difference(roles, availableRoles ?? []);
+  //   if (forbiddenRoles.length) {
+  //     const forbiddenRolesStr = forbiddenRoles.join(', ');
+  //     throw new InputException(
+  //       `Role(s) ${forbiddenRolesStr} cannot be assigned to this project member`,
+  //       'input.roles'
+  //     );
+  //   }
+  // }
 
   async delete(id: string, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
