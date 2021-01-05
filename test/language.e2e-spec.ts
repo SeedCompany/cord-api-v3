@@ -12,7 +12,6 @@ import {
   createSession,
   createTestApp,
   expectNotFound,
-  loginAsAdmin,
   registerUserWithPower,
   TestApp,
 } from './utility';
@@ -102,7 +101,6 @@ describe('Language e2e', () => {
 
   // UPDATE LANGUAGE: update a language ethnologue when language is minimally defined.
   it('update a single language ethnologue property when language is minimally defined', async () => {
-    await loginAsAdmin(app);
     const languageMinimal = await createLanguageMinimal(app);
     const newEthnologueCode = faker.helpers.replaceSymbols('???').toLowerCase();
 
@@ -262,7 +260,6 @@ describe('Language e2e', () => {
   });
 
   it('should throw error if trying to set hasExternalFirstScripture=true while language has engagements that have firstScripture=true', async () => {
-    await loginAsAdmin(app);
     const language = await createLanguage(app);
     await createLanguageEngagement(app, {
       languageId: language.id,
@@ -296,7 +293,6 @@ describe('Language e2e', () => {
   });
 
   it('can set hasExternalFirstScripture=true if language has no engagements that have firstScripture=true', async () => {
-    await loginAsAdmin(app);
     const language = await createLanguage(app);
     await createLanguageEngagement(app, {
       languageId: language.id,
