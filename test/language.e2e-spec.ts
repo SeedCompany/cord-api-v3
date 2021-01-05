@@ -12,7 +12,6 @@ import {
   createSession,
   createTestApp,
   expectNotFound,
-  loginAsAdmin,
   registerUserWithPower,
   TestApp,
 } from './utility';
@@ -34,7 +33,6 @@ describe('Language e2e', () => {
       Powers.CreateLanguageEngagement,
     ]);
   });
-
   afterAll(async () => {
     await resetDatabase(db);
     await app.close();
@@ -103,7 +101,6 @@ describe('Language e2e', () => {
 
   // UPDATE LANGUAGE: update a language ethnologue when language is minimally defined.
   it('update a single language ethnologue property when language is minimally defined', async () => {
-    await loginAsAdmin(app);
     const languageMinimal = await createLanguageMinimal(app);
     const newEthnologueCode = faker.helpers.replaceSymbols('???').toLowerCase();
 
