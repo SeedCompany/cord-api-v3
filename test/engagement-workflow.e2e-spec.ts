@@ -119,143 +119,156 @@ describe('Project-Workflow e2e', () => {
     expect(internEngagement.status.value).toBe(EngagementStatus.InDevelopment);
   });
 
-  it('Translation: should test engagement status Active when Project is made Active', async function () {
-    // --- Translation project
-    const transProject = await createProject(app, {
-      type: ProjectType.Translation,
-    });
-    const langEngagement = await createLanguageEngagement(app, {
-      projectId: transProject.id,
-    });
-    await runAsAdmin(app, async () => {
-      const fundingAccount = await createFundingAccount(app);
-      const location = await createLocation(app, {
-        fundingAccountId: fundingAccount.id,
+  describe('should test engagement status Active when Project is made Active', () => {
+    it('translation', async function () {
+      // --- Translation project
+      const transProject = await createProject(app, {
+        type: ProjectType.Translation,
       });
-      const fieldRegion = await createRegion(app);
-      await updateProject(app, {
-        id: transProject.id,
-        primaryLocationId: location.id,
-        fieldRegionId: fieldRegion.id,
+      const langEngagement = await createLanguageEngagement(app, {
+        projectId: transProject.id,
       });
-      for (const next of stepsFromEarlyConversationToBeforeActive) {
-        await changeProjectStep(app, transProject.id, next);
-      }
-      await changeProjectStep(app, transProject.id, ProjectStep.Active);
+      await runAsAdmin(app, async () => {
+        const fundingAccount = await createFundingAccount(app);
+        const location = await createLocation(app, {
+          fundingAccountId: fundingAccount.id,
+        });
+        const fieldRegion = await createRegion(app);
+        await updateProject(app, {
+          id: transProject.id,
+          primaryLocationId: location.id,
+          fieldRegionId: fieldRegion.id,
+        });
+        for (const next of stepsFromEarlyConversationToBeforeActive) {
+          await changeProjectStep(app, transProject.id, next);
+        }
+        await changeProjectStep(app, transProject.id, ProjectStep.Active);
+      });
+      const lEngagementStatus = await getCurrentEngagementStatus(
+        app,
+        langEngagement.id
+      );
+      expect(lEngagementStatus.status.value).toBe(EngagementStatus.Active);
     });
-    const lEngagementStatus = await getCurrentEngagementStatus(
-      app,
-      langEngagement.id
-    );
-    expect(lEngagementStatus.status.value).toBe(EngagementStatus.Active);
+    it('internship', async function () {
+      // --- Internship project
+      const internProject = await createProject(app, {
+        type: ProjectType.Internship,
+      });
+      const internEngagement = await createInternshipEngagement(app, {
+        projectId: internProject.id,
+      });
+      await runAsAdmin(app, async () => {
+        const fundingAccount = await createFundingAccount(app);
+        const location = await createLocation(app, {
+          fundingAccountId: fundingAccount.id,
+        });
+        const fieldRegion = await createRegion(app);
+        await updateProject(app, {
+          id: internProject.id,
+          primaryLocationId: location.id,
+          fieldRegionId: fieldRegion.id,
+        });
+        for (const next of stepsFromEarlyConversationToBeforeActive) {
+          await changeProjectStep(app, internProject.id, next);
+        }
+        await changeProjectStep(app, internProject.id, ProjectStep.Active);
+      });
+      const lEngagementStatus = await getCurrentEngagementStatus(
+        app,
+        internEngagement.id
+      );
+      expect(lEngagementStatus.status.value).toBe(EngagementStatus.Active);
+    });
   });
 
-  it('Internship: should test engagement status Active when Project is made Active', async function () {
-    // --- Internship project
-    const internProject = await createProject(app, {
-      type: ProjectType.Internship,
-    });
-    const internEngagement = await createInternshipEngagement(app, {
-      projectId: internProject.id,
-    });
-    await runAsAdmin(app, async () => {
-      const fundingAccount = await createFundingAccount(app);
-      const location = await createLocation(app, {
-        fundingAccountId: fundingAccount.id,
+  describe('Workflow', () => {
+    it('engagement completed', async function () {
+      // --- Engagement to Active
+      const transProject = await createProject(app, {
+        type: ProjectType.Translation,
       });
-      const fieldRegion = await createRegion(app);
-      await updateProject(app, {
-        id: internProject.id,
-        primaryLocationId: location.id,
-        fieldRegionId: fieldRegion.id,
+      const langEngagement = await createLanguageEngagement(app, {
+        projectId: transProject.id,
       });
-      for (const next of stepsFromEarlyConversationToBeforeActive) {
-        await changeProjectStep(app, internProject.id, next);
-      }
-      await changeProjectStep(app, internProject.id, ProjectStep.Active);
-    });
-    const lEngagementStatus = await getCurrentEngagementStatus(
-      app,
-      internEngagement.id
-    );
-    expect(lEngagementStatus.status.value).toBe(EngagementStatus.Active);
-  });
-
-  it('Workflow: engagement completed', async function () {
-    // --- Engagement to Active
-    const transProject = await createProject(app, {
-      type: ProjectType.Translation,
-    });
-    const langEngagement = await createLanguageEngagement(app, {
-      projectId: transProject.id,
-    });
-    await transitionEngagementToActive(app, transProject.id, langEngagement.id);
-    await runAsAdmin(app, async function () {
-      await changeProjectStep(
+      await transitionEngagementToActive(
         app,
         transProject.id,
-        ProjectStep.DiscussingChangeToPlan
+        langEngagement.id
+      );
+      await runAsAdmin(app, async function () {
+        await changeProjectStep(
+          app,
+          transProject.id,
+          ProjectStep.DiscussingChangeToPlan
+        );
+      });
+      await changeLanguageEngagementStatus(
+        app,
+        langEngagement.id,
+        EngagementStatus.DiscussingChangeToPlan
+      );
+      await changeLanguageEngagementStatus(
+        app,
+        langEngagement.id,
+        EngagementStatus.ActiveChangedPlan
+      );
+      await runAsAdmin(app, async function () {
+        await changeProjectStep(app, transProject.id, ProjectStep.Active);
+      });
+      await changeLanguageEngagementStatus(
+        app,
+        langEngagement.id,
+        EngagementStatus.FinalizingCompletion
+      );
+      await changeLanguageEngagementStatus(
+        app,
+        langEngagement.id,
+        EngagementStatus.Completed
       );
     });
-    await changeLanguageEngagementStatus(
-      app,
-      langEngagement.id,
-      EngagementStatus.DiscussingChangeToPlan
-    );
-    await changeLanguageEngagementStatus(
-      app,
-      langEngagement.id,
-      EngagementStatus.ActiveChangedPlan
-    );
-    await runAsAdmin(app, async function () {
-      await changeProjectStep(app, transProject.id, ProjectStep.Active);
-    });
-    await changeLanguageEngagementStatus(
-      app,
-      langEngagement.id,
-      EngagementStatus.FinalizingCompletion
-    );
-    await changeLanguageEngagementStatus(
-      app,
-      langEngagement.id,
-      EngagementStatus.Completed
-    );
-  });
 
-  it('Workflow: engagement terminated', async function () {
-    const transProject = await createProject(app, {
-      type: ProjectType.Translation,
-    });
-    const langEngagement = await createLanguageEngagement(app, {
-      projectId: transProject.id,
-    });
-    await transitionEngagementToActive(app, transProject.id, langEngagement.id);
-    await changeLanguageEngagementStatus(
-      app,
-      langEngagement.id,
-      EngagementStatus.DiscussingSuspension
-    );
-    await runAsAdmin(app, async function () {
-      await changeProjectStep(
+    it('engagement terminated', async function () {
+      const transProject = await createProject(app, {
+        type: ProjectType.Translation,
+      });
+      const langEngagement = await createLanguageEngagement(app, {
+        projectId: transProject.id,
+      });
+      await transitionEngagementToActive(
         app,
         transProject.id,
-        ProjectStep.DiscussingChangeToPlan
+        langEngagement.id
+      );
+
+      await runAsAdmin(app, async function () {
+        await changeProjectStep(
+          app,
+          transProject.id,
+          ProjectStep.DiscussingChangeToPlan
+        );
+      });
+
+      await changeLanguageEngagementStatus(
+        app,
+        langEngagement.id,
+        EngagementStatus.DiscussingSuspension
+      );
+      await changeLanguageEngagementStatus(
+        app,
+        langEngagement.id,
+        EngagementStatus.Suspended
+      );
+      await changeLanguageEngagementStatus(
+        app,
+        langEngagement.id,
+        EngagementStatus.DiscussingTermination
+      );
+      await changeLanguageEngagementStatus(
+        app,
+        langEngagement.id,
+        EngagementStatus.Terminated
       );
     });
-    await changeLanguageEngagementStatus(
-      app,
-      langEngagement.id,
-      EngagementStatus.Suspended
-    );
-    await changeLanguageEngagementStatus(
-      app,
-      langEngagement.id,
-      EngagementStatus.DiscussingTermination
-    );
-    await changeLanguageEngagementStatus(
-      app,
-      langEngagement.id,
-      EngagementStatus.Terminated
-    );
   });
 });

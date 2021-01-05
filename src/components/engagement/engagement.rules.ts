@@ -370,21 +370,12 @@ export class EngagementRules {
     }
 
     const currentStep = await this.projectRules.getCurrentStep(projectId);
-    let i = 0;
-    const indexesToSplice: number[] = [];
-    transitions.forEach((value) => {
-      if (
-        !value.projectStepRequirements.includes(currentStep) &&
-        value.projectStepRequirements.length > 0
-      ) {
-        indexesToSplice.push(i);
-      }
-      i++;
-    });
-    indexesToSplice.forEach((i) => {
-      transitions.splice(i, 1);
-    });
-    return transitions;
+    const availableTransitionsAccordingToProject = transitions.filter(
+      (transition) =>
+        transition.projectStepRequirements.length === 0 ||
+        transition.projectStepRequirements.includes(currentStep)
+    );
+    return availableTransitionsAccordingToProject;
   }
 
   async verifyStatusChange(

@@ -55,6 +55,5 @@ export abstract class EngagementStatusTransition {
   @Field(() => EngagementTransitionType)
   type: EngagementTransitionType;
 
-  @Field(() => [ProjectStep])
   projectStepRequirements: ProjectStep[];
 }
