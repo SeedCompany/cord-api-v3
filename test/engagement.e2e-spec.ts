@@ -48,7 +48,10 @@ import {
 } from './utility';
 import { createProduct } from './utility/create-product';
 import { resetDatabase } from './utility/reset-database';
-import { changeInternshipEngagementStatus } from './utility/transition-engagement';
+import {
+  changeInternshipEngagementStatus,
+  transitionEngagementToActive,
+} from './utility/transition-engagement';
 import {
   changeProjectStep,
   stepsFromEarlyConversationToBeforeActive,
@@ -1123,18 +1126,19 @@ describe('Engagement e2e', () => {
     const engagement = await createInternshipEngagement(app, {
       projectId: project.id,
     });
-    // Update Project status to Active
+    // Update Project and Engagement status to Active
     await runAsAdmin(app, async () => {
-      //await changeProjectStep(app, project.id, ProjectStep.Active);
-      const actual = await changeInternshipEngagementStatus(
+      const actual = await transitionEngagementToActive(
         app,
-        engagement.id,
-        EngagementStatus.Active
+        project.id,
+        engagement.id
       );
 
-      expect(actual.id).toBe(engagement.id);
-      expect(actual.status.value).toBe(EngagementStatus.Active);
-      expect(actual.statusModifiedAt.value).toBe(actual.modifiedAt);
+      const modAtMillis = DateTime.fromISO(actual.modifiedAt).toMillis();
+      const statusModMillis = DateTime.fromISO(
+        actual.statusModifiedAt.value
+      ).toMillis();
+      expect(modAtMillis).toBe(statusModMillis);
     });
     // Login back to the user
     await login(app, { email: user.email.value, password });
@@ -1157,19 +1161,11 @@ describe('Engagement e2e', () => {
     });
     // Update Project status to Active
     await runAsAdmin(app, async () => {
-      // for (const next of stepsFromEarlyConversationToBeforeActive) {
-      //   await changeProjectStep(app, project.id, next);
-      // }
-      // await changeProjectStep(app, project.id, ProjectStep.Active);
-      // await changeInternshipEngagementStatus(
-      //   app,
-      //   engagement.id,
-      //   EngagementStatus.InDevelopment
-      // );
-      await changeInternshipEngagementStatus(
+      await transitionEngagementToActive(app, project.id, engagement.id);
+      await changeProjectStep(
         app,
-        engagement.id,
-        EngagementStatus.Active
+        project.id,
+        ProjectStep.DiscussingChangeToPlan
       );
       await changeInternshipEngagementStatus(
         app,
@@ -1209,22 +1205,11 @@ describe('Engagement e2e', () => {
 
     // Update Project status to Active
     await runAsAdmin(app, async () => {
-      // for (const next of stepsFromEarlyConversationToBeforeActive) {
-      //   await changeProjectStep(app, project.id, next);
-      // }
-      // await changeProjectStep(app, project.id, ProjectStep.Active);
-      // - Note that running as admin because it is out of the sequence that the business rules
-      //   allow since we're only testing the updates
-      // Update Engagement status to Suspended
-      // await changeInternshipEngagementStatus(
-      //   app,
-      //   engagement.id,
-      //   EngagementStatus.InDevelopment
-      // );
-      await changeInternshipEngagementStatus(
+      await transitionEngagementToActive(app, project.id, engagement.id);
+      await changeProjectStep(
         app,
-        engagement.id,
-        EngagementStatus.Active
+        project.id,
+        ProjectStep.DiscussingChangeToPlan
       );
       await changeInternshipEngagementStatus(
         app,
@@ -1241,6 +1226,7 @@ describe('Engagement e2e', () => {
         engagement.id,
         EngagementStatus.DiscussingReactivation
       );
+
       const actual = await changeInternshipEngagementStatus(
         app,
         engagement.id,
