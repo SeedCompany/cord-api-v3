@@ -7,12 +7,14 @@ import {
 import { Context } from '@nestjs/graphql';
 import { Request } from 'express';
 import { DateTime } from 'luxon';
+import { DbRole } from '../components/authorization/model';
 import { UnauthenticatedException } from './exceptions';
 
 export interface RawSession {
   readonly token: string;
   readonly issuedAt: DateTime;
   readonly userId?: string;
+  readonly roles: DbRole[];
 }
 
 export interface Session extends Required<RawSession> {
@@ -26,6 +28,7 @@ export function loggedInSession(session: RawSession): Session {
   return {
     ...session,
     userId: session.userId,
+    roles: session.roles,
     anonymous: false,
   };
 }
