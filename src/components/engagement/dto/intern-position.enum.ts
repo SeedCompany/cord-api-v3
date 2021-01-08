@@ -92,9 +92,9 @@ export const InternshipPositionToProgram: Record<
   [Position.OralityFacilitator]: Program.CapacityBuilding,
   [Position.ScriptureEngagement]: Program.CapacityBuilding,
 
-  // historic -- best guesses for programs
-  [Position.OtherAttached]: Program.CapacityBuilding,
-  [Position.OtherTranslationCapacity]: Program.CapacityBuilding,
+  // historic
+  [Position.OtherAttached]: Program.QualityAssurance,
+  [Position.OtherTranslationCapacity]: Program.QualityAssurance,
   [Position.OtherPartnershipCapacity]: Program.CapacityBuilding,
 };
 
