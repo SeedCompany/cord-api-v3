@@ -44,7 +44,7 @@ import {
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
-import { EngagementService } from '../engagement';
+import { EngagementService, EngagementStatus } from '../engagement';
 import {
   LocationListInput,
   LocationService,
@@ -620,7 +620,18 @@ export class LanguageService {
         )
       );
       const dates = compact(
-        engagments.map((engagement) => engagement.startDate.value)
+        engagments
+          .filter(
+            (engagement) =>
+              engagement.status.value &&
+              ![
+                EngagementStatus.InDevelopment,
+                EngagementStatus.DidNotDevelop,
+                EngagementStatus.Unapproved,
+                EngagementStatus.Rejected,
+              ].includes(engagement.status.value)
+          )
+          .map((engagement) => engagement.startDate.value)
       );
 
       const canRead = engagments.every(
