@@ -6,13 +6,21 @@ import {
 } from '../../common';
 import { PatchedConnection } from './cypher.factory';
 
+/**
+ * A neo4j transaction mode
+ */
+export const enum TxMode {
+  Read = 'read',
+  Write = 'write',
+}
+
 export interface TransactionOptions {
   /**
    * Should this method start a read or write transaction?
    * `write` is default.
    * Note that a write transaction cannot be called from within a read transaction.
    */
-  mode?: 'read' | 'write';
+  mode?: TxMode;
 
   /**
    * The transaction's timeout.
