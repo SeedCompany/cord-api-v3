@@ -3,9 +3,12 @@ import { AsyncLocalStorage } from 'async_hooks';
 import { stripIndent } from 'common-tags';
 import { Connection } from 'cypher-query-builder';
 import { Session, Transaction } from 'neo4j-driver';
+// @ts-expect-error this isn't typed but it exists
+import TransactionExecutor from 'neo4j-driver/lib/internal/transaction-executor';
 import QueryRunner from 'neo4j-driver/types/query-runner';
 import { Merge } from 'type-fest';
 import { ConfigService } from '..';
+import { getPreviousList } from '../../common';
 import { jestSkipFileInExceptionSource } from '../jest-skip-source-file';
 import { ILogger, LoggerToken, LogLevel } from '../logger';
 import { createBetterError, isNeo4jError } from './errors';
@@ -13,6 +16,12 @@ import { ParameterTransformer } from './parameter-transformer.service';
 import { MyTransformer } from './transformer';
 import './transaction'; // import our transaction augmentation
 import './query.overrides'; // import our query augmentation
+
+// Change transaction retry logic also check all previous exceptions when
+// looking for retryable errors.
+const canRetryOn = TransactionExecutor._canRetryOn.bind(TransactionExecutor);
+TransactionExecutor._canRetryOn = (error?: Error) =>
+  error && getPreviousList(error, true).some(canRetryOn);
 
 export type PatchedConnection = Merge<
   Connection,
