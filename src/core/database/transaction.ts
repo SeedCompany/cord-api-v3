@@ -7,7 +7,23 @@ import {
 import { PatchedConnection } from './cypher.factory';
 
 export interface TransactionOptions {
+  /**
+   * Should this method start a read or write transaction?
+   * `write` is default.
+   * Note that a write transaction cannot be called from within a read transaction.
+   */
   mode?: 'read' | 'write';
+
+  /**
+   * The transaction's timeout.
+   *
+   * Transactions that execute longer than the configured timeout will be
+   * terminated by the database. This functionality allows to limit
+   * query/transaction execution time.
+   *
+   * Specified timeout overrides the default timeout configured in configured
+   * in the database using `dbms.transaction.timeout` setting.
+   */
   timeout?: MsDurationInput;
 }
 
