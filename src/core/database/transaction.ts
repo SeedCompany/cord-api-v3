@@ -25,6 +25,15 @@ export interface TransactionOptions {
    * in the database using `dbms.transaction.timeout` setting.
    */
   timeout?: MsDurationInput;
+
+  /**
+   * The transaction's metadata.
+   *
+   * Specified metadata will be attached to the executing transaction and visible
+   * in the output of `dbms.listQueries` and `dbms.listTransactions` procedures.
+   * It will also get logged to the `query.log`.
+   */
+  metadata?: Record<string, unknown>;
 }
 
 declare module 'cypher-query-builder/dist/typings/connection' {
@@ -79,6 +88,7 @@ Connection.prototype.runInTransaction = async function withTransaction<R>(
         timeout: options?.timeout
           ? parseMilliseconds(options.timeout)
           : undefined,
+        metadata: options?.metadata,
       }
     );
   } finally {

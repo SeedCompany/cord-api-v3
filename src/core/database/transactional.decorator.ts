@@ -29,6 +29,13 @@ export function Transactional(options?: TransactionOptions) {
       target[ConnKey] = null;
     }
 
+    const clsName: string = target.constructor.name;
+    const methodDescription =
+      typeof methodName === 'symbol'
+        ? methodName.description ?? 'symbol'
+        : methodName;
+    const initiator = `${clsName}.${methodDescription}`;
+
     // Wrap the method in a runInTransaction call
     const origMethod = descriptor.value!;
     descriptor.value = async function (...args: any[]) {
@@ -36,7 +43,13 @@ export function Transactional(options?: TransactionOptions) {
       const connection: Connection = this[ConnKey];
       return await connection.runInTransaction(
         () => origMethod.apply(this, args),
-        options
+        {
+          ...options,
+          metadata: {
+            initiator,
+            ...options?.metadata,
+          },
+        }
       );
     };
   }) as MethodDecorator;
