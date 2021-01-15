@@ -1,5 +1,9 @@
 import { Connection } from 'cypher-query-builder';
-import { MsDurationInput, parseMilliseconds } from '../../common';
+import {
+  MsDurationInput,
+  parseMilliseconds,
+  ServerException,
+} from '../../common';
 import { PatchedConnection } from './cypher.factory';
 
 export interface TransactionOptions {
@@ -32,6 +36,14 @@ Connection.prototype.runInTransaction = async function withTransaction<R>(
 ): Promise<R> {
   const outer = this.transactionStorage.getStore();
   if (outer) {
+    // @ts-expect-error not typed, but js is there.
+    const isExistingRead = outer._connectionHolder._mode === 'READ';
+    if (isExistingRead && options?.mode !== 'read') {
+      throw new ServerException(
+        'A write transaction cannot be started within a read transaction'
+      );
+    }
+
     return await inner();
   }
   const session = this.session();
