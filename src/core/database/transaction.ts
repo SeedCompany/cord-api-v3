@@ -1,9 +1,10 @@
 import { Connection } from 'cypher-query-builder';
-import { TransactionConfig } from 'neo4j-driver/types/session';
+import { MsDurationInput, parseMilliseconds } from '../../common';
 import { PatchedConnection } from './cypher.factory';
 
-export interface TransactionOptions extends TransactionConfig {
+export interface TransactionOptions {
   mode?: 'read' | 'write';
+  timeout?: MsDurationInput;
 }
 
 declare module 'cypher-query-builder/dist/typings/connection' {
@@ -46,7 +47,11 @@ Connection.prototype.runInTransaction = async function withTransaction<R>(
   try {
     return await runTransaction(
       (tx) => this.transactionStorage.run(tx, inner),
-      options
+      {
+        timeout: options?.timeout
+          ? parseMilliseconds(options.timeout)
+          : undefined,
+      }
     );
   } finally {
     await session.close();
