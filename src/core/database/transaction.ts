@@ -1,4 +1,5 @@
 import { Connection } from 'cypher-query-builder';
+import { Transaction } from 'neo4j-driver';
 import {
   MsDurationInput,
   parseMilliseconds,
@@ -47,6 +48,12 @@ export interface TransactionOptions {
 declare module 'cypher-query-builder/dist/typings/connection' {
   interface Connection {
     /**
+     * The currently active transaction within the current calling context.
+     * Use of this is discouraged.
+     */
+    currentTransaction: Transaction | undefined;
+
+    /**
      * This will create a transaction and call the given function with it.
      * The result of the function is returned.
      * Afterwards it will commit the transaction.
@@ -62,12 +69,18 @@ declare module 'cypher-query-builder/dist/typings/connection' {
   }
 }
 
+Object.defineProperty(Connection.prototype, 'currentTransaction', {
+  get: function (this: PatchedConnection) {
+    return this.transactionStorage.getStore();
+  },
+});
+
 Connection.prototype.runInTransaction = async function withTransaction<R>(
   this: PatchedConnection,
   inner: (this: void) => Promise<R>,
   options?: TransactionOptions
 ): Promise<R> {
-  const outer = this.transactionStorage.getStore();
+  const outer = this.currentTransaction;
   if (outer) {
     // @ts-expect-error not typed, but js is there.
     const isExistingRead = outer._connectionHolder._mode === 'READ';
