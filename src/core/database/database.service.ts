@@ -32,6 +32,7 @@ import {
   UniqueProperties,
 } from './query.helpers';
 import { hasMore } from './results';
+import { Transactional } from './transactional.decorator';
 
 export const property = (
   prop: string,
@@ -122,6 +123,7 @@ export class DatabaseService {
     return this.db.query();
   }
 
+  @Transactional()
   async getServerInfo() {
     const info = await this.db
       .query()

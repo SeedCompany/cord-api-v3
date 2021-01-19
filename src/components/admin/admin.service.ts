@@ -8,7 +8,7 @@ import {
   ServerException,
   UnauthenticatedException,
 } from '../../common';
-import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
+import { ConfigService, DatabaseService, ILogger, Logger, Transactional } from '../../core';
 import { AuthenticationService } from '../authentication';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
@@ -128,7 +128,10 @@ export class AdminService implements OnApplicationBootstrap {
     }
   }
 
+  @Transactional()
   async setupRootObjects(): Promise<void> {
+    this.logger.debug('Setting up root objects');
+
     // merge root security group
     await this.mergeRootSecurityGroup();
 

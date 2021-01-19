@@ -9,6 +9,7 @@ import { ConfigService } from '../..';
 import { many } from '../../../common';
 import { ILogger, Logger } from '../../logger';
 import { DatabaseService } from '../database.service';
+import { Transactional } from '../transactional.decorator';
 import { DB_INDEX_KEY } from './indexer.constants';
 
 @Module({
@@ -48,6 +49,7 @@ export class IndexerModule implements OnModuleInit {
     }
   }
 
+  @Transactional()
   async doIndexing(discovered: Array<DiscoveredMethodWithMeta<unknown>>) {
     const serverInfo = await this.db.getServerInfo();
     const isV4 = serverInfo.version.startsWith('4');
