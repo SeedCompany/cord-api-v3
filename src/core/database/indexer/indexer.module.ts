@@ -8,7 +8,7 @@ import { Neo4jError } from 'neo4j-driver';
 import { ConfigService } from '../..';
 import { many } from '../../../common';
 import { ILogger, Logger } from '../../logger';
-import { DatabaseService } from '../database.service';
+import { DatabaseService, ServerInfo } from '../database.service';
 import { Transactional } from '../transactional.decorator';
 import { DB_INDEX_KEY } from './indexer.constants';
 
@@ -33,9 +33,10 @@ export class IndexerModule implements OnModuleInit {
     );
     this.logger.debug('Discovered indexers', { count: discovered.length });
 
-    const finishing = this.db.runOnceUntilCompleteAfterConnecting(() =>
-      this.doIndexing(discovered)
-    );
+    const finishing = this.db.runOnceUntilCompleteAfterConnecting(async () => {
+      const serverInfo = await this.db.getServerInfo();
+      await this.doIndexing(discovered, serverInfo);
+    });
     // Wait for indexing to finish when running tests, else just let it run in
     // background and allow webserver to start.
     if (this.config.jest) {
@@ -50,8 +51,10 @@ export class IndexerModule implements OnModuleInit {
   }
 
   @Transactional()
-  async doIndexing(discovered: Array<DiscoveredMethodWithMeta<unknown>>) {
-    const serverInfo = await this.db.getServerInfo();
+  async doIndexing(
+    discovered: Array<DiscoveredMethodWithMeta<unknown>>,
+    serverInfo: ServerInfo
+  ) {
     const isV4 = serverInfo.version.startsWith('4');
 
     const indexers = discovered.map((h) => h.discoveredMethod);

@@ -80,6 +80,12 @@ export const matchSession = (
   }),
 ];
 
+export interface ServerInfo {
+  name: string;
+  version: string;
+  edition: string;
+}
+
 @Injectable()
 export class DatabaseService {
   constructor(
@@ -133,7 +139,7 @@ export class DatabaseService {
          unwind versions as version
          return name, version, edition`
       )
-      .asResult<{ name: string; version: string; edition: string }>()
+      .asResult<ServerInfo>()
       .first();
     if (!info) {
       throw new ServerException('Unable to determine server info');
