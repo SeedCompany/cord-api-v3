@@ -254,7 +254,7 @@ export class AdminService implements OnApplicationBootstrap {
       .match([
         node('email', 'EmailAddress', { value: email }),
         relation('in', '', 'email', { active: true }),
-        node('root', ['User', 'RootAdmin']),
+        node('root', ['User']),
         relation('out', '', 'password', { active: true }),
         node('pw', 'Propety'),
       ])
