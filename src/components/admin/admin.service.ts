@@ -219,23 +219,35 @@ export class AdminService implements OnApplicationBootstrap {
     const existing = await this.db
       .query()
       .match([
-        node('email', 'EmailAddress', { value: email }),
+        node('email', 'EmailAddress'),
         relation('in', '', 'email', { active: true }),
-        node('root', 'User'),
+        node('root', ['RootUser']),
         relation('out', '', 'password', { active: true }),
         node('pw', 'Property'),
       ])
-      .return(['root.id as id', 'pw.value as hash'])
-      .asResult<{ id: string; hash: string }>()
+      .return(['root.id as id', 'email.value as email', 'pw.value as hash'])
+      .asResult<{ id: string; email: string; hash: string }>()
       .first();
     if (existing) {
-      if (!(await this.crypto.verify(existing.hash, password))) {
-        const msg = 'Root user password does not match configuration';
-        if (this.config.jest) {
-          throw new ServerException(msg);
-        } else {
-          this.logger.warning(msg);
-        }
+      if (
+        existing.email !== email ||
+        !(await this.crypto.verify(existing.hash, password))
+      ) {
+        this.logger.notice('Updating root user to match app configuration');
+        await this.db
+          .query()
+          .match([
+            node('email', 'EmailAddress'),
+            relation('in', '', 'email', { active: true }),
+            node('root', ['RootUser']),
+            relation('out', '', 'password', { active: true }),
+            node('pw', 'Property'),
+          ])
+          .setValues({
+            email: { value: email },
+            pw: { value: await this.crypto.hash(password) },
+          })
+          .run();
       }
       id = existing.id;
     } else {
@@ -251,11 +263,12 @@ export class AdminService implements OnApplicationBootstrap {
         roles: [Role.Administrator], // do not give root all the roles
       });
 
-      // give all powers
+      // set root user label & give all powers
       const powers = Object.keys(Powers);
       await this.db
         .query()
         .matchNode('user', 'User', { id })
+        .setLabels({ user: 'RootUser' })
         .setValues({ user: { powers } }, true)
         .run();
     }
