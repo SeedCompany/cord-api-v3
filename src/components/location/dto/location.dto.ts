@@ -32,6 +32,8 @@ export class Location extends Resource {
   readonly isoAlpha3: SecuredStringNullable;
 
   readonly fundingAccount: Secured<string>;
+
+  readonly defaultFieldRegion: Secured<string>;
 }
 
 @ObjectType({

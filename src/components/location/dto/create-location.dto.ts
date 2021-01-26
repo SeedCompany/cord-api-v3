@@ -32,6 +32,9 @@ export abstract class CreateLocation {
 
   @IdField({ nullable: true })
   readonly fundingAccountId?: string;
+
+  @IdField({ nullable: true })
+  readonly defaultFieldRegionId?: string;
 }
 
 @InputType()

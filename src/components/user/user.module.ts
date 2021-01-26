@@ -21,7 +21,7 @@ import { UserService } from './user.service';
     forwardRef(() => PartnerModule),
     UnavailabilityModule,
     TimeZoneModule,
-    LocationModule,
+    forwardRef(() => LocationModule),
     forwardRef(() => LanguageModule),
   ],
   providers: [KnownLanguageResolver, UserResolver, UserService],

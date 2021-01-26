@@ -25,7 +25,7 @@ import { PnpExtractor } from './pnp-extractor.service';
     CeremonyModule,
     ProductModule,
     forwardRef(() => LanguageModule),
-    LocationModule,
+    forwardRef(() => LocationModule),
     forwardRef(() => ProjectModule),
   ],
   providers: [

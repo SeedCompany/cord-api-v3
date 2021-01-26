@@ -10,7 +10,7 @@ import { LanguageService } from './language.service';
 @Module({
   imports: [
     forwardRef(() => AuthorizationModule),
-    LocationModule,
+    forwardRef(() => LocationModule),
     forwardRef(() => ProjectModule),
     forwardRef(() => EngagementModule),
   ],

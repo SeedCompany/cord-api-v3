@@ -9,4 +9,5 @@ export class DbLocation extends DbBaseNode {
   sensitivity: any = null;
   isoAlpha3: any = null;
   fundingAccount: any = null;
+  defaultFieldRegion: any = null;
 }
