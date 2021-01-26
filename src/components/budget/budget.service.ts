@@ -125,11 +125,6 @@ export class BudgetService {
       const createBudget = this.db
         .query()
         .call(matchRequestingUser, session)
-        .match([
-          node('root', 'User', {
-            id: this.config.rootAdmin.id,
-          }),
-        ])
         .call(createBaseNode, budgetId, 'Budget', secureProps)
         .return('node.id as id');
 

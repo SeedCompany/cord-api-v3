@@ -86,10 +86,7 @@ export class EthnologueLanguageService {
         createBaseNode,
         await generateId(),
         'EthnologueLanguage',
-        secureProps,
-        {},
-        [],
-        session.userId === this.config.rootAdmin.id
+        secureProps
       )
       .return('node.id as id');
 

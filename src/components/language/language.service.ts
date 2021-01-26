@@ -256,15 +256,7 @@ export class LanguageService {
       const createLanguage = this.db
         .query()
         .call(matchRequestingUser, session)
-        .call(
-          createBaseNode,
-          await generateId(),
-          'Language',
-          secureProps,
-          {},
-          [],
-          session.userId === this.config.rootAdmin.id
-        )
+        .call(createBaseNode, await generateId(), 'Language', secureProps)
         .return('node.id as id');
 
       const resultLanguage = await createLanguage.first();

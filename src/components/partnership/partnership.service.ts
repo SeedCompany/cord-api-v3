@@ -193,15 +193,7 @@ export class PartnershipService {
       const createPartnership = this.db
         .query()
         .call(matchRequestingUser, session)
-        .call(
-          createBaseNode,
-          partnershipId,
-          'Partnership',
-          secureProps,
-          {},
-          [],
-          session.userId === this.config.rootAdmin.id
-        )
+        .call(createBaseNode, partnershipId, 'Partnership', secureProps)
         .return('node.id as id');
 
       try {

@@ -71,19 +71,12 @@ export class UnavailabilityService {
       const createUnavailability = this.db
         .query()
         .call(matchRequestingUser, session)
-        .match([
-          node('root', 'User', {
-            id: this.config.rootAdmin.id,
-          }),
-        ])
         .call(
           createBaseNode,
           await generateId(),
           'Unavailability',
           secureProps,
-          {},
-          [],
-          session.userId === this.config.rootAdmin.id
+          {}
         )
         .return('node.id as id')
         .asResult<{ id: string }>();

@@ -30,9 +30,7 @@ export function createBaseNode(
   id: string,
   label: string | string[],
   props: Property[],
-  baseNodeProps?: { owningOrgId?: string | undefined; type?: string },
-  _editableProps?: string[],
-  _isRootuser?: boolean
+  baseNodeProps?: { owningOrgId?: string | undefined; type?: string }
 ) {
   const createdAt = DateTime.local();
 

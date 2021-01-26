@@ -67,7 +67,6 @@ import {
   Project,
   ProjectListInput,
   ProjectListOutput,
-  ProjectStatus,
   ProjectStep,
   ProjectType,
   stepToStatus,
@@ -171,7 +170,6 @@ export class ProjectService {
       status: stepToStatus(step),
       modifiedAt: DateTime.local(),
     };
-    const canEdit = createInput.status === ProjectStatus.InDevelopment;
     const secureProps: Property[] = [
       {
         key: 'name',
@@ -296,8 +294,7 @@ export class ProjectService {
         secureProps,
         {
           type: createInput.type,
-        },
-        canEdit ? ['name', 'mouStart', 'mouEnd'] : []
+        }
       );
 
       if (fieldRegionId) {
