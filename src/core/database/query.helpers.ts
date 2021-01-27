@@ -121,7 +121,7 @@ export function matchUserPermissions(
 
 export function matchRequestingUser(
   query: Query,
-  { userId }: Partial<Session>
+  { userId }: Pick<Session, 'userId'>
 ) {
   query.match([
     node('requestingUser', 'User', {
