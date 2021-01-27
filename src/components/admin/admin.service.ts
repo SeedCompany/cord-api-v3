@@ -289,13 +289,7 @@ export class AdminService implements OnApplicationBootstrap {
         ],
       ])
       .with('*')
-      .match([
-        [
-          node('newRootAdmin', 'User', {
-            id: this.config.rootAdmin.id,
-          }),
-        ],
-      ])
+      .match(node('newRootAdmin', 'RootUser'))
       .with('*')
       .merge([
         [
@@ -390,11 +384,7 @@ export class AdminService implements OnApplicationBootstrap {
               id: this.config.publicSecurityGroup.id,
             })
           )
-          .match(
-            node('rootuser', 'User', {
-              id: this.config.rootAdmin.id,
-            })
-          )
+          .match(node('rootuser', 'RootUser'))
           .create([
             node('orgSg', ['OrgPublicSecurityGroup', 'SecurityGroup'], {
               id: orgSgId,
