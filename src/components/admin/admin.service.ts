@@ -223,7 +223,7 @@ export class AdminService implements OnApplicationBootstrap {
         relation('in', '', 'email', { active: true }),
         node('root', 'User'),
         relation('out', '', 'password', { active: true }),
-        node('pw', 'Propety'),
+        node('pw', 'Property'),
       ])
       .return(['root.id as id', 'pw.value as hash'])
       .asResult<{ id: string; hash: string }>()
