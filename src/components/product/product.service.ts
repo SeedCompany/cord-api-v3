@@ -125,9 +125,7 @@ export class ProductService {
       },
     ];
 
-    const query = this.db
-      .query()
-      .match([node('root', 'User', { id: this.config.rootAdmin.id })]);
+    const query = this.db.query();
 
     if (engagementId) {
       const engagement = await this.db
@@ -183,10 +181,7 @@ export class ProductService {
             ? 'DerivativeScriptureProduct'
             : 'DirectScriptureProduct',
         ],
-        secureProps,
-        {},
-        [],
-        session.userId === this.config.rootAdmin.id
+        secureProps
       );
 
     if (engagementId) {

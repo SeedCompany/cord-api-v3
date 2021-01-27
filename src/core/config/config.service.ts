@@ -8,6 +8,7 @@ import { LazyGetter as Lazy } from 'lazy-get-decorator';
 import { Duration } from 'luxon';
 import { Config as Neo4JDriverConfig } from 'neo4j-driver';
 import { join } from 'path';
+import { ServerException } from '../../common';
 import { FrontendUrlWrapper } from '../email/templates/frontend-url';
 import { LogLevel } from '../logger';
 import { EnvironmentService } from './environment.service';
@@ -101,15 +102,22 @@ export class ConfigService implements EmailOptionsFactory {
   }
 
   @Lazy() get rootAdmin() {
+    let rootId: string;
     return {
-      id: 'rootadminid',
+      get id(): string {
+        if (!rootId) {
+          throw new ServerException(
+            'Cannot access root admin ID before it is initialized'
+          );
+        }
+        return rootId;
+      },
+      set id(newId: string) {
+        rootId = newId;
+      },
       email: 'devops@tsco.org',
       password: this.env.string('ROOT_ADMIN_PASSWORD').optional('admin'),
     };
-  }
-
-  setRootAdminId(id: string) {
-    this.rootAdmin.id = id;
   }
 
   passwordSecret = this.env.string('PASSWORD_SECRET').optional();

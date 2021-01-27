@@ -30,9 +30,7 @@ export function createBaseNode(
   id: string,
   label: string | string[],
   props: Property[],
-  baseNodeProps?: { owningOrgId?: string | undefined; type?: string },
-  _editableProps?: string[],
-  _isRootuser?: boolean
+  baseNodeProps?: { owningOrgId?: string | undefined; type?: string }
 ) {
   const createdAt = DateTime.local();
 
@@ -123,7 +121,7 @@ export function matchUserPermissions(
 
 export function matchRequestingUser(
   query: Query,
-  { userId }: Partial<Session>
+  { userId }: Pick<Session, 'userId'>
 ) {
   query.match([
     node('requestingUser', 'User', {
