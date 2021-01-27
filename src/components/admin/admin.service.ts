@@ -261,7 +261,7 @@ export class AdminService implements OnApplicationBootstrap {
     }
 
     // TODO do this a different way. Using a global like this can cause race conditions.
-    this.config.setRootAdminId(id);
+    this.config.rootAdmin.id = id;
     this.logger.notice('Setting actual root user id', { id });
   }
 
