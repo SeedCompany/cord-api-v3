@@ -912,8 +912,14 @@ export const location = gql`
       canEdit
       canRead
     }
+    defaultFieldRegion {
+      value {
+        ...fieldRegion
+      }
+    }
   }
   ${fundingAccount}
+  ${fieldRegion}
 `;
 
 export const marketingLocation = gql`
