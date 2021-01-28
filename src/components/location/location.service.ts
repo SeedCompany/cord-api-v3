@@ -171,16 +171,16 @@ export class LocationService {
         .matchNode('location', 'Location', {
           id: result.id,
         })
-        .matchNode('fieldRegion', 'FieldRegion', {
+        .matchNode('defaultFieldRegion', 'FieldRegion', {
           id: input.defaultFieldRegionId,
         })
         .create([
           node('location'),
-          relation('out', '', 'fieldRegion', {
+          relation('out', '', 'defaultFieldRegion', {
             active: true,
             createdAt,
           }),
-          node('fieldRegion'),
+          node('defaultFieldRegion'),
         ])
         .run();
     }
@@ -215,11 +215,11 @@ export class LocationService {
       ])
       .optionalMatch([
         node('node'),
-        relation('out', '', 'fieldRegion', { active: true }),
-        node('fieldRegion', 'FieldRegion'),
+        relation('out', '', 'defaultFieldRegion', { active: true }),
+        node('defaultFieldRegion', 'FieldRegion'),
       ])
       .return(
-        'propList, permList, node, fundingAccount.id as fundingAccountId, fieldRegion.id as defaultFieldRegionId'
+        'propList, permList, node, fundingAccount.id as fundingAccountId, defaultFieldRegion.id as defaultFieldRegionId'
       )
       .asResult<
         StandardReadResult<DbPropsOfDto<Location>> & {
@@ -311,14 +311,14 @@ export class LocationService {
         })
         .optionalMatch([
           node('location'),
-          relation('out', 'oldDefaultFieldRegionRel', 'fieldRegion', {
+          relation('out', 'oldDefaultFieldRegionRel', 'defaultFieldRegion', {
             active: true,
           }),
-          node('fieldRegion', 'FieldRegion'),
+          node('defaultFieldRegion', 'FieldRegion'),
         ])
         .create([
           node('location'),
-          relation('out', '', 'fieldRegion', {
+          relation('out', '', 'defaultFieldRegion', {
             active: true,
             createdAt,
           }),
