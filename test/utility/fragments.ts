@@ -899,7 +899,6 @@ export const location = gql`
       canEdit
       canRead
     }
-    sensitivity
     isoAlpha3 {
       value
       canEdit

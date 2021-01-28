@@ -1,12 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import {
-  IdField,
-  ISO31661Alpha3,
-  NameField,
-  Sensitivity,
-} from '../../../common';
+import { IdField, ISO31661Alpha3, NameField } from '../../../common';
 import { Transform } from '../../../common/transform.decorator';
 import { LocationType } from './location-type.enum';
 import { Location } from './location.dto';
@@ -18,9 +13,6 @@ export abstract class CreateLocation {
 
   @Field(() => LocationType)
   readonly type: LocationType;
-
-  @Field(() => Sensitivity)
-  readonly sensitivity: Sensitivity;
 
   @Field(() => String, {
     nullable: true,

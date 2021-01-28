@@ -208,7 +208,6 @@ export const ProjectManager = new DbRole({
       properties: [
         { propertyName: 'name',                       permission: { read, }, },
         { propertyName: 'type',                       permission: { read, }, },
-        { propertyName: 'sensitivity',                permission: { read, }, },
         { propertyName: 'isoAlpha3',                  permission: { read, }, },
         { propertyName: 'fundingAccount',             permission: { read, }, },
     ]}),
