@@ -216,7 +216,6 @@ export const ConsultantManager = new DbRole({
       properties: [
         { propertyName: 'name',                       permission: { read, write, }, },
         { propertyName: 'type',                       permission: { read, write, }, },
-        { propertyName: 'sensitivity',                permission: { read, write, }, },
         { propertyName: 'isoAlpha3',                  permission: { read, write, }, },
         { propertyName: 'fundingAccount',             permission: { read, write, }, },
     ]}),

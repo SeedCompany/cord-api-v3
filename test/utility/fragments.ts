@@ -899,7 +899,6 @@ export const location = gql`
       canEdit
       canRead
     }
-    sensitivity
     isoAlpha3 {
       value
       canEdit
@@ -914,18 +913,6 @@ export const location = gql`
     }
   }
   ${fundingAccount}
-`;
-
-export const marketingLocation = gql`
-  fragment marketingLocation on MarketingLocation {
-    id
-    name {
-      value
-      canRead
-      canEdit
-    }
-    createdAt
-  }
 `;
 
 export const fragments = {
@@ -958,5 +945,4 @@ export const fragments = {
   ceremony,
   partner,
   fundingAccount,
-  marketingLocation,
 };

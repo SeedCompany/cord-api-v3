@@ -5,7 +5,6 @@ import {
   DuplicateException,
   generateId,
   NotFoundException,
-  Sensitivity,
   ServerException,
   Session,
   UnauthorizedException,
@@ -53,7 +52,6 @@ export class LocationService {
     fundingAccount: true,
     isoAlpha3: true,
     type: true,
-    sensitivity: true,
   };
 
   constructor(
@@ -117,12 +115,6 @@ export class LocationService {
         isPublic: false,
         isOrgPublic: false,
         label: 'LocationType',
-      },
-      {
-        key: 'sensitivity',
-        value: input.sensitivity,
-        isPublic: false,
-        isOrgPublic: false,
       },
       {
         key: 'canDelete',
@@ -218,7 +210,6 @@ export class LocationService {
         ...secured.fundingAccount,
         value: result.fundingAccountId,
       },
-      sensitivity: secured.sensitivity.value || Sensitivity.High,
       canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
@@ -229,7 +220,7 @@ export class LocationService {
     await this.db.sgUpdateProperties({
       session,
       object: location,
-      props: ['name', 'isoAlpha3', 'type', 'sensitivity'],
+      props: ['name', 'isoAlpha3', 'type'],
       changes: input,
       nodevar: 'location',
     });

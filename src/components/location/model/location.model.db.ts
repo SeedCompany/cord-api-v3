@@ -6,7 +6,6 @@ export class DbLocation extends DbBaseNode {
   __className = DbBaseNodeLabel.Location;
   name: any = null;
   type: any = null;
-  sensitivity: any = null;
   isoAlpha3: any = null;
   fundingAccount: any = null;
 }
