@@ -31,8 +31,8 @@ import { DbBaseNodeGrant, DbRole } from '../model';
 const read = true;
 const write = true;
 
-export const Liason = new DbRole({
-  name: Role.Liason,
+export const Liaison = new DbRole({
+  name: Role.Liaison,
   powers: [
     Powers.CreateDirectory,
     Powers.CreateEducation,

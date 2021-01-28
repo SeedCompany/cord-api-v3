@@ -45,7 +45,7 @@ export enum Powers {
   GrantFundraisingRole = 'GrantFundraisingRole',
   GrantInternRole = 'GrantInternRole',
   GrantLeadershipRole = 'GrantLeadershipRole',
-  GrantLiasonRole = 'GrantLiasonRole',
+  GrantLiaisonRole = 'GrantLiaisonRole',
   GrantMarketingRole = 'GrantMarketingRole',
   GrantMentorRole = 'GrantMentorRole',
   GrantPower = 'GrantPower',
