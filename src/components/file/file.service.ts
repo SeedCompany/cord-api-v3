@@ -257,7 +257,12 @@ export class FileService {
    * the existing file with the same name or create a new file if not found.
    */
   async createFileVersion(
-    { parentId, uploadId, name }: CreateFileVersionInput,
+    {
+      parentId,
+      uploadId,
+      name,
+      mimeType: mimeTypeOverride,
+    }: CreateFileVersionInput,
     session: Session
   ): Promise<File> {
     const [tempUpload, existingUpload] = await Promise.allSettled([
@@ -325,7 +330,8 @@ export class FileService {
         ? existingUpload.value
         : undefined;
 
-    const mimeType = upload?.ContentType ?? 'application/octet-stream';
+    const mimeType =
+      mimeTypeOverride ?? upload?.ContentType ?? 'application/octet-stream';
     await this.repo.createFileVersion(
       fileId,
       {
