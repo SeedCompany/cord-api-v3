@@ -9,6 +9,7 @@ import {
 import { whereAlpha3 } from 'iso-3166-1';
 import countries from 'iso-3166-1/dist/iso-3166';
 import { AnonSession, IdArg, LoggedInSession, Session } from '../../common';
+import { FieldRegionService, SecuredFieldRegion } from '../field-region';
 import {
   FundingAccountService,
   SecuredFundingAccount,
@@ -28,6 +29,7 @@ import { LocationService } from './location.service';
 @Resolver(Location)
 export class LocationResolver {
   constructor(
+    private readonly fieldRegionService: FieldRegionService,
     private readonly locationService: LocationService,
     private readonly fundingAccountService: FundingAccountService
   ) {}
@@ -65,6 +67,21 @@ export class LocationResolver {
     const { value: id, ...rest } = location.fundingAccount;
     const value = id
       ? await this.fundingAccountService.readOne(id, session)
+      : undefined;
+    return {
+      value,
+      ...rest,
+    };
+  }
+
+  @ResolveField(() => SecuredFieldRegion)
+  async defaultFieldRegion(
+    @Parent() location: Location,
+    @AnonSession() session: Session
+  ): Promise<SecuredFieldRegion> {
+    const { value: id, ...rest } = location.defaultFieldRegion;
+    const value = id
+      ? await this.fieldRegionService.readOne(id, session)
       : undefined;
     return {
       value,
