@@ -773,7 +773,7 @@ export class ProjectRules {
     }
   }
 
-  async getCurrentStep(id: string) {
+  private async getCurrentStep(id: string) {
     const currentStep = await this.db
       .query()
       .match([
