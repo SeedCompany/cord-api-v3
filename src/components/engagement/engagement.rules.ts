@@ -1,11 +1,11 @@
 /* eslint-disable no-case-declarations */
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { first, intersection } from 'lodash';
 import { ServerException, Session, UnauthorizedException } from '../../common';
 import { DatabaseService, ILogger, Logger } from '../../core';
 import { Role } from '../authorization';
-import { ProjectRules, ProjectStep } from '../project';
+import { ProjectStep } from '../project';
 import {
   EngagementStatus,
   EngagementStatusTransition,
@@ -38,8 +38,6 @@ interface StatusRule {
 export class EngagementRules {
   constructor(
     private readonly db: DatabaseService,
-    @Inject(forwardRef(() => ProjectRules))
-    private readonly projectRules: ProjectRules,
     // eslint-disable-next-line @seedcompany/no-unused-vars
     @Logger('engagement:rules') private readonly logger: ILogger
   ) {}
@@ -349,7 +347,6 @@ export class EngagementRules {
 
   async getAvailableTransitions(
     engagementId: string,
-    projectId: string,
     session: Session
   ): Promise<EngagementStatusTransition[]> {
     if (session.anonymous) {
@@ -369,7 +366,16 @@ export class EngagementRules {
       return [];
     }
 
-    const currentStep = await this.projectRules.getCurrentStep(projectId);
+    // If transitions don't need project's step then dont fetch or filter it.
+    if (
+      !transitions.some(
+        (transition) => transition.projectStepRequirements.length > 0
+      )
+    ) {
+      return transitions;
+    }
+
+    const currentStep = await this.getCurrentProjectStep(engagementId);
     const availableTransitionsAccordingToProject = transitions.filter(
       (transition) =>
         transition.projectStepRequirements.length === 0 ||
@@ -381,17 +387,10 @@ export class EngagementRules {
   async verifyStatusChange(
     engagementId: string,
     session: Session,
-    nextStatus: EngagementStatus,
-    projectId: string | undefined
+    nextStatus: EngagementStatus
   ) {
-    if (projectId === undefined) {
-      throw new ServerException(
-        'No project associated with engagement. Cannot update status'
-      );
-    }
     const transitions = await this.getAvailableTransitions(
       engagementId,
-      projectId,
       session
     );
 
@@ -423,6 +422,27 @@ export class EngagementRules {
     }
 
     return currentStatus.status;
+  }
+
+  private async getCurrentProjectStep(engagementId: string) {
+    const result = await this.db
+      .query()
+      .match([
+        node('engagement', 'Engagement', { id: engagementId }),
+        relation('in', '', 'engagement', { active: true }),
+        node('project', 'Project'),
+        relation('out', '', 'step', { active: true }),
+        node('step', 'Property'),
+      ])
+      .raw('return step.value as step')
+      .asResult<{ step: ProjectStep }>()
+      .first();
+
+    if (!result?.step) {
+      throw new ServerException(`Could not find project's step`);
+    }
+
+    return result.step;
   }
 
   private async getUserRoles(id: string) {
