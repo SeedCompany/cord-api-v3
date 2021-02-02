@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { Connection, node, relation } from 'cypher-query-builder';
 import { union, without } from 'lodash';
 import { generateId, ServerException, Session } from '../../common';
+import { retry } from '../../common/retry';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import { DbBudget } from '../budget/model';
 import { DbBudgetRecord } from '../budget/model/budget-record.model.db';
@@ -80,18 +81,26 @@ export class AuthorizationService {
     creatorUserId: string
   ) {
     const label = baseNodeObj.__className.substring(2);
-    const process = () =>
-      this.db
-        .query()
-        .raw(
-          `CALL cord.processNewBaseNode($baseNodeId, $label, $creatorUserId)`,
-          {
-            baseNodeId,
-            label,
-            creatorUserId,
-          }
-        )
-        .run();
+    const process = async () => {
+      await retry(
+        async () => {
+          await this.db
+            .query()
+            .raw(
+              `CALL cord.processNewBaseNode($baseNodeId, $label, $creatorUserId)`,
+              {
+                baseNodeId,
+                label,
+                creatorUserId,
+              }
+            )
+            .run();
+        },
+        {
+          retries: 3,
+        }
+      );
+    };
 
     const tx = this.dbConn.currentTransaction;
     if (!tx) {
