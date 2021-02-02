@@ -25,15 +25,14 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
-  matchPermList,
-  matchPropList,
+  matchPropListNew,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
-  parseSecuredProperties,
+  parseSecuredPropertiesNew,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
@@ -193,18 +192,19 @@ export class OrganizationService {
       id: orgId,
       userId: session.userId,
     });
+    const permsOfBaseNode = await this.authorizationService.getPermissionsOfBaseNode(
+      new DbOrganization(),
+      session
+    );
 
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Organization', { id: orgId })])
-      .call(matchPermList)
-      .call(matchPropList, 'permList')
-      .return('propList, permList, node')
+      .call(matchPropListNew)
+      .return('propList, node')
       .asResult<StandardReadResult<DbPropsOfDto<Organization>>>();
-
     const result = await query.first();
-
     if (!result) {
       throw new NotFoundException(
         'Could not find organization',
@@ -212,10 +212,10 @@ export class OrganizationService {
       );
     }
 
-    const secured = parseSecuredProperties(
+    const secured = parseSecuredPropertiesNew(
       result.propList,
-      result.permList,
-      this.securedProperties
+      this.securedProperties,
+      permsOfBaseNode
     );
 
     return {

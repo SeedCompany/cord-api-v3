@@ -22,15 +22,14 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
-  matchPermList,
-  matchPropList,
+  matchPropListNew,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
-  parseSecuredProperties,
+  parseSecuredPropertiesNew,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
@@ -198,8 +197,7 @@ export class LocationService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Location', { id: id })])
-      .call(matchPermList, 'requestingUser')
-      .call(matchPropList, 'permList')
+      .call(matchPropListNew)
       .optionalMatch([
         node('node'),
         relation('out', '', 'fundingAccount', { active: true }),
@@ -211,7 +209,7 @@ export class LocationService {
         node('defaultFieldRegion', 'FieldRegion'),
       ])
       .return(
-        'propList, permList, node, fundingAccount.id as fundingAccountId, defaultFieldRegion.id as defaultFieldRegionId'
+        'propList, node, fundingAccount.id as fundingAccountId, defaultFieldRegion.id as defaultFieldRegionId'
       )
       .asResult<
         StandardReadResult<DbPropsOfDto<Location>> & {
@@ -226,10 +224,14 @@ export class LocationService {
       throw new NotFoundException('Could not find location', 'location.id');
     }
 
-    const secured = parseSecuredProperties(
+    const permsOfBaseNode = await this.authorizationService.getPermissionsOfBaseNode(
+      new DbLocation(),
+      session
+    );
+    const secured = parseSecuredPropertiesNew(
       result.propList,
-      result.permList,
-      this.securedProperties
+      this.securedProperties,
+      permsOfBaseNode
     );
 
     return {

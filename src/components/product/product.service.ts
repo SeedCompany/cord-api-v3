@@ -24,16 +24,15 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
-  matchPermList,
-  matchPropList,
+  matchPropListNew,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
-import type { BaseNode } from '../../core/database/results';
 import {
+  BaseNode,
   DbPropsOfDto,
   parseBaseNodeProperties,
-  parseSecuredProperties,
+  parseSecuredPropertiesNew,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
@@ -259,9 +258,8 @@ export class ProductService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Product', { id })])
-      .call(matchPermList)
-      .call(matchPropList, 'permList')
-      .return(['propList, permList, node'])
+      .call(matchPropListNew)
+      .return(['propList, node'])
       .asResult<
         StandardReadResult<
           DbPropsOfDto<
@@ -278,21 +276,29 @@ export class ProductService {
       this.logger.warning(`Could not find product`, { id });
       throw new NotFoundException('Could not find product', 'product.id');
     }
+    const permsOfBaseNode = await this.authorizationService.getPermissionsOfBaseNode(
+      new DbProduct(),
+      session
+    );
 
     const {
       produces,
       scriptureReferencesOverride,
       isOverriding,
       ...rest
-    } = parseSecuredProperties(result.propList, result.permList, {
-      mediums: true,
-      purposes: true,
-      methodology: true,
-      scriptureReferences: true,
-      scriptureReferencesOverride: true,
-      produces: true,
-      isOverriding: true,
-    });
+    } = parseSecuredPropertiesNew(
+      result.propList,
+      {
+        mediums: true,
+        purposes: true,
+        methodology: true,
+        scriptureReferences: true,
+        scriptureReferencesOverride: true,
+        produces: true,
+        isOverriding: true,
+      },
+      permsOfBaseNode
+    );
 
     const connectedProducible = await this.db
       .query()

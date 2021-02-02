@@ -24,15 +24,14 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
-  matchPermList,
-  matchPropList,
+  matchPropListNew,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
-  parseSecuredProperties,
+  parseSecuredPropertiesNew,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
@@ -275,8 +274,7 @@ export class PartnershipService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Partnership', { id })])
-      .call(matchPermList)
-      .call(matchPropList, 'permList')
+      .call(matchPropListNew)
       .match([
         node('node'),
         relation('in', '', 'partnership'),
@@ -288,7 +286,7 @@ export class PartnershipService {
         node('partner', 'Partner'),
       ])
       .return(
-        'propList, permList, node, project.id as projectId, partner.id as partnerId'
+        'propList, node, project.id as projectId, partner.id as partnerId'
       )
       .asResult<
         StandardReadResult<DbPropsOfDto<Partnership>> & {
@@ -311,10 +309,15 @@ export class PartnershipService {
       session
     );
 
-    const securedProps = parseSecuredProperties(
+    const permsOfBaseNode = await this.authorizationService.getPermissionsOfBaseNode(
+      new DbPartnership(),
+      session
+    );
+
+    const securedProps = parseSecuredPropertiesNew(
       result.propList,
-      result.permList,
-      this.securedProperties
+      this.securedProperties,
+      permsOfBaseNode
     );
     const canReadMouStart =
       readProject.mouStart.canRead && securedProps.mouStartOverride.canRead;

@@ -21,7 +21,6 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
-  matchPermList,
   matchPropList,
   permissionsOfNode,
   requestingUser,
@@ -30,7 +29,7 @@ import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
-  parseSecuredProperties,
+  parseSecuredPropertiesNew,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
@@ -42,6 +41,7 @@ import {
   CreateCeremony,
   UpdateCeremony,
 } from './dto';
+import { DbCeremony } from './model';
 
 @Injectable()
 export class CeremonyService {
@@ -135,9 +135,8 @@ export class CeremonyService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Ceremony', { id })])
-      .call(matchPermList)
-      .call(matchPropList, 'permList')
-      .return('node, permList, propList')
+      .call(matchPropList)
+      .return('node, propList')
       .asResult<StandardReadResult<DbPropsOfDto<Ceremony>>>();
 
     const result = await readCeremony.first();
@@ -145,12 +144,15 @@ export class CeremonyService {
     if (!result) {
       throw new NotFoundException('Could not find ceremony', 'ceremony.id');
     }
-
+    const permsOfBaseNode = await this.authorizationService.getPermissionsOfBaseNode(
+      new DbCeremony(),
+      session
+    );
     const parsedProps = parsePropList(result.propList);
-    const securedProps = parseSecuredProperties(
+    const securedProps = parseSecuredPropertiesNew(
       parsedProps,
-      result.permList,
-      this.securedProperties
+      this.securedProperties,
+      permsOfBaseNode
     );
 
     return {

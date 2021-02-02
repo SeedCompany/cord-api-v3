@@ -23,8 +23,7 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
-  matchPermList,
-  matchPropList,
+  matchPropListNew,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -32,7 +31,7 @@ import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
-  parseSecuredProperties,
+  parseSecuredPropertiesNew,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
@@ -298,9 +297,8 @@ export class BudgetService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Budget', { id })])
-      .call(matchPermList)
-      .call(matchPropList, 'permList')
-      .return('propList, permList, node')
+      .call(matchPropListNew)
+      .return('propList, node')
       .asResult<StandardReadResult<DbPropsOfDto<Budget>>>();
 
     const result = await query.first();
@@ -319,11 +317,19 @@ export class BudgetService {
       session
     );
 
+    const permsOfBudget = await this.authorizationService.getPermissionsOfBaseNode(
+      new DbBudget(),
+      session
+    );
     const props = parsePropList(result.propList);
-    const securedProps = parseSecuredProperties(props, result.permList, {
-      status: true,
-      universalTemplateFile: true,
-    });
+    const securedProps = parseSecuredPropertiesNew(
+      props,
+      {
+        status: true,
+        universalTemplateFile: true,
+      },
+      permsOfBudget
+    );
 
     return {
       ...parseBaseNodeProperties(result.node),
@@ -344,8 +350,7 @@ export class BudgetService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'BudgetRecord', { id })])
-      .call(matchPermList)
-      .call(matchPropList, 'permList')
+      .call(matchPropListNew)
       .match([
         node('node'),
         relation('out', '', 'organization', { active: true }),
@@ -353,7 +358,6 @@ export class BudgetService {
       ])
       .return([
         'propList + [{value: organization.id, property: "organization"}] as propList',
-        'permList',
         'node',
       ])
       .asResult<StandardReadResult<DbPropsOfDto<BudgetRecord>>>();
@@ -367,12 +371,20 @@ export class BudgetService {
       );
     }
 
+    const permsOfBudgetRecord = await this.authorizationService.getPermissionsOfBaseNode(
+      new DbBudgetRecord(),
+      session
+    );
     const props = parsePropList(result.propList);
-    const securedProps = parseSecuredProperties(props, result.permList, {
-      amount: true,
-      fiscalYear: true,
-      organization: true,
-    });
+    const securedProps = parseSecuredPropertiesNew(
+      props,
+      {
+        amount: true,
+        fiscalYear: true,
+        organization: true,
+      },
+      permsOfBudgetRecord
+    );
 
     return {
       ...parseBaseNodeProperties(result.node),

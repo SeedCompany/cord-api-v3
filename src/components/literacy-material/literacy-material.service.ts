@@ -22,15 +22,14 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
-  matchPermList,
-  matchPropList,
+  matchPropListNew,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
-  parseSecuredProperties,
+  parseSecuredPropertiesNew,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
@@ -164,9 +163,8 @@ export class LiteracyMaterialService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'LiteracyMaterial', { id })])
-      .call(matchPermList)
-      .call(matchPropList, 'permList')
-      .return('node, permList, propList')
+      .call(matchPropListNew)
+      .return('node, propList')
       .asResult<StandardReadResult<DbPropsOfDto<LiteracyMaterial>>>();
 
     const result = await readLiteracyMaterial.first();
@@ -183,10 +181,15 @@ export class LiteracyMaterialService {
       session
     );
 
-    const securedProps = parseSecuredProperties(
+    const permsOfBaseNode = await this.authorizationService.getPermissionsOfBaseNode(
+      new DbLiteracyMaterial(),
+      session
+    );
+
+    const securedProps = parseSecuredPropertiesNew(
       result.propList,
-      result.permList,
-      this.securedProperties
+      this.securedProperties,
+      permsOfBaseNode
     );
 
     return {

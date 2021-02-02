@@ -1,7 +1,7 @@
 /* eslint-disable no-case-declarations */
 import { Injectable } from '@nestjs/common';
 import { Connection, node, relation } from 'cypher-query-builder';
-import { isEqualWith, union, uniqWith, without } from 'lodash';
+import { groupBy, mapValues, pickBy, union, without } from 'lodash';
 import { generateId, ServerException, Session } from '../../common';
 import { retry } from '../../common/retry';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
@@ -33,29 +33,19 @@ import { DbEducation, DbUnavailability, DbUser } from '../user/model';
 import { InternalRole, Role } from './dto';
 import { Powers } from './dto/powers';
 import { MissingPowerException } from './missing-power.exception';
-import { DbRole, OneBaseNode, PropertyGrant } from './model';
+import { DbRole, OneBaseNode } from './model';
 import { DbBaseNode } from './model/db-base-node.model';
 import { everyRole } from './roles';
 
-export interface UserBaseNodePermissions {
-  properties?: Array<PropertyGrant<Partial<DbBaseNode>>>;
-  powers?: Powers[];
+export interface UserPropertyPermissions {
+  [x: string]: { canRead: boolean; canEdit: boolean };
 }
-function propertyGrantCustomizer(
-  perm1: PropertyGrant<Partial<DbBaseNode>>,
-  perm2: PropertyGrant<Partial<DbBaseNode>>
-): boolean {
-  let isEqual = false;
-  if (perm1.propertyName !== perm2.propertyName) {
-    return false;
-  }
-  if (perm1.permission.read || perm2.permission.read) {
-    isEqual = true;
-  } else if (perm1.permission.write || perm2.permission.write) {
-    isEqual = true;
-  }
-  return isEqual;
-}
+
+export const permissionDefaults = {
+  canRead: false,
+  canEdit: false,
+};
+export type Permission = typeof permissionDefaults;
 
 /**
  * powers can exist on a security group or a user node
@@ -140,49 +130,51 @@ export class AuthorizationService {
   async getPermissionsOfBaseNode(
     baseNode: DbBaseNode,
     session: Session
-  ): Promise<UserBaseNodePermissions> {
-    const userRoles = session.roles;
-    const userPermsOnBaseNode: Partial<DbRole> = {};
-    const userSimpleBaseNodePerms: UserBaseNodePermissions = {
-      properties: [],
-      powers: [],
+  ): Promise<UserPropertyPermissions> {
+    const permissionDefaults = {
+      canRead: false,
+      canEdit: false,
     };
-    userRoles.forEach((element) => {
-      // -- filter out all grants except the ones matching the baseNode name
-      element.grants = element.grants.filter(
-        (grant) => grant.__className === baseNode.__className
-      );
-      // -- do sort of the same thing with the powers
-      element.powers = element.powers.filter(
-        (power) =>
-          power === `Create${baseNode.__className.replace('Db', '')}` ||
-          power === `Delete${baseNode.__className.replace('Db', '')}`
-      );
-      // -- simplify the grants and powers into the one role.
-      // -- note: There's probably a lodash function for this, but I don't really get how to do it.
-      userPermsOnBaseNode.grants =
-        userPermsOnBaseNode.grants?.concat(element.grants) || element.grants;
-      userPermsOnBaseNode.powers =
-        userPermsOnBaseNode.powers?.concat(element.powers) || element.powers;
-    });
+    const userRoles = session.roles;
+    const userRoleList = userRoles.map((g) => g.grants);
+    const userRoleListFlat = userRoleList.flat(1);
+    const objGrantList = userRoleListFlat.filter(
+      (g) => g.__className === baseNode.__className
+    );
+    const propList = objGrantList.map((g) => g.properties).flat(1);
+    const byProp = groupBy(propList, 'propertyName');
 
-    // -- further simplify things down because we technically don't need the whole role object
-    void userPermsOnBaseNode.grants?.forEach((grant) => {
-      userSimpleBaseNodePerms.properties =
-        userSimpleBaseNodePerms.properties?.concat(grant.properties) ||
-        grant.properties;
-    });
+    // console.log("userRoles");
+    // console.log(userRoles);
 
-    userSimpleBaseNodePerms.powers = userPermsOnBaseNode.powers;
+    // console.log("userRoleList")
+    // console.log(userRoleList)
 
-    // -- get uniq elements of the array (remove duplicates). Depending on the propertyName and the property.read and property.write
-    userSimpleBaseNodePerms.properties = uniqWith(
-      userSimpleBaseNodePerms.properties,
-      function (arrVal, otherVal) {
-        return isEqualWith(arrVal, otherVal, propertyGrantCustomizer);
+    // console.log("objGrantList")
+    // console.log(objGrantList)
+
+    // console.log("userRoleListFlat")
+    // console.log(userRoleListFlat)
+
+    // console.log("propList")
+    // console.log(propList)
+    // Merge together the results of each property
+    const permissions = mapValues(
+      byProp,
+      (nodes): Permission => {
+        const possibilities = nodes.map((node) =>
+          // Convert the db properties to API properties.
+          // Only keep true values, so merging the objects doesn't replace a true with false
+          pickBy({
+            canRead: node.permission.read || null,
+            canEdit: node.permission.write || null,
+          })
+        );
+        // Merge the all the true permissions together, otherwise default to false
+        return Object.assign({}, permissionDefaults, ...possibilities);
       }
     );
-    return userSimpleBaseNodePerms;
+    return permissions;
   }
 
   async createSGsForEveryRoleForAllBaseNodes(session: Session) {

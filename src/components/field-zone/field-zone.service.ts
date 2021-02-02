@@ -22,15 +22,14 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
-  matchPermList,
-  matchPropList,
+  matchPropListNew,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
-  parseSecuredProperties,
+  parseSecuredPropertiesNew,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
@@ -155,14 +154,13 @@ export class FieldZoneService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'FieldZone', { id: id })])
-      .call(matchPermList, 'requestingUser')
-      .call(matchPropList, 'permList')
+      .call(matchPropListNew)
       .optionalMatch([
         node('node'),
         relation('out', '', 'director', { active: true }),
         node('director', 'User'),
       ])
-      .return('propList, permList, node, director.id as directorId')
+      .return('propList, node, director.id as directorId')
       .asResult<
         StandardReadResult<DbPropsOfDto<FieldZone>> & {
           directorId: string;
@@ -175,10 +173,15 @@ export class FieldZoneService {
       throw new NotFoundException('Could not find field zone', 'fieldZone.id');
     }
 
-    const secured = parseSecuredProperties(
+    const permsOfBaseNode = await this.authorizationService.getPermissionsOfBaseNode(
+      new DbFieldZone(),
+      session
+    );
+
+    const secured = parseSecuredPropertiesNew(
       result.propList,
-      result.permList,
-      this.securedProperties
+      this.securedProperties,
+      permsOfBaseNode
     );
 
     return {

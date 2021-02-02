@@ -21,15 +21,14 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
-  matchPermList,
-  matchPropList,
+  matchPropListNew,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
-  parseSecuredProperties,
+  parseSecuredPropertiesNew,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
@@ -159,9 +158,8 @@ export class FundingAccountService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'FundingAccount', { id })])
-      .call(matchPermList, 'requestingUser')
-      .call(matchPropList, 'permList')
-      .return('propList, permList, node')
+      .call(matchPropListNew)
+      .return('propList, node')
       .asResult<StandardReadResult<DbPropsOfDto<FundingAccount>>>();
 
     const result = await readFundingAccount.first();
@@ -170,10 +168,14 @@ export class FundingAccountService {
       throw new NotFoundException('FundingAccount.id', 'id');
     }
 
-    const secured = parseSecuredProperties(
+    const permsOfBaseNode = await this.authorizationService.getPermissionsOfBaseNode(
+      new DbFundingAccount(),
+      session
+    );
+    const secured = parseSecuredPropertiesNew(
       result.propList,
-      result.permList,
-      this.securedProperties
+      this.securedProperties,
+      permsOfBaseNode
     );
 
     return {

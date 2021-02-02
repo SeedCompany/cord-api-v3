@@ -29,8 +29,7 @@ import {
 import {
   calculateTotalAndPaginateList,
   collect,
-  matchPermList,
-  matchPropList,
+  matchPropListNew,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -38,7 +37,7 @@ import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
-  parseSecuredProperties,
+  parseSecuredPropertiesNew,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
@@ -318,14 +317,13 @@ export class LanguageService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Language', { id: langId })])
-      .call(matchPermList)
-      .call(matchPropList, 'permList')
+      .call(matchPropListNew)
       .match([
         node('node'),
         relation('out', '', 'ethnologue'),
         node('eth', 'EthnologueLanguage'),
       ])
-      .return('propList, permList, node, eth.id as ethnologueLanguageId')
+      .return('propList, node, eth.id as ethnologueLanguageId')
       .asResult<
         StandardReadResult<DbPropsOfDto<Language>> & {
           ethnologueLanguageId: string;
@@ -343,10 +341,14 @@ export class LanguageService {
     );
 
     const props = parsePropList(result.propList);
-    const securedProps = parseSecuredProperties(
+    const permsOfBaseNode = await this.authorizationService.getPermissionsOfBaseNode(
+      new DbLanguage(),
+      session
+    );
+    const securedProps = parseSecuredPropertiesNew(
       props,
-      result.permList,
-      this.securedProperties
+      this.securedProperties,
+      permsOfBaseNode
     );
 
     return {

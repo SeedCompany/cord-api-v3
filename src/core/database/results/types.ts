@@ -35,3 +35,8 @@ export interface StandardReadResult<DbProps> {
   propList: PropListDbResult<DbProps>;
   permList: PermListDbResult<DbProps>;
 }
+
+export interface StandardReadResult2<DbProps> {
+  node: Node<BaseNode>;
+  propList: PropListDbResult<DbProps>;
+}

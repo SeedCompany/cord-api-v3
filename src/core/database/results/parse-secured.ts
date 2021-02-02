@@ -1,5 +1,6 @@
 import { mapValues } from 'lodash';
 import type { Secured } from '../../../common';
+import { UserPropertyPermissions } from '../../../components/authorization/authorization.service';
 import {
   parsePermissions,
   permissionDefaults,
@@ -44,4 +45,24 @@ export const parseSecuredProperties = <
     return res.canRead ? { ...res, value: props[key] } : res;
   });
   return (merged as unknown) as { [K in PickedKeys]: Secured<DbProps[K]> };
+};
+
+export const parseSecuredPropertiesNew = <
+  DbProps extends Record<string, any>,
+  PickedKeys extends keyof DbProps
+>(
+  propList: PropListDbResult<DbProps> | DbProps,
+  propKeys: Record<PickedKeys, boolean>,
+  baseNodePermissions: UserPropertyPermissions
+) => {
+  const props = Array.isArray(propList) ? parsePropList(propList) : propList;
+
+  const merge2 = mapValues(propKeys, (_, key: PickedKeys) => {
+    const res = {
+      ...propertyDefaults,
+      ...(baseNodePermissions[key.toString()] ?? {}),
+    };
+    return res.canRead ? { ...res, value: props[key] } : res;
+  });
+  return (merge2 as unknown) as { [K in PickedKeys]: Secured<DbProps[K]> };
 };
