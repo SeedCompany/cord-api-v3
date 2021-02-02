@@ -165,10 +165,6 @@ export class ProjectMemberService {
 
       return await this.readOne(id, session);
     } catch (exception) {
-      this.logger.warning('Failed to create project member', {
-        exception,
-      });
-
       throw new ServerException('Could not create project member', exception);
     }
   }
