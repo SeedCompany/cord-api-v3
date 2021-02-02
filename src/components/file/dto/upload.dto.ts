@@ -32,7 +32,7 @@ export abstract class CreateFileVersionInput {
 
   @Field({
     description:
-      'Override the mime type of the file. Default pulls mime typed defined on uploaded file',
+      'Override the mime type of the file. Default pulls mime type defined on uploaded file',
     nullable: true,
   })
   readonly mimeType?: string;
@@ -49,6 +49,13 @@ export abstract class CreateDefinedFileVersionInput {
     description: 'An optional name. Defaults to file name.',
   })
   readonly name?: string;
+
+  @Field({
+    description:
+      'Override the mime type of the file version. Default pulls mime type defined on uploaded file',
+    nullable: true,
+  })
+  readonly mimeType?: string;
 }
 
 @InputType()
