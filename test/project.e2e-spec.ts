@@ -65,19 +65,30 @@ describe('Project e2e', () => {
   let fieldRegion: FieldRegion;
   let location: Location;
   let db: Connection;
+  let admin: User;
+  let password: string;
 
   beforeAll(async () => {
     app = await createTestApp();
     db = app.get(Connection);
     await createSession(app);
+    password = 'password';
     director = await registerUserWithPower(app, [Powers.DeleteProject], {
       roles: [Role.ProjectManager],
+      password: password,
     });
+    // -- fieldZone and FieldRegion can only be written by an administrator role.
+    admin = await registerUserWithPower(
+      app,
+      [Powers.CreateFieldZone, Powers.CreateFieldRegion],
+      { roles: [Role.Administrator], password: password }
+    );
     fieldZone = await createZone(app, { directorId: director.id });
     fieldRegion = await createRegion(app, {
       directorId: director.id,
       fieldZoneId: fieldZone.id,
     });
+    await login(app, { email: director.email.value, password: password });
     location = await createLocation(app);
     intern = await getUserFromSession(app);
     mentor = await getUserFromSession(app);
@@ -89,6 +100,7 @@ describe('Project e2e', () => {
   });
 
   it('should have unique name', async () => {
+    await login(app, { email: admin.email.value, password: password });
     const name = faker.random.word() + ' testProject';
     await createProject(app, { name });
     await expect(createProject(app, { name })).rejects.toThrowError(
@@ -97,9 +109,11 @@ describe('Project e2e', () => {
         `Project with this name already exists`
       )
     );
+    await login(app, { email: director.email.value, password: password });
   });
 
   it('create & read project by id', async () => {
+    await login(app, { email: admin.email.value, password: password });
     const project = await createProject(app);
 
     const result = await app.graphql.query(
@@ -129,11 +143,11 @@ describe('Project e2e', () => {
     expect(actual.estimatedSubmission.value).toBe(
       project.estimatedSubmission.value
     );
+    await login(app, { email: director.email.value, password: password });
   });
 
   it('create project with required fields', async () => {
-    await loginAsAdmin(app);
-
+    await login(app, { email: admin.email.value, password: password });
     const project: CreateProject = {
       name: faker.random.uuid(),
       type: ProjectType.Translation,
@@ -185,6 +199,7 @@ describe('Project e2e', () => {
     expect(actual.partnerships.canCreate).toBe(true);
     expect(actual.team.canRead).toBe(true);
     expect(actual.team.canCreate).toBe(true);
+    await login(app, { email: director.email.value, password: password });
   });
 
   it('should throw error if the location id is not valid', async () => {
@@ -277,6 +292,7 @@ describe('Project e2e', () => {
   });
 
   it('update project', async () => {
+    await login(app, { email: admin.email.value, password: password });
     const project = await createProject(app);
     const namenew = faker.random.word() + ' Project';
 
@@ -302,6 +318,7 @@ describe('Project e2e', () => {
   });
 
   it('delete project', async () => {
+    await login(app, { email: admin.email.value, password: password });
     const project = await createProject(app);
     expect(project.id).toBeTruthy();
     const result = await app.graphql.mutate(
