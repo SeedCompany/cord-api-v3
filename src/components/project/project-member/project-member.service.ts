@@ -26,8 +26,7 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
-  matchPermList,
-  matchPropList,
+  matchPropListNew,
   permissionsOfNode,
   requestingUser,
 } from '../../../core/database/query';
@@ -35,7 +34,7 @@ import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
-  parseSecuredProperties,
+  parseSecuredPropertiesNew,
   runListQuery,
   StandardReadResult,
 } from '../../../core/database/results';
@@ -189,10 +188,9 @@ export class ProjectMemberService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'ProjectMember', { id })])
-      .call(matchPermList)
-      .call(matchPropList, 'permList')
+      .call(matchPropListNew)
       .match([node('node'), relation('out', '', 'user'), node('user', 'User')])
-      .return('node, permList, propList, user.id as userId')
+      .return('node, propList, user.id as userId')
       .asResult<
         StandardReadResult<DbPropsOfDto<ProjectMember>> & {
           userId: string;
@@ -208,10 +206,14 @@ export class ProjectMemberService {
     }
 
     const props = parsePropList(result.propList);
-    const securedProps = parseSecuredProperties(
+    const permsOfBaseNode = await this.authorizationService.getPermissionsOfBaseNode(
+      new DbProjectMember(),
+      session
+    );
+    const securedProps = parseSecuredPropertiesNew(
       props,
-      result.permList,
-      this.securedProperties
+      this.securedProperties,
+      permsOfBaseNode
     );
 
     return {
