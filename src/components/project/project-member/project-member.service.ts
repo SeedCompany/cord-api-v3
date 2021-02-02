@@ -17,6 +17,7 @@ import {
   Logger,
   matchRequestingUser,
   matchSession,
+  OnIndex,
   property,
 } from '../../../core';
 import {
@@ -63,6 +64,14 @@ export class ProjectMemberService {
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService
   ) {}
+
+  @OnIndex()
+  async createIndexes() {
+    return [
+      'CREATE CONSTRAINT ON (n:ProjectMember) ASSERT EXISTS(n.id)',
+      'CREATE CONSTRAINT ON (n:ProjectMember) ASSERT n.id IS UNIQUE',
+    ];
+  }
 
   protected async getPMByProjectAndUser(
     projectId: string,
