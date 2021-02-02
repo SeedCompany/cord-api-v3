@@ -929,9 +929,10 @@ export class ProjectRules {
       changedBy = await this.userService.readOne(changedById, {
         userId: this.configService.rootAdmin.id,
       });
-      project = await this.projectService.readOne(projectId, {
-        userId: this.configService.rootAdmin.id,
-      });
+      project = await this.projectService.readOneByUserId(
+        projectId,
+        this.configService.rootAdmin.id
+      );
       recipient = {
         id: recipientId.split('@')[0],
         email: { value: recipientId, canRead: true, canEdit: false },
@@ -951,9 +952,10 @@ export class ProjectRules {
       changedBy = await this.userService.readOne(changedById, {
         userId: recipientId,
       });
-      project = await this.projectService.readOne(projectId, {
-        userId: recipientId,
-      });
+      project = await this.projectService.readOneByUserId(
+        projectId,
+        recipientId
+      );
       recipient = await this.userService.readOne(recipientId, {
         userId: recipientId,
       });

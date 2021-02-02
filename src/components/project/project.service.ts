@@ -28,8 +28,7 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
-  matchPermList,
-  matchPropList,
+  matchPropListNew,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -37,7 +36,7 @@ import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
-  parseSecuredProperties,
+  parseSecuredPropertiesNew,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
@@ -432,16 +431,12 @@ export class ProjectService {
     return project as InternshipProject;
   }
 
-  async readOne(
-    id: string,
-    { userId }: Pick<Session, 'userId'>
-  ): Promise<Project> {
+  // TODO: fix these so that we have DRY code.
+  async readOne(id: string, session: Session): Promise<Project> {
     const query = this.db
       .query()
-      .call(matchRequestingUser, { userId })
       .match([node('node', 'Project', { id })])
-      .call(matchPermList, 'requestingUser')
-      .call(matchPropList, 'permList')
+      .call(matchPropListNew)
       .optionalMatch([
         node('node'),
         relation('out', '', 'primaryLocation', { active: true }),
@@ -473,7 +468,6 @@ export class ProjectService {
       ])
       .return([
         'propList',
-        'permList',
         'node',
         'primaryLocation.id as primaryLocationId',
         'marketingLocation.id as marketingLocationId',
@@ -498,10 +492,120 @@ export class ProjectService {
     }
 
     const props = parsePropList(result.propList);
-    const securedProps = parseSecuredProperties(
+    const permsOfBaseNode = await this.authorizationService.getPermissionsOfBaseNode(
+      new DbProject(),
+      session
+    );
+    const securedProps = parseSecuredPropertiesNew(
       props,
-      result.permList,
-      this.securedProperties
+      this.securedProperties,
+      permsOfBaseNode
+    );
+
+    return {
+      ...parseBaseNodeProperties(result.node),
+      ...securedProps,
+      // Sensitivity is calculated based on the highest language sensitivity (for Translation Projects).
+      // If project has no language engagements (new Translation projects and all Internship projects),
+      // then falls back to the sensitivity prop which defaulted to High on create for all projects.
+      sensitivity:
+        getHighestSensitivity(result.languageSensitivityList) ||
+        props.sensitivity,
+      type: (result as any)?.node?.properties?.type,
+      status: props.status,
+      modifiedAt: props.modifiedAt,
+      tags: {
+        ...securedProps.tags,
+        value: securedProps.tags.value as string[],
+      },
+      primaryLocation: {
+        ...securedProps.primaryLocation,
+        value: result.primaryLocationId,
+      },
+      marketingLocation: {
+        ...securedProps.marketingLocation,
+        value: result.marketingLocationId,
+      },
+      fieldRegion: {
+        ...securedProps.fieldRegion,
+        value: result.fieldRegionId,
+      },
+      owningOrganization: {
+        ...securedProps.owningOrganization,
+        value: result.owningOrganizationId,
+      },
+      canDelete: await this.db.checkDeletePermission(id, session),
+    };
+  }
+
+  async readOneByUserId(id: string, userId: string): Promise<Project> {
+    const query = this.db
+      .query()
+      .match([node('node', 'Project', { id })])
+      .call(matchPropListNew)
+      .optionalMatch([
+        node('node'),
+        relation('out', '', 'primaryLocation', { active: true }),
+        node('primaryLocation', 'Location'),
+      ])
+      .optionalMatch([
+        node('node'),
+        relation('out', '', 'marketingLocation', { active: true }),
+        node('marketingLocation', 'Location'),
+      ])
+      .optionalMatch([
+        node('node'),
+        relation('out', '', 'fieldRegion', { active: true }),
+        node('fieldRegion', 'FieldRegion'),
+      ])
+      .optionalMatch([
+        node('node'),
+        relation('out', '', 'owningOrganization', { active: true }),
+        node('organization', 'Organization'),
+      ])
+      .optionalMatch([
+        node('node'),
+        relation('out', '', 'engagement', { active: true }),
+        node('', 'LanguageEngagement'),
+        relation('out', '', 'language', { active: true }),
+        node('', 'Language'),
+        relation('out', '', 'sensitivity', { active: true }),
+        node('sensitivity', 'Property'),
+      ])
+      .return([
+        'propList',
+        'node',
+        'primaryLocation.id as primaryLocationId',
+        'marketingLocation.id as marketingLocationId',
+        'fieldRegion.id as fieldRegionId',
+        'organization.id as owningOrganizationId',
+        'collect(distinct sensitivity.value) as languageSensitivityList',
+      ])
+      .asResult<
+        StandardReadResult<DbPropsOfDto<Project>> & {
+          primaryLocationId: string;
+          marketingLocationId: string;
+          fieldRegionId: string;
+          owningOrganizationId: string;
+          languageSensitivityList: Sensitivity[];
+        }
+      >();
+
+    const result = await query.first();
+
+    if (!result) {
+      throw new NotFoundException('Could not find Project');
+    }
+
+    const props = parsePropList(result.propList);
+    const permsOfBaseNode = await this.authorizationService.getPermissionsOfBaseNodeWithUserID(
+      new DbProject(),
+      userId
+    );
+    const securedProps = parseSecuredPropertiesNew(
+      props,
+      this.securedProperties,
+      permsOfBaseNode
     );
 
     return {

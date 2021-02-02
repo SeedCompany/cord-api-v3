@@ -127,15 +127,10 @@ export class AuthorizationService {
     };
   }
 
-  async getPermissionsOfBaseNode(
+  async getPerms(
     baseNode: DbBaseNode,
-    session: Session
+    userRoles: DbRole[]
   ): Promise<UserPropertyPermissions> {
-    const permissionDefaults = {
-      canRead: false,
-      canEdit: false,
-    };
-    const userRoles = session.roles;
     const userRoleList = userRoles.map((g) => g.grants);
     const userRoleListFlat = userRoleList.flat(1);
     const objGrantList = userRoleListFlat.filter(
@@ -175,6 +170,20 @@ export class AuthorizationService {
       }
     );
     return permissions;
+  }
+
+  async getPermissionsOfBaseNodeWithUserID(
+    baseNode: DbBaseNode,
+    userId: string
+  ): Promise<UserPropertyPermissions> {
+    return await this.getPerms(baseNode, await this.getUserRoleObjects(userId));
+  }
+
+  async getPermissionsOfBaseNode(
+    baseNode: DbBaseNode,
+    session: Session
+  ): Promise<UserPropertyPermissions> {
+    return await this.getPerms(baseNode, session.roles);
   }
 
   async createSGsForEveryRoleForAllBaseNodes(session: Session) {
