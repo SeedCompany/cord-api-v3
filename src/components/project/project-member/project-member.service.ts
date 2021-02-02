@@ -16,7 +16,6 @@ import {
   ILogger,
   Logger,
   matchRequestingUser,
-  matchSession,
   OnIndex,
   property,
 } from '../../../core';
@@ -114,7 +113,6 @@ export class ProjectMemberService {
     try {
       const createProjectMember = this.db
         .query()
-        .match(matchSession(session))
         .create([
           [
             node('newProjectMember', 'ProjectMember:BaseNode', {
