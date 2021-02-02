@@ -433,6 +433,7 @@ export class FileService {
             parentId: fileId,
             uploadId: initialVersion.uploadId,
             name: initialVersion.name ?? name,
+            mimeType: initialVersion.mimeType,
           },
           session
         );
@@ -467,6 +468,7 @@ export class FileService {
           parentId: file.value,
           uploadId: input.uploadId,
           name,
+          mimeType: input.mimeType,
         },
         session
       );
