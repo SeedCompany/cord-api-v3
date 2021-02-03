@@ -926,9 +926,10 @@ export class ProjectRules {
     let project;
 
     if (recipientId.includes('@')) {
-      changedBy = await this.userService.readOne(changedById, {
-        userId: this.configService.rootAdmin.id,
-      });
+      changedBy = await this.userService.readOneByUserId(
+        changedById,
+        this.configService.rootAdmin.id
+      );
       project = await this.projectService.readOneByUserId(
         projectId,
         this.configService.rootAdmin.id
@@ -949,16 +950,18 @@ export class ProjectRules {
         },
       };
     } else {
-      changedBy = await this.userService.readOne(changedById, {
-        userId: recipientId,
-      });
+      changedBy = await this.userService.readOneByUserId(
+        changedById,
+        recipientId
+      );
       project = await this.projectService.readOneByUserId(
         projectId,
         recipientId
       );
-      recipient = await this.userService.readOne(recipientId, {
-        userId: recipientId,
-      });
+      recipient = await this.userService.readOneByUserId(
+        recipientId,
+        recipientId
+      );
     }
     return {
       changedBy,
