@@ -383,7 +383,7 @@ export class EngagementService {
     const createdAt = DateTime.local();
     const growthPlanId = await generateId();
 
-    const createIE = this.db.query().match(matchSession(session));
+    const createIE = this.db.query();
     if (projectId) {
       createIE.match([node('project', 'Project', { id: projectId })]);
     }
