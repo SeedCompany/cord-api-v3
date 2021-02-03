@@ -169,7 +169,7 @@ export class EngagementService {
     const createdAt = DateTime.local();
     const pnpId = await generateId();
 
-    const createLE = this.db.query().match(matchSession(session));
+    const createLE = this.db.query();
     if (projectId) {
       createLE.match([node('project', 'Project', { id: projectId })]);
     }
