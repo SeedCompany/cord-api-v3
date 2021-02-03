@@ -18,6 +18,7 @@ import {
   loginAsAdmin,
   registerUser,
   registerUserWithPower,
+  registerUserWithStrictInput,
   TestApp,
 } from './utility';
 import { resetDatabase } from './utility/reset-database';
@@ -78,24 +79,9 @@ describe('User e2e', () => {
 
   it('create user with required input fields', async () => {
     const user = await generateRequireFieldsRegisterInput();
+    const result = await registerUserWithStrictInput(app, user);
 
-    const result = await app.graphql.mutate(
-      gql`
-        mutation createUser($input: RegisterInput!) {
-          register(input: $input) {
-            user {
-              ...user
-            }
-          }
-        }
-        ${fragments.user}
-      `,
-      {
-        input: user,
-      }
-    );
-
-    const actual: User = result.register.user;
+    const actual: User = result;
     expect(actual).toBeTruthy();
 
     expect(isValidId(actual.id)).toBe(true);
