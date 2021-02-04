@@ -362,24 +362,27 @@ export class ProjectService {
 
       // get the creating user's roles. Assign them on this project.
       // I'm going direct for performance reasons
-      // const roles = await this.db
-      //   .query()
-      //   .match([
-      //     node('user', 'User', { id: session.userId }),
-      //     relation('out', '', 'roles', { active: true }),
-      //     node('roles', 'Property'),
-      //   ])
-      //   .raw('RETURN roles.value as roles')
-      //   .first();
+      const roles = await this.db
+        .query()
+        .match([
+          node('user', 'User', { id: session.userId }),
+          relation('out', '', 'roles', { active: true }),
+          node('roles', 'Property'),
+        ])
+        .raw('RETURN roles.value as roles')
+        .first();
 
-      // await this.projectMembers.create(
-      //   {
-      //     userId: session.userId,
-      //     projectId: result.id,
-      //     roles: [roles?.roles],
-      //   },
-      //   session
-      // );
+      if (!this.config.migration) {
+        // Add creator to the project team if not in migration
+        await this.projectMembers.create(
+          {
+            userId: session.userId,
+            projectId: result.id,
+            roles: [roles?.roles],
+          },
+          session
+        );
+      }
 
       const dbProject = new DbProject();
       await this.authorizationService.processNewBaseNode(
