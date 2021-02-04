@@ -29,7 +29,6 @@ import {
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
-  parseSecuredPropertiesNew,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
@@ -196,15 +195,12 @@ export class FieldRegionService {
       );
     }
 
-    const permsOfBaseNode = await this.authorizationService.getPermissionsOfBaseNode(
-      new DbFieldRegion(),
-      session
-    );
-    const secured = parseSecuredPropertiesNew(
-      result.propList,
-      this.securedProperties,
-      permsOfBaseNode
-    );
+    const secured = await this.authorizationService.getPermissionsOfBaseNode({
+      baseNode: new DbFieldRegion(),
+      sessionOrUserId: session,
+      propList: result.propList,
+      propKeys: this.securedProperties,
+    });
 
     return {
       ...parseBaseNodeProperties(result.node),

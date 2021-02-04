@@ -32,7 +32,6 @@ import {
   BaseNode,
   DbPropsOfDto,
   parseBaseNodeProperties,
-  parseSecuredPropertiesNew,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
@@ -67,6 +66,10 @@ export class ProductService {
     mediums: true,
     purposes: true,
     methodology: true,
+    scriptureReferences: true,
+    scriptureReferencesOverride: true,
+    produces: true,
+    isOverriding: true,
   };
 
   constructor(
@@ -276,29 +279,18 @@ export class ProductService {
       this.logger.warning(`Could not find product`, { id });
       throw new NotFoundException('Could not find product', 'product.id');
     }
-    const permsOfBaseNode = await this.authorizationService.getPermissionsOfBaseNode(
-      new DbProduct(),
-      session
-    );
 
     const {
       produces,
       scriptureReferencesOverride,
       isOverriding,
       ...rest
-    } = parseSecuredPropertiesNew(
-      result.propList,
-      {
-        mediums: true,
-        purposes: true,
-        methodology: true,
-        scriptureReferences: true,
-        scriptureReferencesOverride: true,
-        produces: true,
-        isOverriding: true,
-      },
-      permsOfBaseNode
-    );
+    } = await this.authorizationService.getPermissionsOfBaseNode({
+      baseNode: new DbProduct(),
+      sessionOrUserId: session,
+      propList: result.propList,
+      propKeys: this.securedProperties,
+    });
 
     const connectedProducible = await this.db
       .query()

@@ -28,7 +28,6 @@ import {
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
-  parseSecuredPropertiesNew,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
@@ -167,14 +166,13 @@ export class FilmService {
       id,
       session
     );
-    const permsOfBaseNode = await this.authorizationService.getPermissionsOfBaseNode(
-      new DbFilm(),
-      session
-    );
-    const securedProps = parseSecuredPropertiesNew(
-      result.propList,
-      this.securedProperties,
-      permsOfBaseNode
+    const securedProps = await this.authorizationService.getPermissionsOfBaseNode(
+      {
+        baseNode: new DbFilm(),
+        sessionOrUserId: session,
+        propList: result.propList,
+        propKeys: this.securedProperties,
+      }
     );
 
     return {

@@ -29,7 +29,6 @@ import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
-  parseSecuredPropertiesNew,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
@@ -144,15 +143,15 @@ export class CeremonyService {
     if (!result) {
       throw new NotFoundException('Could not find ceremony', 'ceremony.id');
     }
-    const permsOfBaseNode = await this.authorizationService.getPermissionsOfBaseNode(
-      new DbCeremony(),
-      session
-    );
     const parsedProps = parsePropList(result.propList);
-    const securedProps = parseSecuredPropertiesNew(
-      parsedProps,
-      this.securedProperties,
-      permsOfBaseNode
+
+    const securedProps = await this.authorizationService.getPermissionsOfBaseNode(
+      {
+        baseNode: new DbCeremony(),
+        sessionOrUserId: session,
+        propList: result.propList,
+        propKeys: this.securedProperties,
+      }
     );
 
     return {

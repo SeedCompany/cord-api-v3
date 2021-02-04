@@ -31,7 +31,6 @@ import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
-  parseSecuredPropertiesNew,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
@@ -56,8 +55,9 @@ import { DbBudgetRecord } from './model/budget-record.model.db';
 @Injectable()
 export class BudgetService {
   private readonly securedProperties = {
-    status: true,
-    universalTemplateFile: true,
+    amount: true,
+    fiscalYear: true,
+    organization: true,
   };
 
   constructor(
@@ -317,18 +317,14 @@ export class BudgetService {
       session
     );
 
-    const permsOfBudget = await this.authorizationService.getPermissionsOfBaseNode(
-      new DbBudget(),
-      session
-    );
     const props = parsePropList(result.propList);
-    const securedProps = parseSecuredPropertiesNew(
-      props,
+    const securedProps = await this.authorizationService.getPermissionsOfBaseNode(
       {
-        status: true,
-        universalTemplateFile: true,
-      },
-      permsOfBudget
+        baseNode: new DbBudget(),
+        sessionOrUserId: session,
+        propList: result.propList,
+        propKeys: this.securedProperties,
+      }
     );
 
     return {
@@ -371,21 +367,14 @@ export class BudgetService {
       );
     }
 
-    const permsOfBudgetRecord = await this.authorizationService.getPermissionsOfBaseNode(
-      new DbBudgetRecord(),
-      session
-    );
-    const props = parsePropList(result.propList);
-    const securedProps = parseSecuredPropertiesNew(
-      props,
+    const securedProps = await this.authorizationService.getPermissionsOfBaseNode(
       {
-        amount: true,
-        fiscalYear: true,
-        organization: true,
-      },
-      permsOfBudgetRecord
+        baseNode: new DbBudget(),
+        sessionOrUserId: session,
+        propList: result.propList,
+        propKeys: this.securedProperties,
+      }
     );
-
     return {
       ...parseBaseNodeProperties(result.node),
       ...securedProps,

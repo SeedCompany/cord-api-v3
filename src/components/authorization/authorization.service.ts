@@ -5,6 +5,10 @@ import { groupBy, mapValues, pickBy, union, without } from 'lodash';
 import { generateId, ServerException, Session } from '../../common';
 import { retry } from '../../common/retry';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
+import {
+  parseSecuredPropertiesNew,
+  PropListDbResult,
+} from '../../core/database/results';
 import { DbBudget } from '../budget/model';
 import { DbBudgetRecord } from '../budget/model/budget-record.model.db';
 import { DbCeremony } from '../ceremony/model';
@@ -40,6 +44,8 @@ import { everyRole } from './roles';
 export interface UserPropertyPermissions {
   [x: string]: { canRead: boolean; canEdit: boolean };
 }
+export type DbProps = Record<string, any>;
+export type PickedKeys = keyof DbProps;
 
 export const permissionDefaults = {
   canRead: false,
@@ -139,20 +145,6 @@ export class AuthorizationService {
     const propList = objGrantList.map((g) => g.properties).flat(1);
     const byProp = groupBy(propList, 'propertyName');
 
-    // console.log("userRoles");
-    // console.log(userRoles);
-
-    // console.log("userRoleList")
-    // console.log(userRoleList)
-
-    // console.log("objGrantList")
-    // console.log(objGrantList)
-
-    // console.log("userRoleListFlat")
-    // console.log(userRoleListFlat)
-
-    // console.log("propList")
-    // console.log(propList)
     // Merge together the results of each property
     const permissions = mapValues(
       byProp,
@@ -172,18 +164,23 @@ export class AuthorizationService {
     return permissions;
   }
 
-  async getPermissionsOfBaseNodeWithUserID(
-    baseNode: DbBaseNode,
-    userId: string
-  ): Promise<UserPropertyPermissions> {
-    return await this.getPerms(baseNode, await this.getUserRoleObjects(userId));
-  }
-
-  async getPermissionsOfBaseNode(
-    baseNode: DbBaseNode,
-    session: Session
-  ): Promise<UserPropertyPermissions> {
-    return await this.getPerms(baseNode, session.roles);
+  async getPermissionsOfBaseNode({
+    baseNode,
+    sessionOrUserId,
+    propList,
+    propKeys,
+  }: {
+    baseNode: DbBaseNode;
+    sessionOrUserId: Session | string;
+    propList: PropListDbResult<DbProps> | DbProps;
+    propKeys: Record<PickedKeys, boolean>;
+  }): Promise<any> {
+    const dbRoles =
+      typeof sessionOrUserId === 'string'
+        ? await this.getUserRoleObjects(sessionOrUserId)
+        : sessionOrUserId.roles;
+    const permsOfBaseNode = await this.getPerms(baseNode, dbRoles);
+    return parseSecuredPropertiesNew(propList, propKeys, permsOfBaseNode);
   }
 
   async createSGsForEveryRoleForAllBaseNodes(session: Session) {

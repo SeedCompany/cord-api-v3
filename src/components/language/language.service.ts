@@ -37,7 +37,6 @@ import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
-  parseSecuredPropertiesNew,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
@@ -341,14 +340,13 @@ export class LanguageService {
     );
 
     const props = parsePropList(result.propList);
-    const permsOfBaseNode = await this.authorizationService.getPermissionsOfBaseNode(
-      new DbLanguage(),
-      session
-    );
-    const securedProps = parseSecuredPropertiesNew(
-      props,
-      this.securedProperties,
-      permsOfBaseNode
+    const securedProps = await this.authorizationService.getPermissionsOfBaseNode(
+      {
+        baseNode: new DbLanguage(),
+        sessionOrUserId: session,
+        propList: result.propList,
+        propKeys: this.securedProperties,
+      }
     );
 
     return {

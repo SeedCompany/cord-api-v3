@@ -16,7 +16,6 @@ import {
   DatabaseService,
   ILogger,
   Logger,
-  matchRequestingUser,
   matchSession,
   OnIndex,
   property,
@@ -284,10 +283,9 @@ export class UserService {
     return result.id;
   }
 
-  async readOne(id: string, session: Session): Promise<User> {
+  async readOne(id: string, sessionOrUserId: Session | string): Promise<User> {
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
       .match([node('node', 'User', { id })])
       .call(matchPropListNew)
       .return('propList, node')
@@ -304,9 +302,12 @@ export class UserService {
 
     let permsOfBaseNode = {};
     // -- let the user explicitly see all properties only if they're reading their own ID
-    // -- TODO: need to find a more... dynamic way of doing this. Just coding like this for
-    //    now to make test pass and this isn't a huge priority at the moment.
-    if (id === session.userId) {
+    // -- TODO: express this within the authorization system. Like an Owner/Creator "meta" role that gets these x permissions.
+    const userId =
+      typeof sessionOrUserId === 'string'
+        ? sessionOrUserId
+        : sessionOrUserId.userId;
+    if (id === userId) {
       permsOfBaseNode = {
         about: { canRead: true, canEdit: true },
         displayFirstName: { canRead: true, canEdit: true },
@@ -326,9 +327,13 @@ export class UserService {
         knownLanguage: { canRead: true, canEdit: true },
       };
     } else {
-      permsOfBaseNode = await this.authorizationService.getPermissionsOfBaseNode(
+      const roles =
+        typeof sessionOrUserId === 'string'
+          ? await this.authorizationService.getUserRoleObjects(sessionOrUserId)
+          : sessionOrUserId.roles;
+      permsOfBaseNode = await this.authorizationService.getPerms(
         new DbUser(),
-        session
+        roles
       );
     }
 
@@ -345,45 +350,7 @@ export class UserService {
         ...securedProps.roles,
         value: rolesValue,
       },
-      canDelete: await this.db.checkDeletePermission(id, session),
-    };
-  }
-
-  async readOneByUserId(id: string, userId: string): Promise<User> {
-    const query = this.db
-      .query()
-      .call(matchRequestingUser, { userId })
-      .match([node('node', 'User', { id })])
-      .call(matchPropListNew)
-      .return('propList, node')
-      .asResult<StandardReadResult<DbPropsOfDto<User>>>();
-
-    const result = await query.first();
-    if (!result) {
-      throw new NotFoundException('Could not find user', 'user.id');
-    }
-
-    const rolesValue = result.propList
-      .filter((prop) => prop.property === 'roles')
-      .map((prop) => prop.value as Role);
-
-    const permsOfBaseNode = await this.authorizationService.getPermissionsOfBaseNodeWithUserID(
-      new DbUser(),
-      userId
-    );
-    const securedProps = parseSecuredPropertiesNew(
-      result.propList,
-      this.securedProperties,
-      permsOfBaseNode
-    );
-    return {
-      ...parseBaseNodeProperties(result.node),
-      ...securedProps,
-      roles: {
-        ...securedProps.roles,
-        value: rolesValue,
-      },
-      canDelete: await this.db.checkDeletePermission(id, { userId }),
+      canDelete: await this.db.checkDeletePermission(id, sessionOrUserId),
     };
   }
 

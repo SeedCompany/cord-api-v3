@@ -31,7 +31,6 @@ import {
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
-  parseSecuredPropertiesNew,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
@@ -309,15 +308,13 @@ export class PartnershipService {
       session
     );
 
-    const permsOfBaseNode = await this.authorizationService.getPermissionsOfBaseNode(
-      new DbPartnership(),
-      session
-    );
-
-    const securedProps = parseSecuredPropertiesNew(
-      result.propList,
-      this.securedProperties,
-      permsOfBaseNode
+    const securedProps = await this.authorizationService.getPermissionsOfBaseNode(
+      {
+        baseNode: new DbPartnership(),
+        sessionOrUserId: session,
+        propList: result.propList,
+        propKeys: this.securedProperties,
+      }
     );
     const canReadMouStart =
       readProject.mouStart.canRead && securedProps.mouStartOverride.canRead;

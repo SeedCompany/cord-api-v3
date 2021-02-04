@@ -58,7 +58,6 @@ export class OrganizationResolver {
     @AnonSession() session: Session,
     @IdArg() id: string
   ): Promise<Organization> {
-    //console.log( await this.orgs.readOne(id, session));
     return await this.orgs.readOne(id, session);
   }
 

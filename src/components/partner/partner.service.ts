@@ -30,7 +30,6 @@ import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
-  parseSecuredPropertiesNew,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
@@ -276,15 +275,12 @@ export class PartnerService {
     }
 
     const props = parsePropList(result.propList);
-    const permsOfBaseNode = await this.authorizationService.getPermissionsOfBaseNode(
-      new DbPartner(),
-      session
-    );
-    const secured = parseSecuredPropertiesNew(
-      result.propList,
-      this.securedProperties,
-      permsOfBaseNode
-    );
+    const secured = await this.authorizationService.getPermissionsOfBaseNode({
+      baseNode: new DbPartner(),
+      sessionOrUserId: session,
+      propList: result.propList,
+      propKeys: this.securedProperties,
+    });
 
     return {
       ...parseBaseNodeProperties(result.node),

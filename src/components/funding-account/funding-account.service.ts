@@ -28,7 +28,6 @@ import {
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
-  parseSecuredPropertiesNew,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
@@ -168,16 +167,12 @@ export class FundingAccountService {
       throw new NotFoundException('FundingAccount.id', 'id');
     }
 
-    const permsOfBaseNode = await this.authorizationService.getPermissionsOfBaseNode(
-      new DbFundingAccount(),
-      session
-    );
-    const secured = parseSecuredPropertiesNew(
-      result.propList,
-      this.securedProperties,
-      permsOfBaseNode
-    );
-
+    const secured = await this.authorizationService.getPermissionsOfBaseNode({
+      baseNode: new DbFundingAccount(),
+      sessionOrUserId: session,
+      propList: result.propList,
+      propKeys: this.securedProperties,
+    });
     return {
       ...parseBaseNodeProperties(result.node),
       ...secured,

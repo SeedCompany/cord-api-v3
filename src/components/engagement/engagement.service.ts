@@ -33,7 +33,6 @@ import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
-  parseSecuredPropertiesNew,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
@@ -707,14 +706,13 @@ export class EngagementService {
     } else {
       baseNode = new DbEngagement();
     }
-    const permsOfBaseNode = await this.authorizationService.getPermissionsOfBaseNode(
-      baseNode,
-      session
-    );
-    const securedProperties = parseSecuredPropertiesNew(
-      props,
-      this.securedProperties,
-      permsOfBaseNode
+    const securedProperties = await this.authorizationService.getPermissionsOfBaseNode(
+      {
+        baseNode: baseNode,
+        sessionOrUserId: session,
+        propList: result.propList,
+        propKeys: this.securedProperties,
+      }
     );
 
     const project = await this.projectService.readOne(

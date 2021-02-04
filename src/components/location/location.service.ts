@@ -29,7 +29,6 @@ import {
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
-  parseSecuredPropertiesNew,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
@@ -224,15 +223,12 @@ export class LocationService {
       throw new NotFoundException('Could not find location', 'location.id');
     }
 
-    const permsOfBaseNode = await this.authorizationService.getPermissionsOfBaseNode(
-      new DbLocation(),
-      session
-    );
-    const secured = parseSecuredPropertiesNew(
-      result.propList,
-      this.securedProperties,
-      permsOfBaseNode
-    );
+    const secured = await this.authorizationService.getPermissionsOfBaseNode({
+      baseNode: new DbLocation(),
+      sessionOrUserId: session,
+      propList: result.propList,
+      propKeys: this.securedProperties,
+    });
 
     return {
       ...parseBaseNodeProperties(result.node),

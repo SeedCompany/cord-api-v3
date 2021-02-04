@@ -34,7 +34,6 @@ import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
-  parseSecuredPropertiesNew,
   runListQuery,
   StandardReadResult,
 } from '../../../core/database/results';
@@ -206,14 +205,13 @@ export class ProjectMemberService {
     }
 
     const props = parsePropList(result.propList);
-    const permsOfBaseNode = await this.authorizationService.getPermissionsOfBaseNode(
-      new DbProjectMember(),
-      session
-    );
-    const securedProps = parseSecuredPropertiesNew(
-      props,
-      this.securedProperties,
-      permsOfBaseNode
+    const securedProps = await this.authorizationService.getPermissionsOfBaseNode(
+      {
+        baseNode: new DbProjectMember(),
+        sessionOrUserId: session,
+        propList: result.propList,
+        propKeys: this.securedProperties,
+      }
     );
 
     return {

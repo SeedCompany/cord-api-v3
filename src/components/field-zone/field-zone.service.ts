@@ -29,7 +29,6 @@ import {
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
-  parseSecuredPropertiesNew,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
@@ -173,16 +172,12 @@ export class FieldZoneService {
       throw new NotFoundException('Could not find field zone', 'fieldZone.id');
     }
 
-    const permsOfBaseNode = await this.authorizationService.getPermissionsOfBaseNode(
-      new DbFieldZone(),
-      session
-    );
-
-    const secured = parseSecuredPropertiesNew(
-      result.propList,
-      this.securedProperties,
-      permsOfBaseNode
-    );
+    const secured = await this.authorizationService.getPermissionsOfBaseNode({
+      baseNode: new DbFieldZone(),
+      sessionOrUserId: session,
+      propList: result.propList,
+      propKeys: this.securedProperties,
+    });
 
     return {
       ...parseBaseNodeProperties(result.node),
