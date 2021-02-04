@@ -38,7 +38,7 @@ import {
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { FileService } from '../file';
-import { PartnerService, PartnerType } from '../partner';
+import { Partner, PartnerService, PartnerType } from '../partner';
 import { ProjectService } from '../project';
 import {
   CreatePartnership,
@@ -92,7 +92,12 @@ export class PartnershipService {
     const createdAt = DateTime.local();
 
     try {
-      await this.partnerService.readOne(partnerId, session);
+      const partner = await this.partnerService.readOne(partnerId, session);
+      this.verifyFinancialReportingType(
+        input.financialReportingType,
+        input.types ?? [],
+        partner
+      );
     } catch (e) {
       if (e instanceof NotFoundException) {
         throw e.withField('partnership.partnerId');
@@ -115,18 +120,6 @@ export class PartnershipService {
         'Partnership for this project and partner already exists'
       );
     }
-
-    this.verifyFinancialReportingType(
-      input.financialReportingType,
-      input.types
-    );
-
-    // financialReportingType should be subset of its Partner's financialReportingTypes
-    const partner = await this.partnerService.readOne(partnerId, session);
-    this.assertFinancialReportingType(
-      input.financialReportingType,
-      partner.financialReportingTypes.value
-    );
 
     const partnershipId = await generateId();
     const mouId = await generateId();
@@ -365,32 +358,27 @@ export class PartnershipService {
     const object = await this.readOne(input.id, session);
     let changes = input;
 
-    // financialReportingType should be subset of its Partner's financialReportingTypes
     const partner = await this.partnerService.readOne(
       object.partner.value!,
       session
     );
-    this.assertFinancialReportingType(
-      input.financialReportingType,
-      partner.financialReportingTypes.value
-    );
-
-    if (
-      !this.validateFinancialReportingType(
+    try {
+      this.verifyFinancialReportingType(
         input.financialReportingType ?? object.financialReportingType.value,
-        input.types ?? object.types.value
-      )
-    ) {
-      if (input.financialReportingType && input.types) {
-        throw new InputException(
-          'Funding type can only be applied to managing partners',
-          'partnership.financialReportingType'
-        );
+        input.types ?? object.types.value,
+        partner
+      );
+    } catch (e) {
+      if (input.types && !input.financialReportingType) {
+        // If input is removing Managing type and FRT is omitted, help caller
+        // out and just remove FRT as well, instead of throwing error.
+        changes = {
+          ...changes,
+          financialReportingType: null,
+        };
+      } else {
+        throw e;
       }
-      changes = {
-        ...changes,
-        financialReportingType: null,
-      };
     }
 
     const { mou, agreement, ...rest } = changes;
@@ -565,35 +553,23 @@ export class PartnershipService {
 
   protected verifyFinancialReportingType(
     financialReportingType: FinancialReportingType | null | undefined,
-    types: PartnerType[] | undefined
+    types: PartnerType[],
+    partner: Partner
   ) {
-    if (!this.validateFinancialReportingType(financialReportingType, types)) {
+    if (!financialReportingType) {
+      return;
+    }
+    if (
+      !partner.financialReportingTypes.value?.includes(financialReportingType)
+    ) {
       throw new InputException(
-        'Funding type can only be applied to managing partners',
+        `Partner does not have this financial reporting type available`,
         'partnership.financialReportingType'
       );
     }
-  }
-
-  protected validateFinancialReportingType(
-    financialReportingType: FinancialReportingType | null | undefined,
-    types: PartnerType[] | undefined
-  ) {
-    return financialReportingType && !types?.includes(PartnerType.Managing)
-      ? false
-      : true;
-  }
-
-  protected assertFinancialReportingType(
-    type: FinancialReportingType | null | undefined,
-    availableTypes: FinancialReportingType[] | undefined
-  ) {
-    if (!type) {
-      return;
-    }
-    if (!availableTypes?.includes(type)) {
+    if (!types.includes(PartnerType.Managing)) {
       throw new InputException(
-        `FinancialReportingType ${type} cannot be assigned to this partnership`,
+        'Financial reporting type can only be applied to managing partners',
         'partnership.financialReportingType'
       );
     }
