@@ -2,7 +2,12 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { first, intersection } from 'lodash';
-import { ServerException, Session, UnauthorizedException } from '../../common';
+import {
+  MaybeAsync,
+  ServerException,
+  Session,
+  UnauthorizedException,
+} from '../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import { Role } from '../authorization';
 import { User, UserService } from '../user';
@@ -14,7 +19,6 @@ import {
 } from './dto';
 import { ProjectService } from './project.service';
 
-type MaybeAsync<T> = T | Promise<T>;
 type EmailAddress = string;
 
 interface StepRule {

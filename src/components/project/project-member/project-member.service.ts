@@ -1,13 +1,17 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
+import { difference } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
   generateId,
+  InputException,
+  MaybeAsync,
   NotFoundException,
   ServerException,
   Session,
+  UnauthorizedException,
 } from '../../../common';
 import {
   ConfigService,
@@ -36,12 +40,13 @@ import {
   StandardReadResult,
 } from '../../../core/database/results';
 import { AuthorizationService } from '../../authorization/authorization.service';
-import { UserService } from '../../user';
+import { User, UserService } from '../../user';
 import {
   CreateProjectMember,
   ProjectMember,
   ProjectMemberListInput,
   ProjectMemberListOutput,
+  Role,
   UpdateProjectMember,
 } from './dto';
 import { DbProjectMember } from './model';
@@ -107,8 +112,9 @@ export class ProjectMemberService {
       );
     }
 
-    // const user = await this.userService.readOne(userId, session);
-    // this.assertValidRoles(input.roles, user.roles.value);
+    await this.assertValidRoles(input.roles, () =>
+      this.userService.readOne(userId, session)
+    );
 
     try {
       const createProjectMember = this.db
@@ -230,7 +236,15 @@ export class ProjectMemberService {
   ): Promise<ProjectMember> {
     const object = await this.readOne(input.id, session);
 
-    // this.assertValidRoles(input.roles, object.user.value?.roles.value);
+    await this.assertValidRoles(input.roles, () => {
+      const user = object.user.value;
+      if (!user) {
+        throw new UnauthorizedException(
+          'Cannot read user to verify roles available'
+        );
+      }
+      return user;
+    });
 
     await this.db.sgUpdateProperties({
       session,
@@ -246,22 +260,24 @@ export class ProjectMemberService {
     return await this.readOne(input.id, session);
   }
 
-  // private assertValidRoles(
-  //   roles: Role[] | undefined,
-  //   availableRoles: Role[] | undefined
-  // ) {
-  //   if (!roles || roles.length === 0) {
-  //     return;
-  //   }
-  //   const forbiddenRoles = difference(roles, availableRoles ?? []);
-  //   if (forbiddenRoles.length) {
-  //     const forbiddenRolesStr = forbiddenRoles.join(', ');
-  //     throw new InputException(
-  //       `Role(s) ${forbiddenRolesStr} cannot be assigned to this project member`,
-  //       'input.roles'
-  //     );
-  //   }
-  // }
+  private async assertValidRoles(
+    roles: Role[] | undefined,
+    forUser: () => MaybeAsync<User>
+  ) {
+    if (!roles || roles.length === 0 || this.config.migration) {
+      return;
+    }
+    const user = await forUser();
+    const availableRoles = user.roles.value ?? [];
+    const forbiddenRoles = difference(roles, availableRoles);
+    if (forbiddenRoles.length) {
+      const forbiddenRolesStr = forbiddenRoles.join(', ');
+      throw new InputException(
+        `Role(s) ${forbiddenRolesStr} cannot be assigned to this project member`,
+        'input.roles'
+      );
+    }
+  }
 
   async delete(id: string, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
