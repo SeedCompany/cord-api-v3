@@ -29,6 +29,9 @@ export class ConfigService implements EmailOptionsFactory {
   /** Is this a jest process? */
   jest = Boolean(this.env.string('JEST_WORKER_ID').optional());
 
+  // Should app be configured for migration?
+  migration = this.env.boolean('MIGRATION').optional(false);
+
   jwtKey = this.env.string('JWT_AUTH_KEY').optional('cord-field');
 
   createEmailOptions(): EmailModuleOptions {
