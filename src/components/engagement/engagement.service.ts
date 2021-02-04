@@ -145,12 +145,7 @@ export class EngagementService {
     }
     await this.verifyProjectStatus(projectId, session);
 
-    if (input.status && input.status !== EngagementStatus.InDevelopment) {
-      throw new InputException(
-        'The Engagement status should be in development',
-        'engagement.status'
-      );
-    }
+    this.verifyCreationStatus(input.status);
 
     this.logger.debug('Mutation create language engagement ', {
       input,
@@ -356,12 +351,7 @@ export class EngagementService {
 
     await this.verifyProjectStatus(projectId, session);
 
-    if (input.status && input.status !== EngagementStatus.InDevelopment) {
-      throw new InputException(
-        'The Engagement status should be in development',
-        'engagement.status'
-      );
-    }
+    this.verifyCreationStatus(input.status);
 
     this.logger.debug('Mutation create internship engagement ', {
       input,
@@ -592,6 +582,19 @@ export class EngagementService {
     await this.eventBus.publish(engagementCreatedEvent);
 
     return engagementCreatedEvent.engagement as InternshipEngagement;
+  }
+
+  private verifyCreationStatus(status?: EngagementStatus) {
+    if (
+      status &&
+      status !== EngagementStatus.InDevelopment &&
+      !this.config.migration
+    ) {
+      throw new InputException(
+        'The Engagement status should be in development',
+        'engagement.status'
+      );
+    }
   }
 
   // READ ///////////////////////////////////////////////////////////
