@@ -21,7 +21,7 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
-  matchPropList,
+  matchPropListNew,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -134,7 +134,7 @@ export class CeremonyService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Ceremony', { id })])
-      .call(matchPropList)
+      .call(matchPropListNew)
       .return('node, propList')
       .asResult<StandardReadResult<DbPropsOfDto<Ceremony>>>();
 
