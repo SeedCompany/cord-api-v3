@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { first, intersection } from 'lodash';
 import { ServerException, Session, UnauthorizedException } from '../../common';
-import { DatabaseService, ILogger, Logger } from '../../core';
+import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import { Role } from '../authorization';
 import { ProjectStep } from '../project';
 import {
@@ -38,6 +38,7 @@ interface StatusRule {
 export class EngagementRules {
   constructor(
     private readonly db: DatabaseService,
+    private readonly config: ConfigService,
     // eslint-disable-next-line @seedcompany/no-unused-vars
     @Logger('engagement:rules') private readonly logger: ILogger
   ) {}
@@ -389,6 +390,10 @@ export class EngagementRules {
     session: Session,
     nextStatus: EngagementStatus
   ) {
+    if (this.config.migration) {
+      return;
+    }
+
     const transitions = await this.getAvailableTransitions(
       engagementId,
       session
