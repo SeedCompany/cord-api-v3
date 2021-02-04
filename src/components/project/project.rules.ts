@@ -760,6 +760,10 @@ export class ProjectRules {
     session: Session,
     nextStep: ProjectStep
   ) {
+    if (this.configService.migration) {
+      return;
+    }
+
     const transitions = await this.getAvailableTransitions(projectId, session);
 
     const validNextStep = transitions.some(
