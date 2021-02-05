@@ -138,24 +138,14 @@ export class EngagementService {
       );
     }
 
-    if (await this.getLEByProjectAndLanguage(projectId, languageId)) {
-      throw new DuplicateException(
-        'engagement.languageId',
-        'Engagement for this project and language already exists'
-      );
-    }
+    await this.verifyUniqueness(projectId, languageId, 'language');
 
     if (input.firstScripture) {
       await this.verifyFirstScripture({ languageId });
     }
     await this.verifyProjectStatus(projectId, session);
 
-    if (input.status && input.status !== EngagementStatus.InDevelopment) {
-      throw new InputException(
-        'The Engagement status should be in development',
-        'engagement.status'
-      );
-    }
+    this.verifyCreationStatus(input.status);
 
     this.logger.debug('Mutation create language engagement ', {
       input,
@@ -169,7 +159,7 @@ export class EngagementService {
     const createdAt = DateTime.local();
     const pnpId = await generateId();
 
-    const createLE = this.db.query().match(matchSession(session));
+    const createLE = this.db.query();
     if (projectId) {
       createLE.match([node('project', 'Project', { id: projectId })]);
     }
@@ -357,20 +347,11 @@ export class EngagementService {
       );
     }
 
-    if (await this.getIEByProjectAndIntern(projectId, internId)) {
-      throw new DuplicateException(
-        'engagement.internId',
-        'Engagement for this project and person already exists'
-      );
-    }
+    await this.verifyUniqueness(projectId, internId, 'internship');
+
     await this.verifyProjectStatus(projectId, session);
 
-    if (input.status && input.status !== EngagementStatus.InDevelopment) {
-      throw new InputException(
-        'The Engagement status should be in development',
-        'engagement.status'
-      );
-    }
+    this.verifyCreationStatus(input.status);
 
     this.logger.debug('Mutation create internship engagement ', {
       input,
@@ -383,7 +364,7 @@ export class EngagementService {
     const createdAt = DateTime.local();
     const growthPlanId = await generateId();
 
-    const createIE = this.db.query().match(matchSession(session));
+    const createIE = this.db.query();
     if (projectId) {
       createIE.match([node('project', 'Project', { id: projectId })]);
     }
@@ -601,6 +582,19 @@ export class EngagementService {
     await this.eventBus.publish(engagementCreatedEvent);
 
     return engagementCreatedEvent.engagement as InternshipEngagement;
+  }
+
+  private verifyCreationStatus(status?: EngagementStatus) {
+    if (
+      status &&
+      status !== EngagementStatus.InDevelopment &&
+      !this.config.migration
+    ) {
+      throw new InputException(
+        'The Engagement status should be in development',
+        'engagement.status'
+      );
+    }
   }
 
   // READ ///////////////////////////////////////////////////////////
@@ -1300,46 +1294,32 @@ export class EngagementService {
     return results?.type as ProjectType | undefined;
   }
 
-  protected async getIEByProjectAndIntern(
+  protected async verifyUniqueness(
     projectId: string,
-    internId: string
-  ): Promise<boolean> {
+    otherId: string,
+    type: 'language' | 'internship'
+  ): Promise<void> {
+    const property = type === 'language' ? type : 'intern';
     const result = await this.db
       .query()
-      .match([node('intern', 'User', { id: internId })])
-      .match([node('project', 'Project', { id: projectId })])
       .match([
-        node('project'),
+        node('project', 'Project', { id: projectId }),
         relation('out', '', 'engagement'),
-        node('internshipEngagement'),
-        relation('out', '', 'intern'),
-        node('intern'),
+        node('engagement'),
+        relation('out', '', property),
+        node('other', type === 'language' ? 'Language' : 'User', {
+          id: otherId,
+        }),
       ])
-      .return('internshipEngagement.id as id')
+      .return('engagement.id as id')
       .first();
-
-    return result ? true : false;
-  }
-
-  protected async getLEByProjectAndLanguage(
-    projectId: string,
-    languageId: string
-  ): Promise<boolean> {
-    const result = await this.db
-      .query()
-      .match([node('language', 'Language', { id: languageId })])
-      .match([node('project', 'Project', { id: projectId })])
-      .match([
-        node('project'),
-        relation('out', '', 'engagement'),
-        node('internshipEngagement'),
-        relation('out', '', 'language'),
-        node('language'),
-      ])
-      .return('internshipEngagement.id as id')
-      .first();
-
-    return result ? true : false;
+    if (result) {
+      const label = type === 'language' ? type : 'person';
+      throw new DuplicateException(
+        `engagement.${property}Id`,
+        `Engagement for this project and ${label} already exists`
+      );
+    }
   }
 
   /**
@@ -1420,6 +1400,10 @@ export class EngagementService {
    * [BUSINESS RULE] Only Projects with a Status of 'In Development' can have Engagements created or deleted.
    */
   protected async verifyProjectStatus(projectId: string, session: Session) {
+    if (this.config.migration) {
+      return;
+    }
+
     let project;
     try {
       project = await this.projectService.readOne(projectId, session);

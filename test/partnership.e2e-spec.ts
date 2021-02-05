@@ -419,7 +419,7 @@ describe('Partnership e2e', () => {
         financialReportingType: FinancialReportingType.Funded,
       })
     ).rejects.toThrowError(
-      `FinancialReportingType ${FinancialReportingType.Funded} cannot be assigned to this partnership`
+      `Partner does not have this financial reporting type available`
     );
   });
 
@@ -456,7 +456,7 @@ describe('Partnership e2e', () => {
         }
       )
     ).rejects.toThrowError(
-      `FinancialReportingType ${FinancialReportingType.Funded} cannot be assigned to this partnership`
+      `Partner does not have this financial reporting type available`
     );
   });
 

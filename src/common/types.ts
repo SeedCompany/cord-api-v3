@@ -7,6 +7,8 @@ import {
 } from '@nestjs/graphql';
 import { ClassDecoratorFactory } from '@nestjs/graphql/dist/interfaces/class-decorator-factory.interface';
 
+export type MaybeAsync<T> = T | Promise<T>;
+
 /**
  * Used for generic GraphQL types
  */

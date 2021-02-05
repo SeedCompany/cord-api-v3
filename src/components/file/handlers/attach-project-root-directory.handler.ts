@@ -1,6 +1,11 @@
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { DatabaseService, EventsHandler, IEventHandler } from '../../../core';
+import {
+  ConfigService,
+  DatabaseService,
+  EventsHandler,
+  IEventHandler,
+} from '../../../core';
 import { AuthorizationService } from '../../authorization/authorization.service';
 import { ProjectCreatedEvent } from '../../project/events';
 import { FileService } from '../file.service';
@@ -12,6 +17,7 @@ export class AttachProjectRootDirectoryHandler
   constructor(
     private readonly files: FileService,
     private readonly db: DatabaseService,
+    private readonly config: ConfigService,
     private readonly authorizationService: AuthorizationService
   ) {}
 
@@ -47,6 +53,9 @@ export class AttachProjectRootDirectoryHandler
       session.userId
     );
 
+    if (this.config.migration) {
+      return; // skip default directories for migration
+    }
     const folders = [
       'Approval Documents',
       'Financial Reports',

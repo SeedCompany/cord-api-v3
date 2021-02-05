@@ -372,14 +372,17 @@ export class ProjectService {
         .raw('RETURN roles.value as roles')
         .first();
 
-      await this.projectMembers.create(
-        {
-          userId: session.userId,
-          projectId: result.id,
-          roles: [roles?.roles],
-        },
-        session
-      );
+      if (!this.config.migration) {
+        // Add creator to the project team if not in migration
+        await this.projectMembers.create(
+          {
+            userId: session.userId,
+            projectId: result.id,
+            roles: [roles?.roles],
+          },
+          session
+        );
+      }
 
       const dbProject = new DbProject();
       await this.authorizationService.processNewBaseNode(
