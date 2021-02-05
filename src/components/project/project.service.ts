@@ -1061,40 +1061,17 @@ export class ProjectService {
       pendingBudget = budgets.items[0];
     }
 
-    const budgetPerms = await this.db
-      .query()
-      .optionalMatch([
-        node('user', 'User', { id: session.userId }),
-        relation('in', 'memberOfReadSecurityGroup', 'member'),
-        node('readSecurityGroup', 'SecurityGroup'),
-        relation('out', 'sgReadPerms', 'permission'),
-        node('canRead', 'Permission', {
-          property: 'budget',
-          read: true,
-        }),
-        relation('out', 'readPermsOfBaseNode', 'baseNode'),
-        node('project', 'Project', { id: project.id }),
-      ])
-      .optionalMatch([
-        node('user'),
-        relation('in', 'memberOfEditSecurityGroup', 'member'),
-        node('editSecurityGroup', 'SecurityGroup'),
-        relation('out', 'sgEditPerms', 'permission'),
-        node('canEdit', 'Permission', {
-          property: 'budget',
-          edit: true,
-        }),
-        relation('out', 'editPermsOfBaseNode', 'baseNode'),
-        node('project'),
-      ])
-      .raw('RETURN canRead.read as canRead, canEdit.edit as canEdit')
-      .first();
-
     const budgetToReturn = current || pendingBudget;
+
+    const permsOfProject = await this.authorizationService.getPerms(
+      new DbProject(),
+      await this.authorizationService.getUserRoleObjects(session.userId)
+    );
+
     return {
       value: budgetToReturn,
-      canRead: (budgetToReturn && budgetPerms?.canRead) || false,
-      canEdit: budgetPerms?.canEdit || false,
+      canRead: permsOfProject.budget.canRead,
+      canEdit: permsOfProject.budget.canEdit,
     };
   }
 

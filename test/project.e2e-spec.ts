@@ -1078,7 +1078,11 @@ describe('Project e2e', () => {
    * After creating a partnership, should be able to query project and get organization
    */
   it('after creating a partnership, should be able to query project and get organization', async () => {
-    await registerUserWithPower(app, [Powers.CreateOrganization]);
+    await registerUserWithPower(
+      app,
+      [Powers.CreateOrganization, Powers.CreatePartnership],
+      { roles: [Role.ProjectManager] }
+    );
     const org = await createOrganization(app);
     const project = await createProject(app, {
       name: faker.random.uuid() + ' project',

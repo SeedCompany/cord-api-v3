@@ -54,9 +54,19 @@ import { DbBudgetRecord } from './model/budget-record.model.db';
 
 @Injectable()
 export class BudgetService {
-  private readonly securedProperties = {
+  private readonly securedPropertiesBudget = {
+    budget: true,
+    records: true,
+    status: true,
+    universalTemplateFile: true,
+    universalTemplateFileNode: true,
+  };
+
+  private readonly securedPropertiesBudgetRecord = {
     amount: true,
     fiscalYear: true,
+    partnership: true,
+    record: true,
     organization: true,
   };
 
@@ -323,7 +333,7 @@ export class BudgetService {
         baseNode: new DbBudget(),
         sessionOrUserId: session,
         propList: result.propList,
-        propKeys: this.securedProperties,
+        propKeys: this.securedPropertiesBudget,
       }
     );
 
@@ -369,10 +379,10 @@ export class BudgetService {
 
     const securedProps = await this.authorizationService.getPermissionsOfBaseNode(
       {
-        baseNode: new DbBudget(),
+        baseNode: new DbBudgetRecord(),
         sessionOrUserId: session,
         propList: result.propList,
-        propKeys: this.securedProperties,
+        propKeys: this.securedPropertiesBudgetRecord,
       }
     );
     return {
@@ -550,7 +560,7 @@ export class BudgetService {
       .call(
         calculateTotalAndPaginateList,
         listInput,
-        this.securedProperties,
+        this.securedPropertiesBudget,
         defaultSorter
       );
 
@@ -582,7 +592,7 @@ export class BudgetService {
       .call(
         calculateTotalAndPaginateList,
         input,
-        this.securedProperties,
+        this.securedPropertiesBudgetRecord,
         defaultSorter
       );
 
