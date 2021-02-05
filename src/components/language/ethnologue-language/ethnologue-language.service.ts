@@ -54,28 +54,24 @@ export class EthnologueLanguageService {
         value: input.code,
         isPublic: false,
         isOrgPublic: false,
-        label: 'Code',
       },
       {
         key: 'provisionalCode',
         value: input.provisionalCode,
         isPublic: false,
         isOrgPublic: false,
-        label: 'ProvisionalCode',
       },
       {
         key: 'name',
         value: input.name,
         isPublic: false,
         isOrgPublic: false,
-        label: 'Name',
       },
       {
         key: 'population',
         value: input.population,
         isPublic: false,
         isOrgPublic: false,
-        label: 'Population',
       },
     ];
 
