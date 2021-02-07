@@ -46,10 +46,10 @@ export const matchPropList = (query: Query, ...withOther: Term[]) =>
       ...withOther,
     ]);
 
-export const matchPropListNew = (query: Query) =>
+export const matchPropListNew = (query: Query, nodeName = 'node') =>
   query
     .match([
-      node('node'),
+      node(nodeName),
       relation('out', 'r', { active: true }),
       node('props', 'Property'),
     ])
@@ -61,5 +61,5 @@ export const matchPropListNew = (query: Query) =>
         }),
         'propList'
       ),
-      'node',
+      nodeName,
     ]);
