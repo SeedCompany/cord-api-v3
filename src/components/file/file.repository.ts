@@ -1,12 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import {
-  contains,
-  hasLabel,
-  node,
-  Node,
-  Query,
-  relation,
-} from 'cypher-query-builder';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { contains, hasLabel, node, relation } from 'cypher-query-builder';
 import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
 import { AnyConditions } from 'cypher-query-builder/dist/typings/clauses/where-utils';
 import { isEmpty } from 'lodash';
@@ -28,15 +21,29 @@ import {
   matchSession,
   Property,
 } from '../../core';
-import { collect, count, mapping } from '../../core/database/query';
-import { hasMore } from '../../core/database/results';
+import {
+  collect,
+  count,
+  mapping,
+  matchPropListNew,
+} from '../../core/database/query';
+import {
+  DbPropsOfDto,
+  hasMore,
+  parseBaseNodeProperties,
+  StandardReadResult,
+} from '../../core/database/results';
+import { AuthorizationService } from '../authorization/authorization.service';
 import { BaseNode, FileListInput, FileNodeType, FileVersion } from './dto';
+import { DbFileVersion } from './model/file-version.model.db';
 
 @Injectable()
 export class FileRepository {
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
+    @Inject(forwardRef(() => AuthorizationService))
+    private readonly authorizationService: AuthorizationService,
     @Logger('file:repository') private readonly logger: ILogger
   ) {}
 
@@ -187,64 +194,76 @@ export class FileRepository {
   }
 
   async getVersionDetails(id: string, session: Session): Promise<FileVersion> {
-    const matchLatestVersionProp = (q: Query, prop: string, variable = prop) =>
-      q
-        .with('*')
-        .optionalMatch([
-          node('requestingUser'),
-          relation('in', `memberOfSecurityGroupFor${prop}`, 'member'),
-          node(`securityGroupFor${prop}`, 'SecurityGroup'),
-          relation('out', `sgPermsFor${prop}`, 'permission'),
-          node('perms', 'Permission'),
-          relation('out', `permsOfBaseNodeFor${prop}`, 'baseNode'),
-          node('fv'),
-          relation('out', '', prop, { active: true }),
-          node(variable, 'Property'),
-        ]);
-    const matchFileVersion = node('fv', 'FileVersion', { id });
-    const result = await this.db
+    const query = this.db
       .query()
+      .call(matchRequestingUser, session)
+      .match([node('node', 'FileNode', { id })])
+      .call(matchPropListNew, 'node')
       .match([
-        matchSession(session),
-        [matchFileVersion],
-        [
-          matchFileVersion,
-          relation('out', '', 'name', { active: true }),
-          node('name', 'Property'),
-        ],
-        [
-          matchFileVersion,
-          relation('out', '', 'createdBy', { active: true }),
-          node('createdBy'),
-        ],
+        node('fv', 'FileVersion', { id }),
+        relation('out', '', 'createdBy', { active: true }),
+        node('createdBy'),
       ])
-      .call(matchLatestVersionProp, 'size')
-      .call(matchLatestVersionProp, 'mimeType')
+      .match([
+        node('fv', 'FileVersion'),
+        relation('out', '', 'parent', { active: true }),
+        node('parent'),
+      ])
       .return([
-        'fv',
-        {
-          name: [{ value: 'name' }],
-          size: [{ value: 'size' }],
-          mimeType: [{ value: 'mimeType' }],
-          createdBy: [{ id: 'createdById' }],
-        },
+        'propList, node',
+        { createdBy: [{ id: 'createdById' }], parent: [{ id: 'parent' }] },
       ])
-      .first();
+      .asResult<
+        StandardReadResult<DbPropsOfDto<FileVersion>> & {
+          createdById: string;
+          parent: string;
+        }
+      >();
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException(
+        'Could not find file version',
+        'fileversion.id'
+      );
+    }
     if (!result) {
       throw new NotFoundException();
     }
 
-    const fv = result.fv as Node<{ id: string; createdAt: DateTime }>;
+    const securedProperties = {
+      category: true,
+      createdBy: true,
+      mimeType: true,
+      name: true,
+      parent: true,
+      size: true,
+    };
+
+    const completePropList = [
+      ...result.propList,
+      { property: 'createdBy', value: result.createdById },
+      { property: 'parent', value: result.parent },
+    ];
+
+    const secured = await this.authorizationService.getPermissionsOfBaseNode({
+      baseNode: new DbFileVersion(),
+      sessionOrUserId: session,
+      propList: completePropList,
+      propKeys: securedProperties,
+    });
 
     return {
-      id: fv.properties.id,
-      type: FileNodeType.FileVersion,
-      name: result.name,
-      size: result.size as number,
-      mimeType: result.mimeType as string,
-      createdAt: fv.properties.createdAt,
-      createdById: result.createdById as string,
-      canDelete: true, // TODO
+      ...parseBaseNodeProperties(result.node),
+      ...{
+        category: secured.category.canRead ? secured.category.value : null,
+        createdById: secured.createdBy.canRead ? secured.createdBy.value : null,
+        mimeType: secured.mimeType.canRead ? secured.mimeType.value : null,
+        name: secured.name.canRead ? secured.name.value : null,
+        parent: secured.parent.canRead ? secured.parent.value : null,
+        size: secured.size.canRead ? secured.size.value : null,
+        type: FileNodeType.FileVersion,
+      },
+      canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 
