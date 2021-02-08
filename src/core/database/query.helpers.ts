@@ -23,6 +23,54 @@ export interface AllNodeProperties {
 export const determineSortValue = (value: unknown) =>
   typeof value === 'string' ? deburr(value) : value;
 
+// just like createBaseNode, but without the security Group creations.
+// ... being used for performance refactor
+export function createBaseNodeNew(
+  query: Query,
+  id: string,
+  label: string | string[],
+  props: Property[],
+  baseNodeProps?: { owningOrgId?: string | undefined; type?: string }
+) {
+  const createdAt = DateTime.local();
+
+  if (typeof label === 'string') {
+    query.create([
+      node('node', [label, 'BaseNode'], {
+        createdAt,
+        id,
+        ...baseNodeProps,
+      }),
+    ]);
+  } else {
+    query.create([
+      node('node', [...label, 'BaseNode'], {
+        createdAt,
+        id,
+        ...baseNodeProps,
+      }),
+    ]);
+  }
+
+  for (const prop of props) {
+    const labels = ['Property'];
+    if (prop.label) {
+      labels.push(prop.label);
+    }
+    const nodeProps = {
+      createdAt,
+      value: prop.value,
+      sortValue: determineSortValue(prop.value),
+    };
+
+    query.create([
+      node('node'),
+      relation('out', '', prop.key, { active: true, createdAt }),
+      node('', labels, nodeProps),
+    ]);
+  }
+}
+
 // assumes 'requestingUser', and 'publicSG' cypher identifiers have been matched
 // add baseNodeProps and editableProps
 export function createBaseNode(
