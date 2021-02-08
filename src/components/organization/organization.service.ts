@@ -25,7 +25,7 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
-  matchPropListNew,
+  matchPropList,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -196,7 +196,7 @@ export class OrganizationService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Organization', { id: orgId })])
-      .call(matchPropListNew)
+      .call(matchPropList)
       .return('propList, node')
       .asResult<StandardReadResult<DbPropsOfDto<Organization>>>();
     const result = await query.first();

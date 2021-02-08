@@ -23,7 +23,7 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
-  matchPropListNew,
+  matchPropList,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -307,7 +307,7 @@ export class BudgetService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Budget', { id })])
-      .call(matchPropListNew)
+      .call(matchPropList)
       .return('propList, node')
       .asResult<StandardReadResult<DbPropsOfDto<Budget>>>();
 
@@ -356,7 +356,7 @@ export class BudgetService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'BudgetRecord', { id })])
-      .call(matchPropListNew)
+      .call(matchPropList)
       .match([
         node('node'),
         relation('out', '', 'organization', { active: true }),

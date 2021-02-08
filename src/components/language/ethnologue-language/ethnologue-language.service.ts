@@ -17,7 +17,7 @@ import {
   matchRequestingUser,
   Property,
 } from '../../../core';
-import { matchPropListNew } from '../../../core/database/query';
+import { matchPropList } from '../../../core/database/query';
 import {
   DbPropsOfDto,
   StandardReadResult,
@@ -109,7 +109,7 @@ export class EthnologueLanguageService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'EthnologueLanguage', { id: id })])
-      .call(matchPropListNew)
+      .call(matchPropList)
       .return('propList, node')
       .asResult<StandardReadResult<EthLangDbProps>>();
 

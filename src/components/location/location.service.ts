@@ -22,7 +22,7 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
-  matchPropListNew,
+  matchPropList,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -196,7 +196,7 @@ export class LocationService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Location', { id: id })])
-      .call(matchPropListNew)
+      .call(matchPropList)
       .optionalMatch([
         node('node'),
         relation('out', '', 'fundingAccount', { active: true }),

@@ -25,7 +25,7 @@ import {
   collect,
   count,
   mapping,
-  matchPropListNew,
+  matchPropList,
 } from '../../core/database/query';
 import {
   DbPropsOfDto,
@@ -198,7 +198,7 @@ export class FileRepository {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'FileNode', { id })])
-      .call(matchPropListNew, 'node')
+      .call(matchPropList, 'node')
       .match([
         node('fv', 'FileVersion', { id }),
         relation('out', '', 'createdBy', { active: true }),

@@ -19,7 +19,7 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
-  matchPropListNew,
+  matchPropList,
   permissionsOfNode,
   requestingUser,
 } from '../../../core/database/query';
@@ -125,7 +125,7 @@ export class EducationService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Education', { id })])
-      .call(matchPropListNew)
+      .call(matchPropList)
       .return('propList, node')
       .asResult<StandardReadResult<DbPropsOfDto<Education>>>();
 

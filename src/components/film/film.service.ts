@@ -21,7 +21,7 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
-  matchPropListNew,
+  matchPropList,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -152,7 +152,7 @@ export class FilmService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Film', { id })])
-      .call(matchPropListNew)
+      .call(matchPropList)
       .return('node, propList')
       .asResult<StandardReadResult<DbPropsOfDto<Film>>>();
 

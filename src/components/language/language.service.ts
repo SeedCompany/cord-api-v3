@@ -29,7 +29,7 @@ import {
 import {
   calculateTotalAndPaginateList,
   collect,
-  matchPropListNew,
+  matchPropList,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -316,7 +316,7 @@ export class LanguageService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Language', { id: langId })])
-      .call(matchPropListNew)
+      .call(matchPropList)
       .match([
         node('node'),
         relation('out', '', 'ethnologue'),

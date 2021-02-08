@@ -21,7 +21,7 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
-  matchPropListNew,
+  matchPropList,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -157,7 +157,7 @@ export class FundingAccountService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'FundingAccount', { id })])
-      .call(matchPropListNew)
+      .call(matchPropList)
       .return('propList, node')
       .asResult<StandardReadResult<DbPropsOfDto<FundingAccount>>>();
 

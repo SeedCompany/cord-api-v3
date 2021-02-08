@@ -28,7 +28,7 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
-  matchPropListNew,
+  matchPropList,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -437,7 +437,7 @@ export class ProjectService {
     const query = this.db
       .query()
       .match([node('node', 'Project', { id })])
-      .call(matchPropListNew)
+      .call(matchPropList)
       .optionalMatch([
         node('node'),
         relation('out', '', 'primaryLocation', { active: true }),

@@ -21,7 +21,7 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
-  matchPropListNew,
+  matchPropList,
   permissionsOfNode,
   requestingUser,
   Sorter,
@@ -245,7 +245,7 @@ export class PartnerService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Partner', { id: id })])
-      .call(matchPropListNew)
+      .call(matchPropList)
       .optionalMatch([
         node('node'),
         relation('out', '', 'organization', { active: true }),

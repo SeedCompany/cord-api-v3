@@ -15,7 +15,7 @@ import {
   matchRequestingUser,
   matchSession,
 } from '../../../core';
-import { matchPropListNew } from '../../../core/database/query';
+import { matchPropList } from '../../../core/database/query';
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
@@ -131,7 +131,7 @@ export class UnavailabilityService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Unavailability', { id })])
-      .call(matchPropListNew)
+      .call(matchPropList)
       .return('propList, node')
       .asResult<StandardReadResult<DbPropsOfDto<Unavailability>>>();
 

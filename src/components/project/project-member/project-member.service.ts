@@ -26,7 +26,7 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
-  matchPropListNew,
+  matchPropList,
   permissionsOfNode,
   requestingUser,
 } from '../../../core/database/query';
@@ -187,7 +187,7 @@ export class ProjectMemberService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'ProjectMember', { id })])
-      .call(matchPropListNew)
+      .call(matchPropList)
       .match([node('node'), relation('out', '', 'user'), node('user', 'User')])
       .return('node, propList, user.id as userId')
       .asResult<

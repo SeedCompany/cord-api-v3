@@ -25,7 +25,7 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
-  matchPropListNew,
+  matchPropList,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -616,7 +616,7 @@ export class EngagementService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Engagement', { id })])
-      .call(matchPropListNew)
+      .call(matchPropList)
       .with([
         'propList',
         'node',

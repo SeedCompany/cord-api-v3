@@ -22,7 +22,7 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
-  matchPropListNew,
+  matchPropList,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -162,7 +162,7 @@ export class LiteracyMaterialService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'LiteracyMaterial', { id })])
-      .call(matchPropListNew)
+      .call(matchPropList)
       .return('node, propList')
       .asResult<StandardReadResult<DbPropsOfDto<LiteracyMaterial>>>();
 

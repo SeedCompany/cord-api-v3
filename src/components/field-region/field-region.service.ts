@@ -22,7 +22,7 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
-  matchPropListNew,
+  matchPropList,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -165,7 +165,7 @@ export class FieldRegionService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'FieldRegion', { id: id })])
-      .call(matchPropListNew)
+      .call(matchPropList)
       .optionalMatch([
         node('node'),
         relation('out', '', 'director', { active: true }),
