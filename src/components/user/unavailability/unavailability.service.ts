@@ -15,11 +15,10 @@ import {
   matchRequestingUser,
   matchSession,
 } from '../../../core';
-import { matchPermList, matchPropList } from '../../../core/database/query';
+import { matchPropListNew } from '../../../core/database/query';
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
-  parseSecuredProperties,
   StandardReadResult,
 } from '../../../core/database/results';
 import { AuthorizationService } from '../../authorization/authorization.service';
@@ -132,9 +131,8 @@ export class UnavailabilityService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Unavailability', { id })])
-      .call(matchPermList, 'requestingUser')
-      .call(matchPropList, 'permList')
-      .return('propList, permList, node')
+      .call(matchPropListNew)
+      .return('propList, node')
       .asResult<StandardReadResult<DbPropsOfDto<Unavailability>>>();
 
     const result = await query.first();
@@ -142,13 +140,16 @@ export class UnavailabilityService {
       throw new NotFoundException('Could not find user', 'user.id');
     }
 
-    const securedProps = parseSecuredProperties(
-      result.propList,
-      result.permList,
+    const securedProps = await this.authorizationService.getPermissionsOfBaseNode(
       {
-        description: true,
-        start: true,
-        end: true,
+        baseNode: new DbUnavailability(),
+        sessionOrUserId: session,
+        propList: result.propList,
+        propKeys: {
+          description: true,
+          start: true,
+          end: true,
+        },
       }
     );
 
