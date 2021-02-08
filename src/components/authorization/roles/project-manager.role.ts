@@ -53,7 +53,7 @@ export const ProjectManager = new DbRole({
     Powers.CreateUnavailability,
     Powers.CreateUser,
     Powers.GrantInternRole,
-    Powers.GrantLiasonRole,
+    Powers.GrantLiaisonRole,
     Powers.GrantMentorRole,
     Powers.GrantRegionalCommunicationsCoordinatorRole,
     Powers.GrantTranslatorRole,
