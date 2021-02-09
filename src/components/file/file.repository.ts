@@ -13,7 +13,7 @@ import {
 } from '../../common';
 import {
   ConfigService,
-  createBaseNodeNew,
+  createBaseNode,
   DatabaseService,
   ILogger,
   Logger,
@@ -291,7 +291,7 @@ export class FileRepository {
       .query()
       .call(matchRequestingUser, session)
       .call(
-        createBaseNodeNew,
+        createBaseNode,
         await generateId(),
         ['Directory', 'FileNode'],
         props
@@ -338,7 +338,7 @@ export class FileRepository {
     const createFile = this.db
       .query()
       .call(matchRequestingUser, session)
-      .call(createBaseNodeNew, fileId, ['File', 'FileNode'], props)
+      .call(createBaseNode, fileId, ['File', 'FileNode'], props)
       .return('node.id as id')
       .asResult<{ id: string }>();
 
@@ -392,7 +392,7 @@ export class FileRepository {
     const createFile = this.db
       .query()
       .call(matchRequestingUser, session)
-      .call(createBaseNodeNew, input.id, ['FileVersion', 'FileNode'], props)
+      .call(createBaseNode, input.id, ['FileVersion', 'FileNode'], props)
       .return('node.id as id')
       .asResult<{ id: string }>();
 
