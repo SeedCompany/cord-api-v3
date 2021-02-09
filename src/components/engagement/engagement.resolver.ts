@@ -60,11 +60,7 @@ export class EngagementResolver {
     @AnonSession() session: Session
   ): Promise<EngagementListOutput> {
     const engagements = await this.service.list(input, session);
-    for (const engagement of engagements.items) {
-      // @ts-expect-error hack engagement id into status object
-      // so the lazy transitions field resolver can use it
-      engagement.status.engagementId = engagement.id;
-    }
+    await this.service.setEngagementIdsIntoStatusObjects(engagements);
     return engagements;
   }
 

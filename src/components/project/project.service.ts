@@ -801,6 +801,8 @@ export class ProjectService {
       session
     );
 
+    await this.engagementService.setEngagementIdsIntoStatusObjects(result);
+
     const permission = await this.db
       .query()
       .match([requestingUser(session)])
