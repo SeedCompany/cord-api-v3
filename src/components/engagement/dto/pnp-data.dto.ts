@@ -1,4 +1,4 @@
-import { Field, Float, ObjectType } from '@nestjs/graphql';
+import { Field, Float, Int, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 
 @ObjectType({
@@ -16,4 +16,10 @@ export abstract class PnpData {
 
   @Field(() => Float)
   variance: number;
+
+  @Field(() => Int)
+  year: number;
+
+  @Field(() => Int)
+  quarter: number;
 }

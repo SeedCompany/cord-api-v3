@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { DateTime } from 'luxon';
 import { read, utils } from 'xlsx';
 import { Session } from '../../common';
 import { ILogger, Logger } from '../../core';
@@ -16,12 +17,45 @@ export class PnpExtractor {
     @Logger('pnp:extractor') private readonly logger: ILogger
   ) {}
 
+  private getYearAndQuarter(fileName: string) {
+    // I don't want to mess with this since there are some files names with a range
+    // i.e. fy18-20. I think this naming has become outmoded anyway.
+    const fyReg = /fy19|fy20|fy21/i;
+    const quarterReg = /q[1-4]/i;
+
+    const currentYear = DateTime.local().year;
+
+    // split by anything that's not a digit
+    // this removes any non-digit characters and allows for distinction
+    // between 4 digit and larger numbers (2021 vs 201983)
+    const fourDigitYear = Math.max(
+      ...fileName
+        .split(/[^\d]/)
+        .filter((i) => i && i.length === 4)
+        .map((i) => Number(i))
+        .filter((i) => i <= currentYear && i > 1990)
+    );
+
+    const year =
+      fourDigitYear ?? fyReg.exec(fileName)
+        ? Number(
+            '20' + fyReg.exec(fileName)![0].toLowerCase().replace('fy', '')
+          )
+        : 0;
+    const quarter = quarterReg.exec(fileName)
+      ? Number(quarterReg.exec(fileName)![0].toLowerCase().replace('q', ''))
+      : 0;
+
+    return { year, quarter };
+  }
+
   async extract(
     input: CreateDefinedFileVersionInput,
     session: Session
   ): Promise<PnpData | null> {
     const file = await this.files.getFileVersion(input.uploadId, session);
     const pnp = await this.downloadWorkbook(file);
+    const { year, quarter } = this.getYearAndQuarter(file.name);
 
     // new standard 2020 version has new sheet "Harvest" which isolates relevant progress data
     const sheet = pnp.Sheets.Harvest ?? pnp.Sheets.Progress;
@@ -41,19 +75,41 @@ export class PnpExtractor {
       for (const row of rows) {
         // new standard 11/09/2020
         if (pnp.Sheets.Harvest && /\d/.test(row?.AC)) {
-          return this.parseRawData(row.AC, row?.AD, row?.AE);
+          const parsedData = this.parseRawData(row.AC, row?.AD, row?.AE);
+          return parsedData
+            ? {
+                ...parsedData,
+                year,
+                quarter,
+              }
+            : null;
         }
         // other 2020 version
         else if (!pnp.Sheets.Harvest && row?.AL === 'Summary Info ====>') {
-          return this.parseRawData(row?.AN, row?.AO, row?.AP);
+          const parsedData = this.parseRawData(row?.AN, row?.AO, row?.AP);
+          return parsedData ? { ...parsedData, year, quarter } : null;
         }
         // row.CK is current year. if current year is greater than 2019 grab data
         else if (!pnp.Sheets.Harvest && parseInt(row?.CK) >= 2019) {
-          return this.parseRawData(row?.CT, row?.CU, row?.CV);
+          const parsedData = this.parseRawData(row?.CT, row?.CU, row?.CV);
+          return parsedData
+            ? {
+                ...parsedData,
+                year,
+                quarter,
+              }
+            : null;
           // 09 version
           // BX is current year
         } else if (!pnp.Sheets.Harvest && parseInt(row?.BX) >= 2019) {
-          return this.parseRawData(row?.BZ, row?.CA, row?.CB);
+          const parsedData = this.parseRawData(row?.BZ, row?.CA, row?.CB);
+          return parsedData
+            ? {
+                ...parsedData,
+                year,
+                quarter,
+              }
+            : null;
         }
       }
     } catch (e) {
@@ -81,7 +137,7 @@ export class PnpExtractor {
     progressPlanned: string,
     progressActual: string,
     variance: string
-  ): PnpData | null {
+  ): Omit<PnpData, 'year' | 'quarter'> | null {
     if (!progressPlanned || !progressActual || !variance) return null;
     return {
       progressPlanned: parsePercent(progressPlanned),
