@@ -23,6 +23,7 @@ import {
   matchRequestingUser,
   matchSession,
   OnIndex,
+  Transactional,
   UniquenessError,
   UniqueProperties,
 } from '../../core';
@@ -140,6 +141,7 @@ export class LanguageService {
     ];
   }
 
+  @Transactional()
   async create(input: CreateLanguage, session: Session): Promise<Language> {
     const createdAt = DateTime.local();
 
@@ -311,6 +313,7 @@ export class LanguageService {
     }
   }
 
+  @Transactional()
   async readOne(langId: string, session: Session): Promise<Language> {
     const query = this.db
       .query()
@@ -359,6 +362,7 @@ export class LanguageService {
     };
   }
 
+  @Transactional()
   async update(
     { ethnologue: newEthnologue, ...input }: UpdateLanguage,
     session: Session
@@ -440,6 +444,7 @@ export class LanguageService {
     return await this.readOne(input.id, session);
   }
 
+  @Transactional()
   async delete(id: string, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
@@ -474,6 +479,7 @@ export class LanguageService {
     }
   }
 
+  @Transactional()
   async list(
     { filter, ...input }: LanguageListInput,
     session: Session
@@ -516,6 +522,7 @@ export class LanguageService {
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 
+  @Transactional()
   async listLocations(
     languageId: string,
     input: LocationListInput,
@@ -530,6 +537,7 @@ export class LanguageService {
     );
   }
 
+  @Transactional()
   async listProjects(
     language: Language,
     input: ProjectListInput,
@@ -583,6 +591,7 @@ export class LanguageService {
     };
   }
 
+  @Transactional()
   async sponsorStartDate(
     language: Language,
     session: Session
@@ -645,6 +654,7 @@ export class LanguageService {
     }
   }
 
+  @Transactional()
   async addLocation(
     languageId: string,
     locationId: string,
@@ -662,6 +672,7 @@ export class LanguageService {
     }
   }
 
+  @Transactional()
   async removeLocation(
     languageId: string,
     locationId: string,

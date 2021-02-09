@@ -10,7 +10,7 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import { ILogger, Logger } from '../../core';
+import { ILogger, Logger, Transactional } from '../../core';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
 import { FileBucket } from './bucket';
@@ -74,6 +74,7 @@ export class FileService {
     return node;
   }
 
+  @Transactional()
   async getFileNode(id: string, session: Session): Promise<FileNode> {
     this.logger.debug(`getNode`, { id, userId: session.userId });
     const base = await this.repo.getBaseNodeById(id, session);
@@ -162,6 +163,7 @@ export class FileService {
     }
   }
 
+  @Transactional()
   async getParents(
     nodeId: string,
     session: Session
@@ -172,6 +174,7 @@ export class FileService {
     );
   }
 
+  @Transactional()
   async listChildren(
     parentId: string,
     input: FileListInput | undefined,
@@ -200,6 +203,7 @@ export class FileService {
     };
   }
 
+  @Transactional()
   async createDirectory(
     parentId: string | undefined,
     name: string,
@@ -246,6 +250,7 @@ export class FileService {
    * If the given parent is a directory, this will attach the new version to
    * the existing file with the same name or create a new file if not found.
    */
+  @Transactional()
   async createFileVersion(
     {
       parentId,
@@ -391,6 +396,7 @@ export class FileService {
     return fileId;
   }
 
+  @Transactional()
   async createDefinedFile(
     fileId: string,
     name: string,
@@ -431,6 +437,7 @@ export class FileService {
     }
   }
 
+  @Transactional()
   async updateDefinedFile(
     file: DefinedFile,
     field: string,
@@ -476,6 +483,7 @@ export class FileService {
     await this.rename({ id: file.value, name }, session);
   }
 
+  @Transactional()
   async resolveDefinedFile(
     input: DefinedFile,
     session: Session
@@ -500,11 +508,13 @@ export class FileService {
     }
   }
 
+  @Transactional()
   async rename(input: RenameFileInput, session: Session): Promise<void> {
     const fileNode = await this.repo.getBaseNodeById(input.id, session);
     await this.repo.rename(fileNode, input.name);
   }
 
+  @Transactional()
   async move(input: MoveFileInput, session: Session): Promise<FileNode> {
     const fileNode = await this.repo.getBaseNodeById(input.id, session);
 
@@ -517,6 +527,7 @@ export class FileService {
     return await this.getFileNode(input.id, session);
   }
 
+  @Transactional()
   async delete(id: string, session: Session): Promise<void> {
     const fileNode = await this.repo.getBaseNodeById(id, session);
     await this.repo.delete(fileNode, session);

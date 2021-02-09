@@ -17,6 +17,7 @@ import {
   matchRequestingUser,
   matchSession,
   Property,
+  Transactional,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -60,6 +61,7 @@ export class CeremonyService {
     @Logger('ceremony:service') private readonly logger: ILogger
   ) {}
 
+  @Transactional()
   async create(input: CreateCeremony, session: Session): Promise<Ceremony> {
     const secureProps: Property[] = [
       {
@@ -126,6 +128,7 @@ export class CeremonyService {
     }
   }
 
+  @Transactional()
   async readOne(id: string, session: Session): Promise<Ceremony> {
     this.logger.debug(`Query readOne Ceremony`, { id, userId: session.userId });
     if (!id) {
@@ -174,6 +177,7 @@ export class CeremonyService {
     };
   }
 
+  @Transactional()
   async update(input: UpdateCeremony, session: Session): Promise<Ceremony> {
     const object = await this.readOne(input.id, session);
 
@@ -186,6 +190,7 @@ export class CeremonyService {
     });
   }
 
+  @Transactional()
   async delete(id: string, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
@@ -215,6 +220,7 @@ export class CeremonyService {
     }
   }
 
+  @Transactional()
   async list(
     { filter, ...input }: CeremonyListInput,
     session: Session

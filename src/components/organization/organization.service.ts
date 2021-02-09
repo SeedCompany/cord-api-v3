@@ -20,6 +20,7 @@ import {
   matchSession,
   OnIndex,
   Property,
+  Transactional,
   UniqueProperties,
 } from '../../core';
 import {
@@ -102,6 +103,7 @@ export class OrganizationService {
     ]);
   };
 
+  @Transactional()
   async create(
     input: CreateOrganization,
     session: Session
@@ -186,6 +188,7 @@ export class OrganizationService {
     return await this.readOne(id, session);
   }
 
+  @Transactional()
   async readOne(orgId: string, session: Session): Promise<Organization> {
     this.logger.debug(`Read Organization`, {
       id: orgId,
@@ -220,6 +223,7 @@ export class OrganizationService {
     };
   }
 
+  @Transactional()
   async update(
     input: UpdateOrganization,
     session: Session
@@ -234,6 +238,7 @@ export class OrganizationService {
     });
   }
 
+  @Transactional()
   async delete(id: string, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
@@ -268,6 +273,7 @@ export class OrganizationService {
     this.logger.debug(`deleted organization with id`, { id });
   }
 
+  @Transactional()
   async list(
     { filter, ...input }: OrganizationListInput,
     session: Session
@@ -299,6 +305,7 @@ export class OrganizationService {
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 
+  @Transactional()
   async addLocation(
     organizationId: string,
     locationId: string,
@@ -316,6 +323,7 @@ export class OrganizationService {
     }
   }
 
+  @Transactional()
   async removeLocation(
     organizationId: string,
     locationId: string,
@@ -336,6 +344,7 @@ export class OrganizationService {
     }
   }
 
+  @Transactional()
   async listLocations(
     organizationId: string,
     input: LocationListInput,

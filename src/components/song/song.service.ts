@@ -16,6 +16,7 @@ import {
   Logger,
   matchRequestingUser,
   OnIndex,
+  Transactional,
   UniqueProperties,
 } from '../../core';
 import {
@@ -73,6 +74,7 @@ export class SongService {
     ];
   }
 
+  @Transactional()
   async create(input: CreateSong, session: Session): Promise<Song> {
     const checkSong = await this.db
       .query()
@@ -144,6 +146,7 @@ export class SongService {
     }
   }
 
+  @Transactional()
   async readOne(id: string, session: Session): Promise<Song> {
     const query = this.db
       .query()
@@ -181,6 +184,7 @@ export class SongService {
     };
   }
 
+  @Transactional()
   async update(input: UpdateSong, session: Session): Promise<Song> {
     await this.scriptureRefService.update(input.id, input.scriptureReferences);
 
@@ -195,6 +199,7 @@ export class SongService {
     });
   }
 
+  @Transactional()
   async delete(id: string, session: Session): Promise<void> {
     const song = await this.readOne(id, session);
     if (!song) {
@@ -227,6 +232,7 @@ export class SongService {
     this.logger.debug(`deleted song with id`, { id });
   }
 
+  @Transactional()
   async list(
     { filter, ...input }: SongListInput,
     session: Session

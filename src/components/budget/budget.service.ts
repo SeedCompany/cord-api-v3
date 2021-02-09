@@ -19,6 +19,7 @@ import {
   matchRequestingUser,
   matchSession,
   Property,
+  Transactional,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -77,6 +78,7 @@ export class BudgetService {
     @Logger('budget:service') private readonly logger: ILogger
   ) {}
 
+  @Transactional()
   async create(
     { projectId, ...input }: CreateBudget,
     session: Session
@@ -188,6 +190,7 @@ export class BudgetService {
     }
   }
 
+  @Transactional()
   async createRecord(
     { budgetId, organizationId, ...input }: CreateBudgetRecord,
     session: Session
@@ -295,6 +298,7 @@ export class BudgetService {
     }
   }
 
+  @Transactional()
   async readOne(id: string, session: Session): Promise<Budget> {
     this.logger.debug(`Query readOne Budget: `, {
       id,
@@ -353,6 +357,7 @@ export class BudgetService {
     };
   }
 
+  @Transactional()
   async readOneRecord(id: string, session: Session): Promise<BudgetRecord> {
     this.logger.debug(`Query readOne Budget Record: `, {
       id,
@@ -413,6 +418,7 @@ export class BudgetService {
     };
   }
 
+  @Transactional()
   async update(
     { universalTemplateFile, ...input }: UpdateBudget,
     session: Session
@@ -435,6 +441,7 @@ export class BudgetService {
     });
   }
 
+  @Transactional()
   async updateRecord(
     { id, ...input }: UpdateBudgetRecord,
     session: Session
@@ -490,6 +497,7 @@ export class BudgetService {
     }
   }
 
+  @Transactional()
   async delete(id: string, session: Session): Promise<void> {
     const budget = await this.readOne(id, session);
 
@@ -524,6 +532,7 @@ export class BudgetService {
     }
   }
 
+  @Transactional()
   async deleteRecord(id: string, session: Session): Promise<void> {
     const br = await this.readOneRecord(id, session);
 
@@ -553,6 +562,7 @@ export class BudgetService {
     }
   }
 
+  @Transactional()
   async list(
     input: Partial<BudgetListInput>,
     session: Session
@@ -590,6 +600,7 @@ export class BudgetService {
     );
   }
 
+  @Transactional()
   async listRecords(
     { filter, ...input }: BudgetRecordListInput,
     session: Session

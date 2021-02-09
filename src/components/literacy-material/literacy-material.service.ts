@@ -17,6 +17,7 @@ import {
   matchRequestingUser,
   OnIndex,
   Property,
+  Transactional,
   UniqueProperties,
 } from '../../core';
 import {
@@ -74,6 +75,7 @@ export class LiteracyMaterialService {
     ];
   }
 
+  @Transactional()
   async create(
     input: CreateLiteracyMaterial,
     session: Session
@@ -152,6 +154,7 @@ export class LiteracyMaterialService {
     }
   }
 
+  @Transactional()
   async readOne(id: string, session: Session): Promise<LiteracyMaterial> {
     this.logger.debug(`Read literacyMaterial`, {
       id,
@@ -197,6 +200,7 @@ export class LiteracyMaterialService {
     };
   }
 
+  @Transactional()
   async update(
     input: UpdateLiteracyMaterial,
     session: Session
@@ -214,6 +218,7 @@ export class LiteracyMaterialService {
     });
   }
 
+  @Transactional()
   async delete(id: string, session: Session): Promise<void> {
     const literacyMaterial = await this.readOne(id, session);
 
@@ -248,6 +253,7 @@ export class LiteracyMaterialService {
     this.logger.debug(`deleted literacyMaterial with id`, { id });
   }
 
+  @Transactional()
   async list(
     { filter, ...input }: LiteracyMaterialListInput,
     session: Session

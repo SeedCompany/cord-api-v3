@@ -6,6 +6,7 @@ import {
   DatabaseService,
   matchRequestingUser,
   matchUserPermissions,
+  Transactional,
 } from '../../core';
 import { FieldRegionService } from '../field-region';
 import { FieldZoneService } from '../field-zone';
@@ -78,6 +79,7 @@ export class SearchService {
     private readonly fundingAccount: FundingAccountService
   ) {}
 
+  @Transactional()
   async search(input: SearchInput, session: Session): Promise<SearchOutput> {
     // if type isn't specified default to all types
     const inputTypes = input.type || SearchResultTypes;

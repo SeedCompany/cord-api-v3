@@ -17,6 +17,7 @@ import {
   Logger,
   matchRequestingUser,
   OnIndex,
+  Transactional,
   UniqueProperties,
 } from '../../core';
 import {
@@ -76,6 +77,7 @@ export class FieldRegionService {
     ];
   }
 
+  @Transactional()
   async create(
     { fieldZoneId, directorId, ...input }: CreateFieldRegion,
     session: Session
@@ -155,6 +157,7 @@ export class FieldRegionService {
     return await this.readOne(result.id, session);
   }
 
+  @Transactional()
   async readOne(id: string, session: Session): Promise<FieldRegion> {
     this.logger.debug(`Read Field Region`, {
       id: id,
@@ -216,6 +219,7 @@ export class FieldRegionService {
     };
   }
 
+  @Transactional()
   async update(
     input: UpdateFieldRegion,
     session: Session
@@ -235,6 +239,7 @@ export class FieldRegionService {
     return await this.readOne(input.id, session);
   }
 
+  @Transactional()
   async delete(id: string, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
@@ -267,6 +272,7 @@ export class FieldRegionService {
     }
   }
 
+  @Transactional()
   async list(
     { filter, ...input }: FieldRegionListInput,
     session: Session

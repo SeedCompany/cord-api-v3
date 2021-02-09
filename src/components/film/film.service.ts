@@ -16,6 +16,7 @@ import {
   Logger,
   matchRequestingUser,
   OnIndex,
+  Transactional,
   UniqueProperties,
 } from '../../core';
 import {
@@ -72,6 +73,7 @@ export class FilmService {
     ];
   }
 
+  @Transactional()
   async create(input: CreateFilm, session: Session): Promise<Film> {
     const checkFm = await this.db
       .query()
@@ -142,6 +144,7 @@ export class FilmService {
     }
   }
 
+  @Transactional()
   async readOne(id: string, session: Session): Promise<Film> {
     this.logger.debug(`Read film`, {
       id,
@@ -183,6 +186,7 @@ export class FilmService {
     };
   }
 
+  @Transactional()
   async update(input: UpdateFilm, session: Session): Promise<Film> {
     await this.scriptureRefService.update(input.id, input.scriptureReferences);
 
@@ -196,6 +200,7 @@ export class FilmService {
     });
   }
 
+  @Transactional()
   async delete(id: string, session: Session): Promise<void> {
     const film = await this.readOne(id, session);
 
@@ -230,6 +235,7 @@ export class FilmService {
     this.logger.debug(`deleted film with id`, { id });
   }
 
+  @Transactional()
   async list(
     { filter, ...input }: FilmListInput,
     session: Session

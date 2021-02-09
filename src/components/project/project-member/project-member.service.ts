@@ -22,6 +22,7 @@ import {
   matchRequestingUser,
   OnIndex,
   property,
+  Transactional,
 } from '../../../core';
 import {
   calculateTotalAndPaginateList,
@@ -118,6 +119,7 @@ export class ProjectMemberService {
     }
   }
 
+  @Transactional()
   async create(
     { userId, projectId, ...input }: CreateProjectMember,
     session: Session
@@ -188,6 +190,7 @@ export class ProjectMemberService {
     }
   }
 
+  @Transactional()
   async readOne(id: string, session: Session): Promise<ProjectMember> {
     this.logger.debug(`read one`, {
       id,
@@ -253,6 +256,7 @@ export class ProjectMemberService {
     };
   }
 
+  @Transactional()
   async update(
     input: UpdateProjectMember,
     session: Session
@@ -302,6 +306,7 @@ export class ProjectMemberService {
     }
   }
 
+  @Transactional()
   async delete(id: string, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
@@ -327,6 +332,7 @@ export class ProjectMemberService {
     }
   }
 
+  @Transactional()
   async list(
     { filter, ...input }: ProjectMemberListInput,
     session: Session

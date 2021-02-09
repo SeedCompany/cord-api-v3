@@ -14,6 +14,7 @@ import {
   Logger,
   matchRequestingUser,
   matchSession,
+  Transactional,
 } from '../../../core';
 import { matchPropList } from '../../../core/database/query';
 import {
@@ -41,6 +42,7 @@ export class UnavailabilityService {
     private readonly authorizationService: AuthorizationService
   ) {}
 
+  @Transactional()
   async create(
     { userId, ...input }: CreateUnavailability,
     session: Session
@@ -126,6 +128,7 @@ export class UnavailabilityService {
     }
   }
 
+  @Transactional()
   async readOne(id: string, session: Session): Promise<Unavailability> {
     const query = this.db
       .query()
@@ -153,6 +156,7 @@ export class UnavailabilityService {
     };
   }
 
+  @Transactional()
   async update(
     input: UpdateUnavailability,
     session: Session
@@ -168,6 +172,7 @@ export class UnavailabilityService {
     });
   }
 
+  @Transactional()
   async delete(id: string, session: Session): Promise<void> {
     this.logger.debug(`mutation delete unavailability`);
     const ua = await this.readOne(id, session);
@@ -184,6 +189,7 @@ export class UnavailabilityService {
     });
   }
 
+  @Transactional()
   async list(
     { page, count, sort, order, filter }: UnavailabilityListInput,
     session: Session
@@ -209,6 +215,7 @@ export class UnavailabilityService {
       total: result.total,
     };
   }
+
   async checkUnavailabilityConsistency(session: Session): Promise<boolean> {
     const unavailabilities = await this.db
       .query()

@@ -20,6 +20,7 @@ import {
   Logger,
   matchRequestingUser,
   matchSession,
+  Transactional,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -85,6 +86,7 @@ export class PartnershipService {
     @Logger('partnership:service') private readonly logger: ILogger
   ) {}
 
+  @Transactional()
   async create(
     { partnerId, projectId, ...input }: CreatePartnership,
     session: Session
@@ -247,6 +249,7 @@ export class PartnershipService {
     }
   }
 
+  @Transactional()
   async readOne(id: string, session: Session): Promise<Partnership> {
     this.logger.debug('readOne', { id, userId: session.userId });
 
@@ -341,6 +344,7 @@ export class PartnershipService {
     };
   }
 
+  @Transactional()
   async update(input: UpdatePartnership, session: Session) {
     // mou start and end are now computed fields and do not get updated directly
     const object = await this.readOne(input.id, session);
@@ -408,6 +412,7 @@ export class PartnershipService {
     return event.updated;
   }
 
+  @Transactional()
   async delete(id: string, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
@@ -441,6 +446,7 @@ export class PartnershipService {
     }
   }
 
+  @Transactional()
   async list(
     input: Partial<PartnershipListInput>,
     session: Session

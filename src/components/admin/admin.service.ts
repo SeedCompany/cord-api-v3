@@ -26,6 +26,7 @@ export class AdminService implements OnApplicationBootstrap {
     @Logger('admin:service') private readonly logger: ILogger
   ) {}
 
+  @Transactional()
   async addRolesToBetaTesters() {
     await this.authorizationService.roleAddedToUser(
       '5c3d887b7219425288a3cb18',

@@ -16,6 +16,7 @@ import {
   Logger,
   matchRequestingUser,
   OnIndex,
+  Transactional,
   UniqueProperties,
 } from '../../core';
 import {
@@ -73,6 +74,7 @@ export class StoryService {
     ];
   }
 
+  @Transactional()
   async create(input: CreateStory, session: Session): Promise<Story> {
     const checkStory = await this.db
       .query()
@@ -143,6 +145,7 @@ export class StoryService {
     }
   }
 
+  @Transactional()
   async readOne(id: string, session: Session): Promise<Story> {
     this.logger.debug(`Read Story`, {
       id,
@@ -185,6 +188,7 @@ export class StoryService {
     };
   }
 
+  @Transactional()
   async update(input: UpdateStory, session: Session): Promise<Story> {
     await this.scriptureRefService.update(input.id, input.scriptureReferences);
 
@@ -198,6 +202,7 @@ export class StoryService {
     });
   }
 
+  @Transactional()
   async delete(id: string, session: Session): Promise<void> {
     const story = await this.readOne(id, session);
     if (!story) {
@@ -230,6 +235,7 @@ export class StoryService {
     this.logger.debug(`deleted story with id`, { id });
   }
 
+  @Transactional()
   async list(
     { filter, ...input }: StoryListInput,
     session: Session

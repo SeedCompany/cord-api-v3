@@ -18,6 +18,7 @@ import {
   Logger,
   matchRequestingUser,
   OnIndex,
+  Transactional,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -76,6 +77,7 @@ export class PartnerService {
     ];
   }
 
+  @Transactional()
   async create(input: CreatePartner, session: Session): Promise<Partner> {
     this.verifyFinancialReportingType(
       input.financialReportingTypes,
@@ -208,6 +210,7 @@ export class PartnerService {
     return await this.readOne(result.id, session);
   }
 
+  @Transactional()
   async readOnePartnerByOrgId(id: string, session: Session): Promise<Partner> {
     this.logger.debug(`Read Partner by Org Id`, {
       id: id,
@@ -235,6 +238,7 @@ export class PartnerService {
     return await this.readOne(result.partnerId, session);
   }
 
+  @Transactional()
   async readOne(id: string, session: Session): Promise<Partner> {
     this.logger.debug(`Read Partner by Partner Id`, {
       id: id,
@@ -305,6 +309,7 @@ export class PartnerService {
     };
   }
 
+  @Transactional()
   async update(input: UpdatePartner, session: Session): Promise<Partner> {
     const object = await this.readOne(input.id, session);
     let changes = {
@@ -385,6 +390,7 @@ export class PartnerService {
     return await this.readOne(input.id, session);
   }
 
+  @Transactional()
   async delete(id: string, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
     if (!object) {
@@ -413,6 +419,7 @@ export class PartnerService {
     this.logger.debug(`deleted partner with id`, { id });
   }
 
+  @Transactional()
   async list(
     { filter, ...input }: PartnerListInput,
     session: Session
@@ -499,8 +506,8 @@ export class PartnerService {
   ) {
     if (!this.validateFinancialReportingType(financialReportingTypes, types)) {
       throw new InputException(
-        'Financial reporting type can only be applied to managing partners',
-        'partnership.financialReportingType'
+        'Financial reporting types can only be applied to managing partners',
+        'partner.financialReportingTypes'
       );
     }
   }

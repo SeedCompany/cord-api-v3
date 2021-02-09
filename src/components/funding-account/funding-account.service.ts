@@ -16,6 +16,7 @@ import {
   Logger,
   matchRequestingUser,
   OnIndex,
+  Transactional,
   UniqueProperties,
 } from '../../core';
 import {
@@ -75,6 +76,7 @@ export class FundingAccountService {
     ];
   }
 
+  @Transactional()
   async create(
     input: CreateFundingAccount,
     session: Session
@@ -146,6 +148,7 @@ export class FundingAccountService {
     }
   }
 
+  @Transactional()
   async readOne(id: string, session: Session): Promise<FundingAccount> {
     this.logger.info('readOne', { id, userId: session.userId });
 
@@ -179,6 +182,7 @@ export class FundingAccountService {
     };
   }
 
+  @Transactional()
   async update(
     input: UpdateFundingAccount,
     session: Session
@@ -194,6 +198,7 @@ export class FundingAccountService {
     });
   }
 
+  @Transactional()
   async delete(id: string, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
@@ -227,6 +232,7 @@ export class FundingAccountService {
     }
   }
 
+  @Transactional()
   async list(
     input: FundingAccountListInput,
     session: Session

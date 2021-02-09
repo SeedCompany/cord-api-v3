@@ -17,6 +17,7 @@ import {
   ILogger,
   Logger,
   matchRequestingUser,
+  Transactional,
 } from '../../core';
 import { ForgotPassword } from '../../core/email/templates';
 import { AuthorizationService } from '../authorization/authorization.service';
@@ -42,6 +43,7 @@ export class AuthenticationService {
     @Logger('authentication:service') private readonly logger: ILogger
   ) {}
 
+  @Transactional()
   async createToken(): Promise<string> {
     const token = this.encodeJWT();
 
@@ -70,6 +72,7 @@ export class AuthenticationService {
     return result.token;
   }
 
+  @Transactional()
   async userFromSession(session: Session): Promise<User | null> {
     const userRes = await this.db
       .query()
@@ -93,6 +96,7 @@ export class AuthenticationService {
     return await this.userService.readOne(userRes.id, session);
   }
 
+  @Transactional()
   async register(input: RegisterInput, session?: Session): Promise<string> {
     // ensure no other tokens are associated with this user
     if (session) {
@@ -133,6 +137,7 @@ export class AuthenticationService {
     return userId;
   }
 
+  @Transactional()
   async login(input: LoginInput, session: Session): Promise<string> {
     const result1 = await this.db
       .query()
@@ -197,6 +202,7 @@ export class AuthenticationService {
     return result2.id;
   }
 
+  @Transactional()
   async logout(token: string): Promise<void> {
     await this.db
       .query()
@@ -216,6 +222,7 @@ export class AuthenticationService {
       .run();
   }
 
+  @Transactional()
   async createSession(token: string): Promise<RawSession> {
     this.logger.debug('Decoding token', { token });
 
@@ -260,6 +267,7 @@ export class AuthenticationService {
     return session;
   }
 
+  @Transactional()
   async changePassword(
     oldPassword: string,
     newPassword: string,
@@ -313,6 +321,7 @@ export class AuthenticationService {
       .run();
   }
 
+  @Transactional()
   async forgotPassword(email: string): Promise<void> {
     const result = await this.db
       .query()
@@ -355,6 +364,7 @@ export class AuthenticationService {
     });
   }
 
+  @Transactional()
   async resetPassword(
     { token, password }: ResetPasswordInput,
     session: Session

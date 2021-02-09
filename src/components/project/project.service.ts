@@ -25,6 +25,7 @@ import {
   matchSession,
   OnIndex,
   Property,
+  Transactional,
   UniquenessError,
   UniqueProperties,
 } from '../../core';
@@ -146,6 +147,7 @@ export class ProjectService {
     ];
   }
 
+  @Transactional()
   async create(
     {
       primaryLocationId,
@@ -459,6 +461,7 @@ export class ProjectService {
     return project as InternshipProject;
   }
 
+  @Transactional()
   async readOne(
     id: string,
     sessionOrUserId: Session | string
@@ -586,6 +589,7 @@ export class ProjectService {
     };
   }
 
+  @Transactional()
   async update(input: UpdateProject, session: Session): Promise<Project> {
     const currentProject = await this.readOne(input.id, session);
     if (input.sensitivity && currentProject.type === ProjectType.Translation)
@@ -742,6 +746,7 @@ export class ProjectService {
     return event.updated;
   }
 
+  @Transactional()
   async delete(id: string, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
     if (!object) {
@@ -777,6 +782,7 @@ export class ProjectService {
     await this.eventBus.publish(new ProjectDeletedEvent(object, session));
   }
 
+  @Transactional()
   async list(
     { filter, ...input }: ProjectListInput,
     session: Session
@@ -844,6 +850,7 @@ export class ProjectService {
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 
+  @Transactional()
   async listEngagements(
     project: Project,
     input: EngagementListInput,
@@ -918,6 +925,7 @@ export class ProjectService {
     };
   }
 
+  @Transactional()
   async listProjectMembers(
     projectId: string,
     input: ProjectMemberListInput,
@@ -986,6 +994,7 @@ export class ProjectService {
     };
   }
 
+  @Transactional()
   async listPartnerships(
     projectId: string,
     input: PartnershipListInput,
@@ -1054,6 +1063,7 @@ export class ProjectService {
     };
   }
 
+  @Transactional()
   async addOtherLocation(
     projectId: string,
     locationId: string,
@@ -1071,6 +1081,7 @@ export class ProjectService {
     }
   }
 
+  @Transactional()
   async removeOtherLocation(
     projectId: string,
     locationId: string,
@@ -1091,6 +1102,7 @@ export class ProjectService {
     }
   }
 
+  @Transactional()
   async listOtherLocations(
     projectId: string,
     input: LocationListInput,
@@ -1105,6 +1117,7 @@ export class ProjectService {
     );
   }
 
+  @Transactional()
   async currentBudget(
     projectOrProjectId: Project | string,
     session: Session
@@ -1173,6 +1186,7 @@ export class ProjectService {
     return result?.memberRoles.flat().map(rolesForScope('project')) ?? [];
   }
 
+  @Transactional()
   async getRootDirectory(
     projectId: string,
     session: Session

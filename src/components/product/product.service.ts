@@ -20,6 +20,7 @@ import {
   Logger,
   matchRequestingUser,
   Property,
+  Transactional,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -87,6 +88,7 @@ export class ProductService {
     @Logger('product:service') private readonly logger: ILogger
   ) {}
 
+  @Transactional()
   async create(
     { engagementId, ...input }: CreateProduct,
     session: Session
@@ -258,6 +260,7 @@ export class ProductService {
     return await this.readOne(result.id, session);
   }
 
+  @Transactional()
   async readOne(id: string, session: Session): Promise<AnyProduct> {
     const query = this.db
       .query()
@@ -385,6 +388,7 @@ export class ProductService {
     };
   }
 
+  @Transactional()
   async update(input: UpdateProduct, session: Session): Promise<AnyProduct> {
     const {
       produces: inputProducesId,
@@ -497,6 +501,7 @@ export class ProductService {
     });
   }
 
+  @Transactional()
   async delete(id: string, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
@@ -530,6 +535,7 @@ export class ProductService {
     }
   }
 
+  @Transactional()
   async list(
     { filter, ...input }: ProductListInput,
     session: Session

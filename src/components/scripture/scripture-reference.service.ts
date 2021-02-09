@@ -2,7 +2,7 @@ import { Node, node, relation } from 'cypher-query-builder';
 import { sortBy } from 'lodash';
 import { DateTime } from 'luxon';
 import { Range, Session } from '../../common';
-import { DatabaseService, ILogger, Logger } from '../../core';
+import { DatabaseService, ILogger, Logger, Transactional } from '../../core';
 import { ScriptureRange, ScriptureRangeInput } from './dto';
 
 export class ScriptureReferenceService {
@@ -11,6 +11,7 @@ export class ScriptureReferenceService {
     private readonly db: DatabaseService
   ) {}
 
+  @Transactional()
   async create(
     producibleId: string,
     scriptureRefs: ScriptureRangeInput[] | undefined,
@@ -43,6 +44,7 @@ export class ScriptureReferenceService {
     }
   }
 
+  @Transactional()
   async update(
     producibleId: string,
     scriptureRefs: ScriptureRangeInput[] | undefined,
@@ -104,6 +106,7 @@ export class ScriptureReferenceService {
     }
   }
 
+  @Transactional()
   async list(
     producibleId: string,
     session: Session,

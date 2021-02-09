@@ -15,6 +15,7 @@ import {
   Logger,
   matchRequestingUser,
   matchSession,
+  Transactional,
 } from '../../../core';
 import {
   calculateTotalAndPaginateList,
@@ -55,6 +56,7 @@ export class EducationService {
     private readonly authorizationService: AuthorizationService
   ) {}
 
+  @Transactional()
   async create(
     { userId, ...input }: CreateEducation,
     session: Session
@@ -115,6 +117,7 @@ export class EducationService {
     return await this.readOne(result.id, session);
   }
 
+  @Transactional()
   async readOne(id: string, session: Session): Promise<Education> {
     this.logger.debug(`Read Education`, {
       id: id,
@@ -148,6 +151,7 @@ export class EducationService {
     };
   }
 
+  @Transactional()
   async update(input: UpdateEducation, session: Session): Promise<Education> {
     const ed = await this.readOne(input.id, session);
 
@@ -160,10 +164,12 @@ export class EducationService {
     });
   }
 
+  @Transactional()
   async delete(_id: string, _session: Session): Promise<void> {
     // Not Implemented
   }
 
+  @Transactional()
   async list(
     { filter, ...input }: EducationListInput,
     session: Session

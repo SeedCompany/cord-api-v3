@@ -171,6 +171,7 @@ export class UserService {
     );
   };
 
+  @Transactional()
   async create(input: CreatePerson, _session?: Session): Promise<string> {
     const id = await generateId();
     const createdAt = DateTime.local();
@@ -283,6 +284,7 @@ export class UserService {
     return result.id;
   }
 
+  @Transactional()
   async readOne(id: string, sessionOrUserId: Session | string): Promise<User> {
     const query = this.db
       .query()
@@ -437,6 +439,7 @@ export class UserService {
     return await this.readOne(input.id, session);
   }
 
+  @Transactional()
   async delete(id: string, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
@@ -469,6 +472,7 @@ export class UserService {
     }
   }
 
+  @Transactional()
   async list(input: UserListInput, session: Session): Promise<UserListOutput> {
     const nameSortMap: Partial<Record<typeof input.sort, string>> = {
       displayFirstName: 'toLower(prop.value)',
@@ -491,6 +495,7 @@ export class UserService {
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 
+  @Transactional()
   async listEducations(
     userId: string,
     input: EducationListInput,
@@ -561,6 +566,7 @@ export class UserService {
     };
   }
 
+  @Transactional()
   async listOrganizations(
     userId: string,
     input: OrganizationListInput,
@@ -632,6 +638,7 @@ export class UserService {
     };
   }
 
+  @Transactional()
   async listPartners(
     userId: string,
     input: PartnerListInput,
@@ -707,6 +714,7 @@ export class UserService {
     };
   }
 
+  @Transactional()
   async listUnavailabilities(
     userId: string,
     input: UnavailabilityListInput,
@@ -778,6 +786,7 @@ export class UserService {
     };
   }
 
+  @Transactional()
   async addLocation(
     userId: string,
     locationId: string,
@@ -795,6 +804,7 @@ export class UserService {
     }
   }
 
+  @Transactional()
   async removeLocation(
     userId: string,
     locationId: string,
@@ -812,6 +822,7 @@ export class UserService {
     }
   }
 
+  @Transactional()
   async listLocations(
     userId: string,
     input: LocationListInput,
@@ -826,6 +837,7 @@ export class UserService {
     );
   }
 
+  @Transactional()
   async createKnownLanguage(
     userId: string,
     languageId: string,
@@ -858,6 +870,7 @@ export class UserService {
     }
   }
 
+  @Transactional()
   async deleteKnownLanguage(
     userId: string,
     languageId: string,
@@ -888,6 +901,7 @@ export class UserService {
     }
   }
 
+  @Transactional()
   async listKnownLanguages(
     userId: string,
     session: Session
@@ -924,6 +938,7 @@ export class UserService {
     return knownLanguages as KnownLanguage[];
   }
 
+  @Transactional()
   async checkEmail(email: string): Promise<boolean> {
     const result = await this.db
       .query()
@@ -947,6 +962,7 @@ export class UserService {
     return true;
   }
 
+  @Transactional()
   async assignOrganizationToUser(
     request: AssignOrganizationToUser,
     session: Session
@@ -1037,6 +1053,7 @@ export class UserService {
     }
   }
 
+  @Transactional()
   async removeOrganizationFromUser(
     request: RemoveOrganizationFromUser,
     _session: Session

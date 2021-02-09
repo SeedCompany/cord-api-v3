@@ -17,6 +17,7 @@ import {
   Logger,
   matchRequestingUser,
   OnIndex,
+  Transactional,
   UniqueProperties,
 } from '../../core';
 import {
@@ -77,6 +78,7 @@ export class LocationService {
     ];
   }
 
+  @Transactional()
   async create(input: CreateLocation, session: Session): Promise<Location> {
     const checkName = await this.db
       .query()
@@ -186,6 +188,7 @@ export class LocationService {
     return await this.readOne(result.id, session);
   }
 
+  @Transactional()
   async readOne(id: string, session: Session): Promise<Location> {
     this.logger.debug(`Read Location`, {
       id: id,
@@ -244,6 +247,7 @@ export class LocationService {
     };
   }
 
+  @Transactional()
   async update(input: UpdateLocation, session: Session): Promise<Location> {
     const location = await this.readOne(input.id, session);
 
@@ -323,6 +327,7 @@ export class LocationService {
     return await this.readOne(input.id, session);
   }
 
+  @Transactional()
   async delete(id: string, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
@@ -355,6 +360,7 @@ export class LocationService {
     }
   }
 
+  @Transactional()
   async list(
     { filter, ...input }: LocationListInput,
     session: Session
@@ -373,6 +379,7 @@ export class LocationService {
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 
+  @Transactional()
   async addLocationToNode(
     label: string,
     id: string,
@@ -399,6 +406,7 @@ export class LocationService {
     }
   }
 
+  @Transactional()
   async removeLocationFromNode(
     label: string,
     id: string,
@@ -426,6 +434,7 @@ export class LocationService {
     }
   }
 
+  @Transactional()
   async listLocationsFromNode(
     label: string,
     id: string,

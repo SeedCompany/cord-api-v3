@@ -22,6 +22,7 @@ import {
   matchRequestingUser,
   matchSession,
   property,
+  Transactional,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -133,6 +134,7 @@ export class EngagementService {
 
   // CREATE /////////////////////////////////////////////////////////
 
+  @Transactional()
   async createLanguageEngagement(
     { languageId, projectId, ...input }: CreateLanguageEngagement,
     session: Session
@@ -330,6 +332,7 @@ export class EngagementService {
     return event.engagement as LanguageEngagement;
   }
 
+  @Transactional()
   async createInternshipEngagement(
     {
       projectId,
@@ -596,6 +599,7 @@ export class EngagementService {
 
   // READ ///////////////////////////////////////////////////////////
 
+  @Transactional()
   async readOne(
     id: string,
     session: Session
@@ -780,6 +784,7 @@ export class EngagementService {
 
   // UPDATE ////////////////////////////////////////////////////////
 
+  @Transactional()
   async updateLanguageEngagement(
     input: UpdateLanguageEngagement,
     session: Session
@@ -865,6 +870,7 @@ export class EngagementService {
     return engagementUpdatedEvent.updated as LanguageEngagement;
   }
 
+  @Transactional()
   async updateInternshipEngagement(
     {
       growthPlan,
@@ -1029,6 +1035,7 @@ export class EngagementService {
 
   // DELETE /////////////////////////////////////////////////////////
 
+  @Transactional()
   async delete(id: string, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
@@ -1077,6 +1084,7 @@ export class EngagementService {
 
   // LIST ///////////////////////////////////////////////////////////
 
+  @Transactional()
   async list(
     { filter, ...input }: EngagementListInput,
     session: Session
@@ -1116,6 +1124,7 @@ export class EngagementService {
     return engagements;
   }
 
+  @Transactional()
   async listProducts(
     engagement: LanguageEngagement,
     input: ProductListInput,
