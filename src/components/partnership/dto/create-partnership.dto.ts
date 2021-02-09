@@ -21,9 +21,13 @@ export class CreatePartnership {
   readonly agreementStatus?: PartnershipAgreementStatus;
 
   @Field({ description: 'The partner agreement', nullable: true })
+  @Type(() => CreateDefinedFileVersionInput)
+  @ValidateNested()
   readonly agreement?: CreateDefinedFileVersionInput;
 
   @Field({ description: 'The MOU agreement', nullable: true })
+  @Type(() => CreateDefinedFileVersionInput)
+  @ValidateNested()
   readonly mou?: CreateDefinedFileVersionInput;
 
   @Field(() => PartnershipAgreementStatus, { nullable: true })
