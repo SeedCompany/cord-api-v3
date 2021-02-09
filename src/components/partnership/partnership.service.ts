@@ -91,6 +91,20 @@ export class PartnershipService {
   ): Promise<Partnership> {
     const createdAt = DateTime.local();
 
+    // make sure that there is an uploadId for mou and agreement
+    if (input.mou && !input.mou.uploadId) {
+      throw new InputException(
+        'An empty uploadId was provided.',
+        'mou.uploadId'
+      );
+    }
+
+    if (input.agreement && !input.agreement.uploadId) {
+      throw new InputException(
+        'An empty uploadId was provided.',
+        'agreement.uploadId'
+      );
+    }
     try {
       const partner = await this.partnerService.readOne(partnerId, session);
       this.verifyFinancialReportingType(

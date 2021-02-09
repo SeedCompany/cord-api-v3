@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
 import { sample, times } from 'lodash';
-import { CalendarDate, NotFoundException } from '../src/common';
+import { CalendarDate, InputException, NotFoundException } from '../src/common';
 import { Powers } from '../src/components/authorization/dto/powers';
 import { PartnerType } from '../src/components/partner';
 import {
@@ -332,6 +332,65 @@ describe('Partnership e2e', () => {
         }
       )
     ).rejects.toThrowError(new NotFoundException('Could not find partner'));
+  });
+
+  it('create partnership throws error if upload Ids are empty', async () => {
+    const badmou: CreatePartnership = {
+      projectId: (await createProject(app)).id,
+      partnerId: (await createPartner(app)).id,
+      mou: { uploadId: '', name: 'name' },
+    };
+    const badagreement: CreatePartnership = {
+      projectId: (await createProject(app)).id,
+      partnerId: (await createPartner(app)).id,
+      agreement: { uploadId: '', name: 'name' },
+    };
+    await expect(
+      app.graphql.mutate(
+        gql`
+          mutation createPartnership($input: CreatePartnershipInput!) {
+            createPartnership(input: $input) {
+              partnership {
+                ...partnership
+              }
+            }
+          }
+          ${fragments.partnership}
+        `,
+        {
+          input: {
+            partnership: badmou,
+          },
+        }
+      )
+    ).rejects.toThrowError(
+      new InputException('An empty uploadId was provided.', 'mou.uploadId')
+    );
+
+    await expect(
+      app.graphql.mutate(
+        gql`
+          mutation createPartnership($input: CreatePartnershipInput!) {
+            createPartnership(input: $input) {
+              partnership {
+                ...partnership
+              }
+            }
+          }
+          ${fragments.partnership}
+        `,
+        {
+          input: {
+            partnership: badagreement,
+          },
+        }
+      )
+    ).rejects.toThrowError(
+      new InputException(
+        'An empty uploadId was provided.',
+        'agreement.uploadId'
+      )
+    );
   });
 
   it('should create partnership without mou dates but returns project mou dates if exists', async () => {
