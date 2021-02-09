@@ -5,9 +5,9 @@ import {
   DuplicateException,
   generateId,
   NotFoundException,
-  Sensitivity,
   ServerException,
   Session,
+  UnauthorizedException,
 } from '../../common';
 import {
   ConfigService,
@@ -17,6 +17,7 @@ import {
   Logger,
   matchRequestingUser,
   OnIndex,
+  UniqueProperties,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -49,9 +50,9 @@ export class LocationService {
   readonly securedProperties = {
     name: true,
     fundingAccount: true,
+    defaultFieldRegion: true,
     isoAlpha3: true,
     type: true,
-    sensitivity: true,
   };
 
   constructor(
@@ -117,8 +118,8 @@ export class LocationService {
         label: 'LocationType',
       },
       {
-        key: 'sensitivity',
-        value: input.sensitivity,
+        key: 'canDelete',
+        value: true,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -156,6 +157,26 @@ export class LocationService {
         .run();
     }
 
+    if (input.defaultFieldRegionId) {
+      await this.db
+        .query()
+        .matchNode('location', 'Location', {
+          id: result.id,
+        })
+        .matchNode('defaultFieldRegion', 'FieldRegion', {
+          id: input.defaultFieldRegionId,
+        })
+        .create([
+          node('location'),
+          relation('out', '', 'defaultFieldRegion', {
+            active: true,
+            createdAt,
+          }),
+          node('defaultFieldRegion'),
+        ])
+        .run();
+    }
+
     const dbLocation = new DbLocation();
     await this.authorizationService.processNewBaseNode(
       dbLocation,
@@ -184,10 +205,18 @@ export class LocationService {
         relation('out', '', 'fundingAccount', { active: true }),
         node('fundingAccount', 'FundingAccount'),
       ])
-      .return('propList, permList, node, fundingAccount.id as fundingAccountId')
+      .optionalMatch([
+        node('node'),
+        relation('out', '', 'defaultFieldRegion', { active: true }),
+        node('defaultFieldRegion', 'FieldRegion'),
+      ])
+      .return(
+        'propList, permList, node, fundingAccount.id as fundingAccountId, defaultFieldRegion.id as defaultFieldRegionId'
+      )
       .asResult<
         StandardReadResult<DbPropsOfDto<Location>> & {
           fundingAccountId: string;
+          defaultFieldRegionId: string;
         }
       >();
 
@@ -206,12 +235,15 @@ export class LocationService {
     return {
       ...parseBaseNodeProperties(result.node),
       ...secured,
+      defaultFieldRegion: {
+        ...secured.defaultFieldRegion,
+        value: result.defaultFieldRegionId,
+      },
       fundingAccount: {
         ...secured.fundingAccount,
         value: result.fundingAccountId,
       },
-      sensitivity: secured.sensitivity.value || Sensitivity.High,
-      canDelete: true, // TODO
+      canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 
@@ -221,12 +253,12 @@ export class LocationService {
     await this.db.sgUpdateProperties({
       session,
       object: location,
-      props: ['name', 'isoAlpha3', 'type', 'sensitivity'],
+      props: ['name', 'isoAlpha3', 'type'],
       changes: input,
       nodevar: 'location',
     });
 
-    // Update partner
+    // Update fundingAccount
     if (input.fundingAccountId) {
       const createdAt = DateTime.local();
       await this.db
@@ -259,11 +291,71 @@ export class LocationService {
         .run();
     }
 
+    if (input.defaultFieldRegionId) {
+      const createdAt = DateTime.local();
+      await this.db
+        .query()
+        .call(matchRequestingUser, session)
+        .matchNode('location', 'Location', { id: input.id })
+        .matchNode('newDefaultFieldRegion', 'FieldRegion', {
+          id: input.defaultFieldRegionId,
+        })
+        .optionalMatch([
+          node('location'),
+          relation('out', 'oldDefaultFieldRegionRel', 'defaultFieldRegion', {
+            active: true,
+          }),
+          node('defaultFieldRegion', 'FieldRegion'),
+        ])
+        .create([
+          node('location'),
+          relation('out', '', 'defaultFieldRegion', {
+            active: true,
+            createdAt,
+          }),
+          node('newDefaultFieldRegion'),
+        ])
+        .set({
+          values: {
+            'oldDefaultFieldRegionRel.active': false,
+          },
+        })
+        .run();
+    }
+
     return await this.readOne(input.id, session);
   }
 
-  async delete(_id: string, _session: Session): Promise<void> {
-    // Not Implemented
+  async delete(id: string, session: Session): Promise<void> {
+    const object = await this.readOne(id, session);
+
+    if (!object) {
+      throw new NotFoundException('Could not find Location');
+    }
+
+    const canDelete = await this.db.checkDeletePermission(id, session);
+
+    if (!canDelete)
+      throw new UnauthorizedException(
+        'You do not have the permission to delete this Location'
+      );
+
+    const baseNodeLabels = ['BaseNode', 'Location'];
+
+    const uniqueProperties: UniqueProperties<Location> = {
+      name: ['Property', 'LocationName'],
+    };
+
+    try {
+      await this.db.deleteNodeNew<Location>({
+        object,
+        baseNodeLabels,
+        uniqueProperties,
+      });
+    } catch (exception) {
+      this.logger.error('Failed to delete', { id, exception });
+      throw new ServerException('Failed to delete', exception);
+    }
   }
 
   async list(

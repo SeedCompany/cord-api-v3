@@ -1,12 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import {
-  IdField,
-  ISO31661Alpha3,
-  NameField,
-  Sensitivity,
-} from '../../../common';
+import { IdField, ISO31661Alpha3, NameField } from '../../../common';
 import { Transform } from '../../../common/transform.decorator';
 import { LocationType } from './location-type.enum';
 import { Location } from './location.dto';
@@ -22,9 +17,6 @@ export abstract class UpdateLocation {
   @Field(() => LocationType, { nullable: true })
   readonly type: LocationType;
 
-  @Field(() => Sensitivity, { nullable: true })
-  readonly sensitivity?: Sensitivity;
-
   @Field(() => String, {
     nullable: true,
     description: 'An ISO 3166-1 alpha-3 country code',
@@ -35,6 +27,9 @@ export abstract class UpdateLocation {
 
   @IdField({ nullable: true })
   readonly fundingAccountId?: string;
+
+  @IdField({ nullable: true })
+  readonly defaultFieldRegionId?: string;
 }
 
 @InputType()

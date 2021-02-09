@@ -154,15 +154,15 @@ describe('Field Zone e2e', () => {
 
     const result = await app.graphql.mutate(
       gql`
-        mutation deleteFieldRegion($id: ID!) {
-          deleteFieldRegion(id: $id)
+        mutation deleteFieldZone($id: ID!) {
+          deleteFieldZone(id: $id)
         }
       `,
       {
         id: fieldZone.id,
       }
     );
-    const actual: FieldZone | undefined = result.deleteFieldRegion;
+    const actual: FieldZone | undefined = result.deleteFieldZone;
 
     expect(actual).toBeTruthy();
   });

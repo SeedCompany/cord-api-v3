@@ -9,6 +9,7 @@ import {
   SecuredList,
   ServerException,
   Session,
+  UnauthorizedException,
 } from '../../common';
 import {
   ConfigService,
@@ -20,6 +21,7 @@ import {
   OnIndex,
   property,
   UniquenessError,
+  UniqueProperties,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -194,6 +196,7 @@ export class UserService {
       ...property('status', input.status, 'user'),
       ...this.roleProperties(input.roles),
       ...property('title', input.title, 'user'),
+      ...property('canDelete', true, 'user'),
     ]);
 
     query.return({
@@ -214,35 +217,6 @@ export class UserService {
     }
     if (!result) {
       throw new ServerException('Failed to create user');
-    }
-
-    // don't remove this when you remove the above function
-    // grant the powers that all users will get
-    const grants = [
-      Powers.CreateCeremony,
-      Powers.CreateEducation,
-      Powers.CreateDirectory,
-      Powers.CreateFile,
-      Powers.CreateFileVersion,
-      Powers.CreateFilm,
-      Powers.CreateInternshipEngagement,
-      Powers.CreateLanguageEngagement,
-      Powers.CreateLiteracyMaterial,
-      Powers.CreateLocation,
-      Powers.CreatePartnership,
-      Powers.CreateProduct,
-      Powers.CreateProject,
-      Powers.CreateProjectEngagement,
-      Powers.CreateProjectMember,
-      Powers.CreateSong,
-      Powers.CreateStory,
-      Powers.CreateTranslationEngagement,
-      Powers.CreateUnavailability,
-      Powers.DeleteLanguage,
-      Powers.DeleteProject,
-    ];
-    for (const power of grants) {
-      await this.authorizationService.grantPower(power, id);
     }
 
     // attach user to publicSG
@@ -345,7 +319,7 @@ export class UserService {
         ...securedProps.roles,
         value: rolesValue,
       },
-      canDelete: true, // TODO
+      canDelete: await this.db.checkDeletePermission(id, { userId }),
     };
   }
 
@@ -407,28 +381,34 @@ export class UserService {
   }
 
   async delete(id: string, session: Session): Promise<void> {
-    const user = await this.readOne(id, session);
-    // remove EmailAddress label so uniqueness constraint works only for exisiting users
-    await this.db
-      .query()
-      .match([
-        node('user', 'User', { id }),
-        relation('out', '', 'email', { active: true }),
-        node('email', 'EmailAddress'),
-      ])
-      .removeLabels({
-        email: 'EmailAddress',
-      })
-      .first();
+    const object = await this.readOne(id, session);
+
+    if (!object) {
+      throw new NotFoundException('Could not find User');
+    }
+
+    const canDelete = await this.db.checkDeletePermission(id, session);
+
+    if (!canDelete)
+      throw new UnauthorizedException(
+        'You do not have the permission to delete this User'
+      );
+
+    const baseNodeLabels = ['BaseNode', 'User'];
+
+    const uniqueProperties: UniqueProperties<User> = {
+      email: ['Property', 'EmailAddress'],
+    };
+
     try {
-      await this.db.deleteNode({
-        session,
-        object: user,
-        aclEditProp: 'canDeleteOwnUser',
+      await this.db.deleteNodeNew<User>({
+        object,
+        baseNodeLabels,
+        uniqueProperties,
       });
     } catch (exception) {
-      this.logger.error('Could not delete user', { exception });
-      throw new ServerException('Could not delete user', exception);
+      this.logger.error('Failed to delete', { id, exception });
+      throw new ServerException('Failed to delete', exception);
     }
   }
 
@@ -465,26 +445,26 @@ export class UserService {
       .match([node('user', 'User', { id: userId })])
       .optionalMatch([
         node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
+        relation('in', 'memberOfReadSecurityGroup', 'member'),
+        node('readSecurityGroup', 'SecurityGroup'),
+        relation('out', 'sgReadPerms', 'permission'),
         node('canRead', 'Permission', {
           property: 'education',
           read: true,
         }),
-        relation('out', '', 'baseNode'),
+        relation('out', 'readPermsOfBaseNode', 'baseNode'),
         node('user'),
       ])
       .optionalMatch([
         node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
+        relation('in', 'memberOfEditSecurityGroup', 'member'),
+        node('editSecurityGroup', 'SecurityGroup'),
+        relation('out', 'sgEditPerms', 'permission'),
         node('canEdit', 'Permission', {
           property: 'education',
           edit: true,
         }),
-        relation('out', '', 'baseNode'),
+        relation('out', 'editPermsOfBaseNode', 'baseNode'),
         node('user'),
       ])
       .return({
@@ -520,7 +500,7 @@ export class UserService {
     return {
       ...result,
       canRead: user.canRead,
-      canCreate: user.canEdit,
+      canCreate: user.canEdit ?? false,
     };
   }
 
@@ -535,26 +515,26 @@ export class UserService {
       .match([node('user', 'User', { id: userId })])
       .optionalMatch([
         node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
+        relation('in', 'memberOfReadSecurityGroup', 'member'),
+        node('readSecurityGroup', 'SecurityGroup'),
+        relation('out', 'sgReadPerms', 'permission'),
         node('canRead', 'Permission', {
           property: 'organization',
           read: true,
         }),
-        relation('out', '', 'baseNode'),
+        relation('out', 'readPermsOfBaseNode', 'baseNode'),
         node('user'),
       ])
       .optionalMatch([
         node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
+        relation('in', 'memberOfEditSecurityGroup', 'member'),
+        node('editSecurityGroup', 'SecurityGroup'),
+        relation('out', 'sgEditPerms', 'permission'),
         node('canEdit', 'Permission', {
           property: 'organization',
           edit: true,
         }),
-        relation('out', '', 'baseNode'),
+        relation('out', 'editPermsOfBaseNode', 'baseNode'),
         node('user'),
       ])
       .return({
@@ -587,10 +567,11 @@ export class UserService {
       },
       session
     );
+
     return {
       ...result,
       canRead: user.canRead,
-      canCreate: user.canEdit,
+      canCreate: user.canEdit ?? false,
     };
   }
 
@@ -605,26 +586,26 @@ export class UserService {
       .match([node('user', 'User', { id: userId })])
       .optionalMatch([
         node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
+        relation('in', 'memberOfReadSecurityGroup', 'member'),
+        node('readSecurityGroup', 'SecurityGroup'),
+        relation('out', 'sgReadPerms', 'permission'),
         node('canRead', 'Permission', {
           property: 'partners',
           read: true,
         }),
-        relation('out', '', 'baseNode'),
+        relation('out', 'readPermsOfBaseNode', 'baseNode'),
         node('user'),
       ])
       .optionalMatch([
         node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
+        relation('in', 'memberOfEditSecurityGroup', 'member'),
+        node('editSecurityGroup', 'SecurityGroup'),
+        relation('out', 'sgEditPerms', 'permission'),
         node('canEdit', 'Permission', {
           property: 'partners',
           edit: true,
         }),
-        relation('out', '', 'baseNode'),
+        relation('out', 'editPermsOfBaseNode', 'baseNode'),
         node('user'),
       ])
       .return({
@@ -680,26 +661,26 @@ export class UserService {
       .match([node('user', 'User', { id: userId })])
       .optionalMatch([
         node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
+        relation('in', 'memberOfReadSecurityGroup', 'member'),
+        node('readSecurityGroup', 'SecurityGroup'),
+        relation('out', 'sgReadPerms', 'permission'),
         node('canRead', 'Permission', {
           property: 'unavailability',
           read: true,
         }),
-        relation('out', '', 'baseNode'),
+        relation('out', 'readPermsOfBaseNode', 'baseNode'),
         node('user'),
       ])
       .optionalMatch([
         node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
+        relation('in', 'memberOfEditSecurityGroup', 'member'),
+        node('editSecurityGroup', 'SecurityGroup'),
+        relation('out', 'sgEditPerms', 'permission'),
         node('canEdit', 'Permission', {
           property: 'unavailability',
           edit: true,
         }),
-        relation('out', '', 'baseNode'),
+        relation('out', 'editPermsOfBaseNode', 'baseNode'),
         node('user'),
       ])
       .return({
@@ -732,10 +713,11 @@ export class UserService {
       },
       session
     );
+
     return {
       ...result,
       canRead: user.canRead,
-      canCreate: user.canEdit,
+      canCreate: user.canEdit ?? false,
     };
   }
 

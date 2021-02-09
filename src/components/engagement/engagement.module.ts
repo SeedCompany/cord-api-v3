@@ -13,7 +13,9 @@ import { EngagementRules } from './engagement.rules';
 import { EngagementService } from './engagement.service';
 import * as handlers from './handlers';
 import { InternshipEngagementResolver } from './internship-engagement.resolver';
+import { InternshipPositionResolver } from './internship-position.resolver';
 import { LanguageEngagementResolver } from './language-engagement.resolver';
+import { PnpExtractor } from './pnp-extractor.service';
 
 @Module({
   imports: [
@@ -23,7 +25,7 @@ import { LanguageEngagementResolver } from './language-engagement.resolver';
     CeremonyModule,
     ProductModule,
     forwardRef(() => LanguageModule),
-    LocationModule,
+    forwardRef(() => LocationModule),
     forwardRef(() => ProjectModule),
   ],
   providers: [
@@ -31,8 +33,10 @@ import { LanguageEngagementResolver } from './language-engagement.resolver';
     LanguageEngagementResolver,
     InternshipEngagementResolver,
     EngagementStatusResolver,
+    InternshipPositionResolver,
     EngagementRules,
     EngagementService,
+    PnpExtractor,
     ...Object.values(handlers),
   ],
   exports: [EngagementService],

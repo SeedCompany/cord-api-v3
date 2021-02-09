@@ -1,5 +1,4 @@
-import { DateTime } from 'luxon';
-import { ServerException } from '../../../common';
+import { keys, ServerException } from '../../../common';
 import {
   DatabaseService,
   EventsHandler,
@@ -20,35 +19,35 @@ export class SetLastStatusDate
 
   async handle(event: EngagementUpdatedEvent) {
     const { previous, updated, session } = event;
-    if (previous.status === updated.status) {
+    if (previous.status.value === updated.status.value) {
       return;
     }
 
     try {
       const modifiedAt = updated.modifiedAt;
       const changes = {
-        id: updated.id,
         statusModifiedAt: modifiedAt,
-        lastSuspendedAt: (undefined as unknown) as DateTime,
-        lastReactivatedAt: (undefined as unknown) as DateTime,
-      };
-
-      if (updated.status.value === EngagementStatus.Suspended) {
-        changes.lastSuspendedAt = modifiedAt;
-      }
-
-      if (
-        previous.status.value === EngagementStatus.Suspended &&
+        ...(updated.status.value === EngagementStatus.Suspended
+          ? {
+              lastSuspendedAt: modifiedAt,
+            }
+          : {}),
+        ...(previous.status.value === EngagementStatus.Suspended &&
         updated.status.value === EngagementStatus.Active
-      ) {
-        changes.lastReactivatedAt = modifiedAt;
-      }
+          ? {
+              lastReactivatedAt: modifiedAt,
+            }
+          : {}),
+      } as const;
 
       event.updated = await this.db.sgUpdateProperties({
         object: updated,
         session,
-        props: ['statusModifiedAt', 'lastSuspendedAt', 'lastReactivatedAt'],
-        changes,
+        props: keys(changes as Required<typeof changes>),
+        changes: {
+          id: updated.id,
+          ...changes,
+        },
         nodevar: 'Engagement',
       });
     } catch (exception) {

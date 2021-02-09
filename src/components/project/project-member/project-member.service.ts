@@ -7,9 +7,11 @@ import {
   DuplicateException,
   generateId,
   InputException,
+  MaybeAsync,
   NotFoundException,
   ServerException,
   Session,
+  UnauthorizedException,
 } from '../../../common';
 import {
   ConfigService,
@@ -18,7 +20,7 @@ import {
   ILogger,
   Logger,
   matchRequestingUser,
-  matchSession,
+  OnIndex,
   property,
 } from '../../../core';
 import {
@@ -38,7 +40,7 @@ import {
   StandardReadResult,
 } from '../../../core/database/results';
 import { AuthorizationService } from '../../authorization/authorization.service';
-import { UserService } from '../../user';
+import { User, UserService } from '../../user';
 import {
   CreateProjectMember,
   ProjectMember,
@@ -66,6 +68,14 @@ export class ProjectMemberService {
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService
   ) {}
+
+  @OnIndex()
+  async createIndexes() {
+    return [
+      'CREATE CONSTRAINT ON (n:ProjectMember) ASSERT EXISTS(n.id)',
+      'CREATE CONSTRAINT ON (n:ProjectMember) ASSERT n.id IS UNIQUE',
+    ];
+  }
 
   protected async getPMByProjectAndUser(
     projectId: string,
@@ -102,13 +112,13 @@ export class ProjectMemberService {
       );
     }
 
-    const user = await this.userService.readOne(userId, session);
-    this.assertValidRoles(input.roles, user.roles.value);
+    await this.assertValidRoles(input.roles, () =>
+      this.userService.readOne(userId, session)
+    );
 
     try {
       const createProjectMember = this.db
         .query()
-        .match(matchSession(session))
         .create([
           [
             node('newProjectMember', 'ProjectMember:BaseNode', {
@@ -159,10 +169,6 @@ export class ProjectMemberService {
 
       return await this.readOne(id, session);
     } catch (exception) {
-      this.logger.warning('Failed to create project member', {
-        exception,
-      });
-
       throw new ServerException('Could not create project member', exception);
     }
   }
@@ -230,7 +236,15 @@ export class ProjectMemberService {
   ): Promise<ProjectMember> {
     const object = await this.readOne(input.id, session);
 
-    this.assertValidRoles(input.roles, object.user.value?.roles.value);
+    await this.assertValidRoles(input.roles, () => {
+      const user = object.user.value;
+      if (!user) {
+        throw new UnauthorizedException(
+          'Cannot read user to verify roles available'
+        );
+      }
+      return user;
+    });
 
     await this.db.sgUpdateProperties({
       session,
@@ -246,14 +260,16 @@ export class ProjectMemberService {
     return await this.readOne(input.id, session);
   }
 
-  private assertValidRoles(
+  private async assertValidRoles(
     roles: Role[] | undefined,
-    availableRoles: Role[] | undefined
+    forUser: () => MaybeAsync<User>
   ) {
-    if (!roles || roles.length === 0) {
+    if (!roles || roles.length === 0 || this.config.migration) {
       return;
     }
-    const forbiddenRoles = difference(roles, availableRoles ?? []);
+    const user = await forUser();
+    const availableRoles = user.roles.value ?? [];
+    const forbiddenRoles = difference(roles, availableRoles);
     if (forbiddenRoles.length) {
       const forbiddenRolesStr = forbiddenRoles.join(', ');
       throw new InputException(

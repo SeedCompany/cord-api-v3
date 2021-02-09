@@ -1,6 +1,3 @@
-import * as React from 'react';
-import { ComponentProps, FC, ReactElement } from 'react';
-import { useFrontendUrl } from './frontend-url';
 import {
   All,
   Attributes,
@@ -11,6 +8,7 @@ import {
   Font,
   Head,
   Image,
+  InText,
   Mjml,
   Raw,
   Section,
@@ -18,8 +16,10 @@ import {
   Text,
   Title,
   Wrapper,
-} from './mjml';
-import { InText } from './text-rendering';
+} from '@seedcompany/nestjs-email/templates';
+import * as React from 'react';
+import { ComponentProps, FC, ReactElement } from 'react';
+import { useFrontendUrl } from './frontend-url';
 
 export const EmailTemplate: FC<{ title: string }> = ({ title, children }) => (
   <Mjml lang="en">
@@ -108,7 +108,7 @@ export const Branding = (): ReactElement => {
   );
 };
 
-export const Heading = (props: ComponentProps<typeof Text>) => (
+export const Heading: FC<ComponentProps<typeof Text>> = (props) => (
   <Section>
     <Column padding={0}>
       <Text fontSize={24} paddingTop={0} paddingBottom={0} {...props}>

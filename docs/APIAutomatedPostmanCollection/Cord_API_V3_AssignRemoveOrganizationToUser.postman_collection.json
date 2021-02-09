@@ -1,12 +1,12 @@
 {
 	"info": {
 		"_postman_id": "bc21907e-f950-4ff0-b71f-c7c1556d3ef4",
-		"name": "Cord_API_V3_AssignOrganizationToUser",
+		"name": "Cord_API_V3_AssignRemoveOrganizationToUser",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
 		{
-			"name": "Pre-req ( Session + Register + Login + GrantPower ) for Organization Copy",
+			"name": "Pre-req ( Session + Register + Login + GrantPower ) for Organization",
 			"item": [
 				{
 					"name": "Session",
@@ -32,7 +32,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "# Write your query or mutation here\r\nquery {\r\n  session(browser: false) {\r\n    user {\r\n      id,\r\n      email\r\n      {\r\n        value\r\n      }\r\n      realFirstName\r\n      {\r\n        value\r\n      }\r\n      createdAt\r\n      displayLastName\r\n      {\r\n         value\r\n      }\r\n      \r\n      \r\n      \r\n    },\r\n    token\r\n  }\r\n}",
+								"query": "# Write your query or mutation here\r\nquery {\r\n  session(browser: false) {\r\n    user {\r\n      id,\r\n      email\r\n      {\r\n        value\r\n      }\r\n      realFirstName\r\n      {\r\n        value\r\n      }\r\n      createdAt\r\n       canDelete\r\n      displayLastName\r\n      {\r\n         value\r\n      }\r\n      \r\n      \r\n      \r\n    },\r\n    token\r\n  }\r\n}",
 								"variables": ""
 							},
 							"options": {
@@ -98,7 +98,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n\r\n# devops@tsco.org\r\n# admin\r\n",
+								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n       canDelete\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n\r\n# devops@tsco.org\r\n# admin\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"email\": \"{{rootAdminLogin_email}}\",\r\n        \"password\": \"{{rootAdminLogin_password}}\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -257,30 +257,7 @@
 									"// pm.globals.set('userStatus', userStatusArray[randomNumber]);\r",
 									"pm.globals.set(\"userStatus\", \"Active\");\r",
 									"\r",
-									"var userRolesArray = ['BibleTranslationLiaison',\r",
-									"'Consultant',\r",
-									"'ConsultantManager',\r",
-									"'Controller',\r",
-									"'Development',\r",
-									"'ExecutiveDevelopmentRepresentative',\r",
-									"'ExecutiveLeadership',\r",
-									"'FieldOperationsDirector',\r",
-									"'FieldPartner',\r",
-									"'FinancialAnalyst',\r",
-									"'Intern',\r",
-									"'Liaison',\r",
-									"'LeadFinancialAnalyst',\r",
-									"'Mentor',\r",
-									"'OfficeOfThePresident',\r",
-									"'ProjectManager',\r",
-									"'RegionalCommunicationsCoordinator',\r",
-									"'RegionalDirector',\r",
-									"'SupportingProjectManager',\r",
-									"'Translator',\r",
-									"'Writer'\r",
-									"];\r",
-									"var randomNumber = Math.floor(Math.random()*userRolesArray.length);\r",
-									"pm.globals.set('userRoles', userRolesArray[randomNumber]);\r",
+									"pm.globals.set(\"userRoles\", \"ProjectManager\");\r",
 									""
 								],
 								"type": "text/javascript"
@@ -303,7 +280,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation register($input: RegisterInput!) {\r\n  register(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation register($input: RegisterInput!) {\r\n  register(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n       canDelete\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"realFirstName\": \"Piyush\",\r\n        \"realLastName\": \"Patel\",\r\n        \"email\": \"{{login_email}}\",\r\n        \"password\": \"{{login_password}}\",\r\n        \"displayFirstName\": \"{{displayFirstName}}\",\r\n        \"displayLastName\": \"{{displayLastName}}\",\r\n        \"phone\": \"{{phone}}\",\r\n        \"timezone\": \"{{timezone}}\",\r\n        \"status\": \"{{userStatus}}\",\r\n        \"title\": \"{{userTitle}}\",\r\n        \"roles\": \"{{userRoles}}\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -369,7 +346,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      canDelete\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n   \"input\": {\r\n      \"email\": \"{{login_email}}\",\r\n      \"password\": \"{{login_password}}\"\r\n   }\r\n}"
 							},
 							"options": {
@@ -435,7 +412,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n\r\n# devops@tsco.org\r\n# admin\r\n",
+								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      canDelete\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n\r\n# devops@tsco.org\r\n# admin\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"email\": \"{{rootAdminLogin_email}}\",\r\n        \"password\": \"{{rootAdminLogin_password}}\"\r\n    }\r\n}"
 							},
 							"options": {
@@ -560,8 +537,86 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n     canDelete\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n   \"input\": {\r\n      \"email\": \"{{login_email}}\",\r\n      \"password\": \"{{login_password}}\"\r\n   }\r\n}"
+							},
+							"options": {
+								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Org",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "d1e815bc-8d1d-423b-8aea-5512cbed5f89",
+								"exec": [
+									"const moment = require('moment');",
+									"var jsonData = pm.response.json();",
+									"",
+									"  var id = jsonData.data.createOrganization.organization.id;",
+									"   pm.globals.set(\"organizationid\", id);",
+									"",
+									"",
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "fa3857a3-d0a0-4040-8256-7ced2b8cecca",
+								"exec": [
+									"const moment = require('moment');\r",
+									"\r",
+									"pm.globals.set(\"orgName\", \"OrganizationName_\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
+									"\r",
+									"pm.globals.set('orgAddress', pm.variables.replaceIn('{{$randomStreetAddress}}'));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation createOrganization($input: CreateOrganizationInput!) {\r\n  createOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      address {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      canDelete\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\n    \"input\": {\n        \"organization\": {\n            \"name\": \"{{orgName}}\",\n            \"address\":\"{{orgAddress}}\"\n        }\n    }\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -654,158 +709,6 @@
 					"listen": "test",
 					"script": {
 						"id": "745ae6b8-c31d-4707-8732-67776a19fc9c",
-						"type": "text/javascript",
-						"exec": [
-							""
-						]
-					}
-				}
-			],
-			"protocolProfileBehavior": {}
-		},
-		{
-			"name": "Pre-req ( Create Organization) for AssognOrgToUser",
-			"item": [
-				{
-					"name": "Create Org Success",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"id": "1f572d54-37d2-475a-8459-bfedccb992d8",
-								"exec": [
-									"const moment = require('moment');",
-									"var jsonData = pm.response.json();",
-									"",
-									"//Common Verification",
-									"pm.test(\"Status code is 200\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test(\"Response time is less than 1000ms\", function () {",
-									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
-									"});",
-									"",
-									"",
-									"//Test Specific",
-									"pm.test(\"Verify that ID is not blank or null\", function () {",
-									"    var id = jsonData.data.createOrganization.organization.id;",
-									"    pm.expect(id).to.not.eql(null);",
-									"    pm.expect(id).to.not.eql(\"\");",
-									"",
-									"    // Saving organization id for future use",
-									"    pm.globals.set(\"organizationid\", id);",
-									"});",
-									"",
-									"// Saving data for future use",
-									"var organization = jsonData.data.createOrganization.organization;",
-									"pm.globals.set('organization_data',JSON.stringify(organization));",
-									"",
-									"pm.test(\"Verify organization name is correct\", function () {",
-									"    pm.expect(jsonData.data.createOrganization.organization.name.value).to.eql(pm.globals.get('orgName'));",
-									"});",
-									"",
-									"pm.test(\"Verify organization address is correct\", function () {",
-									"    pm.expect(jsonData.data.createOrganization.organization.address.value).to.eql(pm.globals.get('orgAddress'));",
-									"});",
-									"",
-									"pm.test(\"Verify that organization's createdAt is in Specific time format\", function () {",
-									"    var time = jsonData.data.createOrganization.organization.createdAt;",
-									"    var isValidTime = moment(time, \"YYYY-MM-DDTHH:mm:ss.SSSZ\", true).isValid();",
-									"    pm.expect(isValidTime).to.eql(true);",
-									"});",
-									"",
-									"pm.test(\"Verify that AvatarLetters are not blank or null\", function () {",
-									"    var avatarLetters = jsonData.data.createOrganization.organization.avatarLetters;",
-									"    pm.expect(avatarLetters).to.not.eql(null);",
-									"    pm.expect(avatarLetters).to.not.eql(\"\");",
-									"});",
-									"",
-									"pm.test(\"Verify that AvatarLetters are as per organization name\", function () {",
-									"    var avatarLetters = jsonData.data.createOrganization.organization.avatarLetters;",
-									"    pm.expect(avatarLetters).to.eql(\"O\");",
-									"});",
-									"",
-									"",
-									"",
-									""
-								],
-								"type": "text/javascript"
-							}
-						},
-						{
-							"listen": "prerequest",
-							"script": {
-								"id": "72156f0c-9a24-41e3-9a10-469985b05646",
-								"exec": [
-									"const moment = require('moment');\r",
-									"\r",
-									"pm.globals.set(\"orgName\", \"OrganizationName_\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
-									"\r",
-									"pm.globals.set('orgAddress', pm.variables.replaceIn('{{$randomStreetAddress}}'));"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "",
-								"value": "",
-								"type": "text",
-								"disabled": true
-							}
-						],
-						"body": {
-							"mode": "graphql",
-							"graphql": {
-								"query": "mutation createOrganization($input: CreateOrganizationInput!) {\r\n  createOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      address {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\n    \"input\": {\n        \"organization\": {\n            \"name\": \"{{orgName}}\",\n            \"address\":\"{{orgAddress}}\"\n        }\n    }\n}"
-							},
-							"options": {
-								"graphql": {}
-							}
-						},
-						"url": {
-							"raw": "{{env}}/graphql",
-							"host": [
-								"{{env}}"
-							],
-							"path": [
-								"graphql"
-							]
-						}
-					},
-					"response": []
-				}
-			],
-			"event": [
-				{
-					"listen": "prerequest",
-					"script": {
-						"id": "e330a9ba-f882-497f-b40a-bf4511115a35",
-						"type": "text/javascript",
-						"exec": [
-							""
-						]
-					}
-				},
-				{
-					"listen": "test",
-					"script": {
-						"id": "6af8c3b8-3e6d-44b9-83a8-99a4d0d91921",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -922,10 +825,22 @@
 									"});\r",
 									"\r",
 									"//Test Specific\r",
-									"pm.test(\"Verify that user is assign to organization\", function () {\r",
-									"    pm.expect(jsonData.data.assignOrganizationToUser).to.eql(true);\r",
+									"pm.test(\"Verify that error message is 400\", function () {\r",
+									"    var error_message = jsonData.errors[0].message;\r",
+									"    pm.expect(error_message).to.eql(\"Input validation failed\");\r",
 									"});\r",
-									""
+									"\r",
+									"pm.test(\"Verify that error status is 400\", function () {\r",
+									"    var error_status = jsonData.errors[0].extensions.status;\r",
+									"    pm.expect(error_status).to.eql(400);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify that orgId error message is correct\", function () {\r",
+									"    var error_orgId_message = jsonData.errors[0].extensions.errors['request.orgId'].IsId;\r",
+									"\r",
+									"   // errors['request.orgId'].IsId;\r",
+									"    pm.expect(error_orgId_message).to.eql(\"Invalid ID\");\r",
+									"});"
 								],
 								"type": "text/javascript"
 							}
@@ -1076,10 +991,22 @@
 									"});\r",
 									"\r",
 									"//Test Specific\r",
-									"pm.test(\"Verify that user is assign to organization\", function () {\r",
-									"    pm.expect(jsonData.data.assignOrganizationToUser).to.eql(true);\r",
+									"pm.test(\"Verify that error message is 400\", function () {\r",
+									"    var error_message = jsonData.errors[0].message;\r",
+									"    pm.expect(error_message).to.eql(\"Input validation failed\");\r",
 									"});\r",
-									""
+									"\r",
+									"pm.test(\"Verify that error status is 400\", function () {\r",
+									"    var error_status = jsonData.errors[0].extensions.status;\r",
+									"    pm.expect(error_status).to.eql(400);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify that orgId error message is correct\", function () {\r",
+									"    var error_userId_message = jsonData.errors[0].extensions.errors['request.userId'].IsId;\r",
+									"\r",
+									"   // errors['request.orgId'].IsId;\r",
+									"    pm.expect(error_userId_message).to.eql(\"Invalid ID\");\r",
+									"});"
 								],
 								"type": "text/javascript"
 							}
@@ -1461,8 +1388,8 @@
 									"var jsonData = pm.response.json();\r",
 									"\r",
 									"//Common Verification\r",
-									"pm.test(\"Status code is 400 Bad Request\", function () {\r",
-									"    pm.response.to.have.status(400);\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
 									"});\r",
 									"\r",
 									"pm.test(\"Response time is less than 1000ms\", function () {\r",
@@ -1470,16 +1397,21 @@
 									"});\r",
 									"\r",
 									"//Test Specific\r",
-									"pm.test(\"Verify that error message is correct\", function () {\r",
-									"    var error_message = jsonData.errors[0].message;  \r",
-									"    pm.expect(error_message).to.include(\"Field \\\"userId\\\" of required type \\\"ID!\\\" was not provided.\");\r",
+									"pm.test(\"Verify that error message is 400\", function () {\r",
+									"    var error_message = jsonData.errors[0].message;\r",
+									"    pm.expect(error_message).to.eql(\"Input validation failed\");\r",
 									"});\r",
 									"\r",
-									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {\r",
-									"    var error_code = jsonData.errors[0].extensions.code;  \r",
-									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");\r",
+									"pm.test(\"Verify that error status is 400\", function () {\r",
+									"    var error_status = jsonData.errors[0].extensions.status;\r",
+									"    pm.expect(error_status).to.eql(400);\r",
 									"});\r",
-									""
+									"\r",
+									"pm.test(\"Verify that orgId error message is correct\", function () {\r",
+									"    var error_orgId_message = jsonData.errors[0].extensions.errors['request.orgId'].IsId;\r",
+									"\r",
+									"    pm.expect(error_orgId_message).to.eql(\"Invalid ID\");\r",
+									"});"
 								],
 								"type": "text/javascript"
 							}
@@ -1502,7 +1434,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation assignOrganizationToUser($input: AssignOrganizationToUserInput!) {\r\n  assignOrganizationToUser(input: $input)\r\n}\r\n",
-								"variables": "{\r\n    \"input\": {\r\n        \"request\": {\r\n            \"orgId\": \"@#$%^&*(\",\r\n            \"userId1\": \"{{userid}}\",\r\n            \"primary\": true\r\n        }\r\n    }\r\n}"
+								"variables": "{\r\n    \"input\": {\r\n        \"request\": {\r\n            \"orgId\": \"@#$%^&*(\",\r\n            \"userId\": \"{{userid}}\",\r\n            \"primary\": true\r\n        }\r\n    }\r\n}"
 							},
 							"options": {
 								"graphql": {}
@@ -1541,8 +1473,8 @@
 									"var jsonData = pm.response.json();\r",
 									"\r",
 									"//Common Verification\r",
-									"pm.test(\"Status code is 400 Bad Request\", function () {\r",
-									"    pm.response.to.have.status(400);\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
 									"});\r",
 									"\r",
 									"pm.test(\"Response time is less than 1000ms\", function () {\r",
@@ -1550,16 +1482,21 @@
 									"});\r",
 									"\r",
 									"//Test Specific\r",
-									"pm.test(\"Verify that error message is correct\", function () {\r",
-									"    var error_message = jsonData.errors[0].message;  \r",
-									"    pm.expect(error_message).to.include(\"Field \\\"userId\\\" of required type \\\"ID!\\\" was not provided.\");\r",
+									"pm.test(\"Verify that error message is 400\", function () {\r",
+									"    var error_message = jsonData.errors[0].message;\r",
+									"    pm.expect(error_message).to.eql(\"Input validation failed\");\r",
 									"});\r",
 									"\r",
-									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {\r",
-									"    var error_code = jsonData.errors[0].extensions.code;  \r",
-									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");\r",
+									"pm.test(\"Verify that error status is 400\", function () {\r",
+									"    var error_status = jsonData.errors[0].extensions.status;\r",
+									"    pm.expect(error_status).to.eql(400);\r",
 									"});\r",
-									""
+									"\r",
+									"pm.test(\"Verify that userId error message is correct\", function () {\r",
+									"    var error_userId_message = jsonData.errors[0].extensions.errors['request.userId'].IsId;\r",
+									"\r",
+									"    pm.expect(error_userId_message).to.eql(\"Invalid ID\");\r",
+									"});"
 								],
 								"type": "text/javascript"
 							}
@@ -1710,10 +1647,21 @@
 									"});\r",
 									"\r",
 									"//Test Specific\r",
-									"pm.test(\"Verify that user is removed from organization\", function () {\r",
-									"    pm.expect(jsonData.data.removeOrganizationFromUser).to.eql(true);\r",
+									"pm.test(\"Verify that error message is 400\", function () {\r",
+									"    var error_message = jsonData.errors[0].message;\r",
+									"    pm.expect(error_message).to.eql(\"Input validation failed\");\r",
 									"});\r",
-									""
+									"\r",
+									"pm.test(\"Verify that error status is 400\", function () {\r",
+									"    var error_status = jsonData.errors[0].extensions.status;\r",
+									"    pm.expect(error_status).to.eql(400);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify that orgId error message is correct\", function () {\r",
+									"    var error_orgId_message = jsonData.errors[0].extensions.errors['request.orgId'].IsId;\r",
+									"\r",
+									"    pm.expect(error_orgId_message).to.eql(\"Invalid ID\");\r",
+									"});"
 								],
 								"type": "text/javascript"
 							}
@@ -1864,10 +1812,21 @@
 									"});\r",
 									"\r",
 									"//Test Specific\r",
-									"pm.test(\"Verify that user is removed from organization\", function () {\r",
-									"    pm.expect(jsonData.data.removeOrganizationFromUser).to.eql(true);\r",
+									"pm.test(\"Verify that error message is 400\", function () {\r",
+									"    var error_message = jsonData.errors[0].message;\r",
+									"    pm.expect(error_message).to.eql(\"Input validation failed\");\r",
 									"});\r",
-									""
+									"\r",
+									"pm.test(\"Verify that error status is 400\", function () {\r",
+									"    var error_status = jsonData.errors[0].extensions.status;\r",
+									"    pm.expect(error_status).to.eql(400);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Verify that userId error message is correct\", function () {\r",
+									"    var error_userId_message = jsonData.errors[0].extensions.errors['request.userId'].IsId;\r",
+									"\r",
+									"    pm.expect(error_userId_message).to.eql(\"Invalid ID\");\r",
+									"});"
 								],
 								"type": "text/javascript"
 							}
@@ -2169,8 +2128,8 @@
 									"var jsonData = pm.response.json();\r",
 									"\r",
 									"//Common Verification\r",
-									"pm.test(\"Status code is 400 Bad Request\", function () {\r",
-									"    pm.response.to.have.status(400);\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
 									"});\r",
 									"\r",
 									"pm.test(\"Response time is less than 1000ms\", function () {\r",
@@ -2178,16 +2137,21 @@
 									"});\r",
 									"\r",
 									"//Test Specific\r",
-									"pm.test(\"Verify that error message is correct\", function () {\r",
-									"    var error_message = jsonData.errors[0].message;  \r",
-									"    pm.expect(error_message).to.include(\"Field \\\"userId\\\" of required type \\\"ID!\\\" was not provided.\");\r",
+									"pm.test(\"Verify that error message is 400\", function () {\r",
+									"    var error_message = jsonData.errors[0].message;\r",
+									"    pm.expect(error_message).to.eql(\"Input validation failed\");\r",
 									"});\r",
 									"\r",
-									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {\r",
-									"    var error_code = jsonData.errors[0].extensions.code;  \r",
-									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");\r",
+									"pm.test(\"Verify that error status is 400\", function () {\r",
+									"    var error_status = jsonData.errors[0].extensions.status;\r",
+									"    pm.expect(error_status).to.eql(400);\r",
 									"});\r",
-									""
+									"\r",
+									"pm.test(\"Verify that orgId error message is correct\", function () {\r",
+									"    var error_orgId_message = jsonData.errors[0].extensions.errors['request.orgId'].IsId;\r",
+									"\r",
+									"    pm.expect(error_orgId_message).to.eql(\"Invalid ID\");\r",
+									"});"
 								],
 								"type": "text/javascript"
 							}
@@ -2249,8 +2213,8 @@
 									"var jsonData = pm.response.json();\r",
 									"\r",
 									"//Common Verification\r",
-									"pm.test(\"Status code is 400 Bad Request\", function () {\r",
-									"    pm.response.to.have.status(400);\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
 									"});\r",
 									"\r",
 									"pm.test(\"Response time is less than 1000ms\", function () {\r",
@@ -2258,16 +2222,21 @@
 									"});\r",
 									"\r",
 									"//Test Specific\r",
-									"pm.test(\"Verify that error message is correct\", function () {\r",
-									"    var error_message = jsonData.errors[0].message;  \r",
-									"    pm.expect(error_message).to.include(\"Field \\\"userId\\\" of required type \\\"ID!\\\" was not provided.\");\r",
+									"pm.test(\"Verify that error message is 400\", function () {\r",
+									"    var error_message = jsonData.errors[0].message;\r",
+									"    pm.expect(error_message).to.eql(\"Input validation failed\");\r",
 									"});\r",
 									"\r",
-									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {\r",
-									"    var error_code = jsonData.errors[0].extensions.code;  \r",
-									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");\r",
+									"pm.test(\"Verify that error status is 400\", function () {\r",
+									"    var error_status = jsonData.errors[0].extensions.status;\r",
+									"    pm.expect(error_status).to.eql(400);\r",
 									"});\r",
-									""
+									"\r",
+									"pm.test(\"Verify that userId error message is correct\", function () {\r",
+									"    var error_userId_message = jsonData.errors[0].extensions.errors['request.userId'].IsId;\r",
+									"\r",
+									"    pm.expect(error_userId_message).to.eql(\"Invalid ID\");\r",
+									"});"
 								],
 								"type": "text/javascript"
 							}

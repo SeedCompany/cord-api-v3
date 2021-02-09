@@ -36,9 +36,13 @@ describe('Partnership e2e', () => {
     app = await createTestApp();
     db = app.get(Connection);
     await createSession(app);
-    await registerUserWithPower(app, [Powers.CreateOrganization], {
-      roles: [Role.Controller],
-    });
+    await registerUserWithPower(
+      app,
+      [Powers.CreateOrganization, Powers.CreateProject],
+      {
+        roles: [Role.Controller],
+      }
+    );
 
     project = await createProject(app);
   });
@@ -415,7 +419,7 @@ describe('Partnership e2e', () => {
         financialReportingType: FinancialReportingType.Funded,
       })
     ).rejects.toThrowError(
-      `FinancialReportingType ${FinancialReportingType.Funded} cannot be assigned to this partnership`
+      `Partner does not have this financial reporting type available`
     );
   });
 
@@ -452,7 +456,7 @@ describe('Partnership e2e', () => {
         }
       )
     ).rejects.toThrowError(
-      `FinancialReportingType ${FinancialReportingType.Funded} cannot be assigned to this partnership`
+      `Partner does not have this financial reporting type available`
     );
   });
 

@@ -57,6 +57,24 @@ export class ServiceUnavailableError extends Neo4jError {
   }
 }
 
+export class ConnectionTimeoutError extends Neo4jError {
+  static readonly code = 'N/A' as const;
+
+  constructor(message: string) {
+    super(message);
+    this.name = this.constructor.name;
+  }
+
+  static fromNeo(e: Neo4jError) {
+    if (e instanceof ConnectionTimeoutError) {
+      return e;
+    }
+    const ex = new this(e.message);
+    ex.stack = e.stack;
+    return ex;
+  }
+}
+
 export class ConstraintError extends Neo4jError {
   static readonly code = 'Neo.ClientError.Schema.ConstraintValidationFailed' as const;
   constructor(message: string) {
@@ -127,6 +145,9 @@ export const createBetterError = (e: Error) => {
   }
   if (e.code === SyntaxError.code) {
     return SyntaxError.fromNeo(e);
+  }
+  if (e.message.startsWith('Connection acquisition timed out in ')) {
+    return ConnectionTimeoutError.fromNeo(e);
   }
   return e;
 };

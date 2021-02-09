@@ -1,8 +1,14 @@
+import {
+  Button,
+  Column,
+  HideInText,
+  InText,
+  Section,
+  Text,
+} from '@seedcompany/nestjs-email/templates';
 import * as React from 'react';
 import { EmailTemplate, Heading, Link, ReplyInfoFooter } from './base';
 import { useFrontendUrl } from './frontend-url';
-import { Button, Column, Section, Text } from './mjml';
-import { HideInText, InText } from './text-rendering';
 
 export interface ForgotPasswordProps {
   token: string;

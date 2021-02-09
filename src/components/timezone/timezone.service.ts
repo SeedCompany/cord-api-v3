@@ -51,6 +51,8 @@ export class TimeZoneService {
     const countries = mapValues(data.countries, (c) => {
       const o = (c as unknown) as IanaCountry;
       o.code = c.abbr;
+      // @ts-expect-error we are converting c to o here. Using the same object is
+      // necessary so that we can maintain the cyclic references between countries & zones.
       delete c.abbr;
       o.zones = c.zones.map((zone) => data.zones[zone]) as any;
       return o;

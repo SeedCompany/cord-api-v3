@@ -8,6 +8,7 @@ import {
   NotFoundException,
   ServerException,
   Session,
+  UnauthorizedException,
 } from '../../common';
 import {
   ConfigService,
@@ -19,10 +20,13 @@ import {
   matchSession,
   OnIndex,
   Property,
+  UniqueProperties,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
+  matchPermList,
+  matchPropList,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -138,6 +142,12 @@ export class OrganizationService {
         isPublic: false,
         isOrgPublic: false,
       },
+      {
+        key: 'canDelete',
+        value: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
     ];
     // const baseMetaProps = [];
 
@@ -188,23 +198,8 @@ export class OrganizationService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Organization', { id: orgId })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
-        node('perms', 'Permission'),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ])
-      .with('collect(distinct perms) as permList, node')
-      .match([
-        node('node'),
-        relation('out', 'r', { active: true }),
-        node('props', 'Property'),
-      ])
-      .with('{value: props.value, property: type(r)} as prop, permList, node')
-      .with('collect(prop) as propList, permList, node')
+      .call(matchPermList)
+      .call(matchPropList, 'permList')
       .return('propList, permList, node')
       .asResult<StandardReadResult<DbPropsOfDto<Organization>>>();
 
@@ -226,7 +221,7 @@ export class OrganizationService {
     return {
       ...parseBaseNodeProperties(result.node),
       ...secured,
-      canDelete: true, // TODO
+      canDelete: await this.db.checkDeletePermission(orgId, session),
     };
   }
 
@@ -245,16 +240,34 @@ export class OrganizationService {
   }
 
   async delete(id: string, session: Session): Promise<void> {
-    const ed = await this.readOne(id, session);
+    const object = await this.readOne(id, session);
+
+    if (!object) {
+      throw new NotFoundException('Could not find Organization');
+    }
+
+    const canDelete = await this.db.checkDeletePermission(id, session);
+
+    if (!canDelete)
+      throw new UnauthorizedException(
+        'You do not have the permission to delete this Organization'
+      );
+
+    const baseNodeLabels = ['BaseNode', 'Organization'];
+
+    const uniqueProperties: UniqueProperties<Organization> = {
+      name: ['Property', 'OrgName'],
+    };
+
     try {
-      await this.db.deleteNode({
-        session,
-        object: ed,
-        aclEditProp: 'canDeleteOwnUser',
+      await this.db.deleteNodeNew<Organization>({
+        object,
+        baseNodeLabels,
+        uniqueProperties,
       });
-    } catch (e) {
-      this.logger.error('Failed to delete', { id, exception: e });
-      throw new ServerException('Failed to delete');
+    } catch (exception) {
+      this.logger.error('Failed to delete', { id, exception });
+      throw new ServerException('Failed to delete', exception);
     }
 
     this.logger.debug(`deleted organization with id`, { id });

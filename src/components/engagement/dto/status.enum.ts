@@ -1,5 +1,6 @@
 import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { SecuredEnum } from '../../../common';
+import { ProjectStep } from '../../project/dto';
 
 export enum EngagementStatus {
   InDevelopment = 'InDevelopment',
@@ -18,7 +19,11 @@ export enum EngagementStatus {
 
   Terminated = 'Terminated',
   Completed = 'Completed',
-  Converted = 'Converted', // this is being used in DOMO & from v2 data. Keep?
+  Converted = 'Converted',
+  Unapproved = 'Unapproved',
+  Transferred = 'Transferred',
+  NotRenewed = 'NotRenewed',
+  Rejected = 'Rejected',
 }
 
 registerEnumType(EngagementStatus, {
@@ -49,4 +54,6 @@ export abstract class EngagementStatusTransition {
 
   @Field(() => EngagementTransitionType)
   type: EngagementTransitionType;
+
+  projectStepRequirements: ProjectStep[];
 }

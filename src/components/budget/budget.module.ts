@@ -18,7 +18,7 @@ import * as handlers from './handlers';
     FileModule,
     forwardRef(() => AuthorizationModule),
     EducationModule,
-    LocationModule,
+    forwardRef(() => LocationModule),
     forwardRef(() => PartnershipModule),
     forwardRef(() => OrganizationModule),
     forwardRef(() => ProjectModule),

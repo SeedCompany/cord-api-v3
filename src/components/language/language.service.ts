@@ -29,6 +29,8 @@ import {
 import {
   calculateTotalAndPaginateList,
   collect,
+  matchPermList,
+  matchPropList,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -42,7 +44,7 @@ import {
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
-import { EngagementService } from '../engagement';
+import { EngagementService, EngagementStatus } from '../engagement';
 import {
   LocationListInput,
   LocationService,
@@ -117,13 +119,13 @@ export class LanguageService {
       // DISPLAYNAME NODE
       'CREATE CONSTRAINT ON (n:LanguageDisplayName) ASSERT EXISTS(n.value)',
 
-      // RODNUMBER REL
-      'CREATE CONSTRAINT ON ()-[r:rodNumber]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:rodNumber]-() ASSERT EXISTS(r.createdAt)',
+      // REGISTRYOFDIALECTSCODE REL
+      'CREATE CONSTRAINT ON ()-[r:registryOfDialectsCode]-() ASSERT EXISTS(r.active)',
+      'CREATE CONSTRAINT ON ()-[r:registryOfDialectsCode]-() ASSERT EXISTS(r.createdAt)',
 
-      // RODNUMBER NODE
-      'CREATE CONSTRAINT ON (n:LanguageRodNumber) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:LanguageRodNumber) ASSERT n.value IS UNIQUE',
+      // REGISTRYOFDIALECTSCODE NODE
+      'CREATE CONSTRAINT ON (n:RegistryOfDialectsCode) ASSERT EXISTS(n.value)',
+      'CREATE CONSTRAINT ON (n:RegistryOfDialectsCode) ASSERT n.value IS UNIQUE',
 
       // ETHNOLOGUELANGUAGE REL
       'CREATE CONSTRAINT ON ()-[r:ethnologue]-() ASSERT EXISTS(r.active)',
@@ -254,15 +256,7 @@ export class LanguageService {
       const createLanguage = this.db
         .query()
         .call(matchRequestingUser, session)
-        .call(
-          createBaseNode,
-          await generateId(),
-          'Language',
-          secureProps,
-          {},
-          [],
-          session.userId === this.config.rootAdmin.id
-        )
+        .call(createBaseNode, await generateId(), 'Language', secureProps)
         .return('node.id as id');
 
       const resultLanguage = await createLanguage.first();
@@ -306,7 +300,7 @@ export class LanguageService {
           simpleSwitch(e.label, {
             LanguageName: 'name',
             LanguageDisplayName: 'displayName',
-            LanguageRodNumber: 'rodNumber',
+            RegistryOfDialectsCode: `registryOfDialectsCode`,
           }) ?? e.label;
         throw new DuplicateException(
           `language.${prop}`,
@@ -324,23 +318,8 @@ export class LanguageService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Language', { id: langId })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
-        node('perms', 'Permission'),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ])
-      .with('collect(distinct perms) as permList, node')
-      .match([
-        node('node'),
-        relation('out', 'r', { active: true }),
-        node('props', 'Property'),
-      ])
-      .with('{value: props.value, property: type(r)} as prop, permList, node')
-      .with('collect(prop) as propList, permList, node')
+      .call(matchPermList)
+      .call(matchPropList, 'permList')
       .match([
         node('node'),
         relation('out', '', 'ethnologue'),
@@ -427,9 +406,9 @@ export class LanguageService {
         .match([node('lang', 'Language', { id: input.id })])
         .optionalMatch([
           node('requestingUser'),
-          relation('in', '', 'member'),
-          node('', 'SecurityGroup'),
-          relation('out', '', 'permission'),
+          relation('in', 'memberOfSecurityGroup', 'member'),
+          node('securityGroup', 'SecurityGroup'),
+          relation('out', 'sgPerms', 'permission'),
           node('canReadEthnologueLanguages', 'Permission', {
             property: 'ethnologue',
             read: true,
@@ -483,7 +462,7 @@ export class LanguageService {
     const uniqueProperties: UniqueProperties<Language> = {
       name: ['Property', 'LanguageName'],
       displayName: ['Property', 'LanguageDisplayName'],
-      registryOfDialectsCode: ['Property'],
+      registryOfDialectsCode: ['Property', 'RegistryOfDialectsCode'],
     };
 
     try {
@@ -633,7 +612,18 @@ export class LanguageService {
         )
       );
       const dates = compact(
-        engagments.map((engagement) => engagement.startDate.value)
+        engagments
+          .filter(
+            (engagement) =>
+              engagement.status.value &&
+              ![
+                EngagementStatus.InDevelopment,
+                EngagementStatus.DidNotDevelop,
+                EngagementStatus.Unapproved,
+                EngagementStatus.Rejected,
+              ].includes(engagement.status.value)
+          )
+          .map((engagement) => engagement.startDate.value)
       );
 
       const canRead = engagments.every(

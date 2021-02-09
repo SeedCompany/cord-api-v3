@@ -1,10 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import * as argon2 from 'argon2';
+import { EmailService } from '@seedcompany/nestjs-email';
 import { node, relation } from 'cypher-query-builder';
 import { sign, verify } from 'jsonwebtoken';
-import { pickBy } from 'lodash';
 import { DateTime } from 'luxon';
-import { Except } from 'type-fest';
 import {
   DuplicateException,
   InputException,
@@ -16,7 +14,6 @@ import { RawSession } from '../../common/session';
 import {
   ConfigService,
   DatabaseService,
-  EmailService,
   ILogger,
   Logger,
   matchRequestingUser,
@@ -24,6 +21,7 @@ import {
 import { ForgotPassword } from '../../core/email/templates';
 import { User, UserService } from '../user';
 import { LoginInput, ResetPasswordInput } from './authentication.dto';
+import { CryptoService } from './crypto.service';
 import { RegisterInput } from './dto';
 import { NoSessionException } from './no-session.exception';
 
@@ -36,6 +34,7 @@ export class AuthenticationService {
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
+    private readonly crypto: CryptoService,
     private readonly email: EmailService,
     private readonly userService: UserService,
     @Logger('authentication:service') private readonly logger: ILogger
@@ -109,7 +108,7 @@ export class AuthenticationService {
       throw e;
     }
 
-    const passwordHash = await argon2.hash(input.password, this.argon2Options);
+    const passwordHash = await this.crypto.hash(input.password);
     await this.db
       .query()
       .match([
@@ -158,10 +157,7 @@ export class AuthenticationService {
       )
       .first();
 
-    if (
-      !result1 ||
-      !(await argon2.verify(result1.pash, input.password, this.argon2Options))
-    ) {
+    if (!(await this.crypto.verify(result1?.pash, input.password))) {
       throw new UnauthenticatedException('Invalid credentials');
     }
 
@@ -274,20 +270,14 @@ export class AuthenticationService {
         node('password', 'Property'),
       ])
       .return('password.value as passwordHash')
+      .asResult<{ passwordHash: string }>()
       .first();
 
-    if (
-      !result ||
-      !(await argon2.verify(
-        result.passwordHash,
-        oldPassword,
-        this.argon2Options
-      ))
-    ) {
+    if (!(await this.crypto.verify(result?.passwordHash, oldPassword))) {
       throw new UnauthenticatedException('Invalid credentials');
     }
 
-    const newPasswordHash = await argon2.hash(newPassword, this.argon2Options);
+    const newPasswordHash = await this.crypto.hash(newPassword);
     await this.db
       .query()
       .call(matchRequestingUser, session)
@@ -367,7 +357,7 @@ export class AuthenticationService {
       throw new InputException('Token has expired', 'TokenExpired');
     }
 
-    const pash = await argon2.hash(password, this.argon2Options);
+    const pash = await this.crypto.hash(password);
 
     await this.db
       .query()
@@ -416,15 +406,5 @@ export class AuthenticationService {
       });
       throw new UnauthenticatedException(exception);
     }
-  }
-
-  private get argon2Options() {
-    const options: Except<argon2.Options, 'raw'> = {
-      secret: this.config.passwordSecret
-        ? Buffer.from(this.config.passwordSecret, 'utf-8')
-        : undefined,
-    };
-    // argon doesn't like undefined values even though the types allow them
-    return pickBy(options, (v) => v !== undefined);
   }
 }

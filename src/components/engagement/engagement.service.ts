@@ -1,7 +1,8 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import { node, Node, Query, relation } from 'cypher-query-builder';
+import { pickBy } from 'lodash';
 import { DateTime } from 'luxon';
-import { MergeExclusive } from 'type-fest';
+import { Except, MergeExclusive } from 'type-fest';
 import {
   DuplicateException,
   generateId,
@@ -9,6 +10,7 @@ import {
   NotFoundException,
   ServerException,
   Session,
+  UnauthorizedException,
 } from '../../common';
 import {
   ConfigService,
@@ -23,6 +25,8 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
+  matchPermList,
+  matchPropList,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -53,6 +57,7 @@ import {
   EngagementStatus,
   InternshipEngagement,
   LanguageEngagement,
+  PnpData,
   UpdateInternshipEngagement,
   UpdateLanguageEngagement,
 } from './dto';
@@ -63,6 +68,7 @@ import {
   EngagementUpdatedEvent,
 } from './events';
 import { DbInternshipEngagement, DbLanguageEngagement } from './model';
+import { PnpExtractor } from './pnp-extractor.service';
 
 @Injectable()
 export class EngagementService {
@@ -86,7 +92,7 @@ export class EngagementService {
     firstScripture: true,
     lukePartnership: true,
     sentPrintingDate: true,
-    paraTextRegistryId: true,
+    paratextRegistryId: true,
     pnp: true,
     language: true,
     historicGoal: true,
@@ -106,6 +112,7 @@ export class EngagementService {
     private readonly products: ProductService,
     private readonly config: ConfigService,
     private readonly files: FileService,
+    private readonly pnpExtractor: PnpExtractor,
     private readonly engagementRules: EngagementRules,
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService,
@@ -131,24 +138,14 @@ export class EngagementService {
       );
     }
 
-    if (await this.getLEByProjectAndLanguage(projectId, languageId)) {
-      throw new DuplicateException(
-        'engagement.languageId',
-        'Engagement for this project and language already exists'
-      );
-    }
+    await this.verifyUniqueness(projectId, languageId, 'language');
 
     if (input.firstScripture) {
       await this.verifyFirstScripture({ languageId });
     }
     await this.verifyProjectStatus(projectId, session);
 
-    if (input.status && input.status !== EngagementStatus.InDevelopment) {
-      throw new InputException(
-        'The Engagement status should be in development',
-        'engagement.status'
-      );
-    }
+    this.verifyCreationStatus(input.status);
 
     this.logger.debug('Mutation create language engagement ', {
       input,
@@ -162,7 +159,7 @@ export class EngagementService {
     const createdAt = DateTime.local();
     const pnpId = await generateId();
 
-    const createLE = this.db.query().match(matchSession(session));
+    const createLE = this.db.query();
     if (projectId) {
       createLE.match([node('project', 'Project', { id: projectId })]);
     }
@@ -217,8 +214,8 @@ export class EngagementService {
         'languageEngagement'
       ),
       ...property(
-        'paraTextRegistryId',
-        input.paraTextRegistryId || undefined,
+        'paratextRegistryId',
+        input.paratextRegistryId || input.paraTextRegistryId || undefined,
         'languageEngagement'
       ),
       ...property('pnp', pnpId || undefined, 'languageEngagement'),
@@ -238,6 +235,7 @@ export class EngagementService {
         'EngagementStatus'
       ),
       ...property('modifiedAt', createdAt, 'languageEngagement'),
+      ...property('canDelete', true, 'languageEngagement'),
     ]);
     if (projectId) {
       createLE.create([
@@ -307,6 +305,10 @@ export class EngagementService {
       input.pnp,
       'engagement.pnp'
     );
+    if (input.pnp) {
+      const pnpData = await this.pnpExtractor.extract(input.pnp, session);
+      await this.savePnpData(id, pnpData);
+    }
 
     const dbLanguageEngagement = new DbLanguageEngagement();
     await this.authorizationService.processNewBaseNode(
@@ -345,20 +347,11 @@ export class EngagementService {
       );
     }
 
-    if (await this.getIEByProjectAndIntern(projectId, internId)) {
-      throw new DuplicateException(
-        'engagement.internId',
-        'Engagement for this project and person already exists'
-      );
-    }
+    await this.verifyUniqueness(projectId, internId, 'internship');
+
     await this.verifyProjectStatus(projectId, session);
 
-    if (input.status && input.status !== EngagementStatus.InDevelopment) {
-      throw new InputException(
-        'The Engagement status should be in development',
-        'engagement.status'
-      );
-    }
+    this.verifyCreationStatus(input.status);
 
     this.logger.debug('Mutation create internship engagement ', {
       input,
@@ -371,7 +364,7 @@ export class EngagementService {
     const createdAt = DateTime.local();
     const growthPlanId = await generateId();
 
-    const createIE = this.db.query().match(matchSession(session));
+    const createIE = this.db.query();
     if (projectId) {
       createIE.match([node('project', 'Project', { id: projectId })]);
     }
@@ -453,6 +446,7 @@ export class EngagementService {
         input.status || EngagementStatus.InDevelopment,
         'internshipEngagement'
       ),
+      ...property('canDelete', true, 'internshipEngagement'),
     ]);
     if (projectId) {
       createIE.create([
@@ -590,6 +584,19 @@ export class EngagementService {
     return engagementCreatedEvent.engagement as InternshipEngagement;
   }
 
+  private verifyCreationStatus(status?: EngagementStatus) {
+    if (
+      status &&
+      status !== EngagementStatus.InDevelopment &&
+      !this.config.migration
+    ) {
+      throw new InputException(
+        'The Engagement status should be in development',
+        'engagement.status'
+      );
+    }
+  }
+
   // READ ///////////////////////////////////////////////////////////
 
   async readOne(
@@ -606,24 +613,10 @@ export class EngagementService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Engagement', { id })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
-        node('perms', 'Permission'),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ])
-      .with('collect(distinct perms) as permList, node')
-      .match([
-        node('node'),
-        relation('out', 'r', { active: true }),
-        node('props', 'Property'),
-      ])
-      .with('{value: props.value, property: type(r)} as prop, permList, node')
+      .call(matchPermList)
+      .call(matchPropList, 'permList')
       .with([
-        'collect(prop) as propList',
+        'propList',
         'permList',
         'node',
         `case
@@ -664,6 +657,11 @@ export class EngagementService {
         relation('out', '', 'mentor', { active: true }),
         node('mentor'),
       ])
+      .optionalMatch([
+        node('node'),
+        relation('out', '', 'pnpData', { active: true }),
+        node('pnpData'),
+      ])
       .return([
         'propList, permList, node, project.id as projectId',
         '__typename, ceremony.id as ceremonyId',
@@ -671,10 +669,14 @@ export class EngagementService {
         'intern.id as internId',
         'countryOfOrigin.id as countryOfOriginId',
         'mentor.id as mentorId',
+        'pnpData',
       ])
       .asResult<
         StandardReadResult<
-          DbPropsOfDto<LanguageEngagement & InternshipEngagement>
+          Except<
+            DbPropsOfDto<LanguageEngagement & InternshipEngagement>,
+            'pnpData'
+          >
         > & {
           __typename: string;
           languageId: string;
@@ -683,6 +685,7 @@ export class EngagementService {
           internId: string;
           countryOfOriginId: string;
           mentorId: string;
+          pnpData?: Node<PnpData>;
         }
       >();
 
@@ -754,7 +757,8 @@ export class EngagementService {
         ...securedProperties.mentor,
         value: result.mentorId,
       },
-      canDelete: true, // TODO
+      pnpData: result.pnpData?.properties,
+      canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 
@@ -767,6 +771,7 @@ export class EngagementService {
     if (input.firstScripture) {
       await this.verifyFirstScripture({ engagementId: input.id });
     }
+
     if (input.status) {
       await this.engagementRules.verifyStatusChange(
         input.id,
@@ -775,11 +780,15 @@ export class EngagementService {
       );
     }
 
-    const { pnp, ...rest } = input;
-    const changes = {
-      ...rest,
-      modifiedAt: DateTime.local(),
-    };
+    const { pnp, paratextRegistryId, paraTextRegistryId, ...rest } = input;
+    const changes = pickBy(
+      {
+        ...rest,
+        paratextRegistryId: paratextRegistryId || paraTextRegistryId,
+        modifiedAt: DateTime.local(),
+      },
+      (val) => val !== undefined
+    );
     const object = (await this.readOne(
       input.id,
       session
@@ -791,6 +800,10 @@ export class EngagementService {
       pnp,
       session
     );
+    if (pnp) {
+      const pnpData = await this.pnpExtractor.extract(pnp, session);
+      await this.savePnpData(object.id, pnpData);
+    }
 
     try {
       await this.db.sgUpdateProperties({
@@ -804,7 +817,7 @@ export class EngagementService {
           'communicationsCompleteDate',
           'startDateOverride',
           'endDateOverride',
-          'paraTextRegistryId',
+          'paratextRegistryId',
           'historicGoal',
           'modifiedAt',
           'status',
@@ -978,7 +991,7 @@ export class EngagementService {
         exception,
       });
       throw new ServerException(
-        'Could not find update InternshipEngagement',
+        'Could not update InternshipEngagement',
         exception
       );
     }
@@ -1007,6 +1020,13 @@ export class EngagementService {
       throw new NotFoundException('Could not find engagement', 'engagement.id');
     }
 
+    const canDelete = await this.db.checkDeletePermission(id, session);
+
+    if (!canDelete)
+      throw new UnauthorizedException(
+        'You do not have the permission to delete this Engagement'
+      );
+
     const result = await this.db
       .query()
       .match([
@@ -1022,19 +1042,20 @@ export class EngagementService {
       await this.verifyProjectStatus(result.projectId, session);
     }
 
-    try {
-      await this.db.deleteNode({
-        session,
-        object,
-        aclEditProp: 'canDeleteOwnUser',
-      });
-    } catch (exception) {
-      this.logger.warning('Failed to delete partnership', {
-        exception,
-      });
+    const baseNodeLabels = ['BaseNode', 'Engagement', object.__typename];
 
-      throw new ServerException('Failed to delete partnership', exception);
+    try {
+      await this.db.deleteNodeNew({
+        object,
+        baseNodeLabels,
+      });
+    } catch (e) {
+      this.logger.warning('Failed to delete Engagement', {
+        exception: e,
+      });
+      throw new ServerException('Failed to delete Engagement');
     }
+
     await this.eventBus.publish(new EngagementDeletedEvent(object, session));
   }
 
@@ -1097,28 +1118,28 @@ export class EngagementService {
       .match([
         [
           node('requestingUser'),
-          relation('in', '', 'member'),
-          node('', 'SecurityGroup'),
-          relation('out', '', 'permission'),
+          relation('in', 'memberOfReadSecurityGroup', 'member'),
+          node('readSecurityGroup', 'SecurityGroup'),
+          relation('out', 'sgReadPerms', 'permission'),
           node('canRead', 'Permission', {
             property: 'product',
             read: true,
           }),
-          relation('out', '', 'baseNode'),
+          relation('out', 'readPermsOfBaseNode', 'baseNode'),
           node('eng', 'Engagement', { id: engagement.id }),
         ],
       ])
       .match([
         [
           node('requestingUser'),
-          relation('in', '', 'member'),
-          node('', 'SecurityGroup'),
-          relation('out', '', 'permission'),
+          relation('in', 'memberOfEditSecurityGroup', 'member'),
+          node('editSecurityGroup', 'SecurityGroup'),
+          relation('out', 'sgEditPerms', 'permission'),
           node('canEdit', 'Permission', {
             property: 'product',
             edit: true,
           }),
-          relation('out', '', 'baseNode'),
+          relation('out', 'editPermsOfBaseNode', 'baseNode'),
           node('eng'),
         ],
       ])
@@ -1242,6 +1263,26 @@ export class EngagementService {
     );
   }
 
+  private async savePnpData(id: string, pnpData: PnpData | null) {
+    const query = this.db.query();
+    pnpData
+      ? query
+          .match(node('node', 'LanguageEngagement', { id }))
+          .merge([
+            node('node'),
+            relation('out', 'engPnp', 'pnpData', { active: true }),
+            node('pnp', 'PnpData', pnpData),
+          ])
+      : query
+          .match([
+            node('node', 'LanguageEngagement', { id }),
+            relation('out', 'engPnp', 'pnpData', { active: true }),
+            node('pnp', 'PnpData'),
+          ])
+          .detachDelete('pnp');
+    await query.run();
+  }
+
   protected async getProjectTypeById(
     projectId: string
   ): Promise<ProjectType | undefined> {
@@ -1253,46 +1294,32 @@ export class EngagementService {
     return results?.type as ProjectType | undefined;
   }
 
-  protected async getIEByProjectAndIntern(
+  protected async verifyUniqueness(
     projectId: string,
-    internId: string
-  ): Promise<boolean> {
+    otherId: string,
+    type: 'language' | 'internship'
+  ): Promise<void> {
+    const property = type === 'language' ? type : 'intern';
     const result = await this.db
       .query()
-      .match([node('intern', 'User', { id: internId })])
-      .match([node('project', 'Project', { id: projectId })])
       .match([
-        node('project'),
+        node('project', 'Project', { id: projectId }),
         relation('out', '', 'engagement'),
-        node('internshipEngagement'),
-        relation('out', '', 'intern'),
-        node('intern'),
+        node('engagement'),
+        relation('out', '', property),
+        node('other', type === 'language' ? 'Language' : 'User', {
+          id: otherId,
+        }),
       ])
-      .return('internshipEngagement.id as id')
+      .return('engagement.id as id')
       .first();
-
-    return result ? true : false;
-  }
-
-  protected async getLEByProjectAndLanguage(
-    projectId: string,
-    languageId: string
-  ): Promise<boolean> {
-    const result = await this.db
-      .query()
-      .match([node('language', 'Language', { id: languageId })])
-      .match([node('project', 'Project', { id: projectId })])
-      .match([
-        node('project'),
-        relation('out', '', 'engagement'),
-        node('internshipEngagement'),
-        relation('out', '', 'language'),
-        node('language'),
-      ])
-      .return('internshipEngagement.id as id')
-      .first();
-
-    return result ? true : false;
+    if (result) {
+      const label = type === 'language' ? type : 'person';
+      throw new DuplicateException(
+        `engagement.${property}Id`,
+        `Engagement for this project and ${label} already exists`
+      );
+    }
   }
 
   /**
@@ -1373,6 +1400,10 @@ export class EngagementService {
    * [BUSINESS RULE] Only Projects with a Status of 'In Development' can have Engagements created or deleted.
    */
   protected async verifyProjectStatus(projectId: string, session: Session) {
+    if (this.config.migration) {
+      return;
+    }
+
     let project;
     try {
       project = await this.projectService.readOne(projectId, session);

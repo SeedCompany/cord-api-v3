@@ -1,14 +1,20 @@
 import { ppRaw as prettyPrint } from '@patarapolw/prettyprint';
 import { enabled as colorsEnabled, red, yellow } from 'colors/safe';
 import stringify from 'fast-safe-stringify';
-import { identity, mapValues } from 'lodash';
+import { identity } from 'lodash';
+import { TransformableInfo as ScuffedTransformableInfo } from 'logform';
 import { DateTime } from 'luxon';
 import { relative } from 'path';
 import { parse as parseTrace, StackFrame } from 'stack-trace';
 import { MESSAGE } from 'triple-beam';
 import { config, format, LogEntry } from 'winston';
 import { Exception } from '../../common/exceptions';
+import { maskSecrets as maskSecretsOfObj } from '../../common/mask-secrets';
 import { getNameFromEntry } from './logger.interface';
+
+type TransformableInfo = ScuffedTransformableInfo & {
+  [MESSAGE]?: string;
+};
 
 type Color = (str: string) => string;
 
@@ -27,11 +33,7 @@ export const metadata = () =>
 
 export const maskSecrets = () =>
   format((info) => {
-    info.metadata = mapValues(info.metadata, (val: string, key) =>
-      /(password|token|key)/i.exec(key)
-        ? `${'*'.repeat(Math.min(val.slice(0, -3).length, 20)) + val.slice(-3)}`
-        : val
-    );
+    info.metadata = maskSecretsOfObj(info.metadata);
     return info;
   })();
 
@@ -131,7 +133,7 @@ const formatStackFrame = (t: StackFrame) => {
 };
 
 export const formatException = () =>
-  format((info) => {
+  format((info: TransformableInfo) => {
     if (!info.exceptions) {
       return info;
     }
@@ -162,9 +164,9 @@ export const formatException = () =>
   })();
 
 export const printForCli = () =>
-  format.printf((info) => {
+  format.printf((info: TransformableInfo) => {
     if (info[MESSAGE]) {
-      return info[MESSAGE];
+      return info[MESSAGE]!;
     }
 
     const name = getNameFromEntry(info);

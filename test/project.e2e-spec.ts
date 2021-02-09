@@ -70,7 +70,9 @@ describe('Project e2e', () => {
     app = await createTestApp();
     db = app.get(Connection);
     await createSession(app);
-    director = await registerUser(app);
+    director = await registerUserWithPower(app, [Powers.DeleteProject], {
+      roles: [Role.ProjectManager],
+    });
     fieldZone = await createZone(app, { directorId: director.id });
     fieldRegion = await createRegion(app, {
       directorId: director.id,
@@ -155,12 +157,23 @@ describe('Project e2e', () => {
         },
       }
     );
+    const folders = [
+      { name: 'Approval Documents' },
+      { name: 'Consultant Reports' },
+      { name: 'Field Correspondence' },
+      { name: 'Financial Reports' },
+      { name: 'Narrative Reports' },
+      { name: 'Photos' },
+    ];
 
     const actual: Project & {
       engagements: { canRead: boolean; canCreate: boolean };
       partnerships: { canRead: boolean; canCreate: boolean };
       team: { canRead: boolean; canCreate: boolean };
     } = result.createProject.project;
+    const projectFiles =
+      result.createProject.project.rootDirectory.value.children.items;
+    expect(projectFiles).toEqual(folders);
     expect(actual.id).toBeDefined();
     expect(actual.departmentId.value).toBeNull();
     expect(actual.mouStart.value).toBeNull();
@@ -322,7 +335,11 @@ describe('Project e2e', () => {
   });
 
   it('List of projects sorted by name to be alphabetical, ignoring case sensitivity. Order: ASCENDING', async () => {
-    await registerUser(app, { displayFirstName: 'Tammy' });
+    await registerUserWithPower(
+      app,
+      [Powers.CreateProject, Powers.DeleteProject],
+      { displayFirstName: 'Tammy' }
+    );
     //Create three projects with mixed cases.
     await createProject(app, {
       name: 'a project 2' + faker.random.uuid(),
@@ -390,7 +407,11 @@ describe('Project e2e', () => {
   });
 
   it('List of projects sorted by name to be alphabetical, ignoring case sensitivity. Order: DESCENDING', async () => {
-    await registerUser(app, { displayFirstName: 'Tammy' });
+    await registerUserWithPower(
+      app,
+      [Powers.CreateProject, Powers.DeleteProject],
+      { displayFirstName: 'Tammy' }
+    );
     //Create three projects, each beginning with lower or upper-cases.
     await createProject(app, {
       name: 'a project 2' + faker.random.uuid(),
@@ -617,6 +638,10 @@ describe('Project e2e', () => {
   it('List view of my projects', async () => {
     const numProjects = 2;
     const type = ProjectType.Translation;
+    await registerUserWithPower(app, [
+      Powers.CreateProject,
+      Powers.DeleteProject,
+    ]);
     await Promise.all(
       times(numProjects).map(
         async () =>

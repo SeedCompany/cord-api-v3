@@ -31,8 +31,8 @@ import { DbBaseNodeGrant, DbRole } from '../model';
 const read = true;
 const write = true;
 
-export const Liason = new DbRole({
-  name: Role.Liason,
+export const Liaison = new DbRole({
+  name: Role.Liaison,
   powers: [
     Powers.CreateDirectory,
     Powers.CreateEducation,
@@ -188,7 +188,7 @@ export const Liason = new DbRole({
         { propertyName: 'lastReactivatedAt',          permission: { read, write, }, },
         { propertyName: 'lastSuspendedAt',            permission: { read, write, }, },
         { propertyName: 'lukePartnership',            permission: { read, write, }, },
-        { propertyName: 'paraTextRegistryId',         permission: { read, write, }, },
+        { propertyName: 'paratextRegistryId',         permission: { read, write, }, },
         { propertyName: 'pnp',                        permission: { read, write, }, },
         { propertyName: 'historicGoal',               permission: { read, write, }, },
         { propertyName: 'sentPrintingDate',           permission: { read, write, }, },
@@ -210,7 +210,6 @@ export const Liason = new DbRole({
       properties: [
         { propertyName: 'name',                       permission: { read, write, }, },
         { propertyName: 'type',                       permission: { read, write, }, },
-        { propertyName: 'sensitivity',                permission: { read, write, }, },
         { propertyName: 'isoAlpha3',                  permission: { read, write, }, },
         { propertyName: 'fundingAccount',             permission: { read, write, }, },
     ]}),

@@ -1,15 +1,16 @@
-/* eslint-disable prettier/prettier */
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
-import * as argon2 from 'argon2';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
+import { generateId, ServerException } from '../../common';
 import {
-  generateId,
-  ServerException,
-  UnauthenticatedException,
-} from '../../common';
-import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
+  ConfigService,
+  DatabaseService,
+  ILogger,
+  Logger,
+  Transactional,
+} from '../../core';
 import { AuthenticationService } from '../authentication';
+import { CryptoService } from '../authentication/crypto.service';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
 import { Role } from '../project';
@@ -20,6 +21,7 @@ export class AdminService implements OnApplicationBootstrap {
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
     private readonly authentication: AuthenticationService,
+    private readonly crypto: CryptoService,
     private readonly authorizationService: AuthorizationService,
     @Logger('admin:service') private readonly logger: ILogger
   ) {}
@@ -128,33 +130,26 @@ export class AdminService implements OnApplicationBootstrap {
     }
   }
 
-  async setupRootObjects(): Promise<void> {
-    // merge root security group
+  @Transactional()
+  private async setupRootObjects(): Promise<void> {
+    this.logger.debug('Setting up root objects');
+
     await this.mergeRootSecurityGroup();
 
-    // merge public security group
     await this.mergePublicSecurityGroup();
 
-    // merge anon user and connect to public sg
     await this.mergeAnonUser();
 
-    // Root Admin
-
-    if (!(await this.doesRootAdminUserAlreadyExist())) {
-      await this.createRootAdminUser();
-    }
-
-    // Connect Root Security Group and Root Admin
+    await this.mergeRootAdminUser();
 
     await this.mergeRootAdminUserToSecurityGroup();
 
     await this.mergePublicSecurityGroupWithRootSg();
 
-    // Default Organization
     await this.mergeDefaultOrg();
   }
 
-  async mergeRootSecurityGroup() {
+  private async mergeRootSecurityGroup() {
     // merge root security group
 
     const powers = Object.keys(Powers);
@@ -176,7 +171,7 @@ export class AdminService implements OnApplicationBootstrap {
       .run();
   }
 
-  async mergePublicSecurityGroup() {
+  private async mergePublicSecurityGroup() {
     await this.db
       .query()
       .merge([
@@ -191,7 +186,7 @@ export class AdminService implements OnApplicationBootstrap {
       .run();
   }
 
-  async mergeAnonUser() {
+  private async mergeAnonUser() {
     const createdAt = DateTime.local();
     await this.db
       .query()
@@ -215,54 +210,49 @@ export class AdminService implements OnApplicationBootstrap {
       .run();
   }
 
-  async doesRootAdminUserAlreadyExist(): Promise<boolean> {
-    const result = await this.db
-      .query()
-      .match([
-        [
-          node('user', 'User'),
-          relation('out', '', 'email', {
-            active: true,
-          }),
-          node('email', 'EmailAddress', {
-            value: this.config.rootAdmin.email,
-          }),
-        ],
-      ])
-      .raw('RETURN user.id as id')
-      .first();
-
-    if (result) {
-      // set id to root user id
-      this.config.setRootAdminId(result.id);
-      this.logger.notice(`root admin id`, { id: result.id });
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  async createRootAdminUser(): Promise<void> {
+  private async mergeRootAdminUser(): Promise<void> {
     const { email, password } = this.config.rootAdmin;
 
+    let id: string;
+
     // see if root already exists
-    const findRoot = await this.db
+    const existing = await this.db
       .query()
       .match([
-        node('email', 'EmailAddress', { value: email }),
+        node('email', 'EmailAddress'),
         relation('in', '', 'email', { active: true }),
-        node('root', ['User', 'RootAdmin']),
+        node('root', ['RootUser']),
         relation('out', '', 'password', { active: true }),
-        node('pw', 'Propety'),
+        node('pw', 'Property'),
       ])
-      .return('pw.value as pash')
+      .return(['root.id as id', 'email.value as email', 'pw.value as hash'])
+      .asResult<{ id: string; email: string; hash: string }>()
       .first();
-
-    if (findRoot === undefined) {
-      // not found, create
-
-      const adminUser = await this.authentication.register({
-        email: email,
+    if (existing) {
+      if (
+        existing.email !== email ||
+        !(await this.crypto.verify(existing.hash, password))
+      ) {
+        this.logger.notice('Updating root user to match app configuration');
+        await this.db
+          .query()
+          .match([
+            node('email', 'EmailAddress'),
+            relation('in', '', 'email', { active: true }),
+            node('root', ['RootUser']),
+            relation('out', '', 'password', { active: true }),
+            node('pw', 'Property'),
+          ])
+          .setValues({
+            email: { value: email },
+            pw: { value: await this.crypto.hash(password) },
+          })
+          .run();
+      }
+      id = existing.id;
+    } else {
+      id = await this.authentication.register({
+        email,
         password,
         displayFirstName: 'root',
         displayLastName: 'root',
@@ -273,37 +263,22 @@ export class AdminService implements OnApplicationBootstrap {
         roles: [Role.Administrator], // do not give root all the roles
       });
 
-      // update config with new root admin id
-      this.config.setRootAdminId(adminUser);
-      this.logger.notice('root user id: ' + adminUser);
-
-      if (!adminUser) {
-        throw new ServerException('Could not create root admin user');
-      } else {
-        // give all powers
-        const powers = Object.keys(Powers);
-        await this.db
-          .query()
-          .match([
-            node('user', 'User', {
-              id: adminUser,
-            }),
-          ])
-          .setValues({ user: { powers: powers } }, true)
-          .run();
-      }
-    } else if (await argon2.verify(findRoot.pash, password)) {
-      // password match - do nothing
-    } else {
-      // password did not match
-
-      throw new UnauthenticatedException(
-        'Root Email or Password are incorrect'
-      );
+      // set root user label & give all powers
+      const powers = Object.keys(Powers);
+      await this.db
+        .query()
+        .matchNode('user', 'User', { id })
+        .setLabels({ user: 'RootUser' })
+        .setValues({ user: { powers } }, true)
+        .run();
     }
+
+    // TODO do this a different way. Using a global like this can cause race conditions.
+    this.config.rootAdmin.id = id;
+    this.logger.notice('Setting actual root user id', { id });
   }
 
-  async mergeRootAdminUserToSecurityGroup(): Promise<void> {
+  private async mergeRootAdminUserToSecurityGroup(): Promise<void> {
     const makeAdmin = await this.db
       .query()
       .match([
@@ -314,13 +289,7 @@ export class AdminService implements OnApplicationBootstrap {
         ],
       ])
       .with('*')
-      .match([
-        [
-          node('newRootAdmin', 'User', {
-            id: this.config.rootAdmin.id,
-          }),
-        ],
-      ])
+      .match(node('newRootAdmin', 'RootUser'))
       .with('*')
       .merge([
         [
@@ -340,7 +309,7 @@ export class AdminService implements OnApplicationBootstrap {
     }
   }
 
-  async mergePublicSecurityGroupWithRootSg(): Promise<void> {
+  private async mergePublicSecurityGroupWithRootSg(): Promise<void> {
     await this.db
       .query()
       .merge([
@@ -364,7 +333,7 @@ export class AdminService implements OnApplicationBootstrap {
       .run();
   }
 
-  async mergeDefaultOrg(): Promise<void> {
+  private async mergeDefaultOrg(): Promise<void> {
     // is there a default org
     const isDefaultOrgResult = await this.db
       .query()
@@ -415,11 +384,7 @@ export class AdminService implements OnApplicationBootstrap {
               id: this.config.publicSecurityGroup.id,
             })
           )
-          .match(
-            node('rootuser', 'User', {
-              id: this.config.rootAdmin.id,
-            })
-          )
+          .match(node('rootuser', 'RootUser'))
           .create([
             node('orgSg', ['OrgPublicSecurityGroup', 'SecurityGroup'], {
               id: orgSgId,

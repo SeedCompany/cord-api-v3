@@ -1,9 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
+import {
+  EmailModuleOptions,
+  EmailOptionsFactory,
+} from '@seedcompany/nestjs-email';
 import { LazyGetter as Lazy } from 'lazy-get-decorator';
 import { Duration } from 'luxon';
 import { Config as Neo4JDriverConfig } from 'neo4j-driver';
 import { join } from 'path';
+import { ServerException } from '../../common';
+import { FrontendUrlWrapper } from '../email/templates/frontend-url';
 import { LogLevel } from '../logger';
 import { EnvironmentService } from './environment.service';
 
@@ -13,7 +19,7 @@ import { EnvironmentService } from './environment.service';
  * Keys are camelcase, objects can be used, references to usages can be found.
  */
 @Injectable()
-export class ConfigService {
+export class ConfigService implements EmailOptionsFactory {
   port = this.env.number('port').optional(3000);
   hostUrl = this.env
     .string('host_url')
@@ -23,16 +29,34 @@ export class ConfigService {
   /** Is this a jest process? */
   jest = Boolean(this.env.string('JEST_WORKER_ID').optional());
 
+  // Should app be configured for migration?
+  migration = this.env.boolean('MIGRATION').optional(false);
+
   jwtKey = this.env.string('JWT_AUTH_KEY').optional('cord-field');
 
-  @Lazy() get email() {
+  createEmailOptions(): EmailModuleOptions {
     const send = this.env.boolean('EMAIL_SEND').optional(false);
     return {
       from: this.env.string('EMAIL_FROM').optional('noreply@cordfield.com'),
       replyTo: this.env.string('EMAIL_REPLY_TO').optional() || undefined, // falsy -> undefined
       send,
-      open: this.env.boolean('EMAIL_OPEN').optional(!send && !this.jest),
-      sesRegion: this.env.string('SES_REGION').optional(),
+      open: this.env
+        .boolean('EMAIL_OPEN')
+        .optional(
+          !send &&
+            !this.jest &&
+            !this.migration &&
+            process.env.NODE_ENV === 'development'
+        ),
+      ses: {
+        region: this.env.string('SES_REGION').optional(),
+      },
+      wrappers: [FrontendUrlWrapper(this.frontendUrl)],
+    };
+  }
+
+  @Lazy() get email() {
+    return {
       notifyDistributionLists: this.env
         .boolean('NOTIFY_DISTRIBUTION_LIST')
         .optional(false),
@@ -88,15 +112,22 @@ export class ConfigService {
   }
 
   @Lazy() get rootAdmin() {
+    let rootId: string;
     return {
-      id: 'rootadminid',
+      get id(): string {
+        if (!rootId) {
+          throw new ServerException(
+            'Cannot access root admin ID before it is initialized'
+          );
+        }
+        return rootId;
+      },
+      set id(newId: string) {
+        rootId = newId;
+      },
       email: 'devops@tsco.org',
       password: this.env.string('ROOT_ADMIN_PASSWORD').optional('admin'),
     };
-  }
-
-  setRootAdminId(id: string) {
-    this.rootAdmin.id = id;
   }
 
   passwordSecret = this.env.string('PASSWORD_SECRET').optional();

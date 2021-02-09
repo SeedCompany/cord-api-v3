@@ -3,14 +3,16 @@ import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { generateId, isValidId } from '../src/common';
+import { Powers } from '../src/components/authorization/dto/powers';
 import { Location } from '../src/components/location';
 import {
   createFundingAccount,
   createLocation,
+  createRegion,
   createSession,
   createTestApp,
   fragments,
-  registerUser,
+  registerUserWithPower,
   TestApp,
 } from './utility';
 import { resetDatabase } from './utility/reset-database';
@@ -23,7 +25,10 @@ describe('Location e2e', () => {
     app = await createTestApp();
     db = app.get(Connection);
     await createSession(app);
-    await registerUser(app);
+    await registerUserWithPower(app, [
+      Powers.CreateLocation,
+      Powers.CreateFundingAccount,
+    ]);
   });
 
   afterAll(async () => {
@@ -133,6 +138,37 @@ describe('Location e2e', () => {
     `);
 
     expect(locations.items.length).toBeGreaterThanOrEqual(numLocations);
+  });
+
+  it('update location with defaultFieldRegion', async () => {
+    const defaultFieldRegion = await createRegion(app);
+    const l = await createLocation(app, {
+      defaultFieldRegionId: defaultFieldRegion.id,
+    });
+    const newFieldRegion = await createRegion(app);
+    const result = await app.graphql.mutate(
+      gql`
+        mutation updateLocation($input: UpdateLocationInput!) {
+          updateLocation(input: $input) {
+            location {
+              ...location
+            }
+          }
+        }
+        ${fragments.location}
+      `,
+      {
+        input: {
+          location: {
+            id: l.id,
+            defaultFieldRegionId: newFieldRegion.id,
+          },
+        },
+      }
+    );
+    const updated = result.updateLocation.location;
+    expect(updated).toBeTruthy();
+    expect(updated.defaultFieldRegion.value.id).toBe(newFieldRegion.id);
   });
 
   it('update location with funding account', async () => {

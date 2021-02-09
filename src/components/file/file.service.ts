@@ -1,5 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { AWSError } from 'aws-sdk';
+import type { AWSError } from 'aws-sdk';
+import { Readable } from 'stream';
 import {
   DuplicateException,
   generateId,
@@ -107,6 +108,45 @@ export class FileService {
       modifiedAt: version.createdAt,
       modifiedById: version.createdById,
     };
+  }
+
+  /**
+   * Internal API method to download file contents from S3
+   */
+  async downloadFileVersion(versionId: string): Promise<Buffer> {
+    let data;
+    try {
+      const obj = await this.bucket.getObject(versionId);
+      data = obj.Body;
+    } catch (e) {
+      if (e instanceof NotFoundException) {
+        throw e;
+      }
+      if ((e as AWSError).code === 'NotFound') {
+        throw new NotFoundException('Could not find file contents', e);
+      }
+      throw new ServerException('Failed to retrieve file contents', e);
+    }
+    if (!data) {
+      throw new NotFoundException('Could not find file contents');
+    }
+
+    if (Buffer.isBuffer(data)) {
+      return data;
+    } else if (data instanceof Uint8Array || typeof data === 'string') {
+      return Buffer.from(data);
+    } else if (data instanceof Readable) {
+      const chunks = [];
+      for await (const chunk of data) {
+        chunks.push(chunk);
+      }
+      return Buffer.concat(chunks);
+    } else if (data instanceof Blob) {
+      return Buffer.from(await data.text());
+    } else {
+      // Shouldn't be hit. S3 types scuffed the Blob type which is why the instanceof above is necessary
+      throw new ServerException("Could not parse S3 object's body");
+    }
   }
 
   async getDownloadUrl(node: FileNode): Promise<string> {
@@ -217,7 +257,12 @@ export class FileService {
    * the existing file with the same name or create a new file if not found.
    */
   async createFileVersion(
-    { parentId, uploadId, name }: CreateFileVersionInput,
+    {
+      parentId,
+      uploadId,
+      name,
+      mimeType: mimeTypeOverride,
+    }: CreateFileVersionInput,
     session: Session
   ): Promise<File> {
     const [tempUpload, existingUpload] = await Promise.allSettled([
@@ -285,7 +330,8 @@ export class FileService {
         ? existingUpload.value
         : undefined;
 
-    const mimeType = upload?.ContentType ?? 'application/octet-stream';
+    const mimeType =
+      mimeTypeOverride ?? upload?.ContentType ?? 'application/octet-stream';
     await this.repo.createFileVersion(
       fileId,
       {
@@ -387,6 +433,7 @@ export class FileService {
             parentId: fileId,
             uploadId: initialVersion.uploadId,
             name: initialVersion.name ?? name,
+            mimeType: initialVersion.mimeType,
           },
           session
         );
@@ -421,6 +468,7 @@ export class FileService {
           parentId: file.value,
           uploadId: input.uploadId,
           name,
+          mimeType: input.mimeType,
         },
         session
       );
@@ -479,6 +527,6 @@ export class FileService {
   }
 
   async checkConsistency(type: FileNodeType, session: Session): Promise<void> {
-    return await this.repo.checkConsistency(type, session);
+    await this.repo.checkConsistency(type, session);
   }
 }

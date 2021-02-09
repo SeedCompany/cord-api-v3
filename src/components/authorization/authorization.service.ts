@@ -1,8 +1,9 @@
 /* eslint-disable no-case-declarations */
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { Connection, node, relation } from 'cypher-query-builder';
 import { union, without } from 'lodash';
 import { generateId, ServerException, Session } from '../../common';
+import { retry } from '../../common/retry';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import { DbBudget } from '../budget/model';
 import { DbBudgetRecord } from '../budget/model/budget-record.model.db';
@@ -69,6 +70,7 @@ export interface ProjectChildIds {
 export class AuthorizationService {
   constructor(
     private readonly db: DatabaseService,
+    private readonly dbConn: Connection,
     private readonly config: ConfigService,
     @Logger('authorization:service') private readonly logger: ILogger
   ) {}
@@ -79,19 +81,40 @@ export class AuthorizationService {
     creatorUserId: string
   ) {
     const label = baseNodeObj.__className.substring(2);
-    await this.db
-      .query()
-      .raw(
-        `CALL cord.processNewBaseNode($baseNodeId, $label, $creatorUserId)`,
+    const process = async () => {
+      await retry(
+        async () => {
+          await this.db
+            .query()
+            .raw(
+              `CALL cord.processNewBaseNode($baseNodeId, $label, $creatorUserId)`,
+              {
+                baseNodeId,
+                label,
+                creatorUserId,
+              }
+            )
+            .run();
+        },
         {
-          baseNodeId,
-          label,
-          creatorUserId,
+          retries: 3,
         }
-      )
-      .run();
+      );
+    };
 
-    return true;
+    const tx = this.dbConn.currentTransaction;
+    if (!tx) {
+      await process();
+      return;
+    }
+
+    // run procedure after transaction finishes committing so data is actually
+    // available for procedure code to use.
+    const origCommit = tx.commit.bind(tx);
+    tx.commit = async () => {
+      await origCommit();
+      await process();
+    };
   }
 
   async createSGsForEveryRoleForAllBaseNodes(session: Session) {

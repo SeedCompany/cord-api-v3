@@ -7,7 +7,7 @@ import { FinancialAnalyst } from './financial-analyst.role';
 import { Fundraising } from './fundraising.role';
 import { Intern } from './intern.role';
 import { Leadership } from './leadership.role';
-import { Liason } from './liason.role';
+import { Liaison } from './liaison.role';
 import { Marketing } from './marketing.role';
 import { Mentor } from './mentor.role';
 import { ProjectManager } from './project-manager.role';
@@ -26,7 +26,7 @@ export const everyRole = [
   Fundraising,
   Intern,
   Leadership,
-  Liason,
+  Liaison,
   Marketing,
   Mentor,
   ProjectManager,

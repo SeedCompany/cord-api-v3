@@ -6,6 +6,7 @@ import {
   NotFoundException,
   ServerException,
   Session,
+  UnauthorizedException,
 } from '../../common';
 import {
   ConfigService,
@@ -85,6 +86,12 @@ export class CeremonyService {
         isPublic: false,
         isOrgPublic: false,
       },
+      {
+        key: 'canDelete',
+        value: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
     ];
 
     try {
@@ -150,7 +157,7 @@ export class CeremonyService {
       ...parseBaseNodeProperties(result.node),
       ...securedProps,
       type: parsedProps.type,
-      canDelete: true, // TODO
+      canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 
@@ -173,17 +180,25 @@ export class CeremonyService {
       throw new NotFoundException('Could not find ceremony', 'ceremony.id');
     }
 
+    const canDelete = await this.db.checkDeletePermission(id, session);
+
+    if (!canDelete)
+      throw new UnauthorizedException(
+        'You do not have the permission to delete this Ceremony'
+      );
+
+    const baseNodeLabels = ['BaseNode', 'Ceremony'];
+
     try {
-      await this.db.deleteNode({
-        session,
+      await this.db.deleteNodeNew({
         object,
-        aclEditProp: 'canDeleteOwnUser',
+        baseNodeLabels,
       });
     } catch (exception) {
-      this.logger.warning('Failed to delete ceremony', {
+      this.logger.warning('Failed to delete Ceremony', {
         exception,
       });
-      throw exception;
+      throw new ServerException('Failed to delete Ceremony');
     }
   }
 

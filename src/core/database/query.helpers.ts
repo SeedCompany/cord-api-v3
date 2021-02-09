@@ -30,9 +30,7 @@ export function createBaseNode(
   id: string,
   label: string | string[],
   props: Property[],
-  baseNodeProps?: { owningOrgId?: string | undefined; type?: string },
-  _editableProps?: string[],
-  _isRootuser?: boolean
+  baseNodeProps?: { owningOrgId?: string | undefined; type?: string }
 ) {
   const createdAt = DateTime.local();
 
@@ -107,11 +105,11 @@ export function matchUserPermissions(
 ) {
   query.match([
     node('requestingUser'),
-    relation('in', '', 'member', {}, [1]),
-    node('', 'SecurityGroup'),
-    relation('out', '', 'permission'),
+    relation('in', 'memberOfSecurityGroup', 'member', {}, [1]),
+    node('security', 'SecurityGroup'),
+    relation('out', 'sgPerms', 'permission'),
     node('perms', 'Permission'),
-    relation('out', '', 'baseNode'),
+    relation('out', 'permsOfBaseNode', 'baseNode'),
     label ? node('node', label) : node('node'),
   ]);
   if (id) {
@@ -123,7 +121,7 @@ export function matchUserPermissions(
 
 export function matchRequestingUser(
   query: Query,
-  { userId }: Partial<Session>
+  { userId }: Pick<Session, 'userId'>
 ) {
   query.match([
     node('requestingUser', 'User', {

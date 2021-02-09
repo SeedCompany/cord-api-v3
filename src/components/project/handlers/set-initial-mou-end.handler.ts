@@ -1,4 +1,4 @@
-import { ServerException } from '../../../common';
+import { ServerException, UnauthorizedException } from '../../../common';
 import {
   DatabaseService,
   EventsHandler,
@@ -8,7 +8,6 @@ import {
 } from '../../../core';
 import { ProjectStatus } from '../dto';
 import { ProjectCreatedEvent, ProjectUpdatedEvent } from '../events';
-import { ProjectService } from '../project.service';
 
 type SubscribedEvent = ProjectCreatedEvent | ProjectUpdatedEvent;
 
@@ -16,7 +15,6 @@ type SubscribedEvent = ProjectCreatedEvent | ProjectUpdatedEvent;
 export class SetInitialMouEnd implements IEventHandler<SubscribedEvent> {
   constructor(
     private readonly db: DatabaseService,
-    private readonly projectService: ProjectService,
     @Logger('project:set-initial-mou-end') private readonly logger: ILogger
   ) {}
 
@@ -28,25 +26,37 @@ export class SetInitialMouEnd implements IEventHandler<SubscribedEvent> {
 
     const project = 'project' in event ? event.project : event.updated;
 
-    const shouldUpdateInitialMouEnd =
-      project.status === ProjectStatus.Active &&
-      project.initialMouEnd.value == null &&
-      project.mouEnd.value != null;
-
-    if (!shouldUpdateInitialMouEnd) {
+    if (
+      event instanceof ProjectUpdatedEvent && // allow setting initial if creating with non-in-dev status
+      project.status !== ProjectStatus.InDevelopment
+    ) {
+      return;
+    }
+    if (!project.mouEnd.canRead) {
+      throw new UnauthorizedException(
+        `Current user cannot read Project's end date thus initial end date cannot be set`
+      );
+    }
+    if (!project.initialMouEnd.canRead) {
+      throw new UnauthorizedException(
+        `Current user cannot read Project's initial end date thus initial end date cannot be set`
+      );
+    }
+    if (
+      project.initialMouEnd.value?.toMillis() ===
+      project.mouEnd.value?.toMillis()
+    ) {
       return;
     }
 
     try {
-      const initialMouEnd = project.mouEnd.value!;
-      const updateInput = {
-        id: project.id,
-        initialMouEnd: initialMouEnd,
-      };
-      const updatedProject = await this.projectService.update(
-        updateInput,
-        event.session
-      );
+      const updatedProject = await this.db.sgUpdateProperty({
+        object: project,
+        nodevar: 'project',
+        key: 'initialMouEnd',
+        value: project.mouEnd.value || null,
+        session: event.session,
+      });
 
       if (event instanceof ProjectUpdatedEvent) {
         event.updated = updatedProject;

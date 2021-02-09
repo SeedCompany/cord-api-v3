@@ -17,7 +17,7 @@ export enum Role {
   Intern = 'Intern',
   LeadFinancialAnalyst = 'LeadFinancialAnalyst',
   Leadership = 'Leadership',
-  Liason = 'Liason',
+  Liaison = 'Liaison',
   Marketing = 'Marketing',
   Mentor = 'Mentor',
   OfficeOfThePresident = 'OfficeOfThePresident',
@@ -54,7 +54,7 @@ export type InternalRole =
   | 'InternRole'
   | 'LeadFinancialAnalystRole'
   | 'LeadershipRole'
-  | 'LiasonRole'
+  | 'LiaisonRole'
   | 'MarketingRole'
   | 'MentorRole'
   | 'OfficeOfThePresidentRole'

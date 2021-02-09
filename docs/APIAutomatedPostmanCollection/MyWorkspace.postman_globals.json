@@ -2,6 +2,11 @@
 	"id": "919ca3c3-14d9-4cef-8a44-44aaa5380bc6",
 	"values": [
 		{
+			"key": "projectStep",
+			"value": "",
+			"enabled": true
+		},
+		{
 			"key": "responseTime",
 			"value": "10000",
 			"enabled": true
@@ -17,6 +22,16 @@
 			"enabled": true
 		},
 		{
+			"key": "email",
+			"value": "email2182020112415@test.com",
+			"enabled": true
+		},
+		{
+			"key": "password",
+			"value": "2182020112415",
+			"enabled": true
+		},
+		{
 			"key": "timestamp",
 			"value": "2182020112415",
 			"enabled": true
@@ -24,6 +39,16 @@
 		{
 			"key": "userid",
 			"value": "tUU4eae0v",
+			"enabled": true
+		},
+		{
+			"key": "user_data",
+			"value": "{\"id\":\"tUU4eae0v\",\"fullName\":\"Piyush Patel\",\"firstName\":\"Piyush\",\"avatarLetters\":\"PP\",\"createdAt\":\"2020-08-11T10:16:03.191+05:30\",\"email\":{\"canRead\":true,\"canEdit\":true,\"value\":\"piyush123456@mail.com\"},\"realFirstName\":{\"canRead\":true,\"canEdit\":true,\"value\":\"Piyush\"},\"realLastName\":{\"canRead\":true,\"canEdit\":true,\"value\":\"Patel\"},\"displayFirstName\":{\"canRead\":true,\"canEdit\":true,\"value\":\"DisplayFirstName1182020101603\"},\"displayLastName\":{\"canRead\":true,\"canEdit\":true,\"value\":\"DisplayLastName1182020101603\"},\"phone\":{\"canRead\":true,\"canEdit\":true,\"value\":\"689-855-0962\"},\"timezone\":{\"canRead\":true,\"canEdit\":true,\"value\":{\"name\":\"Europe/Andorra\",\"lat\":42.5,\"long\":1.5167,\"countries\":[{\"code\":\"AD\",\"name\":\"Andorra\",\"zones\":[{\"name\":\"Europe/Andorra\",\"lat\":42.5,\"long\":1.5167,\"countries\":[{\"code\":\"AD\"}]}]}]}},\"bio\":{\"canRead\":true,\"canEdit\":true,\"value\":\"I'm Tester\"},\"status\":{\"canRead\":true,\"canEdit\":true,\"value\":\"Active\"},\"unavailabilities\":{\"canRead\":true,\"items\":[],\"total\":0,\"hasMore\":false,\"canCreate\":false},\"organizations\":{\"canRead\":true,\"items\":[],\"total\":0,\"hasMore\":false,\"canCreate\":false},\"education\":{\"canRead\":true,\"items\":[],\"total\":0,\"hasMore\":false,\"canCreate\":false}}",
+			"enabled": true
+		},
+		{
+			"key": "userRoles",
+			"value": "",
 			"enabled": true
 		},
 		{
@@ -39,16 +64,6 @@
 		{
 			"key": "partnershipid",
 			"value": "VclsSb_ug",
-			"enabled": true
-		},
-		{
-			"key": "password",
-			"value": "2182020112415",
-			"enabled": true
-		},
-		{
-			"key": "email",
-			"value": "email2182020112415@test.com",
 			"enabled": true
 		},
 		{
@@ -94,11 +109,6 @@
 		{
 			"key": "fullName",
 			"value": "",
-			"enabled": true
-		},
-		{
-			"key": "user_data",
-			"value": "{\"id\":\"tUU4eae0v\",\"fullName\":\"Piyush Patel\",\"firstName\":\"Piyush\",\"avatarLetters\":\"PP\",\"createdAt\":\"2020-08-11T10:16:03.191+05:30\",\"email\":{\"canRead\":true,\"canEdit\":true,\"value\":\"piyush123456@mail.com\"},\"realFirstName\":{\"canRead\":true,\"canEdit\":true,\"value\":\"Piyush\"},\"realLastName\":{\"canRead\":true,\"canEdit\":true,\"value\":\"Patel\"},\"displayFirstName\":{\"canRead\":true,\"canEdit\":true,\"value\":\"DisplayFirstName1182020101603\"},\"displayLastName\":{\"canRead\":true,\"canEdit\":true,\"value\":\"DisplayLastName1182020101603\"},\"phone\":{\"canRead\":true,\"canEdit\":true,\"value\":\"689-855-0962\"},\"timezone\":{\"canRead\":true,\"canEdit\":true,\"value\":{\"name\":\"Europe/Andorra\",\"lat\":42.5,\"long\":1.5167,\"countries\":[{\"code\":\"AD\",\"name\":\"Andorra\",\"zones\":[{\"name\":\"Europe/Andorra\",\"lat\":42.5,\"long\":1.5167,\"countries\":[{\"code\":\"AD\"}]}]}]}},\"bio\":{\"canRead\":true,\"canEdit\":true,\"value\":\"I'm Tester\"},\"status\":{\"canRead\":true,\"canEdit\":true,\"value\":\"Active\"},\"unavailabilities\":{\"canRead\":true,\"items\":[],\"total\":0,\"hasMore\":false,\"canCreate\":false},\"organizations\":{\"canRead\":true,\"items\":[],\"total\":0,\"hasMore\":false,\"canCreate\":false},\"education\":{\"canRead\":true,\"items\":[],\"total\":0,\"hasMore\":false,\"canCreate\":false}}",
 			"enabled": true
 		},
 		{
@@ -192,6 +202,11 @@
 			"enabled": true
 		},
 		{
+			"key": "userStatus",
+			"value": "Active",
+			"enabled": true
+		},
+		{
 			"key": "step",
 			"value": "EarlyConversations",
 			"enabled": true
@@ -244,11 +259,6 @@
 		{
 			"key": "organization_data",
 			"value": "{\"id\":\"fHaIXgANLs\",\"name\":{\"value\":\"OrganizationName_05082020105310\",\"canRead\":true,\"canEdit\":true},\"createdAt\":\"2020-08-05T10:53:10.662+05:30\",\"avatarLetters\":\"O\"}",
-			"enabled": true
-		},
-		{
-			"key": "userStatus",
-			"value": "Active",
 			"enabled": true
 		},
 		{
@@ -901,11 +911,6 @@
 			"enabled": true
 		},
 		{
-			"key": "userRoles",
-			"value": "",
-			"enabled": true
-		},
-		{
 			"key": "budgetName",
 			"value": "",
 			"enabled": true
@@ -949,11 +954,6 @@
 			"key": "login_password",
 			"value": "",
 			"enabled": false
-		},
-		{
-			"key": "login_password",
-			"value": "",
-			"enabled": true
 		},
 		{
 			"key": "accountNumber",
@@ -1091,11 +1091,6 @@
 			"enabled": true
 		},
 		{
-			"key": "",
-			"value": "",
-			"enabled": false
-		},
-		{
 			"key": "defaultPowersArray",
 			"value": "",
 			"enabled": true
@@ -1136,11 +1131,6 @@
 			"enabled": true
 		},
 		{
-			"key": "projectStep",
-			"value": "",
-			"enabled": true
-		},
-		{
 			"key": "projectStepArray",
 			"value": "",
 			"enabled": true
@@ -1154,10 +1144,40 @@
 			"key": "fieldRegionId",
 			"value": "",
 			"enabled": true
+		},
+		{
+			"key": "accountNumberArray",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "financialReportingType",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "testArray",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "financialReportReceivedAt",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "projectTags",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "rootEmail",
+			"value": "",
+			"enabled": true
 		}
 	],
 	"name": "MyWorkspace Globals",
 	"_postman_variable_scope": "globals",
-	"_postman_exported_at": "2020-10-27T13:38:12.156Z",
-	"_postman_exported_using": "Postman/7.34.0"
+	"_postman_exported_at": "2020-12-11T14:09:04.132Z",
+	"_postman_exported_using": "Postman/7.36.0"
 }

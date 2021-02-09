@@ -1,3 +1,10 @@
+import {
+  Button,
+  Column,
+  HideInText,
+  Section,
+  Text,
+} from '@seedcompany/nestjs-email/templates';
 import { startCase } from 'lodash';
 import { DateTime } from 'luxon';
 import * as React from 'react';
@@ -5,8 +12,6 @@ import { EmailNotification as StepChangeNotification } from '../../../components
 import { fullName } from '../../../components/user';
 import { EmailTemplate, Heading } from './base';
 import { useFrontendUrl } from './frontend-url';
-import { Button, Column, Section, Text } from './mjml';
-import { HideInText } from './text-rendering';
 
 export function ProjectStepChanged({
   project,

@@ -6,6 +6,7 @@ import {
   NotFoundException,
   ServerException,
   Session,
+  UnauthorizedException,
 } from '../../../common';
 import {
   ConfigService,
@@ -14,15 +15,16 @@ import {
   ILogger,
   Logger,
   matchRequestingUser,
-  matchSession,
   Property,
 } from '../../../core';
+import { matchPermList, matchPropList } from '../../../core/database/query';
 import {
   DbPropsOfDto,
   parseSecuredProperties,
   StandardReadResult,
 } from '../../../core/database/results';
 import { AuthorizationService } from '../../authorization/authorization.service';
+import { Powers } from '../../authorization/dto/powers';
 import {
   CreateEthnologueLanguage,
   EthnologueLanguage,
@@ -45,34 +47,31 @@ export class EthnologueLanguageService {
     input: CreateEthnologueLanguage,
     session: Session
   ): Promise<string> {
+    await this.authorizationService.checkPower(Powers.CreateLanguage, session);
     const secureProps: Property[] = [
       {
         key: 'code',
         value: input.code,
         isPublic: false,
         isOrgPublic: false,
-        label: 'Code',
       },
       {
         key: 'provisionalCode',
         value: input.provisionalCode,
         isPublic: false,
         isOrgPublic: false,
-        label: 'ProvisionalCode',
       },
       {
         key: 'name',
         value: input.name,
         isPublic: false,
         isOrgPublic: false,
-        label: 'Name',
       },
       {
         key: 'population',
         value: input.population,
         isPublic: false,
         isOrgPublic: false,
-        label: 'Population',
       },
     ];
 
@@ -83,10 +82,7 @@ export class EthnologueLanguageService {
         createBaseNode,
         await generateId(),
         'EthnologueLanguage',
-        secureProps,
-        {},
-        [],
-        session.userId === this.config.rootAdmin.id
+        secureProps
       )
       .return('node.id as id');
 
@@ -114,23 +110,8 @@ export class EthnologueLanguageService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'EthnologueLanguage', { id: id })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
-        node('perms', 'Permission'),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ])
-      .with('collect(distinct perms) as permList, node')
-      .match([
-        node('node'),
-        relation('out', 'r', { active: true }),
-        node('props', 'Property'),
-      ])
-      .with('{value: props.value, property: type(r)} as prop, permList, node')
-      .with('collect(prop) as propList, permList, node')
+      .call(matchPermList)
+      .call(matchPropList, 'permList')
       .return('propList, permList, node')
       .asResult<StandardReadResult<EthLangDbProps>>();
 
@@ -166,11 +147,35 @@ export class EthnologueLanguageService {
 
     // filter out all of the undefined values so we only have a mapping of entries that the user wanted to edit
     const valueSetCleaned = pickBy(valueSet, (v) => v !== undefined);
+    const valueSetCleanedKeys = Object.keys(valueSetCleaned);
+
+    for (const key of valueSetCleanedKeys) {
+      const q = await this.db
+        .query()
+        .match([
+          node('user', 'User', { id: session.userId }),
+          relation('in', 'memberOfSecurityGroup', 'member'),
+          node('security', 'SecurityGroup'),
+          relation('out', 'sgPerms', 'permission'),
+          node('perm', 'Permission', {
+            property: `${key.replace('.value', '')}`,
+            edit: true,
+          }),
+          relation('out', 'permsOfBaseNode', 'baseNode'),
+          node('ethnologueLanguage', 'EthnologueLanguage', { id: id }),
+        ])
+        .return(['user', 'perm', 'ethnologueLanguage'])
+        .first();
+      if (!q) {
+        throw new UnauthorizedException(
+          `You do not have permission to edit his object', '${key}`
+        );
+      }
+    }
 
     try {
       const query = this.db
         .query()
-        .match(matchSession(session, { withAclRead: 'canReadLanguages' }))
         .match([
           node('ethnologueLanguage', 'EthnologueLanguage', {
             id: id,

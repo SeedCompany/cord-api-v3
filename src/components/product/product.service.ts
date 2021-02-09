@@ -10,6 +10,7 @@ import {
   NotFoundException,
   ServerException,
   Session,
+  UnauthorizedException,
 } from '../../common';
 import {
   ConfigService,
@@ -116,11 +117,15 @@ export class ProductService {
         isOrgPublic: false,
         label: '',
       },
+      {
+        key: 'canDelete',
+        value: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
     ];
 
-    const query = this.db
-      .query()
-      .match([node('root', 'User', { id: this.config.rootAdmin.id })]);
+    const query = this.db.query();
 
     if (engagementId) {
       const engagement = await this.db
@@ -176,10 +181,7 @@ export class ProductService {
             ? 'DerivativeScriptureProduct'
             : 'DirectScriptureProduct',
         ],
-        secureProps,
-        {},
-        [],
-        session.userId === this.config.rootAdmin.id
+        secureProps
       );
 
     if (engagementId) {
@@ -325,7 +327,7 @@ export class ProductService {
           ...rest.purposes,
           value: rest.purposes.value ?? [],
         },
-        canDelete: true, // TODO
+        canDelete: await this.db.checkDeletePermission(id, session),
       };
     }
 
@@ -368,7 +370,7 @@ export class ProductService {
         ...scriptureReferencesOverride,
         value: !isOverriding.value ? null : scriptureReferencesValue,
       },
-      canDelete: true, // TODO
+      canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 
@@ -491,17 +493,29 @@ export class ProductService {
       throw new NotFoundException('Could not find product', 'product.id');
     }
 
+    const canDelete = await this.db.checkDeletePermission(id, session);
+
+    if (!canDelete)
+      throw new UnauthorizedException(
+        'You do not have the permission to delete this Product'
+      );
+
+    const baseNodeLabels = [
+      'BaseNode',
+      'Product',
+      object.produces?.value
+        ? 'DerivativeScriptureProduct'
+        : 'DirectScriptureProduct',
+    ];
+
     try {
-      await this.db.deleteNode({
-        session,
+      await this.db.deleteNodeNew({
         object,
-        aclEditProp: 'canDeleteOwnUser',
+        baseNodeLabels,
       });
     } catch (exception) {
-      this.logger.warning('Failed to delete product', {
-        exception,
-      });
-      throw new ServerException('Failed to delete product', exception);
+      this.logger.error('Failed to delete', { id, exception });
+      throw new ServerException('Failed to delete', exception);
     }
   }
 

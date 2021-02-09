@@ -329,6 +329,16 @@ export const project = gql`
     createdAt
     type
     sensitivity
+    rootDirectory {
+      value {
+        id
+        children {
+          items {
+            name
+          }
+        }
+      }
+    }
     name {
       value
       canRead
@@ -575,7 +585,7 @@ export const engagement = gql`
       sentPrintingDate {
         value
       }
-      paraTextRegistryId {
+      paratextRegistryId {
         value
       }
       pnp {
@@ -889,7 +899,6 @@ export const location = gql`
       canEdit
       canRead
     }
-    sensitivity
     isoAlpha3 {
       value
       canEdit
@@ -902,20 +911,14 @@ export const location = gql`
       canEdit
       canRead
     }
+    defaultFieldRegion {
+      value {
+        ...fieldRegion
+      }
+    }
   }
   ${fundingAccount}
-`;
-
-export const marketingLocation = gql`
-  fragment marketingLocation on MarketingLocation {
-    id
-    name {
-      value
-      canRead
-      canEdit
-    }
-    createdAt
-  }
+  ${fieldRegion}
 `;
 
 export const fragments = {
@@ -948,5 +951,4 @@ export const fragments = {
   ceremony,
   partner,
   fundingAccount,
-  marketingLocation,
 };

@@ -19,17 +19,17 @@ import { ProjectService } from './project.service';
 
 @Module({
   imports: [
-    FieldRegionModule,
+    forwardRef(() => FieldRegionModule),
     ProjectMemberModule,
     forwardRef(() => BudgetModule),
     forwardRef(() => PartnershipModule),
     forwardRef(() => UserModule),
-    LocationModule,
+    forwardRef(() => LocationModule),
     FileModule,
     forwardRef(() => EngagementModule),
     forwardRef(() => AuthorizationModule),
     PartnerModule,
-    OrganizationModule,
+    forwardRef(() => OrganizationModule),
   ],
   providers: [
     ProjectResolver,
@@ -39,6 +39,6 @@ import { ProjectService } from './project.service';
     ProjectRules,
     ...Object.values(handlers),
   ],
-  exports: [ProjectService, ProjectMemberModule],
+  exports: [ProjectService, ProjectMemberModule, ProjectRules],
 })
 export class ProjectModule {}

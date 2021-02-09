@@ -4,6 +4,7 @@ import { AuthorizationModule } from '../authorization/authorization.module';
 import { UserModule } from '../user/user.module';
 import { AuthenticationResolver } from './authentication.resolver';
 import { AuthenticationService } from './authentication.service';
+import { CryptoService } from './crypto.service';
 import { SessionPipe } from './session.pipe';
 
 const ProvideSessionPipe: Provider = {
@@ -20,9 +21,15 @@ const ProvideSessionPipe: Provider = {
   providers: [
     AuthenticationResolver,
     AuthenticationService,
+    CryptoService,
     SessionPipe,
     ProvideSessionPipe,
   ],
-  exports: [AuthenticationService, SessionPipe, SESSION_PIPE_TOKEN],
+  exports: [
+    AuthenticationService,
+    CryptoService,
+    SessionPipe,
+    SESSION_PIPE_TOKEN,
+  ],
 })
 export class AuthenticationModule {}

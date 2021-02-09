@@ -1,18 +1,16 @@
 /* eslint-disable no-case-declarations */
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { first, intersection } from 'lodash';
 import { ServerException, Session, UnauthorizedException } from '../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import { Role } from '../authorization';
-import { User, UserService } from '../user';
+import { ProjectStep } from '../project';
 import {
-  Engagement,
   EngagementStatus,
   EngagementStatusTransition,
   EngagementTransitionType,
 } from './dto';
-import { EngagementService } from './engagement.service';
 
 // TODO: Don't think we need notifiers. wiki says none for notifiers for engagment status changes
 // type MaybeAsync<T> = T | Promise<T>;
@@ -21,29 +19,26 @@ import { EngagementService } from './engagement.service';
 interface StatusRule {
   approvers: Role[];
   transitions: EngagementStatusTransition[];
+
   // TODO: I don't think we'll ever need notifiers for this
   //getNotifiers: () => MaybeAsync<ReadonlyArray<EmailAddress | string>>;
 }
 
-export interface EmailNotification {
-  recipient: Pick<
-    User,
-    'id' | 'email' | 'displayFirstName' | 'displayLastName' | 'timezone'
-  >;
-  changedBy: Pick<User, 'id' | 'displayFirstName' | 'displayLastName'>;
-  engagement: Pick<Engagement, 'id' | 'modifiedAt' | 'status'>;
-  previousStatus?: EngagementStatus;
-}
+// export interface EmailNotification {
+//   recipient: Pick<
+//     User,
+//     'id' | 'email' | 'displayFirstName' | 'displayLastName' | 'timezone'
+//   >;
+//   changedBy: Pick<User, 'id' | 'displayFirstName' | 'displayLastName'>;
+//   engagement: Pick<Engagement, 'id' | 'modifiedAt' | 'status'>;
+//   previousStatus?: EngagementStatus;
+// }
 
 @Injectable()
 export class EngagementRules {
   constructor(
     private readonly db: DatabaseService,
-    @Inject(forwardRef(() => UserService))
-    private readonly userService: UserService,
-    @Inject(forwardRef(() => EngagementService))
-    private readonly engagementService: EngagementService,
-    private readonly configService: ConfigService,
+    private readonly config: ConfigService,
     // eslint-disable-next-line @seedcompany/no-unused-vars
     @Logger('engagement:rules') private readonly logger: ILogger
   ) {}
@@ -61,11 +56,13 @@ export class EngagementRules {
               to: EngagementStatus.Active,
               type: EngagementTransitionType.Approve,
               label: 'Project was made active',
+              projectStepRequirements: [ProjectStep.Active],
             },
             {
               to: EngagementStatus.DidNotDevelop,
               type: EngagementTransitionType.Reject,
               label: 'Project did not develop',
+              projectStepRequirements: [ProjectStep.DidNotDevelop],
             },
           ],
         };
@@ -82,21 +79,32 @@ export class EngagementRules {
               to: EngagementStatus.DiscussingChangeToPlan,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Change to Plan',
+              projectStepRequirements: [ProjectStep.DiscussingChangeToPlan],
             },
             {
               to: EngagementStatus.DiscussingSuspension,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Suspension',
+              projectStepRequirements: [
+                ProjectStep.DiscussingChangeToPlan,
+                ProjectStep.DiscussingSuspension,
+              ],
             },
             {
               to: EngagementStatus.DiscussingTermination,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Termination',
+              projectStepRequirements: [
+                ProjectStep.DiscussingChangeToPlan,
+                ProjectStep.DiscussingSuspension,
+                ProjectStep.DiscussingTermination,
+              ],
             },
             {
               to: EngagementStatus.FinalizingCompletion,
               type: EngagementTransitionType.Approve,
               label: 'Finalize Completion',
+              projectStepRequirements: [ProjectStep.Active],
             },
           ],
         };
@@ -113,21 +121,32 @@ export class EngagementRules {
               to: EngagementStatus.DiscussingChangeToPlan,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Change to Plan',
+              projectStepRequirements: [ProjectStep.DiscussingChangeToPlan],
             },
             {
               to: EngagementStatus.DiscussingTermination,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Termination',
+              projectStepRequirements: [
+                ProjectStep.DiscussingChangeToPlan,
+                ProjectStep.DiscussingSuspension,
+                ProjectStep.DiscussingTermination,
+              ],
             },
             {
               to: EngagementStatus.DiscussingSuspension,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Suspension',
+              projectStepRequirements: [
+                ProjectStep.DiscussingChangeToPlan,
+                ProjectStep.DiscussingSuspension,
+              ],
             },
             {
               to: EngagementStatus.FinalizingCompletion,
               type: EngagementTransitionType.Approve,
               label: 'Finalize Completion',
+              projectStepRequirements: [ProjectStep.Active],
             },
           ],
         };
@@ -144,6 +163,16 @@ export class EngagementRules {
               to: EngagementStatus.DiscussingSuspension,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Suspension',
+              projectStepRequirements: [
+                ProjectStep.DiscussingChangeToPlan,
+                ProjectStep.DiscussingSuspension,
+              ],
+            },
+            {
+              to: EngagementStatus.ActiveChangedPlan,
+              type: EngagementTransitionType.Approve,
+              label: 'Approve Change to Plan',
+              projectStepRequirements: [ProjectStep.DiscussingChangeToPlan],
             },
             {
               to: await this.getMostRecentPreviousStatus(id, [
@@ -152,6 +181,7 @@ export class EngagementRules {
               ]),
               type: EngagementTransitionType.Neutral,
               label: 'Will Not Change Plan',
+              projectStepRequirements: [ProjectStep.DiscussingChangeToPlan],
             },
           ],
         };
@@ -168,6 +198,10 @@ export class EngagementRules {
               to: EngagementStatus.Suspended,
               type: EngagementTransitionType.Approve,
               label: 'Approve Suspension',
+              projectStepRequirements: [
+                ProjectStep.DiscussingChangeToPlan,
+                ProjectStep.DiscussingSuspension,
+              ],
             },
             {
               to: await this.getMostRecentPreviousStatus(id, [
@@ -176,6 +210,20 @@ export class EngagementRules {
               ]),
               type: EngagementTransitionType.Neutral,
               label: 'Will Not Suspend',
+              projectStepRequirements: [
+                ProjectStep.DiscussingChangeToPlan,
+                ProjectStep.DiscussingSuspension,
+              ],
+            },
+            {
+              to: EngagementStatus.DiscussingTermination,
+              type: EngagementTransitionType.Neutral,
+              label: 'Discussing Termination',
+              projectStepRequirements: [
+                ProjectStep.DiscussingChangeToPlan,
+                ProjectStep.DiscussingSuspension,
+                ProjectStep.DiscussingTermination,
+              ],
             },
           ],
         };
@@ -192,11 +240,13 @@ export class EngagementRules {
               to: EngagementStatus.DiscussingReactivation,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Reactivation',
+              projectStepRequirements: [],
             },
             {
               to: EngagementStatus.DiscussingTermination,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Termination',
+              projectStepRequirements: [],
             },
           ],
         };
@@ -213,11 +263,13 @@ export class EngagementRules {
               to: EngagementStatus.ActiveChangedPlan,
               type: EngagementTransitionType.Approve,
               label: 'Approve ReActivation',
+              projectStepRequirements: [],
             },
             {
               to: EngagementStatus.DiscussingTermination,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Termination',
+              projectStepRequirements: [],
             },
           ],
         };
@@ -239,6 +291,13 @@ export class EngagementRules {
               ]),
               type: EngagementTransitionType.Neutral,
               label: 'Will Not Terminate',
+              projectStepRequirements: [],
+            },
+            {
+              to: EngagementStatus.Terminated,
+              type: EngagementTransitionType.Approve,
+              label: 'Approve Termination',
+              projectStepRequirements: [],
             },
           ],
         };
@@ -259,11 +318,13 @@ export class EngagementRules {
               ]),
               type: EngagementTransitionType.Neutral,
               label: 'Still Working',
+              projectStepRequirements: [],
             },
             {
               to: EngagementStatus.Completed,
               type: EngagementTransitionType.Approve,
               label: 'Complete 🎉',
+              projectStepRequirements: [],
             },
           ],
         };
@@ -294,7 +355,6 @@ export class EngagementRules {
     }
 
     const currentStatus = await this.getCurrentStatus(engagementId);
-
     // get roles that can approve the current status
     const { approvers, transitions } = await this.getStatusRule(
       currentStatus,
@@ -307,7 +367,22 @@ export class EngagementRules {
       return [];
     }
 
-    return transitions;
+    // If transitions don't need project's step then dont fetch or filter it.
+    if (
+      !transitions.some(
+        (transition) => transition.projectStepRequirements.length > 0
+      )
+    ) {
+      return transitions;
+    }
+
+    const currentStep = await this.getCurrentProjectStep(engagementId);
+    const availableTransitionsAccordingToProject = transitions.filter(
+      (transition) =>
+        transition.projectStepRequirements.length === 0 ||
+        transition.projectStepRequirements.includes(currentStep)
+    );
+    return availableTransitionsAccordingToProject;
   }
 
   async verifyStatusChange(
@@ -315,6 +390,10 @@ export class EngagementRules {
     session: Session,
     nextStatus: EngagementStatus
   ) {
+    if (this.config.migration) {
+      return;
+    }
+
     const transitions = await this.getAvailableTransitions(
       engagementId,
       session
@@ -350,6 +429,27 @@ export class EngagementRules {
     return currentStatus.status;
   }
 
+  private async getCurrentProjectStep(engagementId: string) {
+    const result = await this.db
+      .query()
+      .match([
+        node('engagement', 'Engagement', { id: engagementId }),
+        relation('in', '', 'engagement', { active: true }),
+        node('project', 'Project'),
+        relation('out', '', 'step', { active: true }),
+        node('step', 'Property'),
+      ])
+      .raw('return step.value as step')
+      .asResult<{ step: ProjectStep }>()
+      .first();
+
+    if (!result?.step) {
+      throw new ServerException(`Could not find project's step`);
+    }
+
+    return result.step;
+  }
+
   private async getUserRoles(id: string) {
     const userRolesQuery = await this.db
       .query()
@@ -365,16 +465,16 @@ export class EngagementRules {
     return userRolesQuery?.roles ?? [];
   }
 
-  /** Of the given statuss which one was the most recent previous status */
+  /** Of the given status which one was the most recent previous status */
   private async getMostRecentPreviousStatus(
     id: string,
-    statuss: EngagementStatus[]
+    status: EngagementStatus[]
   ): Promise<EngagementStatus> {
-    const prevStatuss = await this.getPreviousStatuss(id);
-    const mostRecentMatchedStatus = first(intersection(prevStatuss, statuss));
+    const prevStatus = await this.getPreviousStatus(id);
+    const mostRecentMatchedStatus = first(intersection(prevStatus, status));
     if (!mostRecentMatchedStatus) {
       throw new ServerException(
-        `The engagement ${id} has never been in any of these previous statuss: ${statuss.join(
+        `The engagement ${id} has never been in any of these previous status: ${status.join(
           ', '
         )}`
       );
@@ -382,8 +482,8 @@ export class EngagementRules {
     return mostRecentMatchedStatus;
   }
 
-  /** A list of the engagement's previous statuss ordered most recent to furthest in the past */
-  private async getPreviousStatuss(id: string): Promise<EngagementStatus[]> {
+  /** A list of the engagement's previous status ordered most recent to furthest in the past */
+  private async getPreviousStatus(id: string): Promise<EngagementStatus[]> {
     const result = await this.db
       .query()
       .match([
@@ -393,14 +493,14 @@ export class EngagementRules {
       ])
       .with('prop')
       .orderBy('prop.createdAt', 'DESC')
-      .raw(`RETURN collect(prop.value) as statuss`)
-      .asResult<{ statuss: EngagementStatus[] }>()
+      .raw(`RETURN collect(prop.value) as status`)
+      .asResult<{ status: EngagementStatus[] }>()
       .first();
     if (!result) {
       throw new ServerException(
-        "Failed to determine engagement's previous statuss"
+        "Failed to determine engagement's previous status"
       );
     }
-    return result.statuss;
+    return result.status;
   }
 }

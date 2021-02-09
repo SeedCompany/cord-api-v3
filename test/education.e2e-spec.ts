@@ -3,13 +3,14 @@ import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { isValidId } from '../src/common';
+import { Powers } from '../src/components/authorization/dto/powers';
 import { User } from '../src/components/user';
 import { Education } from '../src/components/user/education';
 import {
   createEducation,
   createSession,
   createTestApp,
-  registerUser,
+  registerUserWithPower,
   TestApp,
 } from './utility';
 import { fragments } from './utility/fragments';
@@ -23,7 +24,7 @@ describe('Education e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    user = await registerUser(app);
+    user = await registerUserWithPower(app, [Powers.CreateEducation]);
     db = app.get(Connection);
   });
 

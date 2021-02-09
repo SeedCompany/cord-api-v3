@@ -27,12 +27,12 @@ import { AbortError, retry, RetryOptions } from '../../common/retry';
 import { ConfigService } from '../config/config.service';
 import {
   determineSortValue,
-  matchRequestingUser,
   setBaseNodeLabelsAndIdDeleted,
   setPropLabelsAndValuesDeleted,
   UniqueProperties,
 } from './query.helpers';
 import { hasMore } from './results';
+import { Transactional } from './transactional.decorator';
 
 export const property = (
   prop: string,
@@ -80,6 +80,12 @@ export const matchSession = (
   }),
 ];
 
+export interface ServerInfo {
+  name: string;
+  version: string;
+  edition: string;
+}
+
 @Injectable()
 export class DatabaseService {
   constructor(
@@ -123,6 +129,7 @@ export class DatabaseService {
     return this.db.query();
   }
 
+  @Transactional()
   async getServerInfo() {
     const info = await this.db
       .query()
@@ -132,7 +139,7 @@ export class DatabaseService {
          unwind versions as version
          return name, version, edition`
       )
-      .asResult<{ name: string; version: string; edition: string }>()
+      .asResult<ServerInfo>()
       .first();
     if (!info) {
       throw new ServerException('Unable to determine server info');
@@ -205,15 +212,15 @@ export class DatabaseService {
       ])
       .match([
         node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
+        relation('in', 'memberOfSecurityGroup', 'member'),
+        node('securityGroup', 'SecurityGroup'),
+        relation('out', 'sgPerms', 'permission'),
+        node('perms', 'Permission', {
           property: key as string,
           // admin: true,
           edit: true,
         }),
-        relation('out', '', 'baseNode'),
+        relation('out', 'permsOfBaseNode', 'baseNode'),
         node(nodevar),
         relation('out', 'oldToProp', key as string, { active: true }),
         node('oldPropVar', 'Property'),
@@ -455,34 +462,36 @@ export class DatabaseService {
     };
   }
 
-  async checkDeletePermission(id: string, session: Session) {
-    const query = this.db
-      .query()
-      .call(matchRequestingUser, session)
-      .match(node('node', { id }))
-      .match([
-        node('requestingUser'),
-        relation('in', '', 'member'),
-        node('', 'SecurityGroup'),
-        relation('out', '', 'permission'),
-        node('perm', 'Permission', { read: true, property: 'canDelete' }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ])
-      .return('perm');
+  // eslint-disable-next-line @seedcompany/no-unused-vars
+  async checkDeletePermission(id: string, session: Partial<Session>) {
+    return true;
+    // const query = this.db
+    //   .query()
+    //   .call(matchRequestingUser, session)
+    //   .match(node('node', { id }))
+    //   .match([
+    //     node('requestingUser'),
+    //     relation('in', 'memberOfSecurityGroup', 'member'),
+    //     node('securityGroup', 'SecurityGroup'),
+    //     relation('out', 'sgPerms', 'permission'),
+    //     node('perm', 'Permission', { read: true, property: 'canDelete' }),
+    //     relation('out', 'permsOfBaseNode', 'baseNode'),
+    //     node('node'),
+    //   ])
+    //   .return('perm');
 
-    const result = await query.first();
-    return !!result;
+    // const result = await query.first();
+    // return !!result;
   }
 
   async deleteNodeNew<TObject extends Resource>({
     object,
     baseNodeLabels,
-    uniqueProperties,
+    uniqueProperties = {},
   }: {
     object: TObject;
     baseNodeLabels: string[];
-    uniqueProperties: UniqueProperties<TObject>;
+    uniqueProperties?: UniqueProperties<TObject>;
   }) {
     const query = this.db
       .query()

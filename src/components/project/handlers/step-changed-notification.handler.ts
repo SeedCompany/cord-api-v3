@@ -1,5 +1,6 @@
+import { EmailService } from '@seedcompany/nestjs-email';
 import {
-  EmailService,
+  ConfigService,
   EventsHandler,
   IEventHandler,
   ILogger,
@@ -15,11 +16,15 @@ export class ProjectStepChangedNotificationHandler
   constructor(
     private readonly projectRules: ProjectRules,
     private readonly emailService: EmailService,
+    private readonly config: ConfigService,
     @Logger('project:step-changed') private readonly logger: ILogger
   ) {}
 
   async handle(event: ProjectUpdatedEvent) {
-    if (event.updated.step.value === event.previous.step.value) {
+    if (
+      event.updated.step.value === event.previous.step.value ||
+      this.config.migration
+    ) {
       return;
     }
 
