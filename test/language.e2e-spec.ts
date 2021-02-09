@@ -188,6 +188,61 @@ describe('Language e2e', () => {
     expect(languages.items.length).toBeGreaterThan(numLanguages);
   });
 
+  it('List with projects -> engagements -> engagement status should not error', async () => {
+    const lang = await createLanguage(app);
+    const project = await createProject(app);
+    await app.graphql.mutate(
+      gql`
+        mutation createLanguageEngagement(
+          $input: CreateLanguageEngagementInput!
+        ) {
+          createLanguageEngagement(input: $input) {
+            engagement {
+              status {
+                transitions {
+                  to
+                }
+              }
+            }
+          }
+        }
+      `,
+      {
+        input: {
+          engagement: {
+            languageId: lang.id,
+            projectId: project.id,
+          },
+        },
+      }
+    );
+    // test reading new lang
+    const result = await app.graphql.query(gql`
+      query {
+        languages {
+          items {
+            projects {
+              items {
+                engagements {
+                  items {
+                    status {
+                      transitions {
+                        to
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+          hasMore
+          total
+        }
+      }
+    `);
+    expect(result).toBeTruthy();
+  });
+
   it.skip('should check language has all required properties', async () => {
     // create a test language
     const language = await createLanguage(app);
