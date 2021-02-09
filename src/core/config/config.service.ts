@@ -43,7 +43,10 @@ export class ConfigService implements EmailOptionsFactory {
       open: this.env
         .boolean('EMAIL_OPEN')
         .optional(
-          !send && !this.jest && process.env.NODE_ENV === 'development'
+          !send &&
+            !this.jest &&
+            !this.migration &&
+            process.env.NODE_ENV === 'development'
         ),
       ses: {
         region: this.env.string('SES_REGION').optional(),
