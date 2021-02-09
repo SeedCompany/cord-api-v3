@@ -122,6 +122,14 @@ export class EngagementService {
     @Logger(`engagement.service`) private readonly logger: ILogger
   ) {}
 
+  async setEngagementIdsIntoStatusObjects(engagements: EngagementListOutput) {
+    for (const engagement of engagements.items) {
+      // @ts-expect-error hack engagement id into status object
+      // so the lazy transitions field resolver can use it
+      engagement.status.engagementId = engagement.id;
+    }
+  }
+
   // CREATE /////////////////////////////////////////////////////////
 
   async createLanguageEngagement(
