@@ -54,6 +54,8 @@ export abstract class UpdateLanguageEngagement extends UpdateEngagement {
   readonly paratextRegistryId?: string;
 
   @Field({ nullable: true })
+  @Type(() => CreateDefinedFileVersionInput)
+  @ValidateNested()
   readonly pnp?: CreateDefinedFileVersionInput;
 
   @Field({ nullable: true })
@@ -75,6 +77,8 @@ export abstract class UpdateInternshipEngagement extends UpdateEngagement {
   readonly methodologies?: ProductMethodology[];
 
   @Field({ nullable: true })
+  @Type(() => CreateDefinedFileVersionInput)
+  @ValidateNested()
   readonly growthPlan?: CreateDefinedFileVersionInput;
 }
 
