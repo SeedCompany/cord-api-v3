@@ -1,7 +1,7 @@
 /* eslint-disable no-case-declarations */
 import { Injectable } from '@nestjs/common';
 import { Connection, node, relation } from 'cypher-query-builder';
-import { groupBy, mapValues, pickBy, union, without } from 'lodash';
+import { compact, groupBy, mapValues, pickBy, union, without } from 'lodash';
 import { ServerException, Session } from '../../common';
 import { retry } from '../../common/retry';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
@@ -312,9 +312,10 @@ export class AuthorizationService {
         node('role', 'Property'),
       ])
       .raw(`RETURN collect(role.value) as roles`)
+      .asResult<{ roles: Role[] }>()
       .first();
 
-    const roles = roleQuery?.roles.map(getRole);
+    const roles = compact(roleQuery?.roles.map(getRole));
 
     return roles;
   }
