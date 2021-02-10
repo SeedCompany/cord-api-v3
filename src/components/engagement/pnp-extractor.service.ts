@@ -119,7 +119,7 @@ export class PnpExtractor {
     );
 
     const year =
-      fourDigitYear ?? fyReg.exec(fileName)
+      fourDigitYear || fyReg.exec(fileName)
         ? Number(
             '20' + fyReg.exec(fileName)![0].toLowerCase().replace('fy', '')
           )
