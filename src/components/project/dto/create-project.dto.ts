@@ -8,10 +8,10 @@ import {
   DateField,
   DateTimeField,
   IdField,
+  IsId,
   NameField,
   Sensitivity,
 } from '../../../common';
-import { EachItemIsNotBlank } from '../../../common/validators/each-item-is-not-blank.validator';
 import { IProject, Project } from './project.dto';
 import { ProjectStep } from './step.enum';
 import { ProjectType } from './type.enum';
@@ -34,7 +34,7 @@ export abstract class CreateProject {
     description: 'Other location IDs',
     nullable: true,
   })
-  @EachItemIsNotBlank()
+  @IsId({ each: true })
   readonly otherLocationIds?: string[];
 
   @IdField({
