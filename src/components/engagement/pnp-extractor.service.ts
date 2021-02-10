@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { read, utils } from 'xlsx';
+import { DateTime } from 'luxon';
+import { read, utils, WorkBook } from 'xlsx';
 import { Session } from '../../common';
 import { ILogger, Logger } from '../../core';
 import {
@@ -22,7 +23,15 @@ export class PnpExtractor {
   ): Promise<PnpData | null> {
     const file = await this.files.getFileVersion(input.uploadId, session);
     const pnp = await this.downloadWorkbook(file);
+    const workbookData = this.parseWorkbook(pnp, file);
+    if (!workbookData) {
+      return null;
+    }
+    const timeData = this.parseYearAndQuarter(file.name);
+    return { ...workbookData, ...timeData };
+  }
 
+  private parseWorkbook(pnp: WorkBook, file: FileVersion) {
     // new standard 2020 version has new sheet "Harvest" which isolates relevant progress data
     const sheet = pnp.Sheets.Harvest ?? pnp.Sheets.Progress;
     if (!sheet) {
@@ -81,13 +90,45 @@ export class PnpExtractor {
     progressPlanned: string,
     progressActual: string,
     variance: string
-  ): PnpData | null {
+  ) {
     if (!progressPlanned || !progressActual || !variance) return null;
     return {
       progressPlanned: parsePercent(progressPlanned),
       progressActual: parsePercent(progressActual),
       variance: parsePercent(variance),
     };
+  }
+
+  private parseYearAndQuarter(fileName: string) {
+    // I don't want to mess with this since there are some files names with a range
+    // i.e. fy18-20. I think this naming has become outmoded anyway.
+    const fyReg = /fy19|fy20|fy21/i;
+    const quarterReg = /q[1-4]/i;
+
+    const currentYear = DateTime.local().year;
+
+    // split by anything that's not a digit
+    // this removes any non-digit characters and allows for distinction
+    // between 4 digit and larger numbers (2021 vs 201983)
+    const fourDigitYear = Math.max(
+      ...fileName
+        .split(/[^\d]/)
+        .filter((i) => i && i.length === 4)
+        .map((i) => Number(i))
+        .filter((i) => i <= currentYear && i > 1990)
+    );
+
+    const year =
+      fourDigitYear ?? fyReg.exec(fileName)
+        ? Number(
+            '20' + fyReg.exec(fileName)![0].toLowerCase().replace('fy', '')
+          )
+        : 0;
+    const quarter = quarterReg.exec(fileName)
+      ? Number(quarterReg.exec(fileName)![0].toLowerCase().replace('q', ''))
+      : 0;
+
+    return { year, quarter };
   }
 }
 
