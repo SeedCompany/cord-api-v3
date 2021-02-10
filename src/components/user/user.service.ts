@@ -32,7 +32,7 @@ import {
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
-  parseSecuredPropertiesNew,
+  parseSecuredProperties,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
@@ -337,10 +337,10 @@ export class UserService {
       );
     }
 
-    const securedProps = parseSecuredPropertiesNew(
+    const securedProps = parseSecuredProperties(
       result.propList,
-      this.securedProperties,
-      permsOfBaseNode
+      permsOfBaseNode,
+      this.securedProperties
     );
 
     return {

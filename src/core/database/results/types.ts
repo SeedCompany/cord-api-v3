@@ -3,7 +3,6 @@ import type { DateTime } from 'luxon';
 import type { Except } from 'type-fest';
 import type { UnsecuredDto } from '../../../common';
 import type { BaseNode } from './parse-base-node';
-import type { PermListDbResult } from './parse-permissions';
 import type { PropListDbResult } from './parse-props';
 
 /**
@@ -31,12 +30,6 @@ type NativeDbValue = boolean | string | number | DateTime | null | string[];
  * This is a shortcut for the standard read result based on the given DB props.
  */
 export interface StandardReadResult<DbProps> {
-  node: Node<BaseNode>;
-  propList: PropListDbResult<DbProps>;
-  permList: PermListDbResult<DbProps>;
-}
-
-export interface StandardReadResult2<DbProps> {
   node: Node<BaseNode>;
   propList: PropListDbResult<DbProps>;
 }

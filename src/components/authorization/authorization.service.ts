@@ -6,7 +6,7 @@ import { ServerException, Session } from '../../common';
 import { retry } from '../../common/retry';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import {
-  parseSecuredPropertiesNew,
+  parseSecuredProperties,
   PropListDbResult,
 } from '../../core/database/results';
 import { InternalRole, Role } from './dto';
@@ -19,17 +19,13 @@ import * as AllRoles from './roles';
 const getRole = (role: Role) =>
   Object.values(AllRoles).find((r) => r.name === role);
 
-export interface UserPropertyPermissions {
-  [x: string]: { canRead: boolean; canEdit: boolean };
-}
-export type DbProps = Record<string, any>;
-export type PickedKeys = keyof DbProps;
-
 export const permissionDefaults = {
   canRead: false,
   canEdit: false,
 };
 export type Permission = typeof permissionDefaults;
+
+export type PermissionsOf<T> = Record<keyof T, Permission>;
 
 @Injectable()
 export class AuthorizationService {
@@ -82,10 +78,10 @@ export class AuthorizationService {
     };
   }
 
-  async getPerms(
-    baseNode: DbBaseNode,
+  async getPerms<DbNode extends DbBaseNode>(
+    baseNode: DbNode,
     userRoles: DbRole[]
-  ): Promise<UserPropertyPermissions> {
+  ): Promise<PermissionsOf<DbNode>> {
     const userRoleList = userRoles.map((g) => g.grants);
     const userRoleListFlat = userRoleList.flat(1);
     const objGrantList = userRoleListFlat.filter(
@@ -110,10 +106,13 @@ export class AuthorizationService {
         return Object.assign({}, permissionDefaults, ...possibilities);
       }
     );
-    return permissions;
+    return permissions as PermissionsOf<DbNode>;
   }
 
-  async getPermissionsOfBaseNode({
+  async getPermissionsOfBaseNode<
+    DbProps extends Record<string, any>,
+    PickedKeys extends keyof DbProps
+  >({
     baseNode,
     sessionOrUserId,
     propList,
@@ -123,13 +122,14 @@ export class AuthorizationService {
     sessionOrUserId: Session | string;
     propList: PropListDbResult<DbProps> | DbProps;
     propKeys: Record<PickedKeys, boolean>;
-  }): Promise<any> {
+  }) {
     const dbRoles =
       typeof sessionOrUserId === 'string'
         ? await this.getUserRoleObjects(sessionOrUserId)
         : sessionOrUserId.roles;
-    const permsOfBaseNode = await this.getPerms(baseNode, dbRoles);
-    return parseSecuredPropertiesNew(propList, propKeys, permsOfBaseNode);
+    // ignoring types here because baseNode provides no benefit over propList & propKeys.
+    const permsOfBaseNode = (await this.getPerms(baseNode, dbRoles)) as any;
+    return parseSecuredProperties(propList, permsOfBaseNode, propKeys);
   }
 
   mapRoleToDbRoles(role: Role): InternalRole[] {
