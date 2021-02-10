@@ -110,20 +110,17 @@ export class PnpExtractor {
     // split by anything that's not a digit
     // this removes any non-digit characters and allows for distinction
     // between 4 digit and larger numbers (2021 vs 201983)
-    const fourDigitYear = Math.max(
-      ...fileName
-        .split(/[^\d]/)
-        .filter((i) => i && i.length === 4)
-        .map((i) => Number(i))
-        .filter((i) => i <= currentYear && i > 1990)
-    );
+    const fourDigitYears = fileName
+      .split(/[^\d]/)
+      .filter((i) => i && i.length === 4)
+      .map((i) => Number(i))
+      .filter((i) => i <= currentYear && i > 1990);
 
-    const year =
-      fourDigitYear || fyReg.exec(fileName)
-        ? Number(
-            '20' + fyReg.exec(fileName)![0].toLowerCase().replace('fy', '')
-          )
-        : 0;
+    const year = fourDigitYears.length
+      ? Math.max(...fourDigitYears)
+      : fyReg.exec(fileName)
+      ? Number('20' + fyReg.exec(fileName)![0].toLowerCase().replace('fy', ''))
+      : 0;
     const quarter = quarterReg.exec(fileName)
       ? Number(quarterReg.exec(fileName)![0].toLowerCase().replace('q', ''))
       : 0;
