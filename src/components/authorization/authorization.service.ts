@@ -14,7 +14,10 @@ import { Powers } from './dto/powers';
 import { MissingPowerException } from './missing-power.exception';
 import { DbRole, OneBaseNode } from './model';
 import { DbBaseNode } from './model/db-base-node.model';
-import { everyRole } from './roles';
+import * as AllRoles from './roles';
+
+const getRole = (role: Role) =>
+  Object.values(AllRoles).find((r) => r.name === role);
 
 export interface UserPropertyPermissions {
   [x: string]: { canRead: boolean; canEdit: boolean };
@@ -167,7 +170,7 @@ export class AuthorizationService {
 
     for (const role of roles) {
       // match the role to a real role object and grant powers
-      const roleObj = everyRole.find((i) => i.name === role);
+      const roleObj = getRole(role);
       if (roleObj === undefined) continue;
       for (const power of roleObj.powers) {
         await this.grantPower(power, id);
@@ -311,9 +314,7 @@ export class AuthorizationService {
       .raw(`RETURN collect(role.value) as roles`)
       .first();
 
-    const roles = roleQuery?.roles.map((role: string) => {
-      return everyRole.find((roleObj) => role === roleObj.name);
-    });
+    const roles = roleQuery?.roles.map(getRole);
 
     return roles;
   }
