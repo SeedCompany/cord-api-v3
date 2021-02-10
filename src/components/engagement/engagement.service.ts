@@ -1101,7 +1101,11 @@ export class EngagementService {
         defaultSorter
       );
 
-    return await runListQuery(query, input, (id) => this.readOne(id, session));
+    const engagements = await runListQuery(query, input, (id) =>
+      this.readOne(id, session)
+    );
+    await this.setEngagementIdsIntoStatusObjects(engagements);
+    return engagements;
   }
 
   async listProducts(
