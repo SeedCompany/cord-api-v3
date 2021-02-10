@@ -59,9 +59,7 @@ export class EngagementResolver {
     input: EngagementListInput,
     @AnonSession() session: Session
   ): Promise<EngagementListOutput> {
-    const engagements = await this.service.list(input, session);
-    await this.service.setEngagementIdsIntoStatusObjects(engagements);
-    return engagements;
+    return await this.service.list(input, session);
   }
 
   @ResolveField(() => SecuredCeremony)

@@ -122,7 +122,7 @@ export class EngagementService {
     @Logger(`engagement.service`) private readonly logger: ILogger
   ) {}
 
-  async setEngagementIdsIntoStatusObjects(engagements: EngagementListOutput) {
+  private setEngagementIdsIntoStatusObjects(engagements: EngagementListOutput) {
     for (const engagement of engagements.items) {
       // @ts-expect-error hack engagement id into status object
       // so the lazy transitions field resolver can use it
@@ -1104,7 +1104,7 @@ export class EngagementService {
     const engagements = await runListQuery(query, input, (id) =>
       this.readOne(id, session)
     );
-    await this.setEngagementIdsIntoStatusObjects(engagements);
+    this.setEngagementIdsIntoStatusObjects(engagements);
     return engagements;
   }
 
