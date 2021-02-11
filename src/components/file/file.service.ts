@@ -12,6 +12,7 @@ import {
 } from '../../common';
 import { ILogger, Logger } from '../../core';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { Powers } from '../authorization/dto/powers';
 import { FileBucket } from './bucket';
 import {
   BaseNode,
@@ -38,8 +39,6 @@ import {
 } from './dto';
 import { FileRepository } from './file.repository';
 import { FilesBucketToken } from './files-bucket.factory';
-import { DbDirectory, DbFile } from './model';
-import { DbFileVersion } from './model/file-version.model.db';
 
 @Injectable()
 export class FileService {
@@ -77,7 +76,6 @@ export class FileService {
 
   async getFileNode(id: string, session: Session): Promise<FileNode> {
     this.logger.debug(`getNode`, { id, userId: session.userId });
-
     const base = await this.repo.getBaseNodeById(id, session);
     return await this.adaptBaseNodeToFileNode(base, session);
   }
@@ -207,6 +205,7 @@ export class FileService {
     name: string,
     session: Session
   ): Promise<Directory> {
+    await this.authorizationService.checkPower(Powers.CreateDirectory, session);
     if (parentId) {
       // Enforce parent exists and is a directory
       const parent = await this.getParentNode(parentId, session);
@@ -230,15 +229,6 @@ export class FileService {
     }
 
     const id = await this.repo.createDirectory(parentId, name, session);
-
-    if (parentId) {
-      const dbDirectory = new DbDirectory();
-      await this.authorizationService.processNewBaseNode(
-        dbDirectory,
-        id,
-        session.userId
-      );
-    }
 
     return await this.getDirectory(id, session);
   }
@@ -265,6 +255,10 @@ export class FileService {
     }: CreateFileVersionInput,
     session: Session
   ): Promise<File> {
+    await this.authorizationService.checkPower(
+      Powers.CreateFileVersion,
+      session
+    );
     const [tempUpload, existingUpload] = await Promise.allSettled([
       this.bucket.headObject(`temp/${uploadId}`),
       this.bucket.headObject(uploadId),
@@ -332,21 +326,16 @@ export class FileService {
 
     const mimeType =
       mimeTypeOverride ?? upload?.ContentType ?? 'application/octet-stream';
+
     await this.repo.createFileVersion(
       fileId,
       {
         id: uploadId,
-        name,
+        name: name,
         mimeType,
         size: upload?.ContentLength ?? 0,
       },
       session
-    );
-
-    await this.authorizationService.processNewBaseNode(
-      new DbFileVersion(),
-      uploadId,
-      session.userId
     );
 
     // Skip S3 move if it's not needed
@@ -387,14 +376,9 @@ export class FileService {
       }
     }
 
+    await this.authorizationService.checkPower(Powers.CreateFile, session);
     const fileId = await generateId();
     await this.repo.createFile(fileId, name, session, parentId);
-
-    await this.authorizationService.processNewBaseNode(
-      new DbFile(),
-      fileId,
-      session.userId
-    );
 
     this.logger.debug(
       'File matching given name not found, creating a new one',
@@ -416,15 +400,16 @@ export class FileService {
     initialVersion?: CreateDefinedFileVersionInput,
     field?: string
   ) {
+    // not sure about this, but I'm thinking it's best to check from the get-go whether the user can create a file
+    // File AND fileVersion
+    await this.authorizationService.checkPower(Powers.CreateFile, session);
+    await this.authorizationService.checkPower(
+      Powers.CreateFileVersion,
+      session
+    );
     await this.repo.createFile(fileId, name, session);
 
     await this.repo.attachBaseNode(fileId, baseNodeId, propertyName + 'Node');
-
-    await this.authorizationService.processNewBaseNode(
-      new DbFile(),
-      fileId,
-      session.userId
-    );
 
     if (initialVersion) {
       try {
@@ -452,6 +437,11 @@ export class FileService {
     input: CreateDefinedFileVersionInput | undefined,
     session: Session
   ) {
+    // -- we technically check if they have the CreateFileVersion power, even though it's just an update, right?
+    await this.authorizationService.checkPower(
+      Powers.CreateFileVersion,
+      session
+    );
     if (!input) {
       return;
     }
@@ -478,6 +468,12 @@ export class FileService {
       }
       throw e;
     }
+
+    // Change the file's name to match the latest version name
+    // Since defined files are explicitly referenced by a named property
+    // a consistent name is not required and automatically updating it is more
+    // convenient for consumption.
+    await this.rename({ id: file.value, name }, session);
   }
 
   async resolveDefinedFile(

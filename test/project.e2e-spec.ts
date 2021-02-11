@@ -70,14 +70,17 @@ describe('Project e2e', () => {
     app = await createTestApp();
     db = app.get(Connection);
     await createSession(app);
+    const password = 'password';
     director = await registerUserWithPower(app, [Powers.DeleteProject], {
       roles: [Role.ProjectManager],
+      password: password,
     });
     fieldZone = await createZone(app, { directorId: director.id });
     fieldRegion = await createRegion(app, {
       directorId: director.id,
       fieldZoneId: fieldZone.id,
     });
+    await login(app, { email: director.email.value, password: password });
     location = await createLocation(app);
     intern = await getUserFromSession(app);
     mentor = await getUserFromSession(app);
@@ -1075,7 +1078,11 @@ describe('Project e2e', () => {
    * After creating a partnership, should be able to query project and get organization
    */
   it('after creating a partnership, should be able to query project and get organization', async () => {
-    await registerUserWithPower(app, [Powers.CreateOrganization]);
+    await registerUserWithPower(
+      app,
+      [Powers.CreateOrganization, Powers.CreatePartnership],
+      { roles: [Role.ProjectManager] }
+    );
     const org = await createOrganization(app);
     const project = await createProject(app, {
       name: faker.random.uuid() + ' project',

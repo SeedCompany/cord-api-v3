@@ -1,5 +1,4 @@
 import { node, Query, relation } from 'cypher-query-builder';
-import { Term } from 'cypher-query-builder/dist/typings/clauses/term-list-clause';
 import { Session } from '../../../common';
 import { collect } from './cypher-functions';
 import { mapping } from './mapping';
@@ -18,19 +17,10 @@ export const permissionsOfNode = (nodeLabel?: string) => [
   node('node', nodeLabel),
 ];
 
-export const matchPermList = (
-  query: Query,
-  user = 'requestingUser',
-  ...withOther: Term[]
-) =>
-  query
-    .optionalMatch([node(user), ...permissionsOfNode()])
-    .with(['collect(distinct perms) as permList', 'node', ...withOther]);
-
-export const matchPropList = (query: Query, ...withOther: Term[]) =>
+export const matchPropList = (query: Query, nodeName = 'node') =>
   query
     .match([
-      node('node'),
+      node(nodeName),
       relation('out', 'r', { active: true }),
       node('props', 'Property'),
     ])
@@ -42,6 +32,5 @@ export const matchPropList = (query: Query, ...withOther: Term[]) =>
         }),
         'propList'
       ),
-      'node',
-      ...withOther,
+      nodeName,
     ]);

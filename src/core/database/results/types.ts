@@ -3,7 +3,6 @@ import type { DateTime } from 'luxon';
 import type { Except } from 'type-fest';
 import type { UnsecuredDto } from '../../../common';
 import type { BaseNode } from './parse-base-node';
-import type { PermListDbResult } from './parse-permissions';
 import type { PropListDbResult } from './parse-props';
 
 /**
@@ -18,7 +17,7 @@ import type { PropListDbResult } from './parse-props';
  *   This allows them to be used for permissions, but not for values.
  */
 export type DbPropsOfDto<Dto extends Record<string, any>> = NativeDbProps<
-  Except<UnsecuredDto<Dto>, keyof BaseNode>
+  Except<UnsecuredDto<Dto>, keyof BaseNode | 'canDelete'>
 >;
 
 type NativeDbProps<Dto extends Record<string, any>> = {
@@ -33,5 +32,4 @@ type NativeDbValue = boolean | string | number | DateTime | null | string[];
 export interface StandardReadResult<DbProps> {
   node: Node<BaseNode>;
   propList: PropListDbResult<DbProps>;
-  permList: PermListDbResult<DbProps>;
 }

@@ -5,6 +5,7 @@ import { startCase, times } from 'lodash';
 import { DateTime, Duration, DurationObject, Settings } from 'luxon';
 import { anonymousSession } from '../src/common/session';
 import { AuthenticationService } from '../src/components/authentication';
+import { Role } from '../src/components/authorization';
 import {
   Directory,
   FileNodeType,
@@ -113,7 +114,10 @@ describe('File e2e', () => {
     db = app.get(Connection);
     bucket = app.get(FilesBucketToken);
     await createSession(app);
-    me = await registerUser(app, { password: myPassword });
+    me = await registerUser(app, {
+      password: myPassword,
+      roles: [Role.ProjectManager],
+    });
   });
 
   afterAll(async () => {

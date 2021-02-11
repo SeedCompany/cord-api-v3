@@ -28,7 +28,6 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
-  matchPermList,
   matchPropList,
   permissionsOfNode,
   requestingUser,
@@ -37,7 +36,6 @@ import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
-  parseSecuredProperties,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
@@ -434,14 +432,12 @@ export class ProjectService {
 
   async readOne(
     id: string,
-    { userId }: Pick<Session, 'userId'>
+    sessionOrUserId: Session | string
   ): Promise<Project> {
     const query = this.db
       .query()
-      .call(matchRequestingUser, { userId })
       .match([node('node', 'Project', { id })])
-      .call(matchPermList, 'requestingUser')
-      .call(matchPropList, 'permList')
+      .call(matchPropList)
       .optionalMatch([
         node('node'),
         relation('out', '', 'primaryLocation', { active: true }),
@@ -473,7 +469,6 @@ export class ProjectService {
       ])
       .return([
         'propList',
-        'permList',
         'node',
         'primaryLocation.id as primaryLocationId',
         'marketingLocation.id as marketingLocationId',
@@ -498,10 +493,13 @@ export class ProjectService {
     }
 
     const props = parsePropList(result.propList);
-    const securedProps = parseSecuredProperties(
-      props,
-      result.permList,
-      this.securedProperties
+    const securedProps = await this.authorizationService.getPermissionsOfBaseNode(
+      {
+        baseNode: new DbProject(),
+        sessionOrUserId: sessionOrUserId,
+        propList: result.propList,
+        propKeys: this.securedProperties,
+      }
     );
 
     return {
@@ -536,7 +534,7 @@ export class ProjectService {
         ...securedProps.owningOrganization,
         value: result.owningOrganizationId,
       },
-      canDelete: await this.db.checkDeletePermission(id, { userId }),
+      canDelete: await this.db.checkDeletePermission(id, sessionOrUserId),
     };
   }
 
@@ -1063,40 +1061,17 @@ export class ProjectService {
       pendingBudget = budgets.items[0];
     }
 
-    const budgetPerms = await this.db
-      .query()
-      .optionalMatch([
-        node('user', 'User', { id: session.userId }),
-        relation('in', 'memberOfReadSecurityGroup', 'member'),
-        node('readSecurityGroup', 'SecurityGroup'),
-        relation('out', 'sgReadPerms', 'permission'),
-        node('canRead', 'Permission', {
-          property: 'budget',
-          read: true,
-        }),
-        relation('out', 'readPermsOfBaseNode', 'baseNode'),
-        node('project', 'Project', { id: project.id }),
-      ])
-      .optionalMatch([
-        node('user'),
-        relation('in', 'memberOfEditSecurityGroup', 'member'),
-        node('editSecurityGroup', 'SecurityGroup'),
-        relation('out', 'sgEditPerms', 'permission'),
-        node('canEdit', 'Permission', {
-          property: 'budget',
-          edit: true,
-        }),
-        relation('out', 'editPermsOfBaseNode', 'baseNode'),
-        node('project'),
-      ])
-      .raw('RETURN canRead.read as canRead, canEdit.edit as canEdit')
-      .first();
-
     const budgetToReturn = current || pendingBudget;
+
+    const permsOfProject = await this.authorizationService.getPerms(
+      new DbProject(),
+      await this.authorizationService.getUserRoleObjects(session.userId)
+    );
+
     return {
       value: budgetToReturn,
-      canRead: (budgetToReturn && budgetPerms?.canRead) || false,
-      canEdit: budgetPerms?.canEdit || false,
+      canRead: permsOfProject.budget.canRead,
+      canEdit: permsOfProject.budget.canEdit,
     };
   }
 

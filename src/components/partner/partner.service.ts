@@ -21,7 +21,6 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
-  matchPermList,
   matchPropList,
   permissionsOfNode,
   requestingUser,
@@ -31,7 +30,6 @@ import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
-  parseSecuredProperties,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
@@ -247,8 +245,7 @@ export class PartnerService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Partner', { id: id })])
-      .call(matchPermList, 'requestingUser')
-      .call(matchPropList, 'permList')
+      .call(matchPropList)
       .optionalMatch([
         node('node'),
         relation('out', '', 'organization', { active: true }),
@@ -260,7 +257,7 @@ export class PartnerService {
         node('pointOfContact', 'User'),
       ])
       .return([
-        'propList, permList, node',
+        'propList, node',
         'organization.id as organizationId',
         'pointOfContact.id as pointOfContactId',
       ])
@@ -278,11 +275,12 @@ export class PartnerService {
     }
 
     const props = parsePropList(result.propList);
-    const secured = parseSecuredProperties(
-      result.propList,
-      result.permList,
-      this.securedProperties
-    );
+    const secured = await this.authorizationService.getPermissionsOfBaseNode({
+      baseNode: new DbPartner(),
+      sessionOrUserId: session,
+      propList: result.propList,
+      propKeys: this.securedProperties,
+    });
 
     return {
       ...parseBaseNodeProperties(result.node),

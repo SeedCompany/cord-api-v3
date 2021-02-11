@@ -463,7 +463,7 @@ export class DatabaseService {
   }
 
   // eslint-disable-next-line @seedcompany/no-unused-vars
-  async checkDeletePermission(id: string, session: Partial<Session>) {
+  async checkDeletePermission(id: string, session: Partial<Session> | string) {
     return true;
     // const query = this.db
     //   .query()

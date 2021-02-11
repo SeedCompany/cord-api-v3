@@ -19,7 +19,6 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
-  matchPermList,
   matchPropList,
   permissionsOfNode,
   requestingUser,
@@ -27,7 +26,6 @@ import {
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
-  parseSecuredProperties,
   runListQuery,
   StandardReadResult,
 } from '../../../core/database/results';
@@ -127,9 +125,8 @@ export class EducationService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Education', { id })])
-      .call(matchPermList, 'requestingUser')
-      .call(matchPropList, 'permList')
-      .return('propList, permList, node')
+      .call(matchPropList)
+      .return('propList, node')
       .asResult<StandardReadResult<DbPropsOfDto<Education>>>();
 
     const result = await query.first();
@@ -138,11 +135,12 @@ export class EducationService {
       throw new NotFoundException('Could not find education', 'education.id');
     }
 
-    const secured = parseSecuredProperties(
-      result.propList,
-      result.permList,
-      this.securedProperties
-    );
+    const secured = await this.authorizationService.getPermissionsOfBaseNode({
+      baseNode: new DbEducation(),
+      sessionOrUserId: session,
+      propList: result.propList,
+      propKeys: this.securedProperties,
+    });
 
     return {
       ...parseBaseNodeProperties(result.node),

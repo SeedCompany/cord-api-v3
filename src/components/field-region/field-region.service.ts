@@ -22,7 +22,6 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
-  matchPermList,
   matchPropList,
   permissionsOfNode,
   requestingUser,
@@ -30,7 +29,6 @@ import {
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
-  parseSecuredProperties,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
@@ -167,8 +165,7 @@ export class FieldRegionService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'FieldRegion', { id: id })])
-      .call(matchPermList, 'requestingUser')
-      .call(matchPropList, 'permList')
+      .call(matchPropList)
       .optionalMatch([
         node('node'),
         relation('out', '', 'director', { active: true }),
@@ -180,7 +177,7 @@ export class FieldRegionService {
         node('fieldZone', 'FieldZone'),
       ])
       .return(
-        'propList, permList, node, director.id as directorId, fieldZone.id as fieldZoneId'
+        'propList, node, director.id as directorId, fieldZone.id as fieldZoneId'
       )
       .asResult<
         StandardReadResult<DbPropsOfDto<FieldRegion>> & {
@@ -198,11 +195,12 @@ export class FieldRegionService {
       );
     }
 
-    const secured = parseSecuredProperties(
-      result.propList,
-      result.permList,
-      this.securedProperties
-    );
+    const secured = await this.authorizationService.getPermissionsOfBaseNode({
+      baseNode: new DbFieldRegion(),
+      sessionOrUserId: session,
+      propList: result.propList,
+      propKeys: this.securedProperties,
+    });
 
     return {
       ...parseBaseNodeProperties(result.node),

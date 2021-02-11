@@ -59,13 +59,7 @@ export class EngagementResolver {
     input: EngagementListInput,
     @AnonSession() session: Session
   ): Promise<EngagementListOutput> {
-    const engagements = await this.service.list(input, session);
-    for (const engagement of engagements.items) {
-      // @ts-expect-error hack engagement id into status object
-      // so the lazy transitions field resolver can use it
-      engagement.status.engagementId = engagement.id;
-    }
-    return engagements;
+    return await this.service.list(input, session);
   }
 
   @ResolveField(() => SecuredCeremony)

@@ -1,6 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { compact } from 'lodash';
+import { compact, mapValues } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
@@ -16,7 +16,6 @@ import {
   DatabaseService,
   ILogger,
   Logger,
-  matchRequestingUser,
   matchSession,
   OnIndex,
   property,
@@ -26,7 +25,6 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
-  matchPermList,
   matchPropList,
   permissionsOfNode,
   requestingUser,
@@ -39,7 +37,10 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { Role } from '../authorization';
-import { AuthorizationService } from '../authorization/authorization.service';
+import {
+  AuthorizationService,
+  PermissionsOf,
+} from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
 import { LanguageService } from '../language';
 import {
@@ -285,17 +286,12 @@ export class UserService {
     return result.id;
   }
 
-  async readOne(
-    id: string,
-    { userId }: Pick<Session, 'userId'>
-  ): Promise<User> {
+  async readOne(id: string, sessionOrUserId: Session | string): Promise<User> {
     const query = this.db
       .query()
-      .call(matchRequestingUser, { userId })
       .match([node('node', 'User', { id })])
-      .call(matchPermList, 'node')
-      .call(matchPropList, 'permList')
-      .return('propList, permList, node')
+      .call(matchPropList)
+      .return('propList, node')
       .asResult<StandardReadResult<DbPropsOfDto<User>>>();
 
     const result = await query.first();
@@ -307,11 +303,36 @@ export class UserService {
       .filter((prop) => prop.property === 'roles')
       .map((prop) => prop.value as Role);
 
+    const props = this.securedProperties;
+    let permsOfBaseNode: PermissionsOf<typeof props>;
+    // -- let the user explicitly see all properties only if they're reading their own ID
+    // -- TODO: express this within the authorization system. Like an Owner/Creator "meta" role that gets these x permissions.
+    const userId =
+      typeof sessionOrUserId === 'string'
+        ? sessionOrUserId
+        : sessionOrUserId.userId;
+    if (id === userId) {
+      permsOfBaseNode = mapValues(props, () => ({
+        canRead: true,
+        canEdit: true,
+      }));
+    } else {
+      const roles =
+        typeof sessionOrUserId === 'string'
+          ? await this.authorizationService.getUserRoleObjects(sessionOrUserId)
+          : sessionOrUserId.roles;
+      permsOfBaseNode = await this.authorizationService.getPerms(
+        new DbUser(),
+        roles
+      );
+    }
+
     const securedProps = parseSecuredProperties(
       result.propList,
-      result.permList,
-      this.securedProperties
+      permsOfBaseNode,
+      props
     );
+
     return {
       ...parseBaseNodeProperties(result.node),
       ...securedProps,
@@ -319,7 +340,7 @@ export class UserService {
         ...securedProps.roles,
         value: rolesValue,
       },
-      canDelete: await this.db.checkDeletePermission(id, { userId }),
+      canDelete: await this.db.checkDeletePermission(id, sessionOrUserId),
     };
   }
 

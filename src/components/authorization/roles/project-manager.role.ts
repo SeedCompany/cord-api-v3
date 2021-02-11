@@ -2,6 +2,8 @@ import { DbBudget } from '../../budget/model';
 import { DbBudgetRecord } from '../../budget/model/budget-record.model.db';
 import { DbCeremony } from '../../ceremony/model';
 import { DbInternshipEngagement, DbLanguageEngagement } from '../../engagement/model';
+import { DbFieldRegion } from '../../field-region/model';
+import { DbFieldZone } from '../../field-zone/model';
 import { DbDirectory, DbFile } from '../../file/model';
 import { DbFileVersion } from '../../file/model/file-version.model.db';
 import { DbFilm } from '../../film/model';
@@ -283,6 +285,19 @@ export const ProjectManager = new DbRole({
         { propertyName: 'sensitivity',                permission: { read, write, }, },
         { propertyName: 'tags',                       permission: { read, write, }, },
         { propertyName: 'financialReportReceivedAt',  permission: { read, write, }, },
+      ]}),
+    new DbBaseNodeGrant<DbFieldZone>({
+        __className: 'DbFieldZone',
+        properties: [
+          { propertyName: 'director',                   permission: { read, write, }, },
+          { propertyName: 'name',                       permission: { read, write, }, },
+      ]}),
+    new DbBaseNodeGrant<DbFieldRegion>({
+        __className: 'DbFieldRegion',
+        properties: [
+          { propertyName: 'director',                   permission: { read, write, }, },
+          { propertyName: 'name',                       permission: { read, write, }, },
+          { propertyName: 'fieldZone',                  permission: { read, write, }, },
       ]}),
     new DbBaseNodeGrant<DbProjectMember>({
       __className: 'DbProjectMember',

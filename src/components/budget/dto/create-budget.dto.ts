@@ -14,6 +14,8 @@ export abstract class CreateBudget {
     description: 'Initial version of the universal budget template',
     nullable: true,
   })
+  @Type(() => CreateDefinedFileVersionInput)
+  @ValidateNested()
   readonly universalTemplateFile?: CreateDefinedFileVersionInput;
 }
 
