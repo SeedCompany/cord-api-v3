@@ -122,6 +122,14 @@ export class EngagementService {
     @Logger(`engagement.service`) private readonly logger: ILogger
   ) {}
 
+  private setEngagementIdsIntoStatusObjects(engagements: EngagementListOutput) {
+    for (const engagement of engagements.items) {
+      // @ts-expect-error hack engagement id into status object
+      // so the lazy transitions field resolver can use it
+      engagement.status.engagementId = engagement.id;
+    }
+  }
+
   // CREATE /////////////////////////////////////////////////////////
 
   async createLanguageEngagement(
@@ -1093,7 +1101,11 @@ export class EngagementService {
         defaultSorter
       );
 
-    return await runListQuery(query, input, (id) => this.readOne(id, session));
+    const engagements = await runListQuery(query, input, (id) =>
+      this.readOne(id, session)
+    );
+    this.setEngagementIdsIntoStatusObjects(engagements);
+    return engagements;
   }
 
   async listProducts(
