@@ -6,6 +6,7 @@ import {
   SecuredProps,
   SecuredString,
 } from '../../../common';
+import { Location } from '../../location/dto';
 
 @ObjectType({
   implements: Resource,
@@ -13,6 +14,9 @@ import {
 export class Organization extends Resource {
   static readonly Props = keysOf<Organization>();
   static readonly SecuredProps = keysOf<SecuredProps<Organization>>();
+  static readonly Relations = {
+    locations: [Location],
+  };
 
   @Field()
   readonly name: SecuredString;

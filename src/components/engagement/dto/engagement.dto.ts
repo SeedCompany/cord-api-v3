@@ -13,7 +13,7 @@ import {
   SecuredString,
 } from '../../../common';
 import { DefinedFile } from '../../file/dto';
-import { SecuredMethodologies } from '../../product';
+import { Product, SecuredMethodologies } from '../../product/dto';
 import { SecuredInternPosition } from './intern-position.enum';
 import { PnpData } from './pnp-data.dto';
 import { SecuredEngagementStatus } from './status.enum';
@@ -103,6 +103,10 @@ export { Engagement as IEngagement, AnyEngagement as Engagement };
 export class LanguageEngagement extends Engagement {
   static readonly Props = keysOf<LanguageEngagement>();
   static readonly SecuredProps = keysOf<SecuredProps<LanguageEngagement>>();
+  static readonly Relations = {
+    // why is this singular?
+    product: [Product],
+  };
 
   readonly language: Secured<string>;
 

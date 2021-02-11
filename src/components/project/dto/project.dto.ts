@@ -15,7 +15,13 @@ import {
 } from '../../../common';
 import { Role } from '../../authorization/dto';
 import { DbRole } from '../../authorization/model';
+import { Budget } from '../../budget/dto';
+import { IEngagement as Engagement } from '../../engagement/dto';
+import { Directory } from '../../file/dto';
 import { SecuredTags } from '../../language/dto/language.dto';
+import { Location } from '../../location/dto';
+import { Partnership } from '../../partnership/dto';
+import { ProjectMember } from '../project-member/dto';
 import { ProjectStatus } from './status.enum';
 import { SecuredProjectStep } from './step.enum';
 import { ProjectType } from './type.enum';
@@ -37,6 +43,16 @@ type AnyProject = MergeExclusive<TranslationProject, InternshipProject>;
 class Project extends Resource {
   static readonly Props: string[] = keysOf<Project>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Project>>();
+  static readonly Relations = {
+    rootDirectory: Directory,
+    member: [ProjectMember], // why singular
+    otherLocations: [Location],
+    partnership: Partnership, // why singular
+    budget: [Budget], // budgets or currentBudget?
+    engagement: [Engagement], // why singular
+    // edge case because it's writable for internships but not secured
+    sensitivity: Sensitivity,
+  };
 
   @Field(() => ProjectType)
   readonly type: ProjectType;

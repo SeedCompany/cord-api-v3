@@ -12,6 +12,7 @@ import {
   SecuredString,
   Sensitivity,
 } from '../../../common';
+import { Location } from '../../location/dto';
 
 @ObjectType({
   description: SecuredPropertyList.descriptionFor('tags'),
@@ -54,6 +55,10 @@ export class EthnologueLanguage {
 export class Language extends Resource {
   static readonly Props = keysOf<Language>();
   static readonly SecuredProps = keysOf<SecuredProps<Language>>();
+  static readonly Relations = {
+    ethnologue: EthnologueLanguage,
+    locations: [Location],
+  };
 
   @Field({
     description: `The real language name`,
