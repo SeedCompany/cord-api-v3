@@ -4,6 +4,7 @@ import {
   Resource,
   SecuredEnum,
   SecuredProperty,
+  SecuredProps,
   SecuredString,
 } from '../../../../common';
 
@@ -28,6 +29,7 @@ export abstract class SecuredDegree extends SecuredEnum(Degree) {}
 })
 export class Education extends Resource {
   static readonly Props = keysOf<Education>();
+  static readonly SecuredProps = keysOf<SecuredProps<Education>>();
 
   @Field()
   readonly degree: SecuredDegree;

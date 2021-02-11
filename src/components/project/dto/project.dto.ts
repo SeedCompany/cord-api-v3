@@ -9,6 +9,7 @@ import {
   SecuredDate,
   SecuredDateNullable,
   SecuredDateTime,
+  SecuredProps,
   SecuredString,
   Sensitivity,
 } from '../../../common';
@@ -35,6 +36,7 @@ type AnyProject = MergeExclusive<TranslationProject, InternshipProject>;
 })
 class Project extends Resource {
   static readonly Props: string[] = keysOf<Project>();
+  static readonly SecuredProps: string[] = keysOf<SecuredProps<Project>>();
 
   @Field(() => ProjectType)
   readonly type: ProjectType;
@@ -103,6 +105,7 @@ export { Project as IProject, AnyProject as Project };
 })
 export class TranslationProject extends Project {
   static readonly Props = keysOf<TranslationProject>();
+  static readonly SecuredProps = keysOf<SecuredProps<TranslationProject>>();
 
   readonly type: ProjectType.Translation;
 }
@@ -112,6 +115,7 @@ export class TranslationProject extends Project {
 })
 export class InternshipProject extends Project {
   static readonly Props = keysOf<InternshipProject>();
+  static readonly SecuredProps = keysOf<SecuredProps<InternshipProject>>();
 
   readonly type: ProjectType.Internship;
 }

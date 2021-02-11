@@ -9,7 +9,7 @@ import { stripIndent } from 'common-tags';
 import { GraphQLBoolean, GraphQLScalarType, GraphQLString } from 'graphql';
 import { isObject } from 'lodash';
 import { DateTime } from 'luxon';
-import { Class, ConditionalKeys } from 'type-fest';
+import { Class, ConditionalKeys, ConditionalPick } from 'type-fest';
 import { CalendarDate, DateField, DateTimeField } from '.';
 import { Editable } from './editable.interface';
 import { Readable } from './readable.interface';
@@ -20,6 +20,11 @@ export interface Secured<T> {
   readonly canRead: boolean;
   readonly canEdit: boolean;
 }
+
+export type SecuredProps<Dto extends Record<string, any>> = ConditionalPick<
+  Dto,
+  Secured<any>
+>;
 
 export type SecuredKeys<Dto extends Record<string, any>> = ConditionalKeys<
   Dto,

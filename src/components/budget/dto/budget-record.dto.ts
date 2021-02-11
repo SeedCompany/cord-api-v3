@@ -4,6 +4,7 @@ import {
   Resource,
   SecuredFloatNullable,
   SecuredInt,
+  SecuredProps,
   SecuredString,
 } from '../../../common';
 
@@ -12,6 +13,7 @@ import {
 })
 export class BudgetRecord extends Resource {
   static readonly Props = keysOf<BudgetRecord>();
+  static readonly SecuredProps = keysOf<SecuredProps<BudgetRecord>>();
 
   readonly organization: SecuredString;
 

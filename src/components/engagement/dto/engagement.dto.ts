@@ -9,6 +9,7 @@ import {
   SecuredBoolean,
   SecuredDateNullable,
   SecuredDateTime,
+  SecuredProps,
   SecuredString,
 } from '../../../common';
 import { DefinedFile } from '../../file/dto';
@@ -34,6 +35,7 @@ export type AnyEngagement = MergeExclusive<
  */
 class Engagement extends Resource {
   static readonly Props: string[] = keysOf<Engagement>();
+  static readonly SecuredProps: string[] = keysOf<SecuredProps<Engagement>>();
 
   readonly __typename: string;
 
@@ -100,6 +102,7 @@ export { Engagement as IEngagement, AnyEngagement as Engagement };
 })
 export class LanguageEngagement extends Engagement {
   static readonly Props = keysOf<LanguageEngagement>();
+  static readonly SecuredProps = keysOf<SecuredProps<LanguageEngagement>>();
 
   readonly language: Secured<string>;
 
@@ -131,6 +134,7 @@ export class LanguageEngagement extends Engagement {
 })
 export class InternshipEngagement extends Engagement {
   static readonly Props = keysOf<InternshipEngagement>();
+  static readonly SecuredProps = keysOf<SecuredProps<InternshipEngagement>>();
 
   readonly countryOfOrigin: Secured<string>;
 

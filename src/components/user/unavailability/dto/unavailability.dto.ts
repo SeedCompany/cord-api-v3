@@ -4,6 +4,7 @@ import {
   DateTimeField,
   Resource,
   SecuredDateTime,
+  SecuredProps,
   SecuredString,
 } from '../../../../common';
 
@@ -12,6 +13,7 @@ import {
 })
 export class Unavailability extends Resource {
   static readonly Props = keysOf<Unavailability>();
+  static readonly SecuredProps = keysOf<SecuredProps<Unavailability>>();
 
   @Field()
   readonly description: SecuredString;

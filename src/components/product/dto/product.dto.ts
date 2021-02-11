@@ -2,7 +2,7 @@ import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
-import { Resource } from '../../../common';
+import { Resource, SecuredProps } from '../../../common';
 import { SecuredScriptureRangesOverride } from '../../scripture';
 import { Producible, SecuredProducible } from './producible.dto';
 import { SecuredProductMediums } from './product-medium';
@@ -15,6 +15,7 @@ import { SecuredProductPurposes } from './product-purpose';
 })
 export class Product extends Producible {
   static readonly Props: string[] = keysOf<Product>();
+  static readonly SecuredProps: string[] = keysOf<SecuredProps<Product>>();
 
   @Field()
   readonly mediums: SecuredProductMediums;
@@ -34,6 +35,7 @@ export class Product extends Producible {
 })
 export class DirectScriptureProduct extends Product {
   static readonly Props = keysOf<DirectScriptureProduct>();
+  static readonly SecuredProps = keysOf<SecuredProps<DirectScriptureProduct>>();
 }
 
 @ObjectType({
@@ -45,6 +47,9 @@ export class DirectScriptureProduct extends Product {
 })
 export class DerivativeScriptureProduct extends Product {
   static readonly Props = keysOf<DerivativeScriptureProduct>();
+  static readonly SecuredProps = keysOf<
+    SecuredProps<DerivativeScriptureProduct>
+  >();
 
   @Field({
     description: stripIndent`

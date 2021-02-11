@@ -8,6 +8,7 @@ import {
   SecuredInt,
   SecuredProperty,
   SecuredPropertyList,
+  SecuredProps,
   SecuredString,
   Sensitivity,
 } from '../../../common';
@@ -20,6 +21,7 @@ export abstract class SecuredTags extends SecuredPropertyList(String) {}
 @ObjectType()
 export class EthnologueLanguage {
   static readonly Props = keysOf<EthnologueLanguage>();
+  static readonly SecuredProps = keysOf<SecuredProps<EthnologueLanguage>>();
 
   readonly id: string;
 
@@ -51,6 +53,7 @@ export class EthnologueLanguage {
 })
 export class Language extends Resource {
   static readonly Props = keysOf<Language>();
+  static readonly SecuredProps = keysOf<SecuredProps<Language>>();
 
   @Field({
     description: `The real language name`,

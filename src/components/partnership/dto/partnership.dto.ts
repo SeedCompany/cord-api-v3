@@ -5,6 +5,7 @@ import {
   Secured,
   SecuredDateNullable,
   SecuredEnum,
+  SecuredProps,
 } from '../../../common';
 import { DefinedFile } from '../../file/dto';
 import { SecuredPartnerTypes } from '../../partner/dto/partner-type.enum';
@@ -31,6 +32,7 @@ export abstract class SecuredFinancialReportingType extends SecuredEnum(
 })
 export class Partnership extends Resource {
   static readonly Props = keysOf<Partnership>();
+  static readonly SecuredProps = keysOf<SecuredProps<Partnership>>();
 
   @Field()
   readonly agreementStatus: SecuredPartnershipAgreementStatus;

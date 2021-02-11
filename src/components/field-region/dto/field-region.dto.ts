@@ -4,6 +4,7 @@ import {
   Resource,
   Secured,
   SecuredProperty,
+  SecuredProps,
   SecuredString,
 } from '../../../common';
 
@@ -12,6 +13,7 @@ import {
 })
 export class FieldRegion extends Resource {
   static readonly Props = keysOf<FieldRegion>();
+  static readonly SecuredProps = keysOf<SecuredProps<FieldRegion>>();
 
   @Field()
   readonly name: SecuredString;

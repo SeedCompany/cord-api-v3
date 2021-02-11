@@ -8,6 +8,7 @@ import {
   SecuredBoolean,
   SecuredEnumList,
   SecuredProperty,
+  SecuredProps,
   SecuredString,
 } from '../../../common';
 import { FinancialReportingType } from '../../partnership/dto/financial-reporting-type';
@@ -25,6 +26,7 @@ export abstract class SecuredFinancialReportingTypes extends SecuredEnumList(
 })
 export class Partner extends Resource {
   static readonly Props = keysOf<Partner>();
+  static readonly SecuredProps = keysOf<SecuredProps<Partner>>();
 
   readonly organization: Secured<string>;
 

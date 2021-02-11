@@ -4,6 +4,7 @@ import {
   Resource,
   SecuredEnum,
   SecuredProperty,
+  SecuredProps,
   SecuredString,
 } from '../../../common';
 import { SecuredRoles } from '../../authorization';
@@ -19,6 +20,7 @@ export abstract class SecuredUserStatus extends SecuredEnum(UserStatus) {}
 })
 export class User extends Resource {
   static readonly Props = keysOf<User>();
+  static readonly SecuredProps = keysOf<SecuredProps<User>>();
 
   @Field()
   email: SecuredString;

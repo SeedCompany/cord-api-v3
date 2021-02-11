@@ -5,6 +5,7 @@ import {
   Secured,
   SecuredEnum,
   SecuredProperty,
+  SecuredProps,
   SecuredString,
   SecuredStringNullable,
 } from '../../../common';
@@ -20,6 +21,7 @@ export abstract class SecuredLocationType extends SecuredEnum(LocationType) {}
 })
 export class Location extends Resource {
   static readonly Props = keysOf<Location>();
+  static readonly SecuredProps = keysOf<SecuredProps<Location>>();
 
   @Field()
   readonly name: SecuredString;
