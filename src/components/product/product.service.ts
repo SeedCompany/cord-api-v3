@@ -33,6 +33,7 @@ import {
   BaseNode,
   DbPropsOfDto,
   parseBaseNodeProperties,
+  parsePropList,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
@@ -71,7 +72,6 @@ export class ProductService {
     scriptureReferences: true,
     scriptureReferencesOverride: true,
     produces: true,
-    isOverriding: true,
   };
 
   constructor(
@@ -293,15 +293,15 @@ export class ProductService {
       throw new NotFoundException('Could not find product', 'product.id');
     }
 
+    const { isOverriding, ...props } = parsePropList(result.propList);
     const {
       produces,
       scriptureReferencesOverride,
-      isOverriding,
       ...rest
     } = await this.authorizationService.getPermissionsOfBaseNode({
       baseNode: new DbProduct(),
       sessionOrUserId: session,
-      propList: result.propList,
+      propList: props,
       propKeys: this.securedProperties,
       membershipRoles: result.memberRoles.flat(1),
     });
@@ -359,7 +359,7 @@ export class ProductService {
       ...rest,
       scriptureReferences: {
         ...rest.scriptureReferences,
-        value: !isOverriding.value
+        value: !isOverriding
           ? producible?.scriptureReferences.value
           : scriptureReferencesValue,
       },
@@ -380,7 +380,7 @@ export class ProductService {
       },
       scriptureReferencesOverride: {
         ...scriptureReferencesOverride,
-        value: !isOverriding.value ? null : scriptureReferencesValue,
+        value: !isOverriding ? null : scriptureReferencesValue,
       },
       canDelete: await this.db.checkDeletePermission(id, session),
     };
