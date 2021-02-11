@@ -8,6 +8,7 @@ import {
   DateField,
   DateTimeField,
   IdField,
+  IsId,
   NameField,
   Sensitivity,
 } from '../../../common';
@@ -33,6 +34,7 @@ export abstract class CreateProject {
     description: 'Other location IDs',
     nullable: true,
   })
+  @IsId({ each: true })
   readonly otherLocationIds?: string[];
 
   @IdField({
