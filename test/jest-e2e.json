@@ -5,5 +5,12 @@
   "roots": ["<rootDir>/test"],
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",
-  "setupFiles": ["reflect-metadata", "./src/app.module.ts"]
+  "setupFiles": ["reflect-metadata", "./src/app.module.ts"],
+  "globals": {
+    "ts-jest": {
+      "astTransformers": {
+        "before": ["./tools/jest-ts-transformer-keys"]
+      }
+    }
+  }
 }

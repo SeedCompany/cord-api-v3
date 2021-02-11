@@ -67,6 +67,7 @@
     "rxjs": "^6.6.0",
     "source-map-support": "^0.5.19",
     "ts-essentials": "^7.0.1",
+    "ts-transformer-keys": "^0.4.3",
     "winston": "^3.3.3",
     "xlsx": "^0.16.9"
   },
@@ -110,6 +111,13 @@
     "roots": [
       "<rootDir>/src"
     ],
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "globals": {
+      "ts-jest": {
+        "astTransformers": {
+          "before": ["./tools/jest-ts-transformer-keys"]
+        }
+      }
+    }
   }
 }
