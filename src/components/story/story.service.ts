@@ -21,7 +21,6 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
-  matchPermList,
   matchPropList,
   permissionsOfNode,
   requestingUser,
@@ -29,7 +28,6 @@ import {
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
-  parseSecuredProperties,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
@@ -155,9 +153,8 @@ export class StoryService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Story', { id })])
-      .call(matchPermList)
-      .call(matchPropList, 'permList')
-      .return('node, permList, propList')
+      .call(matchPropList)
+      .return('node, propList')
       .asResult<StandardReadResult<DbPropsOfDto<Story>>>();
 
     const result = await query.first();
@@ -171,10 +168,13 @@ export class StoryService {
       session
     );
 
-    const securedProps = parseSecuredProperties(
-      result.propList,
-      result.permList,
-      this.securedProperties
+    const securedProps = await this.authorizationService.getPermissionsOfBaseNode(
+      {
+        baseNode: new DbStory(),
+        sessionOrUserId: session,
+        propList: result.propList,
+        propKeys: this.securedProperties,
+      }
     );
 
     return {

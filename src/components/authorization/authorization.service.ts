@@ -1,70 +1,31 @@
 /* eslint-disable no-case-declarations */
 import { Injectable } from '@nestjs/common';
 import { Connection, node, relation } from 'cypher-query-builder';
-import { union, without } from 'lodash';
-import { generateId, ServerException, Session } from '../../common';
+import { compact, groupBy, mapValues, pickBy, union, without } from 'lodash';
+import { ServerException, Session } from '../../common';
 import { retry } from '../../common/retry';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
-import { DbBudget } from '../budget/model';
-import { DbBudgetRecord } from '../budget/model/budget-record.model.db';
-import { DbCeremony } from '../ceremony/model';
 import {
-  DbInternshipEngagement,
-  DbLanguageEngagement,
-} from '../engagement/model';
-import { DbFieldRegion } from '../field-region/model';
-import { DbFieldZone } from '../field-zone/model';
-import { DbDirectory, DbFile } from '../file/model';
-import { DbFileVersion } from '../file/model/file-version.model.db';
-import { DbFilm } from '../film/model';
-import { DbFundingAccount } from '../funding-account/model';
-import { DbEthnologueLanguage, DbLanguage } from '../language/model';
-import { DbLiteracyMaterial } from '../literacy-material/model';
-import { DbLocation } from '../location/model';
-import { DbOrganization } from '../organization/model';
-import { DbPartner } from '../partner/model';
-import { DbPartnership } from '../partnership/model';
-import { DbProduct } from '../product/model';
-import { DbProject } from '../project/model';
-import { DbProjectMember } from '../project/project-member/model';
-import { DbSong } from '../song/model';
-import { DbStory } from '../story/model';
-import { DbEducation, DbUnavailability, DbUser } from '../user/model';
+  parseSecuredProperties,
+  PropListDbResult,
+} from '../../core/database/results';
 import { InternalRole, Role } from './dto';
 import { Powers } from './dto/powers';
 import { MissingPowerException } from './missing-power.exception';
 import { DbRole, OneBaseNode } from './model';
-import { everyRole } from './roles';
+import { DbBaseNode } from './model/db-base-node.model';
+import * as AllRoles from './roles';
 
-/**
- * powers can exist on a security group or a user node
- */
+const getRole = (role: Role) =>
+  Object.values(AllRoles).find((r) => r.name === role);
 
-/**
- * Authorization events:
- * 1. base node creation
- *   a. assign all global roles membership for the base node
- *   b. assign any per-object roles membership for the base node
- * 2. adding a project member to a project
- *   a. get the member's project role and assign membership for that project
- * 3. assigning a role to a user
- *   a. assign that user membership to all SGs for their new role.
- */
+export const permissionDefaults = {
+  canRead: false,
+  canEdit: false,
+};
+export type Permission = typeof permissionDefaults;
 
-export interface ProjectChildIds {
-  budgets: string[];
-  budgetRecords: string[];
-  ceremonies: string[];
-  internshipEngagements: string[];
-  langaugeEngagements: string[];
-  members: string[];
-  organizations: string[];
-  partnerships: string[];
-  partners: string[];
-  produces: string[];
-  products: string[];
-  users: string[];
-}
+export type PermissionsOf<T> = Record<keyof T, Permission>;
 
 @Injectable()
 export class AuthorizationService {
@@ -117,213 +78,58 @@ export class AuthorizationService {
     };
   }
 
-  async createSGsForEveryRoleForAllBaseNodes(session: Session) {
-    this.logger.info('beginning to create/merge SGs for all base nodes');
-    if (session.userId !== this.config.rootAdmin.id) {
-      return true;
-    }
-    // loop through every base node and create the SGs for each role
-    // we're going to do this in the least memory intensive way,
-    // which is also the slowest/spammiest
-    const baseNodeCountQuery = await this.db
-      .query()
-      .match([node('baseNode', 'BaseNode')])
-      .raw('return count(baseNode) as total')
-      .first();
+  async getPerms<DbNode extends DbBaseNode>(
+    baseNode: DbNode,
+    userRoles: DbRole[]
+  ): Promise<PermissionsOf<DbNode>> {
+    const userRoleList = userRoles.map((g) => g.grants);
+    const userRoleListFlat = userRoleList.flat(1);
+    const objGrantList = userRoleListFlat.filter(
+      (g) => g.__className === baseNode.__className
+    );
+    const propList = objGrantList.map((g) => g.properties).flat(1);
+    const byProp = groupBy(propList, 'propertyName');
 
-    if (baseNodeCountQuery === undefined) {
-      return true;
-    }
-
-    this.logger.info('total base nodes: ', baseNodeCountQuery.total);
-    // eslint-disable-next-line no-restricted-syntax
-    for (let i = 0; i < baseNodeCountQuery.total; i++) {
-      const idQuery = await this.db
-        .query()
-        .match([node('baseNode', 'BaseNode')])
-        .raw(`return baseNode.id as id, labels(baseNode) as labels`)
-        .skip(i)
-        .limit(1)
-        .first();
-
-      if (idQuery === undefined) {
-        continue;
+    // Merge together the results of each property
+    const permissions = mapValues(
+      byProp,
+      (nodes): Permission => {
+        const possibilities = nodes.map((node) =>
+          // Convert the db properties to API properties.
+          // Only keep true values, so merging the objects doesn't replace a true with false
+          pickBy({
+            canRead: node.permission.read || null,
+            canEdit: node.permission.write || null,
+          })
+        );
+        // Merge the all the true permissions together, otherwise default to false
+        return Object.assign({}, permissionDefaults, ...possibilities);
       }
-
-      for (const role of everyRole) {
-        const baseNodeObj = this.getBaseNodeObjUsingLabel(idQuery.labels);
-        await this.mergeSecurityGroupForRole(idQuery.id, role, baseNodeObj);
-      }
-    }
-
-    this.logger.info('SG creation complete');
-    return true;
+    );
+    return permissions as PermissionsOf<DbNode>;
   }
 
-  private getBaseNodeObjUsingLabel(labels: string[]): OneBaseNode {
-    if (labels.includes('Budget')) {
-      return new DbBudget();
-    } else if (labels.includes('BudgetRecord')) {
-      return new DbBudgetRecord();
-    } else if (labels.includes('Ceremony')) {
-      return new DbCeremony();
-    } else if (labels.includes('Directory')) {
-      return new DbDirectory();
-    } else if (labels.includes('Education')) {
-      return new DbEducation();
-    } else if (labels.includes('EthnologueLanguage')) {
-      return new DbEthnologueLanguage();
-    } else if (labels.includes('FieldRegion')) {
-      return new DbFieldRegion();
-    } else if (labels.includes('FieldZone')) {
-      return new DbFieldZone();
-    } else if (labels.includes('File')) {
-      return new DbFile();
-    } else if (labels.includes('FileVersion')) {
-      return new DbFileVersion();
-    } else if (labels.includes('Film')) {
-      return new DbFilm();
-    } else if (labels.includes('FundingAccount')) {
-      return new DbFundingAccount();
-    } else if (labels.includes('InternshipEngagement')) {
-      return new DbInternshipEngagement();
-    } else if (labels.includes('Language')) {
-      return new DbLanguage();
-    } else if (labels.includes('LanguageEngagement')) {
-      return new DbLanguageEngagement();
-    } else if (labels.includes('LiteracyMaterial')) {
-      return new DbLiteracyMaterial();
-    } else if (labels.includes('Location')) {
-      return new DbLocation();
-    } else if (labels.includes('Organization')) {
-      return new DbOrganization();
-    } else if (labels.includes('Partner')) {
-      return new DbPartner();
-    } else if (labels.includes('Partnership')) {
-      return new DbPartnership();
-    } else if (labels.includes('Product')) {
-      return new DbProduct();
-    } else if (labels.includes('Project')) {
-      return new DbProject();
-    } else if (labels.includes('ProjectMember')) {
-      return new DbProjectMember();
-    } else if (labels.includes('User')) {
-      return new DbUser();
-    } else if (labels.includes('Unavailability')) {
-      return new DbUnavailability();
-    } else if (labels.includes('Song')) {
-      return new DbSong();
-    } else if (labels.includes('Story')) {
-      return new DbStory();
-    }
-    throw new ServerException('base node label not found');
-  }
-
-  private async mergeSecurityGroupForRole(
-    baseNodeId: string,
-    role: DbRole,
-    baseNodeObj?: OneBaseNode
-  ): Promise<string> {
-    /**
-     * this creates or merges with the specific SG needed for a given role
-     * returns the SG id
-     */
-    const checkSg = await this.db
-      .query()
-      .match([
-        node('sg', 'SecurityGroup', { role: role.name }),
-        relation('out', '', 'baseNode'),
-        node('baseNode', 'BaseNode', { id: baseNodeId }),
-      ])
-      .raw('return sg.id as id')
-      .asResult<{ id: string }>()
-      .first();
-
-    if (checkSg?.id) {
-      return checkSg.id;
-    }
-
-    // SG for role does not exist, baseNodeObj must be supplied
-    if (baseNodeObj === undefined) {
-      throw new ServerException('base node object not supplied');
-    }
-
-    // create SG with all role's perms
-    const createSgQuery = this.db
-      .query()
-      .match([node('baseNode', 'BaseNode', { id: baseNodeId })])
-      .merge([
-        node('sg', 'SecurityGroup', {
-          id: await generateId(),
-          role: role.name,
-        }),
-        relation('out', '', 'baseNode'),
-        node('baseNode'),
-      ]);
-
-    // iterate through the key of the base node and get the permission object for each from the role object
-    for (const key of Object.keys(baseNodeObj)) {
-      const perms = role.getPermissionsOnProperty<typeof baseNodeObj>(
-        baseNodeObj.__className,
-        key as keyof OneBaseNode
-      );
-
-      // write the permission to the db if any of its perms are true
-      createSgQuery.merge([
-        node('sg'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          read: perms?.read ? perms.read : false,
-          edit: perms?.write ? perms.write : false,
-          property: key,
-        }),
-        relation('out', '', 'baseNode'),
-        node('baseNode'),
-      ]);
-    }
-
-    const result = await createSgQuery
-      .raw('return sg.id as id')
-      .asResult<{ id: string }>()
-      .first();
-
-    if (result === undefined) {
-      throw new ServerException('failed to create SG for role');
-    }
-
-    return result.id;
-  }
-
-  async unsecureGetProjectIdFromAnyProjectChildNode(
-    id: string
-  ): Promise<string> {
-    const result = await this.db
-      .query()
-      .match([
-        node('project', 'Project'),
-        relation(
-          'out',
-          '',
-          [
-            'budget',
-            'record',
-            'engagement',
-            'ceremony',
-            'member',
-            'partner',
-            'partnership',
-            'produces',
-            'product',
-          ],
-          { active: true },
-          [1, 3]
-        ),
-        node('', 'BaseNode', { id }),
-      ])
-      .raw(`RETURN project.id as id`)
-      .first();
-
-    return result?.id;
+  async getPermissionsOfBaseNode<
+    DbProps extends Record<string, any>,
+    PickedKeys extends keyof DbProps
+  >({
+    baseNode,
+    sessionOrUserId,
+    propList,
+    propKeys,
+  }: {
+    baseNode: DbBaseNode;
+    sessionOrUserId: Session | string;
+    propList: PropListDbResult<DbProps> | DbProps;
+    propKeys: Record<PickedKeys, boolean>;
+  }) {
+    const dbRoles =
+      typeof sessionOrUserId === 'string'
+        ? await this.getUserRoleObjects(sessionOrUserId)
+        : sessionOrUserId.roles;
+    // ignoring types here because baseNode provides no benefit over propList & propKeys.
+    const permsOfBaseNode = (await this.getPerms(baseNode, dbRoles)) as any;
+    return parseSecuredProperties(propList, permsOfBaseNode, propKeys);
   }
 
   mapRoleToDbRoles(role: Role): InternalRole[] {
@@ -364,7 +170,7 @@ export class AuthorizationService {
 
     for (const role of roles) {
       // match the role to a real role object and grant powers
-      const roleObj = everyRole.find((i) => i.name === role);
+      const roleObj = getRole(role);
       if (roleObj === undefined) continue;
       for (const power of roleObj.powers) {
         await this.grantPower(power, id);
@@ -497,233 +303,6 @@ export class AuthorizationService {
     return result?.powers ?? [];
   }
 
-  async unsecureGetProjectIdByBudgetId(id: string): Promise<string> {
-    const result = await this.db
-      .query()
-      .match([
-        node('project', 'Project'),
-        relation('out', '', 'budget', { active: true }),
-        node('', 'Budget', { id }),
-      ])
-      .raw(`RETURN project.id as id`)
-      .first();
-
-    return result?.id;
-  }
-
-  async unsecureGetProjectIdByBudgetRecordId(id: string): Promise<string> {
-    const result = await this.db
-      .query()
-      .match([
-        node('project', 'Project'),
-        relation('out', '', 'budget', { active: true }),
-        node('', 'Budget'),
-        relation('out', '', 'record', { active: true }),
-        node('', 'BudgetRecord', { id }),
-      ])
-      .raw(`RETURN project.id as id`)
-      .first();
-
-    return result?.id;
-  }
-
-  async unsecureGetProjectIdByCeremonyId(id: string): Promise<string> {
-    const result = await this.db
-      .query()
-      .match([
-        node('project', 'Project'),
-        relation('out', '', 'engagement', { active: true }),
-        node('', 'Engagement'),
-        relation('out', '', 'ceremony', { active: true }),
-        node('', 'Ceremony', { id }),
-      ])
-      .raw(`RETURN project.id as id`)
-      .first();
-
-    return result?.id;
-  }
-
-  async unsecureGetProjectIdByEngagementId(id: string): Promise<string> {
-    const result = await this.db
-      .query()
-      .match([
-        node('project', 'Project'),
-        relation('out', '', 'engagement', { active: true }),
-        node('', 'Engagement', { id }),
-      ])
-      .raw(`RETURN project.id as id`)
-      .first();
-
-    return result?.id;
-  }
-
-  async unsecureGetProjectIdByPartnershipId(id: string): Promise<string> {
-    const result = await this.db
-      .query()
-      .match([
-        node('project', 'Project'),
-        relation('out', '', 'partnership', { active: true }),
-        node('', 'Partnership', { id }),
-      ])
-      .raw(`RETURN project.id as id`)
-      .first();
-
-    return result?.id;
-  }
-
-  async unsecureGetProjectIdByProjectMemberId(id: string): Promise<string> {
-    const result = await this.db
-      .query()
-      .match([
-        node('project', 'Project'),
-        relation('out', '', 'member', { active: true }),
-        node('', 'ProjectMember', { id }),
-      ])
-      .raw(`RETURN project.id as id`)
-      .first();
-
-    return result?.id;
-  }
-
-  async unsecureGetProjectIdByProducibleId(id: string): Promise<string> {
-    const result = await this.db
-      .query()
-      .match([
-        node('project', 'Project'),
-        relation('out', '', 'engagement', { active: true }),
-        node('', 'LanguageEngagement'),
-        relation('out', '', 'product', { active: true }),
-        node('', 'Product'),
-        relation('out', '', 'produces', { active: true }),
-        node('', 'Producible', { id }),
-      ])
-      .raw(`RETURN project.id as id`)
-      .first();
-
-    return result?.id;
-  }
-
-  async unsecureGetProjectIdByProductId(id: string): Promise<string> {
-    const result = await this.db
-      .query()
-      .match([
-        node('project', 'Project'),
-        relation('out', '', 'engagement', { active: true }),
-        node('', 'LanguageEngagement'),
-        relation('out', '', 'product', { active: true }),
-        node('', 'Product', { id }),
-      ])
-      .raw(`RETURN project.id as id`)
-      .first();
-
-    return result?.id;
-  }
-
-  async unsecureGetAllProjectBaseNodeIds(id: string): Promise<ProjectChildIds> {
-    const result = await this.db
-      .query()
-      .raw(
-        `
-    match
-      (project:Project {id:$id})
-    with {} as ids, project
-
-    optional match
-      (project)-[:budget {active:true}]->(budget:Budget)-[:record{active:true}]->(budgetRecord:BudgetRecord)
-    with
-      project,
-      ids,
-      apoc.map.setKey(ids, "budgets", collect(distinct budget.id)) as id1,
-      apoc.map.setKey(ids, "budgetRecords", collect(distinct budgetRecord.id)) as id2
-    with apoc.map.mergeList([ids, id1, id2]) as ids, project
-
-    optional match
-      (project)-[:partnership{active:true}]->(partnership:Partnership)-[:partner{active:true}]->(partner:Partner)-[:organization{active:true}]->(organization:Organization)
-    with
-      project,
-      ids,
-      apoc.map.setKey(ids, "partnerships", collect(distinct partnership.id)) as id1,
-      apoc.map.setKey(ids, "partners", collect(distinct partner.id)) as id2,
-      apoc.map.setKey(ids, "organizations", collect(distinct organization.id)) as id3
-    with apoc.map.mergeList([ids, id1, id2, id3]) as ids, project
-
-    optional match
-      (project)-[:engagement{active:true}]->(internshipEngagement:InternshipEngagement)
-    with
-      project,
-      ids,
-      apoc.map.setKey(ids, "internshipEngagements", collect(distinct internshipEngagement.id)) as id1
-    with apoc.map.mergeList([ids, id1]) as ids, project
-
-    optional match
-      (project)-[:engagement{active:true}]->(languageEngagement:LanguageEngagement)
-    with
-      project,
-      ids,
-      apoc.map.setKey(ids, "languageEngagements", collect(distinct languageEngagement.id)) as id1
-    with apoc.map.mergeList([ids, id1]) as ids, project
-
-    optional match
-      (project)-[:engagement{active:true}]->(:Engagement)-[:ceremony{active:true}]->(ceremony:Ceremony)
-    with
-      project,
-      ids,
-      apoc.map.setKey(ids, "ceremonies", collect(distinct ceremony.id)) as id1
-    with apoc.map.mergeList([ids, id1]) as ids, project
-
-    optional match
-      (project)-[:member{active:true}]->(member:ProjectMember)-[:user{active:true}]->(user:User)
-    with
-      project,
-      ids,
-      apoc.map.setKey(ids, "members", collect(distinct member.id)) as id1,
-      apoc.map.setKey(ids, "users", collect(distinct user.id)) as id2
-    with apoc.map.mergeList([ids, id1, id2]) as ids, project
-
-    optional match
-      (project)-[:engagement{active:true}]->(:Engagement)-[:product{active:true}]->(product:Product)-[:produces{active:true}]->(produces:Producible)
-    with
-      project,
-      ids,
-      apoc.map.setKey(ids, "products", collect(distinct product.id)) as id1,
-      apoc.map.setKey(ids, "produces", collect(distinct produces.id)) as id2
-    with apoc.map.mergeList([ids, id1, id2]) as ids, project
-
-    return ids
-    `,
-        { id }
-      )
-      .first();
-    return result?.ids;
-  }
-
-  async unsecureGetUserIdByProjectMemberId(id: string): Promise<string> {
-    const result = this.db
-      .query()
-      .match([
-        node('user', 'User'),
-        relation('in', '', 'user', { active: true }),
-        node('', 'ProjectMember', { id }),
-      ])
-      .raw('RETURN user.id as id');
-    const result2 = await result.first();
-    return result2?.id;
-  }
-
-  async unsecureGetProjectRoles(id: string): Promise<string[]> {
-    const result = await this.db
-      .query()
-      .match([
-        node('projectMember', 'ProjectMember', { id }),
-        relation('out', '', 'roles', { active: true }),
-        node('role', 'Property'),
-      ])
-      .raw(`RETURN role.value as roles`)
-      .first();
-
-    return result?.roles ?? [];
-  }
-
   async getUserRoleObjects(id: string): Promise<DbRole[]> {
     const roleQuery = await this.db
       .query()
@@ -733,11 +312,10 @@ export class AuthorizationService {
         node('role', 'Property'),
       ])
       .raw(`RETURN collect(role.value) as roles`)
+      .asResult<{ roles: Role[] }>()
       .first();
 
-    const roles = roleQuery?.roles.map((role: string) => {
-      return everyRole.find((roleObj) => role === roleObj.name);
-    });
+    const roles = compact(roleQuery?.roles.map(getRole));
 
     return roles;
   }

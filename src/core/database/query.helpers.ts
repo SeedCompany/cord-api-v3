@@ -68,33 +68,6 @@ export function createBaseNode(
       relation('out', '', prop.key, { active: true, createdAt }),
       node('', labels, nodeProps),
     ]);
-
-    if (prop.isPublic) {
-      query.create([
-        node('publicSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property: prop.key,
-          read: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ]);
-    }
-
-    // assumes 'orgSG' cypher variable is declared in a previous query
-    if (prop.isOrgPublic) {
-      query.create([
-        node('orgSG'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property: prop.key,
-          read: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('node'),
-      ]);
-    }
   }
 }
 

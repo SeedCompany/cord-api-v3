@@ -45,14 +45,4 @@ export class AuthorizationResolver {
     await this.authorizationService.deletePower(userId, power, session);
     return true;
   }
-
-  @Mutation(() => Boolean)
-  async authorizationSpecial1(
-    @LoggedInSession() session: Session
-  ): Promise<boolean> {
-    await this.authorizationService.createSGsForEveryRoleForAllBaseNodes(
-      session
-    );
-    return true;
-  }
 }

@@ -24,7 +24,6 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
-  matchPermList,
   matchPropList,
   permissionsOfNode,
   requestingUser,
@@ -32,7 +31,6 @@ import {
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
-  parseSecuredProperties,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
@@ -275,8 +273,7 @@ export class PartnershipService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Partnership', { id })])
-      .call(matchPermList)
-      .call(matchPropList, 'permList')
+      .call(matchPropList)
       .match([
         node('node'),
         relation('in', '', 'partnership'),
@@ -288,7 +285,7 @@ export class PartnershipService {
         node('partner', 'Partner'),
       ])
       .return(
-        'propList, permList, node, project.id as projectId, partner.id as partnerId'
+        'propList, node, project.id as projectId, partner.id as partnerId'
       )
       .asResult<
         StandardReadResult<DbPropsOfDto<Partnership>> & {
@@ -311,10 +308,13 @@ export class PartnershipService {
       session
     );
 
-    const securedProps = parseSecuredProperties(
-      result.propList,
-      result.permList,
-      this.securedProperties
+    const securedProps = await this.authorizationService.getPermissionsOfBaseNode(
+      {
+        baseNode: new DbPartnership(),
+        sessionOrUserId: session,
+        propList: result.propList,
+        propKeys: this.securedProperties,
+      }
     );
     const canReadMouStart =
       readProject.mouStart.canRead && securedProps.mouStartOverride.canRead;

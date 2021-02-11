@@ -24,16 +24,14 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
-  matchPermList,
   matchPropList,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
-import type { BaseNode } from '../../core/database/results';
 import {
+  BaseNode,
   DbPropsOfDto,
   parseBaseNodeProperties,
-  parseSecuredProperties,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
@@ -68,6 +66,10 @@ export class ProductService {
     mediums: true,
     purposes: true,
     methodology: true,
+    scriptureReferences: true,
+    scriptureReferencesOverride: true,
+    produces: true,
+    isOverriding: true,
   };
 
   constructor(
@@ -259,9 +261,8 @@ export class ProductService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Product', { id })])
-      .call(matchPermList)
-      .call(matchPropList, 'permList')
-      .return(['propList, permList, node'])
+      .call(matchPropList)
+      .return(['propList, node'])
       .asResult<
         StandardReadResult<
           DbPropsOfDto<
@@ -284,14 +285,11 @@ export class ProductService {
       scriptureReferencesOverride,
       isOverriding,
       ...rest
-    } = parseSecuredProperties(result.propList, result.permList, {
-      mediums: true,
-      purposes: true,
-      methodology: true,
-      scriptureReferences: true,
-      scriptureReferencesOverride: true,
-      produces: true,
-      isOverriding: true,
+    } = await this.authorizationService.getPermissionsOfBaseNode({
+      baseNode: new DbProduct(),
+      sessionOrUserId: session,
+      propList: result.propList,
+      propKeys: this.securedProperties,
     });
 
     const connectedProducible = await this.db

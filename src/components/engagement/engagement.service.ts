@@ -25,7 +25,6 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
-  matchPermList,
   matchPropList,
   permissionsOfNode,
   requestingUser,
@@ -34,11 +33,11 @@ import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
-  parseSecuredProperties,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { DbBaseNode } from '../authorization/model/db-base-node.model';
 import { CeremonyService } from '../ceremony';
 import { FileService } from '../file';
 import {
@@ -67,7 +66,11 @@ import {
   EngagementDeletedEvent,
   EngagementUpdatedEvent,
 } from './events';
-import { DbInternshipEngagement, DbLanguageEngagement } from './model';
+import {
+  DbEngagement,
+  DbInternshipEngagement,
+  DbLanguageEngagement,
+} from './model';
 import { PnpExtractor } from './pnp-extractor.service';
 
 @Injectable()
@@ -621,11 +624,9 @@ export class EngagementService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Engagement', { id })])
-      .call(matchPermList)
-      .call(matchPropList, 'permList')
+      .call(matchPropList)
       .with([
         'propList',
-        'permList',
         'node',
         `case
           when 'InternshipEngagement' IN labels(node)
@@ -671,7 +672,7 @@ export class EngagementService {
         node('pnpData'),
       ])
       .return([
-        'propList, permList, node, project.id as projectId',
+        'propList, node, project.id as projectId',
         '__typename, ceremony.id as ceremonyId',
         'language.id as languageId',
         'intern.id as internId',
@@ -704,10 +705,22 @@ export class EngagementService {
     }
 
     const props = parsePropList(result.propList);
-    const securedProperties = parseSecuredProperties(
-      props,
-      result.permList,
-      this.securedProperties
+
+    let baseNode = new DbBaseNode();
+    if (result.node.labels.includes('LanguageEngagement')) {
+      baseNode = new DbLanguageEngagement();
+    } else if (result.node.labels.includes('InternshipEngagement')) {
+      baseNode = new DbInternshipEngagement();
+    } else {
+      baseNode = new DbEngagement();
+    }
+    const securedProperties = await this.authorizationService.getPermissionsOfBaseNode(
+      {
+        baseNode: baseNode,
+        sessionOrUserId: session,
+        propList: result.propList,
+        propKeys: this.securedProperties,
+      }
     );
 
     const project = await this.projectService.readOne(

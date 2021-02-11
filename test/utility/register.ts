@@ -29,6 +29,36 @@ export const generateRequireFieldsRegisterInput = async (): Promise<RegisterInpu
   timezone: 'America/Chicago',
 });
 
+export async function registerUserWithStrictInput(
+  app: TestApp,
+  input: RegisterInput
+) {
+  const user: RegisterInput = {
+    ...input,
+  };
+  const result = await app.graphql.mutate(
+    gql`
+      mutation createUser($input: RegisterInput!) {
+        register(input: $input) {
+          user {
+            ...user
+          }
+        }
+      }
+      ${fragments.user}
+    `,
+    {
+      input: user,
+    }
+  );
+  const actual: User = result.register.user;
+  expect(actual).toBeTruthy();
+
+  expect(isValidId(actual.id)).toBe(true);
+  expect(actual.email.value).toBe(input.email.toLowerCase());
+
+  return actual;
+}
 export async function registerUser(
   app: TestApp,
   input: Partial<RegisterInput> = {}

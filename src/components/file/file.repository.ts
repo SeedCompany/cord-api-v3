@@ -1,16 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import {
-  contains,
-  hasLabel,
-  node,
-  Node,
-  Query,
-  relation,
-} from 'cypher-query-builder';
+import { contains, hasLabel, node, relation } from 'cypher-query-builder';
 import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
 import { AnyConditions } from 'cypher-query-builder/dist/typings/clauses/where-utils';
 import { isEmpty } from 'lodash';
 import { DateTime } from 'luxon';
+import { Except } from 'type-fest';
 import {
   generateId,
   NotFoundException,
@@ -28,8 +22,19 @@ import {
   matchSession,
   Property,
 } from '../../core';
-import { collect, count, mapping } from '../../core/database/query';
-import { hasMore } from '../../core/database/results';
+import {
+  collect,
+  count,
+  mapping,
+  matchPropList,
+} from '../../core/database/query';
+import {
+  DbPropsOfDto,
+  hasMore,
+  parseBaseNodeProperties,
+  parsePropList,
+  StandardReadResult,
+} from '../../core/database/results';
 import { BaseNode, FileListInput, FileNodeType, FileVersion } from './dto';
 
 @Injectable()
@@ -187,64 +192,34 @@ export class FileRepository {
   }
 
   async getVersionDetails(id: string, session: Session): Promise<FileVersion> {
-    const matchLatestVersionProp = (q: Query, prop: string, variable = prop) =>
-      q
-        .with('*')
-        .optionalMatch([
-          node('requestingUser'),
-          relation('in', `memberOfSecurityGroupFor${prop}`, 'member'),
-          node(`securityGroupFor${prop}`, 'SecurityGroup'),
-          relation('out', `sgPermsFor${prop}`, 'permission'),
-          node('perms', 'Permission'),
-          relation('out', `permsOfBaseNodeFor${prop}`, 'baseNode'),
-          node('fv'),
-          relation('out', '', prop, { active: true }),
-          node(variable, 'Property'),
-        ]);
-    const matchFileVersion = node('fv', 'FileVersion', { id });
-    const result = await this.db
+    const query = this.db
       .query()
+      .match(node('node', 'FileVersion', { id }))
+      .call(matchPropList)
       .match([
-        matchSession(session),
-        [matchFileVersion],
-        [
-          matchFileVersion,
-          relation('out', '', 'name', { active: true }),
-          node('name', 'Property'),
-        ],
-        [
-          matchFileVersion,
-          relation('out', '', 'createdBy', { active: true }),
-          node('createdBy'),
-        ],
+        node('node'),
+        relation('out', '', 'createdBy', { active: true }),
+        node('createdBy'),
       ])
-      .call(matchLatestVersionProp, 'size')
-      .call(matchLatestVersionProp, 'mimeType')
-      .return([
-        'fv',
-        {
-          name: [{ value: 'name' }],
-          size: [{ value: 'size' }],
-          mimeType: [{ value: 'mimeType' }],
-          createdBy: [{ id: 'createdById' }],
-        },
-      ])
-      .first();
+      .return(['node', 'propList', { createdBy: [{ id: 'createdById' }] }])
+      .asResult<
+        StandardReadResult<
+          DbPropsOfDto<Except<FileVersion, 'type' | 'createdById'>>
+        > & {
+          createdById: string;
+        }
+      >();
+    const result = await query.first();
     if (!result) {
-      throw new NotFoundException();
+      throw new NotFoundException('Could not find file version');
     }
 
-    const fv = result.fv as Node<{ id: string; createdAt: DateTime }>;
-
     return {
-      id: fv.properties.id,
+      ...parseBaseNodeProperties(result.node),
       type: FileNodeType.FileVersion,
-      name: result.name,
-      size: result.size as number,
-      mimeType: result.mimeType as string,
-      createdAt: fv.properties.createdAt,
-      createdById: result.createdById as string,
-      canDelete: true, // TODO
+      ...parsePropList(result.propList),
+      createdById: result.createdById,
+      canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 

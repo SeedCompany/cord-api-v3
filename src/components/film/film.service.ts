@@ -21,7 +21,6 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
-  matchPermList,
   matchPropList,
   permissionsOfNode,
   requestingUser,
@@ -29,7 +28,6 @@ import {
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
-  parseSecuredProperties,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
@@ -154,9 +152,8 @@ export class FilmService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Film', { id })])
-      .call(matchPermList)
-      .call(matchPropList, 'permList')
-      .return('node, permList, propList')
+      .call(matchPropList)
+      .return('node, propList')
       .asResult<StandardReadResult<DbPropsOfDto<Film>>>();
 
     const result = await readFilm.first();
@@ -169,11 +166,13 @@ export class FilmService {
       id,
       session
     );
-
-    const securedProps = parseSecuredProperties(
-      result.propList,
-      result.permList,
-      this.securedProperties
+    const securedProps = await this.authorizationService.getPermissionsOfBaseNode(
+      {
+        baseNode: new DbFilm(),
+        sessionOrUserId: session,
+        propList: result.propList,
+        propKeys: this.securedProperties,
+      }
     );
 
     return {

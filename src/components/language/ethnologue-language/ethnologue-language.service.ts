@@ -17,10 +17,9 @@ import {
   matchRequestingUser,
   Property,
 } from '../../../core';
-import { matchPermList, matchPropList } from '../../../core/database/query';
+import { matchPropList } from '../../../core/database/query';
 import {
   DbPropsOfDto,
-  parseSecuredProperties,
   StandardReadResult,
 } from '../../../core/database/results';
 import { AuthorizationService } from '../../authorization/authorization.service';
@@ -110,9 +109,8 @@ export class EthnologueLanguageService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'EthnologueLanguage', { id: id })])
-      .call(matchPermList)
-      .call(matchPropList, 'permList')
-      .return('propList, permList, node')
+      .call(matchPropList)
+      .return('propList, node')
       .asResult<StandardReadResult<EthLangDbProps>>();
 
     const result = await query.first();
@@ -122,15 +120,23 @@ export class EthnologueLanguageService {
         'ethnologue.id'
       );
     }
+    const securedProperties = {
+      code: true,
+      provisionalCode: true,
+      name: true,
+      population: true,
+    };
+
+    const secured = await this.authorizationService.getPermissionsOfBaseNode({
+      baseNode: new DbEthnologueLanguage(),
+      sessionOrUserId: session,
+      propList: result.propList,
+      propKeys: securedProperties,
+    });
 
     return {
       id,
-      ...parseSecuredProperties(result.propList, result.permList, {
-        code: true,
-        provisionalCode: true,
-        name: true,
-        population: true,
-      }),
+      ...secured,
     };
   }
 

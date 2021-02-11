@@ -19,6 +19,7 @@ import {
   matchRequestingUser,
 } from '../../core';
 import { ForgotPassword } from '../../core/email/templates';
+import { AuthorizationService } from '../authorization/authorization.service';
 import { User, UserService } from '../user';
 import { LoginInput, ResetPasswordInput } from './authentication.dto';
 import { CryptoService } from './crypto.service';
@@ -37,6 +38,7 @@ export class AuthenticationService {
     private readonly crypto: CryptoService,
     private readonly email: EmailService,
     private readonly userService: UserService,
+    private readonly authorizationService: AuthorizationService,
     @Logger('authentication:service') private readonly logger: ILogger
   ) {}
 
@@ -244,10 +246,15 @@ export class AuthenticationService {
       );
     }
 
+    const roles = await this.authorizationService.getUserRoleObjects(
+      result.userId
+    );
+
     const session = {
       token,
       issuedAt: DateTime.fromMillis(iat),
       userId: result.userId,
+      roles: roles,
     };
     this.logger.debug('Created session', session);
     return session;

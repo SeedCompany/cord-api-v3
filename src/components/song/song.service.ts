@@ -21,7 +21,6 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
-  matchPermList,
   matchPropList,
   permissionsOfNode,
   requestingUser,
@@ -29,7 +28,6 @@ import {
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
-  parseSecuredProperties,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
@@ -151,9 +149,8 @@ export class SongService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Song', { id })])
-      .call(matchPermList)
-      .call(matchPropList, 'permList')
-      .return('propList, permList, node')
+      .call(matchPropList)
+      .return('propList, node')
       .asResult<StandardReadResult<DbPropsOfDto<Song>>>();
 
     const result = await query.first();
@@ -167,10 +164,13 @@ export class SongService {
       session
     );
 
-    const securedProps = parseSecuredProperties(
-      result.propList,
-      result.permList,
-      this.securedProperties
+    const securedProps = await this.authorizationService.getPermissionsOfBaseNode(
+      {
+        baseNode: new DbSong(),
+        sessionOrUserId: session,
+        propList: result.propList,
+        propKeys: this.securedProperties,
+      }
     );
 
     return {
