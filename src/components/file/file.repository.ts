@@ -1,9 +1,10 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { contains, hasLabel, node, relation } from 'cypher-query-builder';
 import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
 import { AnyConditions } from 'cypher-query-builder/dist/typings/clauses/where-utils';
 import { isEmpty } from 'lodash';
 import { DateTime } from 'luxon';
+import { Except } from 'type-fest';
 import {
   generateId,
   NotFoundException,
@@ -31,19 +32,16 @@ import {
   DbPropsOfDto,
   hasMore,
   parseBaseNodeProperties,
+  parsePropList,
   StandardReadResult,
 } from '../../core/database/results';
-import { AuthorizationService } from '../authorization/authorization.service';
 import { BaseNode, FileListInput, FileNodeType, FileVersion } from './dto';
-import { DbFileVersion } from './model/file-version.model.db';
 
 @Injectable()
 export class FileRepository {
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
-    @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService,
     @Logger('file:repository') private readonly logger: ILogger
   ) {}
 
@@ -196,73 +194,31 @@ export class FileRepository {
   async getVersionDetails(id: string, session: Session): Promise<FileVersion> {
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
-      .match([node('node', 'FileNode', { id })])
-      .call(matchPropList, 'node')
+      .match(node('node', 'FileVersion', { id }))
+      .call(matchPropList)
       .match([
-        node('fv', 'FileVersion', { id }),
+        node('node'),
         relation('out', '', 'createdBy', { active: true }),
         node('createdBy'),
       ])
-      .match([
-        node('fv', 'FileVersion'),
-        relation('out', '', 'parent', { active: true }),
-        node('parent'),
-      ])
-      .return([
-        'propList, node',
-        { createdBy: [{ id: 'createdById' }], parent: [{ id: 'parent' }] },
-      ])
+      .return(['node', 'propList', { createdBy: [{ id: 'createdById' }] }])
       .asResult<
-        StandardReadResult<DbPropsOfDto<FileVersion>> & {
+        StandardReadResult<
+          DbPropsOfDto<Except<FileVersion, 'type' | 'createdById'>>
+        > & {
           createdById: string;
-          parent: string;
         }
       >();
     const result = await query.first();
     if (!result) {
-      throw new NotFoundException(
-        'Could not find file version',
-        'fileversion.id'
-      );
+      throw new NotFoundException('Could not find file version');
     }
-    if (!result) {
-      throw new NotFoundException();
-    }
-
-    const securedProperties = {
-      category: true,
-      createdBy: true,
-      mimeType: true,
-      name: true,
-      parent: true,
-      size: true,
-    };
-
-    const completePropList = [
-      ...result.propList,
-      { property: 'createdBy', value: result.createdById },
-      { property: 'parent', value: result.parent },
-    ];
-
-    const secured = await this.authorizationService.getPermissionsOfBaseNode({
-      baseNode: new DbFileVersion(),
-      sessionOrUserId: session,
-      propList: completePropList,
-      propKeys: securedProperties,
-    });
 
     return {
       ...parseBaseNodeProperties(result.node),
-      ...{
-        category: secured.category.canRead ? secured.category.value : null,
-        createdById: secured.createdBy.canRead ? secured.createdBy.value : null,
-        mimeType: secured.mimeType.canRead ? secured.mimeType.value : null,
-        name: secured.name.canRead ? secured.name.value : null,
-        parent: secured.parent.canRead ? secured.parent.value : null,
-        size: secured.size.canRead ? secured.size.value : null,
-        type: FileNodeType.FileVersion,
-      },
+      type: FileNodeType.FileVersion,
+      ...parsePropList(result.propList),
+      createdById: result.createdById,
       canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
