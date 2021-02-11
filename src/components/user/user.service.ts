@@ -1,6 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { compact } from 'lodash';
+import { compact, mapValues } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
@@ -37,7 +37,10 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { Role } from '../authorization';
-import { AuthorizationService } from '../authorization/authorization.service';
+import {
+  AuthorizationService,
+  PermissionsOf,
+} from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
 import { LanguageService } from '../language';
 import {
@@ -300,7 +303,8 @@ export class UserService {
       .filter((prop) => prop.property === 'roles')
       .map((prop) => prop.value as Role);
 
-    let permsOfBaseNode = {};
+    const props = this.securedProperties;
+    let permsOfBaseNode: PermissionsOf<typeof props>;
     // -- let the user explicitly see all properties only if they're reading their own ID
     // -- TODO: express this within the authorization system. Like an Owner/Creator "meta" role that gets these x permissions.
     const userId =
@@ -308,24 +312,10 @@ export class UserService {
         ? sessionOrUserId
         : sessionOrUserId.userId;
     if (id === userId) {
-      permsOfBaseNode = {
-        about: { canRead: true, canEdit: true },
-        displayFirstName: { canRead: true, canEdit: true },
-        displayLastName: { canRead: true, canEdit: true },
-        email: { canRead: true, canEdit: true },
-        phone: { canRead: true, canEdit: true },
-        realFirstName: { canRead: true, canEdit: true },
-        realLastName: { canRead: true, canEdit: true },
-        roles: { canRead: true, canEdit: true },
-        status: { canRead: true, canEdit: true },
-        timezone: { canRead: true, canEdit: true },
-        title: { canRead: true, canEdit: true },
-        education: { canRead: true, canEdit: true },
-        organization: { canRead: true, canEdit: true },
-        unavailability: { canRead: true, canEdit: true },
-        locations: { canRead: true, canEdit: true },
-        knownLanguage: { canRead: true, canEdit: true },
-      };
+      permsOfBaseNode = mapValues(props, () => ({
+        canRead: true,
+        canEdit: true,
+      }));
     } else {
       const roles =
         typeof sessionOrUserId === 'string'
@@ -340,7 +330,7 @@ export class UserService {
     const securedProps = parseSecuredProperties(
       result.propList,
       permsOfBaseNode,
-      this.securedProperties
+      props
     );
 
     return {
