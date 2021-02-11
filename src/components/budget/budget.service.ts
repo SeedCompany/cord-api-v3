@@ -54,20 +54,16 @@ import { DbBudgetRecord } from './model/budget-record.model.db';
 
 @Injectable()
 export class BudgetService {
-  private readonly securedPropertiesBudget = {
-    budget: true,
-    records: true,
+  private readonly securedBudgetProperties = {
     status: true,
+    records: true,
     universalTemplateFile: true,
-    universalTemplateFileNode: true,
   };
 
-  private readonly securedPropertiesBudgetRecord = {
-    amount: true,
-    fiscalYear: true,
-    partnership: true,
-    record: true,
+  private readonly securedBudgetRecordProperties = {
     organization: true,
+    fiscalYear: true,
+    amount: true,
   };
 
   constructor(
@@ -333,7 +329,7 @@ export class BudgetService {
         baseNode: new DbBudget(),
         sessionOrUserId: session,
         propList: result.propList,
-        propKeys: this.securedPropertiesBudget,
+        propKeys: this.securedBudgetProperties,
       }
     );
 
@@ -382,7 +378,7 @@ export class BudgetService {
         baseNode: new DbBudgetRecord(),
         sessionOrUserId: session,
         propList: result.propList,
-        propKeys: this.securedPropertiesBudgetRecord,
+        propKeys: this.securedBudgetRecordProperties,
       }
     );
     return {
@@ -560,7 +556,7 @@ export class BudgetService {
       .call(
         calculateTotalAndPaginateList,
         listInput,
-        this.securedPropertiesBudget,
+        this.securedBudgetProperties,
         defaultSorter
       );
 
@@ -592,7 +588,7 @@ export class BudgetService {
       .call(
         calculateTotalAndPaginateList,
         input,
-        this.securedPropertiesBudgetRecord,
+        this.securedBudgetRecordProperties,
         defaultSorter
       );
 
