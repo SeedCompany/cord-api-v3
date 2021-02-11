@@ -1,5 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
+import { keys as keysOf } from 'ts-transformer-keys';
 import {
   DateTimeField,
   Resource,
@@ -23,6 +24,8 @@ export abstract class SecuredFinancialReportingTypes extends SecuredEnumList(
   implements: Resource,
 })
 export class Partner extends Resource {
+  static readonly Props = keysOf<Partner>();
+
   readonly organization: Secured<string>;
 
   readonly pointOfContact: Secured<string>;

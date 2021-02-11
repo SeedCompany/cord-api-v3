@@ -1,4 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
+import { keys as keysOf } from 'ts-transformer-keys';
 import {
   DateTimeField,
   Resource,
@@ -10,6 +11,8 @@ import {
   implements: [Resource],
 })
 export class Unavailability extends Resource {
+  static readonly Props = keysOf<Unavailability>();
+
   @Field()
   readonly description: SecuredString;
 

@@ -1,4 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
+import { keys as keysOf } from 'ts-transformer-keys';
 import { Resource, SecuredProperty } from '../../../common';
 import { DefinedFile } from '../../file/dto';
 import { BudgetRecord } from './budget-record.dto';
@@ -8,6 +9,8 @@ import { BudgetStatus } from './budget-status.enum';
   implements: [Resource],
 })
 export class Budget extends Resource {
+  static readonly Props = keysOf<Budget>();
+
   @Field()
   readonly status: BudgetStatus;
 
@@ -16,6 +19,7 @@ export class Budget extends Resource {
 
   readonly universalTemplateFile: DefinedFile;
 }
+
 @ObjectType({
   description: SecuredProperty.descriptionFor('a budget'),
 })

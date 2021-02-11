@@ -1,4 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
+import { keys as keysOf } from 'ts-transformer-keys';
 import {
   Resource,
   SecuredBoolean,
@@ -11,6 +12,8 @@ import { CeremonyType } from './type.enum';
   implements: [Resource],
 })
 export class Ceremony extends Resource {
+  static readonly Props = keysOf<Ceremony>();
+
   @Field(() => CeremonyType)
   readonly type: CeremonyType;
 

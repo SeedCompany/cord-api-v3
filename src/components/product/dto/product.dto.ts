@@ -1,5 +1,6 @@
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
+import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
 import { Resource } from '../../../common';
 import { SecuredScriptureRangesOverride } from '../../scripture';
@@ -13,6 +14,8 @@ import { SecuredProductPurposes } from './product-purpose';
     product.produces ? DerivativeScriptureProduct : DirectScriptureProduct,
 })
 export class Product extends Producible {
+  static readonly Props: string[] = keysOf<Product>();
+
   @Field()
   readonly mediums: SecuredProductMediums;
 
@@ -29,7 +32,9 @@ export class Product extends Producible {
     A product producing direct scripture only.
   `,
 })
-export class DirectScriptureProduct extends Product {}
+export class DirectScriptureProduct extends Product {
+  static readonly Props = keysOf<DirectScriptureProduct>();
+}
 
 @ObjectType({
   implements: [Product, Producible, Resource],
@@ -39,6 +44,8 @@ export class DirectScriptureProduct extends Product {}
   `,
 })
 export class DerivativeScriptureProduct extends Product {
+  static readonly Props = keysOf<DerivativeScriptureProduct>();
+
   @Field({
     description: stripIndent`
       The object that this product is producing.

@@ -1,4 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
+import { keys as keysOf } from 'ts-transformer-keys';
 import {
   Resource,
   Secured,
@@ -10,6 +11,8 @@ import {
   implements: [Resource],
 })
 export class FieldRegion extends Resource {
+  static readonly Props = keysOf<FieldRegion>();
+
   @Field()
   readonly name: SecuredString;
 
@@ -17,6 +20,7 @@ export class FieldRegion extends Resource {
 
   readonly director: Secured<string>;
 }
+
 @ObjectType({
   description: SecuredProperty.descriptionFor('a field region'),
 })

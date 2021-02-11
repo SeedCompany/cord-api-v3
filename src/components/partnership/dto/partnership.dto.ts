@@ -1,4 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
+import { keys as keysOf } from 'ts-transformer-keys';
 import {
   Resource,
   Secured,
@@ -29,6 +30,8 @@ export abstract class SecuredFinancialReportingType extends SecuredEnum(
   implements: [Resource],
 })
 export class Partnership extends Resource {
+  static readonly Props = keysOf<Partnership>();
+
   @Field()
   readonly agreementStatus: SecuredPartnershipAgreementStatus;
 

@@ -1,5 +1,6 @@
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
+import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
 import {
   DateTimeField,
@@ -32,6 +33,8 @@ export type AnyEngagement = MergeExclusive<
  * This should be used for GraphQL but never for TypeScript types.
  */
 class Engagement extends Resource {
+  static readonly Props: string[] = keysOf<Engagement>();
+
   readonly __typename: string;
 
   @Field(() => SecuredEngagementStatus)
@@ -96,6 +99,8 @@ export { Engagement as IEngagement, AnyEngagement as Engagement };
   implements: [Engagement, Resource],
 })
 export class LanguageEngagement extends Engagement {
+  static readonly Props = keysOf<LanguageEngagement>();
+
   readonly language: Secured<string>;
 
   @Field()
@@ -125,6 +130,8 @@ export class LanguageEngagement extends Engagement {
   implements: [Engagement, Resource],
 })
 export class InternshipEngagement extends Engagement {
+  static readonly Props = keysOf<InternshipEngagement>();
+
   readonly countryOfOrigin: Secured<string>;
 
   readonly intern: Secured<string>;
