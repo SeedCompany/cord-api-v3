@@ -502,14 +502,14 @@ export class FileService {
 
   async rename(input: RenameFileInput, session: Session): Promise<void> {
     const fileNode = await this.repo.getBaseNodeById(input.id, session);
-    await this.repo.rename(fileNode, input.name, session);
+    await this.repo.rename(fileNode, input.name);
   }
 
   async move(input: MoveFileInput, session: Session): Promise<FileNode> {
     const fileNode = await this.repo.getBaseNodeById(input.id, session);
 
     if (input.name) {
-      await this.repo.rename(fileNode, input.name, session);
+      await this.repo.rename(fileNode, input.name);
     }
 
     await this.repo.move(input.id, input.parentId, session);
