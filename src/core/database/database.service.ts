@@ -12,6 +12,7 @@ import { cloneDeep, Many, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { assert } from 'ts-essentials';
 import {
+  AbstractClassType,
   isSecured,
   many,
   Order,
@@ -268,6 +269,64 @@ export class DatabaseService {
         : // replace value directly
           { [key]: value }),
     };
+  }
+
+  async updateProperty<
+    TObject extends Resource,
+    Key extends keyof TObject & string
+  >({
+    type,
+    object: { id },
+    key,
+    value,
+  }: {
+    type: string | AbstractClassType<any>;
+    object: TObject;
+    key: Key;
+    value?: UnwrapSecured<TObject[Key]>;
+  }): Promise<void> {
+    const label = typeof type === 'string' ? type : type.name;
+
+    const createdAt = DateTime.local();
+    const newPropertyNodeProps = {
+      createdAt,
+      value,
+      sortValue: determineSortValue(value),
+    };
+
+    const update = this.db
+      .query()
+      .match(node('node', label, { id }))
+      .match([
+        node('node'),
+        relation('out', 'oldToProp', key, { active: true }),
+        node('oldPropVar', 'Property'),
+      ])
+      .setValues({
+        'oldToProp.active': false,
+      })
+      .with('*')
+      .limit(1)
+      .create([
+        node('node'),
+        relation('out', 'toProp', key, {
+          active: true,
+          createdAt,
+        }),
+        node('newPropNode', 'Property', newPropertyNodeProps),
+      ])
+      .return('newPropNode');
+
+    let result;
+    try {
+      result = await update.first();
+    } catch (e) {
+      throw new ServerException(`Failed to update property ${label}.${key}`, e);
+    }
+
+    if (!result) {
+      throw new ServerException(`Could not find ${label}.${key} to update`);
+    }
   }
 
   async list<TObject extends Resource>({
