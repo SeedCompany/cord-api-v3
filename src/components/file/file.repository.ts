@@ -35,7 +35,13 @@ import {
   parsePropList,
   StandardReadResult,
 } from '../../core/database/results';
-import { BaseNode, FileListInput, FileNodeType, FileVersion } from './dto';
+import {
+  BaseNode,
+  FileListInput,
+  FileNodeType,
+  FileVersion,
+  IFileNode,
+} from './dto';
 
 @Injectable()
 export class FileRepository {
@@ -412,22 +418,18 @@ export class FileRepository {
       .run();
   }
 
-  async rename(
-    fileNode: BaseNode,
-    newName: string,
-    session: Session
-  ): Promise<void> {
+  async rename(fileNode: BaseNode, newName: string): Promise<void> {
+    // TODO Do you have permission to rename the file?
     try {
-      await this.db.sgUpdateProperty({
-        session,
+      await this.db.updateProperty({
+        type: IFileNode,
         object: fileNode,
         key: 'name',
         value: newName,
-        nodevar: 'fileNode',
       });
     } catch (e) {
-      this.logger.error('could not rename', { id: fileNode.id, newName });
-      throw new ServerException('could not rename', e);
+      this.logger.error('Could not rename', { id: fileNode.id, newName });
+      throw new ServerException('Could not rename file node', e);
     }
   }
 
