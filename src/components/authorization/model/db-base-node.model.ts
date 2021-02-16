@@ -5,4 +5,5 @@ export class DbBaseNode {
   __className: DbBaseNodeLabel;
   id: any = null;
   createdOn: any = null;
+  canDelete = false;
 }
