@@ -271,6 +271,129 @@ export class DatabaseService {
     };
   }
 
+  async sgUpdatePropertiesNew<TObject extends Resource>({
+    session,
+    object,
+    props,
+    changes,
+    nodevar,
+    perms,
+  }: {
+    session: Session;
+    object: TObject;
+    props: ReadonlyArray<keyof TObject & string>;
+    changes: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
+    nodevar: string;
+    perms: any;
+  }) {
+    let updated = object;
+    for (const prop of props) {
+      if (
+        changes[prop] === undefined ||
+        unwrapSecured(object[prop]) === changes[prop]
+      ) {
+        continue;
+      }
+
+      if (perms[prop].canEdit) {
+        updated = await this.sgUpdatePropertyNew({
+          object: updated,
+          session,
+          key: prop,
+          value: changes[prop],
+          nodevar,
+        });
+      } else {
+        throw new UnauthorizedException(
+          `You do not have permission to update property: ${prop}`,
+          prop
+        );
+      }
+    }
+    return updated;
+  }
+
+  async sgUpdatePropertyNew<
+    TObject extends Resource,
+    Key extends keyof TObject & string
+  >({
+    session,
+    object,
+    key,
+    value,
+    nodevar,
+  }: {
+    session: Session;
+    object: TObject;
+    key: Key;
+    value?: UnwrapSecured<TObject[Key]>;
+    aclEditProp?: string;
+    nodevar: string;
+  }): Promise<TObject> {
+    const createdAt = DateTime.local();
+    const nodePropsToUpdate = {
+      createdAt,
+      value,
+      sortValue: determineSortValue(value),
+    };
+    const update = this.db
+      .query()
+      .match([matchSession(session)])
+      .match([
+        node(nodevar, upperFirst(nodevar), {
+          id: object.id,
+        }),
+      ])
+      .match([
+        node(nodevar),
+        relation('out', 'oldToProp', key as string, { active: true }),
+        node('oldPropVar', 'Property'),
+      ])
+      .setValues({
+        'oldToProp.active': false,
+      })
+      .with('*')
+      .limit(1)
+      .create([
+        node(nodevar),
+        relation('out', 'toProp', key as string, {
+          active: true,
+          createdAt,
+        }),
+        node('newPropNode', 'Property', nodePropsToUpdate),
+      ])
+      .return('newPropNode');
+    let result;
+
+    try {
+      result = await update.first();
+    } catch (e) {
+      this.logger.error('Neo4jError ', e);
+      throw new ServerException('Failed to update property', e);
+    }
+
+    if (!result) {
+      throw new UnauthorizedException(
+        `You do not have permission to update property: ${key}`,
+        key
+      );
+    }
+
+    return {
+      ...object,
+      ...(isSecured(object[key])
+        ? // replace value in secured object keeping can* properties
+          {
+            [key]: {
+              ...object[key],
+              value,
+            },
+          }
+        : // replace value directly
+          { [key]: value }),
+    };
+  }
+
   async updateProperty<
     TObject extends Resource,
     Key extends keyof TObject & string
