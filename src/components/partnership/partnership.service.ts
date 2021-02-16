@@ -382,7 +382,13 @@ export class PartnershipService {
     }
 
     const { mou, agreement, ...rest } = changes;
-    await this.db.sgUpdateProperties({
+
+    const perms = await this.authorizationService.getPerms(
+      new DbPartnership(),
+      session.roles
+    );
+
+    await this.db.sgUpdatePropertiesNew({
       session,
       object,
       props: [
@@ -395,6 +401,7 @@ export class PartnershipService {
       ],
       changes: rest,
       nodevar: 'partnership',
+      perms: perms,
     });
     await this.files.updateDefinedFile(
       object.mou,
