@@ -7,6 +7,7 @@ export * from './financial-analyst.role';
 export * from './fundraising.role';
 export * from './intern.role';
 export * from './leadership.role';
+export * from './lead-financial-analyst.role';
 export * from './liaison.role';
 export * from './marketing.role';
 export * from './mentor.role';
