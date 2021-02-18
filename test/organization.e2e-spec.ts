@@ -3,6 +3,7 @@ import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { orderBy, times } from 'lodash';
 import { generateId, InputException, isValidId } from '../src/common';
+import { Role } from '../src/components/authorization';
 import { Powers } from '../src/components/authorization/dto/powers';
 import { Organization } from '../src/components/organization';
 import {
@@ -23,7 +24,9 @@ describe('Organization e2e', () => {
     app = await createTestApp();
     db = app.get(Connection);
     await createSession(app);
-    await registerUserWithPower(app, [Powers.CreateOrganization]);
+    await registerUserWithPower(app, [Powers.CreateOrganization], {
+      roles: [Role.ProjectManager],
+    });
   });
 
   afterAll(async () => {
