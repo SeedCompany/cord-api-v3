@@ -351,7 +351,7 @@ export class LanguageService {
       ...securedProps,
       tags: {
         ...securedProps.tags,
-        value: securedProps.tags.value as string[],
+        value: securedProps.tags.value ?? [],
       },
       sensitivity: props.sensitivity,
       ethnologue,

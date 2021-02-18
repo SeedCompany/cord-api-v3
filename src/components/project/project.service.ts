@@ -544,7 +544,7 @@ export class ProjectService {
       modifiedAt: props.modifiedAt,
       tags: {
         ...securedProps.tags,
-        value: securedProps.tags.value as string[],
+        value: securedProps.tags.value ?? [],
       },
       primaryLocation: {
         ...securedProps.primaryLocation,
