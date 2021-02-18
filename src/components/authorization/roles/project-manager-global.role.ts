@@ -31,7 +31,7 @@ import { DbBaseNodeGrant, DbRole } from '../model';
 const read = true;
 const write = true;
 
-export const ProjectManager = new DbRole({
+export const ProjectManagerGlobal = new DbRole({
   name: Role.ProjectManager,
   powers: [
     Powers.CreateBudget,

@@ -31,7 +31,7 @@ import { DbBaseNodeGrant, DbRole } from '../model';
 const read = true;
 const write = true;
 
-export const Consultant = new DbRole({
+export const ConsultantOnProject = new DbRole({
   name: Role.Consultant,
   powers: [
     Powers.CreateDirectory,
