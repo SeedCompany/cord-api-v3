@@ -1,18 +1,35 @@
 /* eslint-disable no-case-declarations */
 import { Injectable } from '@nestjs/common';
 import { Connection, node, relation } from 'cypher-query-builder';
-import { compact, groupBy, mapValues, pickBy, union, without } from 'lodash';
-import { ServerException, Session } from '../../common';
+import {
+  compact,
+  groupBy,
+  keyBy,
+  mapValues,
+  pickBy,
+  union,
+  without,
+} from 'lodash';
+import {
+  getParentTypes,
+  has,
+  mapFromList,
+  ResourceShape,
+  SecuredResource,
+  ServerException,
+  Session,
+} from '../../common';
 import { retry } from '../../common/retry';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import {
+  DbPropsOfDto,
   parseSecuredProperties,
   PropListDbResult,
 } from '../../core/database/results';
 import { InternalRole, Role } from './dto';
 import { Powers } from './dto/powers';
 import { MissingPowerException } from './missing-power.exception';
-import { DbRole, OneBaseNode } from './model';
+import { DbRole, OneBaseNode, PermissionsForResource } from './model';
 import { DbBaseNode } from './model/db-base-node.model';
 import * as AllRoles from './roles';
 
@@ -84,6 +101,68 @@ export class AuthorizationService {
       await origCommit();
       await process();
     };
+  }
+
+  async secureProperties<Resource extends ResourceShape<any>>(
+    resource: Resource,
+    props:
+      | PropListDbResult<DbPropsOfDto<Resource['prototype']>>
+      | DbPropsOfDto<Resource['prototype']>,
+    sessionOrUserId: Session | string
+  ): Promise<SecuredResource<Resource, false>> {
+    const dbRoles =
+      typeof sessionOrUserId === 'string'
+        ? await this.getUserRoleObjects(sessionOrUserId)
+        : sessionOrUserId.roles;
+    const permissions = this.getPermissions(resource, dbRoles);
+    // @ts-expect-error not matching for some reason but declared return type is correct
+    return parseSecuredProperties(props, permissions, resource.SecuredProps);
+  }
+
+  getPermissions<Resource extends ResourceShape<any>>(
+    resource: Resource,
+    userRoles: DbRole[]
+  ): PermissionsOf<SecuredResource<Resource>> {
+    // convert resource to a list of resource names to check
+    const resources = getParentTypes(resource)
+      // if parent defines Props include it in mapping
+      .filter(
+        (r) => has('Props', r) && Array.isArray(r.Props) && r.Props.length > 0
+      )
+      .map((r) => r.name);
+
+    const normalizeGrants = (role: DbRole) =>
+      mapValues(
+        // convert list of grants to object keyed by resource name
+        keyBy(role.grants, (resourceGrant) =>
+          resourceGrant.__className.substring(2)
+        ),
+        (resourceGrant) =>
+          // convert value of a grant to an object keyed by prop name and value is a permission set
+          mapValues(
+            keyBy(resourceGrant.properties, (prop) => prop.propertyName),
+            (prop) => prop.permission
+          )
+      );
+
+    // grab all the grants for the given roles & matching resources
+    const grants = userRoles.flatMap((role) =>
+      Object.entries(normalizeGrants(role)).flatMap(([name, grant]) =>
+        resources.includes(name) ? grant : []
+      )
+    ) as Array<PermissionsForResource<ResourceShape<Resource>>>;
+
+    const keys = [
+      ...resource.SecuredProps,
+      ...Object.keys(resource.Relations ?? {}),
+    ] as Array<keyof Resource & string>;
+    return mapFromList(keys, (key) => {
+      const value = {
+        canRead: grants.some((grant) => grant[key]?.read === true),
+        canEdit: grants.some((grant) => grant[key]?.write === true),
+      };
+      return [key, value];
+    }) as PermissionsOf<SecuredResource<Resource>>;
   }
 
   async getPerms<DbNode extends DbBaseNode>({
