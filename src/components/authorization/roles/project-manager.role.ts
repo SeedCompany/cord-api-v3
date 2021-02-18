@@ -7,6 +7,7 @@ import { DbFieldZone } from '../../field-zone/model';
 import { DbDirectory, DbFile } from '../../file/model';
 import { DbFileVersion } from '../../file/model/file-version.model.db';
 import { DbFilm } from '../../film/model';
+import { DbFundingAccount } from '../../funding-account/model';
 import { DbEthnologueLanguage, DbLanguage } from '../../language/model';
 import { DbLiteracyMaterial } from '../../literacy-material/model';
 import { DbLocation } from '../../location/model';
@@ -126,6 +127,13 @@ export const ProjectManager = new DbRole({
       properties: [
         { propertyName: 'name',                       permission: { read, write, }, },
         { propertyName: 'scriptureReferences',        permission: { read, write, }, },
+    ]}),
+    new DbBaseNodeGrant<DbFundingAccount>({
+      __className: 'DbFundingAccount',
+      properties: [
+        { propertyName: 'canDelete',                  permission: { read, write: false,  }, },
+        { propertyName: 'name',                       permission: { read, write: false,  }, },
+        { propertyName: 'accountNumber',              permission: { read, write: false,  }, },
     ]}),
     new DbBaseNodeGrant<DbInternshipEngagement>({
       __className: 'DbInternshipEngagement',
