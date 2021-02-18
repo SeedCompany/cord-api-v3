@@ -1,12 +1,14 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { compact, mapValues } from 'lodash';
+import { compact } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
   generateId,
+  mapFromList,
   NotFoundException,
   SecuredList,
+  SecuredResource,
   ServerException,
   Session,
   UnauthorizedException,
@@ -303,8 +305,7 @@ export class UserService {
       .filter((prop) => prop.property === 'roles')
       .map((prop) => prop.value as Role);
 
-    const props = this.securedProperties;
-    let permsOfBaseNode: PermissionsOf<typeof props>;
+    let permsOfBaseNode: PermissionsOf<SecuredResource<typeof User, false>>;
     // -- let the user explicitly see all properties only if they're reading their own ID
     // -- TODO: express this within the authorization system. Like an Owner/Creator "meta" role that gets these x permissions.
     const userId =
@@ -312,25 +313,23 @@ export class UserService {
         ? sessionOrUserId
         : sessionOrUserId.userId;
     if (id === userId) {
-      permsOfBaseNode = mapValues(props, () => ({
-        canRead: true,
-        canEdit: true,
-      }));
+      const implicitPerms = { canRead: true, canEdit: true };
+      permsOfBaseNode = mapFromList(User.SecuredProps, (key) => [
+        key,
+        implicitPerms,
+      ]);
     } else {
       const roles =
         typeof sessionOrUserId === 'string'
           ? await this.authorizationService.getUserRoleObjects(sessionOrUserId)
           : sessionOrUserId.roles;
-      permsOfBaseNode = await this.authorizationService.getPerms({
-        baseNode: new DbUser(),
-        globalRoles: roles,
-      });
+      permsOfBaseNode = this.authorizationService.getPermissions(User, roles);
     }
 
     const securedProps = parseSecuredProperties(
       result.propList,
       permsOfBaseNode,
-      props
+      User.SecuredProps
     );
 
     return {
