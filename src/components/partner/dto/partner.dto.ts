@@ -47,8 +47,6 @@ export class Partner extends Resource {
 
   @DateTimeField()
   readonly modifiedAt: DateTime;
-
-  readonly canDelete: SecuredBoolean;
 }
 
 @ObjectType({

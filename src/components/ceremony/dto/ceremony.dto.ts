@@ -22,8 +22,6 @@ export class Ceremony extends Resource {
 
   @Field()
   readonly actualDate: SecuredDate;
-
-  readonly canDelete: SecuredBoolean;
 }
 
 @ObjectType({

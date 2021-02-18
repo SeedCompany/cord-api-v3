@@ -6,7 +6,6 @@ import {
   DateTimeField,
   Resource,
   Secured,
-  SecuredBoolean,
   SecuredProperty,
   simpleSwitch,
 } from '../../../common';
@@ -45,8 +44,6 @@ abstract class FileNode extends Resource {
   readonly name: string;
 
   readonly createdById: string;
-
-  readonly canDelete: SecuredBoolean;
 }
 
 // class name has to match schema name for interface resolvers to work.

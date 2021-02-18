@@ -20,5 +20,4 @@ export class DbLanguage extends DbBaseNode {
   hasExternalFirstScripture: any = null;
   locations: any = null;
   tags: any = null;
-  canDelete: any = null;
 }

@@ -11,5 +11,4 @@ export class DbProduct extends DbBaseNode {
   produces: any = null;
   scriptureReferencesOverride: any = null;
   isOverriding: any = null;
-  canDelete: any = null;
 }

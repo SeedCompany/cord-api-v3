@@ -39,7 +39,8 @@ export class EthnologueLanguage {
   @Field()
   readonly population: SecuredInt;
 
-  readonly canDelete: SecuredBoolean;
+  @Field()
+  readonly canDelete: boolean;
 }
 
 @ObjectType({
@@ -121,8 +122,6 @@ export class Language extends Resource {
 
   @Field()
   readonly tags: SecuredTags;
-
-  readonly canDelete: SecuredBoolean;
 }
 
 @ObjectType({

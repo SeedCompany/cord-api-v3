@@ -6,5 +6,4 @@ export class DbLiteracyMaterial extends DbBaseNode {
   __className = DbBaseNodeLabel.LiteracyMaterial;
   name: any = null;
   scriptureReferences: any = null;
-  canDelete: any = null;
 }

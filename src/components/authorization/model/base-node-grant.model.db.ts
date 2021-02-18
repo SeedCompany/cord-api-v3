@@ -12,6 +12,7 @@ export class DbBaseNodeGrant<AnyBaseNode> {
   }: {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     __className: string;
+    //canDelete: boolean;
     properties: Array<PropertyGrant<Partial<AnyBaseNode>>>;
   }) {
     Object.assign(this, rest);

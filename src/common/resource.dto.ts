@@ -1,4 +1,4 @@
-import { InterfaceType } from '@nestjs/graphql';
+import { Field, InterfaceType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { IdField } from './id-field';
 import { DateTimeField } from './luxon.graphql';
@@ -10,6 +10,11 @@ export abstract class Resource {
 
   @DateTimeField()
   readonly createdAt: DateTime;
+
+  @Field({
+    description: 'Whether the requesting user can delete this resource',
+  })
+  readonly canDelete: boolean;
 
   protected constructor() {
     // no instantiation, shape only

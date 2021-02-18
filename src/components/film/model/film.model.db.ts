@@ -6,5 +6,4 @@ export class DbFilm extends DbBaseNode {
   __className = DbBaseNodeLabel.Film;
   name: any = null;
   scriptureReferences: any = null;
-  canDelete: any = null;
 }

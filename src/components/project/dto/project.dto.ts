@@ -5,7 +5,6 @@ import {
   DateTimeField,
   Resource,
   Secured,
-  SecuredBoolean,
   SecuredDate,
   SecuredDateNullable,
   SecuredDateTime,
@@ -84,8 +83,6 @@ class Project extends Resource {
 
   @Field()
   readonly financialReportReceivedAt: SecuredDateTime;
-
-  readonly canDelete: SecuredBoolean;
 }
 
 // class name has to match schema name for interface resolvers to work.

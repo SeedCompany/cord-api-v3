@@ -2,7 +2,6 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import {
   Resource,
   Secured,
-  SecuredBoolean,
   SecuredProperty,
   SecuredString,
 } from '../../../common';
@@ -15,8 +14,6 @@ export class FieldZone extends Resource {
   readonly name: SecuredString;
 
   readonly director: Secured<string>;
-
-  readonly canDelete: SecuredBoolean;
 }
 
 @ObjectType({

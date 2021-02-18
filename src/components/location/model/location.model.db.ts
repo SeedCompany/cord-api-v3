@@ -10,5 +10,4 @@ export class DbLocation extends DbBaseNode {
   fundingAccount: any = null;
   defaultFieldRegion: any = null;
   sensitivity: any = null;
-  canDelete: any = null;
 }

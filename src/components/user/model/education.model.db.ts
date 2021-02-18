@@ -7,5 +7,4 @@ export class DbEducation extends DbBaseNode {
   degree: any = null;
   institution: any = null;
   major: any = null;
-  canDelete: any = null;
 }

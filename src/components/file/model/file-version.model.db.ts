@@ -9,5 +9,4 @@ export class DbFileVersion extends DbBaseNode {
   parent: any = null;
   mimeType: any = null;
   size: any = null;
-  canDelete: any = null;
 }

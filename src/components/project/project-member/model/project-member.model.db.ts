@@ -7,5 +7,4 @@ export class DbProjectMember extends DbBaseNode {
   roles: any = null;
   user: any = null;
   modifiedAt: any = null;
-  canDelete: any = null;
 }

@@ -6,5 +6,4 @@ export class DbStory extends DbBaseNode {
   __className = DbBaseNodeLabel.Story;
   name: any = null;
   scriptureReferences: any = null;
-  canDelete: any = null;
 }

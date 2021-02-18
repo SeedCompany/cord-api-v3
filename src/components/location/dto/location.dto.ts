@@ -2,7 +2,6 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import {
   Resource,
   Secured,
-  SecuredBoolean,
   SecuredEnum,
   SecuredProperty,
   SecuredString,
@@ -31,8 +30,6 @@ export class Location extends Resource {
   readonly fundingAccount: Secured<string>;
 
   readonly defaultFieldRegion: Secured<string>;
-
-  readonly canDelete: SecuredBoolean;
 }
 
 @ObjectType({

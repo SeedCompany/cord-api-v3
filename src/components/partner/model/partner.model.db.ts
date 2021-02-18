@@ -13,5 +13,4 @@ export class DbPartner extends DbBaseNode {
   active: any = null;
   address: any = null;
   modifiedAt: any = null;
-  canDelete: any = null;
 }

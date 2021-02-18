@@ -86,8 +86,6 @@ class Engagement extends Resource {
 
   @DateTimeField()
   readonly modifiedAt: DateTime;
-
-  readonly canDelete: SecuredBoolean;
 }
 
 // class name has to match schema name for interface resolvers to work.

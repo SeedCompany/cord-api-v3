@@ -131,7 +131,6 @@ export const ProjectManager = new DbRole({
     new DbBaseNodeGrant<DbFundingAccount>({
       __className: 'DbFundingAccount',
       properties: [
-        { propertyName: 'canDelete',                  permission: { read, write: false,  }, },
         { propertyName: 'name',                       permission: { read, write: false,  }, },
         { propertyName: 'accountNumber',              permission: { read, write: false,  }, },
     ]}),

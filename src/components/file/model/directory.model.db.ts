@@ -7,5 +7,4 @@ export class DbDirectory extends DbBaseNode {
   name: any = null;
   createdBy: any = null;
   parent: any = null;
-  canDelete: any = null;
 }

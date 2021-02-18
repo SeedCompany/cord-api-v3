@@ -1,6 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
-import { DateTimeField, Resource, SecuredBoolean } from '../../../../common';
+import { DateTimeField, Resource } from '../../../../common';
 import { SecuredRoles } from '../../../authorization';
 import { SecuredUser } from '../../../user';
 
@@ -16,6 +16,4 @@ export class ProjectMember extends Resource {
 
   @DateTimeField()
   readonly modifiedAt: DateTime;
-
-  readonly canDelete: SecuredBoolean;
 }

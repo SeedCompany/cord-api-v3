@@ -6,5 +6,4 @@ export class DbFundingAccount extends DbBaseNode {
   __className = DbBaseNodeLabel.FundingAccount;
   name: any = null;
   accountNumber: any = null;
-  canDelete: any = null;
 }

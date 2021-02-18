@@ -45,7 +45,6 @@ export const Intern = new DbRole({
     new DbBaseNodeGrant<DbBudget>({
       __className: 'DbBudget',
       properties: [
-        { propertyName: 'canDelete',                  permission: { read, write: false,  }, },
         { propertyName: 'universalTemplateFile',      permission: { read, write, }, },
         { propertyName: 'records',                    permission: { read, write, }, },
         { propertyName: 'status',                     permission: { read, write, }, },
@@ -53,7 +52,6 @@ export const Intern = new DbRole({
     new DbBaseNodeGrant<DbBudgetRecord>({
       __className: 'DbBudgetRecord',
       properties: [
-        { propertyName: 'canDelete',                  permission: { read, write: false,  }, },
         { propertyName: 'amount',                     permission: { read, write, }, },
         { propertyName: 'fiscalYear',                 permission: { read, write, }, },
         { propertyName: 'organization',               permission: { read, write, }, },
@@ -61,7 +59,6 @@ export const Intern = new DbRole({
     new DbBaseNodeGrant<DbCeremony>({
       __className: 'DbCeremony',
       properties: [
-        { propertyName: 'canDelete',                  permission: { read, write: false,  }, },
         { propertyName: 'actualDate',                 permission: { read, write, }, },
         { propertyName: 'estimatedDate',              permission: { read, write, }, },
         { propertyName: 'planned',                    permission: { read, write, }, },
@@ -70,7 +67,6 @@ export const Intern = new DbRole({
     new DbBaseNodeGrant<DbDirectory>({
       __className: 'DbDirectory',
       properties: [
-        { propertyName: 'canDelete',                  permission: { read, write: false,  }, },
         { propertyName: 'name',                       permission: { read, write, }, },
         { propertyName: 'createdBy',                  permission: { read, write, }, },
         { propertyName: 'parent',                     permission: { read, write, }, },
@@ -78,7 +74,6 @@ export const Intern = new DbRole({
     new DbBaseNodeGrant<DbEducation>({
       __className: 'DbEducation',
       properties: [
-        { propertyName: 'canDelete',                  permission: { read, write: false,  }, },
         { propertyName: 'degree',                     permission: { read, write: false,  }, },
         { propertyName: 'institution',                permission: { read, write: false,  }, },
         { propertyName: 'major',                      permission: { read, write: false,  }, },
@@ -86,7 +81,6 @@ export const Intern = new DbRole({
     new DbBaseNodeGrant<DbEthnologueLanguage>({
       __className: 'DbEthnologueLanguage',
       properties: [
-        { propertyName: 'canDelete',                  permission: { read, write: false,  }, },
         { propertyName: 'code',                       permission: { read, write: false,  }, },
         { propertyName: 'name',                       permission: { read, write: false,  }, },
         { propertyName: 'population',                 permission: { read, write: false,  }, },
@@ -95,7 +89,6 @@ export const Intern = new DbRole({
     new DbBaseNodeGrant<DbFieldRegion>({
       __className: 'DbFieldRegion',
       properties: [
-        { propertyName: 'canDelete',                  permission: { read, write: false,  }, },
         { propertyName: 'director',                   permission: { read, write: false,  }, },
         { propertyName: 'name',                       permission: { read, write: false,  }, },
         { propertyName: 'fieldZone',                  permission: { read, write: false,  }, },
@@ -103,14 +96,12 @@ export const Intern = new DbRole({
     new DbBaseNodeGrant<DbFieldZone>({
       __className: 'DbFieldZone',
       properties: [
-        { propertyName: 'canDelete',                  permission: { read, write: false,  }, },
         { propertyName: 'director',                   permission: { read, write: false,  }, },
         { propertyName: 'name',                       permission: { read, write: false,  }, },
     ]}),
     new DbBaseNodeGrant<DbFile>({
       __className: 'DbFile',
       properties: [
-        { propertyName: 'canDelete',                  permission: { read, write: false,  }, },
         { propertyName: 'name',                       permission: { read, write, }, },
         { propertyName: 'createdBy',                  permission: { read, write, }, },
         { propertyName: 'parent',                     permission: { read, write, }, },
@@ -119,7 +110,6 @@ export const Intern = new DbRole({
     new DbBaseNodeGrant<DbFileVersion>({
       __className: 'DbFileVersion',
       properties: [
-        { propertyName: 'canDelete',                  permission: { read, write: false,  }, },
         { propertyName: 'name',                       permission: { read, write, }, },
         { propertyName: 'createdBy',                  permission: { read, write, }, },
         { propertyName: 'parent',                     permission: { read, write, }, },
@@ -129,21 +119,18 @@ export const Intern = new DbRole({
     new DbBaseNodeGrant<DbFilm>({
       __className: 'DbFilm',
       properties: [
-        { propertyName: 'canDelete',                  permission: { read, write: false,  }, },
         { propertyName: 'name',                       permission: { read, write, }, },
         { propertyName: 'scriptureReferences',        permission: { read, write, }, },
     ]}),
     new DbBaseNodeGrant<DbFundingAccount>({
       __className: 'DbFundingAccount',
       properties: [
-        { propertyName: 'canDelete',                  permission: { read, write: false,  }, },
         { propertyName: 'name',                       permission: { read, write: false,  }, },
         { propertyName: 'accountNumber',              permission: { read, write: false,  }, },
     ]}),
     new DbBaseNodeGrant<DbInternshipEngagement>({
       __className: 'DbInternshipEngagement',
       properties: [
-        { propertyName: 'canDelete',                  permission: { read, write: false,  }, },
         { propertyName: 'ceremony',                   permission: { read, write, }, },
         { propertyName: 'communicationsCompleteDate', permission: { read, write, }, },
         { propertyName: 'completeDate',               permission: { read, write, }, },
@@ -168,7 +155,6 @@ export const Intern = new DbRole({
     new DbBaseNodeGrant<DbLanguage>({
       __className: 'DbLanguage',
       properties: [
-        { propertyName: 'canDelete',                  permission: { read, write: false,  }, },
         { propertyName: 'displayName',                permission: { read, write: false,  }, },
         { propertyName: 'displayNamePronunciation',   permission: { read, write: false,  }, },
         { propertyName: 'isDialect',                  permission: { read, write: false,  }, },
@@ -189,7 +175,6 @@ export const Intern = new DbRole({
     new DbBaseNodeGrant<DbLanguageEngagement>({
       __className: 'DbLanguageEngagement',
       properties: [
-        { propertyName: 'canDelete',                  permission: { read, write: false,  }, },
         { propertyName: 'ceremony',                   permission: { read, write, }, },
         { propertyName: 'communicationsCompleteDate', permission: { read, write, }, },
         { propertyName: 'completeDate',               permission: { read, write, }, },
@@ -216,14 +201,12 @@ export const Intern = new DbRole({
     new DbBaseNodeGrant<DbLiteracyMaterial>({
       __className: 'DbLiteracyMaterial',
       properties: [
-        { propertyName: 'canDelete',                  permission: { read, write: false,  }, },
         { propertyName: 'name',                       permission: { read, write, }, },
         { propertyName: 'scriptureReferences',        permission: { read, write, }, },
     ]}),
     new DbBaseNodeGrant<DbLocation>({
       __className: 'DbLocation',
       properties: [
-        { propertyName: 'canDelete',                  permission: { read, write: false,  }, },
         { propertyName: 'name',                       permission: { read, write: false,  }, },
         { propertyName: 'type',                       permission: { read, write: false,  }, },
         { propertyName: 'isoAlpha3',                  permission: { read, write: false,  }, },
@@ -234,7 +217,6 @@ export const Intern = new DbRole({
     new DbBaseNodeGrant<DbOrganization>({
       __className: 'DbOrganization',
       properties: [
-        { propertyName: 'canDelete',                  permission: { read, write: false,  }, },
         { propertyName: 'name',                       permission: { read, write: false,  }, },
         { propertyName: 'address',                    permission: { read, write: false,  }, },
         { propertyName: 'locations',                  permission: { read, write: false,  }, },
@@ -242,7 +224,6 @@ export const Intern = new DbRole({
     new DbBaseNodeGrant<DbPartner>({
       __className: 'DbPartner',
       properties: [
-        { propertyName: 'canDelete',                  permission: { read, write: false,  }, },
         { propertyName: 'organization',               permission: { read, write, }, },
         { propertyName: 'pointOfContact',             permission: { read, write, }, },
         { propertyName: 'types',                      permission: { read, write, }, },
@@ -256,7 +237,6 @@ export const Intern = new DbRole({
     new DbBaseNodeGrant<DbPartnership>({
       __className: 'DbPartnership',
       properties: [
-        { propertyName: 'canDelete',                  permission: { read, write: false,  }, },
         { propertyName: 'agreement',                  permission: { read, write, }, },
         { propertyName: 'agreementStatus',            permission: { read, write, }, },
         { propertyName: 'financialReportingType',     permission: { read, write, }, },
@@ -273,7 +253,6 @@ export const Intern = new DbRole({
     new DbBaseNodeGrant<DbProduct>({
       __className: 'DbProduct',
       properties: [
-        { propertyName: 'canDelete',                  permission: { read, write: false,  }, },
         { propertyName: 'mediums',                    permission: { read, write, }, },
         { propertyName: 'methodology',                permission: { read, write, }, },
         { propertyName: 'purposes',                   permission: { read, write, }, },
@@ -285,7 +264,6 @@ export const Intern = new DbRole({
     new DbBaseNodeGrant<DbProject>({
       __className: 'DbProject',
       properties: [
-        { propertyName: 'canDelete',                  permission: { read, write: false,  }, },
         { propertyName: 'estimatedSubmission',        permission: { read, write, }, },
         { propertyName: 'step',                       permission: { read, write, }, },
         { propertyName: 'name',                       permission: { read, write, }, },
@@ -313,7 +291,6 @@ export const Intern = new DbRole({
     new DbBaseNodeGrant<DbProjectMember>({
       __className: 'DbProjectMember',
       properties: [
-        { propertyName: 'canDelete',                  permission: { read, write: false,  }, },
         { propertyName: 'roles',                      permission: { read, write, }, },
         { propertyName: 'user',                       permission: { read, write, }, },
         { propertyName: 'modifiedAt',                 permission: { read, write, }, },
@@ -321,7 +298,6 @@ export const Intern = new DbRole({
     new DbBaseNodeGrant<DbUser>({
       __className: 'DbUser',
       properties: [
-        { propertyName: 'canDelete',                  permission: { read, write: false,  }, },
         { propertyName: 'about',                      permission: { read, write: false,  }, },
         { propertyName: 'displayFirstName',           permission: { read, write: false,  }, },
         { propertyName: 'displayLastName',            permission: { read, write: false,  }, },
@@ -342,7 +318,6 @@ export const Intern = new DbRole({
     new DbBaseNodeGrant<DbUnavailability>({
       __className: 'DbUnavailability',
       properties: [
-        { propertyName: 'canDelete',                  permission: { read, write: false,  }, },
         { propertyName: 'description',                permission: { read, write: false,  }, },
         { propertyName: 'end',                        permission: { read, write: false,  }, },
         { propertyName: 'start',                      permission: { read, write: false,  }, },
@@ -350,14 +325,12 @@ export const Intern = new DbRole({
     new DbBaseNodeGrant<DbSong>({
       __className: 'DbSong',
       properties: [
-        { propertyName: 'canDelete',                  permission: { read, write: false,  }, },
         { propertyName: 'name',                       permission: { read, write, }, },
         { propertyName: 'scriptureReferences',        permission: { read, write, }, },
     ]}),
     new DbBaseNodeGrant<DbStory>({
       __className: 'DbStory',
       properties: [
-        { propertyName: 'canDelete',                  permission: { read, write: false,  }, },
         { propertyName: 'name',                       permission: { read, write, }, },
         { propertyName: 'scriptureReferences',        permission: { read, write, }, },
     ]}),
