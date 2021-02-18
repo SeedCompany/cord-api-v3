@@ -132,18 +132,20 @@ export class AuthorizationService {
       .map((r) => r.name);
 
     const normalizeGrants = (role: DbRole) =>
-      mapValues(
-        // convert list of grants to object keyed by resource name
-        keyBy(role.grants, (resourceGrant) =>
-          resourceGrant.__className.substring(2)
-        ),
-        (resourceGrant) =>
-          // convert value of a grant to an object keyed by prop name and value is a permission set
-          mapValues(
-            keyBy(resourceGrant.properties, (prop) => prop.propertyName),
-            (prop) => prop.permission
-          )
-      );
+      !Array.isArray(role.grants)
+        ? role.grants
+        : mapValues(
+            // convert list of grants to object keyed by resource name
+            keyBy(role.grants, (resourceGrant) =>
+              resourceGrant.__className.substring(2)
+            ),
+            (resourceGrant) =>
+              // convert value of a grant to an object keyed by prop name and value is a permission set
+              mapValues(
+                keyBy(resourceGrant.properties, (prop) => prop.propertyName),
+                (prop) => prop.permission
+              )
+          );
 
     // grab all the grants for the given roles & matching resources
     const grants = userRoles.flatMap((role) =>

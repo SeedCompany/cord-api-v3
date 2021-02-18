@@ -1,39 +1,34 @@
-import { DbBaseNodeLabel } from '../../../common';
+import { ResourceShape, SecuredResource } from '../../../common';
 import { Role } from '../dto';
 import { Powers } from '../dto/powers';
 import { AnyBaseNode } from './any-base-node.type';
 import { DbBaseNodeGrant } from './base-node-grant.model.db';
 import { DbPermission } from './permission.model.db';
+import { ResourceMap } from './resource-map';
+
+// Map all resources available to property permission definitions
+type PropGrants = {
+  [R in keyof ResourceMap]?: PermissionsForResource<ResourceMap[R]>;
+};
+
+// An object defining the permissions for each property of the resource
+export type PermissionsForResource<
+  Resource extends ResourceShape<any>
+> = Partial<Record<keyof SecuredResource<Resource>, DbPermission>>;
 
 export class DbRole {
   name: Role;
   powers: Powers[];
-  grants: Array<DbBaseNodeGrant<AnyBaseNode>>;
+  grants: PropGrants | Array<DbBaseNodeGrant<AnyBaseNode>>;
 
   constructor({
     ...rest
   }: {
     name: Role;
     powers: Powers[];
-    grants: Array<DbBaseNodeGrant<AnyBaseNode>>;
+    grants: PropGrants | Array<DbBaseNodeGrant<AnyBaseNode>>;
   }) {
     Object.assign(this, rest);
-  }
-
-  getPermissionsOnProperty<AnyBaseNode>(
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    __className: DbBaseNodeLabel,
-    prop: keyof AnyBaseNode
-  ): DbPermission | undefined {
-    const grant = this.grants.find(
-      (element) => element.__className === __className
-    );
-
-    const perms = grant?.properties.find(
-      (element) => element.propertyName === prop
-    );
-
-    return perms?.permission;
   }
 }
 
