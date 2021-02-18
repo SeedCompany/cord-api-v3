@@ -29,4 +29,5 @@ export class DbProject extends DbBaseNode {
   tags: any = null;
   financialReportReceivedAt: any = null;
   owningOrganization: any = null;
+  canDelete: any = null;
 }

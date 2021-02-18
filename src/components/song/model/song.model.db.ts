@@ -6,4 +6,5 @@ export class DbSong extends DbBaseNode {
   __className = DbBaseNodeLabel.Song;
   name: any = null;
   scriptureReferences: any = null;
+  canDelete: any = null;
 }

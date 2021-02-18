@@ -20,4 +20,5 @@ export class DbUser extends DbBaseNode {
   unavailability: any = null;
   locations: any = null;
   knownLanguage: any = null;
+  canDelete: any = null;
 }

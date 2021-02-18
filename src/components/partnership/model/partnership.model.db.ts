@@ -16,4 +16,5 @@ export class DbPartnership extends DbBaseNode {
   types: any = null;
   organization: any = null;
   partner: any = null;
+  canDelete: any = null;
 }

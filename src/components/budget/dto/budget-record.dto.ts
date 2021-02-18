@@ -1,6 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import {
   Resource,
+  SecuredBoolean,
   SecuredFloatNullable,
   SecuredInt,
   SecuredString,
@@ -17,4 +18,6 @@ export class BudgetRecord extends Resource {
 
   @Field()
   readonly amount: SecuredFloatNullable;
+
+  readonly canDelete: SecuredBoolean;
 }

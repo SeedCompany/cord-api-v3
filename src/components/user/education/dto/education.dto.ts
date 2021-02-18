@@ -1,6 +1,7 @@
 import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
 import {
   Resource,
+  SecuredBoolean,
   SecuredEnum,
   SecuredProperty,
   SecuredString,
@@ -34,4 +35,6 @@ export class Education extends Resource {
 
   @Field()
   readonly institution: SecuredString;
+
+  readonly canDelete: SecuredBoolean;
 }

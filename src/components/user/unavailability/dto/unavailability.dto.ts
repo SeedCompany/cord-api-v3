@@ -2,6 +2,7 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import {
   DateTimeField,
   Resource,
+  SecuredBoolean,
   SecuredDateTime,
   SecuredString,
 } from '../../../../common';
@@ -18,4 +19,6 @@ export class Unavailability extends Resource {
 
   @DateTimeField()
   readonly end: SecuredDateTime;
+
+  readonly canDelete: SecuredBoolean;
 }

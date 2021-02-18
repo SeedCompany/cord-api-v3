@@ -1,6 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import {
   Resource,
+  SecuredBoolean,
   SecuredInt,
   SecuredProperty,
   SecuredString,
@@ -15,6 +16,8 @@ export class FundingAccount extends Resource {
 
   @Field()
   readonly accountNumber: SecuredInt;
+
+  readonly canDelete: SecuredBoolean;
 }
 
 @ObjectType({

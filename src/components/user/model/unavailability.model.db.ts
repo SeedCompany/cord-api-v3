@@ -7,4 +7,5 @@ export class DbUnavailability extends DbBaseNode {
   description: any = null;
   end: any = null;
   start: any = null;
+  canDelete: any = null;
 }

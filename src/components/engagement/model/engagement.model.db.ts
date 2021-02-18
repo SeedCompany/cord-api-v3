@@ -18,4 +18,5 @@ export class DbEngagement extends DbBaseNode {
   statusModifiedAt: any = null;
   modifiedAt: any = null;
   status: any = null;
+  canDelete: any = null;
 }

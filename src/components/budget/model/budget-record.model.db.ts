@@ -7,4 +7,5 @@ export class DbBudgetRecord extends DbBaseNode {
   amount: any = null;
   fiscalYear: any = null;
   organization: any = null;
+  canDelete: any = null;
 }

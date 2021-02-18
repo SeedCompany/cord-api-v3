@@ -1,5 +1,10 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import { Resource, SecuredProperty, SecuredString } from '../../../common';
+import {
+  Resource,
+  SecuredBoolean,
+  SecuredProperty,
+  SecuredString,
+} from '../../../common';
 
 @ObjectType({
   implements: Resource,
@@ -10,6 +15,8 @@ export class Organization extends Resource {
 
   @Field()
   readonly address: SecuredString;
+
+  readonly canDelete: SecuredBoolean;
 }
 
 @ObjectType({

@@ -8,4 +8,5 @@ export class DbEthnologueLanguage extends DbBaseNode {
   name: any = null;
   population: any = null;
   provisionalCode: any = null;
+  canDelete: any = null;
 }

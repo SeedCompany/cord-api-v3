@@ -137,6 +137,7 @@ export class EthnologueLanguageService {
     return {
       id,
       ...secured,
+      canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 

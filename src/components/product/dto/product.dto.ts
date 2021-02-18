@@ -1,7 +1,7 @@
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { MergeExclusive } from 'type-fest';
-import { Resource } from '../../../common';
+import { Resource, SecuredBoolean } from '../../../common';
 import { SecuredScriptureRangesOverride } from '../../scripture';
 import { Producible, SecuredProducible } from './producible.dto';
 import { SecuredProductMediums } from './product-medium';
@@ -21,6 +21,8 @@ export class Product extends Producible {
 
   @Field()
   readonly methodology: SecuredMethodology;
+
+  readonly canDelete: SecuredBoolean;
 }
 
 @ObjectType({

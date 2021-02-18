@@ -7,4 +7,5 @@ export class DbOrganization extends DbBaseNode {
   name: any = null;
   address: any = null;
   locations: any = null;
+  canDelete: any = null;
 }

@@ -8,4 +8,5 @@ export class DbFile extends DbBaseNode {
   createdBy: any = null;
   parent: any = null;
   mimeType: any = null;
+  canDelete: any = null;
 }

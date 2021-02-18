@@ -10,4 +10,5 @@ export class DbInternshipEngagement extends DbEngagement {
   mentor: any = null;
   methodologies: any = null;
   position: any = null;
+  canDelete: any = null;
 }

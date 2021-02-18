@@ -2,6 +2,7 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import {
   Resource,
   Secured,
+  SecuredBoolean,
   SecuredDateNullable,
   SecuredEnum,
 } from '../../../common';
@@ -58,4 +59,5 @@ export class Partnership extends Resource {
 
   @Field()
   readonly financialReportingType: SecuredFinancialReportingType;
+  readonly canDelete: SecuredBoolean;
 }

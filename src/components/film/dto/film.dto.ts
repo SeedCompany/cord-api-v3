@@ -1,5 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import { Resource, SecuredString } from '../../../common';
+import { Resource, SecuredBoolean, SecuredString } from '../../../common';
 import { Producible, ProducibleType } from '../../product/dto';
 
 declare module '../../product/dto' {
@@ -16,4 +16,5 @@ Object.assign(ProducibleType, { Film: 'Film' });
 export class Film extends Producible {
   @Field()
   readonly name: SecuredString;
+  readonly canDelete: SecuredBoolean;
 }

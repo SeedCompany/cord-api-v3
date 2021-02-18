@@ -7,4 +7,5 @@ export class DbBudget extends DbBaseNode {
   universalTemplateFile: any = null;
   records: any = null;
   status: any = null;
+  canDelete: any = null;
 }

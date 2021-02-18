@@ -7,4 +7,5 @@ export class DbFieldRegion extends DbBaseNode {
   director: any = null;
   name: any = null;
   fieldZone: any = null;
+  canDelete: any = null;
 }

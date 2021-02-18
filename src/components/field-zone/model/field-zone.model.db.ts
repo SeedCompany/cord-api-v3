@@ -6,4 +6,5 @@ export class DbFieldZone extends DbBaseNode {
   __className = DbBaseNodeLabel.FieldZone;
   director: any = null;
   name: any = null;
+  canDelete: any = null;
 }
