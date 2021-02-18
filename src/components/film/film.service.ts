@@ -166,13 +166,10 @@ export class FilmService {
       id,
       session
     );
-    const securedProps = await this.authorizationService.getPermissionsOfBaseNode(
-      {
-        baseNode: new DbFilm(),
-        sessionOrUserId: session,
-        propList: result.propList,
-        propKeys: this.securedProperties,
-      }
+    const securedProps = await this.authorizationService.secureProperties(
+      Film,
+      result.propList,
+      session
     );
 
     return {

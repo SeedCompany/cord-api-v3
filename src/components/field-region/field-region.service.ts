@@ -195,12 +195,11 @@ export class FieldRegionService {
       );
     }
 
-    const secured = await this.authorizationService.getPermissionsOfBaseNode({
-      baseNode: new DbFieldRegion(),
-      sessionOrUserId: session,
-      propList: result.propList,
-      propKeys: this.securedProperties,
-    });
+    const secured = await this.authorizationService.secureProperties(
+      FieldRegion,
+      result.propList,
+      session
+    );
 
     return {
       ...parseBaseNodeProperties(result.node),

@@ -168,13 +168,10 @@ export class StoryService {
       session
     );
 
-    const securedProps = await this.authorizationService.getPermissionsOfBaseNode(
-      {
-        baseNode: new DbStory(),
-        sessionOrUserId: session,
-        propList: result.propList,
-        propKeys: this.securedProperties,
-      }
+    const securedProps = await this.authorizationService.secureProperties(
+      Story,
+      result.propList,
+      session
     );
 
     return {

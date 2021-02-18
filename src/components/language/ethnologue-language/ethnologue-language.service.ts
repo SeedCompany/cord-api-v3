@@ -20,6 +20,7 @@ import {
 import { matchPropList } from '../../../core/database/query';
 import {
   DbPropsOfDto,
+  parsePropList,
   StandardReadResult,
 } from '../../../core/database/results';
 import { AuthorizationService } from '../../authorization/authorization.service';
@@ -120,19 +121,13 @@ export class EthnologueLanguageService {
         'ethnologue.id'
       );
     }
-    const securedProperties = {
-      code: true,
-      provisionalCode: true,
-      name: true,
-      population: true,
-    };
 
-    const secured = await this.authorizationService.getPermissionsOfBaseNode({
-      baseNode: new DbEthnologueLanguage(),
-      sessionOrUserId: session,
-      propList: result.propList,
-      propKeys: securedProperties,
-    });
+    const { id: _, ...props } = parsePropList(result.propList);
+    const secured = await this.authorizationService.secureProperties(
+      EthnologueLanguage,
+      props,
+      session
+    );
 
     return {
       id,

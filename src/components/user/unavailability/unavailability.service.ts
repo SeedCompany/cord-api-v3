@@ -140,17 +140,10 @@ export class UnavailabilityService {
       throw new NotFoundException('Could not find user', 'user.id');
     }
 
-    const securedProps = await this.authorizationService.getPermissionsOfBaseNode(
-      {
-        baseNode: new DbUnavailability(),
-        sessionOrUserId: session,
-        propList: result.propList,
-        propKeys: {
-          description: true,
-          start: true,
-          end: true,
-        },
-      }
+    const securedProps = await this.authorizationService.secureProperties(
+      Unavailability,
+      result.propList,
+      session
     );
 
     return {
