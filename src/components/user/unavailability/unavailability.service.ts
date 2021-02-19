@@ -157,7 +157,7 @@ export class UnavailabilityService {
     return {
       ...parseBaseNodeProperties(result.node),
       ...securedProps,
-      canDelete: true, // TODO
+      canDelete: await this.db.checkDeletePermission(id, session), // TODO
     };
   }
 

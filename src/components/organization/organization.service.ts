@@ -377,7 +377,7 @@ export class OrganizationService {
       const orgCount = result?.orgCount;
 
       for (const i of range(orgCount)) {
-        const isGood = await this.pullOrg(i);
+        const isGood = await this.pullOrg(i, session);
         if (!isGood) {
           return false;
         }
@@ -389,7 +389,7 @@ export class OrganizationService {
     return true;
   }
 
-  private async pullOrg(index: number): Promise<boolean> {
+  private async pullOrg(index: number, session: Session): Promise<boolean> {
     const result = await this.db
       .query()
       .raw(
@@ -425,7 +425,7 @@ export class OrganizationService {
         canRead: false,
         canEdit: false,
       },
-      canDelete: true, // TODO
+      canDelete: await this.db.checkDeletePermission(result?.id, session), // TODO
     });
 
     return isGood;

@@ -7,4 +7,5 @@ export class DbCeremony extends DbBaseNode {
   actualDate: any = null;
   estimatedDate: any = null;
   planned: any = null;
+  type: any = null;
 }
