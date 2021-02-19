@@ -151,6 +151,7 @@ export class CeremonyService {
         sessionOrUserId: session,
         propList: result.propList,
         propKeys: this.securedProperties,
+        nodeId: id,
       }
     );
 

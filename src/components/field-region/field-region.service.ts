@@ -200,6 +200,7 @@ export class FieldRegionService {
       sessionOrUserId: session,
       propList: result.propList,
       propKeys: this.securedProperties,
+      nodeId: id,
     });
 
     return {

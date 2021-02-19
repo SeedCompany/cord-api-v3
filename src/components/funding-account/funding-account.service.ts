@@ -172,6 +172,7 @@ export class FundingAccountService {
       sessionOrUserId: session,
       propList: result.propList,
       propKeys: this.securedProperties,
+      nodeId: id,
     });
     return {
       ...parseBaseNodeProperties(result.node),

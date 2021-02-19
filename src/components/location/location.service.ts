@@ -228,6 +228,7 @@ export class LocationService {
       sessionOrUserId: session,
       propList: result.propList,
       propKeys: this.securedProperties,
+      nodeId: id,
     });
 
     return {

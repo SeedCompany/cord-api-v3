@@ -10,8 +10,8 @@ import { LanguageService } from './language.service';
 @Module({
   imports: [
     forwardRef(() => AuthorizationModule),
-    forwardRef(() => LocationModule),
     forwardRef(() => ProjectModule),
+    forwardRef(() => LocationModule),
     forwardRef(() => EngagementModule),
   ],
   providers: [LanguageResolver, LanguageService, EthnologueLanguageService],

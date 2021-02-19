@@ -323,6 +323,7 @@ export class UserService {
           : sessionOrUserId.roles;
       permsOfBaseNode = await this.authorizationService.getPerms(
         new DbUser(),
+        id,
         roles
       );
     }

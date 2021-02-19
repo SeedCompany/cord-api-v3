@@ -1,7 +1,7 @@
 import { node, Query, relation } from 'cypher-query-builder';
 import { deburr } from 'lodash';
 import { DateTime } from 'luxon';
-import { entries, Resource, Session } from '../../common';
+import { DbBaseNodeLabel, entries, Resource, Session } from '../../common';
 
 // CREATE clauses //////////////////////////////////////////////////////
 
@@ -69,6 +69,62 @@ export function createBaseNode(
       node('', labels, nodeProps),
     ]);
   }
+}
+
+export function matchProjectContext(
+  query: Query,
+  className: DbBaseNodeLabel,
+  dbBaseNodeId: string
+) {
+  let isProjContext = false;
+  switch (className) {
+    case DbBaseNodeLabel.Budget:
+      // add query for matching the project
+      break;
+    case DbBaseNodeLabel.BudgetRecord:
+      // add query for matching the project
+      break;
+    case DbBaseNodeLabel.Ceremony:
+      // add query for matching the project
+      break;
+    case DbBaseNodeLabel.Directory:
+      // add query for matching the project
+      break;
+    case DbBaseNodeLabel.Engagement:
+      // add query for matching the project
+      break;
+    case DbBaseNodeLabel.File:
+      // add query for matching the project
+      break;
+    case DbBaseNodeLabel.FileVersion:
+      // add query for matching the project
+      break;
+    case DbBaseNodeLabel.InternshipEngagement:
+      // add query for matching the project
+      break;
+    case DbBaseNodeLabel.LanguageEngagement:
+      // add query for matching the project
+      break;
+    case DbBaseNodeLabel.Partnership:
+      // add query for matching the project
+      break;
+    case DbBaseNodeLabel.Product:
+      // add query for matching the project
+      break;
+    case DbBaseNodeLabel.Project:
+      // add query for matching the project
+      isProjContext = true;
+      query
+        .match([node('project', 'Project', { id: dbBaseNodeId })])
+        .with(['project', { 'project.id': 'projectId' }]);
+      break;
+    case DbBaseNodeLabel.ProjectMember:
+      // add query for matching the project
+      break;
+    default:
+      break;
+  }
+  return isProjContext;
 }
 
 export function matchUserPermissions(

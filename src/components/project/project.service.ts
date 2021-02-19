@@ -499,6 +499,7 @@ export class ProjectService {
         sessionOrUserId: sessionOrUserId,
         propList: result.propList,
         propKeys: this.securedProperties,
+        nodeId: id,
       }
     );
 
@@ -1062,11 +1063,15 @@ export class ProjectService {
     }
 
     const budgetToReturn = current || pendingBudget;
-
-    const permsOfProject = await this.authorizationService.getPerms(
-      new DbProject(),
-      await this.authorizationService.getUserRoleObjects(session.userId)
-    );
+    //TODO: not sure if this is right. if there's no budget, not sure if that means someone can't read it.
+    let permsOfProject = { budget: { canRead: false, canEdit: false } };
+    if (budgetToReturn?.id) {
+      permsOfProject = await this.authorizationService.getPerms(
+        new DbProject(),
+        budgetToReturn?.id,
+        await this.authorizationService.getUserRoleObjects(session.userId)
+      );
+    }
 
     return {
       value: budgetToReturn,

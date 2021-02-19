@@ -330,6 +330,7 @@ export class BudgetService {
         sessionOrUserId: session,
         propList: result.propList,
         propKeys: this.securedBudgetProperties,
+        nodeId: id,
       }
     );
 
@@ -379,6 +380,7 @@ export class BudgetService {
         sessionOrUserId: session,
         propList: result.propList,
         propKeys: this.securedBudgetRecordProperties,
+        nodeId: id,
       }
     );
     return {

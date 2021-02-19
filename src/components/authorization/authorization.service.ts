@@ -4,7 +4,13 @@ import { Connection, node, relation } from 'cypher-query-builder';
 import { compact, groupBy, mapValues, pickBy, union, without } from 'lodash';
 import { ServerException, Session } from '../../common';
 import { retry } from '../../common/retry';
-import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
+import {
+  ConfigService,
+  DatabaseService,
+  ILogger,
+  Logger,
+  matchProjectContext,
+} from '../../core';
 import {
   parseSecuredProperties,
   PropListDbResult,
@@ -23,6 +29,7 @@ export const permissionDefaults = {
   canRead: false,
   canEdit: false,
 };
+
 export type Permission = typeof permissionDefaults;
 
 export type PermissionsOf<T> = Record<keyof T, Permission>;
@@ -80,6 +87,7 @@ export class AuthorizationService {
 
   async getPerms<DbNode extends DbBaseNode>(
     baseNode: DbNode,
+    baseNodeId: string,
     userRoles: DbRole[]
   ): Promise<PermissionsOf<DbNode>> {
     const userRoleList = userRoles.map((g) => g.grants);
@@ -90,6 +98,7 @@ export class AuthorizationService {
     const propList = objGrantList.map((g) => g.properties).flat(1);
     const byProp = groupBy(propList, 'propertyName');
 
+    // Global roles
     // Merge together the results of each property
     const permissions = mapValues(
       byProp,
@@ -106,6 +115,36 @@ export class AuthorizationService {
         return Object.assign({}, permissionDefaults, ...possibilities);
       }
     );
+
+    // Project membership roles
+    // if(projectContextNode)
+    // get base project w/ members
+
+    //     if(I am a member of the projectContext)
+    //          get my membership roles
+    //          get the grants from those roles
+    //          filter grants that have the same className
+    //          group by Property
+    //          get membership permissions, merge with global permissions. permissionDefaults being the permissions of that node
+    //     else(do nothing)
+    // else(do nothing)
+    const q = this.db.query();
+    if (matchProjectContext(q, baseNode.__className, baseNodeId)) {
+      const proj = await q
+        .match([
+          node('projectMember', 'ProjectMember'),
+          relation('in', '', 'member'),
+          node('project', 'Project', {
+            id: 'projectId',
+          }),
+        ])
+        .return('*')
+        .first();
+      if (proj) {
+        //console.log(proj);
+      }
+    }
+
     return permissions as PermissionsOf<DbNode>;
   }
 
@@ -117,18 +156,24 @@ export class AuthorizationService {
     sessionOrUserId,
     propList,
     propKeys,
+    nodeId,
   }: {
     baseNode: DbBaseNode;
     sessionOrUserId: Session | string;
     propList: PropListDbResult<DbProps> | DbProps;
     propKeys: Record<PickedKeys, boolean>;
+    nodeId: string;
   }) {
     const dbRoles =
       typeof sessionOrUserId === 'string'
         ? await this.getUserRoleObjects(sessionOrUserId)
         : sessionOrUserId.roles;
     // ignoring types here because baseNode provides no benefit over propList & propKeys.
-    const permsOfBaseNode = (await this.getPerms(baseNode, dbRoles)) as any;
+    const permsOfBaseNode = (await this.getPerms(
+      baseNode,
+      nodeId,
+      dbRoles
+    )) as any;
     return parseSecuredProperties(propList, permsOfBaseNode, propKeys);
   }
 

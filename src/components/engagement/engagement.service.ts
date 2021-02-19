@@ -720,6 +720,7 @@ export class EngagementService {
         sessionOrUserId: session,
         propList: result.propList,
         propKeys: this.securedProperties,
+        nodeId: id,
       }
     );
 

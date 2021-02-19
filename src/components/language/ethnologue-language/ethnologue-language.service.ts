@@ -132,6 +132,7 @@ export class EthnologueLanguageService {
       sessionOrUserId: session,
       propList: result.propList,
       propKeys: securedProperties,
+      nodeId: id,
     });
 
     return {

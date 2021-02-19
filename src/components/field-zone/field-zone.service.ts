@@ -177,6 +177,7 @@ export class FieldZoneService {
       sessionOrUserId: session,
       propList: result.propList,
       propKeys: this.securedProperties,
+      nodeId: id,
     });
 
     return {
