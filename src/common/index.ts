@@ -23,4 +23,3 @@ export * from './validators';
 export * from './name-field';
 export * from './id-field';
 export * from './base-node-labels.enum';
-export * from './project-context.interface';
