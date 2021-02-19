@@ -126,8 +126,6 @@ export class AuthorizationService {
         return Object.assign({}, permissionDefaults, ...possibilities);
       }
     );
-    // console.log(`global permissions for ${baseNode.__className}`);
-    // console.log(permissions);
 
     const q = this.db.query();
     if (matchProjectContext(q, baseNode.__className, baseNodeId)) {
@@ -153,8 +151,6 @@ export class AuthorizationService {
         .asResult<{ roles: Role[] }>()
         .first();
       if (projRoleQuery) {
-        // console.log("ProjroleQuery")
-        // console.log(projRoleQuery)
         projRoleQuery.roles = projRoleQuery.roles.flat(1);
         if (projRoleQuery.roles.length > 0) {
           const roles = compact(projRoleQuery.roles.map(getProjectRole));
@@ -171,13 +167,12 @@ export class AuthorizationService {
             canRead: false,
             canEdit: false,
           };
-          // console.log("merging proj perms with global...")
+          // merge global and project perms
           mapValues(
             byProp,
             (nodes): Permission => {
               const possibilities = nodes.map((node) => {
-                // console.log('-- node: ');
-                // console.log(node);
+                // set the global permissons as the "default" permissions
                 globalPerms = permissions[node.propertyName];
 
                 // Convert the db properties to API properties.
