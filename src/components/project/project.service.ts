@@ -1065,14 +1065,15 @@ export class ProjectService {
     const budgetToReturn = current || pendingBudget;
     //TODO: not sure if this is right. if there's no budget, not sure if that means someone can't read it.
     let permsOfProject = { budget: { canRead: true, canEdit: false } };
-    if (budgetToReturn) {
+    if (budgetToReturn?.id) {
       permsOfProject = await this.authorizationService.getPerms(
         new DbProject(),
         session.userId,
-        budgetToReturn?.id,
+        project.id,
         await this.authorizationService.getUserRoleObjects(session.userId)
       );
     }
+
     return {
       value: budgetToReturn,
       canRead: permsOfProject.budget.canRead,
@@ -1086,7 +1087,7 @@ export class ProjectService {
   ): Promise<SecuredDirectory> {
     const rootRef = await this.db
       .query()
-      .match(matchSession(session))
+      .match(matchSession(session, { withAclRead: 'canReadProjects' }))
       .optionalMatch([
         [
           node('project', 'Project', { id: projectId }),
