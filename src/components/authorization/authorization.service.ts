@@ -98,6 +98,9 @@ export class AuthorizationService {
     baseNodeId: string,
     userRoles: DbRole[]
   ): Promise<PermissionsOf<DbNode>> {
+    // console.log("-----------------------------------------------------------------")
+    // console.log(`userId: ${userId}`)
+    // console.log(`baseNodeID: ${baseNodeId}`)
     const userRoleList = userRoles.map((g) => g.grants);
     const userRoleListFlat = userRoleList.flat(1);
     const objGrantList = userRoleListFlat.filter(
@@ -150,8 +153,10 @@ export class AuthorizationService {
         .asResult<{ roles: Role[] }>()
         .first();
       if (projRoleQuery) {
+        // console.log("ProjroleQuery")
+        // console.log(projRoleQuery)
         projRoleQuery.roles = projRoleQuery.roles.flat(1);
-        if (projRoleQuery.roles.length > 1) {
+        if (projRoleQuery.roles.length > 0) {
           const roles = compact(projRoleQuery.roles.map(getProjectRole));
 
           const userRoleList = roles.map((g) => g.grants);
@@ -166,9 +171,7 @@ export class AuthorizationService {
             canRead: false,
             canEdit: false,
           };
-          // console.log('----- global Permissions');
-          // console.log(permissions);
-
+          // console.log("merging proj perms with global...")
           mapValues(
             byProp,
             (nodes): Permission => {
@@ -188,18 +191,12 @@ export class AuthorizationService {
               return Object.assign(globalPerms, globalPerms, ...possibilities);
             }
           );
-          // console.log('----- projPermissions');
-          // console.log(projPermissions);
-          //permissions = projPermissions;
-
-          // console.log(`... per project ${baseNode.__className}`);
-          // console.log(projPermissions);
-          // redo pretty much the same as merge above, just have the default permissions be the permissions that we just set. Somehow
         }
       }
     }
     // console.log(`final permissions for ${baseNode.__className}`)
     // console.log(permissions)
+    // console.log("-----------------------------------------------------------------")
     return permissions as PermissionsOf<DbNode>;
   }
 
