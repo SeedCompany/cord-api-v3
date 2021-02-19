@@ -42,7 +42,7 @@ export const Administrator = new DbRole({
         { propertyName: 'records',                    permission: { read, write, }, },
         { propertyName: 'status',                     permission: { read, write, }, },
     ],
-    canDelete: false,
+    canDelete: true,
   }),
     new DbBaseNodeGrant<DbBudgetRecord>({
       __className: 'DbBudgetRecord',
@@ -51,7 +51,7 @@ export const Administrator = new DbRole({
         { propertyName: 'fiscalYear',                 permission: { read, write, }, },
         { propertyName: 'organization',               permission: { read, write, }, },
         ],
-    canDelete: false,
+    canDelete: true,
   }),
     new DbBaseNodeGrant<DbCeremony>({
       __className: 'DbCeremony',
@@ -61,7 +61,7 @@ export const Administrator = new DbRole({
         { propertyName: 'planned',                    permission: { read, write, }, },
         { propertyName: 'type',                       permission: { read, write, }, },
         ],
-    canDelete: false,
+    canDelete: true,
   }),
     new DbBaseNodeGrant<DbDirectory>({
       __className: 'DbDirectory',
@@ -70,7 +70,7 @@ export const Administrator = new DbRole({
         { propertyName: 'createdBy',                  permission: { read, write, }, },
         { propertyName: 'parent',                     permission: { read, write, }, },
         ],
-    canDelete: false,
+    canDelete: true,
   }),
     new DbBaseNodeGrant<DbEducation>({
       __className: 'DbEducation',
@@ -79,7 +79,7 @@ export const Administrator = new DbRole({
         { propertyName: 'institution',                permission: { read, write, }, },
         { propertyName: 'major',                      permission: { read, write, }, },
         ],
-    canDelete: false,
+    canDelete: true,
   }),
     new DbBaseNodeGrant<DbEthnologueLanguage>({
       __className: 'DbEthnologueLanguage',
@@ -89,7 +89,7 @@ export const Administrator = new DbRole({
         { propertyName: 'population',                 permission: { read, write, }, },
         { propertyName: 'provisionalCode',            permission: { read, write, }, },
         ],
-    canDelete: false,
+    canDelete: true,
   }),
     new DbBaseNodeGrant<DbFieldRegion>({
       __className: 'DbFieldRegion',
@@ -98,7 +98,7 @@ export const Administrator = new DbRole({
         { propertyName: 'name',                       permission: { read, write, }, },
         { propertyName: 'fieldZone',                  permission: { read, write, }, },
         ],
-    canDelete: false,
+    canDelete: true,
   }),
     new DbBaseNodeGrant<DbFieldZone>({
       __className: 'DbFieldZone',
@@ -106,7 +106,7 @@ export const Administrator = new DbRole({
         { propertyName: 'director',                   permission: { read, write, }, },
         { propertyName: 'name',                       permission: { read, write, }, },
         ],
-    canDelete: false,
+    canDelete: true,
   }),
     new DbBaseNodeGrant<DbFile>({
       __className: 'DbFile',
@@ -116,7 +116,7 @@ export const Administrator = new DbRole({
         { propertyName: 'parent',                     permission: { read, write, }, },
         { propertyName: 'mimeType',                   permission: { read, write, }, },
         ],
-    canDelete: false,
+    canDelete: true,
   }),
     new DbBaseNodeGrant<DbFileVersion>({
       __className: 'DbFileVersion',
@@ -127,7 +127,7 @@ export const Administrator = new DbRole({
         { propertyName: 'mimeType',                   permission: { read, write, }, },
         { propertyName: 'size',                       permission: { read, write, }, },
         ],
-    canDelete: false,
+    canDelete: true,
   }),
     new DbBaseNodeGrant<DbFilm>({
       __className: 'DbFilm',
@@ -135,7 +135,7 @@ export const Administrator = new DbRole({
         { propertyName: 'name',                       permission: { read, write, }, },
         { propertyName: 'scriptureReferences',        permission: { read, write, }, },
         ],
-    canDelete: false,
+    canDelete: true,
   }),
     new DbBaseNodeGrant<DbFundingAccount>({
       __className: 'DbFundingAccount',
@@ -143,7 +143,7 @@ export const Administrator = new DbRole({
         { propertyName: 'name',                       permission: { read, write, }, },
         { propertyName: 'accountNumber',              permission: { read, write, }, },
         ],
-    canDelete: false,
+    canDelete: true,
   }),
     new DbBaseNodeGrant<DbInternshipEngagement>({
       __className: 'DbInternshipEngagement',
@@ -169,7 +169,7 @@ export const Administrator = new DbRole({
         { propertyName: 'modifiedAt',                 permission: { read, write, }, },
         { propertyName: 'status',                     permission: { read, write, }, },
         ],
-    canDelete: false,
+    canDelete: true,
   }),
     new DbBaseNodeGrant<DbLanguage>({
       __className: 'DbLanguage',
@@ -191,7 +191,7 @@ export const Administrator = new DbRole({
         { propertyName: 'locations',                  permission: { read, write, }, },
         { propertyName: 'tags',                       permission: { read, write, }, },
         ],
-    canDelete: false,
+    canDelete: true,
   }),
     new DbBaseNodeGrant<DbLanguageEngagement>({
       __className: 'DbLanguageEngagement',
@@ -219,7 +219,7 @@ export const Administrator = new DbRole({
         { propertyName: 'product',                    permission: { read, write, }, },
         { propertyName: 'status',                     permission: { read, write, }, },
         ],
-    canDelete: false,
+    canDelete: true,
   }),
     new DbBaseNodeGrant<DbLiteracyMaterial>({
       __className: 'DbLiteracyMaterial',
@@ -227,7 +227,7 @@ export const Administrator = new DbRole({
         { propertyName: 'name',                       permission: { read, write, }, },
         { propertyName: 'scriptureReferences',        permission: { read, write, }, },
         ],
-    canDelete: false,
+    canDelete: true,
   }),
     new DbBaseNodeGrant<DbLocation>({
       __className: 'DbLocation',
@@ -239,7 +239,7 @@ export const Administrator = new DbRole({
         { propertyName: 'fundingAccount',             permission: { read, write, }, },
         { propertyName: 'defaultFieldRegion',         permission: { read, write, }, },
         ],
-    canDelete: false,
+    canDelete: true,
   }),
     new DbBaseNodeGrant<DbOrganization>({
       __className: 'DbOrganization',
@@ -248,7 +248,7 @@ export const Administrator = new DbRole({
         { propertyName: 'address',                    permission: { read, write, }, },
         { propertyName: 'locations',                  permission: { read, write, }, },
         ],
-    canDelete: false,
+    canDelete: true,
   }),
     new DbBaseNodeGrant<DbPartner>({
       __className: 'DbPartner',
@@ -263,7 +263,7 @@ export const Administrator = new DbRole({
         { propertyName: 'address',                    permission: { read, write, }, },
         { propertyName: 'modifiedAt',                 permission: { read, write, }, },
         ],
-    canDelete: false,
+    canDelete: true,
   }),
     new DbBaseNodeGrant<DbPartnership>({
       __className: 'DbPartnership',
@@ -281,7 +281,7 @@ export const Administrator = new DbRole({
         { propertyName: 'organization',               permission: { read, write, }, },
         { propertyName: 'partner',                    permission: { read, write, }, },
         ],
-    canDelete: false,
+    canDelete: true,
   }),
     new DbBaseNodeGrant<DbProduct>({
       __className: 'DbProduct',
@@ -294,7 +294,7 @@ export const Administrator = new DbRole({
         { propertyName: 'scriptureReferencesOverride',permission: { read, write, }, },
         { propertyName: 'isOverriding',               permission: { read, write, }, },
           ],
-    canDelete: false,
+    canDelete: true,
   }),
     new DbBaseNodeGrant<DbProject>({
       __className: 'DbProject',
@@ -323,7 +323,7 @@ export const Administrator = new DbRole({
         { propertyName: 'financialReportReceivedAt',  permission: { read, write, }, },
         { propertyName: 'owningOrganization',         permission: { read, write, }, },
           ],
-    canDelete: false,
+    canDelete: true,
   }),
     new DbBaseNodeGrant<DbProjectMember>({
       __className: 'DbProjectMember',
@@ -332,7 +332,7 @@ export const Administrator = new DbRole({
         { propertyName: 'user',                       permission: { read, write, }, },
         { propertyName: 'modifiedAt',                 permission: { read, write, }, },
             ],
-    canDelete: false,
+    canDelete: true,
   }),
     new DbBaseNodeGrant<DbUser>({
       __className: 'DbUser',
@@ -354,7 +354,7 @@ export const Administrator = new DbRole({
         { propertyName: 'locations',                  permission: { read, write, }, },
         { propertyName: 'knownLanguage',              permission: { read, write, }, },
         ],
-    canDelete: false,
+    canDelete: true,
   }),
     new DbBaseNodeGrant<DbUnavailability>({
       __className: 'DbUnavailability',
@@ -363,7 +363,7 @@ export const Administrator = new DbRole({
         { propertyName: 'end',                        permission: { read, write, }, },
         { propertyName: 'start',                      permission: { read, write, }, },
         ],
-    canDelete: false,
+    canDelete: true,
   }),
     new DbBaseNodeGrant<DbSong>({
       __className: 'DbSong',
@@ -371,7 +371,7 @@ export const Administrator = new DbRole({
         { propertyName: 'name',                       permission: { read, write, }, },
         { propertyName: 'scriptureReferences',        permission: { read, write, }, },
         ],
-    canDelete: false,
+    canDelete: true,
   }),
     new DbBaseNodeGrant<DbStory>({
       __className: 'DbStory',
@@ -379,7 +379,7 @@ export const Administrator = new DbRole({
         { propertyName: 'name',                       permission: { read, write, }, },
         { propertyName: 'scriptureReferences',        permission: { read, write, }, },
     ],
-    canDelete: false,
+    canDelete: true,
   }),
   ],
 });
