@@ -108,7 +108,7 @@ export class AuthorizationService {
 
     // Global roles
     // Merge together the results of each property
-    let permissions = mapValues(
+    const permissions = mapValues(
       byProp,
       (nodes): Permission => {
         const possibilities = nodes.map((node) =>
@@ -123,6 +123,8 @@ export class AuthorizationService {
         return Object.assign({}, permissionDefaults, ...possibilities);
       }
     );
+    // console.log(`global permissions for ${baseNode.__className}`);
+    // console.log(permissions);
 
     const q = this.db.query();
     if (matchProjectContext(q, baseNode.__className, baseNodeId)) {
@@ -149,52 +151,55 @@ export class AuthorizationService {
         .first();
       if (projRoleQuery) {
         projRoleQuery.roles = projRoleQuery.roles.flat(1);
-        const roles = compact(projRoleQuery.roles.map(getProjectRole));
+        if (projRoleQuery.roles.length > 1) {
+          const roles = compact(projRoleQuery.roles.map(getProjectRole));
 
-        const userRoleList = roles.map((g) => g.grants);
-        const userRoleListFlat = userRoleList.flat(1);
-        const objGrantList = userRoleListFlat.filter(
-          (g) => g.__className === baseNode.__className
-        );
-        const propList = objGrantList.map((g) => g.properties).flat(1);
-        const byProp = groupBy(propList, 'propertyName');
+          const userRoleList = roles.map((g) => g.grants);
+          const userRoleListFlat = userRoleList.flat(1);
+          const objGrantList = userRoleListFlat.filter(
+            (g) => g.__className === baseNode.__className
+          );
+          const propList = objGrantList.map((g) => g.properties).flat(1);
+          const byProp = groupBy(propList, 'propertyName');
 
-        // Global roles
-        // Merge together the results of each property
-        let projPermissionDefaults = {
-          canRead: false,
-          canEdit: false,
-        };
-        // console.log('----- global Permissions');
-        // console.log(permissions);
+          let globalPerms = {
+            canRead: false,
+            canEdit: false,
+          };
+          // console.log('----- global Permissions');
+          // console.log(permissions);
 
-        const projPermissions = mapValues(
-          byProp,
-          (nodes): Permission => {
-            const possibilities = nodes.map((node) => {
-              // console.log('--node: ');
-              // console.log(node);
-              projPermissionDefaults = permissions[node.propertyName];
+          mapValues(
+            byProp,
+            (nodes): Permission => {
+              const possibilities = nodes.map((node) => {
+                // console.log('-- node: ');
+                // console.log(node);
+                globalPerms = permissions[node.propertyName];
 
-              // Convert the db properties to API properties.
-              // Only keep true values, so merging the objects doesn't replace a true with false
-              return pickBy({
-                canRead: node.permission.read || null,
-                canEdit: node.permission.write || null,
+                // Convert the db properties to API properties.
+                // Only keep true values, so merging the objects doesn't replace a true with false
+                return pickBy({
+                  canRead: node.permission.read || null,
+                  canEdit: node.permission.write || null,
+                });
               });
-            });
-            // Merge the all the true permissions together, otherwise default to whatever is in the global role.
-            return Object.assign({}, projPermissionDefaults, ...possibilities);
-          }
-        );
-        // console.log('----- projPermissions');
-        // console.log(projPermissions);
-        permissions = projPermissions;
+              // Merge the all the true permissions together, otherwise default to whatever is in the global role.
+              return Object.assign(globalPerms, globalPerms, ...possibilities);
+            }
+          );
+          // console.log('----- projPermissions');
+          // console.log(projPermissions);
+          //permissions = projPermissions;
 
-        // redo pretty much the same as merge above, just have the default permissions be the permissions that we just set. Somehow
+          // console.log(`... per project ${baseNode.__className}`);
+          // console.log(projPermissions);
+          // redo pretty much the same as merge above, just have the default permissions be the permissions that we just set. Somehow
+        }
       }
     }
-
+    // console.log(`final permissions for ${baseNode.__className}`)
+    // console.log(permissions)
     return permissions as PermissionsOf<DbNode>;
   }
 

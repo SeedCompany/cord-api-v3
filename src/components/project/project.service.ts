@@ -1086,7 +1086,7 @@ export class ProjectService {
   ): Promise<SecuredDirectory> {
     const rootRef = await this.db
       .query()
-      .match(matchSession(session, { withAclRead: 'canReadProjects' }))
+      .match(matchSession(session))
       .optionalMatch([
         [
           node('project', 'Project', { id: projectId }),
