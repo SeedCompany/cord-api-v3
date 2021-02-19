@@ -36,3 +36,5 @@ export class DbRole {
     return perms?.permission;
   }
 }
+
+export class ProjectRole extends DbRole {}

@@ -23,7 +23,7 @@ import { DbStory } from '../../story/model';
 import { DbEducation, DbUnavailability, DbUser } from '../../user/model';
 import { Role } from '../dto';
 import { Powers } from '../dto/powers';
-import { DbBaseNodeGrant, DbRole } from '../model';
+import { DbBaseNodeGrant, ProjectRole } from '../model';
 
 // do not auto format this file
 // turned off prettier for role files to prevent auto-format making this file huge
@@ -31,7 +31,7 @@ import { DbBaseNodeGrant, DbRole } from '../model';
 const read = true;
 const write = true;
 
-export const ConsultantManagerOnProject = new DbRole({
+export const ConsultantManagerOnProject = new ProjectRole({
   name: Role.ConsultantManager,
   powers: [
     Powers.CreateDirectory,

@@ -25,6 +25,11 @@ import * as AllRoles from './roles';
 const getRole = (role: Role) =>
   Object.values(AllRoles).find((r) => r.name === role);
 
+const getProjectRole = (role: Role) =>
+  Object.values(AllRoles).find(
+    (r) => r.name === role && r.constructor.name === 'ProjectRole'
+  );
+
 export const permissionDefaults = {
   canRead: false,
   canEdit: false,
@@ -33,6 +38,8 @@ export const permissionDefaults = {
 export type Permission = typeof permissionDefaults;
 
 export type PermissionsOf<T> = Record<keyof T, Permission>;
+
+export const allRoles = [];
 
 @Injectable()
 export class AuthorizationService {
@@ -87,6 +94,7 @@ export class AuthorizationService {
 
   async getPerms<DbNode extends DbBaseNode>(
     baseNode: DbNode,
+    userId: string,
     baseNodeId: string,
     userRoles: DbRole[]
   ): Promise<PermissionsOf<DbNode>> {
@@ -100,7 +108,7 @@ export class AuthorizationService {
 
     // Global roles
     // Merge together the results of each property
-    const permissions = mapValues(
+    let permissions = mapValues(
       byProp,
       (nodes): Permission => {
         const possibilities = nodes.map((node) =>
@@ -116,32 +124,74 @@ export class AuthorizationService {
       }
     );
 
-    // Project membership roles
-    // if(projectContextNode)
-    // get base project w/ members
-
-    //     if(I am a member of the projectContext)
-    //          get my membership roles
-    //          get the grants from those roles
-    //          filter grants that have the same className
-    //          group by Property
-    //          get membership permissions, merge with global permissions. permissionDefaults being the permissions of that node
-    //     else(do nothing)
-    // else(do nothing)
     const q = this.db.query();
     if (matchProjectContext(q, baseNode.__className, baseNodeId)) {
-      const proj = await q
+      const projRoleQuery = await q
         .match([
           node('projectMember', 'ProjectMember'),
           relation('in', '', 'member'),
-          node('project', 'Project', {
-            id: 'projectId',
-          }),
+          node('project', 'Project'),
         ])
-        .return('*')
+        .with(['projectMember', 'project'])
+        .match([
+          node('projectMember'),
+          relation('out', '', 'user'),
+          node('user', 'User', { id: userId }),
+        ])
+        .with(['user', 'projectMember'])
+        .match([
+          node('projectMember'),
+          relation('out', 'r', 'roles', { active: true }),
+          node('props', 'Property'),
+        ])
+        .raw(`RETURN collect(props.value) as roles`)
+        .asResult<{ roles: Role[] }>()
         .first();
-      if (proj) {
-        //console.log(proj);
+      if (projRoleQuery) {
+        projRoleQuery.roles = projRoleQuery.roles.flat(1);
+        const roles = compact(projRoleQuery.roles.map(getProjectRole));
+
+        const userRoleList = roles.map((g) => g.grants);
+        const userRoleListFlat = userRoleList.flat(1);
+        const objGrantList = userRoleListFlat.filter(
+          (g) => g.__className === baseNode.__className
+        );
+        const propList = objGrantList.map((g) => g.properties).flat(1);
+        const byProp = groupBy(propList, 'propertyName');
+
+        // Global roles
+        // Merge together the results of each property
+        let projPermissionDefaults = {
+          canRead: false,
+          canEdit: false,
+        };
+        // console.log('----- global Permissions');
+        // console.log(permissions);
+
+        const projPermissions = mapValues(
+          byProp,
+          (nodes): Permission => {
+            const possibilities = nodes.map((node) => {
+              // console.log('--node: ');
+              // console.log(node);
+              projPermissionDefaults = permissions[node.propertyName];
+
+              // Convert the db properties to API properties.
+              // Only keep true values, so merging the objects doesn't replace a true with false
+              return pickBy({
+                canRead: node.permission.read || null,
+                canEdit: node.permission.write || null,
+              });
+            });
+            // Merge the all the true permissions together, otherwise default to whatever is in the global role.
+            return Object.assign({}, projPermissionDefaults, ...possibilities);
+          }
+        );
+        // console.log('----- projPermissions');
+        // console.log(projPermissions);
+        permissions = projPermissions;
+
+        // redo pretty much the same as merge above, just have the default permissions be the permissions that we just set. Somehow
       }
     }
 
@@ -168,9 +218,14 @@ export class AuthorizationService {
       typeof sessionOrUserId === 'string'
         ? await this.getUserRoleObjects(sessionOrUserId)
         : sessionOrUserId.roles;
+    const userId =
+      typeof sessionOrUserId === 'string'
+        ? sessionOrUserId
+        : sessionOrUserId.userId;
     // ignoring types here because baseNode provides no benefit over propList & propKeys.
     const permsOfBaseNode = (await this.getPerms(
       baseNode,
+      userId,
       nodeId,
       dbRoles
     )) as any;
@@ -359,9 +414,7 @@ export class AuthorizationService {
       .raw(`RETURN collect(role.value) as roles`)
       .asResult<{ roles: Role[] }>()
       .first();
-
     const roles = compact(roleQuery?.roles.map(getRole));
-
     return roles;
   }
 }

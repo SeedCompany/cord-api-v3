@@ -321,8 +321,13 @@ export class UserService {
         typeof sessionOrUserId === 'string'
           ? await this.authorizationService.getUserRoleObjects(sessionOrUserId)
           : sessionOrUserId.roles;
+      const userId =
+        typeof sessionOrUserId === 'string'
+          ? sessionOrUserId
+          : sessionOrUserId.userId;
       permsOfBaseNode = await this.authorizationService.getPerms(
         new DbUser(),
+        userId,
         id,
         roles
       );
