@@ -79,47 +79,144 @@ export function matchProjectContext(
   let isProjContext = false;
   switch (className) {
     case DbBaseNodeLabel.Budget:
-      // add query for matching the project
+      isProjContext = true;
+      query
+        .match([
+          node('project', 'Project'),
+          relation('out', '', 'budget', { active: true }),
+          node('budget', 'Budget', { id: dbBaseNodeId }),
+        ])
+        .with(['project', { 'project.id': 'projectId' }]);
       break;
     case DbBaseNodeLabel.BudgetRecord:
-      // add query for matching the project
+      isProjContext = true;
+      query
+        .match([
+          node('project', 'Project'),
+          relation('out', '', 'budget', { active: true }),
+          node('', 'Budget'),
+          relation('out', '', 'records', { active: true }),
+          node('', 'BudgetRecord', { id: dbBaseNodeId }),
+        ])
+        .with(['project', { 'project.id': 'projectId' }]);
       break;
     case DbBaseNodeLabel.Ceremony:
-      // add query for matching the project
+      isProjContext = true;
+      query
+        .match([
+          node('project', 'Project'),
+          relation('out', '', 'engagement', { active: true }),
+          node('', 'Engagement'),
+          relation('out', 'ceremony', { active: true }),
+          node('', 'Ceremony', { id: dbBaseNodeId }),
+        ])
+        .with(['project', { 'project.id': 'projectId' }]);
       break;
+    // todo: this version only works on the root directory
     case DbBaseNodeLabel.Directory:
-      // add query for matching the project
+      isProjContext = true;
+      query
+        .match([
+          node('project', 'Project'),
+          relation('out', '', 'rootDirectory', { active: true }),
+          node('', 'Directory', { id: dbBaseNodeId }),
+        ])
+        .with(['project', { 'project.id': 'projectId' }]);
       break;
     case DbBaseNodeLabel.Engagement:
-      // add query for matching the project
+      isProjContext = true;
+      query
+        .match([
+          node('project', 'Project'),
+          relation('out', '', 'engagement', { active: true }),
+          node('', 'Engagement', { id: dbBaseNodeId }),
+        ])
+        .with(['project', { 'project.id': 'projectId' }]);
       break;
+    // todo: this verison only works when a file is in the root dir
     case DbBaseNodeLabel.File:
-      // add query for matching the project
+      isProjContext = true;
+      query
+        .match([
+          node('project', 'Project'),
+          relation('out', '', 'rootDirectory', { active: true }),
+          node('', 'Directory'),
+          relation('in', '', 'parent', { active: true }),
+          node('', 'File', { id: dbBaseNodeId }),
+        ])
+        .with(['project', { 'project.id': 'projectId' }]);
       break;
     case DbBaseNodeLabel.FileVersion:
-      // add query for matching the project
+      isProjContext = true;
+      query
+        .match([
+          node('project', 'Project'),
+          relation('out', '', 'rootDirectory', { active: true }),
+          node('', 'Directory'),
+          relation('in', '', 'parent', { active: true }),
+          node('', 'File'),
+          relation('in', '', 'parent', { active: true }),
+          node('', 'FileVersion', { id: dbBaseNodeId }),
+        ])
+        .with(['project', { 'project.id': 'projectId' }]);
       break;
     case DbBaseNodeLabel.InternshipEngagement:
-      // add query for matching the project
+      isProjContext = true;
+      query
+        .match([
+          node('project', 'Project'),
+          relation('out', '', 'engagement', { active: true }),
+          node('', 'Engagement', { id: dbBaseNodeId }),
+        ])
+        .with(['project', { 'project.id': 'projectId' }]);
       break;
     case DbBaseNodeLabel.LanguageEngagement:
-      // add query for matching the project
+      isProjContext = true;
+      query
+        .match([
+          node('project', 'Project'),
+          relation('out', '', 'engagement', { active: true }),
+          node('', 'Engagement', { id: dbBaseNodeId }),
+        ])
+        .with(['project', { 'project.id': 'projectId' }]);
       break;
     case DbBaseNodeLabel.Partnership:
-      // add query for matching the project
+      isProjContext = true;
+      query
+        .match([
+          node('project', 'Project'),
+          relation('out', '', 'partnership', { active: true }),
+          node('', 'Partnership', { id: dbBaseNodeId }),
+        ])
+        .with(['project', { 'project.id': 'projectId' }]);
       break;
     case DbBaseNodeLabel.Product:
-      // add query for matching the project
+      isProjContext = true;
+      query
+        .match([
+          node('project', 'Project'),
+          relation('out', '', 'engagement', { active: true }),
+          node('', 'Engagement', { id: dbBaseNodeId }),
+          relation('out', '', 'product', { active: true }),
+          node('', 'Product', { id: dbBaseNodeId }),
+        ])
+        .with(['project', { 'project.id': 'projectId' }]);
       break;
     case DbBaseNodeLabel.Project:
-      // add query for matching the project
       isProjContext = true;
       query
         .match([node('project', 'Project', { id: dbBaseNodeId })])
         .with(['project', { 'project.id': 'projectId' }]);
       break;
     case DbBaseNodeLabel.ProjectMember:
-      // add query for matching the project
+      isProjContext = true;
+      query
+        .match([
+          node('project', 'Project'),
+          relation('out', '', 'member', { active: true }),
+          node('', 'ProjectMember', { id: dbBaseNodeId }),
+        ])
+        .with(['project', { 'project.id': 'projectId' }]);
       break;
     default:
       break;
