@@ -150,7 +150,6 @@ export class UnavailabilityService {
           start: true,
           end: true,
         },
-        nodeId: id,
       }
     );
 

@@ -211,7 +211,6 @@ export class ProjectMemberService {
         sessionOrUserId: session,
         propList: result.propList,
         propKeys: this.securedProperties,
-        nodeId: id,
       }
     );
 

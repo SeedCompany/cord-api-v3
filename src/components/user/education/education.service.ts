@@ -140,7 +140,6 @@ export class EducationService {
       sessionOrUserId: session,
       propList: result.propList,
       propKeys: this.securedProperties,
-      nodeId: id,
     });
 
     return {

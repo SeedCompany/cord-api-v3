@@ -346,7 +346,6 @@ export class LanguageService {
         sessionOrUserId: session,
         propList: result.propList,
         propKeys: this.securedProperties,
-        nodeId: langId,
       }
     );
 

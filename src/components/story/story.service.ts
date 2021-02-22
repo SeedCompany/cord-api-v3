@@ -174,7 +174,6 @@ export class StoryService {
         sessionOrUserId: session,
         propList: result.propList,
         propKeys: this.securedProperties,
-        nodeId: id,
       }
     );
 

@@ -212,7 +212,6 @@ export class OrganizationService {
       sessionOrUserId: session,
       propList: result.propList,
       propKeys: this.securedProperties,
-      nodeId: orgId,
     });
 
     return {

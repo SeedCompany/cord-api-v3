@@ -186,7 +186,6 @@ export class LiteracyMaterialService {
         sessionOrUserId: session,
         propList: result.propList,
         propKeys: this.securedProperties,
-        nodeId: id,
       }
     );
 

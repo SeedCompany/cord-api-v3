@@ -314,7 +314,6 @@ export class PartnershipService {
         sessionOrUserId: session,
         propList: result.propList,
         propKeys: this.securedProperties,
-        nodeId: id,
       }
     );
     const canReadMouStart =

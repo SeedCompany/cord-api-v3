@@ -92,16 +92,19 @@ export class AuthorizationService {
     };
   }
 
-  async getPerms<DbNode extends DbBaseNode>(
-    baseNode: DbNode,
-    userId: string,
-    baseNodeId: string,
-    userRoles: DbRole[]
-  ): Promise<PermissionsOf<DbNode>> {
+  async getPerms<DbNode extends DbBaseNode>({
+    baseNode,
+    globalRoles,
+    membershipRoles,
+  }: {
+    baseNode: DbNode; 
+    globalRoles: DbRole[];
+    membershipRoles?: Role[];
+  }): Promise<PermissionsOf<DbNode>> {
     // console.log("-----------------------------------------------------------------")
     // console.log(`userId: ${userId}`)
     // console.log(`baseNodeID: ${baseNodeId}`)
-    const userRoleList = userRoles.map((g) => g.grants);
+    const userRoleList = globalRoles.map((g) => g.grants);
     const userRoleListFlat = userRoleList.flat(1);
     const objGrantList = userRoleListFlat.filter(
       (g) => g.__className === baseNode.__className
@@ -127,68 +130,44 @@ export class AuthorizationService {
       }
     );
 
-    const q = this.db.query();
-    if (matchProjectContext(q, baseNode.__className, baseNodeId)) {
-      const projRoleQuery = await q
-        .match([
-          node('projectMember', 'ProjectMember'),
-          relation('in', '', 'member'),
-          node('project', 'Project'),
-        ])
-        .with(['projectMember', 'project'])
-        .match([
-          node('projectMember'),
-          relation('out', '', 'user'),
-          node('user', 'User', { id: userId }),
-        ])
-        .with(['user', 'projectMember'])
-        .match([
-          node('projectMember'),
-          relation('out', 'r', 'roles', { active: true }),
-          node('props', 'Property'),
-        ])
-        .raw(`RETURN collect(props.value) as roles`)
-        .asResult<{ roles: Role[] }>()
-        .first();
-      if (projRoleQuery) {
-        projRoleQuery.roles = projRoleQuery.roles.flat(1);
-        if (projRoleQuery.roles.length > 0) {
-          const roles = compact(projRoleQuery.roles.map(getProjectRole));
+    if (membershipRoles) {
+      if (membershipRoles.length > 0) {
+        const roles = compact(membershipRoles.map(getProjectRole));
 
-          const userRoleList = roles.map((g) => g.grants);
-          const userRoleListFlat = userRoleList.flat(1);
-          const objGrantList = userRoleListFlat.filter(
-            (g) => g.__className === baseNode.__className
-          );
-          const propList = objGrantList.map((g) => g.properties).flat(1);
-          const byProp = groupBy(propList, 'propertyName');
+        const userRoleList = roles.map((g) => g.grants);
+        const userRoleListFlat = userRoleList.flat(1);
+        const objGrantList = userRoleListFlat.filter(
+          (g) => g.__className === baseNode.__className
+        );
+        const propList = objGrantList.map((g) => g.properties).flat(1);
+        const byProp = groupBy(propList, 'propertyName');
 
-          let globalPerms = {
-            canRead: false,
-            canEdit: false,
-          };
-          // merge global and project perms
-          mapValues(
-            byProp,
-            (nodes): Permission => {
-              const possibilities = nodes.map((node) => {
-                // set the global permissons as the "default" permissions
-                globalPerms = permissions[node.propertyName];
+        let globalPerms = {
+          canRead: false,
+          canEdit: false,
+        };
+        // merge global and project perms
+        mapValues(
+          byProp,
+          (nodes): Permission => {
+            const possibilities = nodes.map((node) => {
+              // set the global permissons as the "default" permissions
+              globalPerms = permissions[node.propertyName];
 
-                // Convert the db properties to API properties.
-                // Only keep true values, so merging the objects doesn't replace a true with false
-                return pickBy({
-                  canRead: node.permission.read || null,
-                  canEdit: node.permission.write || null,
-                });
+              // Convert the db properties to API properties.
+              // Only keep true values, so merging the objects doesn't replace a true with false
+              return pickBy({
+                canRead: node.permission.read || null,
+                canEdit: node.permission.write || null,
               });
-              // Merge the all the true permissions together, otherwise default to whatever is in the global role.
-              return Object.assign(globalPerms, globalPerms, ...possibilities);
-            }
-          );
-        }
+            });
+            // Merge the all the true permissions together, otherwise default to whatever is in the global role.
+            return Object.assign(globalPerms, globalPerms, ...possibilities);
+          }
+        );
       }
     }
+
     // console.log(`final permissions for ${baseNode.__className}`)
     // console.log(permissions)
     // console.log("-----------------------------------------------------------------")
@@ -203,29 +182,24 @@ export class AuthorizationService {
     sessionOrUserId,
     propList,
     propKeys,
-    nodeId,
+    membershipRoles,
   }: {
     baseNode: DbBaseNode;
     sessionOrUserId: Session | string;
     propList: PropListDbResult<DbProps> | DbProps;
     propKeys: Record<PickedKeys, boolean>;
-    nodeId: string;
+    membershipRoles?: Role[];
   }) {
     const dbRoles =
       typeof sessionOrUserId === 'string'
         ? await this.getUserRoleObjects(sessionOrUserId)
         : sessionOrUserId.roles;
-    const userId =
-      typeof sessionOrUserId === 'string'
-        ? sessionOrUserId
-        : sessionOrUserId.userId;
     // ignoring types here because baseNode provides no benefit over propList & propKeys.
-    const permsOfBaseNode = (await this.getPerms(
+    const permsOfBaseNode = (await this.getPerms({
       baseNode,
-      userId,
-      nodeId,
-      dbRoles
-    )) as any;
+      globalRoles: dbRoles,
+      membershipRoles: membershipRoles,
+    })) as any;
     return parseSecuredProperties(propList, permsOfBaseNode, propKeys);
   }
 

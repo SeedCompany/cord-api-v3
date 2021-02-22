@@ -290,7 +290,6 @@ export class ProductService {
       sessionOrUserId: session,
       propList: result.propList,
       propKeys: this.securedProperties,
-      nodeId: id,
     });
 
     const connectedProducible = await this.db

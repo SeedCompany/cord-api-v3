@@ -280,7 +280,6 @@ export class PartnerService {
       sessionOrUserId: session,
       propList: result.propList,
       propKeys: this.securedProperties,
-      nodeId: id,
     });
 
     return {
