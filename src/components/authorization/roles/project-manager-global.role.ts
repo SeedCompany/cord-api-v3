@@ -327,6 +327,7 @@ export const ProjectManagerGlobal = new DbRole({
         { propertyName: 'modifiedAt',                 permission: { read, write, }, },
         { propertyName: 'fieldRegion',                permission: { read, write, }, },
         { propertyName: 'engagement',                 permission: { read, write, }, },
+        { propertyName: 'owningOrganization',         permission: {}, },
         { propertyName: 'sensitivity',                permission: { read, write, }, },
         { propertyName: 'tags',                       permission: { read, write, }, },
         { propertyName: 'financialReportReceivedAt',  permission: { read, write, }, },
