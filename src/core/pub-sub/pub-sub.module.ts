@@ -1,9 +1,11 @@
 import { Global, Module } from '@nestjs/common';
 import { RedisPubSub } from 'graphql-redis-subscriptions';
+// eslint-disable-next-line no-restricted-imports -- This is the one spot we actually need it
 import { PubSub as InMemoryPubSub, PubSubEngine } from 'graphql-subscriptions';
 import { RedisClient } from 'redis';
 import { ConfigModule } from '../config/config.module';
 import { ConfigService } from '../config/config.service';
+import { PubSub } from './pub-sub';
 
 @Global()
 @Module({
@@ -22,7 +24,8 @@ import { ConfigService } from '../config/config.service';
       },
       inject: [ConfigService],
     },
+    PubSub,
   ],
-  exports: [PubSubEngine],
+  exports: [PubSub],
 })
 export class PubSubModule {}

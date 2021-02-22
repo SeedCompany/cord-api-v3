@@ -2638,6 +2638,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/node@npm:^13.7.4":
+  version: 13.13.45
+  resolution: "@types/node@npm:13.13.45"
+  checksum: f168574f1ecb9c9598742b99c55e9b62bfc97aa2ead0e54ea85208c3021e353452944869a8ee6d6f6a9636f777a6fbf474dba5c1afa728fa34001fb38996de66
+  languageName: node
+  linkType: hard
+
 "@types/normalize-package-data@npm:^2.4.0":
   version: 2.4.0
   resolution: "@types/normalize-package-data@npm:2.4.0"
@@ -4986,6 +4993,7 @@ __metadata:
     highlightjs-cypher: ^1.1.1
     husky: ^4.3.6
     iso-3166-1: ^2.0.1
+    ix: ^4.5.0
     jest: ^26.6.3
     js-yaml: ^4.0.0
     jsonwebtoken: ^8.5.1
@@ -8295,6 +8303,16 @@ cypher-query-builder@6.0.4:
   version: 1.2.1
   resolution: "iterare@npm:1.2.1"
   checksum: b1a896c566581b153a68067bb5939e1b7242ab596fa4d3f907a7a0dd2aa234e71958377278155f4d224bf33431b6ce0a3288e666ef9e1dbc138955b498db8256
+  languageName: node
+  linkType: hard
+
+"ix@npm:^4.5.0":
+  version: 4.5.0
+  resolution: "ix@npm:4.5.0"
+  dependencies:
+    "@types/node": ^13.7.4
+    tslib: ^2.3.0
+  checksum: 0b23195196a5dd3c91636a3e06e72654d9c705cd176e9915879d2e32e541754b69f8edbe50eb73153b077ebf57286835f6c80bfc7939e1c8e9bf61e6492e86c1
   languageName: node
   linkType: hard
 

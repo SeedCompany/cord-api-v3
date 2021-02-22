@@ -69,6 +69,9 @@ rules:
         - name: express-serve-static-core
           importNames: [Dictionary]
           message: Use a type with strict keys instead
+        - name: 'graphql-subscriptions'
+          importNames: [PubSub]
+          message: Import from our core module instead
 
   no-restricted-syntax:
     - error
