@@ -72,6 +72,9 @@ rules:
         - name: 'graphql-subscriptions'
           importNames: [PubSub]
           message: Import from our core module instead
+        - name: '@nestjs/graphql'
+          importNames: [Subscription]
+          message: Import from our core module instead
 
   no-restricted-syntax:
     - error
