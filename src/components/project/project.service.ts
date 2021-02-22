@@ -29,7 +29,6 @@ import {
 import {
   calculateTotalAndPaginateList,
   collect,
-  matchMemberRoles,
   matchPropList,
   permissionsOfNode,
   requestingUser,
@@ -38,12 +37,14 @@ import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
+  parseSecuredProperties,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Role } from '../authorization/dto';
 import { Powers } from '../authorization/dto/powers';
+import { DbRole } from '../authorization/model';
 import { BudgetService, BudgetStatus, SecuredBudget } from '../budget';
 import {
   EngagementListInput,
@@ -519,14 +520,20 @@ export class ProjectService {
       throw new NotFoundException('Could not find Project');
     }
     const props = parsePropList(result.propList);
-    const securedProps = await this.authorizationService.getPermissionsOfBaseNode(
-      {
-        baseNode: new DbProject(),
-        sessionOrUserId: sessionOrUserId,
-        propList: result.propList,
-        propKeys: this.securedProperties,
-        membershipRoles: result.memberRoles.flat(1),
-      }
+    const globalRoles = await this.authorizationService.getUserRoleObjects(
+      userId
+    );
+    const membershipRoles = result.memberRoles.flat(1);
+    // ignoring types here because baseNode provides no benefit over propList & propKeys.
+    const permsOfBaseNode = (await this.authorizationService.getPerms({
+      baseNode: new DbProject(),
+      globalRoles: globalRoles,
+      membershipRoles: membershipRoles,
+    })) as any;
+    const securedProps = parseSecuredProperties(
+      props,
+      permsOfBaseNode,
+      this.securedProperties
     );
 
     return {
@@ -562,6 +569,8 @@ export class ProjectService {
         value: result.owningOrganizationId,
       },
       canDelete: await this.db.checkDeletePermission(id, sessionOrUserId),
+      membershipRoles: result.memberRoles.flat(1),
+      globalRoles: globalRoles,
     };
   }
 
@@ -1066,13 +1075,17 @@ export class ProjectService {
   }
 
   async currentBudget(
-    project: Project | { id: string },
+    projectOrProjectId: Project | string,
     session: Session
   ): Promise<SecuredBudget> {
+    const projectId =
+      typeof projectOrProjectId === 'string'
+        ? projectOrProjectId
+        : projectOrProjectId.id;
     const budgets = await this.budgetService.list(
       {
         filter: {
-          projectId: project.id,
+          projectId: projectId,
         },
       },
       session
@@ -1088,39 +1101,59 @@ export class ProjectService {
       pendingBudget = budgets.items[0];
     }
 
+    let globalRoles: DbRole[];
+    globalRoles = [];
+    let membershipRoles: Role[];
+    membershipRoles = [];
+
     const budgetToReturn = current || pendingBudget;
-    //TODO: not sure if this is right. if there's no budget, not sure if that means someone can't read it.
-    const query = this.db
-      .query()
-      .match([node('node', 'Project', { id: project.id })])
-      .optionalMatch([
-        node('projectMember', 'ProjectMember'),
-        relation('in', '', 'member'),
-        node('node', 'Project', { id: project.id }),
-      ])
-      .with(['projectMember', 'propList', 'node'])
-      .optionalMatch([
-        node('projectMember'),
-        relation('out', '', 'user'),
-        node('user', 'User', { id: session.userId }),
-      ])
-      .with(['projectMember', 'propList', 'node'])
-      .optionalMatch([
-        node('projectMember'),
-        relation('out', 'r', 'roles', { active: true }),
-        node('props', 'Property'),
-      ])
-      .with([collect('props.value', 'memberRoles')])
-      .return(['memberRoles'])
-      .asResult<{ memberRoles: Role[] }>();
-    const result = query.first();
+    if (typeof projectOrProjectId === 'string') {
+      const query = this.db
+        .query()
+        .match([node('node', 'Project', { projectId })])
+        .optionalMatch([
+          node('projectMember', 'ProjectMember'),
+          relation('in', '', 'member'),
+          node('node', 'Project', { projectId }),
+        ])
+        .with(['projectMember', 'node'])
+        .optionalMatch([
+          node('projectMember'),
+          relation('out', '', 'user'),
+          node('user', 'User', { id: session.userId }),
+        ])
+        .with(['projectMember', 'node'])
+        .optionalMatch([
+          node('projectMember'),
+          relation('out', 'r', 'roles', { active: true }),
+          node('props', 'Property'),
+        ])
+        .with(collect('props.value', 'memberRoles'))
+        .return('memberRoles')
+        .asResult<{
+          memberRoles: Role[];
+        }>();
+      const result = await query.first();
+      if (!result) {
+        throw new NotFoundException(
+          'Could not find Project that this budget is a part of'
+        );
+      }
+      membershipRoles = result.memberRoles.flat(1);
+      globalRoles = await this.authorizationService.getUserRoleObjects(
+        session.userId
+      );
+    } else {
+      membershipRoles = projectOrProjectId.membershipRoles;
+      globalRoles = projectOrProjectId.globalRoles;
+    }
+
     let permsOfProject = { budget: { canRead: true, canEdit: false } };
     if (budgetToReturn?.id) {
       permsOfProject = await this.authorizationService.getPerms({
         baseNode: new DbProject(),
-        globalRoles: await this.authorizationService.getUserRoleObjects(
-          session.userId
-        ),
+        globalRoles: globalRoles,
+        membershipRoles: membershipRoles,
       });
     }
 

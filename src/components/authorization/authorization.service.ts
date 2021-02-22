@@ -4,13 +4,7 @@ import { Connection, node, relation } from 'cypher-query-builder';
 import { compact, groupBy, mapValues, pickBy, union, without } from 'lodash';
 import { ServerException, Session } from '../../common';
 import { retry } from '../../common/retry';
-import {
-  ConfigService,
-  DatabaseService,
-  ILogger,
-  Logger,
-  matchProjectContext,
-} from '../../core';
+import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import {
   parseSecuredProperties,
   PropListDbResult,
@@ -97,7 +91,7 @@ export class AuthorizationService {
     globalRoles,
     membershipRoles,
   }: {
-    baseNode: DbNode; 
+    baseNode: DbNode;
     globalRoles: DbRole[];
     membershipRoles?: Role[];
   }): Promise<PermissionsOf<DbNode>> {
