@@ -2,7 +2,7 @@ import { FactoryProvider } from '@nestjs/common/interfaces';
 import { AsyncLocalStorage } from 'async_hooks';
 import { stripIndent } from 'common-tags';
 import { Connection } from 'cypher-query-builder';
-import { Session, Transaction } from 'neo4j-driver';
+import { Driver, Session, Transaction } from 'neo4j-driver';
 // @ts-expect-error this isn't typed but it exists
 import TransactionExecutor from 'neo4j-driver/lib/internal/transaction-executor';
 import QueryRunner from 'neo4j-driver/types/query-runner';
@@ -29,6 +29,8 @@ export type PatchedConnection = Merge<
     transactionStorage: AsyncLocalStorage<Transaction>;
     logger: ILogger;
     transformer: MyTransformer;
+    open: boolean;
+    driver: Driver;
   }
 >;
 
@@ -40,7 +42,7 @@ export const CypherFactory: FactoryProvider<Connection> = {
     logger: ILogger,
     driverLogger: ILogger
   ) => {
-    const { url, username, password, driverConfig } = config.neo4j;
+    const { url, username, password, database, driverConfig } = config.neo4j;
     // @ts-expect-error yes we are patching the connection object
     const conn: PatchedConnection = new Connection(
       url,
@@ -68,7 +70,6 @@ export const CypherFactory: FactoryProvider<Connection> = {
     // - query logging
     // - parameter transformation
     // - error transformation
-    const origSession = conn.session.bind(conn);
     conn.session = function (this: PatchedConnection) {
       const currentTransaction = this.transactionStorage.getStore();
       if (currentTransaction) {
@@ -85,10 +86,12 @@ export const CypherFactory: FactoryProvider<Connection> = {
         return txSession;
       }
 
-      const session: Session | null = origSession();
-      if (!session) {
+      if (!this.open) {
         return null;
       }
+      const session = this.driver.session({
+        database,
+      });
 
       session.run = wrapQueryRun(session, logger, parameterTransformer);
 
