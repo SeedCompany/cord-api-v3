@@ -22,7 +22,6 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
-  collect,
   defaultSorter,
   matchMemberRoles,
   matchPropList,
@@ -411,6 +410,7 @@ export class BudgetService {
         membershipRoles: result.memberRoles,
       }
     );
+
     return {
       ...parseBaseNodeProperties(result.node),
       ...securedProps,
