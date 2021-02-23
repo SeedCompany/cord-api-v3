@@ -381,7 +381,7 @@ export class BudgetService {
         relation('out', '', 'organization', { active: true }),
         node('organization', 'Organization'),
       ])
-      .with(['project', 'node', 'propList', 'organization'])
+      .with(['node', 'propList', 'organization', 'memberRoles'])
       .return([
         'propList + [{value: organization.id, property: "organization"}] as propList',
         'node',
