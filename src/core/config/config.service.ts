@@ -127,7 +127,7 @@ export class ConfigService implements EmailOptionsFactory {
       url,
       username,
       password,
-      database,
+      database: this.jest ? 'test' : database,
       driverConfig,
     };
   }
