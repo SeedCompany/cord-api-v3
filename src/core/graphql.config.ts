@@ -7,10 +7,13 @@ import {
   SyntaxError,
   ValidationError,
 } from 'apollo-server-errors';
+import * as cookieParser from 'cookie-parser';
 import { Request, Response } from 'express';
 import { GraphQLError, GraphQLFormattedError } from 'graphql';
-import { intersection } from 'lodash';
+import { IncomingMessage } from 'http';
+import { intersection, noop } from 'lodash';
 import { sep } from 'path';
+import { MergeExclusive } from 'type-fest';
 import { GqlContextType } from '../common';
 import { ConfigService } from './config/config.service';
 import { VersionService } from './config/version.service';
@@ -50,6 +53,14 @@ export class GraphQLConfig implements GqlOptionsFactory {
       debug: this.debug,
       sortSchema: true,
       installSubscriptionHandlers: true,
+      subscriptions: {
+        onConnect: (connectionParams, websocket, context) => {
+          const req = context.request as Request;
+          // @ts-expect-error hack cookie parsing into request
+          cookieParser()(req, undefined, noop);
+          return { req };
+        },
+      },
     };
   }
 
@@ -57,13 +68,24 @@ export class GraphQLConfig implements GqlOptionsFactory {
     return true; // TODO
   }
 
-  context: ContextFunction<{ req: Request; res: Response }, GqlContextType> = ({
-    req,
-    res,
-  }) => ({
-    request: req,
-    response: res,
-  });
+  context: ContextFunction<
+    MergeExclusive<
+      { req: Request; res: Response },
+      // websocket context
+      { connection: { context: { req: IncomingMessage } } }
+    >,
+    GqlContextType
+  > = (context) => {
+    if (context.connection) {
+      return {
+        request: context.connection.context.req as Request,
+      };
+    }
+    return {
+      request: context.req,
+      response: context.res,
+    };
+  };
 
   formatError = (error: GraphQLError): GraphQLFormattedError => {
     const extensions = { ...error.extensions };

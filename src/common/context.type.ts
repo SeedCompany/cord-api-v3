@@ -5,5 +5,5 @@ import { Request, Response } from 'express';
  */
 export interface GqlContextType {
   request: Request;
-  response: Response;
+  response?: Response;
 }
