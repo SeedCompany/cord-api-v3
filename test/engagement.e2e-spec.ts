@@ -881,7 +881,7 @@ describe('Engagement e2e', () => {
         internId: intern.id,
         mentorId: mentor.id,
       })
-    ).rejects.toThrow('projectId is invalid');
+    ).rejects.toThrow('Could not find project');
     await expect(
       createInternshipEngagement(app, {
         projectId: internshipProject.id,
@@ -902,7 +902,7 @@ describe('Engagement e2e', () => {
         internId: invalidId,
         mentorId: mentor.id,
       })
-    ).rejects.toThrow('internId is invalid');
+    ).rejects.toThrow('Could not find person');
 
     internshipProject = await createProject(app, {
       type: ProjectType.Internship,
@@ -918,20 +918,20 @@ describe('Engagement e2e', () => {
     ).rejects.toThrow('mentorId is invalid');
   });
 
-  it('translation engagement creation fails and lets you know why if your ids are bad', async () => {
+  it('language engagement creation fails and lets you know why if your ids are bad', async () => {
     const invalidId = await generateId();
     await expect(
       createLanguageEngagement(app, {
         projectId: invalidId,
         languageId: language.id,
       })
-    ).rejects.toThrow('projectId is invalid');
+    ).rejects.toThrow('Could not find project');
     await expect(
       createLanguageEngagement(app, {
         projectId: project.id,
         languageId: invalidId,
       })
-    ).rejects.toThrow('languageId is invalid');
+    ).rejects.toThrow('Could not find language');
   });
 
   it('should return empty methodologies array even if it is null', async () => {
@@ -972,7 +972,7 @@ describe('Engagement e2e', () => {
       })
     ).rejects.toThrowError(
       new InputException(
-        'That Project type is not Internship',
+        'Only Internship Engagements can be created on Internship Projects',
         'engagement.projectId'
       )
     );
