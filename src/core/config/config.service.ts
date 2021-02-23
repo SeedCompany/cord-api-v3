@@ -9,6 +9,7 @@ import { LazyGetter as Lazy } from 'lazy-get-decorator';
 import { Duration, DurationInput } from 'luxon';
 import { Config as Neo4JDriverConfig } from 'neo4j-driver';
 import { join } from 'path';
+import type { ClientOpts as RedisOptions } from 'redis';
 import { Merge } from 'type-fest';
 import { ID, ServerException } from '../../common';
 import { FrontendUrlWrapper } from '../email/templates/frontend-url';
@@ -209,6 +210,12 @@ export class ConfigService implements EmailOptionsFactory {
         // Allow 3rd party (other domains)
         sameSite: 'none',
       }),
+    };
+  }
+
+  @Lazy() get redis(): RedisOptions {
+    return {
+      url: this.env.string('REDIS_URL').optional(),
     };
   }
 
