@@ -115,15 +115,19 @@ export class ConfigService implements EmailOptionsFactory {
       parsed.username || this.env.string('NEO4J_USERNAME').optional('neo4j');
     const password =
       parsed.password || this.env.string('NEO4J_PASSWORD').optional('admin');
-    if (parsed.username || parsed.password) {
+    const database =
+      parsed.pathname.slice(1) || this.env.string('NEO4J_DBNAME').optional();
+    if (parsed.username || parsed.password || parsed.pathname) {
       parsed.username = '';
       parsed.password = '';
+      parsed.pathname = '';
       url = parsed.toString();
     }
     return {
       url,
       username,
       password,
+      database,
       driverConfig,
     };
   }
