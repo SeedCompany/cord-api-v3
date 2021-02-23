@@ -49,6 +49,7 @@ export class GraphQLConfig implements GqlOptionsFactory {
       formatError: this.formatError,
       debug: this.debug,
       sortSchema: true,
+      installSubscriptionHandlers: true,
     };
   }
 

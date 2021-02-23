@@ -4,3 +4,4 @@ export * from './core.module';
 export * from './database';
 export * from './events';
 export * from './resources';
+export * from './pub-sub';

@@ -12,6 +12,7 @@ import { EventsModule } from './events';
 import { ExceptionFilter } from './exception.filter';
 import { GraphqlLoggingPlugin } from './graphql-logging.plugin';
 import { GraphQLConfig } from './graphql.config';
+import { PubSubModule } from './pub-sub';
 import { ResourceResolver } from './resources';
 import { ValidationPipe } from './validation.pipe';
 
@@ -23,6 +24,7 @@ import { ValidationPipe } from './validation.pipe';
     DatabaseModule,
     EmailModule.forRootAsync({ useExisting: ConfigService }),
     GraphQLModule.forRootAsync({ useClass: GraphQLConfig }),
+    PubSubModule,
     EventsModule,
   ],
   providers: [

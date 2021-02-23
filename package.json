@@ -58,6 +58,7 @@
     "fast-safe-stringify": "^2.0.7",
     "got": "^11.8.2",
     "graphql": "^15.5.0",
+    "graphql-subscriptions": "^1.2.1",
     "highlightjs-cypher": "^1.1.1",
     "iso-3166-1": "^2.0.1",
     "js-yaml": "^4.0.0",
