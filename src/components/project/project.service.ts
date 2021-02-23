@@ -1104,26 +1104,19 @@ export class ProjectService {
     if (typeof projectOrProjectId === 'string') {
       const query = this.db
         .query()
-        .match([node('node', 'Project', { projectId })])
-        .optionalMatch([
-          node('projectMember', 'ProjectMember'),
-          relation('in', '', 'member'),
+        .match([
           node('node', 'Project', { projectId }),
-        ])
-        .with(['projectMember', 'node'])
-        .optionalMatch([
-          node('projectMember'),
-          relation('out', '', 'user'),
+          relation('out', '', 'member', { active: true }),
+          node('projectMember', 'ProjectMember'),
+          relation('out', '', 'user', { active: true }),
           node('user', 'User', { id: session.userId }),
         ])
-        .with(['projectMember', 'node'])
-        .optionalMatch([
+        .match([
           node('projectMember'),
           relation('out', 'r', 'roles', { active: true }),
-          node('props', 'Property'),
+          node('roles', 'Property'),
         ])
-        .with(collect('props.value', 'memberRoles'))
-        .return('memberRoles')
+        .return('collect(roles.value) as memberRoles')
         .asResult<{
           memberRoles: Role[];
         }>();
