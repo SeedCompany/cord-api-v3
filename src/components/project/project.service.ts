@@ -1148,14 +1148,11 @@ export class ProjectService {
       globalRoles = projectOrProjectId.globalRoles;
     }
 
-    let permsOfProject = { budget: { canRead: true, canEdit: false } };
-    if (budgetToReturn?.id) {
-      permsOfProject = await this.authorizationService.getPerms({
-        baseNode: new DbProject(),
-        globalRoles: globalRoles,
-        membershipRoles: membershipRoles,
-      });
-    }
+    const permsOfProject = await this.authorizationService.getPerms({
+      baseNode: new DbProject(),
+      globalRoles: globalRoles,
+      membershipRoles: membershipRoles,
+    });
 
     return {
       value: budgetToReturn,
