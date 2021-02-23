@@ -371,7 +371,7 @@ export class BudgetService {
         node('project', 'Project'),
         relation('out', '', 'budget', { active: true }),
         node('', 'Budget'),
-        relation('out', '', 'records', { active: true }),
+        relation('out', '', 'record', { active: true }),
         node('node', 'BudgetRecord', { id }),
       ])
       .with(['project', 'node', 'propList'])
