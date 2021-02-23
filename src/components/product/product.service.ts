@@ -24,6 +24,7 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
+  matchMemberRoles,
   matchPropList,
   permissionsOfNode,
   requestingUser,
@@ -35,6 +36,7 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { Role } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Film, FilmService } from '../film';
 import {
@@ -262,7 +264,16 @@ export class ProductService {
       .call(matchRequestingUser, session)
       .match([node('node', 'Product', { id })])
       .call(matchPropList)
-      .return(['propList, node'])
+      .match([
+        node('project', 'Project'),
+        relation('out', '', 'engagement', { active: true }),
+        node('', 'Engagement'),
+        relation('out', '', 'product', { active: true }),
+        node('', 'Product', { id }),
+      ])
+      .with(['project', 'node', 'propList'])
+      .call(matchMemberRoles, session.userId)
+      .return(['propList, node, memberRoles'])
       .asResult<
         StandardReadResult<
           DbPropsOfDto<
@@ -271,7 +282,9 @@ export class ProductService {
                 isOverriding: boolean;
               }
           >
-        >
+        > & {
+          memberRoles: Role[];
+        }
       >();
     const result = await query.first();
 
@@ -290,6 +303,7 @@ export class ProductService {
       sessionOrUserId: session,
       propList: result.propList,
       propKeys: this.securedProperties,
+      membershipRoles: result.memberRoles.flat(1),
     });
 
     const connectedProducible = await this.db

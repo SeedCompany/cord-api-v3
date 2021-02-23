@@ -28,6 +28,7 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
+  collect,
   matchPropList,
   permissionsOfNode,
   requestingUser,
@@ -36,11 +37,14 @@ import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
+  parseSecuredProperties,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { Role } from '../authorization/dto';
 import { Powers } from '../authorization/dto/powers';
+import { DbRole } from '../authorization/model';
 import { BudgetService, BudgetStatus, SecuredBudget } from '../budget';
 import {
   EngagementListInput,
@@ -434,10 +438,26 @@ export class ProjectService {
     id: string,
     sessionOrUserId: Session | string
   ): Promise<Project> {
+    const userId =
+      typeof sessionOrUserId === 'string'
+        ? sessionOrUserId
+        : sessionOrUserId.userId;
     const query = this.db
       .query()
       .match([node('node', 'Project', { id })])
       .call(matchPropList)
+      .with(['node', 'propList'])
+      .optionalMatch([
+        [node('user', 'User', { id: userId })],
+        [node('projectMember'), relation('out', '', 'user'), node('user')],
+        [node('projectMember'), relation('in', '', 'member'), node('node')],
+        [
+          node('projectMember'),
+          relation('out', '', 'roles', { active: true }),
+          node('props', 'Property'),
+        ],
+      ])
+      .with([collect('props.value', 'memberRoles'), 'propList', 'node'])
       .optionalMatch([
         node('node'),
         relation('out', '', 'primaryLocation', { active: true }),
@@ -470,6 +490,7 @@ export class ProjectService {
       .return([
         'propList',
         'node',
+        'memberRoles',
         'primaryLocation.id as primaryLocationId',
         'marketingLocation.id as marketingLocationId',
         'fieldRegion.id as fieldRegionId',
@@ -479,6 +500,7 @@ export class ProjectService {
       .asResult<
         StandardReadResult<DbPropsOfDto<Project>> & {
           primaryLocationId: string;
+          memberRoles: Role[];
           marketingLocationId: string;
           fieldRegionId: string;
           owningOrganizationId: string;
@@ -491,15 +513,21 @@ export class ProjectService {
     if (!result) {
       throw new NotFoundException('Could not find Project');
     }
-
     const props = parsePropList(result.propList);
-    const securedProps = await this.authorizationService.getPermissionsOfBaseNode(
-      {
-        baseNode: new DbProject(),
-        sessionOrUserId: sessionOrUserId,
-        propList: result.propList,
-        propKeys: this.securedProperties,
-      }
+    const globalRoles = await this.authorizationService.getUserRoleObjects(
+      userId
+    );
+    const membershipRoles = result.memberRoles.flat(1);
+    // ignoring types here because baseNode provides no benefit over propList & propKeys.
+    const permsOfBaseNode = (await this.authorizationService.getPerms({
+      baseNode: new DbProject(),
+      globalRoles: globalRoles,
+      membershipRoles: membershipRoles,
+    })) as any;
+    const securedProps = parseSecuredProperties(
+      props,
+      permsOfBaseNode,
+      this.securedProperties
     );
 
     return {
@@ -535,6 +563,8 @@ export class ProjectService {
         value: result.owningOrganizationId,
       },
       canDelete: await this.db.checkDeletePermission(id, sessionOrUserId),
+      membershipRoles: result.memberRoles.flat(1),
+      globalRoles: globalRoles,
     };
   }
 
@@ -1039,13 +1069,17 @@ export class ProjectService {
   }
 
   async currentBudget(
-    project: Project | { id: string },
+    projectOrProjectId: Project | string,
     session: Session
   ): Promise<SecuredBudget> {
+    const projectId =
+      typeof projectOrProjectId === 'string'
+        ? projectOrProjectId
+        : projectOrProjectId.id;
     const budgets = await this.budgetService.list(
       {
         filter: {
-          projectId: project.id,
+          projectId: projectId,
         },
       },
       session
@@ -1061,12 +1095,51 @@ export class ProjectService {
       pendingBudget = budgets.items[0];
     }
 
-    const budgetToReturn = current || pendingBudget;
+    let globalRoles: DbRole[];
+    globalRoles = [];
+    let membershipRoles: Role[];
+    membershipRoles = [];
 
-    const permsOfProject = await this.authorizationService.getPerms(
-      new DbProject(),
-      await this.authorizationService.getUserRoleObjects(session.userId)
-    );
+    const budgetToReturn = current || pendingBudget;
+    if (typeof projectOrProjectId === 'string') {
+      const query = this.db
+        .query()
+        .match([
+          node('node', 'Project', { projectId }),
+          relation('out', '', 'member', { active: true }),
+          node('projectMember', 'ProjectMember'),
+          relation('out', '', 'user', { active: true }),
+          node('user', 'User', { id: session.userId }),
+        ])
+        .match([
+          node('projectMember'),
+          relation('out', 'r', 'roles', { active: true }),
+          node('roles', 'Property'),
+        ])
+        .return('collect(roles.value) as memberRoles')
+        .asResult<{
+          memberRoles: Role[];
+        }>();
+      const result = await query.first();
+      if (!result) {
+        throw new NotFoundException(
+          'Could not find Project that this budget is a part of'
+        );
+      }
+      membershipRoles = result.memberRoles.flat(1);
+      globalRoles = await this.authorizationService.getUserRoleObjects(
+        session.userId
+      );
+    } else {
+      membershipRoles = projectOrProjectId.membershipRoles;
+      globalRoles = projectOrProjectId.globalRoles;
+    }
+
+    const permsOfProject = await this.authorizationService.getPerms({
+      baseNode: new DbProject(),
+      globalRoles: globalRoles,
+      membershipRoles: membershipRoles,
+    });
 
     return {
       value: budgetToReturn,

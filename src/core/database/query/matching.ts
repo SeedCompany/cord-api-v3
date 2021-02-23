@@ -34,3 +34,24 @@ export const matchPropList = (query: Query, nodeName = 'node') =>
       ),
       nodeName,
     ]);
+
+// Have to match project before using this
+export const matchMemberRoles = (query: Query, userId: string) =>
+  query
+    .with(['project', 'node', 'propList'])
+    .optionalMatch([
+      [node('user', 'User', { id: userId })],
+      [node('projectMember'), relation('out', '', 'user'), node('user')],
+      [node('projectMember'), relation('in', '', 'member'), node('project')],
+      [
+        node('projectMember'),
+        relation('out', '', 'roles', { active: true }),
+        node('props', 'Property'),
+      ],
+    ])
+    .with([
+      collect('props.value', 'memberRoles'),
+      'propList',
+      'node',
+      'project',
+    ]);

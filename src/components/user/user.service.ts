@@ -321,10 +321,10 @@ export class UserService {
         typeof sessionOrUserId === 'string'
           ? await this.authorizationService.getUserRoleObjects(sessionOrUserId)
           : sessionOrUserId.roles;
-      permsOfBaseNode = await this.authorizationService.getPerms(
-        new DbUser(),
-        roles
-      );
+      permsOfBaseNode = await this.authorizationService.getPerms({
+        baseNode: new DbUser(),
+        globalRoles: roles,
+      });
     }
 
     const securedProps = parseSecuredProperties(

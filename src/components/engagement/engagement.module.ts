@@ -20,7 +20,7 @@ import { PnpExtractor } from './pnp-extractor.service';
 @Module({
   imports: [
     forwardRef(() => AuthorizationModule),
-    FileModule,
+    forwardRef(() => FileModule),
     forwardRef(() => UserModule),
     CeremonyModule,
     ProductModule,

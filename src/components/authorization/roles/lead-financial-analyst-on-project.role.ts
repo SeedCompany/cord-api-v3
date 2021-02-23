@@ -23,7 +23,7 @@ import { DbStory } from '../../story/model';
 import { DbEducation, DbUnavailability, DbUser } from '../../user/model';
 import { Role } from '../dto';
 import { Powers } from '../dto/powers';
-import { DbBaseNodeGrant, DbRole } from '../model';
+import { DbBaseNodeGrant, ProjectRole } from '../model';
 
 // do not auto format this file
 // turned off prettier for role files to prevent auto-format making this file huge
@@ -31,8 +31,8 @@ import { DbBaseNodeGrant, DbRole } from '../model';
 const read = true;
 const write = true;
 
-export const Controller = new DbRole({
-  name: Role.Controller,
+export const LeadFinancialAnalystOnProject = new ProjectRole({
+  name: Role.LeadFinancialAnalyst,
   powers: [
     Powers.CreateBudget,
     Powers.CreateBudgetRecord,
@@ -51,37 +51,37 @@ export const Controller = new DbRole({
     new DbBaseNodeGrant<DbBudget>({
       __className: 'DbBudget',
       properties: [
-        { propertyName: 'universalTemplateFile',      permission: { read, write, }, },
-        { propertyName: 'records',                    permission: { read, write, }, },
-        { propertyName: 'status',                     permission: { read, write, }, },
+        { propertyName: 'universalTemplateFile',      permission: { read, }, },
+        { propertyName: 'records',                    permission: { read, }, },
+        { propertyName: 'status',                     permission: { read, }, },
         ],
     canDelete: false,
   }),
     new DbBaseNodeGrant<DbBudgetRecord>({
       __className: 'DbBudgetRecord',
       properties: [
-        { propertyName: 'amount',                     permission: { read, write, }, },
-        { propertyName: 'fiscalYear',                 permission: { read, write, }, },
-        { propertyName: 'organization',               permission: { read, write, }, },
+        { propertyName: 'amount',                     permission: { read, }, },
+        { propertyName: 'fiscalYear',                 permission: { read, }, },
+        { propertyName: 'organization',               permission: { read, }, },
         ],
     canDelete: false,
   }),
     new DbBaseNodeGrant<DbCeremony>({
       __className: 'DbCeremony',
       properties: [
-        { propertyName: 'actualDate',                 permission: { read, write, }, },
-        { propertyName: 'estimatedDate',              permission: { read, write, }, },
-        { propertyName: 'planned',                    permission: { read, write, }, },
-        { propertyName: 'type',                       permission: { read, write, }, },
+        { propertyName: 'actualDate',                 permission: { read, }, },
+        { propertyName: 'estimatedDate',              permission: { read, }, },
+        { propertyName: 'planned',                    permission: { read, }, },
+        { propertyName: 'type',                       permission: { read, }, },
         ],
     canDelete: false,
   }),
     new DbBaseNodeGrant<DbDirectory>({
       __className: 'DbDirectory',
       properties: [
-        { propertyName: 'name',                       permission: { read, write, }, },
-        { propertyName: 'createdBy',                  permission: { read, write, }, },
-        { propertyName: 'parent',                     permission: { read, write, }, },
+        { propertyName: 'name',                       permission: { read, }, },
+        { propertyName: 'createdBy',                  permission: { read, }, },
+        { propertyName: 'parent',                     permission: { read, }, },
         ],
     canDelete: false,
   }),
@@ -145,8 +145,8 @@ export const Controller = new DbRole({
     new DbBaseNodeGrant<DbFilm>({
       __className: 'DbFilm',
       properties: [
-        { propertyName: 'name',                       permission: { read, write, }, },
-        { propertyName: 'scriptureReferences',        permission: { read, write, }, },
+        { propertyName: 'name',                       permission: { read, }, },
+        { propertyName: 'scriptureReferences',        permission: { read, }, },
         ],
     canDelete: false,
   }),
@@ -196,11 +196,9 @@ export const Controller = new DbRole({
         { propertyName: 'leastOfTheseReason',         permission: { read, }, },
         { propertyName: 'populationOverride',         permission: { read, }, },
         { propertyName: 'registryOfDialectsCode',     permission: { read, }, },
-        { propertyName: 'name',                       permission: { read, }, },
         { propertyName: 'signLanguageCode',           permission: { read, }, },
         { propertyName: 'sponsorEstimatedEndDate',    permission: { read, }, },
         { propertyName: 'ethnologue',                 permission: { read, }, },
-        { propertyName: 'name',                       permission: { read, }, },
         { propertyName: 'sensitivity',                permission: { read, }, },
         { propertyName: 'hasExternalFirstScripture',  permission: { read, }, },
         { propertyName: 'locations',                  permission: { read, }, },
@@ -230,7 +228,7 @@ export const Controller = new DbRole({
         { propertyName: 'startDate',                  permission: { read, }, },
         { propertyName: 'startDateOverride',          permission: { read, }, },
         { propertyName: 'statusModifiedAt',           permission: { read, }, },
-        { propertyName: 'modifiedAt',                 permission: { read, }, },
+        { propertyName: 'modifiedAt',                 permission: { read, write, }, },
         { propertyName: 'product',                    permission: { read, }, },
         { propertyName: 'status',                     permission: { read, }, },
         ],
@@ -249,6 +247,7 @@ export const Controller = new DbRole({
       properties: [
         { propertyName: 'name',                       permission: { read, }, },
         { propertyName: 'type',                       permission: { read, }, },
+        { propertyName: 'sensitivity',                permission: { read, }, },
         { propertyName: 'isoAlpha3',                  permission: { read, }, },
         { propertyName: 'fundingAccount',             permission: { read, }, },
         ],
@@ -281,18 +280,18 @@ export const Controller = new DbRole({
     new DbBaseNodeGrant<DbPartnership>({
       __className: 'DbPartnership',
       properties: [
-        { propertyName: 'agreement',                  permission: { read, write, }, },
-        { propertyName: 'agreementStatus',            permission: { read, write, }, },
-        { propertyName: 'financialReportingType',     permission: { read, write, }, },
-        { propertyName: 'mou',                        permission: { read, write, }, },
-        { propertyName: 'mouEnd',                     permission: { read, write, }, },
-        { propertyName: 'mouEndOverride',             permission: { read, write, }, },
-        { propertyName: 'mouStart',                   permission: { read, write, }, },
-        { propertyName: 'mouStartOverride',           permission: { read, write, }, },
-        { propertyName: 'mouStatus',                  permission: { read, write, }, },
-        { propertyName: 'types',                      permission: { read, write, }, },
-        { propertyName: 'organization',               permission: { read, write, }, },
-        { propertyName: 'partner',                    permission: { read, write, }, },
+        { propertyName: 'agreement',                  permission: { read, }, },
+        { propertyName: 'agreementStatus',            permission: { read, }, },
+        { propertyName: 'financialReportingType',     permission: { read, }, },
+        { propertyName: 'mou',                        permission: { read, }, },
+        { propertyName: 'mouEnd',                     permission: { read, }, },
+        { propertyName: 'mouEndOverride',             permission: { read, }, },
+        { propertyName: 'mouStart',                   permission: { read, }, },
+        { propertyName: 'mouStartOverride',           permission: { read, }, },
+        { propertyName: 'mouStatus',                  permission: { read, }, },
+        { propertyName: 'types',                      permission: { read, }, },
+        { propertyName: 'organization',               permission: { read, }, },
+        { propertyName: 'partner',                    permission: { read, }, },
         ],
     canDelete: false,
   }),
@@ -329,19 +328,20 @@ export const Controller = new DbRole({
         { propertyName: 'partnership',                permission: { read, write, }, },
         { propertyName: 'budget',                     permission: { read, write, }, },
         { propertyName: 'modifiedAt',                 permission: { read, write, }, },
-        { propertyName: 'fieldRegion',                permission: { read, write, }, },
-        { propertyName: 'engagement',                 permission: { read, write, }, },
-        { propertyName: 'sensitivity',                permission: { read, write, }, },
-        { propertyName: 'tags',                       permission: { read, write, }, },
-        { propertyName: 'financialReportReceivedAt',  permission: { read, write, }, },
+        { propertyName: 'fieldRegion',                permission: { read, }, },
+        { propertyName: 'engagement',                 permission: { read, }, },
+        { propertyName: 'owningOrganization',         permission: { read, }, },
+        { propertyName: 'sensitivity',                permission: { read, }, },
+        { propertyName: 'tags',                       permission: { read, }, },
+        { propertyName: 'financialReportReceivedAt',  permission: { read, }, },
           ],
     canDelete: false,
   }),
     new DbBaseNodeGrant<DbProjectMember>({
       __className: 'DbProjectMember',
       properties: [
-        { propertyName: 'roles',                      permission: { read, write, }, },
-        { propertyName: 'user',                       permission: { read, write, }, },
+        { propertyName: 'roles',                      permission: { read, }, },
+        { propertyName: 'user',                       permission: { read, }, },
         { propertyName: 'modifiedAt',                 permission: { read, write, }, },
             ],
     canDelete: false,
@@ -380,16 +380,16 @@ export const Controller = new DbRole({
     new DbBaseNodeGrant<DbSong>({
       __className: 'DbSong',
       properties: [
-        { propertyName: 'name',                       permission: { read, write, }, },
-        { propertyName: 'scriptureReferences',        permission: { read, write, }, },
+        { propertyName: 'name',                       permission: { read, }, },
+        { propertyName: 'scriptureReferences',        permission: { read, }, },
         ],
     canDelete: false,
   }),
     new DbBaseNodeGrant<DbStory>({
       __className: 'DbStory',
       properties: [
-        { propertyName: 'name',                       permission: { read, write, }, },
-        { propertyName: 'scriptureReferences',        permission: { read, write, }, },
+        { propertyName: 'name',                       permission: { read, }, },
+        { propertyName: 'scriptureReferences',        permission: { read, }, },
     ],
     canDelete: false,
   }),

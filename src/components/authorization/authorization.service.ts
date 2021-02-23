@@ -19,13 +19,21 @@ import * as AllRoles from './roles';
 const getRole = (role: Role) =>
   Object.values(AllRoles).find((r) => r.name === role);
 
+const getProjectRole = (role: Role) =>
+  Object.values(AllRoles).find(
+    (r) => r.name === role && r.constructor.name === 'ProjectRole'
+  );
+
 export const permissionDefaults = {
   canRead: false,
   canEdit: false,
 };
+
 export type Permission = typeof permissionDefaults;
 
 export type PermissionsOf<T> = Record<keyof T, Permission>;
+
+export const allRoles = [];
 
 @Injectable()
 export class AuthorizationService {
@@ -78,11 +86,19 @@ export class AuthorizationService {
     };
   }
 
-  async getPerms<DbNode extends DbBaseNode>(
-    baseNode: DbNode,
-    userRoles: DbRole[]
-  ): Promise<PermissionsOf<DbNode>> {
-    const userRoleList = userRoles.map((g) => g.grants);
+  async getPerms<DbNode extends DbBaseNode>({
+    baseNode,
+    globalRoles,
+    membershipRoles,
+  }: {
+    baseNode: DbNode;
+    globalRoles: DbRole[];
+    membershipRoles?: Role[];
+  }): Promise<PermissionsOf<DbNode>> {
+    // console.log("-----------------------------------------------------------------")
+    // console.log("baseNode:")
+    // console.log(baseNode)
+    const userRoleList = globalRoles.map((g) => g.grants);
     const userRoleListFlat = userRoleList.flat(1);
     const objGrantList = userRoleListFlat.filter(
       (g) => g.__className === baseNode.__className
@@ -90,6 +106,7 @@ export class AuthorizationService {
     const propList = objGrantList.map((g) => g.properties).flat(1);
     const byProp = groupBy(propList, 'propertyName');
 
+    // Global roles
     // Merge together the results of each property
     const permissions = mapValues(
       byProp,
@@ -106,6 +123,48 @@ export class AuthorizationService {
         return Object.assign({}, permissionDefaults, ...possibilities);
       }
     );
+
+    if (membershipRoles) {
+      if (membershipRoles.length > 0) {
+        const roles = compact(membershipRoles.map(getProjectRole));
+
+        const userRoleList = roles.map((g) => g.grants);
+        const userRoleListFlat = userRoleList.flat(1);
+        const objGrantList = userRoleListFlat.filter(
+          (g) => g.__className === baseNode.__className
+        );
+        const propList = objGrantList.map((g) => g.properties).flat(1);
+        const byProp = groupBy(propList, 'propertyName');
+
+        let globalPerms = {
+          canRead: false,
+          canEdit: false,
+        };
+        // merge global and project perms
+        mapValues(
+          byProp,
+          (nodes): Permission => {
+            const possibilities = nodes.map((node) => {
+              // set the global permissons as the "default" permissions
+              globalPerms = permissions[node.propertyName];
+
+              // Convert the db properties to API properties.
+              // Only keep true values, so merging the objects doesn't replace a true with false
+              return pickBy({
+                canRead: node.permission.read || null,
+                canEdit: node.permission.write || null,
+              });
+            });
+            // Merge the all the true permissions together, otherwise default to whatever is in the global role.
+            return Object.assign(globalPerms, globalPerms, ...possibilities);
+          }
+        );
+      }
+    }
+
+    // console.log(`final permissions for ${baseNode.__className}`)
+    // console.log(permissions)
+    // console.log("-----------------------------------------------------------------")
     return permissions as PermissionsOf<DbNode>;
   }
 
@@ -117,18 +176,24 @@ export class AuthorizationService {
     sessionOrUserId,
     propList,
     propKeys,
+    membershipRoles,
   }: {
     baseNode: DbBaseNode;
     sessionOrUserId: Session | string;
     propList: PropListDbResult<DbProps> | DbProps;
     propKeys: Record<PickedKeys, boolean>;
+    membershipRoles?: Role[];
   }) {
     const dbRoles =
       typeof sessionOrUserId === 'string'
         ? await this.getUserRoleObjects(sessionOrUserId)
         : sessionOrUserId.roles;
     // ignoring types here because baseNode provides no benefit over propList & propKeys.
-    const permsOfBaseNode = (await this.getPerms(baseNode, dbRoles)) as any;
+    const permsOfBaseNode = (await this.getPerms({
+      baseNode,
+      globalRoles: dbRoles,
+      membershipRoles: membershipRoles,
+    })) as any;
     return parseSecuredProperties(propList, permsOfBaseNode, propKeys);
   }
 
@@ -314,9 +379,7 @@ export class AuthorizationService {
       .raw(`RETURN collect(role.value) as roles`)
       .asResult<{ roles: Role[] }>()
       .first();
-
     const roles = compact(roleQuery?.roles.map(getRole));
-
     return roles;
   }
 }

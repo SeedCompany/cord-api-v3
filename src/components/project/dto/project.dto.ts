@@ -11,6 +11,8 @@ import {
   SecuredString,
   Sensitivity,
 } from '../../../common';
+import { Role } from '../../authorization/dto';
+import { DbRole } from '../../authorization/model';
 import { SecuredTags } from '../../language/dto/language.dto';
 import { ProjectStatus } from './status.enum';
 import { SecuredProjectStep } from './step.enum';
@@ -83,6 +85,10 @@ class Project extends Resource {
 
   @Field()
   readonly financialReportReceivedAt: SecuredDateTime;
+
+  readonly globalRoles: DbRole[];
+
+  readonly membershipRoles: Role[];
 }
 
 // class name has to match schema name for interface resolvers to work.

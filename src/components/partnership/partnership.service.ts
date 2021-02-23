@@ -24,6 +24,7 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
+  matchMemberRoles,
   matchPropList,
   permissionsOfNode,
   requestingUser,
@@ -35,6 +36,7 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { Role } from '../authorization/dto';
 import { FileService } from '../file';
 import { Partner, PartnerService, PartnerType } from '../partner';
 import { ProjectService } from '../project';
@@ -254,6 +256,13 @@ export class PartnershipService {
       .match([node('node', 'Partnership', { id })])
       .call(matchPropList)
       .match([
+        node('project', 'Project'),
+        relation('out', '', 'partnership', { active: true }),
+        node('', 'Partnership', { id: id }),
+      ])
+      .with(['project', 'node', 'propList'])
+      .call(matchMemberRoles, session.userId)
+      .match([
         node('node'),
         relation('in', '', 'partnership'),
         node('project', 'Project'),
@@ -264,12 +273,13 @@ export class PartnershipService {
         node('partner', 'Partner'),
       ])
       .return(
-        'propList, node, project.id as projectId, partner.id as partnerId'
+        'propList, memberRoles, node, project.id as projectId, partner.id as partnerId'
       )
       .asResult<
         StandardReadResult<DbPropsOfDto<Partnership>> & {
           projectId: string;
           partnerId: string;
+          memberRoles: Role[];
         }
       >();
 
@@ -293,8 +303,10 @@ export class PartnershipService {
         sessionOrUserId: session,
         propList: result.propList,
         propKeys: this.securedProperties,
+        membershipRoles: result.memberRoles.flat(1),
       }
     );
+
     const canReadMouStart =
       readProject.mouStart.canRead && securedProps.mouStartOverride.canRead;
     const canReadMouEnd =

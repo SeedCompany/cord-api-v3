@@ -1,6 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, Node, Query, relation } from 'cypher-query-builder';
-import { pickBy } from 'lodash';
+import { flatten, pickBy } from 'lodash';
 import { DateTime } from 'luxon';
 import { Except, MergeExclusive } from 'type-fest';
 import {
@@ -25,6 +25,7 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
+  matchMemberRoles,
   matchPropList,
   permissionsOfNode,
   requestingUser,
@@ -36,6 +37,7 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { Role } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { DbBaseNode } from '../authorization/model/db-base-node.model';
 import { CeremonyService } from '../ceremony';
@@ -613,9 +615,17 @@ export class EngagementService {
       .call(matchRequestingUser, session)
       .match([node('node', 'Engagement', { id })])
       .call(matchPropList)
+      .optionalMatch([
+        node('project'),
+        relation('out', '', 'engagement', { active: true }),
+        node('node'),
+      ])
+      .call(matchMemberRoles, session.userId)
       .with([
         'propList',
         'node',
+        'project',
+        'memberRoles',
         `case
           when 'InternshipEngagement' IN labels(node)
           then 'InternshipEngagement'
@@ -623,11 +633,6 @@ export class EngagementService {
           then 'LanguageEngagement'
           end as __typename
           `,
-      ])
-      .optionalMatch([
-        node('project'),
-        relation('out', '', 'engagement', { active: true }),
-        node('node'),
       ])
       .optionalMatch([
         node('node'),
@@ -667,6 +672,7 @@ export class EngagementService {
         'countryOfOrigin.id as countryOfOriginId',
         'mentor.id as mentorId',
         'pnpData',
+        'memberRoles',
       ])
       .asResult<
         StandardReadResult<
@@ -683,6 +689,7 @@ export class EngagementService {
           countryOfOriginId: string;
           mentorId: string;
           pnpData?: Node<PnpData>;
+          memberRoles: Role[];
         }
       >();
 
@@ -708,6 +715,7 @@ export class EngagementService {
         sessionOrUserId: session,
         propList: result.propList,
         propKeys: this.securedProperties,
+        membershipRoles: flatten(result.memberRoles),
       }
     );
 

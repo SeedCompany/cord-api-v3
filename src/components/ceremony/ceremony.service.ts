@@ -21,6 +21,7 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
+  matchMemberRoles,
   matchPropList,
   permissionsOfNode,
   requestingUser,
@@ -32,6 +33,7 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { Role } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import {
   Ceremony,
@@ -135,14 +137,28 @@ export class CeremonyService {
       .call(matchRequestingUser, session)
       .match([node('node', 'Ceremony', { id })])
       .call(matchPropList)
-      .return('node, propList')
-      .asResult<StandardReadResult<DbPropsOfDto<Ceremony>>>();
+      .optionalMatch([
+        node('project', 'Project'),
+        relation('out', '', 'engagement', { active: true }),
+        node('', 'Engagement'),
+        relation('out', '', { active: true }),
+        node('node', 'Ceremony', { id }),
+      ])
+      .with(['node', 'propList', 'project'])
+      .call(matchMemberRoles, session.userId)
+      .return(['node', 'propList', 'memberRoles'])
+      .asResult<
+        StandardReadResult<DbPropsOfDto<Ceremony>> & {
+          memberRoles: Role[];
+        }
+      >();
 
     const result = await readCeremony.first();
 
     if (!result) {
       throw new NotFoundException('Could not find ceremony', 'ceremony.id');
     }
+    //console.log(result)
     const parsedProps = parsePropList(result.propList);
 
     const securedProps = await this.authorizationService.getPermissionsOfBaseNode(
@@ -151,6 +167,7 @@ export class CeremonyService {
         sessionOrUserId: session,
         propList: result.propList,
         propKeys: this.securedProperties,
+        membershipRoles: result.memberRoles.flat(1),
       }
     );
 
