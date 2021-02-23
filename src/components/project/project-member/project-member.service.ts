@@ -26,6 +26,7 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
+  matchMemberRoles,
   matchPropList,
   permissionsOfNode,
   requestingUser,
@@ -188,11 +189,19 @@ export class ProjectMemberService {
       .call(matchRequestingUser, session)
       .match([node('node', 'ProjectMember', { id })])
       .call(matchPropList)
+      .match([
+        node('project', 'Project'),
+        relation('out', '', 'member', { active: true }),
+        node('', 'ProjectMember', { id }),
+      ])
+      .with(['project', 'node', 'propList'])
+      .call(matchMemberRoles, session.userId)
       .match([node('node'), relation('out', '', 'user'), node('user', 'User')])
-      .return('node, propList, user.id as userId')
+      .return('node, propList, user.id as userId, memberRoles')
       .asResult<
         StandardReadResult<DbPropsOfDto<ProjectMember>> & {
           userId: string;
+          memberRoles: Role[];
         }
       >();
 
@@ -211,6 +220,7 @@ export class ProjectMemberService {
         sessionOrUserId: session,
         propList: result.propList,
         propKeys: this.securedProperties,
+        membershipRoles: result.memberRoles.flat(1),
       }
     );
 
