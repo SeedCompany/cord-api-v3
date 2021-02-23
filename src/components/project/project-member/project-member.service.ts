@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import { Node, node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { difference } from 'lodash';
 import { DateTime } from 'luxon';
@@ -75,25 +75,45 @@ export class ProjectMemberService {
     ];
   }
 
-  protected async getPMByProjectAndUser(
+  protected async verifyRelationshipEligibility(
     projectId: string,
     userId: string
-  ): Promise<boolean> {
+  ): Promise<void> {
     const result = await this.db
       .query()
-      .match([node('user', 'User', { id: userId })])
-      .match([node('project', 'Project', { id: projectId })])
-      .match([
+      .optionalMatch(node('user', 'User', { id: userId }))
+      .optionalMatch(node('project', 'Project', { id: projectId }))
+      .optionalMatch([
         node('project'),
         relation('out', '', 'member', { active: true }),
-        node('projectMember', 'ProjectMember'),
+        node('member', 'ProjectMember'),
         relation('out', '', 'user', { active: true }),
         node('user'),
       ])
-      .return('projectMember.id as id')
+      .return(['user', 'project', 'member'])
+      .asResult<{ user?: Node; project?: Node; member?: Node }>()
       .first();
 
-    return result ? true : false;
+    if (!result?.project) {
+      throw new NotFoundException(
+        'Could not find project',
+        'projectMember.projectId'
+      );
+    }
+
+    if (!result?.user) {
+      throw new NotFoundException(
+        'Could not find person',
+        'projectMember.userId'
+      );
+    }
+
+    if (result.member) {
+      throw new DuplicateException(
+        'projectMember.userId',
+        'Person is already a member of this project'
+      );
+    }
   }
 
   async create(
@@ -103,12 +123,7 @@ export class ProjectMemberService {
     const id = await generateId();
     const createdAt = DateTime.local();
 
-    if (await this.getPMByProjectAndUser(projectId, userId)) {
-      throw new DuplicateException(
-        'projectMember.userId',
-        'User is already a member of this project'
-      );
-    }
+    await this.verifyRelationshipEligibility(projectId, userId);
 
     await this.assertValidRoles(input.roles, () =>
       this.userService.readOne(userId, session)
