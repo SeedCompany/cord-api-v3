@@ -446,22 +446,16 @@ export class ProjectService {
       .query()
       .match([node('node', 'Project', { id })])
       .call(matchPropList)
+      .with(['node', 'propList'])
       .optionalMatch([
-        node('projectMember', 'ProjectMember'),
-        relation('in', '', 'member'),
-        node('node', 'Project', { id }),
-      ])
-      .with(['projectMember', 'propList', 'node'])
-      .optionalMatch([
-        node('projectMember'),
-        relation('out', '', 'user'),
-        node('user', 'User', { id: userId }),
-      ])
-      .with(['projectMember', 'propList', 'node'])
-      .optionalMatch([
-        node('projectMember'),
-        relation('out', 'r', 'roles', { active: true }),
-        node('props', 'Property'),
+        [node('user', 'User', { id: userId })],
+        [node('projectMember'), relation('out', '', 'user'), node('user')],
+        [node('projectMember'), relation('in', '', 'member'), node('node')],
+        [
+          node('projectMember'),
+          relation('out', '', 'roles', { active: true }),
+          node('props', 'Property'),
+        ],
       ])
       .with([collect('props.value', 'memberRoles'), 'propList', 'node'])
       .optionalMatch([

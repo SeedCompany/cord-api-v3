@@ -40,20 +40,13 @@ export const matchMemberRoles = (query: Query, userId: string) =>
   query
     .with(['project', 'node', 'propList'])
     .optionalMatch([
-      node('projectMember', 'ProjectMember'),
-      relation('in', '', 'member'),
-      node('project'),
-    ])
-    .with(['projectMember', 'propList', 'node'])
-    .optionalMatch([
-      node('projectMember'),
-      relation('out', '', 'user'),
-      node('user', 'User', { id: userId }),
-    ])
-    .with(['projectMember', 'propList', 'node'])
-    .optionalMatch([
-      node('projectMember'),
-      relation('out', 'r', 'roles', { active: true }),
-      node('props', 'Property'),
+      [node('user', 'User', { id: userId })],
+      [node('projectMember'), relation('out', '', 'user'), node('user')],
+      [node('projectMember'), relation('in', '', 'member'), node('project')],
+      [
+        node('projectMember'),
+        relation('out', '', 'roles', { active: true }),
+        node('props', 'Property'),
+      ],
     ])
     .with([collect('props.value', 'memberRoles'), 'propList', 'node']);

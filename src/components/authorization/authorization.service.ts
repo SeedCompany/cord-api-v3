@@ -96,8 +96,8 @@ export class AuthorizationService {
     membershipRoles?: Role[];
   }): Promise<PermissionsOf<DbNode>> {
     // console.log("-----------------------------------------------------------------")
-    // console.log(`userId: ${userId}`)
-    // console.log(`baseNodeID: ${baseNodeId}`)
+    // console.log("baseNode:")
+    // console.log(baseNode)
     const userRoleList = globalRoles.map((g) => g.grants);
     const userRoleListFlat = userRoleList.flat(1);
     const objGrantList = userRoleListFlat.filter(
