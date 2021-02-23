@@ -49,4 +49,9 @@ export const matchMemberRoles = (query: Query, userId: string) =>
         node('props', 'Property'),
       ],
     ])
-    .with([collect('props.value', 'memberRoles'), 'propList', 'node']);
+    .with([
+      collect('props.value', 'memberRoles'),
+      'propList',
+      'node',
+      'project',
+    ]);
