@@ -85,9 +85,9 @@ export class ProjectMemberService {
       .match([node('project', 'Project', { id: projectId })])
       .match([
         node('project'),
-        relation('out', '', 'member'),
+        relation('out', '', 'member', { active: true }),
         node('projectMember', 'ProjectMember'),
-        relation('out', '', 'user'),
+        relation('out', '', 'user', { active: true }),
         node('user'),
       ])
       .return('projectMember.id as id')

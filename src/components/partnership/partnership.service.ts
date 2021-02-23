@@ -585,9 +585,9 @@ export class PartnershipService {
       .match([node('project', 'Project', { id: projectId })])
       .match([
         node('project'),
-        relation('out', '', 'partnership'),
+        relation('out', '', 'partnership', { active: true }),
         node('partnership'),
-        relation('out', '', 'partner'),
+        relation('out', '', 'partner', { active: true }),
         node('partner'),
       ])
       .return('partnership.id as id')

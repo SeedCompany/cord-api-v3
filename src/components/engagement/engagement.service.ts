@@ -1329,9 +1329,9 @@ export class EngagementService {
       .query()
       .match([
         node('project', 'Project', { id: projectId }),
-        relation('out', '', 'engagement'),
+        relation('out', '', 'engagement', { active: true }),
         node('engagement'),
-        relation('out', '', property),
+        relation('out', '', property, { active: true }),
         node('other', type === 'language' ? 'Language' : 'User', {
           id: otherId,
         }),
