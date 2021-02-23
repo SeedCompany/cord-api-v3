@@ -5,7 +5,6 @@ import { CalendarDate, NotFoundException } from '../src/common';
 import { Powers } from '../src/components/authorization/dto/powers';
 import { PartnerType } from '../src/components/partner';
 import {
-  CreatePartnership,
   FinancialReportingType,
   Partnership,
   PartnershipAgreementStatus,
@@ -302,36 +301,20 @@ describe('Partnership e2e', () => {
   });
 
   it('create partnership does not create if organizationId is invalid', async () => {
-    // create bad partnership with fake project id and org id
-    const badPartnership: CreatePartnership = {
-      projectId: 'fakeProj',
-      agreementStatus: PartnershipAgreementStatus.AwaitingSignature,
-      mouStatus: PartnershipAgreementStatus.AwaitingSignature,
-      types: [PartnerType.Managing],
-      partnerId: 'fakePartner',
-      mouStartOverride: CalendarDate.local(),
-      mouEndOverride: CalendarDate.local(),
-    };
-
     await expect(
-      app.graphql.mutate(
-        gql`
-          mutation createPartnership($input: CreatePartnershipInput!) {
-            createPartnership(input: $input) {
-              partnership {
-                ...partnership
-              }
-            }
-          }
-          ${fragments.partnership}
-        `,
-        {
-          input: {
-            partnership: badPartnership,
-          },
-        }
-      )
+      createPartnership(app, {
+        projectId: project.id,
+        partnerId: 'fakePartner',
+      })
     ).rejects.toThrowError(new NotFoundException('Could not find partner'));
+  });
+
+  it('create partnership does not create if projectId is invalid', async () => {
+    await expect(
+      createPartnership(app, {
+        projectId: 'fakeProject',
+      })
+    ).rejects.toThrowError(new NotFoundException('Could not find project'));
   });
 
   it('should create partnership without mou dates but returns project mou dates if exists', async () => {

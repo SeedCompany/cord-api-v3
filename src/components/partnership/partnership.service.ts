@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import { Node, node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { DateTime } from 'luxon';
 import {
@@ -24,6 +24,7 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
+  matchMemberRoles,
   matchPropList,
   permissionsOfNode,
   requestingUser,
@@ -35,6 +36,7 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { Role } from '../authorization/dto';
 import { FileService } from '../file';
 import { Partner, PartnerService, PartnerType } from '../partner';
 import { ProjectService } from '../project';
@@ -89,35 +91,14 @@ export class PartnershipService {
   ): Promise<Partnership> {
     const createdAt = DateTime.local();
 
-    try {
-      const partner = await this.partnerService.readOne(partnerId, session);
-      this.verifyFinancialReportingType(
-        input.financialReportingType,
-        input.types ?? [],
-        partner
-      );
-    } catch (e) {
-      if (e instanceof NotFoundException) {
-        throw e.withField('partnership.partnerId');
-      }
-      throw e;
-    }
+    await this.verifyRelationshipEligibility(projectId, partnerId);
 
-    try {
-      await this.projectService.readOne(projectId, session);
-    } catch (e) {
-      if (e instanceof NotFoundException) {
-        throw e.withField('partnership.projectId');
-      }
-      throw e;
-    }
-
-    if (await this.getPartnershipByProjectAndPartner(projectId, partnerId)) {
-      throw new DuplicateException(
-        'partnership.projectId',
-        'Partnership for this project and partner already exists'
-      );
-    }
+    const partner = await this.partnerService.readOne(partnerId, session);
+    this.verifyFinancialReportingType(
+      input.financialReportingType,
+      input.types ?? [],
+      partner
+    );
 
     const partnershipId = await generateId();
     const mouId = await generateId();
@@ -275,6 +256,13 @@ export class PartnershipService {
       .match([node('node', 'Partnership', { id })])
       .call(matchPropList)
       .match([
+        node('project', 'Project'),
+        relation('out', '', 'partnership', { active: true }),
+        node('', 'Partnership', { id: id }),
+      ])
+      .with(['project', 'node', 'propList'])
+      .call(matchMemberRoles, session.userId)
+      .match([
         node('node'),
         relation('in', '', 'partnership'),
         node('project', 'Project'),
@@ -285,12 +273,13 @@ export class PartnershipService {
         node('partner', 'Partner'),
       ])
       .return(
-        'propList, node, project.id as projectId, partner.id as partnerId'
+        'propList, memberRoles, node, project.id as projectId, partner.id as partnerId'
       )
       .asResult<
         StandardReadResult<DbPropsOfDto<Partnership>> & {
           projectId: string;
           partnerId: string;
+          memberRoles: Role[];
         }
       >();
 
@@ -314,8 +303,10 @@ export class PartnershipService {
         sessionOrUserId: session,
         propList: result.propList,
         propKeys: this.securedProperties,
+        membershipRoles: result.memberRoles.flat(1),
       }
     );
+
     const canReadMouStart =
       readProject.mouStart.canRead && securedProps.mouStartOverride.canRead;
     const canReadMouEnd =
@@ -575,24 +566,44 @@ export class PartnershipService {
     }
   }
 
-  protected async getPartnershipByProjectAndPartner(
+  protected async verifyRelationshipEligibility(
     projectId: string,
     partnerId: string
-  ): Promise<boolean> {
+  ): Promise<void> {
     const result = await this.db
       .query()
-      .match([node('partner', 'Partner', { id: partnerId })])
-      .match([node('project', 'Project', { id: projectId })])
-      .match([
+      .optionalMatch(node('partner', 'Partner', { id: partnerId }))
+      .optionalMatch(node('project', 'Project', { id: projectId }))
+      .optionalMatch([
         node('project'),
-        relation('out', '', 'partnership'),
+        relation('out', '', 'partnership', { active: true }),
         node('partnership'),
-        relation('out', '', 'partner'),
+        relation('out', '', 'partner', { active: true }),
         node('partner'),
       ])
-      .return('partnership.id as id')
+      .return(['partner', 'project', 'partnership'])
+      .asResult<{ partner?: Node; project?: Node; partnership?: Node }>()
       .first();
 
-    return result ? true : false;
+    if (!result?.project) {
+      throw new NotFoundException(
+        'Could not find project',
+        'partnership.projectId'
+      );
+    }
+
+    if (!result.partner) {
+      throw new NotFoundException(
+        'Could not find partner',
+        'partnership.partnerId'
+      );
+    }
+
+    if (result.partnership) {
+      throw new DuplicateException(
+        'partnership.projectId',
+        'Partnership for this project and partner already exists'
+      );
+    }
   }
 }

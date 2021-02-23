@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import { Node, node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { difference } from 'lodash';
 import { DateTime } from 'luxon';
@@ -26,6 +26,7 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
+  matchMemberRoles,
   matchPropList,
   permissionsOfNode,
   requestingUser,
@@ -75,25 +76,45 @@ export class ProjectMemberService {
     ];
   }
 
-  protected async getPMByProjectAndUser(
+  protected async verifyRelationshipEligibility(
     projectId: string,
     userId: string
-  ): Promise<boolean> {
+  ): Promise<void> {
     const result = await this.db
       .query()
-      .match([node('user', 'User', { id: userId })])
-      .match([node('project', 'Project', { id: projectId })])
-      .match([
+      .optionalMatch(node('user', 'User', { id: userId }))
+      .optionalMatch(node('project', 'Project', { id: projectId }))
+      .optionalMatch([
         node('project'),
-        relation('out', '', 'member'),
-        node('projectMember', 'ProjectMember'),
-        relation('out', '', 'user'),
+        relation('out', '', 'member', { active: true }),
+        node('member', 'ProjectMember'),
+        relation('out', '', 'user', { active: true }),
         node('user'),
       ])
-      .return('projectMember.id as id')
+      .return(['user', 'project', 'member'])
+      .asResult<{ user?: Node; project?: Node; member?: Node }>()
       .first();
 
-    return result ? true : false;
+    if (!result?.project) {
+      throw new NotFoundException(
+        'Could not find project',
+        'projectMember.projectId'
+      );
+    }
+
+    if (!result?.user) {
+      throw new NotFoundException(
+        'Could not find person',
+        'projectMember.userId'
+      );
+    }
+
+    if (result.member) {
+      throw new DuplicateException(
+        'projectMember.userId',
+        'Person is already a member of this project'
+      );
+    }
   }
 
   async create(
@@ -103,12 +124,7 @@ export class ProjectMemberService {
     const id = await generateId();
     const createdAt = DateTime.local();
 
-    if (await this.getPMByProjectAndUser(projectId, userId)) {
-      throw new DuplicateException(
-        'projectMember.userId',
-        'User is already a member of this project'
-      );
-    }
+    await this.verifyRelationshipEligibility(projectId, userId);
 
     await this.assertValidRoles(input.roles, () =>
       this.userService.readOne(userId, session)
@@ -188,11 +204,19 @@ export class ProjectMemberService {
       .call(matchRequestingUser, session)
       .match([node('node', 'ProjectMember', { id })])
       .call(matchPropList)
+      .match([
+        node('project', 'Project'),
+        relation('out', '', 'member', { active: true }),
+        node('', 'ProjectMember', { id }),
+      ])
+      .with(['project', 'node', 'propList'])
+      .call(matchMemberRoles, session.userId)
       .match([node('node'), relation('out', '', 'user'), node('user', 'User')])
-      .return('node, propList, user.id as userId')
+      .return('node, propList, user.id as userId, memberRoles')
       .asResult<
         StandardReadResult<DbPropsOfDto<ProjectMember>> & {
           userId: string;
+          memberRoles: Role[];
         }
       >();
 
@@ -211,6 +235,7 @@ export class ProjectMemberService {
         sessionOrUserId: session,
         propList: result.propList,
         propKeys: this.securedProperties,
+        membershipRoles: result.memberRoles.flat(1),
       }
     );
 
@@ -226,7 +251,7 @@ export class ProjectMemberService {
         ...securedProps.roles,
         value: securedProps.roles.value ?? [],
       },
-      canDelete: true, // TODO
+      canDelete: await this.db.checkDeletePermission(id, session), // TODO
     };
   }
 

@@ -75,7 +75,7 @@ export class SyncBudgetRecordsToFundingPartners
 
     // Fetch budget & only continue if it is pending
     const projectsCurrentBudget = await this.projects.currentBudget(
-      { id: projectId },
+      projectId,
       event.session
     );
     const budget = readSecured(projectsCurrentBudget, 'budget');

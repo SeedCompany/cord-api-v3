@@ -38,6 +38,9 @@ export class EthnologueLanguage {
 
   @Field()
   readonly population: SecuredInt;
+
+  @Field()
+  readonly canDelete: boolean;
 }
 
 @ObjectType({

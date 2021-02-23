@@ -1,6 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, Node, Query, relation } from 'cypher-query-builder';
-import { pickBy } from 'lodash';
+import { flatten, pickBy } from 'lodash';
 import { DateTime } from 'luxon';
 import { Except, MergeExclusive } from 'type-fest';
 import {
@@ -25,6 +25,7 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
+  matchMemberRoles,
   matchPropList,
   permissionsOfNode,
   requestingUser,
@@ -36,6 +37,7 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { Role } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { DbBaseNode } from '../authorization/model/db-base-node.model';
 import { CeremonyService } from '../ceremony';
@@ -139,17 +141,11 @@ export class EngagementService {
     { languageId, projectId, ...input }: CreateLanguageEngagement,
     session: Session
   ): Promise<LanguageEngagement> {
-    // LanguageEngagements can only be created on TranslationProjects
-    const projectType = await this.getProjectTypeById(projectId);
-
-    if (projectType && projectType !== ProjectType.Translation) {
-      throw new InputException(
-        'That Project type is not Translation',
-        'engagement.projectId'
-      );
-    }
-
-    await this.verifyUniqueness(projectId, languageId, 'language');
+    await this.verifyRelationshipEligibility(
+      projectId,
+      languageId,
+      ProjectType.Translation
+    );
 
     if (input.firstScripture) {
       await this.verifyFirstScripture({ languageId });
@@ -348,17 +344,11 @@ export class EngagementService {
     }: CreateInternshipEngagement,
     session: Session
   ): Promise<InternshipEngagement> {
-    // InternshipEngagements can only be created on InternshipProjects
-    const projectType = await this.getProjectTypeById(projectId);
-
-    if (projectType && projectType !== ProjectType.Internship) {
-      throw new InputException(
-        'That Project type is not Internship',
-        'engagement.projectId'
-      );
-    }
-
-    await this.verifyUniqueness(projectId, internId, 'internship');
+    await this.verifyRelationshipEligibility(
+      projectId,
+      internId,
+      ProjectType.Internship
+    );
 
     await this.verifyProjectStatus(projectId, session);
 
@@ -625,9 +615,17 @@ export class EngagementService {
       .call(matchRequestingUser, session)
       .match([node('node', 'Engagement', { id })])
       .call(matchPropList)
+      .optionalMatch([
+        node('project'),
+        relation('out', '', 'engagement', { active: true }),
+        node('node'),
+      ])
+      .call(matchMemberRoles, session.userId)
       .with([
         'propList',
         'node',
+        'project',
+        'memberRoles',
         `case
           when 'InternshipEngagement' IN labels(node)
           then 'InternshipEngagement'
@@ -635,11 +633,6 @@ export class EngagementService {
           then 'LanguageEngagement'
           end as __typename
           `,
-      ])
-      .optionalMatch([
-        node('project'),
-        relation('out', '', 'engagement', { active: true }),
-        node('node'),
       ])
       .optionalMatch([
         node('node'),
@@ -679,6 +672,7 @@ export class EngagementService {
         'countryOfOrigin.id as countryOfOriginId',
         'mentor.id as mentorId',
         'pnpData',
+        'memberRoles',
       ])
       .asResult<
         StandardReadResult<
@@ -695,6 +689,7 @@ export class EngagementService {
           countryOfOriginId: string;
           mentorId: string;
           pnpData?: Node<PnpData>;
+          memberRoles: Role[];
         }
       >();
 
@@ -720,6 +715,7 @@ export class EngagementService {
         sessionOrUserId: session,
         propList: result.propList,
         propKeys: this.securedProperties,
+        membershipRoles: flatten(result.memberRoles),
       }
     );
 
@@ -1308,38 +1304,61 @@ export class EngagementService {
     await query.run();
   }
 
-  protected async getProjectTypeById(
-    projectId: string
-  ): Promise<ProjectType | undefined> {
-    const qr = `
-    MATCH (p:Project {id: $projectId}) RETURN p.type as type
-    `;
-    const results = await this.db.query().raw(qr, { projectId }).first();
-
-    return results?.type as ProjectType | undefined;
-  }
-
-  protected async verifyUniqueness(
+  protected async verifyRelationshipEligibility(
     projectId: string,
     otherId: string,
-    type: 'language' | 'internship'
+    type: ProjectType
   ): Promise<void> {
-    const property = type === 'language' ? type : 'intern';
+    const isTranslation = type === ProjectType.Translation;
+    const property = isTranslation ? 'language' : 'intern';
     const result = await this.db
       .query()
-      .match([
-        node('project', 'Project', { id: projectId }),
-        relation('out', '', 'engagement'),
-        node('engagement'),
-        relation('out', '', property),
-        node('other', type === 'language' ? 'Language' : 'User', {
+      .optionalMatch(node('project', 'Project', { id: projectId }))
+      .optionalMatch(
+        node('other', isTranslation ? 'Language' : 'User', {
           id: otherId,
-        }),
+        })
+      )
+      .optionalMatch([
+        node('project'),
+        relation('out', '', 'engagement', { active: true }),
+        node('engagement'),
+        relation('out', '', property, { active: true }),
+        node('other'),
       ])
-      .return('engagement.id as id')
+      .return(['project', 'other', 'engagement'])
+      .asResult<{
+        project?: Node<{ type: ProjectType }>;
+        other?: Node;
+        engagement?: Node;
+      }>()
       .first();
-    if (result) {
-      const label = type === 'language' ? type : 'person';
+
+    if (!result?.project) {
+      throw new NotFoundException(
+        'Could not find project',
+        'engagement.projectId'
+      );
+    }
+
+    if (result.project.properties.type !== type) {
+      throw new InputException(
+        `Only ${
+          isTranslation ? 'Language' : 'Internship'
+        } Engagements can be created on ${type} Projects`,
+        `engagement.${property}Id`
+      );
+    }
+
+    const label = isTranslation ? 'language' : 'person';
+    if (!result?.other) {
+      throw new NotFoundException(
+        `Could not find ${label}`,
+        `engagement.${property}Id`
+      );
+    }
+
+    if (result.engagement) {
       throw new DuplicateException(
         `engagement.${property}Id`,
         `Engagement for this project and ${label} already exists`

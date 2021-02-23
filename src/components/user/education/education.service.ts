@@ -145,7 +145,7 @@ export class EducationService {
     return {
       ...parseBaseNodeProperties(result.node),
       ...secured,
-      canDelete: true, // TODO
+      canDelete: await this.db.checkDeletePermission(id, session), // TODO
     };
   }
 

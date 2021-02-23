@@ -23,6 +23,7 @@ import {
 import {
   calculateTotalAndPaginateList,
   defaultSorter,
+  matchMemberRoles,
   matchPropList,
   permissionsOfNode,
   requestingUser,
@@ -34,6 +35,7 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
+import { Role } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { FileService } from '../file';
 import {
@@ -304,8 +306,19 @@ export class BudgetService {
       .call(matchRequestingUser, session)
       .match([node('node', 'Budget', { id })])
       .call(matchPropList)
-      .return('propList, node')
-      .asResult<StandardReadResult<DbPropsOfDto<Budget>>>();
+      .optionalMatch([
+        node('project', 'Project'),
+        relation('out', '', 'budget', { active: true }),
+        node('node', 'Budget', { id }),
+      ])
+      .with(['project', 'node', 'propList'])
+      .call(matchMemberRoles, session.userId)
+      .return(['propList', 'node', 'memberRoles'])
+      .asResult<
+        StandardReadResult<DbPropsOfDto<Budget>> & {
+          memberRoles: Role[];
+        }
+      >();
 
     const result = await query.first();
     if (!result) {
@@ -330,6 +343,7 @@ export class BudgetService {
         sessionOrUserId: session,
         propList: result.propList,
         propKeys: this.securedBudgetProperties,
+        membershipRoles: result.memberRoles.flat(1),
       }
     );
 
@@ -354,15 +368,29 @@ export class BudgetService {
       .match([node('node', 'BudgetRecord', { id })])
       .call(matchPropList)
       .match([
+        node('project', 'Project'),
+        relation('out', '', 'budget', { active: true }),
+        node('', 'Budget'),
+        relation('out', '', 'record', { active: true }),
+        node('node', 'BudgetRecord', { id }),
+      ])
+      .with(['project', 'node', 'propList'])
+      .call(matchMemberRoles, session.userId)
+      .match([
         node('node'),
         relation('out', '', 'organization', { active: true }),
         node('organization', 'Organization'),
       ])
+      .with(['node', 'propList', 'organization', 'memberRoles'])
       .return([
         'propList + [{value: organization.id, property: "organization"}] as propList',
         'node',
       ])
-      .asResult<StandardReadResult<DbPropsOfDto<BudgetRecord>>>();
+      .asResult<
+        StandardReadResult<DbPropsOfDto<BudgetRecord>> & {
+          memberRoles: Role[];
+        }
+      >();
 
     const result = await query.first();
 
@@ -379,8 +407,10 @@ export class BudgetService {
         sessionOrUserId: session,
         propList: result.propList,
         propKeys: this.securedBudgetRecordProperties,
+        membershipRoles: result.memberRoles,
       }
     );
+
     return {
       ...parseBaseNodeProperties(result.node),
       ...securedProps,
