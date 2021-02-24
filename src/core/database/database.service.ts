@@ -33,7 +33,6 @@ import {
   UniqueProperties,
 } from './query.helpers';
 import { hasMore } from './results';
-import { Transactional } from './transactional.decorator';
 
 export const property = (
   prop: string,
@@ -82,9 +81,15 @@ export const matchSession = (
 ];
 
 export interface ServerInfo {
-  name: string;
   version: string;
   edition: string;
+  databases: DbInfo[];
+}
+
+interface DbInfo {
+  name: string;
+  status: string;
+  error?: string;
 }
 
 @Injectable()
@@ -195,22 +200,43 @@ export class DatabaseService {
     return q;
   }
 
-  @Transactional()
-  async getServerInfo() {
-    const info = await this.db
-      .query()
-      .raw(
-        `call dbms.components()
-         yield name, versions, edition
-         unwind versions as version
-         return name, version, edition`
-      )
-      .asResult<ServerInfo>()
-      .first();
-    if (!info) {
-      throw new ServerException('Unable to determine server info');
+  async getServerInfo(): Promise<ServerInfo> {
+    // @ts-expect-error Yes this is private, but we have a special use case.
+    // We need to run this query with a session that's not configured to use the
+    // database that may not exist.
+    const session = this.db.driver.session();
+    try {
+      const generalInfo = await session.readTransaction((tx) =>
+        tx.run(`
+          call dbms.components()
+          yield versions, edition
+          unwind versions as version
+          return version, edition
+        `)
+      );
+      const info = generalInfo.records[0];
+      if (!info) {
+        throw new ServerException('Unable to determine server info');
+      }
+      // "Administration" command doesn't work with read transactions
+      const dbs = await session.writeTransaction((tx) =>
+        tx.run(`
+          show databases
+          yield name, currentStatus, error
+        `)
+      );
+      return {
+        version: info.get('version'),
+        edition: info.get('edition'),
+        databases: dbs.records.map((r) => ({
+          name: r.get('name'),
+          status: r.get('currentStatus'),
+          error: r.get('error') || undefined,
+        })),
+      };
+    } finally {
+      await session.close();
     }
-    return info;
   }
 
   /**
