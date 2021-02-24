@@ -86,6 +86,14 @@ export class AuthorizationService {
     };
   }
 
+  async checkIfCanEdit<DbNode extends Partial<DbBaseNode>>(baseNode: DbNode, prop: keyof DbNode & string): Promise<boolean> {
+    // if (baseNode[prop].canEdit) 
+    //   return true
+    // else {
+      return false
+    // };
+  }
+
   async getPerms<DbNode extends DbBaseNode>({
     baseNode,
     globalRoles,
