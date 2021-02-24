@@ -111,12 +111,15 @@ export class ConfigService implements EmailOptionsFactory {
     };
     let url = this.env.string('NEO4J_URL').optional('bolt://localhost');
     const parsed = new URL(url);
-    const username =
-      parsed.username || this.env.string('NEO4J_USERNAME').optional('neo4j');
-    const password =
-      parsed.password || this.env.string('NEO4J_PASSWORD').optional('admin');
-    const database =
-      parsed.pathname.slice(1) || this.env.string('NEO4J_DBNAME').optional();
+    const username = this.env
+      .string('NEO4J_USERNAME')
+      .optional(parsed.username || 'neo4j');
+    const password = this.env
+      .string('NEO4J_PASSWORD')
+      .optional(parsed.password || 'admin');
+    const database = this.env
+      .string('NEO4J_DBNAME')
+      .optional(parsed.pathname.slice(1) || undefined);
     if (parsed.username || parsed.password || parsed.pathname) {
       parsed.username = '';
       parsed.password = '';
