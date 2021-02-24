@@ -19,7 +19,6 @@ import {
   Resource,
   ServerException,
   Session,
-  UnauthorizedException,
   unwrapSecured,
   UnwrapSecured,
 } from '../../common';
@@ -216,97 +215,6 @@ export class DatabaseService {
     }
 
     return updated;
-  }
-
-  async sgUpdateProperty<
-    TObject extends Resource,
-    Key extends keyof TObject & string
-  >({
-    session,
-    object,
-    key,
-    value,
-    nodevar,
-  }: {
-    session: Session;
-    object: TObject;
-    key: Key;
-    value?: UnwrapSecured<TObject[Key]>;
-    aclEditProp?: string;
-    nodevar: string;
-  }): Promise<TObject> {
-    const createdAt = DateTime.local();
-    const nodePropsToUpdate = {
-      createdAt,
-      value,
-      sortValue: determineSortValue(value),
-    };
-    const update = this.db
-      .query()
-      .match([matchSession(session)])
-      .match([
-        node(nodevar, upperFirst(nodevar), {
-          id: object.id,
-        }),
-      ])
-      .match([
-        node('requestingUser'),
-        relation('in', 'memberOfSecurityGroup', 'member'),
-        node('securityGroup', 'SecurityGroup'),
-        relation('out', 'sgPerms', 'permission'),
-        node('perms', 'Permission', {
-          property: key as string,
-          // admin: true,
-          edit: true,
-        }),
-        relation('out', 'permsOfBaseNode', 'baseNode'),
-        node(nodevar),
-        relation('out', 'oldToProp', key as string, { active: true }),
-        node('oldPropVar', 'Property'),
-      ])
-      .setValues({
-        'oldToProp.active': false,
-      })
-      .with('*')
-      .limit(1)
-      .create([
-        node(nodevar),
-        relation('out', 'toProp', key as string, {
-          active: true,
-          createdAt,
-        }),
-        node('newPropNode', 'Property', nodePropsToUpdate),
-      ])
-      .return('newPropNode');
-    let result;
-
-    try {
-      result = await update.first();
-    } catch (e) {
-      this.logger.error('Neo4jError ', e);
-      throw new ServerException('Failed to update property', e);
-    }
-
-    if (!result) {
-      throw new UnauthorizedException(
-        `You do not have permission to update property: ${key}`,
-        key
-      );
-    }
-
-    return {
-      ...object,
-      ...(isSecured(object[key])
-        ? // replace value in secured object keeping can* properties
-          {
-            [key]: {
-              ...object[key],
-              value,
-            },
-          }
-        : // replace value directly
-          { [key]: value }),
-    };
   }
 
   async updateProperty<
