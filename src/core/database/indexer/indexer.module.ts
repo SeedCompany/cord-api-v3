@@ -33,10 +33,11 @@ export class IndexerModule implements OnModuleInit {
     );
     this.logger.debug('Discovered indexers', { count: discovered.length });
 
-    const finishing = this.db.runOnceUntilCompleteAfterConnecting(async () => {
-      const serverInfo = await this.db.getServerInfo();
-      await this.doIndexing(discovered, serverInfo);
-    });
+    const finishing = this.db.runOnceUntilCompleteAfterConnecting(
+      async (serverInfo) => {
+        await this.doIndexing(discovered, serverInfo);
+      }
+    );
     // Wait for indexing to finish when running tests, else just let it run in
     // background and allow webserver to start.
     if (this.config.jest) {
