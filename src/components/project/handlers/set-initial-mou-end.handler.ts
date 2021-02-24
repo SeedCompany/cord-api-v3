@@ -6,7 +6,7 @@ import {
   ILogger,
   Logger,
 } from '../../../core';
-import { ProjectStatus } from '../dto';
+import { IProject, ProjectStatus } from '../dto';
 import { ProjectCreatedEvent, ProjectUpdatedEvent } from '../events';
 
 type SubscribedEvent = ProjectCreatedEvent | ProjectUpdatedEvent;
@@ -50,12 +50,13 @@ export class SetInitialMouEnd implements IEventHandler<SubscribedEvent> {
     }
 
     try {
-      const updatedProject = await this.db.sgUpdateProperty({
+      const updatedProject = await this.db.updateProperties({
+        type: IProject,
         object: project,
-        nodevar: 'project',
-        key: 'initialMouEnd',
-        value: project.mouEnd.value || null,
-        session: event.session,
+        props: ['initialMouEnd'],
+        changes: {
+          initialMouEnd: project.mouEnd.value || null,
+        },
       });
 
       if (event instanceof ProjectUpdatedEvent) {
