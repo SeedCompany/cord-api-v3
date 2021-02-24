@@ -6,6 +6,7 @@ import {
 } from '@seedcompany/nestjs-email';
 import { LazyGetter as Lazy } from 'lazy-get-decorator';
 import { Duration } from 'luxon';
+import { nanoid } from 'nanoid';
 import { Config as Neo4JDriverConfig } from 'neo4j-driver';
 import { join } from 'path';
 import { ServerException } from '../../common';
@@ -96,7 +97,8 @@ export class ConfigService implements EmailOptionsFactory {
       url,
       username,
       password,
-      database: this.jest ? 'test' : database,
+      database: this.jest ? `test.${nanoid().replace(/[-_]/g, '')}` : database,
+      ephemeral: this.jest,
       driverConfig,
     };
   }
