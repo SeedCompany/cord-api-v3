@@ -19,7 +19,6 @@ import {
   Resource,
   ServerException,
   Session,
-  UnauthorizedException,
   unwrapSecured,
   UnwrapSecured,
 } from '../../common';
@@ -148,8 +147,10 @@ export class DatabaseService {
     return info;
   }
 
+  /**
+   * @deprecated Use updateProperties() instead
+   */
   async sgUpdateProperties<TObject extends Resource>({
-    session,
     object,
     props,
     changes,
@@ -161,6 +162,29 @@ export class DatabaseService {
     changes: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
     nodevar: string;
   }) {
+    return await this.updateProperties({
+      type: upperFirst(nodevar),
+      object,
+      props,
+      changes,
+    });
+  }
+
+  async updateProperties<TObject extends Resource>({
+    type,
+    object,
+    props,
+    changes,
+  }: {
+    // This becomes the label of the base node
+    type: string | AbstractClassType<any>;
+    // The current object use to check if changes are actually different
+    object: TObject;
+    // The keys of the object to consider for updates
+    props: ReadonlyArray<keyof TObject & string>;
+    // The changes
+    changes: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
+  }) {
     let updated = object;
     for (const prop of props) {
       if (
@@ -169,106 +193,28 @@ export class DatabaseService {
       ) {
         continue;
       }
-      updated = await this.sgUpdateProperty({
-        object: updated,
-        session,
+
+      await this.updateProperty({
+        type,
+        object,
         key: prop,
         value: changes[prop],
-        nodevar,
       });
+
+      updated = {
+        ...updated,
+        [prop]: isSecured(object[prop])
+          ? // replace value in secured object keeping can* properties
+            {
+              ...object[prop],
+              value: changes[prop],
+            }
+          : // replace value directly
+            changes[prop],
+      };
     }
+
     return updated;
-  }
-
-  async sgUpdateProperty<
-    TObject extends Resource,
-    Key extends keyof TObject & string
-  >({
-    session,
-    object,
-    key,
-    value,
-    nodevar,
-  }: {
-    session: Session;
-    object: TObject;
-    key: Key;
-    value?: UnwrapSecured<TObject[Key]>;
-    aclEditProp?: string;
-    nodevar: string;
-  }): Promise<TObject> {
-    const createdAt = DateTime.local();
-    const nodePropsToUpdate = {
-      createdAt,
-      value,
-      sortValue: determineSortValue(value),
-    };
-    const update = this.db
-      .query()
-      .match([matchSession(session)])
-      .match([
-        node(nodevar, upperFirst(nodevar), {
-          id: object.id,
-        }),
-      ])
-      .match([
-        node('requestingUser'),
-        relation('in', 'memberOfSecurityGroup', 'member'),
-        node('securityGroup', 'SecurityGroup'),
-        relation('out', 'sgPerms', 'permission'),
-        node('perms', 'Permission', {
-          property: key as string,
-          // admin: true,
-          edit: true,
-        }),
-        relation('out', 'permsOfBaseNode', 'baseNode'),
-        node(nodevar),
-        relation('out', 'oldToProp', key as string, { active: true }),
-        node('oldPropVar', 'Property'),
-      ])
-      .setValues({
-        'oldToProp.active': false,
-      })
-      .with('*')
-      .limit(1)
-      .create([
-        node(nodevar),
-        relation('out', 'toProp', key as string, {
-          active: true,
-          createdAt,
-        }),
-        node('newPropNode', 'Property', nodePropsToUpdate),
-      ])
-      .return('newPropNode');
-    let result;
-
-    try {
-      result = await update.first();
-    } catch (e) {
-      this.logger.error('Neo4jError ', e);
-      throw new ServerException('Failed to update property', e);
-    }
-
-    if (!result) {
-      throw new UnauthorizedException(
-        `You do not have permission to update property: ${key}`,
-        key
-      );
-    }
-
-    return {
-      ...object,
-      ...(isSecured(object[key])
-        ? // replace value in secured object keeping can* properties
-          {
-            [key]: {
-              ...object[key],
-              value,
-            },
-          }
-        : // replace value directly
-          { [key]: value }),
-    };
   }
 
   async updateProperty<
