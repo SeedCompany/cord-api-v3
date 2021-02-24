@@ -45,18 +45,18 @@ export const Mentor = new DbRole({
     new DbBaseNodeGrant<DbBudget>({
       __className: 'DbBudget',
       properties: [
-        { propertyName: 'universalTemplateFile',      permission: { }, },
-        { propertyName: 'records',                    permission: { }, },
-        { propertyName: 'status',                     permission: { }, },
+        { propertyName: 'universalTemplateFile',      permission: { read, }, },
+        { propertyName: 'records',                    permission: { read, }, },
+        { propertyName: 'status',                     permission: { read, }, },
         ],
     canDelete: false,
   }),
     new DbBaseNodeGrant<DbBudgetRecord>({
       __className: 'DbBudgetRecord',
       properties: [
-        { propertyName: 'amount',                     permission: { }, },
-        { propertyName: 'fiscalYear',                 permission: { }, },
-        { propertyName: 'organization',               permission: { }, },
+        { propertyName: 'amount',                     permission: { read, }, },
+        { propertyName: 'fiscalYear',                 permission: { read, }, },
+        { propertyName: 'organization',               permission: { read, }, },
         ],
     canDelete: false,
   }),
