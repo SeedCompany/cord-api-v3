@@ -94,6 +94,8 @@ interface DbInfo {
 
 @Injectable()
 export class DatabaseService {
+  private attemptedDbCreation = false;
+
   constructor(
     private readonly db: Connection,
     private readonly config: ConfigService,
@@ -123,7 +125,8 @@ export class DatabaseService {
   async waitForConnection(options?: RetryOptions, then?: () => Promise<void>) {
     await retry(async () => {
       try {
-        await this.getServerInfo();
+        const info = await this.getServerInfo();
+        await this.createDbIfNeeded(info);
         await then?.();
       } catch (e) {
         throw e instanceof ServiceUnavailableError ? e : new AbortError(e);
@@ -234,6 +237,34 @@ export class DatabaseService {
           error: r.get('error') || undefined,
         })),
       };
+    } finally {
+      await session.close();
+    }
+  }
+
+  private async createDbIfNeeded(info: ServerInfo) {
+    if (this.attemptedDbCreation) {
+      return;
+    }
+    this.attemptedDbCreation = true;
+
+    const dbName = this.config.neo4j.database;
+    if (info.databases.some((db) => db.name === dbName)) {
+      return; // already exists
+    }
+    // @ts-expect-error Yes this is private, but we have a special use case.
+    // We need to run this query with a session that's not configured to use the
+    // database we are trying to create.
+    const session = this.db.driver.session();
+    const supportsWait = parseFloat(info.version.slice(0, 3)) >= 4.2;
+    try {
+      await session.writeTransaction((tx) =>
+        tx.run(
+          `CREATE DATABASE ${dbName} IF NOT EXISTS ${
+            supportsWait ? 'WAIT' : ''
+          }`
+        )
+      );
     } finally {
       await session.close();
     }
