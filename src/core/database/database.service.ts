@@ -148,8 +148,10 @@ export class DatabaseService {
     return info;
   }
 
+  /**
+   * @deprecated Use updateProperties() instead
+   */
   async sgUpdateProperties<TObject extends Resource>({
-    session,
     object,
     props,
     changes,
@@ -161,6 +163,29 @@ export class DatabaseService {
     changes: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
     nodevar: string;
   }) {
+    return await this.updateProperties({
+      type: upperFirst(nodevar),
+      object,
+      props,
+      changes,
+    });
+  }
+
+  async updateProperties<TObject extends Resource>({
+    type,
+    object,
+    props,
+    changes,
+  }: {
+    // This becomes the label of the base node
+    type: string | AbstractClassType<any>;
+    // The current object use to check if changes are actually different
+    object: TObject;
+    // The keys of the object to consider for updates
+    props: ReadonlyArray<keyof TObject & string>;
+    // The changes
+    changes: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
+  }) {
     let updated = object;
     for (const prop of props) {
       if (
@@ -169,14 +194,27 @@ export class DatabaseService {
       ) {
         continue;
       }
-      updated = await this.sgUpdateProperty({
-        object: updated,
-        session,
+
+      await this.updateProperty({
+        type,
+        object,
         key: prop,
         value: changes[prop],
-        nodevar,
       });
+
+      updated = {
+        ...object,
+        [prop]: isSecured(object[prop])
+          ? // replace value in secured object keeping can* properties
+            {
+              ...object[prop],
+              value: changes[prop],
+            }
+          : // replace value directly
+            changes[prop],
+      };
     }
+
     return updated;
   }
 
