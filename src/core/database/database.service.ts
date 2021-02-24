@@ -52,7 +52,9 @@ export class DatabaseService {
    * If connection to database fails while executing function it will keep
    * retrying (after another successful connection) until the function finishes.
    */
-  async runOnceUntilCompleteAfterConnecting(run: () => Promise<void>) {
+  async runOnceUntilCompleteAfterConnecting(
+    run: (info: ServerInfo) => Promise<void>
+  ) {
     await this.waitForConnection(
       {
         forever: true,
@@ -67,12 +69,15 @@ export class DatabaseService {
    * Wait for database connection.
    * Optionally run a function in retry context after connecting.
    */
-  async waitForConnection(options?: RetryOptions, then?: () => Promise<void>) {
+  async waitForConnection(
+    options?: RetryOptions,
+    then?: (info: ServerInfo) => Promise<void>
+  ) {
     await retry(async () => {
       try {
         const info = await this.getServerInfo();
         await this.createDbIfNeeded(info);
-        await then?.();
+        await then?.(info);
       } catch (e) {
         throw e instanceof ServiceUnavailableError ? e : new AbortError(e);
       }
