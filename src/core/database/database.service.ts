@@ -169,12 +169,11 @@ export class DatabaseService {
       ) {
         continue;
       }
-      updated = await this.sgUpdateProperty({
+      updated = await this.updateProperty({
+        type: upperFirst(nodevar),
         object: updated,
-        session,
         key: prop,
         value: changes[prop],
-        nodevar,
       });
     }
     return updated;
@@ -284,7 +283,7 @@ export class DatabaseService {
     object: TObject;
     key: Key;
     value?: UnwrapSecured<TObject[Key]>;
-  }): Promise<void> {
+  }): Promise<TObject> {
     const label = typeof type === 'string' ? type : type.name;
 
     const createdAt = DateTime.local();
@@ -327,6 +326,7 @@ export class DatabaseService {
     if (!result) {
       throw new ServerException(`Could not find ${label}.${key} to update`);
     }
+    return result;
   }
 
   async list<TObject extends Resource>({
