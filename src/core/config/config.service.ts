@@ -8,6 +8,7 @@ import { CookieOptions } from 'express';
 import type { Server as HttpServer } from 'http';
 import { LazyGetter as Lazy } from 'lazy-get-decorator';
 import { Duration, DurationLike } from 'luxon';
+import { nanoid } from 'nanoid';
 import { Config as Neo4JDriverConfig } from 'neo4j-driver';
 import { join } from 'path';
 import { PoolConfig } from 'pg';
@@ -130,7 +131,8 @@ export class ConfigService implements EmailOptionsFactory {
       url,
       username,
       password,
-      database: this.jest ? 'test' : database,
+      database: this.jest ? `test.${nanoid().replace(/[-_]/g, '')}` : database,
+      ephemeral: this.jest,
       driverConfig,
     };
   }

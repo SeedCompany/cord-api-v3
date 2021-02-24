@@ -150,17 +150,29 @@ export class DatabaseService {
     if (info.databases.some((db) => db.name === dbName)) {
       return; // already exists
     }
+    await this.runAdminCommand('CREATE', info);
+  }
+
+  async dropDb() {
+    await this.runAdminCommand('DROP', await this.getServerInfo());
+  }
+
+  private async runAdminCommand(action: string, info: ServerInfo) {
     // @ts-expect-error Yes this is private, but we have a special use case.
     // We need to run this query with a session that's not configured to use the
     // database we are trying to create.
     const session = this.db.driver.session();
     const supportsWait = parseFloat(info.version.slice(0, 3)) >= 4.2;
+    const dbName = this.config.neo4j.database;
     try {
       await session.writeTransaction((tx) =>
         tx.run(
-          `CREATE DATABASE ${dbName} IF NOT EXISTS ${
+          `${action} DATABASE $name IF NOT EXISTS ${
             supportsWait ? 'WAIT' : ''
-          }`
+          }`,
+          {
+            name: dbName,
+          }
         )
       );
     } finally {
