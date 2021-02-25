@@ -222,7 +222,7 @@ export class DatabaseService {
       });
 
       updated = {
-        ...object,
+        ...updated,
         [prop]: isSecured(object[prop])
           ? // replace value in secured object keeping can* properties
             {
