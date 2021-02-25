@@ -3,8 +3,10 @@ import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { generateId, isValidId } from '../src/common';
+import { Role } from '../src/components/authorization';
 import { Powers } from '../src/components/authorization/dto/powers';
 import { Location } from '../src/components/location';
+import { User } from '../src/components/user';
 import {
   createFundingAccount,
   createLocation,
@@ -12,6 +14,8 @@ import {
   createSession,
   createTestApp,
   fragments,
+  login,
+  registerUser,
   registerUserWithPower,
   TestApp,
 } from './utility';
@@ -20,15 +24,18 @@ import { resetDatabase } from './utility/reset-database';
 describe('Location e2e', () => {
   let app: TestApp;
   let db: Connection;
+  let user: User;
+  let userPassword: string;
 
   beforeAll(async () => {
     app = await createTestApp();
     db = app.get(Connection);
     await createSession(app);
-    await registerUserWithPower(app, [
-      Powers.CreateLocation,
-      Powers.CreateFundingAccount,
-    ]);
+    user = await registerUserWithPower(
+      app,
+      [Powers.CreateLocation, Powers.CreateFundingAccount],
+      { password: userPassword }
+    );
   });
 
   afterAll(async () => {
@@ -69,6 +76,7 @@ describe('Location e2e', () => {
   it('update location', async () => {
     const st = await createLocation(app);
     const newName = faker.company.companyName();
+    await registerUser(app, { roles: [Role.Administrator] });
     const result = await app.graphql.mutate(
       gql`
         mutation updateLocation($input: UpdateLocationInput!) {
@@ -92,6 +100,7 @@ describe('Location e2e', () => {
     const updated = result.updateLocation.location;
     expect(updated).toBeTruthy();
     expect(updated.name.value).toBe(newName);
+    await login(app, { email: user.email.value, password: userPassword });
   });
 
   // Delete Location

@@ -3,7 +3,9 @@ import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { InputException, isValidId } from '../src/common';
+import { Role } from '../src/components/authorization';
 import { Powers } from '../src/components/authorization/dto/powers';
+import { User } from '../src/components/user';
 import {
   createLanguage,
   createLanguageEngagement,
@@ -12,6 +14,8 @@ import {
   createSession,
   createTestApp,
   expectNotFound,
+  login,
+  registerUser,
   registerUserWithPower,
   TestApp,
 } from './utility';
@@ -21,17 +25,24 @@ import { resetDatabase } from './utility/reset-database';
 describe('Language e2e', () => {
   let app: TestApp;
   let db: Connection;
+  let user: User;
+  let userPassword: string;
 
   beforeAll(async () => {
     app = await createTestApp();
     db = app.get(Connection);
     await createSession(app);
-    await registerUserWithPower(app, [
-      Powers.CreateLanguage,
-      Powers.CreateEthnologueLanguage,
-      Powers.CreateProject,
-      Powers.CreateLanguageEngagement,
-    ]);
+    userPassword = 'example';
+    user = await registerUserWithPower(
+      app,
+      [
+        Powers.CreateLanguage,
+        Powers.CreateEthnologueLanguage,
+        Powers.CreateProject,
+        Powers.CreateLanguageEngagement,
+      ],
+      { password: userPassword }
+    );
   });
   afterAll(async () => {
     await resetDatabase(db);
@@ -72,7 +83,8 @@ describe('Language e2e', () => {
   it('update language', async () => {
     const language = await createLanguage(app);
     const newName = faker.company.companyName();
-
+    // only the admin role can update languages
+    await registerUser(app, { roles: [Role.Administrator] });
     const result = await app.graphql.mutate(
       gql`
         mutation updateLanguage($input: UpdateLanguageInput!) {
@@ -97,6 +109,7 @@ describe('Language e2e', () => {
     expect(updated).toBeTruthy();
     expect(updated.id).toBe(language.id);
     expect(updated.name.value).toBe(newName);
+    await login(app, { email: user.email.value, password: userPassword });
   });
 
   // UPDATE LANGUAGE: update a language ethnologue when language is minimally defined.
@@ -354,6 +367,7 @@ describe('Language e2e', () => {
       firstScripture: false,
     });
 
+    await registerUser(app, { roles: [Role.Administrator] });
     const result = await app.graphql.mutate(
       gql`
         mutation updateLanguage($input: UpdateLanguageInput!) {
@@ -378,5 +392,6 @@ describe('Language e2e', () => {
     expect(updated).toBeTruthy();
     expect(updated.id).toBe(language.id);
     expect(updated.hasExternalFirstScripture.value).toBe(true);
+    await login(app, { email: user.email.value, password: userPassword });
   });
 });

@@ -2,6 +2,7 @@ import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { DuplicateException, InputException } from '../src/common';
+import { Role } from '../src/components/authorization';
 import { Powers } from '../src/components/authorization/dto/powers';
 import { Partner, PartnerType } from '../src/components/partner';
 import { FinancialReportingType } from '../src/components/partnership';
@@ -25,10 +26,11 @@ describe('Partner e2e', () => {
     app = await createTestApp();
     db = app.get(Connection);
     await createSession(app);
-    await registerUserWithPower(app, [
-      Powers.CreateOrganization,
-      Powers.CreatePartner,
-    ]);
+    await registerUserWithPower(
+      app,
+      [Powers.CreateOrganization, Powers.CreatePartner],
+      { roles: [Role.LeadFinancialAnalyst] }
+    );
   });
 
   afterAll(async () => {
