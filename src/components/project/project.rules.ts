@@ -762,6 +762,11 @@ export class ProjectRules {
     return transitions;
   }
 
+  async canBypassWorkflow(session: Session) {
+    const roles = await this.getUserRoles(session.userId);
+    return intersection(rolesThatCanBypassWorkflow, roles).length > 0;
+  }
+
   async verifyStepChange(
     projectId: string,
     session: Session,

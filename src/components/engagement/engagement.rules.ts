@@ -371,6 +371,11 @@ export class EngagementRules {
     return availableTransitionsAccordingToProject;
   }
 
+  async canBypassWorkflow(session: Session) {
+    const roles = await this.getUserRoles(session.userId);
+    return intersection(rolesThatCanBypassWorkflow, roles).length > 0;
+  }
+
   async verifyStatusChange(
     engagementId: string,
     session: Session,
