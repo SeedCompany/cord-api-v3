@@ -823,8 +823,8 @@ export class EngagementService {
     }
 
     try {
-      await this.db.sgUpdateProperties({
-        session,
+      await this.db.updateProperties({
+        type: 'LanguageEngagement',
         object,
         props: [
           'firstScripture',
@@ -841,7 +841,6 @@ export class EngagementService {
           'initialEndDate',
         ],
         changes,
-        nodevar: 'LanguageEngagement',
       });
     } catch (exception) {
       this.logger.error('Error updating language engagement', { exception });
@@ -969,8 +968,8 @@ export class EngagementService {
         await countryQ.first();
       }
 
-      await this.db.sgUpdateProperties({
-        session,
+      await this.db.updateProperties({
+        type: 'InternshipEngagement',
         object,
         props: [
           'position',
@@ -988,7 +987,6 @@ export class EngagementService {
           ...input,
           modifiedAt: DateTime.local(),
         },
-        nodevar: 'InternshipEngagement',
       });
       // update property node labels
       Object.keys(input).map(async (ele) => {

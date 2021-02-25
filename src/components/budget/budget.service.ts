@@ -431,12 +431,11 @@ export class BudgetService {
       session
     );
 
-    return await this.db.sgUpdateProperties({
-      session,
+    return await this.db.updateProperties({
+      type: 'Budget',
       object: budget,
       props: ['status'],
       changes: input,
-      nodevar: 'budget',
     });
   }
 
@@ -478,12 +477,11 @@ export class BudgetService {
     const br = await this.readOneRecord(id, session);
 
     try {
-      const result = await this.db.sgUpdateProperties({
-        session,
+      const result = await this.db.updateProperties({
+        type: 'BudgetRecord',
         object: br,
         props: ['amount'],
         changes: { id, ...input },
-        nodevar: 'budgetRecord',
       });
       return result;
     } catch (e) {
