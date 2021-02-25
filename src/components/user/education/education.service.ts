@@ -151,14 +151,36 @@ export class EducationService {
 
   async update(input: UpdateEducation, session: Session): Promise<Education> {
     const ed = await this.readOne(input.id, session);
+    const query = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .match([
+        node('user'),
+        relation('out', '', 'education', { active: true }),
+        node('node', { id: input.id }),
+      ])
+      .return('user.id as educationUserId')
+      .asResult<{
+        educationUserId: string;
+      }>();
 
-    return await this.db.sgUpdateProperties({
-      session,
-      object: ed,
-      props: ['degree', 'major', 'institution'],
-      changes: input,
-      nodevar: 'education',
-    });
+    const result = await query.first();
+    if (result?.educationUserId === session.userId) {
+      return await this.db.updatePropertiesInsecure({
+        type: 'Education',
+        object: ed,
+        props: ['degree', 'major', 'institution'],
+        changes: input,
+      });
+    } else {
+      return await this.db.sgUpdateProperties({
+        session,
+        object: ed,
+        props: ['degree', 'major', 'institution'],
+        changes: input,
+        nodevar: 'education',
+      });
+    }
   }
 
   async delete(_id: string, _session: Session): Promise<void> {

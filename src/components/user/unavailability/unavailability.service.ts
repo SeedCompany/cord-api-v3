@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
 import {
   generateId,
   NotFoundException,
@@ -165,14 +165,36 @@ export class UnavailabilityService {
     session: Session
   ): Promise<Unavailability> {
     const unavailability = await this.readOne(input.id, session);
+    const query = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .match([
+        node('user'),
+        relation('out', '', 'unavailability', { active: true }),
+        node('node', { id: input.id }),
+      ])
+      .return('user.id as unavailabilityUserId')
+      .asResult<{
+        unavailabilityUserId: string;
+      }>();
+    const result = await query.first();
 
-    return await this.db.sgUpdateProperties({
-      session,
-      object: unavailability,
-      props: ['description', 'start', 'end'],
-      changes: input,
-      nodevar: 'unavailability',
-    });
+    if (result?.unavailabilityUserId === session.userId) {
+      return await this.db.updatePropertiesInsecure({
+        type: 'Unavailability',
+        object: unavailability,
+        props: ['description', 'start', 'end'],
+        changes: input,
+      });
+    } else {
+      return await this.db.sgUpdateProperties({
+        session,
+        object: unavailability,
+        props: ['description', 'start', 'end'],
+        changes: input,
+        nodevar: 'unavailability',
+      });
+    }
   }
 
   async delete(id: string, session: Session): Promise<void> {

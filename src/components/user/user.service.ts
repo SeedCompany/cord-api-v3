@@ -348,23 +348,42 @@ export class UserService {
     this.logger.debug('mutation update User', { input, session });
     const user = await this.readOne(input.id, session);
 
-    await this.db.sgUpdateProperties({
-      session,
-      object: user,
-      props: [
-        'realFirstName',
-        'realLastName',
-        'displayFirstName',
-        'displayLastName',
-        'phone',
-        'timezone',
-        'about',
-        'status',
-        'title',
-      ],
-      changes: input,
-      nodevar: 'user',
-    });
+    if (input.id === session.userId) {
+      await this.db.updatePropertiesInsecure({
+        type: 'User',
+        object: user,
+        props: [
+          'realFirstName',
+          'realLastName',
+          'displayFirstName',
+          'displayLastName',
+          'phone',
+          'timezone',
+          'about',
+          'status',
+          'title',
+        ],
+        changes: input,
+      });
+    } else {
+      await this.db.sgUpdateProperties({
+        session,
+        object: user,
+        props: [
+          'realFirstName',
+          'realLastName',
+          'displayFirstName',
+          'displayLastName',
+          'phone',
+          'timezone',
+          'about',
+          'status',
+          'title',
+        ],
+        changes: input,
+        nodevar: 'user',
+      });
+    }
 
     // Update roles
     if (input.roles) {
