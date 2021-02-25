@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import {
   Connection,
   equals,
@@ -19,11 +19,13 @@ import {
   Resource,
   ServerException,
   Session,
+  UnauthorizedException,
   unwrapSecured,
   UnwrapSecured,
 } from '../../common';
 import { ILogger, Logger, ServiceUnavailableError } from '..';
 import { AbortError, retry, RetryOptions } from '../../common/retry';
+import { AuthorizationService } from '../../components/authorization/authorization.service';
 import { ConfigService } from '../config/config.service';
 import {
   determineSortValue,
@@ -86,11 +88,15 @@ export interface ServerInfo {
   edition: string;
 }
 
+forwardRef(() => AuthorizationService);
+
 @Injectable()
 export class DatabaseService {
   constructor(
     private readonly db: Connection,
     private readonly config: ConfigService,
+    @Inject(forwardRef(() => AuthorizationService))
+    private readonly authorizationService: AuthorizationService,
     @Logger('database:service') private readonly logger: ILogger
   ) {}
 
@@ -186,6 +192,20 @@ export class DatabaseService {
     changes: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
   }) {
     let updated = object;
+    for (const prop of props) {
+      if (
+        changes[prop] === undefined ||
+        unwrapSecured(object[prop]) === changes[prop]
+      ) {
+        continue;
+      }
+      if (!(await this.authorizationService.checkIfCanEdit(object, prop))) {
+        throw new UnauthorizedException(
+          'You do not have permission to update this property',
+          prop
+        );
+      }
+    }
     for (const prop of props) {
       if (
         changes[prop] === undefined ||
