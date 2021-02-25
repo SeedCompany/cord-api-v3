@@ -125,8 +125,21 @@ export class DatabaseService {
     }, options);
   }
 
-  query(): Query {
-    return this.db.query();
+  /**
+   * Start a query. It can be executed with run() or first();
+   *
+   * @example
+   * query().matchNode('n').return('n').run();
+   *
+   * @example
+   * query('match (n) return n').run();
+   */
+  query(query?: string, parameters?: Record<string, any>): Query {
+    const q = this.db.query();
+    if (query) {
+      q.raw(query, parameters);
+    }
+    return q;
   }
 
   @Transactional()
