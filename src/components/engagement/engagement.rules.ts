@@ -12,27 +12,12 @@ import {
   EngagementTransitionType,
 } from './dto';
 
-// TODO: Don't think we need notifiers. wiki says none for notifiers for engagment status changes
-// type MaybeAsync<T> = T | Promise<T>;
-// type EmailAddress = string;
-
 interface StatusRule {
   approvers: Role[];
   transitions: EngagementStatusTransition[];
-
-  // TODO: I don't think we'll ever need notifiers for this
-  //getNotifiers: () => MaybeAsync<ReadonlyArray<EmailAddress | string>>;
 }
 
-// export interface EmailNotification {
-//   recipient: Pick<
-//     User,
-//     'id' | 'email' | 'displayFirstName' | 'displayLastName' | 'timezone'
-//   >;
-//   changedBy: Pick<User, 'id' | 'displayFirstName' | 'displayLastName'>;
-//   engagement: Pick<Engagement, 'id' | 'modifiedAt' | 'status'>;
-//   previousStatus?: EngagementStatus;
-// }
+const rolesThatCanBypassWorkflow: Role[] = [Role.Administrator];
 
 @Injectable()
 export class EngagementRules {
@@ -348,7 +333,8 @@ export class EngagementRules {
 
   async getAvailableTransitions(
     engagementId: string,
-    session: Session
+    session: Session,
+    currentUserRoles?: Role[]
   ): Promise<EngagementStatusTransition[]> {
     if (session.anonymous) {
       return [];
@@ -362,7 +348,7 @@ export class EngagementRules {
     );
 
     // If current user is not an approver (based on roles) then don't allow any transitions
-    const currentUserRoles = await this.getUserRoles(session.userId);
+    currentUserRoles ??= await this.getUserRoles(session.userId);
     if (intersection(approvers, currentUserRoles).length === 0) {
       return [];
     }
@@ -385,6 +371,11 @@ export class EngagementRules {
     return availableTransitionsAccordingToProject;
   }
 
+  async canBypassWorkflow(session: Session) {
+    const roles = await this.getUserRoles(session.userId);
+    return intersection(rolesThatCanBypassWorkflow, roles).length > 0;
+  }
+
   async verifyStatusChange(
     engagementId: string,
     session: Session,
@@ -394,9 +385,17 @@ export class EngagementRules {
       return;
     }
 
+    // If current user's roles include a role that can bypass workflow
+    // stop the check here.
+    const currentUserRoles = await this.getUserRoles(session.userId);
+    if (intersection(rolesThatCanBypassWorkflow, currentUserRoles).length > 0) {
+      return;
+    }
+
     const transitions = await this.getAvailableTransitions(
       engagementId,
-      session
+      session,
+      currentUserRoles
     );
 
     const validNextStatus = transitions.some(
