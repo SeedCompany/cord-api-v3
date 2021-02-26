@@ -37,6 +37,8 @@ export interface EmailNotification {
   previousStep?: ProjectStep;
 }
 
+const rolesThatCanBypassWorkflow: Role[] = [Role.Administrator];
+
 @Injectable()
 export class ProjectRules {
   constructor(
@@ -736,7 +738,8 @@ export class ProjectRules {
 
   async getAvailableTransitions(
     projectId: string,
-    session: Session
+    session: Session,
+    currentUserRoles?: Role[]
   ): Promise<ProjectStepTransition[]> {
     if (session.anonymous) {
       return [];
@@ -751,12 +754,17 @@ export class ProjectRules {
     );
 
     // If current user is not an approver (based on roles) then don't allow any transitions
-    const currentUserRoles = await this.getUserRoles(session.userId);
+    currentUserRoles ??= await this.getUserRoles(session.userId);
     if (intersection(approvers, currentUserRoles).length === 0) {
       return [];
     }
 
     return transitions;
+  }
+
+  async canBypassWorkflow(session: Session) {
+    const roles = await this.getUserRoles(session.userId);
+    return intersection(rolesThatCanBypassWorkflow, roles).length > 0;
   }
 
   async verifyStepChange(
@@ -768,7 +776,18 @@ export class ProjectRules {
       return;
     }
 
-    const transitions = await this.getAvailableTransitions(projectId, session);
+    // If current user's roles include a role that can bypass workflow
+    // stop the check here.
+    const currentUserRoles = await this.getUserRoles(session.userId);
+    if (intersection(rolesThatCanBypassWorkflow, currentUserRoles).length > 0) {
+      return;
+    }
+
+    const transitions = await this.getAvailableTransitions(
+      projectId,
+      session,
+      currentUserRoles
+    );
 
     const validNextStep = transitions.some(
       (transition) => transition.to === nextStep

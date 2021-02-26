@@ -1,4 +1,5 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { stripIndent } from 'common-tags';
 import { AnonSession, ServerException, Session } from '../../common';
 import { EngagementStatusTransition, SecuredEngagementStatus } from './dto';
 import { EngagementRules } from './engagement.rules';
@@ -26,5 +27,17 @@ export class EngagementStatusResolver {
       status.engagementId,
       session
     );
+  }
+
+  @ResolveField(() => Boolean, {
+    description: stripIndent`
+      Is the current user allowed to bypass transitions entirely
+      and change the status to any other status?
+   `,
+  })
+  async canBypassTransitions(
+    @AnonSession() session: Session
+  ): Promise<boolean> {
+    return await this.engagementRules.canBypassWorkflow(session);
   }
 }
