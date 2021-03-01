@@ -19,7 +19,6 @@ import {
   Resource,
   ServerException,
   Session,
-  UnauthorizedException,
   unwrapSecured,
   UnwrapSecured,
 } from '../../common';
@@ -248,12 +247,7 @@ export class DatabaseService {
       ) {
         continue;
       }
-      if (!(await this.authorizationService.checkIfCanEdit(object, prop))) {
-        throw new UnauthorizedException(
-          'You do not have permission to update this property',
-          prop
-        );
-      }
+      await this.authorizationService.verifyCanEdit(object, prop);
     }
     for (const prop of props) {
       if (

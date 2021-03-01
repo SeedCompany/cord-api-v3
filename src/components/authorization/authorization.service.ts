@@ -2,7 +2,12 @@
 import { Injectable } from '@nestjs/common';
 import { Connection, node, relation } from 'cypher-query-builder';
 import { compact, groupBy, mapValues, pickBy, union, without } from 'lodash';
-import { isSecured, ServerException, Session } from '../../common';
+import {
+  isSecured,
+  ServerException,
+  Session,
+  UnauthorizedException,
+} from '../../common';
 import { retry } from '../../common/retry';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import {
@@ -243,14 +248,15 @@ export class AuthorizationService {
     }
   }
 
-  async checkIfCanEdit<
+  async verifyCanEdit<
     DbNode extends Record<string, any>,
     Key extends keyof DbNode
-  >(baseNode: DbNode, prop: Key): Promise<boolean> {
-    if (isSecured(baseNode[prop])) {
-      return baseNode[prop].canEdit;
-    } else {
-      return true;
+  >(baseNode: DbNode, prop: Key) {
+    if (isSecured(baseNode[prop]) && !baseNode[prop].canEdit) {
+      throw new UnauthorizedException(
+        'You do not have permission to update this property',
+        prop as string
+      );
     }
   }
 
