@@ -31,6 +31,7 @@ describe('Location e2e', () => {
     app = await createTestApp();
     db = app.get(Connection);
     await createSession(app);
+    userPassword = 'example';
     user = await registerUserWithPower(
       app,
       [Powers.CreateLocation, Powers.CreateFundingAccount],
