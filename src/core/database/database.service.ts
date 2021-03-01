@@ -175,60 +175,12 @@ export class DatabaseService {
     });
   }
 
-  // Used for user, education and unavailability, when a user wants to
-  // update their own properties.
-  async updatePropertiesInsecure<TObject extends Resource>({
-    type,
-    object,
-    props,
-    changes,
-  }: {
-    // This becomes the label of the base node
-    type: string | AbstractClassType<any>;
-    // The current object use to check if changes are actually different
-    object: TObject;
-    // The keys of the object to consider for updates
-    props: ReadonlyArray<keyof TObject & string>;
-    // The changes
-    changes: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
-  }) {
-    let updated = object;
-    for (const prop of props) {
-      if (
-        changes[prop] === undefined ||
-        unwrapSecured(object[prop]) === changes[prop]
-      ) {
-        continue;
-      }
-
-      await this.updateProperty({
-        type,
-        object,
-        key: prop,
-        value: changes[prop],
-      });
-
-      updated = {
-        ...updated,
-        [prop]: isSecured(object[prop])
-          ? // replace value in secured object keeping can* properties
-            {
-              ...object[prop],
-              value: changes[prop],
-            }
-          : // replace value directly
-            changes[prop],
-      };
-    }
-
-    return updated;
-  }
-
   async updateProperties<TObject extends Resource>({
     type,
     object,
     props,
     changes,
+    skipAuth = false,
   }: {
     // This becomes the label of the base node
     type: string | AbstractClassType<any>;
@@ -238,16 +190,20 @@ export class DatabaseService {
     props: ReadonlyArray<keyof TObject & string>;
     // The changes
     changes: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
+
+    skipAuth?: boolean;
   }) {
     let updated = object;
-    for (const prop of props) {
-      if (
-        changes[prop] === undefined ||
-        unwrapSecured(object[prop]) === changes[prop]
-      ) {
-        continue;
+    if (!skipAuth) {
+      for (const prop of props) {
+        if (
+          changes[prop] === undefined ||
+          unwrapSecured(object[prop]) === changes[prop]
+        ) {
+          continue;
+        }
+        await this.authorizationService.verifyCanEdit(object, prop);
       }
-      await this.authorizationService.verifyCanEdit(object, prop);
     }
     for (const prop of props) {
       if (
