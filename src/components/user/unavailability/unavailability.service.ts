@@ -180,11 +180,12 @@ export class UnavailabilityService {
     const result = await query.first();
 
     if (result?.unavailabilityUserId === session.userId) {
-      return await this.db.updatePropertiesInsecure({
+      return await this.db.updateProperties({
         type: 'Unavailability',
         object: unavailability,
         props: ['description', 'start', 'end'],
         changes: input,
+        skipAuth: true,
       });
     } else {
       return await this.db.sgUpdateProperties({

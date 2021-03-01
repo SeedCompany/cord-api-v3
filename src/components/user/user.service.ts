@@ -349,7 +349,7 @@ export class UserService {
     const user = await this.readOne(input.id, session);
 
     if (input.id === session.userId) {
-      await this.db.updatePropertiesInsecure({
+      await this.db.updateProperties({
         type: 'User',
         object: user,
         props: [
@@ -364,6 +364,7 @@ export class UserService {
           'title',
         ],
         changes: input,
+        skipAuth: true,
       });
     } else {
       await this.db.sgUpdateProperties({

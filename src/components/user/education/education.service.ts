@@ -166,11 +166,12 @@ export class EducationService {
 
     const result = await query.first();
     if (result?.educationUserId === session.userId) {
-      return await this.db.updatePropertiesInsecure({
+      return await this.db.updateProperties({
         type: 'Education',
         object: ed,
         props: ['degree', 'major', 'institution'],
         changes: input,
+        skipAuth: true,
       });
     } else {
       return await this.db.sgUpdateProperties({
