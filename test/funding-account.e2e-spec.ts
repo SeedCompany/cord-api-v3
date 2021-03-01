@@ -3,18 +3,15 @@ import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { generateId, isValidId } from '../src/common';
-import { Role } from '../src/components/authorization';
 import { Powers } from '../src/components/authorization/dto/powers';
 import { FundingAccount } from '../src/components/funding-account';
-import { User } from '../src/components/user';
 import {
   createFundingAccount,
   createSession,
   createTestApp,
   fragments,
-  login,
-  registerUser,
   registerUserWithPower,
+  runAsAdmin,
   TestApp,
 } from './utility';
 import { resetDatabase } from './utility/reset-database';
@@ -22,17 +19,12 @@ import { resetDatabase } from './utility/reset-database';
 describe('FundingAccount e2e', () => {
   let app: TestApp;
   let db: Connection;
-  let user: User;
-  let userPassword: string;
 
   beforeAll(async () => {
     app = await createTestApp();
     db = app.get(Connection);
     await createSession(app);
-    userPassword = 'example';
-    user = await registerUserWithPower(app, [Powers.CreateFundingAccount], {
-      password: userPassword,
-    });
+    await registerUserWithPower(app, [Powers.CreateFundingAccount]);
   });
 
   afterAll(async () => {
@@ -74,33 +66,33 @@ describe('FundingAccount e2e', () => {
     const st = await createFundingAccount(app);
     const newName = faker.company.companyName();
     const newAccountNumber = faker.random.number({ min: 0, max: 9 });
-    await registerUser(app, { roles: [Role.Administrator] });
-    const result = await app.graphql.mutate(
-      gql`
-        mutation updateFundingAccount($input: UpdateFundingAccountInput!) {
-          updateFundingAccount(input: $input) {
-            fundingAccount {
-              ...fundingAccount
+    await runAsAdmin(app, async () => {
+      const result = await app.graphql.mutate(
+        gql`
+          mutation updateFundingAccount($input: UpdateFundingAccountInput!) {
+            updateFundingAccount(input: $input) {
+              fundingAccount {
+                ...fundingAccount
+              }
             }
           }
-        }
-        ${fragments.fundingAccount}
-      `,
-      {
-        input: {
-          fundingAccount: {
-            id: st.id,
-            name: newName,
-            accountNumber: newAccountNumber,
+          ${fragments.fundingAccount}
+        `,
+        {
+          input: {
+            fundingAccount: {
+              id: st.id,
+              name: newName,
+              accountNumber: newAccountNumber,
+            },
           },
-        },
-      }
-    );
-    const updated = result.updateFundingAccount.fundingAccount;
-    expect(updated).toBeTruthy();
-    expect(updated.name.value).toBe(newName);
-    expect(updated.accountNumber.value).toBe(newAccountNumber);
-    await login(app, { email: user.email.value, password: userPassword });
+        }
+      );
+      const updated = result.updateFundingAccount.fundingAccount;
+      expect(updated).toBeTruthy();
+      expect(updated.name.value).toBe(newName);
+      expect(updated.accountNumber.value).toBe(newAccountNumber);
+    });
   });
 
   // Delete FundingAccount

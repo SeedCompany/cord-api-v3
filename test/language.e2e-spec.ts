@@ -3,9 +3,7 @@ import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { InputException, isValidId } from '../src/common';
-import { Role } from '../src/components/authorization';
 import { Powers } from '../src/components/authorization/dto/powers';
-import { User } from '../src/components/user';
 import {
   createLanguage,
   createLanguageEngagement,
@@ -14,9 +12,8 @@ import {
   createSession,
   createTestApp,
   expectNotFound,
-  login,
-  registerUser,
   registerUserWithPower,
+  runAsAdmin,
   TestApp,
 } from './utility';
 import { fragments } from './utility/fragments';
@@ -25,24 +22,17 @@ import { resetDatabase } from './utility/reset-database';
 describe('Language e2e', () => {
   let app: TestApp;
   let db: Connection;
-  let user: User;
-  let userPassword: string;
 
   beforeAll(async () => {
     app = await createTestApp();
     db = app.get(Connection);
     await createSession(app);
-    userPassword = 'example';
-    user = await registerUserWithPower(
-      app,
-      [
-        Powers.CreateLanguage,
-        Powers.CreateEthnologueLanguage,
-        Powers.CreateProject,
-        Powers.CreateLanguageEngagement,
-      ],
-      { password: userPassword }
-    );
+    await registerUserWithPower(app, [
+      Powers.CreateLanguage,
+      Powers.CreateEthnologueLanguage,
+      Powers.CreateProject,
+      Powers.CreateLanguageEngagement,
+    ]);
   });
   afterAll(async () => {
     await resetDatabase(db);
@@ -84,32 +74,32 @@ describe('Language e2e', () => {
     const language = await createLanguage(app);
     const newName = faker.company.companyName();
     // only the admin role can update languages
-    await registerUser(app, { roles: [Role.Administrator] });
-    const result = await app.graphql.mutate(
-      gql`
-        mutation updateLanguage($input: UpdateLanguageInput!) {
-          updateLanguage(input: $input) {
-            language {
-              ...language
+    await runAsAdmin(app, async () => {
+      const result = await app.graphql.mutate(
+        gql`
+          mutation updateLanguage($input: UpdateLanguageInput!) {
+            updateLanguage(input: $input) {
+              language {
+                ...language
+              }
             }
           }
-        }
-        ${fragments.language}
-      `,
-      {
-        input: {
-          language: {
-            id: language.id,
-            name: newName,
+          ${fragments.language}
+        `,
+        {
+          input: {
+            language: {
+              id: language.id,
+              name: newName,
+            },
           },
-        },
-      }
-    );
-    const updated = result.updateLanguage.language;
-    expect(updated).toBeTruthy();
-    expect(updated.id).toBe(language.id);
-    expect(updated.name.value).toBe(newName);
-    await login(app, { email: user.email.value, password: userPassword });
+        }
+      );
+      const updated = result.updateLanguage.language;
+      expect(updated).toBeTruthy();
+      expect(updated.id).toBe(language.id);
+      expect(updated.name.value).toBe(newName);
+    });
   });
 
   // UPDATE LANGUAGE: update a language ethnologue when language is minimally defined.
@@ -367,31 +357,31 @@ describe('Language e2e', () => {
       firstScripture: false,
     });
 
-    await registerUser(app, { roles: [Role.Administrator] });
-    const result = await app.graphql.mutate(
-      gql`
-        mutation updateLanguage($input: UpdateLanguageInput!) {
-          updateLanguage(input: $input) {
-            language {
-              ...language
+    await runAsAdmin(app, async () => {
+      const result = await app.graphql.mutate(
+        gql`
+          mutation updateLanguage($input: UpdateLanguageInput!) {
+            updateLanguage(input: $input) {
+              language {
+                ...language
+              }
             }
           }
-        }
-        ${fragments.language}
-      `,
-      {
-        input: {
-          language: {
-            id: language.id,
-            hasExternalFirstScripture: true,
+          ${fragments.language}
+        `,
+        {
+          input: {
+            language: {
+              id: language.id,
+              hasExternalFirstScripture: true,
+            },
           },
-        },
-      }
-    );
-    const updated = result.updateLanguage.language;
-    expect(updated).toBeTruthy();
-    expect(updated.id).toBe(language.id);
-    expect(updated.hasExternalFirstScripture.value).toBe(true);
-    await login(app, { email: user.email.value, password: userPassword });
+        }
+      );
+      const updated = result.updateLanguage.language;
+      expect(updated).toBeTruthy();
+      expect(updated.id).toBe(language.id);
+      expect(updated.hasExternalFirstScripture.value).toBe(true);
+    });
   });
 });
