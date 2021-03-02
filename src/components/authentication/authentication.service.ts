@@ -355,7 +355,10 @@ export class AuthenticationService {
     });
   }
 
-  async resetPassword({ token, password }: ResetPasswordInput): Promise<void> {
+  async resetPassword(
+    { token, password }: ResetPasswordInput,
+    session: Session
+  ): Promise<void> {
     const result = await this.db
       .query()
       .raw(
@@ -404,11 +407,24 @@ export class AuthenticationService {
       )
       .first();
 
-    // remove all the email tokens
+    // remove all the email tokens and invalidate old tokens
     await this.db
       .query()
       .match([node('emailToken', 'EmailToken', { value: result.email })])
       .delete('emailToken')
+      .run();
+
+    await this.db
+      .query()
+      .match([
+        node('emailAddress', 'EmailAddress', { value: result.email }),
+        relation('in', '', 'email', { active: true }),
+        node('user', 'User'),
+        relation('out', 'oldRel', 'token', { active: true }),
+        node('token', 'Token'),
+      ])
+      .where(not([{ 'token.value': session.token }]))
+      .setValues({ 'oldRel.active': false })
       .run();
   }
 
