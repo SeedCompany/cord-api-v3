@@ -355,7 +355,10 @@ export class AuthenticationService {
     });
   }
 
-  async resetPassword({ token, password }: ResetPasswordInput): Promise<void> {
+  async resetPassword(
+    { token, password }: ResetPasswordInput,
+    session: Session
+  ): Promise<void> {
     const result = await this.db
       .query()
       .raw(
@@ -420,6 +423,7 @@ export class AuthenticationService {
         relation('out', 'oldRel', 'token', { active: true }),
         node('token', 'Token'),
       ])
+      .where(not([{ 'token.value': session.token }]))
       .setValues({ 'oldRel.active': false })
       .run();
   }

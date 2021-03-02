@@ -168,9 +168,10 @@ export class AuthenticationResolver {
     description: 'Reset Password',
   })
   async resetPassword(
-    @Args('input') input: ResetPasswordInput
+    @Args('input') input: ResetPasswordInput,
+    @AnonSession() session: Session
   ): Promise<boolean> {
-    await this.authService.resetPassword(input);
+    await this.authService.resetPassword(input, session);
     return true;
   }
 }
