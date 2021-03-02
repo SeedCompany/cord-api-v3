@@ -10,6 +10,7 @@ import {
 import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
 import { cloneDeep, Many, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
+import { Driver, Session as Neo4jSession } from 'neo4j-driver';
 import { assert } from 'ts-essentials';
 import {
   AbstractClassType,
@@ -125,8 +126,73 @@ export class DatabaseService {
     }, options);
   }
 
-  query(): Query {
-    return this.db.query();
+  /**
+   * USE THIS AT YOUR OWN RISK, and expect to have a harder time.
+   * Save yourself the trouble and just use this instead:
+   * ```
+   * query('...').run/first();
+   * ```
+   *
+   * Retrieve a raw session from the driver.
+   *
+   * Note that when you use this method you need:
+   * - To pass in the database name from the config service.
+   * - To explicitly close the session in a finally clause
+   * - Manually convert query parameters to db compatible values
+   *   - Such as Luxon DateTime to Neo4j's ZonedDateTime
+   * - Manually convert the output from
+   *   - Neo4j's Number class to JS numbers
+   *   - Neo4j's ZonedDateTime class to Luxon DateTime
+   *   - etc.
+   *   - Also understand the result output. Instead of
+   *   ```
+   *   const result = await query('... return foo.id as id').first();
+   *   const id = result?.id;
+   *   ```
+   *   You'll need to do
+   *   ```
+   *   const result = await session.run('...');
+   *   const id = result.records.[0]?.get('id');
+   *   ```
+   * - Expect that @Transactional decorators will not work and the current
+   *   transaction will be ignored.
+   * - Error handling relying on error classes will not work.
+   *   i.e. instead of
+   *   ```
+   *   if (e instanceof UniquenessError && e.label === 'EmailAddress') {}
+   *   ```
+   *   you'll need to do
+   *   ```
+   *   if (
+   *     e instanceof Neo4jError &&
+   *     e.code === 'Neo.ClientError.Schema.ConstraintValidationFailed' &&
+   *     e.message.includes('already exists with label') &&
+   *     regexThatImNotGoingToWriteOutHere.exec(e.message)?[0] === 'EmailAddress'
+   *   ) {}
+   *   ```
+   *   This is just one example. Expect more things to break with the app.
+   *
+   */
+  session(...args: Parameters<Driver['session']>): Neo4jSession {
+    // @ts-expect-error it exists it's just private
+    return this.db.driver.session(...args);
+  }
+
+  /**
+   * Start a query. It can be executed with run() or first();
+   *
+   * @example
+   * query().matchNode('n').return('n').run();
+   *
+   * @example
+   * query('match (n) return n').run();
+   */
+  query(query?: string, parameters?: Record<string, any>): Query {
+    const q = this.db.query();
+    if (query) {
+      q.raw(query, parameters);
+    }
+    return q;
   }
 
   @Transactional()

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { EmailService } from '@seedcompany/nestjs-email';
-import { node, relation } from 'cypher-query-builder';
+import { node, not, relation } from 'cypher-query-builder';
 import { sign, verify } from 'jsonwebtoken';
 import { DateTime } from 'luxon';
 import {
@@ -298,6 +298,19 @@ export class AuthenticationService {
       })
       .return('password.value as passwordHash')
       .first();
+
+    // inactivate all the relationships between the current user and all of their tokens except current one
+    await this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .match([
+        node('requestingUser'),
+        relation('out', 'oldRel', 'token', { active: true }),
+        node('token', 'Token'),
+      ])
+      .where(not([{ 'token.value': session.token }]))
+      .setValues({ 'oldRel.active': false })
+      .run();
   }
 
   async forgotPassword(email: string): Promise<void> {
@@ -390,6 +403,13 @@ export class AuthenticationService {
         }
       )
       .first();
+
+    // remove all the email tokens
+    await this.db
+      .query()
+      .match([node('emailToken', 'EmailToken', { value: result.email })])
+      .delete('emailToken')
+      .run();
   }
 
   private encodeJWT() {
