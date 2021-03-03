@@ -135,6 +135,8 @@ export class ProjectRules {
             Role.Administrator,
             Role.Consultant,
             Role.ConsultantManager,
+            Role.RegionalDirector,
+            Role.FieldOperationsDirector,
           ],
           transitions: [
             {
