@@ -207,12 +207,11 @@ export class OrganizationService {
       );
     }
 
-    const secured = await this.authorizationService.getPermissionsOfBaseNode({
-      baseNode: new DbOrganization(),
-      sessionOrUserId: session,
-      propList: result.propList,
-      propKeys: this.securedProperties,
-    });
+    const secured = await this.authorizationService.secureProperties(
+      Organization,
+      result.propList,
+      session
+    );
 
     return {
       ...parseBaseNodeProperties(result.node),

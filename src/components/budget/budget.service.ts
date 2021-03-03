@@ -35,7 +35,7 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
-import { Role } from '../authorization';
+import { Role, rolesForScope } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { FileService } from '../file';
 import {
@@ -316,7 +316,7 @@ export class BudgetService {
       .return(['propList', 'node', 'memberRoles'])
       .asResult<
         StandardReadResult<DbPropsOfDto<Budget>> & {
-          memberRoles: Role[];
+          memberRoles: Role[][];
         }
       >();
 
@@ -337,14 +337,11 @@ export class BudgetService {
     );
 
     const props = parsePropList(result.propList);
-    const securedProps = await this.authorizationService.getPermissionsOfBaseNode(
-      {
-        baseNode: new DbBudget(),
-        sessionOrUserId: session,
-        propList: result.propList,
-        propKeys: this.securedBudgetProperties,
-        membershipRoles: result.memberRoles.flat(1),
-      }
+    const securedProps = await this.authorizationService.secureProperties(
+      Budget,
+      props,
+      session,
+      result.memberRoles.flat().map(rolesForScope('project'))
     );
 
     return {
@@ -385,10 +382,11 @@ export class BudgetService {
       .return([
         'propList + [{value: organization.id, property: "organization"}] as propList',
         'node',
+        'memberRoles',
       ])
       .asResult<
         StandardReadResult<DbPropsOfDto<BudgetRecord>> & {
-          memberRoles: Role[];
+          memberRoles: Role[][];
         }
       >();
 
@@ -401,14 +399,11 @@ export class BudgetService {
       );
     }
 
-    const securedProps = await this.authorizationService.getPermissionsOfBaseNode(
-      {
-        baseNode: new DbBudgetRecord(),
-        sessionOrUserId: session,
-        propList: result.propList,
-        propKeys: this.securedBudgetRecordProperties,
-        membershipRoles: result.memberRoles,
-      }
+    const securedProps = await this.authorizationService.secureProperties(
+      BudgetRecord,
+      result.propList,
+      session,
+      result.memberRoles.flat().map(rolesForScope('project'))
     );
 
     return {

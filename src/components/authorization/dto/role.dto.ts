@@ -37,6 +37,15 @@ registerEnumType(Role, { name: 'Role' });
 })
 export abstract class SecuredRoles extends SecuredEnumList(Role) {}
 
+// Scope for roles. Does this role apply anywhere or only with project membership?
+export type AuthScope = 'global' | 'project';
+
+export type ScopedRole = `${AuthScope}:${Role}`;
+
+// A helper to create a bunch of scoped roles for a given scope
+export const rolesForScope = (scope: AuthScope) => (role: Role): ScopedRole =>
+  `${scope}:${role}` as const;
+
 export type InternalRole =
   | 'AdministratorRole'
   | 'BibleTranslationLiaisonRole'

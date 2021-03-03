@@ -46,6 +46,7 @@ import {
   ProjectMemberListInput,
   ProjectMemberListOutput,
   Role,
+  rolesForScope,
   UpdateProjectMember,
 } from './dto';
 import { DbProjectMember } from './model';
@@ -216,7 +217,7 @@ export class ProjectMemberService {
       .asResult<
         StandardReadResult<DbPropsOfDto<ProjectMember>> & {
           userId: string;
-          memberRoles: Role[];
+          memberRoles: Role[][];
         }
       >();
 
@@ -229,14 +230,11 @@ export class ProjectMemberService {
     }
 
     const props = parsePropList(result.propList);
-    const securedProps = await this.authorizationService.getPermissionsOfBaseNode(
-      {
-        baseNode: new DbProjectMember(),
-        sessionOrUserId: session,
-        propList: result.propList,
-        propKeys: this.securedProperties,
-        membershipRoles: result.memberRoles.flat(1),
-      }
+    const securedProps = await this.authorizationService.secureProperties(
+      ProjectMember,
+      props,
+      session,
+      result.memberRoles.flat().map(rolesForScope('project'))
     );
 
     return {

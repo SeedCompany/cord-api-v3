@@ -246,7 +246,7 @@ export class AuthenticationService {
       );
     }
 
-    const roles = await this.authorizationService.getUserRoleObjects(
+    const roles = await this.authorizationService.getUserGlobalRoles(
       result.userId
     );
 

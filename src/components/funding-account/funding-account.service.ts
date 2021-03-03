@@ -167,12 +167,11 @@ export class FundingAccountService {
       throw new NotFoundException('FundingAccount.id', 'id');
     }
 
-    const secured = await this.authorizationService.getPermissionsOfBaseNode({
-      baseNode: new DbFundingAccount(),
-      sessionOrUserId: session,
-      propList: result.propList,
-      propKeys: this.securedProperties,
-    });
+    const secured = await this.authorizationService.secureProperties(
+      FundingAccount,
+      result.propList,
+      session
+    );
     return {
       ...parseBaseNodeProperties(result.node),
       ...secured,

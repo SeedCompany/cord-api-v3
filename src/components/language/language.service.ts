@@ -340,13 +340,10 @@ export class LanguageService {
     );
 
     const props = parsePropList(result.propList);
-    const securedProps = await this.authorizationService.getPermissionsOfBaseNode(
-      {
-        baseNode: new DbLanguage(),
-        sessionOrUserId: session,
-        propList: result.propList,
-        propKeys: this.securedProperties,
-      }
+    const securedProps = await this.authorizationService.secureProperties(
+      Language,
+      props,
+      session
     );
 
     return {
@@ -354,7 +351,7 @@ export class LanguageService {
       ...securedProps,
       tags: {
         ...securedProps.tags,
-        value: securedProps.tags.value as string[],
+        value: securedProps.tags.value ?? [],
       },
       sensitivity: props.sensitivity,
       ethnologue,

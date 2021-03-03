@@ -32,7 +32,7 @@ const read = true;
 const write = true;
 
 export const ProjectManagerGlobal = new DbRole({
-  name: Role.ProjectManager,
+  name: `global:${Role.ProjectManager}` as const,
   powers: [
     Powers.CreateBudget,
     Powers.CreateBudgetRecord,

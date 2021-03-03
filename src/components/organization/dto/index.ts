@@ -1,4 +1,4 @@
 export * from './create-organization.dto';
 export * from './list-organization.dto';
-export * from './organization';
+export * from './organization.dto';
 export * from './update-organization.dto';

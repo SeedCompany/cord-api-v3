@@ -1,4 +1,4 @@
-import { mapValues } from 'lodash';
+import { keys, mapFromList } from '../../../common';
 import type { Secured } from '../../../common';
 import {
   permissionDefaults,
@@ -15,8 +15,8 @@ import { parsePropList, PropListDbResult } from './parse-props';
  * @param propList This can straight from the DB result, or an object already
  *                 ran through the `parsePropList` function.
  * @param perms    The permissions available for this user/object
- * @param propKeys An object that defines the keys of the result object.
- *                 The values are currently unused.
+ * @param propKeysObjectOrList A list of keys that define the result object or
+ *                 an object that defines the keys of the result object.
  */
 export const parseSecuredProperties = <
   DbProps extends Record<string, any>,
@@ -24,17 +24,26 @@ export const parseSecuredProperties = <
 >(
   propList: PropListDbResult<DbProps> | DbProps,
   perms: PermissionsOf<DbProps>,
-  propKeys: Record<PickedKeys, boolean>
+  propKeysObjectOrList: Record<PickedKeys, boolean> | readonly PickedKeys[]
 ) => {
   const props = Array.isArray(propList) ? parsePropList(propList) : propList;
 
-  const merged = mapValues(propKeys, (_, key: PickedKeys) => {
+  const mapKey = (key: PickedKeys) => {
     const res = {
       value: undefined,
       ...permissionDefaults,
       ...(perms[key] ?? {}),
     };
     return res.canRead ? { ...res, value: props[key] } : res;
-  });
-  return (merged as unknown) as { [K in PickedKeys]: Secured<DbProps[K]> };
+  };
+
+  const propKeys = Array.isArray(propKeysObjectOrList)
+    ? propKeysObjectOrList
+    : keys<PickedKeys & string>(
+        propKeysObjectOrList as Record<PickedKeys, boolean>
+      );
+
+  const merged = mapFromList(propKeys, (key) => [key, mapKey(key)]);
+
+  return merged as { [K in PickedKeys]: Secured<DbProps[K]> };
 };

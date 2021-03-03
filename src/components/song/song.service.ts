@@ -164,13 +164,10 @@ export class SongService {
       session
     );
 
-    const securedProps = await this.authorizationService.getPermissionsOfBaseNode(
-      {
-        baseNode: new DbSong(),
-        sessionOrUserId: session,
-        propList: result.propList,
-        propKeys: this.securedProperties,
-      }
+    const securedProps = await this.authorizationService.secureProperties(
+      Song,
+      result.propList,
+      session
     );
 
     return {

@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { assert } from 'ts-essentials';
+import { keys } from 'ts-transformer-keys';
 import { DateScalar, DateTimeScalar } from './common/luxon.graphql';
 import { AdminModule } from './components/admin/admin.module';
 import { AuthenticationModule } from './components/authentication/authentication.module';
@@ -27,6 +29,11 @@ import { TimeZoneModule } from './components/timezone';
 import { UserModule } from './components/user/user.module';
 import { WorkflowModule } from './components/workflow/workflow.module';
 import { CoreModule, LoggerModule } from './core';
+
+assert(
+  keys<{ foo: string }>().length === 1,
+  'Sanity check for key transformer failed'
+);
 
 @Module({
   imports: [

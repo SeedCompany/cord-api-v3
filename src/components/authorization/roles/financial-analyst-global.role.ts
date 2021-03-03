@@ -32,7 +32,7 @@ const read = true;
 const write = true;
 
 export const FinancialAnalyst = new DbRole({
-  name: Role.FinancialAnalyst,
+  name: `global:${Role.FinancialAnalyst}` as const,
   powers: [
     Powers.CreateBudget,
     Powers.CreateBudgetRecord,

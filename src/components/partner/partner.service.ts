@@ -275,12 +275,11 @@ export class PartnerService {
     }
 
     const props = parsePropList(result.propList);
-    const secured = await this.authorizationService.getPermissionsOfBaseNode({
-      baseNode: new DbPartner(),
-      sessionOrUserId: session,
-      propList: result.propList,
-      propKeys: this.securedProperties,
-    });
+    const secured = await this.authorizationService.secureProperties(
+      Partner,
+      props,
+      session
+    );
 
     return {
       ...parseBaseNodeProperties(result.node),
