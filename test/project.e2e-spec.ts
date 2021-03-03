@@ -191,8 +191,6 @@ describe('Project e2e', () => {
   });
 
   it('should throw error if the location id is not valid', async () => {
-    // eslint-disable-next-line no-console
-    console.log('should throw error');
     await expect(
       createProject(app, {
         name: faker.random.uuid(),

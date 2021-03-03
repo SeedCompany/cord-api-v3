@@ -404,9 +404,6 @@ export class ProjectService {
           'Project with this name already exists'
         );
       }
-      this.logger.warning(`Could not create project`, {
-        exception: e,
-      });
       throw new ServerException(`Could not create project`, e);
     }
   }
