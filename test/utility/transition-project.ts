@@ -24,6 +24,13 @@ export const stepsFromEarlyConversationToBeforeCompleted = [
   ProjectStep.FinalizingCompletion,
 ];
 
+export const stepsFromEarlyConversationToBeforeTerminated = [
+  ...stepsFromEarlyConversationToBeforeActive,
+  ProjectStep.Active,
+  ProjectStep.DiscussingTermination,
+  ProjectStep.PendingTerminationApproval,
+];
+
 type SecuredStep = SecuredProjectStep & {
   transitions: ProjectStepTransition[];
 };
