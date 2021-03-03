@@ -757,8 +757,8 @@ export class EngagementService {
         false
       >;
       return {
-        ...common,
         ...secured,
+        ...common,
         pnpData: result.pnpData?.properties,
       };
     } else {
@@ -768,8 +768,8 @@ export class EngagementService {
         false
       >;
       return {
-        ...common,
         ...secured,
+        ...common,
         methodologies: {
           ...secured.methodologies,
           value: secured.methodologies.value ?? [],
