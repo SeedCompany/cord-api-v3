@@ -319,6 +319,21 @@ describe('Project-Workflow e2e', () => {
       // Login as Director
       await login(app, { email: director.email.value, password });
       await changeProjectStep(app, project.id, ProjectStep.DidNotDevelop);
+      const result = await app.graphql.query(
+        gql`
+          query project($id: ID!) {
+            project(id: $id) {
+              ...project
+            }
+          }
+          ${fragments.project}
+        `,
+        {
+          id: project.id,
+        }
+      );
+      expect(result.project.step.value).toBe(ProjectStep.DidNotDevelop);
+      expect(result.project.status).toBe(ProjectStatus.DidNotDevelop);
     });
 
     it('should test project workflow', async () => {
