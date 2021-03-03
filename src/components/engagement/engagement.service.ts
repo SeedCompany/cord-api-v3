@@ -2,7 +2,7 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, Node, Query, relation } from 'cypher-query-builder';
 import { pickBy } from 'lodash';
 import { DateTime } from 'luxon';
-import { Except, MergeExclusive } from 'type-fest';
+import { MergeExclusive } from 'type-fest';
 import {
   DuplicateException,
   generateId,
@@ -672,9 +672,15 @@ export class EngagementService {
       ])
       .asResult<
         StandardReadResult<
-          Except<
+          Omit<
             DbPropsOfDto<LanguageEngagement & InternshipEngagement>,
-            'pnpData'
+            | '__typename'
+            | 'ceremony'
+            | 'language'
+            | 'pnpData'
+            | 'countryOfOrigin'
+            | 'intern'
+            | 'mentor'
           >
         > & {
           __typename: 'LanguageEngagement' | 'InternshipEngagement';
@@ -695,7 +701,15 @@ export class EngagementService {
       throw new NotFoundException('could not find Engagement', 'engagement.id');
     }
 
-    const props = parsePropList(result.propList);
+    const props = {
+      __typename: result.__typename,
+      ...parsePropList(result.propList),
+      language: result.language,
+      ceremony: result.ceremony,
+      intern: result.intern,
+      countryOfOrigin: result.countryOfOrigin,
+      mentor: result.mentor,
+    };
 
     const isLanguageEngagement = props.__typename === 'LanguageEngagement';
 
