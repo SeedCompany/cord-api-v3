@@ -1118,15 +1118,10 @@ export class ProjectService {
         ])
         .return('collect(roles.value) as memberRoles')
         .asResult<{
-          memberRoles: Role[];
+          memberRoles: Role[][];
         }>();
       const result = await query.first();
-      if (!result) {
-        throw new NotFoundException(
-          'Could not find Project that this budget is a part of'
-        );
-      }
-      membershipRoles = result.memberRoles.flat(1);
+      membershipRoles = result?.memberRoles.flat() ?? [];
       globalRoles = await this.authorizationService.getUserRoleObjects(
         session.userId
       );
