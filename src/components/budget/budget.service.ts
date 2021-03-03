@@ -382,6 +382,7 @@ export class BudgetService {
       .return([
         'propList + [{value: organization.id, property: "organization"}] as propList',
         'node',
+        'memberRoles',
       ])
       .asResult<
         StandardReadResult<DbPropsOfDto<BudgetRecord>> & {
