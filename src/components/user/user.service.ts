@@ -169,6 +169,20 @@ export class UserService {
     );
   };
 
+  emailProperty = (email: string | undefined, createdAt: DateTime) =>
+    email
+      ? [
+          relation('out', '', 'email', {
+            active: true,
+            createdAt,
+          }),
+          node('email', 'EmailAddress:Property', {
+            value: email,
+            createdAt,
+          }),
+        ]
+      : [];
+
   async create(input: CreatePerson, _session?: Session): Promise<string> {
     const id = await generateId();
     const createdAt = DateTime.local();
@@ -180,14 +194,7 @@ export class UserService {
           id,
           createdAt,
         }),
-        relation('out', '', 'email', {
-          active: true,
-          createdAt,
-        }),
-        node('email', 'EmailAddress:Property', {
-          value: input.email,
-          createdAt,
-        }),
+        ...this.emailProperty(input.email, createdAt),
       ],
       ...property('realFirstName', input.realFirstName, 'user'),
       ...property('realLastName', input.realLastName, 'user'),
@@ -363,6 +370,49 @@ export class UserService {
       changes: input,
       nodevar: 'user',
     });
+
+    // Update email
+    if (input.email) {
+      // Remove old emails and relations
+      await this.db
+        .query()
+        .match([
+          node('user', ['User', 'BaseNode'], { id: user.id }),
+          relation('out', 'oldRel', 'email', { active: true }),
+          node('email', 'EmailAddress:Property'),
+        ])
+        .delete('oldRel')
+        .delete('email')
+        .run();
+
+      try {
+        const createdAt = DateTime.local();
+        await this.db
+          .query()
+          .match([node('user', ['User', 'BaseNode'], { id: user.id })])
+          .create([
+            node('user'),
+            relation('out', '', 'email', {
+              active: true,
+              createdAt,
+            }),
+            node('email', 'EmailAddress:Property', {
+              value: input.email,
+              createdAt,
+            }),
+          ])
+          .run();
+      } catch (e) {
+        if (e instanceof UniquenessError && e.label === 'EmailAddress') {
+          throw new DuplicateException(
+            'person.email',
+            'Email address is already in use',
+            e
+          );
+        }
+        throw new ServerException('Failed to create user', e);
+      }
+    }
 
     // Update roles
     if (input.roles) {
