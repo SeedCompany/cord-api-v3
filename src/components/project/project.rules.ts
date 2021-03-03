@@ -10,6 +10,7 @@ import {
 } from '../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import { Role } from '../authorization';
+import { EngagementStatus, NonTerminalEngagementStatuses } from '../engagement';
 import { User, UserService } from '../user';
 import {
   Project,
@@ -712,6 +713,12 @@ export class ProjectRules {
           ],
         };
       case ProjectStep.FinalizingCompletion:
+        const engagementStatuses = (await this.getEngagements(id)).map(
+          (e) => e.status
+        );
+        const disabled =
+          intersection(engagementStatuses, NonTerminalEngagementStatuses)
+            .length > 0;
         return {
           approvers: [
             Role.Administrator,
@@ -733,6 +740,10 @@ export class ProjectRules {
               to: ProjectStep.Completed,
               type: TransitionType.Approve,
               label: 'Complete 🎉',
+              disabled,
+              disabledReason: disabled
+                ? 'The project cannot be completed since some engagements have a non-terminal status'
+                : undefined,
             },
           ],
           getNotifiers: async () => [
@@ -821,7 +832,7 @@ export class ProjectRules {
     );
 
     const validNextStep = transitions.some(
-      (transition) => transition.to === nextStep
+      (transition) => transition.to === nextStep && !transition.disabled
     );
     if (!validNextStep) {
       throw new UnauthorizedException(
@@ -829,6 +840,22 @@ export class ProjectRules {
         'project.step'
       );
     }
+  }
+
+  private async getEngagements(projectId: string) {
+    return await this.db
+      .query()
+      .match([node('project', 'Project', { id: projectId })])
+      .match([
+        node('project'),
+        relation('out', '', 'engagement', { active: true }),
+        node('engagement'),
+        relation('out', '', 'status', { active: true }),
+        node('sn', 'Property'),
+      ])
+      .return('engagement.id as id, sn.value as status')
+      .asResult<{ id: string; status: EngagementStatus }>()
+      .run();
   }
 
   private async getCurrentStep(id: string) {

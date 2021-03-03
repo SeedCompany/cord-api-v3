@@ -62,4 +62,10 @@ export abstract class ProjectStepTransition {
 
   @Field(() => TransitionType)
   type: TransitionType;
+
+  @Field(() => Boolean, { defaultValue: false })
+  disabled?: boolean;
+
+  @Field(() => String, { nullable: true })
+  disabledReason?: string;
 }
