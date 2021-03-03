@@ -6,6 +6,7 @@ export enum ProjectStatus {
   Active = 'Active',
   Terminated = 'Terminated',
   Completed = 'Completed',
+  DidNotDevelop = 'DidNotDevelop',
 }
 
 registerEnumType(ProjectStatus, {
@@ -25,7 +26,7 @@ const mapping: Record<ProjectStep, ProjectStatus> = {
   [ProjectStep.PendingZoneDirectorApproval]: ProjectStatus.InDevelopment,
   [ProjectStep.PendingFinanceConfirmation]: ProjectStatus.InDevelopment,
   [ProjectStep.OnHoldFinanceConfirmation]: ProjectStatus.InDevelopment,
-  [ProjectStep.DidNotDevelop]: ProjectStatus.Terminated,
+  [ProjectStep.DidNotDevelop]: ProjectStatus.DidNotDevelop,
   [ProjectStep.Rejected]: ProjectStatus.Terminated,
   [ProjectStep.Active]: ProjectStatus.Active,
   [ProjectStep.ActiveChangedPlan]: ProjectStatus.Active,
