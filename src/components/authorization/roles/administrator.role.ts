@@ -32,7 +32,7 @@ const read = true;
 const write = true;
 
 export const Administrator = new DbRole({
-  name: Role.Administrator,
+  name: `global:${Role.Administrator}` as const,
   powers: [...(Object.keys(Powers) as Powers[])],
   grants: [
     new DbBaseNodeGrant<DbBudget>({

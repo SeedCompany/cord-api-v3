@@ -32,7 +32,7 @@ const read = true;
 // const write = true;
 
 export const StaffMember = new DbRole({
-  name: Role.StaffMember,
+  name: `global:${Role.StaffMember}` as const,
   powers: [
     Powers.CreateEducation,
     Powers.CreateUnavailability,

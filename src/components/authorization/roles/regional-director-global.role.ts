@@ -32,7 +32,7 @@ const read = true;
 const write = true;
 
 export const RegionalDirectorGlobal = new DbRole({
-  name: Role.RegionalDirector,
+  name: `global:${Role.RegionalDirector}` as const,
   powers: [
     Powers.CreateBudget,
     Powers.CreateBudgetRecord,

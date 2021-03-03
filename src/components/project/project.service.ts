@@ -37,14 +37,12 @@ import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
-  parseSecuredProperties,
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { Role } from '../authorization/dto';
+import { Role, rolesForScope, ScopedRole } from '../authorization/dto';
 import { Powers } from '../authorization/dto/powers';
-import { DbRole } from '../authorization/model';
 import { BudgetService, BudgetStatus, SecuredBudget } from '../budget';
 import {
   EngagementListInput,
@@ -66,6 +64,7 @@ import {
 import {
   CreateProject,
   InternshipProject,
+  IProject,
   Project,
   ProjectListInput,
   ProjectListOutput,
@@ -500,7 +499,7 @@ export class ProjectService {
       .asResult<
         StandardReadResult<DbPropsOfDto<Project>> & {
           primaryLocationId: string;
-          memberRoles: Role[];
+          memberRoles: Role[][];
           marketingLocationId: string;
           fieldRegionId: string;
           owningOrganizationId: string;
@@ -514,20 +513,14 @@ export class ProjectService {
       throw new NotFoundException('Could not find Project');
     }
     const props = parsePropList(result.propList);
-    const globalRoles = await this.authorizationService.getUserRoleObjects(
-      userId
-    );
-    const membershipRoles = result.memberRoles.flat(1);
-    // ignoring types here because baseNode provides no benefit over propList & propKeys.
-    const permsOfBaseNode = (await this.authorizationService.getPerms({
-      baseNode: new DbProject(),
-      globalRoles: globalRoles,
-      membershipRoles: membershipRoles,
-    })) as any;
-    const securedProps = parseSecuredProperties(
+    const membershipRoles = result.memberRoles
+      .flat()
+      .map(rolesForScope('project'));
+    const securedProps = await this.authorizationService.secureProperties(
+      IProject,
       props,
-      permsOfBaseNode,
-      this.securedProperties
+      sessionOrUserId,
+      membershipRoles
     );
 
     return {
@@ -563,8 +556,7 @@ export class ProjectService {
         value: result.owningOrganizationId,
       },
       canDelete: await this.db.checkDeletePermission(id, sessionOrUserId),
-      membershipRoles: result.memberRoles.flat(1),
-      globalRoles: globalRoles,
+      scope: membershipRoles,
     };
   }
 
@@ -1089,58 +1081,51 @@ export class ProjectService {
       (b) => b.status === BudgetStatus.Current
     );
 
-    //574 - if no current budget, then fallback to the first pending budget
-    let pendingBudget;
-    if (!current) {
-      pendingBudget = budgets.items[0];
-    }
+    // #574 - if no current budget, then fallback to the first pending budget
+    const budgetToReturn = current ?? budgets.items[0];
 
-    let globalRoles: DbRole[];
-    globalRoles = [];
-    let membershipRoles: Role[];
-    membershipRoles = [];
-
-    const budgetToReturn = current || pendingBudget;
-    if (typeof projectOrProjectId === 'string') {
-      const query = this.db
-        .query()
-        .match([
-          node('node', 'Project', { projectId }),
-          relation('out', '', 'member', { active: true }),
-          node('projectMember', 'ProjectMember'),
-          relation('out', '', 'user', { active: true }),
-          node('user', 'User', { id: session.userId }),
-        ])
-        .match([
-          node('projectMember'),
-          relation('out', 'r', 'roles', { active: true }),
-          node('roles', 'Property'),
-        ])
-        .return('collect(roles.value) as memberRoles')
-        .asResult<{
-          memberRoles: Role[][];
-        }>();
-      const result = await query.first();
-      membershipRoles = result?.memberRoles.flat() ?? [];
-      globalRoles = await this.authorizationService.getUserRoleObjects(
-        session.userId
-      );
-    } else {
-      membershipRoles = projectOrProjectId.membershipRoles;
-      globalRoles = projectOrProjectId.globalRoles;
-    }
-
-    const permsOfProject = await this.authorizationService.getPerms({
-      baseNode: new DbProject(),
-      globalRoles: globalRoles,
-      membershipRoles: membershipRoles,
-    });
+    const membershipRoles = await this.getMembershipRoles(projectId, session);
+    const permsOfProject = await this.authorizationService.getPermissions(
+      IProject,
+      session,
+      membershipRoles
+    );
 
     return {
       value: budgetToReturn,
       canRead: permsOfProject.budget.canRead,
       canEdit: permsOfProject.budget.canEdit,
     };
+  }
+
+  private async getMembershipRoles(
+    projectId: string | Project,
+    session: Session
+  ): Promise<ScopedRole[]> {
+    if (typeof projectId !== 'string') {
+      return projectId.scope;
+    }
+
+    const query = this.db
+      .query()
+      .match([
+        node('node', 'Project', { projectId }),
+        relation('out', '', 'member', { active: true }),
+        node('projectMember', 'ProjectMember'),
+        relation('out', '', 'user', { active: true }),
+        node('user', 'User', { id: session.userId }),
+      ])
+      .match([
+        node('projectMember'),
+        relation('out', 'r', 'roles', { active: true }),
+        node('roles', 'Property'),
+      ])
+      .return('collect(roles.value) as memberRoles')
+      .asResult<{
+        memberRoles: Role[][];
+      }>();
+    const result = await query.first();
+    return result?.memberRoles.flat().map(rolesForScope('project')) ?? [];
   }
 
   async getRootDirectory(

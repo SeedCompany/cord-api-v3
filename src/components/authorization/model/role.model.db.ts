@@ -1,5 +1,5 @@
 import { ResourceShape, SecuredResource } from '../../../common';
-import { Role } from '../dto';
+import { ScopedRole } from '../dto';
 import { Powers } from '../dto/powers';
 import { AnyBaseNode } from './any-base-node.type';
 import { DbBaseNodeGrant } from './base-node-grant.model.db';
@@ -17,19 +17,17 @@ export type PermissionsForResource<
 > = Partial<Record<keyof SecuredResource<Resource>, DbPermission>>;
 
 export class DbRole {
-  name: Role;
+  name: ScopedRole;
   powers: Powers[];
   grants: PropGrants | Array<DbBaseNodeGrant<AnyBaseNode>>;
 
   constructor({
     ...rest
   }: {
-    name: Role;
+    name: ScopedRole;
     powers: Powers[];
     grants: PropGrants | Array<DbBaseNodeGrant<AnyBaseNode>>;
   }) {
     Object.assign(this, rest);
   }
 }
-
-export class ProjectRole extends DbRole {}

@@ -319,11 +319,10 @@ export class UserService {
         implicitPerms,
       ]);
     } else {
-      const roles =
-        typeof sessionOrUserId === 'string'
-          ? await this.authorizationService.getUserRoleObjects(sessionOrUserId)
-          : sessionOrUserId.roles;
-      permsOfBaseNode = this.authorizationService.getPermissions(User, roles);
+      permsOfBaseNode = await this.authorizationService.getPermissions(
+        User,
+        sessionOrUserId
+      );
     }
 
     const securedProps = parseSecuredProperties(

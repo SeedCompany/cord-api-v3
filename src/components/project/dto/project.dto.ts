@@ -13,8 +13,7 @@ import {
   SecuredString,
   Sensitivity,
 } from '../../../common';
-import { Role } from '../../authorization/dto';
-import { DbRole } from '../../authorization/model';
+import { ScopedRole } from '../../authorization/dto';
 import { Budget } from '../../budget/dto';
 import { IEngagement as Engagement } from '../../engagement/dto';
 import { Directory } from '../../file/dto';
@@ -107,9 +106,9 @@ class Project extends Resource {
   @Field()
   readonly financialReportReceivedAt: SecuredDateTime;
 
-  readonly globalRoles: DbRole[];
-
-  readonly membershipRoles: Role[];
+  // A list of non-global roles the requesting user has available for this object.
+  // This is just a cache, to prevent extra db lookups within the same request.
+  readonly scope: ScopedRole[];
 }
 
 // class name has to match schema name for interface resolvers to work.
