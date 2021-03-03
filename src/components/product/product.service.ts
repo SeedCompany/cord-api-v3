@@ -37,7 +37,7 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
-import { Role } from '../authorization';
+import { Role, rolesForScope } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Film, FilmService } from '../film';
 import {
@@ -283,7 +283,7 @@ export class ProductService {
               }
           >
         > & {
-          memberRoles: Role[];
+          memberRoles: Role[][];
         }
       >();
     const result = await query.first();
@@ -298,13 +298,12 @@ export class ProductService {
       produces,
       scriptureReferencesOverride,
       ...rest
-    } = await this.authorizationService.getPermissionsOfBaseNode({
-      baseNode: new DbProduct(),
-      sessionOrUserId: session,
-      propList: props,
-      propKeys: this.securedProperties,
-      membershipRoles: result.memberRoles.flat(1),
-    });
+    } = await this.authorizationService.secureProperties(
+      DerivativeScriptureProduct,
+      props,
+      session,
+      result.memberRoles.flat().map(rolesForScope('project'))
+    );
 
     const connectedProducible = await this.db
       .query()

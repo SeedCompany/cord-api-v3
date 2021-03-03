@@ -1,6 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, Node, Query, relation } from 'cypher-query-builder';
-import { flatten, pickBy } from 'lodash';
+import { pickBy } from 'lodash';
 import { DateTime } from 'luxon';
 import { Except, MergeExclusive } from 'type-fest';
 import {
@@ -8,6 +8,7 @@ import {
   generateId,
   InputException,
   NotFoundException,
+  SecuredResource,
   ServerException,
   Session,
   UnauthorizedException,
@@ -37,9 +38,8 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
-import { Role } from '../authorization';
+import { Role, rolesForScope } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { DbBaseNode } from '../authorization/model/db-base-node.model';
 import { CeremonyService } from '../ceremony';
 import { FileService } from '../file';
 import {
@@ -68,11 +68,7 @@ import {
   EngagementDeletedEvent,
   EngagementUpdatedEvent,
 } from './events';
-import {
-  DbEngagement,
-  DbInternshipEngagement,
-  DbLanguageEngagement,
-} from './model';
+import { DbInternshipEngagement, DbLanguageEngagement } from './model';
 import { PnpExtractor } from './pnp-extractor.service';
 
 @Injectable()
@@ -665,12 +661,12 @@ export class EngagementService {
         node('pnpData'),
       ])
       .return([
-        'propList, node, project.id as projectId',
-        '__typename, ceremony.id as ceremonyId',
-        'language.id as languageId',
-        'intern.id as internId',
-        'countryOfOrigin.id as countryOfOriginId',
-        'mentor.id as mentorId',
+        'propList, node, project.id as project',
+        '__typename, ceremony.id as ceremony',
+        'language.id as language',
+        'intern.id as intern',
+        'countryOfOrigin.id as countryOfOrigin',
+        'mentor.id as mentor',
         'pnpData',
         'memberRoles',
       ])
@@ -681,15 +677,15 @@ export class EngagementService {
             'pnpData'
           >
         > & {
-          __typename: string;
-          languageId: string;
-          ceremonyId: string;
-          projectId: string;
-          internId: string;
-          countryOfOriginId: string;
-          mentorId: string;
+          __typename: 'LanguageEngagement' | 'InternshipEngagement';
+          language: string;
+          ceremony: string;
+          project: string;
+          intern: string;
+          countryOfOrigin: string;
+          mentor: string;
           pnpData?: Node<PnpData>;
-          memberRoles: Role[];
+          memberRoles: Role[][];
         }
       >();
 
@@ -701,28 +697,16 @@ export class EngagementService {
 
     const props = parsePropList(result.propList);
 
-    let baseNode = new DbBaseNode();
-    if (result.node.labels.includes('LanguageEngagement')) {
-      baseNode = new DbLanguageEngagement();
-    } else if (result.node.labels.includes('InternshipEngagement')) {
-      baseNode = new DbInternshipEngagement();
-    } else {
-      baseNode = new DbEngagement();
-    }
-    const securedProperties = await this.authorizationService.getPermissionsOfBaseNode(
-      {
-        baseNode: baseNode,
-        sessionOrUserId: session,
-        propList: result.propList,
-        propKeys: this.securedProperties,
-        membershipRoles: flatten(result.memberRoles),
-      }
+    const isLanguageEngagement = props.__typename === 'LanguageEngagement';
+
+    const securedProperties = await this.authorizationService.secureProperties(
+      isLanguageEngagement ? LanguageEngagement : InternshipEngagement,
+      props,
+      session,
+      result.memberRoles.flat().map(rolesForScope('project'))
     );
 
-    const project = await this.projectService.readOne(
-      result.projectId,
-      session
-    );
+    const project = await this.projectService.readOne(result.project, session);
 
     const canReadStartDate =
       project.mouStart.canRead && securedProperties.startDateOverride.canRead;
@@ -735,9 +719,8 @@ export class EngagementService {
       ? props.endDateOverride ?? project.mouEnd.value
       : null;
 
-    return {
+    const common = {
       __typename: result.__typename,
-      ...securedProperties,
       ...parseBaseNodeProperties(result.node),
       modifiedAt: props.modifiedAt,
       startDate: {
@@ -750,33 +733,35 @@ export class EngagementService {
         canRead: canReadEndDate,
         canEdit: false,
       },
-      methodologies: {
-        ...securedProperties.methodologies,
-        value: securedProperties.methodologies.value ?? [],
-      },
-      ceremony: {
-        ...securedProperties.ceremony,
-        value: result.ceremonyId,
-      },
-      language: {
-        ...securedProperties.language,
-        value: result.languageId,
-      },
-      intern: {
-        ...securedProperties.intern,
-        value: result.internId,
-      },
-      countryOfOrigin: {
-        ...securedProperties.countryOfOrigin,
-        value: result.countryOfOriginId,
-      },
-      mentor: {
-        ...securedProperties.mentor,
-        value: result.mentorId,
-      },
-      pnpData: result.pnpData?.properties,
       canDelete: await this.db.checkDeletePermission(id, session),
     };
+
+    if (isLanguageEngagement) {
+      // help TS understand that the secured props are for a LanguageEngagement
+      const secured = securedProperties as SecuredResource<
+        typeof LanguageEngagement,
+        false
+      >;
+      return {
+        ...common,
+        ...secured,
+        pnpData: result.pnpData?.properties,
+      };
+    } else {
+      // help TS understand that the secured props are for a InternshipEngagement
+      const secured = securedProperties as SecuredResource<
+        typeof InternshipEngagement,
+        false
+      >;
+      return {
+        ...common,
+        ...secured,
+        methodologies: {
+          ...secured.methodologies,
+          value: secured.methodologies.value ?? [],
+        },
+      };
+    }
   }
 
   // UPDATE ////////////////////////////////////////////////////////
