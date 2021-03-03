@@ -17,6 +17,7 @@ import { Location } from '../src/components/location';
 import { ProductMethodology } from '../src/components/product';
 import {
   Project,
+  ProjectStatus,
   ProjectStep,
   ProjectStepTransition,
   ProjectType,
@@ -56,6 +57,7 @@ import {
   changeProjectStep,
   stepsFromEarlyConversationToBeforeActive,
   stepsFromEarlyConversationToBeforeCompleted,
+  stepsFromEarlyConversationToBeforeTerminated,
 } from './utility/transition-project';
 
 describe('Engagement e2e', () => {
@@ -1132,8 +1134,71 @@ describe('Engagement e2e', () => {
     await expect(updateProject).rejects.toThrow(Error);
   });
 
-  /**
-   * Whenever an engagement's status gets changed to anything different the statusModifiedAt date should get set to now
+  it.each([
+    [EngagementStatus.Active, stepsFromEarlyConversationToBeforeActive],
+    [EngagementStatus.DidNotDevelop, []],
+    [EngagementStatus.Rejected, stepsFromEarlyConversationToBeforeActive],
+    [EngagementStatus.Terminated, stepsFromEarlyConversationToBeforeTerminated],
+    // this only happens when an admin overrides to completed
+    // this is prohibited if there are non terminal engagements
+    [EngagementStatus.Completed, stepsFromEarlyConversationToBeforeCompleted],
+  ])(
+    'should update Engagement status to match Project step when it becomes %s',
+    async (newStatus: EngagementStatus, steps: ProjectStep[] | []) => {
+      const fundingAccount = await createFundingAccount(app);
+      const location = await createLocation(app, {
+        fundingAccountId: fundingAccount.id,
+      });
+      const project = await createProject(app, {
+        step: ProjectStep.EarlyConversations,
+        primaryLocationId: location.id,
+      });
+      expect(project.status).toBe(ProjectStatus.InDevelopment);
+
+      const engagement = await createLanguageEngagement(app, {
+        projectId: project.id,
+      });
+      expect(engagement.status.value === EngagementStatus.InDevelopment).toBe(
+        true
+      );
+      await runAsAdmin(app, async () => {
+        for (const next of steps) {
+          await changeProjectStep(app, project.id, next);
+        }
+
+        const result = await app.graphql.mutate(
+          gql`
+            mutation updateProject($id: ID!, $step: ProjectStep) {
+              updateProject(input: { project: { id: $id, step: $step } }) {
+                project {
+                  id
+                  engagements {
+                    items {
+                      id
+                      status {
+                        value
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          `,
+          {
+            id: project.id,
+            step: newStatus,
+          }
+        );
+
+        const actual = result.updateProject.project.engagements.items.find(
+          (e: { id: string }) => e.id === engagement.id
+        );
+        expect(actual.status.value).toBe(EngagementStatus[newStatus]);
+      });
+    }
+  );
+
+  /** Whenever an engagement's status gets changed to anything different the statusModifiedAt date should get set to now
    */
   it('should update Engagement statusModifiedAt if status is updated', async () => {
     const fundingAccount = await createFundingAccount(app);
