@@ -1,6 +1,6 @@
 import {
   Args,
-  Int,
+  Float,
   Mutation,
   Parent,
   Query,
@@ -53,7 +53,7 @@ export class BudgetResolver {
     return this.service.list(input, session);
   }
 
-  @ResolveField(() => Int)
+  @ResolveField(() => Float)
   async total(@Parent() budget: Budget): Promise<number> {
     return sumBy(budget.records, (record) => record.amount.value ?? 0);
   }
