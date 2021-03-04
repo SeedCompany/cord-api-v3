@@ -366,7 +366,7 @@ export class UserService {
 
     // Update roles
     if (input.roles) {
-      await this.authorizationService.checkPower(Powers.GrantRole, session);
+      await this.authorizationService.verifyPower(Powers.GrantRole, session);
       await this.db
         .query()
         .match([

@@ -143,9 +143,9 @@ export class LanguageService {
   async create(input: CreateLanguage, session: Session): Promise<Language> {
     const createdAt = DateTime.local();
 
-    await this.authorizationService.checkPower(Powers.CreateLanguage, session);
+    await this.authorizationService.verifyPower(Powers.CreateLanguage, session);
 
-    await this.authorizationService.checkPower(
+    await this.authorizationService.verifyPower(
       Powers.CreateEthnologueLanguage,
       session
     );

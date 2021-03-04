@@ -106,7 +106,7 @@ export class OrganizationService {
     input: CreateOrganization,
     session: Session
   ): Promise<Organization> {
-    await this.authorizationService.checkPower(
+    await this.authorizationService.verifyPower(
       Powers.CreateOrganization,
       session
     );

@@ -47,7 +47,7 @@ export class EthnologueLanguageService {
     input: CreateEthnologueLanguage,
     session: Session
   ): Promise<string> {
-    await this.authorizationService.checkPower(Powers.CreateLanguage, session);
+    await this.authorizationService.verifyPower(Powers.CreateLanguage, session);
     const secureProps: Property[] = [
       {
         key: 'code',

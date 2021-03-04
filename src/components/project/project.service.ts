@@ -160,7 +160,7 @@ export class ProjectService {
         'project.sensitivity'
       );
     }
-    await this.authorizationService.checkPower(Powers.CreateProject, session);
+    await this.authorizationService.verifyPower(Powers.CreateProject, session);
 
     const createdAt = DateTime.local();
     const step = input.step ?? ProjectStep.EarlyConversations;

@@ -205,7 +205,10 @@ export class FileService {
     name: string,
     session: Session
   ): Promise<Directory> {
-    await this.authorizationService.checkPower(Powers.CreateDirectory, session);
+    await this.authorizationService.verifyPower(
+      Powers.CreateDirectory,
+      session
+    );
     if (parentId) {
       // Enforce parent exists and is a directory
       const parent = await this.getParentNode(parentId, session);
@@ -255,7 +258,7 @@ export class FileService {
     }: CreateFileVersionInput,
     session: Session
   ): Promise<File> {
-    await this.authorizationService.checkPower(
+    await this.authorizationService.verifyPower(
       Powers.CreateFileVersion,
       session
     );
@@ -376,7 +379,7 @@ export class FileService {
       }
     }
 
-    await this.authorizationService.checkPower(Powers.CreateFile, session);
+    await this.authorizationService.verifyPower(Powers.CreateFile, session);
     const fileId = await generateId();
     await this.repo.createFile(fileId, name, session, parentId);
 
@@ -402,8 +405,8 @@ export class FileService {
   ) {
     // not sure about this, but I'm thinking it's best to check from the get-go whether the user can create a file
     // File AND fileVersion
-    await this.authorizationService.checkPower(Powers.CreateFile, session);
-    await this.authorizationService.checkPower(
+    await this.authorizationService.verifyPower(Powers.CreateFile, session);
+    await this.authorizationService.verifyPower(
       Powers.CreateFileVersion,
       session
     );
@@ -438,7 +441,7 @@ export class FileService {
     session: Session
   ) {
     // -- we technically check if they have the CreateFileVersion power, even though it's just an update, right?
-    await this.authorizationService.checkPower(
+    await this.authorizationService.verifyPower(
       Powers.CreateFileVersion,
       session
     );

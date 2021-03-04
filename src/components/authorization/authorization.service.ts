@@ -223,7 +223,7 @@ export class AuthorizationService {
     }
   }
 
-  async checkPower(powers: Many<Powers>, session: Session): Promise<void> {
+  async verifyPower(powers: Many<Powers>, session: Session): Promise<void> {
     const availablePowers = getDbRoles(session.roles).flatMap(
       (dbRole) => dbRole.powers
     );
