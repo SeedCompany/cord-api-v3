@@ -43,7 +43,6 @@ export async function createPerson(
   expect(actual).toBeTruthy();
 
   expect(isValidId(actual.id)).toBe(true);
-  expect(actual.email.value).toBe(person.email.toLowerCase());
 
   return actual;
 }
