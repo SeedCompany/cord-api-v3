@@ -236,6 +236,7 @@ export class AuthenticationService {
         node('user', 'User'),
       ])
       .return('token, user.id AS userId')
+      .asResult<{ userId?: string }>()
       .first();
 
     if (!result) {
@@ -246,9 +247,9 @@ export class AuthenticationService {
       );
     }
 
-    const roles = await this.authorizationService.getUserGlobalRoles(
-      result.userId
-    );
+    const roles = result.userId
+      ? await this.authorizationService.getUserGlobalRoles(result.userId)
+      : [];
 
     const session = {
       token,
