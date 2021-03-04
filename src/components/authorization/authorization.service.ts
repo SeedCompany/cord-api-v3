@@ -1,10 +1,19 @@
 /* eslint-disable no-case-declarations */
 import { Injectable } from '@nestjs/common';
 import { Connection, node, relation } from 'cypher-query-builder';
-import { compact, keyBy, mapValues, union, without } from 'lodash';
+import {
+  compact,
+  difference,
+  keyBy,
+  mapValues,
+  union,
+  without,
+} from 'lodash';
 import {
   getParentTypes,
   has,
+  many,
+  Many,
   mapFromList,
   ResourceShape,
   SecuredResource,
@@ -214,42 +223,17 @@ export class AuthorizationService {
     }
   }
 
-  async checkPower(power: Powers, session: Session): Promise<void> {
-    const id = session.userId;
+  async checkPower(powers: Many<Powers>, session: Session): Promise<void> {
+    const availablePowers = getDbRoles(session.roles).flatMap(
+      (dbRole) => dbRole.powers
+    );
 
-    const query = this.db
-      .query()
-      .match(
-        // if anonymous we check the public sg for public powers
-        session.anonymous
-          ? [
-              node('user', 'User', { id }),
-              relation('in', '', 'member'),
-              node('sg', 'SecurityGroup'),
-            ]
-          : [
-              node('sg', 'PublicSecurityGroup', {
-                id: this.config.publicSecurityGroup.id,
-              }),
-            ]
-      )
-      .raw('where $power IN sg.powers', { power })
-      .raw('return $power IN sg.powers as hasPower')
-      .union()
-      .match([node('user', 'User', { id })])
-      .raw('where $power IN user.powers')
-      .raw('return $power IN user.powers as hasPower')
-      .asResult<{ hasPower: boolean }>();
+    const missing = difference(many(powers), availablePowers);
 
-    const result = await query.first();
-    const hasPower = result?.hasPower ?? false;
-
-    if (!hasPower) {
+    if (missing.length > 0) {
       throw new MissingPowerException(
-        power,
-        `user ${
-          session.anonymous ? id : 'anon'
-        } does not have the requested power: ${power}`
+        missing[0],
+        `User does not have the requested power(s): ${missing.join(', ')}`
       );
     }
   }
