@@ -1639,10 +1639,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/luxon@npm:^1.25.0":
-  version: 1.25.0
-  resolution: "@types/luxon@npm:1.25.0"
-  checksum: f2a1b84878cef1df59bc1debf98a79a1342931fe059aad28fe71e7cc457c73020786cc6cce9b4587a1ec2f6d530bf6e32ac913799bb8775dce671792eb2b854c
+"@types/luxon@npm:^1.26.1":
+  version: 1.26.1
+  resolution: "@types/luxon@npm:1.26.1"
+  checksum: 5aac5bc7e77839fc006e28f1a4f9ca15f1708e995669e1624f3c43ebc75463290d6e57e836670c7a9560a68d4787fa818aa4f41d802664ad29a67deaedbbaef2
   languageName: node
   linkType: hard
 
@@ -4125,7 +4125,7 @@ __metadata:
     "@types/js-yaml": ^3.12.5
     "@types/jsonwebtoken": ^8.5.0
     "@types/lodash": ^4.14.165
-    "@types/luxon": ^1.25.0
+    "@types/luxon": ^1.26.1
     "@types/mjml-react": ^1.0.4
     "@types/node": ^14.14.14
     "@types/react": ^16.14.2
@@ -4159,7 +4159,7 @@ __metadata:
     lazy-get-decorator: ^2.2.0
     lint-staged: ^10.5.3
     lodash: ^4.17.20
-    luxon: ^1.25.0
+    luxon: ^1.26.0
     madge: ^3.12.0
     nanoid: ^3.1.20
     neo4j-driver: ^4.1.2
@@ -8515,10 +8515,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"luxon@npm:^1.25.0":
-  version: 1.25.0
-  resolution: "luxon@npm:1.25.0"
-  checksum: 3f0d64355beab707f5e8eb4e2d7e1cad90569c2a4c4dce440e0b4be4eb6833ec1a83513a4210361cd4dc5a266c0221718a9afd15f7cde3002d8fa1d0976b9e50
+"luxon@npm:^1.26.0":
+  version: 1.26.0
+  resolution: "luxon@npm:1.26.0"
+  checksum: e12bb8bfdd69707f0f3e57b1b2ff39042c67904bdc437602064519f3eb87d3267497bc56cc0b7611faa40e22019991440a8e8e179d4c6a0440e9f226571fce46
   languageName: node
   linkType: hard
 
