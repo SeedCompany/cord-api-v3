@@ -224,9 +224,7 @@ export class AuthorizationService {
   }
 
   async verifyPower(powers: Many<Powers>, session: Session): Promise<void> {
-    const availablePowers = getDbRoles(session.roles).flatMap(
-      (dbRole) => dbRole.powers
-    );
+    const availablePowers = await this.readPower(session);
 
     const missing = difference(many(powers), availablePowers);
 
@@ -239,10 +237,7 @@ export class AuthorizationService {
   }
 
   async readPower(session: Session): Promise<Powers[]> {
-    if (session.anonymous) {
-      return [];
-    }
-    return await this.readPowerByUserId(session.userId);
+    return getDbRoles(session.roles).flatMap((dbRole) => dbRole.powers);
   }
 
   async createPower(
