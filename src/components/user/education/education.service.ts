@@ -135,12 +135,11 @@ export class EducationService {
       throw new NotFoundException('Could not find education', 'education.id');
     }
 
-    const secured = await this.authorizationService.getPermissionsOfBaseNode({
-      baseNode: new DbEducation(),
-      sessionOrUserId: session,
-      propList: result.propList,
-      propKeys: this.securedProperties,
-    });
+    const secured = await this.authorizationService.secureProperties(
+      Education,
+      result.propList,
+      session
+    );
 
     return {
       ...parseBaseNodeProperties(result.node),

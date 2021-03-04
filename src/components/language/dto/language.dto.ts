@@ -1,5 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
+import { keys as keysOf } from 'ts-transformer-keys';
 import {
   Resource,
   SecuredBoolean,
@@ -7,9 +8,11 @@ import {
   SecuredInt,
   SecuredProperty,
   SecuredPropertyList,
+  SecuredProps,
   SecuredString,
   Sensitivity,
 } from '../../../common';
+import { Location } from '../../location/dto';
 
 @ObjectType({
   description: SecuredPropertyList.descriptionFor('tags'),
@@ -18,6 +21,9 @@ export abstract class SecuredTags extends SecuredPropertyList(String) {}
 
 @ObjectType()
 export class EthnologueLanguage {
+  static readonly Props = keysOf<EthnologueLanguage>();
+  static readonly SecuredProps = keysOf<SecuredProps<EthnologueLanguage>>();
+
   readonly id: string;
 
   @Field({
@@ -47,6 +53,13 @@ export class EthnologueLanguage {
   implements: [Resource],
 })
 export class Language extends Resource {
+  static readonly Props = keysOf<Language>();
+  static readonly SecuredProps = keysOf<SecuredProps<Language>>();
+  static readonly Relations = {
+    ethnologue: EthnologueLanguage,
+    locations: [Location],
+  };
+
   @Field({
     description: `The real language name`,
   })

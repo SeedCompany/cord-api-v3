@@ -2,7 +2,7 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { IdField, NameField } from '../../../common';
-import { Organization } from './organization';
+import { Organization } from './organization.dto';
 
 @InputType()
 export abstract class UpdateOrganization {

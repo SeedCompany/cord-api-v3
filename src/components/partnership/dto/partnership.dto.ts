@@ -1,11 +1,14 @@
 import { Field, ObjectType } from '@nestjs/graphql';
+import { keys as keysOf } from 'ts-transformer-keys';
 import {
   Resource,
   Secured,
   SecuredDateNullable,
   SecuredEnum,
+  SecuredProps,
 } from '../../../common';
 import { DefinedFile } from '../../file/dto';
+import { Organization } from '../../organization/dto';
 import { SecuredPartnerTypes } from '../../partner/dto/partner-type.enum';
 import { FinancialReportingType } from './financial-reporting-type';
 import { PartnershipAgreementStatus } from './partnership-agreement-status.enum';
@@ -29,6 +32,13 @@ export abstract class SecuredFinancialReportingType extends SecuredEnum(
   implements: [Resource],
 })
 export class Partnership extends Resource {
+  static readonly Props = keysOf<Partnership>();
+  static readonly SecuredProps = keysOf<SecuredProps<Partnership>>();
+  static readonly Relations = {
+    // why is this here? We have a relation to partner, not org...
+    organization: Organization,
+  };
+
   @Field()
   readonly agreementStatus: SecuredPartnershipAgreementStatus;
 

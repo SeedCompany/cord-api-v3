@@ -223,12 +223,11 @@ export class LocationService {
       throw new NotFoundException('Could not find location', 'location.id');
     }
 
-    const secured = await this.authorizationService.getPermissionsOfBaseNode({
-      baseNode: new DbLocation(),
-      sessionOrUserId: session,
-      propList: result.propList,
-      propKeys: this.securedProperties,
-    });
+    const secured = await this.authorizationService.secureProperties(
+      Location,
+      result.propList,
+      session
+    );
 
     return {
       ...parseBaseNodeProperties(result.node),

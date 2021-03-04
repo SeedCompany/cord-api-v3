@@ -1,5 +1,6 @@
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
+import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
 import {
   DateTimeField,
@@ -8,10 +9,11 @@ import {
   SecuredBoolean,
   SecuredDateNullable,
   SecuredDateTime,
+  SecuredProps,
   SecuredString,
 } from '../../../common';
 import { DefinedFile } from '../../file/dto';
-import { SecuredMethodologies } from '../../product';
+import { Product, SecuredMethodologies } from '../../product/dto';
 import { SecuredInternPosition } from './intern-position.enum';
 import { PnpData } from './pnp-data.dto';
 import { SecuredEngagementStatus } from './status.enum';
@@ -32,6 +34,9 @@ export type AnyEngagement = MergeExclusive<
  * This should be used for GraphQL but never for TypeScript types.
  */
 class Engagement extends Resource {
+  static readonly Props: string[] = keysOf<Engagement>();
+  static readonly SecuredProps: string[] = keysOf<SecuredProps<Engagement>>();
+
   readonly __typename: string;
 
   @Field(() => SecuredEngagementStatus)
@@ -96,6 +101,13 @@ export { Engagement as IEngagement, AnyEngagement as Engagement };
   implements: [Engagement, Resource],
 })
 export class LanguageEngagement extends Engagement {
+  static readonly Props = keysOf<LanguageEngagement>();
+  static readonly SecuredProps = keysOf<SecuredProps<LanguageEngagement>>();
+  static readonly Relations = {
+    // why is this singular?
+    product: [Product],
+  };
+
   readonly language: Secured<string>;
 
   @Field()
@@ -125,6 +137,9 @@ export class LanguageEngagement extends Engagement {
   implements: [Engagement, Resource],
 })
 export class InternshipEngagement extends Engagement {
+  static readonly Props = keysOf<InternshipEngagement>();
+  static readonly SecuredProps = keysOf<SecuredProps<InternshipEngagement>>();
+
   readonly countryOfOrigin: Secured<string>;
 
   readonly intern: Secured<string>;

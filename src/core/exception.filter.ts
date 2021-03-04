@@ -17,7 +17,13 @@ import {
   GqlExceptionFilter,
 } from '@nestjs/graphql';
 import { compact, mapValues, uniq } from 'lodash';
-import { Exception, getPreviousList, simpleSwitch } from '../common';
+import {
+  AbstractClassType,
+  Exception,
+  getParentTypes,
+  getPreviousList,
+  simpleSwitch,
+} from '../common';
 import { ConnectionTimeoutError, ServiceUnavailableError } from './database';
 import { ILogger, Logger, LogLevel } from './logger';
 
@@ -170,24 +176,11 @@ export class ExceptionFilter implements GqlExceptionFilter {
 
   private errorToCodes(ex: Error) {
     return compact(
-      this.getProtoChain(ex).flatMap((e) => this.errorToCode(e, ex))
+      getParentTypes(ex.constructor).flatMap((e) => this.errorToCode(e, ex))
     );
   }
 
-  private getProtoChain<T>(obj: T, chain: T[] = []): T[] {
-    if (!obj || typeof obj !== 'object') {
-      return chain;
-    }
-    const ex = Object.getPrototypeOf(obj);
-    if (ex == null) {
-      return chain.slice(0, -1);
-    }
-    return this.getProtoChain(ex, [...chain, ex]);
-  }
-
-  private errorToCode(obj: Error, ex: Error) {
-    const type = obj.constructor;
-
+  private errorToCode(type: AbstractClassType<Error>, ex: Error) {
     if (type === InternalServerErrorException) {
       return 'Server';
     }

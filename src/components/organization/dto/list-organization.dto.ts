@@ -6,7 +6,7 @@ import {
   SecuredList,
   SortablePaginationInput,
 } from '../../../common';
-import { Organization } from './organization';
+import { Organization } from './organization.dto';
 
 @InputType()
 export abstract class OrganizationFilters {

@@ -32,7 +32,7 @@ const read = true;
 const write = true;
 
 export const RegionalCommunicationsCoordinator = new DbRole({
-  name: Role.RegionalCommunicationsCoordinator,
+  name: `global:${Role.RegionalCommunicationsCoordinator}` as const,
   powers: [
     Powers.CreateDirectory,
     Powers.CreateEducation,

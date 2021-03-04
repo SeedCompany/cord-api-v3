@@ -180,13 +180,10 @@ export class LiteracyMaterialService {
       session
     );
 
-    const securedProps = await this.authorizationService.getPermissionsOfBaseNode(
-      {
-        baseNode: new DbLiteracyMaterial(),
-        sessionOrUserId: session,
-        propList: result.propList,
-        propKeys: this.securedProperties,
-      }
+    const securedProps = await this.authorizationService.secureProperties(
+      LiteracyMaterial,
+      result.propList,
+      session
     );
 
     return {

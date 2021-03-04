@@ -31,7 +31,7 @@ import { DbBaseNodeGrant, DbRole } from '../model';
 const read = true;
 
 export const Fundraising = new DbRole({
-  name: Role.Fundraising,
+  name: `global:${Role.Fundraising}` as const,
   powers: [
     Powers.CreateEducation,
     Powers.CreateUnavailability,

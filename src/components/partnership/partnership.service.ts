@@ -36,7 +36,7 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { Role } from '../authorization/dto';
+import { Role, rolesForScope } from '../authorization/dto';
 import { FileService } from '../file';
 import { Partner, PartnerService, PartnerType } from '../partner';
 import { ProjectService } from '../project';
@@ -279,7 +279,7 @@ export class PartnershipService {
         StandardReadResult<DbPropsOfDto<Partnership>> & {
           projectId: string;
           partnerId: string;
-          memberRoles: Role[];
+          memberRoles: Role[][];
         }
       >();
 
@@ -297,14 +297,11 @@ export class PartnershipService {
       session
     );
 
-    const securedProps = await this.authorizationService.getPermissionsOfBaseNode(
-      {
-        baseNode: new DbPartnership(),
-        sessionOrUserId: session,
-        propList: result.propList,
-        propKeys: this.securedProperties,
-        membershipRoles: result.memberRoles.flat(1),
-      }
+    const securedProps = await this.authorizationService.secureProperties(
+      Partnership,
+      result.propList,
+      session,
+      result.memberRoles.flat().map(rolesForScope('project'))
     );
 
     const canReadMouStart =

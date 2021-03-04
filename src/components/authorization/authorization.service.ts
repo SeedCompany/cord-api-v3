@@ -1,28 +1,31 @@
 /* eslint-disable no-case-declarations */
 import { Injectable } from '@nestjs/common';
 import { Connection, node, relation } from 'cypher-query-builder';
-import { compact, groupBy, mapValues, pickBy, union, without } from 'lodash';
-import { ServerException, Session } from '../../common';
+import { compact, keyBy, mapValues, union, without } from 'lodash';
+import {
+  getParentTypes,
+  has,
+  mapFromList,
+  ResourceShape,
+  SecuredResource,
+  ServerException,
+  Session,
+} from '../../common';
 import { retry } from '../../common/retry';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import {
+  DbPropsOfDto,
   parseSecuredProperties,
   PropListDbResult,
 } from '../../core/database/results';
-import { InternalRole, Role } from './dto';
+import { InternalRole, Role, rolesForScope, ScopedRole } from './dto';
 import { Powers } from './dto/powers';
 import { MissingPowerException } from './missing-power.exception';
-import { DbRole, OneBaseNode } from './model';
-import { DbBaseNode } from './model/db-base-node.model';
+import { DbRole, OneBaseNode, PermissionsForResource } from './model';
 import * as AllRoles from './roles';
 
-const getRole = (role: Role) =>
-  Object.values(AllRoles).find((r) => r.name === role);
-
-const getProjectRole = (role: Role) =>
-  Object.values(AllRoles).find(
-    (r) => r.name === role && r.constructor.name === 'ProjectRole'
-  );
+const getDbRoles = (roles: ScopedRole[]) =>
+  Object.values(AllRoles).filter((role) => roles.includes(role.name));
 
 export const permissionDefaults = {
   canRead: false,
@@ -32,8 +35,6 @@ export const permissionDefaults = {
 export type Permission = typeof permissionDefaults;
 
 export type PermissionsOf<T> = Record<keyof T, Permission>;
-
-export const allRoles = [];
 
 @Injectable()
 export class AuthorizationService {
@@ -86,115 +87,87 @@ export class AuthorizationService {
     };
   }
 
-  async getPerms<DbNode extends DbBaseNode>({
-    baseNode,
-    globalRoles,
-    membershipRoles,
-  }: {
-    baseNode: DbNode;
-    globalRoles: DbRole[];
-    membershipRoles?: Role[];
-  }): Promise<PermissionsOf<DbNode>> {
-    // console.log("-----------------------------------------------------------------")
-    // console.log("baseNode:")
-    // console.log(baseNode)
-    const userRoleList = globalRoles.map((g) => g.grants);
-    const userRoleListFlat = userRoleList.flat(1);
-    const objGrantList = userRoleListFlat.filter(
-      (g) => g.__className === baseNode.__className
+  async secureProperties<Resource extends ResourceShape<any>>(
+    resource: Resource,
+    props:
+      | PropListDbResult<DbPropsOfDto<Resource['prototype']>>
+      | DbPropsOfDto<Resource['prototype']>,
+    sessionOrUserId: Session | string,
+    otherRoles: ScopedRole[] = []
+  ): Promise<SecuredResource<Resource, false>> {
+    const permissions = await this.getPermissions(
+      resource,
+      sessionOrUserId,
+      otherRoles
     );
-    const propList = objGrantList.map((g) => g.properties).flat(1);
-    const byProp = groupBy(propList, 'propertyName');
-
-    // Global roles
-    // Merge together the results of each property
-    const permissions = mapValues(
-      byProp,
-      (nodes): Permission => {
-        const possibilities = nodes.map((node) =>
-          // Convert the db properties to API properties.
-          // Only keep true values, so merging the objects doesn't replace a true with false
-          pickBy({
-            canRead: node.permission.read || null,
-            canEdit: node.permission.write || null,
-          })
-        );
-        // Merge the all the true permissions together, otherwise default to false
-        return Object.assign({}, permissionDefaults, ...possibilities);
-      }
-    );
-
-    if (membershipRoles) {
-      if (membershipRoles.length > 0) {
-        const roles = compact(membershipRoles.map(getProjectRole));
-
-        const userRoleList = roles.map((g) => g.grants);
-        const userRoleListFlat = userRoleList.flat(1);
-        const objGrantList = userRoleListFlat.filter(
-          (g) => g.__className === baseNode.__className
-        );
-        const propList = objGrantList.map((g) => g.properties).flat(1);
-        const byProp = groupBy(propList, 'propertyName');
-
-        let globalPerms = {
-          canRead: false,
-          canEdit: false,
-        };
-        // merge global and project perms
-        mapValues(
-          byProp,
-          (nodes): Permission => {
-            const possibilities = nodes.map((node) => {
-              // set the global permissons as the "default" permissions
-              globalPerms = permissions[node.propertyName];
-
-              // Convert the db properties to API properties.
-              // Only keep true values, so merging the objects doesn't replace a true with false
-              return pickBy({
-                canRead: node.permission.read || null,
-                canEdit: node.permission.write || null,
-              });
-            });
-            // Merge the all the true permissions together, otherwise default to whatever is in the global role.
-            return Object.assign(globalPerms, globalPerms, ...possibilities);
-          }
-        );
-      }
-    }
-
-    // console.log(`final permissions for ${baseNode.__className}`)
-    // console.log(permissions)
-    // console.log("-----------------------------------------------------------------")
-    return permissions as PermissionsOf<DbNode>;
+    // @ts-expect-error not matching for some reason but declared return type is correct
+    return parseSecuredProperties(props, permissions, resource.SecuredProps);
   }
 
-  async getPermissionsOfBaseNode<
-    DbProps extends Record<string, any>,
-    PickedKeys extends keyof DbProps
-  >({
-    baseNode,
-    sessionOrUserId,
-    propList,
-    propKeys,
-    membershipRoles,
-  }: {
-    baseNode: DbBaseNode;
-    sessionOrUserId: Session | string;
-    propList: PropListDbResult<DbProps> | DbProps;
-    propKeys: Record<PickedKeys, boolean>;
-    membershipRoles?: Role[];
-  }) {
-    const dbRoles =
+  /**
+   * Get the permissions for a resource.
+   *
+   * @param resource        The resource to pull permissions for,
+   *                        this determines the return type
+   * @param sessionOrUserId Give session or a user to grab their global roles
+   *                        and merge them with the given roles
+   * @param otherRoles      Other roles to apply, probably non-global context
+   */
+  async getPermissions<Resource extends ResourceShape<any>>(
+    resource: Resource,
+    sessionOrUserId: Session | string,
+    otherRoles: ScopedRole[] = []
+  ): Promise<PermissionsOf<SecuredResource<Resource>>> {
+    const userGlobalRoles =
       typeof sessionOrUserId === 'string'
-        ? await this.getUserRoleObjects(sessionOrUserId)
+        ? await this.getUserGlobalRoles(sessionOrUserId)
         : sessionOrUserId.roles;
-    // ignoring types here because baseNode provides no benefit over propList & propKeys.
-    const permsOfBaseNode = (await this.getPerms({
-      baseNode,
-      globalRoles: dbRoles,
-      membershipRoles: membershipRoles,
-    })) as any;
-    return parseSecuredProperties(propList, permsOfBaseNode, propKeys);
+    const roles = [...userGlobalRoles, ...otherRoles];
+
+    // convert resource to a list of resource names to check
+    const resources = getParentTypes(resource)
+      // if parent defines Props include it in mapping
+      .filter(
+        (r) => has('Props', r) && Array.isArray(r.Props) && r.Props.length > 0
+      )
+      .map((r) => r.name);
+
+    const normalizeGrants = (role: DbRole) =>
+      !Array.isArray(role.grants)
+        ? role.grants
+        : mapValues(
+            // convert list of grants to object keyed by resource name
+            keyBy(role.grants, (resourceGrant) =>
+              resourceGrant.__className.substring(2)
+            ),
+            (resourceGrant) =>
+              // convert value of a grant to an object keyed by prop name and value is a permission set
+              mapValues(
+                keyBy(resourceGrant.properties, (prop) => prop.propertyName),
+                (prop) => prop.permission
+              )
+          );
+
+    const dbRoles = getDbRoles(roles);
+
+    // grab all the grants for the given roles & matching resources
+    const grants = dbRoles.flatMap((role) =>
+      Object.entries(normalizeGrants(role)).flatMap(([name, grant]) =>
+        resources.includes(name) ? grant : []
+      )
+    ) as Array<PermissionsForResource<ResourceShape<Resource>>>;
+
+    const keys = [
+      ...resource.SecuredProps,
+      ...Object.keys(resource.Relations ?? {}),
+    ] as Array<keyof Resource & string>;
+    return mapFromList(keys, (key) => {
+      const value = {
+        canRead: grants.some((grant) => grant[key]?.read === true),
+        canEdit: grants.some((grant) => grant[key]?.write === true),
+      };
+      return [key, value];
+    }) as PermissionsOf<SecuredResource<Resource>>;
   }
 
   mapRoleToDbRoles(role: Role): InternalRole[] {
@@ -233,13 +206,11 @@ export class AuthorizationService {
         .run();
     }
 
-    for (const role of roles) {
-      // match the role to a real role object and grant powers
-      const roleObj = getRole(role);
-      if (roleObj === undefined) continue;
-      for (const power of roleObj.powers) {
-        await this.grantPower(power, id);
-      }
+    const powers = getDbRoles(roles.map(rolesForScope('global'))).flatMap(
+      (dbRole) => dbRole.powers
+    );
+    for (const power of powers) {
+      await this.grantPower(power, id);
     }
   }
 
@@ -368,7 +339,7 @@ export class AuthorizationService {
     return result?.powers ?? [];
   }
 
-  async getUserRoleObjects(id: string): Promise<DbRole[]> {
+  async getUserGlobalRoles(id: string): Promise<ScopedRole[]> {
     const roleQuery = await this.db
       .query()
       .match([
@@ -379,7 +350,7 @@ export class AuthorizationService {
       .raw(`RETURN collect(role.value) as roles`)
       .asResult<{ roles: Role[] }>()
       .first();
-    const roles = compact(roleQuery?.roles.map(getRole));
+    const roles = compact(roleQuery?.roles.map(rolesForScope('global')));
     return roles;
   }
 }

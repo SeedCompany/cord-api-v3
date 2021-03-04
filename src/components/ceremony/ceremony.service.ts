@@ -33,7 +33,7 @@ import {
   runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
-import { Role } from '../authorization';
+import { Role, rolesForScope } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import {
   Ceremony,
@@ -42,7 +42,6 @@ import {
   CreateCeremony,
   UpdateCeremony,
 } from './dto';
-import { DbCeremony } from './model';
 
 @Injectable()
 export class CeremonyService {
@@ -154,21 +153,17 @@ export class CeremonyService {
       >();
 
     const result = await readCeremony.first();
-
     if (!result) {
       throw new NotFoundException('Could not find ceremony', 'ceremony.id');
     }
-    //console.log(result)
+
     const parsedProps = parsePropList(result.propList);
 
-    const securedProps = await this.authorizationService.getPermissionsOfBaseNode(
-      {
-        baseNode: new DbCeremony(),
-        sessionOrUserId: session,
-        propList: result.propList,
-        propKeys: this.securedProperties,
-        membershipRoles: result.memberRoles.flat(1),
-      }
+    const securedProps = await this.authorizationService.secureProperties(
+      Ceremony,
+      parsedProps,
+      session,
+      result.memberRoles.flat().map(rolesForScope('project'))
     );
 
     return {

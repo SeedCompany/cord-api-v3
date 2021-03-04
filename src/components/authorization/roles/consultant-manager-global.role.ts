@@ -32,7 +32,7 @@ const read = true;
 const write = true;
 
 export const ConsultantManagerGlobal = new DbRole({
-  name: Role.ConsultantManager,
+  name: `global:${Role.ConsultantManager}` as const,
   powers: [
     Powers.CreateDirectory,
     Powers.CreateEducation,

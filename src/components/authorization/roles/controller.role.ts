@@ -32,7 +32,7 @@ const read = true;
 const write = true;
 
 export const Controller = new DbRole({
-  name: Role.Controller,
+  name: `global:${Role.Controller}` as const,
   powers: [
     Powers.CreateBudget,
     Powers.CreateBudgetRecord,
