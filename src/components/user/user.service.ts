@@ -21,6 +21,7 @@ import {
   matchSession,
   OnIndex,
   property,
+  setPropLabelsAndValuesDeleted,
   UniquenessError,
   UniqueProperties,
 } from '../../core';
@@ -194,8 +195,8 @@ export class UserService {
           id,
           createdAt,
         }),
-        ...this.emailProperty(input.email, createdAt),
       ],
+      ...property('email', input.email, 'user', 'email', 'EmailAddress'),
       ...property('realFirstName', input.realFirstName, 'user'),
       ...property('realLastName', input.realLastName, 'user'),
       ...property('displayFirstName', input.displayFirstName, 'user'),
@@ -374,15 +375,14 @@ export class UserService {
     // Update email
     if (input.email) {
       // Remove old emails and relations
+      const uniqueProperties: UniqueProperties<User> = {
+        email: ['Property', 'EmailAddress'],
+      };
       await this.db
         .query()
-        .match([
-          node('user', ['User', 'BaseNode'], { id: user.id }),
-          relation('out', 'oldRel', 'email', { active: true }),
-          node('email', 'EmailAddress:Property'),
-        ])
-        .delete('oldRel')
-        .delete('email')
+        .match([node('node', ['User', 'BaseNode'], { id: user.id })])
+        .call(setPropLabelsAndValuesDeleted, uniqueProperties)
+        .return('*')
         .run();
 
       try {
