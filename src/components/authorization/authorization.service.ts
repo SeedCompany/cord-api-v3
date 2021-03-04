@@ -5,11 +5,16 @@ import { compact, keyBy, mapValues, union, without } from 'lodash';
 import {
   getParentTypes,
   has,
+  isSecured,
   mapFromList,
+  Resource,
   ResourceShape,
   SecuredResource,
   ServerException,
   Session,
+  UnauthorizedException,
+  unwrapSecured,
+  UnwrapSecured,
 } from '../../common';
 import { retry } from '../../common/retry';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
@@ -102,6 +107,37 @@ export class AuthorizationService {
     );
     // @ts-expect-error not matching for some reason but declared return type is correct
     return parseSecuredProperties(props, permissions, resource.SecuredProps);
+  }
+
+  async verifyCanEditChanges<
+    TObject extends Resource,
+    Key extends keyof TObject & string
+  >(
+    baseNode: TObject,
+    props: readonly Key[],
+    changes: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> }
+  ) {
+    for (const prop of props) {
+      if (
+        changes[prop] === undefined ||
+        unwrapSecured(baseNode[prop]) === changes[prop]
+      ) {
+        continue;
+      }
+      await this.verifyCanEdit(baseNode, prop);
+    }
+  }
+
+  async verifyCanEdit<
+    DbNode extends Record<string, any>,
+    Key extends keyof DbNode
+  >(baseNode: DbNode, prop: Key) {
+    if (isSecured(baseNode[prop]) && !baseNode[prop].canEdit) {
+      throw new UnauthorizedException(
+        'You do not have permission to update this property',
+        prop as string
+      );
+    }
   }
 
   /**
