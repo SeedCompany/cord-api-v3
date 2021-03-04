@@ -107,6 +107,7 @@ describe('User e2e', () => {
 
     const fakeUser: UpdateUser = {
       id: user.id,
+      email: faker.internet.email(),
       realFirstName: faker.name.firstName(),
       realLastName: faker.name.lastName(),
       displayFirstName: faker.name.firstName(),
@@ -157,6 +158,7 @@ describe('User e2e', () => {
 
     expect(isValidId(actual.id)).toBe(true);
 
+    expect(actual.email.value).toBe(fakeUser.email?.toLowerCase());
     expect(actual.realFirstName.value).toBe(fakeUser.realFirstName);
     expect(actual.realLastName.value).toBe(fakeUser.realLastName);
     expect(actual.displayFirstName.value).toBe(fakeUser.displayFirstName);
