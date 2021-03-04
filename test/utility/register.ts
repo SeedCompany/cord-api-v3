@@ -7,7 +7,6 @@ import { Role } from '../../src/components/project';
 import { User, UserStatus } from '../../src/components/user';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
-import { grantPower } from './grant-power';
 import { login } from './login';
 
 export const generateRegisterInput = async (): Promise<RegisterInput> => ({
@@ -95,19 +94,13 @@ export async function registerUser(
 
 export async function registerUserWithPower(
   app: TestApp,
-  powers: Powers[],
+  _powers: Powers[],
   input: Partial<RegisterInput> = {}
 ): Promise<User> {
   const password: string = input.password || faker.internet.password();
   const user = await registerUser(app, { ...input, password });
 
-  for (const power of powers) {
-    await grantPower(app, user.id, power);
-  }
   await login(app, { email: user.email.value, password });
 
   return user;
 }
-
-/** @deprecated use registerUser instead */
-export const createUser = registerUser;

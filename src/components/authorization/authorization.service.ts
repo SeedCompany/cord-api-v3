@@ -1,14 +1,7 @@
 /* eslint-disable no-case-declarations */
 import { Injectable } from '@nestjs/common';
 import { Connection, node, relation } from 'cypher-query-builder';
-import {
-  compact,
-  difference,
-  keyBy,
-  mapValues,
-  union,
-  without,
-} from 'lodash';
+import { compact, difference, keyBy, mapValues } from 'lodash';
 import {
   getParentTypes,
   has,
@@ -17,7 +10,6 @@ import {
   mapFromList,
   ResourceShape,
   SecuredResource,
-  ServerException,
   Session,
 } from '../../common';
 import { retry } from '../../common/retry';
@@ -27,7 +19,7 @@ import {
   parseSecuredProperties,
   PropListDbResult,
 } from '../../core/database/results';
-import { InternalRole, Role, rolesForScope, ScopedRole } from './dto';
+import { Role, rolesForScope, ScopedRole } from './dto';
 import { Powers } from './dto/powers';
 import { MissingPowerException } from './missing-power.exception';
 import { DbRole, OneBaseNode, PermissionsForResource } from './model';
@@ -179,50 +171,6 @@ export class AuthorizationService {
     }) as PermissionsOf<SecuredResource<Resource>>;
   }
 
-  mapRoleToDbRoles(role: Role): InternalRole[] {
-    switch (role) {
-      case Role.FinancialAnalyst:
-        return [
-          'FinancialAnalystOnGlobalRole',
-          'FinancialAnalystOnProjectRole',
-        ];
-      case Role.ProjectManager:
-        return ['ProjectManagerGlobalRole', 'ProjectManagerOnProjectRole'];
-      case Role.RegionalDirector:
-        return ['RegionalDirectorGlobalRole', 'RegionalDirectorOnProjectRole'];
-      default:
-        return [(role + 'Role') as InternalRole];
-    }
-  }
-
-  async roleAddedToUser(id: string, roles: Role[]) {
-    // todo: this only applies to global roles, the only kind we have until next week
-    // iterate through all roles and assign to all SGs with that role
-
-    for (const role of roles.flatMap((role) => this.mapRoleToDbRoles(role))) {
-      await this.db
-        .query()
-        .raw(
-          `
-          call apoc.periodic.iterate(
-            "MATCH (u:User {id:'${id}'}), (sg:SecurityGroup {role:'${role}'})
-            WHERE NOT (u)<-[:member]-(sg)
-            RETURN u, sg",
-            "MERGE (u)<-[:member]-(sg)", {batchSize:1000})
-          yield batches, total return batches, total
-      `
-        )
-        .run();
-    }
-
-    const powers = getDbRoles(roles.map(rolesForScope('global'))).flatMap(
-      (dbRole) => dbRole.powers
-    );
-    for (const power of powers) {
-      await this.grantPower(power, id);
-    }
-  }
-
   async verifyPower(powers: Many<Powers>, session: Session): Promise<void> {
     const availablePowers = await this.readPower(session);
 
@@ -238,84 +186,6 @@ export class AuthorizationService {
 
   async readPower(session: Session): Promise<Powers[]> {
     return getDbRoles(session.roles).flatMap((dbRole) => dbRole.powers);
-  }
-
-  async createPower(
-    userId: string,
-    power: Powers,
-    session: Session
-  ): Promise<void> {
-    const requestingUserPowers = await this.readPowerByUserId(session.userId);
-    if (!requestingUserPowers.includes(Powers.GrantPower)) {
-      throw new MissingPowerException(
-        Powers.GrantPower,
-        'user does not have the power to grant power to others'
-      );
-    }
-
-    await this.grantPower(power, userId);
-  }
-
-  async deletePower(
-    userId: string,
-    power: Powers,
-    session: Session
-  ): Promise<void> {
-    const requestingUserPowers = await this.readPowerByUserId(session.userId);
-    if (!requestingUserPowers.includes(Powers.GrantPower)) {
-      throw new MissingPowerException(
-        Powers.GrantPower,
-        'user does not have the power to remove power from others'
-      );
-    }
-
-    await this.removePower(power, userId);
-  }
-
-  async grantPower(power: Powers, userId: string): Promise<void> {
-    const powers = await this.readPowerByUserId(userId);
-
-    const newPowers = union(powers, [power]);
-    await this.updateUserPowers(userId, newPowers);
-  }
-
-  async removePower(power: Powers, userId: string): Promise<void> {
-    const powers = await this.readPowerByUserId(userId);
-
-    const newPowers = without(powers, power);
-    await this.updateUserPowers(userId, newPowers);
-  }
-
-  private async updateUserPowers(
-    userId: string,
-    newPowers: Powers[]
-  ): Promise<void> {
-    const result = await this.db
-      .query()
-      .optionalMatch([node('userOrSg', 'User', { id: userId })])
-      .setValues({ 'userOrSg.powers': newPowers })
-      .with('*')
-      .optionalMatch([node('userOrSg', 'SecurityGroup', { id: userId })])
-      .setValues({ 'userOrSg.powers': newPowers })
-      .run();
-
-    if (!result) {
-      throw new ServerException('Failed to grant power');
-    }
-  }
-
-  private async readPowerByUserId(id: string): Promise<Powers[]> {
-    const result = await this.db
-      .query()
-      .match([node('user', 'User', { id })])
-      .raw('return user.powers as powers')
-      .unionAll()
-      .match([node('sg', 'SecurityGroup', { id })])
-      .raw('return sg.powers as powers')
-      .asResult<{ powers?: Powers[] }>()
-      .first();
-
-    return result?.powers ?? [];
   }
 
   async getUserGlobalRoles(id: string): Promise<ScopedRole[]> {

@@ -32,6 +32,5 @@ export * from './create-partnership';
 export * from './create-song';
 export * from './create-partner';
 export * from './create-funding-account';
-export * from './grant-power';
 export * from './register';
 export * from './update-project';

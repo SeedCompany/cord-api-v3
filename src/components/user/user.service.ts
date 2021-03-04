@@ -279,8 +279,6 @@ export class UserService {
         //
       }
     }
-    input.roles &&
-      (await this.authorizationService.roleAddedToUser(id, input.roles));
 
     const dbUser = new DbUser();
     await this.authorizationService.processNewBaseNode(dbUser, id, id);
@@ -392,8 +390,6 @@ export class UserService {
         ])
         .create([...this.roleProperties(input.roles)])
         .run();
-
-      await this.authorizationService.roleAddedToUser(input.id, input.roles);
     }
 
     return await this.readOne(input.id, session);
