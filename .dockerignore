@@ -1,7 +1,6 @@
 # Versioned but ignore
 docs
 scripts
-tools
 .*
 buildspec.yml
 eslint-local-rules.js
