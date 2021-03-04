@@ -22,6 +22,7 @@ import {
   OnIndex,
   property,
   setPropLabelsAndValuesDeleted,
+  Transactional,
   UniquenessError,
   UniqueProperties,
 } from '../../core';
@@ -169,20 +170,6 @@ export class UserService {
       property('roles', role, 'user', `role${role}`)
     );
   };
-
-  emailProperty = (email: string | undefined, createdAt: DateTime) =>
-    email
-      ? [
-          relation('out', '', 'email', {
-            active: true,
-            createdAt,
-          }),
-          node('email', 'EmailAddress:Property', {
-            value: email,
-            createdAt,
-          }),
-        ]
-      : [];
 
   async create(input: CreatePerson, _session?: Session): Promise<string> {
     const id = await generateId();
@@ -350,6 +337,7 @@ export class UserService {
     };
   }
 
+  @Transactional()
   async update(input: UpdateUser, session: Session): Promise<User> {
     this.logger.debug('mutation update User', { input, session });
     const user = await this.readOne(input.id, session);
