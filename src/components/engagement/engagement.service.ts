@@ -805,6 +805,28 @@ export class EngagementService {
       session
     )) as LanguageEngagement;
 
+    const props: Array<keyof typeof object> = [
+      'firstScripture',
+      'lukePartnership',
+      'completeDate',
+      'disbursementCompleteDate',
+      'communicationsCompleteDate',
+      'startDateOverride',
+      'endDateOverride',
+      'paratextRegistryId',
+      'historicGoal',
+      'modifiedAt',
+      'status',
+      'initialEndDate',
+    ];
+    await this.authorizationService.verifyCanEditChanges(
+      object,
+      props,
+      changes
+    );
+    if (pnp) {
+      await this.authorizationService.verifyCanEdit(object, 'pnp');
+    }
     await this.files.updateDefinedFile(
       object.pnp,
       'engagement.pnp',
@@ -817,25 +839,12 @@ export class EngagementService {
     }
 
     try {
-      await this.db.sgUpdateProperties({
-        session,
+      await this.db.updateProperties({
+        type: 'LanguageEngagement',
         object,
-        props: [
-          'firstScripture',
-          'lukePartnership',
-          'completeDate',
-          'disbursementCompleteDate',
-          'communicationsCompleteDate',
-          'startDateOverride',
-          'endDateOverride',
-          'paratextRegistryId',
-          'historicGoal',
-          'modifiedAt',
-          'status',
-          'initialEndDate',
-        ],
+        props: props,
         changes,
-        nodevar: 'LanguageEngagement',
+        skipAuth: true,
       });
     } catch (exception) {
       this.logger.error('Error updating language engagement', { exception });
@@ -883,6 +892,30 @@ export class EngagementService {
       session
     )) as InternshipEngagement;
 
+    // verify that all props can be edited before changing anything
+    const props: Array<keyof typeof object> = [
+      'position',
+      'methodologies',
+      'completeDate',
+      'disbursementCompleteDate',
+      'communicationsCompleteDate',
+      'startDateOverride',
+      'endDateOverride',
+      'modifiedAt',
+      'status',
+      'initialEndDate',
+    ];
+
+    await this.authorizationService.verifyCanEditChanges(object, props, input);
+    if (mentorId) {
+      await this.authorizationService.verifyCanEdit(object, 'mentor');
+    }
+    if (growthPlan) {
+      await this.authorizationService.verifyCanEdit(object, 'growthPlan');
+    }
+    if (countryOfOriginId) {
+      await this.authorizationService.verifyCanEdit(object, 'countryOfOrigin');
+    }
     await this.files.updateDefinedFile(
       object.growthPlan,
       'engagement.growthPlan',
@@ -963,26 +996,15 @@ export class EngagementService {
         await countryQ.first();
       }
 
-      await this.db.sgUpdateProperties({
-        session,
+      await this.db.updateProperties({
+        type: 'InternshipEngagement',
         object,
-        props: [
-          'position',
-          'methodologies',
-          'completeDate',
-          'disbursementCompleteDate',
-          'communicationsCompleteDate',
-          'startDateOverride',
-          'endDateOverride',
-          'modifiedAt',
-          'status',
-          'initialEndDate',
-        ],
+        props: props,
         changes: {
           ...input,
           modifiedAt: DateTime.local(),
         },
-        nodevar: 'InternshipEngagement',
+        skipAuth: true,
       });
       // update property node labels
       Object.keys(input).map(async (ele) => {

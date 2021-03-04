@@ -450,6 +450,18 @@ export class BudgetService {
   ): Promise<Budget> {
     const budget = await this.readOne(input.id, session);
 
+    await this.authorizationService.verifyCanEditChanges(
+      budget,
+      ['status'],
+      input
+    );
+    if (universalTemplateFile) {
+      await this.authorizationService.verifyCanEdit(
+        budget,
+        'universalTemplateFile'
+      );
+    }
+
     await this.files.updateDefinedFile(
       budget.universalTemplateFile,
       'budget.universalTemplateFile',
@@ -457,12 +469,12 @@ export class BudgetService {
       session
     );
 
-    return await this.db.sgUpdateProperties({
-      session,
+    return await this.db.updateProperties({
+      type: 'Budget',
       object: budget,
       props: ['status'],
       changes: input,
-      nodevar: 'budget',
+      skipAuth: true,
     });
   }
 
@@ -477,12 +489,11 @@ export class BudgetService {
     const br = await this.readOneRecord(id, session);
 
     try {
-      const result = await this.db.sgUpdateProperties({
-        session,
+      const result = await this.db.updateProperties({
+        type: 'BudgetRecord',
         object: br,
         props: ['amount'],
         changes: { id, ...input },
-        nodevar: 'budgetRecord',
       });
       return result;
     } catch (e) {

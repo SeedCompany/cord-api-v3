@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import {
   Connection,
   equals,
@@ -26,6 +26,7 @@ import {
 } from '../../common';
 import { ILogger, Logger, ServiceUnavailableError } from '..';
 import { AbortError, retry, RetryOptions } from '../../common/retry';
+import { AuthorizationService } from '../../components/authorization/authorization.service';
 import { ConfigService } from '../config/config.service';
 import { determineSortValue } from './query.helpers';
 import { hasMore } from './results';
@@ -88,6 +89,8 @@ export class DatabaseService {
   constructor(
     private readonly db: Connection,
     private readonly config: ConfigService,
+    @Inject(forwardRef(() => AuthorizationService))
+    private readonly authorizationService: AuthorizationService,
     @Logger('database:service') private readonly logger: ILogger
   ) {}
 
@@ -237,6 +240,7 @@ export class DatabaseService {
     object,
     props,
     changes,
+    skipAuth = false,
   }: {
     // This becomes the label of the base node
     type: string | AbstractClassType<any>;
@@ -246,7 +250,15 @@ export class DatabaseService {
     props: ReadonlyArray<keyof TObject & string>;
     // The changes
     changes: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
+    skipAuth?: boolean;
   }) {
+    if (!skipAuth) {
+      await this.authorizationService.verifyCanEditChanges(
+        object,
+        props,
+        changes
+      );
+    }
     let updated = object;
     for (const prop of props) {
       if (

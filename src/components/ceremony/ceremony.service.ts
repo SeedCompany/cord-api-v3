@@ -178,12 +178,11 @@ export class CeremonyService {
   async update(input: UpdateCeremony, session: Session): Promise<Ceremony> {
     const object = await this.readOne(input.id, session);
 
-    return await this.db.sgUpdateProperties({
-      session,
+    return await this.db.updateProperties({
+      type: 'Ceremony',
       object,
       props: ['planned', 'estimatedDate', 'actualDate'],
       changes: input,
-      nodevar: 'ceremony',
     });
   }
 
