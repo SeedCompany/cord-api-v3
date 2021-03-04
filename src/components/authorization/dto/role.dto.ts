@@ -7,9 +7,6 @@ export enum Role {
   Consultant = 'Consultant',
   ConsultantManager = 'ConsultantManager',
   Controller = 'Controller',
-  Development = 'Development',
-  ExecutiveDevelopmentRepresentative = 'ExecutiveDevelopmentRepresentative',
-  ExecutiveLeadership = 'ExecutiveLeadership',
   FieldOperationsDirector = 'FieldOperationsDirector',
   FieldPartner = 'FieldPartner',
   FinancialAnalyst = 'FinancialAnalyst',
@@ -20,14 +17,11 @@ export enum Role {
   Liaison = 'Liaison',
   Marketing = 'Marketing',
   Mentor = 'Mentor',
-  OfficeOfThePresident = 'OfficeOfThePresident',
   ProjectManager = 'ProjectManager',
   RegionalCommunicationsCoordinator = 'RegionalCommunicationsCoordinator',
   RegionalDirector = 'RegionalDirector',
   StaffMember = 'StaffMember',
-  SupportingProjectManager = 'SupportingProjectManager',
   Translator = 'Translator',
-  Writer = 'Writer',
 }
 
 registerEnumType(Role, { name: 'Role' });
@@ -52,9 +46,6 @@ export type InternalRole =
   | 'ConsultantRole'
   | 'ConsultantManagerRole'
   | 'ControllerRole'
-  | 'DevelopmentRole'
-  | 'ExecutiveDevelopmentRepresentativeRole'
-  | 'ExecutiveLeadershipRole'
   | 'FieldOperationsDirectorRole'
   | 'FieldPartnerRole'
   | 'FinancialAnalystOnGlobalRole'
@@ -66,13 +57,10 @@ export type InternalRole =
   | 'LiaisonRole'
   | 'MarketingRole'
   | 'MentorRole'
-  | 'OfficeOfThePresidentRole'
   | 'ProjectManagerGlobalRole'
   | 'ProjectManagerOnProjectRole'
   | 'RegionalCommunicationsCoordinatorRole'
   | 'RegionalDirectorGlobalRole'
   | 'RegionalDirectorOnProjectRole'
   | 'StaffMemberRole'
-  | 'SupportingProjectManagerRole'
-  | 'TranslatorRole'
-  | 'WriterRole';
+  | 'TranslatorRole';
