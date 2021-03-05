@@ -431,7 +431,20 @@ describe('Project-Workflow e2e', () => {
 
       // Login as Director
       await login(app, { email: director.email.value, password });
+      await changeProjectStep(
+        app,
+        project.id,
+        ProjectStep.PendingChangeToPlanConfirmation
+      );
+
+      // Login as Controller
+      await login(app, {
+        email: financialAnalystController.email.value,
+        password,
+      });
       await changeProjectStep(app, project.id, ProjectStep.ActiveChangedPlan);
+      // Login as Director
+      await login(app, { email: director.email.value, password });
       await changeProjectStep(
         app,
         project.id,

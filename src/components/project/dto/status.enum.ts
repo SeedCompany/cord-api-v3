@@ -32,6 +32,7 @@ const mapping: Record<ProjectStep, ProjectStatus> = {
   [ProjectStep.ActiveChangedPlan]: ProjectStatus.Active,
   [ProjectStep.DiscussingChangeToPlan]: ProjectStatus.Active,
   [ProjectStep.PendingChangeToPlanApproval]: ProjectStatus.Active,
+  [ProjectStep.PendingChangeToPlanConfirmation]: ProjectStatus.Active,
   [ProjectStep.DiscussingSuspension]: ProjectStatus.Active,
   [ProjectStep.PendingSuspensionApproval]: ProjectStatus.Active,
   [ProjectStep.Suspended]: ProjectStatus.Active,
