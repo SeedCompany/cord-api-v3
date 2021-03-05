@@ -460,6 +460,35 @@ export class ProjectRules {
               label: 'Send Back for Corrections',
             },
             {
+              to: ProjectStep.PendingChangeToPlanConfirmation,
+              type: TransitionType.Approve,
+              label: 'Approve Change to Plan',
+            },
+            {
+              to: await this.getMostRecentPreviousStep(id, [
+                ProjectStep.Active,
+                ProjectStep.ActiveChangedPlan,
+              ]),
+              type: TransitionType.Reject,
+              label: 'Reject Change to Plan',
+            },
+          ],
+          getNotifiers: async () => [
+            ...(await this.getProjectTeamUserIds(id)),
+            'project_extension@tsco.org',
+            'project_revision@tsco.org',
+          ],
+        };
+      case ProjectStep.PendingChangeToPlanConfirmation:
+        return {
+          approvers: [Role.Controller],
+          transitions: [
+            {
+              to: ProjectStep.DiscussingChangeToPlan,
+              type: TransitionType.Reject,
+              label: 'Send Back for Corrections',
+            },
+            {
               to: ProjectStep.ActiveChangedPlan,
               type: TransitionType.Approve,
               label: 'Approve Change to Plan',
