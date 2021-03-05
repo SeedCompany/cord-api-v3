@@ -1,7 +1,7 @@
 import { node, Query, relation } from 'cypher-query-builder';
 import { deburr } from 'lodash';
 import { DateTime } from 'luxon';
-import { entries, Resource, Session } from '../../common';
+import { Resource, Session } from '../../common';
 
 // CREATE clauses //////////////////////////////////////////////////////
 
@@ -133,47 +133,39 @@ export type UniqueProperties<BaseNode extends Resource> = Partial<
   Record<keyof BaseNode, string[]>
 >;
 
-export function setPropLabelsAndValuesDeleted<BaseNode extends Resource>(
+export function setPropLabelsAndValuesDeleted(
   query: Query,
-  uniqueProperties: UniqueProperties<BaseNode>
+  uniqueProperties: string[]
 ) {
-  entries(uniqueProperties).forEach(([property, labels], i) => {
-    const currentPropertyNodeAlias = `propertyNode${i}`;
-    // Match the baseNode out to the propertyNode
-    query.optionalMatch([
-      node('node'),
-      relation('out', '', property),
-      node(currentPropertyNodeAlias, 'Property'),
-    ]);
-
-    // Reset all the labels on the propertyNode with the Delete_ prefix
-    labels?.forEach((label) => {
-      query.call(setLabelDeleted, currentPropertyNodeAlias, label);
-    });
-
-    // Reset all the values on the propertyNode to deleted_value
+  uniqueProperties.forEach((property, i) => {
     query
-      .with(`*, ${currentPropertyNodeAlias}.value as propVal${i}`)
-      .set({
-        variables: {
-          [`${currentPropertyNodeAlias}.deleted_value`]: `propVal${i}`,
-        },
-      })
-      .removeProperties({
-        [currentPropertyNodeAlias]: 'value',
-      })
+      .match([
+        node('node'),
+        relation('out', '', { active: true }),
+        node(`prop${i}`, property),
+      ])
+      .call(setLabelDeleted, `prop${i}`, property)
+      .with('*')
+      .raw(
+        `
+      set prop${i}.deleted_value = prop${i}.value
+      set prop${i}.deleted_sortValue = prop${i}.sortValue
+      remove prop${i}.value
+      remove prop${i}.sortValue
+      `
+      )
       .with('*');
   });
 }
 
-const setLabelDeleted = (query: Query, nodeAlas: string, label: string) => {
+const setLabelDeleted = (query: Query, nodeAlias: string, label: string) => {
   query
     .set({
       labels: {
-        [nodeAlas]: `Deleted_${label}`,
+        [nodeAlias]: `Deleted_${label}`,
       },
     })
     .removeLabels({
-      [nodeAlas]: label,
+      [nodeAlias]: label,
     });
 };

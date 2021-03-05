@@ -16,7 +16,6 @@ import {
   Logger,
   matchRequestingUser,
   OnIndex,
-  UniqueProperties,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -210,14 +209,9 @@ export class FilmService {
         'You do not have the permission to delete this Film'
       );
 
-    const uniqueProperties: UniqueProperties<Film> = {
-      name: ['Property', 'FilmName'],
-    };
-
     try {
       await this.db.deleteNodeNew({
         object: film,
-        uniqueProperties,
       });
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });

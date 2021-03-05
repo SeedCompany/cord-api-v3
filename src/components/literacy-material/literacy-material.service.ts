@@ -17,7 +17,6 @@ import {
   matchRequestingUser,
   OnIndex,
   Property,
-  UniqueProperties,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -228,14 +227,9 @@ export class LiteracyMaterialService {
         'You do not have the permission to delete this Literacy Material'
       );
 
-    const uniqueProperties: UniqueProperties<LiteracyMaterial> = {
-      name: ['Property', 'LiteracyName'],
-    };
-
     try {
       await this.db.deleteNodeNew<LiteracyMaterial>({
         object: literacyMaterial,
-        uniqueProperties,
       });
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });

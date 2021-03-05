@@ -24,7 +24,6 @@ import {
   OnIndex,
   Property,
   UniquenessError,
-  UniqueProperties,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -709,14 +708,9 @@ export class ProjectService {
         'You do not have the permission to delete this Project'
       );
 
-    const uniqueProperties: UniqueProperties<Project> = {
-      name: ['Property', 'ProjectName'],
-    };
-
     try {
       await this.db.deleteNodeNew({
         object,
-        uniqueProperties,
       });
     } catch (e) {
       this.logger.warning('Failed to delete project', {

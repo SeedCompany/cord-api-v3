@@ -30,7 +30,6 @@ import {
   determineSortValue,
   setBaseNodeLabelsAndIdDeleted,
   setPropLabelsAndValuesDeleted,
-  UniqueProperties,
 } from './query.helpers';
 import { hasMore } from './results';
 import { Transactional } from './transactional.decorator';
@@ -557,10 +556,8 @@ export class DatabaseService {
 
   async deleteNodeNew<TObject extends Resource>({
     object,
-    uniqueProperties = {},
   }: {
     object: TObject;
-    uniqueProperties?: UniqueProperties<TObject>;
   }) {
     const nodeLabelsResult = await this.db
       .query()
@@ -568,10 +565,37 @@ export class DatabaseService {
       .return('labels(node) as nodeLabels')
       .asResult<{ nodeLabels: string[] }>()
       .first();
+    const uniquePropertiesResult = await this.db
+      .query()
+      .match([
+        node('node', { id: object.id }),
+        relation('out', '', { active: true }),
+        node('p', 'Property'),
+      ])
+      /*
+      1: if a property node has more than one label, we know it's a unique property
+      2: flatten the two-dimensional array -- collect(labels(p)) -- (labels for each property node)
+         with reduce to get a one-dimensional array: propertyLabels
+      3: we don't need to prefix the Property label with Deleted_ -- so filter those out
+      */
+      .raw(
+        `
+      where size(labels(p)) > 1
+      with reduce(output = [], property in collect(labels(p)) | output + property) as propertyLabels
+      unwind propertyLabels as propertyLabel
+      with propertyLabel
+      where not propertyLabel = "Property"
+      `
+      )
+      .return('collect(propertyLabel) as uniqueProperties')
+      .asResult<{
+        uniqueProperties: string[];
+      }>()
+      .first();
     const query = this.db
       .query()
       .matchNode('node', { id: object.id })
-      //Mark any parent base node relationships (pointing to the base node) as active = false.
+      // Mark any parent base node relationships (pointing to the base node) as active = false.
       .optionalMatch([
         node('node'),
         relation('in', 'rel'),
@@ -583,10 +607,11 @@ export class DatabaseService {
         },
       })
       .with('distinct(node) as node')
-      //Mark baseNode labels and id deleted
-      .call(setBaseNodeLabelsAndIdDeleted, nodeLabelsResult!.nodeLabels)
-      //Mark unique property labels and values deleted
-      .call(setPropLabelsAndValuesDeleted, uniqueProperties)
+      .call(setBaseNodeLabelsAndIdDeleted, nodeLabelsResult?.nodeLabels ?? [])
+      .call(
+        setPropLabelsAndValuesDeleted,
+        uniquePropertiesResult?.uniqueProperties ?? []
+      )
       .return('*');
     await query.run();
   }

@@ -362,14 +362,15 @@ export class UserService {
 
     // Update email
     if (input.email) {
-      // Remove old emails and relations
       const uniqueProperties: UniqueProperties<User> = {
-        email: ['Property', 'EmailAddress'],
+        email: ['EmailAddress'],
       };
+
+      // Remove old emails and relations
       await this.db
         .query()
         .match([node('node', ['User', 'BaseNode'], { id: user.id })])
-        .call(setPropLabelsAndValuesDeleted, uniqueProperties)
+        .call(setPropLabelsAndValuesDeleted, uniqueProperties.email!)
         .return('*')
         .run();
 
@@ -451,14 +452,9 @@ export class UserService {
         'You do not have the permission to delete this User'
       );
 
-    const uniqueProperties: UniqueProperties<User> = {
-      email: ['Property', 'EmailAddress'],
-    };
-
     try {
       await this.db.deleteNodeNew<User>({
         object,
-        uniqueProperties,
       });
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });
