@@ -337,8 +337,6 @@ export class LocationService {
         'You do not have the permission to delete this Location'
       );
 
-    const baseNodeLabels = ['BaseNode', 'Location'];
-
     const uniqueProperties: UniqueProperties<Location> = {
       name: ['Property', 'LocationName'],
     };
@@ -346,7 +344,6 @@ export class LocationService {
     try {
       await this.db.deleteNodeNew<Location>({
         object,
-        baseNodeLabels,
         uniqueProperties,
       });
     } catch (exception) {

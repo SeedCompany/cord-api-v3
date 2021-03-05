@@ -210,8 +210,6 @@ export class StoryService {
         'You do not have the permission to delete this Story'
       );
 
-    const baseNodeLabels = ['BaseNode', 'Story', 'Producible'];
-
     const uniqueProperties: UniqueProperties<Story> = {
       name: ['Property', 'StoryName'],
     };
@@ -219,7 +217,6 @@ export class StoryService {
     try {
       await this.db.deleteNodeNew<Story>({
         object: story,
-        baseNodeLabels,
         uniqueProperties,
       });
     } catch (exception) {

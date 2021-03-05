@@ -228,8 +228,6 @@ export class LiteracyMaterialService {
         'You do not have the permission to delete this Literacy Material'
       );
 
-    const baseNodeLabels = ['BaseNode', 'LiteracyMaterial', 'Producible'];
-
     const uniqueProperties: UniqueProperties<LiteracyMaterial> = {
       name: ['Property', 'LiteracyName'],
     };
@@ -237,7 +235,6 @@ export class LiteracyMaterialService {
     try {
       await this.db.deleteNodeNew<LiteracyMaterial>({
         object: literacyMaterial,
-        baseNodeLabels,
         uniqueProperties,
       });
     } catch (exception) {

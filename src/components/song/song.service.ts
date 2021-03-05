@@ -207,8 +207,6 @@ export class SongService {
         'You do not have the permission to delete this Song'
       );
 
-    const baseNodeLabels = ['BaseNode', 'Song', 'Producible'];
-
     const uniqueProperties: UniqueProperties<Song> = {
       name: ['Property', 'SongName'],
     };
@@ -216,7 +214,6 @@ export class SongService {
     try {
       await this.db.deleteNodeNew<Song>({
         object: song,
-        baseNodeLabels,
         uniqueProperties,
       });
     } catch (exception) {

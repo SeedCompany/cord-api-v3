@@ -398,12 +398,9 @@ export class PartnerService {
         'You do not have the permission to delete this Partner'
       );
 
-    const baseNodeLabels = ['BaseNode', 'Partner'];
-
     try {
       await this.db.deleteNodeNew<Partner>({
         object,
-        baseNodeLabels,
       });
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });

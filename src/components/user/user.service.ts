@@ -451,8 +451,6 @@ export class UserService {
         'You do not have the permission to delete this User'
       );
 
-    const baseNodeLabels = ['BaseNode', 'User'];
-
     const uniqueProperties: UniqueProperties<User> = {
       email: ['Property', 'EmailAddress'],
     };
@@ -460,7 +458,6 @@ export class UserService {
     try {
       await this.db.deleteNodeNew<User>({
         object,
-        baseNodeLabels,
         uniqueProperties,
       });
     } catch (exception) {

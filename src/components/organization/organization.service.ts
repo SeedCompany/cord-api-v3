@@ -248,8 +248,6 @@ export class OrganizationService {
         'You do not have the permission to delete this Organization'
       );
 
-    const baseNodeLabels = ['BaseNode', 'Organization'];
-
     const uniqueProperties: UniqueProperties<Organization> = {
       name: ['Property', 'OrgName'],
     };
@@ -257,7 +255,6 @@ export class OrganizationService {
     try {
       await this.db.deleteNodeNew<Organization>({
         object,
-        baseNodeLabels,
         uniqueProperties,
       });
     } catch (exception) {

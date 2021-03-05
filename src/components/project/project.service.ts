@@ -709,8 +709,6 @@ export class ProjectService {
         'You do not have the permission to delete this Project'
       );
 
-    const baseNodeLabels = ['BaseNode', 'Project', `${object.type}Project`];
-
     const uniqueProperties: UniqueProperties<Project> = {
       name: ['Property', 'ProjectName'],
     };
@@ -718,7 +716,6 @@ export class ProjectService {
     try {
       await this.db.deleteNodeNew({
         object,
-        baseNodeLabels,
         uniqueProperties,
       });
     } catch (e) {

@@ -557,16 +557,20 @@ export class DatabaseService {
 
   async deleteNodeNew<TObject extends Resource>({
     object,
-    baseNodeLabels,
     uniqueProperties = {},
   }: {
     object: TObject;
-    baseNodeLabels: string[];
     uniqueProperties?: UniqueProperties<TObject>;
   }) {
+    const nodeLabelsResult = await this.db
+      .query()
+      .matchNode('node', { id: object.id })
+      .return('labels(node) as nodeLabels')
+      .asResult<{ nodeLabels: string[] }>()
+      .first();
     const query = this.db
       .query()
-      .match(node('node', { id: object.id }))
+      .matchNode('node', { id: object.id })
       //Mark any parent base node relationships (pointing to the base node) as active = false.
       .optionalMatch([
         node('node'),
@@ -580,7 +584,7 @@ export class DatabaseService {
       })
       .with('distinct(node) as node')
       //Mark baseNode labels and id deleted
-      .call(setBaseNodeLabelsAndIdDeleted, baseNodeLabels)
+      .call(setBaseNodeLabelsAndIdDeleted, nodeLabelsResult!.nodeLabels)
       //Mark unique property labels and values deleted
       .call(setPropLabelsAndValuesDeleted, uniqueProperties)
       .return('*');

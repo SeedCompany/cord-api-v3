@@ -208,8 +208,6 @@ export class FundingAccountService {
         'You do not have the permission to delete this Funding Account'
       );
 
-    const baseNodeLabels = ['BaseNode', 'FundingAccount'];
-
     const uniqueProperties: UniqueProperties<FundingAccount> = {
       name: ['Property', 'FundingAccountName'],
       accountNumber: ['Property', 'FundingAccountNumber'],
@@ -218,7 +216,6 @@ export class FundingAccountService {
     try {
       await this.db.deleteNodeNew({
         object,
-        baseNodeLabels,
         uniqueProperties,
       });
     } catch (exception) {

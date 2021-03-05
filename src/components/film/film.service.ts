@@ -210,8 +210,6 @@ export class FilmService {
         'You do not have the permission to delete this Film'
       );
 
-    const baseNodeLabels = ['BaseNode', 'Producible', 'Film'];
-
     const uniqueProperties: UniqueProperties<Film> = {
       name: ['Property', 'FilmName'],
     };
@@ -219,7 +217,6 @@ export class FilmService {
     try {
       await this.db.deleteNodeNew({
         object: film,
-        baseNodeLabels,
         uniqueProperties,
       });
     } catch (exception) {

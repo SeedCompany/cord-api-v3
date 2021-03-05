@@ -509,12 +509,9 @@ export class BudgetService {
       budget.records.map((br) => this.deleteRecord(br.id, session))
     );
 
-    const baseNodeLabels = ['BaseNode', 'Budget'];
-
     try {
       await this.db.deleteNodeNew({
         object: budget,
-        baseNodeLabels,
       });
     } catch (e) {
       this.logger.warning('Failed to delete budget', {
@@ -538,12 +535,9 @@ export class BudgetService {
         'You do not have the permission to delete this Budget Record'
       );
 
-    const baseNodeLabels = ['BaseNode', 'Budget'];
-
     try {
       await this.db.deleteNodeNew({
         object: br,
-        baseNodeLabels,
       });
     } catch (e) {
       this.logger.warning('Failed to delete Budget Record', {

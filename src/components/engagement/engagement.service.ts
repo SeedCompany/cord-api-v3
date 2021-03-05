@@ -1058,12 +1058,9 @@ export class EngagementService {
       await this.verifyProjectStatus(result.projectId, session);
     }
 
-    const baseNodeLabels = ['BaseNode', 'Engagement', object.__typename];
-
     try {
       await this.db.deleteNodeNew({
         object,
-        baseNodeLabels,
       });
     } catch (e) {
       this.logger.warning('Failed to delete Engagement', {

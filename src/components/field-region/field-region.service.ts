@@ -249,8 +249,6 @@ export class FieldRegionService {
         'You do not have the permission to delete this Field Region'
       );
 
-    const baseNodeLabels = ['BaseNode', 'FieldRegion'];
-
     const uniqueProperties: UniqueProperties<FieldRegion> = {
       name: ['Property', 'FieldRegionName'],
     };
@@ -258,7 +256,6 @@ export class FieldRegionService {
     try {
       await this.db.deleteNodeNew<FieldRegion>({
         object,
-        baseNodeLabels,
         uniqueProperties,
       });
     } catch (exception) {
