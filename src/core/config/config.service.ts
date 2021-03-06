@@ -4,11 +4,13 @@ import {
   EmailModuleOptions,
   EmailOptionsFactory,
 } from '@seedcompany/nestjs-email';
+import { CookieOptions } from 'express';
 import { LazyGetter as Lazy } from 'lazy-get-decorator';
 import { Duration } from 'luxon';
 import { Config as Neo4JDriverConfig } from 'neo4j-driver';
 import { join } from 'path';
-import { ServerException } from '../../common';
+import { Merge } from 'type-fest';
+import { MsDurationInput, ServerException } from '../../common';
 import { FrontendUrlWrapper } from '../email/templates/frontend-url';
 import { LogLevel } from '../logger';
 import { EnvironmentService } from './environment.service';
@@ -172,24 +174,32 @@ export class ConfigService implements EmailOptionsFactory {
     };
   }
 
-  @Lazy() get session(): {
-    cookieName: string;
-    cookieDomain: string | undefined;
-  } {
-    const cookieName = this.env
-      .string('SESSION_COOKIE_NAME')
-      .optional('cordsession');
+  @Lazy() get sessionCookie(): Merge<
+    CookieOptions,
+    { name: string; expires?: MsDurationInput }
+  > {
+    const name = this.env.string('SESSION_COOKIE_NAME').optional('cordsession');
 
-    let cookieDomain = this.env.string('SESSION_COOKIE_DOMAIN').optional();
+    let domain = this.env.string('SESSION_COOKIE_DOMAIN').optional();
 
-    // prepend a leading "." to the domain if one doesn't exist, to ensure cookies are cross-domain-enabled
-    if (cookieDomain && !cookieDomain.startsWith('.')) {
-      cookieDomain = '.' + cookieDomain;
+    // Ensure sub-domains are allowed
+    if (domain && !domain.startsWith('.')) {
+      domain = '.' + domain;
     }
 
     return {
-      cookieName,
-      cookieDomain,
+      name,
+      domain,
+      // Persist past current browser session
+      expires: { years: 10 },
+      // Cannot be retrieved by JS
+      httpOnly: true,
+      // All paths, not just the current one
+      path: '/',
+      // Require HTTPS (required for SameSite)
+      secure: true,
+      // Allow 3rd party (other domains)
+      sameSite: 'none',
     };
   }
 
