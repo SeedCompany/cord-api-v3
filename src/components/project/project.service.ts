@@ -1,11 +1,13 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
+import { Many } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
   generateId,
   getHighestSensitivity,
   InputException,
+  many,
   NotFoundException,
   Sensitivity,
   ServerException,
@@ -266,7 +268,7 @@ export class ProjectService {
 
       if (fieldRegionId) {
         await this.validateOtherResourceId(
-          [fieldRegionId],
+          fieldRegionId,
           'FieldRegion',
           'fieldRegionId',
           'Field region not found'
@@ -277,7 +279,7 @@ export class ProjectService {
       }
       if (primaryLocationId) {
         await this.validateOtherResourceId(
-          [primaryLocationId],
+          primaryLocationId,
           'Location',
           'primaryLocationId',
           'Primary location not found'
@@ -299,7 +301,7 @@ export class ProjectService {
       }
       if (marketingLocationId) {
         await this.validateOtherResourceId(
-          [marketingLocationId],
+          marketingLocationId,
           'Location',
           'marketingLocationId',
           'Marketing location not found'
@@ -620,7 +622,8 @@ export class ProjectService {
         if (e instanceof NotFoundException) {
           throw new NotFoundException(
             'Primary location not found',
-            'project.primaryLocationId'
+            'project.primaryLocationId',
+            e
           );
         }
         throw e;
@@ -666,7 +669,7 @@ export class ProjectService {
 
     if (input.fieldRegionId) {
       await this.validateOtherResourceId(
-        [input.fieldRegionId],
+        input.fieldRegionId,
         'FieldRegion',
         'fieldRegionId',
         'Field region not found'
@@ -1245,12 +1248,13 @@ export class ProjectService {
   }
 
   protected async validateOtherResourceId(
-    ids: string[],
+    ids: Many<string>,
     label: string,
     resourceField: string,
     errMsg: string
-  ): Promise<boolean> {
-    for (const id of ids) {
+  ): Promise<void> {
+    let index = 0;
+    for (const id of many(ids)) {
       const result = await this.db
         .query()
         .match([node('node', label, { id })])
@@ -1258,10 +1262,12 @@ export class ProjectService {
         .first();
 
       if (!result) {
-        throw new NotFoundException(errMsg, `project.${resourceField}`);
+        throw new NotFoundException(
+          errMsg,
+          `project.${resourceField}${Array.isArray(ids) ? `[${index}]` : ''}`
+        );
       }
+      index++;
     }
-
-    return true;
   }
 }
