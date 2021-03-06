@@ -293,7 +293,7 @@ export class ProjectService {
           otherLocationIds,
           'Location',
           'otherLocationIds',
-          'Other locations not found'
+          'One of the other locations was not found'
         );
         otherLocationIds.forEach((id) => {
           createProject.match([node(`otherLocation${id}`, 'Location', { id })]);
