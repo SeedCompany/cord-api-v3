@@ -7,8 +7,8 @@ import {
   CalendarDate,
   DuplicateException,
   generateId,
+  NotFoundException,
   Sensitivity,
-  ServerException,
 } from '../src/common';
 import { Powers } from '../src/components/authorization/dto/powers';
 import { BudgetStatus } from '../src/components/budget/dto';
@@ -197,7 +197,9 @@ describe('Project e2e', () => {
         type: ProjectType.Translation,
         fieldRegionId: 'invalid-location-id',
       })
-    ).rejects.toThrowError(new ServerException('Could not create project'));
+    ).rejects.toThrowError(
+      new NotFoundException('Field region not found', 'project.fieldRegionId')
+    );
   });
 
   it('create & read project with budget and field region by id', async () => {
