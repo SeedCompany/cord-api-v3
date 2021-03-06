@@ -78,14 +78,12 @@ export class AuthenticationResolver {
     const powers = await this.authorizationService.readPower(session);
 
     if (browser) {
-      // http cookies must have an expiration in order to persist, so we're setting it to 10 years in the future
-      const expires = DateTime.local().plus({ years: 10 }).toJSDate();
-
-      res.cookie(this.config.session.cookieName, token, {
-        expires,
-        httpOnly: true,
-        path: '/',
-        domain: this.config.session.cookieDomain,
+      const { name, expires, ...options } = this.config.sessionCookie;
+      res.cookie(name, token, {
+        ...options,
+        expires: expires
+          ? DateTime.local().plus(expires).toJSDate()
+          : undefined,
       });
 
       return { user: userFromSession, powers };

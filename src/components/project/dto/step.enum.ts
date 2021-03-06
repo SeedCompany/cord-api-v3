@@ -21,6 +21,7 @@ export enum ProjectStep {
   ActiveChangedPlan = 'ActiveChangedPlan',
   DiscussingChangeToPlan = 'DiscussingChangeToPlan',
   PendingChangeToPlanApproval = 'PendingChangeToPlanApproval',
+  PendingChangeToPlanConfirmation = 'PendingChangeToPlanConfirmation',
   DiscussingSuspension = 'DiscussingSuspension',
   PendingSuspensionApproval = 'PendingSuspensionApproval',
   Suspended = 'Suspended',
