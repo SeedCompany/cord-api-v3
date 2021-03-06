@@ -66,6 +66,6 @@ export class SessionPipe
   }
 
   getTokenFromCookie(req: Request): string | null {
-    return req?.cookies?.[this.config.session.cookieName] || null;
+    return req?.cookies?.[this.config.sessionCookie.name] || null;
   }
 }
