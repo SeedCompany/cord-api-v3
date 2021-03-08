@@ -188,12 +188,13 @@ export class FilmService {
     await this.authorizationService.verifyCanEditChanges(film, ['name'], input);
     await this.authorizationService.verifyCanEdit(film, 'scriptureReferences');
     await this.scriptureRefService.update(input.id, input.scriptureReferences);
-    return await this.db.updateProperties({
+    await this.db.updateProperties({
       type: 'Film',
       object: film,
       props: ['name'],
       changes: input,
     });
+    return await this.readOne(input.id, session);
   }
 
   async delete(id: ID, session: Session): Promise<void> {

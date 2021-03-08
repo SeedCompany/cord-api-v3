@@ -187,13 +187,14 @@ export class SongService {
     await this.authorizationService.verifyCanEdit(song, 'scriptureReferences');
     await this.scriptureRefService.update(input.id, input.scriptureReferences);
 
-    return await this.db.updateProperties({
+    await this.db.updateProperties({
       type: 'Song',
       object: song,
       props: ['name'],
       changes: input,
       skipAuth: true,
     });
+    return await this.readOne(input.id, session);
   }
 
   async delete(id: ID, session: Session): Promise<void> {

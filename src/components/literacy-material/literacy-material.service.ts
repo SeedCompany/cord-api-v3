@@ -213,12 +213,16 @@ export class LiteracyMaterialService {
     );
     await this.scriptureRefService.update(input.id, input.scriptureReferences);
 
-    return await this.db.updateProperties({
+    await this.db.updateProperties({
       type: 'LiteracyMaterial',
       object: literacyMaterial,
       props: ['name'],
       changes: input,
     });
+    // doing a whole 'nother readOne because we also have to pick up the
+    //     ScriptureReferences. the updateProperties function will only
+    //     return the updated properties we pass it, not the whole object.
+    return await this.readOne(input.id, session);
   }
 
   async delete(id: ID, session: Session): Promise<void> {
