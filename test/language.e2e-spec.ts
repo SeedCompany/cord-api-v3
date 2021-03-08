@@ -327,30 +327,29 @@ describe('Language e2e', () => {
     });
 
     await runAsAdmin(app, async () => {
-      const result = await app.graphql.mutate(
-        gql`
-          mutation updateLanguage($input: UpdateLanguageInput!) {
-            updateLanguage(input: $input) {
-              language {
-                ...language
+      await expect(
+        app.graphql.mutate(
+          gql`
+            mutation updateLanguage($input: UpdateLanguageInput!) {
+              updateLanguage(input: $input) {
+                language {
+                  ...language
+                }
               }
             }
-          }
-          ${fragments.language}
-        `,
-        {
-          input: {
-            language: {
-              id: language.id,
-              hasExternalFirstScripture: true,
+            ${fragments.language}
+          `,
+          {
+            input: {
+              language: {
+                id: language.id,
+                hasExternalFirstScripture: true,
+              },
             },
-          },
-        }
-      );
-      expect(
-        result.rejects.toThrowError(
-          'hasExternalFirstScripture can be set to true if the language has no engagements that have firstScripture=true'
+          }
         )
+      ).rejects.toThrowError(
+        'hasExternalFirstScripture can be set to true if the language has no engagements that have firstScripture=true'
       );
     });
   });
