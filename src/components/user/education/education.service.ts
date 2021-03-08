@@ -151,14 +151,36 @@ export class EducationService {
 
   async update(input: UpdateEducation, session: Session): Promise<Education> {
     const ed = await this.readOne(input.id, session);
+    const result = await this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .match([
+        node('user', 'User'),
+        relation('out', '', 'education', { active: true }),
+        node('education', 'Education', { id: input.id }),
+      ])
+      .return('user')
+      .first();
+    if (!result) {
+      throw new NotFoundException(
+        'Could not find user associated with education',
+        'user.education'
+      );
+    }
+    const props: Array<keyof typeof ed> = ['degree', 'major', 'institution'];
 
-    return await this.db.sgUpdateProperties({
-      session,
+    if (result.user.properties.id !== session.userId) {
+      await this.authorizationService.verifyCanEditChanges(ed, props, input);
+    }
+
+    await this.db.updateProperties({
+      type: 'Education',
       object: ed,
-      props: ['degree', 'major', 'institution'],
+      props: props,
       changes: input,
-      nodevar: 'education',
+      skipAuth: true,
     });
+    return await this.readOne(input.id, session);
   }
 
   async delete(_id: ID, _session: Session): Promise<void> {
