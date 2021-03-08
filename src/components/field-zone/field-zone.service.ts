@@ -192,23 +192,17 @@ export class FieldZoneService {
   async update(input: UpdateFieldZone, session: Session): Promise<FieldZone> {
     const fieldZone = await this.readOne(input.id, session);
 
+    await this.authorizationService.verifyCanEditChanges(
+      fieldZone,
+      ['name', 'director'],
+      input
+    );
     // update director
     if (input.directorId) {
       const createdAt = DateTime.local();
       const query = this.db
         .query()
-        .match([
-          node('user', 'User', { id: session.userId }),
-          relation('in', 'memberOfSecurityGroup', 'member'),
-          node('securityGroup', 'SecurityGroup'),
-          relation('out', 'sgPerms', 'permission'),
-          node('', 'Permission', {
-            property: 'director',
-            edit: true,
-          }),
-          relation('out', '', 'baseNode'),
-          node('fieldZone', 'FieldZone', { id: input.id }),
-        ])
+        .match(node('fieldZone', 'FieldZone', { id: input.id }))
         .with('fieldZone')
         .limit(1)
         .match([node('director', 'User', { id: input.directorId })])
@@ -232,12 +226,11 @@ export class FieldZoneService {
       await query.run();
     }
 
-    await this.db.sgUpdateProperties({
-      session,
+    await this.db.updateProperties({
+      type: 'FieldZone',
       object: fieldZone,
       props: ['name'],
       changes: input,
-      nodevar: 'FieldZone',
     });
 
     return await this.readOne(input.id, session);

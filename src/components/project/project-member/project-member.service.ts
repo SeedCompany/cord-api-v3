@@ -269,8 +269,8 @@ export class ProjectMemberService {
       return user;
     });
 
-    await this.db.sgUpdateProperties({
-      session,
+    await this.db.updateProperties({
+      type: 'ProjectMember',
       object,
       props: ['roles', 'modifiedAt'],
       changes: {
@@ -278,7 +278,6 @@ export class ProjectMemberService {
         roles: (input.roles ? input.roles : undefined) as any,
         modifiedAt: DateTime.local(),
       },
-      nodevar: 'projectMember',
     });
     return await this.readOne(input.id, session);
   }

@@ -370,19 +370,28 @@ export class PartnershipService {
     }
 
     const { mou, agreement, ...rest } = changes;
-    await this.db.sgUpdateProperties({
-      session,
+    const props: Array<keyof typeof object> = [
+      'agreementStatus',
+      'mouStatus',
+      'types',
+      'financialReportingType',
+      'mouStartOverride',
+      'mouEndOverride',
+    ];
+    await this.authorizationService.verifyCanEditChanges(object, props, rest);
+    if (mou) {
+      await this.authorizationService.verifyCanEdit(object, 'mou');
+    }
+    if (agreement) {
+      await this.authorizationService.verifyCanEdit(object, 'agreement');
+    }
+
+    await this.db.updateProperties({
+      type: 'Partnership',
       object,
-      props: [
-        'agreementStatus',
-        'mouStatus',
-        'types',
-        'financialReportingType',
-        'mouStartOverride',
-        'mouEndOverride',
-      ],
+      props: props,
       changes: rest,
-      nodevar: 'partnership',
+      skipAuth: true,
     });
     await this.files.updateDefinedFile(
       object.mou,
