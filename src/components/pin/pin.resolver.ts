@@ -1,5 +1,11 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { IdArg, LoggedInSession, Session } from '../../common';
+import {
+  IdArg,
+  LoggedInSession,
+  NotImplementedException,
+  Session,
+} from '../../common';
+import { PinnedListInput, PinnedListOutput } from './dto';
 import { PinService } from './pin.service';
 
 @Resolver()
@@ -38,5 +44,21 @@ export class PinResolver {
     pinned?: boolean
   ): Promise<boolean> {
     return await this.pins.togglePinned(id, session, pinned);
+  }
+
+  // @Query(() => PinnedListOutput, {
+  //   name: 'pins',
+  //   description: "A list of the requesting user's pinned items",
+  // })
+  async list(
+    @LoggedInSession() _session: Session,
+    @Args({
+      name: 'input',
+      type: () => PinnedListInput,
+      defaultValue: PinnedListInput.defaultVal,
+    })
+    _input: PinnedListInput
+  ): Promise<PinnedListOutput> {
+    throw new NotImplementedException();
   }
 }
