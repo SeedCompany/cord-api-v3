@@ -582,6 +582,7 @@ export class ProjectService {
         value: result.owningOrganizationId,
       },
       canDelete: await this.db.checkDeletePermission(id, sessionOrUserId),
+      pinned: false, // TODO implement this
       scope: membershipRoles,
     };
   }

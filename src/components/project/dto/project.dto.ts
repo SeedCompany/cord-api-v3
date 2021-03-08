@@ -4,6 +4,7 @@ import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
 import {
   DateTimeField,
+  IntersectionType,
   Resource,
   Secured,
   SecuredDate,
@@ -20,6 +21,7 @@ import { Directory } from '../../file/dto';
 import { SecuredTags } from '../../language/dto/language.dto';
 import { Location } from '../../location/dto';
 import { Partnership } from '../../partnership/dto';
+import { Pinnable } from '../../pin/dto';
 import { ProjectMember } from '../project-member/dto';
 import { ProjectStatus } from './status.enum';
 import { SecuredProjectStep } from './step.enum';
@@ -39,7 +41,7 @@ type AnyProject = MergeExclusive<TranslationProject, InternshipProject>;
     throw new Error('Could not resolve project type');
   },
 })
-class Project extends Resource {
+class Project extends IntersectionType(Resource, Pinnable) {
   static readonly Props: string[] = keysOf<Project>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Project>>();
   static readonly Relations = {
@@ -116,7 +118,7 @@ class Project extends Resource {
 export { Project as IProject, AnyProject as Project };
 
 @ObjectType({
-  implements: [Project, Resource],
+  implements: [Project, Resource, Pinnable],
 })
 export class TranslationProject extends Project {
   static readonly Props = keysOf<TranslationProject>();
@@ -126,7 +128,7 @@ export class TranslationProject extends Project {
 }
 
 @ObjectType({
-  implements: [Project, Resource],
+  implements: [Project, Resource, Pinnable],
 })
 export class InternshipProject extends Project {
   static readonly Props = keysOf<InternshipProject>();
