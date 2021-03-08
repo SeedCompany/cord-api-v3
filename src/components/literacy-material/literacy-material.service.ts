@@ -201,16 +201,23 @@ export class LiteracyMaterialService {
     input: UpdateLiteracyMaterial,
     session: Session
   ): Promise<LiteracyMaterial> {
+    const literacyMaterial = await this.readOne(input.id, session);
+    await this.authorizationService.verifyCanEditChanges(
+      literacyMaterial,
+      ['name'],
+      input
+    );
+    await this.authorizationService.verifyCanEdit(
+      literacyMaterial,
+      'scriptureReferences'
+    );
     await this.scriptureRefService.update(input.id, input.scriptureReferences);
 
-    const literacyMaterial = await this.readOne(input.id, session);
-
-    return await this.db.sgUpdateProperties({
-      session,
+    return await this.db.updateProperties({
+      type: 'LiteracyMaterial',
       object: literacyMaterial,
       props: ['name'],
       changes: input,
-      nodevar: 'literacyMaterial',
     });
   }
 

@@ -420,6 +420,32 @@ export class ProductService {
       );
     }
 
+    const productProps: Array<keyof typeof currentProduct> = [
+      'mediums',
+      'purposes',
+      'methodology',
+    ];
+    await this.authorizationService.verifyCanEditChanges(
+      currentProduct,
+      productProps,
+      rest
+    );
+    if (inputProducesId) {
+      await this.authorizationService.verifyCanEdit(currentProduct, 'produces');
+    }
+    if (scriptureReferences) {
+      await this.authorizationService.verifyCanEdit(
+        currentProduct,
+        'scriptureReferences'
+      );
+    }
+    if (scriptureReferencesOverride) {
+      await this.authorizationService.verifyCanEdit(
+        currentProduct,
+        'scriptureReferencesOverride'
+      );
+    }
+
     // If given an new produces id, update the producible
     if (inputProducesId) {
       const producible = await this.db
@@ -489,12 +515,12 @@ export class ProductService {
       session
     );
 
-    return await this.db.sgUpdateProperties({
-      session,
+    return await this.db.updateProperties({
+      type: 'Product',
       object: productUpdatedScriptureReferences,
       props: ['mediums', 'purposes', 'methodology'],
       changes: rest,
-      nodevar: 'product',
+      skipAuth: true, //skipAuth because already checked authorization
     });
   }
 

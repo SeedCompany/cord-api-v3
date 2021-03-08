@@ -610,6 +610,38 @@ export class ProjectService {
       ...(input.step ? { status: stepToStatus(input.step) } : {}),
     };
 
+    const props: Array<keyof typeof currentProject> = [
+      'name',
+      'mouStart',
+      'mouEnd',
+      'initialMouEnd',
+      'estimatedSubmission',
+      'status',
+      'modifiedAt',
+      'step',
+      'sensitivity',
+      'tags',
+      'financialReportReceivedAt',
+    ];
+
+    await this.authorizationService.verifyCanEditChanges(
+      currentProject,
+      props,
+      changes
+    );
+    if (input.primaryLocationId) {
+      await this.authorizationService.verifyCanEdit(
+        currentProject,
+        'primaryLocation'
+      );
+    }
+    if (input.fieldRegionId) {
+      await this.authorizationService.verifyCanEdit(
+        currentProject,
+        'fieldRegion'
+      );
+    }
+
     // TODO: re-connect the locationId node when locations are hooked up
 
     if (input.primaryLocationId) {
@@ -638,23 +670,12 @@ export class ProjectService {
       const createdAt = DateTime.local();
       const query = this.db
         .query()
-        .match([
-          node('user', 'User', { id: session.userId }),
-          relation('in', 'memberOfSecurityGroup', 'member'),
-          node('security', 'SecurityGroup'),
-          relation('out', 'sgPerms', 'permission'),
-          node('', 'Permission', {
-            property: 'primaryLocation',
-            edit: true,
-          }),
-          relation('out', 'permsOfBaseNode', 'baseNode'),
-          node('project', 'Project', { id: input.id }),
-        ])
-        .with('project')
+        .match(node('project', 'Project', { id: input.id }))
+        .match(node('location', 'Location', { id: input.primaryLocationId }))
+        .with('project, location')
         .limit(1)
-        .match([node('location', 'Location', { id: input.primaryLocationId })])
         .optionalMatch([
-          node('project'),
+          node('project', 'Project', { id: input.id }),
           relation('out', 'oldRel', 'primaryLocation', { active: true }),
           node(''),
         ])
@@ -683,18 +704,7 @@ export class ProjectService {
       const createdAt = DateTime.local();
       const query = this.db
         .query()
-        .match([
-          node('user', 'User', { id: session.userId }),
-          relation('in', 'memberOfSecurityGroup', 'member'),
-          node('security', 'SecurityGroup'),
-          relation('out', 'sgPerms', 'permission'),
-          node('', 'Permission', {
-            property: 'fieldRegion',
-            edit: true,
-          }),
-          relation('out', 'permsOfBaseNode', 'baseNode'),
-          node('project', 'Project', { id: input.id }),
-        ])
+        .match(node('project', 'Project', { id: input.id }))
         .with('project')
         .limit(1)
         .match([node('region', 'FieldRegion', { id: input.fieldRegionId })])
@@ -718,24 +728,12 @@ export class ProjectService {
       await query.run();
     }
 
-    const result = await this.db.sgUpdateProperties({
-      session,
+    const result = await this.db.updateProperties({
+      type: 'Project',
       object: currentProject,
-      props: [
-        'name',
-        'mouStart',
-        'mouEnd',
-        'initialMouEnd',
-        'estimatedSubmission',
-        'status',
-        'modifiedAt',
-        'step',
-        'sensitivity',
-        'tags',
-        'financialReportReceivedAt',
-      ],
+      props: props,
       changes,
-      nodevar: 'project',
+      skipAuth: true,
     });
 
     const event = new ProjectUpdatedEvent(

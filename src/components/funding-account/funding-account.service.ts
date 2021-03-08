@@ -185,12 +185,11 @@ export class FundingAccountService {
   ): Promise<FundingAccount> {
     const fundingAccount = await this.readOne(input.id, session);
 
-    return await this.db.sgUpdateProperties({
-      session,
+    return await this.db.updateProperties({
+      type: 'FundingAccount',
       object: fundingAccount,
       props: ['name', 'accountNumber'],
       changes: input,
-      nodevar: 'fundingAccount',
     });
   }
 

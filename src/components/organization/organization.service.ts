@@ -225,12 +225,11 @@ export class OrganizationService {
     session: Session
   ): Promise<Organization> {
     const organization = await this.readOne(input.id, session);
-    return await this.db.sgUpdateProperties({
-      session,
+    return await this.db.updateProperties({
+      type: 'Organization',
       object: organization,
       props: ['name', 'address'],
       changes: input,
-      nodevar: 'organization',
     });
   }
 

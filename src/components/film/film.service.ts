@@ -184,15 +184,15 @@ export class FilmService {
   }
 
   async update(input: UpdateFilm, session: Session): Promise<Film> {
-    await this.scriptureRefService.update(input.id, input.scriptureReferences);
-
     const film = await this.readOne(input.id, session);
-    return await this.db.sgUpdateProperties({
-      session,
+    await this.authorizationService.verifyCanEditChanges(film, ['name'], input);
+    await this.authorizationService.verifyCanEdit(film, 'scriptureReferences');
+    await this.scriptureRefService.update(input.id, input.scriptureReferences);
+    return await this.db.updateProperties({
+      type: 'Film',
       object: film,
       props: ['name'],
       changes: input,
-      nodevar: 'film',
     });
   }
 

@@ -224,12 +224,11 @@ export class FieldRegionService {
 
     // update director
 
-    await this.db.sgUpdateProperties({
-      session,
+    await this.db.updateProperties({
+      type: 'FieldRegion',
       object: fieldRegion,
       props: ['name'],
       changes: input,
-      nodevar: 'fieldRegion',
     });
 
     return await this.readOne(input.id, session);

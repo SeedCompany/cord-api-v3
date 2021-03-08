@@ -144,7 +144,7 @@ export class AuthorizationService {
     if (isSecured(baseNode[prop]) && !baseNode[prop].canEdit) {
       throw new UnauthorizedException(
         'You do not have permission to update this property',
-        prop as string
+        `${baseNode.__typename as string}.${prop as string}`
       );
     }
   }

@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { pickBy } from 'lodash';
+import { DateTime } from 'luxon';
 import {
   generateId,
   ID,
   NotFoundException,
   ServerException,
   Session,
-  UnauthorizedException,
 } from '../../../common';
 import {
   ConfigService,
@@ -139,6 +139,7 @@ export class EthnologueLanguageService {
 
   async update(id: ID, input: UpdateEthnologueLanguage, session: Session) {
     if (!input) return;
+    const ethnologueLanguage = await this.readOne(id, session);
 
     // Make a mapping of the fields that we want to set in the db to the inputs
     const valueSet = {
@@ -150,32 +151,14 @@ export class EthnologueLanguageService {
 
     // filter out all of the undefined values so we only have a mapping of entries that the user wanted to edit
     const valueSetCleaned = pickBy(valueSet, (v) => v !== undefined);
-    const valueSetCleanedKeys = Object.keys(valueSetCleaned);
 
-    for (const key of valueSetCleanedKeys) {
-      const q = await this.db
-        .query()
-        .match([
-          node('user', 'User', { id: session.userId }),
-          relation('in', 'memberOfSecurityGroup', 'member'),
-          node('security', 'SecurityGroup'),
-          relation('out', 'sgPerms', 'permission'),
-          node('perm', 'Permission', {
-            property: `${key.replace('.value', '')}`,
-            edit: true,
-          }),
-          relation('out', 'permsOfBaseNode', 'baseNode'),
-          node('ethnologueLanguage', 'EthnologueLanguage', { id: id }),
-        ])
-        .return(['user', 'perm', 'ethnologueLanguage'])
-        .first();
-      if (!q) {
-        throw new UnauthorizedException(
-          `You do not have permission to edit his object', '${key}`
-        );
-      }
-    }
-
+    // verifying that we can edit the changes. 'hacking' in the createdAt prop to satisfy typescripts Resource type.
+    // TODO: find a better way. may need to even change the function.
+    await this.authorizationService.verifyCanEditChanges(
+      { createdAt: DateTime.now(), ...ethnologueLanguage },
+      ['code', 'provisionalCode', 'name', 'population'],
+      input
+    );
     try {
       const query = this.db
         .query()

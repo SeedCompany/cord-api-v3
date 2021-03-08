@@ -330,20 +330,24 @@ export class PartnerService {
       };
     }
 
-    await this.db.sgUpdateProperties({
-      session,
+    const props: Array<keyof typeof object> = [
+      'types',
+      'financialReportingTypes',
+      'pmcEntityCode',
+      'globalInnovationsClient',
+      'active',
+      'address',
+      'modifiedAt',
+    ];
+    await this.authorizationService.verifyCanEditChanges(object, props, input);
+    if (input.pointOfContactId) {
+      await this.authorizationService.verifyCanEdit(object, 'pointOfContact');
+    }
+    await this.db.updateProperties({
+      type: 'Partner',
       object,
-      props: [
-        'types',
-        'financialReportingTypes',
-        'pmcEntityCode',
-        'globalInnovationsClient',
-        'active',
-        'address',
-        'modifiedAt',
-      ],
+      props: props,
       changes: changes,
-      nodevar: 'partner',
     });
     // Update partner
     if (input.pointOfContactId) {
@@ -356,21 +360,16 @@ export class PartnerService {
           id: input.pointOfContactId,
         })
         .optionalMatch([
-          node('requestingUser'),
-          relation('in', 'memberOfSecurityGroup', 'member'),
-          node('securityGroup', 'SecurityGroup'),
-          relation('out', 'sgPerms', 'permission'),
-          node('canReadPointOfContact', 'Permission', {
-            property: 'pointOfContact',
-            read: true,
-          }),
-          relation('out', 'permsOfBaseNode', 'baseNode'),
           node('org'),
           relation('out', 'oldPointOfContactRel', 'pointOfContact', {
             active: true,
           }),
           node('pointOfContact', 'User'),
         ])
+        .setValues({
+          'oldPointOfContactRel.active': false,
+        })
+        .with('*')
         .create([
           node('partner'),
           relation('out', '', 'pointOfContact', {
@@ -379,7 +378,6 @@ export class PartnerService {
           }),
           node('newPointOfContact'),
         ])
-        .delete('oldPointOfContactRel')
         .run();
     }
 
