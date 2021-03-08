@@ -1,11 +1,13 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
+import { Many } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
   generateId,
   getHighestSensitivity,
   InputException,
+  many,
   NotFoundException,
   Sensitivity,
   ServerException,
@@ -265,21 +267,45 @@ export class ProjectService {
       const createProject = this.db.query().call(matchRequestingUser, session);
 
       if (fieldRegionId) {
+        await this.validateOtherResourceId(
+          fieldRegionId,
+          'FieldRegion',
+          'fieldRegionId',
+          'Field region not found'
+        );
         createProject.match([
           node('fieldRegion', 'FieldRegion', { id: fieldRegionId }),
         ]);
       }
       if (primaryLocationId) {
+        await this.validateOtherResourceId(
+          primaryLocationId,
+          'Location',
+          'primaryLocationId',
+          'Primary location not found'
+        );
         createProject.match([
           node('primaryLocation', 'Location', { id: primaryLocationId }),
         ]);
       }
       if (otherLocationIds?.length) {
+        await this.validateOtherResourceId(
+          otherLocationIds,
+          'Location',
+          'otherLocationIds',
+          'One of the other locations was not found'
+        );
         otherLocationIds.forEach((id) => {
           createProject.match([node(`otherLocation${id}`, 'Location', { id })]);
         });
       }
       if (marketingLocationId) {
+        await this.validateOtherResourceId(
+          marketingLocationId,
+          'Location',
+          'marketingLocationId',
+          'Marketing location not found'
+        );
         createProject.match([
           node('marketingLocation', 'Location', { id: marketingLocationId }),
         ]);
@@ -403,6 +429,9 @@ export class ProjectService {
           'project.name',
           'Project with this name already exists'
         );
+      }
+      if (e instanceof NotFoundException) {
+        throw e;
       }
       throw new ServerException(`Could not create project`, e);
     }
@@ -578,16 +607,27 @@ export class ProjectService {
     // TODO: re-connect the locationId node when locations are hooked up
 
     if (input.primaryLocationId) {
-      const location = await this.locationService.readOne(
-        input.primaryLocationId,
-        session
-      );
-
-      if (!location.fundingAccount.value)
-        throw new InputException(
-          'Cannot connect location without a funding account',
-          'project.primaryLocationId'
+      try {
+        const location = await this.locationService.readOne(
+          input.primaryLocationId,
+          session
         );
+        if (!location.fundingAccount.value) {
+          throw new InputException(
+            'Cannot connect location without a funding account',
+            'project.primaryLocationId'
+          );
+        }
+      } catch (e) {
+        if (e instanceof NotFoundException) {
+          throw new NotFoundException(
+            'Primary location not found',
+            'project.primaryLocationId',
+            e
+          );
+        }
+        throw e;
+      }
 
       const createdAt = DateTime.local();
       const query = this.db
@@ -628,6 +668,12 @@ export class ProjectService {
     }
 
     if (input.fieldRegionId) {
+      await this.validateOtherResourceId(
+        input.fieldRegionId,
+        'FieldRegion',
+        'fieldRegionId',
+        'Field region not found'
+      );
       const createdAt = DateTime.local();
       const query = this.db
         .query()
@@ -1199,5 +1245,29 @@ export class ProjectService {
         )
       ).every((n) => n)
     );
+  }
+
+  protected async validateOtherResourceId(
+    ids: Many<string>,
+    label: string,
+    resourceField: string,
+    errMsg: string
+  ): Promise<void> {
+    let index = 0;
+    for (const id of many(ids)) {
+      const result = await this.db
+        .query()
+        .match([node('node', label, { id })])
+        .return('node')
+        .first();
+
+      if (!result) {
+        throw new NotFoundException(
+          errMsg,
+          `project.${resourceField}${Array.isArray(ids) ? `[${index}]` : ''}`
+        );
+      }
+      index++;
+    }
   }
 }
