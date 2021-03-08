@@ -13,6 +13,7 @@ import {
   createTestApp,
   expectNotFound,
   registerUserWithPower,
+  runAsAdmin,
   TestApp,
 } from './utility';
 import { fragments } from './utility/fragments';
@@ -73,30 +74,33 @@ describe('Language e2e', () => {
     const language = await createLanguage(app);
     const newName = faker.company.companyName();
 
-    const result = await app.graphql.mutate(
-      gql`
-        mutation updateLanguage($input: UpdateLanguageInput!) {
-          updateLanguage(input: $input) {
-            language {
-              ...language
+    // run as admin because only admin role can edit properties on language
+    await runAsAdmin(app, async () => {
+      const result = await app.graphql.mutate(
+        gql`
+          mutation updateLanguage($input: UpdateLanguageInput!) {
+            updateLanguage(input: $input) {
+              language {
+                ...language
+              }
             }
           }
-        }
-        ${fragments.language}
-      `,
-      {
-        input: {
-          language: {
-            id: language.id,
-            name: newName,
+          ${fragments.language}
+        `,
+        {
+          input: {
+            language: {
+              id: language.id,
+              name: newName,
+            },
           },
-        },
-      }
-    );
-    const updated = result.updateLanguage.language;
-    expect(updated).toBeTruthy();
-    expect(updated.id).toBe(language.id);
-    expect(updated.name.value).toBe(newName);
+        }
+      );
+      const updated = result.updateLanguage.language;
+      expect(updated).toBeTruthy();
+      expect(updated.id).toBe(language.id);
+      expect(updated.name.value).toBe(newName);
+    });
   });
 
   // UPDATE LANGUAGE: update a language ethnologue when language is minimally defined.
@@ -104,33 +108,34 @@ describe('Language e2e', () => {
     const languageMinimal = await createLanguageMinimal(app);
     const newEthnologueCode = faker.helpers.replaceSymbols('???').toLowerCase();
 
-    const result = await app.graphql.mutate(
-      gql`
-        mutation UpdateLanguageEthnologue($input: UpdateLanguageInput!) {
-          updateLanguage(input: $input) {
-            language {
-              ...language
+    await runAsAdmin(app, async () => {
+      const result = await app.graphql.mutate(
+        gql`
+          mutation UpdateLanguageEthnologue($input: UpdateLanguageInput!) {
+            updateLanguage(input: $input) {
+              language {
+                ...language
+              }
             }
           }
-        }
-        ${fragments.language}
-      `,
-      {
-        input: {
-          language: {
-            id: languageMinimal.id,
-            ethnologue: {
-              code: newEthnologueCode,
+          ${fragments.language}
+        `,
+        {
+          input: {
+            language: {
+              id: languageMinimal.id,
+              ethnologue: {
+                code: newEthnologueCode,
+              },
             },
           },
-        },
-      }
-    );
-
-    const updated = result.updateLanguage.language;
-    expect(updated).toBeTruthy();
-    expect(updated.id).toBe(languageMinimal.id);
-    expect(updated.ethnologue.code.value).toBe(newEthnologueCode);
+        }
+      );
+      const updated = result.updateLanguage.language;
+      expect(updated).toBeTruthy();
+      expect(updated.id).toBe(languageMinimal.id);
+      expect(updated.ethnologue.code.value).toBe(newEthnologueCode);
+    });
   });
 
   // DELETE LANGUAGE
@@ -321,8 +326,8 @@ describe('Language e2e', () => {
       firstScripture: true,
     });
 
-    await expect(
-      app.graphql.mutate(
+    await runAsAdmin(app, async () => {
+      const result = await app.graphql.mutate(
         gql`
           mutation updateLanguage($input: UpdateLanguageInput!) {
             updateLanguage(input: $input) {
@@ -341,10 +346,13 @@ describe('Language e2e', () => {
             },
           },
         }
-      )
-    ).rejects.toThrowError(
-      'hasExternalFirstScripture can be set to true if the language has no engagements that have firstScripture=true'
-    );
+      );
+      expect(
+        result.rejects.toThrowError(
+          'hasExternalFirstScripture can be set to true if the language has no engagements that have firstScripture=true'
+        )
+      );
+    });
   });
 
   it('can set hasExternalFirstScripture=true if language has no engagements that have firstScripture=true', async () => {
@@ -354,29 +362,31 @@ describe('Language e2e', () => {
       firstScripture: false,
     });
 
-    const result = await app.graphql.mutate(
-      gql`
-        mutation updateLanguage($input: UpdateLanguageInput!) {
-          updateLanguage(input: $input) {
-            language {
-              ...language
+    await runAsAdmin(app, async () => {
+      const result = await app.graphql.mutate(
+        gql`
+          mutation updateLanguage($input: UpdateLanguageInput!) {
+            updateLanguage(input: $input) {
+              language {
+                ...language
+              }
             }
           }
-        }
-        ${fragments.language}
-      `,
-      {
-        input: {
-          language: {
-            id: language.id,
-            hasExternalFirstScripture: true,
+          ${fragments.language}
+        `,
+        {
+          input: {
+            language: {
+              id: language.id,
+              hasExternalFirstScripture: true,
+            },
           },
-        },
-      }
-    );
-    const updated = result.updateLanguage.language;
-    expect(updated).toBeTruthy();
-    expect(updated.id).toBe(language.id);
-    expect(updated.hasExternalFirstScripture.value).toBe(true);
+        }
+      );
+      const updated = result.updateLanguage.language;
+      expect(updated).toBeTruthy();
+      expect(updated.id).toBe(language.id);
+      expect(updated.hasExternalFirstScripture.value).toBe(true);
+    });
   });
 });
