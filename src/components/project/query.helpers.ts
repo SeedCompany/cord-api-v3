@@ -44,6 +44,10 @@ export function projectListFilter(query: Query, filter: ProjectFilters) {
       node('node'),
     ]);
   }
+
+  if (filter.pinned != null) {
+    // TODO implement filter
+  }
 }
 
 export const propMatch = (property: string) => [
