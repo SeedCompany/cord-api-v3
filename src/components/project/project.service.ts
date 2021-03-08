@@ -624,14 +624,12 @@ export class ProjectService {
       const createdAt = DateTime.local();
       const query = this.db
         .query()
-        .match([
-          node('project', 'Project', { id: input.id }),
-          node('location', 'Location', { id: input.primaryLocationId }),
-        ])
+        .match(node('project', 'Project', { id: input.id }))
+        .match(node('location', 'Location', { id: input.primaryLocationId }))
         .with('project, location')
         .limit(1)
         .optionalMatch([
-          node('project'),
+          node('project', 'Project', { id: input.id }),
           relation('out', 'oldRel', 'primaryLocation', { active: true }),
           node(''),
         ])
