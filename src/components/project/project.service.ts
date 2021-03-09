@@ -825,18 +825,20 @@ export class ProjectService {
         input,
         this.securedProperties,
         (q, sort, order) =>
-          q
-            .raw(input.sort === 'sensitivity' ? sensitivitySubquery : '')
-            .match([
-              node('node'),
-              relation('out', '', sort, { active: true }),
-              node('prop', 'Property'),
-            ])
-            .with([
-              '*',
-              ...(input.sort === 'sensitivity' ? [sensitivityCase] : []),
-            ])
-            .orderBy(sortBy, order)
+          ['id', 'createdAt'].includes(sort)
+            ? q.orderBy(`node.${sort}`, order)
+            : q
+                .raw(input.sort === 'sensitivity' ? sensitivitySubquery : '')
+                .match([
+                  node('node'),
+                  relation('out', '', sort, { active: true }),
+                  node('prop', 'Property'),
+                ])
+                .with([
+                  '*',
+                  ...(input.sort === 'sensitivity' ? [sensitivityCase] : []),
+                ])
+                .orderBy(sortBy, order)
       );
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
