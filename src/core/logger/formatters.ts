@@ -194,7 +194,7 @@ export const printForJson = () =>
     const { level, message, exceptions, metadata } = info;
 
     const obj = {
-      '@name': getNameFromEntry(info),
+      logger: getNameFromEntry(info),
       level,
       message,
       exceptions: exceptions?.map(({ message, type, stack, other }) => ({
