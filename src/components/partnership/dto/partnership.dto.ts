@@ -3,6 +3,7 @@ import { keys as keysOf } from 'ts-transformer-keys';
 import {
   Resource,
   Secured,
+  SecuredBoolean,
   SecuredDateNullable,
   SecuredEnum,
   SecuredProps,
@@ -68,4 +69,7 @@ export class Partnership extends Resource {
 
   @Field()
   readonly financialReportingType: SecuredFinancialReportingType;
+
+  @Field()
+  readonly primary: SecuredBoolean;
 }

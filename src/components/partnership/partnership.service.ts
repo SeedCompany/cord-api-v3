@@ -70,6 +70,7 @@ export class PartnershipService {
     mou: true,
     agreement: true,
     partner: true,
+    primary: true,
   };
 
   constructor(
@@ -92,6 +93,12 @@ export class PartnershipService {
     const createdAt = DateTime.local();
 
     await this.verifyRelationshipEligibility(projectId, partnerId);
+
+    const isFirstPartnership = await this.isFirstPartnership(projectId);
+    if (!isFirstPartnership && input.primary) {
+      await this.setPrimaryForOldPartnerships(projectId, false);
+    }
+    const primary = isFirstPartnership ? true : input.primary;
 
     const partner = await this.partnerService.readOne(partnerId, session);
     this.verifyFinancialReportingType(
@@ -156,6 +163,12 @@ export class PartnershipService {
       {
         key: 'canDelete',
         value: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'primary',
+        value: primary,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -369,6 +382,11 @@ export class PartnershipService {
       }
     }
 
+    if (input.primary) {
+      const projectId = await this.getProjectIdByPartnershipId(input.id);
+      await this.setPrimaryForOldPartnerships(projectId, false);
+    }
+
     const { mou, agreement, ...rest } = changes;
     await this.db.sgUpdateProperties({
       session,
@@ -380,6 +398,7 @@ export class PartnershipService {
         'financialReportingType',
         'mouStartOverride',
         'mouEndOverride',
+        'primary',
       ],
       changes: rest,
       nodevar: 'partnership',
@@ -424,6 +443,8 @@ export class PartnershipService {
         'You do not have the permission to delete this Partnership'
       );
 
+    const projectId = await this.getProjectIdByPartnershipId(id);
+
     await this.eventBus.publish(
       new PartnershipWillDeleteEvent(object, session)
     );
@@ -438,6 +459,31 @@ export class PartnershipService {
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);
+    }
+
+    // Assign primary to other partnership if one exists
+    if (object.primary) {
+      const result = await this.db
+        .query()
+        .optionalMatch(node('project', 'Project', { id: projectId }))
+        .optionalMatch([
+          node('project'),
+          relation('out', '', 'partnership', { active: true }),
+          node('partnership'),
+        ])
+        .return('partnership.id as partnershipId')
+        .asResult<{ partnershipId: string }>()
+        .first();
+
+      if (result) {
+        await this.update(
+          {
+            id: result.partnershipId,
+            primary: true,
+          },
+          session
+        );
+      }
     }
   }
 
@@ -602,5 +648,57 @@ export class PartnershipService {
         'Partnership for this project and partner already exists'
       );
     }
+  }
+
+  protected async isFirstPartnership(projectId: string): Promise<boolean> {
+    const result = await this.db
+      .query()
+      .optionalMatch(node('project', 'Project', { id: projectId }))
+      .optionalMatch([
+        node('project'),
+        relation('out', '', 'partnership', { active: true }),
+        node('partnership'),
+      ])
+      .return(['partnership'])
+      .asResult<{ partnership?: Node }>()
+      .first();
+
+    return result?.partnership ? false : true;
+  }
+
+  protected async setPrimaryForOldPartnerships(
+    projectId: string,
+    value: boolean
+  ): Promise<void> {
+    await this.db
+      .query()
+      .optionalMatch(node('project', 'Project', { id: projectId }))
+      .optionalMatch([
+        node('project'),
+        relation('out', '', 'partnership', { active: true }),
+        node('partnership'),
+        relation('out', '', 'primary'),
+        node('property', 'Property'),
+      ])
+      .setValues({ 'property.value': value })
+      .first();
+  }
+
+  protected async getProjectIdByPartnershipId(
+    partnershipId: string
+  ): Promise<string> {
+    const result = await this.db
+      .query()
+      .match(node('partnership', 'Partnership', { id: partnershipId }))
+      .optionalMatch([
+        node('partnership'),
+        relation('in', '', 'partnership', { active: true }),
+        node('project', 'Project'),
+      ])
+      .return('project.id as projectId')
+      .asResult<{ projectId: string }>()
+      .first();
+
+    return result!.projectId;
   }
 }

@@ -45,6 +45,9 @@ export class CreatePartnership {
 
   @Field(() => FinancialReportingType, { nullable: true })
   readonly financialReportingType?: FinancialReportingType;
+
+  @Field({ nullable: true })
+  readonly primary?: boolean = false;
 }
 
 @InputType()

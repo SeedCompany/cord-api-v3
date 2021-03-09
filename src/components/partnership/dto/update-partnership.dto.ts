@@ -42,6 +42,9 @@ export abstract class UpdatePartnership {
 
   @Field(() => FinancialReportingType, { nullable: true })
   readonly financialReportingType?: FinancialReportingType | null;
+
+  @Field({ nullable: true })
+  readonly primary?: boolean;
 }
 
 @InputType()
