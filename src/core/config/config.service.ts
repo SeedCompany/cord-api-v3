@@ -42,14 +42,12 @@ export class ConfigService implements EmailOptionsFactory {
       from: this.env.string('EMAIL_FROM').optional('noreply@cordfield.com'),
       replyTo: this.env.string('EMAIL_REPLY_TO').optional() || undefined, // falsy -> undefined
       send,
-      open: this.env
-        .boolean('EMAIL_OPEN')
-        .optional(
-          !send &&
-            !this.jest &&
-            !this.migration &&
-            process.env.NODE_ENV === 'development'
-        ),
+      open:
+        this.jest || this.migration
+          ? false
+          : this.env
+              .boolean('EMAIL_OPEN')
+              .optional(!send && process.env.NODE_ENV === 'development'),
       ses: {
         region: this.env.string('SES_REGION').optional(),
       },
