@@ -20,11 +20,11 @@ export class GraphqlLoggingPlugin implements ApolloServerPlugin {
     _context: GraphQLRequestContext
   ): GraphQLRequestListener | void {
     return {
-      executionDidStart: ({ operationName, request }) => {
+      executionDidStart: ({ operationName, operation, request }) => {
         if (operationName === 'IntrospectionQuery') {
           return;
         }
-        this.logger.info('Received request', {
+        this.logger.info(`Received ${operation.operation}`, {
           operation: operationName,
           ...maskSecrets(request.variables ?? {}),
         });
