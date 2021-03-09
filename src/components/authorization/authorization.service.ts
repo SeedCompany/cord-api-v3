@@ -11,8 +11,13 @@ import {
   ServerException,
   Session,
 } from '../../common';
-import { retry } from '../../common/retry';
-import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
+import {
+  ConfigService,
+  DatabaseService,
+  ILogger,
+  Logger,
+  Transactional,
+} from '../../core';
 import {
   DbPropsOfDto,
   parseSecuredProperties,
@@ -45,46 +50,24 @@ export class AuthorizationService {
     @Logger('authorization:service') private readonly logger: ILogger
   ) {}
 
+  @Transactional()
   async processNewBaseNode(
     baseNodeObj: OneBaseNode,
     baseNodeId: string,
     creatorUserId: string
   ) {
     const label = baseNodeObj.__className.substring(2);
-    const process = async () => {
-      await retry(
-        async () => {
-          await this.db
-            .query()
-            .raw(
-              `CALL cord.processNewBaseNode($baseNodeId, $label, $creatorUserId)`,
-              {
-                baseNodeId,
-                label,
-                creatorUserId,
-              }
-            )
-            .run();
-        },
+    await this.db
+      .query()
+      .raw(
+        `CALL cord.processNewBaseNode($baseNodeId, $label, $creatorUserId)`,
         {
-          retries: 3,
+          baseNodeId,
+          label,
+          creatorUserId,
         }
-      );
-    };
-
-    const tx = this.dbConn.currentTransaction;
-    if (!tx) {
-      await process();
-      return;
-    }
-
-    // run procedure after transaction finishes committing so data is actually
-    // available for procedure code to use.
-    const origCommit = tx.commit.bind(tx);
-    tx.commit = async () => {
-      await origCommit();
-      await process();
-    };
+      )
+      .run();
   }
 
   async secureProperties<Resource extends ResourceShape<any>>(
