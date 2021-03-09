@@ -826,7 +826,7 @@ export class ProjectService {
         this.securedProperties,
         (q, sort, order) =>
           ['id', 'createdAt'].includes(sort)
-            ? q.orderBy(`node.${sort}`, order)
+            ? q.with('*').orderBy(`node.${sort}`, order)
             : q
                 .raw(input.sort === 'sensitivity' ? sensitivitySubquery : '')
                 .match([
