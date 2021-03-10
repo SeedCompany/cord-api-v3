@@ -7,6 +7,7 @@ import {
   HttpException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException as NestjsNotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 /* eslint-enable no-restricted-imports */
@@ -72,6 +73,14 @@ export class ExceptionFilter implements GqlExceptionFilter {
           (constraints) => Object.values(constraints)[0]
         ),
       });
+      return;
+    }
+
+    // Don't spam log with warnings for unmatched requests. These are all hack attempts.
+    if (
+      error instanceof NestjsNotFoundException &&
+      process.env.NODE_ENV === 'production'
+    ) {
       return;
     }
 

@@ -50,26 +50,33 @@ export class AuthorizationService {
     baseNodeId: string,
     creatorUserId: string
   ) {
-    const label = baseNodeObj.__className.substring(2);
+    await this.afterTransaction(async () => {
+      await this.db
+        .query()
+        .raw(
+          `CALL cord.processNewBaseNode($baseNodeId, $label, $creatorUserId)`,
+          {
+            baseNodeId,
+            label: baseNodeObj.__className.substring(2),
+            creatorUserId,
+          }
+        )
+        .run();
+    });
+  }
+
+  /**
+   * Run code after current transaction finishes, if there is one.
+   * This is a hack to allow our procedure and apoc.periodic.iterate to work
+   * without dead-locking. They use separate transactions so they need the
+   * resource being modified to be unlocked (which happens after the
+   * transaction commits/finishes).
+   */
+  private async afterTransaction(fn: () => Promise<void>) {
     const process = async () => {
-      await retry(
-        async () => {
-          await this.db
-            .query()
-            .raw(
-              `CALL cord.processNewBaseNode($baseNodeId, $label, $creatorUserId)`,
-              {
-                baseNodeId,
-                label,
-                creatorUserId,
-              }
-            )
-            .run();
-        },
-        {
-          retries: 3,
-        }
-      );
+      await retry(fn, {
+        retries: 3,
+      });
     };
 
     const tx = this.dbConn.currentTransaction;
@@ -187,6 +194,10 @@ export class AuthorizationService {
   }
 
   async roleAddedToUser(id: string, roles: Role[]) {
+    await this.afterTransaction(() => this.doRoleAddedToUser(id, roles));
+  }
+
+  private async doRoleAddedToUser(id: string, roles: Role[]) {
     // todo: this only applies to global roles, the only kind we have until next week
     // iterate through all roles and assign to all SGs with that role
 
