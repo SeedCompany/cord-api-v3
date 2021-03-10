@@ -173,7 +173,7 @@ describe('Partner e2e', () => {
         financialReportingTypes: [FinancialReportingType.Funded],
       })
     ).rejects.toThrowError(
-      'Financial reporting type can only be applied to managing partners'
+      'Financial reporting types can only be applied to managing partners'
     );
   });
 });
