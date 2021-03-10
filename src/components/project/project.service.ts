@@ -63,6 +63,7 @@ import {
   PartnershipService,
   SecuredPartnershipList,
 } from '../partnership';
+import { PinService } from '../pin/pin.service';
 import {
   CreateProject,
   InternshipProject,
@@ -127,6 +128,7 @@ export class ProjectService {
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
     private readonly projectRules: ProjectRules,
+    private readonly pinSerivce: PinService,
     @Logger('project:service') private readonly logger: ILogger
   ) {}
 
@@ -582,7 +584,7 @@ export class ProjectService {
         value: result.owningOrganizationId,
       },
       canDelete: await this.db.checkDeletePermission(id, sessionOrUserId),
-      pinned: false, // TODO implement this
+      pinned: await this.pinSerivce.isPinned(id, sessionOrUserId as Session), // TODO: More safe way to pass session
       scope: membershipRoles,
     };
   }

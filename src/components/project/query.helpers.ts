@@ -45,8 +45,12 @@ export function projectListFilter(query: Query, filter: ProjectFilters) {
     ]);
   }
 
-  if (filter.pinned != null) {
-    // TODO implement filter
+  if (filter.pinned) {
+    query.match([
+      node('requestingUser'),
+      relation('out', '', 'pinned', { active: true }),
+      node('node'),
+    ]);
   }
 }
 
