@@ -194,6 +194,10 @@ export class AuthorizationService {
   }
 
   async roleAddedToUser(id: string, roles: Role[]) {
+    await this.afterTransaction(() => this.doRoleAddedToUser(id, roles));
+  }
+
+  private async doRoleAddedToUser(id: string, roles: Role[]) {
     // todo: this only applies to global roles, the only kind we have until next week
     // iterate through all roles and assign to all SGs with that role
 
