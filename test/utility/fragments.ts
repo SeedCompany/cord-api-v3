@@ -355,6 +355,7 @@ export const project = gql`
       canEdit
     }
     status
+    pinned
     fieldRegion {
       value {
         id

@@ -34,6 +34,7 @@ import {
   createOrganization,
   createPartner,
   createPartnership,
+  createPin,
   createProject,
   createProjectMember,
   createRegion,
@@ -685,6 +686,64 @@ describe('Project e2e', () => {
         );
       })
     );
+  });
+
+  it('List view of pinned/unpinned projects', async () => {
+    const numProjects = 2;
+    const type = ProjectType.Translation;
+    await registerUserWithPower(app, [Powers.CreateProject]);
+    await Promise.all(
+      times(numProjects).map(
+        async () =>
+          await createProject(app, {
+            type,
+          })
+      )
+    );
+    const project = await createProject(app);
+    await createPin(app, project.id, true);
+
+    // filter pinned projects
+    const { projects: pinnedProjects } = await app.graphql.query(
+      gql`
+        query projects {
+          projects(input: { filter: { pinned: true } }) {
+            items {
+              ...project
+            }
+            hasMore
+            total
+          }
+        }
+        ${fragments.project}
+      `
+    );
+
+    expect(pinnedProjects.items.length).toBe(1);
+    expect(pinnedProjects.items[0].id).toBe(project.id);
+
+    // filter unpinned projects
+    const { projects: unpinnedProjects } = await app.graphql.query(
+      gql`
+        query projects {
+          projects(input: { filter: { pinned: false } }) {
+            items {
+              ...project
+            }
+            hasMore
+            total
+          }
+        }
+        ${fragments.project}
+      `
+    );
+
+    expect(unpinnedProjects.items.length).toBeGreaterThanOrEqual(numProjects);
+    // pinned project should be excluded
+    const result = unpinnedProjects.items.find(
+      ({ id }: Partial<Project>) => id === project.id
+    );
+    expect(result).toBeUndefined();
   });
 
   it('Project engagement and sensitivity connected to language engagements', async () => {
