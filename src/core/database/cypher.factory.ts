@@ -2,6 +2,7 @@ import { FactoryProvider } from '@nestjs/common/interfaces';
 import { AsyncLocalStorage } from 'async_hooks';
 import { stripIndent } from 'common-tags';
 import { Connection } from 'cypher-query-builder';
+import { compact } from 'lodash';
 import { Session, Transaction } from 'neo4j-driver';
 // @ts-expect-error this isn't typed but it exists
 import TransactionExecutor from 'neo4j-driver/lib/internal/transaction-executor';
@@ -22,6 +23,26 @@ import './query.overrides'; // import our query augmentation
 const canRetryOn = TransactionExecutor._canRetryOn.bind(TransactionExecutor);
 TransactionExecutor._canRetryOn = (error?: Error) =>
   error && getPreviousList(error, true).some(canRetryOn);
+
+const csv = (str: string): string[] =>
+  compact(str.split(',').map((s) => s.trim()));
+
+const parseRoutingTable = (routingTableStr: string) => {
+  const matched = /RoutingTable\[database=(.+), expirationTime=(\d+), currentTime=(\d+), routers=\[(.*)], readers=\[(.*)], writers=\[(.*)]]/.exec(
+    routingTableStr
+  );
+  if (!matched) {
+    return undefined;
+  }
+  return {
+    database: matched[1] === 'default database' ? null : matched[0],
+    expirationTime: parseInt(matched[2], 10),
+    currentTime: parseInt(matched[3], 10),
+    routers: csv(matched[4]),
+    readers: csv(matched[5]),
+    writers: csv(matched[6]),
+  };
+};
 
 export type PatchedConnection = Merge<
   Connection,
@@ -53,7 +74,24 @@ export const CypherFactory: FactoryProvider<Connection> = {
             logger: (neoLevel, message) => {
               const level =
                 neoLevel === 'warn' ? LogLevel.WARNING : (neoLevel as LogLevel);
-              driverLogger.log(level, message);
+              if (message.startsWith('Updated routing table')) {
+                const routingTable = parseRoutingTable(message);
+                driverLogger.info('Updated routing table', { routingTable });
+              } else if (
+                message.startsWith('Routing table is stale for database')
+              ) {
+                const routingTable = parseRoutingTable(message);
+                const matched = /for database: "(.*)" and access mode: "(.+)":/.exec(
+                  message
+                );
+                driverLogger.info('Routing table is stale', {
+                  database: matched?.[1] || null,
+                  accessMode: matched?.[2],
+                  routingTable,
+                });
+              } else {
+                driverLogger.log(level, message);
+              }
             },
           },
         },
