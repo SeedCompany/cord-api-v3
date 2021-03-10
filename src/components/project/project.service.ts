@@ -243,6 +243,7 @@ export class ProjectService {
         value: null,
         isPublic: false,
         isOrgPublic: false,
+        label: 'DepartmentId',
       },
       {
         key: 'tags',
@@ -759,6 +760,7 @@ export class ProjectService {
 
     const uniqueProperties: UniqueProperties<Project> = {
       name: ['Property', 'ProjectName'],
+      departmentId: ['Property', 'DepartmentId'],
     };
 
     try {

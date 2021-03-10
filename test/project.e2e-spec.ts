@@ -1140,4 +1140,47 @@ describe('Project e2e', () => {
       projectQueryResult.project.budget.value.records[0].organization.value.id;
     expect(firstBudgetRecordOrganizationId).toBe(org.id);
   });
+
+  it('should not assign the same department id to two projects created with the same location', async () => {
+    await runAsAdmin(app, async () => {
+      const fundingAccount = await createFundingAccount(app);
+      const location = await createLocation(app, {
+        fundingAccountId: fundingAccount.id,
+      });
+
+      const createAndUpdateProject = async (name: string) => {
+        const project = await createProject(app, {
+          name,
+          primaryLocationId: location.id,
+        });
+        const updatedProject = await app.graphql.mutate(
+          gql`
+            mutation updateProject($id: ID!, $step: ProjectStep!) {
+              updateProject(input: { project: { id: $id, step: $step } }) {
+                project {
+                  departmentId {
+                    value
+                  }
+                }
+              }
+            }
+          `,
+          {
+            id: project.id,
+            // updating to this step assigns a dept id
+            step: ProjectStep.PendingFinanceConfirmation,
+          }
+        );
+        return updatedProject.updateProject.project;
+      };
+      const projects = await Promise.all(
+        ['1', '2'].map(async (i) => {
+          return await createAndUpdateProject(i);
+        })
+      );
+      const [project1, project2] = projects;
+
+      expect(project1.departmentId.value).not.toBe(project2.departmentId.value);
+    });
+  });
 });
