@@ -100,10 +100,7 @@ describe('User e2e', () => {
 
   it('update user', async () => {
     // create user first
-    const newUser = await generateRegisterInput();
-    await createSession(app);
-    const user = await registerUser(app, newUser);
-    await login(app, { email: newUser.email, password: newUser.password });
+    const user = await registerUser(app);
 
     const fakeUser: UpdateUser = {
       id: user.id,
@@ -118,8 +115,7 @@ describe('User e2e', () => {
       status: UserStatus.Disabled,
     };
 
-    // update
-    await app.graphql.mutate(
+    const result = await app.graphql.mutate(
       gql`
         mutation updateUser($input: UpdateUserInput!) {
           updateUser(input: $input) {
@@ -138,21 +134,7 @@ describe('User e2e', () => {
         },
       }
     );
-    // get the user from the ID
-    const result = await app.graphql.query(
-      gql`
-        query user($id: ID!) {
-          user(id: $id) {
-            ...user
-          }
-        }
-        ${fragments.user}
-      `,
-      {
-        id: user.id,
-      }
-    );
-    const actual: User = result.user;
+    const actual: User = result.updateUser.user;
 
     expect(actual).toBeTruthy();
 
