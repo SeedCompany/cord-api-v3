@@ -22,28 +22,29 @@ export class PinRepository {
     return result ? true : false;
   }
 
-  async togglePinned(
-    id: string,
-    pinned: boolean,
-    session: Session
-  ): Promise<void> {
-    await this.removeOldPinned(id, session);
-    if (pinned) {
-      const createdAt = DateTime.local();
-      await this.db
-        .query()
-        .call(matchRequestingUser, session)
-        .match([node('node', 'BaseNode', { id })])
-        .create([
-          node('requestingUser'),
-          relation('out', '', 'pinned', { active: true, createdAt }),
-          node('node'),
-        ])
-        .run();
+  async add(id: string, session: Session): Promise<void> {
+    const isPinned = await this.isPinned(id, session);
+    if (isPinned) {
+      return;
     }
+    const createdAt = DateTime.local();
+    await this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .match([node('node', 'BaseNode', { id })])
+      .create([
+        node('requestingUser'),
+        relation('out', '', 'pinned', { active: true, createdAt }),
+        node('node'),
+      ])
+      .run();
   }
 
-  protected async removeOldPinned(id: string, session: Session): Promise<void> {
+  async remove(id: string, session: Session): Promise<void> {
+    const isPinned = await this.isPinned(id, session);
+    if (!isPinned) {
+      return;
+    }
     await this.db
       .query()
       .call(matchRequestingUser, session)
@@ -52,7 +53,7 @@ export class PinRepository {
         relation('out', 'rel', 'pinned', { active: true }),
         node('node', 'BaseNode', { id }),
       ])
-      .setValues({ 'rel.active': false })
+      .delete('rel')
       .run();
   }
 }
