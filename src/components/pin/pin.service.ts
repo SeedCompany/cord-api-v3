@@ -15,10 +15,11 @@ export class PinService {
     session: Session,
     pinned?: boolean
   ): Promise<boolean> {
-    pinned ??= !(await this.repo.isPinned(id, session));
-    if (pinned) {
+    const isPinned = await this.repo.isPinned(id, session);
+    pinned ??= !isPinned;
+    if (pinned && !isPinned) {
       await this.repo.add(id, session);
-    } else {
+    } else if (!pinned && isPinned) {
       await this.repo.remove(id, session);
     }
     return pinned;

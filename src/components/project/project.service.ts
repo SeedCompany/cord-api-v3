@@ -532,7 +532,7 @@ export class ProjectService {
       ])
       .asResult<
         StandardReadResult<DbPropsOfDto<Project>> & {
-          pinnedRel: Relation;
+          pinnedRel?: Relation;
           primaryLocationId: string;
           memberRoles: Role[][];
           marketingLocationId: string;

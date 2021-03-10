@@ -23,10 +23,6 @@ export class PinRepository {
   }
 
   async add(id: string, session: Session): Promise<void> {
-    const isPinned = await this.isPinned(id, session);
-    if (isPinned) {
-      return;
-    }
     const createdAt = DateTime.local();
     await this.db
       .query()
@@ -41,10 +37,6 @@ export class PinRepository {
   }
 
   async remove(id: string, session: Session): Promise<void> {
-    const isPinned = await this.isPinned(id, session);
-    if (!isPinned) {
-      return;
-    }
     await this.db
       .query()
       .call(matchRequestingUser, session)
