@@ -34,6 +34,7 @@ import {
   createOrganization,
   createPartner,
   createPartnership,
+  createPerson,
   createProject,
   createProjectMember,
   createRegion,
@@ -45,7 +46,6 @@ import {
   getUserFromSession,
   login,
   loginAsAdmin,
-  registerUser,
   registerUserWithPower,
   runAsAdmin,
   TestApp,
@@ -798,22 +798,12 @@ describe('Project e2e', () => {
     const numProjectMembers = 2;
     const project = await createProject(app);
     const projectId = project.id;
-    const password = faker.internet.password();
-    const password2 = faker.internet.password();
-    const userForList = await registerUser(app, { password });
-    const userId = userForList.id;
-    const userForList2 = await registerUser(app, { password: password2 });
-    const userId2 = userForList2.id;
-    const memberIds: string[] = [userId, userId2];
-
-    await login(app, { email: userForList.email.value, password });
 
     await Promise.all(
-      times(numProjectMembers, async (index) => {
+      times(numProjectMembers, async () => {
         await createProjectMember(app, {
-          userId: memberIds[index],
+          userId: (await createPerson(app)).id,
           projectId,
-          roles: [Role.Consultant],
         });
       })
     );
