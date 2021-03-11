@@ -28,11 +28,14 @@ export class PinRepository {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'BaseNode', { id })])
-      .create([
+      .merge([
         node('requestingUser'),
-        relation('out', '', 'pinned', { createdAt }),
+        relation('out', 'rel', 'pinned'),
         node('node'),
       ])
+      .onCreate.setValues({
+        'rel.createdAt': createdAt,
+      })
       .run();
   }
 
