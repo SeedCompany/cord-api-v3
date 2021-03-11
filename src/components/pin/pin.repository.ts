@@ -14,7 +14,7 @@ export class PinRepository {
       .call(matchRequestingUser, session)
       .match([
         node('requestingUser'),
-        relation('out', '', 'pinned', { active: true }),
+        relation('out', '', 'pinned'),
         node('node', 'BaseNode', { id }),
       ])
       .return('node')
@@ -30,7 +30,7 @@ export class PinRepository {
       .match([node('node', 'BaseNode', { id })])
       .create([
         node('requestingUser'),
-        relation('out', '', 'pinned', { active: true, createdAt }),
+        relation('out', '', 'pinned', { createdAt }),
         node('node'),
       ])
       .run();
@@ -42,7 +42,7 @@ export class PinRepository {
       .call(matchRequestingUser, session)
       .optionalMatch([
         node('requestingUser'),
-        relation('out', 'rel', 'pinned', { active: true }),
+        relation('out', 'rel', 'pinned'),
         node('node', 'BaseNode', { id }),
       ])
       .delete('rel')

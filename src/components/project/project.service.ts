@@ -63,7 +63,6 @@ import {
   PartnershipService,
   SecuredPartnershipList,
 } from '../partnership';
-import { PinService } from '../pin/pin.service';
 import {
   CreateProject,
   InternshipProject,
@@ -128,7 +127,6 @@ export class ProjectService {
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
     private readonly projectRules: ProjectRules,
-    private readonly pinSerivce: PinService,
     @Logger('project:service') private readonly logger: ILogger
   ) {}
 
@@ -487,7 +485,7 @@ export class ProjectService {
       .with([collect('props.value', 'memberRoles'), 'propList', 'node'])
       .optionalMatch([
         node('requestingUser', 'User', { id: userId }),
-        relation('out', 'pinnedRel', 'pinned', { active: true }),
+        relation('out', 'pinnedRel', 'pinned'),
         node('node'),
       ])
       .optionalMatch([

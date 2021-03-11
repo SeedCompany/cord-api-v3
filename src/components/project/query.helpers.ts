@@ -1,7 +1,6 @@
 import {
   greaterThan,
   inArray,
-  isNull,
   node,
   Query,
   relation,
@@ -50,20 +49,11 @@ export function projectListFilter(query: Query, filter: ProjectFilters) {
     if (filter.pinned) {
       query.match([
         node('requestingUser'),
-        relation('out', '', 'pinned', { active: true }),
+        relation('out', '', 'pinned'),
         node('node'),
       ]);
     } else {
-      query
-        .optionalMatch([
-          node('node'),
-          relation('in', 'rel', 'pinned', { active: true }),
-          node('requestingUser'),
-        ])
-        .with('node, requestingUser')
-        .where({
-          rel: isNull(),
-        });
+      query.raw('where not (requestingUser)-[:pinned]->(node)');
     }
   }
 }
