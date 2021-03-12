@@ -11,8 +11,7 @@ import { isObject } from 'lodash';
 import { DateTime } from 'luxon';
 import { Class, ConditionalKeys, ConditionalPick } from 'type-fest';
 import { CalendarDate, DateField, DateTimeField } from '.';
-import { Editable } from './editable.interface';
-import { Readable } from './readable.interface';
+import { ISecured } from './secured.interface';
 import { AbstractClassType } from './types';
 
 export interface Secured<T> {
@@ -102,9 +101,9 @@ function InnerSecuredProperty<
   TsType = GqlType,
   Nullable extends boolean | undefined = false
 >(valueClass: GqlType, _options: SecuredPropertyOptions<Nullable> = {}) {
-  @ObjectType({ isAbstract: true, implements: [Readable, Editable] })
+  @ObjectType({ isAbstract: true, implements: [ISecured] })
   abstract class SecuredPropertyClass
-    implements Readable, Editable, Secured<SecuredValue<TsType, Nullable>> {
+    implements ISecured, Secured<SecuredValue<TsType, Nullable>> {
     @Field(() => valueClass, { nullable: true })
     readonly value?: SecuredValue<TsType, Nullable>;
     @Field()
@@ -157,9 +156,9 @@ function SecuredList<GQL, TS, Nullable extends boolean | undefined = false>(
   valueClass: GQL,
   options: SecuredPropertyOptions<Nullable> = {}
 ) {
-  @ObjectType({ isAbstract: true, implements: [Readable, Editable] })
+  @ObjectType({ isAbstract: true, implements: [ISecured] })
   abstract class SecuredPropertyListClass
-    implements Readable, Editable, Secured<SecuredList<TS, Nullable>> {
+    implements ISecured, Secured<SecuredList<TS, Nullable>> {
     @Field(() => [valueClass], {
       nullable: options.nullable,
     })
@@ -236,9 +235,8 @@ export abstract class SecuredBoolean extends SecuredProperty<boolean>(
   GraphQLBoolean
 ) {}
 
-@ObjectType({ implements: [Readable, Editable] })
-export abstract class SecuredDateTime
-  implements Readable, Editable, Secured<DateTime> {
+@ObjectType({ implements: [ISecured] })
+export abstract class SecuredDateTime implements ISecured, Secured<DateTime> {
   @DateTimeField({ nullable: true })
   readonly value?: DateTime;
 
@@ -249,9 +247,9 @@ export abstract class SecuredDateTime
   readonly canEdit: boolean;
 }
 
-@ObjectType({ implements: [Readable, Editable] })
+@ObjectType({ implements: [ISecured] })
 export abstract class SecuredDateTimeNullable
-  implements Readable, Editable, Secured<DateTime | null> {
+  implements ISecured, Secured<DateTime | null> {
   @DateTimeField({ nullable: true })
   readonly value?: DateTime | null;
 
@@ -262,9 +260,8 @@ export abstract class SecuredDateTimeNullable
   readonly canEdit: boolean;
 }
 
-@ObjectType({ implements: [Readable, Editable] })
-export abstract class SecuredDate
-  implements Readable, Editable, Secured<CalendarDate> {
+@ObjectType({ implements: [ISecured] })
+export abstract class SecuredDate implements ISecured, Secured<CalendarDate> {
   @DateField({ nullable: true })
   readonly value?: CalendarDate;
 
@@ -275,9 +272,9 @@ export abstract class SecuredDate
   readonly canEdit: boolean;
 }
 
-@ObjectType({ implements: [Readable, Editable] })
+@ObjectType({ implements: [ISecured] })
 export abstract class SecuredDateNullable
-  implements Readable, Editable, Secured<CalendarDate | null> {
+  implements ISecured, Secured<CalendarDate | null> {
   @DateField({ nullable: true })
   readonly value?: CalendarDate | null;
 
