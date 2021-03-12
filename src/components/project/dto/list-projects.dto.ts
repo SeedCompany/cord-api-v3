@@ -39,6 +39,13 @@ export abstract class ProjectFilters {
   })
   readonly step?: ProjectStep[];
 
+  @Field({
+    description:
+      'Only projects that are pinned/unpinned by the requesting user',
+    nullable: true,
+  })
+  readonly pinned?: boolean;
+
   readonly locationIds?: string[];
 
   @Field({

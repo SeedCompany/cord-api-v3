@@ -44,6 +44,18 @@ export function projectListFilter(query: Query, filter: ProjectFilters) {
       node('node'),
     ]);
   }
+
+  if (filter.pinned != null) {
+    if (filter.pinned) {
+      query.match([
+        node('requestingUser'),
+        relation('out', '', 'pinned'),
+        node('node'),
+      ]);
+    } else {
+      query.raw('where not (requestingUser)-[:pinned]->(node)');
+    }
+  }
 }
 
 export const propMatch = (property: string) => [

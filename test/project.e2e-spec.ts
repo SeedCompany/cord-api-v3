@@ -34,6 +34,7 @@ import {
   createOrganization,
   createPartner,
   createPartnership,
+  createPin,
   createProject,
   createProjectMember,
   createRegion,
@@ -687,6 +688,64 @@ describe('Project e2e', () => {
     );
   });
 
+  it('List view of pinned/unpinned projects', async () => {
+    const numProjects = 2;
+    const type = ProjectType.Translation;
+    await registerUserWithPower(app, [Powers.CreateProject]);
+    await Promise.all(
+      times(numProjects).map(
+        async () =>
+          await createProject(app, {
+            type,
+          })
+      )
+    );
+    const project = await createProject(app);
+    await createPin(app, project.id, true);
+
+    // filter pinned projects
+    const { projects: pinnedProjects } = await app.graphql.query(
+      gql`
+        query projects {
+          projects(input: { filter: { pinned: true } }) {
+            items {
+              ...project
+            }
+            hasMore
+            total
+          }
+        }
+        ${fragments.project}
+      `
+    );
+
+    expect(pinnedProjects.items.length).toBe(1);
+    expect(pinnedProjects.items[0].id).toBe(project.id);
+
+    // filter unpinned projects
+    const { projects: unpinnedProjects } = await app.graphql.query(
+      gql`
+        query projects {
+          projects(input: { filter: { pinned: false } }) {
+            items {
+              ...project
+            }
+            hasMore
+            total
+          }
+        }
+        ${fragments.project}
+      `
+    );
+
+    expect(unpinnedProjects.items.length).toBeGreaterThanOrEqual(numProjects);
+    // pinned project should be excluded
+    const result = unpinnedProjects.items.find(
+      ({ id }: Partial<Project>) => id === project.id
+    );
+    expect(result).toBeUndefined();
+  });
+
   it('Project engagement and sensitivity connected to language engagements', async () => {
     await loginAsAdmin(app);
 
@@ -1139,5 +1198,48 @@ describe('Project e2e', () => {
     const firstBudgetRecordOrganizationId =
       projectQueryResult.project.budget.value.records[0].organization.value.id;
     expect(firstBudgetRecordOrganizationId).toBe(org.id);
+  });
+
+  it('should not assign the same department id to two projects created with the same location', async () => {
+    await runAsAdmin(app, async () => {
+      const fundingAccount = await createFundingAccount(app);
+      const location = await createLocation(app, {
+        fundingAccountId: fundingAccount.id,
+      });
+
+      const createAndUpdateProject = async (name: string) => {
+        const project = await createProject(app, {
+          name,
+          primaryLocationId: location.id,
+        });
+        const updatedProject = await app.graphql.mutate(
+          gql`
+            mutation updateProject($id: ID!, $step: ProjectStep!) {
+              updateProject(input: { project: { id: $id, step: $step } }) {
+                project {
+                  departmentId {
+                    value
+                  }
+                }
+              }
+            }
+          `,
+          {
+            id: project.id,
+            // updating to this step assigns a dept id
+            step: ProjectStep.PendingFinanceConfirmation,
+          }
+        );
+        return updatedProject.updateProject.project;
+      };
+      const projects = await Promise.all(
+        ['1', '2'].map(async (i) => {
+          return await createAndUpdateProject(i);
+        })
+      );
+      const [project1, project2] = projects;
+
+      expect(project1.departmentId.value).not.toBe(project2.departmentId.value);
+    });
   });
 });

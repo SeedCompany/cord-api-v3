@@ -1,7 +1,6 @@
 export * from './context.type';
 export * from './calendar-date';
 export * from './date-filter.input';
-export * from './editable.interface';
 export * from './exceptions';
 export * from './firstLettersOfWords';
 export * from './fiscal-year';
@@ -12,7 +11,6 @@ export * from './order.enum';
 export * from './pagination.input';
 export * from './pagination-list';
 export * from './parent-types';
-export * from './readable.interface';
 export * from './resource.dto';
 export * from './secured-list';
 export * from './secured-property';
