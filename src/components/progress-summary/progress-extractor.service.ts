@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { read, utils, WorkBook } from 'xlsx';
+import { isNumeric } from '../../common';
 import { ILogger, Logger } from '../../core';
 import { FileService, FileVersion } from '../file';
 import { ProgressSummary } from './dto';
@@ -92,5 +93,3 @@ const parsePercent = (raw: string) => {
   }
   return parseFloat(num);
 };
-
-const isNumeric = (str: string) => !isNaN(parseFloat(str));

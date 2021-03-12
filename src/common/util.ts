@@ -67,3 +67,16 @@ export function has<K extends string | number | symbol, T>(
 ): obj is T & Record<K, unknown> {
   return key in obj;
 }
+
+/**
+ * https://stackoverflow.com/questions/18082
+ * This is better than anything lodash has.
+ */
+export const isNumeric = (value: any): value is string | number =>
+  !isNaN(value - parseFloat(value));
+
+/**
+ * If value is numeric return it has number, otherwise null
+ */
+export const tryAsNumber = (value: unknown) =>
+  isNumeric(value) ? parseFloat(value as string) : null;
