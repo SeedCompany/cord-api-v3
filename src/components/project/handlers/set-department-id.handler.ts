@@ -37,9 +37,7 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
   }
 
   private async assignDepartmentIdForProject(project: Project) {
-    const departmentIdPrefix = await this.getDepartmentIdPrefixForProject(
-      project
-    );
+    const departmentIdPrefix = await this.getFundingAccountNumber(project);
     const res = await this.db
       .query()
       .raw(
@@ -48,9 +46,10 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
         MATCH ()-[:departmentId]-(departmentIdPropertyNode:Property)
         WHERE departmentIdPropertyNode.value STARTS WITH $departmentIdPrefix
         WITH collect(distinct(toInteger(right(departmentIdPropertyNode.value, 4)))) as listOfDepartmentIds
-        UNWIND [n IN range(1, 9999) WHERE NOT n IN listOfDepartmentIds] as listOfUnusedDepartmentIds
-        WITH toString(min(listOfUnusedDepartmentIds)) AS nextIdBase
-        WITH '${departmentIdPrefix}' + substring("0000", 1, 4 - size(nextIdBase)) + nextIdBase as nextId
+        WITH [n IN range(11, 9999) WHERE NOT n IN listOfDepartmentIds] as listOfUnusedDepartmentIds
+        WITH apoc.coll.shuffle(listOfUnusedDepartmentIds) AS randomizedIds
+        WITH toString(randomizedIds[0]) AS nextIdBase
+        WITH $departmentIdPrefix + substring("0000", 1, 4 - size(nextIdBase)) + nextIdBase as nextId
         MATCH (project:Project {id: $projectId})
         OPTIONAL MATCH (project)-[oldDepartmentIdRelationship:departmentId {active: true}]-(oldDepartmentIdPropertyNode:Property)
         SET oldDepartmentIdRelationship.active = false
@@ -68,7 +67,7 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
     return res.departmentId;
   }
 
-  private async getDepartmentIdPrefixForProject(project: Project) {
+  private async getFundingAccountNumber(project: Project) {
     const res = await this.db
       .query()
       .raw(
@@ -80,13 +79,13 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
       `,
         { projectId: project.id }
       )
-      .asResult<{ prefix: string }>()
+      .asResult<{ prefix: number }>()
       .first();
     if (!res) {
       throw new ServerException(
         `Unable to find accountNumber associated with project: ${project.id}`
       );
     }
-    return res.prefix;
+    return res.prefix.toString();
   }
 }
