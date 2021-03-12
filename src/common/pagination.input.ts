@@ -1,6 +1,7 @@
 import { Field, InputType, Int } from '@nestjs/graphql';
 import { Max, Min } from 'class-validator';
 import { stripIndent } from 'common-tags';
+import { Cursor, CursorField } from './cursor.scalar';
 import { Order } from './order.enum';
 
 @InputType({
@@ -23,37 +24,23 @@ export abstract class PaginationInput {
   @Min(1)
   readonly page: number = 1;
 
-  protected constructor() {
-    // no instantiation, shape only
-  }
-}
-
-@InputType({
-  isAbstract: true,
-})
-export abstract class CursorPaginationInput {
-  @Field(() => Int, {
-    description: 'The number of items to return in a single page',
-  })
-  readonly count = 25;
-
-  @Field({
+  @CursorField({
     description: stripIndent`
       Return items starting after this cursor.
       This usually is the endCursor from the previous page/call to fetch the next page.
     `,
     nullable: true,
   })
-  readonly after?: string;
+  readonly after?: Cursor;
 
-  @Field({
+  @CursorField({
     description: stripIndent`
       Return items starting before this cursor.
       This usually is the startCursor from the previous page/call to fetch the previous page.
     `,
     nullable: true,
   })
-  readonly before?: string;
+  readonly before?: Cursor;
 
   protected constructor() {
     // no instantiation, shape only

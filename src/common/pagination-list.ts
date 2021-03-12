@@ -2,6 +2,7 @@ import { Field, Int, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { GraphQLScalarType } from 'graphql';
 import { Class } from 'type-fest';
+import { Cursor, CursorField } from './cursor.scalar';
 import { IPaginatedList } from './list.interface';
 import { AbstractClassType } from './types';
 
@@ -12,6 +13,11 @@ export interface ListOptions {
 export interface PaginatedListType<T> {
   readonly items: readonly T[];
   readonly total: number;
+  readonly startCursor?: Cursor;
+  readonly endCursor?: Cursor;
+  readonly hasNextPage?: boolean;
+  readonly hasPreviousPage?: boolean;
+  /** @deprecated */
   readonly hasMore: boolean;
 }
 
@@ -37,8 +43,31 @@ export function PaginatedList<Type, ListItem = Type>(
 
     @Field({
       description: 'Whether the next page exists',
+      deprecationReason: 'Use hasNextPage instead',
     })
     readonly hasMore: boolean;
+
+    @CursorField({
+      description:
+        'When paginating backwards, pass this as the before argument to continue',
+    })
+    readonly startCursor?: Cursor;
+
+    @CursorField({
+      description:
+        'When paginating forwards, pass this as the after argument to continue',
+    })
+    readonly endCursor?: Cursor;
+
+    @Field({
+      description: 'When paginating forwards, are there more items?',
+    })
+    readonly hasNextPage?: boolean;
+
+    @Field({
+      description: 'When paginating backwards, are there more items?',
+    })
+    readonly hasPreviousPage?: boolean;
 
     protected constructor() {
       // no instantiation, shape only
