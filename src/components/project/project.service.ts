@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { node, relation, Relation } from 'cypher-query-builder';
 import { Many } from 'lodash';
 import { DateTime } from 'luxon';
 import {
@@ -484,6 +484,11 @@ export class ProjectService {
       ])
       .with([collect('props.value', 'memberRoles'), 'propList', 'node'])
       .optionalMatch([
+        node('requestingUser', 'User', { id: userId }),
+        relation('out', 'pinnedRel', 'pinned'),
+        node('node'),
+      ])
+      .optionalMatch([
         node('node'),
         relation('out', '', 'primaryLocation', { active: true }),
         node('primaryLocation', 'Location'),
@@ -516,6 +521,7 @@ export class ProjectService {
         'propList',
         'node',
         'memberRoles',
+        'pinnedRel',
         'primaryLocation.id as primaryLocationId',
         'marketingLocation.id as marketingLocationId',
         'fieldRegion.id as fieldRegionId',
@@ -524,6 +530,7 @@ export class ProjectService {
       ])
       .asResult<
         StandardReadResult<DbPropsOfDto<Project>> & {
+          pinnedRel?: Relation;
           primaryLocationId: string;
           memberRoles: Role[][];
           marketingLocationId: string;
@@ -582,6 +589,7 @@ export class ProjectService {
         value: result.owningOrganizationId,
       },
       canDelete: await this.db.checkDeletePermission(id, sessionOrUserId),
+      pinned: result.pinnedRel ? true : false,
       scope: membershipRoles,
     };
   }
