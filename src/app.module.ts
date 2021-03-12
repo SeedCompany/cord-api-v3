@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { assert } from 'ts-essentials';
 import { keys } from 'ts-transformer-keys';
+import { CursorScalar } from './common/cursor.scalar';
 import { DateScalar, DateTimeScalar } from './common/luxon.graphql';
 import { AdminModule } from './components/admin/admin.module';
 import { AuthenticationModule } from './components/authentication/authentication.module';
@@ -83,6 +84,6 @@ assert(
     ProductProgressModule,
   ],
   controllers: [],
-  providers: [DateTimeScalar, DateScalar],
+  providers: [CursorScalar, DateTimeScalar, DateScalar],
 })
 export class AppModule {}
