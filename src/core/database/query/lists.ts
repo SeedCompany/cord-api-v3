@@ -5,7 +5,6 @@ import {
   ID,
   Order,
   PaginatedListType,
-  PaginationInput,
   Resource,
   ResourceShape,
   SortablePaginationInput,
@@ -25,7 +24,7 @@ import { collect } from './cypher-functions';
  */
 export const paginate =
   <R = ID>(
-    { count, page }: PaginationInput,
+    { count, page, after, before, sort, order }: SortablePaginationInput,
     hydrate?: (query: Query) => Query<{ dto: R }>
   ) =>
   (query: Query) => {
@@ -33,7 +32,19 @@ export const paginate =
     const params: Record<string, any> = {
       limit: count,
     };
-    if (page !== 1) {
+    if (after || before) {
+      // todo cursor pagination direction
+      // cursor is inclusive so these need to be excluded from result
+      // [a b c] [d e f] cursor of "after c" needs to start with [d
+      if (typeof (after ?? before) === 'string') {
+        const startIndex = `apoc.call.indexOf([item in list | item.${sort}], $cursor)`;
+        list = `list[${startIndex}..]`;
+      } else {
+        const op = after || order === Order.ASC ? '>' : '<';
+        list = `[item in list where item.${sort} ${op} $cursor]`;
+      }
+      params.cursor = after || before;
+    } else if (page !== 1) {
       params.offset = ((page ?? 1) - 1) * count;
       list = `list[$offset..]`;
     }
@@ -64,7 +75,11 @@ export const paginate =
       .return<PaginatedListType<R>>([
         'hydratedPage as items',
         'size(list) as total',
+        `page[0].${sort} as startCursor`,
+        `page[-1].${sort} as endCursor`,
         // We use list & page here as comparison needs to be done with neo4j nodes
+        'size(page) > 0 and page[0] <> list[0] as hasPreviousPage',
+        'size(page) > 0 and page[-1] <> list[-1] as hasNextPage',
         'size(page) > 0 and page[-1] <> list[-1] as hasMore',
       ]);
   };

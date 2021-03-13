@@ -110,7 +110,7 @@ const decodeCursor = (cursor: string): Cursor => {
   }
 
   // guess date / date time
-  // I don't think it matters for neo4j temporal comparison?
+  // I don't think it matters for neo4j temporal comparison?  It does!
   try {
     return DateTime.fromISO(value);
   } catch {
