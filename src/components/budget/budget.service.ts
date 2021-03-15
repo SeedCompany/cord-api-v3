@@ -538,7 +538,7 @@ export class BudgetService {
         'You do not have the permission to delete this Budget Record'
       );
 
-    const baseNodeLabels = ['BaseNode', 'Budget'];
+    const baseNodeLabels = ['BaseNode', 'BudgetRecord'];
 
     try {
       await this.db.deleteNodeNew({
