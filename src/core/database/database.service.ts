@@ -52,6 +52,10 @@ export const property = (
   ],
 ];
 
+type ChangesOf<T extends ResourceShape<any>> = Partial<
+  Record<keyof T['prototype'] & string, any>
+>;
+
 export const matchSession = (
   session: Session,
   {
@@ -236,8 +240,8 @@ export class DatabaseService {
   // expecting the changes of the "simple" properties.
   async getActualChanges<TResource extends ResourceShape<any>>(
     oldObject: TResource['prototype'],
-    changes: Partial<Record<keyof TResource['prototype'] & string, any>>
-  ): Promise<typeof changes> {
+    changes: ChangesOf<TResource>
+  ): Promise<ChangesOf<TResource>> {
     const props = Object.keys(changes);
     // have a reference to 'input' most of the time, so need to copy the data instead of
     //    accidentally mutating 'input'
