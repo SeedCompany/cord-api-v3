@@ -18,6 +18,7 @@ import { DbProduct } from '../../product/model';
 /* eslint-disable @typescript-eslint/naming-convention */
 import { DbProject } from '../../project/model';
 import { DbProjectMember } from '../../project/project-member/model';
+import { DbProjectReport } from '../../project/project-report/model';
 import { DbSong } from '../../song/model';
 import { DbStory } from '../../story/model';
 import { DbEducation, DbUnavailability, DbUser } from '../../user/model';
@@ -29,6 +30,7 @@ import { DbBaseNodeGrant, DbRole } from '../model';
 // turned off prettier for role files to prevent auto-format making this file huge
 
 const read = true;
+const write = true;
 
 export const Fundraising = new DbRole({
   name: `global:${Role.Fundraising}` as const,
@@ -336,6 +338,17 @@ export const Fundraising = new DbRole({
         { propertyName: 'modifiedAt',                 permission: { read, }, },
             ],
     canDelete: false,
+  }),
+    new DbBaseNodeGrant<DbProjectReport>({
+      __className: 'DbProjectReport',
+      properties: [
+        { propertyName: 'reportType',                 permission: { read, write, }, },
+        { propertyName: 'periodType',                 permission: { read, write, }, },
+        { propertyName: 'period',                     permission: { read, write, }, },
+        { propertyName: 'reportFile',                 permission: { read, write, }, },
+        { propertyName: 'user',                       permission: { read, write, }, },
+      ],
+    canDelete: true,
   }),
     new DbBaseNodeGrant<DbUser>({
       __className: 'DbUser',

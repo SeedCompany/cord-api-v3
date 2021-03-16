@@ -12,6 +12,7 @@ import { PartnershipModule } from '../partnership/partnership.module';
 import { UserModule } from '../user/user.module';
 import * as handlers from './handlers';
 import { ProjectMemberModule } from './project-member/project-member.module';
+import { ProjectReportModule } from './project-report/project-report.module';
 import { ProjectStepResolver } from './project-step.resolver';
 import { ProjectResolver } from './project.resolver';
 import { ProjectRules } from './project.rules';
@@ -21,6 +22,7 @@ import { ProjectService } from './project.service';
   imports: [
     forwardRef(() => FieldRegionModule),
     ProjectMemberModule,
+    ProjectReportModule,
     forwardRef(() => BudgetModule),
     forwardRef(() => PartnershipModule),
     forwardRef(() => UserModule),

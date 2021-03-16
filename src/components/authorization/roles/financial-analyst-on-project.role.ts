@@ -18,6 +18,7 @@ import { DbProduct } from '../../product/model';
 /* eslint-disable @typescript-eslint/naming-convention */
 import { DbProject } from '../../project/model';
 import { DbProjectMember } from '../../project/project-member/model';
+import { DbProjectReport } from '../../project/project-report/model';
 import { DbSong } from '../../song/model';
 import { DbStory } from '../../story/model';
 import { DbEducation, DbUnavailability, DbUser } from '../../user/model';
@@ -346,6 +347,17 @@ export const FinancialAnalystOnProject = new DbRole({
         { propertyName: 'modifiedAt',                 permission: { read, write, }, },
             ],
     canDelete: false,
+  }),
+    new DbBaseNodeGrant<DbProjectReport>({
+      __className: 'DbProjectReport',
+      properties: [
+        { propertyName: 'reportType',                 permission: { read, write, }, },
+        { propertyName: 'periodType',                 permission: { read, write, }, },
+        { propertyName: 'period',                     permission: { read, write, }, },
+        { propertyName: 'reportFile',                 permission: { read, write, }, },
+        { propertyName: 'user',                       permission: { read, write, }, },
+      ],
+    canDelete: true,
   }),
     new DbBaseNodeGrant<DbUser>({
       __className: 'DbUser',

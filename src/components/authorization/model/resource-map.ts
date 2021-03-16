@@ -26,6 +26,7 @@ import {
   TranslationProject,
 } from '../../project/dto';
 import { ProjectMember } from '../../project/project-member/dto';
+import { ProjectReport } from '../../project/project-report/dto';
 import { Song } from '../../song/dto';
 import { Story } from '../../story/dto';
 import { User } from '../../user/dto';
@@ -58,6 +59,7 @@ export const ResourceMap = {
   TranslationProject,
   InternshipProject,
   ProjectMember,
+  ProjectReport,
   Song,
   Story,
   Unavailability,

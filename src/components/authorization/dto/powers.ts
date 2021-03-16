@@ -27,6 +27,7 @@ export enum Powers {
   CreateProject = 'CreateProject',
   CreateProjectEngagement = 'CreateProjectEngagement', // place holder if needed
   CreateProjectMember = 'CreateProjectMember',
+  CreateProjectReport = 'CreateProjectReport',
   CreateRegion = 'CreateRegion',
   CreateSong = 'CreateSong',
   CreateStory = 'CreateStory',
