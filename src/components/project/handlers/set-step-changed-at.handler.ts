@@ -25,17 +25,13 @@ export class ProjectStepChangedAtHandler
     try {
       const project = event.updated;
       const changes = {
-        //id: project.id,
         stepChangedAt: project.modifiedAt,
       };
 
-      //console.log(project)
-      event.updated = await this.db.sgUpdateProperties({
+      event.updated = await this.db.updateProperties({
+        type: 'Project',
         object: project,
-        session: event.session,
-        props: ['stepChangedAt'],
         changes,
-        nodevar: 'Project',
       });
     } catch (e) {
       this.logger.error(`Could not update step changed at on project`, {

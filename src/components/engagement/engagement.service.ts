@@ -888,20 +888,6 @@ export class EngagementService {
       session
     )) as InternshipEngagement;
 
-    // verify that all props can be edited before changing anything
-    const props: Array<keyof typeof object> = [
-      'position',
-      'methodologies',
-      'completeDate',
-      'disbursementCompleteDate',
-      'communicationsCompleteDate',
-      'startDateOverride',
-      'endDateOverride',
-      'modifiedAt',
-      'status',
-      'initialEndDate',
-    ];
-
     // take mentor, growthPlan, countryOfOrigin out of object to verify the 'simple' properties
     const {
       mentor,
@@ -1025,7 +1011,6 @@ export class EngagementService {
       await this.db.updateProperties({
         type: 'InternshipEngagement',
         object,
-        props: props,
         changes: {
           ...realChanges,
           modifiedAt: DateTime.local(),

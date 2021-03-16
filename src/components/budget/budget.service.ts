@@ -474,7 +474,6 @@ export class BudgetService {
     return await this.db.updateProperties({
       type: 'Budget',
       object: budget,
-      props: ['status'],
       changes: realChanges,
     });
   }
@@ -488,13 +487,18 @@ export class BudgetService {
     await this.verifyCanEdit(id, session);
 
     const br = await this.readOneRecord(id, session);
+    const realChanges = await this.db.getActualChanges(br, input);
+    await this.authorizationService.verifyCanEditChanges(
+      BudgetRecord,
+      br,
+      realChanges
+    );
 
     try {
       const result = await this.db.updateProperties({
         type: 'BudgetRecord',
         object: br,
-        props: ['amount'],
-        changes: { id, ...input },
+        changes: realChanges,
       });
       return result;
     } catch (e) {

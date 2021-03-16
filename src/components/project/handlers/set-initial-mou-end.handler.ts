@@ -53,7 +53,6 @@ export class SetInitialMouEnd implements IEventHandler<SubscribedEvent> {
       const updatedProject = await this.db.updateProperties({
         type: IProject,
         object: project,
-        props: ['initialMouEnd'],
         changes: {
           initialMouEnd: project.mouEnd.value || null,
         },
