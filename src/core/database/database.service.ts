@@ -26,12 +26,7 @@ import {
 import { ILogger, Logger, ServiceUnavailableError } from '..';
 import { AbortError, retry, RetryOptions } from '../../common/retry';
 import { ConfigService } from '../config/config.service';
-import {
-  determineSortValue,
-  setBaseNodeLabelsAndIdDeleted,
-  setPropLabelsAndValuesDeleted,
-  UniqueProperties,
-} from './query.helpers';
+import { determineSortValue } from './query.helpers';
 import { hasMore } from './results';
 import { Transactional } from './transactional.decorator';
 
@@ -557,32 +552,45 @@ export class DatabaseService {
 
   async deleteNodeNew<TObject extends Resource>({
     object,
-    baseNodeLabels,
-    uniqueProperties = {},
   }: {
     object: TObject;
-    baseNodeLabels: string[];
-    uniqueProperties?: UniqueProperties<TObject>;
   }) {
     const query = this.db
       .query()
-      .match(node('node', { id: object.id }))
-      //Mark any parent base node relationships (pointing to the base node) as active = false.
+      .match([
+        node('baseNode', { id: object.id }),
+        // in this case we want to set Deleted_ labels for all properties
+        // including those with active = false
+        relation('out', 'propRel'),
+        node('propertyNode', 'Property'),
+      ])
+      // Mark any parent base node relationships (pointing to the base node) as active = false.
       .optionalMatch([
-        node('node'),
+        node('baseNode'),
         relation('in', 'rel'),
         node('', 'BaseNode'),
       ])
-      .set({
-        values: {
-          'rel.active': false,
-        },
+      .setValues({
+        'rel.active': false,
+        'propRel.active': false,
       })
-      .with('distinct(node) as node')
-      //Mark baseNode labels and id deleted
-      .call(setBaseNodeLabelsAndIdDeleted, baseNodeLabels)
-      //Mark unique property labels and values deleted
-      .call(setPropLabelsAndValuesDeleted, uniqueProperties)
+      // after setting propRel.active false, we need to distinct propertyNode (not sure why)
+      .with('baseNode, collect(distinct propertyNode) as propertyNodes')
+      // combine baseNode with propertyNodes to set Deleted_ labels on all of them
+      .with(
+        'reduce(nodes = [baseNode], pn in propertyNodes | nodes + pn) as nodeList'
+      )
+      // yielding a node from this procedure is necessary I believe, but not used in the rest of the query
+      // they're aliased to avoid colliding with the unwound node var
+      .raw(
+        `
+        unwind nodeList as node
+        with node, reduce(deletedLabels = [], label in labels(node) | deletedLabels + ("Deleted_" + label)) as deletedLabels
+        call apoc.create.removeLabels(node, labels(node)) yield node as nodeRemoved
+        with node, deletedLabels
+        call apoc.create.addLabels(node, deletedLabels) yield node as nodeAdded
+      `
+      )
       .return('*');
     await query.run();
   }

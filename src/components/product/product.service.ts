@@ -511,18 +511,9 @@ export class ProductService {
         'You do not have the permission to delete this Product'
       );
 
-    const baseNodeLabels = [
-      'BaseNode',
-      'Product',
-      object.produces?.value
-        ? 'DerivativeScriptureProduct'
-        : 'DirectScriptureProduct',
-    ];
-
     try {
       await this.db.deleteNodeNew({
         object,
-        baseNodeLabels,
       });
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });

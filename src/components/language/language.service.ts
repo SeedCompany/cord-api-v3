@@ -24,7 +24,6 @@ import {
   matchSession,
   OnIndex,
   UniquenessError,
-  UniqueProperties,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -454,19 +453,9 @@ export class LanguageService {
         'You do not have the permission to delete this Language'
       );
 
-    const baseNodeLabels = ['BaseNode', 'Language'];
-
-    const uniqueProperties: UniqueProperties<Language> = {
-      name: ['Property', 'LanguageName'],
-      displayName: ['Property', 'LanguageDisplayName'],
-      registryOfDialectsCode: ['Property', 'RegistryOfDialectsCode'],
-    };
-
     try {
       await this.db.deleteNodeNew<Language>({
         object,
-        baseNodeLabels,
-        uniqueProperties,
       });
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });

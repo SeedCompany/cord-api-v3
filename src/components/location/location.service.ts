@@ -17,7 +17,6 @@ import {
   Logger,
   matchRequestingUser,
   OnIndex,
-  UniqueProperties,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -337,17 +336,9 @@ export class LocationService {
         'You do not have the permission to delete this Location'
       );
 
-    const baseNodeLabels = ['BaseNode', 'Location'];
-
-    const uniqueProperties: UniqueProperties<Location> = {
-      name: ['Property', 'LocationName'],
-    };
-
     try {
       await this.db.deleteNodeNew<Location>({
         object,
-        baseNodeLabels,
-        uniqueProperties,
       });
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });

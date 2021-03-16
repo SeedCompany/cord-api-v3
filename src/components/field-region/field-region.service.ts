@@ -17,7 +17,6 @@ import {
   Logger,
   matchRequestingUser,
   OnIndex,
-  UniqueProperties,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -249,17 +248,9 @@ export class FieldRegionService {
         'You do not have the permission to delete this Field Region'
       );
 
-    const baseNodeLabels = ['BaseNode', 'FieldRegion'];
-
-    const uniqueProperties: UniqueProperties<FieldRegion> = {
-      name: ['Property', 'FieldRegionName'],
-    };
-
     try {
       await this.db.deleteNodeNew<FieldRegion>({
         object,
-        baseNodeLabels,
-        uniqueProperties,
       });
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });
