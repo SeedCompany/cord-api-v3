@@ -391,34 +391,41 @@ export class PartnershipService {
       );
     }
 
+    const { mou, agreement, ...changesSimpleProps } = changes;
+    const { mou: objMou, agreement: objAgreement, ...objSimpleProps } = object;
+    const realChanges = await this.db.getActualChanges(
+      objSimpleProps,
+      changesSimpleProps
+    );
+    await this.authorizationService.verifyCanEditChanges(
+      Partnership,
+      objSimpleProps,
+      realChanges
+    );
+
     if (!object.primary.value && input.primary) {
       await this.removeOtherPartnershipPrimary(input.id);
     }
 
-    const { mou, agreement, ...rest } = changes;
-    const props: Array<keyof typeof object> = [
-      'agreementStatus',
-      'mouStatus',
-      'types',
-      'financialReportingType',
-      'mouStartOverride',
-      'mouEndOverride',
-      'primary',
-    ];
-    await this.authorizationService.verifyCanEditChanges(object, props, rest);
     if (mou) {
-      await this.authorizationService.verifyCanEdit(object, 'mou');
+      await this.authorizationService.verifyCanEdit({
+        resource: Partnership,
+        baseNode: object,
+        prop: 'mou',
+      });
     }
     if (agreement) {
-      await this.authorizationService.verifyCanEdit(object, 'agreement');
+      await this.authorizationService.verifyCanEdit({
+        resource: Partnership,
+        baseNode: object,
+        prop: 'agreement',
+      });
     }
 
     await this.db.updateProperties({
       type: 'Partnership',
       object,
-      props: props,
-      changes: rest,
-      skipAuth: true,
+      changes: realChanges,
     });
     await this.files.updateDefinedFile(
       object.mou,

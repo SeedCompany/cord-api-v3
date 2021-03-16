@@ -391,7 +391,7 @@ export class ProductService {
       produces: inputProducesId,
       scriptureReferences,
       scriptureReferencesOverride,
-      ...rest
+      ...simplePropsChanges
     } = input;
 
     const currentProduct = await this.readOne(input.id, session);
@@ -420,30 +420,42 @@ export class ProductService {
       );
     }
 
-    const productProps: Array<keyof typeof currentProduct> = [
-      'mediums',
-      'purposes',
-      'methodology',
-    ];
+    const {
+      scriptureReferencesOverride: scripRefOv,
+      scriptureReferences: scriptureRef,
+      produces,
+      ...objSimpleProps
+    } = currentProduct;
+    const realChanges = await this.db.getActualChanges(
+      objSimpleProps,
+      simplePropsChanges
+    );
     await this.authorizationService.verifyCanEditChanges(
-      currentProduct,
-      productProps,
-      rest
+      DerivativeScriptureProduct,
+      objSimpleProps,
+      realChanges
     );
     if (inputProducesId) {
-      await this.authorizationService.verifyCanEdit(currentProduct, 'produces');
+      await this.authorizationService.verifyCanEdit({
+        resource: DerivativeScriptureProduct,
+        baseNode: currentProduct,
+        prop: 'produces',
+        propName: 'producesId',
+      });
     }
     if (scriptureReferences) {
-      await this.authorizationService.verifyCanEdit(
-        currentProduct,
-        'scriptureReferences'
-      );
+      await this.authorizationService.verifyCanEdit({
+        resource: DerivativeScriptureProduct,
+        baseNode: currentProduct,
+        prop: 'scriptureReferences',
+      });
     }
     if (scriptureReferencesOverride) {
-      await this.authorizationService.verifyCanEdit(
-        currentProduct,
-        'scriptureReferencesOverride'
-      );
+      await this.authorizationService.verifyCanEdit({
+        resource: DerivativeScriptureProduct,
+        baseNode: currentProduct,
+        prop: 'scriptureReferencesOverride',
+      });
     }
 
     // If given an new produces id, update the producible
@@ -518,9 +530,7 @@ export class ProductService {
     return await this.db.updateProperties({
       type: 'Product',
       object: productUpdatedScriptureReferences,
-      props: ['mediums', 'purposes', 'methodology'],
-      changes: rest,
-      skipAuth: true, //skipAuth because already checked authorization
+      changes: realChanges,
     });
   }
 

@@ -368,34 +368,25 @@ export class LanguageService {
     }
 
     const object = await this.readOne(input.id, session);
-
-    const props: Array<keyof typeof object> = [
-      'name',
-      'displayName',
-      'isDialect',
-      'populationOverride',
-      'registryOfDialectsCode',
-      'leastOfThese',
-      'leastOfTheseReason',
-      'displayNamePronunciation',
-      'isSignLanguage',
-      'signLanguageCode',
-      'sensitivity',
-      'sponsorEstimatedEndDate',
-      'hasExternalFirstScripture',
-      'tags',
-    ];
-    await this.authorizationService.verifyCanEditChanges(object, props, input);
+    const { ethnologue, ...objNoEth } = object;
+    const realChanges = await this.db.getActualChanges(objNoEth, input);
+    await this.authorizationService.verifyCanEditChanges(
+      Language,
+      objNoEth,
+      realChanges
+    );
     if (newEthnologue) {
-      await this.authorizationService.verifyCanEdit(object, 'ethnologue');
+      await this.authorizationService.verifyCanEdit({
+        resource: Language,
+        baseNode: object,
+        prop: 'ethnologue',
+      });
     }
 
     await this.db.updateProperties({
       type: 'Language',
       object: object,
-      props: props,
-      changes: input,
-      skipAuth: true, // skipping Auth because already checked above
+      changes: realChanges,
     });
 
     // Update EthnologueLanguage

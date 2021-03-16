@@ -341,34 +341,33 @@ export class UserService {
   async update(input: UpdateUser, session: Session): Promise<User> {
     this.logger.debug('mutation update User', { input, session });
     const user = await this.readOne(input.id, session);
-    let skipAuth = false;
-    const props: Array<keyof typeof user> = [
-      'realFirstName',
-      'realLastName',
-      'displayFirstName',
-      'displayLastName',
-      'phone',
-      'timezone',
-      'about',
-      'status',
-      'title',
-    ];
-    if (user.id === session.userId) {
-      skipAuth = true;
-    } else {
-      await this.authorizationService.verifyCanEditChanges(user, props, input);
+
+    const { roles, ...userSimpleProps } = user;
+    const { roles: rolesInput, ...inputSimpleProps } = input;
+    const realChanges = await this.db.getActualChanges(
+      userSimpleProps,
+      inputSimpleProps
+    );
+    if (user.id !== session.userId) {
+      await this.authorizationService.verifyCanEditChanges(
+        User,
+        userSimpleProps,
+        realChanges
+      );
     }
     if (input.roles) {
-      await this.authorizationService.verifyCanEdit(user, 'roles');
+      await this.authorizationService.verifyCanEdit({
+        resource: User,
+        baseNode: user,
+        prop: 'roles',
+      });
       await this.authorizationService.checkPower(Powers.GrantRole, session);
     }
 
     await this.db.updateProperties({
       type: 'User',
       object: user,
-      props: props,
-      changes: input,
-      skipAuth: skipAuth,
+      changes: realChanges,
     });
 
     // Update email

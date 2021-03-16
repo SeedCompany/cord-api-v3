@@ -610,36 +610,35 @@ export class ProjectService {
       ...(input.step ? { status: stepToStatus(input.step) } : {}),
     };
 
-    const props: Array<keyof typeof currentProject> = [
-      'name',
-      'mouStart',
-      'mouEnd',
-      'initialMouEnd',
-      'estimatedSubmission',
-      'status',
-      'modifiedAt',
-      'step',
-      'sensitivity',
-      'tags',
-      'financialReportReceivedAt',
-    ];
+    const { primaryLocation, fieldRegion, ...objSimpleProps } = currentProject;
+    const { primaryLocationId, fieldRegionId, ...changesSimpleProps } = changes;
+
+    // get the 'real' changes... nothing undefined or the same as the old object
+    const realChanges = await this.db.getActualChanges(
+      currentProject,
+      changesSimpleProps
+    );
 
     await this.authorizationService.verifyCanEditChanges(
-      currentProject,
-      props,
-      changes
+      IProject,
+      objSimpleProps,
+      realChanges
     );
     if (input.primaryLocationId) {
-      await this.authorizationService.verifyCanEdit(
-        currentProject,
-        'primaryLocation'
-      );
+      await this.authorizationService.verifyCanEdit({
+        resource: IProject,
+        baseNode: currentProject,
+        prop: 'primaryLocation',
+        propName: 'primaryLocationId',
+      });
     }
     if (input.fieldRegionId) {
-      await this.authorizationService.verifyCanEdit(
-        currentProject,
-        'fieldRegion'
-      );
+      await this.authorizationService.verifyCanEdit({
+        resource: IProject,
+        baseNode: currentProject,
+        prop: 'fieldRegion',
+        propName: 'fieldRegionId',
+      });
     }
 
     // TODO: re-connect the locationId node when locations are hooked up
@@ -731,11 +730,8 @@ export class ProjectService {
     const result = await this.db.updateProperties({
       type: 'Project',
       object: currentProject,
-      props: props,
-      changes,
-      skipAuth: true,
+      changes: realChanges,
     });
-
     const event = new ProjectUpdatedEvent(
       result,
       currentProject,
@@ -743,7 +739,7 @@ export class ProjectService {
       session
     );
     await this.eventBus.publish(event);
-    return event.updated;
+    return await this.readOne(input.id, session);
   }
 
   async delete(id: ID, session: Session): Promise<void> {

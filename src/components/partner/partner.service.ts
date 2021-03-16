@@ -329,28 +329,32 @@ export class PartnerService {
         financialReportingTypes: [],
       };
     }
-
-    const props: Array<keyof typeof object> = [
-      'types',
-      'financialReportingTypes',
-      'pmcEntityCode',
-      'globalInnovationsClient',
-      'active',
-      'address',
-      'modifiedAt',
-    ];
-    await this.authorizationService.verifyCanEditChanges(object, props, input);
-    if (input.pointOfContactId) {
-      await this.authorizationService.verifyCanEdit(object, 'pointOfContact');
+    const { pointOfContact, ...objectSimpleProps } = object;
+    const { pointOfContactId, ...changesNoPOC } = changes;
+    const realChanges = await this.db.getActualChanges(
+      objectSimpleProps,
+      changesNoPOC
+    );
+    await this.authorizationService.verifyCanEditChanges(
+      Partner,
+      objectSimpleProps,
+      realChanges
+    );
+    if (pointOfContactId) {
+      await this.authorizationService.verifyCanEdit({
+        resource: Partner,
+        baseNode: object,
+        prop: 'pointOfContact',
+        propName: 'pointOfContactId',
+      });
     }
     await this.db.updateProperties({
       type: 'Partner',
       object,
-      props: props,
-      changes: changes,
+      changes: realChanges,
     });
     // Update partner
-    if (input.pointOfContactId) {
+    if (pointOfContactId) {
       const createdAt = DateTime.local();
       await this.db
         .query()

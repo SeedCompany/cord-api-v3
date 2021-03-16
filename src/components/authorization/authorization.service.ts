@@ -1,22 +1,20 @@
 /* eslint-disable no-case-declarations */
 import { Injectable } from '@nestjs/common';
 import { Connection, node, relation } from 'cypher-query-builder';
-import { compact, keyBy, mapValues, union, without } from 'lodash';
+import { camelCase, compact, keyBy, mapValues, union, without } from 'lodash';
 import {
   getParentTypes,
   has,
   ID,
   isIdLike,
   isSecured,
+  keys,
   mapFromList,
-  Resource,
   ResourceShape,
   SecuredResource,
   ServerException,
   Session,
   UnauthorizedException,
-  unwrapSecured,
-  UnwrapSecured,
 } from '../../common';
 import { retry } from '../../common/retry';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
@@ -118,33 +116,37 @@ export class AuthorizationService {
     return parseSecuredProperties(props, permissions, resource.SecuredProps);
   }
 
-  async verifyCanEditChanges<
-    TObject extends Resource,
-    Key extends keyof TObject & string
-  >(
-    baseNode: TObject,
-    props: readonly Key[],
-    changes: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> }
+  async verifyCanEditChanges<TResource extends ResourceShape<any>>(
+    resource: TResource,
+    baseNode: Partial<TResource['prototype']>, // for use cases like checking defined files separately
+    changes: Partial<Record<keyof TResource['prototype'], any>>
   ) {
-    for (const prop of props) {
-      if (
-        changes[prop] === undefined ||
-        unwrapSecured(baseNode[prop]) === changes[prop]
-      ) {
-        continue;
-      }
-      await this.verifyCanEdit(baseNode, prop);
+    const propsToChange = keys(changes);
+    for (const prop of propsToChange) {
+      await this.verifyCanEdit({ resource, baseNode, prop });
     }
   }
 
   async verifyCanEdit<
-    DbNode extends Record<string, any>,
-    Key extends keyof DbNode
-  >(baseNode: DbNode, prop: Key) {
+    TResource extends ResourceShape<any>,
+    Key extends keyof TResource['prototype'] & string
+  >({
+    resource,
+    baseNode,
+    prop,
+    propName = prop,
+    resourceName = camelCase(resource.name),
+  }: {
+    resource: TResource;
+    baseNode: Partial<TResource['prototype']>;
+    prop: Key;
+    propName?: string;
+    resourceName?: string;
+  }) {
     if (isSecured(baseNode[prop]) && !baseNode[prop].canEdit) {
       throw new UnauthorizedException(
-        'You do not have permission to update this property',
-        `${baseNode.__typename as string}.${prop as string}`
+        `You do not have permission to update ${resource.name}.${propName}`,
+        `${resourceName}.${propName}`
       );
     }
   }

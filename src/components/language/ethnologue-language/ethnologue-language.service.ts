@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { pickBy } from 'lodash';
-import { DateTime } from 'luxon';
 import {
   generateId,
   ID,
@@ -151,13 +150,15 @@ export class EthnologueLanguageService {
 
     // filter out all of the undefined values so we only have a mapping of entries that the user wanted to edit
     const valueSetCleaned = pickBy(valueSet, (v) => v !== undefined);
-
-    // verifying that we can edit the changes. 'hacking' in the createdAt prop to satisfy typescripts Resource type.
-    // TODO: find a better way. may need to even change the function.
-    await this.authorizationService.verifyCanEditChanges(
-      { createdAt: DateTime.now(), ...ethnologueLanguage },
-      ['code', 'provisionalCode', 'name', 'population'],
+    const realChanges = await this.db.getActualChanges(
+      ethnologueLanguage,
       input
+    );
+
+    await this.authorizationService.verifyCanEditChanges(
+      EthnologueLanguage,
+      ethnologueLanguage,
+      realChanges
     );
     try {
       const query = this.db

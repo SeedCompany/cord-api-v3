@@ -8,7 +8,7 @@ import {
   relation,
 } from 'cypher-query-builder';
 import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
-import { cloneDeep, Many, upperFirst } from 'lodash';
+import { cloneDeep, isEqual, keys, Many, sortBy, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { Driver, Session as Neo4jSession } from 'neo4j-driver';
 import { assert } from 'ts-essentials';
@@ -19,6 +19,7 @@ import {
   many,
   Order,
   Resource,
+  ResourceShape,
   ServerException,
   Session,
   unwrapSecured,
@@ -235,39 +236,71 @@ export class DatabaseService {
     });
   }
 
+  // expecting the changes of the "simple" properties.
+  async getActualChanges<TResource extends ResourceShape<any>>(
+    oldObject: TResource['prototype'],
+    changes: Partial<Record<keyof TResource['prototype'] & string, any>>
+  ): Promise<typeof changes> {
+    const props = Object.keys(changes);
+    // have a reference to 'input' most of the time, so need to copy the data instead of
+    //    accidentally mutating 'input'
+    const realChanges: typeof changes = {};
+    Object.assign(realChanges, changes);
+    // we don't need id, it's not a change, it's the id of the data we want to change
+    if (props.includes('id')) {
+      delete realChanges.id;
+    }
+    for (const prop of props) {
+      if (realChanges[prop] === undefined) {
+        // TODO: maybe a better way than circumventing dynamic delete? I don't see a way around
+        //     deleting dynamically right now.
+        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+        delete realChanges[prop];
+        continue;
+      }
+      const unwrapped = unwrapSecured(oldObject[prop]);
+      if (unwrapped instanceof Array) {
+        if (isEqual(sortBy(unwrapped), sortBy(realChanges[prop]))) {
+          // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+          delete realChanges[prop];
+        }
+      }
+
+      if (unwrapped instanceof Date) {
+        if (unwrapped.getTime() === (realChanges[prop] as Date).getTime()) {
+          // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+          delete realChanges[prop];
+          continue;
+        }
+      }
+      if (unwrapped instanceof DateTime) {
+        if (unwrapped.equals(realChanges[prop] as DateTime)) {
+          // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+          delete realChanges[prop];
+          continue;
+        }
+      }
+    }
+    return realChanges;
+  }
+
   async updateProperties<TObject extends Resource>({
     type,
     object,
-    props,
     changes,
-    skipAuth = false,
   }: {
     // This becomes the label of the base node
     type: string | AbstractClassType<any>;
     // The current object use to check if changes are actually different
     object: TObject;
-    // The keys of the object to consider for updates
-    props: ReadonlyArray<keyof TObject & string>;
     // The changes
     changes: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
-    skipAuth?: boolean;
   }) {
-    if (!skipAuth) {
-      await this.authorizationService.verifyCanEditChanges(
-        object,
-        props,
-        changes
-      );
-    }
     let updated = object;
-    for (const prop of props) {
-      if (
-        changes[prop] === undefined ||
-        unwrapSecured(object[prop]) === changes[prop]
-      ) {
-        continue;
-      }
-
+    const propsToUpdate: Array<keyof TObject & string> = keys(changes) as Array<
+      keyof TObject & string
+    >;
+    for (const prop of propsToUpdate) {
       await this.updateProperty({
         type,
         object,
@@ -313,7 +346,6 @@ export class DatabaseService {
       value,
       sortValue: determineSortValue(value),
     };
-
     const update = this.db
       .query()
       .match(node('node', label, { id }))

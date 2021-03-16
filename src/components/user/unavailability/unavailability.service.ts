@@ -176,25 +176,19 @@ export class UnavailabilityService {
         'user.unavailability'
       );
     }
-    const props: Array<keyof typeof unavailability> = [
-      'description',
-      'start',
-      'end',
-    ];
+    const realChanges = await this.db.getActualChanges(unavailability, input);
 
     if (result.user.properties.id !== session.userId) {
       await this.authorizationService.verifyCanEditChanges(
+        Unavailability,
         unavailability,
-        props,
-        input
+        realChanges
       );
     }
     return await this.db.updateProperties({
       type: 'Unavailability',
       object: unavailability,
-      props: props,
-      changes: input,
-      skipAuth: true,
+      changes: realChanges,
     });
   }
 

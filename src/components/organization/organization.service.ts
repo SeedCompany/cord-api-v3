@@ -225,11 +225,16 @@ export class OrganizationService {
     session: Session
   ): Promise<Organization> {
     const organization = await this.readOne(input.id, session);
+    const realChanges = await this.db.getActualChanges(organization, input);
+    await this.authorizationService.verifyCanEditChanges(
+      Organization,
+      organization,
+      realChanges
+    );
     return await this.db.updateProperties({
       type: 'Organization',
       object: organization,
-      props: ['name', 'address'],
-      changes: input,
+      changes: realChanges,
     });
   }
 

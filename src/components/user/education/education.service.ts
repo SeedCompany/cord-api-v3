@@ -167,18 +167,19 @@ export class EducationService {
         'user.education'
       );
     }
-    const props: Array<keyof typeof ed> = ['degree', 'major', 'institution'];
-
+    const realChanges = await this.db.getActualChanges(ed, input);
     if (result.user.properties.id !== session.userId) {
-      await this.authorizationService.verifyCanEditChanges(ed, props, input);
+      await this.authorizationService.verifyCanEditChanges(
+        Education,
+        ed,
+        realChanges
+      );
     }
 
     await this.db.updateProperties({
       type: 'Education',
       object: ed,
-      props: props,
-      changes: input,
-      skipAuth: true,
+      changes: realChanges,
     });
     return await this.readOne(input.id, session);
   }

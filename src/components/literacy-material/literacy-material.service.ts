@@ -202,26 +202,36 @@ export class LiteracyMaterialService {
     session: Session
   ): Promise<LiteracyMaterial> {
     const literacyMaterial = await this.readOne(input.id, session);
+    const {
+      scriptureReferences,
+      ...literacyMaterialNoScrip
+    } = literacyMaterial;
+    const {
+      scriptureReferences: changeScriptureRefOnly,
+      ...changesNoScripRef
+    } = input;
+    const realChanges = await this.db.getActualChanges(
+      literacyMaterialNoScrip,
+      changesNoScripRef
+    );
     await this.authorizationService.verifyCanEditChanges(
-      literacyMaterial,
-      ['name'],
-      input
+      LiteracyMaterial,
+      literacyMaterialNoScrip,
+      realChanges
     );
-    await this.authorizationService.verifyCanEdit(
-      literacyMaterial,
-      'scriptureReferences'
-    );
+    await this.authorizationService.verifyCanEdit({
+      resource: LiteracyMaterial,
+      baseNode: literacyMaterial,
+      prop: 'scriptureReferences',
+    });
     await this.scriptureRefService.update(input.id, input.scriptureReferences);
 
     await this.db.updateProperties({
       type: 'LiteracyMaterial',
       object: literacyMaterial,
-      props: ['name'],
-      changes: input,
+      changes: realChanges,
     });
-    // doing a whole 'nother readOne because we also have to pick up the
-    //     ScriptureReferences. the updateProperties function will only
-    //     return the updated properties we pass it, not the whole object.
+
     return await this.readOne(input.id, session);
   }
 

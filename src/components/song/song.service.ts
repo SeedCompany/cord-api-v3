@@ -183,16 +183,28 @@ export class SongService {
 
   async update(input: UpdateSong, session: Session): Promise<Song> {
     const song = await this.readOne(input.id, session);
-    await this.authorizationService.verifyCanEditChanges(song, ['name'], input);
-    await this.authorizationService.verifyCanEdit(song, 'scriptureReferences');
+    const { scriptureReferences, ...changesSimpleProps } = input;
+    const { scriptureReferences: scriptureRef, ...objSimpleProps } = song;
+    const realChanges = await this.db.getActualChanges(
+      objSimpleProps,
+      changesSimpleProps
+    );
+    await this.authorizationService.verifyCanEditChanges(
+      Song,
+      objSimpleProps,
+      realChanges
+    );
+    await this.authorizationService.verifyCanEdit({
+      resource: Song,
+      baseNode: song,
+      prop: 'scriptureReferences',
+    });
     await this.scriptureRefService.update(input.id, input.scriptureReferences);
 
     await this.db.updateProperties({
       type: 'Song',
       object: song,
-      props: ['name'],
-      changes: input,
-      skipAuth: true,
+      changes: realChanges,
     });
     return await this.readOne(input.id, session);
   }

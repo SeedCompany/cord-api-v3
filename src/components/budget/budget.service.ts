@@ -450,16 +450,18 @@ export class BudgetService {
   ): Promise<Budget> {
     const budget = await this.readOne(input.id, session);
 
+    const realChanges = await this.db.getActualChanges(budget, input);
     await this.authorizationService.verifyCanEditChanges(
+      Budget,
       budget,
-      ['status'],
-      input
+      realChanges
     );
     if (universalTemplateFile) {
-      await this.authorizationService.verifyCanEdit(
-        budget,
-        'universalTemplateFile'
-      );
+      await this.authorizationService.verifyCanEdit({
+        resource: Budget,
+        baseNode: budget,
+        prop: 'universalTemplateFile',
+      });
     }
 
     await this.files.updateDefinedFile(
@@ -473,8 +475,7 @@ export class BudgetService {
       type: 'Budget',
       object: budget,
       props: ['status'],
-      changes: input,
-      skipAuth: true,
+      changes: realChanges,
     });
   }
 

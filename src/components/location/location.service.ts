@@ -247,28 +247,42 @@ export class LocationService {
   async update(input: UpdateLocation, session: Session): Promise<Location> {
     const location = await this.readOne(input.id, session);
 
-    const props: Array<keyof typeof location> = ['name', 'isoAlpha3', 'type'];
-    await this.authorizationService.verifyCanEditChanges(
-      location,
-      props,
-      input
+    const { fundingAccount, defaultFieldRegion, ...locSimpleProps } = location;
+    const {
+      fundingAccountId,
+      defaultFieldRegionId,
+      ...simplePropChanges
+    } = input;
+    const realChanges = await this.db.getActualChanges(
+      locSimpleProps,
+      simplePropChanges
     );
-    if (input.fundingAccountId) {
-      await this.authorizationService.verifyCanEdit(location, 'fundingAccount');
+    await this.authorizationService.verifyCanEditChanges(
+      Location,
+      locSimpleProps,
+      realChanges
+    );
+    if (fundingAccountId) {
+      await this.authorizationService.verifyCanEdit({
+        resource: Location,
+        baseNode: location,
+        prop: 'fundingAccount',
+        propName: 'fundingAccountId',
+      });
     }
     if (input.defaultFieldRegionId) {
-      await this.authorizationService.verifyCanEdit(
-        location,
-        'defaultFieldRegion'
-      );
+      await this.authorizationService.verifyCanEdit({
+        resource: Location,
+        baseNode: location,
+        prop: 'defaultFieldRegion',
+        propName: 'defaultFieldRegionId',
+      });
     }
     // -- skip auth here because already checked authorization
     await this.db.updateProperties({
       type: 'Location',
       object: location,
-      props: ['name', 'isoAlpha3', 'type'],
-      changes: input,
-      skipAuth: true,
+      changes: realChanges,
     });
 
     // Update fundingAccount

@@ -25,10 +25,11 @@ export class ProjectStepChangedAtHandler
     try {
       const project = event.updated;
       const changes = {
-        id: project.id,
+        //id: project.id,
         stepChangedAt: project.modifiedAt,
       };
 
+      //console.log(project)
       event.updated = await this.db.sgUpdateProperties({
         object: project,
         session: event.session,

@@ -192,11 +192,23 @@ export class FieldZoneService {
   async update(input: UpdateFieldZone, session: Session): Promise<FieldZone> {
     const fieldZone = await this.readOne(input.id, session);
 
-    await this.authorizationService.verifyCanEditChanges(
-      fieldZone,
-      ['name', 'director'],
-      input
+    const { directorId, ...inputSimpleProps } = input;
+    const { director, ...fieldZoneSimpleProps } = fieldZone;
+    const realChanges = await this.db.getActualChanges(
+      fieldZoneSimpleProps,
+      inputSimpleProps
     );
+    await this.authorizationService.verifyCanEditChanges(
+      FieldZone,
+      fieldZoneSimpleProps,
+      realChanges
+    );
+    await this.authorizationService.verifyCanEdit({
+      resource: FieldZone,
+      baseNode: fieldZone,
+      prop: 'director',
+      propName: 'directorId',
+    });
     // update director
     if (input.directorId) {
       const createdAt = DateTime.local();
@@ -229,8 +241,7 @@ export class FieldZoneService {
     await this.db.updateProperties({
       type: 'FieldZone',
       object: fieldZone,
-      props: ['name'],
-      changes: input,
+      changes: realChanges,
     });
 
     return await this.readOne(input.id, session);
