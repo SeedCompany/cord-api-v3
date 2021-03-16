@@ -218,20 +218,17 @@ export class DatabaseService {
    */
   async sgUpdateProperties<TObject extends Resource>({
     object,
-    props,
     changes,
     nodevar,
   }: {
     session: Session;
     object: TObject;
-    props: ReadonlyArray<keyof TObject & string>;
     changes: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
     nodevar: string;
   }) {
     return await this.updateProperties({
       type: upperFirst(nodevar),
       object,
-      props,
       changes,
     });
   }
