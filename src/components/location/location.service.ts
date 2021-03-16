@@ -259,7 +259,7 @@ export class LocationService {
     );
     await this.authorizationService.verifyCanEditChanges(
       Location,
-      locSimpleProps,
+      location,
       realChanges
     );
     if (fundingAccountId) {

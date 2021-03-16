@@ -610,9 +610,7 @@ export class ProjectService {
       ...(input.step ? { status: stepToStatus(input.step) } : {}),
     };
 
-    const { primaryLocation, fieldRegion, ...objSimpleProps } = currentProject;
     const { primaryLocationId, fieldRegionId, ...changesSimpleProps } = changes;
-
     // get the 'real' changes... nothing undefined or the same as the old object
     const realChanges = await this.db.getActualChanges(
       currentProject,
@@ -621,7 +619,7 @@ export class ProjectService {
 
     await this.authorizationService.verifyCanEditChanges(
       IProject,
-      objSimpleProps,
+      currentProject,
       realChanges
     );
     if (input.primaryLocationId) {

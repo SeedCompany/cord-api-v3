@@ -814,7 +814,7 @@ export class EngagementService {
     );
     await this.authorizationService.verifyCanEditChanges(
       LanguageEngagement,
-      objectNoPnp,
+      object,
       realChanges
     );
     if (pnp) {
@@ -899,7 +899,7 @@ export class EngagementService {
     const realChanges = await this.db.getActualChanges(objectNoExtra, input);
     await this.authorizationService.verifyCanEditChanges(
       InternshipEngagement,
-      objectNoExtra,
+      object,
       realChanges
     );
     if (mentorId) {

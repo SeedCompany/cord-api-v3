@@ -337,7 +337,7 @@ export class PartnerService {
     );
     await this.authorizationService.verifyCanEditChanges(
       Partner,
-      objectSimpleProps,
+      object,
       realChanges
     );
     if (pointOfContactId) {

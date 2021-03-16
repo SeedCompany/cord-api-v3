@@ -200,7 +200,7 @@ export class FieldZoneService {
     );
     await this.authorizationService.verifyCanEditChanges(
       FieldZone,
-      fieldZoneSimpleProps,
+      fieldZone,
       realChanges
     );
     await this.authorizationService.verifyCanEdit({

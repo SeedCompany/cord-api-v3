@@ -195,7 +195,7 @@ export class StoryService {
     );
     await this.authorizationService.verifyCanEditChanges(
       Story,
-      objSimpleProps,
+      story,
       realChanges
     );
     await this.authorizationService.verifyCanEdit({

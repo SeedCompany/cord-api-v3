@@ -216,7 +216,7 @@ export class LiteracyMaterialService {
     );
     await this.authorizationService.verifyCanEditChanges(
       LiteracyMaterial,
-      literacyMaterialNoScrip,
+      literacyMaterial,
       realChanges
     );
     await this.authorizationService.verifyCanEdit({

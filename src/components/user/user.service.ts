@@ -351,7 +351,7 @@ export class UserService {
     if (user.id !== session.userId) {
       await this.authorizationService.verifyCanEditChanges(
         User,
-        userSimpleProps,
+        user,
         realChanges
       );
     }

@@ -56,6 +56,7 @@ import {
   DirectScriptureProduct,
   MethodologyToApproach,
   ProducibleType,
+  Product,
   ProductApproach,
   ProductListInput,
   ProductListOutput,
@@ -431,8 +432,8 @@ export class ProductService {
       simplePropsChanges
     );
     await this.authorizationService.verifyCanEditChanges(
-      DerivativeScriptureProduct,
-      objSimpleProps,
+      Product,
+      currentProduct,
       realChanges
     );
     if (inputProducesId) {

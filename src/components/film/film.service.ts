@@ -196,7 +196,7 @@ export class FilmService {
     );
     await this.authorizationService.verifyCanEditChanges(
       Film,
-      filmNoScrip,
+      film,
       realChanges
     );
     if (changeScriptureRefOnly) {

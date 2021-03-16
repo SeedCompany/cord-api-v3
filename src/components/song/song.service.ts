@@ -191,7 +191,7 @@ export class SongService {
     );
     await this.authorizationService.verifyCanEditChanges(
       Song,
-      objSimpleProps,
+      song,
       realChanges
     );
     await this.authorizationService.verifyCanEdit({

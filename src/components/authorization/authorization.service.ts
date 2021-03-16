@@ -118,7 +118,7 @@ export class AuthorizationService {
 
   async verifyCanEditChanges<TResource extends ResourceShape<any>>(
     resource: TResource,
-    baseNode: Partial<TResource['prototype']>, // for use cases like checking defined files separately
+    baseNode: TResource['prototype'],
     changes: Partial<Record<keyof TResource['prototype'], any>>
   ) {
     const propsToChange = keys(changes);

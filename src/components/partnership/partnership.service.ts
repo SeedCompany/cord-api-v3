@@ -399,7 +399,7 @@ export class PartnershipService {
     );
     await this.authorizationService.verifyCanEditChanges(
       Partnership,
-      objSimpleProps,
+      object,
       realChanges
     );
 

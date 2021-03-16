@@ -372,7 +372,7 @@ export class LanguageService {
     const realChanges = await this.db.getActualChanges(objNoEth, input);
     await this.authorizationService.verifyCanEditChanges(
       Language,
-      objNoEth,
+      object,
       realChanges
     );
     if (newEthnologue) {
