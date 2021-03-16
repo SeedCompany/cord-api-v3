@@ -805,13 +805,9 @@ export class EngagementService {
       session
     )) as LanguageEngagement;
 
-    const { pnp: onlyPnp, ...objectNoPnp } = object;
     const { pnp: changesOnlyPnp, ...changesNoPnp } = changes;
 
-    const realChanges = await this.db.getActualChanges(
-      objectNoPnp,
-      changesNoPnp
-    );
+    const realChanges = await this.db.getActualChanges(object, changesNoPnp);
     await this.authorizationService.verifyCanEditChanges(
       LanguageEngagement,
       object,
