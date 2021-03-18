@@ -22,6 +22,10 @@ export class CreateProjectReport {
   @Field(() => CalendarDate, { nullable: true })
   readonly period?: CalendarDate;
 
+  @Field({
+    description: 'Report file',
+    nullable: true,
+  })
   @Type(() => CreateDefinedFileVersionInput)
   @ValidateNested()
   readonly reportFile?: CreateDefinedFileVersionInput;
