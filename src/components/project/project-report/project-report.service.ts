@@ -40,7 +40,6 @@ import {
   ProjectReportListOutput,
   UpdateProjectReport,
 } from './dto';
-import { DbProjectReport } from './model';
 
 @Injectable()
 export class ProjectReportService {
@@ -90,7 +89,7 @@ export class ProjectReportService {
           ],
           ...property('reportType', input.reportType, 'newProjectReport'),
           ...property('periodType', input.periodType, 'newProjectReport'),
-          ...property('period', input.periodType, 'newProjectReport'),
+          ...property('period', input.period, 'newProjectReport'),
           ...property('reportFile', reportFileId, 'newProjectReport'),
         ])
         .return('newProjectReport.id as id');
@@ -101,7 +100,7 @@ export class ProjectReportService {
       }
 
       // connect the Project to the ProjectReport
-      const reportQuery = await this.db
+      await this.db
         .query()
         .match([
           [node('user', 'User', { id: session.userId })],
@@ -132,13 +131,6 @@ export class ProjectReportService {
         'reportFile',
         input.reportFile,
         'projectReport.reportFile'
-      );
-
-      const dbProjectReport = new DbProjectReport();
-      await this.authorizationService.processNewBaseNode(
-        dbProjectReport,
-        reportQuery?.id,
-        session.userId
       );
 
       return await this.readOne(id, session);
