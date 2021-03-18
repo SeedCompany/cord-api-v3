@@ -1,7 +1,7 @@
 import { node, Query, relation } from 'cypher-query-builder';
 import { deburr } from 'lodash';
 import { DateTime } from 'luxon';
-import { Resource, Session } from '../../common';
+import { ResourceShape, Session } from '../../common';
 
 // CREATE clauses //////////////////////////////////////////////////////
 
@@ -103,21 +103,21 @@ export function matchRequestingUser(
   ]);
 }
 
-export type BaseNodePropertyRelationships<BaseNode extends Resource> = Array<
-  keyof BaseNode
->;
-
-export function deleteProperties<BaseNode extends Resource>(
-  query: Query,
-  // relationships of properties to delete
-  // it will prefix every node label with Deleted_
-  relationships: BaseNodePropertyRelationships<BaseNode>
-) {
+/**
+ * This will set all relationships given to active false
+ * and add deleted prefix to its labels.
+ */
+export const deleteProperties = <Resource extends ResourceShape<any>>(
+  _resource: Resource,
+  ...relationLabels: ReadonlyArray<keyof Resource['prototype']>
+) => (query: Query) => {
+  if (relationLabels.length === 0) {
+    return query;
+  }
+  const relationStr = relationLabels.join('|');
   return query.raw(
     `
-    match(node)-[propertyRel:${relationships.join(
-      '|'
-    )} {active: true}]->(property:Property)
+    match(node)-[propertyRel:${relationStr} {active: true}]->(property:Property)
     set propertyRel.active = false
     with property, reduce(deletedLabels = [], label in labels(property) | deletedLabels + ("Deleted_" + label)) as deletedLabels
     call apoc.create.removeLabels(property, labels(property)) yield node as nodeRemoved
@@ -126,4 +126,4 @@ export function deleteProperties<BaseNode extends Resource>(
     with *
   `
   );
-}
+};

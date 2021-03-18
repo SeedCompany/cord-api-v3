@@ -14,7 +14,6 @@ import {
   UnauthorizedException,
 } from '../../common';
 import {
-  BaseNodePropertyRelationships,
   ConfigService,
   DatabaseService,
   deleteProperties,
@@ -362,15 +361,11 @@ export class UserService {
 
     // Update email
     if (input.email) {
-      const relationshipsOfPropertiesToDelete: BaseNodePropertyRelationships<User> = [
-        'email',
-      ];
-
       // Remove old emails and relations
       await this.db
         .query()
         .match([node('node', ['User', 'BaseNode'], { id: user.id })])
-        .call(deleteProperties, relationshipsOfPropertiesToDelete)
+        .call(deleteProperties(User, 'email'))
         .return('*')
         .run();
 
