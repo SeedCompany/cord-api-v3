@@ -575,11 +575,8 @@ export class DatabaseService {
         'propRel.active': false,
       })
       // after setting propRel.active false, we need to distinct propertyNode (not sure why)
-      .with('baseNode, collect(distinct propertyNode) as propertyNodes')
       // combine baseNode with propertyNodes to set Deleted_ labels on all of them
-      .with(
-        'reduce(nodes = [baseNode], pn in propertyNodes | nodes + pn) as nodeList'
-      )
+      .with('[baseNode] + collect(distinct propertyNode) as nodeList')
       // yielding a node from this procedure is necessary I believe, but not used in the rest of the query
       // they're aliased to avoid colliding with the unwound node var
       .raw(
