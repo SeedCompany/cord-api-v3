@@ -2,6 +2,7 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Node, node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { DateTime } from 'luxon';
+import { MergeExclusive } from 'type-fest';
 import {
   DuplicateException,
   generateId,
@@ -96,7 +97,7 @@ export class PartnershipService {
 
     const isFirstPartnership = await this.isFirstPartnership(projectId);
     if (!isFirstPartnership && input.primary) {
-      await this.setPrimaryForOldPartnerships(projectId, false);
+      await this.movePrimaryPartnership(false, { projectId: projectId });
     }
     const primary = isFirstPartnership ? true : input.primary;
 
@@ -383,8 +384,7 @@ export class PartnershipService {
     }
 
     if (input.primary) {
-      const projectId = await this.getProjectIdByPartnershipId(input.id);
-      await this.setPrimaryForOldPartnerships(projectId, false);
+      await this.movePrimaryPartnership(false, { partnershipId: input.id });
     }
 
     const { mou, agreement, ...rest } = changes;
@@ -443,7 +443,10 @@ export class PartnershipService {
         'You do not have the permission to delete this Partnership'
       );
 
-    const projectId = await this.getProjectIdByPartnershipId(id);
+    // Assign primary to other partnership if one exists
+    if (object.primary) {
+      await this.movePrimaryPartnership(true, { partnershipId: object.id });
+    }
 
     await this.eventBus.publish(
       new PartnershipWillDeleteEvent(object, session)
@@ -459,31 +462,6 @@ export class PartnershipService {
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);
-    }
-
-    // Assign primary to other partnership if one exists
-    if (object.primary) {
-      const result = await this.db
-        .query()
-        .optionalMatch(node('project', 'Project', { id: projectId }))
-        .optionalMatch([
-          node('project'),
-          relation('out', '', 'partnership', { active: true }),
-          node('partnership'),
-        ])
-        .return('partnership.id as partnershipId')
-        .asResult<{ partnershipId: string }>()
-        .first();
-
-      if (result) {
-        await this.update(
-          {
-            id: result.partnershipId,
-            primary: true,
-          },
-          session
-        );
-      }
     }
   }
 
@@ -653,9 +631,8 @@ export class PartnershipService {
   protected async isFirstPartnership(projectId: string): Promise<boolean> {
     const result = await this.db
       .query()
-      .optionalMatch(node('project', 'Project', { id: projectId }))
-      .optionalMatch([
-        node('project'),
+      .match([
+        node('project', 'Project', { id: projectId }),
         relation('out', '', 'partnership', { active: true }),
         node('partnership'),
       ])
@@ -666,39 +643,55 @@ export class PartnershipService {
     return result?.partnership ? false : true;
   }
 
-  protected async setPrimaryForOldPartnerships(
-    projectId: string,
-    value: boolean
+  /**
+   *
+   * match current primary partnership, its project, and all other partnerships
+   * set current to primary false
+   * set first of other partnerships to primary true
+   */
+  protected async movePrimaryPartnership(
+    value: boolean,
+    {
+      partnershipId,
+      projectId,
+    }: MergeExclusive<{ partnershipId: string }, { projectId: string }>
   ): Promise<void> {
-    await this.db
-      .query()
-      .optionalMatch(node('project', 'Project', { id: projectId }))
-      .optionalMatch([
-        node('project'),
-        relation('out', '', 'partnership', { active: true }),
-        node('partnership'),
-        relation('out', '', 'primary'),
-        node('property', 'Property'),
-      ])
-      .setValues({ 'property.value': value })
-      .first();
-  }
+    const query = this.db.query();
+    projectId
+      ? query.match([
+          node('project', 'Project', { id: projectId }),
+          relation('out', '', 'partnership', { active: true }),
+          node('partnership'),
+          relation('out', '', 'primary'),
+          node('property', 'Property', { value: true }),
+        ])
+      : query.match([
+          node('partnership', 'Partnership', { id: partnershipId }),
+        ]);
 
-  protected async getProjectIdByPartnershipId(
-    partnershipId: string
-  ): Promise<string> {
-    const result = await this.db
-      .query()
-      .match(node('partnership', 'Partnership', { id: partnershipId }))
+    query
       .optionalMatch([
         node('partnership'),
         relation('in', '', 'partnership', { active: true }),
         node('project', 'Project'),
+        relation('out', '', 'partnership', { active: true }),
+        node('otherPartnership'),
       ])
-      .return('project.id as projectId')
-      .asResult<{ projectId: string }>()
-      .first();
+      .optionalMatch([
+        node('partnership'),
+        relation('out', '', 'primary'),
+        node('property', 'Property'),
+      ])
+      .setValues({ 'property.value': false })
+      .with('project, otherPartnership')
+      .limit(1)
+      .optionalMatch([
+        node('otherPartnership'),
+        relation('out', '', 'primary'),
+        node('property', 'Property'),
+      ])
+      .setValues({ 'property.value': value });
 
-    return result!.projectId;
+    await query.run();
   }
 }
