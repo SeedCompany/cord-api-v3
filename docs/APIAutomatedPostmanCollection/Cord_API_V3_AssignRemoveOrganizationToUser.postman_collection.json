@@ -14,7 +14,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "752166a8-c0cb-4ebe-8a4a-08408e44768c",
 								"exec": [
 									"var response = pm.response.json();\r",
 									"pm.globals.set(\"token\", response.data.session.token);"
@@ -34,9 +33,6 @@
 							"graphql": {
 								"query": "# Write your query or mutation here\r\nquery {\r\n  session(browser: false) {\r\n    user {\r\n      id,\r\n      email\r\n      {\r\n        value\r\n      }\r\n      realFirstName\r\n      {\r\n        value\r\n      }\r\n      createdAt\r\n       canDelete\r\n      displayLastName\r\n      {\r\n         value\r\n      }\r\n      \r\n      \r\n      \r\n    },\r\n    token\r\n  }\r\n}",
 								"variables": ""
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -57,7 +53,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "4f6950d5-4656-42ec-b324-bcf01fcddbb4",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -74,7 +69,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "9dc8f2ab-3ee9-4603-acbf-ce985e49ee79",
 								"exec": [
 									""
 								],
@@ -98,11 +92,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n       canDelete\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n\r\n# devops@tsco.org\r\n# admin\r\n",
+								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    powers\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      canDelete\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n      }\r\n      organizations {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          avatarLetters\r\n          name {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          address {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          locations {\r\n            total\r\n            hasMore\r\n            canRead\r\n            canCreate\r\n            items {\r\n              id\r\n              createdAt\r\n              canDelete\r\n              name {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n              type {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n\r\n              isoAlpha3 {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n              fundingAccount {\r\n                value {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  name {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  accountNumber {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                }\r\n                canEdit\r\n                canRead\r\n              }\r\n              isoCountry {\r\n                country\r\n                alpha2\r\n                alpha3\r\n                numeric\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      partners {\r\n        total\r\n        hasMore\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          modifiedAt\r\n          types {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          financialReportingTypes {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          pmcEntityCode {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          globalInnovationsClient {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          active {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          address {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          organization {\r\n            value {\r\n              id\r\n              createdAt\r\n              canDelete\r\n              avatarLetters\r\n              name {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              address {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              locations {\r\n                total\r\n                hasMore\r\n                canRead\r\n                canCreate\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  name {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  type {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n\r\n                  isoAlpha3 {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  fundingAccount {\r\n                    value {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      name {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      accountNumber {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                    }\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  isoCountry {\r\n                    country\r\n                    alpha2\r\n                    alpha3\r\n                    numeric\r\n                  }\r\n                }\r\n              }\r\n            }\r\n            canEdit\r\n            canRead\r\n          }\r\n          pointOfContact {\r\n            value {\r\n              id\r\n              fullName\r\n              firstName\r\n              avatarLetters\r\n              createdAt\r\n              email {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              realFirstName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              realLastName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              displayFirstName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              displayLastName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              phone {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              about {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              status {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              title {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              roles {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              timezone {\r\n                canRead\r\n                canEdit\r\n                value {\r\n                  name\r\n                  lat\r\n                  long\r\n                  countries {\r\n                    code\r\n                    name\r\n                    zones {\r\n                      name\r\n                      lat\r\n                      long\r\n                      countries {\r\n                        code\r\n                      }\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              unavailabilities {\r\n                total\r\n                hasMore\r\n                canCreate\r\n                canRead\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  start\r\n                  end\r\n                  description {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                }\r\n              }\r\n              organizations {\r\n                total\r\n                hasMore\r\n                canCreate\r\n                canRead\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  avatarLetters\r\n                  name {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  address {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  locations {\r\n                    total\r\n                    hasMore\r\n                    canRead\r\n                    canCreate\r\n                    items {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      name {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      type {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n\r\n                      isoAlpha3 {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      fundingAccount {\r\n                        value {\r\n                          id\r\n                          createdAt\r\n                          canDelete\r\n                          name {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          accountNumber {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                        }\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      isoCountry {\r\n                        country\r\n                        alpha2\r\n                        alpha3\r\n                        numeric\r\n                      }\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              education {\r\n                canRead\r\n                total\r\n                hasMore\r\n                canCreate\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  degree {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  major {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  institution {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                }\r\n              }\r\n              partners {\r\n                canCreate\r\n                canRead\r\n                hasMore\r\n                total\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  modifiedAt\r\n                  types {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  financialReportingTypes {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  pmcEntityCode {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  globalInnovationsClient {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  active {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  address {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  organization {\r\n                    value {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      avatarLetters\r\n                      name {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      address {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      locations {\r\n                        total\r\n                        hasMore\r\n                        canRead\r\n                        canCreate\r\n                        items {\r\n                          id\r\n                          createdAt\r\n                          canDelete\r\n                          name {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          type {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n\r\n                          isoAlpha3 {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          fundingAccount {\r\n                            value {\r\n                              id\r\n                              createdAt\r\n                              canDelete\r\n                              name {\r\n                                value\r\n                                canEdit\r\n                                canRead\r\n                              }\r\n                              accountNumber {\r\n                                value\r\n                                canEdit\r\n                                canRead\r\n                              }\r\n                            }\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          isoCountry {\r\n                            country\r\n                            alpha2\r\n                            alpha3\r\n                            numeric\r\n                          }\r\n                        }\r\n                      }\r\n                    }\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  pointOfContact {\r\n                    canEdit\r\n                    canRead\r\n                    value {\r\n                      id\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              locations {\r\n                canRead\r\n                total\r\n                hasMore\r\n                canCreate\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n\r\n                  name {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  type {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  isoAlpha3 {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  isoCountry {\r\n                    country\r\n                    alpha2\r\n                    alpha3\r\n                    numeric\r\n                  }\r\n                  fundingAccount {\r\n                    value {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      name {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      accountNumber {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                    }\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                }\r\n              }\r\n              knownLanguages {\r\n                proficiency\r\n                language {\r\n                  id\r\n                }\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      education {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          degree {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          major {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          institution {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n      }\r\n      locations {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          type {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          isoAlpha3 {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          isoCountry {\r\n            country\r\n            alpha2\r\n            alpha3\r\n            numeric\r\n          }\r\n          fundingAccount {\r\n            value {\r\n              id\r\n              createdAt\r\n              canDelete\r\n              name {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n              accountNumber {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n            }\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n      }\r\n      knownLanguages {\r\n        proficiency\r\n        language {\r\n          id\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"email\": \"{{rootAdminLogin_email}}\",\r\n        \"password\": \"{{rootAdminLogin_password}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -123,7 +114,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "3c7ec44d-d64f-46e9-b377-a3a37a2852ab",
 								"exec": [
 									""
 								],
@@ -133,7 +123,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "d1b24a02-c5bc-4b4a-be9c-06403cec1d44",
 								"exec": [
 									""
 								],
@@ -159,9 +148,6 @@
 							"graphql": {
 								"query": "mutation grantPower($userId: ID!,$power:Power!) {\r\n  grantPower(userId:$userId,power:$power)\r\n}\r\n",
 								"variables": "{\r\n    \"userId\": \"{{rootAdminUserid}}\",\r\n    \"power\": \"GrantPower\"\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -182,7 +168,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "6d979660-d6c4-430d-a1a3-5889cc117c14",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -207,7 +192,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "1e1eb979-c3cd-46aa-86f1-6e34496b1ac1",
 								"exec": [
 									"const moment = require('moment');\r",
 									"pm.globals.set(\"timestamp\", moment().format(\"DDMYYYYhhmmss\"));\r",
@@ -280,11 +264,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation register($input: RegisterInput!) {\r\n  register(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n       canDelete\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n    \"input\": {\r\n        \"realFirstName\": \"Piyush\",\r\n        \"realLastName\": \"Patel\",\r\n        \"email\": \"{{login_email}}\",\r\n        \"password\": \"{{login_password}}\",\r\n        \"displayFirstName\": \"{{displayFirstName}}\",\r\n        \"displayLastName\": \"{{displayLastName}}\",\r\n        \"phone\": \"{{phone}}\",\r\n        \"timezone\": \"{{timezone}}\",\r\n        \"status\": \"{{userStatus}}\",\r\n        \"title\": \"{{userTitle}}\",\r\n        \"roles\": \"{{userRoles}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
+								"query": "mutation register($input: RegisterInput!) {\r\n  register(input: $input) {\r\n    powers\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      canDelete\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n      }\r\n      organizations {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          avatarLetters\r\n          name {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          address {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          locations {\r\n            total\r\n            hasMore\r\n            canRead\r\n            canCreate\r\n            items {\r\n              id\r\n              createdAt\r\n              canDelete\r\n              name {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n              type {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n\r\n              isoAlpha3 {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n              fundingAccount {\r\n                value {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  name {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  accountNumber {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                }\r\n                canEdit\r\n                canRead\r\n              }\r\n              isoCountry {\r\n                country\r\n                alpha2\r\n                alpha3\r\n                numeric\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      partners {\r\n        total\r\n        hasMore\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          modifiedAt\r\n          types {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          financialReportingTypes {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          pmcEntityCode {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          globalInnovationsClient {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          active {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          address {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          organization {\r\n            value {\r\n              id\r\n              createdAt\r\n              canDelete\r\n              avatarLetters\r\n              name {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              address {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              locations {\r\n                total\r\n                hasMore\r\n                canRead\r\n                canCreate\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  name {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  type {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n\r\n                  isoAlpha3 {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  fundingAccount {\r\n                    value {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      name {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      accountNumber {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                    }\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  isoCountry {\r\n                    country\r\n                    alpha2\r\n                    alpha3\r\n                    numeric\r\n                  }\r\n                }\r\n              }\r\n            }\r\n            canEdit\r\n            canRead\r\n          }\r\n          pointOfContact {\r\n            value {\r\n              id\r\n              fullName\r\n              firstName\r\n              avatarLetters\r\n              createdAt\r\n              email {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              realFirstName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              realLastName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              displayFirstName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              displayLastName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              phone {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              about {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              status {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              title {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              roles {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              timezone {\r\n                canRead\r\n                canEdit\r\n                value {\r\n                  name\r\n                  lat\r\n                  long\r\n                  countries {\r\n                    code\r\n                    name\r\n                    zones {\r\n                      name\r\n                      lat\r\n                      long\r\n                      countries {\r\n                        code\r\n                      }\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              unavailabilities {\r\n                total\r\n                hasMore\r\n                canCreate\r\n                canRead\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  start\r\n                  end\r\n                  description {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                }\r\n              }\r\n              organizations {\r\n                total\r\n                hasMore\r\n                canCreate\r\n                canRead\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  avatarLetters\r\n                  name {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  address {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  locations {\r\n                    total\r\n                    hasMore\r\n                    canRead\r\n                    canCreate\r\n                    items {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      name {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      type {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n\r\n                      isoAlpha3 {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      fundingAccount {\r\n                        value {\r\n                          id\r\n                          createdAt\r\n                          canDelete\r\n                          name {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          accountNumber {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                        }\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      isoCountry {\r\n                        country\r\n                        alpha2\r\n                        alpha3\r\n                        numeric\r\n                      }\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              education {\r\n                canRead\r\n                total\r\n                hasMore\r\n                canCreate\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  degree {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  major {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  institution {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                }\r\n              }\r\n              partners {\r\n                canCreate\r\n                canRead\r\n                hasMore\r\n                total\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  modifiedAt\r\n                  types {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  financialReportingTypes {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  pmcEntityCode {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  globalInnovationsClient {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  active {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  address {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  organization {\r\n                    value {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      avatarLetters\r\n                      name {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      address {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      locations {\r\n                        total\r\n                        hasMore\r\n                        canRead\r\n                        canCreate\r\n                        items {\r\n                          id\r\n                          createdAt\r\n                          canDelete\r\n                          name {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          type {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n\r\n                          isoAlpha3 {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          fundingAccount {\r\n                            value {\r\n                              id\r\n                              createdAt\r\n                              canDelete\r\n                              name {\r\n                                value\r\n                                canEdit\r\n                                canRead\r\n                              }\r\n                              accountNumber {\r\n                                value\r\n                                canEdit\r\n                                canRead\r\n                              }\r\n                            }\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          isoCountry {\r\n                            country\r\n                            alpha2\r\n                            alpha3\r\n                            numeric\r\n                          }\r\n                        }\r\n                      }\r\n                    }\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  pointOfContact {\r\n                    canEdit\r\n                    canRead\r\n                    value {\r\n                      id\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              locations {\r\n                canRead\r\n                total\r\n                hasMore\r\n                canCreate\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n\r\n                  name {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  type {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  isoAlpha3 {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  isoCountry {\r\n                    country\r\n                    alpha2\r\n                    alpha3\r\n                    numeric\r\n                  }\r\n                  fundingAccount {\r\n                    value {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      name {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      accountNumber {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                    }\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                }\r\n              }\r\n              knownLanguages {\r\n                proficiency\r\n                language {\r\n                  id\r\n                }\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      education {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          degree {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          major {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          institution {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n      }\r\n      locations {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          type {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          isoAlpha3 {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          isoCountry {\r\n            country\r\n            alpha2\r\n            alpha3\r\n            numeric\r\n          }\r\n          fundingAccount {\r\n            value {\r\n              id\r\n              createdAt\r\n              canDelete\r\n              name {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n              accountNumber {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n            }\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n      }\r\n      knownLanguages {\r\n        proficiency\r\n        language {\r\n          id\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"realFirstName\": \"Piyush\",\r\n        \"realLastName\": \"Patel\",\r\n        \"email\": \"{{login_email}}\",\r\n        \"password\": \"{{login_password}}\",\r\n        \"displayFirstName\": \"{{displayFirstName}}\",\r\n        \"displayLastName\": \"{{displayLastName}}\",\r\n        \"phone\": \"{{phone}}\",\r\n        \"timezone\": \"{{timezone}}\",\r\n        \"status\": \"{{userStatus}}\",\r\n        \"title\": \"{{userTitle}}\",\r\n        \"about\": \"{{about}}\",\r\n        \"roles\": \"{{userRoles}}\"\r\n    }\r\n}"
 							}
 						},
 						"url": {
@@ -305,7 +286,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "9a41067d-4618-48c7-a25e-9843f7c0646d",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -322,7 +302,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "1fa0ffa3-762d-4ed8-869c-d2523187b6c6",
 								"exec": [
 									""
 								],
@@ -346,11 +325,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      canDelete\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    powers\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      canDelete\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          #canDelete\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n      }\r\n      organizations {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          avatarLetters\r\n          name {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          address {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          locations {\r\n            total\r\n            hasMore\r\n            canRead\r\n            canCreate\r\n            items {\r\n              id\r\n              createdAt\r\n              canDelete\r\n              name {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n              type {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n\r\n              isoAlpha3 {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n              fundingAccount {\r\n                value {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  name {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  accountNumber {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                }\r\n                canEdit\r\n                canRead\r\n              }\r\n              isoCountry {\r\n                country\r\n                alpha2\r\n                alpha3\r\n                numeric\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      partners {\r\n        total\r\n        hasMore\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          modifiedAt\r\n          types {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          financialReportingTypes {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          pmcEntityCode {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          globalInnovationsClient {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          active {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          address {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          organization {\r\n            value {\r\n              id\r\n              createdAt\r\n              canDelete\r\n              avatarLetters\r\n              name {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              address {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              locations {\r\n                total\r\n                hasMore\r\n                canRead\r\n                canCreate\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  name {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  type {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n\r\n                  isoAlpha3 {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  fundingAccount {\r\n                    value {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      name {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      accountNumber {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                    }\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  isoCountry {\r\n                    country\r\n                    alpha2\r\n                    alpha3\r\n                    numeric\r\n                  }\r\n                }\r\n              }\r\n            }\r\n            canEdit\r\n            canRead\r\n          }\r\n          pointOfContact {\r\n            value {\r\n              id\r\n              fullName\r\n              firstName\r\n              avatarLetters\r\n              createdAt\r\n              email {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              realFirstName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              realLastName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              displayFirstName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              displayLastName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              phone {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              about {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              status {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              title {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              roles {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              timezone {\r\n                canRead\r\n                canEdit\r\n                value {\r\n                  name\r\n                  lat\r\n                  long\r\n                  countries {\r\n                    code\r\n                    name\r\n                    zones {\r\n                      name\r\n                      lat\r\n                      long\r\n                      countries {\r\n                        code\r\n                      }\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              unavailabilities {\r\n                total\r\n                hasMore\r\n                canCreate\r\n                canRead\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  #canDelete\r\n                  start\r\n                  end\r\n                  description {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                }\r\n              }\r\n              organizations {\r\n                total\r\n                hasMore\r\n                canCreate\r\n                canRead\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  avatarLetters\r\n                  name {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  address {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  locations {\r\n                    total\r\n                    hasMore\r\n                    canRead\r\n                    canCreate\r\n                    items {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      name {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      type {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n\r\n                      isoAlpha3 {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      fundingAccount {\r\n                        value {\r\n                          id\r\n                          createdAt\r\n                          canDelete\r\n                          name {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          accountNumber {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                        }\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      isoCountry {\r\n                        country\r\n                        alpha2\r\n                        alpha3\r\n                        numeric\r\n                      }\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              education {\r\n                canRead\r\n                total\r\n                hasMore\r\n                canCreate\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  degree {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  major {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  institution {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                }\r\n              }\r\n              partners {\r\n                canCreate\r\n                canRead\r\n                hasMore\r\n                total\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  modifiedAt\r\n                  types {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  financialReportingTypes {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  pmcEntityCode {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  globalInnovationsClient {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  active {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  address {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  organization {\r\n                    value {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      avatarLetters\r\n                      name {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      address {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      locations {\r\n                        total\r\n                        hasMore\r\n                        canRead\r\n                        canCreate\r\n                        items {\r\n                          id\r\n                          createdAt\r\n                          canDelete\r\n                          name {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          type {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n\r\n                          isoAlpha3 {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          fundingAccount {\r\n                            value {\r\n                              id\r\n                              createdAt\r\n                              canDelete\r\n                              name {\r\n                                value\r\n                                canEdit\r\n                                canRead\r\n                              }\r\n                              accountNumber {\r\n                                value\r\n                                canEdit\r\n                                canRead\r\n                              }\r\n                            }\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          isoCountry {\r\n                            country\r\n                            alpha2\r\n                            alpha3\r\n                            numeric\r\n                          }\r\n                        }\r\n                      }\r\n                    }\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  pointOfContact {\r\n                    canEdit\r\n                    canRead\r\n                    value {\r\n                      id\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              locations {\r\n                canRead\r\n                total\r\n                hasMore\r\n                canCreate\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n\r\n                  name {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  type {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  isoAlpha3 {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  isoCountry {\r\n                    country\r\n                    alpha2\r\n                    alpha3\r\n                    numeric\r\n                  }\r\n                  fundingAccount {\r\n                    value {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      name {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      accountNumber {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                    }\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                }\r\n              }\r\n              knownLanguages {\r\n                proficiency\r\n                language {\r\n                  id\r\n                }\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      education {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          degree {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          major {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          institution {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n      }\r\n      locations {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          type {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          isoAlpha3 {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          isoCountry {\r\n            country\r\n            alpha2\r\n            alpha3\r\n            numeric\r\n          }\r\n          fundingAccount {\r\n            value {\r\n              id\r\n              createdAt\r\n              canDelete\r\n              name {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n              accountNumber {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n            }\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n      }\r\n      knownLanguages {\r\n        proficiency\r\n        language {\r\n          id\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n   \"input\": {\r\n      \"email\": \"{{login_email}}\",\r\n      \"password\": \"{{login_password}}\"\r\n   }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -371,7 +347,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "bce3b3c7-61fc-4487-b199-3899e77771d5",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -388,7 +363,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "65e4e82f-da29-428b-84b5-d177ec25f5eb",
 								"exec": [
 									""
 								],
@@ -412,11 +386,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      canDelete\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n\r\n# devops@tsco.org\r\n# admin\r\n",
+								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    powers\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      canDelete\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n      }\r\n      organizations {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          avatarLetters\r\n          name {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          address {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          locations {\r\n            total\r\n            hasMore\r\n            canRead\r\n            canCreate\r\n            items {\r\n              id\r\n              createdAt\r\n              canDelete\r\n              name {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n              type {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n\r\n              isoAlpha3 {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n              fundingAccount {\r\n                value {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  name {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  accountNumber {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                }\r\n                canEdit\r\n                canRead\r\n              }\r\n              isoCountry {\r\n                country\r\n                alpha2\r\n                alpha3\r\n                numeric\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      partners {\r\n        total\r\n        hasMore\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          modifiedAt\r\n          types {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          financialReportingTypes {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          pmcEntityCode {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          globalInnovationsClient {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          active {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          address {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          organization {\r\n            value {\r\n              id\r\n              createdAt\r\n              canDelete\r\n              avatarLetters\r\n              name {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              address {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              locations {\r\n                total\r\n                hasMore\r\n                canRead\r\n                canCreate\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  name {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  type {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n\r\n                  isoAlpha3 {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  fundingAccount {\r\n                    value {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      name {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      accountNumber {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                    }\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  isoCountry {\r\n                    country\r\n                    alpha2\r\n                    alpha3\r\n                    numeric\r\n                  }\r\n                }\r\n              }\r\n            }\r\n            canEdit\r\n            canRead\r\n          }\r\n          pointOfContact {\r\n            value {\r\n              id\r\n              fullName\r\n              firstName\r\n              avatarLetters\r\n              createdAt\r\n              email {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              realFirstName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              realLastName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              displayFirstName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              displayLastName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              phone {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              about {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              status {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              title {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              roles {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              timezone {\r\n                canRead\r\n                canEdit\r\n                value {\r\n                  name\r\n                  lat\r\n                  long\r\n                  countries {\r\n                    code\r\n                    name\r\n                    zones {\r\n                      name\r\n                      lat\r\n                      long\r\n                      countries {\r\n                        code\r\n                      }\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              unavailabilities {\r\n                total\r\n                hasMore\r\n                canCreate\r\n                canRead\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  start\r\n                  end\r\n                  description {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                }\r\n              }\r\n              organizations {\r\n                total\r\n                hasMore\r\n                canCreate\r\n                canRead\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  avatarLetters\r\n                  name {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  address {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  locations {\r\n                    total\r\n                    hasMore\r\n                    canRead\r\n                    canCreate\r\n                    items {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      name {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      type {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n\r\n                      isoAlpha3 {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      fundingAccount {\r\n                        value {\r\n                          id\r\n                          createdAt\r\n                          canDelete\r\n                          name {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          accountNumber {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                        }\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      isoCountry {\r\n                        country\r\n                        alpha2\r\n                        alpha3\r\n                        numeric\r\n                      }\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              education {\r\n                canRead\r\n                total\r\n                hasMore\r\n                canCreate\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  degree {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  major {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  institution {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                }\r\n              }\r\n              partners {\r\n                canCreate\r\n                canRead\r\n                hasMore\r\n                total\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  modifiedAt\r\n                  types {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  financialReportingTypes {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  pmcEntityCode {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  globalInnovationsClient {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  active {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  address {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  organization {\r\n                    value {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      avatarLetters\r\n                      name {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      address {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      locations {\r\n                        total\r\n                        hasMore\r\n                        canRead\r\n                        canCreate\r\n                        items {\r\n                          id\r\n                          createdAt\r\n                          canDelete\r\n                          name {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          type {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n\r\n                          isoAlpha3 {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          fundingAccount {\r\n                            value {\r\n                              id\r\n                              createdAt\r\n                              canDelete\r\n                              name {\r\n                                value\r\n                                canEdit\r\n                                canRead\r\n                              }\r\n                              accountNumber {\r\n                                value\r\n                                canEdit\r\n                                canRead\r\n                              }\r\n                            }\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          isoCountry {\r\n                            country\r\n                            alpha2\r\n                            alpha3\r\n                            numeric\r\n                          }\r\n                        }\r\n                      }\r\n                    }\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  pointOfContact {\r\n                    canEdit\r\n                    canRead\r\n                    value {\r\n                      id\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              locations {\r\n                canRead\r\n                total\r\n                hasMore\r\n                canCreate\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n\r\n                  name {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  type {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  isoAlpha3 {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  isoCountry {\r\n                    country\r\n                    alpha2\r\n                    alpha3\r\n                    numeric\r\n                  }\r\n                  fundingAccount {\r\n                    value {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      name {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      accountNumber {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                    }\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                }\r\n              }\r\n              knownLanguages {\r\n                proficiency\r\n                language {\r\n                  id\r\n                }\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      education {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          degree {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          major {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          institution {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n      }\r\n      locations {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          type {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          isoAlpha3 {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          isoCountry {\r\n            country\r\n            alpha2\r\n            alpha3\r\n            numeric\r\n          }\r\n          fundingAccount {\r\n            value {\r\n              id\r\n              createdAt\r\n              canDelete\r\n              name {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n              accountNumber {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n            }\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n      }\r\n      knownLanguages {\r\n        proficiency\r\n        language {\r\n          id\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"email\": \"{{rootAdminLogin_email}}\",\r\n        \"password\": \"{{rootAdminLogin_password}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -437,7 +408,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "0fab0f99-cca4-49cb-b671-7d0c0c0c9986",
 								"exec": [
 									""
 								],
@@ -447,7 +417,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "01b9077d-9c20-499c-a540-98f056311a24",
 								"exec": [
 									""
 								],
@@ -473,9 +442,6 @@
 							"graphql": {
 								"query": "mutation grantPower($userId: ID!,$power:Power!) {\r\n  grantPower(userId:$userId,power:$power)\r\n}\r\n",
 								"variables": "{\r\n    \"userId\": \"{{userid}}\",\r\n    \"power\": \"GrantPower\"\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -496,7 +462,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "69c6bacd-c9e3-498e-b6c3-3a2a81fad3b5",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -513,7 +478,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "0116571f-523c-41c8-b65b-56d20e11c21e",
 								"exec": [
 									""
 								],
@@ -537,11 +501,62 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n     canDelete\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    powers\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      canDelete\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n         # canDelete\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n      }\r\n      organizations {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          avatarLetters\r\n          name {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          address {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          locations {\r\n            total\r\n            hasMore\r\n            canRead\r\n            canCreate\r\n            items {\r\n              id\r\n              createdAt\r\n              canDelete\r\n              name {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n              type {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n\r\n              isoAlpha3 {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n              fundingAccount {\r\n                value {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  name {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  accountNumber {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                }\r\n                canEdit\r\n                canRead\r\n              }\r\n              isoCountry {\r\n                country\r\n                alpha2\r\n                alpha3\r\n                numeric\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      partners {\r\n        total\r\n        hasMore\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          modifiedAt\r\n          types {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          financialReportingTypes {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          pmcEntityCode {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          globalInnovationsClient {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          active {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          address {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          organization {\r\n            value {\r\n              id\r\n              createdAt\r\n              canDelete\r\n              avatarLetters\r\n              name {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              address {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              locations {\r\n                total\r\n                hasMore\r\n                canRead\r\n                canCreate\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  name {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  type {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n\r\n                  isoAlpha3 {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  fundingAccount {\r\n                    value {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      name {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      accountNumber {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                    }\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  isoCountry {\r\n                    country\r\n                    alpha2\r\n                    alpha3\r\n                    numeric\r\n                  }\r\n                }\r\n              }\r\n            }\r\n            canEdit\r\n            canRead\r\n          }\r\n          pointOfContact {\r\n            value {\r\n              id\r\n              fullName\r\n              firstName\r\n              avatarLetters\r\n              createdAt\r\n              email {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              realFirstName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              realLastName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              displayFirstName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              displayLastName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              phone {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              about {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              status {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              title {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              roles {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              timezone {\r\n                canRead\r\n                canEdit\r\n                value {\r\n                  name\r\n                  lat\r\n                  long\r\n                  countries {\r\n                    code\r\n                    name\r\n                    zones {\r\n                      name\r\n                      lat\r\n                      long\r\n                      countries {\r\n                        code\r\n                      }\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              unavailabilities {\r\n                total\r\n                hasMore\r\n                canCreate\r\n                canRead\r\n                items {\r\n                  id\r\n                  createdAt\r\n                 # canDelete\r\n                  start\r\n                  end\r\n                  description {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                }\r\n              }\r\n              organizations {\r\n                total\r\n                hasMore\r\n                canCreate\r\n                canRead\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  avatarLetters\r\n                  name {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  address {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  locations {\r\n                    total\r\n                    hasMore\r\n                    canRead\r\n                    canCreate\r\n                    items {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      name {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      type {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n\r\n                      isoAlpha3 {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      fundingAccount {\r\n                        value {\r\n                          id\r\n                          createdAt\r\n                          canDelete\r\n                          name {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          accountNumber {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                        }\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      isoCountry {\r\n                        country\r\n                        alpha2\r\n                        alpha3\r\n                        numeric\r\n                      }\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              education {\r\n                canRead\r\n                total\r\n                hasMore\r\n                canCreate\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  degree {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  major {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  institution {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                }\r\n              }\r\n              partners {\r\n                canCreate\r\n                canRead\r\n                hasMore\r\n                total\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  modifiedAt\r\n                  types {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  financialReportingTypes {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  pmcEntityCode {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  globalInnovationsClient {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  active {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  address {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  organization {\r\n                    value {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      avatarLetters\r\n                      name {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      address {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      locations {\r\n                        total\r\n                        hasMore\r\n                        canRead\r\n                        canCreate\r\n                        items {\r\n                          id\r\n                          createdAt\r\n                          canDelete\r\n                          name {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          type {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n\r\n                          isoAlpha3 {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          fundingAccount {\r\n                            value {\r\n                              id\r\n                              createdAt\r\n                              canDelete\r\n                              name {\r\n                                value\r\n                                canEdit\r\n                                canRead\r\n                              }\r\n                              accountNumber {\r\n                                value\r\n                                canEdit\r\n                                canRead\r\n                              }\r\n                            }\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          isoCountry {\r\n                            country\r\n                            alpha2\r\n                            alpha3\r\n                            numeric\r\n                          }\r\n                        }\r\n                      }\r\n                    }\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  pointOfContact {\r\n                    canEdit\r\n                    canRead\r\n                    value {\r\n                      id\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              locations {\r\n                canRead\r\n                total\r\n                hasMore\r\n                canCreate\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n\r\n                  name {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  type {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  isoAlpha3 {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  isoCountry {\r\n                    country\r\n                    alpha2\r\n                    alpha3\r\n                    numeric\r\n                  }\r\n                  fundingAccount {\r\n                    value {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      name {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      accountNumber {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                    }\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                }\r\n              }\r\n              knownLanguages {\r\n                proficiency\r\n                language {\r\n                  id\r\n                }\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      education {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          degree {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          major {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          institution {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n      }\r\n      locations {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          type {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          isoAlpha3 {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          isoCountry {\r\n            country\r\n            alpha2\r\n            alpha3\r\n            numeric\r\n          }\r\n          fundingAccount {\r\n            value {\r\n              id\r\n              createdAt\r\n              canDelete\r\n              name {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n              accountNumber {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n            }\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n      }\r\n      knownLanguages {\r\n        proficiency\r\n        language {\r\n          id\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n   \"input\": {\r\n      \"email\": \"{{login_email}}\",\r\n      \"password\": \"{{login_password}}\"\r\n   }\r\n}"
-							},
-							"options": {
-								"graphql": {}
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Grant Power to Create Organization to Root User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation grantPower($userId: ID!,$power:Power!) {\r\n  grantPower(userId:$userId,power:$power)\r\n}\r\n",
+								"variables": "{\r\n    \"userId\": \"{{userid}}\",\r\n    \"power\": \"CreateOrganization\"\r\n}"
 							}
 						},
 						"url": {
@@ -562,7 +577,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "d1e815bc-8d1d-423b-8aea-5512cbed5f89",
 								"exec": [
 									"const moment = require('moment');",
 									"var jsonData = pm.response.json();",
@@ -580,7 +594,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "fa3857a3-d0a0-4040-8256-7ced2b8cecca",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -615,70 +628,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation createOrganization($input: CreateOrganizationInput!) {\r\n  createOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      address {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      createdAt\r\n      canDelete\r\n      avatarLetters\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation createOrganization($input: CreateOrganizationInput!) {\r\n  createOrganization(input: $input) {\r\n    organization {\r\n      id\r\n      createdAt\r\n      canDelete\r\n      avatarLetters\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      address {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      locations {\r\n        total\r\n        hasMore\r\n        canRead\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          type {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          isoAlpha3 {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          fundingAccount {\r\n            value {\r\n              id\r\n              createdAt\r\n              canDelete\r\n              name {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n              accountNumber {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n            }\r\n            canEdit\r\n            canRead\r\n          }\r\n          isoCountry {\r\n            country\r\n            alpha2\r\n            alpha3\r\n            numeric\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\n    \"input\": {\n        \"organization\": {\n            \"name\": \"{{orgName}}\",\n            \"address\":\"{{orgAddress}}\"\n        }\n    }\n}"
-							},
-							"options": {
-								"graphql": {}
-							}
-						},
-						"url": {
-							"raw": "{{env}}/graphql",
-							"host": [
-								"{{env}}"
-							],
-							"path": [
-								"graphql"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Grant Power to Create Organization to Root User",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"id": "c58230ae-17d6-45c6-9745-a68929f8d51f",
-								"exec": [
-									""
-								],
-								"type": "text/javascript"
-							}
-						},
-						{
-							"listen": "prerequest",
-							"script": {
-								"id": "df851635-d21a-4616-ab4e-e4142b90f66a",
-								"exec": [
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "graphql",
-							"graphql": {
-								"query": "mutation grantPower($userId: ID!,$power:Power!) {\r\n  grantPower(userId:$userId,power:$power)\r\n}\r\n",
-								"variables": "{\r\n    \"userId\": \"{{userid}}\",\r\n    \"power\": \"CreateOrganization\"\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -698,7 +649,6 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "a702efc0-0e0f-44bc-b7ae-1b4afb5cb713",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -708,15 +658,13 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "745ae6b8-c31d-4707-8732-67776a19fc9c",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "AssignOrganizationToUser",
@@ -727,7 +675,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "070f7ab3-06bb-41f4-8ea1-110009c67fdf",
 								"exec": [
 									""
 								],
@@ -737,7 +684,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "b0140c00-463e-4872-86d8-812885e4c304",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -778,9 +724,6 @@
 							"graphql": {
 								"query": "mutation assignOrganizationToUser($input: AssignOrganizationToUserInput!) {\r\n  assignOrganizationToUser(input: $input)\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"request\": {\r\n            \"orgId\": \"{{organizationid}}\",\r\n            \"userId\": \"{{userid}}\",\r\n            \"primary\": true\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -801,7 +744,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "a66541ad-3d6b-4304-8ea5-b34bd3aa9ad7",
 								"exec": [
 									""
 								],
@@ -811,7 +753,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "faaa5d8a-452c-40ee-9476-d1f84f63b822",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -864,9 +805,6 @@
 							"graphql": {
 								"query": "mutation assignOrganizationToUser($input: AssignOrganizationToUserInput!) {\r\n  assignOrganizationToUser(input: $input)\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"request\": {\r\n            \"orgId\": \"\",\r\n            \"userId\": \"{{userid}}\",\r\n            \"primary\": true\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -887,7 +825,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "2b75bee6-5ab0-4bbf-bda9-c5c184c8bb98",
 								"exec": [
 									""
 								],
@@ -897,7 +834,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "5517e9a5-5362-4c9a-ac48-879965ef2e80",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -944,9 +880,6 @@
 							"graphql": {
 								"query": "mutation assignOrganizationToUser($input: AssignOrganizationToUserInput!) {\r\n  assignOrganizationToUser(input: $input)\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"request\": {\r\n            \"userId\": \"{{userid}}\",\r\n            \"primary\": true\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -967,7 +900,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "b788b603-3f51-4f5d-9d33-853fff7a56f1",
 								"exec": [
 									""
 								],
@@ -977,7 +909,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "a9f2dfbc-57ee-477c-9bdf-8bb0c26abb3f",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -1030,9 +961,6 @@
 							"graphql": {
 								"query": "mutation assignOrganizationToUser($input: AssignOrganizationToUserInput!) {\r\n  assignOrganizationToUser(input: $input)\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"request\": {\r\n            \"orgId\": \"{{organizationid}}\",\r\n            \"userId\": \"\",\r\n            \"primary\": true\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1053,7 +981,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "763ec9e7-e004-48d5-a1d4-1b11ba04c6d1",
 								"exec": [
 									""
 								],
@@ -1063,7 +990,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "e261668c-0b91-4525-85f0-9df8e23f31ca",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -1110,9 +1036,6 @@
 							"graphql": {
 								"query": "mutation assignOrganizationToUser($input: AssignOrganizationToUserInput!) {\r\n  assignOrganizationToUser(input: $input)\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"request\": {\r\n            \"orgId\": \"{{organizationid}}\",\r\n            \"primary\": true\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1133,7 +1056,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "c7c87c95-0a00-409d-b6e2-802b3ca05017",
 								"exec": [
 									""
 								],
@@ -1143,7 +1065,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "271dd39f-e2a5-45f9-a863-7eea460764b4",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -1190,9 +1111,6 @@
 							"graphql": {
 								"query": "mutation assignOrganizationToUser($input: AssignOrganizationToUserInput!) {\r\n  assignOrganizationToUser(input: $input)\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"request\": {\r\n            \"orgId1\": \"{{organizationid}}\",\r\n            \"userId\": \"{{userid}}\",\r\n            \"primary\": true\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1213,7 +1131,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "d8c520e1-a09e-4dc5-92cf-7a8c0f2fe66e",
 								"exec": [
 									""
 								],
@@ -1223,7 +1140,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "5988a88b-6517-4770-89dc-277ac596e5e7",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -1270,9 +1186,6 @@
 							"graphql": {
 								"query": "mutation assignOrganizationToUser($input: AssignOrganizationToUserInput!) {\r\n  assignOrganizationToUser(input: $input)\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"request\": {\r\n            \"orgId\": \"{{organizationid}}\",\r\n            \"userId1\": \"{{userid}}\",\r\n            \"primary\": true\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1293,7 +1206,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "59342b77-b9c6-417f-bccb-cfa5aaf3b736",
 								"exec": [
 									""
 								],
@@ -1303,7 +1215,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "2b0846f9-b13c-43c2-9402-335803c60438",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -1350,9 +1261,6 @@
 							"graphql": {
 								"query": "mutation assignOrganizationToUser($input: AssignOrganizationToUserInput!) {\r\n  assignOrganizationToUser(input: $input)\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"request\": {\r\n            \"orgId\": \"{{organizationid}}\",\r\n            \"userId\": \"{{userid}}\",\r\n            \"primary1\": true\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1373,7 +1281,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "ca133fe9-7a15-4528-8982-f33822ce2142",
 								"exec": [
 									""
 								],
@@ -1383,7 +1290,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "d85e7f38-967b-417a-a36a-9b2d7a1a08cf",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -1435,9 +1341,6 @@
 							"graphql": {
 								"query": "mutation assignOrganizationToUser($input: AssignOrganizationToUserInput!) {\r\n  assignOrganizationToUser(input: $input)\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"request\": {\r\n            \"orgId\": \"@#$%^&*(\",\r\n            \"userId\": \"{{userid}}\",\r\n            \"primary\": true\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1458,7 +1361,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "3f7f6272-a055-48fe-b4f3-2d24c67a822b",
 								"exec": [
 									""
 								],
@@ -1468,7 +1370,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "e84f8c4d-f9d4-4cce-90b9-1f1d1ba660b7",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -1520,9 +1421,6 @@
 							"graphql": {
 								"query": "mutation assignOrganizationToUser($input: AssignOrganizationToUserInput!) {\r\n  assignOrganizationToUser(input: $input)\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"request\": {\r\n            \"orgId\": \"{{organizationid}}\",\r\n            \"userId\": \"!@#$%^&*9\",\r\n            \"primary\": true\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1537,8 +1435,7 @@
 					},
 					"response": []
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "RemoveOrganizationFromUser",
@@ -1549,7 +1446,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "c0c68b1e-8de2-44b5-9681-10d62c39922d",
 								"exec": [
 									""
 								],
@@ -1559,7 +1455,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "2a440135-6955-4aea-a905-2e89012853ec",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -1600,9 +1495,6 @@
 							"graphql": {
 								"query": "mutation removeOrganizationFromUser($input: RemoveOrganizationFromUserInput!) {\r\n  removeOrganizationFromUser(input: $input)\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"request\": {\r\n            \"orgId\": \"{{organizationid}}\",\r\n            \"userId\": \"{{userid}}\"\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1623,7 +1515,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "2104a4bd-dd63-4897-8e92-e46fe133cb95",
 								"exec": [
 									""
 								],
@@ -1633,7 +1524,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "e2d14124-2550-4186-ae2d-89f46f4003aa",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -1685,9 +1575,6 @@
 							"graphql": {
 								"query": "mutation removeOrganizationFromUser($input: RemoveOrganizationFromUserInput!) {\r\n  removeOrganizationFromUser(input: $input)\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"request\": {\r\n            \"orgId\": \"\",\r\n            \"userId\": \"{{userid}}\"\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1708,7 +1595,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "264c325f-6fa9-49cd-98d5-8831200f9680",
 								"exec": [
 									""
 								],
@@ -1718,7 +1604,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "11fffc54-a30b-4d4f-9ac4-544fe9db282f",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -1765,9 +1650,6 @@
 							"graphql": {
 								"query": "mutation removeOrganizationFromUser($input: RemoveOrganizationFromUserInput!) {\r\n  removeOrganizationFromUser(input: $input)\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"request\": {\r\n            \"userId\": \"{{userid}}\"\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1788,7 +1670,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "fd52eaaa-be4e-4898-9d72-a7b8ea85aec0",
 								"exec": [
 									""
 								],
@@ -1798,7 +1679,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "332bdf90-8a1e-4e63-a5d6-c9cc941d11bf",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -1850,9 +1730,6 @@
 							"graphql": {
 								"query": "mutation removeOrganizationFromUser($input: RemoveOrganizationFromUserInput!) {\r\n  removeOrganizationFromUser(input: $input)\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"request\": {\r\n            \"orgId\": \"{{organizationid}}\",\r\n            \"userId\": \"\"\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1873,7 +1750,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "e27ed4ae-2e59-4485-9e99-425c5152230f",
 								"exec": [
 									""
 								],
@@ -1883,7 +1759,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "5cb3ed4a-1ab6-4444-8ee6-18143fe62aa2",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -1930,9 +1805,6 @@
 							"graphql": {
 								"query": "mutation removeOrganizationFromUser($input: RemoveOrganizationFromUserInput!) {\r\n  removeOrganizationFromUser(input: $input)\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"request\": {\r\n            \"orgId\": \"{{organizationid}}\"\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1953,7 +1825,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "76490ce9-4d1d-468c-9919-8b41507cfe26",
 								"exec": [
 									""
 								],
@@ -1963,7 +1834,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "55ca7a4b-8cf7-441c-956b-eaa3d98ed293",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -2010,9 +1880,6 @@
 							"graphql": {
 								"query": "mutation removeOrganizationFromUser($input: RemoveOrganizationFromUserInput!) {\r\n  removeOrganizationFromUser(input: $input)\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"request\": {\r\n            \"orgId1\": \"{{organizationid}}\",\r\n            \"userId\": \"{{userid}}\"\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -2033,7 +1900,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "57d4339f-8abe-42ff-992e-425fb86f6b4c",
 								"exec": [
 									""
 								],
@@ -2043,7 +1909,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "ab4bd8ff-e7cb-400f-8f89-25dddaf4509f",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -2090,9 +1955,6 @@
 							"graphql": {
 								"query": "mutation removeOrganizationFromUser($input: RemoveOrganizationFromUserInput!) {\r\n  removeOrganizationFromUser(input: $input)\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"request\": {\r\n            \"orgId\": \"{{organizationid}}\",\r\n            \"userId1\": \"{{userid}}\"\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -2113,7 +1975,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "2296f242-f601-4879-ad4f-4dd985c52615",
 								"exec": [
 									""
 								],
@@ -2123,7 +1984,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "5b034402-fbd8-47b2-9f36-7f76458d90fb",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -2175,9 +2035,6 @@
 							"graphql": {
 								"query": "mutation removeOrganizationFromUser($input: RemoveOrganizationFromUserInput!) {\r\n  removeOrganizationFromUser(input: $input)\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"request\": {\r\n            \"orgId\": \"!@#$%^&\",\r\n            \"userId\": \"{{userid}}\"\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -2198,7 +2055,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "139a8f9d-91e3-4aef-85c4-3d2fd81d9625",
 								"exec": [
 									""
 								],
@@ -2208,7 +2064,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "2af07380-29f4-49ea-a816-5a0caee5a96b",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -2260,9 +2115,6 @@
 							"graphql": {
 								"query": "mutation removeOrganizationFromUser($input: RemoveOrganizationFromUserInput!) {\r\n  removeOrganizationFromUser(input: $input)\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"request\": {\r\n            \"orgId\": \"{{organizationid}}\",\r\n            \"userId\": \"!@#$%^\"\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -2277,8 +2129,7 @@
 					},
 					"response": []
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		}
 	],
 	"auth": {
@@ -2295,7 +2146,6 @@
 		{
 			"listen": "prerequest",
 			"script": {
-				"id": "2fab46a2-6e29-4112-adf5-7226acc5f43f",
 				"type": "text/javascript",
 				"exec": [
 					""
@@ -2305,13 +2155,11 @@
 		{
 			"listen": "test",
 			"script": {
-				"id": "437d013c-3880-45fd-88d4-ec240f608670",
 				"type": "text/javascript",
 				"exec": [
 					""
 				]
 			}
 		}
-	],
-	"protocolProfileBehavior": {}
+	]
 }

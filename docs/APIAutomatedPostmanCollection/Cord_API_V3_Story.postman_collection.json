@@ -14,7 +14,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "48f5ee07-8cfa-48a1-867a-b9c34b4a1817",
 								"exec": [
 									"var response = pm.response.json();\r",
 									"pm.globals.set(\"token\", response.data.session.token);"
@@ -34,9 +33,6 @@
 							"graphql": {
 								"query": "# Write your query or mutation here\r\nquery {\r\n  session(browser: false) {\r\n    user {\r\n      id,\r\n      email\r\n      {\r\n        value\r\n      }\r\n      realFirstName\r\n      {\r\n        value\r\n      }\r\n      createdAt\r\n      canDelete\r\n      displayLastName\r\n      {\r\n         value\r\n      }\r\n      \r\n      \r\n      \r\n    },\r\n    token\r\n  }\r\n}",
 								"variables": ""
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -57,7 +53,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "fd766ff9-bebb-47f8-84fb-532d3ef42ef2",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -82,7 +77,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "0c1c5283-b1ef-4b4a-8c47-de76023d1ec1",
 								"exec": [
 									"const moment = require('moment');\r",
 									"pm.globals.set(\"timestamp\", moment().format(\"DDMYYYYhhmmss\"));\r",
@@ -154,11 +148,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation register($input: RegisterInput!) {\r\n  register(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      canDelete\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n    \"input\": {\r\n        \"realFirstName\": \"Piyush\",\r\n        \"realLastName\": \"Patel\",\r\n        \"email\": \"{{login_email}}\",\r\n        \"password\": \"{{login_password}}\",\r\n        \"displayFirstName\": \"{{displayFirstName}}\",\r\n        \"displayLastName\": \"{{displayLastName}}\",\r\n        \"phone\": \"{{phone}}\",\r\n        \"timezone\": \"{{timezone}}\",\r\n        \"status\": \"{{userStatus}}\",\r\n        \"title\": \"{{userTitle}}\",\r\n        \"roles\": \"{{userRoles}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
+								"query": "mutation register($input: RegisterInput!) {\r\n  register(input: $input) {\r\n    powers\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      canDelete\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          #canDelete\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n      }\r\n      organizations {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          avatarLetters\r\n          name {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          address {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          locations {\r\n            total\r\n            hasMore\r\n            canRead\r\n            canCreate\r\n            items {\r\n              id\r\n              createdAt\r\n              canDelete\r\n              name {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n              type {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n\r\n              isoAlpha3 {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n              fundingAccount {\r\n                value {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  name {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  accountNumber {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                }\r\n                canEdit\r\n                canRead\r\n              }\r\n              isoCountry {\r\n                country\r\n                alpha2\r\n                alpha3\r\n                numeric\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      partners {\r\n        total\r\n        hasMore\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          modifiedAt\r\n          types {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          financialReportingTypes {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          pmcEntityCode {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          globalInnovationsClient {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          active {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          address {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          organization {\r\n            value {\r\n              id\r\n              createdAt\r\n              canDelete\r\n              avatarLetters\r\n              name {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              address {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              locations {\r\n                total\r\n                hasMore\r\n                canRead\r\n                canCreate\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  name {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  type {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n\r\n                  isoAlpha3 {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  fundingAccount {\r\n                    value {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      name {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      accountNumber {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                    }\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  isoCountry {\r\n                    country\r\n                    alpha2\r\n                    alpha3\r\n                    numeric\r\n                  }\r\n                }\r\n              }\r\n            }\r\n            canEdit\r\n            canRead\r\n          }\r\n          pointOfContact {\r\n            value {\r\n              id\r\n              fullName\r\n              firstName\r\n              avatarLetters\r\n              createdAt\r\n              email {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              realFirstName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              realLastName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              displayFirstName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              displayLastName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              phone {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              about {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              status {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              title {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              roles {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              timezone {\r\n                canRead\r\n                canEdit\r\n                value {\r\n                  name\r\n                  lat\r\n                  long\r\n                  countries {\r\n                    code\r\n                    name\r\n                    zones {\r\n                      name\r\n                      lat\r\n                      long\r\n                      countries {\r\n                        code\r\n                      }\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              unavailabilities {\r\n                total\r\n                hasMore\r\n                canCreate\r\n                canRead\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  #canDelete\r\n                  start\r\n                  end\r\n                  description {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                }\r\n              }\r\n              organizations {\r\n                total\r\n                hasMore\r\n                canCreate\r\n                canRead\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  avatarLetters\r\n                  name {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  address {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  locations {\r\n                    total\r\n                    hasMore\r\n                    canRead\r\n                    canCreate\r\n                    items {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      name {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      type {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n\r\n                      isoAlpha3 {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      fundingAccount {\r\n                        value {\r\n                          id\r\n                          createdAt\r\n                          canDelete\r\n                          name {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          accountNumber {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                        }\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      isoCountry {\r\n                        country\r\n                        alpha2\r\n                        alpha3\r\n                        numeric\r\n                      }\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              education {\r\n                canRead\r\n                total\r\n                hasMore\r\n                canCreate\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  degree {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  major {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  institution {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                }\r\n              }\r\n              partners {\r\n                canCreate\r\n                canRead\r\n                hasMore\r\n                total\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  modifiedAt\r\n                  types {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  financialReportingTypes {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  pmcEntityCode {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  globalInnovationsClient {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  active {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  address {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  organization {\r\n                    value {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      avatarLetters\r\n                      name {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      address {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      locations {\r\n                        total\r\n                        hasMore\r\n                        canRead\r\n                        canCreate\r\n                        items {\r\n                          id\r\n                          createdAt\r\n                          canDelete\r\n                          name {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          type {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n\r\n                          isoAlpha3 {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          fundingAccount {\r\n                            value {\r\n                              id\r\n                              createdAt\r\n                              canDelete\r\n                              name {\r\n                                value\r\n                                canEdit\r\n                                canRead\r\n                              }\r\n                              accountNumber {\r\n                                value\r\n                                canEdit\r\n                                canRead\r\n                              }\r\n                            }\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          isoCountry {\r\n                            country\r\n                            alpha2\r\n                            alpha3\r\n                            numeric\r\n                          }\r\n                        }\r\n                      }\r\n                    }\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  pointOfContact {\r\n                    canEdit\r\n                    canRead\r\n                    value {\r\n                      id\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              locations {\r\n                canRead\r\n                total\r\n                hasMore\r\n                canCreate\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n\r\n                  name {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  type {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  isoAlpha3 {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  isoCountry {\r\n                    country\r\n                    alpha2\r\n                    alpha3\r\n                    numeric\r\n                  }\r\n                  fundingAccount {\r\n                    value {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      name {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      accountNumber {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                    }\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                }\r\n              }\r\n              knownLanguages {\r\n                proficiency\r\n                language {\r\n                  id\r\n                }\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      education {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          degree {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          major {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          institution {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n      }\r\n      locations {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          type {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          isoAlpha3 {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          isoCountry {\r\n            country\r\n            alpha2\r\n            alpha3\r\n            numeric\r\n          }\r\n          fundingAccount {\r\n            value {\r\n              id\r\n              createdAt\r\n              canDelete\r\n              name {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n              accountNumber {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n            }\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n      }\r\n      knownLanguages {\r\n        proficiency\r\n        language {\r\n          id\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"realFirstName\": \"Piyush\",\r\n        \"realLastName\": \"Patel\",\r\n        \"email\": \"{{login_email}}\",\r\n        \"password\": \"{{login_password}}\",\r\n        \"displayFirstName\": \"{{displayFirstName}}\",\r\n        \"displayLastName\": \"{{displayLastName}}\",\r\n        \"phone\": \"{{phone}}\",\r\n        \"timezone\": \"{{timezone}}\",\r\n        \"status\": \"{{userStatus}}\",\r\n        \"title\": \"{{userTitle}}\",\r\n        \"about\": \"{{about}}\",\r\n        \"roles\": \"{{userRoles}}\"\r\n    }\r\n}"
 							}
 						},
 						"url": {
@@ -179,7 +170,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "2902fc17-712d-4d31-8a69-e2231abfca25",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -196,7 +186,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "0346d0ef-c820-40bb-a397-69da0a6e976f",
 								"exec": [
 									""
 								],
@@ -220,11 +209,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      canDelete\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    powers\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      canDelete\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          #canDelete\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n      }\r\n      organizations {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          avatarLetters\r\n          name {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          address {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          locations {\r\n            total\r\n            hasMore\r\n            canRead\r\n            canCreate\r\n            items {\r\n              id\r\n              createdAt\r\n              canDelete\r\n              name {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n              type {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n\r\n              isoAlpha3 {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n              fundingAccount {\r\n                value {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  name {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  accountNumber {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                }\r\n                canEdit\r\n                canRead\r\n              }\r\n              isoCountry {\r\n                country\r\n                alpha2\r\n                alpha3\r\n                numeric\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      partners {\r\n        total\r\n        hasMore\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          modifiedAt\r\n          types {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          financialReportingTypes {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          pmcEntityCode {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          globalInnovationsClient {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          active {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          address {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          organization {\r\n            value {\r\n              id\r\n              createdAt\r\n              canDelete\r\n              avatarLetters\r\n              name {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              address {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              locations {\r\n                total\r\n                hasMore\r\n                canRead\r\n                canCreate\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  name {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  type {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n\r\n                  isoAlpha3 {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  fundingAccount {\r\n                    value {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      name {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      accountNumber {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                    }\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  isoCountry {\r\n                    country\r\n                    alpha2\r\n                    alpha3\r\n                    numeric\r\n                  }\r\n                }\r\n              }\r\n            }\r\n            canEdit\r\n            canRead\r\n          }\r\n          pointOfContact {\r\n            value {\r\n              id\r\n              fullName\r\n              firstName\r\n              avatarLetters\r\n              createdAt\r\n              email {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              realFirstName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              realLastName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              displayFirstName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              displayLastName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              phone {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              about {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              status {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              title {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              roles {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              timezone {\r\n                canRead\r\n                canEdit\r\n                value {\r\n                  name\r\n                  lat\r\n                  long\r\n                  countries {\r\n                    code\r\n                    name\r\n                    zones {\r\n                      name\r\n                      lat\r\n                      long\r\n                      countries {\r\n                        code\r\n                      }\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              unavailabilities {\r\n                total\r\n                hasMore\r\n                canCreate\r\n                canRead\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  #canDelete\r\n                  start\r\n                  end\r\n                  description {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                }\r\n              }\r\n              organizations {\r\n                total\r\n                hasMore\r\n                canCreate\r\n                canRead\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  avatarLetters\r\n                  name {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  address {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  locations {\r\n                    total\r\n                    hasMore\r\n                    canRead\r\n                    canCreate\r\n                    items {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      name {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      type {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n\r\n                      isoAlpha3 {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      fundingAccount {\r\n                        value {\r\n                          id\r\n                          createdAt\r\n                          canDelete\r\n                          name {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          accountNumber {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                        }\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      isoCountry {\r\n                        country\r\n                        alpha2\r\n                        alpha3\r\n                        numeric\r\n                      }\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              education {\r\n                canRead\r\n                total\r\n                hasMore\r\n                canCreate\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  degree {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  major {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  institution {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                }\r\n              }\r\n              partners {\r\n                canCreate\r\n                canRead\r\n                hasMore\r\n                total\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  modifiedAt\r\n                  types {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  financialReportingTypes {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  pmcEntityCode {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  globalInnovationsClient {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  active {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  address {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  organization {\r\n                    value {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      avatarLetters\r\n                      name {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      address {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      locations {\r\n                        total\r\n                        hasMore\r\n                        canRead\r\n                        canCreate\r\n                        items {\r\n                          id\r\n                          createdAt\r\n                          canDelete\r\n                          name {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          type {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n\r\n                          isoAlpha3 {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          fundingAccount {\r\n                            value {\r\n                              id\r\n                              createdAt\r\n                              canDelete\r\n                              name {\r\n                                value\r\n                                canEdit\r\n                                canRead\r\n                              }\r\n                              accountNumber {\r\n                                value\r\n                                canEdit\r\n                                canRead\r\n                              }\r\n                            }\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          isoCountry {\r\n                            country\r\n                            alpha2\r\n                            alpha3\r\n                            numeric\r\n                          }\r\n                        }\r\n                      }\r\n                    }\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  pointOfContact {\r\n                    canEdit\r\n                    canRead\r\n                    value {\r\n                      id\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              locations {\r\n                canRead\r\n                total\r\n                hasMore\r\n                canCreate\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n\r\n                  name {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  type {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  isoAlpha3 {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  isoCountry {\r\n                    country\r\n                    alpha2\r\n                    alpha3\r\n                    numeric\r\n                  }\r\n                  fundingAccount {\r\n                    value {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      name {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      accountNumber {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                    }\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                }\r\n              }\r\n              knownLanguages {\r\n                proficiency\r\n                language {\r\n                  id\r\n                }\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      education {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          degree {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          major {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          institution {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n      }\r\n      locations {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          type {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          isoAlpha3 {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          isoCountry {\r\n            country\r\n            alpha2\r\n            alpha3\r\n            numeric\r\n          }\r\n          fundingAccount {\r\n            value {\r\n              id\r\n              createdAt\r\n              canDelete\r\n              name {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n              accountNumber {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n            }\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n      }\r\n      knownLanguages {\r\n        proficiency\r\n        language {\r\n          id\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n   \"input\": {\r\n      \"email\": \"{{login_email}}\",\r\n      \"password\": \"{{login_password}}\"\r\n   }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -244,7 +230,6 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "be3ef384-39c1-4726-a9c8-87870fb5d635",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -254,15 +239,13 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "022616b9-fc35-46de-b4c6-f6b939a9bbe0",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "Story",
@@ -273,7 +256,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "d8293f5f-1db8-4a53-9c71-b87c4efff333",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -310,7 +292,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "85540a51-7975-4a60-bed4-646d7df9a63b",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"const moment = require('moment');\r",
@@ -429,9 +410,6 @@
 							"graphql": {
 								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      canDelete\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"story\": {\r\n            \"name\": \"{{storyName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{storyScriptRefBookStart}}\",\r\n                    \"chapter\": {{storyScriptRefChapterStart}},\r\n                    \"verse\": {{storyScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{storyScriptRefBookEnd}}\",\r\n                    \"chapter\": {{storyScriptRefChapterEnd}},\r\n                    \"verse\": {{storyScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -452,7 +430,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "17f7de53-1142-43f7-b50b-8998e1770613",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -489,7 +466,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "3046f0f2-b680-46f1-86d5-4644c369d399",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"const moment = require('moment');\r",
@@ -608,9 +584,6 @@
 							"graphql": {
 								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"story\": {\r\n            \"name\": \"{{storyName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"Genesis\",\r\n                    \"chapter\": {{storyScriptRefChapterStart}},\r\n                    \"verse\": {{storyScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"Exo\",\r\n                    \"chapter\": {{storyScriptRefChapterEnd}},\r\n                    \"verse\": {{storyScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -631,7 +604,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "7b53357e-435b-4158-9d82-60592c0380a0",
 								"exec": [
 									""
 								],
@@ -641,7 +613,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "29f7619a-f40e-4c66-a79d-b8c1319510dd",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -692,9 +663,6 @@
 							"graphql": {
 								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"story\": {\r\n      \"name\": \"\"\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -715,7 +683,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "2db55c2b-613d-4e88-9760-f22dcd6fc9de",
 								"exec": [
 									""
 								],
@@ -725,7 +692,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "9583c245-528a-4bc5-80b6-cfa11ecd170c",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -772,9 +738,6 @@
 							"graphql": {
 								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"story\": {}\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -795,7 +758,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "6f52b824-acc0-4878-9606-a47c12307f4e",
 								"exec": [
 									""
 								],
@@ -805,7 +767,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "b21c576c-211d-4c50-8b38-b683fed8f1ff",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -852,9 +813,6 @@
 							"graphql": {
 								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"story\": {\r\n      \"name1\": \"{{storyName}}\"\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -875,7 +833,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "a08594c5-5a67-4f6a-9a82-bb3da431d4ef",
 								"exec": [
 									""
 								],
@@ -885,7 +842,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "bc68cd38-9dc1-4a06-b30c-2208108c773a",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -932,9 +888,6 @@
 							"graphql": {
 								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"story\": {\r\n      \"name\": \"{{storyName}}\",\r\n      \"scriptureReferences1\": {\r\n        \"start\": {\r\n          \"book\": \"{{storyScriptRefBookStart}}\",\r\n          \"chapter\": {{storyScriptRefChapterStart}},\r\n          \"verse\": {{storyScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{storyScriptRefBookEnd}}\",\r\n          \"chapter\": {{storyScriptRefChapterEnd}},\r\n          \"verse\": {{storyScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -955,7 +908,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "e9b56c6b-7c12-4cd0-8961-861384c27499",
 								"exec": [
 									""
 								],
@@ -965,7 +917,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "306ffc6e-5162-46d2-96c0-62fd0bfce32d",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -1012,9 +963,6 @@
 							"graphql": {
 								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"story\": {\r\n      \"name\": \"{{storyName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start1\": {\r\n          \"book\": \"{{storyScriptRefBookStart}}\",\r\n          \"chapter\": {{storyScriptRefChapterStart}},\r\n          \"verse\": {{storyScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{storyScriptRefBookEnd}}\",\r\n          \"chapter\": {{storyScriptRefChapterEnd}},\r\n          \"verse\": {{storyScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1035,7 +983,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "193be2c5-4f21-404e-be6e-458b9291e948",
 								"exec": [
 									""
 								],
@@ -1045,7 +992,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "2528c716-8440-414e-b60a-720719509083",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -1092,9 +1038,6 @@
 							"graphql": {
 								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"story\": {\r\n      \"name\": \"{{storyName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book1\": \"{{storyScriptRefBookStart}}\",\r\n          \"chapter\": {{storyScriptRefChapterStart}},\r\n          \"verse\": {{storyScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{storyScriptRefBookEnd}}\",\r\n          \"chapter\": {{storyScriptRefChapterEnd}},\r\n          \"verse\": {{storyScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1115,7 +1058,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "f28253e1-a599-45e0-93e0-254bfc9859a0",
 								"exec": [
 									""
 								],
@@ -1125,7 +1067,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "0361b0f3-d111-4b54-9bff-7731fd3453a3",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -1172,9 +1113,6 @@
 							"graphql": {
 								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"story\": {\r\n      \"name\": \"{{storyName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{storyScriptRefBookStart}}\",\r\n          \"chapter1\": {{storyScriptRefChapterStart}},\r\n          \"verse\": {{storyScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{storyScriptRefBookEnd}}\",\r\n          \"chapter\": {{storyScriptRefChapterEnd}},\r\n          \"verse\": {{storyScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1195,7 +1133,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "ca69e8cc-bdee-4918-87fb-4e424904cb0c",
 								"exec": [
 									""
 								],
@@ -1205,7 +1142,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "4b046f29-bbc7-4228-b1f0-2ecfca6f0859",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -1252,9 +1188,6 @@
 							"graphql": {
 								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"story\": {\r\n      \"name\": \"{{storyName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{storyScriptRefBookStart}}\",\r\n          \"chapter\": {{storyScriptRefChapterStart}},\r\n          \"verse1\": {{storyScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{storyScriptRefBookEnd}}\",\r\n          \"chapter\": {{storyScriptRefChapterEnd}},\r\n          \"verse\": {{storyScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1275,7 +1208,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "b91913c5-bff3-4be0-ab9d-21f77ca24c5d",
 								"exec": [
 									""
 								],
@@ -1285,7 +1217,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "30be23f6-3acb-4ba8-b23a-e455c005bf70",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -1332,9 +1263,6 @@
 							"graphql": {
 								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"story\": {\r\n      \"name\": \"{{storyName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{storyScriptRefBookStart}}\",\r\n          \"chapter\": {{storyScriptRefChapterStart}},\r\n          \"verse\": {{storyScriptRefVerseStart}}\r\n        },\r\n        \"end1\": {\r\n          \"book\": \"{{storyScriptRefBookEnd}}\",\r\n          \"chapter\": {{storyScriptRefChapterEnd}},\r\n          \"verse\": {{storyScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1355,7 +1283,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "34daac00-f9f7-467d-8a72-466be5bcfcfc",
 								"exec": [
 									""
 								],
@@ -1365,7 +1292,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "1ddeb0ce-21a6-4e95-92a0-6fccaa7a21c6",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -1412,9 +1338,6 @@
 							"graphql": {
 								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"story\": {\r\n      \"name\": \"{{storyName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{storyScriptRefBookStart}}\",\r\n          \"chapter\": {{storyScriptRefChapterStart}},\r\n          \"verse\": {{storyScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book1\": \"{{storyScriptRefBookEnd}}\",\r\n          \"chapter\": {{storyScriptRefChapterEnd}},\r\n          \"verse\": {{storyScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1435,7 +1358,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "65656ea5-3d64-44cc-ad69-908f01f9d5c9",
 								"exec": [
 									""
 								],
@@ -1445,7 +1367,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "e41cae30-5243-4e7a-92ae-aa285d1b6bde",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -1492,9 +1413,6 @@
 							"graphql": {
 								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"story\": {\r\n      \"name\": \"{{storyName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{storyScriptRefBookStart}}\",\r\n          \"chapter\": {{storyScriptRefChapterStart}},\r\n          \"verse\": {{storyScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{storyScriptRefBookEnd}}\",\r\n          \"chapter1\": {{storyScriptRefChapterEnd}},\r\n          \"verse\": {{storyScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1515,7 +1433,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "748c4b4d-4ab2-4020-868a-a2a34b167fe4",
 								"exec": [
 									""
 								],
@@ -1525,7 +1442,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "17b943cd-6bf4-4fa7-b2fe-2f3d69f71d90",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -1572,9 +1488,6 @@
 							"graphql": {
 								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"story\": {\r\n      \"name\": \"{{storyName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{storyScriptRefBookStart}}\",\r\n          \"chapter\": {{storyScriptRefChapterStart}},\r\n          \"verse\": {{storyScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{storyScriptRefBookEnd}}\",\r\n          \"chapter\": {{storyScriptRefChapterEnd}},\r\n          \"verse1\": {{storyScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1595,7 +1508,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "6a640caf-6c2c-4e2a-b9f4-d9f43c7c91a5",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -1632,7 +1544,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "c147e29d-3bbd-4110-89c2-bcc33f2c26dc",
 								"exec": [
 									""
 								],
@@ -1658,9 +1569,6 @@
 							"graphql": {
 								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"story\": {\r\n            \"name\": \"{{storyName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{storyScriptRefBookStart}}\",\r\n                    \"chapter\": {{storyScriptRefChapterStart}},\r\n                    \"verse\": {{storyScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{storyScriptRefBookEnd}}\",\r\n                    \"chapter\": {{storyScriptRefChapterEnd}},\r\n                    \"verse\": {{storyScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1681,7 +1589,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "6e52257e-0e65-4285-9801-ea545de98575",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -1693,7 +1600,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "ed7c0242-d4fe-438d-bb83-1bab5f40890a",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"var story_data = JSON.parse(pm.variables.get(\"story_data\"));\r",
@@ -1812,9 +1718,6 @@
 							"graphql": {
 								"query": "query story($id: ID!) {\r\n  story(id: $id) {\r\n    id\r\n    createdAt\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"id\": \"{{storyId}}\"\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1835,7 +1738,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "0b20f112-338b-4515-9607-d1a0a2eb8ec3",
 								"exec": [
 									""
 								],
@@ -1845,7 +1747,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "3b92ee0f-1e02-4d66-b4a2-ce049579a484",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -1896,9 +1797,6 @@
 							"graphql": {
 								"query": "query story($id: ID!) {\r\n  story(id: $id) {\r\n    id\r\n    createdAt\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"id\": \"\"\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1919,7 +1817,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "ed5b9ffc-1659-4fb4-a6cd-d9cc972ba929",
 								"exec": [
 									""
 								],
@@ -1929,7 +1826,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "870085bf-3b34-4958-b79f-31a9dca5d844",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -1976,9 +1872,6 @@
 							"graphql": {
 								"query": "query story($id: ID!) {\r\n  story(id: $id) {\r\n    id\r\n    createdAt\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1999,7 +1892,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "d4e989bf-c005-44b7-b7d9-32db488b0bb9",
 								"exec": [
 									""
 								],
@@ -2009,7 +1901,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "a80a7ba4-855a-4b90-bd71-5694cfa77486",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -2056,9 +1947,6 @@
 							"graphql": {
 								"query": "query story($id: ID!) {\r\n  story(id: $id) {\r\n    id\r\n    createdAt\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"id1\": \"{{storyId}}\"\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -2079,7 +1967,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "23a2fe03-b2ac-4ddc-9710-d4211918c610",
 								"exec": [
 									""
 								],
@@ -2089,7 +1976,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "de2bc813-55f9-40d4-a76c-20303fe7f9d3",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -2140,9 +2026,6 @@
 							"graphql": {
 								"query": "query story($id: ID!) {\r\n  story(id: $id) {\r\n    id\r\n    createdAt\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"id\": \"!@#$%^\"\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -2163,7 +2046,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "6e5e789c-fb9c-4547-8be7-d08985f084aa",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -2197,7 +2079,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "6b029ffc-cddd-447f-80d5-c9640d1e3b1f",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"var story_data = JSON.parse(pm.variables.get(\"story_data\"));\r",
@@ -2315,9 +2196,6 @@
 							"graphql": {
 								"query": "mutation updateStory($input: UpdateStoryInput!) {\r\n  updateStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"story\": {\r\n            \"id\": \"{{storyId}}\",\r\n            \"name\": \"{{storyName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{storyScriptRefBookStart}}\",\r\n                    \"chapter\": {{storyScriptRefChapterStart}},\r\n                    \"verse\": {{storyScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{storyScriptRefBookEnd}}\",\r\n                    \"chapter\": {{storyScriptRefChapterEnd}},\r\n                    \"verse\": {{storyScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -2338,7 +2216,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "9c0caac1-a1d0-47d5-b6fe-b4e2a3b46e4e",
 								"exec": [
 									""
 								],
@@ -2348,7 +2225,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "e962d72b-ba11-42f4-bd0b-eba71ba8da5f",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"var story_data = JSON.parse(pm.variables.get(\"story_data\"));\r",
@@ -2465,9 +2341,6 @@
 							"graphql": {
 								"query": "mutation updateStory($input: UpdateStoryInput!) {\r\n  updateStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"story\": {\r\n      \"id\": \"{{storyId}}\"\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -2488,7 +2361,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "6a126974-f275-4978-86ac-f716b1784d2c",
 								"exec": [
 									""
 								],
@@ -2498,7 +2370,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "ef42a7a9-c81d-4a2b-94f1-47e49b390ce5",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -2545,9 +2416,6 @@
 							"graphql": {
 								"query": "mutation updateStory($input: UpdateStoryInput!) {\r\n  updateStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"story\": {\r\n            \"name\": \"{{storyName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{storyScriptRefBookStart}}\",\r\n                    \"chapter\": {{storyScriptRefChapterStart}},\r\n                    \"verse\": {{storyScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{storyScriptRefBookEnd}}\",\r\n                    \"chapter\": {{storyScriptRefChapterEnd}},\r\n                    \"verse\": {{storyScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -2568,7 +2436,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "0c9b3361-00fe-4e38-a46c-987b2306bd46",
 								"exec": [
 									""
 								],
@@ -2578,7 +2445,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "e17b2bd8-4dc2-44a3-9e54-54aa53ea0012",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -2629,9 +2495,6 @@
 							"graphql": {
 								"query": "mutation updateStory($input: UpdateStoryInput!) {\r\n  updateStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"story\": {\r\n            \"id\": \"\",\r\n            \"name\": \"{{storyName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{storyScriptRefBookStart}}\",\r\n                    \"chapter\": {{storyScriptRefChapterStart}},\r\n                    \"verse\": {{storyScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{storyScriptRefBookEnd}}\",\r\n                    \"chapter\": {{storyScriptRefChapterEnd}},\r\n                    \"verse\": {{storyScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -2652,7 +2515,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "af9b4549-1680-428f-aef4-9d4b92162be5",
 								"exec": [
 									""
 								],
@@ -2662,7 +2524,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "8084ec02-a98a-4408-be30-018abb253e48",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -2712,9 +2573,6 @@
 							"graphql": {
 								"query": "mutation updateStory($input: UpdateStoryInput!) {\r\n  updateStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"story\": {\r\n            \"id\": \"{{storyId}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{storyScriptRefBookStart}}\",\r\n                    \"chapter\": {{storyScriptRefChapterStart}},\r\n                    \"verse\": {{storyScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{storyScriptRefBookEnd}}\",\r\n                    \"chapter\": {{storyScriptRefChapterEnd}},\r\n                    \"verse\": {{storyScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -2735,7 +2593,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "bddc9910-e69c-43d0-8f0c-4c55f4a302b8",
 								"exec": [
 									""
 								],
@@ -2745,7 +2602,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "faa4516c-ea04-4907-8bb9-50a7fab0b62e",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -2796,9 +2652,6 @@
 							"graphql": {
 								"query": "mutation updateStory($input: UpdateStoryInput!) {\r\n  updateStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"story\": {\r\n            \"id\": \"{{storyId}}\",\r\n            \"name\": \"\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{storyScriptRefBookStart}}\",\r\n                    \"chapter\": {{storyScriptRefChapterStart}},\r\n                    \"verse\": {{storyScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{storyScriptRefBookEnd}}\",\r\n                    \"chapter\": {{storyScriptRefChapterEnd}},\r\n                    \"verse\": {{storyScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -2819,7 +2672,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "614f461b-d3cc-43ef-a2aa-fa65b135d822",
 								"exec": [
 									""
 								],
@@ -2829,7 +2681,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "c07f7e3a-ea2f-445f-a7e7-36f4a89ac9b4",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -2881,9 +2732,6 @@
 							"graphql": {
 								"query": "mutation updateStory($input: UpdateStoryInput!) {\r\n  updateStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"story\": {\r\n            \"id\": \"!@#$%^\",\r\n            \"name\": \"{{storyName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{storyScriptRefBookStart}}\",\r\n                    \"chapter\": {{storyScriptRefChapterStart}},\r\n                    \"verse\": {{storyScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{storyScriptRefBookEnd}}\",\r\n                    \"chapter\": {{storyScriptRefChapterEnd}},\r\n                    \"verse\": {{storyScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -2904,7 +2752,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "4007d2a0-f455-4402-8183-606c97f7bba5",
 								"exec": [
 									""
 								],
@@ -2914,7 +2761,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "14439b8a-03c5-4bd2-839e-2777b6974e34",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -2961,9 +2807,6 @@
 							"graphql": {
 								"query": "mutation updateStory($input: UpdateStoryInput!) {\r\n  updateStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"story\": {\r\n            \"id1\": \"{{storyId}}\",\r\n            \"name\": \"{{storyName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{storyScriptRefBookStart}}\",\r\n                    \"chapter\": {{storyScriptRefChapterStart}},\r\n                    \"verse\": {{storyScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{storyScriptRefBookEnd}}\",\r\n                    \"chapter\": {{storyScriptRefChapterEnd}},\r\n                    \"verse\": {{storyScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -2984,7 +2827,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "42bf074f-df15-48df-bc6c-312c6339f202",
 								"exec": [
 									""
 								],
@@ -2994,7 +2836,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "4977ec23-89c3-4d09-8e40-8c4729c72bf5",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -3041,9 +2882,6 @@
 							"graphql": {
 								"query": "mutation updateStory($input: UpdateStoryInput!) {\r\n  updateStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"story\": {\r\n            \"id\": \"{{storyId}}\",\r\n            \"name1\": \"{{storyName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{storyScriptRefBookStart}}\",\r\n                    \"chapter\": {{storyScriptRefChapterStart}},\r\n                    \"verse\": {{storyScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{storyScriptRefBookEnd}}\",\r\n                    \"chapter\": {{storyScriptRefChapterEnd}},\r\n                    \"verse\": {{storyScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -3064,7 +2902,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "5e9cb04e-2062-4591-99c0-cf9f104e8b9c",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -3098,7 +2935,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "1d532aca-bc32-4d88-befb-1157c338ea12",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -3133,9 +2969,6 @@
 							"graphql": {
 								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"story\": {\r\n      \"name\": \"{{storyName}}\",\r\n      \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{storyScriptRefBookStart}}\",\r\n                    \"chapter\": {{storyScriptRefChapterStart}},\r\n                    \"verse\": {{storyScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{storyScriptRefBookEnd}}\",\r\n                    \"chapter\": {{storyScriptRefChapterEnd}},\r\n                    \"verse\": {{storyScriptRefVerseEnd}}\r\n                }\r\n            }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -3156,7 +2989,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "c6aa7c88-481f-44a9-9b1f-21cb9276e2a7",
 								"exec": [
 									"pm.globals.set(\"itemCount\", 25);\r",
 									"pm.globals.set(\"page\", 1);\r",
@@ -3168,7 +3000,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "39ed81f6-8461-40a3-8b22-801d154d37c1",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"var story_data = JSON.parse(pm.variables.get(\"story_data\")); // Get stored story object\r",
@@ -3270,9 +3101,6 @@
 							"graphql": {
 								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -3293,7 +3121,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "dfdeca87-c77f-4936-bc07-635abd4d161b",
 								"exec": [
 									"pm.globals.set(\"itemCount\", 25);\r",
 									"// Page is set from previous request test script based on total\r",
@@ -3305,7 +3132,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "80a1646e-2fe2-4fc1-8b9a-7caf946e244d",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"var story_data = JSON.parse(pm.variables.get(\"story_data\")); // Get stored story object\r",
@@ -3436,9 +3262,6 @@
 							"graphql": {
 								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -3459,7 +3282,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "f9423e49-48d0-4445-acc8-58a108d46c1b",
 								"exec": [
 									"pm.globals.set(\"itemCount\", 25);\r",
 									"pm.globals.set(\"page\", 1);\r",
@@ -3471,7 +3293,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "15821a26-08eb-4dfb-80c0-0fd6c4bcd2c4",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -3512,9 +3333,6 @@
 							"graphql": {
 								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -3535,7 +3353,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "2172c5c9-c238-4a51-ac0a-c4d434b0df02",
 								"exec": [
 									"pm.globals.set(\"itemCount\", 25);\r",
 									"pm.globals.set(\"page\", 1);\r",
@@ -3547,7 +3364,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "12bb8562-1b61-4397-9c8e-d8928ab982bf",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -3594,9 +3410,6 @@
 							"graphql": {
 								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -3617,7 +3430,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "0ffc9120-c52a-4784-be96-70748dfd2080",
 								"exec": [
 									"pm.globals.set(\"itemCount\", 25);\r",
 									"pm.globals.set(\"page\", 1);\r",
@@ -3629,7 +3441,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "bee5fba9-03ee-49a2-9ebb-c840c30fd4b7",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -3681,9 +3492,6 @@
 							"graphql": {
 								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -3704,7 +3512,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "00352f73-b900-429f-b5ef-d9a6bef21c33",
 								"exec": [
 									"pm.globals.set(\"itemCount\", 25);\r",
 									"pm.globals.set(\"page\", 1);\r",
@@ -3716,7 +3523,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "c2da19a5-0ce5-4884-9f78-38aa68e3dfb8",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -3769,9 +3575,6 @@
 							"graphql": {
 								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -3792,7 +3595,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "8fa13959-e1c8-441d-b9d8-9234615db73a",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -3829,7 +3631,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "be78581e-1398-44db-a7b7-01fe2ddb7ba7",
 								"exec": [
 									""
 								],
@@ -3855,9 +3656,6 @@
 							"graphql": {
 								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"story\": {\r\n      \"name\": \"{{storyName}}\",\r\n      \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{storyScriptRefBookStart}}\",\r\n                    \"chapter\": {{storyScriptRefChapterStart}},\r\n                    \"verse\": {{storyScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{storyScriptRefBookEnd}}\",\r\n                    \"chapter\": {{storyScriptRefChapterEnd}},\r\n                    \"verse\": {{storyScriptRefVerseEnd}}\r\n                }\r\n            }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -3878,7 +3676,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "865ba043-17a9-415e-a4f1-64da4f4dd9e5",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -3915,7 +3712,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "986c8b08-d979-4594-b9ee-6020b1466a04",
 								"exec": [
 									""
 								],
@@ -3941,9 +3737,6 @@
 							"graphql": {
 								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"story\": {\r\n            \"name\": \"{{storyName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{storyScriptRefBookStart}}\",\r\n                    \"chapter\": {{storyScriptRefChapterStart}},\r\n                    \"verse\": {{storyScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{storyScriptRefBookEnd}}\",\r\n                    \"chapter\": {{storyScriptRefChapterEnd}},\r\n                    \"verse\": {{storyScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -3964,7 +3757,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "d3531483-16e6-4295-818a-6e6b121d9fb2",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -4000,7 +3792,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "638112c2-f3fd-4465-8bb5-c040a5e8b810",
 								"exec": [
 									""
 								],
@@ -4026,9 +3817,6 @@
 							"graphql": {
 								"query": "mutation createStory($input: CreateStoryInput!) {\r\n  createStory(input: $input) {\r\n    story {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"story\": {\r\n            \"name\": \"{{storyName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{storyScriptRefBookStart}}\",\r\n                    \"chapter\": {{storyScriptRefChapterStart}},\r\n                    \"verse\": {{storyScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{storyScriptRefBookEnd}}\",\r\n                    \"chapter\": {{storyScriptRefChapterEnd}},\r\n                    \"verse\": {{storyScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -4049,7 +3837,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "3c16c66a-22c2-4ee8-8cd3-7e9d39febee4",
 								"exec": [
 									"pm.globals.set(\"itemCount\", 25);\r",
 									"pm.globals.set(\"page\", 1);\r",
@@ -4061,7 +3848,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "12571a50-e4d3-4a21-9e91-375454d60cba",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"var lodash = require('lodash');\r",
@@ -4109,9 +3895,6 @@
 							"graphql": {
 								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -4132,7 +3915,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "595b0fae-9f9b-4c42-91dd-6d1e276c8615",
 								"exec": [
 									"pm.globals.set(\"itemCount\", 25);\r",
 									"pm.globals.set(\"page\", 1);\r",
@@ -4144,7 +3926,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "4004df91-f0ec-48c0-af2c-9596c41f76f9",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"var lodash = require('lodash');\r",
@@ -4193,9 +3974,6 @@
 							"graphql": {
 								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -4216,7 +3994,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "5614ff52-ed81-4e54-84f0-01bb70289e50",
 								"exec": [
 									""
 								],
@@ -4226,7 +4003,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "7d8f1b24-9772-4115-82c7-b4b841ef0e20",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -4269,9 +4045,6 @@
 							"graphql": {
 								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -4292,7 +4065,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "a1e12170-3d24-4f64-b69e-a1590a42f190",
 								"exec": [
 									"pm.globals.set(\"page\",1);\r",
 									"pm.globals.set('order', \"DESC\");\r",
@@ -4304,7 +4076,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "67c6f0a8-5c9f-4793-a84b-f1d960e0a6d6",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -4356,9 +4127,6 @@
 							"graphql": {
 								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\":{{count}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -4379,7 +4147,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "58d567db-503c-4f76-8b54-385dbfbde22b",
 								"exec": [
 									""
 								],
@@ -4389,7 +4156,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "d2777bfe-cc7e-4905-9bee-16d243600099",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -4436,9 +4202,6 @@
 							"graphql": {
 								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\":{{count}},\r\n    \"page\": \"{{page}}\",\r\n    \"sort\": \"name\",\r\n    \"order\": \"\"\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -4459,7 +4222,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "788e99e3-6494-4b8b-b98b-0af43f05f7ab",
 								"exec": [
 									""
 								],
@@ -4469,7 +4231,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "f9420738-826a-46b6-a64c-8b3e5bac20a5",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -4516,9 +4277,6 @@
 							"graphql": {
 								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count1\":{{count}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -4539,7 +4297,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "e4a4737a-9f05-442b-bae0-3432a1d1d219",
 								"exec": [
 									""
 								],
@@ -4549,7 +4306,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "83da0a33-aca4-458d-a63d-84f1b87cc26e",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -4596,9 +4352,6 @@
 							"graphql": {
 								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\":{{count}},\r\n    \"page1\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -4619,7 +4372,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "f71112e1-7b43-4cb5-849b-99939b23e180",
 								"exec": [
 									""
 								],
@@ -4629,7 +4381,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "893256f4-26e8-4103-9c54-defd9121fe62",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -4676,9 +4427,6 @@
 							"graphql": {
 								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\":{{count}},\r\n    \"page\": {{page}},\r\n    \"sort1\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -4699,7 +4447,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "4c857899-a2dd-46ef-86b7-44638240b847",
 								"exec": [
 									""
 								],
@@ -4709,7 +4456,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "c9c9f40e-85da-48c5-8067-e514aa87f969",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -4756,9 +4502,6 @@
 							"graphql": {
 								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{count}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order1\": \"{{order}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -4779,7 +4522,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "b9a02b12-daee-45a8-999b-3e7fb617712d",
 								"exec": [
 									""
 								],
@@ -4789,7 +4531,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "1bea2512-6576-4b1c-98b3-e2011b7e912e",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -4840,9 +4581,6 @@
 							"graphql": {
 								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": 0,\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -4863,7 +4601,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "d1eec4ab-c30e-4fa0-bbfb-bd3b419105e4",
 								"exec": [
 									""
 								],
@@ -4873,7 +4610,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "0b418e15-d0e8-42fa-9045-48b5bc8ff9fc",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -4924,9 +4660,6 @@
 							"graphql": {
 								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": 159,\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -4947,7 +4680,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "e08c6be3-0081-4963-afd7-2c2a0a634f37",
 								"exec": [
 									""
 								],
@@ -4957,7 +4689,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "1cc28931-7288-420b-89b1-a1e0ed3dea3c",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -5008,9 +4739,6 @@
 							"graphql": {
 								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{count}},\r\n        \"page\": 0,\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -5031,7 +4759,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "17e52f14-216c-447c-8fc3-8a31deeb5c92",
 								"exec": [
 									""
 								],
@@ -5041,7 +4768,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "efa9734e-95cf-4ee8-bbed-ec0edfbf7e09",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -5087,9 +4813,6 @@
 							"graphql": {
 								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{count}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"QWERTYU\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -5110,7 +4833,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "9903c67d-543f-40f3-bc28-74be5c80185a",
 								"exec": [
 									""
 								],
@@ -5120,7 +4842,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "e282c8a9-d619-4d42-a79e-42a3beb42ceb",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -5167,9 +4888,6 @@
 							"graphql": {
 								"query": "query stories($input: StoryListInput!) {\r\n  stories(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{count}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"11 #$%% ^&*\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -5190,7 +4908,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "2959c192-8519-4798-b924-e1c9398fe1cb",
 								"exec": [
 									""
 								],
@@ -5200,7 +4917,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "69b2512f-853f-483b-8a2a-536be02cfcec",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -5241,9 +4957,6 @@
 							"graphql": {
 								"query": "mutation deleteStory($id: ID!) {\r\n  deleteStory(id: $id)\r\n}\r\n",
 								"variables": "{\r\n  \"id\": \"{{storyId}}\"\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -5264,7 +4977,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "641f8d51-440b-4fb6-94cc-967bf47507d9",
 								"exec": [
 									""
 								],
@@ -5274,7 +4986,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "0d70d5b9-5c31-4559-969c-bac68440edce",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -5325,9 +5036,6 @@
 							"graphql": {
 								"query": "mutation deleteStory($id: ID!) {\r\n  deleteStory(id: $id)\r\n}\r\n",
 								"variables": "{\r\n  \"id\": \"\"\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -5348,7 +5056,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "b39cd357-890d-4bf3-9b37-a5fef77c5265",
 								"exec": [
 									""
 								],
@@ -5358,7 +5065,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "ea7ebcee-ec59-4e9f-920d-c67db1344c03",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -5405,9 +5111,6 @@
 							"graphql": {
 								"query": "mutation deleteStory($id: ID!) {\r\n  deleteStory(id: $id)\r\n}\r\n",
 								"variables": "{\r\n  \r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -5428,7 +5131,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "0e88c304-15d9-4efb-8bd0-f1462e604490",
 								"exec": [
 									""
 								],
@@ -5438,7 +5140,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "390ea5ac-8981-4cf3-a11d-adce3deafa6f",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -5485,9 +5186,6 @@
 							"graphql": {
 								"query": "mutation deleteStory($id: ID!) {\r\n  deleteStory(id: $id)\r\n}\r\n",
 								"variables": "{\r\n  \"id1\": \"{{storyId}}\"\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -5508,7 +5206,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "9548c16d-620b-4864-a9d6-68abf600c2b1",
 								"exec": [
 									""
 								],
@@ -5518,7 +5215,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "f486fbdf-2a54-42ac-b826-6119d0e7ec92",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -5569,9 +5265,6 @@
 							"graphql": {
 								"query": "mutation deleteStory($id: ID!) {\r\n  deleteStory(id: $id)\r\n}\r\n",
 								"variables": "{\r\n  \"id\": \"!@#$%^&*\"\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -5592,7 +5285,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "ea7b5d18-508d-4451-96c1-0ac814e8e4bb",
 								"exec": [
 									""
 								],
@@ -5602,7 +5294,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "b6488e79-2b43-4cbb-89cd-e9c1ddc09914",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -5648,9 +5339,6 @@
 							"graphql": {
 								"query": "mutation deleteStory($id: ID!) {\r\n  deleteStory(id: $id)\r\n}\r\n",
 								"variables": "{\r\n  \"id\": \"{{storyId}}\"\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -5665,9 +5353,7 @@
 					},
 					"response": []
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		}
-	],
-	"protocolProfileBehavior": {}
+	]
 }

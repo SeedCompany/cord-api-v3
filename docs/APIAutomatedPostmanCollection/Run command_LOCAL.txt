@@ -10,6 +10,10 @@ newman run Cord_API_V3_Organization.postman_collection.json -e local.postman_env
 >> Project
 newman run Cord_API_V3_Project.postman_collection.json -e local.postman_environment.json -g MyWorkspace.postman_globals.json -r htmlextra --delay-request 1000
 
+newman run Cord_API_V3_Project.postman_collection.json -e local.postman_environment.json -g MyWorkspace.postman_globals.json -r html --delay-request 1000
+
+newman run Cord_API_V3_Project.postman_collection.json -e local.postman_environment.json -g MyWorkspace.postman_globals.json -r htmlextra --delay-request 1000 --folder ProPre --folder ProjectCopy
+
 >> Partnership
 newman run Cord_API_V3_Partnership.postman_collection.json -e local.postman_environment.json -g MyWorkspace.postman_globals.json -r htmlextra --delay-request 1000
 

@@ -14,7 +14,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "41838f6d-9098-4991-9136-73bbad32a2d8",
 								"exec": [
 									"var response = pm.response.json();\r",
 									"pm.globals.set(\"token\", response.data.session.token);"
@@ -34,9 +33,6 @@
 							"graphql": {
 								"query": "# Write your query or mutation here\r\nquery {\r\n  session(browser: false) {\r\n    user {\r\n      id,\r\n      email\r\n      {\r\n        value\r\n      }\r\n      realFirstName\r\n      {\r\n        value\r\n      }\r\n      createdAt\r\n      canDelete\r\n      displayLastName\r\n      {\r\n         value\r\n      }\r\n      \r\n      \r\n      \r\n    },\r\n    token\r\n  }\r\n}",
 								"variables": ""
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -57,7 +53,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "ba2976aa-f6c3-47e7-b575-f1982a3f415e",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -82,7 +77,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "6075fdad-e064-4ca9-85a5-c1616bef3c2d",
 								"exec": [
 									"const moment = require('moment');\r",
 									"pm.globals.set(\"timestamp\", moment().format(\"DDMYYYYhhmmss\"));\r",
@@ -155,11 +149,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation register($input: RegisterInput!) {\r\n  register(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      canDelete\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n    \"input\": {\r\n        \"realFirstName\": \"Piyush\",\r\n        \"realLastName\": \"Patel\",\r\n        \"email\": \"{{login_email}}\",\r\n        \"password\": \"{{login_password}}\",\r\n        \"displayFirstName\": \"{{displayFirstName}}\",\r\n        \"displayLastName\": \"{{displayLastName}}\",\r\n        \"phone\": \"{{phone}}\",\r\n        \"timezone\": \"{{timezone}}\",\r\n        \"status\": \"{{userStatus}}\",\r\n        \"title\": \"{{userTitle}}\",\r\n        \"roles\": \"{{userRoles}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
+								"query": "mutation register($input: RegisterInput!) {\r\n  register(input: $input) {\r\n    powers\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      canDelete\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n         # canDelete\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n      }\r\n      organizations {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          avatarLetters\r\n          name {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          address {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          locations {\r\n            total\r\n            hasMore\r\n            canRead\r\n            canCreate\r\n            items {\r\n              id\r\n              createdAt\r\n              canDelete\r\n              name {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n              type {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n\r\n              isoAlpha3 {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n              fundingAccount {\r\n                value {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  name {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  accountNumber {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                }\r\n                canEdit\r\n                canRead\r\n              }\r\n              isoCountry {\r\n                country\r\n                alpha2\r\n                alpha3\r\n                numeric\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      partners {\r\n        total\r\n        hasMore\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          modifiedAt\r\n          types {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          financialReportingTypes {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          pmcEntityCode {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          globalInnovationsClient {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          active {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          address {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          organization {\r\n            value {\r\n              id\r\n              createdAt\r\n              canDelete\r\n              avatarLetters\r\n              name {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              address {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              locations {\r\n                total\r\n                hasMore\r\n                canRead\r\n                canCreate\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  name {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  type {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n\r\n                  isoAlpha3 {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  fundingAccount {\r\n                    value {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      name {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      accountNumber {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                    }\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  isoCountry {\r\n                    country\r\n                    alpha2\r\n                    alpha3\r\n                    numeric\r\n                  }\r\n                }\r\n              }\r\n            }\r\n            canEdit\r\n            canRead\r\n          }\r\n          pointOfContact {\r\n            value {\r\n              id\r\n              fullName\r\n              firstName\r\n              avatarLetters\r\n              createdAt\r\n              email {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              realFirstName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              realLastName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              displayFirstName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              displayLastName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              phone {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              about {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              status {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              title {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              roles {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              timezone {\r\n                canRead\r\n                canEdit\r\n                value {\r\n                  name\r\n                  lat\r\n                  long\r\n                  countries {\r\n                    code\r\n                    name\r\n                    zones {\r\n                      name\r\n                      lat\r\n                      long\r\n                      countries {\r\n                        code\r\n                      }\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              unavailabilities {\r\n                total\r\n                hasMore\r\n                canCreate\r\n                canRead\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  #canDelete\r\n                  start\r\n                  end\r\n                  description {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                }\r\n              }\r\n              organizations {\r\n                total\r\n                hasMore\r\n                canCreate\r\n                canRead\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  avatarLetters\r\n                  name {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  address {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  locations {\r\n                    total\r\n                    hasMore\r\n                    canRead\r\n                    canCreate\r\n                    items {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      name {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      type {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n\r\n                      isoAlpha3 {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      fundingAccount {\r\n                        value {\r\n                          id\r\n                          createdAt\r\n                          canDelete\r\n                          name {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          accountNumber {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                        }\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      isoCountry {\r\n                        country\r\n                        alpha2\r\n                        alpha3\r\n                        numeric\r\n                      }\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              education {\r\n                canRead\r\n                total\r\n                hasMore\r\n                canCreate\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  degree {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  major {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  institution {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                }\r\n              }\r\n              partners {\r\n                canCreate\r\n                canRead\r\n                hasMore\r\n                total\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  modifiedAt\r\n                  types {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  financialReportingTypes {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  pmcEntityCode {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  globalInnovationsClient {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  active {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  address {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  organization {\r\n                    value {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      avatarLetters\r\n                      name {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      address {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      locations {\r\n                        total\r\n                        hasMore\r\n                        canRead\r\n                        canCreate\r\n                        items {\r\n                          id\r\n                          createdAt\r\n                          canDelete\r\n                          name {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          type {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n\r\n                          isoAlpha3 {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          fundingAccount {\r\n                            value {\r\n                              id\r\n                              createdAt\r\n                              canDelete\r\n                              name {\r\n                                value\r\n                                canEdit\r\n                                canRead\r\n                              }\r\n                              accountNumber {\r\n                                value\r\n                                canEdit\r\n                                canRead\r\n                              }\r\n                            }\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          isoCountry {\r\n                            country\r\n                            alpha2\r\n                            alpha3\r\n                            numeric\r\n                          }\r\n                        }\r\n                      }\r\n                    }\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  pointOfContact {\r\n                    canEdit\r\n                    canRead\r\n                    value {\r\n                      id\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              locations {\r\n                canRead\r\n                total\r\n                hasMore\r\n                canCreate\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n\r\n                  name {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  type {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  isoAlpha3 {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  isoCountry {\r\n                    country\r\n                    alpha2\r\n                    alpha3\r\n                    numeric\r\n                  }\r\n                  fundingAccount {\r\n                    value {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      name {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      accountNumber {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                    }\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                }\r\n              }\r\n              knownLanguages {\r\n                proficiency\r\n                language {\r\n                  id\r\n                }\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      education {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          degree {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          major {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          institution {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n      }\r\n      locations {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          type {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          isoAlpha3 {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          isoCountry {\r\n            country\r\n            alpha2\r\n            alpha3\r\n            numeric\r\n          }\r\n          fundingAccount {\r\n            value {\r\n              id\r\n              createdAt\r\n              canDelete\r\n              name {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n              accountNumber {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n            }\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n      }\r\n      knownLanguages {\r\n        proficiency\r\n        language {\r\n          id\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"realFirstName\": \"Piyush\",\r\n        \"realLastName\": \"Patel\",\r\n        \"email\": \"{{login_email}}\",\r\n        \"password\": \"{{login_password}}\",\r\n        \"displayFirstName\": \"{{displayFirstName}}\",\r\n        \"displayLastName\": \"{{displayLastName}}\",\r\n        \"phone\": \"{{phone}}\",\r\n        \"timezone\": \"{{timezone}}\",\r\n        \"status\": \"{{userStatus}}\",\r\n        \"title\": \"{{userTitle}}\",\r\n        \"about\": \"{{about}}\",\r\n        \"roles\": \"{{userRoles}}\"\r\n    }\r\n}"
 							}
 						},
 						"url": {
@@ -180,7 +171,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "7ff21945-3047-4294-a0e7-7c4d35020359",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -197,7 +187,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "5f05966c-ff80-48d1-83f4-248f55ba6ec8",
 								"exec": [
 									""
 								],
@@ -221,11 +210,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      canDelete\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    powers\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      canDelete\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          #canDelete\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n      }\r\n      organizations {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          avatarLetters\r\n          name {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          address {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          locations {\r\n            total\r\n            hasMore\r\n            canRead\r\n            canCreate\r\n            items {\r\n              id\r\n              createdAt\r\n              canDelete\r\n              name {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n              type {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n\r\n              isoAlpha3 {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n              fundingAccount {\r\n                value {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  name {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  accountNumber {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                }\r\n                canEdit\r\n                canRead\r\n              }\r\n              isoCountry {\r\n                country\r\n                alpha2\r\n                alpha3\r\n                numeric\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      partners {\r\n        total\r\n        hasMore\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          modifiedAt\r\n          types {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          financialReportingTypes {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          pmcEntityCode {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          globalInnovationsClient {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          active {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          address {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          organization {\r\n            value {\r\n              id\r\n              createdAt\r\n              canDelete\r\n              avatarLetters\r\n              name {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              address {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              locations {\r\n                total\r\n                hasMore\r\n                canRead\r\n                canCreate\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  name {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  type {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n\r\n                  isoAlpha3 {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  fundingAccount {\r\n                    value {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      name {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      accountNumber {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                    }\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  isoCountry {\r\n                    country\r\n                    alpha2\r\n                    alpha3\r\n                    numeric\r\n                  }\r\n                }\r\n              }\r\n            }\r\n            canEdit\r\n            canRead\r\n          }\r\n          pointOfContact {\r\n            value {\r\n              id\r\n              fullName\r\n              firstName\r\n              avatarLetters\r\n              createdAt\r\n              email {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              realFirstName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              realLastName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              displayFirstName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              displayLastName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              phone {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              about {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              status {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              title {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              roles {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              timezone {\r\n                canRead\r\n                canEdit\r\n                value {\r\n                  name\r\n                  lat\r\n                  long\r\n                  countries {\r\n                    code\r\n                    name\r\n                    zones {\r\n                      name\r\n                      lat\r\n                      long\r\n                      countries {\r\n                        code\r\n                      }\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              unavailabilities {\r\n                total\r\n                hasMore\r\n                canCreate\r\n                canRead\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  #canDelete\r\n                  start\r\n                  end\r\n                  description {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                }\r\n              }\r\n              organizations {\r\n                total\r\n                hasMore\r\n                canCreate\r\n                canRead\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  avatarLetters\r\n                  name {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  address {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  locations {\r\n                    total\r\n                    hasMore\r\n                    canRead\r\n                    canCreate\r\n                    items {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      name {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      type {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n\r\n                      isoAlpha3 {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      fundingAccount {\r\n                        value {\r\n                          id\r\n                          createdAt\r\n                          canDelete\r\n                          name {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          accountNumber {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                        }\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      isoCountry {\r\n                        country\r\n                        alpha2\r\n                        alpha3\r\n                        numeric\r\n                      }\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              education {\r\n                canRead\r\n                total\r\n                hasMore\r\n                canCreate\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  degree {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  major {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  institution {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                }\r\n              }\r\n              partners {\r\n                canCreate\r\n                canRead\r\n                hasMore\r\n                total\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  modifiedAt\r\n                  types {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  financialReportingTypes {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  pmcEntityCode {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  globalInnovationsClient {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  active {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  address {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  organization {\r\n                    value {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      avatarLetters\r\n                      name {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      address {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      locations {\r\n                        total\r\n                        hasMore\r\n                        canRead\r\n                        canCreate\r\n                        items {\r\n                          id\r\n                          createdAt\r\n                          canDelete\r\n                          name {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          type {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n\r\n                          isoAlpha3 {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          fundingAccount {\r\n                            value {\r\n                              id\r\n                              createdAt\r\n                              canDelete\r\n                              name {\r\n                                value\r\n                                canEdit\r\n                                canRead\r\n                              }\r\n                              accountNumber {\r\n                                value\r\n                                canEdit\r\n                                canRead\r\n                              }\r\n                            }\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          isoCountry {\r\n                            country\r\n                            alpha2\r\n                            alpha3\r\n                            numeric\r\n                          }\r\n                        }\r\n                      }\r\n                    }\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  pointOfContact {\r\n                    canEdit\r\n                    canRead\r\n                    value {\r\n                      id\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              locations {\r\n                canRead\r\n                total\r\n                hasMore\r\n                canCreate\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n\r\n                  name {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  type {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  isoAlpha3 {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  isoCountry {\r\n                    country\r\n                    alpha2\r\n                    alpha3\r\n                    numeric\r\n                  }\r\n                  fundingAccount {\r\n                    value {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      name {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      accountNumber {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                    }\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                }\r\n              }\r\n              knownLanguages {\r\n                proficiency\r\n                language {\r\n                  id\r\n                }\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      education {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          degree {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          major {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          institution {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n      }\r\n      locations {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          type {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          isoAlpha3 {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          isoCountry {\r\n            country\r\n            alpha2\r\n            alpha3\r\n            numeric\r\n          }\r\n          fundingAccount {\r\n            value {\r\n              id\r\n              createdAt\r\n              canDelete\r\n              name {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n              accountNumber {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n            }\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n      }\r\n      knownLanguages {\r\n        proficiency\r\n        language {\r\n          id\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n   \"input\": {\r\n      \"email\": \"{{login_email}}\",\r\n      \"password\": \"{{login_password}}\"\r\n   }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -240,8 +226,7 @@
 					},
 					"response": []
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "Song",
@@ -252,7 +237,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "83a3977e-8576-44f3-a153-49260ed3b955",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"const moment = require('moment');",
@@ -352,7 +336,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "90aed534-2747-42fb-838b-88524521ac46",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -406,9 +389,6 @@
 							"graphql": {
 								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      canDelete\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"song\": {\r\n            \"name\": \"{{songName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{songScriptRefBookStart}}\",\r\n                    \"chapter\": {{songScriptRefChapterStart}},\r\n                    \"verse\": {{songScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{songScriptRefBookEnd}}\",\r\n                    \"chapter\": {{songScriptRefChapterEnd}},\r\n                    \"verse\": {{songScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -429,7 +409,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "e1227868-1d8b-4eab-b804-cd65b46756bb",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"const moment = require('moment');",
@@ -531,7 +510,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "961b6b3f-6c5b-416b-afa7-1e6f7254992c",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -585,9 +563,6 @@
 							"graphql": {
 								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"song\": {\r\n            \"name\": \"{{songName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{songScriptRefBookStart}}\",\r\n                    \"chapter\": {{songScriptRefChapterStart}},\r\n                    \"verse\": {{songScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{songScriptRefBookEnd}}\",\r\n                    \"chapter\": {{songScriptRefChapterEnd}},\r\n                    \"verse\": {{songScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -608,7 +583,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "54d93f9e-54da-49b4-bfc1-2c7563d55ad3",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -643,7 +617,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "46b79fb5-91d1-4663-8002-6129245ec952",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -671,9 +644,6 @@
 							"graphql": {
 								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"name\": \"\"\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -694,7 +664,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "2feb819c-7eae-4f70-816d-059d6c131b12",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -725,7 +694,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "2d73f4b7-54ba-4881-9de3-640490b797fc",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -753,9 +721,6 @@
 							"graphql": {
 								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {}\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -776,7 +741,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "6dee7b3c-fbfd-456f-ab85-02b65e638a7b",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -812,7 +776,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "a4cd9c4e-2f2b-4cfc-a35c-6787a2f87f77",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -840,9 +803,6 @@
 							"graphql": {
 								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"name\": \"{{songName}}\"\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -863,7 +823,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "2998b20a-bbe8-42aa-9884-b3daf06b4333",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -894,7 +853,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "a4106f94-f899-4426-b74f-cfa7988a4916",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -922,9 +880,6 @@
 							"graphql": {
 								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"name1\": \"{{songName}}\"\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -945,7 +900,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "44b46367-b7e4-4920-8b63-912e03bee954",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -976,7 +930,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "b159a966-f7be-4a7f-aff4-68071ab3f43d",
 								"exec": [
 									""
 								],
@@ -1002,9 +955,6 @@
 							"graphql": {
 								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"name\": \"{{songName}}\",\r\n      \"scriptureReferences1\": {\r\n        \"start\": {\r\n          \"book\": \"{{songScriptRefBookStart}}\",\r\n          \"chapter\": {{songScriptRefChapterStart}},\r\n          \"verse\": {{songScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{songScriptRefBookEnd}}\",\r\n          \"chapter\": {{songScriptRefChapterEnd}},\r\n          \"verse\": {{songScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1025,7 +975,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "a340f250-f8d0-4a29-9c41-8c330d879086",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -1056,7 +1005,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "85c44144-dd9c-45e3-ac61-b1484e66c275",
 								"exec": [
 									""
 								],
@@ -1082,9 +1030,6 @@
 							"graphql": {
 								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"name\": \"{{songName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start1\": {\r\n          \"book\": \"{{songScriptRefBookStart}}\",\r\n          \"chapter\": {{songScriptRefChapterStart}},\r\n          \"verse\": {{songScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{songScriptRefBookEnd}}\",\r\n          \"chapter\": {{songScriptRefChapterEnd}},\r\n          \"verse\": {{songScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1105,7 +1050,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "03194dfa-bf26-4bf8-b384-ed19e5ff7efd",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -1136,7 +1080,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "d934be9c-3733-4669-8180-978922fd4df3",
 								"exec": [
 									""
 								],
@@ -1162,9 +1105,6 @@
 							"graphql": {
 								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"name\": \"{{songName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book1\": \"{{songScriptRefBookStart}}\",\r\n          \"chapter\": {{songScriptRefChapterStart}},\r\n          \"verse\": {{songScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{songScriptRefBookEnd}}\",\r\n          \"chapter\": {{songScriptRefChapterEnd}},\r\n          \"verse\": {{songScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1185,7 +1125,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "768522b2-d762-446d-af8c-e7808d51490c",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -1216,7 +1155,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "27a2a438-2c38-41f4-b2dd-d0899c0220ba",
 								"exec": [
 									""
 								],
@@ -1242,9 +1180,6 @@
 							"graphql": {
 								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"name\": \"{{songName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{songScriptRefBookStart}}\",\r\n          \"chapter1\": {{songScriptRefChapterStart}},\r\n          \"verse\": {{songScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{songScriptRefBookEnd}}\",\r\n          \"chapter\": {{songScriptRefChapterEnd}},\r\n          \"verse\": {{songScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1265,7 +1200,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "caa3ae91-f595-444f-9c6d-77991cb4b1a8",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -1296,7 +1230,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "99630a4f-cd0a-47c9-bd18-6e8bcc608455",
 								"exec": [
 									""
 								],
@@ -1322,9 +1255,6 @@
 							"graphql": {
 								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"name\": \"{{songName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{songScriptRefBookStart}}\",\r\n          \"chapter\": {{songScriptRefChapterStart}},\r\n          \"verse1\": {{songScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{songScriptRefBookEnd}}\",\r\n          \"chapter\": {{songScriptRefChapterEnd}},\r\n          \"verse\": {{songScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1345,7 +1275,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "453a8d3f-c542-4cf5-9406-9027f8378093",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -1376,7 +1305,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "8621adf2-2f7a-42bd-ad12-e500d4ac67ed",
 								"exec": [
 									""
 								],
@@ -1402,9 +1330,6 @@
 							"graphql": {
 								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"name\": \"{{songName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{songScriptRefBookStart}}\",\r\n          \"chapter\": {{songScriptRefChapterStart}},\r\n          \"verse\": {{songScriptRefVerseStart}}\r\n        },\r\n        \"end1\": {\r\n          \"book\": \"{{songScriptRefBookEnd}}\",\r\n          \"chapter\": {{songScriptRefChapterEnd}},\r\n          \"verse\": {{songScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1425,7 +1350,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "dcf675e5-0f46-4e09-9c97-2df5c52f831d",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -1456,7 +1380,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "db6a8531-c394-4f72-9e97-2bdbe24af5d5",
 								"exec": [
 									""
 								],
@@ -1482,9 +1405,6 @@
 							"graphql": {
 								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"name\": \"{{songName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{songScriptRefBookStart}}\",\r\n          \"chapter\": {{songScriptRefChapterStart}},\r\n          \"verse\": {{songScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book1\": \"{{songScriptRefBookEnd}}\",\r\n          \"chapter\": {{songScriptRefChapterEnd}},\r\n          \"verse\": {{songScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1505,7 +1425,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "232aa46b-6ff3-4203-95f4-06ae3453ceb1",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -1536,7 +1455,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "57e184bc-ee5f-4baa-b09e-5011d0080570",
 								"exec": [
 									""
 								],
@@ -1562,9 +1480,6 @@
 							"graphql": {
 								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"name\": \"{{songName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{songScriptRefBookStart}}\",\r\n          \"chapter\": {{songScriptRefChapterStart}},\r\n          \"verse\": {{songScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{songScriptRefBookEnd}}\",\r\n          \"chapter1\": {{songScriptRefChapterEnd}},\r\n          \"verse\": {{songScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1585,7 +1500,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "3ab7d10a-3cf9-45a0-9732-aab66d5238e1",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -1616,7 +1530,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "1aea3335-e882-4edd-b23e-ae1265fa19bc",
 								"exec": [
 									""
 								],
@@ -1642,9 +1555,6 @@
 							"graphql": {
 								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"name\": \"{{songName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{songScriptRefBookStart}}\",\r\n          \"chapter\": {{songScriptRefChapterStart}},\r\n          \"verse\": {{songScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{songScriptRefBookEnd}}\",\r\n          \"chapter\": {{songScriptRefChapterEnd}},\r\n          \"verse1\": {{songScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1665,7 +1575,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "b6f3ad56-7cd4-4756-b705-cdb7bf09d757",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -1685,7 +1594,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "70c2e8aa-cc71-4648-acd5-770ca1d3a0ba",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -1739,9 +1647,6 @@
 							"graphql": {
 								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"song\": {\r\n            \"name\": \"{{songName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{songScriptRefBookStart}}\",\r\n                    \"chapter\": {{songScriptRefChapterStart}},\r\n                    \"verse\": {{songScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{songScriptRefBookEnd}}\",\r\n                    \"chapter\": {{songScriptRefChapterEnd}},\r\n                    \"verse\": {{songScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1762,7 +1667,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "a9ec5372-f2e3-4b80-963c-809aa54b0307",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"var song_data = JSON.parse(pm.variables.get(\"song_data\"));",
@@ -1863,7 +1767,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "4c872c66-d868-4fd2-a002-bff6a2fdd8fe",
 								"exec": [
 									""
 								],
@@ -1889,9 +1792,6 @@
 							"graphql": {
 								"query": "query song($id: ID!) {\r\n  song(id: $id) {\r\n    id\r\n    createdAt\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"id\": \"{{songId}}\"\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1912,7 +1812,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "2b57ae72-315a-41be-86c8-80d9a0d2d97e",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -1947,7 +1846,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "4c197902-7602-4e72-8675-06ba2370fd72",
 								"exec": [
 									""
 								],
@@ -1973,9 +1871,6 @@
 							"graphql": {
 								"query": "query song($id: ID!) {\r\n  song(id: $id) {\r\n    id\r\n    createdAt\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"id\": \"\"\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1996,7 +1891,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "4db40a79-0122-4dab-9317-2d21d756ec72",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -2027,7 +1921,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "16cce0b9-ac5d-40ec-8f00-589e6e8ad4f0",
 								"exec": [
 									""
 								],
@@ -2053,9 +1946,6 @@
 							"graphql": {
 								"query": "query song($id: ID!) {\r\n  song(id: $id) {\r\n    id\r\n    createdAt\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -2076,7 +1966,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "c9c5e54f-50f0-4e4a-a8f1-ad0e21a8ac0e",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -2107,7 +1996,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "cabaa301-4167-4297-86df-ceb8b2c1dca7",
 								"exec": [
 									""
 								],
@@ -2133,9 +2021,6 @@
 							"graphql": {
 								"query": "query song($id: ID!) {\r\n  song(id: $id) {\r\n    id\r\n    createdAt\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"id1\": \"{{songId}}\"\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -2156,7 +2041,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "9085aded-40d5-4118-a6c5-7e36f4a1fef7",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -2191,7 +2075,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "e87caf04-3333-4a8c-8948-a36ede29afcf",
 								"exec": [
 									""
 								],
@@ -2217,9 +2100,6 @@
 							"graphql": {
 								"query": "query song($id: ID!) {\r\n  song(id: $id) {\r\n    id\r\n    createdAt\r\n    name {\r\n      value\r\n      canEdit\r\n      canRead\r\n    }\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"id\": \"!@#$%^&\"\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -2240,7 +2120,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "963d7459-14cb-4369-a1f4-bf3189f45702",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"var song_data = JSON.parse(pm.variables.get(\"song_data\"));",
@@ -2342,7 +2221,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "1f57bf3c-28e1-41f5-bd43-8a9a1afb8305",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -2393,9 +2271,6 @@
 							"graphql": {
 								"query": "mutation updateSong($input: UpdateSongInput!) {\r\n  updateSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"song\": {\r\n            \"id\": \"{{songId}}\",\r\n            \"name\": \"{{songName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{songScriptRefBookStart}}\",\r\n                    \"chapter\": {{songScriptRefChapterStart}},\r\n                    \"verse\": {{songScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{songScriptRefBookEnd}}\",\r\n                    \"chapter\": {{songScriptRefChapterEnd}},\r\n                    \"verse\": {{songScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -2416,7 +2291,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "c40ad48b-d4f8-467c-b991-878ccf37e268",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"var song_data = JSON.parse(pm.variables.get(\"song_data\"));",
@@ -2515,7 +2389,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "dd65eb62-bb96-47df-9c55-0a0dcd14b3cd",
 								"exec": [
 									""
 								],
@@ -2541,9 +2414,6 @@
 							"graphql": {
 								"query": "mutation updateSong($input: UpdateSongInput!) {\r\n  updateSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"id\": \"{{songId}}\"\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -2564,7 +2434,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "aaab5d87-d0a2-4c4b-ba03-a751a5ea60c5",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -2594,7 +2463,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "08c46d98-efeb-4cf9-9d45-ec25cb9679a6",
 								"exec": [
 									""
 								],
@@ -2620,9 +2488,6 @@
 							"graphql": {
 								"query": "mutation updateSong($input: UpdateSongInput!) {\r\n  updateSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"name\": \"{{songName}}\"\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -2643,7 +2508,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "5eab825b-011c-4db8-9f83-8f68768c64d1",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -2678,7 +2542,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "97ff9ea1-805a-4de5-8fa8-1cc3c9a1ee1b",
 								"exec": [
 									""
 								],
@@ -2704,9 +2567,6 @@
 							"graphql": {
 								"query": "mutation updateSong($input: UpdateSongInput!) {\r\n  updateSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"id\": \"\",\r\n      \"name\": \"aaaa\"\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -2727,7 +2587,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "fc046e70-f3c4-468c-be0f-2415f635755d",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -2761,7 +2620,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "159d7096-3420-4ba3-b775-9e5f46099657",
 								"exec": [
 									""
 								],
@@ -2787,9 +2645,6 @@
 							"graphql": {
 								"query": "mutation updateSong($input: UpdateSongInput!) {\r\n  updateSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"id\": \"{{songId}}\"\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -2810,7 +2665,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "d13588f6-cafd-4b55-9fad-ee8e7f00cfdd",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -2845,7 +2699,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "4e609877-3a03-4793-8d72-17535974e375",
 								"exec": [
 									""
 								],
@@ -2871,9 +2724,6 @@
 							"graphql": {
 								"query": "mutation updateSong($input: UpdateSongInput!) {\r\n  updateSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"id\": \"{{songId}}\",\r\n      \"name\": \"\"\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -2894,7 +2744,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "bf9ee97e-f574-4fb3-823d-b572a3e6dc62",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -2925,7 +2774,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "aa3cfcee-aa24-40c2-9169-ca542c07a25a",
 								"exec": [
 									""
 								],
@@ -2951,9 +2799,6 @@
 							"graphql": {
 								"query": "mutation updateSong($input: UpdateSongInput!) {\r\n  updateSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"id1\": \"{{songId}}\",\r\n      \"name\": \"{{songName}}\"\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -2974,7 +2819,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "9133f7ed-bb10-4168-9e2e-23cf0752144b",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -3005,7 +2849,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "fe1bfeac-4bed-4d08-b690-f5e0e3d3eec2",
 								"exec": [
 									""
 								],
@@ -3031,9 +2874,6 @@
 							"graphql": {
 								"query": "mutation updateSong($input: UpdateSongInput!) {\r\n  updateSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"id\": \"{{songId}}\",\r\n      \"name1\": \"{{songName}}\"\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -3054,7 +2894,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "a4c765f2-bfbc-4498-ac57-b3f516014163",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -3090,7 +2929,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "49ba2619-3bc6-4d50-8a43-2fd4e5648eec",
 								"exec": [
 									""
 								],
@@ -3116,9 +2954,6 @@
 							"graphql": {
 								"query": "mutation updateSong($input: UpdateSongInput!) {\r\n  updateSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"id\": \"!@#$%^&\",\r\n      \"name\": \"{{songName}}\"\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -3139,7 +2974,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "d8f57898-b3b9-4a39-b7e5-0f688da43775",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -3159,7 +2993,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "15e46e3a-0098-4748-8c25-72decf08cf0a",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -3213,9 +3046,6 @@
 							"graphql": {
 								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"song\": {\r\n            \"name\": \"{{songName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{songScriptRefBookStart}}\",\r\n                    \"chapter\": {{songScriptRefChapterStart}},\r\n                    \"verse\": {{songScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{songScriptRefBookEnd}}\",\r\n                    \"chapter\": {{songScriptRefChapterEnd}},\r\n                    \"verse\": {{songScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -3236,7 +3066,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "aec10e37-027a-4832-91cf-ea9d1e912edc",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"var lodash = require('lodash');",
@@ -3314,7 +3143,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "e246a15d-4e31-45ff-9df4-9fa573f259f8",
 								"exec": [
 									"pm.globals.set(\"itemCount\", 25);\r",
 									"pm.globals.set(\"page\", 1);\r",
@@ -3342,9 +3170,6 @@
 							"graphql": {
 								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": \r\n  {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -3365,7 +3190,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "2e1bbf85-4bee-4e6b-92af-93ea8c9ea36f",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"var song_data = JSON.parse(pm.variables.get(\"song_data\")); // Get stored song object",
@@ -3481,7 +3305,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "5047bd72-03de-45ac-b4a9-047a94b98006",
 								"exec": [
 									"pm.globals.set(\"itemCount\", 25);\r",
 									"// Page is set from previous request test script based on total\r",
@@ -3509,9 +3332,6 @@
 							"graphql": {
 								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -3532,7 +3352,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "13e4d272-048c-4b72-83b8-1428cc2b8600",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -3557,7 +3376,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "80b3043f-1ec5-4226-bc26-dcd8bda23cd6",
 								"exec": [
 									"pm.globals.set(\"itemCount\", 25);\r",
 									"pm.globals.set(\"page\", 1);\r",
@@ -3585,9 +3403,6 @@
 							"graphql": {
 								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -3608,7 +3423,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "31324004-cfff-4755-9eaf-d8bda83b7ec8",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -3639,7 +3453,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "da7b4163-50bd-4392-be1a-ae9d01fae508",
 								"exec": [
 									"pm.globals.set(\"itemCount\", 25);\r",
 									"pm.globals.set(\"page\", 1);\r",
@@ -3667,9 +3480,6 @@
 							"graphql": {
 								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -3690,7 +3500,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "662869be-0f70-4873-9eb6-b071eabb8b75",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -3726,7 +3535,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "7df576bd-5d3d-4e1a-a3a2-7dc401996099",
 								"exec": [
 									"pm.globals.set(\"itemCount\", 25);\r",
 									"pm.globals.set(\"page\", 1);\r",
@@ -3754,9 +3562,6 @@
 							"graphql": {
 								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -3777,7 +3582,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "5c298093-2ea4-43fd-ba59-1e6c4bfeb93a",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -3814,7 +3618,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "bfd7a2e3-b822-44d8-bfbb-2ded74b87aa2",
 								"exec": [
 									"pm.globals.set(\"itemCount\", 25);\r",
 									"pm.globals.set(\"page\", 1);\r",
@@ -3842,9 +3645,6 @@
 							"graphql": {
 								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -3865,7 +3665,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "77aa1e50-161e-44f3-9bf6-972f8ea4ce7b",
 								"exec": [
 									""
 								],
@@ -3875,7 +3674,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "4023afaf-8044-4a7a-877d-ba6f7f51f7a2",
 								"exec": [
 									"const moment = require('moment');\r",
 									"pm.globals.set(\"timestamp\", moment().format(\"DDMMYYYYhhmmss\"));\r",
@@ -3929,9 +3727,6 @@
 							"graphql": {
 								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"song\": {\r\n            \"name\": \"{{songName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{songScriptRefBookStart}}\",\r\n                    \"chapter\": {{songScriptRefChapterStart}},\r\n                    \"verse\": {{songScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{songScriptRefBookEnd}}\",\r\n                    \"chapter\": {{songScriptRefChapterEnd}},\r\n                    \"verse\": {{songScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -3952,7 +3747,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "03ee2b5b-1171-4c30-bc1b-d8c65d6b3363",
 								"exec": [
 									""
 								],
@@ -3962,7 +3756,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "cd07fb46-7bd2-47cf-9a52-466b4f795cbf",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -4014,9 +3807,6 @@
 							"graphql": {
 								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"song\": {\r\n            \"name\": \"{{songName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{songScriptRefBookStart}}\",\r\n                    \"chapter\": {{songScriptRefChapterStart}},\r\n                    \"verse\": {{songScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{songScriptRefBookEnd}}\",\r\n                    \"chapter\": {{songScriptRefChapterEnd}},\r\n                    \"verse\": {{songScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -4037,7 +3827,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "996e7b4b-54af-4797-8bcf-d5e5fa75b57f",
 								"exec": [
 									""
 								],
@@ -4047,7 +3836,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "dab9be84-2c96-4585-abd8-42d59ccb1f20",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -4099,9 +3887,6 @@
 							"graphql": {
 								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"song\": {\r\n            \"name\": \"{{songName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{songScriptRefBookStart}}\",\r\n                    \"chapter\": {{songScriptRefChapterStart}},\r\n                    \"verse\": {{songScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{songScriptRefBookEnd}}\",\r\n                    \"chapter\": {{songScriptRefChapterEnd}},\r\n                    \"verse\": {{songScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -4122,7 +3907,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "89ab610f-5744-4807-b50f-a9cfa83226d8",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"var lodash = require('lodash');",
@@ -4156,7 +3940,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "6dc03191-4f61-42c7-81bd-dffa7b761c23",
 								"exec": [
 									"pm.globals.set(\"itemCount\", 25);\r",
 									"pm.globals.set(\"page\", 1);\r",
@@ -4184,9 +3967,6 @@
 							"graphql": {
 								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -4207,7 +3987,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "69f19629-79b6-49bf-92e0-56145f452001",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"var lodash = require('lodash');",
@@ -4241,7 +4020,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "7e643e4e-5c30-4861-9fbd-dea7c77a1d66",
 								"exec": [
 									"pm.globals.set(\"itemCount\", 25);\r",
 									"pm.globals.set(\"page\", 1);\r",
@@ -4269,9 +4047,6 @@
 							"graphql": {
 								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -4292,7 +4067,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "52490abf-dd68-4cca-bb81-98edfd17e65b",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -4319,7 +4093,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "815d04d3-cec9-4bfa-b179-0fa36857e3f0",
 								"exec": [
 									""
 								],
@@ -4345,9 +4118,6 @@
 							"graphql": {
 								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -4368,7 +4138,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "304a7258-06aa-4947-9e94-623dd25883d2",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -4416,7 +4185,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "4ec2bfac-92d6-420b-8985-f55e23489cb7",
 								"exec": [
 									""
 								],
@@ -4442,9 +4210,6 @@
 							"graphql": {
 								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -4465,7 +4230,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "8c1145d0-528c-4916-b7cc-1e9f01e8f1c4",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -4496,7 +4260,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "78573bd3-b7e3-4bec-aa73-e5e974ea563f",
 								"exec": [
 									""
 								],
@@ -4522,9 +4285,6 @@
 							"graphql": {
 								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -4545,7 +4305,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "b1ba2ed5-18a3-4579-bd4b-79bfec00f869",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -4576,7 +4335,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "addb4f66-cf4c-4780-b7c2-286f22906a45",
 								"exec": [
 									""
 								],
@@ -4602,9 +4360,6 @@
 							"graphql": {
 								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count1\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -4625,7 +4380,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "e2c2f525-bcc6-4456-97da-ad2fe0d3e9bc",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -4656,7 +4410,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "966593c5-e10e-4346-9857-3c86d029cdf2",
 								"exec": [
 									""
 								],
@@ -4682,9 +4435,6 @@
 							"graphql": {
 								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page1\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -4705,7 +4455,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "3d1b6c22-ba7d-4abd-84a3-ee42b8c990f9",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -4736,7 +4485,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "ff5d53ef-8151-4390-aea2-554dd2027475",
 								"exec": [
 									""
 								],
@@ -4762,9 +4510,6 @@
 							"graphql": {
 								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort1\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -4785,7 +4530,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "661062a2-f271-430f-8996-942601ee3084",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -4816,7 +4560,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "090a0a7d-826f-4a8a-b33d-905695bf44d6",
 								"exec": [
 									""
 								],
@@ -4842,9 +4585,6 @@
 							"graphql": {
 								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order1\": \"{{order}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -4865,7 +4605,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "e534b2fd-5444-4bad-b34f-0998713a08de",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -4900,7 +4639,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "a5a14ff7-c9a4-4627-ba69-94fde863f7f0",
 								"exec": [
 									""
 								],
@@ -4926,9 +4664,6 @@
 							"graphql": {
 								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": 0,\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -4949,7 +4684,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "45a3433e-c014-4c05-b285-90f6a35b719d",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -4984,7 +4718,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "3ab63a08-cb36-46e9-a47b-a63ef4ccd4ad",
 								"exec": [
 									""
 								],
@@ -5010,9 +4743,6 @@
 							"graphql": {
 								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": 159,\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -5033,7 +4763,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "7731c8a5-e425-45de-9145-7a42f23284ac",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -5068,7 +4797,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "2bb72989-af17-46f7-9249-40dbfdf6f68b",
 								"exec": [
 									""
 								],
@@ -5094,9 +4822,6 @@
 							"graphql": {
 								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": 0,\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -5117,7 +4842,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "c2f115c8-cc60-4949-8627-00a77dc90c67",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -5163,7 +4887,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "982a4e5f-7080-40c6-a124-d3e2c61775e7",
 								"exec": [
 									""
 								],
@@ -5189,9 +4912,6 @@
 							"graphql": {
 								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"qwerty\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -5212,7 +4932,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "8196c6a0-5318-4794-b346-b795330cca59",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -5243,7 +4962,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "feac2716-95b3-4a75-be79-b4ec06cbedc6",
 								"exec": [
 									""
 								],
@@ -5269,9 +4987,6 @@
 							"graphql": {
 								"query": "query songs($input: SongListInput!) {\r\n  songs(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"11 #$%% ^&*\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -5292,7 +5007,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "ff813d9b-512e-48f1-8ba8-40308e56a114",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -5327,7 +5041,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "61457090-3eee-442f-a538-025032a7fa8f",
 								"exec": [
 									""
 								],
@@ -5353,9 +5066,6 @@
 							"graphql": {
 								"query": "mutation deleteSong($id: ID!) {\r\n  deleteSong(id: $id)\r\n}\r\n",
 								"variables": "{\r\n    \"id\": \"\"\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -5376,7 +5086,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "ba43707e-47ba-462c-8e8b-b7f18b3a5942",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -5401,7 +5110,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "3ec654d8-4c26-4ef1-97a3-98e64ee1bbc9",
 								"exec": [
 									""
 								],
@@ -5427,9 +5135,6 @@
 							"graphql": {
 								"query": "mutation deleteSong($id: ID!) {\r\n  deleteSong(id: $id)\r\n}\r\n",
 								"variables": "{\r\n    \"id\": \"{{songId}}\"\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -5450,7 +5155,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "38748a5b-37e6-467c-b6ef-969511e42cc7",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -5481,7 +5185,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "deae5449-8092-476b-9b71-62eb897846e8",
 								"exec": [
 									""
 								],
@@ -5507,9 +5210,6 @@
 							"graphql": {
 								"query": "mutation deleteSong($id: ID!) {\r\n  deleteSong(id: $id)\r\n}\r\n",
 								"variables": "{\r\n    \r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -5530,7 +5230,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "78b9aa8e-17a2-4b53-98e7-f5d06aa0d244",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -5561,7 +5260,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "b30c6094-fa8d-4d4b-bb1d-f1cffcbe7f0a",
 								"exec": [
 									""
 								],
@@ -5587,9 +5285,6 @@
 							"graphql": {
 								"query": "mutation deleteSong($id: ID!) {\r\n  deleteSong(id: $id)\r\n}\r\n",
 								"variables": "{\r\n    \"id1\": \"{{songId}}\"\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -5610,7 +5305,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "8db6a670-909d-4091-9c3c-6b9409cd2ff6",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -5641,7 +5335,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "461ba522-57a9-4eee-ae21-1f4c6b99191e",
 								"exec": [
 									""
 								],
@@ -5667,9 +5360,6 @@
 							"graphql": {
 								"query": "mutation deleteSong($id: ID!) {\r\n  deleteSong(id: $id)\r\n}\r\n",
 								"variables": "{\r\n    \"id1\": \"!@#$%^&*\"\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -5684,9 +5374,7 @@
 					},
 					"response": []
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		}
-	],
-	"protocolProfileBehavior": {}
+	]
 }

@@ -14,7 +14,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "1645151b-0648-43e9-91b9-faf5afec91fb",
 								"exec": [
 									"var response = pm.response.json();\r",
 									"pm.globals.set(\"token\", response.data.session.token);"
@@ -34,9 +33,6 @@
 							"graphql": {
 								"query": "# Write your query or mutation here\r\nquery {\r\n  session(browser: false) {\r\n    user {\r\n      id,\r\n      email\r\n      {\r\n        value\r\n      }\r\n      realFirstName\r\n      {\r\n        value\r\n      }\r\n      createdAt\r\n      displayLastName\r\n      {\r\n         value\r\n      }\r\n      \r\n      \r\n      \r\n    },\r\n    token\r\n  }\r\n}",
 								"variables": ""
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -57,7 +53,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "e623a406-c17b-42db-9ae0-095ce69d17c3",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -82,7 +77,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "27442da9-bf8d-46d3-963b-bc1abac7c712",
 								"exec": [
 									"const moment = require('moment');\r",
 									"pm.globals.set(\"timestamp\", moment().format(\"DDMYYYYhhmmss\"));\r",
@@ -155,11 +149,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation register($input: RegisterInput!) {\r\n  register(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
-								"variables": "{\r\n    \"input\": {\r\n        \"realFirstName\": \"Piyush\",\r\n        \"realLastName\": \"Patel\",\r\n        \"email\": \"{{login_email}}\",\r\n        \"password\": \"{{login_password}}\",\r\n        \"displayFirstName\": \"{{displayFirstName}}\",\r\n        \"displayLastName\": \"{{displayLastName}}\",\r\n        \"phone\": \"{{phone}}\",\r\n        \"timezone\": \"{{timezone}}\",\r\n        \"status\": \"{{userStatus}}\",\r\n        \"title\": \"{{userTitle}}\",\r\n        \"roles\": \"{{userRoles}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
+								"query": "mutation register($input: RegisterInput!) {\r\n  register(input: $input) {\r\n    powers\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      canDelete\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n        #  canDelete\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n      }\r\n      organizations {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          avatarLetters\r\n          name {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          address {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          locations {\r\n            total\r\n            hasMore\r\n            canRead\r\n            canCreate\r\n            items {\r\n              id\r\n              createdAt\r\n              canDelete\r\n              name {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n              type {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n\r\n              isoAlpha3 {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n              fundingAccount {\r\n                value {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  name {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  accountNumber {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                }\r\n                canEdit\r\n                canRead\r\n              }\r\n              isoCountry {\r\n                country\r\n                alpha2\r\n                alpha3\r\n                numeric\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      partners {\r\n        total\r\n        hasMore\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          modifiedAt\r\n          types {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          financialReportingTypes {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          pmcEntityCode {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          globalInnovationsClient {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          active {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          address {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          organization {\r\n            value {\r\n              id\r\n              createdAt\r\n              canDelete\r\n              avatarLetters\r\n              name {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              address {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              locations {\r\n                total\r\n                hasMore\r\n                canRead\r\n                canCreate\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  name {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  type {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n\r\n                  isoAlpha3 {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  fundingAccount {\r\n                    value {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      name {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      accountNumber {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                    }\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  isoCountry {\r\n                    country\r\n                    alpha2\r\n                    alpha3\r\n                    numeric\r\n                  }\r\n                }\r\n              }\r\n            }\r\n            canEdit\r\n            canRead\r\n          }\r\n          pointOfContact {\r\n            value {\r\n              id\r\n              fullName\r\n              firstName\r\n              avatarLetters\r\n              createdAt\r\n              email {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              realFirstName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              realLastName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              displayFirstName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              displayLastName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              phone {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              about {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              status {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              title {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              roles {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              timezone {\r\n                canRead\r\n                canEdit\r\n                value {\r\n                  name\r\n                  lat\r\n                  long\r\n                  countries {\r\n                    code\r\n                    name\r\n                    zones {\r\n                      name\r\n                      lat\r\n                      long\r\n                      countries {\r\n                        code\r\n                      }\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              unavailabilities {\r\n                total\r\n                hasMore\r\n                canCreate\r\n                canRead\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  #canDelete\r\n                  start\r\n                  end\r\n                  description {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                }\r\n              }\r\n              organizations {\r\n                total\r\n                hasMore\r\n                canCreate\r\n                canRead\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  avatarLetters\r\n                  name {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  address {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  locations {\r\n                    total\r\n                    hasMore\r\n                    canRead\r\n                    canCreate\r\n                    items {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      name {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      type {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n\r\n                      isoAlpha3 {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      fundingAccount {\r\n                        value {\r\n                          id\r\n                          createdAt\r\n                          canDelete\r\n                          name {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          accountNumber {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                        }\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      isoCountry {\r\n                        country\r\n                        alpha2\r\n                        alpha3\r\n                        numeric\r\n                      }\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              education {\r\n                canRead\r\n                total\r\n                hasMore\r\n                canCreate\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  degree {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  major {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  institution {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                }\r\n              }\r\n              partners {\r\n                canCreate\r\n                canRead\r\n                hasMore\r\n                total\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  modifiedAt\r\n                  types {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  financialReportingTypes {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  pmcEntityCode {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  globalInnovationsClient {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  active {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  address {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  organization {\r\n                    value {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      avatarLetters\r\n                      name {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      address {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      locations {\r\n                        total\r\n                        hasMore\r\n                        canRead\r\n                        canCreate\r\n                        items {\r\n                          id\r\n                          createdAt\r\n                          canDelete\r\n                          name {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          type {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n\r\n                          isoAlpha3 {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          fundingAccount {\r\n                            value {\r\n                              id\r\n                              createdAt\r\n                              canDelete\r\n                              name {\r\n                                value\r\n                                canEdit\r\n                                canRead\r\n                              }\r\n                              accountNumber {\r\n                                value\r\n                                canEdit\r\n                                canRead\r\n                              }\r\n                            }\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          isoCountry {\r\n                            country\r\n                            alpha2\r\n                            alpha3\r\n                            numeric\r\n                          }\r\n                        }\r\n                      }\r\n                    }\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  pointOfContact {\r\n                    canEdit\r\n                    canRead\r\n                    value {\r\n                      id\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              locations {\r\n                canRead\r\n                total\r\n                hasMore\r\n                canCreate\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n\r\n                  name {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  type {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  isoAlpha3 {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  isoCountry {\r\n                    country\r\n                    alpha2\r\n                    alpha3\r\n                    numeric\r\n                  }\r\n                  fundingAccount {\r\n                    value {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      name {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      accountNumber {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                    }\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                }\r\n              }\r\n              knownLanguages {\r\n                proficiency\r\n                language {\r\n                  id\r\n                }\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      education {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          degree {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          major {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          institution {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n      }\r\n      locations {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          type {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          isoAlpha3 {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          isoCountry {\r\n            country\r\n            alpha2\r\n            alpha3\r\n            numeric\r\n          }\r\n          fundingAccount {\r\n            value {\r\n              id\r\n              createdAt\r\n              canDelete\r\n              name {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n              accountNumber {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n            }\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n      }\r\n      knownLanguages {\r\n        proficiency\r\n        language {\r\n          id\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"realFirstName\": \"Piyush\",\r\n        \"realLastName\": \"Patel\",\r\n        \"email\": \"{{login_email}}\",\r\n        \"password\": \"{{login_password}}\",\r\n        \"displayFirstName\": \"{{displayFirstName}}\",\r\n        \"displayLastName\": \"{{displayLastName}}\",\r\n        \"phone\": \"{{phone}}\",\r\n        \"timezone\": \"{{timezone}}\",\r\n        \"status\": \"{{userStatus}}\",\r\n        \"title\": \"{{userTitle}}\",\r\n        \"about\": \"{{about}}\",\r\n        \"roles\": \"{{userRoles}}\"\r\n    }\r\n}"
 							}
 						},
 						"url": {
@@ -180,7 +171,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "fd459367-38c6-41c5-98f9-4d6d1cf8609a",
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"",
@@ -197,7 +187,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "bf6eaab9-c138-44d2-ab3e-d92c00c7b918",
 								"exec": [
 									""
 								],
@@ -221,11 +210,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      organizations {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          name {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          avatarLetters\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n      education {\r\n        canRead\r\n        items {\r\n          id\r\n          createdAt\r\n          degree {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          major {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          institution {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n        }\r\n        total\r\n        hasMore\r\n        canCreate\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"query": "mutation login($input: LoginInput!) {\r\n  login(input: $input) {\r\n    powers\r\n    user {\r\n      id\r\n      fullName\r\n      firstName\r\n      avatarLetters\r\n      createdAt\r\n      canDelete\r\n      email {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      realLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayFirstName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      displayLastName {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      phone {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      about {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      status {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      roles {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      title {\r\n        canRead\r\n        canEdit\r\n        value\r\n      }\r\n      timezone {\r\n        canRead\r\n        canEdit\r\n        value {\r\n          name\r\n          lat\r\n          long\r\n          countries {\r\n            code\r\n            name\r\n            zones {\r\n              name\r\n              lat\r\n              long\r\n              countries {\r\n                code\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      unavailabilities {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          #canDelete\r\n          description {\r\n            canRead\r\n            canEdit\r\n            value\r\n          }\r\n          start\r\n          end\r\n        }\r\n      }\r\n      organizations {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          avatarLetters\r\n          name {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          address {\r\n            value\r\n            canRead\r\n            canEdit\r\n          }\r\n          locations {\r\n            total\r\n            hasMore\r\n            canRead\r\n            canCreate\r\n            items {\r\n              id\r\n              createdAt\r\n              canDelete\r\n              name {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n              type {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n\r\n              isoAlpha3 {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n              fundingAccount {\r\n                value {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  name {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  accountNumber {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                }\r\n                canEdit\r\n                canRead\r\n              }\r\n              isoCountry {\r\n                country\r\n                alpha2\r\n                alpha3\r\n                numeric\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      partners {\r\n        total\r\n        hasMore\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          modifiedAt\r\n          types {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          financialReportingTypes {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          pmcEntityCode {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          globalInnovationsClient {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          active {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          address {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          organization {\r\n            value {\r\n              id\r\n              createdAt\r\n              canDelete\r\n              avatarLetters\r\n              name {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              address {\r\n                value\r\n                canRead\r\n                canEdit\r\n              }\r\n              locations {\r\n                total\r\n                hasMore\r\n                canRead\r\n                canCreate\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  name {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  type {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n\r\n                  isoAlpha3 {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  fundingAccount {\r\n                    value {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      name {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      accountNumber {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                    }\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  isoCountry {\r\n                    country\r\n                    alpha2\r\n                    alpha3\r\n                    numeric\r\n                  }\r\n                }\r\n              }\r\n            }\r\n            canEdit\r\n            canRead\r\n          }\r\n          pointOfContact {\r\n            value {\r\n              id\r\n              fullName\r\n              firstName\r\n              avatarLetters\r\n              createdAt\r\n              email {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              realFirstName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              realLastName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              displayFirstName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              displayLastName {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              phone {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              about {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              status {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              title {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              roles {\r\n                canRead\r\n                canEdit\r\n                value\r\n              }\r\n              timezone {\r\n                canRead\r\n                canEdit\r\n                value {\r\n                  name\r\n                  lat\r\n                  long\r\n                  countries {\r\n                    code\r\n                    name\r\n                    zones {\r\n                      name\r\n                      lat\r\n                      long\r\n                      countries {\r\n                        code\r\n                      }\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              unavailabilities {\r\n                total\r\n                hasMore\r\n                canCreate\r\n                canRead\r\n                items {\r\n                  id\r\n                  createdAt\r\n                 # canDelete\r\n                  start\r\n                  end\r\n                  description {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                }\r\n              }\r\n              organizations {\r\n                total\r\n                hasMore\r\n                canCreate\r\n                canRead\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  avatarLetters\r\n                  name {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  address {\r\n                    value\r\n                    canRead\r\n                    canEdit\r\n                  }\r\n                  locations {\r\n                    total\r\n                    hasMore\r\n                    canRead\r\n                    canCreate\r\n                    items {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      name {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      type {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n\r\n                      isoAlpha3 {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      fundingAccount {\r\n                        value {\r\n                          id\r\n                          createdAt\r\n                          canDelete\r\n                          name {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          accountNumber {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                        }\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      isoCountry {\r\n                        country\r\n                        alpha2\r\n                        alpha3\r\n                        numeric\r\n                      }\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              education {\r\n                canRead\r\n                total\r\n                hasMore\r\n                canCreate\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  degree {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  major {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  institution {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                }\r\n              }\r\n              partners {\r\n                canCreate\r\n                canRead\r\n                hasMore\r\n                total\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n                  modifiedAt\r\n                  types {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  financialReportingTypes {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  pmcEntityCode {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  globalInnovationsClient {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  active {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  address {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  organization {\r\n                    value {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      avatarLetters\r\n                      name {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      address {\r\n                        value\r\n                        canRead\r\n                        canEdit\r\n                      }\r\n                      locations {\r\n                        total\r\n                        hasMore\r\n                        canRead\r\n                        canCreate\r\n                        items {\r\n                          id\r\n                          createdAt\r\n                          canDelete\r\n                          name {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          type {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n\r\n                          isoAlpha3 {\r\n                            value\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          fundingAccount {\r\n                            value {\r\n                              id\r\n                              createdAt\r\n                              canDelete\r\n                              name {\r\n                                value\r\n                                canEdit\r\n                                canRead\r\n                              }\r\n                              accountNumber {\r\n                                value\r\n                                canEdit\r\n                                canRead\r\n                              }\r\n                            }\r\n                            canEdit\r\n                            canRead\r\n                          }\r\n                          isoCountry {\r\n                            country\r\n                            alpha2\r\n                            alpha3\r\n                            numeric\r\n                          }\r\n                        }\r\n                      }\r\n                    }\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  pointOfContact {\r\n                    canEdit\r\n                    canRead\r\n                    value {\r\n                      id\r\n                    }\r\n                  }\r\n                }\r\n              }\r\n              locations {\r\n                canRead\r\n                total\r\n                hasMore\r\n                canCreate\r\n                items {\r\n                  id\r\n                  createdAt\r\n                  canDelete\r\n\r\n                  name {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  type {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  isoAlpha3 {\r\n                    value\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                  isoCountry {\r\n                    country\r\n                    alpha2\r\n                    alpha3\r\n                    numeric\r\n                  }\r\n                  fundingAccount {\r\n                    value {\r\n                      id\r\n                      createdAt\r\n                      canDelete\r\n                      name {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                      accountNumber {\r\n                        value\r\n                        canEdit\r\n                        canRead\r\n                      }\r\n                    }\r\n                    canEdit\r\n                    canRead\r\n                  }\r\n                }\r\n              }\r\n              knownLanguages {\r\n                proficiency\r\n                language {\r\n                  id\r\n                }\r\n              }\r\n            }\r\n          }\r\n        }\r\n      }\r\n      education {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n          degree {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          major {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          institution {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n      }\r\n      locations {\r\n        canRead\r\n        total\r\n        hasMore\r\n        canCreate\r\n        items {\r\n          id\r\n          createdAt\r\n          canDelete\r\n\r\n          name {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          type {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          isoAlpha3 {\r\n            value\r\n            canEdit\r\n            canRead\r\n          }\r\n          isoCountry {\r\n            country\r\n            alpha2\r\n            alpha3\r\n            numeric\r\n          }\r\n          fundingAccount {\r\n            value {\r\n              id\r\n              createdAt\r\n              canDelete\r\n              name {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n              accountNumber {\r\n                value\r\n                canEdit\r\n                canRead\r\n              }\r\n            }\r\n            canEdit\r\n            canRead\r\n          }\r\n        }\r\n      }\r\n      knownLanguages {\r\n        proficiency\r\n        language {\r\n          id\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n   \"input\": {\r\n      \"email\": \"{{login_email}}\",\r\n      \"password\": \"{{login_password}}\"\r\n   }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -245,7 +231,6 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "cc8b7c54-5132-457a-b7d0-71ec404cf1ec",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -255,15 +240,13 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "b2582c87-b26a-4e76-829f-441a8aeff0ff",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "Literacy Material",
@@ -274,7 +257,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "62be654d-85b7-4826-903f-785c5bb54ce5",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -313,7 +295,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "787e6297-f67d-41c6-b936-1372a2b9d0ce",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"const moment = require('moment');\r",
@@ -430,9 +411,6 @@
 							"graphql": {
 								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      canDelete\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"literacyMaterial\": {\r\n            \"name\": \"{{literacyMaterialName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -453,7 +431,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "b5b57600-b181-4aff-bbe8-c9509285895f",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -492,7 +469,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "21356b2a-c5b4-4c7a-811c-2c233d24a5ca",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"const moment = require('moment');\r",
@@ -612,9 +588,6 @@
 							"graphql": {
 								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"literacyMaterial\": {\r\n            \"name\": \"{{literacyMaterialName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -635,7 +608,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "7c508d14-ef9f-4e20-ab42-37f4418b97ff",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -657,7 +629,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "955eac58-1a17-4628-a1d0-8b09bc87c92c",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -708,9 +679,6 @@
 							"graphql": {
 								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"name\": \"\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -731,7 +699,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "140e5eca-83a2-4fae-8dee-22539a13ff3c",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -751,7 +718,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "34e13f2b-6454-4bd8-87b5-582eeb2bd2ba",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -798,9 +764,6 @@
 							"graphql": {
 								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n     \r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -821,7 +784,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "0b539712-44e7-4f4a-9c82-b395909ec1e7",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -856,7 +818,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "fc47edb2-b552-4bae-9473-f427c1a862b6",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -902,9 +863,6 @@
 							"graphql": {
 								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"literacyMaterial\": {\r\n            \"name\": \"{{literacyMaterialName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -925,7 +883,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "9e7802ff-b268-4535-b3d1-1fef2cc43a5c",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -945,7 +902,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "7e09c59e-0ae5-4c55-a943-f374f6389835",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -992,9 +948,6 @@
 							"graphql": {
 								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"name\": \"{{literacyMaterialName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1015,7 +968,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "d216f97c-e152-45e0-885d-dbb1eb7acefa",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -1037,7 +989,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "4f6ae666-f972-41f1-97ac-e39029f33a37",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -1083,9 +1034,6 @@
 							"graphql": {
 								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"name\": \"{{literacyMaterialName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1106,7 +1054,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "a28244f5-71d3-4144-9dda-05b87cd1f48e",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -1128,7 +1075,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "6d10e13c-c4d3-4631-91ec-82b60dbcd514",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -1175,9 +1121,6 @@
 							"graphql": {
 								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"name\": \"{{literacyMaterialName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1198,7 +1141,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "55626531-0b47-4534-b323-aa9a7f326a9f",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -1210,7 +1152,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "6cd95f75-d437-42bc-ad74-deadf5a2ae8f",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"const moment = require('moment');\r",
@@ -1266,9 +1207,6 @@
 							"graphql": {
 								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"name\": \"{{literacyMaterialName}}\"\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1289,7 +1227,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "1a98f292-a062-4796-bed1-9c4ce652c74b",
 								"exec": [
 									""
 								],
@@ -1299,7 +1236,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "36e26e91-cf67-4567-8ed2-1c27e4a5fcad",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -1346,9 +1282,6 @@
 							"graphql": {
 								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"name\": \"{{literacyMaterialName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book1\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1369,7 +1302,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "04a2e839-723e-403e-abee-06300cfc5cd5",
 								"exec": [
 									""
 								],
@@ -1379,7 +1311,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "256e37cf-eea9-4af0-a281-e9e1400a5f14",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -1426,9 +1357,6 @@
 							"graphql": {
 								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"name\": \"{{literacyMaterialName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n          \"chapter1\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1449,7 +1377,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "a3f5a7ac-4ee1-46aa-b393-498340fff6ec",
 								"exec": [
 									""
 								],
@@ -1459,7 +1386,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "982ce76f-2722-4a23-a241-6c3ec76df74c",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -1506,9 +1432,6 @@
 							"graphql": {
 								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"name\": \"{{literacyMaterialName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse1\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1529,7 +1452,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "696dd687-f1fb-45f6-b4fe-6481a865dba1",
 								"exec": [
 									""
 								],
@@ -1539,7 +1461,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "f7b0d044-443e-4c27-945f-7c0b9d932e62",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -1586,9 +1507,6 @@
 							"graphql": {
 								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"name\": \"{{literacyMaterialName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book1\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1609,7 +1527,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "40d1805b-8d8d-42b7-847b-1e105ba5870c",
 								"exec": [
 									""
 								],
@@ -1619,7 +1536,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "c56a4a66-834b-49ee-a57f-f6cb22f65326",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -1666,9 +1582,6 @@
 							"graphql": {
 								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"name\": \"{{literacyMaterialName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n          \"chapter1\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1689,7 +1602,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "36527815-92e8-4e60-ac8d-f7a792bd8df3",
 								"exec": [
 									""
 								],
@@ -1699,7 +1611,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "736662a7-ed59-43bb-8e42-b9794b4b5e05",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -1746,9 +1657,6 @@
 							"graphql": {
 								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"name\": \"{{literacyMaterialName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse1\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1769,7 +1677,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "88d229da-51ca-432e-acca-0d3968c5d2b4",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -1808,7 +1715,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "74074dd0-a769-48ef-a6f3-37b359fffc2a",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"const moment = require('moment');\r",
@@ -1843,9 +1749,6 @@
 							"graphql": {
 								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"literacyMaterial\": {\r\n            \"name\": \"{{literacyMaterialName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -1866,7 +1769,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "5d3394a3-e787-4dd4-bab6-f200c0a69a50",
 								"exec": [
 									""
 								],
@@ -1876,7 +1778,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "ee138f88-faba-4086-bf37-318ae89f5498",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"var literacyMaterial_data = JSON.parse(pm.variables.get(\"literacyMaterial_data\"));\r",
@@ -1996,9 +1897,6 @@
 							"graphql": {
 								"query": "query literacyMaterial($id: ID!) {\r\n  literacyMaterial(id: $id) {\r\n    id\r\n    createdAt\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n    name {\r\n      value\r\n      canRead\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"id\": \"{{literacyMaterialId}}\"\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -2019,7 +1917,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "141d8227-7d7f-4461-ae11-f1cac25d722c",
 								"exec": [
 									""
 								],
@@ -2029,7 +1926,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "95fcb35f-15cc-4d10-9444-07b3107dc7c0",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -2080,9 +1976,6 @@
 							"graphql": {
 								"query": "query literacyMaterial($id: ID!) {\r\n  literacyMaterial(id: $id) {\r\n    id\r\n    createdAt\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n    name {\r\n      value\r\n      canRead\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"id\": \"\"\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -2103,7 +1996,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "4addde3d-984a-4ac8-afa5-85ac94f61038",
 								"exec": [
 									""
 								],
@@ -2113,7 +2005,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "aa4598b9-54e6-4daa-8efd-2b834e87e1ce",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -2160,9 +2051,6 @@
 							"graphql": {
 								"query": "query literacyMaterial($id: ID!) {\r\n  literacyMaterial(id: $id) {\r\n    id\r\n    createdAt\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n    name {\r\n      value\r\n      canRead\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -2183,7 +2071,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "62f36960-0b5e-4d22-bf14-c686173ae46c",
 								"exec": [
 									""
 								],
@@ -2193,7 +2080,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "11ad0785-84ef-41d2-84ed-aa9cdcfa469c",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -2240,9 +2126,6 @@
 							"graphql": {
 								"query": "query literacyMaterial($id: ID!) {\r\n  literacyMaterial(id: $id) {\r\n    id\r\n    createdAt\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n    name {\r\n      value\r\n      canRead\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"id1\": \"{{literacyMaterialId}}\"\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -2263,7 +2146,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "b2f9afe6-e954-44a0-a162-2d55d0629cd5",
 								"exec": [
 									""
 								],
@@ -2273,7 +2155,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "59787fc4-389d-4d8c-a84c-bd6f377f3565",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -2324,9 +2205,6 @@
 							"graphql": {
 								"query": "query literacyMaterial($id: ID!) {\r\n  literacyMaterial(id: $id) {\r\n    id\r\n    createdAt\r\n    scriptureReferences {\r\n      value {\r\n        start {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        end {\r\n          book\r\n          chapter\r\n          verse\r\n          label\r\n        }\r\n        label\r\n        totalVerses\r\n      }\r\n      canEdit\r\n      canRead\r\n    }\r\n    name {\r\n      value\r\n      canRead\r\n      canRead\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"id\": \"!@#$%^&\"\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -2347,7 +2225,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "f31d3673-8b96-4d44-921b-b1526aeb0990",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -2386,7 +2263,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "19b26f86-ecd0-4bd2-90f6-4853b284bcdd",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"var literacyMaterial_data = JSON.parse(pm.variables.get(\"literacyMaterial_data\"));\r",
@@ -2506,9 +2382,6 @@
 							"graphql": {
 								"query": "mutation updateLiteracyMaterial($input: UpdateLiteracyMaterialInput!) {\r\n  updateLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"literacyMaterial\": {\r\n            \"id\": \"{{literacyMaterialId}}\",\r\n            \"name\": \"{{literacyMaterialName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -2529,7 +2402,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "8751544a-8bed-4445-812b-1424ab7a5efe",
 								"exec": [
 									""
 								],
@@ -2539,7 +2411,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "9f8df98a-2f4f-4818-86bd-2ded1a522cd7",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"var literacyMaterial_data = JSON.parse(pm.variables.get(\"literacyMaterial_data\"));\r",
@@ -2660,9 +2531,6 @@
 							"graphql": {
 								"query": "mutation updateLiteracyMaterial($input: UpdateLiteracyMaterialInput!) {\r\n  updateLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"literacyMaterial\": {\r\n            \"id\": \"{{literacyMaterialId}}\"\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -2683,7 +2551,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "61b701ab-6b69-40ad-949b-32e73860f051",
 								"exec": [
 									""
 								],
@@ -2693,7 +2560,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "f53f1aca-d14c-4c26-bcca-c91533e2f182",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -2740,9 +2606,6 @@
 							"graphql": {
 								"query": "mutation updateLiteracyMaterial($input: UpdateLiteracyMaterialInput!) {\r\n  updateLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"name\": \"{{literacyMaterialName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -2763,7 +2626,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "e06e9b7d-7934-4f49-b202-4935eb0d73a9",
 								"exec": [
 									""
 								],
@@ -2773,7 +2635,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "fd519926-9d44-4b62-896f-6fe2eafd8b58",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -2824,9 +2685,6 @@
 							"graphql": {
 								"query": "mutation updateLiteracyMaterial($input: UpdateLiteracyMaterialInput!) {\r\n  updateLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"id\": \"\",\r\n      \"name\": \"{{literacyMaterialName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -2847,7 +2705,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "7228793e-5f19-4733-85e1-a97b7ccad50d",
 								"exec": [
 									""
 								],
@@ -2857,7 +2714,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "7e19cce4-f8b1-4d02-a363-be78bc999a41",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -2906,9 +2762,6 @@
 							"graphql": {
 								"query": "mutation updateLiteracyMaterial($input: UpdateLiteracyMaterialInput!) {\r\n  updateLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"id\": \"{{literacyMaterialId}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -2929,7 +2782,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "baaf65d4-8bac-46be-9685-8b0574fbd69e",
 								"exec": [
 									""
 								],
@@ -2939,7 +2791,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "bfce4f05-b1fb-4acc-a400-621076cdeac4",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -2992,9 +2843,6 @@
 							"graphql": {
 								"query": "mutation updateLiteracyMaterial($input: UpdateLiteracyMaterialInput!) {\r\n  updateLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"id\": \"{{literacyMaterialId}}\",\r\n      \"name\": \"\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -3015,7 +2863,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "0533bcfb-513e-40fc-98cb-e5b7e24daadc",
 								"exec": [
 									""
 								],
@@ -3025,7 +2872,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "7cfc4cc7-8896-4535-8183-e26e769c706e",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -3072,9 +2918,6 @@
 							"graphql": {
 								"query": "mutation updateLiteracyMaterial($input: UpdateLiteracyMaterialInput!) {\r\n  updateLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"id\": \"{{literacyMaterialId}}\",\r\n      \"name\": \"{{literacyMaterialName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -3095,7 +2938,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "52dfc895-2532-411d-9ccb-3cc37cdb3e17",
 								"exec": [
 									""
 								],
@@ -3105,7 +2947,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "64489707-a94e-400a-86c3-f0892b9fb0f3",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -3156,9 +2997,6 @@
 							"graphql": {
 								"query": "mutation updateLiteracyMaterial($input: UpdateLiteracyMaterialInput!) {\r\n  updateLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"id\": \"{{literacyMaterialId}}\",\r\n      \"name\": \"{{literacyMaterialName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -3179,7 +3017,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "7eb8ab26-40d8-4c27-87e4-3b8a6f3794d6",
 								"exec": [
 									""
 								],
@@ -3189,7 +3026,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "b53f0380-fa2c-4fcf-87f9-36f6e5a349e7",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -3236,9 +3072,6 @@
 							"graphql": {
 								"query": "mutation updateLiteracyMaterial($input: UpdateLiteracyMaterialInput!) {\r\n  updateLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"id\": \"{{literacyMaterialId}}\",\r\n      \"name\": \"{{literacyMaterialName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -3259,7 +3092,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "0d9ee9d8-11ea-4711-826a-01e13203a46a",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -3272,7 +3104,7 @@
 									"pm.globals.set('literacyMaterialScriptRefChapterStart', 3);\r",
 									"pm.globals.set('literacyMaterialScriptRefVerseStart', 4);\r",
 									"\r",
-									"pm.globals.set('literacyMaterialScriptRefBookEnd', \"Genesis\");\r",
+									"// pm.globals.set('literacyMaterialScriptRefBookEnd', \"Genesis\");\r",
 									"pm.globals.set('literacyMaterialScriptRefChapterEnd', 3);\r",
 									"pm.globals.set('literacyMaterialScriptRefVerseEnd', 4);\r",
 									"\r",
@@ -3285,7 +3117,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "2ca37747-1439-49d6-88b7-1470b778cfa3",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -3336,9 +3167,6 @@
 							"graphql": {
 								"query": "mutation updateLiteracyMaterial($input: UpdateLiteracyMaterialInput!) {\r\n  updateLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"literacyMaterial\": {\r\n      \"id\": \"{{literacyMaterialId}}\",\r\n      \"name\": \"{{literacyMaterialName}}\",\r\n      \"scriptureReferences\": {\r\n        \"start\": {\r\n          \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n          \"verse\":{{literacyMaterialScriptRefVerseStart}}\r\n        },\r\n        \"end\": {\r\n          \"book\": \"\",\r\n          \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n          \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n        }\r\n      }\r\n    }\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -3359,7 +3187,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "414a4734-5124-4b0f-a353-2552bb5c711f",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -3398,7 +3225,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "82221289-9ae5-4e5a-b2e1-bf432ac42b15",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -3431,9 +3257,6 @@
 							"graphql": {
 								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"literacyMaterial\": {\r\n            \"name\": \"{{literacyMaterialName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -3454,7 +3277,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "38e75132-d7a7-4dda-a4ee-3ec0f95d0eb5",
 								"exec": [
 									"pm.globals.set(\"itemCount\", 25);\r",
 									"pm.globals.set(\"page\", 1);\r",
@@ -3466,7 +3288,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "33e01b78-9e46-4a45-95fa-452dd6ab9a2a",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"var literacyMaterial_data = JSON.parse(pm.variables.get(\"literacyMaterial_data\")); // Get stored literacyMaterial object\r",
@@ -3558,9 +3379,6 @@
 							"graphql": {
 								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -3581,7 +3399,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "55943e6b-21be-4ad0-9ee1-ea550c4b1c31",
 								"exec": [
 									"pm.globals.set(\"itemCount\", 25);\r",
 									"// Page is set from previous request test script based on total\r",
@@ -3593,7 +3410,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "a0a8c43b-36a8-45a9-9f85-9cc1657070b9",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"var literacyMaterial_data = JSON.parse(pm.variables.get(\"literacyMaterial_data\")); // Get stored literacyMaterial object\r",
@@ -3734,9 +3550,6 @@
 							"graphql": {
 								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -3757,7 +3570,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "70987832-f102-4685-b9b9-ba6ad53b0258",
 								"exec": [
 									"pm.globals.set(\"itemCount\", 10);\r",
 									"pm.globals.set(\"page\", 1);\r",
@@ -3771,7 +3583,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "e0d8b394-4e54-4115-8e90-03a2a7ea7f99",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -3812,9 +3623,6 @@
 							"graphql": {
 								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -3835,7 +3643,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "4863c023-40b9-4ede-9db7-5c3de3100b30",
 								"exec": [
 									"pm.globals.set(\"itemCount\", 10);\r",
 									"pm.globals.set(\"page\", 1);\r",
@@ -3849,7 +3656,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "55320473-79f3-45a5-bf42-9df7894cb386",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -3896,9 +3702,6 @@
 							"graphql": {
 								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -3919,7 +3722,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "e1b882eb-1dde-42cb-b567-74d6deb82e4a",
 								"exec": [
 									"pm.globals.set(\"itemCount\", 10);\r",
 									"pm.globals.set(\"page\", 1);\r",
@@ -3933,7 +3735,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "688b9784-2a37-4104-8e36-0df776ccfbe2",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -3985,9 +3786,6 @@
 							"graphql": {
 								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -4008,7 +3806,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "148fb6be-a2ad-4a70-97e5-e3509ce1e093",
 								"exec": [
 									"pm.globals.set(\"itemCount\", 25);\r",
 									"pm.globals.set(\"page\", 1);\r",
@@ -4022,7 +3819,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "ed569886-d663-4af1-921c-a63d4821a8ee",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -4075,9 +3871,6 @@
 							"graphql": {
 								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -4098,7 +3891,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "fc47827c-c036-4b93-9a6b-7990a1a092cb",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -4137,7 +3929,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "53dca466-5a05-4b47-9353-78416454253d",
 								"exec": [
 									""
 								],
@@ -4163,9 +3954,6 @@
 							"graphql": {
 								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"literacyMaterial\": {\r\n            \"name\": \"{{literacyMaterialName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -4186,7 +3974,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "9dd5a1a5-a6b4-447c-918f-6c6b5d3a22c3",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -4221,7 +4008,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "6e55290c-4e09-40b2-8f33-cb708482da56",
 								"exec": [
 									""
 								],
@@ -4247,9 +4033,6 @@
 							"graphql": {
 								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"literacyMaterial\": {\r\n            \"name\": \"{{literacyMaterialName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -4270,7 +4053,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "495f1732-0504-437e-b6e5-286b01be8f9a",
 								"exec": [
 									"const moment = require('moment');\r",
 									"\r",
@@ -4307,7 +4089,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "57a61257-344a-4461-a514-50c7209b60e3",
 								"exec": [
 									""
 								],
@@ -4333,9 +4114,6 @@
 							"graphql": {
 								"query": "mutation createLiteracyMaterial($input: CreateLiteracyMaterialInput!) {\r\n  createLiteracyMaterial(input: $input) {\r\n    literacyMaterial {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canRead\r\n        canEdit\r\n      }\r\n      scriptureReferences {\r\n        canEdit\r\n        canRead\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"literacyMaterial\": {\r\n            \"name\": \"{{literacyMaterialName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{literacyMaterialScriptRefBookStart}}\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterStart}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{literacyMaterialScriptRefBookEnd}}\",\r\n                    \"chapter\": {{literacyMaterialScriptRefChapterEnd}},\r\n                    \"verse\": {{literacyMaterialScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -4356,7 +4134,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "58bad551-987b-4dd9-acba-12092558b771",
 								"exec": [
 									"pm.globals.set(\"itemCount\", 100);\r",
 									"pm.globals.set(\"page\", 1);\r",
@@ -4370,7 +4147,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "cb56a352-d35f-44c3-b2d4-e3bc05c3048f",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"var lodash = require('lodash');\r",
@@ -4420,9 +4196,6 @@
 							"graphql": {
 								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -4443,7 +4216,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "795825fd-b3c7-47d9-8204-7352d3c34673",
 								"exec": [
 									"pm.globals.set(\"itemCount\", 100);\r",
 									"pm.globals.set(\"page\", 1);\r",
@@ -4457,7 +4229,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "7aef3974-e6a9-450a-a93e-97b83d1c9f73",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"var lodash = require('lodash');\r",
@@ -4506,9 +4277,6 @@
 							"graphql": {
 								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -4529,7 +4297,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "20ec2403-3427-4cab-95b8-4f4e1e204708",
 								"exec": [
 									""
 								],
@@ -4539,7 +4306,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "baac1d6b-b355-464a-a9fb-8563719afabf",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -4582,9 +4348,6 @@
 							"graphql": {
 								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"page\": {{page}},\r\n    \"sort\": \"name\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -4605,7 +4368,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "52ac8139-7543-4be7-849b-281cab441ac1",
 								"exec": [
 									""
 								],
@@ -4615,7 +4377,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "f11c44f5-874a-4907-a2ae-8d43ab13fe7d",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -4677,9 +4438,6 @@
 							"graphql": {
 								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"count\": {{itemCount}},\r\n    \"page\": {{page}},\r\n    \"sort\": \"\",\r\n    \"order\": \"{{order}}\"\r\n  }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -4700,7 +4458,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "e3658176-947e-4b16-aaf3-e79146fdd85f",
 								"exec": [
 									""
 								],
@@ -4710,7 +4467,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "fc653663-b185-409c-a16a-e3261a6abc01",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -4757,9 +4513,6 @@
 							"graphql": {
 								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -4780,7 +4533,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "25a72b7d-8e10-4c33-ae97-077a2cb47c31",
 								"exec": [
 									""
 								],
@@ -4790,7 +4542,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "73324ad5-c6d7-44bc-a16c-f2f1ecfe667f",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -4837,9 +4588,6 @@
 							"graphql": {
 								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count1\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -4860,7 +4608,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "f93b2d13-04d9-4653-b525-c095021cdffb",
 								"exec": [
 									""
 								],
@@ -4870,7 +4617,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "564e819c-cb60-4e9c-b57a-9b7bbc4505a2",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -4917,9 +4663,6 @@
 							"graphql": {
 								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page1\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -4940,7 +4683,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "0ae7cb25-c542-4b10-8575-e20b124ab830",
 								"exec": [
 									""
 								],
@@ -4950,7 +4692,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "8e29e1ba-f262-440a-a8ff-4df24af7a03b",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -4997,9 +4738,6 @@
 							"graphql": {
 								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort1\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -5020,7 +4758,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "f3c696b4-9a19-4e7c-8d5e-2855696f1052",
 								"exec": [
 									""
 								],
@@ -5030,7 +4767,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "5ea4c1d6-3dfa-4c02-9d17-b1754d9ccca2",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -5077,9 +4813,6 @@
 							"graphql": {
 								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{itemCount}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order1\": \"{{order}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -5100,7 +4833,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "d3be516d-a98f-43ae-90fa-fb4ddb4475b8",
 								"exec": [
 									""
 								],
@@ -5110,7 +4842,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "2152c677-b645-4541-9785-4f6960b19c75",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -5161,9 +4892,6 @@
 							"graphql": {
 								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": 0,\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -5184,7 +4912,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "b8bde2bb-dbc4-473f-a7a9-950779a8880f",
 								"exec": [
 									""
 								],
@@ -5194,7 +4921,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "ccd3d88c-d4fd-4898-86eb-5e745b1fec27",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -5245,9 +4971,6 @@
 							"graphql": {
 								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": 159,\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -5268,7 +4991,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "2100d459-a313-400e-a467-7b8986846d33",
 								"exec": [
 									""
 								],
@@ -5278,7 +5000,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "e00327ed-762a-4087-93ec-dbee2da89d73",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -5330,9 +5051,6 @@
 							"graphql": {
 								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{count}},\r\n        \"page\": 0,\r\n        \"sort\": \"name\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -5353,7 +5071,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "c7262467-ca02-48ed-aeb5-f5c4b2d03ae1",
 								"exec": [
 									""
 								],
@@ -5363,7 +5080,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "96e60e61-5b28-4ec1-a9c6-bab424a5ed24",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -5408,9 +5124,6 @@
 							"graphql": {
 								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{count}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"qwerty\",\r\n        \"order\": \"{{order}}\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -5431,7 +5144,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "93573b96-ed6f-4d73-a77c-0dc5454309d7",
 								"exec": [
 									""
 								],
@@ -5441,7 +5153,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "fb81e674-9463-480c-b020-e582330544cb",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -5488,9 +5199,6 @@
 							"graphql": {
 								"query": "query($input: LiteracyMaterialListInput!) {\r\n  literacyMaterials(input: $input) {\r\n    total\r\n    hasMore\r\n    items {\r\n      id\r\n      createdAt\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n    \"input\": {\r\n        \"count\": {{count}},\r\n        \"page\": {{page}},\r\n        \"sort\": \"name\",\r\n        \"order\": \"11 #$%% ^&*\"\r\n    }\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -5511,7 +5219,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "23f364e7-2ea5-4aff-a771-8a0386e3f225",
 								"exec": [
 									""
 								],
@@ -5521,7 +5228,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "aadab79d-0b13-4595-9515-17b918521af8",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -5562,9 +5268,6 @@
 							"graphql": {
 								"query": "mutation deleteLiteracyMaterial($id: ID!) {\r\n  deleteLiteracyMaterial(id: $id)\r\n}\r\n",
 								"variables": "{\r\n  \"id\": \"{{literacyMaterialId}}\"\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -5585,7 +5288,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "37a25e5b-5078-48c5-ae3b-4913b63e13d2",
 								"exec": [
 									""
 								],
@@ -5595,7 +5297,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "cf86c424-714a-4577-8861-3b6e2aafef15",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -5646,9 +5347,6 @@
 							"graphql": {
 								"query": "mutation deleteLiteracyMaterial($id: ID!) {\r\n  deleteLiteracyMaterial(id: $id)\r\n}\r\n",
 								"variables": "{\r\n  \"id\": \"\"\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -5669,7 +5367,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "5c4bf478-72e1-4531-890d-9ffe9547488a",
 								"exec": [
 									""
 								],
@@ -5679,7 +5376,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "cec51bc5-aecc-4a2a-b982-9b597bca5f86",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -5726,9 +5422,6 @@
 							"graphql": {
 								"query": "mutation deleteLiteracyMaterial($id: ID!) {\r\n  deleteLiteracyMaterial(id: $id)\r\n}\r\n",
 								"variables": "{\r\n  \r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -5749,7 +5442,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "f843c399-0979-4191-8a32-172759b7e133",
 								"exec": [
 									""
 								],
@@ -5759,7 +5451,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "32d00327-d6aa-4270-b38d-6a496cb05ccf",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -5806,9 +5497,6 @@
 							"graphql": {
 								"query": "mutation deleteLiteracyMaterial($id: ID!) {\r\n  deleteLiteracyMaterial(id: $id)\r\n}\r\n",
 								"variables": "{\r\n  \"id1\": \"{{literacyMaterialId}}\"\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -5829,7 +5517,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "1af08c76-0738-46dc-8598-e98f42c1d1cd",
 								"exec": [
 									""
 								],
@@ -5839,7 +5526,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "d9828a1b-0563-4ce3-95de-b1f82c6424a0",
 								"exec": [
 									"var jsonData = pm.response.json();\r",
 									"\r",
@@ -5890,9 +5576,6 @@
 							"graphql": {
 								"query": "mutation deleteLiteracyMaterial($id: ID!) {\r\n  deleteLiteracyMaterial(id: $id)\r\n}\r\n",
 								"variables": "{\r\n  \"id\": \"---- @@@ hhkjh 2323\"\r\n}"
-							},
-							"options": {
-								"graphql": {}
 							}
 						},
 						"url": {
@@ -5907,9 +5590,7 @@
 					},
 					"response": []
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		}
-	],
-	"protocolProfileBehavior": {}
+	]
 }
