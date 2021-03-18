@@ -20,8 +20,6 @@ import {
   calculateTotalAndPaginateList,
   defaultSorter,
   matchPropList,
-  permissionsOfNode,
-  requestingUser,
 } from '../../../core/database/query';
 import {
   DbPropsOfDto,
@@ -250,13 +248,10 @@ export class ProjectReportService {
     { filter, ...input }: ProjectReportListInput,
     session: Session
   ): Promise<ProjectReportListOutput> {
-    const label = 'ProjectReport';
-
     const query = this.db
       .query()
       .match([
-        requestingUser(session),
-        ...permissionsOfNode(label),
+        node('node', 'ProjectReport'),
         ...(filter.projectId
           ? [
               relation('in', '', 'report'),

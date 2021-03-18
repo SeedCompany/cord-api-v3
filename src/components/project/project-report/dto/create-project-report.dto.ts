@@ -23,7 +23,7 @@ export class CreateProjectReport {
   readonly period?: CalendarDate;
 
   @Field({
-    description: 'Report file',
+    description: 'Initial version of the report file',
     nullable: true,
   })
   @Type(() => CreateDefinedFileVersionInput)

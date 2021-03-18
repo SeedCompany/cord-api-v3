@@ -40,7 +40,7 @@ export class ProjectReportResolver {
   }
 
   @Mutation(() => CreateProjectReportOutput, {
-    description: 'Create a project member',
+    description: 'Create a project report',
   })
   async createProjectReport(
     @LoggedInSession() session: Session,
@@ -76,7 +76,7 @@ export class ProjectReportResolver {
   }
 
   @Mutation(() => UpdateProjectReportOutput, {
-    description: 'Update a project member',
+    description: 'Update a project report',
   })
   async updateProjectReport(
     @LoggedInSession() session: Session,

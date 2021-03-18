@@ -16,6 +16,7 @@ export abstract class ProjectReportFilters {
   })
   readonly reportType?: ReportType;
 
+  @Field({ nullable: true })
   readonly projectId?: string;
 }
 
