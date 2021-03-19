@@ -17,7 +17,6 @@ import {
   Logger,
   matchRequestingUser,
   OnIndex,
-  UniqueProperties,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -257,17 +256,9 @@ export class FieldZoneService {
         'You do not have the permission to delete this Field Zone'
       );
 
-    const baseNodeLabels = ['BaseNode', 'FieldZone'];
-
-    const uniqueProperties: UniqueProperties<FieldZone> = {
-      name: ['Property', 'FieldZoneName'],
-    };
-
     try {
       await this.db.deleteNodeNew({
         object,
-        baseNodeLabels,
-        uniqueProperties,
       });
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });

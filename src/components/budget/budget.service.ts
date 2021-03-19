@@ -2,6 +2,7 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
+  DuplicateException,
   generateId,
   InputException,
   NotFoundException,
@@ -189,14 +190,18 @@ export class BudgetService {
   }
 
   async createRecord(
-    { budgetId, organizationId, ...input }: CreateBudgetRecord,
+    input: CreateBudgetRecord,
     session: Session
   ): Promise<BudgetRecord> {
-    if (!input.fiscalYear || !organizationId) {
+    const { budgetId, organizationId, fiscalYear } = input;
+
+    if (!fiscalYear || !organizationId) {
       throw new InputException(
-        !input.fiscalYear ? 'budget.fiscalYear' : 'budget.organizationId'
+        !fiscalYear ? 'budget.fiscalYear' : 'budget.organizationId'
       );
     }
+
+    await this.verifyRecordUniqueness(input);
 
     this.logger.debug('Creating BudgetRecord', input);
     // on Init, create a budget will create a budget record for each org and each fiscal year in the project input.projectId
@@ -205,7 +210,7 @@ export class BudgetService {
     const secureProps: Property[] = [
       {
         key: 'fiscalYear',
-        value: input.fiscalYear,
+        value: fiscalYear,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -283,15 +288,40 @@ export class BudgetService {
         userId: session.userId,
       });
 
-      const bugetRecord = await this.readOneRecord(result.id, session);
+      const budgetRecord = await this.readOneRecord(result.id, session);
 
-      return bugetRecord;
+      return budgetRecord;
     } catch (exception) {
       this.logger.error(`Could not create Budget Record`, {
         userId: session.userId,
         exception,
       });
       throw new ServerException('Could not create Budget Record', exception);
+    }
+  }
+
+  private async verifyRecordUniqueness(input: CreateBudgetRecord) {
+    const existingRecord = await this.db
+      .query()
+      .match([
+        node('budget', 'Budget', { id: input.budgetId }),
+        relation('out', '', 'record', { active: true }),
+        node('br', 'BudgetRecord'),
+        relation('out', '', 'organization', { active: true }),
+        node('', 'Organization', { id: input.organizationId }),
+      ])
+      .match([
+        node('br'),
+        relation('out', '', 'fiscalYear', { active: true }),
+        node('', 'Property', { value: input.fiscalYear }),
+      ])
+      .return('br')
+      .first();
+    if (existingRecord) {
+      throw new DuplicateException(
+        'fiscalYear',
+        'A record for given partner and fiscal year already exists in this budget'
+      );
     }
   }
 
@@ -509,12 +539,9 @@ export class BudgetService {
       budget.records.map((br) => this.deleteRecord(br.id, session))
     );
 
-    const baseNodeLabels = ['BaseNode', 'Budget'];
-
     try {
       await this.db.deleteNodeNew({
         object: budget,
-        baseNodeLabels,
       });
     } catch (e) {
       this.logger.warning('Failed to delete budget', {
@@ -538,12 +565,9 @@ export class BudgetService {
         'You do not have the permission to delete this Budget Record'
       );
 
-    const baseNodeLabels = ['BaseNode', 'BudgetRecord'];
-
     try {
       await this.db.deleteNodeNew({
         object: br,
-        baseNodeLabels,
       });
     } catch (e) {
       this.logger.warning('Failed to delete Budget Record', {

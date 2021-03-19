@@ -8,6 +8,7 @@ import { ProductModule } from '../product/product.module';
 import { ProjectModule } from '../project/project.module';
 import { UserModule } from '../user/user.module';
 import { EngagementStatusResolver } from './engagement-status.resolver';
+import { EngagementRepository } from './engagement.repository';
 import { EngagementResolver } from './engagement.resolver';
 import { EngagementRules } from './engagement.rules';
 import { EngagementService } from './engagement.service';
@@ -36,6 +37,7 @@ import { PnpExtractor } from './pnp-extractor.service';
     InternshipPositionResolver,
     EngagementRules,
     EngagementService,
+    EngagementRepository,
     PnpExtractor,
     ...Object.values(handlers),
   ],

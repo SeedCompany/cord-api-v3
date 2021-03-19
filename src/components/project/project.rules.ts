@@ -10,6 +10,7 @@ import {
 } from '../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import { Role } from '../authorization';
+import { EngagementService } from '../engagement';
 import { User, UserService } from '../user';
 import {
   Project,
@@ -47,6 +48,8 @@ export class ProjectRules {
     private readonly userService: UserService,
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService,
+    @Inject(forwardRef(() => EngagementService))
+    private readonly engagements: EngagementService,
     private readonly configService: ConfigService,
     // eslint-disable-next-line @seedcompany/no-unused-vars
     @Logger('project:rules') private readonly logger: ILogger
@@ -712,6 +715,7 @@ export class ProjectRules {
           ],
         };
       case ProjectStep.FinalizingCompletion:
+        const disabled = await this.engagements.hasOngoing(id);
         return {
           approvers: [
             Role.Administrator,
@@ -733,6 +737,10 @@ export class ProjectRules {
               to: ProjectStep.Completed,
               type: TransitionType.Approve,
               label: 'Complete 🎉',
+              disabled,
+              disabledReason: disabled
+                ? 'The project cannot be completed since some engagements have a non-terminal status'
+                : undefined,
             },
           ],
           getNotifiers: async () => [
@@ -821,7 +829,7 @@ export class ProjectRules {
     );
 
     const validNextStep = transitions.some(
-      (transition) => transition.to === nextStep
+      (transition) => transition.to === nextStep && !transition.disabled
     );
     if (!validNextStep) {
       throw new UnauthorizedException(

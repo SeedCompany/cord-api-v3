@@ -20,7 +20,6 @@ import {
   matchSession,
   OnIndex,
   Property,
-  UniqueProperties,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -248,17 +247,9 @@ export class OrganizationService {
         'You do not have the permission to delete this Organization'
       );
 
-    const baseNodeLabels = ['BaseNode', 'Organization'];
-
-    const uniqueProperties: UniqueProperties<Organization> = {
-      name: ['Property', 'OrgName'],
-    };
-
     try {
       await this.db.deleteNodeNew<Organization>({
         object,
-        baseNodeLabels,
-        uniqueProperties,
       });
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });

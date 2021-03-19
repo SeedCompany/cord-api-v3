@@ -1,6 +1,7 @@
 import { node, relation } from 'cypher-query-builder';
 import { difference } from 'lodash';
 import {
+  DuplicateException,
   fiscalYears,
   NotFoundException,
   Secured,
@@ -154,14 +155,23 @@ export class SyncBudgetRecordsToFundingPartners
   ) {
     await Promise.all(
       additions.map((fiscalYear) =>
-        this.budgets.createRecord(
-          {
-            budgetId: budget.id,
-            fiscalYear,
-            organizationId,
-          },
-          session
-        )
+        this.budgets
+          .createRecord(
+            {
+              budgetId: budget.id,
+              fiscalYear,
+              organizationId,
+            },
+            session
+          )
+          .catch((e) => {
+            if (e instanceof DuplicateException) {
+              // If this record already exists, this user probably just doesn't
+              // have permission to see it yet. Ignore and move on.
+              return;
+            }
+            throw e;
+          })
       )
     );
   }

@@ -16,7 +16,6 @@ import {
   Logger,
   matchRequestingUser,
   OnIndex,
-  UniqueProperties,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -208,18 +207,9 @@ export class FundingAccountService {
         'You do not have the permission to delete this Funding Account'
       );
 
-    const baseNodeLabels = ['BaseNode', 'FundingAccount'];
-
-    const uniqueProperties: UniqueProperties<FundingAccount> = {
-      name: ['Property', 'FundingAccountName'],
-      accountNumber: ['Property', 'FundingAccountNumber'],
-    };
-
     try {
       await this.db.deleteNodeNew({
         object,
-        baseNodeLabels,
-        uniqueProperties,
       });
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });

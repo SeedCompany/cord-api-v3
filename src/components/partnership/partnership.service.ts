@@ -428,12 +428,9 @@ export class PartnershipService {
       new PartnershipWillDeleteEvent(object, session)
     );
 
-    const baseNodeLabels = ['BaseNode', 'Partnership'];
-
     try {
       await this.db.deleteNodeNew({
         object,
-        baseNodeLabels,
       });
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });

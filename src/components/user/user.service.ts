@@ -16,15 +16,14 @@ import {
 import {
   ConfigService,
   DatabaseService,
+  deleteProperties,
   ILogger,
   Logger,
   matchSession,
   OnIndex,
   property,
-  setPropLabelsAndValuesDeleted,
   Transactional,
   UniquenessError,
-  UniqueProperties,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -363,13 +362,10 @@ export class UserService {
     // Update email
     if (input.email) {
       // Remove old emails and relations
-      const uniqueProperties: UniqueProperties<User> = {
-        email: ['Property', 'EmailAddress'],
-      };
       await this.db
         .query()
         .match([node('node', ['User', 'BaseNode'], { id: user.id })])
-        .call(setPropLabelsAndValuesDeleted, uniqueProperties)
+        .call(deleteProperties(User, 'email'))
         .return('*')
         .run();
 
@@ -451,17 +447,9 @@ export class UserService {
         'You do not have the permission to delete this User'
       );
 
-    const baseNodeLabels = ['BaseNode', 'User'];
-
-    const uniqueProperties: UniqueProperties<User> = {
-      email: ['Property', 'EmailAddress'],
-    };
-
     try {
       await this.db.deleteNodeNew<User>({
         object,
-        baseNodeLabels,
-        uniqueProperties,
       });
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });

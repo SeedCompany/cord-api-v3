@@ -1,4 +1,5 @@
 import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
+import { partition } from 'lodash';
 import { SecuredEnum } from '../../../common';
 import { ProjectStep } from '../../project/dto';
 
@@ -25,6 +26,34 @@ export enum EngagementStatus {
   NotRenewed = 'NotRenewed',
   Rejected = 'Rejected',
 }
+
+const EngagementStatusTerminalMap: Record<EngagementStatus, boolean> = {
+  [EngagementStatus.InDevelopment]: false,
+  [EngagementStatus.DidNotDevelop]: true,
+  [EngagementStatus.Active]: false,
+  [EngagementStatus.DiscussingTermination]: false,
+  [EngagementStatus.DiscussingReactivation]: false,
+  [EngagementStatus.DiscussingChangeToPlan]: false,
+  [EngagementStatus.DiscussingSuspension]: false,
+  [EngagementStatus.FinalizingCompletion]: false,
+  [EngagementStatus.ActiveChangedPlan]: false,
+  [EngagementStatus.Suspended]: false,
+  [EngagementStatus.Terminated]: true,
+  [EngagementStatus.Completed]: true,
+  [EngagementStatus.Converted]: true,
+  [EngagementStatus.Unapproved]: true,
+  [EngagementStatus.Transferred]: true,
+  [EngagementStatus.NotRenewed]: true,
+  [EngagementStatus.Rejected]: true,
+};
+
+export const [
+  TerminalEngagementStatuses,
+  OngoingEngagementStatuses,
+] = partition(
+  Object.keys(EngagementStatusTerminalMap) as EngagementStatus[],
+  (k) => EngagementStatusTerminalMap[k]
+);
 
 registerEnumType(EngagementStatus, {
   name: 'EngagementStatus',

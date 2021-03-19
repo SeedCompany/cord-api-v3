@@ -16,7 +16,6 @@ import {
   Logger,
   matchRequestingUser,
   OnIndex,
-  UniqueProperties,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -207,17 +206,9 @@ export class SongService {
         'You do not have the permission to delete this Song'
       );
 
-    const baseNodeLabels = ['BaseNode', 'Song', 'Producible'];
-
-    const uniqueProperties: UniqueProperties<Song> = {
-      name: ['Property', 'SongName'],
-    };
-
     try {
       await this.db.deleteNodeNew<Song>({
         object: song,
-        baseNodeLabels,
-        uniqueProperties,
       });
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });

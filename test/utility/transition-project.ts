@@ -18,6 +18,19 @@ export const stepsFromEarlyConversationToBeforeActive = [
   ProjectStep.PendingFinanceConfirmation,
 ];
 
+export const stepsFromEarlyConversationToBeforeCompleted = [
+  ...stepsFromEarlyConversationToBeforeActive,
+  ProjectStep.Active,
+  ProjectStep.FinalizingCompletion,
+];
+
+export const stepsFromEarlyConversationToBeforeTerminated = [
+  ...stepsFromEarlyConversationToBeforeActive,
+  ProjectStep.Active,
+  ProjectStep.DiscussingTermination,
+  ProjectStep.PendingTerminationApproval,
+];
+
 type SecuredStep = SecuredProjectStep & {
   transitions: ProjectStepTransition[];
 };
