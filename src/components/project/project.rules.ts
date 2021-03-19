@@ -10,7 +10,7 @@ import {
 } from '../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import { Role } from '../authorization';
-import { EngagementStatus, NonTerminalEngagementStatuses } from '../engagement';
+import { EngagementService } from '../engagement';
 import { User, UserService } from '../user';
 import {
   Project,
@@ -48,6 +48,8 @@ export class ProjectRules {
     private readonly userService: UserService,
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService,
+    @Inject(forwardRef(() => EngagementService))
+    private readonly engagements: EngagementService,
     private readonly configService: ConfigService,
     // eslint-disable-next-line @seedcompany/no-unused-vars
     @Logger('project:rules') private readonly logger: ILogger
@@ -713,12 +715,7 @@ export class ProjectRules {
           ],
         };
       case ProjectStep.FinalizingCompletion:
-        const engagementStatuses = (await this.getEngagements(id)).map(
-          (e) => e.status
-        );
-        const disabled =
-          intersection(engagementStatuses, NonTerminalEngagementStatuses)
-            .length > 0;
+        const disabled = await this.engagements.hasOngoing(id);
         return {
           approvers: [
             Role.Administrator,
@@ -840,22 +837,6 @@ export class ProjectRules {
         'project.step'
       );
     }
-  }
-
-  private async getEngagements(projectId: string) {
-    return await this.db
-      .query()
-      .match([node('project', 'Project', { id: projectId })])
-      .match([
-        node('project'),
-        relation('out', '', 'engagement', { active: true }),
-        node('engagement'),
-        relation('out', '', 'status', { active: true }),
-        node('sn', 'Property'),
-      ])
-      .return('engagement.id as id, sn.value as status')
-      .asResult<{ id: string; status: EngagementStatus }>()
-      .run();
   }
 
   private async getCurrentStep(id: string) {

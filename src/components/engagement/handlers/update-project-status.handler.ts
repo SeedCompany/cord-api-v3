@@ -1,7 +1,6 @@
-import { node, relation } from 'cypher-query-builder';
 import { MergeExclusive, RequireAtLeastOne } from 'type-fest';
 import { Session } from '../../../common';
-import { DatabaseService, EventsHandler, IEventHandler } from '../../../core';
+import { EventsHandler, IEventHandler } from '../../../core';
 import {
   Project,
   ProjectStatus,
@@ -9,7 +8,8 @@ import {
   ProjectType,
 } from '../../project';
 import { ProjectUpdatedEvent } from '../../project/events';
-import { EngagementStatus, TerminalEngagementStatuses } from '../dto';
+import { EngagementStatus } from '../dto';
+import { EngagementRepository } from '../engagement.repository';
 import { EngagementService } from '../engagement.service';
 
 const changes: Change[] = [
@@ -59,42 +59,23 @@ const matches = (cond: Condition, p: Project) =>
 export class UpdateProjectStatusHandler
   implements IEventHandler<ProjectUpdatedEvent> {
   constructor(
-    private readonly db: DatabaseService,
+    private readonly repo: EngagementRepository,
     private readonly engagementService: EngagementService
   ) {}
 
-  async handle({ previous, updated, updates, session }: ProjectUpdatedEvent) {
+  async handle({ previous, updated, session }: ProjectUpdatedEvent) {
     const engagementStatus = changes.find(changeMatcher(previous, updated))
       ?.newStatus;
     if (!engagementStatus) return;
 
-    // filter out engagements with a terminal status
-    const engagements = (await this.getEngagements(updates.id)).filter(
-      (e) => !TerminalEngagementStatuses.includes(e.status)
-    );
+    const engagementIds = await this.repo.getOngoingEngagementIds(updated.id);
 
     await this.updateEngagements(
       engagementStatus,
-      engagements.map((e) => e.id),
+      engagementIds,
       updated.type,
       session
     );
-  }
-
-  private async getEngagements(projectId: string) {
-    return await this.db
-      .query()
-      .match([node('project', 'Project', { id: projectId })])
-      .match([
-        node('project'),
-        relation('out', '', 'engagement', { active: true }),
-        node('engagement'),
-        relation('out', '', 'status', { active: true }),
-        node('sn', 'Property'),
-      ])
-      .return('engagement.id as id, sn.value as status')
-      .asResult<{ id: string; status: EngagementStatus }>()
-      .run();
   }
 
   private async updateEngagements(

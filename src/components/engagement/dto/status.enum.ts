@@ -49,7 +49,7 @@ const EngagementStatusTerminalMap: Record<EngagementStatus, boolean> = {
 
 export const [
   TerminalEngagementStatuses,
-  NonTerminalEngagementStatuses,
+  OngoingEngagementStatuses,
 ] = partition(
   Object.keys(EngagementStatusTerminalMap) as EngagementStatus[],
   (k) => EngagementStatusTerminalMap[k]
