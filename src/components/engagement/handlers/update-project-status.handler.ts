@@ -1,10 +1,59 @@
 import { node, relation } from 'cypher-query-builder';
+import { MergeExclusive, RequireAtLeastOne } from 'type-fest';
 import { Session } from '../../../common';
 import { DatabaseService, EventsHandler, IEventHandler } from '../../../core';
-import { ProjectStatus, ProjectStep, ProjectType } from '../../project';
+import {
+  Project,
+  ProjectStatus,
+  ProjectStep,
+  ProjectType,
+} from '../../project';
 import { ProjectUpdatedEvent } from '../../project/events';
 import { EngagementStatus, TerminalEngagementStatuses } from '../dto';
 import { EngagementService } from '../engagement.service';
+
+const changes: Change[] = [
+  {
+    from: { status: ProjectStatus.InDevelopment },
+    to: { status: ProjectStatus.Active },
+    newStatus: EngagementStatus.Active,
+  },
+  {
+    to: { step: ProjectStep.Completed },
+    newStatus: EngagementStatus.Completed,
+  },
+  {
+    to: { step: ProjectStep.Rejected },
+    newStatus: EngagementStatus.Rejected,
+  },
+  {
+    to: { step: ProjectStep.DidNotDevelop },
+    newStatus: EngagementStatus.DidNotDevelop,
+  },
+  {
+    to: { step: ProjectStep.Terminated },
+    newStatus: EngagementStatus.Terminated,
+  },
+];
+
+type Change = RequireAtLeastOne<{ from: Condition; to: Condition }> & {
+  newStatus: EngagementStatus;
+};
+type Condition = MergeExclusive<
+  { status: ProjectStatus },
+  { step: ProjectStep }
+>;
+
+const changeMatcher = (previous: Project, updated: Project) => ({
+  from,
+  to,
+}: Change) => {
+  const toMatches = to ? matches(to, updated) : !matches(from!, updated);
+  const fromMatches = from ? matches(from, previous) : !matches(to!, previous);
+  return toMatches && fromMatches;
+};
+const matches = (cond: Condition, p: Project) =>
+  cond.step ? cond.step === p.step.value : cond.status === p.status;
 
 @EventsHandler(ProjectUpdatedEvent)
 export class UpdateProjectStatusHandler
@@ -15,39 +64,18 @@ export class UpdateProjectStatusHandler
   ) {}
 
   async handle({ previous, updated, updates, session }: ProjectUpdatedEvent) {
-    // every project status that triggers engagement status updates with accompanying engagement status
-    const updateStatusTuples: Array<[ProjectStatus, EngagementStatus]> = [
-      [
-        ProjectStatus.Terminated,
-        updated.step.value === ProjectStep.Rejected
-          ? EngagementStatus.Rejected
-          : EngagementStatus.Terminated,
-      ],
-      [ProjectStatus.DidNotDevelop, EngagementStatus.DidNotDevelop],
-      [ProjectStatus.Completed, EngagementStatus.Completed],
-      [ProjectStatus.Active, EngagementStatus.Active],
-    ];
-    // if the previous project status is the same as the updated status, we do nothing to the engagements
-    const [projectStatus, engagementStatus] = updateStatusTuples.find(
-      (t) => t[0] === updated.status && t[0] !== previous.status
-    ) ?? [null, null];
+    const engagementStatus = changes.find(changeMatcher(previous, updated))
+      ?.newStatus;
     if (!engagementStatus) return;
-    // when the project becomes Active if it is currently InDevelopment
-    // we want to update all non terminal engagements to match
-    if (
-      projectStatus === ProjectStatus.Active &&
-      previous.status !== ProjectStatus.InDevelopment
-    ) {
-      return;
-    }
+
     // filter out engagements with a terminal status
     const engagements = (await this.getEngagements(updates.id)).filter(
       (e) => !TerminalEngagementStatuses.includes(e.status)
     );
-    if (!engagements.length) return;
+
     await this.updateEngagements(
       engagementStatus,
-      engagements,
+      engagements.map((e) => e.id),
       updated.type,
       session
     );
@@ -71,14 +99,14 @@ export class UpdateProjectStatusHandler
 
   private async updateEngagements(
     status: EngagementStatus,
-    engagements: Array<{ id: string; status: EngagementStatus }>,
+    engagementIds: string[],
     type: ProjectType,
     session: Session
   ) {
     await Promise.all(
-      engagements.map(async (engagement) => {
+      engagementIds.map(async (id) => {
         const updateInput = {
-          id: engagement.id,
+          id,
           status,
         };
         type === ProjectType.Translation
