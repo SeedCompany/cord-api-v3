@@ -2,7 +2,6 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Node, node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { DateTime } from 'luxon';
-import { MergeExclusive } from 'type-fest';
 import {
   DuplicateException,
   generateId,
@@ -16,6 +15,7 @@ import {
   ConfigService,
   createBaseNode,
   DatabaseService,
+  determineSortValue,
   IEventBus,
   ILogger,
   Logger,
@@ -96,9 +96,6 @@ export class PartnershipService {
     await this.verifyRelationshipEligibility(projectId, partnerId);
 
     const isFirstPartnership = await this.isFirstPartnership(projectId);
-    if (!isFirstPartnership && input.primary) {
-      await this.movePrimaryPartnership(false, { projectId: projectId });
-    }
     const primary = isFirstPartnership ? true : input.primary;
 
     const partner = await this.partnerService.readOne(partnerId, session);
@@ -245,6 +242,10 @@ export class PartnershipService {
         session.userId
       );
 
+      if (primary) {
+        await this.movePrimaryPartnership('to', result.id);
+      }
+
       const partnership = await this.readOne(result.id, session);
 
       await this.eventBus.publish(
@@ -384,7 +385,7 @@ export class PartnershipService {
     }
 
     if (input.primary) {
-      await this.movePrimaryPartnership(false, { partnershipId: input.id });
+      await this.movePrimaryPartnership('to', input.id);
     }
 
     const { mou, agreement, ...rest } = changes;
@@ -445,7 +446,7 @@ export class PartnershipService {
 
     // Assign primary to other partnership if one exists
     if (object.primary) {
-      await this.movePrimaryPartnership(true, { partnershipId: object.id });
+      await this.movePrimaryPartnership('from', object.id);
     }
 
     await this.eventBus.publish(
@@ -650,47 +651,43 @@ export class PartnershipService {
    * set first of other partnerships to primary true
    */
   protected async movePrimaryPartnership(
-    value: boolean,
-    {
-      partnershipId,
-      projectId,
-    }: MergeExclusive<{ partnershipId: string }, { projectId: string }>
+    direction: 'to' | 'from',
+    partnershipId: string
   ): Promise<void> {
-    const query = this.db.query();
-    projectId
-      ? query.match([
-          node('project', 'Project', { id: projectId }),
-          relation('out', '', 'partnership', { active: true }),
-          node('partnership'),
-          relation('out', '', 'primary'),
-          node('property', 'Property', { value: true }),
-        ])
-      : query.match([
-          node('partnership', 'Partnership', { id: partnershipId }),
-        ]);
-
-    query
-      .optionalMatch([
-        node('partnership'),
+    const createdAt = DateTime.local();
+    const newPropertyNodeProps = {
+      createdAt,
+      value: direction === 'from',
+      sortValue: determineSortValue(direction === 'from'),
+    };
+    const query = this.db
+      .query()
+      .match([
+        node('partnership', 'Partnership', { id: partnershipId }),
         relation('in', '', 'partnership', { active: true }),
         node('project', 'Project'),
         relation('out', '', 'partnership', { active: true }),
         node('otherPartnership'),
       ])
-      .optionalMatch([
-        node('partnership'),
-        relation('out', '', 'primary'),
-        node('property', 'Property'),
-      ])
-      .setValues({ 'property.value': false })
-      .with('project, otherPartnership')
+      .with('otherPartnership')
       .limit(1)
       .optionalMatch([
         node('otherPartnership'),
-        relation('out', '', 'primary'),
+        relation('out', 'oldRel', 'primary', { active: true }),
         node('property', 'Property'),
       ])
-      .setValues({ 'property.value': value });
+      .setValues({
+        'oldRel.active': false,
+      })
+      .with('otherPartnership')
+      .create([
+        node('otherPartnership'),
+        relation('out', '', 'primary', {
+          active: true,
+          createdAt,
+        }),
+        node('newProperty', 'Property', newPropertyNodeProps),
+      ]);
 
     await query.run();
   }
