@@ -62,6 +62,7 @@ import {
   UpdateInternshipEngagement,
   UpdateLanguageEngagement,
 } from './dto';
+import { EngagementRepository } from './engagement.repository';
 import { EngagementRules } from './engagement.rules';
 import {
   EngagementCreatedEvent,
@@ -109,6 +110,7 @@ export class EngagementService {
 
   constructor(
     private readonly db: DatabaseService,
+    private readonly repo: EngagementRepository,
     private readonly ceremonyService: CeremonyService,
     private readonly products: ProductService,
     private readonly config: ConfigService,
@@ -1171,6 +1173,11 @@ export class EngagementService {
       canRead: !!permission?.canRead,
       canCreate: !!permission?.canEdit,
     };
+  }
+
+  async hasOngoing(projectId: string) {
+    const ids = await this.repo.getOngoingEngagementIds(projectId);
+    return ids.length > 0;
   }
 
   // CONSISTENCY ////////////////////////////////////////////////////
