@@ -200,12 +200,9 @@ export class CeremonyService {
         'You do not have the permission to delete this Ceremony'
       );
 
-    const baseNodeLabels = ['BaseNode', 'Ceremony'];
-
     try {
       await this.db.deleteNodeNew({
         object,
-        baseNodeLabels,
       });
     } catch (exception) {
       this.logger.warning('Failed to delete Ceremony', {

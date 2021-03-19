@@ -470,12 +470,9 @@ export class FileRepository {
         'You do not have the permission to delete this File item'
       );
 
-    const baseNodeLabels = ['BaseNode', fileNode.type, 'FileNode'];
-
     try {
       await this.db.deleteNodeNew({
         object: fileNode,
-        baseNodeLabels,
       });
     } catch (exception) {
       this.logger.error('Failed to delete', { id: fileNode.id, exception });

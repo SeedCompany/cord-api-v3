@@ -16,7 +16,6 @@ import {
   Logger,
   matchRequestingUser,
   OnIndex,
-  UniqueProperties,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -210,17 +209,9 @@ export class StoryService {
         'You do not have the permission to delete this Story'
       );
 
-    const baseNodeLabels = ['BaseNode', 'Story', 'Producible'];
-
-    const uniqueProperties: UniqueProperties<Story> = {
-      name: ['Property', 'StoryName'],
-    };
-
     try {
       await this.db.deleteNodeNew<Story>({
         object: story,
-        baseNodeLabels,
-        uniqueProperties,
       });
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });

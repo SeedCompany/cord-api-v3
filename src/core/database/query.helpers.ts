@@ -1,7 +1,7 @@
 import { node, Query, relation } from 'cypher-query-builder';
 import { deburr } from 'lodash';
 import { DateTime } from 'luxon';
-import { entries, Resource, Session } from '../../common';
+import { ResourceShape, Session } from '../../common';
 
 // CREATE clauses //////////////////////////////////////////////////////
 
@@ -103,77 +103,27 @@ export function matchRequestingUser(
   ]);
 }
 
-//DELETE service
-export const setBaseNodeLabelsAndIdDeleted = (
-  query: Query,
-  baseNodeLabels: string[]
-) => {
-  //set labels as Deleted
-  baseNodeLabels.forEach((label) => {
-    query.call(setLabelDeleted, 'node', label).with('distinct(node) as node');
-  });
-
-  //set id as deleted_id
-
-  query
-    .with('*, node.id as nodeId')
-    .set({
-      variables: {
-        // eslint-disable-next-line @typescript-eslint/naming-convention
-        'node.deleted_id': 'nodeId',
-      },
-    })
-    .removeProperties({
-      node: 'id',
-    })
-    .with('distinct(node) as node');
-};
-
-export type UniqueProperties<BaseNode extends Resource> = Partial<
-  Record<keyof BaseNode, string[]>
->;
-
-export function setPropLabelsAndValuesDeleted<BaseNode extends Resource>(
-  query: Query,
-  uniqueProperties: UniqueProperties<BaseNode>
-) {
-  entries(uniqueProperties).forEach(([property, labels], i) => {
-    const currentPropertyNodeAlias = `propertyNode${i}`;
-    // Match the baseNode out to the propertyNode
-    query.optionalMatch([
-      node('node'),
-      relation('out', '', property),
-      node(currentPropertyNodeAlias, 'Property'),
-    ]);
-
-    // Reset all the labels on the propertyNode with the Delete_ prefix
-    labels?.forEach((label) => {
-      query.call(setLabelDeleted, currentPropertyNodeAlias, label);
-    });
-
-    // Reset all the values on the propertyNode to deleted_value
-    query
-      .with(`*, ${currentPropertyNodeAlias}.value as propVal${i}`)
-      .set({
-        variables: {
-          [`${currentPropertyNodeAlias}.deleted_value`]: `propVal${i}`,
-        },
-      })
-      .removeProperties({
-        [currentPropertyNodeAlias]: 'value',
-      })
-      .with('*');
-  });
-}
-
-const setLabelDeleted = (query: Query, nodeAlas: string, label: string) => {
-  query
-    .set({
-      labels: {
-        [nodeAlas]: `Deleted_${label}`,
-      },
-    })
-    .removeLabels({
-      [nodeAlas]: label,
-    });
+/**
+ * This will set all relationships given to active false
+ * and add deleted prefix to its labels.
+ */
+export const deleteProperties = <Resource extends ResourceShape<any>>(
+  _resource: Resource,
+  ...relationLabels: ReadonlyArray<keyof Resource['prototype']>
+) => (query: Query) => {
+  if (relationLabels.length === 0) {
+    return query;
+  }
+  const relationStr = relationLabels.join('|');
+  return query.raw(
+    `
+    match(node)-[propertyRel:${relationStr} {active: true}]->(property:Property)
+    set propertyRel.active = false
+    with property, reduce(deletedLabels = [], label in labels(property) | deletedLabels + ("Deleted_" + label)) as deletedLabels
+    call apoc.create.removeLabels(property, labels(property)) yield node as nodeRemoved
+    with property, deletedLabels
+    call apoc.create.addLabels(property, deletedLabels) yield node as nodeAdded
+    with *
+  `
+  );
 };
