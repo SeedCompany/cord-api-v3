@@ -383,7 +383,7 @@ export class PartnershipService {
       }
     }
 
-    if (!object.primary && input.primary) {
+    if (!object.primary.value && input.primary) {
       await this.movePrimaryPartnership('to', input.id);
     }
 

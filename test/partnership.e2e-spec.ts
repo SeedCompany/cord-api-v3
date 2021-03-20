@@ -461,4 +461,108 @@ describe('Partnership e2e', () => {
       'Partnership for this project and partner already exists'
     );
   });
+
+  it('primary partnership logic', async () => {
+    const project = await createProject(app);
+    let partnership1 = await createPartnership(app, {
+      projectId: project.id,
+      primary: true,
+    });
+    let partnership2 = await createPartnership(app, {
+      projectId: project.id,
+      primary: true,
+    });
+    let partnership3 = await createPartnership(app, {
+      projectId: project.id,
+      primary: true,
+    });
+
+    const getPartnershipById = async (
+      partnershipId: string
+    ): Promise<Partnership> => {
+      const result = await app.graphql.query(
+        gql`
+          query partnership($id: ID!) {
+            partnership(id: $id) {
+              ...partnership
+            }
+          }
+          ${fragments.partnership}
+        `,
+        {
+          id: partnershipId,
+          projectId: project.id,
+        }
+      );
+      return result.partnership;
+    };
+
+    partnership1 = await getPartnershipById(partnership1.id);
+    partnership2 = await getPartnershipById(partnership2.id);
+    partnership3 = await getPartnershipById(partnership3.id);
+    expect(partnership1.primary.value).toBe(false);
+    expect(partnership2.primary.value).toBe(false);
+    expect(partnership3.primary.value).toBe(true);
+
+    // update partnership2 primary to true, check others' primary is false
+    const input: UpdatePartnershipInput = {
+      partnership: {
+        id: partnership2.id,
+        primary: true,
+      },
+    };
+    await app.graphql.query(
+      gql`
+        mutation updatePartnership($input: UpdatePartnershipInput!) {
+          updatePartnership(input: $input) {
+            partnership {
+              ...partnership
+            }
+          }
+        }
+        ${fragments.partnership}
+      `,
+      { input }
+    );
+    partnership1 = await getPartnershipById(partnership1.id);
+    partnership2 = await getPartnershipById(partnership2.id);
+    partnership3 = await getPartnershipById(partnership3.id);
+    expect(partnership1.primary.value).toBe(false);
+    expect(partnership2.primary.value).toBe(true);
+    expect(partnership3.primary.value).toBe(false);
+
+    // delete primary partnership, move primary to other existing one
+    await app.graphql.mutate(
+      gql`
+        mutation deletePartnership($id: ID!) {
+          deletePartnership(id: $id)
+        }
+      `,
+      {
+        id: partnership2.id,
+      }
+    );
+    partnership1 = await getPartnershipById(partnership1.id);
+    partnership3 = await getPartnershipById(partnership3.id);
+    expect(partnership1.primary.value !== partnership3.primary.value).toBe(
+      true
+    );
+
+    const [deletePartnershipId, primaryPartnershipId] = partnership1.primary
+      .value
+      ? [partnership1.id, partnership3.id]
+      : [partnership3.id, partnership1.id];
+    await app.graphql.mutate(
+      gql`
+        mutation deletePartnership($id: ID!) {
+          deletePartnership(id: $id)
+        }
+      `,
+      {
+        id: deletePartnershipId,
+      }
+    );
+    const primaryPartnership = await getPartnershipById(primaryPartnershipId);
+    expect(primaryPartnership.primary.value).toBe(true);
+  });
 });

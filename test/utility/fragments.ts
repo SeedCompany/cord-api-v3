@@ -501,6 +501,11 @@ export const partnership = gql`
       canRead
       canEdit
     }
+    primary {
+      value
+      canRead
+      canEdit
+    }
     partner {
       canEdit
       canRead
