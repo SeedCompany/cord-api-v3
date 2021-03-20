@@ -15,7 +15,6 @@ import {
   ConfigService,
   createBaseNode,
   DatabaseService,
-  determineSortValue,
   IEventBus,
   ILogger,
   Logger,
@@ -384,7 +383,7 @@ export class PartnershipService {
       }
     }
 
-    if (input.primary) {
+    if (!object.primary && input.primary) {
       await this.movePrimaryPartnership('to', input.id);
     }
 
@@ -655,12 +654,7 @@ export class PartnershipService {
     partnershipId: string
   ): Promise<void> {
     const createdAt = DateTime.local();
-    const newPropertyNodeProps = {
-      createdAt,
-      value: direction === 'from',
-      sortValue: determineSortValue(direction === 'from'),
-    };
-    const query = this.db
+    await this.db
       .query()
       .match([
         node('partnership', 'Partnership', { id: partnershipId }),
@@ -670,11 +664,10 @@ export class PartnershipService {
         node('otherPartnership'),
       ])
       .with('otherPartnership')
-      .limit(1)
-      .optionalMatch([
+      .match([
         node('otherPartnership'),
         relation('out', 'oldRel', 'primary', { active: true }),
-        node('property', 'Property'),
+        node('', 'Property'),
       ])
       .setValues({
         'oldRel.active': false,
@@ -686,9 +679,33 @@ export class PartnershipService {
           active: true,
           createdAt,
         }),
-        node('newProperty', 'Property', newPropertyNodeProps),
-      ]);
+        node('newProperty', 'Property', {
+          createdAt,
+          value: false,
+          sortValue: false,
+        }),
+      ])
+      .run();
 
-    await query.run();
+    if (direction === 'from') {
+      await this.db
+        .query()
+        .match([
+          node('partnership', 'Partnership', { id: partnershipId }),
+          relation('in', '', 'partnership', { active: true }),
+          node('project', 'Project'),
+          relation('out', '', 'partnership', { active: true }),
+          node('otherPartnership'),
+        ])
+        .with('otherPartnership')
+        .limit(1)
+        .match([
+          node('otherPartnership'),
+          relation('out', '', 'primary', { active: true }),
+          node('property', 'Property'),
+        ])
+        .setValues({ 'property.value': true })
+        .run();
+    }
   }
 }
