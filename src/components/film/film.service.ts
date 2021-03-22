@@ -185,14 +185,14 @@ export class FilmService {
 
   async update(input: UpdateFilm, session: Session): Promise<Film> {
     const film = await this.readOne(input.id, session);
-    const { scriptureReferences, ...filmNoScrip } = film;
     const {
       scriptureReferences: changeScriptureRefOnly,
       ...changesNoScrip
     } = input;
     const realChanges = await this.db.getActualChanges(
-      filmNoScrip,
-      changesNoScrip
+      film,
+      changesNoScrip,
+      Film.Props
     );
     await this.authorizationService.verifyCanEditChanges(
       Film,

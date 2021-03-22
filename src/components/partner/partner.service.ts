@@ -329,11 +329,12 @@ export class PartnerService {
         financialReportingTypes: [],
       };
     }
-    const { pointOfContact, ...objectSimpleProps } = object;
+
     const { pointOfContactId, ...changesNoPOC } = changes;
     const realChanges = await this.db.getActualChanges(
-      objectSimpleProps,
-      changesNoPOC
+      object,
+      changesNoPOC,
+      Partner.Props
     );
     await this.authorizationService.verifyCanEditChanges(
       Partner,

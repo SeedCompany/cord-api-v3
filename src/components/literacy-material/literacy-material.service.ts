@@ -203,16 +203,13 @@ export class LiteracyMaterialService {
   ): Promise<LiteracyMaterial> {
     const literacyMaterial = await this.readOne(input.id, session);
     const {
-      scriptureReferences,
-      ...literacyMaterialNoScrip
-    } = literacyMaterial;
-    const {
       scriptureReferences: changeScriptureRefOnly,
       ...changesNoScripRef
     } = input;
     const realChanges = await this.db.getActualChanges(
-      literacyMaterialNoScrip,
-      changesNoScripRef
+      literacyMaterial,
+      changesNoScripRef,
+      LiteracyMaterial.Props
     );
     await this.authorizationService.verifyCanEditChanges(
       LiteracyMaterial,

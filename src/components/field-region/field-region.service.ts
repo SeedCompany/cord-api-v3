@@ -221,7 +221,11 @@ export class FieldRegionService {
     session: Session
   ): Promise<FieldRegion> {
     const fieldRegion = await this.readOne(input.id, session);
-    const realChanges = await this.db.getActualChanges(fieldRegion, input);
+    const realChanges = await this.db.getActualChanges(
+      fieldRegion,
+      input,
+      FieldRegion.Props
+    );
     await this.authorizationService.verifyCanEditChanges(
       FieldRegion,
       fieldRegion,

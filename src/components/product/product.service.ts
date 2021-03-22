@@ -421,15 +421,10 @@ export class ProductService {
       );
     }
 
-    const {
-      scriptureReferencesOverride: scripRefOv,
-      scriptureReferences: scriptureRef,
-      produces,
-      ...objSimpleProps
-    } = currentProduct;
     const realChanges = await this.db.getActualChanges(
-      objSimpleProps,
-      simplePropsChanges
+      currentProduct,
+      simplePropsChanges,
+      DerivativeScriptureProduct.Props
     );
     await this.authorizationService.verifyCanEditChanges(
       Product,

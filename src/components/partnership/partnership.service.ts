@@ -392,10 +392,10 @@ export class PartnershipService {
     }
 
     const { mou, agreement, ...changesSimpleProps } = changes;
-    const { mou: objMou, agreement: objAgreement, ...objSimpleProps } = object;
     const realChanges = await this.db.getActualChanges(
-      objSimpleProps,
-      changesSimpleProps
+      object,
+      changesSimpleProps,
+      Partnership.Props
     );
     await this.authorizationService.verifyCanEditChanges(
       Partnership,

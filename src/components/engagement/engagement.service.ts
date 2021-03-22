@@ -805,9 +805,11 @@ export class EngagementService {
       session
     )) as LanguageEngagement;
 
-    const { pnp: changesOnlyPnp, ...changesNoPnp } = changes;
-
-    const realChanges = await this.db.getActualChanges(object, changesNoPnp);
+    const realChanges = await this.db.getActualChanges(
+      object,
+      changes,
+      LanguageEngagement.Props
+    );
     await this.authorizationService.verifyCanEditChanges(
       LanguageEngagement,
       object,
@@ -834,7 +836,7 @@ export class EngagementService {
 
     try {
       await this.db.updateProperties({
-        type: 'LanguageEngagement',
+        type: LanguageEngagement,
         object: object,
         changes: realChanges,
       });
@@ -884,15 +886,11 @@ export class EngagementService {
       session
     )) as InternshipEngagement;
 
-    // take mentor, growthPlan, countryOfOrigin out of object to verify the 'simple' properties
-    const {
-      mentor,
-      growthPlan: growthPlanOnly,
-      countryOfOrigin,
-      ...objectNoExtra
-    } = object;
-
-    const realChanges = await this.db.getActualChanges(objectNoExtra, input);
+    const realChanges = await this.db.getActualChanges(
+      object,
+      input,
+      InternshipEngagement.Props
+    );
     await this.authorizationService.verifyCanEditChanges(
       InternshipEngagement,
       object,
@@ -912,7 +910,7 @@ export class EngagementService {
         resource: InternshipEngagement,
         baseNode: object,
         prop: 'growthPlan',
-        resourceName: 'Engagement',
+        resourceName: 'engagement',
       });
     }
     if (countryOfOriginId) {

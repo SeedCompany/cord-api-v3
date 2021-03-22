@@ -247,15 +247,15 @@ export class LocationService {
   async update(input: UpdateLocation, session: Session): Promise<Location> {
     const location = await this.readOne(input.id, session);
 
-    const { fundingAccount, defaultFieldRegion, ...locSimpleProps } = location;
     const {
       fundingAccountId,
       defaultFieldRegionId,
       ...simplePropChanges
     } = input;
     const realChanges = await this.db.getActualChanges(
-      locSimpleProps,
-      simplePropChanges
+      location,
+      simplePropChanges,
+      Location.Props
     );
     await this.authorizationService.verifyCanEditChanges(
       Location,
@@ -278,7 +278,6 @@ export class LocationService {
         propName: 'defaultFieldRegionId',
       });
     }
-    // -- skip auth here because already checked authorization
     await this.db.updateProperties({
       type: 'Location',
       object: location,

@@ -193,10 +193,11 @@ export class FieldZoneService {
     const fieldZone = await this.readOne(input.id, session);
 
     const { directorId, ...inputSimpleProps } = input;
-    const { director, ...fieldZoneSimpleProps } = fieldZone;
+
     const realChanges = await this.db.getActualChanges(
-      fieldZoneSimpleProps,
-      inputSimpleProps
+      fieldZone,
+      inputSimpleProps,
+      FieldZone.Props
     );
     await this.authorizationService.verifyCanEditChanges(
       FieldZone,

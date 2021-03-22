@@ -14,12 +14,12 @@ import { Driver, Session as Neo4jSession } from 'neo4j-driver';
 import { assert } from 'ts-essentials';
 import {
   AbstractClassType,
+  CalendarDate,
   ID,
   isSecured,
   many,
   Order,
   Resource,
-  ResourceShape,
   ServerException,
   Session,
   unwrapSecured,
@@ -52,9 +52,9 @@ export const property = (
   ],
 ];
 
-type ChangesOf<T extends ResourceShape<any>> = Partial<
-  Record<keyof T['prototype'] & string, any>
->;
+type ChangesOf<T extends Resource> = {
+  [Key in keyof T]?: UnwrapSecured<T[Key]>;
+};
 
 export const matchSession = (
   session: Session,
@@ -238,48 +238,41 @@ export class DatabaseService {
   }
 
   // expecting the changes of the "simple" properties.
-  async getActualChanges<TResource extends ResourceShape<any>>(
-    oldObject: TResource['prototype'],
-    changes: ChangesOf<TResource>
+  async getActualChanges<TResource extends Resource>(
+    oldObject: TResource,
+    changes: ChangesOf<TResource>,
+    props: ReadonlyArray<keyof TResource & string>
   ): Promise<ChangesOf<TResource>> {
-    const props = Object.keys(changes);
-    // have a reference to 'input' most of the time, so need to copy the data instead of
-    //    accidentally mutating 'input'
     const realChanges: typeof changes = {};
-    Object.assign(realChanges, changes);
-    // we don't need id, it's not a change, it's the id of the data we want to change
-    if (props.includes('id')) {
-      delete realChanges.id;
-    }
     for (const prop of props) {
-      if (realChanges[prop] === undefined) {
-        // TODO: maybe a better way than circumventing dynamic delete? I don't see a way around
-        //     deleting dynamically right now.
-        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-        delete realChanges[prop];
+      if (changes[prop] === undefined) {
         continue;
       }
       const unwrapped = unwrapSecured(oldObject[prop]);
-      if (unwrapped instanceof Array) {
-        if (isEqual(sortBy(unwrapped), sortBy(realChanges[prop]))) {
-          // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-          delete realChanges[prop];
+      if (unwrapped !== null && changes[prop] !== null) {
+        if (
+          Array.isArray(unwrapped) &&
+          !isEqual(sortBy(unwrapped), sortBy(changes[prop] as any[]))
+        ) {
+          realChanges[prop] = changes[prop];
         }
-      }
 
-      if (unwrapped instanceof Date) {
-        if (unwrapped.getTime() === (realChanges[prop] as Date).getTime()) {
-          // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-          delete realChanges[prop];
+        if (
+          unwrapped instanceof CalendarDate &&
+          unwrapped.valueOf() !== (changes[prop] as CalendarDate).valueOf()
+        ) {
+          realChanges[prop] = changes[prop];
           continue;
+        }
+        if (unwrapped instanceof DateTime) {
+          if (unwrapped.valueOf() !== (changes[prop] as DateTime).valueOf()) {
+            realChanges[prop] = changes[prop];
+            continue;
+          }
         }
       }
-      if (unwrapped instanceof DateTime) {
-        if (unwrapped.equals(realChanges[prop] as DateTime)) {
-          // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-          delete realChanges[prop];
-          continue;
-        }
+      if (unwrapped !== changes[prop]) {
+        realChanges[prop] = changes[prop];
       }
     }
     return realChanges;

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { pickBy } from 'lodash';
 import {
+  CalendarDate,
   generateId,
   ID,
   NotFoundException,
@@ -150,9 +151,12 @@ export class EthnologueLanguageService {
 
     // filter out all of the undefined values so we only have a mapping of entries that the user wanted to edit
     const valueSetCleaned = pickBy(valueSet, (v) => v !== undefined);
+
+    // even though we already have a cleaned value set, we still need to get them in a readable way for the verifyCanEditChanges function
     const realChanges = await this.db.getActualChanges(
-      ethnologueLanguage,
-      input
+      { ...ethnologueLanguage, createdAt: CalendarDate.now() }, // hacking in a createAt field, because getActualChanges is expecting a Resource shape.
+      input,
+      EthnologueLanguage.Props
     );
 
     await this.authorizationService.verifyCanEditChanges(

@@ -176,7 +176,11 @@ export class UnavailabilityService {
         'user.unavailability'
       );
     }
-    const realChanges = await this.db.getActualChanges(unavailability, input);
+    const realChanges = await this.db.getActualChanges(
+      unavailability,
+      input,
+      Unavailability.Props
+    );
 
     if (result.user.properties.id !== session.userId) {
       await this.authorizationService.verifyCanEditChanges(

@@ -342,11 +342,11 @@ export class UserService {
     this.logger.debug('mutation update User', { input, session });
     const user = await this.readOne(input.id, session);
 
-    const { roles, ...userSimpleProps } = user;
     const { roles: rolesInput, ...inputSimpleProps } = input;
     const realChanges = await this.db.getActualChanges(
-      userSimpleProps,
-      inputSimpleProps
+      user,
+      inputSimpleProps,
+      User.Props
     );
     if (user.id !== session.userId) {
       await this.authorizationService.verifyCanEditChanges(

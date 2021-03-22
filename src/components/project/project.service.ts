@@ -611,10 +611,16 @@ export class ProjectService {
     };
 
     const { primaryLocationId, fieldRegionId, ...changesSimpleProps } = changes;
+
     // get the 'real' changes... nothing undefined or the same as the old object
+    const props =
+      currentProject.type === ProjectType.Internship
+        ? InternshipProject.Props
+        : TranslationProject.Props;
     const realChanges = await this.db.getActualChanges(
       currentProject,
-      changesSimpleProps
+      changesSimpleProps,
+      props
     );
 
     await this.authorizationService.verifyCanEditChanges(

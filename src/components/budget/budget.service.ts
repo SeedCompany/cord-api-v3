@@ -450,7 +450,11 @@ export class BudgetService {
   ): Promise<Budget> {
     const budget = await this.readOne(input.id, session);
 
-    const realChanges = await this.db.getActualChanges(budget, input);
+    const realChanges = await this.db.getActualChanges(
+      budget,
+      input,
+      Budget.Props
+    );
     await this.authorizationService.verifyCanEditChanges(
       Budget,
       budget,
@@ -462,15 +466,13 @@ export class BudgetService {
         baseNode: budget,
         prop: 'universalTemplateFile',
       });
+      await this.files.updateDefinedFile(
+        budget.universalTemplateFile,
+        'budget.universalTemplateFile',
+        universalTemplateFile,
+        session
+      );
     }
-
-    await this.files.updateDefinedFile(
-      budget.universalTemplateFile,
-      'budget.universalTemplateFile',
-      universalTemplateFile,
-      session
-    );
-
     return await this.db.updateProperties({
       type: 'Budget',
       object: budget,
@@ -487,7 +489,11 @@ export class BudgetService {
     await this.verifyCanEdit(id, session);
 
     const br = await this.readOneRecord(id, session);
-    const realChanges = await this.db.getActualChanges(br, input);
+    const realChanges = await this.db.getActualChanges(
+      br,
+      input,
+      BudgetRecord.Props
+    );
     await this.authorizationService.verifyCanEditChanges(
       BudgetRecord,
       br,
