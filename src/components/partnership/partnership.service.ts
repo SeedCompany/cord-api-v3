@@ -654,16 +654,20 @@ export class PartnershipService {
     partnershipId: string
   ): Promise<void> {
     const createdAt = DateTime.local();
-    await this.db
-      .query()
-      .match([
-        node('partnership', 'Partnership', { id: partnershipId }),
-        relation('in', '', 'partnership', { active: true }),
-        node('project', 'Project'),
-        relation('out', '', 'partnership', { active: true }),
-        node('otherPartnership'),
-      ])
-      .with('otherPartnership')
+    const startQuery = () =>
+      this.db
+        .query()
+        .match([
+          node('partnership', 'Partnership', { id: partnershipId }),
+          relation('in', '', 'partnership', { active: true }),
+          node('project', 'Project'),
+          relation('out', '', 'partnership', { active: true }),
+          node('otherPartnership'),
+        ])
+        .raw('WHERE partnership <> otherPartnership')
+        .with('otherPartnership');
+
+    await startQuery()
       .match([
         node('otherPartnership'),
         relation('out', 'oldRel', 'primary', { active: true }),
@@ -688,16 +692,7 @@ export class PartnershipService {
       .run();
 
     if (direction === 'from') {
-      await this.db
-        .query()
-        .match([
-          node('partnership', 'Partnership', { id: partnershipId }),
-          relation('in', '', 'partnership', { active: true }),
-          node('project', 'Project'),
-          relation('out', '', 'partnership', { active: true }),
-          node('otherPartnership'),
-        ])
-        .with('otherPartnership')
+      await startQuery()
         .limit(1)
         .match([
           node('otherPartnership'),
