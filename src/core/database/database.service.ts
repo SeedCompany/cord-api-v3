@@ -555,6 +555,7 @@ export class DatabaseService {
   }: {
     object: TObject;
   }) {
+    const deletedAt = DateTime.local();
     const query = this.db
       .query()
       .match([
@@ -575,6 +576,7 @@ export class DatabaseService {
         node('', 'BaseNode'),
       ])
       .setValues({
+        'baseNode.deletedAt': deletedAt,
         'baseNodeRel.active': false,
       })
       /**
@@ -590,7 +592,14 @@ export class DatabaseService {
       .raw(
         `
         unwind nodeList as node
-        with node, reduce(deletedLabels = [], label in labels(node) | deletedLabels + ("Deleted_" + label)) as deletedLabels
+        with node,
+        reduce(
+          deletedLabels = [], label in labels(node) |
+            case
+              when label starts with "Deleted_" then deletedLabels + label
+              else deletedLabels + ("Deleted_" + label)
+            end
+        ) as deletedLabels
         call apoc.create.removeLabels(node, labels(node)) yield node as nodeRemoved
         with node, deletedLabels
         call apoc.create.addLabels(node, deletedLabels) yield node as nodeAdded
