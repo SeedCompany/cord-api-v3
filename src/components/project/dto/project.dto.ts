@@ -24,6 +24,7 @@ import { Directory } from '../../file/dto';
 import { SecuredTags } from '../../language/dto/language.dto';
 import { Location } from '../../location/dto';
 import { Partnership } from '../../partnership/dto';
+import { SecuredReportPeriod } from '../../periodic-report/dto/type.enum';
 import { Pinnable } from '../../pin/dto';
 import { ProjectMember } from '../project-member/dto';
 import { ProjectStatus } from './status.enum';
@@ -117,6 +118,9 @@ class Project extends IntersectionType(Resource, Pinnable) {
 
   @Field()
   readonly financialReportReceivedAt: SecuredDateTime;
+
+  @Field()
+  readonly financialReportPeriod: SecuredReportPeriod;
 
   // A list of non-global roles the requesting user has available for this object.
   // This is just a cache, to prevent extra db lookups within the same request.

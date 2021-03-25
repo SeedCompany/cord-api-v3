@@ -17,10 +17,10 @@ import { DbLocation } from '../../location/model';
 import { DbOrganization } from '../../organization/model';
 import { DbPartner } from '../../partner/model';
 import { DbPartnership } from '../../partnership/model';
+import { DbPeriodicReport } from '../../periodic-report/model';
 import { DbProduct } from '../../product/model';
 import { DbProject } from '../../project/model';
 import { DbProjectMember } from '../../project/project-member/model';
-import { DbProjectReport } from '../../project/project-report/model';
 import { DbSong } from '../../song/model';
 import { DbStory } from '../../story/model';
 import { DbEducation, DbUnavailability, DbUser } from '../../user/model';
@@ -48,7 +48,7 @@ export type AnyBaseNode = DbBudget &
   DbProduct &
   DbProject &
   DbProjectMember &
-  DbProjectReport &
+  DbPeriodicReport &
   DbSong &
   DbStory &
   DbUnavailability &
@@ -77,7 +77,7 @@ export type OneBaseNode =
   | DbProduct
   | DbProject
   | DbProjectMember
-  | DbProjectReport
+  | DbPeriodicReport
   | DbSong
   | DbStory
   | DbUnavailability

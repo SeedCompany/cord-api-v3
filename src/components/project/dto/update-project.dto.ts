@@ -12,6 +12,7 @@ import {
   NameField,
   Sensitivity,
 } from '../../../common';
+import { ReportPeriod } from '../../periodic-report/dto/type.enum';
 import { IProject, Project } from './project.dto';
 import { ProjectStep } from './step.enum';
 
@@ -67,6 +68,9 @@ export abstract class UpdateProject {
 
   @DateTimeField({ nullable: true })
   readonly financialReportReceivedAt?: DateTime;
+
+  @Field(() => ReportPeriod)
+  readonly financialReportPeriod: ReportPeriod;
 }
 
 @InputType()

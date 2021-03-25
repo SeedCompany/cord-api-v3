@@ -244,6 +244,12 @@ export class ProjectService {
         isOrgPublic: false,
       },
       {
+        key: 'financialReportPeriod',
+        value: createInput.financialReportPeriod,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
         key: 'canDelete',
         value: true,
         isPublic: false,
