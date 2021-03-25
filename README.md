@@ -21,7 +21,7 @@ docker-compose up
 1. Create a `.env.local` file in the root of the project and specify your username and password used at database creation:
    ```ini
    NEO4J_USERNAME=neo4j
-   NEO4J_PASSWORD=asdf
+   NEO4J_PASSWORD=admin
    ```
 1. Run `yarn` to install dependencies
 
