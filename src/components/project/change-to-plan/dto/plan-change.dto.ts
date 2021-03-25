@@ -1,28 +1,19 @@
-import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
-import { TranslationProject } from '../..';
+import { Field, ObjectType } from '@nestjs/graphql';
 import { IdField } from '../../../../common';
-
-export enum PlanChangeStep {
-  Start = 'Start',
-  End = 'End',
-}
-
-registerEnumType(PlanChangeStep, {
-  name: 'PlanChangeStep',
-});
+import { PlanChangeStatus } from './plan-change-status.enum';
+import { PlanChangeType } from './plan-change-type.enum';
 
 @ObjectType()
 export abstract class PlanChange {
-  @IdField({
-    description:
-      'A change to project id. Each change request will have its own id.',
-    nullable: false,
-  })
-  readonly changeId: string;
+  @IdField()
+  readonly id: string;
 
-  @Field(() => TranslationProject)
-  readonly project: TranslationProject;
+  @Field(() => [PlanChangeType])
+  readonly types: PlanChangeType[];
 
-  @Field(() => PlanChangeStep)
-  readonly changeStep: PlanChangeStep;
+  @Field()
+  readonly summary: string;
+
+  @Field(() => PlanChangeStatus)
+  readonly status: PlanChangeStatus;
 }
