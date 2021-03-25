@@ -9,8 +9,7 @@ import { CeremonyType } from '../dto/type.enum';
 
 @EventsHandler(EngagementCreatedEvent)
 export class CreateEngagementDefaultCeremonyHandler
-  implements IEventHandler<EngagementCreatedEvent>
-{
+  implements IEventHandler<EngagementCreatedEvent> {
   constructor(
     private readonly ceremonies: CeremonyService,
     private readonly db: DatabaseService,

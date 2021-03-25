@@ -19,16 +19,15 @@ export const generateRegisterInput = async (): Promise<RegisterInput> => ({
   title: faker.name.title(),
 });
 
-export const generateRequireFieldsRegisterInput =
-  async (): Promise<RegisterInput> => ({
-    email: faker.internet.email(),
-    realFirstName: faker.name.firstName(),
-    realLastName: faker.name.lastName(),
-    displayFirstName: faker.name.firstName() + (await generateId()),
-    displayLastName: faker.name.lastName() + (await generateId()),
-    password: faker.internet.password(10),
-    timezone: 'America/Chicago',
-  });
+export const generateRequireFieldsRegisterInput = async (): Promise<RegisterInput> => ({
+  email: faker.internet.email(),
+  realFirstName: faker.name.firstName(),
+  realLastName: faker.name.lastName(),
+  displayFirstName: faker.name.firstName() + (await generateId()),
+  displayLastName: faker.name.lastName() + (await generateId()),
+  password: faker.internet.password(10),
+  timezone: 'America/Chicago',
+});
 
 export async function registerUserWithStrictInput(
   app: TestApp,

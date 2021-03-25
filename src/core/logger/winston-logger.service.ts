@@ -17,8 +17,7 @@ export class LoggerOptions {
 @Injectable()
 export class WinstonLoggerService
   extends AbstractLogger
-  implements OnModuleDestroy
-{
+  implements OnModuleDestroy {
   private readonly logger: WinstonLogger;
   private closing = false;
 

@@ -37,10 +37,8 @@ export type AuthScope = 'global' | 'project';
 export type ScopedRole = `${AuthScope}:${Role}`;
 
 // A helper to create a bunch of scoped roles for a given scope
-export const rolesForScope =
-  (scope: AuthScope) =>
-  (role: Role): ScopedRole =>
-    `${scope}:${role}` as const;
+export const rolesForScope = (scope: AuthScope) => (role: Role): ScopedRole =>
+  `${scope}:${role}` as const;
 
 export type InternalRole =
   | 'AdministratorRole'

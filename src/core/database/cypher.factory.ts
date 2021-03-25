@@ -28,10 +28,9 @@ const csv = (str: string): string[] =>
   compact(str.split(',').map((s) => s.trim()));
 
 const parseRoutingTable = (routingTableStr: string) => {
-  const matched =
-    /RoutingTable\[database=(.+), expirationTime=(\d+), currentTime=(\d+), routers=\[(.*)], readers=\[(.*)], writers=\[(.*)]]/.exec(
-      routingTableStr
-    );
+  const matched = /RoutingTable\[database=(.+), expirationTime=(\d+), currentTime=(\d+), routers=\[(.*)], readers=\[(.*)], writers=\[(.*)]]/.exec(
+    routingTableStr
+  );
   if (!matched) {
     return undefined;
   }
@@ -82,8 +81,9 @@ export const CypherFactory: FactoryProvider<Connection> = {
                 message.startsWith('Routing table is stale for database')
               ) {
                 const routingTable = parseRoutingTable(message);
-                const matched =
-                  /for database: "(.*)" and access mode: "(.+)":/.exec(message);
+                const matched = /for database: "(.*)" and access mode: "(.+)":/.exec(
+                  message
+                );
                 driverLogger.info('Routing table is stale', {
                   database: matched?.[1] || null,
                   accessMode: matched?.[2],

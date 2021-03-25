@@ -26,6 +26,7 @@ import {
   DirectScriptureProduct,
   Product,
 } from '../../product/dto';
+import { PlanChange } from '../../project/change-to-plan/dto';
 import {
   InternshipProject,
   IProject as Project,
@@ -68,6 +69,7 @@ export const ResourceMap = {
   FinancialReport,
   NarrativeReport,
   ProgressReport,
+  PlanChange,
   Song,
   Story,
   Unavailability,

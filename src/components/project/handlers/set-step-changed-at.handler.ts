@@ -11,8 +11,7 @@ import { ProjectService } from '../project.service';
 
 @EventsHandler(ProjectUpdatedEvent)
 export class ProjectStepChangedAtHandler
-  implements IEventHandler<ProjectUpdatedEvent>
-{
+  implements IEventHandler<ProjectUpdatedEvent> {
   constructor(
     private readonly db: DatabaseService,
     private readonly projectService: ProjectService,

@@ -98,8 +98,9 @@ export class LoggerModule {
   }
 
   static forRoot(): DynamicModule {
-    const namedLoggerProviders =
-      Array.from(loggerNames).map(namedLoggerProvider);
+    const namedLoggerProviders = Array.from(loggerNames).map(
+      namedLoggerProvider
+    );
     return {
       module: LoggerModule,
       providers: namedLoggerProviders,

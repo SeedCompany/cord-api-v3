@@ -84,39 +84,39 @@ type AndModifiedAt<T> = T extends { modifiedAt: DateTime }
  * Note that while ID properties to change a relationship can be passed in they
  * are assumed to always be different.
  */
-export const getChanges =
-  <TResourceStatic extends ResourceShape<any>>(resource: TResourceStatic) =>
-  <
-    TResource extends MaybeUnsecuredInstance<TResourceStatic>,
-    Changes extends ChangesOf<TResource>
-  >(
-    existingObject: TResource,
-    changes: Changes &
-      // Ensure there are no extra props not in ChangesOf<TResource>
-      // This is needed because changes is a generic.
-      // It's a generic to ensure that if only a subset of the changes
-      // are passed in we don't declare the return type having those omitted
-      // properties.
-      Record<Exclude<keyof Changes, keyof ChangesOf<TResource>>, never>
-  ): Partial<Omit<Changes, keyof Resource> & AndModifiedAt<TResource>> => {
-    const actual = pickBy(omit(changes, Resource.Props), (change, prop) => {
-      const key = isRelation(prop, existingObject) ? prop.slice(0, -2) : prop;
-      const existing = unwrapSecured(existingObject[key]);
-      return !isSame(change, existing);
-    });
+export const getChanges = <TResourceStatic extends ResourceShape<any>>(
+  resource: TResourceStatic
+) => <
+  TResource extends MaybeUnsecuredInstance<TResourceStatic>,
+  Changes extends ChangesOf<TResource>
+>(
+  existingObject: TResource,
+  changes: Changes &
+    // Ensure there are no extra props not in ChangesOf<TResource>
+    // This is needed because changes is a generic.
+    // It's a generic to ensure that if only a subset of the changes
+    // are passed in we don't declare the return type having those omitted
+    // properties.
+    Record<Exclude<keyof Changes, keyof ChangesOf<TResource>>, never>
+): Partial<Omit<Changes, keyof Resource> & AndModifiedAt<TResource>> => {
+  const actual = pickBy(omit(changes, Resource.Props), (change, prop) => {
+    const key = isRelation(prop, existingObject) ? prop.slice(0, -2) : prop;
+    const existing = unwrapSecured(existingObject[key]);
+    return !isSame(change, existing);
+  });
 
-    if (
-      Object.keys(actual).length > 0 &&
-      resource.Props.includes('modifiedAt') &&
-      !actual.modifiedAt
-    ) {
-      return {
-        ...(actual as any),
-        modifiedAt: DateTime.local(),
-      };
-    }
-    return actual as any;
-  };
+  if (
+    Object.keys(actual).length > 0 &&
+    resource.Props.includes('modifiedAt') &&
+    !actual.modifiedAt
+  ) {
+    return {
+      ...(actual as any),
+      modifiedAt: DateTime.local(),
+    };
+  }
+  return actual as any;
+};
 
 /**
  * If prop ends with `Id` and existing object has `x` instead of `xId`, assume

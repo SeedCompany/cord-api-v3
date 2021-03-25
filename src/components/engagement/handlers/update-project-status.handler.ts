@@ -48,31 +48,28 @@ type Condition = MergeExclusive<
   { step: ProjectStep }
 >;
 
-const changeMatcher =
-  (previous: UnsecuredDto<Project>, updated: UnsecuredDto<Project>) =>
-  ({ from, to }: Change) => {
-    const toMatches = to ? matches(to, updated) : !matches(from!, updated);
-    const fromMatches = from
-      ? matches(from, previous)
-      : !matches(to!, previous);
-    return toMatches && fromMatches;
-  };
+const changeMatcher = (
+  previous: UnsecuredDto<Project>,
+  updated: UnsecuredDto<Project>
+) => ({ from, to }: Change) => {
+  const toMatches = to ? matches(to, updated) : !matches(from!, updated);
+  const fromMatches = from ? matches(from, previous) : !matches(to!, previous);
+  return toMatches && fromMatches;
+};
 const matches = (cond: Condition, p: UnsecuredDto<Project>) =>
   cond.step ? cond.step === p.step : cond.status === p.status;
 
 @EventsHandler(ProjectUpdatedEvent)
 export class UpdateProjectStatusHandler
-  implements IEventHandler<ProjectUpdatedEvent>
-{
+  implements IEventHandler<ProjectUpdatedEvent> {
   constructor(
     private readonly repo: EngagementRepository,
     private readonly engagementService: EngagementService
   ) {}
 
   async handle({ previous, updated, session }: ProjectUpdatedEvent) {
-    const engagementStatus = changes.find(
-      changeMatcher(previous, updated)
-    )?.newStatus;
+    const engagementStatus = changes.find(changeMatcher(previous, updated))
+      ?.newStatus;
     if (!engagementStatus) return;
 
     const engagementIds = await this.repo.getOngoingEngagementIds(updated.id);

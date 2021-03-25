@@ -59,8 +59,7 @@ export const DateField = (options?: FieldOptions) =>
 
 @Scalar('DateTime', () => DateTime)
 export class DateTimeScalar
-  implements CustomScalar<string, DateTime | string | null>
-{
+  implements CustomScalar<string, DateTime | string | null> {
   description = 'An ISO-8601 date time string';
 
   parseValue(value: string): string {

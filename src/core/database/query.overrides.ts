@@ -87,7 +87,7 @@ Query.prototype.apply = function apply<
 };
 
 Query.prototype.asResult = function asResult<R>(this: Query) {
-  return this as unknown as QueryWithResult<R>;
+  return (this as unknown) as QueryWithResult<R>;
 };
 
 Query.prototype.logIt = function logIt(this: Query, level = LogLevel.NOTICE) {

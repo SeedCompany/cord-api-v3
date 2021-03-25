@@ -14,6 +14,7 @@ import {
   IdArg,
   IdField,
   LoggedInSession,
+  SecuredStringNullable,
   Session,
 } from '../../common';
 import { SecuredBudget } from '../budget';
@@ -34,6 +35,10 @@ import {
   SecuredPeriodicReportList,
 } from '../periodic-report';
 import { ReportType } from '../periodic-report/dto';
+import {
+  ChangeListInput,
+  SecuredChangeList,
+} from './change-to-plan/dto/change-list.dto';
 import {
   CreateProjectInput,
   CreateProjectOutput,
@@ -73,8 +78,8 @@ export class ProjectResolver {
     description: 'Look up a project by its ID',
   })
   async project(
-    @IdArg() id: ID,
-    @LoggedInSession() session: Session
+    @LoggedInSession() session: Session,
+    @IdArg() id: ID
   ): Promise<Project> {
     const project = await this.projectService.readOneUnsecured(id, session);
     const secured = await this.projectService.secure(project, session);
@@ -105,6 +110,44 @@ export class ProjectResolver {
       : undefined;
   }
 
+  @ResolveField(() => SecuredChangeList)
+  async changes(
+    @AnonSession() session: Session,
+    @Parent() project: Project,
+    @Args({
+      name: 'input',
+      type: () => ChangeListInput,
+      nullable: true,
+      defaultValue: ChangeListInput.defaultVal,
+    })
+    input: ChangeListInput
+  ): Promise<SecuredChangeList> {
+    return this.projectService.listPlanChanges(project.id, input, session);
+  }
+
+  @ResolveField(() => IProject)
+  async projectChanges(
+    @AnonSession() session: Session,
+    @Parent() project: Project,
+    @IdArg({ nullable: true }) id?: ID
+  ): Promise<Project> {
+    const projectChanges = await this.projectService.readOne(
+      project.id,
+      session,
+      id
+    );
+    return projectChanges;
+  }
+
+  /** @deprecated Moved from field definition in DTO to here */
+  @ResolveField(() => SecuredStringNullable, {
+    description: 'The legacy department ID',
+    deprecationReason: 'Use `Project.departmentId` instead',
+  })
+  deptId(@Parent() project: Project): SecuredStringNullable {
+    return project.departmentId;
+  }
+
   @ResolveField(() => SecuredBudget, {
     description: `The project's current budget`,
   })
@@ -125,9 +168,15 @@ export class ProjectResolver {
       nullable: true,
       defaultValue: EngagementListInput.defaultVal,
     })
-    input: EngagementListInput
+    input: EngagementListInput,
+    @IdArg({ name: 'changeId', nullable: true }) changeId?: ID
   ): Promise<SecuredEngagementList> {
-    return this.projectService.listEngagements(project, input, session);
+    return this.projectService.listEngagements(
+      project,
+      input,
+      session,
+      changeId
+    );
   }
 
   @ResolveField(() => SecuredProjectMemberList, {
@@ -249,9 +298,10 @@ export class ProjectResolver {
   })
   async updateProject(
     @Args('input') { project: input }: UpdateProjectInput,
+    @IdArg({ name: 'changeId', nullable: true }) changeId: ID,
     @LoggedInSession() session: Session
   ): Promise<UpdateProjectOutput> {
-    const project = await this.projectService.update(input, session);
+    const project = await this.projectService.update(input, session, changeId);
     const secured = await this.projectService.secure(project, session);
     return { project: secured };
   }

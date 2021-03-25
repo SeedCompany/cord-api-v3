@@ -46,11 +46,13 @@ const EngagementStatusTerminalMap: Record<EngagementStatus, boolean> = {
   [EngagementStatus.Rejected]: true,
 };
 
-export const [TerminalEngagementStatuses, OngoingEngagementStatuses] =
-  partition(
-    Object.keys(EngagementStatusTerminalMap) as EngagementStatus[],
-    (k) => EngagementStatusTerminalMap[k]
-  );
+export const [
+  TerminalEngagementStatuses,
+  OngoingEngagementStatuses,
+] = partition(
+  Object.keys(EngagementStatusTerminalMap) as EngagementStatus[],
+  (k) => EngagementStatusTerminalMap[k]
+);
 
 registerEnumType(EngagementStatus, {
   name: 'EngagementStatus',

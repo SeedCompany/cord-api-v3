@@ -139,8 +139,11 @@ export class LocationService {
       changes
     );
 
-    const { fundingAccountId, defaultFieldRegionId, ...simpleChanges } =
-      changes;
+    const {
+      fundingAccountId,
+      defaultFieldRegionId,
+      ...simpleChanges
+    } = changes;
 
     await this.repo.updateProperties(location, simpleChanges);
 

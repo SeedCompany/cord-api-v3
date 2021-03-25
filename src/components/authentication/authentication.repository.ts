@@ -172,7 +172,9 @@ export class AuthenticationRepository {
     return result;
   }
 
-  async changePassword(session: Session): Promise<
+  async changePassword(
+    session: Session
+  ): Promise<
     | {
         passwordHash: string;
       }

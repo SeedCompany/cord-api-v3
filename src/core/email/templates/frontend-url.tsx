@@ -12,5 +12,6 @@ export const useFrontendUrl = (path: string) => {
   return base + path;
 };
 
-export const FrontendUrlWrapper = (url: string) => (el: ReactElement) =>
-  <FrontendUrlContext.Provider value={url}>{el}</FrontendUrlContext.Provider>;
+export const FrontendUrlWrapper = (url: string) => (el: ReactElement) => (
+  <FrontendUrlContext.Provider value={url}>{el}</FrontendUrlContext.Provider>
+);

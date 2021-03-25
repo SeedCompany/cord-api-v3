@@ -24,6 +24,7 @@ import {
 import {
   BaseNode,
   DbPropsOfDto,
+  parsePropList,
   PropListDbResult,
 } from '../../core/database/results';
 import { Role } from '../authorization';
@@ -146,7 +147,8 @@ export class ProjectRepository extends CommonRepository {
 
   async updateProperties(
     currentProject: UnsecuredDto<Project>,
-    simpleChanges: DbChanges<TranslationProject | InternshipProject>
+    simpleChanges: DbChanges<TranslationProject | InternshipProject>,
+    changeId?: ID
   ) {
     return await this.db.updateProperties({
       type:
@@ -155,6 +157,7 @@ export class ProjectRepository extends CommonRepository {
           : InternshipProject,
       object: currentProject,
       changes: simpleChanges,
+      changeId,
     });
   }
 
@@ -482,5 +485,27 @@ export class ProjectRepository extends CommonRepository {
       .match([node('node', label, { id })])
       .return('node')
       .first();
+  }
+
+  async getPlanChangesProps(
+    id: ID,
+    changeId: ID
+  ): Promise<Record<string, any>> {
+    const planChangeQuery = this.db
+      .query()
+      .match([node('node', 'Project', { id })])
+      .call(matchPropList, changeId)
+      .with(['node', 'propList'])
+      .return(['propList', 'node'])
+      .asResult<{
+        node: Node<BaseNode & { type: ProjectType }>;
+        propList: PropListDbResult<DbPropsOfDto<Project>>;
+      }>();
+
+    const planChangeResult = await planChangeQuery.first();
+    if (planChangeResult) {
+      return parsePropList(planChangeResult.propList);
+    }
+    return {};
   }
 }

@@ -22,8 +22,7 @@ export function SecuredList<Type, ListItem = Type>(
   @ObjectType({ isAbstract: true, implements: [ISecured] })
   abstract class SecuredListClass
     extends PaginatedList<Type, ListItem>(itemClass, options)
-    implements ISecured, SecuredListType<ListItem>
-  {
+    implements ISecured, SecuredListType<ListItem> {
     @Field({
       description: 'Whether the current user can read the list of items',
     })

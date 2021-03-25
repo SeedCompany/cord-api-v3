@@ -22,8 +22,7 @@ type SubscribedEvent =
   ProjectUpdatedEvent
 )
 export class SyncProgressReportToEngagementDateRange
-  implements IEventHandler<SubscribedEvent>
-{
+  implements IEventHandler<SubscribedEvent> {
   constructor(
     private readonly periodicReports: PeriodicReportService,
     private readonly engagements: EngagementService,

@@ -12,8 +12,7 @@ import { ProjectRules } from '../project.rules';
 
 @EventsHandler(ProjectUpdatedEvent)
 export class ProjectStepChangedNotificationHandler
-  implements IEventHandler<ProjectUpdatedEvent>
-{
+  implements IEventHandler<ProjectUpdatedEvent> {
   constructor(
     private readonly projectRules: ProjectRules,
     private readonly emailService: EmailService,

@@ -93,8 +93,10 @@ export interface SecuredPropertyOptions<
   nullable?: Nullable;
 }
 
-type SecuredValue<T, Nullable extends boolean | undefined> =
-  Nullable extends true ? T | null : T;
+type SecuredValue<
+  T,
+  Nullable extends boolean | undefined
+> = Nullable extends true ? T | null : T;
 
 function InnerSecuredProperty<
   GqlType extends GqlTypeReference,
@@ -103,8 +105,7 @@ function InnerSecuredProperty<
 >(valueClass: GqlType, _options: SecuredPropertyOptions<Nullable> = {}) {
   @ObjectType({ isAbstract: true, implements: [ISecured] })
   abstract class SecuredPropertyClass
-    implements ISecured, Secured<SecuredValue<TsType, Nullable>>
-  {
+    implements ISecured, Secured<SecuredValue<TsType, Nullable>> {
     @Field(() => valueClass, { nullable: true })
     readonly value?: SecuredValue<TsType, Nullable>;
     @Field()
@@ -159,8 +160,7 @@ function SecuredList<GQL, TS, Nullable extends boolean | undefined = false>(
 ) {
   @ObjectType({ isAbstract: true, implements: [ISecured] })
   abstract class SecuredPropertyListClass
-    implements ISecured, Secured<SecuredList<TS, Nullable>>
-  {
+    implements ISecured, Secured<SecuredList<TS, Nullable>> {
     @Field(() => [valueClass], {
       nullable: options.nullable,
     })
@@ -251,8 +251,7 @@ export abstract class SecuredDateTime implements ISecured, Secured<DateTime> {
 
 @ObjectType({ implements: [ISecured] })
 export abstract class SecuredDateTimeNullable
-  implements ISecured, Secured<DateTime | null>
-{
+  implements ISecured, Secured<DateTime | null> {
   @DateTimeField({ nullable: true })
   readonly value?: DateTime | null;
 
@@ -277,8 +276,7 @@ export abstract class SecuredDate implements ISecured, Secured<CalendarDate> {
 
 @ObjectType({ implements: [ISecured] })
 export abstract class SecuredDateNullable
-  implements ISecured, Secured<CalendarDate | null>
-{
+  implements ISecured, Secured<CalendarDate | null> {
   @DateField({ nullable: true })
   readonly value?: CalendarDate | null;
 

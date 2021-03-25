@@ -15,51 +15,52 @@ import { CreatePartner, Partner, PartnerListInput, UpdatePartner } from './dto';
 
 @Injectable()
 export class PartnerRepository extends DtoRepository(Partner) {
-  private readonly orgNameSorter =
-    (sortInput: string, order: Order) => (q: Query) => {
-      // If the user inputs orgName as the sort value, then match the organization node for the sortValue match
-      const orgProperties = ['name'];
+  private readonly orgNameSorter = (sortInput: string, order: Order) => (
+    q: Query
+  ) => {
+    // If the user inputs orgName as the sort value, then match the organization node for the sortValue match
+    const orgProperties = ['name'];
 
-      //The properties that are stored as strings
-      const stringProperties = ['name'];
-      const sortInputIsString = stringProperties.includes(sortInput);
+    //The properties that are stored as strings
+    const stringProperties = ['name'];
+    const sortInputIsString = stringProperties.includes(sortInput);
 
-      //if the sortInput, e.g. name, is a string type, check to see if a custom sortVal is given.  If not, coerse the default prop.value to lower case in the orderBy clause
-      const sortValSecuredProp = sortInputIsString
-        ? 'toLower(prop.value)'
-        : 'prop.value';
-      const sortValBaseNodeProp = sortInputIsString
-        ? `toLower(node.${sortInput})`
-        : `node.${sortInput}`;
+    //if the sortInput, e.g. name, is a string type, check to see if a custom sortVal is given.  If not, coerse the default prop.value to lower case in the orderBy clause
+    const sortValSecuredProp = sortInputIsString
+      ? 'toLower(prop.value)'
+      : 'prop.value';
+    const sortValBaseNodeProp = sortInputIsString
+      ? `toLower(node.${sortInput})`
+      : `node.${sortInput}`;
 
-      if (orgProperties.includes(sortInput)) {
-        return q
-          .match([
-            node('node'),
-            relation('out', '', 'organization', { active: true }),
-            node('organization', 'Organization'),
-          ])
+    if (orgProperties.includes(sortInput)) {
+      return q
+        .match([
+          node('node'),
+          relation('out', '', 'organization', { active: true }),
+          node('organization', 'Organization'),
+        ])
+        .with('*')
+        .match([
+          node('organization'),
+          relation('out', '', sortInput, { active: true }),
+          node('prop', 'Property'),
+        ])
+        .with('*')
+        .orderBy(sortValSecuredProp, order);
+    }
+    return (Partner.SecuredProps as string[]).includes(sortInput)
+      ? q
           .with('*')
           .match([
-            node('organization'),
+            node(node),
             relation('out', '', sortInput, { active: true }),
             node('prop', 'Property'),
           ])
           .with('*')
-          .orderBy(sortValSecuredProp, order);
-      }
-      return (Partner.SecuredProps as string[]).includes(sortInput)
-        ? q
-            .with('*')
-            .match([
-              node(node),
-              relation('out', '', sortInput, { active: true }),
-              node('prop', 'Property'),
-            ])
-            .with('*')
-            .orderBy(sortValSecuredProp, order)
-        : q.with('*').orderBy(sortValBaseNodeProp, order);
-    };
+          .orderBy(sortValSecuredProp, order)
+      : q.with('*').orderBy(sortValBaseNodeProp, order);
+  };
 
   async checkPartner(organizationId: ID) {
     const partnerByOrgQ = this.db

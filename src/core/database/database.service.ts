@@ -224,6 +224,7 @@ export class DatabaseService {
     type,
     object,
     changes,
+    changeId,
   }: {
     // This becomes the label of the base node
     type: TResourceStatic;
@@ -231,18 +232,31 @@ export class DatabaseService {
     object: TObject;
     // The changes
     changes: DbChanges<TResourceStatic['prototype']>;
+    // Plan Change ID
+    changeId?: ID;
   }): Promise<TObject> {
     let updated = object;
     for (const [prop, change] of entries(changes)) {
       if (change === undefined) {
         continue;
       }
-      await this.updateProperty({
-        type,
-        object,
-        key: prop as any,
-        value: change,
-      });
+      if (changeId) {
+        await this.updatePlanChangeProperty({
+          type,
+          object,
+          key: prop as any,
+          value: change,
+          changeId,
+        });
+        continue;
+      } else {
+        await this.updateProperty({
+          type,
+          object,
+          key: prop as any,
+          value: change,
+        });
+      }
 
       updated = {
         ...updated,
@@ -338,6 +352,69 @@ export class DatabaseService {
     }
   }
 
+  async updatePlanChangeProperty<
+    TResourceStatic extends ResourceShape<any>,
+    TObject extends Partial<MaybeUnsecuredInstance<TResourceStatic>> & {
+      id: ID;
+    },
+    Key extends keyof DbChanges<TObject> & string
+  >({
+    type,
+    object: { id },
+    key,
+    value,
+    changeId,
+  }: {
+    type: TResourceStatic;
+    object: TObject;
+    key: Key;
+    value?: UnwrapSecured<TObject[Key]>;
+    changeId: ID;
+  }): Promise<void> {
+    const label = type.name;
+    const createdAt = DateTime.local();
+    const newPropertyNodeProps = {
+      createdAt,
+      value,
+    };
+    const update = this.db
+      .query()
+      .match(node('node', label, { id }))
+      .match(node('changeNode', 'PlanChange', { id: changeId }))
+      .optionalMatch([
+        node('node'),
+        relation('out', '', key, { active: false }),
+        node('oldPropVar', 'Property'),
+        relation('in', 'oldChange', { active: true }),
+        node('changeNode'),
+      ])
+      .setValues({
+        'oldChange.active': false,
+      })
+      .with('*')
+      .limit(1)
+      .create([
+        node('node'),
+        relation('out', '', key, {
+          active: false,
+          createdAt,
+        }),
+        node('newChangeProp', 'Property', newPropertyNodeProps),
+        relation('in', '', 'change', { active: true }),
+        node('changeNode'),
+      ])
+      .return('newChangeProp');
+
+    try {
+      await update.first();
+    } catch (e) {
+      throw new ServerException(
+        `Failed to update plan change property ${label}.${key}`,
+        e
+      );
+    }
+  }
+
   async list<TObject extends Resource>({
     session,
     props,
@@ -421,9 +498,9 @@ export class DatabaseService {
 
       // with the rest of the requested properties
       ...props.map((prop) => {
-        const propName = (
-          typeof prop === 'object' ? prop.name : prop
-        ) as string;
+        const propName = (typeof prop === 'object'
+          ? prop.name
+          : prop) as string;
         return propName;
       }),
     ]);
@@ -469,9 +546,9 @@ export class DatabaseService {
 
         // return the rest of the requested properties
         ...props.map((prop) => {
-          const propName = (
-            typeof prop === 'object' ? prop.name : prop
-          ) as string;
+          const propName = (typeof prop === 'object'
+            ? prop.name
+            : prop) as string;
           return { [propName + '.value']: propName };
         }),
       ])
@@ -491,9 +568,9 @@ export class DatabaseService {
       };
 
       for (const prop of props) {
-        const propName = (
-          typeof prop === 'object' ? prop.name : prop
-        ) as string;
+        const propName = (typeof prop === 'object'
+          ? prop.name
+          : prop) as string;
         const secure = typeof prop === 'object' ? prop.secure : true;
         const list = typeof prop === 'object' ? prop.list : false;
 

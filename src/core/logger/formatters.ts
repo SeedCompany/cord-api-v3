@@ -73,20 +73,22 @@ export const exceptionInfo = () =>
         ? [ex, ...flatten(ex.previous)]
         : [ex];
 
-    info.exceptions = flatten(info.exception).map((ex): ParsedError => {
-      const { name: _, message, stack: __, ...other } = ex;
-      const stack = ex.stack!;
-      const type = ex.constructor.name || stack.slice(0, stack.indexOf(':'));
-      const trace = parseTrace({ stack } as any);
+    info.exceptions = flatten(info.exception).map(
+      (ex): ParsedError => {
+        const { name: _, message, stack: __, ...other } = ex;
+        const stack = ex.stack!;
+        const type = ex.constructor.name || stack.slice(0, stack.indexOf(':'));
+        const trace = parseTrace({ stack } as any);
 
-      return {
-        type,
-        message,
-        stack,
-        trace,
-        other,
-      };
-    });
+        return {
+          type,
+          message,
+          stack,
+          trace,
+          other,
+        };
+      }
+    );
     delete info.exception;
 
     return info;

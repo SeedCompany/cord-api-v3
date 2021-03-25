@@ -1,6 +1,6 @@
 import { stripIndent } from 'common-tags';
 import { node, Query, relation } from 'cypher-query-builder';
-import { Session } from '../../../common';
+import { ID, Session } from '../../../common';
 import { collect } from './cypher-functions';
 import { mapping } from './mapping';
 
@@ -21,26 +21,30 @@ export const permissionsOfNode = (nodeLabel?: string) => [
   node('node', nodeLabel),
 ];
 
-/**
- * @deprecated use matchProps instead. It returns props as an object instead of the weird list.
- */
-export const matchPropList = (query: Query, nodeName = 'node') =>
-  query
-    .match([
-      node(nodeName),
-      relation('out', 'r', { active: true }),
-      node('props', 'Property'),
-    ])
-    .with([
-      collect(
-        mapping({
-          value: 'props.value',
-          property: 'type(r)',
-        }),
-        'propList'
-      ),
-      nodeName,
-    ]);
+export const matchPropList = (query: Query, changeId?: ID, nodeName = 'node') =>
+  (changeId
+    ? query.match([
+        node(nodeName),
+        relation('out', 'r', { active: false }),
+        node('props', 'Property'),
+        relation('in', '', 'change', { active: true }),
+        node('planChange', 'PlanChange', { id: changeId }),
+      ])
+    : query.match([
+        node(nodeName),
+        relation('out', 'r', { active: true }),
+        node('props', 'Property'),
+      ])
+  ).with([
+    collect(
+      mapping({
+        value: 'props.value',
+        property: 'type(r)',
+      }),
+      'propList'
+    ),
+    nodeName,
+  ]);
 
 /**
  * Matches all the given `node`s properties and returns them plus the props on
@@ -49,23 +53,21 @@ export const matchPropList = (query: Query, nodeName = 'node') =>
  * This is executed in a sub-query so other variables in scope are passed-through
  * transparently.
  */
-export const matchProps =
-  ({ nodeName = 'node' } = {}) =>
-  (query: Query) =>
-    query.subQuery((sub) =>
-      sub
-        .with(nodeName)
-        .match([
-          node(nodeName),
-          relation('out', 'r', { active: true }),
-          node('prop', 'Property'),
-        ])
-        .return([
-          stripIndent`
+export const matchProps = ({ nodeName = 'node' } = {}) => (query: Query) =>
+  query.subQuery((sub) =>
+    sub
+      .with(nodeName)
+      .match([
+        node(nodeName),
+        relation('out', 'r', { active: true }),
+        node('prop', 'Property'),
+      ])
+      .return([
+        stripIndent`
           apoc.map.mergeList(
             [node] + collect(
               apoc.map.fromValues([type(r), prop.value])
             )
           ) as props`,
-        ])
-    );
+      ])
+  );

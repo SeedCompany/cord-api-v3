@@ -11,6 +11,7 @@ import { PartnerModule } from '../partner/partner.module';
 import { PartnershipModule } from '../partnership/partnership.module';
 import { PeriodicReportModule } from '../periodic-report/periodic-report.module';
 import { UserModule } from '../user/user.module';
+import { PlanChangeModule } from './change-to-plan/plan-change.module';
 import * as handlers from './handlers';
 import { ProjectMemberModule } from './project-member/project-member.module';
 import { ProjectStepResolver } from './project-step.resolver';
@@ -26,6 +27,7 @@ import { ProjectService } from './project.service';
     forwardRef(() => PeriodicReportModule),
     forwardRef(() => BudgetModule),
     forwardRef(() => PartnershipModule),
+    forwardRef(() => PlanChangeModule),
     forwardRef(() => UserModule),
     forwardRef(() => LocationModule),
     FileModule,
@@ -33,6 +35,7 @@ import { ProjectService } from './project.service';
     forwardRef(() => AuthorizationModule),
     PartnerModule,
     forwardRef(() => OrganizationModule),
+    PlanChangeModule,
   ],
   providers: [
     ProjectResolver,

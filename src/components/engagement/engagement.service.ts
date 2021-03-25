@@ -1,5 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
+import { entries } from 'lodash';
 import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
 import {
@@ -77,12 +78,14 @@ export class EngagementService {
 
   async createLanguageEngagement(
     { languageId, projectId, ...input }: CreateLanguageEngagement,
-    session: Session
+    session: Session,
+    changeId?: ID
   ): Promise<LanguageEngagement> {
     await this.verifyRelationshipEligibility(
       projectId,
       languageId,
-      ProjectType.Translation
+      ProjectType.Translation,
+      changeId
     );
 
     if (input.firstScripture) {
@@ -110,6 +113,9 @@ export class EngagementService {
     }
     if (languageId) {
       createLE.match([node('language', 'Language', { id: languageId })]);
+    }
+    if (changeId) {
+      createLE.match([node('planChange', 'PlanChange', { id: changeId })]);
     }
     createLE.create([
       [
@@ -182,7 +188,7 @@ export class EngagementService {
       ...property('modifiedAt', createdAt, 'languageEngagement'),
       ...property('canDelete', true, 'languageEngagement'),
     ]);
-    if (projectId) {
+    if (projectId && !changeId) {
       createLE.create([
         node('project'),
         relation('out', 'engagementRel', 'engagement', {
@@ -190,6 +196,17 @@ export class EngagementService {
           createdAt,
         }),
         node('languageEngagement'),
+      ]);
+    } else if (projectId && changeId) {
+      createLE.create([
+        node('project'),
+        relation('out', 'engagementRel', 'engagement', {
+          active: false,
+          createdAt,
+        }),
+        node('languageEngagement'),
+        relation('in', '', 'change', { active: true, createdAt }),
+        node('planChange'),
       ]);
     }
     if (languageId) {
@@ -249,8 +266,12 @@ export class EngagementService {
 
     const languageEngagement = (await this.readOne(
       id,
-      session
+      session,
+      changeId
     )) as LanguageEngagement;
+    if (changeId) {
+      return languageEngagement;
+    }
     const event = new EngagementCreatedEvent(languageEngagement, session);
     await this.eventBus.publish(event);
 
@@ -265,12 +286,14 @@ export class EngagementService {
       countryOfOriginId,
       ...input
     }: CreateInternshipEngagement,
-    session: Session
+    session: Session,
+    changeId?: ID
   ): Promise<InternshipEngagement> {
     await this.verifyRelationshipEligibility(
       projectId,
       internId,
-      ProjectType.Internship
+      ProjectType.Internship,
+      changeId
     );
 
     await this.verifyProjectStatus(projectId, session);
@@ -304,6 +327,9 @@ export class EngagementService {
           id: countryOfOriginId,
         }),
       ]);
+    }
+    if (changeId) {
+      createIE.match([node('planChange', 'PlanChange', { id: changeId })]);
     }
     createIE.create([
       [
@@ -372,7 +398,7 @@ export class EngagementService {
       ),
       ...property('canDelete', true, 'internshipEngagement'),
     ]);
-    if (projectId) {
+    if (projectId && !changeId) {
       createIE.create([
         node('project'),
         relation('out', 'engagementRel', 'engagement', {
@@ -380,6 +406,17 @@ export class EngagementService {
           createdAt,
         }),
         node('internshipEngagement'),
+      ]);
+    } else if (projectId && changeId) {
+      createIE.create([
+        node('project'),
+        relation('out', 'engagementRel', 'engagement', {
+          active: false,
+          createdAt,
+        }),
+        node('internshipEngagement'),
+        relation('in', '', 'change', { active: true, createdAt }),
+        node('planChange'),
       ]);
     }
     if (internId) {
@@ -467,8 +504,12 @@ export class EngagementService {
 
     const internshipEngagement = (await this.readOne(
       id,
-      session
+      session,
+      changeId
     )) as InternshipEngagement;
+    if (changeId) {
+      return internshipEngagement;
+    }
     const engagementCreatedEvent = new EngagementCreatedEvent(
       internshipEngagement,
       session
@@ -495,14 +536,15 @@ export class EngagementService {
 
   async readOne(
     id: ID,
-    session: Session
+    session: Session,
+    changeId?: ID
   ): Promise<LanguageEngagement | InternshipEngagement> {
     this.logger.debug('readOne', { id, userId: session.userId });
 
     if (!id) {
       throw new NotFoundException('no id given', 'engagement.id');
     }
-    const query = this.repo.readOne(id, session);
+    const query = this.repo.readOne(id, session, changeId);
 
     const result = await query.first();
 
@@ -510,7 +552,7 @@ export class EngagementService {
       throw new NotFoundException('could not find Engagement', 'engagement.id');
     }
 
-    const props = {
+    let props = {
       __typename: result.__typename,
       ...result.props,
       language: result.language,
@@ -519,6 +561,21 @@ export class EngagementService {
       countryOfOrigin: result.countryOfOrigin,
       mentor: result.mentor,
     };
+
+    if (changeId) {
+      const planChangesProps = await this.repo.getPlanChangesProps(
+        id,
+        changeId
+      );
+      entries(planChangesProps).forEach(([key, prop]) => {
+        if (prop !== undefined) {
+          props = {
+            ...props,
+            [key]: prop,
+          };
+        }
+      });
+    }
 
     const isLanguageEngagement = props.__typename === 'LanguageEngagement';
 
@@ -598,7 +655,8 @@ export class EngagementService {
 
   async updateLanguageEngagement(
     input: UpdateLanguageEngagement,
-    session: Session
+    session: Session,
+    changeId?: ID
   ): Promise<LanguageEngagement> {
     if (input.firstScripture) {
       await this.verifyFirstScripture({ engagementId: input.id });
@@ -608,13 +666,15 @@ export class EngagementService {
       await this.engagementRules.verifyStatusChange(
         input.id,
         session,
-        input.status
+        input.status,
+        changeId
       );
     }
 
     const object = (await this.readOne(
       input.id,
-      session
+      session,
+      changeId
     )) as LanguageEngagement;
 
     const changes = this.repo.getActualLanguageChanges(object, input);
@@ -638,7 +698,7 @@ export class EngagementService {
     }
 
     try {
-      await this.repo.updateLanguageProperties(object, simpleChanges);
+      await this.repo.updateLanguageProperties(object, simpleChanges, changeId);
     } catch (exception) {
       this.logger.error('Error updating language engagement', { exception });
       throw new ServerException(
@@ -649,8 +709,14 @@ export class EngagementService {
 
     const updated = (await this.readOne(
       input.id,
-      session
+      session,
+      changeId
     )) as LanguageEngagement;
+
+    if (changeId) {
+      return updated;
+    }
+
     const engagementUpdatedEvent = new EngagementUpdatedEvent(
       updated,
       object,
@@ -664,20 +730,23 @@ export class EngagementService {
 
   async updateInternshipEngagement(
     input: UpdateInternshipEngagement,
-    session: Session
+    session: Session,
+    changeId?: ID
   ): Promise<InternshipEngagement> {
     const createdAt = DateTime.local();
     if (input.status) {
       await this.engagementRules.verifyStatusChange(
         input.id,
         session,
-        input.status
+        input.status,
+        changeId
       );
     }
 
     const object = (await this.readOne(
       input.id,
-      session
+      session,
+      changeId
     )) as InternshipEngagement;
 
     const changes = this.repo.getActualInternshipChanges(object, input);
@@ -688,8 +757,12 @@ export class EngagementService {
       'engagement'
     );
 
-    const { mentorId, countryOfOriginId, growthPlan, ...simpleChanges } =
-      changes;
+    const {
+      mentorId,
+      countryOfOriginId,
+      growthPlan,
+      ...simpleChanges
+    } = changes;
 
     await this.files.updateDefinedFile(
       object.growthPlan,
@@ -715,8 +788,11 @@ export class EngagementService {
         await countryQ.first();
       }
 
-      await this.repo.updateInternshipProperties(object, simpleChanges);
-
+      await this.repo.updateInternshipProperties(
+        object,
+        simpleChanges,
+        changeId
+      );
       // update property node labels
       Object.keys(input).map(async (ele) => {
         if (ele === 'position') {
@@ -740,6 +816,11 @@ export class EngagementService {
       input.id,
       session
     )) as InternshipEngagement;
+
+    if (changeId) {
+      return updated;
+    }
+
     const engagementUpdatedEvent = new EngagementUpdatedEvent(
       updated,
       object,
@@ -787,12 +868,13 @@ export class EngagementService {
 
   async list(
     { filter, ...input }: EngagementListInput,
-    session: Session
+    session: Session,
+    changeId?: ID
   ): Promise<EngagementListOutput> {
-    const query = this.repo.list(session, { filter, ...input });
+    const query = this.repo.list(session, { filter, ...input }, changeId);
 
     const engagements = await runListQuery(query, input, (id) =>
-      this.readOne(id, session)
+      this.readOne(id, session, changeId)
     );
     return engagements;
   }
@@ -876,7 +958,8 @@ export class EngagementService {
   protected async verifyRelationshipEligibility(
     projectId: ID,
     otherId: ID,
-    type: ProjectType
+    type: ProjectType,
+    changeId?: ID
   ): Promise<void> {
     const isTranslation = type === ProjectType.Translation;
     const property = isTranslation ? 'language' : 'intern';
@@ -884,7 +967,8 @@ export class EngagementService {
       projectId,
       otherId,
       isTranslation,
-      property
+      property,
+      changeId
     );
 
     if (!result?.project) {

@@ -78,8 +78,7 @@ export const SortablePaginationInput = <SortKey extends string = string>({
   })
   abstract class SortablePaginationInputClass
     extends PaginationInput
-    implements SortablePaginationInput<SortKey>
-  {
+    implements SortablePaginationInput<SortKey> {
     @Field(() => String, {
       nullable: true,
       description: 'The field in which to sort on',

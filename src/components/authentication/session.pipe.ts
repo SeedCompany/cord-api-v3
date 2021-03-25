@@ -19,8 +19,7 @@ declare module 'express' {
 
 @Injectable()
 export class SessionPipe
-  implements PipeTransform<Request, Promise<RawSession>>
-{
+  implements PipeTransform<Request, Promise<RawSession>> {
   constructor(
     private readonly auth: AuthenticationService,
     private readonly config: ConfigService

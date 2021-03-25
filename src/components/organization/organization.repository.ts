@@ -20,20 +20,23 @@ import { CreateOrganization, Organization, OrganizationListInput } from './dto';
 @Injectable()
 export class OrganizationRepository extends DtoRepository(Organization) {
   // assumes 'root' cypher variable is declared in query
-  private readonly createSG =
-    (cypherIdentifier: string, id: ID, label?: string) => (query: Query) => {
-      const labels = ['SecurityGroup'];
-      if (label) {
-        labels.push(label);
-      }
-      const createdAt = DateTime.local();
+  private readonly createSG = (
+    cypherIdentifier: string,
+    id: ID,
+    label?: string
+  ) => (query: Query) => {
+    const labels = ['SecurityGroup'];
+    if (label) {
+      labels.push(label);
+    }
+    const createdAt = DateTime.local();
 
-      query.create([
-        node('root'),
-        relation('in', '', 'member'),
-        node(cypherIdentifier, labels, { createdAt, id }),
-      ]);
-    };
+    query.create([
+      node('root'),
+      relation('in', '', 'member'),
+      node(cypherIdentifier, labels, { createdAt, id }),
+    ]);
+  };
 
   async checkOrg(name: string) {
     return await this.db

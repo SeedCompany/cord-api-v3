@@ -102,7 +102,9 @@ export class BudgetRepository extends DtoRepository(Budget) {
     return query;
   }
 
-  async verifyCanEdit(id: ID): Promise<
+  async verifyCanEdit(
+    id: ID
+  ): Promise<
     | {
         status: BudgetStatus;
       }

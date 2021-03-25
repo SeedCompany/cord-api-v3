@@ -91,9 +91,9 @@ describe('DateInterval', () => {
   it('toDuration', () => {
     const interval = DateInterval.fromISO('2020-03-04/2021-05-22');
     expect(interval.toDuration().toObject()).toEqual({ days: 445 });
-    expect(interval.toDuration(['years', 'months', 'days']).toObject()).toEqual(
-      { years: 1, months: 2, days: 19 }
-    );
+    expect(
+      interval.toDuration(['years', 'months', 'days']).toObject()
+    ).toEqual({ years: 1, months: 2, days: 19 });
   });
   it('fromInterval', () => {
     const dtInterval = Interval.fromISO('2020-03-04T04/2021-05-22T05');

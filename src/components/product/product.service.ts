@@ -231,13 +231,16 @@ export class ProductService {
     }
 
     const { isOverriding, ...props } = result.props;
-    const { produces, scriptureReferencesOverride, ...rest } =
-      await this.authorizationService.secureProperties(
-        DerivativeScriptureProduct,
-        props,
-        session,
-        result.scopedRoles
-      );
+    const {
+      produces,
+      scriptureReferencesOverride,
+      ...rest
+    } = await this.authorizationService.secureProperties(
+      DerivativeScriptureProduct,
+      props,
+      session,
+      result.scopedRoles
+    );
 
     const connectedProducible = await this.repo.connectedProducible(id);
 
@@ -269,12 +272,10 @@ export class ProductService {
       };
     }
 
-    const typeName = (
-      difference(connectedProducible.producible.labels, [
-        'Producible',
-        'BaseNode',
-      ]) as ProducibleType[]
-    )[0];
+    const typeName = (difference(connectedProducible.producible.labels, [
+      'Producible',
+      'BaseNode',
+    ]) as ProducibleType[])[0];
 
     const producible = await this.getProducibleByType(
       connectedProducible.producible.properties.id,

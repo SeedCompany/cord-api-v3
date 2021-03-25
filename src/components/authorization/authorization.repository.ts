@@ -92,7 +92,9 @@ export class AuthorizationRepository {
       .run();
     return result;
   }
-  async getUserGlobalRoles(id: ID): Promise<
+  async getUserGlobalRoles(
+    id: ID
+  ): Promise<
     | {
         roles: Role[];
       }

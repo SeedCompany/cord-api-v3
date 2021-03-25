@@ -1,6 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { Many } from 'lodash';
+import { entries, Many } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
@@ -54,6 +54,12 @@ import {
   SecuredPartnershipList,
 } from '../partnership';
 import { ReportPeriod } from '../periodic-report';
+import { PlanChangeService } from './change-to-plan';
+import {
+  ChangeListInput,
+  SecuredChangeList,
+} from './change-to-plan/dto/change-list.dto';
+import { PlanChangeStatus } from './change-to-plan/dto/plan-change-status.enum';
 import {
   CreateProject,
   InternshipProject,
@@ -100,6 +106,7 @@ export class ProjectService {
     private readonly authorizationService: AuthorizationService,
     private readonly projectRules: ProjectRules,
     private readonly repo: ProjectRepository,
+    private readonly planChangeService: PlanChangeService,
     @Logger('project:service') private readonly logger: ILogger
   ) {}
 
@@ -434,7 +441,8 @@ export class ProjectService {
 
   async readOneUnsecured(
     id: ID,
-    sessionOrUserId: Session | ID
+    sessionOrUserId: Session | ID,
+    changeId?: ID
   ): Promise<UnsecuredDto<Project>> {
     const userId = isIdLike(sessionOrUserId)
       ? sessionOrUserId
@@ -445,7 +453,7 @@ export class ProjectService {
     }
 
     const props = parsePropList(result.propList);
-    return {
+    let project = {
       ...parseBaseNodeProperties(result.node),
       // @ts-expect-error this could be missing from props for all projects created/updated before this property was added
       financialReportPeriod: ReportPeriod.Monthly,
@@ -464,6 +472,23 @@ export class ProjectService {
       pinned: !!result.pinnedRel,
       scope: result.memberRoles.flat().map(rolesForScope('project')),
     };
+
+    if (changeId) {
+      const planChangesProps = await this.repo.getPlanChangesProps(
+        id,
+        changeId
+      );
+      entries(planChangesProps).forEach(([key, prop]) => {
+        if (prop !== undefined) {
+          project = {
+            ...project,
+            [key]: prop,
+          };
+        }
+      });
+    }
+
+    return project;
   }
 
   async secure(
@@ -487,14 +512,23 @@ export class ProjectService {
     };
   }
 
-  async readOne(id: ID, sessionOrUserId: Session | ID): Promise<Project> {
-    const unsecured = await this.readOneUnsecured(id, sessionOrUserId);
+  async readOne(
+    id: ID,
+    sessionOrUserId: Session | ID,
+    changeId?: ID
+  ): Promise<Project> {
+    const unsecured = await this.readOneUnsecured(
+      id,
+      sessionOrUserId,
+      changeId
+    );
     return await this.secure(unsecured, sessionOrUserId);
   }
 
   async update(
     input: UpdateProject,
-    session: Session
+    session: Session,
+    changeId?: ID
   ): Promise<UnsecuredDto<Project>> {
     const currentProject = await this.readOneUnsecured(input.id, session);
     if (input.sensitivity && currentProject.type === ProjectType.Translation)
@@ -514,7 +548,12 @@ export class ProjectService {
     );
 
     if (changes.step) {
-      await this.projectRules.verifyStepChange(input.id, session, changes.step);
+      await this.projectRules.verifyStepChange(
+        input.id,
+        session,
+        changes.step,
+        changeId
+      );
     }
 
     const {
@@ -524,10 +563,31 @@ export class ProjectService {
       ...simpleChanges
     } = changes;
 
+    // In CR mode, Project status should be Active and CR status is pending
+    if (changeId) {
+      const planChange = await this.planChangeService.readOne(
+        changeId,
+        session
+      );
+      if (
+        currentProject.status !== ProjectStatus.Active ||
+        planChange.status.value !== PlanChangeStatus.Pending
+      ) {
+        throw new InputException(
+          'Project status is not Active or CR is not pending',
+          'project.status'
+        );
+      }
+    }
     let result = await this.repo.updateProperties(
       currentProject,
-      simpleChanges
+      simpleChanges,
+      changeId
     );
+
+    if (changeId) {
+      return currentProject;
+    }
 
     if (primaryLocationId) {
       try {
@@ -632,7 +692,8 @@ export class ProjectService {
   async listEngagements(
     project: Project,
     input: EngagementListInput,
-    session: Session
+    session: Session,
+    changeId?: ID
   ): Promise<SecuredEngagementList> {
     this.logger.debug('list engagements ', {
       projectId: project.id,
@@ -648,7 +709,8 @@ export class ProjectService {
           projectId: project.id,
         },
       },
-      session
+      session,
+      changeId
     );
 
     const permission = await this.repo.getEngagementPermission(
@@ -719,6 +781,29 @@ export class ProjectService {
       ...result,
       canRead: !!permission?.canReadPartnershipRead,
       canCreate: !!permission?.canReadPartnershipCreate,
+    };
+  }
+
+  async listPlanChanges(
+    projectId: ID,
+    input: ChangeListInput,
+    session: Session
+  ): Promise<SecuredChangeList> {
+    const result = await this.planChangeService.list(
+      {
+        ...input,
+        filter: {
+          ...input.filter,
+          projectId: projectId,
+        },
+      },
+      session
+    );
+
+    return {
+      ...result,
+      canRead: true, // TODO
+      canCreate: true, // TODO
     };
   }
 
