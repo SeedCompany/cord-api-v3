@@ -87,6 +87,12 @@ export abstract class CreateInternshipEngagement extends CreateEngagement {
 
 @InputType()
 export abstract class CreateLanguageEngagementInput {
+  @IdField({
+    description: 'The change object to associate these engagement changes with',
+    nullable: true,
+  })
+  readonly changeId?: string;
+
   @Field()
   @Type(() => CreateLanguageEngagement)
   @ValidateNested()
@@ -101,6 +107,12 @@ export abstract class CreateLanguageEngagementOutput {
 
 @InputType()
 export abstract class CreateInternshipEngagementInput {
+  @IdField({
+    description: 'The change object to associate these engagement changes with',
+    nullable: true,
+  })
+  readonly changeId?: string;
+
   @Field()
   @Type(() => CreateInternshipEngagement)
   @ValidateNested()
