@@ -14,6 +14,7 @@ import {
   IdArg,
   IdField,
   LoggedInSession,
+  NotImplementedException,
   Session,
 } from '../../common';
 import { SecuredBudget } from '../budget';
@@ -96,6 +97,11 @@ export class ProjectResolver {
     return project.name.canRead && project.name.value
       ? firstLettersOfWords(project.name.value)
       : undefined;
+  }
+
+  @ResolveField(() => SecuredChangeList)
+  async changes() {
+    throw new NotImplementedException();
   }
 
   @ResolveField(() => SecuredBudget, {

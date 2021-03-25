@@ -1,10 +1,12 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import { IdField } from '../../../../common';
+import { IdField, Resource } from '../../../../common';
 import { PlanChangeStatus } from './plan-change-status.enum';
 import { PlanChangeType } from './plan-change-type.enum';
 
-@ObjectType()
-export abstract class PlanChange {
+@ObjectType({
+  implements: [Resource],
+})
+export abstract class PlanChange extends Resource {
   @IdField()
   readonly id: string;
 
