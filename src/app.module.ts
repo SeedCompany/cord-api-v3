@@ -21,6 +21,7 @@ import { PartnerModule } from './components/partner/partner.module';
 import { PartnershipModule } from './components/partnership/partnership.module';
 import { PinModule } from './components/pin/pin.module';
 import { ProductModule } from './components/product/product.module';
+import { PlanChangeModule } from './components/project/change-to-plan/plan-change.module';
 import { ProjectModule } from './components/project/project.module';
 import { ScriptureModule } from './components/scripture/scripture.module';
 import { SearchModule } from './components/search/search.module';
@@ -67,6 +68,7 @@ assert(
     FieldRegionModule,
     FieldZoneModule,
     PinModule,
+    PlanChangeModule,
   ],
   controllers: [],
   providers: [DateTimeScalar, DateScalar],
