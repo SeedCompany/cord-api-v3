@@ -14,4 +14,4 @@ import { PeriodicReportService } from './periodic-report.service';
   providers: [PeriodicReportService, ...Object.values(handlers)],
   exports: [PeriodicReportService],
 })
-export class ProjectReportModule {}
+export class PeriodicReportModule {}

@@ -9,7 +9,7 @@ import { OrganizationService } from '../organization';
 import { OrganizationModule } from '../organization/organization.module';
 import { PartnerModule } from '../partner/partner.module';
 import { PartnershipModule } from '../partnership/partnership.module';
-import { ProjectReportModule } from '../periodic-report/periodic-report.module';
+import { PeriodicReportModule } from '../periodic-report/periodic-report.module';
 import { UserModule } from '../user/user.module';
 import * as handlers from './handlers';
 import { ProjectMemberModule } from './project-member/project-member.module';
@@ -22,7 +22,7 @@ import { ProjectService } from './project.service';
   imports: [
     forwardRef(() => FieldRegionModule),
     ProjectMemberModule,
-    ProjectReportModule,
+    PeriodicReportModule,
     forwardRef(() => BudgetModule),
     forwardRef(() => PartnershipModule),
     forwardRef(() => UserModule),

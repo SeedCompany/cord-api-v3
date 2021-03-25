@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   generateId,
@@ -16,11 +16,16 @@ import {
   OnIndex,
   property,
 } from '../../core';
-import { matchPropList } from '../../core/database/query';
+import {
+  calculateTotalAndPaginateList,
+  defaultSorter,
+  matchPropList,
+} from '../../core/database/query';
 import {
   DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
+  runListQuery,
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
@@ -30,8 +35,11 @@ import {
   CreatePeriodicReport,
   IPeriodicReport,
   PeriodicReport,
+  PeriodicReportListInput,
+  SecuredPeriodicReportList,
   UpdatePeriodicReport,
 } from './dto';
+import { ReportType } from './dto/type.enum';
 
 @Injectable()
 export class PeriodicReportService {
@@ -74,10 +82,14 @@ export class PeriodicReportService {
         .query()
         .create([
           [
-            node('newPeriodicReport', 'PeriodicReport:BaseNode', {
-              createdAt,
-              id,
-            }),
+            node(
+              'newPeriodicReport',
+              ['PeriodicReport', 'BaseNode', `${input.type}Report`],
+              {
+                createdAt,
+                id,
+              }
+            ),
           ],
           ...property('type', input.type, 'newPeriodicReport'),
           ...property('start', input.start, 'newPeriodicReport'),
@@ -203,30 +215,57 @@ export class PeriodicReportService {
     }
   }
 
-  // async list(
-  //   { filter, ...input }: PeriodicReportListInput,
-  //   session: Session
-  // ): Promise<PeriodicReportListOutput> {
-  //   const query = this.db
-  //     .query()
-  //     .match([
-  //       node('node', 'PeriodicReport'),
-  //       ...(filter.periodicId
-  //         ? [
-  //             relation('in', '', 'report'),
-  //             node('periodic', 'Periodic', {
-  //               id: filter.periodicId,
-  //             }),
-  //           ]
-  //         : []),
-  //     ])
-  //     .call(
-  //       calculateTotalAndPaginateList,
-  //       input,
-  //       this.securedProperties,
-  //       defaultSorter
-  //     );
+  async listProjectReports(
+    projectId: string,
+    reportType: ReportType,
+    { filter, ...input }: PeriodicReportListInput,
+    session: Session
+  ): Promise<SecuredPeriodicReportList> {
+    const query = this.db
+      .query()
+      .match([
+        node('project', 'Project', { id: projectId }),
+        relation('out', '', 'report', { active: true }),
+        node('node', `PeriodicReport:${reportType}Report`),
+      ])
+      .call(
+        calculateTotalAndPaginateList,
+        input,
+        this.securedProperties,
+        defaultSorter
+      );
 
-  //   return await runListQuery(query, input, (id) => this.readOne(id, session));
-  // }
+    return {
+      ...(await runListQuery(query, input, (id) => this.readOne(id, session))),
+      canRead: true,
+      canCreate: true,
+    };
+  }
+
+  async listEngagementReports(
+    engagementId: string,
+    reportType: ReportType,
+    { filter, ...input }: PeriodicReportListInput,
+    session: Session
+  ): Promise<SecuredPeriodicReportList> {
+    const query = this.db
+      .query()
+      .match([
+        node('engagement', 'Engagement', { id: engagementId }),
+        relation('out', '', 'report', { active: true }),
+        node('node', `PeriodicReport:${reportType}Report`),
+      ])
+      .call(
+        calculateTotalAndPaginateList,
+        input,
+        this.securedProperties,
+        defaultSorter
+      );
+
+    return {
+      ...(await runListQuery(query, input, (id) => this.readOne(id, session))),
+      canRead: true,
+      canCreate: true,
+    };
+  }
 }
