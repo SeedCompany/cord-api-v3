@@ -13,6 +13,7 @@ import {
   IdArg,
   IdField,
   LoggedInSession,
+  NotImplementedException,
   SecuredString,
   Session,
 } from '../../common';
@@ -28,6 +29,7 @@ import {
 } from '../location';
 import { OrganizationService, SecuredOrganization } from '../organization';
 import { PartnershipListInput, SecuredPartnershipList } from '../partnership';
+import { SecuredChangeList } from './change-to-plan/dto/change-list.dto';
 import {
   CreateProjectInput,
   CreateProjectOutput,
@@ -103,6 +105,11 @@ export class ProjectResolver {
     return project.name.canRead && project.name.value
       ? firstLettersOfWords(project.name.value)
       : undefined;
+  }
+
+  @ResolveField(() => SecuredChangeList)
+  async changes() {
+    throw new NotImplementedException();
   }
 
   /** @deprecated Moved from field definition in DTO to here */
