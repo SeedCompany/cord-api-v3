@@ -16,11 +16,12 @@ docker-compose up
 
 ### Local
 
+1. Ensure you are using at least node v12.17+. Node 14 is recommended.
 1. Use docker to run a database locally: `docker-compose up -d db` . To update your db image: `docker-compose pull db`.
 1. Create a `.env.local` file in the root of the project and specify your username and password used at database creation:
    ```ini
    NEO4J_USERNAME=neo4j
-   NEO4J_PASSWORD=asdf
+   NEO4J_PASSWORD=admin
    ```
 1. Run `yarn` to install dependencies
 
