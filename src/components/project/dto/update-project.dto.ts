@@ -70,6 +70,12 @@ export abstract class UpdateProject {
 
 @InputType()
 export abstract class UpdateProjectInput {
+  @IdField({
+    description: 'The change object to associate these project changes with',
+    nullable: true,
+  })
+  readonly changeId?: string;
+
   @Field()
   @Type(() => UpdateProject)
   @ValidateNested()
