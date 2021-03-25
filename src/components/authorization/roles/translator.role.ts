@@ -286,6 +286,7 @@ export const Translator = new DbRole({
         { propertyName: 'types',                      permission: { }, },
         { propertyName: 'organization',               permission: { }, },
         { propertyName: 'partner',                    permission: { }, },
+        { propertyName: 'primary',                    permission: { }, },
         ],
     canDelete: false,
   }),
