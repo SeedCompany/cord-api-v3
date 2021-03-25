@@ -1,4 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { NotImplementedException, Session } from '../../../common';
 import {
   ConfigService,
   DatabaseService,
@@ -7,6 +8,7 @@ import {
   OnIndex,
 } from '../../../core';
 import { AuthorizationService } from '../../authorization/authorization.service';
+import { PlanChange } from './dto';
 
 @Injectable()
 export class PlanChangeService {
@@ -21,5 +23,9 @@ export class PlanChangeService {
   @OnIndex()
   async createIndexes() {
     return [];
+  }
+
+  async readOne(_id: string, _session: Session): Promise<PlanChange> {
+    throw new NotImplementedException();
   }
 }

@@ -31,6 +31,7 @@ import { SecuredReportPeriod } from '../../periodic-report/dto';
 import { Pinnable } from '../../pin/dto';
 import { Post } from '../../post/dto';
 import { Postable } from '../../post/postable/dto/postable.dto';
+import { Changeable } from '../change-to-plan/dto';
 import { ProjectMember } from '../project-member/dto';
 import { ProjectStatus } from './status.enum';
 import { SecuredProjectStep } from './step.enum';
@@ -38,8 +39,12 @@ import { ProjectType } from './type.enum';
 
 type AnyProject = MergeExclusive<TranslationProject, InternshipProject>;
 
-const PinnablePostableResource: Type<Resource & Postable & Pinnable> =
-  IntersectionType(Resource, IntersectionType(Postable, Pinnable));
+const PinnablePostableChangeableResource: Type<
+  Resource & Postable & Changeable & Pinnable
+> = IntersectionType(
+  Resource,
+  IntersectionType(Postable, IntersectionType(Changeable, Pinnable))
+);
 
 @InterfaceType({
   resolveType: (val: Project) => {
@@ -54,7 +59,7 @@ const PinnablePostableResource: Type<Resource & Postable & Pinnable> =
   },
   implements: [Resource, Pinnable],
 })
-class Project extends PinnablePostableResource {
+class Project extends PinnablePostableChangeableResource {
   static readonly Props: string[] = keysOf<Project>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Project>>();
   static readonly Relations = {
@@ -141,7 +146,7 @@ class Project extends PinnablePostableResource {
 export { Project as IProject, AnyProject as Project };
 
 @ObjectType({
-  implements: [Project, Resource, Pinnable, Postable],
+  implements: [Project, Resource, Pinnable, Postable, Changeable],
 })
 export class TranslationProject extends Project {
   static readonly Props = keysOf<TranslationProject>();
@@ -151,7 +156,7 @@ export class TranslationProject extends Project {
 }
 
 @ObjectType({
-  implements: [Project, Resource, Pinnable, Postable],
+  implements: [Project, Resource, Pinnable, Postable, Changeable],
 })
 export class InternshipProject extends Project {
   static readonly Props = keysOf<InternshipProject>();
