@@ -25,6 +25,7 @@ import { PostModule } from './components/post/post.module';
 import { PostableModule } from './components/post/postable/postable.module';
 import { ProductModule } from './components/product/product.module';
 import { ProgressSummaryModule } from './components/progress-summary/progress-summary.module';
+import { PlanChangeModule } from './components/project/change-to-plan/plan-change.module';
 import { ProjectModule } from './components/project/project.module';
 import { ScriptureModule } from './components/scripture/scripture.module';
 import { SearchModule } from './components/search/search.module';
@@ -75,6 +76,7 @@ assert(
     PostableModule,
     PeriodicReportModule,
     ProgressSummaryModule,
+    PlanChangeModule,
   ],
   controllers: [],
   providers: [DateTimeScalar, DateScalar],
