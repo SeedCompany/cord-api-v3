@@ -1,7 +1,6 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { CalendarDate, isValidId } from '../../src/common';
-import { ReportPeriod } from '../../src/components/periodic-report/dto/type.enum';
 import {
   CreateProject,
   Project,
@@ -24,7 +23,6 @@ export async function createProject(
     mouEnd: CalendarDate.fromISO('1992-01-01'),
     step: ProjectStep.EarlyConversations,
     tags: ['tag1', 'tag2'],
-    financialReportPeriod: ReportPeriod.Monthly,
     fieldRegionId: input.fieldRegionId || (await createRegion(app)).id,
     ...input,
   };
