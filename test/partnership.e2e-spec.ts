@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
 import { sample, times } from 'lodash';
-import { CalendarDate, NotFoundException } from '../src/common';
+import { CalendarDate, InputException, NotFoundException } from '../src/common';
 import { Powers } from '../src/components/authorization/dto/powers';
 import { PartnerType } from '../src/components/partner';
 import {
@@ -497,6 +497,19 @@ describe('Partnership e2e', () => {
       return result.partnership;
     };
 
+    const deletePartnership = async (partnershipId: string): Promise<void> => {
+      await app.graphql.mutate(
+        gql`
+          mutation deletePartnership($id: ID!) {
+            deletePartnership(id: $id)
+          }
+        `,
+        {
+          id: partnershipId,
+        }
+      );
+    };
+
     partnership1 = await getPartnershipById(partnership1.id);
     partnership2 = await getPartnershipById(partnership2.id);
     partnership3 = await getPartnershipById(partnership3.id);
@@ -531,38 +544,17 @@ describe('Partnership e2e', () => {
     expect(partnership2.primary.value).toBe(true);
     expect(partnership3.primary.value).toBe(false);
 
-    // delete primary partnership, move primary to other existing one
-    await app.graphql.mutate(
-      gql`
-        mutation deletePartnership($id: ID!) {
-          deletePartnership(id: $id)
-        }
-      `,
-      {
-        id: partnership2.id,
-      }
-    );
-    partnership1 = await getPartnershipById(partnership1.id);
-    partnership3 = await getPartnershipById(partnership3.id);
-    expect(partnership1.primary.value !== partnership3.primary.value).toBe(
-      true
+    // delete primary partnership, throw error if it's not the only one
+    await expect(deletePartnership(partnership2.id)).rejects.toThrowError(
+      new InputException('Partnership is not the only primary one')
     );
 
-    const [deletePartnershipId, primaryPartnershipId] = partnership1.primary
-      .value
-      ? [partnership1.id, partnership3.id]
-      : [partnership3.id, partnership1.id];
-    await app.graphql.mutate(
-      gql`
-        mutation deletePartnership($id: ID!) {
-          deletePartnership(id: $id)
-        }
-      `,
-      {
-        id: deletePartnershipId,
-      }
+    await deletePartnership(partnership1.id);
+    await expect(deletePartnership(partnership2.id)).rejects.toThrowError(
+      new InputException('Partnership is not the only primary one')
     );
-    const primaryPartnership = await getPartnershipById(primaryPartnershipId);
-    expect(primaryPartnership.primary.value).toBe(true);
+
+    await deletePartnership(partnership3.id);
+    await deletePartnership(partnership2.id);
   });
 });

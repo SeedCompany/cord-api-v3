@@ -242,7 +242,7 @@ export class PartnershipService {
       );
 
       if (primary) {
-        await this.movePrimaryPartnership('to', result.id);
+        await this.removeOtherPartnershipPrimary(result.id);
       }
 
       const partnership = await this.readOne(result.id, session);
@@ -383,8 +383,15 @@ export class PartnershipService {
       }
     }
 
+    if (input.primary === false) {
+      throw new InputException(
+        'Partnership primary could not be false',
+        'partnership.primary'
+      );
+    }
+
     if (!object.primary.value && input.primary) {
-      await this.movePrimaryPartnership('to', input.id);
+      await this.removeOtherPartnershipPrimary(input.id);
     }
 
     const { mou, agreement, ...rest } = changes;
@@ -443,9 +450,18 @@ export class PartnershipService {
         'You do not have the permission to delete this Partnership'
       );
 
-    // Assign primary to other partnership if one exists
-    if (object.primary) {
-      await this.movePrimaryPartnership('from', object.id);
+    // only primary one partnership could be removed
+    if (object.primary.value) {
+      const result = await this.otherPartnershipQuery(object.id)
+        .return('otherPartnership')
+        .first();
+
+      if (result) {
+        throw new InputException(
+          'Partnership is not the only primary one',
+          'partnership.id'
+        );
+      }
     }
 
     await this.eventBus.publish(
@@ -643,31 +659,31 @@ export class PartnershipService {
     return result?.partnership ? false : true;
   }
 
+  protected otherPartnershipQuery(partnershipId: string): Query {
+    return this.db
+      .query()
+      .match([
+        node('partnership', 'Partnership', { id: partnershipId }),
+        relation('in', '', 'partnership', { active: true }),
+        node('project', 'Project'),
+        relation('out', '', 'partnership', { active: true }),
+        node('otherPartnership'),
+      ])
+      .raw('WHERE partnership <> otherPartnership')
+      .with('otherPartnership');
+  }
+
   /**
    *
    * match current primary partnership, its project, and all other partnerships
    * set current to primary false
-   * set first of other partnerships to primary true
    */
-  protected async movePrimaryPartnership(
-    direction: 'to' | 'from',
+  protected async removeOtherPartnershipPrimary(
     partnershipId: string
   ): Promise<void> {
     const createdAt = DateTime.local();
-    const startQuery = () =>
-      this.db
-        .query()
-        .match([
-          node('partnership', 'Partnership', { id: partnershipId }),
-          relation('in', '', 'partnership', { active: true }),
-          node('project', 'Project'),
-          relation('out', '', 'partnership', { active: true }),
-          node('otherPartnership'),
-        ])
-        .raw('WHERE partnership <> otherPartnership')
-        .with('otherPartnership');
 
-    await startQuery()
+    await this.otherPartnershipQuery(partnershipId)
       .match([
         node('otherPartnership'),
         relation('out', 'oldRel', 'primary', { active: true }),
@@ -690,17 +706,5 @@ export class PartnershipService {
         }),
       ])
       .run();
-
-    if (direction === 'from') {
-      await startQuery()
-        .limit(1)
-        .match([
-          node('otherPartnership'),
-          relation('out', '', 'primary', { active: true }),
-          node('property', 'Property'),
-        ])
-        .setValues({ 'property.value': true })
-        .run();
-    }
   }
 }
