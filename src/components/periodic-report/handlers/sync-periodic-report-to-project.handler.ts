@@ -73,13 +73,15 @@ export class SyncPeriodicReportToProject
     const report = await this.periodicReports.create(input, session);
     await this.db
       .query()
+      .match(node('project', 'Project', { id: projectId }))
+      .match(node('periodicReport', 'PeriodicReport', { id: report.id }))
       .create([
-        node('project', 'Project', { id: projectId }),
+        node('project'),
         relation('out', '', 'report', {
           active: true,
           createdAt: DateTime.local(),
         }),
-        node('periodicReport', 'PeriodicReport', { id: report.id }),
+        node('periodicReport'),
       ])
       .run();
   }

@@ -127,7 +127,7 @@ export class PeriodicReportService {
       .match([node('node', 'PeriodicReport', { id })])
       .call(matchPropList)
       .match([node('', 'PeriodicReport', { id })])
-      .with(['project', 'node', 'propList'])
+      .with(['node', 'propList'])
       .return('node, propList')
       .asResult<StandardReadResult<DbPropsOfDto<PeriodicReport>>>();
 
