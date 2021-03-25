@@ -9,17 +9,14 @@ import {
   Logger,
 } from '../../../core';
 import { Engagement } from '../../engagement';
-import {
-  EngagementCreatedEvent,
-  EngagementUpdatedEvent,
-} from '../../engagement/events';
+import { EngagementUpdatedEvent } from '../../engagement/events';
 import { CreatePeriodicReport } from '../dto';
 import { ReportType } from '../dto/type.enum';
 import { PeriodicReportService } from '../periodic-report.service';
 
-type SubscribedEvent = EngagementCreatedEvent | EngagementUpdatedEvent;
+type SubscribedEvent = EngagementUpdatedEvent;
 
-@EventsHandler(EngagementCreatedEvent, EngagementUpdatedEvent)
+@EventsHandler(EngagementUpdatedEvent)
 export class SyncProgressReportToProject
   implements IEventHandler<SubscribedEvent> {
   constructor(
@@ -34,16 +31,9 @@ export class SyncProgressReportToProject
       event: event.constructor.name,
     });
 
-    const engagement = this.determineEngagement(event);
+    const engagement = event.updated;
 
     await this.syncRecords(engagement, event.session);
-  }
-
-  private determineEngagement(event: SubscribedEvent) {
-    if (event instanceof EngagementCreatedEvent) {
-      return event.engagement;
-    }
-    return event.updated;
   }
 
   private async syncRecords(engagement: Engagement, session: Session) {
