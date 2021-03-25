@@ -546,12 +546,16 @@ describe('Partnership e2e', () => {
 
     // delete primary partnership, throw error if it's not the only one
     await expect(deletePartnership(partnership2.id)).rejects.toThrowError(
-      new InputException('Partnership is not the only primary one')
+      new InputException(
+        'Primary partnerships cannot be removed. Make another partnership primary first.'
+      )
     );
 
     await deletePartnership(partnership1.id);
     await expect(deletePartnership(partnership2.id)).rejects.toThrowError(
-      new InputException('Partnership is not the only primary one')
+      new InputException(
+        'Primary partnerships cannot be removed. Make another partnership primary first.'
+      )
     );
 
     await deletePartnership(partnership3.id);

@@ -385,7 +385,7 @@ export class PartnershipService {
 
     if (input.primary === false) {
       throw new InputException(
-        'Partnership primary could not be false',
+        'To remove primary from this partnership, set another partnership as the primary',
         'partnership.primary'
       );
     }
@@ -458,7 +458,7 @@ export class PartnershipService {
 
       if (result) {
         throw new InputException(
-          'Partnership is not the only primary one',
+          'Primary partnerships cannot be removed. Make another partnership primary first.',
           'partnership.id'
         );
       }
