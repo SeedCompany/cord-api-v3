@@ -1,3 +1,4 @@
+import { Type } from '@nestjs/common';
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
@@ -22,12 +23,17 @@ import { SecuredTags } from '../../language/dto/language.dto';
 import { Location } from '../../location/dto';
 import { Partnership } from '../../partnership/dto';
 import { Pinnable } from '../../pin/dto';
+import { Changeable } from '../change-to-plan/dto';
 import { ProjectMember } from '../project-member/dto';
 import { ProjectStatus } from './status.enum';
 import { SecuredProjectStep } from './step.enum';
 import { ProjectType } from './type.enum';
 
 type AnyProject = MergeExclusive<TranslationProject, InternshipProject>;
+
+const PinnableChangeableResource: Type<
+  Resource & Changeable & Pinnable
+> = IntersectionType(Resource, IntersectionType(Changeable, Pinnable));
 
 @InterfaceType({
   resolveType: (val: Project) => {
@@ -41,7 +47,7 @@ type AnyProject = MergeExclusive<TranslationProject, InternshipProject>;
     throw new Error('Could not resolve project type');
   },
 })
-class Project extends IntersectionType(Resource, Pinnable) {
+class Project extends PinnableChangeableResource {
   static readonly Props: string[] = keysOf<Project>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Project>>();
   static readonly Relations = {
@@ -118,7 +124,7 @@ class Project extends IntersectionType(Resource, Pinnable) {
 export { Project as IProject, AnyProject as Project };
 
 @ObjectType({
-  implements: [Project, Resource, Pinnable],
+  implements: [Project, Resource, Pinnable, Changeable],
 })
 export class TranslationProject extends Project {
   static readonly Props = keysOf<TranslationProject>();
@@ -128,7 +134,7 @@ export class TranslationProject extends Project {
 }
 
 @ObjectType({
-  implements: [Project, Resource, Pinnable],
+  implements: [Project, Resource, Pinnable, Changeable],
 })
 export class InternshipProject extends Project {
   static readonly Props = keysOf<InternshipProject>();
