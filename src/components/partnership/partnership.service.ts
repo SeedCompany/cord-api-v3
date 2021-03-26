@@ -70,6 +70,7 @@ export class PartnershipService {
     mou: true,
     agreement: true,
     partner: true,
+    primary: true,
   };
 
   constructor(
@@ -92,6 +93,9 @@ export class PartnershipService {
     const createdAt = DateTime.local();
 
     await this.verifyRelationshipEligibility(projectId, partnerId);
+
+    const isFirstPartnership = await this.isFirstPartnership(projectId);
+    const primary = isFirstPartnership ? true : input.primary;
 
     const partner = await this.partnerService.readOne(partnerId, session);
     this.verifyFinancialReportingType(
@@ -156,6 +160,12 @@ export class PartnershipService {
       {
         key: 'canDelete',
         value: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'primary',
+        value: primary,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -230,6 +240,10 @@ export class PartnershipService {
         result.id,
         session.userId
       );
+
+      if (primary) {
+        await this.removeOtherPartnershipPrimary(result.id);
+      }
 
       const partnership = await this.readOne(result.id, session);
 
@@ -369,6 +383,17 @@ export class PartnershipService {
       }
     }
 
+    if (input.primary === false) {
+      throw new InputException(
+        'To remove primary from this partnership, set another partnership as the primary',
+        'partnership.primary'
+      );
+    }
+
+    if (!object.primary.value && input.primary) {
+      await this.removeOtherPartnershipPrimary(input.id);
+    }
+
     const { mou, agreement, ...rest } = changes;
     await this.db.sgUpdateProperties({
       session,
@@ -380,6 +405,7 @@ export class PartnershipService {
         'financialReportingType',
         'mouStartOverride',
         'mouEndOverride',
+        'primary',
       ],
       changes: rest,
       nodevar: 'partnership',
@@ -423,6 +449,20 @@ export class PartnershipService {
       throw new UnauthorizedException(
         'You do not have the permission to delete this Partnership'
       );
+
+    // only primary one partnership could be removed
+    if (object.primary.value) {
+      const result = await this.otherPartnershipQuery(object.id)
+        .return('otherPartnership')
+        .first();
+
+      if (result) {
+        throw new InputException(
+          'Primary partnerships cannot be removed. Make another partnership primary first.',
+          'partnership.id'
+        );
+      }
+    }
 
     await this.eventBus.publish(
       new PartnershipWillDeleteEvent(object, session)
@@ -599,5 +639,69 @@ export class PartnershipService {
         'Partnership for this project and partner already exists'
       );
     }
+  }
+
+  protected async isFirstPartnership(projectId: string): Promise<boolean> {
+    const result = await this.db
+      .query()
+      .match([
+        node('project', 'Project', { id: projectId }),
+        relation('out', '', 'partnership', { active: true }),
+        node('partnership'),
+      ])
+      .return(['partnership'])
+      .asResult<{ partnership?: Node }>()
+      .first();
+
+    return result?.partnership ? false : true;
+  }
+
+  protected otherPartnershipQuery(partnershipId: string): Query {
+    return this.db
+      .query()
+      .match([
+        node('partnership', 'Partnership', { id: partnershipId }),
+        relation('in', '', 'partnership', { active: true }),
+        node('project', 'Project'),
+        relation('out', '', 'partnership', { active: true }),
+        node('otherPartnership'),
+      ])
+      .raw('WHERE partnership <> otherPartnership')
+      .with('otherPartnership');
+  }
+
+  /**
+   *
+   * match current primary partnership, its project, and all other partnerships
+   * set current to primary false
+   */
+  protected async removeOtherPartnershipPrimary(
+    partnershipId: string
+  ): Promise<void> {
+    const createdAt = DateTime.local();
+
+    await this.otherPartnershipQuery(partnershipId)
+      .match([
+        node('otherPartnership'),
+        relation('out', 'oldRel', 'primary', { active: true }),
+        node('', 'Property'),
+      ])
+      .setValues({
+        'oldRel.active': false,
+      })
+      .with('otherPartnership')
+      .create([
+        node('otherPartnership'),
+        relation('out', '', 'primary', {
+          active: true,
+          createdAt,
+        }),
+        node('newProperty', 'Property', {
+          createdAt,
+          value: false,
+          sortValue: false,
+        }),
+      ])
+      .run();
   }
 }
