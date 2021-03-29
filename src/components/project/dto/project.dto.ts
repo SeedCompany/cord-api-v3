@@ -1,3 +1,4 @@
+import { Type } from '@nestjs/common';
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
@@ -25,12 +26,17 @@ import { SecuredTags } from '../../language/dto/language.dto';
 import { Location } from '../../location/dto';
 import { Partnership } from '../../partnership/dto';
 import { Pinnable } from '../../pin/dto';
+import { Postable } from '../../post/postable/dto/postable.dto';
 import { ProjectMember } from '../project-member/dto';
 import { ProjectStatus } from './status.enum';
 import { SecuredProjectStep } from './step.enum';
 import { ProjectType } from './type.enum';
 
 type AnyProject = MergeExclusive<TranslationProject, InternshipProject>;
+
+const PinnablePostableResource: Type<
+  Resource & Postable & Pinnable
+> = IntersectionType(Resource, IntersectionType(Postable, Pinnable));
 
 @InterfaceType({
   resolveType: (val: Project) => {
@@ -45,7 +51,7 @@ type AnyProject = MergeExclusive<TranslationProject, InternshipProject>;
   },
   implements: [Resource, Pinnable],
 })
-class Project extends IntersectionType(Resource, Pinnable) {
+class Project extends PinnablePostableResource {
   static readonly Props: string[] = keysOf<Project>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Project>>();
   static readonly Relations = {
@@ -128,7 +134,7 @@ class Project extends IntersectionType(Resource, Pinnable) {
 export { Project as IProject, AnyProject as Project };
 
 @ObjectType({
-  implements: [Project],
+  implements: [Project, Resource, Pinnable, Postable],
 })
 export class TranslationProject extends Project {
   static readonly Props = keysOf<TranslationProject>();
@@ -138,7 +144,7 @@ export class TranslationProject extends Project {
 }
 
 @ObjectType({
-  implements: [Project],
+  implements: [Project, Resource, Pinnable, Postable],
 })
 export class InternshipProject extends Project {
   static readonly Props = keysOf<InternshipProject>();
