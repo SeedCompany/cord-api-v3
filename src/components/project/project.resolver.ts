@@ -280,6 +280,17 @@ export class ProjectResolver {
     return true;
   }
 
+  @Mutation(() => Boolean, {
+    description: 'Restore a project',
+  })
+  async restoreProject(
+    @IdArg() id: string,
+    @LoggedInSession() session: Session
+  ): Promise<boolean> {
+    // await this.projectService.restore(id, session);
+    return true;
+  }
+
   @Mutation(() => IProject, {
     description: 'Add a location to a project',
   })

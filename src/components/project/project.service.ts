@@ -777,6 +777,22 @@ export class ProjectService {
     await this.eventBus.publish(new ProjectDeletedEvent(object, session));
   }
 
+  async restore(id: string): Promise<void> {
+    const projectExists = await this.db
+      .query()
+      .matchNode('deletedProject', 'Deleted_Project', { id })
+      .return('deletedProject')
+      .run();
+    if (!projectExists) {
+      throw new NotFoundException('Project has not been deleted');
+    }
+    try {
+      await this.db.restoreNode(id);
+    } catch (e) {
+      throw new ServerException('Failed to restore project');
+    }
+  }
+
   async list(
     { filter, ...input }: ProjectListInput,
     session: Session

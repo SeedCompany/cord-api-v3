@@ -592,6 +592,47 @@ export class DatabaseService {
     await query.run();
   }
 
+  async restoreNode(id: string) {
+    const query = this.db
+      .query()
+      .match([
+        node('baseNode', { id }),
+        // we only want to restore properties that were not deleted before the base node was deleted
+        relation(
+          'out',
+          'propRel'
+          // , { active: true }
+        ),
+        node('propertyNode', 'Deleted_Property'),
+      ])
+      // Mark any parent base node relationships (pointing to the base node) as active = false.
+      .optionalMatch([
+        node('baseNode'),
+        relation('in', 'rel'),
+        node('', 'BaseNode'),
+      ])
+      .setValues({
+        'rel.active': true,
+        'propRel.active': true,
+      })
+      // after setting propRel.active false, we need to distinct propertyNode (not sure why)
+      // combine baseNode with propertyNodes to set Deleted_ labels on all of them
+      .with('[baseNode] + collect(distinct propertyNode) as nodeList')
+      // yielding a node from this procedure is necessary I believe, but not used in the rest of the query
+      // they're aliased to avoid colliding with the unwound node var
+      .raw(
+        `
+        unwind nodeList as node
+        with node, reduce(restoredLabels = [], label in labels(node) | restoredLabels + replace(label, "Deleted_", "")) as restoredLabels
+        call apoc.create.removeLabels(node, labels(node)) yield node as nodeRemoved
+        with node, restoredLabels
+        call apoc.create.addLabels(node, restoredLabels) yield node as nodeAdded
+      `
+      )
+      .return('*');
+    await query.run();
+  }
+
   async deleteNode<TObject extends Resource>({
     session,
     object,
