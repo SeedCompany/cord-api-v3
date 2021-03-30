@@ -1,7 +1,7 @@
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
 import { LoggedInSession, Session } from '../../common';
 import { SecuredFile } from '../file';
-import { UploadPeriodicReportInput, UploadPeriodicReportOutput } from './dto';
+import { UploadPeriodicReportInput } from './dto';
 import { PeriodicReportService } from './periodic-report.service';
 
 @Resolver()
@@ -13,13 +13,13 @@ export class PeriodicReportResolver {
   })
   async uploadPeriodicReport(
     @LoggedInSession() session: Session,
-    @Args('input') { input }: UploadPeriodicReportInput
-  ): Promise<UploadPeriodicReportOutput> {
+    @Args('input') input: UploadPeriodicReportInput
+  ): Promise<SecuredFile> {
     const reportFile = await this.service.uploadFile(
       input.reportId,
       input.file,
       session
     );
-    return { reportFile };
+    return reportFile;
   }
 }

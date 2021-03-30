@@ -114,24 +114,29 @@ export class PeriodicReportService {
   ) {
     const reportFileId = await generateId();
 
-    await this.db
-      .query()
-      .match(node('peridoicReport', { id: reportId }))
-      .create([
-        [node('peridoicReport')],
-        ...property('reportFile', reportFileId, 'peridoicReport'),
-      ])
-      .run();
-
     await this.files.createDefinedFile(
       reportFileId,
-      `Periodic Report File`,
+      file.name ?? 'Report File',
       session,
       reportId,
       'reportFile',
       file,
       'periodicReport.reportFile'
     );
+
+    await this.db
+      .query()
+      .match(node('periodicReport', 'PeriodicReport', { id: reportId }))
+      .match(node('file', 'File', { id: reportFileId }))
+      .create([
+        node('periodicReport'),
+        relation('out', '', 'reportFile', {
+          active: true,
+          createdAt: DateTime.local(),
+        }),
+        node('file'),
+      ])
+      .run();
 
     return await this.files.resolveDefinedFile(
       {
@@ -160,10 +165,17 @@ export class PeriodicReportService {
       .call(matchRequestingUser, session)
       .match([node('node', 'PeriodicReport', { id })])
       .call(matchPropList)
-      .match([node('', 'PeriodicReport', { id })])
-      .with(['node', 'propList'])
-      .return('node, propList')
-      .asResult<StandardReadResult<DbPropsOfDto<PeriodicReport>>>();
+      .optionalMatch([
+        node('node'),
+        relation('out', '', 'reportFile', { active: true }),
+        node('reportFile', 'File'),
+      ])
+      .return('node, propList, reportFile.id as reportFileId')
+      .asResult<
+        StandardReadResult<DbPropsOfDto<PeriodicReport>> & {
+          reportFileId: string;
+        }
+      >();
 
     const result = await query.first();
     if (!result) {
@@ -186,6 +198,14 @@ export class PeriodicReportService {
       type: props.type,
       start: props.start,
       end: props.end,
+      reportFile: await this.files.resolveDefinedFile(
+        {
+          value: result.reportFileId,
+          canEdit: true,
+          canRead: true,
+        },
+        session
+      ),
       canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
@@ -195,13 +215,6 @@ export class PeriodicReportService {
     session: Session
   ): Promise<PeriodicReport> {
     const object = await this.readOne(input.id, session);
-
-    await this.files.updateDefinedFile(
-      object.reportFile,
-      'periodicReport.reportFile',
-      reportFile,
-      session
-    );
 
     return await this.db.sgUpdateProperties({
       session,

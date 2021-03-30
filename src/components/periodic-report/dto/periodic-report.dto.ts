@@ -2,7 +2,7 @@ import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
 import { CalendarDate, Resource, SecuredProps } from '../../../common';
-import { DefinedFile } from '../../file';
+import { SecuredFile } from '../../file';
 import { ReportType } from './type.enum';
 
 type AnyPeriodicReport = MergeExclusive<
@@ -38,7 +38,8 @@ class PeriodicReport extends Resource {
   @Field(() => CalendarDate)
   readonly end: CalendarDate;
 
-  readonly reportFile: DefinedFile;
+  @Field(() => SecuredFile)
+  readonly reportFile: SecuredFile;
 }
 
 export {
