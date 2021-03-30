@@ -9,14 +9,14 @@ import {
   Logger,
 } from '../../../core';
 import { Project } from '../../project';
-import { ProjectCreatedEvent, ProjectUpdatedEvent } from '../../project/events';
+import { ProjectUpdatedEvent } from '../../project/events';
 import { CreatePeriodicReport } from '../dto';
 import { ReportType } from '../dto/type.enum';
 import { PeriodicReportService } from '../periodic-report.service';
 
-type SubscribedEvent = ProjectCreatedEvent | ProjectUpdatedEvent;
+type SubscribedEvent = ProjectUpdatedEvent;
 
-@EventsHandler(ProjectCreatedEvent, ProjectUpdatedEvent)
+@EventsHandler(ProjectUpdatedEvent)
 export class SyncPeriodicReportToProject
   implements IEventHandler<SubscribedEvent> {
   constructor(
@@ -31,16 +31,9 @@ export class SyncPeriodicReportToProject
       event: event.constructor.name,
     });
 
-    const project = this.determineProject(event);
+    const project = event.updated;
 
     await this.syncRecords(project, event.session);
-  }
-
-  private determineProject(event: SubscribedEvent) {
-    if (event instanceof ProjectCreatedEvent) {
-      return event.project;
-    }
-    return event.updated;
   }
 
   private async syncRecords(project: Project, session: Session) {

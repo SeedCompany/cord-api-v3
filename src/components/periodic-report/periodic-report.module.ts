@@ -3,6 +3,7 @@ import { AuthorizationModule } from '../authorization/authorization.module';
 import { FileModule } from '../file/file.module';
 import { UserModule } from '../user/user.module';
 import * as handlers from './handlers';
+import { PeriodicReportResolver } from './periodic-report.resolver';
 import { PeriodicReportService } from './periodic-report.service';
 
 @Module({
@@ -11,7 +12,11 @@ import { PeriodicReportService } from './periodic-report.service';
     forwardRef(() => UserModule),
     forwardRef(() => AuthorizationModule),
   ],
-  providers: [PeriodicReportService, ...Object.values(handlers)],
+  providers: [
+    PeriodicReportService,
+    PeriodicReportResolver,
+    ...Object.values(handlers),
+  ],
   exports: [PeriodicReportService],
 })
 export class PeriodicReportModule {}
