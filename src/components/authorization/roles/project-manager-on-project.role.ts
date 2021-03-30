@@ -308,6 +308,7 @@ export const ProjectManagerOnProject = new DbRole({
         { propertyName: 'mediums', permission: { read, write, }, },
         { propertyName: 'methodology', permission: { read, write, }, },
         { propertyName: 'purposes', permission: { read, write, }, },
+        { propertyName: 'steps', permission: { read, write, }, },
         { propertyName: 'scriptureReferences', permission: { read, write, }, },
         { propertyName: 'produces', permission: { read, write, }, },
         { propertyName: 'scriptureReferencesOverride', permission: { read, write, }, },

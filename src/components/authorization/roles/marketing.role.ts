@@ -306,6 +306,7 @@ export const Marketing = new DbRole({
         { propertyName: 'mediums', permission: { read, }, },
         { propertyName: 'methodology', permission: { read, }, },
         { propertyName: 'purposes', permission: { read, }, },
+        { propertyName: 'steps', permission: { read, }, },
         { propertyName: 'scriptureReferences', permission: { read, }, },
         { propertyName: 'produces', permission: { read, }, },
         { propertyName: 'scriptureReferencesOverride', permission: { read, }, },

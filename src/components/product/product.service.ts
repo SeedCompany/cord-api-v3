@@ -90,6 +90,12 @@ export class ProductService {
         label: 'ProductMethodology',
       },
       {
+        key: 'steps',
+        value: input.steps,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
         key: 'isOverriding',
         value: false,
         isPublic: false,
