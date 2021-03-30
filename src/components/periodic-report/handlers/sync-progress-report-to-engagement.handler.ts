@@ -1,4 +1,4 @@
-import { node, relation } from 'cypher-query-builder';
+import { isNull, node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { Session } from '../../../common';
 import {
@@ -32,8 +32,47 @@ export class SyncProgressReportToProject
     });
 
     const engagement = event.updated;
+    const previous = event.previous;
 
-    await this.syncRecords(engagement, event.session);
+    const [startDate, endDate] = this.determineEngagementDateRange(engagement);
+    const [
+      previousStartDate,
+      previousEndDate,
+    ] = this.determineEngagementDateRange(previous);
+
+    const isDateRangeChanged =
+      startDate !== previousStartDate || endDate !== previousEndDate;
+
+    if (isDateRangeChanged) {
+      await this.removeOldReports(engagement, event.session);
+      await this.syncRecords(engagement, event.session);
+    }
+  }
+
+  private async removeOldReports(engagement: Engagement, session: Session) {
+    const reports = await this.db
+      .query()
+      .match([
+        node('engagement', 'Engagement', { id: engagement.id }),
+        relation('out', '', 'report', { active: true }),
+        node('report', 'PeriodicReport'),
+      ])
+      .optionalMatch([
+        node('report'),
+        relation('out', 'rel', 'reportFile', { active: true }),
+        node('file', 'File'),
+      ])
+      .with('report, rel')
+      .where({ rel: isNull() })
+      .return('report.id as reportId')
+      .asResult<{ reportId: string }>()
+      .run();
+
+    await Promise.all(
+      reports.map((report) =>
+        this.periodicReports.delete(report.reportId, session)
+      )
+    );
   }
 
   private async syncRecords(engagement: Engagement, session: Session) {
