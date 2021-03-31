@@ -27,6 +27,7 @@ import {
   ProductApproach,
   ProductListInput,
   ProductListOutput,
+  ProductMethodology,
   ProductType,
   UpdateProductInput,
   UpdateProductOutput,
@@ -104,6 +105,23 @@ export class ProductResolver {
         steps,
       })
     );
+  }
+
+  @Query(() => [String], {
+    description: stripIndent`
+      Suggestions for describing a product's completion.
+      Use in conjunction with \`Product.describeCompletion\`.
+    `,
+  })
+  suggestProductCompletionDescriptions(
+    @Args('methodology', {
+      nullable: true,
+      description:
+        'Optionally limit suggestions to only ones for this methodology',
+    })
+    _methodology?: ProductMethodology
+  ): string[] {
+    return [];
   }
 
   @Mutation(() => CreateProductOutput, {
