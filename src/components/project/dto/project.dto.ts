@@ -23,7 +23,7 @@ import { SecuredTags } from '../../language/dto/language.dto';
 import { Location } from '../../location/dto';
 import { Partnership } from '../../partnership/dto';
 import { Pinnable } from '../../pin/dto';
-import { Changeable } from '../change-to-plan/dto';
+import { Changeable, PlanChange } from '../change-to-plan/dto';
 import { ProjectMember } from '../project-member/dto';
 import { ProjectStatus } from './status.enum';
 import { SecuredProjectStep } from './step.enum';
@@ -59,6 +59,7 @@ class Project extends PinnableChangeableResource {
     engagement: [Engagement], // why singular
     // edge case because it's writable for internships but not secured
     sensitivity: Sensitivity,
+    planChange: PlanChange    
   };
 
   @Field(() => ProjectType)
