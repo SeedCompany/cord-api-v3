@@ -8,7 +8,7 @@ import {
   OnIndex,
 } from '../../../core';
 import { AuthorizationService } from '../../authorization/authorization.service';
-import { CreatePlanChangeInput, CreatePlanChange, PlanChange } from './dto';
+import { CreatePlanChange, PlanChange } from './dto';
 
 @Injectable()
 export class PlanChangeService {
@@ -26,10 +26,9 @@ export class PlanChangeService {
   }
 
   async create(
-    {
-      ...input
-    }: CreatePlanChange,
-    session: Session): Promise<PlanChange> {
+    _input: CreatePlanChange,
+    _session: Session
+  ): Promise<PlanChange> {
     throw new NotImplementedException();
   }
 
