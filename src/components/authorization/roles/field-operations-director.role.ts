@@ -329,6 +329,7 @@ export const FieldOperationsDirector = new DbRole({
         { propertyName: 'produces', permission: { read, write, }, },
         { propertyName: 'scriptureReferencesOverride', permission: { read, write, }, },
         { propertyName: 'isOverriding', permission: { read, write, }, },
+        { propertyName: 'describeCompletion', permission: { read, write, }, },
       ],
       canDelete: false,
     }),

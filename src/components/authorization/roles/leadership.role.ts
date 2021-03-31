@@ -307,6 +307,7 @@ export const Leadership = new DbRole({
         { propertyName: 'produces', permission: { read, }, },
         { propertyName: 'scriptureReferencesOverride', permission: { read, }, },
         { propertyName: 'isOverriding', permission: { read, }, },
+        { propertyName: 'describeCompletion', permission: { read, }, },
       ],
       canDelete: false,
     }),

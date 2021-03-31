@@ -108,6 +108,12 @@ export class ProductService {
         isPublic: false,
         isOrgPublic: false,
       },
+      {
+        key: 'describeCompletion',
+        value: null,
+        isPublic: false,
+        isOrgPublic: false,
+      },
     ];
 
     const query = this.repo.query();

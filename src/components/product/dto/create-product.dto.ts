@@ -67,6 +67,9 @@ export abstract class CreateProduct {
 
   @Field(() => [MethodologyStep], { nullable: true })
   readonly steps?: MethodologyStep[] = [];
+
+  @Field({ nullable: true })
+  readonly describeCompletion?: string;
 }
 
 @InputType()
