@@ -33,7 +33,13 @@ export function ProjectStepChanged({
     .toLocaleString(DateTime.DATETIME_FULL);
 
   return (
-    <EmailTemplate title="Project Status Change">
+    <EmailTemplate
+      title={
+        projectName && newStep
+          ? `${projectName} is ${newStep}`
+          : 'Project Status Change'
+      }
+    >
       <Heading>
         {projectName && newStep ? (
           <>
