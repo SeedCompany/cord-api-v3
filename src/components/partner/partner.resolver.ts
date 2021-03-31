@@ -7,8 +7,15 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { AnonSession, IdArg, LoggedInSession, Session } from '../../common';
+import {
+  AnonSession,
+  IdArg,
+  LoggedInSession,
+  NotImplementedException,
+  Session,
+} from '../../common';
 import { OrganizationService, SecuredOrganization } from '../organization';
+import { SecuredProjectList } from '../project';
 import { SecuredUser, UserService } from '../user';
 import {
   CreatePartnerInput,
@@ -79,6 +86,14 @@ export class PartnerResolver {
       value,
       ...rest,
     };
+  }
+
+  @ResolveField(() => SecuredProjectList)
+  async projects(
+    @Parent() partner: Partner,
+    @AnonSession() session: Session
+  ): Promise<SecuredProjectList> {
+    throw new NotImplementedException().with(partner, session);
   }
 
   @Mutation(() => CreatePartnerOutput, {
