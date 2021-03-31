@@ -31,7 +31,7 @@ import { SecuredReportPeriod } from '../../periodic-report/dto';
 import { Pinnable } from '../../pin/dto';
 import { Post } from '../../post/dto';
 import { Postable } from '../../post/postable/dto/postable.dto';
-import { Changeable } from '../change-to-plan/dto';
+import { Changeable, PlanChange } from '../change-to-plan/dto';
 import { ProjectMember } from '../project-member/dto';
 import { ProjectStatus } from './status.enum';
 import { SecuredProjectStep } from './step.enum';
@@ -72,6 +72,7 @@ class Project extends PinnablePostableChangeableResource {
     // edge case because it's writable for internships but not secured
     sensitivity: Sensitivity,
     posts: [Post], // from Postable interface
+    planChange: PlanChange,
   };
 
   @Field(() => ProjectType)
