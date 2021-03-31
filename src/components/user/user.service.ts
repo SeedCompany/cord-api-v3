@@ -417,15 +417,17 @@ export class UserService {
         })
         .run();
 
-      await this.db
-        .query()
-        .match([
-          node('user', ['User', 'BaseNode'], {
-            id: input.id,
-          }),
-        ])
-        .create([...this.roleProperties(input.roles)])
-        .run();
+      if (input.roles.length > 0) {
+        await this.db
+          .query()
+          .match([
+            node('user', ['User', 'BaseNode'], {
+              id: input.id,
+            }),
+          ])
+          .create([...this.roleProperties(input.roles)])
+          .run();
+      }
 
       await this.authorizationService.roleAddedToUser(input.id, input.roles);
     }
