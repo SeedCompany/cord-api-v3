@@ -1,9 +1,10 @@
 /* eslint-disable no-case-declarations */
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { first, intersection } from 'lodash';
+import { first, intersection, Many, uniq } from 'lodash';
 import {
   MaybeAsync,
+  maybeMany,
   ServerException,
   Session,
   UnauthorizedException,
@@ -22,10 +23,16 @@ import { ProjectService } from './project.service';
 
 type EmailAddress = string;
 
+interface Transition extends ProjectStepTransition {
+  // Users/emails to notify when the project makes this transition
+  notifiers?: Many<string> | (() => Promise<Many<string>>);
+}
+
 interface StepRule {
   approvers: Role[];
-  transitions: ProjectStepTransition[];
-  getNotifiers: () => MaybeAsync<ReadonlyArray<EmailAddress | string>>;
+  transitions: Transition[];
+  // Users/emails to notify when the project arrives at this step
+  getNotifiers?: () => MaybeAsync<ReadonlyArray<EmailAddress | string>>;
 }
 
 export interface EmailNotification {
@@ -306,6 +313,11 @@ export class ProjectRules {
               to: ProjectStep.Active,
               type: TransitionType.Approve,
               label: 'Confirm Project 🎉',
+              notifiers: async () => [
+                ...(await this.getRoleEmails(Role.Controller)),
+                'project_approval@tsco.org',
+                'projects@tsco.org',
+              ],
             },
             {
               to: ProjectStep.OnHoldFinanceConfirmation,
@@ -336,6 +348,11 @@ export class ProjectRules {
               to: ProjectStep.Active,
               type: TransitionType.Approve,
               label: 'Confirm Project 🎉',
+              notifiers: async () => [
+                ...(await this.getRoleEmails(Role.Controller)),
+                'project_approval@tsco.org',
+                'projects@tsco.org',
+              ],
             },
             {
               to: ProjectStep.FinalizingProposal,
@@ -378,11 +395,7 @@ export class ProjectRules {
               label: 'Finalize Completion',
             },
           ],
-          getNotifiers: async () => [
-            ...(await this.getProjectTeamUserIds(id)),
-            ...(await this.getRoleEmails(Role.Controller)),
-            'project_approve@tsco.org',
-          ],
+          getNotifiers: () => this.getProjectTeamUserIds(id),
         };
       case ProjectStep.ActiveChangedPlan:
         return {
@@ -411,6 +424,7 @@ export class ProjectRules {
           ],
           getNotifiers: async () => [
             ...(await this.getProjectTeamUserIds(id)),
+            ...(await this.getRoleEmails(Role.Controller)),
             'project_extension@tsco.org',
             'project_revision@tsco.org',
           ],
@@ -507,6 +521,7 @@ export class ProjectRules {
           ],
           getNotifiers: async () => [
             ...(await this.getProjectTeamUserIds(id)),
+            ...(await this.getRoleEmails(Role.Controller)),
             'project_extension@tsco.org',
             'project_revision@tsco.org',
           ],
@@ -770,7 +785,6 @@ export class ProjectRules {
         return {
           approvers: [Role.Administrator],
           transitions: [],
-          getNotifiers: () => [],
         };
     }
   }
@@ -877,11 +891,25 @@ export class ProjectRules {
     projectId: string,
     step: ProjectStep,
     changedById: string,
-    previousStep?: ProjectStep
+    previousStep: ProjectStep
   ): Promise<EmailNotification[]> {
-    // notify everyone
-    const { getNotifiers } = await this.getStepRule(step, projectId);
-    const userIdsAndEmailAddresses = await getNotifiers();
+    const { getNotifiers: arrivalNotifiers } = await this.getStepRule(
+      step,
+      projectId
+    );
+
+    const transitionNotifiers = (
+      await this.getStepRule(previousStep, projectId)
+    ).transitions.find((t) => t.to === step)?.notifiers;
+
+    const userIdsAndEmailAddresses = uniq([
+      ...((await arrivalNotifiers?.()) ?? []),
+      ...(maybeMany(
+        typeof transitionNotifiers === 'function'
+          ? await transitionNotifiers()
+          : transitionNotifiers
+      ) ?? []),
+    ]);
 
     const recipientIds = this.configService.email.notifyDistributionLists
       ? userIdsAndEmailAddresses
@@ -927,8 +955,8 @@ export class ProjectRules {
         node('email', 'EmailAddress'),
         relation('in', '', 'email', { active: true }),
         node('user', 'User'),
-        relation('out', '', 'roles', { active: true, role }),
-        node('role', 'Property'),
+        relation('out', '', 'roles', { active: true }),
+        node('role', 'Property', { value: role }),
       ])
       .raw('return collect(email.value) as emails')
       .first();

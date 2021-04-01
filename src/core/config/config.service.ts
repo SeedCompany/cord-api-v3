@@ -60,6 +60,9 @@ export class ConfigService implements EmailOptionsFactory {
       notifyDistributionLists: this.env
         .boolean('NOTIFY_DISTRIBUTION_LIST')
         .optional(false),
+      notifyProjectStepChanges: this.env
+        .boolean('NOTIFY_PROJECT_STEP_CHANGES')
+        .optional(true),
     };
   }
 
