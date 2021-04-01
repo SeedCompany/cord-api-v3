@@ -61,8 +61,8 @@ export const ConsultantManagerGlobal = new DbRole({
     new DbBaseNodeGrant<DbBudgetRecord>({
       __className: 'DbBudgetRecord',
       properties: [
-        { propertyName: 'amount',                     permission: { read, }, },
-        { propertyName: 'fiscalYear',                 permission: { read, }, },
+        { propertyName: 'amount',                     permission: { read, sensitivityLevel: Sensitivity.Medium }, },
+        { propertyName: 'fiscalYear',                 permission: { read, sensitivityLevel: Sensitivity.Medium }, },
         { propertyName: 'organization',               permission: { read, }, },
         ],
     canDelete: false,
