@@ -3,11 +3,13 @@ import { Injectable } from '@nestjs/common';
 import { Connection, node, relation } from 'cypher-query-builder';
 import { compact, keyBy, mapValues, union, without } from 'lodash';
 import {
+  getHighestSensitivity,
   getParentTypes,
   has,
   mapFromList,
   ResourceShape,
   SecuredResource,
+  Sensitivity,
   ServerException,
   Session,
 } from '../../common';
@@ -100,12 +102,14 @@ export class AuthorizationService {
       | PropListDbResult<DbPropsOfDto<Resource['prototype']>>
       | DbPropsOfDto<Resource['prototype']>,
     sessionOrUserId: Session | string,
-    otherRoles: ScopedRole[] = []
+    otherRoles: ScopedRole[] = [],
+    sensitivity?: Sensitivity
   ): Promise<SecuredResource<Resource, false>> {
     const permissions = await this.getPermissions(
       resource,
       sessionOrUserId,
-      otherRoles
+      otherRoles,
+      sensitivity
     );
     // @ts-expect-error not matching for some reason but declared return type is correct
     return parseSecuredProperties(props, permissions, resource.SecuredProps);
@@ -123,7 +127,8 @@ export class AuthorizationService {
   async getPermissions<Resource extends ResourceShape<any>>(
     resource: Resource,
     sessionOrUserId: Session | string,
-    otherRoles: ScopedRole[] = []
+    otherRoles: ScopedRole[] = [],
+    sensitivity?: Sensitivity
   ): Promise<PermissionsOf<SecuredResource<Resource>>> {
     const userGlobalRoles =
       typeof sessionOrUserId === 'string'
@@ -164,6 +169,8 @@ export class AuthorizationService {
       )
     ) as Array<PermissionsForResource<ResourceShape<Resource>>>;
 
+    const sensitivityRank = { High: 3, Medium: 2, Low: 1 };
+
     const keys = [
       ...resource.SecuredProps,
       ...Object.keys(resource.Relations ?? {}),
@@ -173,6 +180,35 @@ export class AuthorizationService {
         canRead: grants.some((grant) => grant[key]?.read === true),
         canEdit: grants.some((grant) => grant[key]?.write === true),
       };
+      if (sensitivity && value.canRead) {
+        // -- only check sensitivity if all the grants' properties have sensitivity restrictions.
+        //    if there's at least one other grant that doesn't have the sensitivityLevel restriction,
+        //       we don't want to restrict it (e.g. if one grant is from an admin role, we don't want to restrict the sensitivity fields)
+        if (grants.every((grant) => grant[key]?.sensitivityLevel)) {
+          // going with a boring 'ole loop, because typescript doesn't seem to get that .map() is going to return
+          // only defined values for whatever reason
+          const sensitivityGrants: Sensitivity[] = [];
+          grants.forEach((g) => {
+            const level = g[key]?.sensitivityLevel; // can't directly assign because of the Sensitity | undefined problem.
+            if (level) {
+              sensitivityGrants.push(level);
+            }
+          });
+
+          const highestSensitivityOnPerms = getHighestSensitivity(
+            sensitivityGrants
+          );
+
+          if (
+            highestSensitivityOnPerms &&
+            sensitivityRank[sensitivity] >
+              sensitivityRank[highestSensitivityOnPerms]
+          ) {
+            value.canRead = false;
+            value.canEdit = false; // really not sure what the business rules are here, but pretty sure if we don't want them to read we don't want them to edit
+          }
+        }
+      }
       return [key, value];
     }) as PermissionsOf<SecuredResource<Resource>>;
   }

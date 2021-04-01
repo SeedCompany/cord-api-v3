@@ -4,9 +4,11 @@ import { DateTime } from 'luxon';
 import {
   DuplicateException,
   generateId,
+  getHighestSensitivity,
   InputException,
   NotFoundException,
   Order,
+  Sensitivity,
   ServerException,
   Session,
   UnauthorizedException,
@@ -25,6 +27,7 @@ import {
   calculateTotalAndPaginateList,
   defaultSorter,
   matchMemberRoles,
+  matchProjectSensitivity,
   matchPropList,
   permissionsOfNode,
   requestingUser,
@@ -343,10 +346,19 @@ export class BudgetService {
       ])
       .with(['project', 'node', 'propList'])
       .call(matchMemberRoles, session.userId)
-      .return(['propList', 'node', 'memberRoles'])
+      .call(matchProjectSensitivity)
+      .return([
+        'propList',
+        'node',
+        'memberRoles',
+        'internSens.value as internOrDefaultSensitivity',
+        'collect(distinct transSensitivity.value) as languageSensitivityList',
+      ])
       .asResult<
         StandardReadResult<DbPropsOfDto<Budget>> & {
           memberRoles: Role[][];
+          internOrDefaultSensitivity: Sensitivity;
+          languageSensitivityList: Sensitivity[];
         }
       >();
 
@@ -354,6 +366,10 @@ export class BudgetService {
     if (!result) {
       throw new NotFoundException('Could not find budget', 'budget.id');
     }
+
+    const sensitivity =
+      getHighestSensitivity(result.languageSensitivityList) ||
+      result.internOrDefaultSensitivity;
 
     const records = await this.listRecords(
       {
@@ -371,7 +387,8 @@ export class BudgetService {
       Budget,
       props,
       session,
-      result.memberRoles.flat().map(rolesForScope('project'))
+      result.memberRoles.flat().map(rolesForScope('project')),
+      sensitivity
     );
 
     return {
@@ -408,15 +425,20 @@ export class BudgetService {
         relation('out', '', 'organization', { active: true }),
         node('organization', 'Organization'),
       ])
-      .with(['node', 'propList', 'organization', 'memberRoles'])
+      .with(['node', 'propList', 'organization', 'memberRoles', 'project'])
+      .call(matchProjectSensitivity)
       .return([
         'propList + [{value: organization.id, property: "organization"}] as propList',
         'node',
         'memberRoles',
+        'internSens.value as internOrDefaultSensitivity',
+        'collect(distinct transSensitivity.value) as languageSensitivityList',
       ])
       .asResult<
         StandardReadResult<DbPropsOfDto<BudgetRecord>> & {
           memberRoles: Role[][];
+          internOrDefaultSensitivity: Sensitivity;
+          languageSensitivityList: Sensitivity[];
         }
       >();
 
@@ -429,11 +451,16 @@ export class BudgetService {
       );
     }
 
+    const sensitivity =
+      getHighestSensitivity(result.languageSensitivityList) ||
+      result.internOrDefaultSensitivity;
+
     const securedProps = await this.authorizationService.secureProperties(
       BudgetRecord,
       result.propList,
       session,
-      result.memberRoles.flat().map(rolesForScope('project'))
+      result.memberRoles.flat().map(rolesForScope('project')),
+      sensitivity
     );
 
     return {

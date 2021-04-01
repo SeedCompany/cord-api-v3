@@ -55,3 +55,20 @@ export const matchMemberRoles = (query: Query, userId: string) =>
       'node',
       'project',
     ]);
+
+export const matchProjectSensitivity = (query: Query) =>
+  query
+    .optionalMatch([
+      node('project'),
+      relation('out', '', 'sensitivity', { active: true }),
+      node('internSens', 'Property'),
+    ])
+    .optionalMatch([
+      node('project'),
+      relation('out', '', 'engagement', { active: true }),
+      node('', 'LanguageEngagement'),
+      relation('out', '', 'language', { active: true }),
+      node('', 'Language'),
+      relation('out', '', 'sensitivity', { active: true }),
+      node('transSensitivity', 'Property'),
+    ]);

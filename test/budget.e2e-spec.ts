@@ -7,39 +7,54 @@ import {
   isValidId,
   NotFoundException,
   Secured,
+  Sensitivity,
 } from '../src/common';
 import { Powers } from '../src/components/authorization/dto/powers';
 import { Budget } from '../src/components/budget';
 import { PartnerType } from '../src/components/partner';
-import { Project } from '../src/components/project';
+import { Project, Role } from '../src/components/project';
 import {
   createBudget,
   createProject,
   createSession,
   createTestApp,
   fragments,
+  login,
   Raw,
+  readOneBudget,
   registerUserWithPower,
   TestApp,
 } from './utility';
 import { createPartnership } from './utility/create-partnership';
 import { resetDatabase } from './utility/reset-database';
+import { checkSensitivePropertyTranslation } from './utility/sensitivity';
 
 describe('Budget e2e', () => {
   let app: TestApp;
   let project: Raw<Project>;
   let db: Connection;
+  let email: string;
+  let password: string;
 
   beforeAll(async () => {
     app = await createTestApp();
     db = app.get(Connection);
     await createSession(app);
-    await registerUserWithPower(app, [
-      Powers.CreateOrganization,
-      Powers.CreateProject,
-      Powers.CreatePartnership,
-      Powers.CreateBudget,
-    ]);
+    email = 'test@tsco.org';
+    password = 'password';
+    await registerUserWithPower(
+      app,
+      [
+        Powers.CreateOrganization,
+        Powers.CreateProject,
+        Powers.CreatePartnership,
+        Powers.CreateBudget,
+        Powers.CreateLanguage,
+        Powers.CreateEthnologueLanguage,
+        Powers.CreateLanguageEngagement,
+      ],
+      { email: email, password: password }
+    );
     project = await createProject(app);
     await createPartnership(app, {
       projectId: project.id,
@@ -83,6 +98,45 @@ describe('Budget e2e', () => {
     expect(actual.id).toBe(budget.id);
     expect(isValidId(actual.id)).toBe(true);
     expect(actual.status).toEqual(budget.status);
+  });
+
+  describe('Security restricted by Sensitivity', () => {
+    describe('universal template file', () => {
+      it('consultant manager role: medium', async () => {
+        const proj = await createProject(app);
+        const budget = await createBudget(app, { projectId: proj.id });
+
+        await checkSensitivePropertyTranslation(
+          app,
+          Role.ConsultantManager,
+          'universalTemplateFile',
+          proj.id,
+          budget.id,
+          budget,
+          Sensitivity.Medium,
+          readOneBudget
+        );
+        await login(app, { email: email, password: password });
+      });
+    });
+    describe('Records', () => {
+      it('consultant manager role: medium', async () => {
+        const proj = await createProject(app);
+        const budget = await createBudget(app, { projectId: proj.id });
+
+        await checkSensitivePropertyTranslation(
+          app,
+          Role.ConsultantManager,
+          'records',
+          proj.id,
+          budget.id,
+          budget,
+          Sensitivity.Medium,
+          readOneBudget
+        );
+        await login(app, { email: email, password: password });
+      });
+    });
   });
 
   it.skip('delete budget', async () => {

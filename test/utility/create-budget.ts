@@ -40,3 +40,20 @@ export async function createBudget(
 
   return actual;
 }
+
+export async function readOneBudget(app: TestApp, id: string): Promise<Budget> {
+  const readOneBudget = await app.graphql.query(
+    gql`
+      query budget($id: ID!) {
+        budget(id: $id) {
+          ...budget
+        }
+      }
+      ${fragments.budget}
+    `,
+    {
+      id: id,
+    }
+  );
+  return readOneBudget.budget;
+}
