@@ -33,7 +33,7 @@ import {
   PeriodicReportService,
   SecuredPeriodicReportList,
 } from '../periodic-report';
-import { ReportType } from '../periodic-report/dto/type.enum';
+import { ReportType } from '../periodic-report/dto';
 import {
   CreateProjectInput,
   CreateProjectOutput,

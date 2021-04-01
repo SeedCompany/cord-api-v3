@@ -7,7 +7,7 @@ import {
   SortablePaginationInput,
 } from '../../../common';
 import { IPeriodicReport, PeriodicReport } from './periodic-report.dto';
-import { ReportType } from './type.enum';
+import { ReportType } from './report-type.enum';
 
 @InputType()
 export abstract class PeriodicReportFilters {

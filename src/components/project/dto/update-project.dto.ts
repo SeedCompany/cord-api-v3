@@ -12,7 +12,7 @@ import {
   NameField,
   Sensitivity,
 } from '../../../common';
-import { ReportPeriod } from '../../periodic-report/dto/type.enum';
+import { ReportPeriod } from '../../periodic-report/dto';
 import { IProject, Project } from './project.dto';
 import { ProjectStep } from './step.enum';
 

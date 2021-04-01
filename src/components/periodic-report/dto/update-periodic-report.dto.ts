@@ -4,7 +4,7 @@ import { ValidateNested } from 'class-validator';
 import { CalendarDate, IdField } from '../../../common';
 import { CreateDefinedFileVersionInput } from '../../file';
 import { IPeriodicReport, PeriodicReport } from './periodic-report.dto';
-import { ReportType } from './type.enum';
+import { ReportType } from './report-type.enum';
 
 @InputType()
 export abstract class UpdatePeriodicReport {

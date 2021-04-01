@@ -3,7 +3,7 @@ import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { CalendarDate } from '../../../common';
 import { IPeriodicReport, PeriodicReport } from './periodic-report.dto';
-import { ReportType } from './type.enum';
+import { ReportType } from './report-type.enum';
 
 @InputType()
 export class CreatePeriodicReport {

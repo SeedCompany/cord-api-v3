@@ -10,8 +10,7 @@ import {
 } from '../../../core';
 import { Project } from '../../project';
 import { ProjectUpdatedEvent } from '../../project/events';
-import { CreatePeriodicReport } from '../dto';
-import { ReportType } from '../dto/type.enum';
+import { CreatePeriodicReport, ReportType } from '../dto';
 import { PeriodicReportService } from '../periodic-report.service';
 
 type SubscribedEvent = ProjectUpdatedEvent;

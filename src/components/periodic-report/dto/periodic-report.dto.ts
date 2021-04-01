@@ -3,7 +3,7 @@ import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
 import { CalendarDate, Resource, SecuredProps } from '../../../common';
 import { SecuredFile } from '../../file';
-import { ReportType } from './type.enum';
+import { ReportType } from './report-type.enum';
 
 type AnyPeriodicReport = MergeExclusive<
   MergeExclusive<FinancialReport, NarrativeReport>,

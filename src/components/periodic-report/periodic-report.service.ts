@@ -36,10 +36,10 @@ import {
   IPeriodicReport,
   PeriodicReport,
   PeriodicReportListInput,
+  ReportType,
   SecuredPeriodicReportList,
   UpdatePeriodicReport,
 } from './dto';
-import { ReportType } from './dto/type.enum';
 
 @Injectable()
 export class PeriodicReportService {
