@@ -1,9 +1,10 @@
 /* eslint-disable no-case-declarations */
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { first, intersection } from 'lodash';
+import { first, intersection, Many, uniq } from 'lodash';
 import {
   MaybeAsync,
+  maybeMany,
   ServerException,
   Session,
   UnauthorizedException,
@@ -22,9 +23,15 @@ import { ProjectService } from './project.service';
 
 type EmailAddress = string;
 
+interface Transition extends ProjectStepTransition {
+  // Users/emails to notify when the project makes this transition
+  notifiers?: Many<string> | (() => Promise<Many<string>>);
+}
+
 interface StepRule {
   approvers: Role[];
-  transitions: ProjectStepTransition[];
+  transitions: Transition[];
+  // Users/emails to notify when the project arrives at this step
   getNotifiers: () => MaybeAsync<ReadonlyArray<EmailAddress | string>>;
 }
 
@@ -877,11 +884,25 @@ export class ProjectRules {
     projectId: string,
     step: ProjectStep,
     changedById: string,
-    previousStep?: ProjectStep
+    previousStep: ProjectStep
   ): Promise<EmailNotification[]> {
-    // notify everyone
-    const { getNotifiers } = await this.getStepRule(step, projectId);
-    const userIdsAndEmailAddresses = await getNotifiers();
+    const { getNotifiers: arrivalNotifiers } = await this.getStepRule(
+      step,
+      projectId
+    );
+
+    const transitionNotifiers = (
+      await this.getStepRule(previousStep, projectId)
+    ).transitions.find((t) => t.to === step)?.notifiers;
+
+    const userIdsAndEmailAddresses = uniq([
+      ...(await arrivalNotifiers()),
+      ...(maybeMany(
+        typeof transitionNotifiers === 'function'
+          ? await transitionNotifiers()
+          : transitionNotifiers
+      ) ?? []),
+    ]);
 
     const recipientIds = this.configService.email.notifyDistributionLists
       ? userIdsAndEmailAddresses
