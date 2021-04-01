@@ -35,8 +35,8 @@ export function ProjectStepChanged({
   return (
     <EmailTemplate
       title={
-        projectName && newStep
-          ? `${projectName} is ${newStep}`
+        projectName && oldStep && newStep
+          ? `${projectName} changed from ${oldStep} to ${newStep}`
           : 'Project Status Change'
       }
     >
