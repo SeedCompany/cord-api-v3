@@ -32,7 +32,7 @@ export class ProjectStepChangedNotificationHandler
       event.updated.id,
       event.updated.step.value!,
       event.session.userId,
-      event.previous.step.value
+      event.previous.step.value!
     );
 
     this.logger.info('Notifying', {
