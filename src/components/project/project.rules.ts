@@ -949,8 +949,8 @@ export class ProjectRules {
         node('email', 'EmailAddress'),
         relation('in', '', 'email', { active: true }),
         node('user', 'User'),
-        relation('out', '', 'roles', { active: true, role }),
-        node('role', 'Property'),
+        relation('out', '', 'roles', { active: true }),
+        node('role', 'Property', { value: role }),
       ])
       .raw('return collect(email.value) as emails')
       .first();
