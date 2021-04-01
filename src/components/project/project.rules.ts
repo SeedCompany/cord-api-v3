@@ -313,6 +313,7 @@ export class ProjectRules {
               to: ProjectStep.Active,
               type: TransitionType.Approve,
               label: 'Confirm Project 🎉',
+              notifiers: 'projects@tsco.org',
             },
             {
               to: ProjectStep.OnHoldFinanceConfirmation,
