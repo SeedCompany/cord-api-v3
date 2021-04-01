@@ -1,6 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
-import { compact } from 'lodash';
+import { inArray, node, relation } from 'cypher-query-builder';
+import { compact, difference } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
@@ -401,31 +401,42 @@ export class UserService {
     // Update roles
     if (input.roles) {
       await this.authorizationService.checkPower(Powers.GrantRole, session);
-      await this.db
-        .query()
-        .match([
-          node('user', ['User', 'BaseNode'], {
-            id: input.id,
-          }),
-          relation('out', 'oldRoleRel', 'roles', { active: true }),
-          node('oldRoles', 'Property'),
-        ])
-        .set({
-          values: {
-            'oldRoleRel.active': false,
-          },
-        })
-        .run();
+      const removals = difference(user.roles.value, input.roles);
+      const additions = difference(input.roles, user.roles.value);
+      if (removals.length > 0) {
+        await this.db
+          .query()
+          .match([
+            node('user', ['User', 'BaseNode'], {
+              id: input.id,
+            }),
+            relation('out', 'oldRoleRel', 'roles', { active: true }),
+            node('oldRoles', 'Property'),
+          ])
+          .where({
+            oldRoles: {
+              value: inArray(removals),
+            },
+          })
+          .set({
+            values: {
+              'oldRoleRel.active': false,
+            },
+          })
+          .run();
+      }
 
-      await this.db
-        .query()
-        .match([
-          node('user', ['User', 'BaseNode'], {
-            id: input.id,
-          }),
-        ])
-        .create([...this.roleProperties(input.roles)])
-        .run();
+      if (additions.length > 0) {
+        await this.db
+          .query()
+          .match([
+            node('user', ['User', 'BaseNode'], {
+              id: input.id,
+            }),
+          ])
+          .create([...this.roleProperties(additions)])
+          .run();
+      }
 
       await this.authorizationService.roleAddedToUser(input.id, input.roles);
     }
