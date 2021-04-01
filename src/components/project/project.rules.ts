@@ -32,7 +32,7 @@ interface StepRule {
   approvers: Role[];
   transitions: Transition[];
   // Users/emails to notify when the project arrives at this step
-  getNotifiers: () => MaybeAsync<ReadonlyArray<EmailAddress | string>>;
+  getNotifiers?: () => MaybeAsync<ReadonlyArray<EmailAddress | string>>;
 }
 
 export interface EmailNotification {
@@ -778,7 +778,6 @@ export class ProjectRules {
         return {
           approvers: [Role.Administrator],
           transitions: [],
-          getNotifiers: () => [],
         };
     }
   }
@@ -897,7 +896,7 @@ export class ProjectRules {
     ).transitions.find((t) => t.to === step)?.notifiers;
 
     const userIdsAndEmailAddresses = uniq([
-      ...(await arrivalNotifiers()),
+      ...((await arrivalNotifiers?.()) ?? []),
       ...(maybeMany(
         typeof transitionNotifiers === 'function'
           ? await transitionNotifiers()
