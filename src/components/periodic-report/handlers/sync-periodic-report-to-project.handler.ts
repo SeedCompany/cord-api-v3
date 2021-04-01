@@ -1,5 +1,4 @@
 import { isNull, node, relation } from 'cypher-query-builder';
-import { DateTime } from 'luxon';
 import { Session } from '../../../common';
 import {
   DatabaseService,
@@ -10,18 +9,18 @@ import {
 } from '../../../core';
 import { Project } from '../../project';
 import { ProjectUpdatedEvent } from '../../project/events';
-import { CreatePeriodicReport, ReportType } from '../dto';
+import { ReportType } from '../dto';
 import { PeriodicReportService } from '../periodic-report.service';
 
 type SubscribedEvent = ProjectUpdatedEvent;
 
 @EventsHandler(ProjectUpdatedEvent)
-export class SyncPeriodicReportToProject
+export class SyncPeriodicReportsToProjectDateRange
   implements IEventHandler<SubscribedEvent> {
   constructor(
     private readonly db: DatabaseService,
     private readonly periodicReports: PeriodicReportService,
-    @Logger('periodicReport:sync-project') private readonly logger: ILogger
+    @Logger('periodic-reports:project-sync') private readonly logger: ILogger
   ) {}
 
   async handle(event: SubscribedEvent) {
@@ -34,12 +33,12 @@ export class SyncPeriodicReportToProject
     const previous = event.previous;
 
     const isDateRangeChanged =
-      project.mouStart !== previous.mouStart ||
-      project.mouEnd !== previous.mouEnd;
+      +project.mouStart !== +previous.mouStart ||
+      +project.mouEnd !== +previous.mouEnd;
 
     if (isDateRangeChanged) {
-      await this.removeOldReports(project, event.session);
-      await this.syncRecords(project, event.session);
+      await this.removeOldReports(previous, event.session);
+      await this.addRecords(project, event.session);
     }
   }
 
@@ -56,8 +55,26 @@ export class SyncPeriodicReportToProject
         relation('out', 'rel', 'reportFile', { active: true }),
         node('file', 'File'),
       ])
-      .with('report, rel')
-      .where({ rel: isNull() })
+      .optionalMatch([
+        node('report'),
+        relation('out', '', 'start', { active: true }),
+        node('start', 'Property'),
+      ])
+      .optionalMatch([
+        node('report'),
+        relation('out', '', 'end', { active: true }),
+        node('end', 'Property'),
+      ])
+      .with('report, rel, start, end')
+      .where({
+        rel: isNull(),
+        start: {
+          value: project.mouStart.value,
+        },
+        end: {
+          value: project.mouEnd.value,
+        },
+      })
       .return('report.id as reportId')
       .asResult<{ reportId: string }>()
       .run();
@@ -69,46 +86,25 @@ export class SyncPeriodicReportToProject
     );
   }
 
-  private async syncRecords(project: Project, session: Session) {
-    await this.addReport(
-      project.id,
+  private async addRecords(project: Project, session: Session) {
+    await this.periodicReports.create(
       {
         start: project.mouStart.value!,
         end: project.mouEnd.value!,
         type: ReportType.Financial,
+        projectOrEngagementId: project.id,
       },
       session
     );
 
-    await this.addReport(
-      project.id,
+    await this.periodicReports.create(
       {
         start: project.mouStart.value!,
         end: project.mouEnd.value!,
         type: ReportType.Narrative,
+        projectOrEngagementId: project.id,
       },
       session
     );
-  }
-
-  private async addReport(
-    projectId: string,
-    input: CreatePeriodicReport,
-    session: Session
-  ) {
-    const report = await this.periodicReports.create(input, session);
-    await this.db
-      .query()
-      .match(node('project', 'Project', { id: projectId }))
-      .match(node('periodicReport', 'PeriodicReport', { id: report.id }))
-      .create([
-        node('project'),
-        relation('out', '', 'report', {
-          active: true,
-          createdAt: DateTime.local(),
-        }),
-        node('periodicReport'),
-      ])
-      .run();
   }
 }

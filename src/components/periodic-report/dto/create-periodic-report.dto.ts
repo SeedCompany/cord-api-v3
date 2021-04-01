@@ -1,12 +1,15 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { CalendarDate } from '../../../common';
+import { CalendarDate, IdField } from '../../../common';
 import { IPeriodicReport, PeriodicReport } from './periodic-report.dto';
 import { ReportType } from './report-type.enum';
 
 @InputType()
 export class CreatePeriodicReport {
+  @IdField()
+  readonly projectOrEngagementId: string;
+
   @Field(() => ReportType)
   readonly type: ReportType;
 

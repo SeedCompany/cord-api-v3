@@ -8,7 +8,6 @@ import {
   Session,
 } from '../../common';
 import {
-  ConfigService,
   DatabaseService,
   ILogger,
   Logger,
@@ -30,7 +29,6 @@ import {
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { CreateDefinedFileVersionInput, FileService } from '../file';
-import { UserService } from '../user';
 import {
   CreatePeriodicReport,
   IPeriodicReport,
@@ -38,7 +36,6 @@ import {
   PeriodicReportListInput,
   ReportType,
   SecuredPeriodicReportList,
-  UpdatePeriodicReport,
 } from './dto';
 
 @Injectable()
@@ -52,10 +49,7 @@ export class PeriodicReportService {
 
   constructor(
     private readonly db: DatabaseService,
-    private readonly config: ConfigService,
     private readonly files: FileService,
-    @Inject(forwardRef(() => UserService))
-    private readonly userService: UserService,
     @Logger('periodic:report:service') private readonly logger: ILogger,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService
@@ -101,6 +95,45 @@ export class PeriodicReportService {
         throw new ServerException('Failed to create a periodic report');
       }
 
+      if (
+        input.type === ReportType.Financial ||
+        input.type === ReportType.Narrative
+      ) {
+        await this.db
+          .query()
+          .match(
+            node('project', 'Project', { id: input.projectOrEngagementId })
+          )
+          .match(node('periodicReport', 'PeriodicReport', { id: result.id }))
+          .create([
+            node('project'),
+            relation('out', '', 'report', {
+              active: true,
+              createdAt: DateTime.local(),
+            }),
+            node('periodicReport'),
+          ])
+          .run();
+      } else {
+        await this.db
+          .query()
+          .match(
+            node('engagement', 'Engagement', {
+              id: input.projectOrEngagementId,
+            })
+          )
+          .match(node('periodicReport', 'PeriodicReport', { id: result.id }))
+          .create([
+            node('engagement'),
+            relation('out', '', 'report', {
+              active: true,
+              createdAt: DateTime.local(),
+            }),
+            node('periodicReport'),
+          ])
+          .run();
+      }
+
       return await this.readOne(id, session);
     } catch (exception) {
       throw new ServerException('Could not create periodic report', exception);
@@ -114,9 +147,11 @@ export class PeriodicReportService {
   ) {
     const reportFileId = await generateId();
 
+    const report = await this.readOne(reportId, session);
+
     await this.files.createDefinedFile(
       reportFileId,
-      file.name ?? 'Report File',
+      report.end.toISODate(),
       session,
       reportId,
       'reportFile',
@@ -210,21 +245,6 @@ export class PeriodicReportService {
     };
   }
 
-  async update(
-    { reportFile, ...input }: UpdatePeriodicReport,
-    session: Session
-  ): Promise<PeriodicReport> {
-    const object = await this.readOne(input.id, session);
-
-    return await this.db.sgUpdateProperties({
-      session,
-      object,
-      props: ['start', 'end'],
-      changes: input,
-      nodevar: 'periodicReport',
-    });
-  }
-
   async delete(id: string, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
@@ -261,7 +281,7 @@ export class PeriodicReportService {
       .match([
         node('project', 'Project', { id: projectId }),
         relation('out', '', 'report', { active: true }),
-        node('node', `PeriodicReport:${reportType}Report`),
+        node('node', ['PeriodicReport', `${reportType}Report`]),
       ])
       .call(
         calculateTotalAndPaginateList,
