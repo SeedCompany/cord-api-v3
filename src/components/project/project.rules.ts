@@ -389,7 +389,7 @@ export class ProjectRules {
           getNotifiers: async () => [
             ...(await this.getProjectTeamUserIds(id)),
             ...(await this.getRoleEmails(Role.Controller)),
-            'project_approve@tsco.org',
+            'project_approval@tsco.org',
           ],
         };
       case ProjectStep.ActiveChangedPlan:
