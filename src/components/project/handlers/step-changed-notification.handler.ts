@@ -23,7 +23,8 @@ export class ProjectStepChangedNotificationHandler
   async handle(event: ProjectUpdatedEvent) {
     if (
       event.updated.step.value === event.previous.step.value ||
-      this.config.migration
+      this.config.migration ||
+      !this.config.email.notifyProjectStepChanges
     ) {
       return;
     }
