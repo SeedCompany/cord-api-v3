@@ -114,16 +114,31 @@ export const deleteProperties = <Resource extends ResourceShape<any>>(
   if (relationLabels.length === 0) {
     return query;
   }
-  const relationStr = relationLabels.join('|');
-  return query.raw(
-    `
-    match(node)-[propertyRel:${relationStr} {active: true}]->(property:Property)
-    set propertyRel.active = false
-    with property, reduce(deletedLabels = [], label in labels(property) | deletedLabels + ("Deleted_" + label)) as deletedLabels
+  const deletedAt = DateTime.local();
+  return query
+    .match([
+      node('node'),
+      relation('out', 'propertyRel', relationLabels, { active: true }),
+      node('property', 'Property'),
+    ])
+    .setValues({
+      'property.deletedAt': deletedAt,
+      'propertyRel.active': false,
+    })
+    .raw(
+      `
+    with property,
+    reduce(
+      deletedLabels = [], label in labels(property) |
+        case
+          when label starts with "Deleted_" then deletedLabels + label
+          else deletedLabels + ("Deleted_" + label)
+        end
+    ) as deletedLabels
     call apoc.create.removeLabels(property, labels(property)) yield node as nodeRemoved
     with property, deletedLabels
     call apoc.create.addLabels(property, deletedLabels) yield node as nodeAdded
     with *
   `
-  );
+    );
 };

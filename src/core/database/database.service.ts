@@ -555,34 +555,51 @@ export class DatabaseService {
   }: {
     object: TObject;
   }) {
+    const deletedAt = DateTime.local();
     const query = this.db
       .query()
       .match([
         node('baseNode', { id: object.id }),
-        // in this case we want to set Deleted_ labels for all properties
-        // including those with active = false
-        relation('out', 'propRel'),
+        /**
+         in this case we want to set Deleted_ labels for all properties
+         including active = false
+         deleteProperties does this, but deletes from before that was changed only prefixed
+         unique property labels
+        */
+        relation('out', ''),
         node('propertyNode', 'Property'),
       ])
       // Mark any parent base node relationships (pointing to the base node) as active = false.
       .optionalMatch([
         node('baseNode'),
-        relation('in', 'rel'),
+        relation('in', 'baseNodeRel'),
         node('', 'BaseNode'),
       ])
       .setValues({
-        'rel.active': false,
-        'propRel.active': false,
+        'baseNode.deletedAt': deletedAt,
+        'baseNodeRel.active': false,
       })
-      // after setting propRel.active false, we need to distinct propertyNode (not sure why)
-      // combine baseNode with propertyNodes to set Deleted_ labels on all of them
-      .with('[baseNode] + collect(distinct propertyNode) as nodeList')
-      // yielding a node from this procedure is necessary I believe, but not used in the rest of the query
-      // they're aliased to avoid colliding with the unwound node var
+      /**
+       if we set anything on property nodes or property relationships in the query above (as was done previously)
+       we need to distinct propertyNode to avoid collecting and labeling each propertyNode more than once
+      */
+      .with('[baseNode] + collect(propertyNode) as nodeList')
+      /**
+       check if labels already have the "Deleted_" prefix to avoid "Deleted_Deleted_"
+       yielding a node from the label procedures is necessary I believe
+       they're not used in rest of the query and are aliased to avoid colliding with the unwound "node" alias
+      */
       .raw(
         `
         unwind nodeList as node
-        with node, reduce(deletedLabels = [], label in labels(node) | deletedLabels + ("Deleted_" + label)) as deletedLabels
+        with node,
+        reduce(
+          deletedLabels = [], label in labels(node) |
+            case
+              when label starts with "Deleted_" then deletedLabels + label
+              else deletedLabels + ("Deleted_" + label)
+            end
+        ) as deletedLabels
         call apoc.create.removeLabels(node, labels(node)) yield node as nodeRemoved
         with node, deletedLabels
         call apoc.create.addLabels(node, deletedLabels) yield node as nodeAdded
