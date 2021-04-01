@@ -313,7 +313,11 @@ export class ProjectRules {
               to: ProjectStep.Active,
               type: TransitionType.Approve,
               label: 'Confirm Project 🎉',
-              notifiers: 'projects@tsco.org',
+              notifiers: async () => [
+                ...(await this.getRoleEmails(Role.Controller)),
+                'project_approval@tsco.org',
+                'projects@tsco.org',
+              ],
             },
             {
               to: ProjectStep.OnHoldFinanceConfirmation,
@@ -344,6 +348,11 @@ export class ProjectRules {
               to: ProjectStep.Active,
               type: TransitionType.Approve,
               label: 'Confirm Project 🎉',
+              notifiers: async () => [
+                ...(await this.getRoleEmails(Role.Controller)),
+                'project_approval@tsco.org',
+                'projects@tsco.org',
+              ],
             },
             {
               to: ProjectStep.FinalizingProposal,
@@ -386,11 +395,7 @@ export class ProjectRules {
               label: 'Finalize Completion',
             },
           ],
-          getNotifiers: async () => [
-            ...(await this.getProjectTeamUserIds(id)),
-            ...(await this.getRoleEmails(Role.Controller)),
-            'project_approval@tsco.org',
-          ],
+          getNotifiers: () => this.getProjectTeamUserIds(id),
         };
       case ProjectStep.ActiveChangedPlan:
         return {
@@ -419,6 +424,7 @@ export class ProjectRules {
           ],
           getNotifiers: async () => [
             ...(await this.getProjectTeamUserIds(id)),
+            ...(await this.getRoleEmails(Role.Controller)),
             'project_extension@tsco.org',
             'project_revision@tsco.org',
           ],
@@ -515,6 +521,7 @@ export class ProjectRules {
           ],
           getNotifiers: async () => [
             ...(await this.getProjectTeamUserIds(id)),
+            ...(await this.getRoleEmails(Role.Controller)),
             'project_extension@tsco.org',
             'project_revision@tsco.org',
           ],
