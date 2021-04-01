@@ -53,7 +53,7 @@ export const ConsultantManagerGlobal = new DbRole({
       __className: 'DbBudget',
       properties: [
         { propertyName: 'universalTemplateFile',      permission: { read, sensitivityLevel: Sensitivity.Medium, }, },
-        { propertyName: 'records',                    permission: { read, sensitivityLevel: Sensitivity.Medium  }, },
+        { propertyName: 'records',                    permission: { read, }, },
         { propertyName: 'status',                     permission: { read, }, },
         ],
     canDelete: false,
