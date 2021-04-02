@@ -233,14 +233,11 @@ export class PeriodicReportService {
       type: props.type,
       start: props.start,
       end: props.end,
-      reportFile: await this.files.resolveDefinedFile(
-        {
-          value: result.reportFileId,
-          canEdit: true,
-          canRead: true,
-        },
-        session
-      ),
+      reportFile: {
+        value: result.reportFileId,
+        canEdit: true,
+        canRead: true,
+      },
       canDelete: await this.db.checkDeletePermission(id, session),
     };
   }

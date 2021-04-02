@@ -1,12 +1,21 @@
-import { Args, Mutation, Resolver } from '@nestjs/graphql';
-import { LoggedInSession, Session } from '../../common';
-import { SecuredFile } from '../file';
-import { UploadPeriodicReportInput } from './dto';
+import {
+  Args,
+  Mutation,
+  Parent,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
+import { AnonSession, LoggedInSession, Session } from '../../common';
+import { FileService, SecuredFile } from '../file';
+import { IPeriodicReport, UploadPeriodicReportInput } from './dto';
 import { PeriodicReportService } from './periodic-report.service';
 
-@Resolver()
+@Resolver(IPeriodicReport)
 export class PeriodicReportResolver {
-  constructor(private readonly service: PeriodicReportService) {}
+  constructor(
+    private readonly service: PeriodicReportService,
+    private readonly files: FileService
+  ) {}
 
   @Mutation(() => SecuredFile, {
     description: 'Update a report file',
@@ -21,5 +30,26 @@ export class PeriodicReportResolver {
       session
     );
     return reportFile;
+  }
+
+  @ResolveField(() => SecuredFile, {
+    nullable: true,
+  })
+  async reportFile(
+    @Parent() report: IPeriodicReport,
+    @AnonSession() session: Session
+  ): Promise<SecuredFile | null> {
+    const { value: id, ...rest } = report.reportFile;
+    const value = id
+      ? await this.files.resolveDefinedFile(
+          {
+            value: id,
+            ...rest,
+          },
+          session
+        )
+      : null;
+
+    return value;
   }
 }
