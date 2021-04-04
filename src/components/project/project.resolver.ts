@@ -13,7 +13,6 @@ import {
   IdArg,
   IdField,
   LoggedInSession,
-  NotImplementedException,
   SecuredString,
   Session,
 } from '../../common';
@@ -109,7 +108,14 @@ export class ProjectResolver {
 
   @ResolveField(() => SecuredChangeList)
   async changes() {
-    throw new NotImplementedException();
+    return {
+      total: 0,
+      hasMore: false,
+      items: [],
+      canRead: true,
+      canCreate: true,
+    };
+    // throw new NotImplementedException();
   }
 
   /** @deprecated Moved from field definition in DTO to here */
