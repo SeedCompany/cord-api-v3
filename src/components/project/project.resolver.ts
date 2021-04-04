@@ -28,7 +28,11 @@ import {
 } from '../location';
 import { OrganizationService, SecuredOrganization } from '../organization';
 import { PartnershipListInput, SecuredPartnershipList } from '../partnership';
-import { SecuredChangeList } from './change-to-plan/dto/change-list.dto';
+import { PlanChangeService } from './change-to-plan';
+import {
+  ChangeListInput,
+  SecuredChangeList,
+} from './change-to-plan/dto/change-list.dto';
 import {
   CreateProjectInput,
   CreateProjectOutput,
@@ -60,7 +64,8 @@ export class ProjectResolver {
     private readonly projectService: ProjectService,
     private readonly locationService: LocationService,
     private readonly fieldRegionService: FieldRegionService,
-    private readonly organizationService: OrganizationService
+    private readonly organizationService: OrganizationService,
+    private readonly planChangeService: PlanChangeService
   ) {}
 
   @Query(() => IProject, {
@@ -107,15 +112,18 @@ export class ProjectResolver {
   }
 
   @ResolveField(() => SecuredChangeList)
-  async changes() {
-    return {
-      total: 0,
-      hasMore: false,
-      items: [],
-      canRead: true,
-      canCreate: true,
-    };
-    // throw new NotImplementedException();
+  async changes(
+    @AnonSession() session: Session,
+    @Parent() project: Project,
+    @Args({
+      name: 'input',
+      type: () => ChangeListInput,
+      nullable: true,
+      defaultValue: ChangeListInput.defaultVal,
+    })
+    input: ChangeListInput
+  ): Promise<SecuredChangeList> {
+    return await this.planChangeService.list(project.id, input, session);
   }
 
   /** @deprecated Moved from field definition in DTO to here */

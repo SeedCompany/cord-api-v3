@@ -10,6 +10,7 @@ import { OrganizationModule } from '../organization/organization.module';
 import { PartnerModule } from '../partner/partner.module';
 import { PartnershipModule } from '../partnership/partnership.module';
 import { UserModule } from '../user/user.module';
+import { PlanChangeModule } from './change-to-plan/plan-change.module';
 import * as handlers from './handlers';
 import { ProjectMemberModule } from './project-member/project-member.module';
 import { ProjectStepResolver } from './project-step.resolver';
@@ -30,6 +31,7 @@ import { ProjectService } from './project.service';
     forwardRef(() => AuthorizationModule),
     PartnerModule,
     forwardRef(() => OrganizationModule),
+    PlanChangeModule,
   ],
   providers: [
     ProjectResolver,
