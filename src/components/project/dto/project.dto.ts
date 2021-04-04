@@ -72,7 +72,7 @@ class Project extends PinnablePostableChangeableResource {
     // edge case because it's writable for internships but not secured
     sensitivity: Sensitivity,
     posts: [Post], // from Postable interface
-    planChange: PlanChange,
+    planChange: [PlanChange],
   };
 
   @Field(() => ProjectType)
