@@ -185,9 +185,9 @@ export class FundingAccountService {
   ): Promise<FundingAccount> {
     const fundingAccount = await this.readOne(input.id, session);
     const realChanges = await this.db.getActualChanges(
+      FundingAccount,
       fundingAccount,
-      input,
-      FundingAccount.Props
+      input
     );
     await this.authorizationService.verifyCanEditChanges(
       FundingAccount,

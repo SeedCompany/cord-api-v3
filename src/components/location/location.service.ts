@@ -253,9 +253,9 @@ export class LocationService {
       ...simplePropChanges
     } = input;
     const realChanges = await this.db.getActualChanges(
+      Location,
       location,
-      simplePropChanges,
-      Location.Props
+      simplePropChanges
     );
     await this.authorizationService.verifyCanEditChanges(
       Location,

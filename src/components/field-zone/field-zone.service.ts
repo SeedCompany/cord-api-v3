@@ -195,9 +195,9 @@ export class FieldZoneService {
     const { directorId, ...inputSimpleProps } = input;
 
     const realChanges = await this.db.getActualChanges(
+      FieldZone,
       fieldZone,
-      inputSimpleProps,
-      FieldZone.Props
+      inputSimpleProps
     );
     await this.authorizationService.verifyCanEditChanges(
       FieldZone,

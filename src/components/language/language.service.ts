@@ -368,11 +368,7 @@ export class LanguageService {
     }
 
     const object = await this.readOne(input.id, session);
-    const realChanges = await this.db.getActualChanges(
-      object,
-      input,
-      Language.Props
-    );
+    const realChanges = await this.db.getActualChanges(Language, object, input);
     await this.authorizationService.verifyCanEditChanges(
       Language,
       object,

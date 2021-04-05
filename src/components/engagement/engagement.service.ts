@@ -806,9 +806,9 @@ export class EngagementService {
     )) as LanguageEngagement;
 
     const realChanges = await this.db.getActualChanges(
+      LanguageEngagement,
       object,
-      changes,
-      LanguageEngagement.Props
+      changes
     );
     await this.authorizationService.verifyCanEditChanges(
       LanguageEngagement,
@@ -887,9 +887,9 @@ export class EngagementService {
     )) as InternshipEngagement;
 
     const realChanges = await this.db.getActualChanges(
+      InternshipEngagement,
       object,
-      input,
-      InternshipEngagement.Props
+      input
     );
     await this.authorizationService.verifyCanEditChanges(
       InternshipEngagement,

@@ -332,9 +332,9 @@ export class PartnerService {
 
     const { pointOfContactId, ...changesNoPOC } = changes;
     const realChanges = await this.db.getActualChanges(
+      Partner,
       object,
-      changesNoPOC,
-      Partner.Props
+      changesNoPOC
     );
     await this.authorizationService.verifyCanEditChanges(
       Partner,

@@ -226,9 +226,9 @@ export class OrganizationService {
   ): Promise<Organization> {
     const organization = await this.readOne(input.id, session);
     const realChanges = await this.db.getActualChanges(
+      Organization,
       organization,
-      input,
-      Organization.Props
+      input
     );
     await this.authorizationService.verifyCanEditChanges(
       Organization,

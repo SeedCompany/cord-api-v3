@@ -185,9 +185,9 @@ export class SongService {
     const song = await this.readOne(input.id, session);
     const { scriptureReferences, ...changesSimpleProps } = input;
     const realChanges = await this.db.getActualChanges(
+      Song,
       song,
-      changesSimpleProps,
-      Song.Props
+      changesSimpleProps
     );
     await this.authorizationService.verifyCanEditChanges(
       Song,

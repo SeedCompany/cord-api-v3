@@ -2,6 +2,7 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation, Relation } from 'cypher-query-builder';
 import { Many } from 'lodash';
 import { DateTime } from 'luxon';
+import { Mutable } from 'type-fest';
 import {
   DuplicateException,
   generateId,
@@ -612,15 +613,10 @@ export class ProjectService {
 
     const { primaryLocationId, fieldRegionId, ...changesSimpleProps } = changes;
 
-    // get the 'real' changes... nothing undefined or the same as the old object
-    const props =
-      currentProject.type === ProjectType.Internship
-        ? InternshipProject.Props
-        : TranslationProject.Props;
     const realChanges = await this.db.getActualChanges(
+      IProject,
       currentProject,
-      changesSimpleProps,
-      props
+      changesSimpleProps
     );
 
     await this.authorizationService.verifyCanEditChanges(
@@ -645,7 +641,11 @@ export class ProjectService {
       });
     }
 
-    // TODO: re-connect the locationId node when locations are hooked up
+    const result: Mutable<Project> = await this.db.updateProperties({
+      type: 'Project',
+      object: currentProject,
+      changes: realChanges,
+    });
 
     if (input.primaryLocationId) {
       try {
@@ -695,6 +695,12 @@ export class ProjectService {
         ]);
 
       await query.run();
+      const newPrimaryLocation = {
+        canRead: result.primaryLocation.canRead,
+        canEdit: result.primaryLocation.canEdit,
+        value: input.primaryLocationId,
+      };
+      result.primaryLocation = newPrimaryLocation;
     }
 
     if (input.fieldRegionId) {
@@ -729,13 +735,14 @@ export class ProjectService {
         ]);
 
       await query.run();
+      const newFieldRegion = {
+        canRead: result.fieldRegion.canRead,
+        canEdit: result.fieldRegion.canEdit,
+        value: input.fieldRegionId,
+      };
+      result.fieldRegion = newFieldRegion;
     }
 
-    const result = await this.db.updateProperties({
-      type: 'Project',
-      object: currentProject,
-      changes: realChanges,
-    });
     const event = new ProjectUpdatedEvent(
       result,
       currentProject,
@@ -743,7 +750,7 @@ export class ProjectService {
       session
     );
     await this.eventBus.publish(event);
-    return await this.readOne(input.id, session);
+    return result;
   }
 
   async delete(id: ID, session: Session): Promise<void> {

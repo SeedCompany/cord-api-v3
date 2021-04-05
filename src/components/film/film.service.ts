@@ -190,9 +190,9 @@ export class FilmService {
       ...changesNoScrip
     } = input;
     const realChanges = await this.db.getActualChanges(
+      Film,
       film,
-      changesNoScrip,
-      Film.Props
+      changesNoScrip
     );
     await this.authorizationService.verifyCanEditChanges(
       Film,

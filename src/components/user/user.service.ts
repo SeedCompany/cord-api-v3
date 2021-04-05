@@ -344,9 +344,9 @@ export class UserService {
 
     const { roles: rolesInput, ...inputSimpleProps } = input;
     const realChanges = await this.db.getActualChanges(
+      User,
       user,
-      inputSimpleProps,
-      User.Props
+      inputSimpleProps
     );
     if (user.id !== session.userId) {
       await this.authorizationService.verifyCanEditChanges(

@@ -270,15 +270,10 @@ export class ProjectMemberService {
       return user;
     });
 
-    const realChanges = await this.db.getActualChanges(
-      object,
-      {
-        ...input,
-        roles: (input.roles ? input.roles : undefined) as any,
-        modifiedAt: DateTime.local(),
-      },
-      ProjectMember.Props
-    );
+    const realChanges = await this.db.getActualChanges(ProjectMember, object, {
+      ...input,
+      roles: (input.roles ? input.roles : undefined) as any,
+    });
     await this.authorizationService.verifyCanEditChanges(
       ProjectMember,
       object,

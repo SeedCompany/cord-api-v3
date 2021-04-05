@@ -177,9 +177,9 @@ export class UnavailabilityService {
       );
     }
     const realChanges = await this.db.getActualChanges(
+      Unavailability,
       unavailability,
-      input,
-      Unavailability.Props
+      input
     );
 
     if (result.user.properties.id !== session.userId) {

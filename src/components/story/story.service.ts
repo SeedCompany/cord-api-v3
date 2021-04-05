@@ -189,9 +189,9 @@ export class StoryService {
     const story = await this.readOne(input.id, session);
     const { scriptureReferences, ...simplePropChanges } = input;
     const realChanges = await this.db.getActualChanges(
+      Story,
       story,
-      simplePropChanges,
-      Story.Props
+      simplePropChanges
     );
     await this.authorizationService.verifyCanEditChanges(
       Story,

@@ -422,9 +422,9 @@ export class ProductService {
     }
 
     const realChanges = await this.db.getActualChanges(
+      Product,
       currentProduct,
-      simplePropsChanges,
-      DerivativeScriptureProduct.Props
+      simplePropsChanges
     );
     await this.authorizationService.verifyCanEditChanges(
       Product,

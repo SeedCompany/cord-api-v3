@@ -167,11 +167,7 @@ export class EducationService {
         'user.education'
       );
     }
-    const realChanges = await this.db.getActualChanges(
-      ed,
-      input,
-      Education.Props
-    );
+    const realChanges = await this.db.getActualChanges(Education, ed, input);
     if (result.user.properties.id !== session.userId) {
       await this.authorizationService.verifyCanEditChanges(
         Education,

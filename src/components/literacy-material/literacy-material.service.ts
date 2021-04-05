@@ -207,9 +207,9 @@ export class LiteracyMaterialService {
       ...changesNoScripRef
     } = input;
     const realChanges = await this.db.getActualChanges(
+      LiteracyMaterial,
       literacyMaterial,
-      changesNoScripRef,
-      LiteracyMaterial.Props
+      changesNoScripRef
     );
     await this.authorizationService.verifyCanEditChanges(
       LiteracyMaterial,
