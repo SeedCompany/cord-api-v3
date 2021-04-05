@@ -4,6 +4,7 @@ import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
 import {
   DateTimeField,
+  parentIdMiddleware,
   Resource,
   Secured,
   SecuredBoolean,
@@ -39,7 +40,9 @@ class Engagement extends Resource {
 
   readonly __typename: string;
 
-  @Field(() => SecuredEngagementStatus)
+  @Field(() => SecuredEngagementStatus, {
+    middleware: [parentIdMiddleware],
+  })
   readonly status: SecuredEngagementStatus;
 
   readonly ceremony: Secured<string>;

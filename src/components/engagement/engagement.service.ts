@@ -122,16 +122,8 @@ export class EngagementService {
     private readonly eventBus: IEventBus,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
-    @Logger(`engagement.service`) private readonly logger: ILogger
+    @Logger(`engagement:service`) private readonly logger: ILogger
   ) {}
-
-  private setEngagementIdsIntoStatusObjects(engagements: EngagementListOutput) {
-    for (const engagement of engagements.items) {
-      // @ts-expect-error hack engagement id into status object
-      // so the lazy transitions field resolver can use it
-      engagement.status.engagementId = engagement.id;
-    }
-  }
 
   // CREATE /////////////////////////////////////////////////////////
 
@@ -1111,7 +1103,6 @@ export class EngagementService {
     const engagements = await runListQuery(query, input, (id) =>
       this.readOne(id, session)
     );
-    this.setEngagementIdsIntoStatusObjects(engagements);
     return engagements;
   }
 

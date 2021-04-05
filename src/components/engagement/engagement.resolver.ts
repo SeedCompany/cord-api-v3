@@ -40,9 +40,6 @@ export class EngagementResolver {
     @AnonSession() session: Session
   ): Promise<Engagement> {
     const engagement = await this.service.readOne(id, session);
-    // @ts-expect-error hack engagement id into status object
-    // so the lazy transitions field resolver can use it
-    engagement.status.engagementId = engagement.id;
     return engagement;
   }
 
@@ -86,9 +83,6 @@ export class EngagementResolver {
       input,
       session
     );
-    // @ts-expect-error hack engagement id into status object
-    // so the lazy transitions field resolver can use it
-    engagement.status.engagementId = engagement.id;
     return { engagement };
   }
 
@@ -103,9 +97,6 @@ export class EngagementResolver {
       input,
       session
     );
-    // @ts-expect-error hack engagement id into status object
-    // so the lazy transitions field resolver can use it
-    engagement.status.engagementId = engagement.id;
     return { engagement };
   }
 
@@ -120,9 +111,6 @@ export class EngagementResolver {
       input,
       session
     );
-    // @ts-expect-error hack engagement id into status object
-    // so the lazy transitions field resolver can use it
-    engagement.status.engagementId = engagement.id;
     return { engagement };
   }
 
@@ -137,9 +125,6 @@ export class EngagementResolver {
       input,
       session
     );
-    // @ts-expect-error hack engagement id into status object
-    // so the lazy transitions field resolver can use it
-    engagement.status.engagementId = engagement.id;
     return { engagement };
   }
 

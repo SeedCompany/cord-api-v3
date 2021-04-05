@@ -70,9 +70,6 @@ export class ProjectResolver {
     @LoggedInSession() session: Session
   ): Promise<Project> {
     const project = await this.projectService.readOne(id, session);
-    // @ts-expect-error hack project id into step object so the lazy transitions
-    // field resolver can use it
-    project.step.projectId = project.id;
     return project;
   }
 
@@ -90,11 +87,6 @@ export class ProjectResolver {
     @AnonSession() session: Session
   ): Promise<ProjectListOutput> {
     const list = await this.projectService.list(input, session);
-    for (const project of list.items) {
-      // @ts-expect-error hack project id into step object so the lazy transitions
-      // field resolver can use it
-      project.step.projectId = project.id;
-    }
     return list;
   }
 
@@ -249,9 +241,6 @@ export class ProjectResolver {
     @LoggedInSession() session: Session
   ): Promise<CreateProjectOutput> {
     const project = await this.projectService.create(input, session);
-    // @ts-expect-error hack project id into step object so the lazy transitions
-    // field resolver can use it
-    project.step.projectId = project.id;
     return { project };
   }
 
@@ -263,9 +252,6 @@ export class ProjectResolver {
     @LoggedInSession() session: Session
   ): Promise<UpdateProjectOutput> {
     const project = await this.projectService.update(input, session);
-    // @ts-expect-error hack project id into step object so the lazy transitions
-    // field resolver can use it
-    project.step.projectId = project.id;
     return { project };
   }
 

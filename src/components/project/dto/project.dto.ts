@@ -5,6 +5,7 @@ import { MergeExclusive } from 'type-fest';
 import {
   DateTimeField,
   IntersectionType,
+  parentIdMiddleware,
   Resource,
   Secured,
   SecuredDate,
@@ -69,7 +70,9 @@ class Project extends IntersectionType(Resource, Pinnable) {
   })
   readonly departmentId: SecuredString;
 
-  @Field()
+  @Field({
+    middleware: [parentIdMiddleware],
+  })
   readonly step: SecuredProjectStep;
 
   @Field(() => ProjectStatus)
