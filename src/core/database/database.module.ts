@@ -1,6 +1,5 @@
-import { forwardRef, Module, OnApplicationShutdown } from '@nestjs/common';
+import { Module, OnApplicationShutdown } from '@nestjs/common';
 import { Connection } from 'cypher-query-builder';
-import { AuthorizationModule } from '../../components/authorization/authorization.module';
 import { ConfigModule } from '../config/config.module';
 import { CypherFactory } from './cypher.factory';
 import { DatabaseService } from './database.service';
@@ -8,7 +7,7 @@ import { IndexerModule } from './indexer/indexer.module';
 import { ParameterTransformer } from './parameter-transformer.service';
 
 @Module({
-  imports: [IndexerModule, ConfigModule, forwardRef(() => AuthorizationModule)],
+  imports: [IndexerModule, ConfigModule],
   providers: [CypherFactory, DatabaseService, ParameterTransformer],
   exports: [CypherFactory, DatabaseService, IndexerModule],
 })

@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   Connection,
   equals,
@@ -20,6 +20,7 @@ import {
   many,
   Order,
   Resource,
+  ResourceShape,
   ServerException,
   Session,
   unwrapSecured,
@@ -27,7 +28,6 @@ import {
 } from '../../common';
 import { ILogger, Logger, ServiceUnavailableError } from '..';
 import { AbortError, retry, RetryOptions } from '../../common/retry';
-import { AuthorizationService } from '../../components/authorization/authorization.service';
 import { ConfigService } from '../config/config.service';
 import { determineSortValue } from './query.helpers';
 import { hasMore } from './results';
@@ -94,8 +94,6 @@ export class DatabaseService {
   constructor(
     private readonly db: Connection,
     private readonly config: ConfigService,
-    @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService,
     @Logger('database:service') private readonly logger: ILogger
   ) {}
 
@@ -238,17 +236,18 @@ export class DatabaseService {
   }
 
   // expecting the changes of the "simple" properties.
-  async getActualChanges<TResource extends Resource>(
-    oldObject: TResource,
-    changes: ChangesOf<TResource>,
-    props: ReadonlyArray<keyof TResource & string>
-  ): Promise<ChangesOf<TResource>> {
+  async getActualChanges<TResourceStatic extends ResourceShape<any>>(
+    resource: TResourceStatic,
+    existingObject: TResourceStatic['prototype'],
+    changes: ChangesOf<TResourceStatic['prototype']>
+  ): Promise<ChangesOf<TResourceStatic['prototype']>> {
+    const props = resource.Props as Array<keyof TResourceStatic['prototype']>;
     const realChanges: typeof changes = {};
     for (const prop of props) {
       if (changes[prop] === undefined) {
         continue;
       }
-      const unwrapped = unwrapSecured(oldObject[prop]);
+      const unwrapped = unwrapSecured(existingObject[prop]);
       if (unwrapped !== null && changes[prop] !== null) {
         if (
           Array.isArray(unwrapped) &&
@@ -258,19 +257,21 @@ export class DatabaseService {
         }
 
         if (
-          unwrapped instanceof CalendarDate &&
+          CalendarDate.isDate(unwrapped) &&
           unwrapped.valueOf() !== (changes[prop] as CalendarDate).valueOf()
         ) {
           realChanges[prop] = changes[prop];
           continue;
         }
-        if (unwrapped instanceof DateTime) {
-          if (unwrapped.valueOf() !== (changes[prop] as DateTime).valueOf()) {
-            realChanges[prop] = changes[prop];
-            continue;
-          }
+        if (
+          DateTime.isDateTime(unwrapped) &&
+          unwrapped.valueOf() !== (changes[prop] as DateTime).valueOf()
+        ) {
+          realChanges[prop] = changes[prop];
+          continue;
         }
       }
+
       if (unwrapped !== changes[prop]) {
         realChanges[prop] = changes[prop];
       }
