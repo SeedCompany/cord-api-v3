@@ -11,7 +11,7 @@ import { User } from './user.dto';
 export abstract class CreatePerson {
   @Field({ nullable: true })
   @IsEmail()
-  @Transform(toLower)
+  @Transform(({ value }) => toLower(value))
   readonly email?: string;
 
   @NameField()
@@ -40,7 +40,7 @@ export abstract class CreatePerson {
   readonly status?: UserStatus;
 
   @Field(() => [Role], { nullable: true })
-  @Transform(uniq)
+  @Transform(({ value }) => uniq(value))
   readonly roles?: Role[];
 
   @Field({ nullable: true })

@@ -95,7 +95,7 @@ export abstract class UpdateLanguage {
   readonly hasExternalFirstScripture?: boolean;
 
   @Field(() => [String], { nullable: true })
-  @Transform(uniq)
+  @Transform(({ value }) => uniq(value))
   readonly tags?: string[];
 }
 

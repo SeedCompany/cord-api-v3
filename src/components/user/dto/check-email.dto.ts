@@ -7,6 +7,6 @@ import { IsEmail } from '../../../common';
 export abstract class CheckEmailArgs {
   @Field()
   @IsEmail()
-  @Transform(toLower)
+  @Transform(({ value }) => toLower(value))
   readonly email: string;
 }

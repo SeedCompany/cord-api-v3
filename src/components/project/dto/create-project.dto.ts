@@ -68,7 +68,7 @@ export abstract class CreateProject {
   readonly sensitivity?: Sensitivity;
 
   @Field(() => [String], { nullable: true })
-  @Transform(uniq)
+  @Transform(({ value }) => uniq(value))
   readonly tags?: string[] = [];
 
   @DateTimeField({ nullable: true })

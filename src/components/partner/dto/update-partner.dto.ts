@@ -16,11 +16,11 @@ export abstract class UpdatePartner {
   readonly pointOfContactId?: string;
 
   @Field(() => [PartnerType], { nullable: true })
-  @Transform(uniq)
+  @Transform(({ value }) => uniq(value))
   readonly types?: PartnerType[];
 
   @Field(() => [FinancialReportingType], { nullable: true })
-  @Transform(uniq)
+  @Transform(({ value }) => uniq(value))
   readonly financialReportingTypes?: FinancialReportingType[];
 
   @Field({ nullable: true })

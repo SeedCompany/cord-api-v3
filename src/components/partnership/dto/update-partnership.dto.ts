@@ -37,7 +37,7 @@ export abstract class UpdatePartnership {
   readonly mouEndOverride?: CalendarDate;
 
   @Field(() => [PartnerType], { nullable: true })
-  @Transform(uniq)
+  @Transform(({ value }) => uniq(value))
   readonly types?: PartnerType[];
 
   @Field(() => FinancialReportingType, { nullable: true })

@@ -6,6 +6,6 @@ import { Transform } from './transform.decorator';
 export const NameField = (options?: FieldOptions) =>
   applyDecorators(
     Field(() => String, options),
-    Transform((value) => value?.trim()),
+    Transform(({ value }) => value?.trim()),
     MinLength(1)
   );

@@ -19,7 +19,7 @@ export abstract class CreateLocation {
     description: 'An ISO 3166-1 alpha-3 country code',
   })
   @ISO31661Alpha3()
-  @Transform((str) => (str ? str.toUpperCase() : null))
+  @Transform(({ value: str }) => (str ? str.toUpperCase() : null))
   readonly isoAlpha3?: string | null;
 
   @IdField({ nullable: true })

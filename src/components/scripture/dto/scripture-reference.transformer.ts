@@ -37,12 +37,12 @@ export const ScriptureStart = () =>
   applyDecorators(
     ValidateNested(),
     // @Transform doesn't work with nested validators, so using a custom class instead.
-    Type(() => ScriptureReferenceStartInput) as PropertyDecorator
+    Type(() => ScriptureReferenceStartInput)!
   );
 
 export const ScriptureEnd = () =>
   applyDecorators(
     ValidateNested(),
     // @Transform doesn't work with nested validators, so using a custom class instead.
-    Type(() => ScriptureReferenceEndInput) as PropertyDecorator
+    Type(() => ScriptureReferenceEndInput)!
   );

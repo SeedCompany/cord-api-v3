@@ -14,7 +14,7 @@ export abstract class UpdateUser {
 
   @Field({ nullable: true })
   @IsEmail()
-  @Transform(toLower)
+  @Transform(({ value }) => toLower(value))
   readonly email?: string;
 
   @NameField({ nullable: true })
@@ -43,7 +43,7 @@ export abstract class UpdateUser {
   readonly status?: UserStatus;
 
   @Field(() => [Role], { nullable: true })
-  @Transform(uniq)
+  @Transform(({ value }) => uniq(value))
   readonly roles?: Role[];
 
   @Field({ nullable: true })

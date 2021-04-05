@@ -53,11 +53,11 @@ export abstract class CreateProduct {
   readonly scriptureReferencesOverride?: ScriptureRangeInput[];
 
   @Field(() => [ProductMedium], { nullable: true })
-  @Transform(uniq)
+  @Transform(({ value }) => uniq(value))
   readonly mediums?: ProductMedium[] = [];
 
   @Field(() => [ProductPurpose], { nullable: true })
-  @Transform(uniq)
+  @Transform(({ value }) => uniq(value))
   readonly purposes?: ProductPurpose[] = [];
 
   @Field(() => ProductMethodology, { nullable: true })
