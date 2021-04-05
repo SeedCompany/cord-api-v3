@@ -22,7 +22,7 @@ export class ProjectStepChangedNotificationHandler
 
   async handle(event: ProjectUpdatedEvent) {
     if (
-      event.updated.step.value === event.previous.step.value ||
+      event.updated.step === event.previous.step ||
       this.config.migration ||
       !this.config.email.notifyProjectStepChanges
     ) {
@@ -31,16 +31,16 @@ export class ProjectStepChangedNotificationHandler
 
     const recipients = await this.projectRules.getNotifications(
       event.updated.id,
-      event.updated.step.value!,
+      event.updated.step,
       event.session.userId,
-      event.previous.step.value!
+      event.previous.step
     );
 
     this.logger.info('Notifying', {
       emails: recipients.map((r) => r.recipient.email.value),
       projectId: event.updated.id,
-      step: event.updated.step.value,
-      previousStep: event.previous.step.value,
+      step: event.updated.step,
+      previousStep: event.previous.step,
     });
 
     for (const notification of recipients) {

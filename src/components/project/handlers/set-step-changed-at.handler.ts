@@ -19,23 +19,21 @@ export class ProjectStepChangedAtHandler
   ) {}
 
   async handle(event: ProjectUpdatedEvent) {
-    if (event.updated.step.value === event.previous.step.value) {
+    if (event.updated.step === event.previous.step) {
       return;
     }
 
     try {
       const project = event.updated;
-      const changes = {
-        stepChangedAt: project.modifiedAt,
-      };
-
       event.updated = await this.db.updateProperties({
         type:
           project.type === ProjectType.Translation
             ? TranslationProject
             : InternshipProject,
         object: project,
-        changes,
+        changes: {
+          stepChangedAt: project.modifiedAt,
+        },
       });
     } catch (e) {
       this.logger.error(`Could not update step changed at on project`, {
