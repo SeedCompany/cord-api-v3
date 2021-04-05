@@ -1,8 +1,8 @@
 import {
   ValidationPipe as BaseValidationPipe,
   Injectable,
+  ValidationError,
 } from '@nestjs/common';
-import { ValidationError } from 'class-validator';
 import { isEmpty } from 'lodash';
 import { SetRequired } from 'type-fest';
 import { ClientException } from '../common/exceptions';
@@ -51,7 +51,7 @@ const flattenConstraints = (
     ...(er.constraints
       ? [er as SetRequired<ValidationError, 'constraints'>]
       : []),
-    ...flattenConstraints(er.children),
+    ...flattenConstraints(er.children ?? []),
   ]);
 
 const flattenValidationErrors = (
@@ -66,7 +66,7 @@ const flattenValidationErrors = (
       obj[path.join('.')] = constraints;
     }
     if (!isEmpty(children)) {
-      flattenValidationErrors(children, obj, path);
+      flattenValidationErrors(children ?? [], obj, path);
     }
     return obj;
   }, out);
