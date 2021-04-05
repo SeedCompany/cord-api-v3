@@ -6,7 +6,7 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "jsx": "react",
-    "target": "es2019",
+    "target": "es2020",
     "sourceMap": true,
     "outDir": "./dist",
     "incremental": true,
