@@ -1,5 +1,11 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import {
+  greaterEqualTo,
+  isNull,
+  lessEqualTo,
+  node,
+  relation,
+} from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   generateId,
@@ -29,11 +35,13 @@ import {
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { CreateDefinedFileVersionInput, FileService } from '../file';
+import { Project } from '../project';
 import {
   CreatePeriodicReport,
   IPeriodicReport,
   PeriodicReport,
   PeriodicReportListInput,
+  ReportPeriod,
   ReportType,
   SecuredPeriodicReportList,
 } from './dto';
@@ -319,5 +327,98 @@ export class PeriodicReportService {
       canRead: true,
       canCreate: true,
     };
+  }
+
+  getProjectReportsQuery(project: Project) {
+    return this.db
+      .query()
+      .match([
+        node('project', 'Project', { id: project.id }),
+        relation('out', '', 'report', { active: true }),
+        node('report', 'PeriodicReport'),
+      ])
+      .optionalMatch([
+        node('report'),
+        relation('out', 'rel', 'reportFile', { active: true }),
+        node('file', 'File'),
+      ])
+      .optionalMatch([
+        node('report'),
+        relation('out', '', 'start', { active: true }),
+        node('start', 'Property'),
+      ])
+      .optionalMatch([
+        node('report'),
+        relation('out', '', 'end', { active: true }),
+        node('end', 'Property'),
+      ])
+      .optionalMatch([
+        node('report'),
+        relation('out', '', 'type', { active: true }),
+        node('type', 'Property'),
+      ])
+      .with('report, rel, start, end, type');
+  }
+
+  async removeFinancialReports(project: Project, session: Session) {
+    let reports;
+    if (project.financialReportPeriod.value === ReportPeriod.Monthly) {
+      reports = await this.getProjectReportsQuery(project)
+        .where({
+          rel: isNull(),
+          'date(start.value)': greaterEqualTo(
+            project.mouStart.value?.startOf('month')
+          ),
+          'date(end.value)': lessEqualTo(project.mouEnd.value?.endOf('month')),
+          type: {
+            value: ReportType.Financial,
+          },
+        })
+        .return('report.id as reportId')
+        .asResult<{ reportId: string }>()
+        .run();
+    } else {
+      reports = await this.getProjectReportsQuery(project)
+        .where({
+          rel: isNull(),
+          'date(start.value)': greaterEqualTo(
+            project.mouStart.value?.startOf('quarter')
+          ),
+          'date(end.value)': lessEqualTo(
+            project.mouEnd.value?.endOf('quarter')
+          ),
+          type: {
+            value: ReportType.Financial,
+          },
+        })
+        .return('report.id as reportId')
+        .asResult<{ reportId: string }>()
+        .run();
+    }
+
+    await Promise.all(
+      reports.map((report) => this.delete(report.reportId, session))
+    );
+  }
+
+  async removeNarrativeReports(project: Project, session: Session) {
+    const reports = await this.getProjectReportsQuery(project)
+      .where({
+        rel: isNull(),
+        'date(start.value)': greaterEqualTo(
+          project.mouStart.value?.startOf('quarter')
+        ),
+        'date(end.value)': lessEqualTo(project.mouEnd.value?.endOf('quarter')),
+        type: {
+          value: ReportType.Narrative,
+        },
+      })
+      .return('report.id as reportId')
+      .asResult<{ reportId: string }>()
+      .run();
+
+    await Promise.all(
+      reports.map((report) => this.delete(report.reportId, session))
+    );
   }
 }

@@ -1,5 +1,4 @@
-import { isNull, node, relation } from 'cypher-query-builder';
-import { Session } from '../../../common';
+import { fiscalMonths, fiscalQuarters, Session } from '../../../common';
 import {
   DatabaseService,
   EventsHandler,
@@ -9,7 +8,7 @@ import {
 } from '../../../core';
 import { Project } from '../../project';
 import { ProjectUpdatedEvent } from '../../project/events';
-import { ReportType } from '../dto';
+import { ReportPeriod, ReportType } from '../dto';
 import { PeriodicReportService } from '../periodic-report.service';
 
 type SubscribedEvent = ProjectUpdatedEvent;
@@ -32,79 +31,67 @@ export class SyncPeriodicReportsToProjectDateRange
     const project = event.updated;
     const previous = event.previous;
 
+    // Check if the project has valid date range set and changed from the previous set
     const isDateRangeChanged =
-      +project.mouStart !== +previous.mouStart ||
-      +project.mouEnd !== +previous.mouEnd;
+      project.mouStart.value &&
+      project.mouEnd.value &&
+      (project.mouStart.value.toMillis() !==
+        previous.mouStart.value?.toMillis() ||
+        project.mouEnd.value.toMillis() !== previous.mouEnd.value?.toMillis());
 
     if (isDateRangeChanged) {
-      await this.removeOldReports(previous, event.session);
+      await this.periodicReports.removeFinancialReports(project, event.session);
+      await this.periodicReports.removeNarrativeReports(project, event.session);
       await this.addRecords(project, event.session);
     }
   }
 
-  private async removeOldReports(project: Project, session: Session) {
-    const reports = await this.db
-      .query()
-      .match([
-        node('project', 'Project', { id: project.id }),
-        relation('out', '', 'report', { active: true }),
-        node('report', 'PeriodicReport'),
-      ])
-      .optionalMatch([
-        node('report'),
-        relation('out', 'rel', 'reportFile', { active: true }),
-        node('file', 'File'),
-      ])
-      .optionalMatch([
-        node('report'),
-        relation('out', '', 'start', { active: true }),
-        node('start', 'Property'),
-      ])
-      .optionalMatch([
-        node('report'),
-        relation('out', '', 'end', { active: true }),
-        node('end', 'Property'),
-      ])
-      .with('report, rel, start, end')
-      .where({
-        rel: isNull(),
-        start: {
-          value: project.mouStart.value,
-        },
-        end: {
-          value: project.mouEnd.value,
-        },
-      })
-      .return('report.id as reportId')
-      .asResult<{ reportId: string }>()
-      .run();
+  private async addRecords(project: Project, session: Session) {
+    const startDate = project.mouStart.value!;
+    const endDate = project.mouEnd.value!;
 
-    await Promise.all(
-      reports.map((report) =>
-        this.periodicReports.delete(report.reportId, session)
+    const quarterIntervals = fiscalQuarters(startDate, endDate);
+    const monthIntervals = fiscalMonths(startDate, endDate);
+
+    let financialReportPromises: Array<Promise<any>> = [];
+    if (project.financialReportPeriod.value === ReportPeriod.Monthly) {
+      financialReportPromises = monthIntervals.map((interval) =>
+        this.periodicReports.create(
+          {
+            start: interval.start,
+            end: interval.start.endOf('month'),
+            type: ReportType.Financial,
+            projectOrEngagementId: project.id,
+          },
+          session
+        )
+      );
+    } else {
+      financialReportPromises = quarterIntervals.map((interval) =>
+        this.periodicReports.create(
+          {
+            start: interval.start,
+            end: interval.start.endOf('quarter'),
+            type: ReportType.Financial,
+            projectOrEngagementId: project.id,
+          },
+          session
+        )
+      );
+    }
+
+    const narrativeReportPromises = quarterIntervals.map((interval) =>
+      this.periodicReports.create(
+        {
+          start: interval.start,
+          end: interval.start.endOf('quarter'),
+          type: ReportType.Narrative,
+          projectOrEngagementId: project.id,
+        },
+        session
       )
     );
-  }
 
-  private async addRecords(project: Project, session: Session) {
-    await this.periodicReports.create(
-      {
-        start: project.mouStart.value!,
-        end: project.mouEnd.value!,
-        type: ReportType.Financial,
-        projectOrEngagementId: project.id,
-      },
-      session
-    );
-
-    await this.periodicReports.create(
-      {
-        start: project.mouStart.value!,
-        end: project.mouEnd.value!,
-        type: ReportType.Narrative,
-        projectOrEngagementId: project.id,
-      },
-      session
-    );
+    await Promise.all([...financialReportPromises, ...narrativeReportPromises]);
   }
 }

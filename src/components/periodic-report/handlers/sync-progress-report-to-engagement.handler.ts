@@ -1,5 +1,11 @@
-import { isNull, node, relation } from 'cypher-query-builder';
-import { Session } from '../../../common';
+import {
+  greaterEqualTo,
+  isNull,
+  lessEqualTo,
+  node,
+  relation,
+} from 'cypher-query-builder';
+import { fiscalQuarters, Session } from '../../../common';
 import {
   DatabaseService,
   EventsHandler,
@@ -33,7 +39,7 @@ export class SyncProgressReportToEngagementDateRange
     });
 
     if (event instanceof EngagementCreatedEvent) {
-      await this.addRecord(event.engagement, event.session);
+      await this.addRecords(event.engagement, event.session);
     } else {
       const engagement = event.updated;
       const previous = event.previous;
@@ -47,11 +53,14 @@ export class SyncProgressReportToEngagementDateRange
       ] = this.determineEngagementDateRange(previous);
 
       const isDateRangeChanged =
-        +startDate !== +previousStartDate || +endDate !== +previousEndDate;
+        startDate &&
+        endDate &&
+        (startDate.toMillis() !== previousStartDate?.toMillis() ||
+          endDate.toMillis() !== previousEndDate?.toMillis());
 
       if (isDateRangeChanged) {
         await this.removeOldReports(previous, event.session);
-        await this.addRecord(engagement, event.session);
+        await this.addRecords(engagement, event.session);
       }
     }
   }
@@ -83,12 +92,8 @@ export class SyncProgressReportToEngagementDateRange
       .with('report, rel, start, end')
       .where({
         rel: isNull(),
-        start: {
-          value: oldStart,
-        },
-        end: {
-          value: oldEnd,
-        },
+        'date(start.value)': greaterEqualTo(oldStart?.startOf('quarter')),
+        'date(end.value)': lessEqualTo(oldEnd?.endOf('quarter')),
       })
       .return('report.id as reportId')
       .asResult<{ reportId: string }>()
@@ -101,28 +106,33 @@ export class SyncProgressReportToEngagementDateRange
     );
   }
 
-  private async addRecord(engagement: Engagement, session: Session) {
+  private async addRecords(engagement: Engagement, session: Session) {
     const [startDate, endDate] = this.determineEngagementDateRange(engagement);
+    const quarterIntervals = fiscalQuarters(startDate!, endDate!);
 
-    await this.periodicReports.create(
-      {
-        start: startDate,
-        end: endDate,
-        type: ReportType.Progress,
-        projectOrEngagementId: engagement.id,
-      },
-      session
+    const reports = quarterIntervals.map((interval) =>
+      this.periodicReports.create(
+        {
+          start: interval.start,
+          end: interval.start.endOf('quarter'),
+          type: ReportType.Progress,
+          projectOrEngagementId: engagement.id,
+        },
+        session
+      )
     );
+
+    await Promise.all(reports);
   }
 
   private determineEngagementDateRange(engagement: Engagement) {
     const startDate = engagement.startDateOverride.value
       ? engagement.startDateOverride.value
-      : engagement.startDate.value!;
+      : engagement.startDate.value;
 
     const endDate = engagement.endDateOverride.value
       ? engagement.endDateOverride.value
-      : engagement.endDate.value!;
+      : engagement.endDate.value;
 
     return [startDate, endDate];
   }
