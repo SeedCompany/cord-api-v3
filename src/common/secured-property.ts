@@ -49,7 +49,9 @@ export type SecuredKeys<Dto extends Record<string, any>> = ConditionalKeys<
  * }
  * ```
  */
-export type UnsecuredDto<Dto> = { [K in keyof Dto]: UnwrapSecured<Dto[K]> };
+export type UnsecuredDto<Dto> = {
+  [K in keyof Dto as Exclude<K, 'canDelete'>]: UnwrapSecured<Dto[K]>;
+};
 
 export type UnwrapSecured<T> = T extends Secured<infer P> ? P : T;
 
