@@ -14,7 +14,6 @@ import {
   IdArg,
   IdField,
   LoggedInSession,
-  SecuredString,
   Session,
 } from '../../common';
 import { SecuredBudget } from '../budget';
@@ -96,15 +95,6 @@ export class ProjectResolver {
     return project.name.canRead && project.name.value
       ? firstLettersOfWords(project.name.value)
       : undefined;
-  }
-
-  /** @deprecated Moved from field definition in DTO to here */
-  @ResolveField(() => SecuredString, {
-    description: 'The legacy department ID',
-    deprecationReason: 'Use `Project.departmentId` instead',
-  })
-  deptId(@Parent() project: Project): SecuredString {
-    return project.departmentId;
   }
 
   @ResolveField(() => SecuredBudget, {
