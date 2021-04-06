@@ -3,6 +3,7 @@ import { node } from 'cypher-query-builder';
 import {
   DuplicateException,
   generateId,
+  ID,
   NotFoundException,
   ServerException,
   Session,
@@ -145,7 +146,7 @@ export class FundingAccountService {
     }
   }
 
-  async readOne(id: string, session: Session): Promise<FundingAccount> {
+  async readOne(id: ID, session: Session): Promise<FundingAccount> {
     this.logger.info('readOne', { id, userId: session.userId });
 
     if (!id) {
@@ -193,7 +194,7 @@ export class FundingAccountService {
     });
   }
 
-  async delete(id: string, session: Session): Promise<void> {
+  async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
     if (!object) {

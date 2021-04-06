@@ -2,6 +2,7 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
 import {
   generateId,
+  ID,
   NotFoundException,
   ServerException,
   Session,
@@ -78,7 +79,7 @@ export class UnavailabilityService {
           {}
         )
         .return('node.id as id')
-        .asResult<{ id: string }>();
+        .asResult<{ id: ID }>();
 
       const createUnavailabilityResult = await createUnavailability.first();
 
@@ -126,7 +127,7 @@ export class UnavailabilityService {
     }
   }
 
-  async readOne(id: string, session: Session): Promise<Unavailability> {
+  async readOne(id: ID, session: Session): Promise<Unavailability> {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
@@ -168,7 +169,7 @@ export class UnavailabilityService {
     });
   }
 
-  async delete(id: string, session: Session): Promise<void> {
+  async delete(id: ID, session: Session): Promise<void> {
     this.logger.debug(`mutation delete unavailability`);
     const ua = await this.readOne(id, session);
     if (!ua) {

@@ -2,6 +2,7 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import {
+  ID,
   PaginatedList,
   SecuredList,
   SortablePaginationInput,
@@ -24,7 +25,7 @@ export abstract class ProductFilters {
   })
   readonly methodology?: ProductMethodology;
 
-  readonly engagementId?: string;
+  readonly engagementId?: ID;
 }
 
 const defaultFilters = {};

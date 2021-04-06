@@ -1,6 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { assert, MarkOptional } from 'ts-essentials';
+import { ID } from '../../src/common';
 import {
   CreateFileVersionInput,
   FileListInput,
@@ -93,7 +94,7 @@ export async function createFileVersion(
   return actual;
 }
 
-export async function getFileNode(app: TestApp, id: string) {
+export async function getFileNode(app: TestApp, id: ID) {
   const result = await app.graphql.query(
     gql`
       query getFileNode($id: ID!) {
@@ -115,7 +116,7 @@ export async function getFileNode(app: TestApp, id: string) {
 
 export async function getFileNodeChildren(
   app: TestApp,
-  id: string,
+  id: ID,
   input?: Partial<FileListInput>
 ) {
   const result = await app.graphql.query(

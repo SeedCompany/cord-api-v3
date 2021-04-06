@@ -1,7 +1,12 @@
 import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
 import { sample, times } from 'lodash';
-import { CalendarDate, InputException, NotFoundException } from '../src/common';
+import {
+  CalendarDate,
+  ID,
+  InputException,
+  NotFoundException,
+} from '../src/common';
 import { Powers } from '../src/components/authorization/dto/powers';
 import { PartnerType } from '../src/components/partner';
 import {
@@ -304,7 +309,7 @@ describe('Partnership e2e', () => {
     await expect(
       createPartnership(app, {
         projectId: project.id,
-        partnerId: 'fakePartner',
+        partnerId: 'fakePartner' as ID,
       })
     ).rejects.toThrowError(new NotFoundException('Could not find partner'));
   });
@@ -312,7 +317,7 @@ describe('Partnership e2e', () => {
   it('create partnership does not create if projectId is invalid', async () => {
     await expect(
       createPartnership(app, {
-        projectId: 'fakeProject',
+        projectId: 'fakeProject' as ID,
       })
     ).rejects.toThrowError(new NotFoundException('Could not find project'));
   });
@@ -478,7 +483,7 @@ describe('Partnership e2e', () => {
     });
 
     const getPartnershipById = async (
-      partnershipId: string
+      partnershipId: ID
     ): Promise<Partnership> => {
       const result = await app.graphql.query(
         gql`
@@ -497,7 +502,7 @@ describe('Partnership e2e', () => {
       return result.partnership;
     };
 
-    const deletePartnership = async (partnershipId: string): Promise<void> => {
+    const deletePartnership = async (partnershipId: ID): Promise<void> => {
       await app.graphql.mutate(
         gql`
           mutation deletePartnership($id: ID!) {

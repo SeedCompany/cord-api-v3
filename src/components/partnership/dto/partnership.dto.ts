@@ -1,6 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
+  ID,
   Resource,
   Secured,
   SecuredBoolean,
@@ -62,7 +63,7 @@ export class Partnership extends Resource {
 
   readonly agreement: DefinedFile;
 
-  readonly partner: Secured<string>;
+  readonly partner: Secured<ID>;
 
   @Field()
   readonly types: SecuredPartnerTypes;

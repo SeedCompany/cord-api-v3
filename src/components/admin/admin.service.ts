@@ -1,7 +1,7 @@
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { generateId, ServerException } from '../../common';
+import { generateId, ID, ServerException } from '../../common';
 import {
   ConfigService,
   DatabaseService,
@@ -213,7 +213,7 @@ export class AdminService implements OnApplicationBootstrap {
   private async mergeRootAdminUser(): Promise<void> {
     const { email, password } = this.config.rootAdmin;
 
-    let id: string;
+    let id: ID;
 
     // see if root already exists
     const existing = await this.db
@@ -226,7 +226,7 @@ export class AdminService implements OnApplicationBootstrap {
         node('pw', 'Property'),
       ])
       .return(['root.id as id', 'email.value as email', 'pw.value as hash'])
-      .asResult<{ id: string; email: string; hash: string }>()
+      .asResult<{ id: ID; email: string; hash: string }>()
       .first();
     if (existing) {
       if (

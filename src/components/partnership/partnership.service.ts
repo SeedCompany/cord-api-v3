@@ -5,6 +5,7 @@ import { DateTime } from 'luxon';
 import {
   DuplicateException,
   generateId,
+  ID,
   InputException,
   NotFoundException,
   ServerException,
@@ -261,7 +262,7 @@ export class PartnershipService {
     }
   }
 
-  async readOne(id: string, session: Session): Promise<Partnership> {
+  async readOne(id: ID, session: Session): Promise<Partnership> {
     this.logger.debug('readOne', { id, userId: session.userId });
 
     const query = this.db
@@ -291,8 +292,8 @@ export class PartnershipService {
       )
       .asResult<
         StandardReadResult<DbPropsOfDto<Partnership>> & {
-          projectId: string;
-          partnerId: string;
+          projectId: ID;
+          partnerId: ID;
           memberRoles: Role[][];
         }
       >();
@@ -434,7 +435,7 @@ export class PartnershipService {
     return event.updated;
   }
 
-  async delete(id: string, session: Session): Promise<void> {
+  async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
     if (!object) {
@@ -564,7 +565,7 @@ export class PartnershipService {
 
   protected filterByProject(
     query: Query,
-    projectId: string,
+    projectId: ID,
     relationshipType: string,
     relationshipDirection: RelationDirection,
     label: string
@@ -601,8 +602,8 @@ export class PartnershipService {
   }
 
   protected async verifyRelationshipEligibility(
-    projectId: string,
-    partnerId: string
+    projectId: ID,
+    partnerId: ID
   ): Promise<void> {
     const result = await this.db
       .query()
@@ -641,7 +642,7 @@ export class PartnershipService {
     }
   }
 
-  protected async isFirstPartnership(projectId: string): Promise<boolean> {
+  protected async isFirstPartnership(projectId: ID): Promise<boolean> {
     const result = await this.db
       .query()
       .match([
@@ -656,7 +657,7 @@ export class PartnershipService {
     return result?.partnership ? false : true;
   }
 
-  protected otherPartnershipQuery(partnershipId: string): Query {
+  protected otherPartnershipQuery(partnershipId: ID): Query {
     return this.db
       .query()
       .match([
@@ -676,7 +677,7 @@ export class PartnershipService {
    * set current to primary false
    */
   protected async removeOtherPartnershipPrimary(
-    partnershipId: string
+    partnershipId: ID
   ): Promise<void> {
     const createdAt = DateTime.local();
 

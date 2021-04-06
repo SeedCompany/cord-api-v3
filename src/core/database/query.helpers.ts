@@ -1,7 +1,7 @@
 import { node, Query, relation } from 'cypher-query-builder';
 import { deburr } from 'lodash';
 import { DateTime } from 'luxon';
-import { ResourceShape, Session } from '../../common';
+import { ID, ResourceShape, Session } from '../../common';
 
 // CREATE clauses //////////////////////////////////////////////////////
 
@@ -27,7 +27,7 @@ export const determineSortValue = (value: unknown) =>
 // add baseNodeProps and editableProps
 export function createBaseNode(
   query: Query,
-  id: string,
+  id: ID,
   label: string | string[],
   props: Property[],
   baseNodeProps?: { owningOrgId?: string | undefined; type?: string }

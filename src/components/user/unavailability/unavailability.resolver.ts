@@ -1,5 +1,11 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { AnonSession, IdArg, LoggedInSession, Session } from '../../../common';
+import {
+  AnonSession,
+  ID,
+  IdArg,
+  LoggedInSession,
+  Session,
+} from '../../../common';
 import {
   CreateUnavailabilityInput,
   CreateUnavailabilityOutput,
@@ -20,7 +26,7 @@ export class UnavailabilityResolver {
   })
   async unavailability(
     @AnonSession() session: Session,
-    @IdArg() id: string
+    @IdArg() id: ID
   ): Promise<Unavailability> {
     return await this.service.readOne(id, session);
   }
@@ -67,7 +73,7 @@ export class UnavailabilityResolver {
   })
   async deleteUnavailability(
     @LoggedInSession() session: Session,
-    @IdArg() id: string
+    @IdArg() id: ID
   ): Promise<boolean> {
     await this.service.delete(id, session);
     return true;

@@ -6,7 +6,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { AnonSession, IdArg, LoggedInSession, Session } from '../../common';
+import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
 import {
   CreateDirectoryInput,
   Directory,
@@ -21,7 +21,7 @@ export class DirectoryResolver {
 
   @Query(() => Directory)
   async directory(
-    @IdArg() id: string,
+    @IdArg() id: ID,
     @AnonSession() session: Session
   ): Promise<Directory> {
     return await this.service.getDirectory(id, session);

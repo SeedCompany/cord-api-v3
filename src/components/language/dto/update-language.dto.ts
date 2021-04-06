@@ -13,6 +13,7 @@ import { uniq } from 'lodash';
 import {
   CalendarDate,
   DateField,
+  ID,
   IdField,
   NameField,
   Sensitivity,
@@ -44,7 +45,7 @@ export abstract class UpdateEthnologueLanguage {
 @InputType()
 export abstract class UpdateLanguage {
   @IdField()
-  readonly id: string;
+  readonly id: ID;
 
   @NameField({ nullable: true })
   readonly name?: string;

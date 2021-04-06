@@ -6,14 +6,20 @@ import {
   Query,
   Resolver,
 } from '@nestjs/graphql';
-import { AnonSession, IdField, LoggedInSession, Session } from '../../common';
+import {
+  AnonSession,
+  ID,
+  IdField,
+  LoggedInSession,
+  Session,
+} from '../../common';
 import { Powers } from '../authorization/dto/powers';
 import { AuthorizationService } from './authorization.service';
 
 @ArgsType()
 class ModifyPowerArgs {
   @IdField()
-  userId: string;
+  userId: ID;
 
   @Field(() => Powers)
   power: Powers;

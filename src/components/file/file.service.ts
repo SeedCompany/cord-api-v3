@@ -4,6 +4,7 @@ import { Readable } from 'stream';
 import {
   DuplicateException,
   generateId,
+  ID,
   InputException,
   NotFoundException,
   ServerException,
@@ -50,7 +51,7 @@ export class FileService {
     private readonly authorizationService: AuthorizationService
   ) {}
 
-  async getDirectory(id: string, session: Session): Promise<Directory> {
+  async getDirectory(id: ID, session: Session): Promise<Directory> {
     const node = await this.getFileNode(id, session);
     if (!isDirectory(node)) {
       throw new InputException('Node is not a directory');
@@ -58,7 +59,7 @@ export class FileService {
     return node;
   }
 
-  async getFile(id: string, session: Session): Promise<File> {
+  async getFile(id: ID, session: Session): Promise<File> {
     const node = await this.getFileNode(id, session);
     if (!isFile(node)) {
       throw new InputException('Node is not a file');
@@ -66,7 +67,7 @@ export class FileService {
     return node;
   }
 
-  async getFileVersion(id: string, session: Session): Promise<FileVersion> {
+  async getFileVersion(id: ID, session: Session): Promise<FileVersion> {
     const node = await this.getFileNode(id, session);
     if (!isFileVersion(node)) {
       throw new InputException('Node is not a file version');
@@ -74,7 +75,7 @@ export class FileService {
     return node;
   }
 
-  async getFileNode(id: string, session: Session): Promise<FileNode> {
+  async getFileNode(id: ID, session: Session): Promise<FileNode> {
     this.logger.debug(`getNode`, { id, userId: session.userId });
     const base = await this.repo.getBaseNodeById(id, session);
     return await this.adaptBaseNodeToFileNode(base, session);
@@ -111,7 +112,7 @@ export class FileService {
   /**
    * Internal API method to download file contents from S3
    */
-  async downloadFileVersion(versionId: string): Promise<Buffer> {
+  async downloadFileVersion(versionId: ID): Promise<Buffer> {
     let data;
     try {
       const obj = await this.bucket.getObject(versionId);
@@ -162,10 +163,7 @@ export class FileService {
     }
   }
 
-  async getParents(
-    nodeId: string,
-    session: Session
-  ): Promise<readonly FileNode[]> {
+  async getParents(nodeId: ID, session: Session): Promise<readonly FileNode[]> {
     const parents = await this.repo.getParentsById(nodeId, session);
     return await Promise.all(
       parents.map((node) => this.adaptBaseNodeToFileNode(node, session))
@@ -173,7 +171,7 @@ export class FileService {
   }
 
   async listChildren(
-    parentId: string,
+    parentId: ID,
     input: FileListInput | undefined,
     session: Session
   ): Promise<FileListOutput> {
@@ -201,7 +199,7 @@ export class FileService {
   }
 
   async createDirectory(
-    parentId: string | undefined,
+    parentId: ID | undefined,
     name: string,
     session: Session
   ): Promise<Directory> {
@@ -346,7 +344,7 @@ export class FileService {
     return await this.getFile(fileId, session);
   }
 
-  private async getParentNode(id: string, session: Session) {
+  private async getParentNode(id: ID, session: Session) {
     try {
       return await this.repo.getBaseNodeById(id, session);
     } catch (e) {
@@ -358,7 +356,7 @@ export class FileService {
   }
 
   private async getOrCreateFileByName(
-    parentId: string,
+    parentId: ID,
     name: string,
     session: Session
   ) {
@@ -392,10 +390,10 @@ export class FileService {
   }
 
   async createDefinedFile(
-    fileId: string,
+    fileId: ID,
     name: string,
     session: Session,
-    baseNodeId: string,
+    baseNodeId: ID,
     propertyName: string,
     initialVersion?: CreateDefinedFileVersionInput,
     field?: string
@@ -517,7 +515,7 @@ export class FileService {
     return await this.getFileNode(input.id, session);
   }
 
-  async delete(id: string, session: Session): Promise<void> {
+  async delete(id: ID, session: Session): Promise<void> {
     const fileNode = await this.repo.getBaseNodeById(id, session);
     await this.repo.delete(fileNode, session);
   }

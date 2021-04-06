@@ -9,11 +9,12 @@ import { Request } from 'express';
 import { DateTime } from 'luxon';
 import { ScopedRole } from '../components/authorization';
 import { UnauthenticatedException } from './exceptions';
+import { ID } from './id-field';
 
 export interface RawSession {
   readonly token: string;
   readonly issuedAt: DateTime;
-  readonly userId?: string;
+  readonly userId?: ID;
   readonly roles: ScopedRole[];
 }
 
@@ -34,7 +35,7 @@ export function loggedInSession(session: RawSession): Session {
 
 export const anonymousSession = (session: RawSession): Session => ({
   ...session,
-  userId: session.userId ?? 'anonuserid',
+  userId: session.userId ?? ('anonuserid' as ID),
   anonymous: !session.userId,
 });
 

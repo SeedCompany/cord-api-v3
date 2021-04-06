@@ -5,6 +5,8 @@ import { compact, keyBy, mapValues, union, without } from 'lodash';
 import {
   getParentTypes,
   has,
+  ID,
+  isIdLike,
   mapFromList,
   ResourceShape,
   SecuredResource,
@@ -47,8 +49,8 @@ export class AuthorizationService {
 
   async processNewBaseNode(
     baseNodeObj: OneBaseNode,
-    baseNodeId: string,
-    creatorUserId: string
+    baseNodeId: ID,
+    creatorUserId: ID
   ) {
     await this.afterTransaction(async () => {
       await this.db
@@ -99,7 +101,7 @@ export class AuthorizationService {
     props:
       | PropListDbResult<DbPropsOfDto<Resource['prototype']>>
       | DbPropsOfDto<Resource['prototype']>,
-    sessionOrUserId: Session | string,
+    sessionOrUserId: Session | ID,
     otherRoles: ScopedRole[] = []
   ): Promise<SecuredResource<Resource, false>> {
     const permissions = await this.getPermissions(
@@ -122,13 +124,12 @@ export class AuthorizationService {
    */
   async getPermissions<Resource extends ResourceShape<any>>(
     resource: Resource,
-    sessionOrUserId: Session | string,
+    sessionOrUserId: Session | ID,
     otherRoles: ScopedRole[] = []
   ): Promise<PermissionsOf<SecuredResource<Resource>>> {
-    const userGlobalRoles =
-      typeof sessionOrUserId === 'string'
-        ? await this.getUserGlobalRoles(sessionOrUserId)
-        : sessionOrUserId.roles;
+    const userGlobalRoles = isIdLike(sessionOrUserId)
+      ? await this.getUserGlobalRoles(sessionOrUserId)
+      : sessionOrUserId.roles;
     const roles = [...userGlobalRoles, ...otherRoles];
 
     // convert resource to a list of resource names to check
@@ -193,11 +194,11 @@ export class AuthorizationService {
     }
   }
 
-  async roleAddedToUser(id: string, roles: Role[]) {
+  async roleAddedToUser(id: ID | string, roles: Role[]) {
     await this.afterTransaction(() => this.doRoleAddedToUser(id, roles));
   }
 
-  private async doRoleAddedToUser(id: string, roles: Role[]) {
+  private async doRoleAddedToUser(id: ID | string, roles: Role[]) {
     // todo: this only applies to global roles, the only kind we have until next week
     // iterate through all roles and assign to all SGs with that role
 
@@ -273,7 +274,7 @@ export class AuthorizationService {
   }
 
   async createPower(
-    userId: string,
+    userId: ID,
     power: Powers,
     session: Session
   ): Promise<void> {
@@ -289,7 +290,7 @@ export class AuthorizationService {
   }
 
   async deletePower(
-    userId: string,
+    userId: ID,
     power: Powers,
     session: Session
   ): Promise<void> {
@@ -304,14 +305,14 @@ export class AuthorizationService {
     await this.removePower(power, userId);
   }
 
-  async grantPower(power: Powers, userId: string): Promise<void> {
+  async grantPower(power: Powers, userId: ID | string): Promise<void> {
     const powers = await this.readPowerByUserId(userId);
 
     const newPowers = union(powers, [power]);
     await this.updateUserPowers(userId, newPowers);
   }
 
-  async removePower(power: Powers, userId: string): Promise<void> {
+  async removePower(power: Powers, userId: ID): Promise<void> {
     const powers = await this.readPowerByUserId(userId);
 
     const newPowers = without(powers, power);
@@ -319,7 +320,7 @@ export class AuthorizationService {
   }
 
   private async updateUserPowers(
-    userId: string,
+    userId: ID | string,
     newPowers: Powers[]
   ): Promise<void> {
     const result = await this.db
@@ -336,7 +337,7 @@ export class AuthorizationService {
     }
   }
 
-  private async readPowerByUserId(id: string): Promise<Powers[]> {
+  private async readPowerByUserId(id: ID | string): Promise<Powers[]> {
     const result = await this.db
       .query()
       .match([node('user', 'User', { id })])
@@ -350,7 +351,7 @@ export class AuthorizationService {
     return result?.powers ?? [];
   }
 
-  async getUserGlobalRoles(id: string): Promise<ScopedRole[]> {
+  async getUserGlobalRoles(id: ID): Promise<ScopedRole[]> {
     const roleQuery = await this.db
       .query()
       .match([

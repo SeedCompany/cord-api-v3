@@ -3,6 +3,7 @@ import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   generateId,
+  ID,
   NotFoundException,
   ServerException,
   Session,
@@ -115,7 +116,7 @@ export class EducationService {
     return await this.readOne(result.id, session);
   }
 
-  async readOne(id: string, session: Session): Promise<Education> {
+  async readOne(id: ID, session: Session): Promise<Education> {
     this.logger.debug(`Read Education`, {
       id: id,
       userId: session.userId,
@@ -160,7 +161,7 @@ export class EducationService {
     });
   }
 
-  async delete(_id: string, _session: Session): Promise<void> {
+  async delete(_id: ID, _session: Session): Promise<void> {
     // Not Implemented
   }
 

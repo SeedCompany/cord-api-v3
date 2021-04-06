@@ -1,6 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { startCase } from 'lodash';
+import { ID } from '../../src/common';
 import { loggedInSession } from '../../src/common/session';
 import { AuthenticationService } from '../../src/components/authentication';
 import { FileService } from '../../src/components/file';
@@ -25,7 +26,7 @@ export async function createRootDirectory(app: TestApp, name?: string) {
 
 export async function createDirectory(
   app: TestApp,
-  parentId: string,
+  parentId: ID,
   name?: string
 ) {
   const input = {

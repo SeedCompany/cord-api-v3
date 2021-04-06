@@ -1,6 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
+  ID,
   Resource,
   Secured,
   SecuredEnum,
@@ -32,9 +33,9 @@ export class Location extends Resource {
   @Field()
   readonly isoAlpha3: SecuredStringNullable;
 
-  readonly fundingAccount: Secured<string>;
+  readonly fundingAccount: Secured<ID>;
 
-  readonly defaultFieldRegion: Secured<string>;
+  readonly defaultFieldRegion: Secured<ID>;
 }
 
 @ObjectType({

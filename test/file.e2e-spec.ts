@@ -3,6 +3,7 @@ import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { startCase, times } from 'lodash';
 import { DateTime, Duration, DurationObject, Settings } from 'luxon';
+import { ID } from '../src/common';
 import { anonymousSession } from '../src/common/session';
 import { AuthenticationService } from '../src/components/authentication';
 import { Role } from '../src/components/authorization';
@@ -45,7 +46,7 @@ import { resetDatabase } from './utility/reset-database';
 
 export async function uploadFile(
   app: TestApp,
-  parentId: string,
+  parentId: ID,
   input: Partial<FakeFile> = {},
   uploadRequest?: RequestUploadOutput
 ) {
@@ -62,7 +63,7 @@ export async function uploadFile(
   return fileNode;
 }
 
-async function deleteNode(app: TestApp, id: string) {
+async function deleteNode(app: TestApp, id: ID) {
   await app.graphql.mutate(
     gql`
       mutation deleteFileNode($id: ID!) {
@@ -75,7 +76,7 @@ async function deleteNode(app: TestApp, id: string) {
   );
 }
 
-async function expectNodeNotFound(app: TestApp, id: string) {
+async function expectNodeNotFound(app: TestApp, id: ID) {
   await expectNotFound(
     app.graphql.query(
       gql`
@@ -398,7 +399,7 @@ describe('File e2e', () => {
 
   describe('file children', () => {
     let file: RawFile;
-    const expectedVersionIds: string[] = [];
+    const expectedVersionIds: ID[] = [];
     let expectedTotalVersions: number;
 
     afterAll(async () => {

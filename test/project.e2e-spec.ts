@@ -7,6 +7,7 @@ import {
   CalendarDate,
   DuplicateException,
   generateId,
+  ID,
   NotFoundException,
   Sensitivity,
 } from '../src/common';
@@ -196,7 +197,7 @@ describe('Project e2e', () => {
       createProject(app, {
         name: faker.random.uuid(),
         type: ProjectType.Translation,
-        fieldRegionId: 'invalid-location-id',
+        fieldRegionId: 'invalid-location-id' as ID,
       })
     ).rejects.toThrowError(
       new NotFoundException('Field region not found', 'project.fieldRegionId')
@@ -863,7 +864,7 @@ describe('Project e2e', () => {
     const userId = userForList.id;
     const userForList2 = await registerUser(app, { password: password2 });
     const userId2 = userForList2.id;
-    const memberIds: string[] = [userId, userId2];
+    const memberIds: ID[] = [userId, userId2];
 
     await login(app, { email: userForList.email.value, password });
 

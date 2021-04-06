@@ -1,7 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { CalendarDate, DateField, IdField } from '../../../common';
+import { CalendarDate, DateField, ID, IdField } from '../../../common';
 import { CreateDefinedFileVersionInput } from '../../file/dto';
 import { ProductMethodology } from '../../product/dto';
 import { InternshipEngagement, LanguageEngagement } from './engagement.dto';
@@ -13,7 +13,7 @@ import { EngagementStatus } from './status.enum';
 })
 export abstract class UpdateEngagement {
   @IdField()
-  readonly id: string;
+  readonly id: ID;
 
   @DateField({ nullable: true })
   readonly completeDate?: CalendarDate;
@@ -65,10 +65,10 @@ export abstract class UpdateLanguageEngagement extends UpdateEngagement {
 @InputType()
 export abstract class UpdateInternshipEngagement extends UpdateEngagement {
   @IdField({ nullable: true })
-  readonly mentorId?: string;
+  readonly mentorId?: ID;
 
   @IdField({ nullable: true })
-  readonly countryOfOriginId?: string;
+  readonly countryOfOriginId?: ID;
 
   @Field(() => InternshipPosition, { nullable: true })
   readonly position?: InternshipPosition;

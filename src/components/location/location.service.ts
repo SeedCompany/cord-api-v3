@@ -4,6 +4,7 @@ import { DateTime } from 'luxon';
 import {
   DuplicateException,
   generateId,
+  ID,
   NotFoundException,
   ServerException,
   Session,
@@ -185,7 +186,7 @@ export class LocationService {
     return await this.readOne(result.id, session);
   }
 
-  async readOne(id: string, session: Session): Promise<Location> {
+  async readOne(id: ID, session: Session): Promise<Location> {
     this.logger.debug(`Read Location`, {
       id: id,
       userId: session.userId,
@@ -211,8 +212,8 @@ export class LocationService {
       )
       .asResult<
         StandardReadResult<DbPropsOfDto<Location>> & {
-          fundingAccountId: string;
-          defaultFieldRegionId: string;
+          fundingAccountId: ID;
+          defaultFieldRegionId: ID;
         }
       >();
 
@@ -322,7 +323,7 @@ export class LocationService {
     return await this.readOne(input.id, session);
   }
 
-  async delete(id: string, session: Session): Promise<void> {
+  async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
     if (!object) {
@@ -364,12 +365,7 @@ export class LocationService {
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 
-  async addLocationToNode(
-    label: string,
-    id: string,
-    rel: string,
-    locationId: string
-  ) {
+  async addLocationToNode(label: string, id: ID, rel: string, locationId: ID) {
     try {
       await this.removeLocationFromNode(label, id, rel, locationId);
       await this.db
@@ -392,9 +388,9 @@ export class LocationService {
 
   async removeLocationFromNode(
     label: string,
-    id: string,
+    id: ID,
     rel: string,
-    locationId: string
+    locationId: ID
   ) {
     try {
       await this.db
@@ -419,7 +415,7 @@ export class LocationService {
 
   async listLocationsFromNode(
     label: string,
-    id: string,
+    id: ID,
     rel: string,
     input: LocationListInput,
     session: Session

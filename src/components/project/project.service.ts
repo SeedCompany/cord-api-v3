@@ -6,7 +6,9 @@ import {
   DuplicateException,
   generateId,
   getHighestSensitivity,
+  ID,
   InputException,
+  isIdLike,
   many,
   NotFoundException,
   Sensitivity,
@@ -380,7 +382,7 @@ export class ProjectService {
         ],
       ]);
 
-      createProject.return('node.id as id').asResult<{ id: string }>();
+      createProject.return('node.id as id').asResult<{ id: ID }>();
       const result = await createProject.first();
 
       if (!result) {
@@ -438,7 +440,7 @@ export class ProjectService {
   }
 
   async readOneTranslation(
-    id: string,
+    id: ID,
     session: Session
   ): Promise<TranslationProject> {
     const project = await this.readOne(id, session);
@@ -449,7 +451,7 @@ export class ProjectService {
   }
 
   async readOneInternship(
-    id: string,
+    id: ID,
     session: Session
   ): Promise<InternshipProject> {
     const project = await this.readOne(id, session);
@@ -459,14 +461,10 @@ export class ProjectService {
     return project as InternshipProject;
   }
 
-  async readOne(
-    id: string,
-    sessionOrUserId: Session | string
-  ): Promise<Project> {
-    const userId =
-      typeof sessionOrUserId === 'string'
-        ? sessionOrUserId
-        : sessionOrUserId.userId;
+  async readOne(id: ID, sessionOrUserId: Session | ID): Promise<Project> {
+    const userId = isIdLike(sessionOrUserId)
+      ? sessionOrUserId
+      : sessionOrUserId.userId;
     const query = this.db
       .query()
       .match([node('node', 'Project', { id })])
@@ -531,11 +529,11 @@ export class ProjectService {
       .asResult<
         StandardReadResult<DbPropsOfDto<Project>> & {
           pinnedRel?: Relation;
-          primaryLocationId: string;
+          primaryLocationId: ID;
           memberRoles: Role[][];
-          marketingLocationId: string;
-          fieldRegionId: string;
-          owningOrganizationId: string;
+          marketingLocationId: ID;
+          fieldRegionId: ID;
+          owningOrganizationId: ID;
           languageSensitivityList: Sensitivity[];
         }
       >();
@@ -750,7 +748,7 @@ export class ProjectService {
     return event.updated;
   }
 
-  async delete(id: string, session: Session): Promise<void> {
+  async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
     if (!object) {
       throw new NotFoundException('Could not find project');
@@ -919,7 +917,7 @@ export class ProjectService {
   }
 
   async listProjectMembers(
-    projectId: string,
+    projectId: ID,
     input: ProjectMemberListInput,
     session: Session
   ): Promise<SecuredProjectMemberList> {
@@ -987,7 +985,7 @@ export class ProjectService {
   }
 
   async listPartnerships(
-    projectId: string,
+    projectId: ID,
     input: PartnershipListInput,
     session: Session
   ): Promise<SecuredPartnershipList> {
@@ -1055,8 +1053,8 @@ export class ProjectService {
   }
 
   async addOtherLocation(
-    projectId: string,
-    locationId: string,
+    projectId: ID,
+    locationId: ID,
     _session: Session
   ): Promise<void> {
     try {
@@ -1072,8 +1070,8 @@ export class ProjectService {
   }
 
   async removeOtherLocation(
-    projectId: string,
-    locationId: string,
+    projectId: ID,
+    locationId: ID,
     _session: Session
   ): Promise<void> {
     try {
@@ -1092,7 +1090,7 @@ export class ProjectService {
   }
 
   async listOtherLocations(
-    projectId: string,
+    projectId: ID,
     input: LocationListInput,
     session: Session
   ): Promise<SecuredLocationList> {
@@ -1106,13 +1104,12 @@ export class ProjectService {
   }
 
   async currentBudget(
-    projectOrProjectId: Project | string,
+    projectOrProjectId: Project | ID,
     session: Session
   ): Promise<SecuredBudget> {
-    const projectId =
-      typeof projectOrProjectId === 'string'
-        ? projectOrProjectId
-        : projectOrProjectId.id;
+    const projectId = isIdLike(projectOrProjectId)
+      ? projectOrProjectId
+      : projectOrProjectId.id;
     const budgets = await this.budgetService.list(
       {
         filter: {
@@ -1144,10 +1141,10 @@ export class ProjectService {
   }
 
   private async getMembershipRoles(
-    projectId: string | Project,
+    projectId: ID | Project,
     session: Session
   ): Promise<ScopedRole[]> {
-    if (typeof projectId !== 'string') {
+    if (!isIdLike(projectId)) {
       return projectId.scope;
     }
 
@@ -1174,7 +1171,7 @@ export class ProjectService {
   }
 
   async getRootDirectory(
-    projectId: string,
+    projectId: ID,
     session: Session
   ): Promise<SecuredDirectory> {
     const rootRef = await this.db

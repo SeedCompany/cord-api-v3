@@ -5,6 +5,7 @@ import { sign, verify } from 'jsonwebtoken';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
+  ID,
   InputException,
   ServerException,
   Session,
@@ -93,7 +94,7 @@ export class AuthenticationService {
     return await this.userService.readOne(userRes.id, session);
   }
 
-  async register(input: RegisterInput, session?: Session): Promise<string> {
+  async register(input: RegisterInput, session?: Session): Promise<ID> {
     // ensure no other tokens are associated with this user
     if (session) {
       await this.logout(session.token);
@@ -133,7 +134,7 @@ export class AuthenticationService {
     return userId;
   }
 
-  async login(input: LoginInput, session: Session): Promise<string> {
+  async login(input: LoginInput, session: Session): Promise<ID> {
     const result1 = await this.db
       .query()
       .raw(

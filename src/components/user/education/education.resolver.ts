@@ -1,6 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { Args, Mutation, Query } from '@nestjs/graphql';
-import { AnonSession, IdArg, LoggedInSession, Session } from '../../../common';
+import {
+  AnonSession,
+  ID,
+  IdArg,
+  LoggedInSession,
+  Session,
+} from '../../../common';
 import {
   CreateEducationInput,
   CreateEducationOutput,
@@ -32,7 +38,7 @@ export class EducationResolver {
   })
   async education(
     @AnonSession() session: Session,
-    @IdArg() id: string
+    @IdArg() id: ID
   ): Promise<Education> {
     return await this.service.readOne(id, session);
   }
@@ -68,7 +74,7 @@ export class EducationResolver {
   })
   async deleteEducation(
     @LoggedInSession() session: Session,
-    @IdArg() id: string
+    @IdArg() id: ID
   ): Promise<boolean> {
     await this.service.delete(id, session);
     return true;

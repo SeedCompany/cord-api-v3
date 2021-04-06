@@ -1,5 +1,5 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { AnonSession, IdArg, LoggedInSession, Session } from '../../common';
+import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
 import { CeremonyService } from './ceremony.service';
 import {
   Ceremony,
@@ -18,7 +18,7 @@ export class CeremonyResolver {
   })
   async ceremony(
     @AnonSession() session: Session,
-    @IdArg() id: string
+    @IdArg() id: ID
   ): Promise<Ceremony> {
     return await this.service.readOne(id, session);
   }

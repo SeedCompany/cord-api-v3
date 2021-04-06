@@ -1,5 +1,5 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { AnonSession, IdArg, LoggedInSession, Session } from '../../common';
+import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
 import {
   CreateFundingAccountInput,
   CreateFundingAccountOutput,
@@ -20,7 +20,7 @@ export class FundingAccountResolver {
   })
   async fundingAccount(
     @AnonSession() session: Session,
-    @IdArg() id: string
+    @IdArg() id: ID
   ): Promise<FundingAccount> {
     return await this.fundingAccountService.readOne(id, session);
   }
@@ -73,7 +73,7 @@ export class FundingAccountResolver {
   })
   async deleteFundingAccount(
     @LoggedInSession() session: Session,
-    @IdArg() id: string
+    @IdArg() id: ID
   ): Promise<boolean> {
     await this.fundingAccountService.delete(id, session);
     return true;

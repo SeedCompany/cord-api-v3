@@ -10,6 +10,7 @@ import {
 import {
   AnonSession,
   firstLettersOfWords,
+  ID,
   IdArg,
   IdField,
   LoggedInSession,
@@ -47,10 +48,10 @@ import { ProjectService } from './project.service';
 @ArgsType()
 class ModifyOtherLocationArgs {
   @IdField()
-  projectId: string;
+  projectId: ID;
 
   @IdField()
-  locationId: string;
+  locationId: ID;
 }
 
 @Resolver(IProject)
@@ -66,7 +67,7 @@ export class ProjectResolver {
     description: 'Look up a project by its ID',
   })
   async project(
-    @IdArg() id: string,
+    @IdArg() id: ID,
     @LoggedInSession() session: Session
   ): Promise<Project> {
     const project = await this.projectService.readOne(id, session);
@@ -259,7 +260,7 @@ export class ProjectResolver {
     description: 'Delete a project',
   })
   async deleteProject(
-    @IdArg() id: string,
+    @IdArg() id: ID,
     @LoggedInSession() session: Session
   ): Promise<boolean> {
     await this.projectService.delete(id, session);

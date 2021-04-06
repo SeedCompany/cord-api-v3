@@ -2,7 +2,12 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { first, intersection } from 'lodash';
-import { ServerException, Session, UnauthorizedException } from '../../common';
+import {
+  ID,
+  ServerException,
+  Session,
+  UnauthorizedException,
+} from '../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import { Role } from '../authorization';
 import { ProjectStep } from '../project';
@@ -30,7 +35,7 @@ export class EngagementRules {
 
   private async getStatusRule(
     status: EngagementStatus,
-    id: string
+    id: ID
   ): Promise<StatusRule> {
     switch (status) {
       case EngagementStatus.InDevelopment:
@@ -332,7 +337,7 @@ export class EngagementRules {
   }
 
   async getAvailableTransitions(
-    engagementId: string,
+    engagementId: ID,
     session: Session,
     currentUserRoles?: Role[]
   ): Promise<EngagementStatusTransition[]> {
@@ -377,7 +382,7 @@ export class EngagementRules {
   }
 
   async verifyStatusChange(
-    engagementId: string,
+    engagementId: ID,
     session: Session,
     nextStatus: EngagementStatus
   ) {
@@ -409,7 +414,7 @@ export class EngagementRules {
     }
   }
 
-  private async getCurrentStatus(id: string) {
+  private async getCurrentStatus(id: ID) {
     const currentStatus = await this.db
       .query()
       .match([
@@ -428,7 +433,7 @@ export class EngagementRules {
     return currentStatus.status;
   }
 
-  private async getCurrentProjectStep(engagementId: string) {
+  private async getCurrentProjectStep(engagementId: ID) {
     const result = await this.db
       .query()
       .match([
@@ -449,7 +454,7 @@ export class EngagementRules {
     return result.step;
   }
 
-  private async getUserRoles(id: string) {
+  private async getUserRoles(id: ID) {
     const userRolesQuery = await this.db
       .query()
       .match([
@@ -466,7 +471,7 @@ export class EngagementRules {
 
   /** Of the given status which one was the most recent previous status */
   private async getMostRecentPreviousStatus(
-    id: string,
+    id: ID,
     status: EngagementStatus[]
   ): Promise<EngagementStatus> {
     const prevStatus = await this.getPreviousStatus(id);
@@ -482,7 +487,7 @@ export class EngagementRules {
   }
 
   /** A list of the engagement's previous status ordered most recent to furthest in the past */
-  private async getPreviousStatus(id: string): Promise<EngagementStatus[]> {
+  private async getPreviousStatus(id: ID): Promise<EngagementStatus[]> {
     const result = await this.db
       .query()
       .match([

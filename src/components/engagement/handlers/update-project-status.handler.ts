@@ -1,5 +1,5 @@
 import { MergeExclusive, RequireAtLeastOne } from 'type-fest';
-import { Session } from '../../../common';
+import { ID, Session } from '../../../common';
 import { EventsHandler, IEventHandler } from '../../../core';
 import {
   Project,
@@ -80,7 +80,7 @@ export class UpdateProjectStatusHandler
 
   private async updateEngagements(
     status: EngagementStatus,
-    engagementIds: string[],
+    engagementIds: ID[],
     type: ProjectType,
     session: Session
   ) {

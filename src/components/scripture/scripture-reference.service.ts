@@ -1,7 +1,7 @@
 import { Node, node, relation } from 'cypher-query-builder';
 import { sortBy } from 'lodash';
 import { DateTime } from 'luxon';
-import { Range, Session } from '../../common';
+import { ID, Range, Session } from '../../common';
 import { DatabaseService, ILogger, Logger } from '../../core';
 import { ScriptureRange, ScriptureRangeInput } from './dto';
 
@@ -12,7 +12,7 @@ export class ScriptureReferenceService {
   ) {}
 
   async create(
-    producibleId: string,
+    producibleId: ID,
     scriptureRefs: ScriptureRangeInput[] | undefined,
     // eslint-disable-next-line @seedcompany/no-unused-vars
     session: Session
@@ -44,7 +44,7 @@ export class ScriptureReferenceService {
   }
 
   async update(
-    producibleId: string,
+    producibleId: ID,
     scriptureRefs: ScriptureRangeInput[] | undefined,
     options: { isOverriding?: boolean } = {}
   ): Promise<void> {
@@ -105,7 +105,7 @@ export class ScriptureReferenceService {
   }
 
   async list(
-    producibleId: string,
+    producibleId: ID,
     session: Session,
     options: { isOverriding?: boolean } = {}
   ): Promise<ScriptureRange[]> {

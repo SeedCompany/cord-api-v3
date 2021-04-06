@@ -9,6 +9,7 @@ import {
   TestApp,
   updateProject,
 } from '.';
+import { ID } from '../../src/common';
 import {
   EngagementStatus,
   InternshipEngagement,
@@ -22,7 +23,7 @@ import {
 
 export const changeInternshipEngagementStatus = async (
   app: TestApp,
-  id: string,
+  id: ID,
   to: EngagementStatus
 ): Promise<InternshipEngagement> => {
   const result = await app.graphql.mutate(
@@ -51,7 +52,7 @@ export const changeInternshipEngagementStatus = async (
 
 export const changeLanguageEngagementStatus = async (
   app: TestApp,
-  id: string,
+  id: ID,
   to: EngagementStatus
 ): Promise<LanguageEngagement> => {
   const result = await app.graphql.mutate(
@@ -78,8 +79,8 @@ export const changeLanguageEngagementStatus = async (
 
 export const transitionEngagementToActive = async (
   app: TestApp,
-  projectId: string,
-  langEngagementId: string
+  projectId: ID,
+  langEngagementId: ID
 ): Promise<any> => {
   await runAsAdmin(app, async () => {
     const fundingAccount = await createFundingAccount(app);
