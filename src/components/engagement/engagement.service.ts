@@ -741,7 +741,11 @@ export class EngagementService {
         canRead: canReadEndDate,
         canEdit: false,
       },
-      canDelete: await this.db.checkDeletePermission(id, session),
+      canDelete:
+        props.status !== EngagementStatus.InDevelopment &&
+        !session.roles.includes(`global:Administrator`)
+          ? false
+          : await this.db.checkDeletePermission(id, session),
     };
 
     if (isLanguageEngagement) {
@@ -1026,9 +1030,7 @@ export class EngagementService {
       throw new NotFoundException('Could not find engagement', 'engagement.id');
     }
 
-    const canDelete = await this.db.checkDeletePermission(id, session);
-
-    if (!canDelete)
+    if (!object.canDelete)
       throw new UnauthorizedException(
         'You do not have the permission to delete this Engagement'
       );
