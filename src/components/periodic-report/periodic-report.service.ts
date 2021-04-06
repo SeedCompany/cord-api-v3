@@ -28,6 +28,7 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { Engagement } from '../engagement';
 import { CreateDefinedFileVersionInput, FileService } from '../file';
 import { Project } from '../project';
 import {
@@ -373,6 +374,49 @@ export class PeriodicReportService {
         type: {
           value: ReportType.Narrative,
         },
+      })
+      .return('report.id as reportId')
+      .asResult<{ reportId: string }>()
+      .run();
+
+    await Promise.all(
+      reports.map((report) => this.delete(report.reportId, session))
+    );
+  }
+
+  async removeProgressReports(
+    engagement: Engagement,
+    intervals: Interval[],
+    session: Session
+  ) {
+    const reports = await this.db
+      .query()
+      .match([
+        node('engagement', 'Engagement', { id: engagement.id }),
+        relation('out', '', 'report', { active: true }),
+        node('report', 'PeriodicReport'),
+      ])
+      .optionalMatch([
+        node('report'),
+        relation('out', 'rel', 'reportFile', { active: true }),
+        node('file', 'File'),
+      ])
+      .optionalMatch([
+        node('report'),
+        relation('out', '', 'start', { active: true }),
+        node('start', 'Property'),
+      ])
+      .optionalMatch([
+        node('report'),
+        relation('out', '', 'end', { active: true }),
+        node('end', 'Property'),
+      ])
+      .with('report, rel, start, end')
+      .where({
+        rel: isNull(),
+        'date(start.value)': inArray(
+          intervals.map((interval) => interval.start.startOf('quarter'))
+        ),
       })
       .return('report.id as reportId')
       .asResult<{ reportId: string }>()

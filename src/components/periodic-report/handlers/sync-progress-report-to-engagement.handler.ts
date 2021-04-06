@@ -1,11 +1,9 @@
+import { Interval } from 'luxon';
 import {
-  greaterEqualTo,
-  isNull,
-  lessEqualTo,
-  node,
-  relation,
-} from 'cypher-query-builder';
-import { fiscalQuarters, Session } from '../../../common';
+  fiscalQuarters,
+  getIntervalsDifference,
+  Session,
+} from '../../../common';
 import {
   DatabaseService,
   EventsHandler,
@@ -38,15 +36,17 @@ export class SyncProgressReportToEngagementDateRange
       event: event.constructor.name,
     });
 
+    const [startDate, endDate] = this.determineEngagementDateRange(
+      event instanceof EngagementCreatedEvent ? event.engagement : event.updated
+    );
+
     if (event instanceof EngagementCreatedEvent) {
-      await this.addRecords(event.engagement, event.session);
+      const quarterIntervals = fiscalQuarters(startDate, endDate);
+      await this.addRecords(event.engagement, quarterIntervals, event.session);
     } else {
       const engagement = event.updated;
       const previous = event.previous;
 
-      const [startDate, endDate] = this.determineEngagementDateRange(
-        engagement
-      );
       const [
         previousStartDate,
         previousEndDate,
@@ -59,58 +59,26 @@ export class SyncProgressReportToEngagementDateRange
           endDate.toMillis() !== previousEndDate?.toMillis());
 
       if (isDateRangeChanged) {
-        await this.removeOldReports(previous, event.session);
-        await this.addRecords(engagement, event.session);
+        const [newQuarters, oldQuarters] = this.getNewPeriodIntervals(
+          engagement,
+          previous
+        );
+        await this.periodicReports.removeProgressReports(
+          engagement,
+          oldQuarters,
+          event.session
+        );
+        await this.addRecords(engagement, newQuarters, event.session);
       }
     }
   }
 
-  private async removeOldReports(engagement: Engagement, session: Session) {
-    const [oldStart, oldEnd] = this.determineEngagementDateRange(engagement);
-    const reports = await this.db
-      .query()
-      .match([
-        node('engagement', 'Engagement', { id: engagement.id }),
-        relation('out', '', 'report', { active: true }),
-        node('report', 'PeriodicReport'),
-      ])
-      .optionalMatch([
-        node('report'),
-        relation('out', 'rel', 'reportFile', { active: true }),
-        node('file', 'File'),
-      ])
-      .optionalMatch([
-        node('report'),
-        relation('out', '', 'start', { active: true }),
-        node('start', 'Property'),
-      ])
-      .optionalMatch([
-        node('report'),
-        relation('out', '', 'end', { active: true }),
-        node('end', 'Property'),
-      ])
-      .with('report, rel, start, end')
-      .where({
-        rel: isNull(),
-        'date(start.value)': greaterEqualTo(oldStart?.startOf('quarter')),
-        'date(end.value)': lessEqualTo(oldEnd?.endOf('quarter')),
-      })
-      .return('report.id as reportId')
-      .asResult<{ reportId: string }>()
-      .run();
-
-    await Promise.all(
-      reports.map((report) =>
-        this.periodicReports.delete(report.reportId, session)
-      )
-    );
-  }
-
-  private async addRecords(engagement: Engagement, session: Session) {
-    const [startDate, endDate] = this.determineEngagementDateRange(engagement);
-    const quarterIntervals = fiscalQuarters(startDate!, endDate!);
-
-    const reports = quarterIntervals.map((interval) =>
+  private async addRecords(
+    engagement: Engagement,
+    intervals: Interval[],
+    session: Session
+  ) {
+    const reports = intervals.map((interval) =>
       this.periodicReports.create(
         {
           start: interval.start,
@@ -135,5 +103,27 @@ export class SyncProgressReportToEngagementDateRange
       : engagement.endDate.value;
 
     return [startDate, endDate];
+  }
+
+  private getNewPeriodIntervals(engagement: Engagement, previous: Engagement) {
+    const [startDate, endDate] = this.determineEngagementDateRange(engagement);
+    const [prevStartDate, prevEndDate] = this.determineEngagementDateRange(
+      previous
+    );
+
+    const quarterIntervals = fiscalQuarters(startDate, endDate);
+    const prevQuarterIntervals = fiscalQuarters(prevStartDate, prevEndDate);
+
+    const newQuarters = getIntervalsDifference(
+      quarterIntervals,
+      prevQuarterIntervals
+    );
+
+    const oldQuarters = getIntervalsDifference(
+      prevQuarterIntervals,
+      quarterIntervals
+    );
+
+    return [newQuarters, oldQuarters];
   }
 }

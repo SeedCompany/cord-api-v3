@@ -1,6 +1,10 @@
-import { differenceBy } from 'lodash';
 import { Interval } from 'luxon';
-import { fiscalMonths, fiscalQuarters, Session } from '../../../common';
+import {
+  fiscalMonths,
+  fiscalQuarters,
+  getIntervalsDifference,
+  Session,
+} from '../../../common';
 import { EventsHandler, IEventHandler, ILogger, Logger } from '../../../core';
 import { Project } from '../../project';
 import { ProjectUpdatedEvent } from '../../project/events';
@@ -57,26 +61,22 @@ export class SyncPeriodicReportsToProjectDateRange
     const prevQuarterIntervals = fiscalQuarters(prevStartDate, prevEndDate);
     const prevMonthIntervals = fiscalMonths(prevStartDate, prevEndDate);
 
-    const newQuarters = differenceBy(
+    const newQuarters = getIntervalsDifference(
       quarterIntervals,
-      prevQuarterIntervals,
-      (interval) => interval.start.toMillis()
+      prevQuarterIntervals
     );
-    const newMonths = differenceBy(
+    const newMonths = getIntervalsDifference(
       monthIntervals,
-      prevMonthIntervals,
-      (interval) => interval.start.toMillis()
+      prevMonthIntervals
     );
 
-    const oldQuarters = differenceBy(
+    const oldQuarters = getIntervalsDifference(
       prevQuarterIntervals,
-      quarterIntervals,
-      (interval) => interval.start.toMillis()
+      quarterIntervals
     );
-    const oldMonths = differenceBy(
+    const oldMonths = getIntervalsDifference(
       prevMonthIntervals,
-      monthIntervals,
-      (interval) => interval.start.toMillis()
+      monthIntervals
     );
 
     return [newQuarters, newMonths, oldQuarters, oldMonths];

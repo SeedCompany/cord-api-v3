@@ -1,4 +1,4 @@
-import { range } from 'lodash';
+import { differenceBy, range } from 'lodash';
 import { DateTime, Interval } from 'luxon';
 
 export const fiscalYear = (dt: DateTime) =>
@@ -8,8 +8,8 @@ export const fiscalYears = (start?: DateTime, end?: DateTime) =>
   start && end ? range(fiscalYear(start), fiscalYear(end) + 1) : [];
 
 export const fiscalQuarters = (
-  start?: DateTime,
-  end?: DateTime
+  start?: DateTime | null,
+  end?: DateTime | null
 ): Interval[] => {
   if (!start || !end) {
     return [];
@@ -40,4 +40,13 @@ export const fiscalMonths = (start?: DateTime, end?: DateTime): Interval[] => {
   ).splitBy({ months: 1 });
 
   return intervals; // Luxon monthly interval format: 01/01/2021 ~ 01/02/2021
+};
+
+export const getIntervalsDifference = (
+  intervals1: Interval[],
+  intervals2: Interval[]
+) => {
+  return differenceBy(intervals1, intervals2, (interval) =>
+    interval.start.toMillis()
+  );
 };
