@@ -1,12 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import {
-  greaterEqualTo,
-  isNull,
-  lessEqualTo,
-  node,
-  relation,
-} from 'cypher-query-builder';
-import { DateTime } from 'luxon';
+import { inArray, isNull, node, relation } from 'cypher-query-builder';
+import { DateTime, Interval } from 'luxon';
 import {
   generateId,
   NotFoundException,
@@ -336,7 +330,11 @@ export class PeriodicReportService {
       .with('report, rel, start, end, type');
   }
 
-  async removeFinancialReports(project: Project, session: Session) {
+  async removeFinancialReports(
+    project: Project,
+    intervals: Interval[],
+    session: Session
+  ) {
     const period =
       project.financialReportPeriod.value === ReportPeriod.Monthly
         ? 'month'
@@ -345,10 +343,9 @@ export class PeriodicReportService {
     const reports = await this.getProjectReportsQuery(project)
       .where({
         rel: isNull(),
-        'date(start.value)': greaterEqualTo(
-          project.mouStart.value?.startOf(period)
+        'date(start.value)': inArray(
+          intervals.map((interval) => interval.start.startOf(period))
         ),
-        'date(end.value)': lessEqualTo(project.mouEnd.value?.endOf(period)),
         type: {
           value: ReportType.Financial,
         },
@@ -362,14 +359,17 @@ export class PeriodicReportService {
     );
   }
 
-  async removeNarrativeReports(project: Project, session: Session) {
+  async removeNarrativeReports(
+    project: Project,
+    intervals: Interval[],
+    session: Session
+  ) {
     const reports = await this.getProjectReportsQuery(project)
       .where({
         rel: isNull(),
-        'date(start.value)': greaterEqualTo(
-          project.mouStart.value?.startOf('quarter')
+        'date(start.value)': inArray(
+          intervals.map((interval) => interval.start.startOf('quarter'))
         ),
-        'date(end.value)': lessEqualTo(project.mouEnd.value?.endOf('quarter')),
         type: {
           value: ReportType.Narrative,
         },
