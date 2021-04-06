@@ -1,12 +1,12 @@
 import { Field, InterfaceType } from '@nestjs/graphql';
-import { IdField } from '../../../common';
+import { ID, IdField } from '../../../common';
 
 @InterfaceType({
   description: 'An item that can be pinned',
 })
 export class Pinnable {
   @IdField()
-  readonly id: string;
+  readonly id: ID;
 
   @Field({
     description: 'Does the requesting user have this pinned?',

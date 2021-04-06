@@ -8,7 +8,7 @@ import {
 } from '@nestjs/graphql';
 import { whereAlpha3 } from 'iso-3166-1';
 import countries from 'iso-3166-1/dist/iso-3166';
-import { AnonSession, IdArg, LoggedInSession, Session } from '../../common';
+import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
 import { FieldRegionService, SecuredFieldRegion } from '../field-region';
 import {
   FundingAccountService,
@@ -39,7 +39,7 @@ export class LocationResolver {
   })
   async location(
     @AnonSession() session: Session,
-    @IdArg() id: string
+    @IdArg() id: ID
   ): Promise<Location> {
     return await this.locationService.readOne(id, session);
   }
@@ -136,7 +136,7 @@ export class LocationResolver {
   })
   async deleteLocation(
     @LoggedInSession() session: Session,
-    @IdArg() id: string
+    @IdArg() id: ID
   ): Promise<boolean> {
     await this.locationService.delete(id, session);
     return true;

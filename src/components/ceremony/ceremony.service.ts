@@ -2,6 +2,7 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import {
   generateId,
+  ID,
   InputException,
   NotFoundException,
   ServerException,
@@ -126,7 +127,7 @@ export class CeremonyService {
     }
   }
 
-  async readOne(id: string, session: Session): Promise<Ceremony> {
+  async readOne(id: ID, session: Session): Promise<Ceremony> {
     this.logger.debug(`Query readOne Ceremony`, { id, userId: session.userId });
     if (!id) {
       throw new InputException('No ceremony id to search for', 'ceremony.id');
@@ -186,7 +187,7 @@ export class CeremonyService {
     });
   }
 
-  async delete(id: string, session: Session): Promise<void> {
+  async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
     if (!object) {

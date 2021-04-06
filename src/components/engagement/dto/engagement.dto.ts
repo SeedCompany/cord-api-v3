@@ -4,6 +4,7 @@ import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
 import {
   DateTimeField,
+  ID,
   parentIdMiddleware,
   Resource,
   Secured,
@@ -45,7 +46,7 @@ class Engagement extends Resource {
   })
   readonly status: SecuredEngagementStatus;
 
-  readonly ceremony: Secured<string>;
+  readonly ceremony: Secured<ID>;
 
   @Field({
     description: 'Translation / Growth Plan complete date',
@@ -111,7 +112,7 @@ export class LanguageEngagement extends Engagement {
     product: [Product],
   };
 
-  readonly language: Secured<string>;
+  readonly language: Secured<ID>;
 
   @Field()
   readonly firstScripture: SecuredBoolean;
@@ -143,11 +144,11 @@ export class InternshipEngagement extends Engagement {
   static readonly Props = keysOf<InternshipEngagement>();
   static readonly SecuredProps = keysOf<SecuredProps<InternshipEngagement>>();
 
-  readonly countryOfOrigin: Secured<string>;
+  readonly countryOfOrigin: Secured<ID>;
 
-  readonly intern: Secured<string>;
+  readonly intern: Secured<ID>;
 
-  readonly mentor: Secured<string>;
+  readonly mentor: Secured<ID>;
 
   @Field()
   readonly position: SecuredInternPosition;

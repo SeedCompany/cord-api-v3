@@ -2,7 +2,7 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
-import { IdField, OmitType } from '../../../common';
+import { ID, IdField, OmitType } from '../../../common';
 import { CreateProduct } from './create-product.dto';
 import { AnyProduct, Product } from './product.dto';
 
@@ -12,7 +12,7 @@ export abstract class UpdateProduct extends OmitType(CreateProduct, [
   'produces',
 ] as const) {
   @IdField()
-  readonly id: string;
+  readonly id: ID;
 
   @IdField({
     nullable: true,
@@ -22,7 +22,7 @@ export abstract class UpdateProduct extends OmitType(CreateProduct, [
       Note only \`DerivativeScriptureProduct\`s can use this field.
     `,
   })
-  readonly produces?: string;
+  readonly produces?: ID;
 }
 
 @InputType()

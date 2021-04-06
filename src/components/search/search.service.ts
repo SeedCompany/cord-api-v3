@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { node, regexp, relation } from 'cypher-query-builder';
 import { compact } from 'lodash';
-import { NotFoundException, ServerException, Session } from '../../common';
+import { ID, NotFoundException, ServerException, Session } from '../../common';
 import {
   DatabaseService,
   matchRequestingUser,
@@ -32,7 +32,7 @@ import {
 type HydratorMap = {
   [K in keyof SearchableMap]?: Hydrator<SearchableMap[K]>;
 };
-type Hydrator<R> = (id: string, session: Session) => Promise<R>;
+type Hydrator<R> = (id: ID, session: Session) => Promise<R>;
 
 const labels = JSON.stringify(SearchResultTypes);
 const typeFromLabels = `[l in labels(node) where l in ${labels}][0] as type`;
@@ -110,7 +110,7 @@ export class SearchService {
       })
       .returnDistinct(['node.id as id', typeFromLabels])
       .limit(input.count)
-      .asResult<{ id: string; type: keyof SearchResultMap }>();
+      .asResult<{ id: ID; type: keyof SearchResultMap }>();
 
     const results = await query.run();
 

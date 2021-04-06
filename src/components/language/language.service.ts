@@ -6,6 +6,7 @@ import {
   CalendarDate,
   DuplicateException,
   generateId,
+  ID,
   InputException,
   NotFoundException,
   SecuredDate,
@@ -310,7 +311,7 @@ export class LanguageService {
     }
   }
 
-  async readOne(langId: string, session: Session): Promise<Language> {
+  async readOne(langId: ID, session: Session): Promise<Language> {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
@@ -324,7 +325,7 @@ export class LanguageService {
       .return('propList, node, eth.id as ethnologueLanguageId')
       .asResult<
         StandardReadResult<DbPropsOfDto<Language>> & {
-          ethnologueLanguageId: string;
+          ethnologueLanguageId: ID;
         }
       >();
 
@@ -439,7 +440,7 @@ export class LanguageService {
     return await this.readOne(input.id, session);
   }
 
-  async delete(id: string, session: Session): Promise<void> {
+  async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
     if (!object) {
@@ -508,7 +509,7 @@ export class LanguageService {
   }
 
   async listLocations(
-    languageId: string,
+    languageId: ID,
     input: LocationListInput,
     session: Session
   ): Promise<SecuredLocationList> {
@@ -586,7 +587,7 @@ export class LanguageService {
         node('engagement', 'LanguageEngagement'),
       ])
       .return(collect('engagement.id', 'engagementIds'))
-      .asResult<{ engagementIds: string[] }>()
+      .asResult<{ engagementIds: ID[] }>()
       .first();
 
     if (!result) {
@@ -637,8 +638,8 @@ export class LanguageService {
   }
 
   async addLocation(
-    languageId: string,
-    locationId: string,
+    languageId: ID,
+    locationId: ID,
     _session: Session
   ): Promise<void> {
     try {
@@ -654,8 +655,8 @@ export class LanguageService {
   }
 
   async removeLocation(
-    languageId: string,
-    locationId: string,
+    languageId: ID,
+    locationId: ID,
     _session: Session
   ): Promise<void> {
     try {
@@ -694,7 +695,7 @@ export class LanguageService {
   /**
    * Check if the language has no engagements that have firstScripture=true.
    */
-  protected async verifyExternalFirstScripture(id: string) {
+  protected async verifyExternalFirstScripture(id: ID) {
     const engagement = await this.db
       .query()
       .match([

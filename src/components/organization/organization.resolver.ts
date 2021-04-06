@@ -10,6 +10,7 @@ import {
 import {
   AnonSession,
   firstLettersOfWords,
+  ID,
   IdArg,
   IdField,
   LoggedInSession,
@@ -30,10 +31,10 @@ import { OrganizationService } from './organization.service';
 @ArgsType()
 class ModifyLocationArgs {
   @IdField()
-  organizationId: string;
+  organizationId: ID;
 
   @IdField()
-  locationId: string;
+  locationId: ID;
 }
 
 @Resolver(Organization)
@@ -56,7 +57,7 @@ export class OrganizationResolver {
   })
   async organization(
     @AnonSession() session: Session,
-    @IdArg() id: string
+    @IdArg() id: ID
   ): Promise<Organization> {
     return await this.orgs.readOne(id, session);
   }
@@ -113,7 +114,7 @@ export class OrganizationResolver {
   })
   async deleteOrganization(
     @LoggedInSession() session: Session,
-    @IdArg() id: string
+    @IdArg() id: ID
   ): Promise<boolean> {
     await this.orgs.delete(id, session);
     return true;

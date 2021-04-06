@@ -6,7 +6,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { AnonSession, IdArg, LoggedInSession, Session } from '../../common';
+import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
 import {
   AnyProduct,
   CreateProductInput,
@@ -32,7 +32,7 @@ export class ProductResolver {
   })
   async product(
     @AnonSession() session: Session,
-    @IdArg() id: string
+    @IdArg() id: ID
   ): Promise<AnyProduct> {
     return await this.productService.readOne(id, session);
   }
@@ -108,7 +108,7 @@ export class ProductResolver {
   })
   async deleteProduct(
     @LoggedInSession() session: Session,
-    @IdArg() id: string
+    @IdArg() id: ID
   ): Promise<boolean> {
     await this.productService.delete(id, session);
     return true;

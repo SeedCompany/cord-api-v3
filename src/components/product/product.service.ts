@@ -6,6 +6,7 @@ import { difference } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   generateId,
+  ID,
   InputException,
   NotFoundException,
   ServerException,
@@ -258,7 +259,7 @@ export class ProductService {
     return await this.readOne(result.id, session);
   }
 
-  async readOne(id: string, session: Session): Promise<AnyProduct> {
+  async readOne(id: ID, session: Session): Promise<AnyProduct> {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
@@ -497,7 +498,7 @@ export class ProductService {
     });
   }
 
-  async delete(id: string, session: Session): Promise<void> {
+  async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
     if (!object) {
@@ -555,7 +556,7 @@ export class ProductService {
   // for example, searching all products a engagement is a part of
   protected filterByEngagement(
     query: Query,
-    engagementId: string,
+    engagementId: ID,
     relationshipType: string,
     relationshipDirection: RelationDirection,
     label: string
@@ -576,7 +577,7 @@ export class ProductService {
   }
 
   protected async getProducibleByType(
-    id: string,
+    id: ID,
     type: string,
     session: Session
   ): Promise<Film | Story | Song | LiteracyMaterial> {

@@ -2,6 +2,7 @@ import { InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import {
+  ID,
   PaginatedList,
   SecuredList,
   SortablePaginationInput,
@@ -11,7 +12,7 @@ import { Budget } from './budget.dto';
 
 @InputType()
 export abstract class BudgetFilters {
-  readonly projectId?: string;
+  readonly projectId?: ID;
 }
 
 const defaultFilters = {};
@@ -37,7 +38,7 @@ export abstract class SecuredBudgetList extends SecuredList(Budget) {}
 
 @InputType()
 export abstract class BudgetRecordFilters {
-  readonly budgetId?: string;
+  readonly budgetId?: ID;
 }
 
 @InputType()

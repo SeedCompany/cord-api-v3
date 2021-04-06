@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, relation } from 'cypher-query-builder';
+import { ID } from '../../common';
 import { DatabaseService } from '../../core';
 import { OngoingEngagementStatuses } from './dto';
 
@@ -7,7 +8,7 @@ import { OngoingEngagementStatuses } from './dto';
 export class EngagementRepository {
   constructor(private readonly db: DatabaseService) {}
 
-  async getOngoingEngagementIds(projectId: string) {
+  async getOngoingEngagementIds(projectId: ID) {
     const rows = await this.db
       .query()
       .match([
@@ -23,7 +24,7 @@ export class EngagementRepository {
         },
       })
       .return('engagement.id as id')
-      .asResult<{ id: string }>()
+      .asResult<{ id: ID }>()
       .run();
     return rows.map((r) => r.id);
   }

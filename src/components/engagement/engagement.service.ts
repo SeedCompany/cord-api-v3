@@ -6,6 +6,7 @@ import { MergeExclusive } from 'type-fest';
 import {
   DuplicateException,
   generateId,
+  ID,
   InputException,
   NotFoundException,
   SecuredResource,
@@ -591,7 +592,7 @@ export class EngagementService {
   // READ ///////////////////////////////////////////////////////////
 
   async readOne(
-    id: string,
+    id: ID,
     session: Session
   ): Promise<LanguageEngagement | InternshipEngagement> {
     this.logger.debug('readOne', { id, userId: session.userId });
@@ -678,12 +679,12 @@ export class EngagementService {
           >
         > & {
           __typename: 'LanguageEngagement' | 'InternshipEngagement';
-          language: string;
-          ceremony: string;
-          project: string;
-          intern: string;
-          countryOfOrigin: string;
-          mentor: string;
+          language: ID;
+          ceremony: ID;
+          project: ID;
+          intern: ID;
+          countryOfOrigin: ID;
+          mentor: ID;
           pnpData?: Node<PnpData>;
           memberRoles: Role[][];
         }
@@ -1023,7 +1024,7 @@ export class EngagementService {
 
   // DELETE /////////////////////////////////////////////////////////
 
-  async delete(id: string, session: Session): Promise<void> {
+  async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
     if (!object) {
@@ -1045,7 +1046,7 @@ export class EngagementService {
         node('project', 'Project'),
       ])
       .return('project.id as projectId')
-      .asResult<{ projectId: string }>()
+      .asResult<{ projectId: ID }>()
       .first();
 
     if (result) {
@@ -1166,7 +1167,7 @@ export class EngagementService {
     };
   }
 
-  async hasOngoing(projectId: string) {
+  async hasOngoing(projectId: ID) {
     const ids = await this.repo.getOngoingEngagementIds(projectId);
     return ids.length > 0;
   }
@@ -1278,7 +1279,7 @@ export class EngagementService {
     );
   }
 
-  private async savePnpData(id: string, pnpData: PnpData | null) {
+  private async savePnpData(id: ID, pnpData: PnpData | null) {
     const query = this.db.query();
     pnpData
       ? query
@@ -1299,8 +1300,8 @@ export class EngagementService {
   }
 
   protected async verifyRelationshipEligibility(
-    projectId: string,
-    otherId: string,
+    projectId: ID,
+    otherId: ID,
     type: ProjectType
   ): Promise<void> {
     const isTranslation = type === ProjectType.Translation;
@@ -1368,7 +1369,7 @@ export class EngagementService {
   protected async verifyFirstScripture({
     engagementId,
     languageId,
-  }: MergeExclusive<{ engagementId: string }, { languageId: string }>) {
+  }: MergeExclusive<{ engagementId: ID }, { languageId: ID }>) {
     const startQuery = () =>
       this.db.query().call((query) =>
         engagementId
@@ -1437,7 +1438,7 @@ export class EngagementService {
   /**
    * [BUSINESS RULE] Only Projects with a Status of 'In Development' can have Engagements created or deleted.
    */
-  protected async verifyProjectStatus(projectId: string, session: Session) {
+  protected async verifyProjectStatus(projectId: ID, session: Session) {
     if (this.config.migration) {
       return;
     }

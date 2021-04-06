@@ -6,6 +6,7 @@ import { DateTime } from 'luxon';
 import {
   DuplicateException,
   generateId,
+  ID,
   InputException,
   MaybeAsync,
   NotFoundException,
@@ -78,8 +79,8 @@ export class ProjectMemberService {
   }
 
   protected async verifyRelationshipEligibility(
-    projectId: string,
-    userId: string
+    projectId: ID,
+    userId: ID
   ): Promise<void> {
     const result = await this.db
       .query()
@@ -188,7 +189,7 @@ export class ProjectMemberService {
     }
   }
 
-  async readOne(id: string, session: Session): Promise<ProjectMember> {
+  async readOne(id: ID, session: Session): Promise<ProjectMember> {
     this.logger.debug(`read one`, {
       id,
       userId: session.userId,
@@ -216,7 +217,7 @@ export class ProjectMemberService {
       .return('node, propList, user.id as userId, memberRoles')
       .asResult<
         StandardReadResult<DbPropsOfDto<ProjectMember>> & {
-          userId: string;
+          userId: ID;
           memberRoles: Role[][];
         }
       >();
@@ -302,7 +303,7 @@ export class ProjectMemberService {
     }
   }
 
-  async delete(id: string, session: Session): Promise<void> {
+  async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
     if (!object) {
@@ -359,7 +360,7 @@ export class ProjectMemberService {
 
   protected filterByProject(
     query: Query,
-    projectId: string,
+    projectId: ID,
     relationshipType: string,
     relationshipDirection: RelationDirection,
     label: string
@@ -373,7 +374,7 @@ export class ProjectMemberService {
 
   // when a new user is added to a project, all the project admins need to have access
   // to some of that user's properties in order to know about that user
-  // async addProjectAdminsToUserSg(projectId: string, userId: string) {
+  // async addProjectAdminsToUserSg(projectId: ID, userId: ID) {
   //   // get all admins of a project, then add the role for them to see the user info
   //   const result = await this.db
   //     .query()

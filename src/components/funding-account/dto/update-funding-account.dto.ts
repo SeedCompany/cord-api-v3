@@ -1,13 +1,13 @@
 import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { Max, Min, ValidateNested } from 'class-validator';
-import { IdField, NameField } from '../../../common';
+import { ID, IdField, NameField } from '../../../common';
 import { FundingAccount } from './funding-account.dto';
 
 @InputType()
 export abstract class UpdateFundingAccount {
   @IdField()
-  readonly id: string;
+  readonly id: ID;
 
   @NameField({ nullable: true })
   readonly name?: string;

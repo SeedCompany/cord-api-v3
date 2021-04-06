@@ -11,6 +11,7 @@ import { stripIndent } from 'common-tags';
 import {
   AnonSession,
   firstLettersOfWords,
+  ID,
   IdArg,
   IdField,
   LoggedInSession,
@@ -34,10 +35,10 @@ import { LanguageService } from './language.service';
 @ArgsType()
 class ModifyLocationArgs {
   @IdField()
-  languageId: string;
+  languageId: ID;
 
   @IdField()
-  locationId: string;
+  locationId: ID;
 }
 
 @Resolver(Language)
@@ -49,7 +50,7 @@ export class LanguageResolver {
   })
   async language(
     @AnonSession() session: Session,
-    @IdArg() id: string
+    @IdArg() id: ID
   ): Promise<Language> {
     return await this.langService.readOne(id, session);
   }
@@ -163,7 +164,7 @@ export class LanguageResolver {
   })
   async deleteLanguage(
     @LoggedInSession() session: Session,
-    @IdArg() id: string
+    @IdArg() id: ID
   ): Promise<boolean> {
     await this.langService.delete(id, session);
     return true;

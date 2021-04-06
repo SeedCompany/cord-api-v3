@@ -14,6 +14,7 @@ import { Driver, Session as Neo4jSession } from 'neo4j-driver';
 import { assert } from 'ts-essentials';
 import {
   AbstractClassType,
+  ID,
   isSecured,
   many,
   Order,
@@ -353,7 +354,7 @@ export class DatabaseService {
       keyof TObject | { secure: boolean; name: keyof TObject; list?: boolean }
     >;
     nodevar: string;
-    owningOrgId?: string;
+    owningOrgId?: ID;
     skipOwningOrgCheck?: boolean;
     aclReadProp?: string;
     aclEditProp?: string;
@@ -529,7 +530,7 @@ export class DatabaseService {
   }
 
   // eslint-disable-next-line @seedcompany/no-unused-vars
-  async checkDeletePermission(id: string, session: Partial<Session> | string) {
+  async checkDeletePermission(id: ID, session: Partial<Session> | string) {
     return true;
     // const query = this.db
     //   .query()
@@ -655,7 +656,7 @@ export class DatabaseService {
     props,
     nodevar,
   }: {
-    id: string;
+    id: ID;
     session: Session;
     props: string[];
     nodevar: string;
@@ -679,7 +680,7 @@ export class DatabaseService {
     prop,
     nodevar,
   }: {
-    id: string;
+    id: ID;
     session: Session;
     prop: string;
     nodevar: string;
@@ -712,7 +713,7 @@ export class DatabaseService {
     srcNodeLabel,
   }: {
     session: Session;
-    id: string;
+    id: ID;
     relName: string;
     srcNodeLabel: string;
   }): Promise<boolean> {
@@ -744,7 +745,7 @@ export class DatabaseService {
     props,
     nodevar,
   }: {
-    id: string;
+    id: ID;
     session: Session;
     props: string[];
     nodevar: string;
@@ -768,7 +769,7 @@ export class DatabaseService {
     prop,
     nodevar,
   }: {
-    id: string;
+    id: ID;
     session: Session;
     prop: string;
     nodevar: string;
@@ -796,7 +797,7 @@ export class DatabaseService {
   }
 
   async addLabelsToPropNodes(
-    baseNodeId: string,
+    baseNodeId: ID,
     property: string,
     lables: string[]
   ): Promise<void> {

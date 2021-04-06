@@ -1,15 +1,15 @@
 import { Field, InputType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { IdField } from '../../../common';
+import { ID, IdField } from '../../../common';
 
 @InputType()
 export class RemoveOrganizationFromUser {
   @IdField()
-  readonly orgId: string;
+  readonly orgId: ID;
 
   @IdField()
-  readonly userId: string;
+  readonly userId: ID;
 }
 
 @InputType()

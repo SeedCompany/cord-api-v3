@@ -1,8 +1,9 @@
 import type { Node } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
+import { ID } from '../../../common';
 
 export interface BaseNode {
-  id: string;
+  id: ID;
   createdAt: DateTime;
 }
 

@@ -1,7 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { IdField, ISO31661Alpha3, NameField } from '../../../common';
+import { ID, IdField, ISO31661Alpha3, NameField } from '../../../common';
 import { Transform } from '../../../common/transform.decorator';
 import { LocationType } from './location-type.enum';
 import { Location } from './location.dto';
@@ -9,7 +9,7 @@ import { Location } from './location.dto';
 @InputType()
 export abstract class UpdateLocation {
   @IdField()
-  readonly id: string;
+  readonly id: ID;
 
   @NameField({ nullable: true })
   readonly name?: string;
@@ -26,10 +26,10 @@ export abstract class UpdateLocation {
   readonly isoAlpha3?: string | null;
 
   @IdField({ nullable: true })
-  readonly fundingAccountId?: string;
+  readonly fundingAccountId?: ID;
 
   @IdField({ nullable: true })
-  readonly defaultFieldRegionId?: string;
+  readonly defaultFieldRegionId?: ID;
 }
 
 @InputType()

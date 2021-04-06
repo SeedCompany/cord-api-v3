@@ -2,13 +2,13 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { DateTime } from 'luxon';
-import { DateTimeField, IdField } from '../../../../common';
+import { DateTimeField, ID, IdField } from '../../../../common';
 import { Unavailability } from './unavailability.dto';
 
 @InputType()
 export abstract class UpdateUnavailability {
   @IdField()
-  readonly id: string;
+  readonly id: ID;
 
   @Field({ nullable: true })
   readonly description?: string;

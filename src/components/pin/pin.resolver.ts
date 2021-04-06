@@ -1,5 +1,6 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import {
+  ID,
   IdArg,
   LoggedInSession,
   NotImplementedException,
@@ -21,7 +22,7 @@ export class PinResolver {
     @IdArg({
       description: 'A resource ID',
     })
-    id: string
+    id: ID
   ): Promise<boolean> {
     return await this.pins.isPinned(id, session);
   }
@@ -35,7 +36,7 @@ export class PinResolver {
     @IdArg({
       description: 'A resource ID',
     })
-    id: string,
+    id: ID,
     @Args('pinned', {
       nullable: true,
       description:

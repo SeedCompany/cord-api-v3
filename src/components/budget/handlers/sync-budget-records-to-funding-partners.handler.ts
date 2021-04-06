@@ -3,6 +3,7 @@ import { difference } from 'lodash';
 import {
   DuplicateException,
   fiscalYears,
+  ID,
   NotFoundException,
   Secured,
   Session,
@@ -149,7 +150,7 @@ export class SyncBudgetRecordsToFundingPartners
 
   private async addRecords(
     budget: Budget,
-    organizationId: string,
+    organizationId: ID,
     additions: readonly FiscalYear[],
     session: Session
   ) {
@@ -178,7 +179,7 @@ export class SyncBudgetRecordsToFundingPartners
 
   private async removeRecords(
     budget: Budget,
-    organizationId: string,
+    organizationId: ID,
     removals: readonly FiscalYear[],
     session: Session
   ) {
@@ -206,7 +207,7 @@ export class SyncBudgetRecordsToFundingPartners
         node('organization', 'Organization'),
       ])
       .return('organization.id as id')
-      .asResult<{ id: string }>()
+      .asResult<{ id: ID }>()
       .first();
     if (!result) {
       throw new NotFoundException("Could not find partner's organization");
@@ -224,7 +225,7 @@ export class SyncBudgetRecordsToFundingPartners
         node('project', 'Project'),
       ])
       .return('project.id as id')
-      .asResult<{ id: string }>()
+      .asResult<{ id: ID }>()
       .first();
     if (!result) {
       throw new NotFoundException("Unable to find partnership's project");

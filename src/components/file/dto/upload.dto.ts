@@ -1,10 +1,10 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { IdField } from '../../../common';
+import { ID, IdField } from '../../../common';
 
 @ObjectType()
 export abstract class RequestUploadOutput {
   @IdField()
-  readonly id: string;
+  readonly id: ID;
 
   @Field({
     description: 'A pre-signed url to upload the file to',
@@ -17,13 +17,13 @@ export abstract class CreateFileVersionInput {
   @IdField({
     description: 'The ID returned from the `requestFileUpload` mutation',
   })
-  readonly uploadId: string;
+  readonly uploadId: ID;
 
   @IdField({
     description:
       'The directory ID if creating a new file or the file ID if creating a new version',
   })
-  readonly parentId: string;
+  readonly parentId: ID;
 
   @Field({
     description: 'The file name',
@@ -43,7 +43,7 @@ export abstract class CreateDefinedFileVersionInput {
   @IdField({
     description: 'The ID returned from the `requestFileUpload` mutation',
   })
-  readonly uploadId: string;
+  readonly uploadId: ID;
 
   @Field({
     description: 'An optional name. Defaults to file name.',
@@ -63,7 +63,7 @@ export abstract class CreateDirectoryInput {
   @IdField({
     description: 'The ID for the parent directory',
   })
-  readonly parentId: string;
+  readonly parentId: ID;
 
   @Field({
     description: 'The directory name',

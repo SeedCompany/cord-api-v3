@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { DateTime } from 'luxon';
-import { isValidId } from '../../src/common';
+import { ID, isValidId } from '../../src/common';
 import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,
@@ -154,7 +154,7 @@ export async function createInternshipEngagementWithMinimumValues(
   return actual;
 }
 
-export async function getCurrentEngagementStatus(app: TestApp, id: string) {
+export async function getCurrentEngagementStatus(app: TestApp, id: ID) {
   const result = await app.graphql.query(
     gql`
     query {

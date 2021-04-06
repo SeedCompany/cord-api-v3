@@ -7,6 +7,7 @@ import { DateTime } from 'luxon';
 import { Except } from 'type-fest';
 import {
   generateId,
+  ID,
   NotFoundException,
   ServerException,
   Session,
@@ -51,7 +52,7 @@ export class FileRepository {
     @Logger('file:repository') private readonly logger: ILogger
   ) {}
 
-  async getBaseNodeById(id: string, session: Session): Promise<BaseNode> {
+  async getBaseNodeById(id: ID, session: Session): Promise<BaseNode> {
     return await this.getBaseNodeBy(session, [
       [node('node', 'FileNode', { id })],
       matchName(),
@@ -59,7 +60,7 @@ export class FileRepository {
   }
 
   async getBaseNodeByName(
-    parentId: string,
+    parentId: ID,
     name: string,
     session: Session
   ): Promise<BaseNode> {
@@ -74,7 +75,7 @@ export class FileRepository {
     ]);
   }
 
-  async getParentsById(id: string, session: Session): Promise<BaseNode[]> {
+  async getParentsById(id: ID, session: Session): Promise<BaseNode[]> {
     const query = this.getBaseNodeQuery(session, [
       [
         node('start', 'FileNode', { id }),
@@ -89,7 +90,7 @@ export class FileRepository {
 
   async getChildrenById(
     session: Session,
-    nodeId: string,
+    nodeId: ID,
     options: FileListInput | undefined
   ) {
     options = options ?? FileListInput.defaultVal;
@@ -179,7 +180,7 @@ export class FileRepository {
     return query;
   }
 
-  async getLatestVersionId(fileId: string): Promise<string> {
+  async getLatestVersionId(fileId: ID): Promise<ID> {
     const latestVersionResult = await this.db
       .query()
       .match([
@@ -197,7 +198,7 @@ export class FileRepository {
     return latestVersionResult.fv.properties.id;
   }
 
-  async getVersionDetails(id: string, session: Session): Promise<FileVersion> {
+  async getVersionDetails(id: ID, session: Session): Promise<FileVersion> {
     const query = this.db
       .query()
       .match(node('node', 'FileVersion', { id }))
@@ -212,7 +213,7 @@ export class FileRepository {
         StandardReadResult<
           DbPropsOfDto<Except<FileVersion, 'type' | 'createdById'>>
         > & {
-          createdById: string;
+          createdById: ID;
         }
       >();
     const result = await query.first();
@@ -230,10 +231,10 @@ export class FileRepository {
   }
 
   async createDirectory(
-    parentId: string | undefined,
+    parentId: ID | undefined,
     name: string,
     session: Session
-  ): Promise<string> {
+  ): Promise<ID> {
     const props: Property[] = [
       {
         key: 'name',
@@ -259,7 +260,7 @@ export class FileRepository {
         props
       )
       .return('node.id as id')
-      .asResult<{ id: string }>();
+      .asResult<{ id: ID }>();
 
     const result = await createFile.first();
 
@@ -276,12 +277,7 @@ export class FileRepository {
     return result.id;
   }
 
-  async createFile(
-    fileId: string,
-    name: string,
-    session: Session,
-    parentId?: string
-  ) {
+  async createFile(fileId: ID, name: string, session: Session, parentId?: ID) {
     const props: Property[] = [
       {
         key: 'name',
@@ -302,7 +298,7 @@ export class FileRepository {
       .call(matchRequestingUser, session)
       .call(createBaseNode, fileId, ['File', 'FileNode'], props)
       .return('node.id as id')
-      .asResult<{ id: string }>();
+      .asResult<{ id: ID }>();
 
     const result = await createFile.first();
 
@@ -320,7 +316,7 @@ export class FileRepository {
   }
 
   async createFileVersion(
-    fileId: string,
+    fileId: ID,
     input: Pick<FileVersion, 'id' | 'name' | 'mimeType' | 'size'>,
     session: Session
   ) {
@@ -356,7 +352,7 @@ export class FileRepository {
       .call(matchRequestingUser, session)
       .call(createBaseNode, input.id, ['FileVersion', 'FileNode'], props)
       .return('node.id as id')
-      .asResult<{ id: string }>();
+      .asResult<{ id: ID }>();
 
     const result = await createFile.first();
 
@@ -370,7 +366,7 @@ export class FileRepository {
     return result;
   }
 
-  private async attachCreator(id: string, session: Session) {
+  private async attachCreator(id: ID, session: Session) {
     await this.db
       .query()
       .match([
@@ -388,7 +384,7 @@ export class FileRepository {
       .run();
   }
 
-  async attachBaseNode(id: string, baseNodeId: string, attachName: string) {
+  async attachBaseNode(id: ID, baseNodeId: ID, attachName: string) {
     await this.db
       .query()
       .match([
@@ -403,7 +399,7 @@ export class FileRepository {
       .run();
   }
 
-  private async attachParent(id: string, parentId: string) {
+  private async attachParent(id: ID, parentId: ID) {
     await this.db
       .query()
       .match([
@@ -433,7 +429,7 @@ export class FileRepository {
     }
   }
 
-  async move(id: string, newParentId: string, session: Session): Promise<void> {
+  async move(id: ID, newParentId: ID, session: Session): Promise<void> {
     try {
       await this.db
         .query()
@@ -492,7 +488,7 @@ export class FileRepository {
     const uniqueRelationships = ['createdBy', 'parent'];
 
     for (const fn of fileNodes) {
-      const id = fn.id as string;
+      const id = fn.id as ID;
       for (const rel of uniqueRelationships) {
         const unique = await this.db.isRelationshipUnique({
           session,

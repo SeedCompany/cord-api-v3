@@ -1,5 +1,5 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { AnonSession, IdArg, LoggedInSession, Session } from '../../common';
+import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
 import {
   CreateFilmInput,
   CreateFilmOutput,
@@ -18,10 +18,7 @@ export class FilmResolver {
   @Query(() => Film, {
     description: 'Look up a film by its ID',
   })
-  async film(
-    @AnonSession() session: Session,
-    @IdArg() id: string
-  ): Promise<Film> {
+  async film(@AnonSession() session: Session, @IdArg() id: ID): Promise<Film> {
     return await this.filmService.readOne(id, session);
   }
 
@@ -67,7 +64,7 @@ export class FilmResolver {
   })
   async deleteFilm(
     @LoggedInSession() session: Session,
-    @IdArg() id: string
+    @IdArg() id: ID
   ): Promise<boolean> {
     await this.filmService.delete(id, session);
     return true;

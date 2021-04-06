@@ -6,7 +6,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { AnonSession, IdArg, LoggedInSession, Session } from '../../common';
+import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
 import { SecuredUser, UserService } from '../user';
 import {
   CreateFieldZoneInput,
@@ -31,7 +31,7 @@ export class FieldZoneResolver {
   })
   async fieldZone(
     @AnonSession() session: Session,
-    @IdArg() id: string
+    @IdArg() id: ID
   ): Promise<FieldZone> {
     return await this.fieldZoneService.readOne(id, session);
   }
@@ -91,7 +91,7 @@ export class FieldZoneResolver {
   })
   async deleteFieldZone(
     @LoggedInSession() session: Session,
-    @IdArg() id: string
+    @IdArg() id: ID
   ): Promise<boolean> {
     await this.fieldZoneService.delete(id, session);
     return true;

@@ -1,10 +1,10 @@
-import { PaginationInput } from '../../../common';
+import { ID, PaginationInput } from '../../../common';
 import { QueryWithResult } from '../query.overrides';
 
 export async function runListQuery<T>(
-  query: QueryWithResult<{ items: string[]; total: number }>,
+  query: QueryWithResult<{ items: ID[]; total: number }>,
   input: PaginationInput,
-  readOne: (id: string) => Promise<T>
+  readOne: (id: ID) => Promise<T>
 ) {
   const result = await query.first();
 

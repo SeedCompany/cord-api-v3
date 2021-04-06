@@ -3,7 +3,7 @@ import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { some } from 'lodash';
 import { DateTime, Interval } from 'luxon';
-import { generateId, InputException } from '../src/common';
+import { generateId, ID, InputException } from '../src/common';
 import { Powers } from '../src/components/authorization/dto/powers';
 import {
   CreateInternshipEngagement,
@@ -1191,7 +1191,7 @@ describe('Engagement e2e', () => {
         );
 
         const actual = result.updateProject.project.engagements.items.find(
-          (e: { id: string }) => e.id === engagement.id
+          (e: { id: ID }) => e.id === engagement.id
         );
         expect(actual.status.value).toBe(EngagementStatus[newStatus]);
       });

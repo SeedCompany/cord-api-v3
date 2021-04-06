@@ -1,4 +1,4 @@
-import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, ID as IDType, InputType, ObjectType } from '@nestjs/graphql';
 import { Transform, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { uniq } from 'lodash';
@@ -7,6 +7,7 @@ import {
   CalendarDate,
   DateField,
   DateTimeField,
+  ID,
   IdField,
   IsId,
   NameField,
@@ -28,26 +29,26 @@ export abstract class CreateProject {
     description: 'A primary location ID',
     nullable: true,
   })
-  readonly primaryLocationId?: string;
+  readonly primaryLocationId?: ID;
 
-  @Field(() => [ID], {
+  @Field(() => [IDType], {
     description: 'Other location IDs',
     nullable: true,
   })
   @IsId({ each: true })
-  readonly otherLocationIds?: string[];
+  readonly otherLocationIds?: ID[];
 
   @IdField({
     description: 'A marketing primary location ID',
     nullable: true,
   })
-  readonly marketingLocationId?: string;
+  readonly marketingLocationId?: ID;
 
   @IdField({
     description: 'A field region ID',
     nullable: true,
   })
-  readonly fieldRegionId?: string;
+  readonly fieldRegionId?: ID;
 
   @DateField({ nullable: true })
   readonly mouStart?: CalendarDate;

@@ -1,5 +1,5 @@
 import { node, Query, relation } from 'cypher-query-builder';
-import { Session } from '../../../common';
+import { ID, Session } from '../../../common';
 import { collect } from './cypher-functions';
 import { mapping } from './mapping';
 
@@ -36,7 +36,7 @@ export const matchPropList = (query: Query, nodeName = 'node') =>
     ]);
 
 // Have to match project before using this
-export const matchMemberRoles = (query: Query, userId: string) =>
+export const matchMemberRoles = (query: Query, userId: ID) =>
   query
     .with(['project', 'node', 'propList'])
     .optionalMatch([

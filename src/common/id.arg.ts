@@ -1,12 +1,13 @@
 import { ArgumentMetadata, PipeTransform, Type } from '@nestjs/common';
-import { Args, ArgsOptions, ID } from '@nestjs/graphql';
+import { Args, ArgsOptions, ID as IdType } from '@nestjs/graphql';
 import { ValidationPipe } from '../core/validation.pipe';
+import { ID } from './id-field';
 import { IsId } from './validators';
 
 // just an object with the validator metadata
 class IdHolder {
   @IsId()
-  id: string;
+  id: ID;
 }
 
 class ValidateIdPipe implements PipeTransform {
@@ -26,4 +27,5 @@ class ValidateIdPipe implements PipeTransform {
 export const IdArg = (
   opts: Partial<ArgsOptions> = {},
   ...pipes: Array<Type<PipeTransform> | PipeTransform>
-) => Args({ name: 'id', type: () => ID, ...opts }, ValidateIdPipe, ...pipes);
+) =>
+  Args({ name: 'id', type: () => IdType, ...opts }, ValidateIdPipe, ...pipes);

@@ -4,6 +4,7 @@ import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
 import {
   DateTimeField,
+  ID,
   IntersectionType,
   parentIdMiddleware,
   Resource,
@@ -78,13 +79,13 @@ class Project extends IntersectionType(Resource, Pinnable) {
   @Field(() => ProjectStatus)
   readonly status: ProjectStatus;
 
-  readonly primaryLocation: Secured<string>;
+  readonly primaryLocation: Secured<ID>;
 
-  readonly marketingLocation: Secured<string>;
+  readonly marketingLocation: Secured<ID>;
 
-  readonly fieldRegion: Secured<string>;
+  readonly fieldRegion: Secured<ID>;
 
-  readonly owningOrganization: Secured<string>;
+  readonly owningOrganization: Secured<ID>;
 
   @Field()
   readonly mouStart: SecuredDate;
