@@ -1,5 +1,5 @@
 import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { AnonSession, SecuredString, Session } from '../../common';
+import { AnonSession, Session } from '../../common';
 import { FileService, SecuredFile } from '../file';
 import { LanguageService } from '../language';
 import { SecuredLanguage } from '../language/dto';
@@ -44,14 +44,6 @@ export class LanguageEngagementResolver {
       input || ProductListInput.defaultVal,
       session
     );
-  }
-
-  @ResolveField(() => SecuredString, {
-    description: 'The legacy paratext ID',
-    deprecationReason: 'Use `Engagement.paratextRegistryId` instead',
-  })
-  paraTextRegistryId(@Parent() engagement: LanguageEngagement): SecuredString {
-    return engagement.paratextRegistryId;
   }
 
   @ResolveField(() => SecuredFile)

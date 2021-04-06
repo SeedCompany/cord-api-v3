@@ -1,6 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, Node, Query, relation } from 'cypher-query-builder';
-import { pickBy } from 'lodash';
 import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
 import {
@@ -213,7 +212,7 @@ export class EngagementService {
       ),
       ...property(
         'paratextRegistryId',
-        input.paratextRegistryId || input.paraTextRegistryId || undefined,
+        input.paratextRegistryId,
         'languageEngagement'
       ),
       ...property('pnp', pnpId || undefined, 'languageEngagement'),
@@ -791,15 +790,11 @@ export class EngagementService {
       );
     }
 
-    const { pnp, paratextRegistryId, paraTextRegistryId, ...rest } = input;
-    const changes = pickBy(
-      {
-        ...rest,
-        paratextRegistryId: paratextRegistryId || paraTextRegistryId,
-        modifiedAt: DateTime.local(),
-      },
-      (val) => val !== undefined
-    );
+    const { pnp, ...rest } = input;
+    const changes = {
+      ...rest,
+      modifiedAt: DateTime.local(),
+    };
     const object = (await this.readOne(
       input.id,
       session

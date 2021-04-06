@@ -44,12 +44,6 @@ export abstract class UpdateLanguageEngagement extends UpdateEngagement {
   @Field({ nullable: true })
   readonly lukePartnership?: boolean;
 
-  @Field({
-    deprecationReason: 'Not proper case',
-    nullable: true,
-  })
-  readonly paraTextRegistryId?: string;
-
   @Field({ nullable: true })
   readonly paratextRegistryId?: string;
 
