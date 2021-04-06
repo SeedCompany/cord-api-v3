@@ -3,6 +3,7 @@ import { inArray, isNull, node, relation } from 'cypher-query-builder';
 import { DateTime, Interval } from 'luxon';
 import {
   generateId,
+  ID,
   NotFoundException,
   ServerException,
   Session,
@@ -125,7 +126,7 @@ export class PeriodicReportService {
   }
 
   async uploadFile(
-    reportId: string,
+    reportId: ID,
     file: CreateDefinedFileVersionInput,
     session: Session
   ) {
@@ -167,7 +168,7 @@ export class PeriodicReportService {
     );
   }
 
-  async readOne(id: string, session: Session): Promise<PeriodicReport> {
+  async readOne(id: ID, session: Session): Promise<PeriodicReport> {
     this.logger.debug(`read one`, {
       id,
       userId: session.userId,
@@ -221,7 +222,7 @@ export class PeriodicReportService {
     };
   }
 
-  async delete(id: string, session: Session): Promise<void> {
+  async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
     if (!object) {
@@ -352,7 +353,7 @@ export class PeriodicReportService {
         },
       })
       .return('report.id as reportId')
-      .asResult<{ reportId: string }>()
+      .asResult<{ reportId: ID }>()
       .run();
 
     await Promise.all(
@@ -376,7 +377,7 @@ export class PeriodicReportService {
         },
       })
       .return('report.id as reportId')
-      .asResult<{ reportId: string }>()
+      .asResult<{ reportId: ID }>()
       .run();
 
     await Promise.all(
@@ -419,7 +420,7 @@ export class PeriodicReportService {
         ),
       })
       .return('report.id as reportId')
-      .asResult<{ reportId: string }>()
+      .asResult<{ reportId: ID }>()
       .run();
 
     await Promise.all(

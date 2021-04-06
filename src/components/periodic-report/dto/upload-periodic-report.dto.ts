@@ -1,13 +1,13 @@
 import { Field, InputType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { IdField } from '../../../common';
+import { ID, IdField } from '../../../common';
 import { CreateDefinedFileVersionInput } from '../../file';
 
 @InputType()
 export abstract class UploadPeriodicReportInput {
   @IdField()
-  readonly reportId: string;
+  readonly reportId: ID;
 
   @Field({
     description: 'Initial version of the report file',

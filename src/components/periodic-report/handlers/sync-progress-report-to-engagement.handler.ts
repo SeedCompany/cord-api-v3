@@ -4,13 +4,7 @@ import {
   getIntervalsDifference,
   Session,
 } from '../../../common';
-import {
-  DatabaseService,
-  EventsHandler,
-  IEventHandler,
-  ILogger,
-  Logger,
-} from '../../../core';
+import { EventsHandler, IEventHandler, ILogger, Logger } from '../../../core';
 import { Engagement } from '../../engagement';
 import {
   EngagementCreatedEvent,
@@ -25,7 +19,6 @@ type SubscribedEvent = EngagementCreatedEvent | EngagementUpdatedEvent;
 export class SyncProgressReportToEngagementDateRange
   implements IEventHandler<SubscribedEvent> {
   constructor(
-    private readonly db: DatabaseService,
     private readonly periodicReports: PeriodicReportService,
     @Logger('progress-report:engagement-sync') private readonly logger: ILogger
   ) {}
