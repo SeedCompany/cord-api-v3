@@ -2,6 +2,7 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
+  ID,
   Resource,
   SecuredBoolean,
   SecuredDate,
@@ -24,7 +25,7 @@ export class EthnologueLanguage {
   static readonly Props = keysOf<EthnologueLanguage>();
   static readonly SecuredProps = keysOf<SecuredProps<EthnologueLanguage>>();
 
-  readonly id: string;
+  readonly id: ID;
 
   @Field({
     description: 'ISO 639-3 code',
