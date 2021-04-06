@@ -17,7 +17,7 @@ import * as fragments from './fragments';
 export const generateFakeFile = () => ({
   name: faker.system.fileName(),
   content: Buffer.from(faker.image.dataUri(200, 200).split(',')[1], 'base64'),
-  size: faker.random.number(1_000_000),
+  size: faker.datatype.number(1_000_000),
   mimeType: faker.random.arrayElement(mimeTypes).name,
 });
 

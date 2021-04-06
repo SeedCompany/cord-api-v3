@@ -13,7 +13,7 @@ export async function createFundingAccount(
 ) {
   const name = input.name || faker.hacker.noun() + faker.company.companyName();
   const accountNumber =
-    input.accountNumber || faker.random.number({ min: 0, max: 9 });
+    input.accountNumber || faker.datatype.number({ min: 0, max: 9 });
 
   const result = await app.graphql.mutate(
     gql`
