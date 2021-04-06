@@ -444,35 +444,26 @@ export class BudgetService {
     };
   }
 
-  async update(
-    { universalTemplateFile, ...input }: UpdateBudget,
-    session: Session
-  ): Promise<Budget> {
+  async update(input: UpdateBudget, session: Session): Promise<Budget> {
     const budget = await this.readOne(input.id, session);
 
-    const realChanges = await this.db.getActualChanges(Budget, budget, input);
+    const changes = this.db.getActualChanges(Budget, budget, input);
     await this.authorizationService.verifyCanEditChanges(
       Budget,
       budget,
-      realChanges
+      changes
     );
-    if (universalTemplateFile) {
-      await this.authorizationService.verifyCanEdit({
-        resource: Budget,
-        baseNode: budget,
-        prop: 'universalTemplateFile',
-      });
-      await this.files.updateDefinedFile(
-        budget.universalTemplateFile,
-        'budget.universalTemplateFile',
-        universalTemplateFile,
-        session
-      );
-    }
+    const { universalTemplateFile, ...simpleChanges } = changes;
+    await this.files.updateDefinedFile(
+      budget.universalTemplateFile,
+      'budget.universalTemplateFile',
+      universalTemplateFile,
+      session
+    );
     return await this.db.updateProperties({
-      type: 'Budget',
+      type: Budget,
       object: budget,
-      changes: realChanges,
+      changes: simpleChanges,
     });
   }
 
@@ -485,18 +476,18 @@ export class BudgetService {
     await this.verifyCanEdit(id, session);
 
     const br = await this.readOneRecord(id, session);
-    const realChanges = await this.db.getActualChanges(BudgetRecord, br, input);
+    const changes = this.db.getActualChanges(BudgetRecord, br, input);
     await this.authorizationService.verifyCanEditChanges(
       BudgetRecord,
       br,
-      realChanges
+      changes
     );
 
     try {
       const result = await this.db.updateProperties({
-        type: 'BudgetRecord',
+        type: BudgetRecord,
         object: br,
-        changes: realChanges,
+        changes: changes,
       });
       return result;
     } catch (e) {

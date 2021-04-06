@@ -435,14 +435,14 @@ export class FileService {
     input: CreateDefinedFileVersionInput | undefined,
     session: Session
   ) {
+    if (!input) {
+      return;
+    }
     // -- we technically check if they have the CreateFileVersion power, even though it's just an update, right?
     await this.authorizationService.checkPower(
       Powers.CreateFileVersion,
       session
     );
-    if (!input) {
-      return;
-    }
     if (!file.canRead || !file.canEdit || !file.value) {
       throw new UnauthorizedException(
         'You do not have permission to update this file',

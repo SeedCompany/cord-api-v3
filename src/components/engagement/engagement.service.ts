@@ -795,34 +795,20 @@ export class EngagementService {
       );
     }
 
-    const { pnp, ...rest } = input;
-    const changes = {
-      ...rest,
-      modifiedAt: DateTime.local(),
-    };
     const object = (await this.readOne(
       input.id,
       session
     )) as LanguageEngagement;
 
-    const realChanges = await this.db.getActualChanges(
+    const changes = this.db.getActualChanges(LanguageEngagement, object, input);
+    await this.authorizationService.verifyCanEditChanges(
       LanguageEngagement,
       object,
       changes
     );
-    await this.authorizationService.verifyCanEditChanges(
-      LanguageEngagement,
-      object,
-      realChanges
-    );
-    if (pnp) {
-      await this.authorizationService.verifyCanEdit({
-        resource: LanguageEngagement,
-        baseNode: object,
-        prop: 'pnp',
-        resourceName: 'Engagement',
-      });
-    }
+
+    const { pnp, ...simpleChanges } = changes;
+
     await this.files.updateDefinedFile(
       object.pnp,
       'engagement.pnp',
@@ -838,7 +824,10 @@ export class EngagementService {
       await this.db.updateProperties({
         type: LanguageEngagement,
         object: object,
-        changes: realChanges,
+        changes: {
+          ...simpleChanges,
+          modifiedAt: DateTime.local(),
+        },
       });
     } catch (exception) {
       this.logger.error('Error updating language engagement', { exception });
@@ -864,12 +853,7 @@ export class EngagementService {
   }
 
   async updateInternshipEngagement(
-    {
-      growthPlan,
-      mentorId,
-      countryOfOriginId,
-      ...input
-    }: UpdateInternshipEngagement,
+    input: UpdateInternshipEngagement,
     session: Session
   ): Promise<InternshipEngagement> {
     const createdAt = DateTime.local();
@@ -886,7 +870,7 @@ export class EngagementService {
       session
     )) as InternshipEngagement;
 
-    const realChanges = await this.db.getActualChanges(
+    const changes = this.db.getActualChanges(
       InternshipEngagement,
       object,
       input
@@ -894,34 +878,17 @@ export class EngagementService {
     await this.authorizationService.verifyCanEditChanges(
       InternshipEngagement,
       object,
-      realChanges
+      changes,
+      'engagement'
     );
-    if (mentorId) {
-      await this.authorizationService.verifyCanEdit({
-        resource: InternshipEngagement,
-        baseNode: object,
-        prop: 'mentor',
-        propName: 'mentorId',
-        resourceName: 'Engagement',
-      });
-    }
-    if (growthPlan) {
-      await this.authorizationService.verifyCanEdit({
-        resource: InternshipEngagement,
-        baseNode: object,
-        prop: 'growthPlan',
-        resourceName: 'engagement',
-      });
-    }
-    if (countryOfOriginId) {
-      await this.authorizationService.verifyCanEdit({
-        resource: InternshipEngagement,
-        baseNode: object,
-        prop: 'countryOfOrigin',
-        propName: 'countryOfOriginId',
-        resourceName: 'Engagement',
-      });
-    }
+
+    const {
+      mentorId,
+      countryOfOriginId,
+      growthPlan,
+      ...simpleChanges
+    } = changes;
+
     await this.files.updateDefinedFile(
       object.growthPlan,
       'engagement.growthPlan',
@@ -1006,7 +973,7 @@ export class EngagementService {
         type: 'InternshipEngagement',
         object,
         changes: {
-          ...realChanges,
+          ...simpleChanges,
           modifiedAt: DateTime.local(),
         },
       });

@@ -601,56 +601,42 @@ export class ProjectService {
         'project.sensitivity'
       );
 
-    if (input.step) {
-      await this.projectRules.verifyStepChange(input.id, session, input.step);
-    }
-
-    const changes = {
+    const changes = this.db.getActualChanges(IProject, currentProject, {
       ...input,
       modifiedAt: DateTime.local(),
       ...(input.step ? { status: stepToStatus(input.step) } : {}),
-    };
-
-    const { primaryLocationId, fieldRegionId, ...changesSimpleProps } = changes;
-
-    const realChanges = await this.db.getActualChanges(
-      IProject,
-      currentProject,
-      changesSimpleProps
-    );
-
-    await this.authorizationService.verifyCanEditChanges(
-      IProject,
-      currentProject,
-      realChanges
-    );
-    if (input.primaryLocationId) {
-      await this.authorizationService.verifyCanEdit({
-        resource: IProject,
-        baseNode: currentProject,
-        prop: 'primaryLocation',
-        propName: 'primaryLocationId',
-      });
-    }
-    if (input.fieldRegionId) {
-      await this.authorizationService.verifyCanEdit({
-        resource: IProject,
-        baseNode: currentProject,
-        prop: 'fieldRegion',
-        propName: 'fieldRegionId',
-      });
-    }
-
-    const result: Mutable<Project> = await this.db.updateProperties({
-      type: 'Project',
-      object: currentProject,
-      changes: realChanges,
     });
 
-    if (input.primaryLocationId) {
+    await this.authorizationService.verifyCanEditChanges(
+      currentProject.type === 'Translation'
+        ? TranslationProject
+        : InternshipProject,
+      currentProject,
+      changes,
+      'project'
+    );
+
+    if (changes.step) {
+      await this.projectRules.verifyStepChange(input.id, session, changes.step);
+    }
+
+    const {
+      primaryLocationId,
+      marketingLocationId,
+      fieldRegionId,
+      ...simpleChanges
+    } = changes;
+
+    const result: Mutable<Project> = await this.db.updateProperties({
+      type: IProject,
+      object: currentProject,
+      changes: simpleChanges,
+    });
+
+    if (primaryLocationId) {
       try {
         const location = await this.locationService.readOne(
-          input.primaryLocationId,
+          primaryLocationId,
           session
         );
         if (!location.fundingAccount.value) {
@@ -695,17 +681,15 @@ export class ProjectService {
         ]);
 
       await query.run();
-      const newPrimaryLocation = {
-        canRead: result.primaryLocation.canRead,
-        canEdit: result.primaryLocation.canEdit,
-        value: input.primaryLocationId,
+      result.primaryLocation = {
+        ...result.primaryLocation,
+        value: primaryLocationId,
       };
-      result.primaryLocation = newPrimaryLocation;
     }
 
-    if (input.fieldRegionId) {
+    if (fieldRegionId) {
       await this.validateOtherResourceId(
-        input.fieldRegionId,
+        fieldRegionId,
         'FieldRegion',
         'fieldRegionId',
         'Field region not found'
@@ -735,12 +719,10 @@ export class ProjectService {
         ]);
 
       await query.run();
-      const newFieldRegion = {
-        canRead: result.fieldRegion.canRead,
-        canEdit: result.fieldRegion.canEdit,
-        value: input.fieldRegionId,
+      result.fieldRegion = {
+        ...result.fieldRegion,
+        value: fieldRegionId,
       };
-      result.fieldRegion = newFieldRegion;
     }
 
     const event = new ProjectUpdatedEvent(
