@@ -1,7 +1,7 @@
 import { Field, Int, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
-import { ConditionalExcept, MergeExclusive } from 'type-fest';
+import { ConditionalExcept, MergeExclusive, Opaque } from 'type-fest';
 import {
   DateTimeField,
   ID,
@@ -108,7 +108,9 @@ export abstract class SecuredFile extends SecuredProperty(File) {}
 /**
  * A reference to a secured defined file. The value is the ID of the file.
  */
-export type DefinedFile = Secured<ID>;
+export type DefinedFile = Secured<FileId>;
+
+export type FileId = ID & Opaque<string, 'FileId'>;
 
 export const isDirectory = (node: AnyFileNode): node is Directory =>
   isDirectoryNode(node);

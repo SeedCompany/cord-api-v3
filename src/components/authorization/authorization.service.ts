@@ -18,6 +18,7 @@ import {
 } from '../../common';
 import { retry } from '../../common/retry';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
+import { ChangesOf, isRelation } from '../../core/database/changes';
 import {
   DbPropsOfDto,
   parseSecuredProperties,
@@ -119,11 +120,18 @@ export class AuthorizationService {
   async verifyCanEditChanges<TResource extends ResourceShape<any>>(
     resource: TResource,
     baseNode: TResource['prototype'],
-    changes: Partial<Record<keyof TResource['prototype'], any>>
+    changes: ChangesOf<TResource['prototype']>,
+    pathPrefix = camelCase(resource.name)
   ) {
-    const propsToChange = keys(changes);
-    for (const prop of propsToChange) {
-      await this.verifyCanEdit({ resource, baseNode, prop });
+    for (const prop of keys(changes)) {
+      await this.verifyCanEdit({
+        resource,
+        baseNode,
+        ...(isRelation(prop, baseNode)
+          ? { prop: prop.slice(0, -2), propPath: prop }
+          : { prop }),
+        pathPrefix: pathPrefix,
+      });
     }
   }
 
@@ -134,19 +142,23 @@ export class AuthorizationService {
     resource,
     baseNode,
     prop,
-    propName = prop,
-    resourceName = camelCase(resource.name),
+    propName,
+    propPath,
+    pathPrefix = camelCase(resource.name),
   }: {
     resource: TResource;
     baseNode: Partial<TResource['prototype']>;
     prop: Key;
+    /** @deprecated Use propPath instead */
     propName?: string;
-    resourceName?: string;
+    propPath?: string;
+    pathPrefix?: string;
   }) {
+    const path = propPath ?? propName ?? prop;
     if (isSecured(baseNode[prop]) && !baseNode[prop].canEdit) {
       throw new UnauthorizedException(
-        `You do not have permission to update ${resource.name}.${propName}`,
-        `${resourceName}.${propName}`
+        `You do not have permission to update ${resource.name}.${path}`,
+        compact([pathPrefix, path]).join('.')
       );
     }
   }

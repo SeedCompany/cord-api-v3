@@ -1,5 +1,6 @@
 import { Field, InterfaceType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
+import { keys as keysOf } from 'ts-transformer-keys';
 import { ID, IdField } from './id-field';
 import { DateTimeField } from './luxon.graphql';
 import { SecuredProps } from './secured-property';
@@ -7,6 +8,8 @@ import { AbstractClassType } from './types';
 
 @InterfaceType()
 export abstract class Resource {
+  static readonly Props: string[] = keysOf<Resource>();
+
   @IdField()
   readonly id: ID;
 

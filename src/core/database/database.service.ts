@@ -8,27 +8,25 @@ import {
   relation,
 } from 'cypher-query-builder';
 import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
-import { cloneDeep, isEqual, keys, Many, sortBy, upperFirst } from 'lodash';
+import { cloneDeep, keys, Many, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { Driver, Session as Neo4jSession } from 'neo4j-driver';
 import { assert } from 'ts-essentials';
 import {
   AbstractClassType,
-  CalendarDate,
   ID,
   isSecured,
   many,
   Order,
   Resource,
-  ResourceShape,
   ServerException,
   Session,
-  unwrapSecured,
   UnwrapSecured,
 } from '../../common';
 import { ILogger, Logger, ServiceUnavailableError } from '..';
 import { AbortError, retry, RetryOptions } from '../../common/retry';
 import { ConfigService } from '../config/config.service';
+import { getChanges } from './changes';
 import { determineSortValue } from './query.helpers';
 import { hasMore } from './results';
 import { Transactional } from './transactional.decorator';
@@ -51,10 +49,6 @@ export const property = (
     }),
   ],
 ];
-
-type ChangesOf<T extends Resource> = {
-  [Key in keyof T]?: UnwrapSecured<T[Key]>;
-};
 
 export const matchSession = (
   session: Session,
@@ -235,49 +229,7 @@ export class DatabaseService {
     });
   }
 
-  // expecting the changes of the "simple" properties.
-  async getActualChanges<TResourceStatic extends ResourceShape<any>>(
-    resource: TResourceStatic,
-    existingObject: TResourceStatic['prototype'],
-    changes: ChangesOf<TResourceStatic['prototype']>
-  ): Promise<ChangesOf<TResourceStatic['prototype']>> {
-    const props = resource.Props as Array<keyof TResourceStatic['prototype']>;
-    const realChanges: typeof changes = {};
-    for (const prop of props) {
-      if (changes[prop] === undefined) {
-        continue;
-      }
-      const unwrapped = unwrapSecured(existingObject[prop]);
-      if (unwrapped !== null && changes[prop] !== null) {
-        if (
-          Array.isArray(unwrapped) &&
-          !isEqual(sortBy(unwrapped), sortBy(changes[prop] as any[]))
-        ) {
-          realChanges[prop] = changes[prop];
-        }
-
-        if (
-          CalendarDate.isDate(unwrapped) &&
-          unwrapped.valueOf() !== (changes[prop] as CalendarDate).valueOf()
-        ) {
-          realChanges[prop] = changes[prop];
-          continue;
-        }
-        if (
-          DateTime.isDateTime(unwrapped) &&
-          unwrapped.valueOf() !== (changes[prop] as DateTime).valueOf()
-        ) {
-          realChanges[prop] = changes[prop];
-          continue;
-        }
-      }
-
-      if (unwrapped !== changes[prop]) {
-        realChanges[prop] = changes[prop];
-      }
-    }
-    return realChanges;
-  }
+  getActualChanges = getChanges;
 
   async updateProperties<TObject extends Resource>({
     type,
