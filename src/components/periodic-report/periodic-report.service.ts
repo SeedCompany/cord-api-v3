@@ -103,44 +103,25 @@ export class PeriodicReportService {
         throw new ServerException('Failed to create a periodic report');
       }
 
-      if (
-        input.type === ReportType.Financial ||
-        input.type === ReportType.Narrative
-      ) {
-        await this.db
-          .query()
-          .match(
-            node('project', 'Project', { id: input.projectOrEngagementId })
+      await this.db
+        .query()
+        .match(
+          node(
+            'node',
+            input.type === ReportType.Progress ? 'Engagement' : 'Project',
+            { id: input.projectOrEngagementId }
           )
-          .match(node('periodicReport', 'PeriodicReport', { id: result.id }))
-          .create([
-            node('project'),
-            relation('out', '', 'report', {
-              active: true,
-              createdAt: DateTime.local(),
-            }),
-            node('periodicReport'),
-          ])
-          .run();
-      } else {
-        await this.db
-          .query()
-          .match(
-            node('engagement', 'Engagement', {
-              id: input.projectOrEngagementId,
-            })
-          )
-          .match(node('periodicReport', 'PeriodicReport', { id: result.id }))
-          .create([
-            node('engagement'),
-            relation('out', '', 'report', {
-              active: true,
-              createdAt: DateTime.local(),
-            }),
-            node('periodicReport'),
-          ])
-          .run();
-      }
+        )
+        .match(node('periodicReport', 'PeriodicReport', { id: result.id }))
+        .create([
+          node('node'),
+          relation('out', '', 'report', {
+            active: true,
+            createdAt: DateTime.local(),
+          }),
+          node('periodicReport'),
+        ])
+        .run();
 
       return await this.readOne(id, session);
     } catch (exception) {
@@ -241,11 +222,6 @@ export class PeriodicReportService {
       type: props.type,
       start: props.start,
       end: props.end,
-      reportFile: {
-        value: result.reportFileId,
-        canEdit: true,
-        canRead: true,
-      },
       canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
@@ -361,40 +337,25 @@ export class PeriodicReportService {
   }
 
   async removeFinancialReports(project: Project, session: Session) {
-    let reports;
-    if (project.financialReportPeriod.value === ReportPeriod.Monthly) {
-      reports = await this.getProjectReportsQuery(project)
-        .where({
-          rel: isNull(),
-          'date(start.value)': greaterEqualTo(
-            project.mouStart.value?.startOf('month')
-          ),
-          'date(end.value)': lessEqualTo(project.mouEnd.value?.endOf('month')),
-          type: {
-            value: ReportType.Financial,
-          },
-        })
-        .return('report.id as reportId')
-        .asResult<{ reportId: string }>()
-        .run();
-    } else {
-      reports = await this.getProjectReportsQuery(project)
-        .where({
-          rel: isNull(),
-          'date(start.value)': greaterEqualTo(
-            project.mouStart.value?.startOf('quarter')
-          ),
-          'date(end.value)': lessEqualTo(
-            project.mouEnd.value?.endOf('quarter')
-          ),
-          type: {
-            value: ReportType.Financial,
-          },
-        })
-        .return('report.id as reportId')
-        .asResult<{ reportId: string }>()
-        .run();
-    }
+    const period =
+      project.financialReportPeriod.value === ReportPeriod.Monthly
+        ? 'month'
+        : 'quarter';
+
+    const reports = await this.getProjectReportsQuery(project)
+      .where({
+        rel: isNull(),
+        'date(start.value)': greaterEqualTo(
+          project.mouStart.value?.startOf(period)
+        ),
+        'date(end.value)': lessEqualTo(project.mouEnd.value?.endOf(period)),
+        type: {
+          value: ReportType.Financial,
+        },
+      })
+      .return('report.id as reportId')
+      .asResult<{ reportId: string }>()
+      .run();
 
     await Promise.all(
       reports.map((report) => this.delete(report.reportId, session))

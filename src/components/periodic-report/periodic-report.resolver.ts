@@ -32,24 +32,11 @@ export class PeriodicReportResolver {
     return reportFile;
   }
 
-  @ResolveField(() => SecuredFile, {
-    nullable: true,
-  })
+  @ResolveField(() => SecuredFile)
   async reportFile(
     @Parent() report: IPeriodicReport,
     @AnonSession() session: Session
-  ): Promise<SecuredFile | null> {
-    const { value: id, ...rest } = report.reportFile;
-    const value = id
-      ? await this.files.resolveDefinedFile(
-          {
-            value: id,
-            ...rest,
-          },
-          session
-        )
-      : null;
-
-    return value;
+  ): Promise<SecuredFile> {
+    return await this.files.resolveDefinedFile(report.reportFile, session);
   }
 }

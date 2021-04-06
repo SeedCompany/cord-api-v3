@@ -1,11 +1,5 @@
 import { fiscalMonths, fiscalQuarters, Session } from '../../../common';
-import {
-  DatabaseService,
-  EventsHandler,
-  IEventHandler,
-  ILogger,
-  Logger,
-} from '../../../core';
+import { EventsHandler, IEventHandler, ILogger, Logger } from '../../../core';
 import { Project } from '../../project';
 import { ProjectUpdatedEvent } from '../../project/events';
 import { ReportPeriod, ReportType } from '../dto';
@@ -17,7 +11,6 @@ type SubscribedEvent = ProjectUpdatedEvent;
 export class SyncPeriodicReportsToProjectDateRange
   implements IEventHandler<SubscribedEvent> {
   constructor(
-    private readonly db: DatabaseService,
     private readonly periodicReports: PeriodicReportService,
     @Logger('periodic-reports:project-sync') private readonly logger: ILogger
   ) {}
