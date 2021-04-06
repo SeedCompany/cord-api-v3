@@ -42,6 +42,7 @@ type AnyProject = MergeExclusive<TranslationProject, InternshipProject>;
 
     throw new Error('Could not resolve project type');
   },
+  implements: [Resource, Pinnable],
 })
 class Project extends IntersectionType(Resource, Pinnable) {
   static readonly Props: string[] = keysOf<Project>();
@@ -122,7 +123,7 @@ class Project extends IntersectionType(Resource, Pinnable) {
 export { Project as IProject, AnyProject as Project };
 
 @ObjectType({
-  implements: [Project, Resource, Pinnable],
+  implements: [Project],
 })
 export class TranslationProject extends Project {
   static readonly Props = keysOf<TranslationProject>();
@@ -132,7 +133,7 @@ export class TranslationProject extends Project {
 }
 
 @ObjectType({
-  implements: [Project, Resource, Pinnable],
+  implements: [Project],
 })
 export class InternshipProject extends Project {
   static readonly Props = keysOf<InternshipProject>();

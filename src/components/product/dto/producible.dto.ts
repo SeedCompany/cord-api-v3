@@ -6,6 +6,7 @@ import { SecuredScriptureRanges } from '../../scripture/dto';
 @InterfaceType({
   description: 'Something that is _producible_ via a Product',
   resolveType: (p: ProducibleResult) => p.__typename,
+  implements: [Resource],
 })
 @ObjectType({
   isAbstract: true,

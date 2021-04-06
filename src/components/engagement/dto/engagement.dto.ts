@@ -31,6 +31,7 @@ export type AnyEngagement = MergeExclusive<
 
 @InterfaceType({
   resolveType: (val: AnyEngagement) => val.__typename,
+  implements: [Resource],
 })
 /**
  * This should be used for GraphQL but never for TypeScript types.
@@ -102,7 +103,7 @@ class Engagement extends Resource {
 export { Engagement as IEngagement, AnyEngagement as Engagement };
 
 @ObjectType({
-  implements: [Engagement, Resource],
+  implements: [Engagement],
 })
 export class LanguageEngagement extends Engagement {
   static readonly Props = keysOf<LanguageEngagement>();
@@ -138,7 +139,7 @@ export class LanguageEngagement extends Engagement {
 }
 
 @ObjectType({
-  implements: [Engagement, Resource],
+  implements: [Engagement],
 })
 export class InternshipEngagement extends Engagement {
   static readonly Props = keysOf<InternshipEngagement>();
