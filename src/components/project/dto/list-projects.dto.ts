@@ -3,6 +3,7 @@ import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import {
   DateTimeFilter,
+  ID,
   PaginatedList,
   SecuredList,
   Sensitivity,
@@ -46,7 +47,7 @@ export abstract class ProjectFilters {
   })
   readonly pinned?: boolean;
 
-  readonly locationIds?: string[];
+  readonly locationIds?: ID[];
 
   @Field({
     nullable: true,
@@ -61,7 +62,7 @@ export abstract class ProjectFilters {
   readonly modifiedAt?: DateTimeFilter;
 
   // User IDs ANY of which are team members
-  readonly userIds?: string[];
+  readonly userIds?: ID[];
 
   @Field({
     nullable: true,

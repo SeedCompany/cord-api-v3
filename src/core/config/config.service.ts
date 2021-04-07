@@ -10,7 +10,7 @@ import { Duration } from 'luxon';
 import { Config as Neo4JDriverConfig } from 'neo4j-driver';
 import { join } from 'path';
 import { Merge } from 'type-fest';
-import { MsDurationInput, ServerException } from '../../common';
+import { ID, MsDurationInput, ServerException } from '../../common';
 import { FrontendUrlWrapper } from '../email/templates/frontend-url';
 import { LogLevel } from '../logger';
 import { EnvironmentService } from './environment.service';
@@ -115,9 +115,9 @@ export class ConfigService implements EmailOptionsFactory {
   }
 
   @Lazy() get rootAdmin() {
-    let rootId: string;
+    let rootId: ID;
     return {
-      get id(): string {
+      get id(): ID {
         if (!rootId) {
           throw new ServerException(
             'Cannot access root admin ID before it is initialized'
@@ -125,7 +125,7 @@ export class ConfigService implements EmailOptionsFactory {
         }
         return rootId;
       },
-      set id(newId: string) {
+      set id(newId: ID) {
         rootId = newId;
       },
       email: 'devops@tsco.org',

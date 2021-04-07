@@ -17,24 +17,24 @@ export async function createLanguage(
     code: faker.helpers.replaceSymbols('???').toLowerCase(),
     provisionalCode: faker.helpers.replaceSymbols('???').toLowerCase(),
     name: faker.name.firstName(),
-    population: faker.random.number(),
+    population: faker.datatype.number(),
     ...input.ethnologue,
   };
   const language: CreateLanguage = {
     name: faker.address.country() + '' + (await generateId()),
     displayName: faker.company.companyName() + '' + (await generateId()),
     displayNamePronunciation: faker.random.word(),
-    isDialect: faker.random.boolean(),
-    populationOverride: faker.random.number(),
-    registryOfDialectsCode: faker.random
+    isDialect: faker.datatype.boolean(),
+    populationOverride: faker.datatype.number(),
+    registryOfDialectsCode: faker.datatype
       .number({ min: 10000, max: 99999 })
       .toString(),
-    leastOfThese: faker.random.boolean(),
+    leastOfThese: faker.datatype.boolean(),
     leastOfTheseReason: faker.lorem.sentence(),
     ethnologue: ethnologueLanguage,
     signLanguageCode:
       faker.helpers.replaceSymbols('??').toUpperCase() +
-      faker.random.number({ min: 10, max: 99 }).toString(),
+      faker.datatype.number({ min: 10, max: 99 }).toString(),
     sponsorEstimatedEndDate: CalendarDate.fromISO('1991-01-01'),
     tags: ['tag1', 'tag2'],
     ...input,

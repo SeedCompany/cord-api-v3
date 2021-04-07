@@ -1,14 +1,14 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { MinLength, ValidateNested } from 'class-validator';
-import { IdField } from '../../../common';
+import { ID, IdField } from '../../../common';
 import { CreateDefinedFileVersionInput } from '../../file/dto';
 import { Budget } from './budget.dto';
 
 @InputType()
 export abstract class CreateBudget {
   @IdField()
-  readonly projectId: string;
+  readonly projectId: ID;
 
   @Field({
     description: 'Initial version of the universal budget template',
@@ -35,10 +35,10 @@ export abstract class CreateBudgetOutput {
 
 export abstract class CreateBudgetRecord {
   @MinLength(2)
-  readonly budgetId: string;
+  readonly budgetId: ID;
 
   @MinLength(2)
-  readonly organizationId: string;
+  readonly organizationId: ID;
 
   readonly fiscalYear: number;
 }

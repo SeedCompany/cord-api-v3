@@ -10,10 +10,10 @@ import {
 import {
   AnonSession,
   firstLettersOfWords,
+  ID,
   IdArg,
   IdField,
   LoggedInSession,
-  SecuredString,
   Session,
 } from '../../common';
 import { SecuredBudget } from '../budget';
@@ -47,10 +47,10 @@ import { ProjectService } from './project.service';
 @ArgsType()
 class ModifyOtherLocationArgs {
   @IdField()
-  projectId: string;
+  projectId: ID;
 
   @IdField()
-  locationId: string;
+  locationId: ID;
 }
 
 @Resolver(IProject)
@@ -66,13 +66,10 @@ export class ProjectResolver {
     description: 'Look up a project by its ID',
   })
   async project(
-    @IdArg() id: string,
+    @IdArg() id: ID,
     @LoggedInSession() session: Session
   ): Promise<Project> {
     const project = await this.projectService.readOne(id, session);
-    // @ts-expect-error hack project id into step object so the lazy transitions
-    // field resolver can use it
-    project.step.projectId = project.id;
     return project;
   }
 
@@ -90,11 +87,6 @@ export class ProjectResolver {
     @AnonSession() session: Session
   ): Promise<ProjectListOutput> {
     const list = await this.projectService.list(input, session);
-    for (const project of list.items) {
-      // @ts-expect-error hack project id into step object so the lazy transitions
-      // field resolver can use it
-      project.step.projectId = project.id;
-    }
     return list;
   }
 
@@ -103,15 +95,6 @@ export class ProjectResolver {
     return project.name.canRead && project.name.value
       ? firstLettersOfWords(project.name.value)
       : undefined;
-  }
-
-  /** @deprecated Moved from field definition in DTO to here */
-  @ResolveField(() => SecuredString, {
-    description: 'The legacy department ID',
-    deprecationReason: 'Use `Project.departmentId` instead',
-  })
-  deptId(@Parent() project: Project): SecuredString {
-    return project.departmentId;
   }
 
   @ResolveField(() => SecuredBudget, {
@@ -249,9 +232,6 @@ export class ProjectResolver {
     @LoggedInSession() session: Session
   ): Promise<CreateProjectOutput> {
     const project = await this.projectService.create(input, session);
-    // @ts-expect-error hack project id into step object so the lazy transitions
-    // field resolver can use it
-    project.step.projectId = project.id;
     return { project };
   }
 
@@ -263,9 +243,6 @@ export class ProjectResolver {
     @LoggedInSession() session: Session
   ): Promise<UpdateProjectOutput> {
     const project = await this.projectService.update(input, session);
-    // @ts-expect-error hack project id into step object so the lazy transitions
-    // field resolver can use it
-    project.step.projectId = project.id;
     return { project };
   }
 
@@ -273,7 +250,7 @@ export class ProjectResolver {
     description: 'Delete a project',
   })
   async deleteProject(
-    @IdArg() id: string,
+    @IdArg() id: ID,
     @LoggedInSession() session: Session
   ): Promise<boolean> {
     await this.projectService.delete(id, session);

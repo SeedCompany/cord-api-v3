@@ -10,6 +10,7 @@ import {
 import {
   AnonSession,
   firstLettersOfWords,
+  ID,
   IdArg,
   IdField,
   LoggedInSession,
@@ -48,10 +49,10 @@ import { fullName, UserService } from './user.service';
 @ArgsType()
 class ModifyLocationArgs {
   @IdField()
-  userId: string;
+  userId: ID;
 
   @IdField()
-  locationId: string;
+  locationId: ID;
 }
 
 @Resolver(User)
@@ -64,10 +65,7 @@ export class UserResolver {
   @Query(() => User, {
     description: 'Look up a user by its ID',
   })
-  async user(
-    @AnonSession() session: Session,
-    @IdArg() id: string
-  ): Promise<User> {
+  async user(@AnonSession() session: Session, @IdArg() id: ID): Promise<User> {
     return await this.userService.readOne(id, session);
   }
 
@@ -223,7 +221,7 @@ export class UserResolver {
   @Mutation(() => Boolean, {
     description: 'Delete a user',
   })
-  async deleteUser(@LoggedInSession() session: Session, @IdArg() id: string) {
+  async deleteUser(@LoggedInSession() session: Session, @IdArg() id: ID) {
     await this.userService.delete(id, session);
     return true;
   }

@@ -4,6 +4,7 @@ import { DateTime } from 'luxon';
 import {
   DuplicateException,
   generateId,
+  ID,
   InputException,
   NotFoundException,
   Order,
@@ -325,7 +326,7 @@ export class BudgetService {
     }
   }
 
-  async readOne(id: string, session: Session): Promise<Budget> {
+  async readOne(id: ID, session: Session): Promise<Budget> {
     this.logger.debug(`Query readOne Budget: `, {
       id,
       userId: session.userId,
@@ -383,7 +384,7 @@ export class BudgetService {
     };
   }
 
-  async readOneRecord(id: string, session: Session): Promise<BudgetRecord> {
+  async readOneRecord(id: ID, session: Session): Promise<BudgetRecord> {
     this.logger.debug(`Query readOne Budget Record: `, {
       id,
       userId: session.userId,
@@ -520,7 +521,7 @@ export class BudgetService {
     }
   }
 
-  async delete(id: string, session: Session): Promise<void> {
+  async delete(id: ID, session: Session): Promise<void> {
     const budget = await this.readOne(id, session);
 
     if (!budget) {
@@ -551,7 +552,7 @@ export class BudgetService {
     }
   }
 
-  async deleteRecord(id: string, session: Session): Promise<void> {
+  async deleteRecord(id: ID, session: Session): Promise<void> {
     const br = await this.readOneRecord(id, session);
 
     if (!br) {

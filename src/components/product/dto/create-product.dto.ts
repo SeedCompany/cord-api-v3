@@ -1,8 +1,9 @@
-import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Transform, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
 import { uniq } from 'lodash';
+import { ID, IdField } from '../../../common';
 import { ScriptureRangeInput } from '../../scripture';
 import { ProductMedium } from './product-medium';
 import { ProductMethodology } from './product-methodology';
@@ -11,19 +12,19 @@ import { AnyProduct, Product } from './product.dto';
 
 @InputType()
 export abstract class CreateProduct {
-  @Field({
+  @IdField({
     description: 'An ID of a `LanguageEngagement` to create this product for',
   })
-  readonly engagementId: string;
+  readonly engagementId: ID;
 
-  @Field(() => ID, {
+  @IdField({
     nullable: true,
     description: stripIndent`
       An ID of a \`Producible\` object, which will create a \`DerivativeScriptureProduct\`.
       If omitted a \`DirectScriptureProduct\` will be created instead.
     `,
   })
-  readonly produces?: string;
+  readonly produces?: ID;
 
   @Field(() => [ScriptureRangeInput], {
     nullable: true,
@@ -53,11 +54,11 @@ export abstract class CreateProduct {
   readonly scriptureReferencesOverride?: ScriptureRangeInput[];
 
   @Field(() => [ProductMedium], { nullable: true })
-  @Transform(uniq)
+  @Transform(({ value }) => uniq(value))
   readonly mediums?: ProductMedium[] = [];
 
   @Field(() => [ProductPurpose], { nullable: true })
-  @Transform(uniq)
+  @Transform(({ value }) => uniq(value))
   readonly purposes?: ProductPurpose[] = [];
 
   @Field(() => ProductMethodology, { nullable: true })

@@ -3,6 +3,7 @@ import { node, relation } from 'cypher-query-builder';
 import { pickBy } from 'lodash';
 import {
   generateId,
+  ID,
   NotFoundException,
   ServerException,
   Session,
@@ -32,7 +33,7 @@ import {
 } from '../dto';
 import { DbEthnologueLanguage } from '../model';
 
-type EthLangDbProps = DbPropsOfDto<EthnologueLanguage> & { id: string };
+type EthLangDbProps = DbPropsOfDto<EthnologueLanguage> & { id: ID };
 
 @Injectable()
 export class EthnologueLanguageService {
@@ -105,7 +106,7 @@ export class EthnologueLanguageService {
     return id;
   }
 
-  async readOne(id: string, session: Session): Promise<EthnologueLanguage> {
+  async readOne(id: ID, session: Session): Promise<EthnologueLanguage> {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
@@ -136,7 +137,7 @@ export class EthnologueLanguageService {
     };
   }
 
-  async update(id: string, input: UpdateEthnologueLanguage, session: Session) {
+  async update(id: ID, input: UpdateEthnologueLanguage, session: Session) {
     if (!input) return;
 
     // Make a mapping of the fields that we want to set in the db to the inputs

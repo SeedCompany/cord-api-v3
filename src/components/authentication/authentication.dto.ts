@@ -33,7 +33,7 @@ export abstract class SessionOutput {
 export abstract class LoginInput {
   @Field()
   @IsEmail()
-  @Transform(toLower)
+  @Transform(({ value }) => toLower(value))
   email: string;
 
   @Field()
@@ -75,6 +75,6 @@ export abstract class ChangePasswordArgs {
 export abstract class ForgotPasswordArgs {
   @Field()
   @IsEmail()
-  @Transform(toLower)
+  @Transform(({ value }) => toLower(value))
   readonly email: string;
 }

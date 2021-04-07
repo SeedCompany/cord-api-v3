@@ -4,7 +4,9 @@ import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
 import {
   DateTimeField,
+  ID,
   IntersectionType,
+  parentIdMiddleware,
   Resource,
   Secured,
   SecuredDate,
@@ -40,6 +42,7 @@ type AnyProject = MergeExclusive<TranslationProject, InternshipProject>;
 
     throw new Error('Could not resolve project type');
   },
+  implements: [Resource, Pinnable],
 })
 class Project extends IntersectionType(Resource, Pinnable) {
   static readonly Props: string[] = keysOf<Project>();
@@ -69,19 +72,21 @@ class Project extends IntersectionType(Resource, Pinnable) {
   })
   readonly departmentId: SecuredString;
 
-  @Field()
+  @Field({
+    middleware: [parentIdMiddleware],
+  })
   readonly step: SecuredProjectStep;
 
   @Field(() => ProjectStatus)
   readonly status: ProjectStatus;
 
-  readonly primaryLocation: Secured<string>;
+  readonly primaryLocation: Secured<ID>;
 
-  readonly marketingLocation: Secured<string>;
+  readonly marketingLocation: Secured<ID>;
 
-  readonly fieldRegion: Secured<string>;
+  readonly fieldRegion: Secured<ID>;
 
-  readonly owningOrganization: Secured<string>;
+  readonly owningOrganization: Secured<ID>;
 
   @Field()
   readonly mouStart: SecuredDate;
@@ -118,7 +123,7 @@ class Project extends IntersectionType(Resource, Pinnable) {
 export { Project as IProject, AnyProject as Project };
 
 @ObjectType({
-  implements: [Project, Resource, Pinnable],
+  implements: [Project],
 })
 export class TranslationProject extends Project {
   static readonly Props = keysOf<TranslationProject>();
@@ -128,7 +133,7 @@ export class TranslationProject extends Project {
 }
 
 @ObjectType({
-  implements: [Project, Resource, Pinnable],
+  implements: [Project],
 })
 export class InternshipProject extends Project {
   static readonly Props = keysOf<InternshipProject>();

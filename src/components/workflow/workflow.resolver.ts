@@ -1,5 +1,5 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { AnonSession, IdArg, LoggedInSession, Session } from '../../common';
+import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
 import {
   AddStateInput,
   AddStateOutput,
@@ -35,7 +35,7 @@ export class WorkflowResolver {
   })
   async deleteWorkflow(
     @LoggedInSession() session: Session,
-    @IdArg() workflowId: string
+    @IdArg() workflowId: ID
   ): Promise<boolean> {
     await this.service.deleteWorkflow(session, workflowId);
     return true;
@@ -68,7 +68,7 @@ export class WorkflowResolver {
   })
   async deleteState(
     @LoggedInSession() session: Session,
-    @IdArg() stateId: string
+    @IdArg() stateId: ID
   ): Promise<boolean> {
     await this.service.deleteState(session, stateId);
     return true;
@@ -79,7 +79,7 @@ export class WorkflowResolver {
   })
   async states(
     @AnonSession() session: Session,
-    @IdArg() baseNodeId: string
+    @IdArg() baseNodeId: ID
   ): Promise<StateListOutput> {
     return await this.service.listStates(session, baseNodeId);
   }
@@ -89,7 +89,7 @@ export class WorkflowResolver {
   })
   async nextStates(
     @AnonSession() session: Session,
-    @IdArg() stateId: string
+    @IdArg() stateId: ID
   ): Promise<StateListOutput> {
     return await this.service.listNextStates(session, stateId);
   }
@@ -187,7 +187,7 @@ export class WorkflowResolver {
   })
   async listRequiredFields(
     @AnonSession() session: Session,
-    @IdArg() stateId: string
+    @IdArg() stateId: ID
   ): Promise<RequiredFieldListOutput> {
     const fields = await this.service.listRequiredFields(session, stateId);
     return fields;

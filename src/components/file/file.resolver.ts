@@ -7,7 +7,7 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { AnonSession, IdArg, LoggedInSession, Session } from '../../common';
+import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
 import { User, UserService } from '../user';
 import {
   CreateFileVersionInput,
@@ -31,16 +31,13 @@ export class FileResolver {
   ) {}
 
   @Query(() => File)
-  async file(
-    @IdArg() id: string,
-    @AnonSession() session: Session
-  ): Promise<File> {
+  async file(@IdArg() id: ID, @AnonSession() session: Session): Promise<File> {
     return await this.service.getFile(id, session);
   }
 
   @Query(() => IFileNode)
   async fileNode(
-    @IdArg() id: string,
+    @IdArg() id: ID,
     @AnonSession() session: Session
   ): Promise<FileNode> {
     return await this.service.getFileNode(id, session);
@@ -83,7 +80,7 @@ export class FileResolver {
     description: 'Delete a file or directory',
   })
   async deleteFileNode(
-    @IdArg() id: string,
+    @IdArg() id: ID,
     @LoggedInSession() session: Session
   ): Promise<boolean> {
     await this.service.delete(id, session);

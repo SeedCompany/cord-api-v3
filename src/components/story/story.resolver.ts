@@ -1,5 +1,5 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { AnonSession, IdArg, LoggedInSession, Session } from '../../common';
+import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
 import {
   CreateStoryInput,
   CreateStoryOutput,
@@ -20,7 +20,7 @@ export class StoryResolver {
   })
   async story(
     @AnonSession() session: Session,
-    @IdArg() id: string
+    @IdArg() id: ID
   ): Promise<Story> {
     return await this.storyService.readOne(id, session);
   }
@@ -67,7 +67,7 @@ export class StoryResolver {
   })
   async deleteStory(
     @LoggedInSession() session: Session,
-    @IdArg() id: string
+    @IdArg() id: ID
   ): Promise<boolean> {
     await this.storyService.delete(id, session);
     return true;

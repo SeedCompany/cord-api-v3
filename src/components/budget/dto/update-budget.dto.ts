@@ -2,13 +2,13 @@ import { Field, Float, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { Budget, BudgetRecord, BudgetStatus } from '.';
-import { IdField } from '../../../common';
+import { ID, IdField } from '../../../common';
 import { CreateDefinedFileVersionInput } from '../../file/dto';
 
 @InputType()
 export abstract class UpdateBudget {
   @IdField()
-  readonly id: string;
+  readonly id: ID;
 
   readonly status?: BudgetStatus | undefined;
 
@@ -38,7 +38,7 @@ export abstract class UpdateBudgetOutput {
 @InputType()
 export abstract class UpdateBudgetRecord {
   @IdField()
-  readonly id: string;
+  readonly id: ID;
 
   @Field(() => Float, { nullable: true })
   readonly amount: number | null;

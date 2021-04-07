@@ -2,7 +2,7 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Transform, Type } from 'class-transformer';
 import { Matches, ValidateNested } from 'class-validator';
 import { uniq } from 'lodash';
-import { IdField } from '../../../common';
+import { ID, IdField } from '../../../common';
 import { FinancialReportingType } from '../../partnership/dto/financial-reporting-type';
 import { PartnerType } from './partner-type.enum';
 import { Partner } from './partner.dto';
@@ -10,17 +10,17 @@ import { Partner } from './partner.dto';
 @InputType()
 export abstract class CreatePartner {
   @IdField()
-  readonly organizationId: string;
+  readonly organizationId: ID;
 
   @IdField({ nullable: true })
-  readonly pointOfContactId?: string;
+  readonly pointOfContactId?: ID;
 
   @Field(() => [PartnerType], { nullable: true })
-  @Transform(uniq)
+  @Transform(({ value }) => uniq(value))
   readonly types?: PartnerType[] = [];
 
   @Field(() => [FinancialReportingType], { nullable: true })
-  @Transform(uniq)
+  @Transform(({ value }) => uniq(value))
   readonly financialReportingTypes?: FinancialReportingType[] = [];
 
   @Field({ nullable: true })

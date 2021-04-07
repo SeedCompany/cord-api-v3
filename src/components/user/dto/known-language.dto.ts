@@ -1,10 +1,10 @@
 import { ArgsType, Field, ObjectType } from '@nestjs/graphql';
-import { IdField } from '../../../common';
+import { ID, IdField } from '../../../common';
 import { LanguageProficiency } from './language-proficiency.enum';
 
 @ObjectType()
 export abstract class KnownLanguage {
-  language: string;
+  language: ID;
 
   @Field(() => LanguageProficiency)
   proficiency: LanguageProficiency;
@@ -13,10 +13,10 @@ export abstract class KnownLanguage {
 @ArgsType()
 export abstract class ModifyKnownLanguageArgs {
   @IdField()
-  userId: string;
+  userId: ID;
 
   @IdField()
-  languageId: string;
+  languageId: ID;
 
   @Field(() => LanguageProficiency)
   languageProficiency: LanguageProficiency;

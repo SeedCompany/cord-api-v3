@@ -1,10 +1,10 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import { IdField } from '../../../common';
+import { ID, IdField } from '../../../common';
 
 @ObjectType()
 export class State {
   @IdField()
-  readonly id: string;
+  readonly id: ID;
 
   @Field()
   readonly value: string;
@@ -13,5 +13,5 @@ export class State {
 @ObjectType()
 export class CurrentState {
   @IdField()
-  readonly id: string;
+  readonly id: ID;
 }

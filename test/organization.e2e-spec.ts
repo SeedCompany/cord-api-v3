@@ -412,16 +412,16 @@ describe('Organization e2e', () => {
     });
     //Create three projects, each beginning with lower or upper-cases
     await createOrganization(app, {
-      name: 'an Organization ' + faker.random.uuid(),
+      name: 'an Organization ' + faker.datatype.uuid(),
     });
     await createOrganization(app, {
-      name: 'Another Organization' + faker.random.uuid(),
+      name: 'Another Organization' + faker.datatype.uuid(),
     });
     await createOrganization(app, {
-      name: 'Big Organization' + faker.random.uuid(),
+      name: 'Big Organization' + faker.datatype.uuid(),
     });
     await createOrganization(app, {
-      name: 'big Organization also' + faker.random.uuid(),
+      name: 'big Organization also' + faker.datatype.uuid(),
     });
     const sortBy = 'name';
     const ascOrder = 'ASC';
@@ -460,16 +460,16 @@ describe('Organization e2e', () => {
     });
     //Create three projects, each beginning with lower or upper-cases
     await createOrganization(app, {
-      name: 'an Organization ' + faker.random.uuid(),
+      name: 'an Organization ' + faker.datatype.uuid(),
     });
     await createOrganization(app, {
-      name: 'Another Organization' + faker.random.uuid(),
+      name: 'Another Organization' + faker.datatype.uuid(),
     });
     await createOrganization(app, {
-      name: 'Big Organization' + faker.random.uuid(),
+      name: 'Big Organization' + faker.datatype.uuid(),
     });
     await createOrganization(app, {
-      name: 'big Organization also' + faker.random.uuid(),
+      name: 'big Organization also' + faker.datatype.uuid(),
     });
     const sortBy = 'name';
     const descOrder = 'DESC';

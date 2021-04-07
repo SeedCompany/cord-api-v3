@@ -8,7 +8,7 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { sumBy } from 'lodash';
-import { AnonSession, IdArg, LoggedInSession, Session } from '../../common';
+import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
 import { FileService, SecuredFile } from '../file';
 import { BudgetService } from './budget.service';
 import {
@@ -33,7 +33,7 @@ export class BudgetResolver {
   })
   async budget(
     @AnonSession() session: Session,
-    @IdArg() id: string
+    @IdArg() id: ID
   ): Promise<Budget> {
     return await this.service.readOne(id, session);
   }
@@ -98,7 +98,7 @@ export class BudgetResolver {
   })
   async deleteBudget(
     @LoggedInSession() session: Session,
-    @IdArg() id: string
+    @IdArg() id: ID
   ): Promise<boolean> {
     await this.service.delete(id, session);
     return true;

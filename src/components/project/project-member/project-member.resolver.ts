@@ -1,5 +1,11 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { AnonSession, IdArg, LoggedInSession, Session } from '../../../common';
+import {
+  AnonSession,
+  ID,
+  IdArg,
+  LoggedInSession,
+  Session,
+} from '../../../common';
 import {
   CreateProjectMemberInput,
   CreateProjectMemberOutput,
@@ -31,7 +37,7 @@ export class ProjectMemberResolver {
   })
   async projectMember(
     @AnonSession() session: Session,
-    @IdArg() id: string
+    @IdArg() id: ID
   ): Promise<ProjectMember> {
     return await this.service.readOne(id, session);
   }
@@ -67,7 +73,7 @@ export class ProjectMemberResolver {
   })
   async deleteProjectMember(
     @LoggedInSession() session: Session,
-    @IdArg() id: string
+    @IdArg() id: ID
   ): Promise<boolean> {
     await this.service.delete(id, session);
     return true;

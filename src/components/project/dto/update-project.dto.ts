@@ -7,6 +7,7 @@ import {
   CalendarDate,
   DateField,
   DateTimeField,
+  ID,
   IdField,
   NameField,
   Sensitivity,
@@ -17,7 +18,7 @@ import { ProjectStep } from './step.enum';
 @InputType()
 export abstract class UpdateProject {
   @IdField()
-  readonly id: string;
+  readonly id: ID;
 
   @NameField({ nullable: true })
   readonly name?: string;
@@ -26,19 +27,19 @@ export abstract class UpdateProject {
     description: 'A primary location ID',
     nullable: true,
   })
-  readonly primaryLocationId?: string;
+  readonly primaryLocationId?: ID;
 
   @IdField({
     description: 'A marketing primary location ID',
     nullable: true,
   })
-  readonly marketingLocationId?: string;
+  readonly marketingLocationId?: ID;
 
   @IdField({
     description: 'A field region ID',
     nullable: true,
   })
-  readonly fieldRegionId?: string;
+  readonly fieldRegionId?: ID;
 
   @DateField({ nullable: true })
   readonly mouStart?: CalendarDate;
@@ -61,7 +62,7 @@ export abstract class UpdateProject {
   readonly sensitivity?: Sensitivity;
 
   @Field(() => [String], { nullable: true })
-  @Transform(uniq)
+  @Transform(({ value }) => uniq(value))
   readonly tags?: string[];
 
   @DateTimeField({ nullable: true })

@@ -1,5 +1,5 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { AnonSession, IdArg, LoggedInSession, Session } from '../../common';
+import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
 import {
   CreateLiteracyMaterialInput,
   CreateLiteracyMaterialOutput,
@@ -22,7 +22,7 @@ export class LiteracyMaterialResolver {
   })
   async literacyMaterial(
     @AnonSession() session: Session,
-    @IdArg() id: string
+    @IdArg() id: ID
   ): Promise<LiteracyMaterial> {
     return await this.literacyMaterialService.readOne(id, session);
   }
@@ -75,7 +75,7 @@ export class LiteracyMaterialResolver {
   })
   async deleteLiteracyMaterial(
     @LoggedInSession() session: Session,
-    @IdArg() id: string
+    @IdArg() id: ID
   ): Promise<boolean> {
     await this.literacyMaterialService.delete(id, session);
     return true;

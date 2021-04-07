@@ -1,5 +1,5 @@
 import { node, Query, relation } from 'cypher-query-builder';
-import { Order, SortablePaginationInput } from '../../../common';
+import { ID, Order, SortablePaginationInput } from '../../../common';
 
 type SecuredProperties = Record<string, boolean>;
 
@@ -31,7 +31,7 @@ export function calculateTotalAndPaginateList(
     ])
     .return(['items', 'total']);
 
-  return query.asResult<{ items: string[]; total: number }>();
+  return query.asResult<{ items: ID[]; total: number }>();
 }
 
 export const defaultSorter: Sorter = (

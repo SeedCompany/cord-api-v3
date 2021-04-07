@@ -5,6 +5,7 @@ import { DateTime } from 'luxon';
 import {
   DuplicateException,
   generateId,
+  ID,
   NotFoundException,
   ServerException,
   Session,
@@ -85,7 +86,7 @@ export class OrganizationService {
   private readonly createSG = (
     query: Query,
     cypherIdentifier: string,
-    id: string,
+    id: ID,
     label?: string
   ) => {
     const labels = ['SecurityGroup'];
@@ -185,7 +186,7 @@ export class OrganizationService {
     return await this.readOne(id, session);
   }
 
-  async readOne(orgId: string, session: Session): Promise<Organization> {
+  async readOne(orgId: ID, session: Session): Promise<Organization> {
     this.logger.debug(`Read Organization`, {
       id: orgId,
       userId: session.userId,
@@ -233,7 +234,7 @@ export class OrganizationService {
     });
   }
 
-  async delete(id: string, session: Session): Promise<void> {
+  async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
     if (!object) {
@@ -291,8 +292,8 @@ export class OrganizationService {
   }
 
   async addLocation(
-    organizationId: string,
-    locationId: string,
+    organizationId: ID,
+    locationId: ID,
     _session: Session
   ): Promise<void> {
     try {
@@ -308,8 +309,8 @@ export class OrganizationService {
   }
 
   async removeLocation(
-    organizationId: string,
-    locationId: string,
+    organizationId: ID,
+    locationId: ID,
     _session: Session
   ): Promise<void> {
     try {
@@ -328,7 +329,7 @@ export class OrganizationService {
   }
 
   async listLocations(
-    organizationId: string,
+    organizationId: ID,
     input: LocationListInput,
     session: Session
   ): Promise<SecuredLocationList> {

@@ -2,8 +2,9 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { first, intersection, Many, uniq } from 'lodash';
+import { Promisable } from 'type-fest';
 import {
-  MaybeAsync,
+  ID,
   maybeMany,
   ServerException,
   Session,
@@ -23,16 +24,22 @@ import { ProjectService } from './project.service';
 
 type EmailAddress = string;
 
+type Lazy<T> = T | (() => Promisable<T>);
+
+type Notifier = EmailAddress | ID;
+
+type Notifiers = Lazy<Many<Notifier>>;
+
 interface Transition extends ProjectStepTransition {
   // Users/emails to notify when the project makes this transition
-  notifiers?: Many<string> | (() => Promise<Many<string>>);
+  notifiers?: Notifiers;
 }
 
 interface StepRule {
   approvers: Role[];
   transitions: Transition[];
   // Users/emails to notify when the project arrives at this step
-  getNotifiers?: () => MaybeAsync<ReadonlyArray<EmailAddress | string>>;
+  getNotifiers?: Notifiers;
 }
 
 export interface EmailNotification {
@@ -62,7 +69,7 @@ export class ProjectRules {
     @Logger('project:rules') private readonly logger: ILogger
   ) {}
 
-  private async getStepRule(step: ProjectStep, id: string): Promise<StepRule> {
+  private async getStepRule(step: ProjectStep, id: ID): Promise<StepRule> {
     switch (step) {
       case ProjectStep.EarlyConversations:
         return {
@@ -790,7 +797,7 @@ export class ProjectRules {
   }
 
   async getAvailableTransitions(
-    projectId: string,
+    projectId: ID,
     session: Session,
     currentUserRoles?: Role[]
   ): Promise<ProjectStepTransition[]> {
@@ -821,7 +828,7 @@ export class ProjectRules {
   }
 
   async verifyStepChange(
-    projectId: string,
+    projectId: ID,
     session: Session,
     nextStep: ProjectStep
   ) {
@@ -853,7 +860,7 @@ export class ProjectRules {
     }
   }
 
-  private async getCurrentStep(id: string) {
+  private async getCurrentStep(id: ID) {
     const currentStep = await this.db
       .query()
       .match([
@@ -872,7 +879,7 @@ export class ProjectRules {
     return currentStep.step;
   }
 
-  private async getUserRoles(id: string) {
+  private async getUserRoles(id: ID) {
     const userRolesQuery = await this.db
       .query()
       .match([
@@ -888,9 +895,9 @@ export class ProjectRules {
   }
 
   async getNotifications(
-    projectId: string,
+    projectId: ID,
     step: ProjectStep,
-    changedById: string,
+    changedById: ID,
     previousStep: ProjectStep
   ): Promise<EmailNotification[]> {
     const { getNotifiers: arrivalNotifiers } = await this.getStepRule(
@@ -902,13 +909,14 @@ export class ProjectRules {
       await this.getStepRule(previousStep, projectId)
     ).transitions.find((t) => t.to === step)?.notifiers;
 
+    const resolve = async (notifiers?: Notifiers) =>
+      maybeMany(
+        typeof notifiers === 'function' ? await notifiers() : notifiers
+      ) ?? [];
+
     const userIdsAndEmailAddresses = uniq([
-      ...((await arrivalNotifiers?.()) ?? []),
-      ...(maybeMany(
-        typeof transitionNotifiers === 'function'
-          ? await transitionNotifiers()
-          : transitionNotifiers
-      ) ?? []),
+      ...(await resolve(arrivalNotifiers)),
+      ...(await resolve(transitionNotifiers)),
     ]);
 
     const recipientIds = this.configService.email.notifyDistributionLists
@@ -933,7 +941,7 @@ export class ProjectRules {
     return notifications;
   }
 
-  private async getProjectTeamUserIds(id: string): Promise<string[]> {
+  private async getProjectTeamUserIds(id: ID): Promise<ID[]> {
     const users = await this.db
       .query()
       .match([
@@ -966,7 +974,7 @@ export class ProjectRules {
 
   /** Of the given steps which one was the most recent previous step */
   private async getMostRecentPreviousStep(
-    id: string,
+    id: ID,
     steps: ProjectStep[]
   ): Promise<ProjectStep> {
     const prevSteps = await this.getPreviousSteps(id);
@@ -982,7 +990,7 @@ export class ProjectRules {
   }
 
   /** A list of the project's previous steps ordered most recent to furthest in the past */
-  private async getPreviousSteps(id: string): Promise<ProjectStep[]> {
+  private async getPreviousSteps(id: ID): Promise<ProjectStep[]> {
     const result = await this.db
       .query()
       .match([
@@ -1002,16 +1010,17 @@ export class ProjectRules {
   }
 
   private async getEmailNotificationObject(
-    changedById: string,
-    projectId: string,
-    recipientId: string,
+    changedById: ID,
+    projectId: ID,
+    notifier: Notifier,
     previousStep?: ProjectStep
   ): Promise<EmailNotification> {
     let recipient;
     let changedBy;
     let project;
 
-    if (recipientId.includes('@')) {
+    if (notifier.includes('@')) {
+      const email = notifier;
       changedBy = await this.userService.readOne(
         changedById,
         this.configService.rootAdmin.id
@@ -1021,10 +1030,10 @@ export class ProjectRules {
         this.configService.rootAdmin.id
       );
       recipient = {
-        id: recipientId.split('@')[0],
-        email: { value: recipientId, canRead: true, canEdit: false },
+        id: email.split('@')[0] as ID,
+        email: { value: email, canRead: true, canEdit: false },
         displayFirstName: {
-          value: recipientId.split('@')[0],
+          value: email.split('@')[0],
           canRead: true,
           canEdit: false,
         },
@@ -1036,6 +1045,7 @@ export class ProjectRules {
         },
       };
     } else {
+      const recipientId = notifier as ID;
       changedBy = await this.userService.readOne(changedById, recipientId);
       project = await this.projectService.readOne(projectId, recipientId);
       recipient = await this.userService.readOne(recipientId, recipientId);

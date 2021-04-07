@@ -109,13 +109,11 @@ describe('ProjectMember e2e', () => {
     const numProjectMembers = 2;
     const userForList = await registerUser(app, { password });
     const userId = userForList.id;
-    const projectIds: string[] = [];
-
-    await Promise.all(
+    const projectIds = await Promise.all(
       times(numProjectMembers).map(async () => {
         await registerUser(app);
         const project = await createProject(app);
-        projectIds.push(project.id);
+        return project.id;
       })
     );
 

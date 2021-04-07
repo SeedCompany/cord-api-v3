@@ -7,6 +7,7 @@ import {
   CalendarDate,
   DuplicateException,
   generateId,
+  ID,
   NotFoundException,
   Sensitivity,
 } from '../src/common';
@@ -139,7 +140,7 @@ describe('Project e2e', () => {
     await loginAsAdmin(app);
 
     const project: CreateProject = {
-      name: faker.random.uuid(),
+      name: faker.datatype.uuid(),
       type: ProjectType.Translation,
       fieldRegionId: (await createRegion(app)).id,
     };
@@ -194,9 +195,9 @@ describe('Project e2e', () => {
   it('should throw error if the location id is not valid', async () => {
     await expect(
       createProject(app, {
-        name: faker.random.uuid(),
+        name: faker.datatype.uuid(),
         type: ProjectType.Translation,
-        fieldRegionId: 'invalid-location-id',
+        fieldRegionId: 'invalid-location-id' as ID,
       })
     ).rejects.toThrowError(
       new NotFoundException('Field region not found', 'project.fieldRegionId')
@@ -205,7 +206,7 @@ describe('Project e2e', () => {
 
   it('create & read project with budget and field region by id', async () => {
     const proj: CreateProject = {
-      name: faker.random.uuid(),
+      name: faker.datatype.uuid(),
       type: ProjectType.Translation,
       fieldRegionId: fieldRegion.id,
     };
@@ -346,19 +347,19 @@ describe('Project e2e', () => {
     );
     //Create three projects with mixed cases.
     await createProject(app, {
-      name: 'a project 2' + faker.random.uuid(),
+      name: 'a project 2' + faker.datatype.uuid(),
       type: ProjectType.Translation,
     });
     await createProject(app, {
-      name: 'Another project 2' + faker.random.uuid(),
+      name: 'Another project 2' + faker.datatype.uuid(),
       type: ProjectType.Translation,
     });
     await createProject(app, {
-      name: 'Big project 2' + faker.random.uuid(),
+      name: 'Big project 2' + faker.datatype.uuid(),
       type: ProjectType.Translation,
     });
     await createProject(app, {
-      name: 'big project also 2' + faker.random.uuid(),
+      name: 'big project also 2' + faker.datatype.uuid(),
       type: ProjectType.Translation,
     });
     const sortBy = 'name';
@@ -418,19 +419,19 @@ describe('Project e2e', () => {
     );
     //Create three projects, each beginning with lower or upper-cases.
     await createProject(app, {
-      name: 'a project 2' + faker.random.uuid(),
+      name: 'a project 2' + faker.datatype.uuid(),
       type: ProjectType.Translation,
     });
     await createProject(app, {
-      name: 'Another project 2' + faker.random.uuid(),
+      name: 'Another project 2' + faker.datatype.uuid(),
       type: ProjectType.Translation,
     });
     await createProject(app, {
-      name: 'Big project 2' + faker.random.uuid(),
+      name: 'Big project 2' + faker.datatype.uuid(),
       type: ProjectType.Translation,
     });
     await createProject(app, {
-      name: 'big project also 2' + faker.random.uuid(),
+      name: 'big project also 2' + faker.datatype.uuid(),
       type: ProjectType.Translation,
     });
     const sortBy = 'name';
@@ -863,7 +864,7 @@ describe('Project e2e', () => {
     const userId = userForList.id;
     const userForList2 = await registerUser(app, { password: password2 });
     const userId2 = userForList2.id;
-    const memberIds: string[] = [userId, userId2];
+    const memberIds: ID[] = [userId, userId2];
 
     await login(app, { email: userForList.email.value, password });
 
@@ -1004,7 +1005,7 @@ describe('Project e2e', () => {
   // #727 create without mouStart, mouEnd, estimatedSubmission
   it('can create without mouStart, mouEnd and estimatedSubmission', async () => {
     const project: CreateProject = {
-      name: faker.random.uuid(),
+      name: faker.datatype.uuid(),
       type: ProjectType.Translation,
       fieldRegionId: fieldRegion.id,
     };
@@ -1031,7 +1032,7 @@ describe('Project e2e', () => {
 
   it('can create without mouStart, if mouEnd is defined', async () => {
     const project: CreateProject = {
-      name: faker.random.uuid(),
+      name: faker.datatype.uuid(),
       type: ProjectType.Translation,
       mouEnd: CalendarDate.fromISO('1992-11-01'),
       estimatedSubmission: CalendarDate.fromISO('1993-11-01'),
@@ -1067,7 +1068,7 @@ describe('Project e2e', () => {
     await registerUserWithPower(app, [Powers.CreateOrganization]);
     const org = await createOrganization(app);
     const proj = await createProject(app, {
-      name: faker.random.uuid() + ' project',
+      name: faker.datatype.uuid() + ' project',
       mouStart: undefined,
       mouEnd: undefined,
     });
@@ -1144,7 +1145,7 @@ describe('Project e2e', () => {
     );
     const org = await createOrganization(app);
     const project = await createProject(app, {
-      name: faker.random.uuid() + ' project',
+      name: faker.datatype.uuid() + ' project',
     });
     const partnership: CreatePartnership = {
       projectId: project.id,

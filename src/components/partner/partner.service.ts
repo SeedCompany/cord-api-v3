@@ -4,6 +4,7 @@ import { DateTime } from 'luxon';
 import {
   DuplicateException,
   generateId,
+  ID,
   InputException,
   NotFoundException,
   ServerException,
@@ -93,7 +94,7 @@ export class PartnerService {
         partner: [{ id: 'partnerId' }],
       })
       .asResult<{
-        partnerId: string;
+        partnerId: ID;
       }>();
     const checkPartner = await partnerByOrgQ.first();
     if (checkPartner) {
@@ -208,7 +209,7 @@ export class PartnerService {
     return await this.readOne(result.id, session);
   }
 
-  async readOnePartnerByOrgId(id: string, session: Session): Promise<Partner> {
+  async readOnePartnerByOrgId(id: ID, session: Session): Promise<Partner> {
     this.logger.debug(`Read Partner by Org Id`, {
       id: id,
       userId: session.userId,
@@ -226,7 +227,7 @@ export class PartnerService {
         partner: [{ id: 'partnerId' }],
       })
       .asResult<{
-        partnerId: string;
+        partnerId: ID;
       }>();
     const result = await query.first();
     if (!result)
@@ -235,7 +236,7 @@ export class PartnerService {
     return await this.readOne(result.partnerId, session);
   }
 
-  async readOne(id: string, session: Session): Promise<Partner> {
+  async readOne(id: ID, session: Session): Promise<Partner> {
     this.logger.debug(`Read Partner by Partner Id`, {
       id: id,
       userId: session.userId,
@@ -263,8 +264,8 @@ export class PartnerService {
       ])
       .asResult<
         StandardReadResult<DbPropsOfDto<Partner>> & {
-          organizationId: string;
-          pointOfContactId: string;
+          organizationId: ID;
+          pointOfContactId: ID;
         }
       >();
 
@@ -385,7 +386,7 @@ export class PartnerService {
     return await this.readOne(input.id, session);
   }
 
-  async delete(id: string, session: Session): Promise<void> {
+  async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
     if (!object) {
       throw new NotFoundException('Could not find Partner');

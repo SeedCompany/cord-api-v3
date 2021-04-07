@@ -4,6 +4,8 @@ import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
 import {
   DateTimeField,
+  ID,
+  parentIdMiddleware,
   Resource,
   Secured,
   SecuredBoolean,
@@ -29,6 +31,7 @@ export type AnyEngagement = MergeExclusive<
 
 @InterfaceType({
   resolveType: (val: AnyEngagement) => val.__typename,
+  implements: [Resource],
 })
 /**
  * This should be used for GraphQL but never for TypeScript types.
@@ -39,10 +42,12 @@ class Engagement extends Resource {
 
   readonly __typename: string;
 
-  @Field(() => SecuredEngagementStatus)
+  @Field(() => SecuredEngagementStatus, {
+    middleware: [parentIdMiddleware],
+  })
   readonly status: SecuredEngagementStatus;
 
-  readonly ceremony: Secured<string>;
+  readonly ceremony: Secured<ID>;
 
   @Field({
     description: 'Translation / Growth Plan complete date',
@@ -98,7 +103,7 @@ class Engagement extends Resource {
 export { Engagement as IEngagement, AnyEngagement as Engagement };
 
 @ObjectType({
-  implements: [Engagement, Resource],
+  implements: [Engagement],
 })
 export class LanguageEngagement extends Engagement {
   static readonly Props = keysOf<LanguageEngagement>();
@@ -108,7 +113,7 @@ export class LanguageEngagement extends Engagement {
     product: [Product],
   };
 
-  readonly language: Secured<string>;
+  readonly language: Secured<ID>;
 
   @Field()
   readonly firstScripture: SecuredBoolean;
@@ -134,17 +139,17 @@ export class LanguageEngagement extends Engagement {
 }
 
 @ObjectType({
-  implements: [Engagement, Resource],
+  implements: [Engagement],
 })
 export class InternshipEngagement extends Engagement {
   static readonly Props = keysOf<InternshipEngagement>();
   static readonly SecuredProps = keysOf<SecuredProps<InternshipEngagement>>();
 
-  readonly countryOfOrigin: Secured<string>;
+  readonly countryOfOrigin: Secured<ID>;
 
-  readonly intern: Secured<string>;
+  readonly intern: Secured<ID>;
 
-  readonly mentor: Secured<string>;
+  readonly mentor: Secured<ID>;
 
   @Field()
   readonly position: SecuredInternPosition;

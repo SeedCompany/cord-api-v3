@@ -1,4 +1,4 @@
-import { ServerException } from '../../../common';
+import { ID, ServerException } from '../../../common';
 import { DatabaseService, EventsHandler, IEventHandler } from '../../../core';
 import { Project, ProjectStep } from '../dto';
 import { ProjectUpdatedEvent } from '../events';
@@ -59,7 +59,7 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
         `,
         { departmentIdPrefix: departmentIdPrefix, projectId: project.id }
       )
-      .asResult<{ departmentId: string }>()
+      .asResult<{ departmentId: ID }>()
       .first();
     if (!res) {
       throw new ServerException('Unable to assign department ID');

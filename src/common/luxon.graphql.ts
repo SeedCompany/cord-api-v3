@@ -24,7 +24,7 @@ export const DateTimeField = (options?: FieldOptions) =>
   applyDecorators(
     Field(() => DateTime, options),
     Transform(
-      (value) => {
+      ({ value }) => {
         try {
           return value == null ? null : DateTime.fromISO(value);
         } catch (e) {
@@ -43,7 +43,7 @@ export const DateField = (options?: FieldOptions) =>
   applyDecorators(
     Field(() => CalendarDate, options),
     Transform(
-      (value) => {
+      ({ value }) => {
         try {
           return value == null ? null : CalendarDate.fromISO(value);
         } catch (e) {

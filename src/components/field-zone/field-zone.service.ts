@@ -4,6 +4,7 @@ import { DateTime } from 'luxon';
 import {
   DuplicateException,
   generateId,
+  ID,
   NotFoundException,
   ServerException,
   Session,
@@ -142,7 +143,7 @@ export class FieldZoneService {
     return await this.readOne(result.id, session);
   }
 
-  async readOne(id: string, session: Session): Promise<FieldZone> {
+  async readOne(id: ID, session: Session): Promise<FieldZone> {
     this.logger.debug(`Read Field Zone`, {
       id: id,
       userId: session.userId,
@@ -161,7 +162,7 @@ export class FieldZoneService {
       .return('propList, node, director.id as directorId')
       .asResult<
         StandardReadResult<DbPropsOfDto<FieldZone>> & {
-          directorId: string;
+          directorId: ID;
         }
       >();
 
@@ -242,7 +243,7 @@ export class FieldZoneService {
     return await this.readOne(input.id, session);
   }
 
-  async delete(id: string, session: Session): Promise<void> {
+  async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
     if (!object) {

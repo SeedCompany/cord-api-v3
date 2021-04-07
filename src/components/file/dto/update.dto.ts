@@ -1,13 +1,13 @@
 import { Field, InputType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { IdField } from '../../../common';
+import { ID, IdField } from '../../../common';
 
 @InputType()
 export abstract class RenameFileInput {
   @IdField({
     description: "The file node's ID",
   })
-  readonly id: string;
+  readonly id: ID;
 
   @Field({
     description: 'The new name',
@@ -20,12 +20,12 @@ export abstract class MoveFileInput {
   @IdField({
     description: "The file or directory's ID",
   })
-  readonly id: string;
+  readonly id: ID;
 
   @IdField({
     description: 'The new parent ID',
   })
-  readonly parentId: string;
+  readonly parentId: ID;
 
   @Field({
     description: stripIndent`

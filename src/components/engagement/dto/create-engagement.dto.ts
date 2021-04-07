@@ -1,7 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { CalendarDate, DateField, IdField } from '../../../common';
+import { CalendarDate, DateField, ID, IdField } from '../../../common';
 import { CreateDefinedFileVersionInput } from '../../file/dto';
 import { ProductMethodology } from '../../product/dto';
 import { InternshipEngagement, LanguageEngagement } from './engagement.dto';
@@ -13,7 +13,7 @@ import { EngagementStatus } from './status.enum';
 })
 export abstract class CreateEngagement {
   @IdField()
-  readonly projectId: string;
+  readonly projectId: ID;
 
   @DateField({ nullable: true })
   readonly completeDate?: CalendarDate;
@@ -37,19 +37,13 @@ export abstract class CreateEngagement {
 @InputType()
 export abstract class CreateLanguageEngagement extends CreateEngagement {
   @IdField()
-  readonly languageId: string;
+  readonly languageId: ID;
 
   @Field({ nullable: true })
   readonly firstScripture?: boolean;
 
   @Field({ nullable: true })
   readonly lukePartnership?: boolean;
-
-  @Field({
-    deprecationReason: 'Not proper case',
-    nullable: true,
-  })
-  readonly paraTextRegistryId?: string;
 
   @Field({ nullable: true })
   readonly paratextRegistryId?: string;
@@ -66,13 +60,13 @@ export abstract class CreateLanguageEngagement extends CreateEngagement {
 @InputType()
 export abstract class CreateInternshipEngagement extends CreateEngagement {
   @IdField()
-  readonly internId: string;
+  readonly internId: ID;
 
   @IdField({ nullable: true })
-  readonly mentorId?: string;
+  readonly mentorId?: ID;
 
   @IdField({ nullable: true })
-  readonly countryOfOriginId?: string;
+  readonly countryOfOriginId?: ID;
 
   @Field(() => InternshipPosition, { nullable: true })
   readonly position?: InternshipPosition;

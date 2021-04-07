@@ -1,5 +1,5 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { AnonSession, IdArg, LoggedInSession, Session } from '../../common';
+import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
 import {
   CreateSongInput,
   CreateSongOutput,
@@ -18,10 +18,7 @@ export class SongResolver {
   @Query(() => Song, {
     description: 'Look up a song by its ID',
   })
-  async song(
-    @AnonSession() session: Session,
-    @IdArg() id: string
-  ): Promise<Song> {
+  async song(@AnonSession() session: Session, @IdArg() id: ID): Promise<Song> {
     return await this.storyService.readOne(id, session);
   }
 
@@ -67,7 +64,7 @@ export class SongResolver {
   })
   async deleteSong(
     @LoggedInSession() session: Session,
-    @IdArg() id: string
+    @IdArg() id: ID
   ): Promise<boolean> {
     await this.storyService.delete(id, session);
     return true;

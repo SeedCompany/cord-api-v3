@@ -2,6 +2,7 @@ import { InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import {
+  ID,
   Order,
   PaginatedList,
   SecuredList,
@@ -11,7 +12,7 @@ import { Unavailability } from './unavailability.dto';
 
 @InputType()
 export abstract class UnavailabilityFilters {
-  readonly userId?: string;
+  readonly userId?: ID;
 }
 
 const defaultFilters = {};

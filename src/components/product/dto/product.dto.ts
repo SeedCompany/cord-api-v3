@@ -2,7 +2,7 @@ import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
-import { Resource, SecuredProps } from '../../../common';
+import { SecuredProps } from '../../../common';
 import { SecuredScriptureRangesOverride } from '../../scripture';
 import { Producible, SecuredProducible } from './producible.dto';
 import { SecuredProductMediums } from './product-medium';
@@ -12,6 +12,7 @@ import { SecuredProductPurposes } from './product-purpose';
 @InterfaceType({
   resolveType: (product: AnyProduct) =>
     product.produces ? DerivativeScriptureProduct : DirectScriptureProduct,
+  implements: [Producible],
 })
 export class Product extends Producible {
   static readonly Props: string[] = keysOf<Product>();
@@ -28,7 +29,7 @@ export class Product extends Producible {
 }
 
 @ObjectType({
-  implements: [Product, Producible, Resource],
+  implements: [Product],
   description: stripIndent`
     A product producing direct scripture only.
   `,
@@ -39,7 +40,7 @@ export class DirectScriptureProduct extends Product {
 }
 
 @ObjectType({
-  implements: [Product, Producible, Resource],
+  implements: [Product],
   description: stripIndent`
     A product producing derivative of scripture.
     Only meaning that this has a relationship to a \`Producible\` object.

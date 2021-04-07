@@ -1,11 +1,11 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, Node, Query, relation } from 'cypher-query-builder';
-import { pickBy } from 'lodash';
 import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
 import {
   DuplicateException,
   generateId,
+  ID,
   InputException,
   NotFoundException,
   SecuredResource,
@@ -122,16 +122,8 @@ export class EngagementService {
     private readonly eventBus: IEventBus,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
-    @Logger(`engagement.service`) private readonly logger: ILogger
+    @Logger(`engagement:service`) private readonly logger: ILogger
   ) {}
-
-  private setEngagementIdsIntoStatusObjects(engagements: EngagementListOutput) {
-    for (const engagement of engagements.items) {
-      // @ts-expect-error hack engagement id into status object
-      // so the lazy transitions field resolver can use it
-      engagement.status.engagementId = engagement.id;
-    }
-  }
 
   // CREATE /////////////////////////////////////////////////////////
 
@@ -220,7 +212,7 @@ export class EngagementService {
       ),
       ...property(
         'paratextRegistryId',
-        input.paratextRegistryId || input.paraTextRegistryId || undefined,
+        input.paratextRegistryId,
         'languageEngagement'
       ),
       ...property('pnp', pnpId || undefined, 'languageEngagement'),
@@ -599,7 +591,7 @@ export class EngagementService {
   // READ ///////////////////////////////////////////////////////////
 
   async readOne(
-    id: string,
+    id: ID,
     session: Session
   ): Promise<LanguageEngagement | InternshipEngagement> {
     this.logger.debug('readOne', { id, userId: session.userId });
@@ -686,12 +678,12 @@ export class EngagementService {
           >
         > & {
           __typename: 'LanguageEngagement' | 'InternshipEngagement';
-          language: string;
-          ceremony: string;
-          project: string;
-          intern: string;
-          countryOfOrigin: string;
-          mentor: string;
+          language: ID;
+          ceremony: ID;
+          project: ID;
+          intern: ID;
+          countryOfOrigin: ID;
+          mentor: ID;
           pnpData?: Node<PnpData>;
           memberRoles: Role[][];
         }
@@ -749,7 +741,11 @@ export class EngagementService {
         canRead: canReadEndDate,
         canEdit: false,
       },
-      canDelete: await this.db.checkDeletePermission(id, session),
+      canDelete:
+        props.status !== EngagementStatus.InDevelopment &&
+        !session.roles.includes(`global:Administrator`)
+          ? false
+          : await this.db.checkDeletePermission(id, session),
     };
 
     if (isLanguageEngagement) {
@@ -798,15 +794,11 @@ export class EngagementService {
       );
     }
 
-    const { pnp, paratextRegistryId, paraTextRegistryId, ...rest } = input;
-    const changes = pickBy(
-      {
-        ...rest,
-        paratextRegistryId: paratextRegistryId || paraTextRegistryId,
-        modifiedAt: DateTime.local(),
-      },
-      (val) => val !== undefined
-    );
+    const { pnp, ...rest } = input;
+    const changes = {
+      ...rest,
+      modifiedAt: DateTime.local(),
+    };
     const object = (await this.readOne(
       input.id,
       session
@@ -1031,16 +1023,14 @@ export class EngagementService {
 
   // DELETE /////////////////////////////////////////////////////////
 
-  async delete(id: string, session: Session): Promise<void> {
+  async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
     if (!object) {
       throw new NotFoundException('Could not find engagement', 'engagement.id');
     }
 
-    const canDelete = await this.db.checkDeletePermission(id, session);
-
-    if (!canDelete)
+    if (!object.canDelete)
       throw new UnauthorizedException(
         'You do not have the permission to delete this Engagement'
       );
@@ -1053,7 +1043,7 @@ export class EngagementService {
         node('project', 'Project'),
       ])
       .return('project.id as projectId')
-      .asResult<{ projectId: string }>()
+      .asResult<{ projectId: ID }>()
       .first();
 
     if (result) {
@@ -1111,7 +1101,6 @@ export class EngagementService {
     const engagements = await runListQuery(query, input, (id) =>
       this.readOne(id, session)
     );
-    this.setEngagementIdsIntoStatusObjects(engagements);
     return engagements;
   }
 
@@ -1175,7 +1164,7 @@ export class EngagementService {
     };
   }
 
-  async hasOngoing(projectId: string) {
+  async hasOngoing(projectId: ID) {
     const ids = await this.repo.getOngoingEngagementIds(projectId);
     return ids.length > 0;
   }
@@ -1287,7 +1276,7 @@ export class EngagementService {
     );
   }
 
-  private async savePnpData(id: string, pnpData: PnpData | null) {
+  private async savePnpData(id: ID, pnpData: PnpData | null) {
     const query = this.db.query();
     pnpData
       ? query
@@ -1308,8 +1297,8 @@ export class EngagementService {
   }
 
   protected async verifyRelationshipEligibility(
-    projectId: string,
-    otherId: string,
+    projectId: ID,
+    otherId: ID,
     type: ProjectType
   ): Promise<void> {
     const isTranslation = type === ProjectType.Translation;
@@ -1377,7 +1366,7 @@ export class EngagementService {
   protected async verifyFirstScripture({
     engagementId,
     languageId,
-  }: MergeExclusive<{ engagementId: string }, { languageId: string }>) {
+  }: MergeExclusive<{ engagementId: ID }, { languageId: ID }>) {
     const startQuery = () =>
       this.db.query().call((query) =>
         engagementId
@@ -1446,7 +1435,7 @@ export class EngagementService {
   /**
    * [BUSINESS RULE] Only Projects with a Status of 'In Development' can have Engagements created or deleted.
    */
-  protected async verifyProjectStatus(projectId: string, session: Session) {
+  protected async verifyProjectStatus(projectId: ID, session: Session) {
     if (this.config.migration) {
       return;
     }

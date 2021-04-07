@@ -1,6 +1,6 @@
 import { gql } from 'apollo-server-core';
 import { Except, Merge, MergeExclusive } from 'type-fest';
-import { Secured } from '../../src/common';
+import { ID, Secured } from '../../src/common';
 import {
   IEngagement,
   InternshipEngagement,
@@ -639,7 +639,7 @@ export const engagement = gql`
   ${product}
 `;
 type RawBaseEngagement = Except<Raw<IEngagement>, 'ceremony'> & {
-  ceremony: Secured<{ id: string }>;
+  ceremony: Secured<{ id: ID }>;
 };
 export type RawLanguageEngagement = RawBaseEngagement &
   Merge<

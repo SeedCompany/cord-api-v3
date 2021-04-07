@@ -4,6 +4,7 @@ import { DateTime } from 'luxon';
 import { ConditionalExcept, MergeExclusive } from 'type-fest';
 import {
   DateTimeField,
+  ID,
   Resource,
   Secured,
   SecuredProperty,
@@ -43,7 +44,7 @@ abstract class FileNode extends Resource {
   })
   readonly name: string;
 
-  readonly createdById: string;
+  readonly createdById: ID;
 }
 
 // class name has to match schema name for interface resolvers to work.
@@ -79,9 +80,9 @@ export class FileVersion extends BaseFile {
 export class File extends BaseFile {
   readonly type: FileNodeType.File;
 
-  readonly latestVersionId: string;
+  readonly latestVersionId: ID;
 
-  readonly modifiedById: string;
+  readonly modifiedById: ID;
 
   @DateTimeField()
   readonly modifiedAt: DateTime;
@@ -107,7 +108,7 @@ export abstract class SecuredFile extends SecuredProperty(File) {}
 /**
  * A reference to a secured defined file. The value is the ID of the file.
  */
-export type DefinedFile = Secured<string>;
+export type DefinedFile = Secured<ID>;
 
 export const isDirectory = (node: AnyFileNode): node is Directory =>
   isDirectoryNode(node);

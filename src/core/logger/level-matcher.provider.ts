@@ -18,7 +18,7 @@ export const LevelMatcherProvider: Provider<Promise<LevelMatcher>> = {
     }
     const defaults = ConfigService.logging;
     const yamlOverrides: Partial<typeof defaults> = rawYaml
-      ? pickBy(load(rawYaml, { filename: path }))
+      ? pickBy(load(rawYaml, { filename: path }) as typeof defaults)
       : {};
 
     const envDefault = process.env.LOG_LEVEL_DEFAULT as LogLevel | undefined;

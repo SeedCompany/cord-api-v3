@@ -5,6 +5,8 @@ import { DateTime } from 'luxon';
 import {
   DuplicateException,
   generateId,
+  ID,
+  isIdLike,
   mapFromList,
   NotFoundException,
   SecuredList,
@@ -170,7 +172,7 @@ export class UserService {
     );
   };
 
-  async create(input: CreatePerson, _session?: Session): Promise<string> {
+  async create(input: CreatePerson, _session?: Session): Promise<ID> {
     const id = await generateId();
     const createdAt = DateTime.local();
 
@@ -282,7 +284,7 @@ export class UserService {
     return result.id;
   }
 
-  async readOne(id: string, sessionOrUserId: Session | string): Promise<User> {
+  async readOne(id: ID, sessionOrUserId: Session | ID): Promise<User> {
     const query = this.db
       .query()
       .match([node('node', 'User', { id })])
@@ -302,10 +304,9 @@ export class UserService {
     let permsOfBaseNode: PermissionsOf<SecuredResource<typeof User, false>>;
     // -- let the user explicitly see all properties only if they're reading their own ID
     // -- TODO: express this within the authorization system. Like an Owner/Creator "meta" role that gets these x permissions.
-    const userId =
-      typeof sessionOrUserId === 'string'
-        ? sessionOrUserId
-        : sessionOrUserId.userId;
+    const userId = isIdLike(sessionOrUserId)
+      ? sessionOrUserId
+      : sessionOrUserId.userId;
     if (id === userId) {
       const implicitPerms = { canRead: true, canEdit: true };
       permsOfBaseNode = mapFromList(User.SecuredProps, (key) => [
@@ -444,7 +445,7 @@ export class UserService {
     return await this.readOne(input.id, session);
   }
 
-  async delete(id: string, session: Session): Promise<void> {
+  async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
     if (!object) {
@@ -491,7 +492,7 @@ export class UserService {
   }
 
   async listEducations(
-    userId: string,
+    userId: ID,
     input: EducationListInput,
     session: Session
   ): Promise<SecuredEducationList> {
@@ -561,7 +562,7 @@ export class UserService {
   }
 
   async listOrganizations(
-    userId: string,
+    userId: ID,
     input: OrganizationListInput,
     session: Session
   ): Promise<SecuredOrganizationList> {
@@ -632,7 +633,7 @@ export class UserService {
   }
 
   async listPartners(
-    userId: string,
+    userId: ID,
     input: PartnerListInput,
     session: Session
   ): Promise<SecuredPartnerList> {
@@ -707,7 +708,7 @@ export class UserService {
   }
 
   async listUnavailabilities(
-    userId: string,
+    userId: ID,
     input: UnavailabilityListInput,
     session: Session
   ): Promise<SecuredUnavailabilityList> {
@@ -778,8 +779,8 @@ export class UserService {
   }
 
   async addLocation(
-    userId: string,
-    locationId: string,
+    userId: ID,
+    locationId: ID,
     _session: Session
   ): Promise<void> {
     try {
@@ -795,8 +796,8 @@ export class UserService {
   }
 
   async removeLocation(
-    userId: string,
-    locationId: string,
+    userId: ID,
+    locationId: ID,
     _session: Session
   ): Promise<void> {
     try {
@@ -812,7 +813,7 @@ export class UserService {
   }
 
   async listLocations(
-    userId: string,
+    userId: ID,
     input: LocationListInput,
     session: Session
   ): Promise<SecuredLocationList> {
@@ -826,8 +827,8 @@ export class UserService {
   }
 
   async createKnownLanguage(
-    userId: string,
-    languageId: string,
+    userId: ID,
+    languageId: ID,
     languageProficiency: LanguageProficiency,
     _session: Session
   ): Promise<void> {
@@ -858,8 +859,8 @@ export class UserService {
   }
 
   async deleteKnownLanguage(
-    userId: string,
-    languageId: string,
+    userId: ID,
+    languageId: ID,
     languageProficiency: LanguageProficiency,
     _session: Session
   ): Promise<void> {
@@ -888,7 +889,7 @@ export class UserService {
   }
 
   async listKnownLanguages(
-    userId: string,
+    userId: ID,
     session: Session
   ): Promise<KnownLanguage[]> {
     const results = await this.db
@@ -907,7 +908,7 @@ export class UserService {
       ])
       .asResult<{
         languageProficiency: LanguageProficiency;
-        languageId: string;
+        languageId: ID;
       }>()
       .run();
 

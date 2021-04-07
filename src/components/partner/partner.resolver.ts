@@ -7,7 +7,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { AnonSession, IdArg, LoggedInSession, Session } from '../../common';
+import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
 import { OrganizationService, SecuredOrganization } from '../organization';
 import { SecuredUser, UserService } from '../user';
 import {
@@ -35,7 +35,7 @@ export class PartnerResolver {
   })
   async partner(
     @AnonSession() session: Session,
-    @IdArg() id: string
+    @IdArg() id: ID
   ): Promise<Partner> {
     return await this.partnerService.readOne(id, session);
   }
@@ -108,7 +108,7 @@ export class PartnerResolver {
   })
   async deletePartner(
     @LoggedInSession() session: Session,
-    @IdArg() id: string
+    @IdArg() id: ID
   ): Promise<boolean> {
     await this.partnerService.delete(id, session);
     return true;

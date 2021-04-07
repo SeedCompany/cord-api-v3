@@ -2,7 +2,7 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Transform, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { uniq } from 'lodash';
-import { CalendarDate, DateField, IdField } from '../../../common';
+import { CalendarDate, DateField, ID, IdField } from '../../../common';
 import { CreateDefinedFileVersionInput } from '../../file/dto';
 import { PartnerType } from '../../partner/dto';
 import { FinancialReportingType } from './financial-reporting-type';
@@ -12,10 +12,10 @@ import { Partnership } from './partnership.dto';
 @InputType()
 export class CreatePartnership {
   @IdField()
-  readonly partnerId: string;
+  readonly partnerId: ID;
 
   @IdField()
-  readonly projectId: string;
+  readonly projectId: ID;
 
   @Field(() => PartnershipAgreementStatus, { nullable: true })
   readonly agreementStatus?: PartnershipAgreementStatus;
@@ -40,7 +40,7 @@ export class CreatePartnership {
   readonly mouEndOverride?: CalendarDate;
 
   @Field(() => [PartnerType], { nullable: true })
-  @Transform(uniq)
+  @Transform(({ value }) => uniq(value))
   readonly types?: PartnerType[] = [];
 
   @Field(() => FinancialReportingType, { nullable: true })

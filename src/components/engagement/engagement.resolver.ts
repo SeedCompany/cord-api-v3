@@ -6,7 +6,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { AnonSession, IdArg, LoggedInSession, Session } from '../../common';
+import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
 import { CeremonyService, SecuredCeremony } from '../ceremony';
 import {
   CreateInternshipEngagementInput,
@@ -36,13 +36,10 @@ export class EngagementResolver {
     description: 'Lookup an engagement by ID',
   })
   async engagement(
-    @IdArg() id: string,
+    @IdArg() id: ID,
     @AnonSession() session: Session
   ): Promise<Engagement> {
     const engagement = await this.service.readOne(id, session);
-    // @ts-expect-error hack engagement id into status object
-    // so the lazy transitions field resolver can use it
-    engagement.status.engagementId = engagement.id;
     return engagement;
   }
 
@@ -86,9 +83,6 @@ export class EngagementResolver {
       input,
       session
     );
-    // @ts-expect-error hack engagement id into status object
-    // so the lazy transitions field resolver can use it
-    engagement.status.engagementId = engagement.id;
     return { engagement };
   }
 
@@ -103,9 +97,6 @@ export class EngagementResolver {
       input,
       session
     );
-    // @ts-expect-error hack engagement id into status object
-    // so the lazy transitions field resolver can use it
-    engagement.status.engagementId = engagement.id;
     return { engagement };
   }
 
@@ -120,9 +111,6 @@ export class EngagementResolver {
       input,
       session
     );
-    // @ts-expect-error hack engagement id into status object
-    // so the lazy transitions field resolver can use it
-    engagement.status.engagementId = engagement.id;
     return { engagement };
   }
 
@@ -137,9 +125,6 @@ export class EngagementResolver {
       input,
       session
     );
-    // @ts-expect-error hack engagement id into status object
-    // so the lazy transitions field resolver can use it
-    engagement.status.engagementId = engagement.id;
     return { engagement };
   }
 
@@ -147,7 +132,7 @@ export class EngagementResolver {
     description: 'Delete an engagement',
   })
   async deleteEngagement(
-    @IdArg() id: string,
+    @IdArg() id: ID,
     @LoggedInSession() session: Session
   ): Promise<boolean> {
     await this.service.delete(id, session);

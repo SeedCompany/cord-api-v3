@@ -4,6 +4,7 @@ import { DateTime } from 'luxon';
 import {
   DuplicateException,
   generateId,
+  ID,
   NotFoundException,
   ServerException,
   Session,
@@ -154,7 +155,7 @@ export class FieldRegionService {
     return await this.readOne(result.id, session);
   }
 
-  async readOne(id: string, session: Session): Promise<FieldRegion> {
+  async readOne(id: ID, session: Session): Promise<FieldRegion> {
     this.logger.debug(`Read Field Region`, {
       id: id,
       userId: session.userId,
@@ -180,8 +181,8 @@ export class FieldRegionService {
       )
       .asResult<
         StandardReadResult<DbPropsOfDto<FieldRegion>> & {
-          directorId: string;
-          fieldZoneId: string;
+          directorId: ID;
+          fieldZoneId: ID;
         }
       >();
 
@@ -234,7 +235,7 @@ export class FieldRegionService {
     return await this.readOne(input.id, session);
   }
 
-  async delete(id: string, session: Session): Promise<void> {
+  async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
     if (!object) {

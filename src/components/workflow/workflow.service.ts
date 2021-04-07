@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import {
   generateId,
+  ID,
   NotFoundException,
   ServerException,
   Session,
@@ -121,7 +122,7 @@ export class WorkflowService {
     }
   }
 
-  async deleteWorkflow(session: Session, workflowId: string): Promise<void> {
+  async deleteWorkflow(session: Session, workflowId: ID): Promise<void> {
     try {
       await this.db
         .query()
@@ -351,7 +352,7 @@ export class WorkflowService {
   }
 
   // deleteStateFromWorkflow
-  async deleteState(session: Session, stateId: string): Promise<void> {
+  async deleteState(session: Session, stateId: ID): Promise<void> {
     try {
       await this.db
         .query()
@@ -393,10 +394,7 @@ export class WorkflowService {
   }
 
   // we don't need to have a list workflow function when we have a list state function that takes the baseNodeId // listAllStatesOnWorkflow
-  async listStates(
-    session: Session,
-    baseNodeId: string
-  ): Promise<StateListOutput> {
+  async listStates(session: Session, baseNodeId: ID): Promise<StateListOutput> {
     try {
       const result = (await this.db
         .query()
@@ -444,7 +442,7 @@ export class WorkflowService {
   // this will be used to get the next possible states of any state, including the current state  // listNextPossibleStates
   async listNextStates(
     session: Session,
-    stateId: string
+    stateId: ID
   ): Promise<StateListOutput> {
     try {
       // WIP, not sure how to check session in this function
@@ -1016,7 +1014,7 @@ export class WorkflowService {
   // listAllRequiredFieldsInAState
   async listRequiredFields(
     session: Session,
-    stateId: string
+    stateId: ID
   ): Promise<RequiredFieldListOutput> {
     try {
       const result = (await this.db

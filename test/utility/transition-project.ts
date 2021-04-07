@@ -1,4 +1,5 @@
 import { gql } from 'apollo-server-core';
+import { ID } from '../../src/common';
 import {
   ProjectStep,
   ProjectStepTransition,
@@ -37,7 +38,7 @@ type SecuredStep = SecuredProjectStep & {
 
 export const changeProjectStep = async (
   app: TestApp,
-  id: string,
+  id: ID,
   to: ProjectStep
 ): Promise<SecuredStep> => {
   const result = await app.graphql.mutate(
