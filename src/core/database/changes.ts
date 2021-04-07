@@ -9,11 +9,28 @@ import {
 } from '../../common';
 import { CreateDefinedFileVersionInput, FileId } from '../../components/file';
 
+/**
+ * Specify this on a property to override the key & value type for ChangesOf on
+ * the object.
+ *
+ * @example
+ * class Foo {
+ *   color: string & SetChangeType<'hexColor', number>
+ * }
+ * const changes: ChangesOf<Foo> = {
+ *   hexColor: 0xFFFFFF,
+ * };
+ */
+export interface SetChangeType<Key, Value> {
+  // eslint-disable-next-line @typescript-eslint/naming-convention -- shush we are hiding this. It's only for TS types.
+  __update_type__?: { key: Key; value: Value };
+}
+
 export type ChangesOf<T extends { id: string }> = {
   [Key in keyof T & string as ChangeKey<
     Exclude<Key, keyof Resource>,
     T
-  >]?: ChangeOf<UnwrapSecured<T[Key]>>;
+  >]?: ChangeOf<T[Key]>;
 } & {
   // allow id to be passed in and removed from changes as it's what we are doing
   // all over the app.
@@ -23,13 +40,21 @@ export type ChangesOf<T extends { id: string }> = {
 export type ChangeKey<
   Key extends keyof T & string,
   T extends { id: string }
-> = UnwrapSecured<T[Key]> extends FileId
+> = T[Key] extends SetChangeType<infer Override, any>
+  ? Override extends string
+    ? Override
+    : never
+  : UnwrapSecured<T[Key]> extends FileId
   ? Key
   : UnwrapSecured<T[Key]> extends ID
   ? `${Key}Id` // our convention for relationships
   : Key;
 
-type ChangeOf<Val> = Val extends FileId ? CreateDefinedFileVersionInput : Val;
+type ChangeOf<Val> = Val extends SetChangeType<any, infer Override>
+  ? Override
+  : UnwrapSecured<Val> extends FileId
+  ? CreateDefinedFileVersionInput
+  : UnwrapSecured<Val>;
 
 /**
  * Given the existing object and proposed changes, return only the changes
