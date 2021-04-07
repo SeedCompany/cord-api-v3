@@ -193,7 +193,7 @@ export class PeriodicReportService {
       .return('node, propList, reportFile.id as reportFileId')
       .asResult<
         StandardReadResult<DbPropsOfDto<PeriodicReport>> & {
-          reportFileId: string;
+          reportFileId: ID;
         }
       >();
 
@@ -218,6 +218,10 @@ export class PeriodicReportService {
       type: props.type,
       start: props.start,
       end: props.end,
+      reportFile: {
+        ...securedProps.reportFile,
+        value: result.reportFileId,
+      },
       canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
