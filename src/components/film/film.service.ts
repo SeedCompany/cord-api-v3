@@ -185,37 +185,17 @@ export class FilmService {
 
   async update(input: UpdateFilm, session: Session): Promise<Film> {
     const film = await this.readOne(input.id, session);
-    const {
-      scriptureReferences: changeScriptureRefOnly,
-      ...changesNoScrip
-    } = input;
-    const realChanges = await this.db.getActualChanges(
-      Film,
-      film,
-      changesNoScrip
-    );
-    await this.authorizationService.verifyCanEditChanges(
-      Film,
-      film,
-      realChanges
-    );
-    if (changeScriptureRefOnly) {
-      await this.authorizationService.verifyCanEdit({
-        resource: Film,
-        baseNode: film,
-        prop: 'scriptureReferences',
-      });
-      await this.scriptureRefService.update(
-        input.id,
-        input.scriptureReferences
-      );
-    }
+    const changes = this.db.getActualChanges(Film, film, input);
+    await this.authorizationService.verifyCanEditChanges(Film, film, changes);
+    const { scriptureReferences, ...simpleChanges } = changes;
 
+    await this.scriptureRefService.update(input.id, scriptureReferences);
     await this.db.updateProperties({
-      type: 'Film',
+      type: Film,
       object: film,
-      changes: realChanges,
+      changes: simpleChanges,
     });
+
     return await this.readOne(input.id, session);
   }
 

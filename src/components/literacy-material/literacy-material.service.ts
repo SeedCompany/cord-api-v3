@@ -202,31 +202,24 @@ export class LiteracyMaterialService {
     session: Session
   ): Promise<LiteracyMaterial> {
     const literacyMaterial = await this.readOne(input.id, session);
-    const {
-      scriptureReferences: changeScriptureRefOnly,
-      ...changesNoScripRef
-    } = input;
-    const realChanges = await this.db.getActualChanges(
+    const changes = this.db.getActualChanges(
       LiteracyMaterial,
       literacyMaterial,
-      changesNoScripRef
+      input
     );
     await this.authorizationService.verifyCanEditChanges(
       LiteracyMaterial,
       literacyMaterial,
-      realChanges
+      changes
     );
-    await this.authorizationService.verifyCanEdit({
-      resource: LiteracyMaterial,
-      baseNode: literacyMaterial,
-      prop: 'scriptureReferences',
-    });
-    await this.scriptureRefService.update(input.id, input.scriptureReferences);
+    const { scriptureReferences, ...simpleChanges } = changes;
+
+    await this.scriptureRefService.update(input.id, scriptureReferences);
 
     await this.db.updateProperties({
-      type: 'LiteracyMaterial',
+      type: LiteracyMaterial,
       object: literacyMaterial,
-      changes: realChanges,
+      changes: simpleChanges,
     });
 
     return await this.readOne(input.id, session);

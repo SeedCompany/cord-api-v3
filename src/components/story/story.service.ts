@@ -187,28 +187,17 @@ export class StoryService {
 
   async update(input: UpdateStory, session: Session): Promise<Story> {
     const story = await this.readOne(input.id, session);
-    const { scriptureReferences, ...simplePropChanges } = input;
-    const realChanges = await this.db.getActualChanges(
-      Story,
-      story,
-      simplePropChanges
-    );
-    await this.authorizationService.verifyCanEditChanges(
-      Story,
-      story,
-      realChanges
-    );
-    await this.authorizationService.verifyCanEdit({
-      resource: Story,
-      baseNode: story,
-      prop: 'scriptureReferences',
-    });
-    await this.scriptureRefService.update(input.id, input.scriptureReferences);
+    const changes = this.db.getActualChanges(Story, story, input);
+    await this.authorizationService.verifyCanEditChanges(Story, story, changes);
+    const { scriptureReferences, ...simpleChanges } = changes;
+
+    await this.scriptureRefService.update(input.id, scriptureReferences);
     await this.db.updateProperties({
-      type: 'Story',
+      type: Story,
       object: story,
-      changes: realChanges,
+      changes: simpleChanges,
     });
+
     return await this.readOne(input.id, session);
   }
 
