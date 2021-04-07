@@ -140,29 +140,30 @@ export class EthnologueLanguageService {
     if (!input) return;
     const ethnologueLanguage = await this.readOne(id, session);
 
-    // Make a mapping of the fields that we want to set in the db to the inputs
-    const valueSet = {
-      'code.value': input.code,
-      'provisionalCode.value': input.provisionalCode,
-      'name.value': input.name,
-      'population.value': input.population,
-    };
-
-    // filter out all of the undefined values so we only have a mapping of entries that the user wanted to edit
-    const valueSetCleaned = pickBy(valueSet, (v) => v !== undefined);
-
-    // even though we already have a cleaned value set, we still need to get them in a readable way for the verifyCanEditChanges function
-    const realChanges = await this.db.getActualChanges(
+    const changes = this.db.getActualChanges(
       EthnologueLanguage,
       ethnologueLanguage,
       input
     );
 
+    // Make a mapping of the fields that we want to set in the db to the inputs
+    const valueSet = pickBy(
+      {
+        'code.value': changes.code,
+        'provisionalCode.value': changes.provisionalCode,
+        'name.value': changes.name,
+        'population.value': changes.population,
+      },
+      (v) => v !== undefined
+    );
+
+    // even though we already have a cleaned value set, we still need to verify edit permission
     await this.authorizationService.verifyCanEditChanges(
       EthnologueLanguage,
       ethnologueLanguage,
-      realChanges
+      changes
     );
+
     try {
       const query = this.db
         .query()
@@ -193,7 +194,7 @@ export class EthnologueLanguageService {
             node('population', 'Property'),
           ],
         ])
-        .setValues(valueSetCleaned);
+        .setValues(valueSet);
       await query.run();
     } catch (exception) {
       this.logger.error('update failed', { exception });

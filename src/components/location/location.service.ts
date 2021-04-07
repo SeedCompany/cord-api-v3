@@ -247,52 +247,33 @@ export class LocationService {
   async update(input: UpdateLocation, session: Session): Promise<Location> {
     const location = await this.readOne(input.id, session);
 
-    const {
-      fundingAccountId,
-      defaultFieldRegionId,
-      ...simplePropChanges
-    } = input;
-    const realChanges = await this.db.getActualChanges(
-      Location,
-      location,
-      simplePropChanges
-    );
+    const changes = this.db.getActualChanges(Location, location, input);
     await this.authorizationService.verifyCanEditChanges(
       Location,
       location,
-      realChanges
+      changes
     );
-    if (fundingAccountId) {
-      await this.authorizationService.verifyCanEdit({
-        resource: Location,
-        baseNode: location,
-        prop: 'fundingAccount',
-        propName: 'fundingAccountId',
-      });
-    }
-    if (input.defaultFieldRegionId) {
-      await this.authorizationService.verifyCanEdit({
-        resource: Location,
-        baseNode: location,
-        prop: 'defaultFieldRegion',
-        propName: 'defaultFieldRegionId',
-      });
-    }
+
+    const {
+      fundingAccountId,
+      defaultFieldRegionId,
+      ...simpleChanges
+    } = changes;
+
     await this.db.updateProperties({
-      type: 'Location',
+      type: Location,
       object: location,
-      changes: realChanges,
+      changes: simpleChanges,
     });
 
-    // Update fundingAccount
-    if (input.fundingAccountId) {
+    if (fundingAccountId) {
       const createdAt = DateTime.local();
       await this.db
         .query()
         .call(matchRequestingUser, session)
         .matchNode('location', 'Location', { id: input.id })
         .matchNode('newFundingAccount', 'FundingAccount', {
-          id: input.fundingAccountId,
+          id: fundingAccountId,
         })
         .optionalMatch([
           node('location'),
@@ -317,14 +298,14 @@ export class LocationService {
         .run();
     }
 
-    if (input.defaultFieldRegionId) {
+    if (defaultFieldRegionId) {
       const createdAt = DateTime.local();
       await this.db
         .query()
         .call(matchRequestingUser, session)
         .matchNode('location', 'Location', { id: input.id })
         .matchNode('newDefaultFieldRegion', 'FieldRegion', {
-          id: input.defaultFieldRegionId,
+          id: defaultFieldRegionId,
         })
         .optionalMatch([
           node('location'),

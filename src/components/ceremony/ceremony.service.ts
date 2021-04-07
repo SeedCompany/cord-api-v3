@@ -177,17 +177,16 @@ export class CeremonyService {
 
   async update(input: UpdateCeremony, session: Session): Promise<Ceremony> {
     const object = await this.readOne(input.id, session);
-    const realChanges = await this.db.getActualChanges(Ceremony, object, input);
+    const changes = this.db.getActualChanges(Ceremony, object, input);
     await this.authorizationService.verifyCanEditChanges(
       Ceremony,
       object,
-      realChanges
+      changes
     );
-
     return await this.db.updateProperties({
-      type: 'Ceremony',
-      object: object,
-      changes: realChanges,
+      type: Ceremony,
+      object,
+      changes,
     });
   }
 

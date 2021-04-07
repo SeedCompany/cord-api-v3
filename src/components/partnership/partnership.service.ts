@@ -359,7 +359,6 @@ export class PartnershipService {
   async update(input: UpdatePartnership, session: Session) {
     // mou start and end are now computed fields and do not get updated directly
     const object = await this.readOne(input.id, session);
-    let changes = input;
 
     const partner = await this.partnerService.readOne(
       object.partner.value!,
@@ -375,8 +374,8 @@ export class PartnershipService {
       if (input.types && !input.financialReportingType) {
         // If input is removing Managing type and FRT is omitted, help caller
         // out and just remove FRT as well, instead of throwing error.
-        changes = {
-          ...changes,
+        input = {
+          ...input,
           financialReportingType: null,
         };
       } else {
@@ -391,41 +390,22 @@ export class PartnershipService {
       );
     }
 
-    const { mou, agreement, ...changesSimpleProps } = changes;
-    const realChanges = await this.db.getActualChanges(
-      Partnership,
-      object,
-      changesSimpleProps
-    );
+    const changes = this.db.getActualChanges(Partnership, object, input);
     await this.authorizationService.verifyCanEditChanges(
       Partnership,
       object,
-      realChanges
+      changes
     );
+    const { mou, agreement, ...simpleChanges } = changes;
 
-    if (!object.primary.value && input.primary) {
+    if (changes.primary) {
       await this.removeOtherPartnershipPrimary(input.id);
     }
 
-    if (mou) {
-      await this.authorizationService.verifyCanEdit({
-        resource: Partnership,
-        baseNode: object,
-        prop: 'mou',
-      });
-    }
-    if (agreement) {
-      await this.authorizationService.verifyCanEdit({
-        resource: Partnership,
-        baseNode: object,
-        prop: 'agreement',
-      });
-    }
-
     await this.db.updateProperties({
-      type: 'Partnership',
+      type: Partnership,
       object,
-      changes: realChanges,
+      changes: simpleChanges,
     });
     await this.files.updateDefinedFile(
       object.mou,

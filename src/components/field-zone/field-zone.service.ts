@@ -192,33 +192,24 @@ export class FieldZoneService {
   async update(input: UpdateFieldZone, session: Session): Promise<FieldZone> {
     const fieldZone = await this.readOne(input.id, session);
 
-    const { directorId, ...inputSimpleProps } = input;
-
-    const realChanges = await this.db.getActualChanges(
-      FieldZone,
-      fieldZone,
-      inputSimpleProps
-    );
+    const changes = this.db.getActualChanges(FieldZone, fieldZone, input);
     await this.authorizationService.verifyCanEditChanges(
       FieldZone,
       fieldZone,
-      realChanges
+      changes
     );
-    await this.authorizationService.verifyCanEdit({
-      resource: FieldZone,
-      baseNode: fieldZone,
-      prop: 'director',
-      propName: 'directorId',
-    });
+
+    const { directorId, ...simpleChanges } = changes;
+
     // update director
-    if (input.directorId) {
+    if (directorId) {
       const createdAt = DateTime.local();
       const query = this.db
         .query()
         .match(node('fieldZone', 'FieldZone', { id: input.id }))
         .with('fieldZone')
         .limit(1)
-        .match([node('director', 'User', { id: input.directorId })])
+        .match([node('director', 'User', { id: directorId })])
         .optionalMatch([
           node('fieldZone'),
           relation('out', 'oldRel', 'director', { active: true }),
@@ -240,9 +231,9 @@ export class FieldZoneService {
     }
 
     await this.db.updateProperties({
-      type: 'FieldZone',
+      type: FieldZone,
       object: fieldZone,
-      changes: realChanges,
+      changes: simpleChanges,
     });
 
     return await this.readOne(input.id, session);

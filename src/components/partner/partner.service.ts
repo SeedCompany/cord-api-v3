@@ -308,10 +308,7 @@ export class PartnerService {
 
   async update(input: UpdatePartner, session: Session): Promise<Partner> {
     const object = await this.readOne(input.id, session);
-    let changes = {
-      ...input,
-      modifiedAt: DateTime.local(),
-    };
+
     if (
       !this.validateFinancialReportingType(
         input.financialReportingTypes ?? object.financialReportingTypes.value,
@@ -324,37 +321,26 @@ export class PartnerService {
           'partnership.financialReportingType'
         );
       }
-      changes = {
-        ...changes,
+      input = {
+        ...input,
         financialReportingTypes: [],
       };
     }
 
-    const { pointOfContactId, ...changesNoPOC } = changes;
-    const realChanges = await this.db.getActualChanges(
-      Partner,
-      object,
-      changesNoPOC
-    );
+    const changes = this.db.getActualChanges(Partner, object, input);
     await this.authorizationService.verifyCanEditChanges(
       Partner,
       object,
-      realChanges
+      changes
     );
-    if (pointOfContactId) {
-      await this.authorizationService.verifyCanEdit({
-        resource: Partner,
-        baseNode: object,
-        prop: 'pointOfContact',
-        propName: 'pointOfContactId',
-      });
-    }
+    const { pointOfContactId, ...simpleChanges } = changes;
+
     await this.db.updateProperties({
-      type: 'Partner',
+      type: Partner,
       object,
-      changes: realChanges,
+      changes: { ...simpleChanges, modifiedAt: DateTime.local() },
     });
-    // Update partner
+
     if (pointOfContactId) {
       const createdAt = DateTime.local();
       await this.db

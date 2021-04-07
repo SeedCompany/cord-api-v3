@@ -176,7 +176,7 @@ export class UnavailabilityService {
         'user.unavailability'
       );
     }
-    const realChanges = await this.db.getActualChanges(
+    const changes = this.db.getActualChanges(
       Unavailability,
       unavailability,
       input
@@ -186,13 +186,13 @@ export class UnavailabilityService {
       await this.authorizationService.verifyCanEditChanges(
         Unavailability,
         unavailability,
-        realChanges
+        changes
       );
     }
     return await this.db.updateProperties({
-      type: 'Unavailability',
+      type: Unavailability,
       object: unavailability,
-      changes: realChanges,
+      changes,
     });
   }
 
