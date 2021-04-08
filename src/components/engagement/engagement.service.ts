@@ -8,6 +8,7 @@ import {
   ID,
   InputException,
   NotFoundException,
+  SecuredList,
   SecuredResource,
   ServerException,
   Session,
@@ -1109,6 +1110,15 @@ export class EngagementService {
     input: ProductListInput,
     session: Session
   ): Promise<SecuredProductList> {
+    const { product: perms } = await this.authorizationService.getPermissions(
+      LanguageEngagement,
+      session,
+      await this.repo.rolesInScope(engagement.id, session)
+    );
+    if (!perms.canRead) {
+      return SecuredList.Redacted;
+    }
+
     const result = await this.products.list(
       {
         ...input,
@@ -1120,16 +1130,10 @@ export class EngagementService {
       session
     );
 
-    const permissions = await this.authorizationService.getPermissions(
-      LanguageEngagement,
-      session,
-      await this.repo.rolesInScope(engagement.id, session)
-    );
-
     return {
       ...result,
-      canRead: permissions.product.canRead,
-      canCreate: permissions.product.canEdit,
+      canRead: true,
+      canCreate: perms.canEdit,
     };
   }
 
