@@ -17,6 +17,7 @@ import {
   ID,
   isSecured,
   many,
+  MaybeUnsecuredInstance,
   Order,
   Resource,
   ResourceShape,
@@ -214,7 +215,9 @@ export class DatabaseService {
 
   async updateProperties<
     TResourceStatic extends ResourceShape<any>,
-    TObject extends Partial<TResourceStatic['prototype']> & { id: ID }
+    TObject extends Partial<MaybeUnsecuredInstance<TResourceStatic>> & {
+      id: ID;
+    }
   >({
     type,
     object,
@@ -257,7 +260,9 @@ export class DatabaseService {
 
   async updateProperty<
     TResourceStatic extends ResourceShape<any>,
-    TObject extends Partial<TResourceStatic['prototype']> & { id: ID },
+    TObject extends Partial<MaybeUnsecuredInstance<TResourceStatic>> & {
+      id: ID;
+    },
     Key extends keyof DbChanges<TObject> & string
   >({
     type,
@@ -527,7 +532,7 @@ export class DatabaseService {
     // return !!result;
   }
 
-  async deleteNodeNew<TObject extends Resource>({
+  async deleteNodeNew<TObject extends { id: string }>({
     object,
   }: {
     object: TObject;
