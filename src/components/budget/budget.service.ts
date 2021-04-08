@@ -470,36 +470,9 @@ export class BudgetService {
     { id, ...input }: UpdateBudgetRecord,
     session: Session
   ): Promise<BudgetRecord> {
-    this.logger.debug('Update budget Record, ', { id, userId: session.userId });
+    this.logger.debug('Update budget record', { id, userId: session.userId });
 
-    // 574 - Budget records are only editable if the budget is pending
-    // Get budget status
-    const budgetStatusQuery = this.db
-      .query()
-      .match(matchSession(session, { withAclRead: 'canReadBudgets' }))
-      .match([
-        node('budgetRecord', 'BudgetRecord', { id }),
-        relation('in', '', 'record', {
-          active: true,
-        }),
-        node('budget', 'Budget'),
-        relation('out', '', 'status', { active: true }),
-        node('status', 'Property'),
-      ]);
-    budgetStatusQuery.return([
-      {
-        budget: [{ id: 'id' }],
-        status: [{ value: 'status' }],
-      },
-    ]);
-
-    const readBudget = await budgetStatusQuery.first();
-    if (!readBudget?.status.includes(BudgetStatus.Pending)) {
-      throw new InputException(
-        'budget records can not be modified',
-        'budgetRecord.id'
-      );
-    }
+    await this.verifyCanEdit(id, session);
 
     const br = await this.readOneRecord(id, session);
 
@@ -518,6 +491,35 @@ export class BudgetService {
         userId: session.userId,
       });
       throw e;
+    }
+  }
+
+  private async verifyCanEdit(id: ID, session: Session) {
+    if (session.roles.includes('global:Administrator')) {
+      return;
+    }
+
+    const result = await this.db
+      .query()
+      .match([
+        node('budgetRecord', 'BudgetRecord', { id }),
+        relation('in', '', 'record', { active: true }),
+        node('budget', 'Budget'),
+        relation('out', '', 'status', { active: true }),
+        node('status', 'Property'),
+      ])
+      .return('status.value as status')
+      .asResult<{ status: BudgetStatus }>()
+      .first();
+    if (!result) {
+      throw new NotFoundException('Budget could not be found');
+    }
+
+    if (result.status !== BudgetStatus.Pending) {
+      throw new InputException(
+        'Budget cannot be modified',
+        'budgetRecord.amount'
+      );
     }
   }
 
