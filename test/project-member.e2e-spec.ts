@@ -14,6 +14,7 @@ import {
   createTestApp,
   fragments,
   login,
+  Raw,
   registerUser,
   TestApp,
 } from './utility';
@@ -252,15 +253,12 @@ describe('ProjectMember e2e', () => {
     expect(result.updateProjectMember.projectMember.roles.value).toEqual(
       expect.arrayContaining([Role.ProjectManager])
     );
-    const updated = result.updateProjectMember.projectMember;
-    const difference = Interval.fromDateTimes(
-      DateTime.fromISO(projectMember.modifiedAt.toString()),
-      DateTime.fromISO(updated.modifiedAt)
-    )
-      .toDuration()
-      .toFormat('S');
+    const updated: Raw<ProjectMember> =
+      result.updateProjectMember.projectMember;
     expect(updated).toBeTruthy();
-    expect(parseInt(difference)).toBeGreaterThan(0);
+    expect(+DateTime.fromISO(updated.modifiedAt)).toBeGreaterThan(
+      +DateTime.fromISO(projectMember.modifiedAt)
+    );
   });
 
   it('should throw error with invalid roles when update', async () => {
