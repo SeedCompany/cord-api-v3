@@ -1,6 +1,7 @@
 import { Field, Int, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
+import { keys as keysOf } from 'ts-transformer-keys';
 import { ConditionalExcept, MergeExclusive, Opaque } from 'type-fest';
 import {
   DateTimeField,
@@ -8,6 +9,7 @@ import {
   Resource,
   Secured,
   SecuredProperty,
+  SecuredProps,
   simpleSwitch,
 } from '../../../common';
 import { FileNodeType } from './type';
@@ -33,6 +35,9 @@ export type AnyFileNode = MergeExclusive<
  * This should be used for GraphQL but never for TypeScript types.
  */
 abstract class FileNode extends Resource {
+  static readonly Props: string[] = keysOf<FileNode>();
+  static readonly SecuredProps: string[] = keysOf<SecuredProps<FileNode>>();
+
   @Field(() => FileNodeType)
   readonly type: FileNodeType;
 
@@ -71,6 +76,9 @@ abstract class BaseFile extends FileNode {
   implements: [FileNode, Resource],
 })
 export class FileVersion extends BaseFile {
+  static readonly Props = keysOf<FileVersion>();
+  static readonly SecuredProps = keysOf<SecuredProps<FileVersion>>();
+
   readonly type: FileNodeType.FileVersion;
 }
 
@@ -78,6 +86,9 @@ export class FileVersion extends BaseFile {
   implements: [FileNode, Resource],
 })
 export class File extends BaseFile {
+  static readonly Props = keysOf<File>();
+  static readonly SecuredProps = keysOf<SecuredProps<File>>();
+
   readonly type: FileNodeType.File;
 
   readonly latestVersionId: ID;
@@ -92,6 +103,9 @@ export class File extends BaseFile {
   implements: [FileNode, Resource],
 })
 export class Directory extends FileNode {
+  static readonly Props = keysOf<Directory>();
+  static readonly SecuredProps = keysOf<SecuredProps<Directory>>();
+
   readonly type: FileNodeType.Directory;
 }
 
