@@ -1,5 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
+import { GraphQLString } from 'graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
   ID,
@@ -20,7 +21,9 @@ import { UpdateEthnologueLanguage } from './update-language.dto';
 @ObjectType({
   description: SecuredPropertyList.descriptionFor('tags'),
 })
-export abstract class SecuredTags extends SecuredPropertyList(String) {}
+export abstract class SecuredTags extends SecuredPropertyList<string>(
+  GraphQLString
+) {}
 
 @ObjectType()
 export class EthnologueLanguage {
