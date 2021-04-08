@@ -603,7 +603,6 @@ export class ProjectService {
 
     const changes = this.db.getActualChanges(IProject, currentProject, {
       ...input,
-      modifiedAt: DateTime.local(),
       ...(input.step ? { status: stepToStatus(input.step) } : {}),
     });
 

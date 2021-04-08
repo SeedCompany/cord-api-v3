@@ -824,10 +824,7 @@ export class EngagementService {
       await this.db.updateProperties({
         type: LanguageEngagement,
         object: object,
-        changes: {
-          ...simpleChanges,
-          modifiedAt: DateTime.local(),
-        },
+        changes: simpleChanges,
       });
     } catch (exception) {
       this.logger.error('Error updating language engagement', { exception });
@@ -972,10 +969,7 @@ export class EngagementService {
       await this.db.updateProperties({
         type: InternshipEngagement,
         object,
-        changes: {
-          ...simpleChanges,
-          modifiedAt: DateTime.local(),
-        },
+        changes: simpleChanges,
       });
       // update property node labels
       Object.keys(input).map(async (ele) => {

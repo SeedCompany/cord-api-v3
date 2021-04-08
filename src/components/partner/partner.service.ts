@@ -338,7 +338,7 @@ export class PartnerService {
     await this.db.updateProperties({
       type: Partner,
       object,
-      changes: { ...simpleChanges, modifiedAt: DateTime.local() },
+      changes: simpleChanges,
     });
 
     if (pointOfContactId) {

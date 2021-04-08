@@ -93,12 +93,24 @@ export function getChanges<
     // are passed in we don't declare the return type having those omitted
     // properties.
     Record<Exclude<keyof Changes, keyof ChangesOf<TResource>>, never>
-): Partial<Omit<Changes, keyof Resource>> {
-  return pickBy(omit(changes, Resource.Props), (change, prop) => {
+): Partial<Omit<Changes, keyof Resource> & Pick<TResource, 'modifiedAt'>> {
+  const actual = pickBy(omit(changes, Resource.Props), (change, prop) => {
     const key = isRelation(prop, existingObject) ? prop.slice(0, -2) : prop;
     const existing = unwrapSecured(existingObject[key]);
     return !isSame(change, existing);
-  }) as any;
+  });
+
+  if (
+    Object.keys(actual).length > 0 &&
+    resource.Props.includes('modifiedAt') &&
+    !actual.modifiedAt
+  ) {
+    return {
+      ...(actual as any),
+      modifiedAt: DateTime.local(),
+    };
+  }
+  return actual as any;
 }
 
 /**
