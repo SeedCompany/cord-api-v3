@@ -51,13 +51,13 @@ export class EngagementRules {
             {
               to: EngagementStatus.Active,
               type: EngagementTransitionType.Approve,
-              label: 'Project was made active',
+              label: 'Approve',
               projectStepRequirements: [ProjectStep.Active],
             },
             {
               to: EngagementStatus.DidNotDevelop,
               type: EngagementTransitionType.Reject,
-              label: 'Project did not develop',
+              label: 'End Development',
               projectStepRequirements: [ProjectStep.DidNotDevelop],
             },
             {
