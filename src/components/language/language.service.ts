@@ -359,43 +359,34 @@ export class LanguageService {
     };
   }
 
-  async update(
-    { ethnologue: newEthnologue, ...input }: UpdateLanguage,
-    session: Session
-  ): Promise<Language> {
+  async update(input: UpdateLanguage, session: Session): Promise<Language> {
     if (input.hasExternalFirstScripture) {
       await this.verifyExternalFirstScripture(input.id);
     }
 
     const object = await this.readOne(input.id, session);
-    const realChanges = await this.db.getActualChanges(Language, object, input);
+    const changes = this.db.getActualChanges(Language, object, input);
     await this.authorizationService.verifyCanEditChanges(
       Language,
       object,
-      realChanges
+      changes
     );
-    if (newEthnologue) {
-      await this.authorizationService.verifyCanEdit({
-        resource: Language,
-        baseNode: object,
-        prop: 'ethnologue',
-      });
-    }
 
-    await this.db.updateProperties({
-      type: 'Language',
-      object: object,
-      changes: realChanges,
-    });
+    const { ethnologue, ...simpleChanges } = changes;
 
-    // Update EthnologueLanguage
-    if (newEthnologue) {
+    if (ethnologue) {
       await this.ethnologueLanguageService.update(
         object.ethnologue.id,
-        newEthnologue,
+        ethnologue,
         session
       );
     }
+
+    await this.db.updateProperties({
+      type: Language,
+      object: object,
+      changes: simpleChanges,
+    });
 
     return await this.readOne(input.id, session);
   }

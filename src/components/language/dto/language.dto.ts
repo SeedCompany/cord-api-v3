@@ -13,7 +13,9 @@ import {
   SecuredString,
   Sensitivity,
 } from '../../../common';
+import { SetChangeType } from '../../../core/database/changes';
 import { Location } from '../../location/dto';
+import { UpdateEthnologueLanguage } from './update-language.dto';
 
 @ObjectType({
   description: SecuredPropertyList.descriptionFor('tags'),
@@ -85,8 +87,9 @@ export class Language extends Resource {
   })
   readonly isDialect: SecuredBoolean;
 
-  @Field()
-  readonly ethnologue: EthnologueLanguage;
+  @Field(() => EthnologueLanguage)
+  readonly ethnologue: EthnologueLanguage &
+    SetChangeType<'ethnologue', UpdateEthnologueLanguage>;
 
   @Field({
     description: `An override for the ethnologue's population`,
