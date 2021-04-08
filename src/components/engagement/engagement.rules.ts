@@ -17,9 +17,13 @@ import {
   EngagementTransitionType,
 } from './dto';
 
+interface Transition extends EngagementStatusTransition {
+  projectStepRequirements?: ProjectStep[];
+}
+
 interface StatusRule {
   approvers: Role[];
-  transitions: EngagementStatusTransition[];
+  transitions: Transition[];
 }
 
 const rolesThatCanBypassWorkflow: Role[] = [Role.Administrator];
@@ -40,19 +44,31 @@ export class EngagementRules {
     switch (status) {
       case EngagementStatus.InDevelopment:
         return {
-          approvers: [Role.Administrator],
+          approvers: [
+            Role.Administrator,
+            Role.ProjectManager,
+            Role.RegionalDirector,
+            Role.FieldOperationsDirector,
+            Role.Controller,
+          ],
           transitions: [
             {
               to: EngagementStatus.Active,
               type: EngagementTransitionType.Approve,
-              label: 'Project was made active',
+              label: 'Approve',
               projectStepRequirements: [ProjectStep.Active],
             },
             {
               to: EngagementStatus.DidNotDevelop,
               type: EngagementTransitionType.Reject,
-              label: 'Project did not develop',
+              label: 'End Development',
               projectStepRequirements: [ProjectStep.DidNotDevelop],
+            },
+            {
+              to: EngagementStatus.Rejected,
+              type: EngagementTransitionType.Reject,
+              label: 'Reject',
+              projectStepRequirements: [ProjectStep.Rejected],
             },
           ],
         };
@@ -230,13 +246,11 @@ export class EngagementRules {
               to: EngagementStatus.DiscussingReactivation,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Reactivation',
-              projectStepRequirements: [],
             },
             {
               to: EngagementStatus.DiscussingTermination,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Termination',
-              projectStepRequirements: [],
             },
           ],
         };
@@ -253,13 +267,11 @@ export class EngagementRules {
               to: EngagementStatus.ActiveChangedPlan,
               type: EngagementTransitionType.Approve,
               label: 'Approve ReActivation',
-              projectStepRequirements: [],
             },
             {
               to: EngagementStatus.DiscussingTermination,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Termination',
-              projectStepRequirements: [],
             },
           ],
         };
@@ -281,13 +293,11 @@ export class EngagementRules {
               ]),
               type: EngagementTransitionType.Neutral,
               label: 'Will Not Terminate',
-              projectStepRequirements: [],
             },
             {
               to: EngagementStatus.Terminated,
               type: EngagementTransitionType.Approve,
               label: 'Approve Termination',
-              projectStepRequirements: [],
             },
           ],
         };
@@ -308,13 +318,11 @@ export class EngagementRules {
               ]),
               type: EngagementTransitionType.Neutral,
               label: 'Still Working',
-              projectStepRequirements: [],
             },
             {
               to: EngagementStatus.Completed,
               type: EngagementTransitionType.Approve,
               label: 'Complete 🎉',
-              projectStepRequirements: [],
             },
           ],
         };
@@ -361,7 +369,7 @@ export class EngagementRules {
     // If transitions don't need project's step then dont fetch or filter it.
     if (
       !transitions.some(
-        (transition) => transition.projectStepRequirements.length > 0
+        (transition) => transition.projectStepRequirements?.length
       )
     ) {
       return transitions;
@@ -370,7 +378,7 @@ export class EngagementRules {
     const currentStep = await this.getCurrentProjectStep(engagementId);
     const availableTransitionsAccordingToProject = transitions.filter(
       (transition) =>
-        transition.projectStepRequirements.length === 0 ||
+        !transition.projectStepRequirements?.length ||
         transition.projectStepRequirements.includes(currentStep)
     );
     return availableTransitionsAccordingToProject;

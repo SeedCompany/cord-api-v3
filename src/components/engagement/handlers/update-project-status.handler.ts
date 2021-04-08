@@ -19,6 +19,10 @@ const changes: Change[] = [
     newStatus: EngagementStatus.Active,
   },
   {
+    to: { step: ProjectStep.FinalizingCompletion },
+    newStatus: EngagementStatus.FinalizingCompletion,
+  },
+  {
     to: { step: ProjectStep.Completed },
     newStatus: EngagementStatus.Completed,
   },
