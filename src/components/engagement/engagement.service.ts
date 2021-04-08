@@ -8,6 +8,7 @@ import {
   ID,
   InputException,
   NotFoundException,
+  SecuredList,
   SecuredResource,
   ServerException,
   Session,
@@ -1109,6 +1110,15 @@ export class EngagementService {
     input: ProductListInput,
     session: Session
   ): Promise<SecuredProductList> {
+    const { product: perms } = await this.authorizationService.getPermissions(
+      LanguageEngagement,
+      session,
+      await this.repo.rolesInScope(engagement.id, session)
+    );
+    if (!perms.canRead) {
+      return SecuredList.Redacted;
+    }
+
     const result = await this.products.list(
       {
         ...input,
@@ -1120,47 +1130,10 @@ export class EngagementService {
       session
     );
 
-    const permission = await this.db
-      .query()
-      .call(matchRequestingUser, session)
-      .match([
-        [
-          node('requestingUser'),
-          relation('in', 'memberOfReadSecurityGroup', 'member'),
-          node('readSecurityGroup', 'SecurityGroup'),
-          relation('out', 'sgReadPerms', 'permission'),
-          node('canRead', 'Permission', {
-            property: 'product',
-            read: true,
-          }),
-          relation('out', 'readPermsOfBaseNode', 'baseNode'),
-          node('eng', 'Engagement', { id: engagement.id }),
-        ],
-      ])
-      .match([
-        [
-          node('requestingUser'),
-          relation('in', 'memberOfEditSecurityGroup', 'member'),
-          node('editSecurityGroup', 'SecurityGroup'),
-          relation('out', 'sgEditPerms', 'permission'),
-          node('canEdit', 'Permission', {
-            property: 'product',
-            edit: true,
-          }),
-          relation('out', 'editPermsOfBaseNode', 'baseNode'),
-          node('eng'),
-        ],
-      ])
-      .return({
-        canRead: [{ read: 'canRead' }],
-        canEdit: [{ edit: 'canEdit' }],
-      })
-      .first();
-
     return {
       ...result,
-      canRead: !!permission?.canRead,
-      canCreate: !!permission?.canEdit,
+      canRead: true,
+      canCreate: perms.canEdit,
     };
   }
 
