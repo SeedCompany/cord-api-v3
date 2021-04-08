@@ -1120,47 +1120,16 @@ export class EngagementService {
       session
     );
 
-    const permission = await this.db
-      .query()
-      .call(matchRequestingUser, session)
-      .match([
-        [
-          node('requestingUser'),
-          relation('in', 'memberOfReadSecurityGroup', 'member'),
-          node('readSecurityGroup', 'SecurityGroup'),
-          relation('out', 'sgReadPerms', 'permission'),
-          node('canRead', 'Permission', {
-            property: 'product',
-            read: true,
-          }),
-          relation('out', 'readPermsOfBaseNode', 'baseNode'),
-          node('eng', 'Engagement', { id: engagement.id }),
-        ],
-      ])
-      .match([
-        [
-          node('requestingUser'),
-          relation('in', 'memberOfEditSecurityGroup', 'member'),
-          node('editSecurityGroup', 'SecurityGroup'),
-          relation('out', 'sgEditPerms', 'permission'),
-          node('canEdit', 'Permission', {
-            property: 'product',
-            edit: true,
-          }),
-          relation('out', 'editPermsOfBaseNode', 'baseNode'),
-          node('eng'),
-        ],
-      ])
-      .return({
-        canRead: [{ read: 'canRead' }],
-        canEdit: [{ edit: 'canEdit' }],
-      })
-      .first();
+    const permissions = await this.authorizationService.getPermissions(
+      LanguageEngagement,
+      session,
+      await this.repo.rolesInScope(engagement.id, session)
+    );
 
     return {
       ...result,
-      canRead: !!permission?.canRead,
-      canCreate: !!permission?.canEdit,
+      canRead: permissions.product.canRead,
+      canCreate: permissions.product.canEdit,
     };
   }
 
