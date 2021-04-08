@@ -732,7 +732,7 @@ export class ProjectService {
       session
     );
     await this.eventBus.publish(event);
-    return result;
+    return event.updated;
   }
 
   async delete(id: ID, session: Session): Promise<void> {
