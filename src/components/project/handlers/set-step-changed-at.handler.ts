@@ -5,6 +5,7 @@ import {
   ILogger,
   Logger,
 } from '../../../core';
+import { InternshipProject, ProjectType, TranslationProject } from '../dto';
 import { ProjectUpdatedEvent } from '../events';
 import { ProjectService } from '../project.service';
 
@@ -29,7 +30,10 @@ export class ProjectStepChangedAtHandler
       };
 
       event.updated = await this.db.updateProperties({
-        type: 'Project',
+        type:
+          project.type === ProjectType.Translation
+            ? TranslationProject
+            : InternshipProject,
         object: project,
         changes,
       });

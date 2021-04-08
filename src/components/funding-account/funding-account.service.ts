@@ -195,7 +195,7 @@ export class FundingAccountService {
       changes
     );
     return await this.db.updateProperties({
-      type: 'FundingAccount',
+      type: FundingAccount,
       object: fundingAccount,
       changes: changes,
     });

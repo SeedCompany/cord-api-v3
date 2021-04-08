@@ -628,7 +628,10 @@ export class ProjectService {
     } = changes;
 
     const result: Mutable<Project> = await this.db.updateProperties({
-      type: IProject,
+      type:
+        currentProject.type === ProjectType.Translation
+          ? TranslationProject
+          : InternshipProject,
       object: currentProject,
       changes: simpleChanges,
     });

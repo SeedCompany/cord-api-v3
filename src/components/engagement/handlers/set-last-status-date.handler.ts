@@ -6,7 +6,11 @@ import {
   ILogger,
   Logger,
 } from '../../../core';
-import { EngagementStatus } from '../dto';
+import {
+  EngagementStatus,
+  InternshipEngagement,
+  LanguageEngagement,
+} from '../dto';
 import { EngagementUpdatedEvent } from '../events';
 
 @EventsHandler(EngagementUpdatedEvent)
@@ -41,7 +45,10 @@ export class SetLastStatusDate
       } as const;
 
       event.updated = await this.db.updateProperties({
-        type: 'Engagement',
+        type:
+          updated.__typename === 'LanguageEngagement'
+            ? LanguageEngagement
+            : InternshipEngagement,
         object: updated,
         changes,
       });

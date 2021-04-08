@@ -24,7 +24,6 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
     private readonly engagementService: EngagementService,
     @Logger('engagement:set-initial-end-date') private readonly logger: ILogger
   ) {}
-  private readonly languageEngagementTypeName = 'LanguageEngagement';
 
   async handle(event: SubscribedEvent) {
     this.logger.debug('Engagement mutation, set initial end date', {
@@ -93,7 +92,7 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
       initialEndDate: initialEndDate || null,
     };
     // TODO: Refactor to call repository directly instead of engagementService methods
-    if (engagement.__typename === this.languageEngagementTypeName) {
+    if (engagement.__typename === 'LanguageEngagement') {
       return await this.engagementService.updateLanguageEngagement(
         updateInput,
         session

@@ -230,7 +230,7 @@ export class FieldRegionService {
     // update director
 
     await this.db.updateProperties({
-      type: 'FieldRegion',
+      type: FieldRegion,
       object: fieldRegion,
       changes: changes,
     });

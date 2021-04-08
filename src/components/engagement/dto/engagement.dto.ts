@@ -40,7 +40,7 @@ class Engagement extends Resource {
   static readonly Props: string[] = keysOf<Engagement>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Engagement>>();
 
-  readonly __typename: string;
+  readonly __typename: 'LanguageEngagement' | 'InternshipEngagement';
 
   @Field(() => SecuredEngagementStatus, {
     middleware: [parentIdMiddleware],

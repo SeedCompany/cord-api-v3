@@ -970,7 +970,7 @@ export class EngagementService {
       }
 
       await this.db.updateProperties({
-        type: 'InternshipEngagement',
+        type: InternshipEngagement,
         object,
         changes: {
           ...simpleChanges,
