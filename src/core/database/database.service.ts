@@ -13,12 +13,12 @@ import { DateTime } from 'luxon';
 import { Driver, Session as Neo4jSession } from 'neo4j-driver';
 import { assert } from 'ts-essentials';
 import {
-  AbstractClassType,
   ID,
   isSecured,
   many,
   Order,
   Resource,
+  ResourceShape,
   ServerException,
   Session,
   UnwrapSecured,
@@ -211,22 +211,23 @@ export class DatabaseService {
 
   getActualChanges = getChanges;
 
-  async updateProperties<TObject extends Resource>({
+  async updateProperties<
+    TResourceStatic extends ResourceShape<any>,
+    TObject extends Partial<TResourceStatic['prototype']> & { id: ID }
+  >({
     type,
     object,
     changes,
   }: {
     // This becomes the label of the base node
-    type: string | AbstractClassType<any>;
-    // The current object use to check if changes are actually different
+    type: TResourceStatic;
+    // The current object to get the ID from & the starting point for the return value
     object: TObject;
     // The changes
     changes: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
-  }) {
+  }): Promise<TObject> {
     let updated = object;
-    const propsToUpdate: Array<keyof TObject & string> = keys(changes) as Array<
-      keyof TObject & string
-    >;
+    const propsToUpdate: Array<keyof TObject & string> = keys(changes)!;
     for (const prop of propsToUpdate) {
       await this.updateProperty({
         type,
@@ -252,7 +253,8 @@ export class DatabaseService {
   }
 
   async updateProperty<
-    TObject extends Resource,
+    TResourceStatic extends ResourceShape<any>,
+    TObject extends Partial<TResourceStatic['prototype']> & { id: ID },
     Key extends keyof TObject & string
   >({
     type,
@@ -260,12 +262,12 @@ export class DatabaseService {
     key,
     value,
   }: {
-    type: string | AbstractClassType<any>;
+    type: TResourceStatic;
     object: TObject;
     key: Key;
     value?: UnwrapSecured<TObject[Key]>;
   }): Promise<void> {
-    const label = typeof type === 'string' ? type : type.name;
+    const label = type.name;
 
     const createdAt = DateTime.local();
     const newPropertyNodeProps = {
