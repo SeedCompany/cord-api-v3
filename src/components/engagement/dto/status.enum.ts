@@ -1,7 +1,6 @@
 import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { partition } from 'lodash';
 import { SecuredEnum } from '../../../common';
-import { ProjectStep } from '../../project/dto';
 
 export enum EngagementStatus {
   InDevelopment = 'InDevelopment',
@@ -83,6 +82,4 @@ export abstract class EngagementStatusTransition {
 
   @Field(() => EngagementTransitionType)
   type: EngagementTransitionType;
-
-  projectStepRequirements: ProjectStep[];
 }
