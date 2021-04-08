@@ -8,11 +8,12 @@ import {
   relation,
 } from 'cypher-query-builder';
 import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
-import { cloneDeep, keys, Many, upperFirst } from 'lodash';
+import { cloneDeep, Many, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { Driver, Session as Neo4jSession } from 'neo4j-driver';
 import { assert } from 'ts-essentials';
 import {
+  entries,
   ID,
   isSecured,
   many,
@@ -26,7 +27,7 @@ import {
 import { ILogger, Logger, ServiceUnavailableError } from '..';
 import { AbortError, retry, RetryOptions } from '../../common/retry';
 import { ConfigService } from '../config/config.service';
-import { getChanges } from './changes';
+import { DbChanges, getChanges } from './changes';
 import { determineSortValue } from './query.helpers';
 import { hasMore } from './results';
 import { Transactional } from './transactional.decorator';
@@ -224,16 +225,18 @@ export class DatabaseService {
     // The current object to get the ID from & the starting point for the return value
     object: TObject;
     // The changes
-    changes: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
+    changes: DbChanges<TResourceStatic['prototype']>;
   }): Promise<TObject> {
     let updated = object;
-    const propsToUpdate: Array<keyof TObject & string> = keys(changes)!;
-    for (const prop of propsToUpdate) {
+    for (const [prop, change] of entries(changes)) {
+      if (change === undefined) {
+        continue;
+      }
       await this.updateProperty({
         type,
         object,
-        key: prop,
-        value: changes[prop],
+        key: prop as any,
+        value: change,
       });
 
       updated = {
@@ -242,10 +245,10 @@ export class DatabaseService {
           ? // replace value in secured object keeping can* properties
             {
               ...object[prop],
-              value: changes[prop],
+              value: change,
             }
           : // replace value directly
-            changes[prop],
+            change,
       };
     }
 
@@ -255,7 +258,7 @@ export class DatabaseService {
   async updateProperty<
     TResourceStatic extends ResourceShape<any>,
     TObject extends Partial<TResourceStatic['prototype']> & { id: ID },
-    Key extends keyof TObject & string
+    Key extends keyof DbChanges<TObject> & string
   >({
     type,
     object: { id },

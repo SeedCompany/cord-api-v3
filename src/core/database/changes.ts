@@ -1,13 +1,16 @@
 import { difference, isEmpty, omit, pickBy } from 'lodash';
 import { DateTime } from 'luxon';
+import { ConditionalKeys } from 'type-fest';
 import {
   ID,
   Resource,
   ResourceShape,
+  Secured,
   unwrapSecured,
   UnwrapSecured,
 } from '../../common';
 import { CreateDefinedFileVersionInput, FileId } from '../../components/file';
+import { NativeDbValue } from './results';
 
 /**
  * Specify this on a property to override the key & value type for ChangesOf on
@@ -37,7 +40,7 @@ export type ChangesOf<T extends { id: string }> = {
   id?: ID;
 };
 
-export type ChangeKey<
+type ChangeKey<
   Key extends keyof T & string,
   T extends { id: string }
 > = T[Key] extends SetChangeType<infer Override, any>
@@ -55,6 +58,19 @@ type ChangeOf<Val> = Val extends SetChangeType<any, infer Override>
   : UnwrapSecured<Val> extends FileId
   ? CreateDefinedFileVersionInput
   : UnwrapSecured<Val>;
+
+/**
+ * Only props of T that can be written directly to DB
+ */
+export type DbChanges<T> = DbAllowableChanges<T> &
+  Partial<Record<Exclude<keyof T, keyof DbAllowableChanges<T>>, never>>;
+
+type DbAllowableChanges<T> = {
+  [K in Exclude<
+    ConditionalKeys<Required<T>, NativeDbValue | Secured<NativeDbValue>>,
+    keyof Resource
+  >]?: UnwrapSecured<T[K]>;
+};
 
 /**
  * Given the existing object and proposed changes, return only the changes
