@@ -5,6 +5,7 @@ import {
   ILogger,
   Logger,
 } from '../../../core';
+import { InternshipProject, ProjectType, TranslationProject } from '../dto';
 import { ProjectUpdatedEvent } from '../events';
 import { ProjectService } from '../project.service';
 
@@ -25,16 +26,16 @@ export class ProjectStepChangedAtHandler
     try {
       const project = event.updated;
       const changes = {
-        id: project.id,
         stepChangedAt: project.modifiedAt,
       };
 
-      event.updated = await this.db.sgUpdateProperties({
+      event.updated = await this.db.updateProperties({
+        type:
+          project.type === ProjectType.Translation
+            ? TranslationProject
+            : InternshipProject,
         object: project,
-        session: event.session,
-        props: ['stepChangedAt'],
         changes,
-        nodevar: 'Project',
       });
     } catch (e) {
       this.logger.error(`Could not update step changed at on project`, {

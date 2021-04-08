@@ -342,26 +342,25 @@ export class UserService {
     this.logger.debug('mutation update User', { input, session });
     const user = await this.readOne(input.id, session);
 
-    await this.db.sgUpdateProperties({
-      session,
+    const changes = this.db.getActualChanges(User, user, input);
+    if (user.id !== session.userId) {
+      await this.authorizationService.verifyCanEditChanges(User, user, changes);
+    }
+
+    const { roles, email, ...simpleChanges } = changes;
+
+    if (roles) {
+      await this.authorizationService.checkPower(Powers.GrantRole, session);
+    }
+
+    await this.db.updateProperties({
+      type: User,
       object: user,
-      props: [
-        'realFirstName',
-        'realLastName',
-        'displayFirstName',
-        'displayLastName',
-        'phone',
-        'timezone',
-        'about',
-        'status',
-        'title',
-      ],
-      changes: input,
-      nodevar: 'user',
+      changes: simpleChanges,
     });
 
     // Update email
-    if (input.email) {
+    if (email) {
       // Remove old emails and relations
       await this.db
         .query()
@@ -382,7 +381,7 @@ export class UserService {
               createdAt,
             }),
             node('email', 'EmailAddress:Property', {
-              value: input.email,
+              value: email,
               createdAt,
             }),
           ])
@@ -400,10 +399,9 @@ export class UserService {
     }
 
     // Update roles
-    if (input.roles) {
-      await this.authorizationService.checkPower(Powers.GrantRole, session);
-      const removals = difference(user.roles.value, input.roles);
-      const additions = difference(input.roles, user.roles.value);
+    if (roles) {
+      const removals = difference(user.roles.value, roles);
+      const additions = difference(roles, user.roles.value);
       if (removals.length > 0) {
         await this.db
           .query()
@@ -439,7 +437,7 @@ export class UserService {
           .run();
       }
 
-      await this.authorizationService.roleAddedToUser(input.id, input.roles);
+      await this.authorizationService.roleAddedToUser(input.id, roles);
     }
 
     return await this.readOne(input.id, session);

@@ -1,4 +1,4 @@
-import { keys, ServerException } from '../../../common';
+import { ServerException } from '../../../common';
 import {
   DatabaseService,
   EventsHandler,
@@ -6,7 +6,11 @@ import {
   ILogger,
   Logger,
 } from '../../../core';
-import { EngagementStatus } from '../dto';
+import {
+  EngagementStatus,
+  InternshipEngagement,
+  LanguageEngagement,
+} from '../dto';
 import { EngagementUpdatedEvent } from '../events';
 
 @EventsHandler(EngagementUpdatedEvent)
@@ -40,15 +44,13 @@ export class SetLastStatusDate
           : {}),
       } as const;
 
-      event.updated = await this.db.sgUpdateProperties({
+      event.updated = await this.db.updateProperties({
+        type:
+          updated.__typename === 'LanguageEngagement'
+            ? LanguageEngagement
+            : InternshipEngagement,
         object: updated,
-        session,
-        props: keys(changes as Required<typeof changes>),
-        changes: {
-          id: updated.id,
-          ...changes,
-        },
-        nodevar: 'Engagement',
+        changes,
       });
     } catch (exception) {
       this.logger.error(`Could not set last status date`, {

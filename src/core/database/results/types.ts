@@ -24,7 +24,13 @@ type NativeDbProps<Dto extends Record<string, any>> = {
   [Key in keyof Dto]: Dto[Key] extends NativeDbValue ? Dto[Key] : unknown;
 };
 
-type NativeDbValue = boolean | string | number | DateTime | null | string[];
+export type NativeDbValue =
+  | boolean
+  | string
+  | number
+  | DateTime
+  | null
+  | string[];
 
 /**
  * This is a shortcut for the standard read result based on the given DB props.

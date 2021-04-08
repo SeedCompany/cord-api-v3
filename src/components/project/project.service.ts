@@ -2,6 +2,7 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation, Relation } from 'cypher-query-builder';
 import { Many } from 'lodash';
 import { DateTime } from 'luxon';
+import { Mutable } from 'type-fest';
 import {
   DuplicateException,
   generateId,
@@ -600,22 +601,44 @@ export class ProjectService {
         'project.sensitivity'
       );
 
-    if (input.step) {
-      await this.projectRules.verifyStepChange(input.id, session, input.step);
+    const changes = this.db.getActualChanges(IProject, currentProject, {
+      ...input,
+      ...(input.step ? { status: stepToStatus(input.step) } : {}),
+    });
+
+    await this.authorizationService.verifyCanEditChanges(
+      currentProject.type === 'Translation'
+        ? TranslationProject
+        : InternshipProject,
+      currentProject,
+      changes,
+      'project'
+    );
+
+    if (changes.step) {
+      await this.projectRules.verifyStepChange(input.id, session, changes.step);
     }
 
-    const changes = {
-      ...input,
-      modifiedAt: DateTime.local(),
-      ...(input.step ? { status: stepToStatus(input.step) } : {}),
-    };
+    const {
+      primaryLocationId,
+      marketingLocationId,
+      fieldRegionId,
+      ...simpleChanges
+    } = changes;
 
-    // TODO: re-connect the locationId node when locations are hooked up
+    const result: Mutable<Project> = await this.db.updateProperties({
+      type:
+        currentProject.type === ProjectType.Translation
+          ? TranslationProject
+          : InternshipProject,
+      object: currentProject,
+      changes: simpleChanges,
+    });
 
-    if (input.primaryLocationId) {
+    if (primaryLocationId) {
       try {
         const location = await this.locationService.readOne(
-          input.primaryLocationId,
+          primaryLocationId,
           session
         );
         if (!location.fundingAccount.value) {
@@ -638,23 +661,12 @@ export class ProjectService {
       const createdAt = DateTime.local();
       const query = this.db
         .query()
-        .match([
-          node('user', 'User', { id: session.userId }),
-          relation('in', 'memberOfSecurityGroup', 'member'),
-          node('security', 'SecurityGroup'),
-          relation('out', 'sgPerms', 'permission'),
-          node('', 'Permission', {
-            property: 'primaryLocation',
-            edit: true,
-          }),
-          relation('out', 'permsOfBaseNode', 'baseNode'),
-          node('project', 'Project', { id: input.id }),
-        ])
-        .with('project')
+        .match(node('project', 'Project', { id: input.id }))
+        .match(node('location', 'Location', { id: input.primaryLocationId }))
+        .with('project, location')
         .limit(1)
-        .match([node('location', 'Location', { id: input.primaryLocationId })])
         .optionalMatch([
-          node('project'),
+          node('project', 'Project', { id: input.id }),
           relation('out', 'oldRel', 'primaryLocation', { active: true }),
           node(''),
         ])
@@ -671,11 +683,15 @@ export class ProjectService {
         ]);
 
       await query.run();
+      result.primaryLocation = {
+        ...result.primaryLocation,
+        value: primaryLocationId,
+      };
     }
 
-    if (input.fieldRegionId) {
+    if (fieldRegionId) {
       await this.validateOtherResourceId(
-        input.fieldRegionId,
+        fieldRegionId,
         'FieldRegion',
         'fieldRegionId',
         'Field region not found'
@@ -683,18 +699,7 @@ export class ProjectService {
       const createdAt = DateTime.local();
       const query = this.db
         .query()
-        .match([
-          node('user', 'User', { id: session.userId }),
-          relation('in', 'memberOfSecurityGroup', 'member'),
-          node('security', 'SecurityGroup'),
-          relation('out', 'sgPerms', 'permission'),
-          node('', 'Permission', {
-            property: 'fieldRegion',
-            edit: true,
-          }),
-          relation('out', 'permsOfBaseNode', 'baseNode'),
-          node('project', 'Project', { id: input.id }),
-        ])
+        .match(node('project', 'Project', { id: input.id }))
         .with('project')
         .limit(1)
         .match([node('region', 'FieldRegion', { id: input.fieldRegionId })])
@@ -716,27 +721,11 @@ export class ProjectService {
         ]);
 
       await query.run();
+      result.fieldRegion = {
+        ...result.fieldRegion,
+        value: fieldRegionId,
+      };
     }
-
-    const result = await this.db.sgUpdateProperties({
-      session,
-      object: currentProject,
-      props: [
-        'name',
-        'mouStart',
-        'mouEnd',
-        'initialMouEnd',
-        'estimatedSubmission',
-        'status',
-        'modifiedAt',
-        'step',
-        'sensitivity',
-        'tags',
-        'financialReportReceivedAt',
-      ],
-      changes,
-      nodevar: 'project',
-    });
 
     const event = new ProjectUpdatedEvent(
       result,

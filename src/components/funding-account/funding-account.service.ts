@@ -184,13 +184,20 @@ export class FundingAccountService {
     session: Session
   ): Promise<FundingAccount> {
     const fundingAccount = await this.readOne(input.id, session);
-
-    return await this.db.sgUpdateProperties({
-      session,
+    const changes = this.db.getActualChanges(
+      FundingAccount,
+      fundingAccount,
+      input
+    );
+    await this.authorizationService.verifyCanEditChanges(
+      FundingAccount,
+      fundingAccount,
+      changes
+    );
+    return await this.db.updateProperties({
+      type: FundingAccount,
       object: fundingAccount,
-      props: ['name', 'accountNumber'],
-      changes: input,
-      nodevar: 'fundingAccount',
+      changes: changes,
     });
   }
 

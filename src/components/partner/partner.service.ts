@@ -308,10 +308,7 @@ export class PartnerService {
 
   async update(input: UpdatePartner, session: Session): Promise<Partner> {
     const object = await this.readOne(input.id, session);
-    let changes = {
-      ...input,
-      modifiedAt: DateTime.local(),
-    };
+
     if (
       !this.validateFinancialReportingType(
         input.financialReportingTypes ?? object.financialReportingTypes.value,
@@ -324,29 +321,27 @@ export class PartnerService {
           'partnership.financialReportingType'
         );
       }
-      changes = {
-        ...changes,
+      input = {
+        ...input,
         financialReportingTypes: [],
       };
     }
 
-    await this.db.sgUpdateProperties({
-      session,
+    const changes = this.db.getActualChanges(Partner, object, input);
+    await this.authorizationService.verifyCanEditChanges(
+      Partner,
       object,
-      props: [
-        'types',
-        'financialReportingTypes',
-        'pmcEntityCode',
-        'globalInnovationsClient',
-        'active',
-        'address',
-        'modifiedAt',
-      ],
-      changes: changes,
-      nodevar: 'partner',
+      changes
+    );
+    const { pointOfContactId, ...simpleChanges } = changes;
+
+    await this.db.updateProperties({
+      type: Partner,
+      object,
+      changes: simpleChanges,
     });
-    // Update partner
-    if (input.pointOfContactId) {
+
+    if (pointOfContactId) {
       const createdAt = DateTime.local();
       await this.db
         .query()
@@ -356,21 +351,16 @@ export class PartnerService {
           id: input.pointOfContactId,
         })
         .optionalMatch([
-          node('requestingUser'),
-          relation('in', 'memberOfSecurityGroup', 'member'),
-          node('securityGroup', 'SecurityGroup'),
-          relation('out', 'sgPerms', 'permission'),
-          node('canReadPointOfContact', 'Permission', {
-            property: 'pointOfContact',
-            read: true,
-          }),
-          relation('out', 'permsOfBaseNode', 'baseNode'),
           node('org'),
           relation('out', 'oldPointOfContactRel', 'pointOfContact', {
             active: true,
           }),
           node('pointOfContact', 'User'),
         ])
+        .setValues({
+          'oldPointOfContactRel.active': false,
+        })
+        .with('*')
         .create([
           node('partner'),
           relation('out', '', 'pointOfContact', {
@@ -379,7 +369,6 @@ export class PartnerService {
           }),
           node('newPointOfContact'),
         ])
-        .delete('oldPointOfContactRel')
         .run();
     }
 

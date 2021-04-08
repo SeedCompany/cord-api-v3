@@ -13,20 +13,21 @@ import { DateTime } from 'luxon';
 import { Driver, Session as Neo4jSession } from 'neo4j-driver';
 import { assert } from 'ts-essentials';
 import {
-  AbstractClassType,
+  entries,
   ID,
   isSecured,
   many,
   Order,
   Resource,
+  ResourceShape,
   ServerException,
   Session,
-  unwrapSecured,
   UnwrapSecured,
 } from '../../common';
 import { ILogger, Logger, ServiceUnavailableError } from '..';
 import { AbortError, retry, RetryOptions } from '../../common/retry';
 import { ConfigService } from '../config/config.service';
+import { DbChanges, getChanges } from './changes';
 import { determineSortValue } from './query.helpers';
 import { hasMore } from './results';
 import { Transactional } from './transactional.decorator';
@@ -209,58 +210,33 @@ export class DatabaseService {
     return info;
   }
 
-  /**
-   * @deprecated Use updateProperties() instead
-   */
-  async sgUpdateProperties<TObject extends Resource>({
-    object,
-    props,
-    changes,
-    nodevar,
-  }: {
-    session: Session;
-    object: TObject;
-    props: ReadonlyArray<keyof TObject & string>;
-    changes: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
-    nodevar: string;
-  }) {
-    return await this.updateProperties({
-      type: upperFirst(nodevar),
-      object,
-      props,
-      changes,
-    });
-  }
+  getActualChanges = getChanges;
 
-  async updateProperties<TObject extends Resource>({
+  async updateProperties<
+    TResourceStatic extends ResourceShape<any>,
+    TObject extends Partial<TResourceStatic['prototype']> & { id: ID }
+  >({
     type,
     object,
-    props,
     changes,
   }: {
     // This becomes the label of the base node
-    type: string | AbstractClassType<any>;
-    // The current object use to check if changes are actually different
+    type: TResourceStatic;
+    // The current object to get the ID from & the starting point for the return value
     object: TObject;
-    // The keys of the object to consider for updates
-    props: ReadonlyArray<keyof TObject & string>;
     // The changes
-    changes: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
-  }) {
+    changes: DbChanges<TResourceStatic['prototype']>;
+  }): Promise<TObject> {
     let updated = object;
-    for (const prop of props) {
-      if (
-        changes[prop] === undefined ||
-        unwrapSecured(object[prop]) === changes[prop]
-      ) {
+    for (const [prop, change] of entries(changes)) {
+      if (change === undefined) {
         continue;
       }
-
       await this.updateProperty({
         type,
         object,
-        key: prop,
-        value: changes[prop],
+        key: prop as any,
+        value: change,
       });
 
       updated = {
@@ -269,10 +245,10 @@ export class DatabaseService {
           ? // replace value in secured object keeping can* properties
             {
               ...object[prop],
-              value: changes[prop],
+              value: change,
             }
           : // replace value directly
-            changes[prop],
+            change,
       };
     }
 
@@ -280,20 +256,21 @@ export class DatabaseService {
   }
 
   async updateProperty<
-    TObject extends Resource,
-    Key extends keyof TObject & string
+    TResourceStatic extends ResourceShape<any>,
+    TObject extends Partial<TResourceStatic['prototype']> & { id: ID },
+    Key extends keyof DbChanges<TObject> & string
   >({
     type,
     object: { id },
     key,
     value,
   }: {
-    type: string | AbstractClassType<any>;
+    type: TResourceStatic;
     object: TObject;
     key: Key;
     value?: UnwrapSecured<TObject[Key]>;
   }): Promise<void> {
-    const label = typeof type === 'string' ? type : type.name;
+    const label = type.name;
 
     const createdAt = DateTime.local();
     const newPropertyNodeProps = {
@@ -301,7 +278,6 @@ export class DatabaseService {
       value,
       sortValue: determineSortValue(value),
     };
-
     const update = this.db
       .query()
       .match(node('node', label, { id }))

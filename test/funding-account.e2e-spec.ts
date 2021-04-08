@@ -11,6 +11,7 @@ import {
   createTestApp,
   fragments,
   registerUserWithPower,
+  runAsAdmin,
   TestApp,
 } from './utility';
 import { resetDatabase } from './utility/reset-database';
@@ -65,31 +66,33 @@ describe('FundingAccount e2e', () => {
     const st = await createFundingAccount(app);
     const newName = faker.company.companyName();
     const newAccountNumber = faker.datatype.number({ min: 0, max: 9 });
-    const result = await app.graphql.mutate(
-      gql`
-        mutation updateFundingAccount($input: UpdateFundingAccountInput!) {
-          updateFundingAccount(input: $input) {
-            fundingAccount {
-              ...fundingAccount
+    await runAsAdmin(app, async () => {
+      const result = await app.graphql.mutate(
+        gql`
+          mutation updateFundingAccount($input: UpdateFundingAccountInput!) {
+            updateFundingAccount(input: $input) {
+              fundingAccount {
+                ...fundingAccount
+              }
             }
           }
-        }
-        ${fragments.fundingAccount}
-      `,
-      {
-        input: {
-          fundingAccount: {
-            id: st.id,
-            name: newName,
-            accountNumber: newAccountNumber,
+          ${fragments.fundingAccount}
+        `,
+        {
+          input: {
+            fundingAccount: {
+              id: st.id,
+              name: newName,
+              accountNumber: newAccountNumber,
+            },
           },
-        },
-      }
-    );
-    const updated = result.updateFundingAccount.fundingAccount;
-    expect(updated).toBeTruthy();
-    expect(updated.name.value).toBe(newName);
-    expect(updated.accountNumber.value).toBe(newAccountNumber);
+        }
+      );
+      const updated = result.updateFundingAccount.fundingAccount;
+      expect(updated).toBeTruthy();
+      expect(updated.name.value).toBe(newName);
+      expect(updated.accountNumber.value).toBe(newAccountNumber);
+    });
   });
 
   // Delete FundingAccount
