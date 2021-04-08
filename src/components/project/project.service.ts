@@ -1136,7 +1136,10 @@ export class ProjectService {
     return {
       value: budgetToReturn,
       canRead: permsOfProject.budget.canRead,
-      canEdit: permsOfProject.budget.canEdit,
+      canEdit: session.roles.includes('global:Administrator')
+        ? true
+        : permsOfProject.budget.canEdit &&
+          budgetToReturn.status === BudgetStatus.Pending,
     };
   }
 
