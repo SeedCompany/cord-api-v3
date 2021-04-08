@@ -209,26 +209,6 @@ export class DatabaseService {
     return info;
   }
 
-  /**
-   * @deprecated Use updateProperties() instead
-   */
-  async sgUpdateProperties<TObject extends Resource>({
-    object,
-    changes,
-    nodevar,
-  }: {
-    session: Session;
-    object: TObject;
-    changes: { [Key in keyof TObject]?: UnwrapSecured<TObject[Key]> };
-    nodevar: string;
-  }) {
-    return await this.updateProperties({
-      type: upperFirst(nodevar),
-      object,
-      changes,
-    });
-  }
-
   getActualChanges = getChanges;
 
   async updateProperties<TObject extends Resource>({
