@@ -40,7 +40,13 @@ export class EngagementRules {
     switch (status) {
       case EngagementStatus.InDevelopment:
         return {
-          approvers: [Role.Administrator],
+          approvers: [
+            Role.Administrator,
+            Role.ProjectManager,
+            Role.RegionalDirector,
+            Role.FieldOperationsDirector,
+            Role.Controller,
+          ],
           transitions: [
             {
               to: EngagementStatus.Active,
@@ -53,6 +59,12 @@ export class EngagementRules {
               type: EngagementTransitionType.Reject,
               label: 'Project did not develop',
               projectStepRequirements: [ProjectStep.DidNotDevelop],
+            },
+            {
+              to: EngagementStatus.Rejected,
+              type: EngagementTransitionType.Reject,
+              label: 'Reject',
+              projectStepRequirements: [ProjectStep.Rejected],
             },
           ],
         };
