@@ -298,6 +298,14 @@ export class DatabaseService {
       .setValues({
         'oldToProp.active': false,
       })
+      .raw(
+        `
+        with node, oldPropVar, reduce(deletedLabels = [], label in labels(oldPropVar) | deletedLabels + ("Deleted_" + label)) as deletedLabels
+        call apoc.create.removeLabels(oldPropVar, labels(oldPropVar)) yield node as nodeRemoved
+        with node, oldPropVar, deletedLabels
+        call apoc.create.addLabels(oldPropVar, deletedLabels) yield node as nodeAdded
+        `
+      )
       .with('*')
       .limit(1)
       .create([
