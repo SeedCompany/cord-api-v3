@@ -3,6 +3,7 @@ import { DateTime } from 'luxon';
 import { ConditionalKeys } from 'type-fest';
 import {
   ID,
+  MaybeUnsecuredInstance,
   Resource,
   ResourceShape,
   Secured,
@@ -29,7 +30,7 @@ export interface SetChangeType<Key, Value> {
   __update_type__?: { key: Key; value: Value };
 }
 
-export type ChangesOf<T extends { id: string }> = {
+export type ChangesOf<T> = {
   [Key in keyof T & string as ChangeKey<
     Exclude<Key, keyof Resource>,
     T
@@ -40,10 +41,10 @@ export type ChangesOf<T extends { id: string }> = {
   id?: ID;
 };
 
-type ChangeKey<
-  Key extends keyof T & string,
-  T extends { id: string }
-> = T[Key] extends SetChangeType<infer Override, any>
+type ChangeKey<Key extends keyof T & string, T> = T[Key] extends SetChangeType<
+  infer Override,
+  any
+>
   ? Override extends string
     ? Override
     : never
@@ -72,6 +73,10 @@ type DbAllowableChanges<T> = {
   >]?: UnwrapSecured<T[K]>;
 };
 
+type AndModifiedAt<T> = T extends { modifiedAt: DateTime }
+  ? Pick<T, 'modifiedAt'>
+  : unknown;
+
 /**
  * Given the existing object and proposed changes, return only the changes
  * that are actually different from the current values.
@@ -81,7 +86,7 @@ type DbAllowableChanges<T> = {
  */
 export function getChanges<
   TResourceStatic extends ResourceShape<any>,
-  TResource extends TResourceStatic['prototype'],
+  TResource extends MaybeUnsecuredInstance<TResourceStatic>,
   Changes extends ChangesOf<TResource>
 >(
   resource: TResourceStatic,
@@ -93,7 +98,7 @@ export function getChanges<
     // are passed in we don't declare the return type having those omitted
     // properties.
     Record<Exclude<keyof Changes, keyof ChangesOf<TResource>>, never>
-): Partial<Omit<Changes, keyof Resource> & Pick<TResource, 'modifiedAt'>> {
+): Partial<Omit<Changes, keyof Resource> & AndModifiedAt<TResource>> {
   const actual = pickBy(omit(changes, Resource.Props), (change, prop) => {
     const key = isRelation(prop, existingObject) ? prop.slice(0, -2) : prop;
     const existing = unwrapSecured(existingObject[key]);

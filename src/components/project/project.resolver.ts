@@ -69,8 +69,9 @@ export class ProjectResolver {
     @IdArg() id: ID,
     @LoggedInSession() session: Session
   ): Promise<Project> {
-    const project = await this.projectService.readOne(id, session);
-    return project;
+    const project = await this.projectService.readOneUnsecured(id, session);
+    const secured = await this.projectService.secure(project, session);
+    return secured;
   }
 
   @Query(() => ProjectListOutput, {
@@ -232,7 +233,8 @@ export class ProjectResolver {
     @LoggedInSession() session: Session
   ): Promise<CreateProjectOutput> {
     const project = await this.projectService.create(input, session);
-    return { project };
+    const secured = await this.projectService.secure(project, session);
+    return { project: secured };
   }
 
   @Mutation(() => UpdateProjectOutput, {
@@ -243,7 +245,8 @@ export class ProjectResolver {
     @LoggedInSession() session: Session
   ): Promise<UpdateProjectOutput> {
     const project = await this.projectService.update(input, session);
-    return { project };
+    const secured = await this.projectService.secure(project, session);
+    return { project: secured };
   }
 
   @Mutation(() => Boolean, {

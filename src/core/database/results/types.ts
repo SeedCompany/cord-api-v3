@@ -1,6 +1,5 @@
 import type { Node } from 'cypher-query-builder';
 import type { DateTime } from 'luxon';
-import type { Except } from 'type-fest';
 import type { UnsecuredDto } from '../../../common';
 import type { BaseNode } from './parse-base-node';
 import type { PropListDbResult } from './parse-props';
@@ -17,7 +16,7 @@ import type { PropListDbResult } from './parse-props';
  *   This allows them to be used for permissions, but not for values.
  */
 export type DbPropsOfDto<Dto extends Record<string, any>> = NativeDbProps<
-  Except<UnsecuredDto<Dto>, keyof BaseNode | 'canDelete'>
+  Omit<UnsecuredDto<Dto>, keyof BaseNode>
 >;
 
 type NativeDbProps<Dto extends Record<string, any>> = {

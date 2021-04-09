@@ -1,4 +1,4 @@
-import { ID, ServerException } from '../../../common';
+import { ID, ServerException, UnsecuredDto } from '../../../common';
 import { DatabaseService, EventsHandler, IEventHandler } from '../../../core';
 import { Project, ProjectStep } from '../dto';
 import { ProjectUpdatedEvent } from '../events';
@@ -12,7 +12,7 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
   async handle(event: SubscribedEvent) {
     const shouldSetDepartmentId =
       event.updates.step === ProjectStep.PendingFinanceConfirmation &&
-      !event.updated.departmentId.value;
+      !event.updated.departmentId;
     if (!shouldSetDepartmentId) {
       return;
     }
@@ -23,10 +23,7 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
       );
       event.updated = {
         ...event.updated,
-        departmentId: {
-          ...event.updated.departmentId,
-          value: event.updated.departmentId.canRead ? departmentId : undefined,
-        },
+        departmentId,
       };
     } catch (exception) {
       throw new ServerException(
@@ -36,7 +33,7 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
     }
   }
 
-  private async assignDepartmentIdForProject(project: Project) {
+  private async assignDepartmentIdForProject(project: UnsecuredDto<Project>) {
     const departmentIdPrefix = await this.getFundingAccountNumber(project);
     const res = await this.db
       .query()
@@ -67,7 +64,7 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
     return res.departmentId;
   }
 
-  private async getFundingAccountNumber(project: Project) {
+  private async getFundingAccountNumber(project: UnsecuredDto<Project>) {
     const res = await this.db
       .query()
       .raw(
