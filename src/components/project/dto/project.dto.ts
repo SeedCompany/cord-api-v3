@@ -4,6 +4,7 @@ import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
 import {
   DateTimeField,
+  DbLabel,
   ID,
   IntersectionType,
   parentIdMiddleware,
@@ -65,19 +66,23 @@ class Project extends IntersectionType(Resource, Pinnable) {
   readonly sensitivity: Sensitivity;
 
   @Field()
+  @DbLabel('ProjectName')
   readonly name: SecuredString;
 
   @Field({
     description: 'The legacy department ID',
   })
+  @DbLabel('DepartmentId')
   readonly departmentId: SecuredString;
 
   @Field({
     middleware: [parentIdMiddleware],
   })
+  @DbLabel('ProjectStep')
   readonly step: SecuredProjectStep;
 
   @Field(() => ProjectStatus)
+  @DbLabel('ProjectStatus')
   readonly status: ProjectStatus;
 
   readonly primaryLocation: Secured<ID>;
