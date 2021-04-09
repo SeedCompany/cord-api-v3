@@ -8,7 +8,7 @@ import {
   relation,
 } from 'cypher-query-builder';
 import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
-import { cloneDeep, Many, upperFirst } from 'lodash';
+import { cloneDeep, last, Many, startCase, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { Driver, Session as Neo4jSession } from 'neo4j-driver';
 import { assert } from 'ts-essentials';
@@ -16,6 +16,7 @@ import {
   entries,
   getDbPropertyLabels,
   ID,
+  InputException,
   isSecured,
   many,
   MaybeUnsecuredInstance,
@@ -26,7 +27,7 @@ import {
   Session,
   UnwrapSecured,
 } from '../../common';
-import { ILogger, Logger, ServiceUnavailableError } from '..';
+import { ILogger, Logger, ServiceUnavailableError, UniquenessError } from '..';
 import { AbortError, retry, RetryOptions } from '../../common/retry';
 import { ConfigService } from '../config/config.service';
 import { DbChanges, getChanges } from './changes';
@@ -313,6 +314,14 @@ export class DatabaseService {
     try {
       result = await update.first();
     } catch (e) {
+      if (e instanceof UniquenessError) {
+        throw new InputException(
+          `${startCase(label)} with this ${key} is already in use`,
+          // Guess the input field path based on name convention
+          `${last(startCase(label).split(' '))!.toLowerCase()}.${key}`,
+          e
+        );
+      }
       throw new ServerException(`Failed to update property ${label}.${key}`, e);
     }
 
