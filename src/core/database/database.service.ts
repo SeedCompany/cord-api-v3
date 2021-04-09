@@ -14,6 +14,7 @@ import { Driver, Session as Neo4jSession } from 'neo4j-driver';
 import { assert } from 'ts-essentials';
 import {
   entries,
+  getDbPropertyLabels,
   ID,
   isSecured,
   many,
@@ -277,6 +278,8 @@ export class DatabaseService {
   }): Promise<void> {
     const label = type.name;
 
+    const propLabels = getDbPropertyLabels(type, key);
+
     const createdAt = DateTime.local();
     const newPropertyNodeProps = {
       createdAt,
@@ -302,7 +305,7 @@ export class DatabaseService {
           active: true,
           createdAt,
         }),
-        node('newPropNode', 'Property', newPropertyNodeProps),
+        node('newPropNode', propLabels, newPropertyNodeProps),
       ])
       .return('newPropNode');
 
