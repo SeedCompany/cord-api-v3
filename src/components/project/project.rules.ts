@@ -996,7 +996,7 @@ export class ProjectRules {
       .match([
         node('node', 'Project', { id }),
         relation('out', '', 'step', { active: false }),
-        node('prop', 'Property'),
+        node('prop', 'Deleted_Property'),
       ])
       .with('prop')
       .orderBy('prop.createdAt', 'DESC')
