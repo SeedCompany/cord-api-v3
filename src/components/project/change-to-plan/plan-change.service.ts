@@ -21,8 +21,6 @@ import {
   defaultSorter,
   matchMemberRoles,
   matchPropList,
-  permissionsOfNode,
-  requestingUser,
 } from '../../../core/database/query';
 import {
   DbPropsOfDto,
@@ -226,8 +224,7 @@ export class PlanChangeService {
     const query = this.db
       .query()
       .match([
-        requestingUser(session),
-        ...permissionsOfNode(label),
+        node('node', label),
         ...(filter.projectId
           ? [
               relation('in', '', 'planChange'),
