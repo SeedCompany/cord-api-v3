@@ -11,10 +11,10 @@ import {
   ConfigService,
   createBaseNode,
   DatabaseService,
+  IEventBus,
   ILogger,
   Logger,
   matchRequestingUser,
-  OnIndex,
 } from '../../../core';
 import {
   calculateTotalAndPaginateList,
@@ -34,60 +34,48 @@ import {
 import { AuthorizationService } from '../../authorization/authorization.service';
 import { Role } from '../../authorization/dto';
 import {
-  CreatePlanChange,
-  PlanChange,
-  PlanChangeListInput,
-  PlanChangeListOutput,
-  UpdatePlanChange,
+  CreateProperty,
+  Property,
+  PropertyListInput,
+  PropertyListOutput,
+  UpdateProperty,
 } from './dto';
 
 @Injectable()
-export class PlanChangeService {
+export class PropertyService {
   private readonly securedProperties = {
-    types: true,
-    summary: true,
-    status: true,
+    user: true,
+    roles: true,
   };
 
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
-    @Logger('project:plan-change:service') private readonly logger: ILogger,
+    private readonly eventBus: IEventBus,
+    @Logger('project:property:service') private readonly logger: ILogger,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService
   ) {}
 
-  @OnIndex()
-  async createIndexes() {
-    return [
-      'CREATE CONSTRAINT ON (n:PlanChange) ASSERT EXISTS(n.id)',
-      'CREATE CONSTRAINT ON (n:PlanChange) ASSERT n.id IS UNIQUE',
-    ];
-  }
+  // @OnIndex()
+  // async createIndexes() {
+  //   return [
+  //     'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.id)',
+  //     'CREATE CONSTRAINT ON (n:Property) ASSERT n.id IS UNIQUE',
+  //   ];
+  // }
 
   async create(
-    { projectId, ...input }: CreatePlanChange,
+    { projectId, ...input }: CreateProperty,
     session: Session
-  ): Promise<PlanChange> {
+  ): Promise<Property> {
+    const propertyId = await generateId();
     const createdAt = DateTime.local();
-    const planChangeId = await generateId();
 
     const secureProps = [
       {
-        key: 'types',
-        value: input.types,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'summary',
-        value: input.summary,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'status',
-        value: input.status,
+        key: 'value',
+        value: input.value,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -95,121 +83,91 @@ export class PlanChangeService {
 
     let result;
     try {
-      const createPlanChange = this.db
+      const createProperty = this.db
         .query()
         .call(matchRequestingUser, session)
-        .call(createBaseNode, planChangeId, 'PlanChange', secureProps)
+        .call(createBaseNode, propertyId, 'Property', secureProps)
         .return('node.id as id');
 
       try {
-        result = await createPlanChange.first();
+        result = await createProperty.first();
       } catch (e) {
         this.logger.error('e :>> ', e);
       }
 
       if (!result) {
-        throw new ServerException('failed to create planChange');
+        throw new ServerException('failed to create property');
       }
 
-      // connect PlanChange to Project
+      // connect Property to Project
       await this.db
         .query()
         .match([
-          [node('planChange', 'PlanChange', { id: result.id })],
+          [node('property', 'Property', { id: result.id })],
           [node('project', 'Project', { id: projectId })],
         ])
         .create([
           node('project'),
-          relation('out', '', 'planChange', { active: true, createdAt }),
-          node('planChange'),
+          relation('out', '', 'property', { active: false, createdAt }),
+          node('property'),
         ])
-        .return('planChange.id as id')
+        .return('property.id as id')
         .first();
 
-      // await this.authorizationService.processNewBaseNode(
-      //   new DbPlanChange(),
-      //   result.id,
-      //   session.userId
-      // );
+      const property = await this.readOne(propertyId, session);
 
-      const planChange = await this.readOne(planChangeId, session);
-
-      // await this.eventBus.publish(
-      //   new PartnershipCreatedEvent(partnership, session)
-      // );
-
-      return planChange;
+      return property;
     } catch (exception) {
-      this.logger.warning('Failed to create planChange', {
+      this.logger.warning('Failed to create property', {
         exception,
       });
 
-      throw new ServerException('Failed to create planChange', exception);
+      throw new ServerException('Failed to create property', exception);
     }
   }
 
-  async readOne(id: string, session: Session): Promise<PlanChange> {
+  async readOne(id: string, session: Session): Promise<Property> {
     this.logger.debug(`read one`, {
       id,
       userId: session.userId,
     });
     if (!id) {
       throw new NotFoundException(
-        'No plan change id to search for',
-        'planChange.id'
+        'No property id to search for',
+        'property.id'
       );
     }
 
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .match([node('node', 'PlanChange', { id })])
+      .match([node('node', 'Property', { id })])
       .call(matchPropList)
       .match([
         node('project', 'Project'),
-        relation('out', '', 'planChange', { active: true }),
-        node('', 'PlanChange', { id }),
+        relation('out', '', 'property', { active: false }),
+        node('', 'Property', { id }),
       ])
       .with(['project', 'node', 'propList'])
       .call(matchMemberRoles, session.userId)
       .return('node, propList, memberRoles')
       .asResult<
-        StandardReadResult<DbPropsOfDto<PlanChange>> & {
+        StandardReadResult<DbPropsOfDto<Property>> & {
           memberRoles: Role[][];
         }
       >();
 
     const result = await query.first();
     if (!result) {
-      throw new NotFoundException(
-        'Could not find plan change',
-        'planChange.id'
-      );
+      throw new NotFoundException('Could not find property', 'property.id');
     }
 
     const props = parsePropList(result.propList);
 
-    // const securedProps = await this.authorizationService.secureProperties(
-    //   PlanChange,
-    //   props,
-    //   session,
-    //   result.memberRoles.flat().map(rolesForScope('project'))
-    // );
-
     return {
       ...parseBaseNodeProperties(result.node),
-      types: {
-        value: props.types ?? [],
-        canEdit: false,
-        canRead: false,
-      },
-      summary: {
-        value: props.summary,
-        canEdit: false,
-        canRead: false,
-      },
-      status: {
-        value: props.status,
+      value: {
+        value: props.value,
         canEdit: false,
         canRead: false,
       },
@@ -218,10 +176,10 @@ export class PlanChangeService {
   }
 
   async list(
-    { filter, ...input }: PlanChangeListInput,
+    { filter, ...input }: PropertyListInput,
     session: Session
-  ): Promise<PlanChangeListOutput> {
-    const label = 'PlanChange';
+  ): Promise<PropertyListOutput> {
+    const label = 'Property';
 
     const query = this.db
       .query()
@@ -230,7 +188,7 @@ export class PlanChangeService {
         ...permissionsOfNode(label),
         ...(filter.projectId
           ? [
-              relation('in', '', 'planChange'),
+              relation('in', '', 'property'),
               node('project', 'Project', {
                 id: filter.projectId,
               }),
@@ -247,17 +205,17 @@ export class PlanChangeService {
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 
-  async update(input: UpdatePlanChange, session: Session): Promise<PlanChange> {
+  async update(input: UpdateProperty, session: Session): Promise<Property> {
     const object = await this.readOne(input.id, session);
 
     await this.db.sgUpdateProperties({
       session,
       object,
-      props: ['types', 'summary', 'status'],
+      props: ['value'],
       changes: {
         ...input,
       },
-      nodevar: 'planChange',
+      nodevar: 'property',
     });
     return await this.readOne(input.id, session);
   }
@@ -266,10 +224,7 @@ export class PlanChangeService {
     const object = await this.readOne(id, session);
 
     if (!object) {
-      throw new NotFoundException(
-        'Could not find plan change',
-        'planChange.id'
-      );
+      throw new NotFoundException('Could not find property', 'property.id');
     }
 
     try {
@@ -279,11 +234,11 @@ export class PlanChangeService {
         aclEditProp: 'canDeleteOwnUser',
       });
     } catch (exception) {
-      this.logger.warning('Failed to delete plan change', {
+      this.logger.warning('Failed to delete property', {
         exception,
       });
 
-      throw new ServerException('Failed to delete plan change', exception);
+      throw new ServerException('Failed to delete property', exception);
     }
   }
 }

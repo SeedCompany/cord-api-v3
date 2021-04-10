@@ -7,32 +7,30 @@ import { PlanChangeType } from './plan-change-type.enum';
 import { PlanChange } from './plan-change.dto';
 
 @InputType()
-export abstract class CreatePlanChange {
-  @IdField({
-    description: 'A project ID',
-  })
-  readonly projectId: string;
+export abstract class UpdatePlanChange {
+  @IdField()
+  readonly id: string;
 
-  @Field(() => [PlanChangeType])
-  readonly types: PlanChangeType[];
+  @Field(() => [PlanChangeType], { nullable: true })
+  readonly types?: [PlanChangeType];
 
-  @Field()
-  readonly summary: string;
+  @Field(() => String)
+  readonly summary?: string;
 
   @Field(() => PlanChangeStatus)
-  readonly status: PlanChangeStatus;
+  readonly status?: PlanChangeStatus;
 }
 
 @InputType()
-export abstract class CreatePlanChangeInput {
+export abstract class UpdatePlanChangeInput {
   @Field()
-  @Type(() => CreatePlanChange)
+  @Type(() => UpdatePlanChange)
   @ValidateNested()
-  readonly planChange: CreatePlanChange;
+  readonly planChange: UpdatePlanChange;
 }
 
 @ObjectType()
-export abstract class CreatePlanChangeOutput {
-  @Field(() => PlanChange)
+export abstract class UpdatePlanChangeOutput {
+  @Field()
   readonly planChange: PlanChange;
 }

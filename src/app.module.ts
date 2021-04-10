@@ -23,6 +23,7 @@ import { PinModule } from './components/pin/pin.module';
 import { ProductModule } from './components/product/product.module';
 import { PlanChangeModule } from './components/project/change-to-plan/plan-change.module';
 import { ProjectModule } from './components/project/project.module';
+import { PropertyModule } from './components/project/property/property.module';
 import { ScriptureModule } from './components/scripture/scripture.module';
 import { SearchModule } from './components/search/search.module';
 import { SongModule } from './components/song/song.module';
@@ -69,6 +70,7 @@ assert(
     FieldZoneModule,
     PinModule,
     PlanChangeModule,
+    PropertyModule,
   ],
   controllers: [],
   providers: [DateTimeScalar, DateScalar],

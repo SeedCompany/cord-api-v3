@@ -59,7 +59,7 @@ class Project extends PinnableChangeableResource {
     engagement: [Engagement], // why singular
     // edge case because it's writable for internships but not secured
     sensitivity: Sensitivity,
-    planChange: PlanChange,
+    planChange: [PlanChange],
   };
 
   @Field(() => ProjectType)

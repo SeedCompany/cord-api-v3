@@ -17,6 +17,7 @@ import { ProjectStepResolver } from './project-step.resolver';
 import { ProjectResolver } from './project.resolver';
 import { ProjectRules } from './project.rules';
 import { ProjectService } from './project.service';
+import { PropertyModule } from './property/property.module';
 
 @Module({
   imports: [
@@ -24,6 +25,8 @@ import { ProjectService } from './project.service';
     ProjectMemberModule,
     forwardRef(() => BudgetModule),
     forwardRef(() => PartnershipModule),
+    forwardRef(() => PlanChangeModule),
+    forwardRef(() => PropertyModule),
     forwardRef(() => UserModule),
     forwardRef(() => LocationModule),
     FileModule,

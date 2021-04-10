@@ -29,10 +29,8 @@ import {
 import { OrganizationService, SecuredOrganization } from '../organization';
 import { PartnershipListInput, SecuredPartnershipList } from '../partnership';
 import { PlanChangeService } from './change-to-plan';
-import {
-  ChangeListInput,
-  SecuredChangeList,
-} from './change-to-plan/dto/change-list.dto';
+import { PlanChangeListInput } from './change-to-plan/dto';
+import { SecuredChangeList } from './change-to-plan/dto/change-list.dto';
 import {
   CreateProjectInput,
   CreateProjectOutput,
@@ -117,13 +115,13 @@ export class ProjectResolver {
     @Parent() project: Project,
     @Args({
       name: 'input',
-      type: () => ChangeListInput,
+      type: () => PlanChangeListInput,
       nullable: true,
-      defaultValue: ChangeListInput.defaultVal,
+      defaultValue: PlanChangeListInput.defaultVal,
     })
-    input: ChangeListInput
+    input: PlanChangeListInput
   ): Promise<SecuredChangeList> {
-    return await this.planChangeService.list(project.id, input, session);
+    return this.projectService.listPlanChanges(project.id, input, session);
   }
 
   /** @deprecated Moved from field definition in DTO to here */

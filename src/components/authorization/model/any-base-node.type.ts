@@ -18,6 +18,7 @@ import { DbOrganization } from '../../organization/model';
 import { DbPartner } from '../../partner/model';
 import { DbPartnership } from '../../partnership/model';
 import { DbProduct } from '../../product/model';
+import { DbPlanChange } from '../../project/change-to-plan/model';
 import { DbProject } from '../../project/model';
 import { DbProjectMember } from '../../project/project-member/model';
 import { DbSong } from '../../song/model';
@@ -47,6 +48,7 @@ export type AnyBaseNode = DbBudget &
   DbProduct &
   DbProject &
   DbProjectMember &
+  DbPlanChange &
   DbSong &
   DbStory &
   DbUnavailability &
@@ -75,6 +77,7 @@ export type OneBaseNode =
   | DbProduct
   | DbProject
   | DbProjectMember
+  | DbPlanChange
   | DbSong
   | DbStory
   | DbUnavailability

@@ -62,6 +62,11 @@ import {
   PartnershipService,
   SecuredPartnershipList,
 } from '../partnership';
+import { PlanChangeService } from './change-to-plan';
+import {
+  PlanChangeListInput,
+  SecuredPlanChangeList,
+} from './change-to-plan/dto';
 import {
   CreateProject,
   InternshipProject,
@@ -126,6 +131,7 @@ export class ProjectService {
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
     private readonly projectRules: ProjectRules,
+    private readonly planChangeService: PlanChangeService,
     @Logger('project:service') private readonly logger: ILogger
   ) {}
 
@@ -1051,6 +1057,29 @@ export class ProjectService {
       ...result,
       canRead: !!permission?.canReadPartnershipRead,
       canCreate: !!permission?.canReadPartnershipCreate,
+    };
+  }
+
+  async listPlanChanges(
+    projectId: string,
+    input: PlanChangeListInput,
+    session: Session
+  ): Promise<SecuredPlanChangeList> {
+    const result = await this.planChangeService.list(
+      {
+        ...input,
+        filter: {
+          ...input.filter,
+          projectId: projectId,
+        },
+      },
+      session
+    );
+
+    return {
+      ...result,
+      canRead: true,
+      canCreate: true,
     };
   }
 
