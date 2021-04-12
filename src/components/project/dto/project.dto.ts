@@ -10,11 +10,11 @@ import {
   parentIdMiddleware,
   Resource,
   Secured,
-  SecuredDate,
   SecuredDateNullable,
   SecuredDateTime,
   SecuredProps,
   SecuredString,
+  SecuredStringNullable,
   Sensitivity,
 } from '../../../common';
 import { ScopedRole } from '../../authorization/dto';
@@ -74,7 +74,7 @@ class Project extends IntersectionType(Resource, Pinnable) {
     description: 'The legacy department ID',
   })
   @DbLabel('DepartmentId')
-  readonly departmentId: SecuredString;
+  readonly departmentId: SecuredStringNullable;
 
   @Field({
     middleware: [parentIdMiddleware],
@@ -86,19 +86,19 @@ class Project extends IntersectionType(Resource, Pinnable) {
   @DbLabel('ProjectStatus')
   readonly status: ProjectStatus;
 
-  readonly primaryLocation: Secured<ID>;
+  readonly primaryLocation: Secured<ID | null>;
 
-  readonly marketingLocation: Secured<ID>;
+  readonly marketingLocation: Secured<ID | null>;
 
-  readonly fieldRegion: Secured<ID>;
+  readonly fieldRegion: Secured<ID | null>;
 
-  readonly owningOrganization: Secured<ID>;
-
-  @Field()
-  readonly mouStart: SecuredDate;
+  readonly owningOrganization: Secured<ID | null>;
 
   @Field()
-  readonly mouEnd: SecuredDate;
+  readonly mouStart: SecuredDateNullable;
+
+  @Field()
+  readonly mouEnd: SecuredDateNullable;
 
   @Field()
   // this should match project mouEnd, until it becomes active, then this is final.
@@ -108,7 +108,7 @@ class Project extends IntersectionType(Resource, Pinnable) {
   readonly stepChangedAt: SecuredDateTime;
 
   @Field()
-  readonly estimatedSubmission: SecuredDate;
+  readonly estimatedSubmission: SecuredDateNullable;
 
   @DateTimeField()
   readonly modifiedAt: DateTime;
