@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
 import {
   generateId,
   ID,
@@ -160,12 +160,39 @@ export class UnavailabilityService {
   ): Promise<Unavailability> {
     const unavailability = await this.readOne(input.id, session);
 
-    return await this.db.sgUpdateProperties({
-      session,
+    const result = await this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .match([
+        node('user', 'User'),
+        relation('out', '', 'unavailability', { active: true }),
+        node('unavailability', 'Unavailability', { id: input.id }),
+      ])
+      .return('user')
+      .first();
+    if (!result) {
+      throw new NotFoundException(
+        'Could not find user associated with unavailability',
+        'user.unavailability'
+      );
+    }
+    const changes = this.db.getActualChanges(
+      Unavailability,
+      unavailability,
+      input
+    );
+
+    if (result.user.properties.id !== session.userId) {
+      await this.authorizationService.verifyCanEditChanges(
+        Unavailability,
+        unavailability,
+        changes
+      );
+    }
+    return await this.db.updateProperties({
+      type: Unavailability,
       object: unavailability,
-      props: ['description', 'start', 'end'],
-      changes: input,
-      nodevar: 'unavailability',
+      changes,
     });
   }
 

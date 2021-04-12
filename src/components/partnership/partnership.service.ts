@@ -359,7 +359,6 @@ export class PartnershipService {
   async update(input: UpdatePartnership, session: Session) {
     // mou start and end are now computed fields and do not get updated directly
     const object = await this.readOne(input.id, session);
-    let changes = input;
 
     const partner = await this.partnerService.readOne(
       object.partner.value!,
@@ -375,8 +374,8 @@ export class PartnershipService {
       if (input.types && !input.financialReportingType) {
         // If input is removing Managing type and FRT is omitted, help caller
         // out and just remove FRT as well, instead of throwing error.
-        changes = {
-          ...changes,
+        input = {
+          ...input,
           financialReportingType: null,
         };
       } else {
@@ -391,25 +390,22 @@ export class PartnershipService {
       );
     }
 
-    if (!object.primary.value && input.primary) {
+    const changes = this.db.getActualChanges(Partnership, object, input);
+    await this.authorizationService.verifyCanEditChanges(
+      Partnership,
+      object,
+      changes
+    );
+    const { mou, agreement, ...simpleChanges } = changes;
+
+    if (changes.primary) {
       await this.removeOtherPartnershipPrimary(input.id);
     }
 
-    const { mou, agreement, ...rest } = changes;
-    await this.db.sgUpdateProperties({
-      session,
+    await this.db.updateProperties({
+      type: Partnership,
       object,
-      props: [
-        'agreementStatus',
-        'mouStatus',
-        'types',
-        'financialReportingType',
-        'mouStartOverride',
-        'mouEndOverride',
-        'primary',
-      ],
-      changes: rest,
-      nodevar: 'partnership',
+      changes: simpleChanges,
     });
     await this.files.updateDefinedFile(
       object.mou,

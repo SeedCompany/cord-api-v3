@@ -1,12 +1,15 @@
 import { Field, InterfaceType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
+import { keys as keysOf } from 'ts-transformer-keys';
 import { ID, IdField } from './id-field';
 import { DateTimeField } from './luxon.graphql';
-import { SecuredProps } from './secured-property';
+import { SecuredProps, UnsecuredDto } from './secured-property';
 import { AbstractClassType } from './types';
 
 @InterfaceType()
 export abstract class Resource {
+  static readonly Props: string[] = keysOf<Resource>();
+
   @IdField()
   readonly id: ID;
 
@@ -28,6 +31,10 @@ export type ResourceShape<T> = AbstractClassType<T> & {
   SecuredProps: string[];
   Relations?: Record<string, any>;
 };
+
+export type MaybeUnsecuredInstance<
+  TResourceStatic extends ResourceShape<any>
+> = TResourceStatic['prototype'] | UnsecuredDto<TResourceStatic['prototype']>;
 
 // Get the secured props of the resource
 // merged with all of the relations which are assumed to be secure.

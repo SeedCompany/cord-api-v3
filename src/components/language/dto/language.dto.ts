@@ -1,5 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
+import { GraphQLString } from 'graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
   ID,
@@ -13,12 +14,16 @@ import {
   SecuredString,
   Sensitivity,
 } from '../../../common';
+import { SetChangeType } from '../../../core/database/changes';
 import { Location } from '../../location/dto';
+import { UpdateEthnologueLanguage } from './update-language.dto';
 
 @ObjectType({
   description: SecuredPropertyList.descriptionFor('tags'),
 })
-export abstract class SecuredTags extends SecuredPropertyList(String) {}
+export abstract class SecuredTags extends SecuredPropertyList<string>(
+  GraphQLString
+) {}
 
 @ObjectType()
 export class EthnologueLanguage {
@@ -85,8 +90,9 @@ export class Language extends Resource {
   })
   readonly isDialect: SecuredBoolean;
 
-  @Field()
-  readonly ethnologue: EthnologueLanguage;
+  @Field(() => EthnologueLanguage)
+  readonly ethnologue: EthnologueLanguage &
+    SetChangeType<'ethnologue', UpdateEthnologueLanguage>;
 
   @Field({
     description: `An override for the ethnologue's population`,

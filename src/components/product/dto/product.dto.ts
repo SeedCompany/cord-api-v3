@@ -2,7 +2,8 @@ import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
-import { SecuredProps } from '../../../common';
+import { DbLabel, ID, SecuredProps } from '../../../common';
+import { SetChangeType } from '../../../core/database/changes';
 import { SecuredScriptureRangesOverride } from '../../scripture';
 import { Producible, SecuredProducible } from './producible.dto';
 import { SecuredProductMediums } from './product-medium';
@@ -19,12 +20,15 @@ export class Product extends Producible {
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Product>>();
 
   @Field()
+  @DbLabel('ProductMedium')
   readonly mediums: SecuredProductMediums;
 
   @Field()
+  @DbLabel('ProductPurpose')
   readonly purposes: SecuredProductPurposes;
 
   @Field()
+  @DbLabel('ProductMethodology')
   readonly methodology: SecuredMethodology;
 }
 
@@ -52,13 +56,13 @@ export class DerivativeScriptureProduct extends Product {
     SecuredProps<DerivativeScriptureProduct>
   >();
 
-  @Field({
+  @Field(() => SecuredProducible, {
     description: stripIndent`
       The object that this product is producing.
       i.e. A film named "Jesus Film".
     `,
   })
-  readonly produces: SecuredProducible;
+  readonly produces: SecuredProducible & SetChangeType<'produces', ID>;
 
   @Field({
     description: stripIndent`

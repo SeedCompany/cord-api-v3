@@ -201,17 +201,28 @@ export class LiteracyMaterialService {
     input: UpdateLiteracyMaterial,
     session: Session
   ): Promise<LiteracyMaterial> {
-    await this.scriptureRefService.update(input.id, input.scriptureReferences);
-
     const literacyMaterial = await this.readOne(input.id, session);
+    const changes = this.db.getActualChanges(
+      LiteracyMaterial,
+      literacyMaterial,
+      input
+    );
+    await this.authorizationService.verifyCanEditChanges(
+      LiteracyMaterial,
+      literacyMaterial,
+      changes
+    );
+    const { scriptureReferences, ...simpleChanges } = changes;
 
-    return await this.db.sgUpdateProperties({
-      session,
+    await this.scriptureRefService.update(input.id, scriptureReferences);
+
+    await this.db.updateProperties({
+      type: LiteracyMaterial,
       object: literacyMaterial,
-      props: ['name'],
-      changes: input,
-      nodevar: 'literacyMaterial',
+      changes: simpleChanges,
     });
+
+    return await this.readOne(input.id, session);
   }
 
   async delete(id: ID, session: Session): Promise<void> {

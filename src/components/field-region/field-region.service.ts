@@ -221,15 +221,18 @@ export class FieldRegionService {
     session: Session
   ): Promise<FieldRegion> {
     const fieldRegion = await this.readOne(input.id, session);
-
+    const changes = this.db.getActualChanges(FieldRegion, fieldRegion, input);
+    await this.authorizationService.verifyCanEditChanges(
+      FieldRegion,
+      fieldRegion,
+      changes
+    );
     // update director
 
-    await this.db.sgUpdateProperties({
-      session,
+    await this.db.updateProperties({
+      type: FieldRegion,
       object: fieldRegion,
-      props: ['name'],
-      changes: input,
-      nodevar: 'fieldRegion',
+      changes: changes,
     });
 
     return await this.readOne(input.id, session);

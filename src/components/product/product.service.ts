@@ -4,6 +4,7 @@ import type { Node } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { difference } from 'lodash';
 import { DateTime } from 'luxon';
+import { Except } from 'type-fest';
 import {
   generateId,
   ID,
@@ -56,6 +57,7 @@ import {
   DirectScriptureProduct,
   MethodologyToApproach,
   ProducibleType,
+  Product,
   ProductApproach,
   ProductListInput,
   ProductListOutput,
@@ -387,53 +389,115 @@ export class ProductService {
   }
 
   async update(input: UpdateProduct, session: Session): Promise<AnyProduct> {
-    const {
-      produces: inputProducesId,
-      scriptureReferences,
-      scriptureReferencesOverride,
-      ...rest
-    } = input;
-
     const currentProduct = await this.readOne(input.id, session);
     const isDirectScriptureProduct = !currentProduct.produces;
 
-    //If current product is a Direct Scripture Product, cannot update scriptureReferencesOverride or produces
-    if (isDirectScriptureProduct && scriptureReferencesOverride) {
-      throw new InputException(
-        'Cannot update Scripture References Override on a Direct Scripture Product',
-        'product.scriptureReferencesOverride'
-      );
+    if (isDirectScriptureProduct) {
+      if (input.produces) {
+        throw new InputException(
+          'Cannot update produces on a Direct Scripture Product',
+          'product.produces'
+        );
+      }
+      //If current product is a Direct Scripture Product, cannot update scriptureReferencesOverride or produces
+      if (input.scriptureReferencesOverride) {
+        throw new InputException(
+          'Cannot update Scripture References Override on a Direct Scripture Product',
+          'product.scriptureReferencesOverride'
+        );
+      }
+      return await this.updateDirect(currentProduct, input, session);
     }
 
-    if (isDirectScriptureProduct && inputProducesId) {
-      throw new InputException(
-        'Cannot update produces on a Direct Scripture Product',
-        'product.produces'
-      );
-    }
-
-    //If current product is a Derivative Scripture Product, cannot update scriptureReferencesOverride
-    if (!isDirectScriptureProduct && scriptureReferences) {
+    // If current product is a Derivative Scripture Product, cannot update scriptureReferencesOverride
+    if (input.scriptureReferences) {
       throw new InputException(
         'Cannot update Scripture References on a Derivative Scripture Product',
         'product.scriptureReferences'
       );
     }
+    return await this.updateDerivative(
+      currentProduct as DerivativeScriptureProduct,
+      input,
+      session
+    );
+  }
+
+  private async updateDirect(
+    currentProduct: DirectScriptureProduct,
+    input: Except<UpdateProduct, 'produces' | 'scriptureReferencesOverride'>,
+    session: Session
+  ) {
+    const changes = this.db.getActualChanges(
+      DirectScriptureProduct,
+      currentProduct,
+      input
+    );
+    await this.authorizationService.verifyCanEditChanges(
+      Product,
+      currentProduct,
+      changes,
+      'product'
+    );
+    const { scriptureReferences, ...simpleChanges } = changes;
+
+    await this.scriptureRefService.update(input.id, scriptureReferences);
+
+    const productUpdatedScriptureReferences = await this.readOne(
+      input.id,
+      session
+    );
+
+    return await this.db.updateProperties({
+      type: DirectScriptureProduct,
+      object: productUpdatedScriptureReferences,
+      changes: simpleChanges,
+    });
+  }
+
+  private async updateDerivative(
+    currentProduct: DerivativeScriptureProduct,
+    input: Except<UpdateProduct, 'scriptureReferences'>,
+    session: Session
+  ) {
+    let changes = this.db.getActualChanges(
+      DerivativeScriptureProduct,
+      currentProduct,
+      input
+    );
+    changes = {
+      ...changes,
+      // This needs to be manually checked for changes as the existing value
+      // is the object not the ID.
+      produces:
+        currentProduct.produces.value !== input.produces
+          ? input.produces
+          : undefined,
+    };
+
+    await this.authorizationService.verifyCanEditChanges(
+      Product,
+      currentProduct,
+      changes,
+      'product'
+    );
+
+    const { produces, scriptureReferencesOverride, ...simpleChanges } = changes;
 
     // If given an new produces id, update the producible
-    if (inputProducesId) {
+    if (produces) {
       const producible = await this.db
         .query()
         .match([
           node('producible', 'Producible', {
-            id: inputProducesId,
+            id: produces,
           }),
         ])
         .return('producible')
         .first();
       if (!producible) {
         this.logger.warning(`Could not find producible node`, {
-          id: inputProducesId,
+          id: produces,
         });
         throw new NotFoundException(
           'Could not find producible node',
@@ -458,7 +522,7 @@ export class ProductService {
         .match([node('product', 'Product', { id: input.id })])
         .match([
           node('producible', 'Producible', {
-            id: inputProducesId,
+            id: produces,
           }),
         ])
         .create([
@@ -474,27 +538,21 @@ export class ProductService {
     }
 
     // update the scripture references (override)
-    if (isDirectScriptureProduct) {
-      await this.scriptureRefService.update(input.id, scriptureReferences);
-    } else {
-      await this.scriptureRefService.update(
-        input.id,
-        scriptureReferencesOverride,
-        { isOverriding: true }
-      );
-    }
+    await this.scriptureRefService.update(
+      input.id,
+      scriptureReferencesOverride,
+      { isOverriding: true }
+    );
 
     const productUpdatedScriptureReferences = await this.readOne(
       input.id,
       session
     );
 
-    return await this.db.sgUpdateProperties({
-      session,
+    return await this.db.updateProperties({
+      type: DerivativeScriptureProduct,
       object: productUpdatedScriptureReferences,
-      props: ['mediums', 'purposes', 'methodology'],
-      changes: rest,
-      nodevar: 'product',
+      changes: simpleChanges,
     });
   }
 

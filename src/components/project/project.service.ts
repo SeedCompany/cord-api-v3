@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, relation, Relation } from 'cypher-query-builder';
+import { Node, node, relation, Relation } from 'cypher-query-builder';
 import { Many } from 'lodash';
 import { DateTime } from 'luxon';
 import {
@@ -15,6 +15,7 @@ import {
   ServerException,
   Session,
   UnauthorizedException,
+  UnsecuredDto,
 } from '../../common';
 import {
   ConfigService,
@@ -37,11 +38,12 @@ import {
   requestingUser,
 } from '../../core/database/query';
 import {
+  BaseNode,
   DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
+  PropListDbResult,
   runListQuery,
-  StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Role, rolesForScope, ScopedRole } from '../authorization/dto';
@@ -156,7 +158,7 @@ export class ProjectService {
       ...input
     }: CreateProject,
     session: Session
-  ): Promise<Project> {
+  ): Promise<UnsecuredDto<Project>> {
     if (input.type === ProjectType.Translation && input.sensitivity) {
       throw new InputException(
         'Cannot set sensitivity on translation project',
@@ -420,7 +422,7 @@ export class ProjectService {
         session.userId
       );
 
-      const project = await this.readOne(result.id, session);
+      const project = await this.readOneUnsecured(result.id, session);
 
       await this.eventBus.publish(new ProjectCreatedEvent(project, session));
 
@@ -461,7 +463,10 @@ export class ProjectService {
     return project as InternshipProject;
   }
 
-  async readOne(id: ID, sessionOrUserId: Session | ID): Promise<Project> {
+  async readOneUnsecured(
+    id: ID,
+    sessionOrUserId: Session | ID
+  ): Promise<UnsecuredDto<Project>> {
     const userId = isIdLike(sessionOrUserId)
       ? sessionOrUserId
       : sessionOrUserId.userId;
@@ -526,96 +531,118 @@ export class ProjectService {
         'organization.id as owningOrganizationId',
         'collect(distinct sensitivity.value) as languageSensitivityList',
       ])
-      .asResult<
-        StandardReadResult<DbPropsOfDto<Project>> & {
-          pinnedRel?: Relation;
-          primaryLocationId: ID;
-          memberRoles: Role[][];
-          marketingLocationId: ID;
-          fieldRegionId: ID;
-          owningOrganizationId: ID;
-          languageSensitivityList: Sensitivity[];
-        }
-      >();
+      .asResult<{
+        node: Node<BaseNode & { type: ProjectType }>;
+        propList: PropListDbResult<DbPropsOfDto<Project>>;
+        pinnedRel?: Relation;
+        primaryLocationId: ID;
+        memberRoles: Role[][];
+        marketingLocationId: ID;
+        fieldRegionId: ID;
+        owningOrganizationId: ID;
+        languageSensitivityList: Sensitivity[];
+      }>();
 
     const result = await query.first();
-
     if (!result) {
-      throw new NotFoundException('Could not find Project');
+      throw new NotFoundException('Could not find project');
     }
-    const props = parsePropList(result.propList);
-    const membershipRoles = result.memberRoles
-      .flat()
-      .map(rolesForScope('project'));
-    const securedProps = await this.authorizationService.secureProperties(
-      IProject,
-      props,
-      sessionOrUserId,
-      membershipRoles
-    );
 
+    const props = parsePropList(result.propList);
     return {
       ...parseBaseNodeProperties(result.node),
-      ...securedProps,
+      ...props,
       // Sensitivity is calculated based on the highest language sensitivity (for Translation Projects).
       // If project has no language engagements (new Translation projects and all Internship projects),
       // then falls back to the sensitivity prop which defaulted to High on create for all projects.
       sensitivity:
-        getHighestSensitivity(result.languageSensitivityList) ||
+        getHighestSensitivity(result.languageSensitivityList) ??
         props.sensitivity,
-      type: (result as any)?.node?.properties?.type,
-      status: props.status,
-      modifiedAt: props.modifiedAt,
-      tags: {
-        ...securedProps.tags,
-        value: securedProps.tags.value ?? [],
-      },
-      primaryLocation: {
-        ...securedProps.primaryLocation,
-        value: result.primaryLocationId,
-      },
-      marketingLocation: {
-        ...securedProps.marketingLocation,
-        value: result.marketingLocationId,
-      },
-      fieldRegion: {
-        ...securedProps.fieldRegion,
-        value: result.fieldRegionId,
-      },
-      owningOrganization: {
-        ...securedProps.owningOrganization,
-        value: result.owningOrganizationId,
-      },
-      canDelete: await this.db.checkDeletePermission(id, sessionOrUserId),
-      pinned: result.pinnedRel ? true : false,
-      scope: membershipRoles,
+      type: result.node.properties.type,
+      primaryLocation: result.primaryLocationId,
+      marketingLocation: result.marketingLocationId,
+      fieldRegion: result.fieldRegionId,
+      owningOrganization: result.owningOrganizationId,
+      pinned: !!result.pinnedRel,
+      scope: result.memberRoles.flat().map(rolesForScope('project')),
     };
   }
 
-  async update(input: UpdateProject, session: Session): Promise<Project> {
-    const currentProject = await this.readOne(input.id, session);
+  async secure(
+    project: UnsecuredDto<Project>,
+    sessionOrUserId: Session | ID
+  ): Promise<Project> {
+    const securedProps = await this.authorizationService.secureProperties(
+      IProject,
+      project,
+      sessionOrUserId,
+      project.scope
+    );
+
+    return {
+      ...project,
+      ...securedProps,
+      canDelete: await this.db.checkDeletePermission(
+        project.id,
+        sessionOrUserId
+      ),
+    };
+  }
+
+  async readOne(id: ID, sessionOrUserId: Session | ID): Promise<Project> {
+    const unsecured = await this.readOneUnsecured(id, sessionOrUserId);
+    return await this.secure(unsecured, sessionOrUserId);
+  }
+
+  async update(
+    input: UpdateProject,
+    session: Session
+  ): Promise<UnsecuredDto<Project>> {
+    const currentProject = await this.readOneUnsecured(input.id, session);
     if (input.sensitivity && currentProject.type === ProjectType.Translation)
       throw new InputException(
         'Cannot update sensitivity on Translation Project',
         'project.sensitivity'
       );
 
-    if (input.step) {
-      await this.projectRules.verifyStepChange(input.id, session, input.step);
+    const changes = this.db.getActualChanges(IProject, currentProject, {
+      ...input,
+      ...(input.step ? { status: stepToStatus(input.step) } : {}),
+    });
+
+    await this.authorizationService.verifyCanEditChanges(
+      currentProject.type === 'Translation'
+        ? TranslationProject
+        : InternshipProject,
+      await this.secure(currentProject, session),
+      changes,
+      'project'
+    );
+
+    if (changes.step) {
+      await this.projectRules.verifyStepChange(input.id, session, changes.step);
     }
 
-    const changes = {
-      ...input,
-      modifiedAt: DateTime.local(),
-      ...(input.step ? { status: stepToStatus(input.step) } : {}),
-    };
+    const {
+      primaryLocationId,
+      marketingLocationId,
+      fieldRegionId,
+      ...simpleChanges
+    } = changes;
 
-    // TODO: re-connect the locationId node when locations are hooked up
+    let result = await this.db.updateProperties({
+      type:
+        currentProject.type === ProjectType.Translation
+          ? TranslationProject
+          : InternshipProject,
+      object: currentProject,
+      changes: simpleChanges,
+    });
 
-    if (input.primaryLocationId) {
+    if (primaryLocationId) {
       try {
         const location = await this.locationService.readOne(
-          input.primaryLocationId,
+          primaryLocationId,
           session
         );
         if (!location.fundingAccount.value) {
@@ -638,23 +665,12 @@ export class ProjectService {
       const createdAt = DateTime.local();
       const query = this.db
         .query()
-        .match([
-          node('user', 'User', { id: session.userId }),
-          relation('in', 'memberOfSecurityGroup', 'member'),
-          node('security', 'SecurityGroup'),
-          relation('out', 'sgPerms', 'permission'),
-          node('', 'Permission', {
-            property: 'primaryLocation',
-            edit: true,
-          }),
-          relation('out', 'permsOfBaseNode', 'baseNode'),
-          node('project', 'Project', { id: input.id }),
-        ])
-        .with('project')
+        .match(node('project', 'Project', { id: input.id }))
+        .match(node('location', 'Location', { id: input.primaryLocationId }))
+        .with('project, location')
         .limit(1)
-        .match([node('location', 'Location', { id: input.primaryLocationId })])
         .optionalMatch([
-          node('project'),
+          node('project', 'Project', { id: input.id }),
           relation('out', 'oldRel', 'primaryLocation', { active: true }),
           node(''),
         ])
@@ -671,11 +687,15 @@ export class ProjectService {
         ]);
 
       await query.run();
+      result = {
+        ...result,
+        primaryLocation: primaryLocationId,
+      };
     }
 
-    if (input.fieldRegionId) {
+    if (fieldRegionId) {
       await this.validateOtherResourceId(
-        input.fieldRegionId,
+        fieldRegionId,
         'FieldRegion',
         'fieldRegionId',
         'Field region not found'
@@ -683,18 +703,7 @@ export class ProjectService {
       const createdAt = DateTime.local();
       const query = this.db
         .query()
-        .match([
-          node('user', 'User', { id: session.userId }),
-          relation('in', 'memberOfSecurityGroup', 'member'),
-          node('security', 'SecurityGroup'),
-          relation('out', 'sgPerms', 'permission'),
-          node('', 'Permission', {
-            property: 'fieldRegion',
-            edit: true,
-          }),
-          relation('out', 'permsOfBaseNode', 'baseNode'),
-          node('project', 'Project', { id: input.id }),
-        ])
+        .match(node('project', 'Project', { id: input.id }))
         .with('project')
         .limit(1)
         .match([node('region', 'FieldRegion', { id: input.fieldRegionId })])
@@ -716,27 +725,11 @@ export class ProjectService {
         ]);
 
       await query.run();
+      result = {
+        ...result,
+        fieldRegion: fieldRegionId,
+      };
     }
-
-    const result = await this.db.sgUpdateProperties({
-      session,
-      object: currentProject,
-      props: [
-        'name',
-        'mouStart',
-        'mouEnd',
-        'initialMouEnd',
-        'estimatedSubmission',
-        'status',
-        'modifiedAt',
-        'step',
-        'sensitivity',
-        'tags',
-        'financialReportReceivedAt',
-      ],
-      changes,
-      nodevar: 'project',
-    });
 
     const event = new ProjectUpdatedEvent(
       result,
@@ -749,7 +742,7 @@ export class ProjectService {
   }
 
   async delete(id: ID, session: Session): Promise<void> {
-    const object = await this.readOne(id, session);
+    const object = await this.readOneUnsecured(id, session);
     if (!object) {
       throw new NotFoundException('Could not find project');
     }

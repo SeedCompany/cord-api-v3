@@ -1,4 +1,4 @@
-import { ServerException, UnauthorizedException } from '../../../common';
+import { ServerException } from '../../../common';
 import {
   DatabaseService,
   EventsHandler,
@@ -32,20 +32,7 @@ export class SetInitialMouEnd implements IEventHandler<SubscribedEvent> {
     ) {
       return;
     }
-    if (!project.mouEnd.canRead) {
-      throw new UnauthorizedException(
-        `Current user cannot read Project's end date thus initial end date cannot be set`
-      );
-    }
-    if (!project.initialMouEnd.canRead) {
-      throw new UnauthorizedException(
-        `Current user cannot read Project's initial end date thus initial end date cannot be set`
-      );
-    }
-    if (
-      project.initialMouEnd.value?.toMillis() ===
-      project.mouEnd.value?.toMillis()
-    ) {
+    if (project.initialMouEnd?.toMillis() === project.mouEnd?.toMillis()) {
       return;
     }
 
@@ -53,9 +40,8 @@ export class SetInitialMouEnd implements IEventHandler<SubscribedEvent> {
       const updatedProject = await this.db.updateProperties({
         type: IProject,
         object: project,
-        props: ['initialMouEnd'],
         changes: {
-          initialMouEnd: project.mouEnd.value || null,
+          initialMouEnd: project.mouEnd || null,
         },
       });
 

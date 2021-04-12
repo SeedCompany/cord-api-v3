@@ -444,25 +444,26 @@ export class BudgetService {
     };
   }
 
-  async update(
-    { universalTemplateFile, ...input }: UpdateBudget,
-    session: Session
-  ): Promise<Budget> {
+  async update(input: UpdateBudget, session: Session): Promise<Budget> {
     const budget = await this.readOne(input.id, session);
 
+    const changes = this.db.getActualChanges(Budget, budget, input);
+    await this.authorizationService.verifyCanEditChanges(
+      Budget,
+      budget,
+      changes
+    );
+    const { universalTemplateFile, ...simpleChanges } = changes;
     await this.files.updateDefinedFile(
       budget.universalTemplateFile,
       'budget.universalTemplateFile',
       universalTemplateFile,
       session
     );
-
-    return await this.db.sgUpdateProperties({
-      session,
+    return await this.db.updateProperties({
+      type: Budget,
       object: budget,
-      props: ['status'],
-      changes: input,
-      nodevar: 'budget',
+      changes: simpleChanges,
     });
   }
 
@@ -475,14 +476,18 @@ export class BudgetService {
     await this.verifyCanEdit(id, session);
 
     const br = await this.readOneRecord(id, session);
+    const changes = this.db.getActualChanges(BudgetRecord, br, input);
+    await this.authorizationService.verifyCanEditChanges(
+      BudgetRecord,
+      br,
+      changes
+    );
 
     try {
-      const result = await this.db.sgUpdateProperties({
-        session,
+      const result = await this.db.updateProperties({
+        type: BudgetRecord,
         object: br,
-        props: ['amount'],
-        changes: { id, ...input },
-        nodevar: 'budgetRecord',
+        changes: changes,
       });
       return result;
     } catch (e) {

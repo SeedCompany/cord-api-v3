@@ -7,7 +7,6 @@ import {
   NotFoundException,
   ServerException,
   Session,
-  UnauthorizedException,
 } from '../../../common';
 import {
   ConfigService,
@@ -139,42 +138,31 @@ export class EthnologueLanguageService {
 
   async update(id: ID, input: UpdateEthnologueLanguage, session: Session) {
     if (!input) return;
+    const ethnologueLanguage = await this.readOne(id, session);
+
+    const changes = this.db.getActualChanges(
+      EthnologueLanguage,
+      ethnologueLanguage,
+      input
+    );
 
     // Make a mapping of the fields that we want to set in the db to the inputs
-    const valueSet = {
-      'code.value': input.code,
-      'provisionalCode.value': input.provisionalCode,
-      'name.value': input.name,
-      'population.value': input.population,
-    };
+    const valueSet = pickBy(
+      {
+        'code.value': changes.code,
+        'provisionalCode.value': changes.provisionalCode,
+        'name.value': changes.name,
+        'population.value': changes.population,
+      },
+      (v) => v !== undefined
+    );
 
-    // filter out all of the undefined values so we only have a mapping of entries that the user wanted to edit
-    const valueSetCleaned = pickBy(valueSet, (v) => v !== undefined);
-    const valueSetCleanedKeys = Object.keys(valueSetCleaned);
-
-    for (const key of valueSetCleanedKeys) {
-      const q = await this.db
-        .query()
-        .match([
-          node('user', 'User', { id: session.userId }),
-          relation('in', 'memberOfSecurityGroup', 'member'),
-          node('security', 'SecurityGroup'),
-          relation('out', 'sgPerms', 'permission'),
-          node('perm', 'Permission', {
-            property: `${key.replace('.value', '')}`,
-            edit: true,
-          }),
-          relation('out', 'permsOfBaseNode', 'baseNode'),
-          node('ethnologueLanguage', 'EthnologueLanguage', { id: id }),
-        ])
-        .return(['user', 'perm', 'ethnologueLanguage'])
-        .first();
-      if (!q) {
-        throw new UnauthorizedException(
-          `You do not have permission to edit his object', '${key}`
-        );
-      }
-    }
+    // even though we already have a cleaned value set, we still need to verify edit permission
+    await this.authorizationService.verifyCanEditChanges(
+      EthnologueLanguage,
+      ethnologueLanguage,
+      changes
+    );
 
     try {
       const query = this.db
@@ -206,7 +194,7 @@ export class EthnologueLanguageService {
             node('population', 'Property'),
           ],
         ])
-        .setValues(valueSetCleaned);
+        .setValues(valueSet);
       await query.run();
     } catch (exception) {
       this.logger.error('update failed', { exception });

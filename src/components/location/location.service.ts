@@ -247,23 +247,33 @@ export class LocationService {
   async update(input: UpdateLocation, session: Session): Promise<Location> {
     const location = await this.readOne(input.id, session);
 
-    await this.db.sgUpdateProperties({
-      session,
+    const changes = this.db.getActualChanges(Location, location, input);
+    await this.authorizationService.verifyCanEditChanges(
+      Location,
+      location,
+      changes
+    );
+
+    const {
+      fundingAccountId,
+      defaultFieldRegionId,
+      ...simpleChanges
+    } = changes;
+
+    await this.db.updateProperties({
+      type: Location,
       object: location,
-      props: ['name', 'isoAlpha3', 'type'],
-      changes: input,
-      nodevar: 'location',
+      changes: simpleChanges,
     });
 
-    // Update fundingAccount
-    if (input.fundingAccountId) {
+    if (fundingAccountId) {
       const createdAt = DateTime.local();
       await this.db
         .query()
         .call(matchRequestingUser, session)
         .matchNode('location', 'Location', { id: input.id })
         .matchNode('newFundingAccount', 'FundingAccount', {
-          id: input.fundingAccountId,
+          id: fundingAccountId,
         })
         .optionalMatch([
           node('location'),
@@ -288,14 +298,14 @@ export class LocationService {
         .run();
     }
 
-    if (input.defaultFieldRegionId) {
+    if (defaultFieldRegionId) {
       const createdAt = DateTime.local();
       await this.db
         .query()
         .call(matchRequestingUser, session)
         .matchNode('location', 'Location', { id: input.id })
         .matchNode('newDefaultFieldRegion', 'FieldRegion', {
-          id: input.defaultFieldRegionId,
+          id: defaultFieldRegionId,
         })
         .optionalMatch([
           node('location'),

@@ -359,83 +359,34 @@ export class LanguageService {
     };
   }
 
-  async update(
-    { ethnologue: newEthnologue, ...input }: UpdateLanguage,
-    session: Session
-  ): Promise<Language> {
+  async update(input: UpdateLanguage, session: Session): Promise<Language> {
     if (input.hasExternalFirstScripture) {
       await this.verifyExternalFirstScripture(input.id);
     }
 
-    const { ethnologue: oldEthnologue, ...language } = await this.readOne(
-      input.id,
-      session
+    const object = await this.readOne(input.id, session);
+    const changes = this.db.getActualChanges(Language, object, input);
+    await this.authorizationService.verifyCanEditChanges(
+      Language,
+      object,
+      changes
     );
 
-    await this.db.sgUpdateProperties({
-      session,
-      object: language,
-      props: [
-        'name',
-        'displayName',
-        'isDialect',
-        'populationOverride',
-        'registryOfDialectsCode',
-        'leastOfThese',
-        'leastOfTheseReason',
-        'displayNamePronunciation',
-        'isSignLanguage',
-        'signLanguageCode',
-        'sensitivity',
-        'sponsorEstimatedEndDate',
-        'hasExternalFirstScripture',
-        'tags',
-      ],
-      changes: input,
-      nodevar: 'language', // not sure if this is right, just trying to get this to compile - michael
-    });
+    const { ethnologue, ...simpleChanges } = changes;
 
-    // Update EthnologueLanguage
-    if (newEthnologue) {
-      const readLanguage = this.db
-        .query()
-        .match(matchSession(session, { withAclRead: 'canReadLanguages' }))
-        .match([node('lang', 'Language', { id: input.id })])
-        .optionalMatch([
-          node('requestingUser'),
-          relation('in', 'memberOfSecurityGroup', 'member'),
-          node('securityGroup', 'SecurityGroup'),
-          relation('out', 'sgPerms', 'permission'),
-          node('canReadEthnologueLanguages', 'Permission', {
-            property: 'ethnologue',
-            read: true,
-          }),
-          relation('out', '', 'baseNode'),
-          node('lang'),
-          relation('out', '', 'ethnologue', { active: true }),
-          node('ethnologueLanguage', 'EthnologueLanguage'),
-        ])
-        .return({
-          ethnologueLanguage: [{ id: 'ethnologueLanguageId' }],
-        });
-
-      const result = await readLanguage.first();
-      if (!result || !result.ethnologueLanguageId) {
-        this.logger.warning(`Could not find ethnologue language`, {
-          id: input.id,
-        });
-        throw new NotFoundException(
-          'Could not find ethnologue language',
-          'language.id'
-        );
-      }
-
+    if (ethnologue) {
       await this.ethnologueLanguageService.update(
-        result.ethnologueLanguageId,
-        newEthnologue,
+        object.ethnologue.id,
+        ethnologue,
         session
       );
     }
+
+    await this.db.updateProperties({
+      type: Language,
+      object: object,
+      changes: simpleChanges,
+    });
 
     return await this.readOne(input.id, session);
   }

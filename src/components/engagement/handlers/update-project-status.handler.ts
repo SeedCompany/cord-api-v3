@@ -1,5 +1,5 @@
 import { MergeExclusive, RequireAtLeastOne } from 'type-fest';
-import { ID, Session } from '../../../common';
+import { ID, Session, UnsecuredDto } from '../../../common';
 import { EventsHandler, IEventHandler } from '../../../core';
 import {
   Project,
@@ -48,16 +48,16 @@ type Condition = MergeExclusive<
   { step: ProjectStep }
 >;
 
-const changeMatcher = (previous: Project, updated: Project) => ({
-  from,
-  to,
-}: Change) => {
+const changeMatcher = (
+  previous: UnsecuredDto<Project>,
+  updated: UnsecuredDto<Project>
+) => ({ from, to }: Change) => {
   const toMatches = to ? matches(to, updated) : !matches(from!, updated);
   const fromMatches = from ? matches(from, previous) : !matches(to!, previous);
   return toMatches && fromMatches;
 };
-const matches = (cond: Condition, p: Project) =>
-  cond.step ? cond.step === p.step.value : cond.status === p.status;
+const matches = (cond: Condition, p: UnsecuredDto<Project>) =>
+  cond.step ? cond.step === p.step : cond.status === p.status;
 
 @EventsHandler(ProjectUpdatedEvent)
 export class UpdateProjectStatusHandler

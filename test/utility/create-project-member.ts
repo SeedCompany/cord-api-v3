@@ -4,7 +4,13 @@ import {
   CreateProjectMember,
   ProjectMember,
 } from '../../src/components/project';
-import { createPerson, createProject, fragments, TestApp } from '../utility';
+import {
+  createPerson,
+  createProject,
+  fragments,
+  Raw,
+  TestApp,
+} from '../utility';
 import { getUserFromSession } from './create-session';
 
 export async function createProjectMember(
@@ -38,7 +44,7 @@ export async function createProjectMember(
     }
   );
 
-  const actual: ProjectMember = result.createProjectMember.projectMember;
+  const actual: Raw<ProjectMember> = result.createProjectMember.projectMember;
 
   expect(actual).toBeTruthy();
   expect(isValidId(actual.id)).toBe(true);

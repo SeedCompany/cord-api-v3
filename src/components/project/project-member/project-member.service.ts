@@ -270,16 +270,16 @@ export class ProjectMemberService {
       return user;
     });
 
-    await this.db.sgUpdateProperties({
-      session,
+    const changes = this.db.getActualChanges(ProjectMember, object, input);
+    await this.authorizationService.verifyCanEditChanges(
+      ProjectMember,
       object,
-      props: ['roles', 'modifiedAt'],
-      changes: {
-        ...input,
-        roles: (input.roles ? input.roles : undefined) as any,
-        modifiedAt: DateTime.local(),
-      },
-      nodevar: 'projectMember',
+      changes
+    );
+    await this.db.updateProperties({
+      type: ProjectMember,
+      object,
+      changes,
     });
     return await this.readOne(input.id, session);
   }
