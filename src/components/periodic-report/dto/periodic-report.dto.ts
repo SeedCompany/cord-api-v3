@@ -3,11 +3,11 @@ import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
 import {
   CalendarDate,
-  ID,
   Resource,
-  Secured,
   SecuredProps,
+  ServerException,
 } from '../../../common';
+import { DefinedFile } from '../../file';
 import { ReportType } from './report-type.enum';
 
 type AnyPeriodicReport = MergeExclusive<
@@ -27,7 +27,7 @@ type AnyPeriodicReport = MergeExclusive<
       return FinancialReport;
     }
 
-    throw new Error('Could not resolve periodic report type');
+    throw new ServerException('Could not resolve periodic report type');
   },
 })
 class PeriodicReport extends Resource {
@@ -43,7 +43,7 @@ class PeriodicReport extends Resource {
   @Field(() => CalendarDate)
   readonly end: CalendarDate;
 
-  readonly reportFile: Secured<ID>;
+  readonly reportFile: DefinedFile;
 }
 
 export {
