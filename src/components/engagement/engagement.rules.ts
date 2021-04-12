@@ -501,7 +501,7 @@ export class EngagementRules {
       .match([
         node('node', 'Engagement', { id }),
         relation('out', '', 'status', { active: false }),
-        node('prop', 'Deleted_Property'),
+        node('prop'),
       ])
       .with('prop')
       .orderBy('prop.createdAt', 'DESC')
