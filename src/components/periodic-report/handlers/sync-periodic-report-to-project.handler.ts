@@ -1,12 +1,7 @@
-import { Interval } from 'luxon';
-import {
-  fiscalMonths,
-  fiscalQuarters,
-  getIntervalsDifference,
-  Session,
-} from '../../../common';
+import { DurationUnit } from 'luxon';
+import { DateInterval } from '../../../common';
 import { EventsHandler, IEventHandler, ILogger, Logger } from '../../../core';
-import { Project } from '../../project';
+import { projectRange } from '../../project';
 import { ProjectUpdatedEvent } from '../../project/events';
 import { ReportPeriod, ReportType } from '../dto';
 import { PeriodicReportService } from '../periodic-report.service';
@@ -27,120 +22,65 @@ export class SyncPeriodicReportsToProjectDateRange
       event: event.constructor.name,
     });
 
+    await this.syncNarrative(event);
+    await this.syncFinancial(event);
+  }
+
+  private async syncFinancial(event: SubscribedEvent) {
     const project = event.updated;
-    const previous = event.previous;
-
-    // Check if the project has valid date range set and changed from the previous set
-    const isDateRangeChanged =
-      project.mouStart.value &&
-      project.mouEnd.value &&
-      (project.mouStart.value.toMillis() !==
-        previous.mouStart.value?.toMillis() ||
-        project.mouEnd.value.toMillis() !== previous.mouEnd.value?.toMillis());
-
-    if (isDateRangeChanged) {
-      const [
-        newQuarters,
-        newMonths,
-        oldQuarters,
-        oldMonths,
-      ] = this.getNewPeriodIntervals(project, previous);
-      await this.removeRecords(project, oldQuarters, oldMonths, event.session);
-      await this.addRecords(project, newQuarters, newMonths, event.session);
-    }
-  }
-
-  private getNewPeriodIntervals(project: Project, previous: Project) {
-    const startDate = project.mouStart.value;
-    const endDate = project.mouEnd.value;
-    const prevStartDate = previous.mouStart.value;
-    const prevEndDate = previous.mouEnd.value;
-
-    const quarterIntervals = fiscalQuarters(startDate, endDate);
-    const monthIntervals = fiscalMonths(startDate, endDate);
-    const prevQuarterIntervals = fiscalQuarters(prevStartDate, prevEndDate);
-    const prevMonthIntervals = fiscalMonths(prevStartDate, prevEndDate);
-
-    const newQuarters = getIntervalsDifference(
-      quarterIntervals,
-      prevQuarterIntervals
-    );
-    const newMonths = getIntervalsDifference(
-      monthIntervals,
-      prevMonthIntervals
+    const diff = this.diffBy(
+      event,
+      project.financialReportPeriod === ReportPeriod.Monthly
+        ? 'months'
+        : 'quarters'
     );
 
-    const oldQuarters = getIntervalsDifference(
-      prevQuarterIntervals,
-      quarterIntervals
-    );
-    const oldMonths = getIntervalsDifference(
-      prevMonthIntervals,
-      monthIntervals
-    );
-
-    return [newQuarters, newMonths, oldQuarters, oldMonths];
-  }
-
-  private async removeRecords(
-    project: Project,
-    quarters: Interval[],
-    months: Interval[],
-    session: Session
-  ) {
     await this.periodicReports.removeFinancialReports(
-      project,
-      project.financialReportPeriod.value === ReportPeriod.Monthly
-        ? months
-        : quarters,
-      session
+      project.id,
+      diff.removals,
+      event.session
     );
-    await this.periodicReports.removeNarrativeReports(
-      project,
-      quarters,
-      session
+    await Promise.all(
+      diff.additions.map((interval) =>
+        this.periodicReports.create(
+          {
+            start: interval.start,
+            end: interval.end,
+            type: ReportType.Financial,
+            projectOrEngagementId: project.id,
+          },
+          event.session
+        )
+      )
     );
   }
 
-  private async addRecords(
-    project: Project,
-    quarters: Interval[],
-    months: Interval[],
-    session: Session
-  ) {
-    const isMonthlyFinancialReport =
-      project.financialReportPeriod.value === ReportPeriod.Monthly;
-    const financialReportPeriod = isMonthlyFinancialReport
-      ? 'month'
-      : 'quarter';
-
-    const financialReportPromises = (isMonthlyFinancialReport
-      ? months
-      : quarters
-    ).map((interval) =>
-      this.periodicReports.create(
-        {
-          start: interval.start,
-          end: interval.start.endOf(financialReportPeriod),
-          type: ReportType.Financial,
-          projectOrEngagementId: project.id,
-        },
-        session
+  private async syncNarrative(event: SubscribedEvent) {
+    const diff = this.diffBy(event, 'quarter');
+    await this.periodicReports.removeNarrativeReports(
+      event.updated.id,
+      diff.removals,
+      event.session
+    );
+    await Promise.all(
+      diff.additions.map((interval) =>
+        this.periodicReports.create(
+          {
+            start: interval.start,
+            end: interval.end,
+            type: ReportType.Narrative,
+            projectOrEngagementId: event.updated.id,
+          },
+          event.session
+        )
       )
     );
+  }
 
-    const narrativeReportPromises = quarters.map((interval) =>
-      this.periodicReports.create(
-        {
-          start: interval.start,
-          end: interval.start.endOf('quarter'),
-          type: ReportType.Narrative,
-          projectOrEngagementId: project.id,
-        },
-        session
-      )
+  private diffBy(event: SubscribedEvent, unit: DurationUnit) {
+    return DateInterval.compare(
+      projectRange(event.previous)?.expandToFull(unit),
+      projectRange(event.updated)?.expandToFull(unit)
     );
-
-    await Promise.all([...financialReportPromises, ...narrativeReportPromises]);
   }
 }

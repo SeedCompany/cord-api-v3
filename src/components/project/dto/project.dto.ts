@@ -3,6 +3,7 @@ import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
 import {
+  DateInterval,
   DateTimeField,
   DbLabel,
   ID,
@@ -16,6 +17,7 @@ import {
   SecuredString,
   SecuredStringNullable,
   Sensitivity,
+  UnsecuredDto,
 } from '../../../common';
 import { ScopedRole } from '../../authorization/dto';
 import { Budget } from '../../budget/dto';
@@ -150,3 +152,6 @@ export class InternshipProject extends Project {
 
   readonly type: ProjectType.Internship;
 }
+
+export const projectRange = (project: UnsecuredDto<Project>) =>
+  DateInterval.tryFrom(project.mouStart, project.mouEnd);

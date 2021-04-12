@@ -30,14 +30,12 @@ import {
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Engagement } from '../engagement';
-import { CreateDefinedFileVersionInput, FileService } from '../file';
-import { Project } from '../project';
+import { CreateDefinedFileVersionInput, FileId, FileService } from '../file';
 import {
   CreatePeriodicReport,
   IPeriodicReport,
   PeriodicReport,
   PeriodicReportListInput,
-  ReportPeriod,
   ReportType,
   SecuredPeriodicReportList,
 } from './dto';
@@ -130,7 +128,7 @@ export class PeriodicReportService {
     file: CreateDefinedFileVersionInput,
     session: Session
   ) {
-    const reportFileId = await generateId();
+    const reportFileId = (await generateId()) as FileId;
 
     const report = await this.readOne(reportId, session);
 
@@ -193,7 +191,7 @@ export class PeriodicReportService {
       .return('node, propList, reportFile.id as reportFileId')
       .asResult<
         StandardReadResult<DbPropsOfDto<PeriodicReport>> & {
-          reportFileId: ID;
+          reportFileId: FileId;
         }
       >();
 
@@ -305,11 +303,11 @@ export class PeriodicReportService {
     };
   }
 
-  getProjectReportsQuery(project: Project) {
+  getProjectReportsQuery(projectId: ID) {
     return this.db
       .query()
       .match([
-        node('project', 'Project', { id: project.id }),
+        node('project', 'Project', { id: projectId }),
         relation('out', '', 'report', { active: true }),
         node('report', 'PeriodicReport'),
       ])
@@ -337,21 +335,14 @@ export class PeriodicReportService {
   }
 
   async removeFinancialReports(
-    project: Project,
+    projectId: ID,
     intervals: Interval[],
     session: Session
   ) {
-    const period =
-      project.financialReportPeriod.value === ReportPeriod.Monthly
-        ? 'month'
-        : 'quarter';
-
-    const reports = await this.getProjectReportsQuery(project)
+    const reports = await this.getProjectReportsQuery(projectId)
       .where({
         rel: isNull(),
-        'date(start.value)': inArray(
-          intervals.map((interval) => interval.start.startOf(period))
-        ),
+        'start.value': inArray(intervals.map((interval) => interval.start)),
         type: {
           value: ReportType.Financial,
         },
@@ -366,16 +357,14 @@ export class PeriodicReportService {
   }
 
   async removeNarrativeReports(
-    project: Project,
+    projectId: ID,
     intervals: Interval[],
     session: Session
   ) {
-    const reports = await this.getProjectReportsQuery(project)
+    const reports = await this.getProjectReportsQuery(projectId)
       .where({
         rel: isNull(),
-        'date(start.value)': inArray(
-          intervals.map((interval) => interval.start.startOf('quarter'))
-        ),
+        'start.value': inArray(intervals.map((interval) => interval.start)),
         type: {
           value: ReportType.Narrative,
         },
