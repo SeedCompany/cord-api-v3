@@ -205,9 +205,7 @@ export class CeremonyService {
       );
 
     try {
-      await this.db.deleteNodeNew({
-        object,
-      });
+      await this.db.deleteNode(object);
     } catch (exception) {
       this.logger.warning('Failed to delete Ceremony', {
         exception,

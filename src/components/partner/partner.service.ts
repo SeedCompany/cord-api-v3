@@ -389,9 +389,7 @@ export class PartnerService {
       );
 
     try {
-      await this.db.deleteNodeNew<Partner>({
-        object,
-      });
+      await this.db.deleteNode(object);
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);

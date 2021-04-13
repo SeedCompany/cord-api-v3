@@ -240,9 +240,7 @@ export class LiteracyMaterialService {
       );
 
     try {
-      await this.db.deleteNodeNew<LiteracyMaterial>({
-        object: literacyMaterial,
-      });
+      await this.db.deleteNode(literacyMaterial);
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);

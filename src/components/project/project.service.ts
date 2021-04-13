@@ -755,9 +755,7 @@ export class ProjectService {
       );
 
     try {
-      await this.db.deleteNodeNew({
-        object,
-      });
+      await this.db.deleteNode(object);
     } catch (e) {
       this.logger.warning('Failed to delete project', {
         exception: e,

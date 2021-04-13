@@ -205,11 +205,7 @@ export class UnavailabilityService {
         'unavailability.id'
       );
     }
-    await this.db.deleteNode({
-      session,
-      object: ua,
-      aclEditProp: 'canDeleteOwnUser',
-    });
+    await this.db.deleteNode(ua);
   }
 
   async list(

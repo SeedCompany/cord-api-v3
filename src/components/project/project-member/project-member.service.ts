@@ -314,11 +314,7 @@ export class ProjectMemberService {
     }
 
     try {
-      await this.db.deleteNode({
-        session,
-        object,
-        aclEditProp: 'canDeleteOwnUser',
-      });
+      await this.db.deleteNode(object);
     } catch (exception) {
       this.logger.warning('Failed to delete project member', {
         exception,

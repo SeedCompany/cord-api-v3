@@ -214,9 +214,7 @@ export class StoryService {
       );
 
     try {
-      await this.db.deleteNodeNew<Story>({
-        object: story,
-      });
+      await this.db.deleteNode(story);
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);
