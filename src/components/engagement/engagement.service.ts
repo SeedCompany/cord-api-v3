@@ -1039,9 +1039,7 @@ export class EngagementService {
     }
 
     try {
-      await this.db.deleteNodeNew({
-        object,
-      });
+      await this.db.deleteNode(object);
     } catch (e) {
       this.logger.warning('Failed to delete Engagement', {
         exception: e,

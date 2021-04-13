@@ -548,9 +548,7 @@ export class BudgetService {
     );
 
     try {
-      await this.db.deleteNodeNew({
-        object: budget,
-      });
+      await this.db.deleteNode(budget);
     } catch (e) {
       this.logger.warning('Failed to delete budget', {
         exception: e,
@@ -574,9 +572,7 @@ export class BudgetService {
       );
 
     try {
-      await this.db.deleteNodeNew({
-        object: br,
-      });
+      await this.db.deleteNode(br);
     } catch (e) {
       this.logger.warning('Failed to delete Budget Record', {
         exception: e,

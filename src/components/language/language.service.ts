@@ -406,9 +406,7 @@ export class LanguageService {
       );
 
     try {
-      await this.db.deleteNodeNew<Language>({
-        object,
-      });
+      await this.db.deleteNode(object);
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);

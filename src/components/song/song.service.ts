@@ -210,9 +210,7 @@ export class SongService {
       );
 
     try {
-      await this.db.deleteNodeNew<Song>({
-        object: song,
-      });
+      await this.db.deleteNode(song);
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);

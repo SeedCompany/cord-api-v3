@@ -214,9 +214,7 @@ export class FilmService {
       );
 
     try {
-      await this.db.deleteNodeNew({
-        object: film,
-      });
+      await this.db.deleteNode(film);
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);

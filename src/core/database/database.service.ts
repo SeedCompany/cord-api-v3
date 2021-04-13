@@ -17,6 +17,7 @@ import {
   getDbPropertyLabels,
   ID,
   InputException,
+  isIdLike,
   isSecured,
   many,
   MaybeUnsecuredInstance,
@@ -553,57 +554,14 @@ export class DatabaseService {
     // return !!result;
   }
 
-  async deleteNodeNew<TObject extends { id: string }>({
-    object,
-  }: {
-    object: TObject;
-  }) {
+  async deleteNode(objectOrId: { id: ID } | ID) {
+    const id = isIdLike(objectOrId) ? objectOrId : objectOrId.id;
     const query = this.db
       .query()
-      .matchNode('baseNode', { id: object.id })
+      .matchNode('baseNode', { id })
       .call(deleteBaseNode)
       .return('*');
     await query.run();
-  }
-
-  async deleteNode<TObject extends Resource>({
-    session,
-    object,
-    // eslint-disable-next-line @seedcompany/no-unused-vars
-    aclEditProp, // example canCreateLangs
-  }: {
-    session: Session;
-    object: TObject;
-    aclEditProp: string;
-  }) {
-    await this.db
-      .query()
-      .raw(
-        `
-        MATCH
-        (token:Token {
-          active: true,
-          value: $token
-        })
-        <-[:token {active: true}]-
-        (requestingUser:User {
-
-          id: $requestingUserId
-        }),
-        (object {
-
-          id: $objectId
-        })
-        detach delete object
-
-        `,
-        {
-          requestingUserId: session.userId,
-          token: session.token,
-          objectId: object.id,
-        }
-      )
-      .run();
   }
 
   async hasProperties({
