@@ -24,7 +24,6 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
-  defaultSorter,
   matchPropList,
   permissionsOfNode,
   requestingUser,
@@ -53,11 +52,6 @@ import { DbOrganization } from './model';
 
 @Injectable()
 export class OrganizationService {
-  private readonly securedProperties = {
-    name: true,
-    address: true,
-  };
-
   constructor(
     @Logger('org:service') private readonly logger: ILogger,
     private readonly config: ConfigService,
@@ -266,10 +260,6 @@ export class OrganizationService {
     { filter, ...input }: OrganizationListInput,
     session: Session
   ): Promise<OrganizationListOutput> {
-    const orgSortMap: Partial<Record<typeof input.sort, string>> = {
-      name: 'toLower(prop.value)',
-    };
-    const sortBy = orgSortMap[input.sort] ?? 'prop.value';
     const query = this.db
       .query()
       .match([
@@ -282,13 +272,7 @@ export class OrganizationService {
             ]
           : []),
       ])
-      .call(
-        calculateTotalAndPaginateList,
-        input,
-        this.securedProperties,
-        defaultSorter,
-        sortBy
-      );
+      .call(calculateTotalAndPaginateList(Organization, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

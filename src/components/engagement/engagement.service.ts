@@ -26,7 +26,6 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
-  defaultSorter,
   matchMemberRoles,
   matchPropList,
   permissionsOfNode,
@@ -57,6 +56,7 @@ import {
   EngagementListInput,
   EngagementListOutput,
   EngagementStatus,
+  IEngagement,
   InternshipEngagement,
   LanguageEngagement,
   PnpData,
@@ -75,40 +75,6 @@ import { PnpExtractor } from './pnp-extractor.service';
 
 @Injectable()
 export class EngagementService {
-  private readonly securedProperties = {
-    status: true,
-    statusModifiedAt: true,
-    completeDate: true,
-    disbursementCompleteDate: true,
-    communicationsCompleteDate: true,
-    initialEndDate: true,
-    startDate: true,
-    endDate: true,
-    startDateOverride: true,
-    endDateOverride: true,
-    modifiedAt: true,
-    lastSuspendedAt: true,
-    lastReactivatedAt: true,
-    ceremony: true,
-
-    //Language Specific
-    firstScripture: true,
-    lukePartnership: true,
-    sentPrintingDate: true,
-    paratextRegistryId: true,
-    pnp: true,
-    language: true,
-    historicGoal: true,
-
-    //Internship Specific
-    position: true,
-    growthPlan: true,
-    methodologies: true,
-    intern: true,
-    mentor: true,
-    countryOfOrigin: true,
-  };
-
   constructor(
     private readonly db: DatabaseService,
     private readonly repo: EngagementRepository,
@@ -1077,12 +1043,7 @@ export class EngagementService {
             ]
           : []),
       ])
-      .call(
-        calculateTotalAndPaginateList,
-        input,
-        this.securedProperties,
-        defaultSorter
-      );
+      .call(calculateTotalAndPaginateList(IEngagement, input));
 
     const engagements = await runListQuery(query, input, (id) =>
       this.readOne(id, session)

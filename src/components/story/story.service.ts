@@ -20,7 +20,6 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
-  defaultSorter,
   matchPropList,
   permissionsOfNode,
   requestingUser,
@@ -44,11 +43,6 @@ import { DbStory } from './model';
 
 @Injectable()
 export class StoryService {
-  private readonly securedProperties = {
-    name: true,
-    scriptureReferences: true,
-  };
-
   constructor(
     @Logger('story:service') private readonly logger: ILogger,
     private readonly db: DatabaseService,
@@ -230,12 +224,7 @@ export class StoryService {
     const query = this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode('Story')])
-      .call(
-        calculateTotalAndPaginateList,
-        input,
-        this.securedProperties,
-        defaultSorter
-      );
+      .call(calculateTotalAndPaginateList(Story, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

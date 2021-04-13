@@ -26,7 +26,6 @@ import {
 } from '../../../core';
 import {
   calculateTotalAndPaginateList,
-  defaultSorter,
   matchMemberRoles,
   matchPropList,
   permissionsOfNode,
@@ -54,11 +53,6 @@ import { DbProjectMember } from './model';
 
 @Injectable()
 export class ProjectMemberService {
-  private readonly securedProperties = {
-    user: true,
-    roles: true,
-  };
-
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
@@ -344,12 +338,7 @@ export class ProjectMemberService {
             ]
           : []),
       ])
-      .call(
-        calculateTotalAndPaginateList,
-        input,
-        this.securedProperties,
-        defaultSorter
-      );
+      .call(calculateTotalAndPaginateList(ProjectMember, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

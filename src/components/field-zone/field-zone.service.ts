@@ -21,7 +21,6 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
-  defaultSorter,
   matchPropList,
   permissionsOfNode,
   requestingUser,
@@ -44,11 +43,6 @@ import { DbFieldZone } from './model';
 
 @Injectable()
 export class FieldZoneService {
-  private readonly securedProperties = {
-    name: true,
-    director: true,
-  };
-
   constructor(
     @Logger('field-zone:service') private readonly logger: ILogger,
     private readonly config: ConfigService,
@@ -269,12 +263,7 @@ export class FieldZoneService {
     const query = this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode(label)])
-      .call(
-        calculateTotalAndPaginateList,
-        input,
-        this.securedProperties,
-        defaultSorter
-      );
+      .call(calculateTotalAndPaginateList(FieldZone, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

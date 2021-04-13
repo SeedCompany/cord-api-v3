@@ -21,7 +21,6 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
-  defaultSorter,
   matchPropList,
   permissionsOfNode,
   requestingUser,
@@ -44,12 +43,6 @@ import { DbFieldRegion } from './model';
 
 @Injectable()
 export class FieldRegionService {
-  private readonly securedProperties = {
-    name: true,
-    director: true,
-    fieldZone: true,
-  };
-
   constructor(
     @Logger('field-region:service') private readonly logger: ILogger,
     private readonly config: ConfigService,
@@ -268,12 +261,7 @@ export class FieldRegionService {
     const query = this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode(label)])
-      .call(
-        calculateTotalAndPaginateList,
-        input,
-        this.securedProperties,
-        defaultSorter
-      );
+      .call(calculateTotalAndPaginateList(FieldRegion, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
