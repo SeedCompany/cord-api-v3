@@ -24,7 +24,6 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
-  defaultSorter,
   matchMemberRoles,
   matchPropList,
   permissionsOfNode,
@@ -58,18 +57,6 @@ import { DbBudgetRecord } from './model/budget-record.model.db';
 
 @Injectable()
 export class BudgetService {
-  private readonly securedBudgetProperties = {
-    status: true,
-    records: true,
-    universalTemplateFile: true,
-  };
-
-  private readonly securedBudgetRecordProperties = {
-    organization: true,
-    fiscalYear: true,
-    amount: true,
-  };
-
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
@@ -610,12 +597,7 @@ export class BudgetService {
             ]
           : []),
       ])
-      .call(
-        calculateTotalAndPaginateList,
-        listInput,
-        this.securedBudgetProperties,
-        defaultSorter
-      );
+      .call(calculateTotalAndPaginateList(Budget, listInput));
 
     return await runListQuery(query, listInput, (id) =>
       this.readOne(id, session)
@@ -642,12 +624,7 @@ export class BudgetService {
             ]
           : []),
       ])
-      .call(
-        calculateTotalAndPaginateList,
-        input,
-        this.securedBudgetRecordProperties,
-        defaultSorter
-      );
+      .call(calculateTotalAndPaginateList(BudgetRecord, input));
 
     return await runListQuery(query, input, (id) =>
       this.readOneRecord(id, session)

@@ -95,24 +95,6 @@ import { projectListFilter } from './query.helpers';
 
 @Injectable()
 export class ProjectService {
-  private readonly securedProperties = {
-    name: true,
-    departmentId: true,
-    step: true,
-    mouStart: true,
-    mouEnd: true,
-    initialMouEnd: true,
-    stepChangedAt: true,
-    estimatedSubmission: true,
-    type: true,
-    tags: true,
-    financialReportReceivedAt: true,
-    primaryLocation: true,
-    marketingLocation: true,
-    fieldRegion: true,
-    owningOrganization: true,
-  };
-
   constructor(
     private readonly db: DatabaseService,
     private readonly projectMembers: ProjectMemberService,
@@ -812,24 +794,22 @@ export class ProjectService {
       .with('distinct(node) as node, requestingUser')
       .call(projectListFilter, filter)
       .call(
-        calculateTotalAndPaginateList,
-        input,
-        this.securedProperties,
-        (q, sort, order) =>
-          ['id', 'createdAt'].includes(sort)
-            ? q.with('*').orderBy(`node.${sort}`, order)
+        calculateTotalAndPaginateList(IProject, input, (q) =>
+          ['id', 'createdAt'].includes(input.sort)
+            ? q.with('*').orderBy(`node.${input.sort}`, input.order)
             : q
                 .raw(input.sort === 'sensitivity' ? sensitivitySubquery : '')
                 .match([
                   node('node'),
-                  relation('out', '', sort, { active: true }),
+                  relation('out', '', input.sort, { active: true }),
                   node('prop', 'Property'),
                 ])
                 .with([
                   '*',
                   ...(input.sort === 'sensitivity' ? [sensitivityCase] : []),
                 ])
-                .orderBy(sortBy, order)
+                .orderBy(sortBy, input.order)
+        )
       );
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));

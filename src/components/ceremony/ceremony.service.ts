@@ -21,7 +21,6 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
-  defaultSorter,
   matchMemberRoles,
   matchPropList,
   permissionsOfNode,
@@ -46,13 +45,6 @@ import {
 
 @Injectable()
 export class CeremonyService {
-  private readonly securedProperties = {
-    type: true,
-    planned: true,
-    estimatedDate: true,
-    actualDate: true,
-  };
-
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
@@ -233,12 +225,7 @@ export class CeremonyService {
             ]
           : []),
       ])
-      .call(
-        calculateTotalAndPaginateList,
-        input,
-        this.securedProperties,
-        defaultSorter
-      );
+      .call(calculateTotalAndPaginateList(Ceremony, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
@@ -7,6 +7,7 @@ import {
   ID,
   InputException,
   NotFoundException,
+  Order,
   ServerException,
   Session,
   UnauthorizedException,
@@ -25,7 +26,6 @@ import {
   matchPropList,
   permissionsOfNode,
   requestingUser,
-  Sorter,
 } from '../../core/database/query';
 import {
   DbPropsOfDto,
@@ -48,17 +48,6 @@ import { DbPartner } from './model';
 
 @Injectable()
 export class PartnerService {
-  private readonly securedProperties = {
-    organization: true,
-    pointOfContact: true,
-    types: true,
-    financialReportingTypes: true,
-    pmcEntityCode: true,
-    globalInnovationsClient: true,
-    active: true,
-    address: true,
-  };
-
   constructor(
     @Logger('partner:service') private readonly logger: ILogger,
     private readonly config: ConfigService,
@@ -420,21 +409,18 @@ export class PartnerService {
           : []),
       ])
       .call(
-        calculateTotalAndPaginateList,
-        input,
-        this.securedProperties,
-        this.orgNameSorter
+        calculateTotalAndPaginateList(
+          Partner,
+          input,
+          this.orgNameSorter(input.sort, input.order)
+        )
       );
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 
-  private readonly orgNameSorter: Sorter = (
-    q,
-    sortInput,
-    order,
-    securedProperties,
-    sortValInput
+  private readonly orgNameSorter = (sortInput: string, order: Order) => (
+    q: Query
   ) => {
     // If the user inputs orgName as the sort value, then match the organization node for the sortValue match
     const orgProperties = ['name'];
@@ -444,9 +430,9 @@ export class PartnerService {
     const sortInputIsString = stringProperties.includes(sortInput);
 
     //if the sortInput, e.g. name, is a string type, check to see if a custom sortVal is given.  If not, coerse the default prop.value to lower case in the orderBy clause
-    const sortValSecuredProp =
-      sortValInput ||
-      (sortInputIsString ? 'toLower(prop.value)' : 'prop.value');
+    const sortValSecuredProp = sortInputIsString
+      ? 'toLower(prop.value)'
+      : 'prop.value';
     const sortValBaseNodeProp = sortInputIsString
       ? `toLower(node.${sortInput})`
       : `node.${sortInput}`;
@@ -467,7 +453,7 @@ export class PartnerService {
         .with('*')
         .orderBy(sortValSecuredProp, order);
     }
-    return sortInput in securedProperties
+    return (Partner.SecuredProps as string[]).includes(sortInput)
       ? q
           .with('*')
           .match([

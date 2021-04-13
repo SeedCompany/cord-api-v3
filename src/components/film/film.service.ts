@@ -20,7 +20,6 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
-  defaultSorter,
   matchPropList,
   permissionsOfNode,
   requestingUser,
@@ -44,11 +43,6 @@ import { DbFilm } from './model';
 
 @Injectable()
 export class FilmService {
-  private readonly securedProperties = {
-    name: true,
-    scriptureReferences: true,
-  };
-
   constructor(
     @Logger('film:service') private readonly logger: ILogger,
     private readonly db: DatabaseService,
@@ -232,12 +226,7 @@ export class FilmService {
     const query = this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode('Film')])
-      .call(
-        calculateTotalAndPaginateList,
-        input,
-        this.securedProperties,
-        defaultSorter
-      );
+      .call(calculateTotalAndPaginateList(Film, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

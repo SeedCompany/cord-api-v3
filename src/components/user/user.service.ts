@@ -29,7 +29,6 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
-  defaultSorter,
   matchPropList,
   permissionsOfNode,
   requestingUser,
@@ -114,20 +113,6 @@ export const fullName = (
 
 @Injectable()
 export class UserService {
-  private readonly securedProperties = {
-    email: true,
-    realFirstName: true,
-    realLastName: true,
-    displayFirstName: true,
-    displayLastName: true,
-    phone: true,
-    timezone: true,
-    about: true,
-    status: true,
-    title: true,
-    roles: true,
-  };
-
   constructor(
     private readonly educations: EducationService,
     private readonly organizations: OrganizationService,
@@ -468,23 +453,10 @@ export class UserService {
   }
 
   async list(input: UserListInput, session: Session): Promise<UserListOutput> {
-    const nameSortMap: Partial<Record<typeof input.sort, string>> = {
-      displayFirstName: 'toLower(prop.value)',
-      displayLastName: 'toLower(prop.value)',
-    };
-
-    const sortBy = nameSortMap[input.sort] ?? 'prop.value';
-
     const query = this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode('User')])
-      .call(
-        calculateTotalAndPaginateList,
-        input,
-        this.securedProperties,
-        defaultSorter,
-        sortBy
-      );
+      .call(calculateTotalAndPaginateList(User, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
