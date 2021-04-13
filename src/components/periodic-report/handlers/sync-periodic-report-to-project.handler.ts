@@ -78,9 +78,14 @@ export class SyncPeriodicReportsToProjectDateRange
   }
 
   private diffBy(event: SubscribedEvent, unit: DurationUnit) {
-    return DateInterval.compare(
+    const diff = DateInterval.compare(
       projectRange(event.previous)?.expandToFull(unit),
       projectRange(event.updated)?.expandToFull(unit)
     );
+    const splitByUnit = (range: DateInterval) => range.splitBy({ [unit]: 1 });
+    return {
+      additions: diff.additions.flatMap(splitByUnit),
+      removals: diff.removals.flatMap(splitByUnit),
+    };
   }
 }
