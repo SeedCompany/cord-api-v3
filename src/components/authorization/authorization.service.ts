@@ -1,7 +1,15 @@
 /* eslint-disable no-case-declarations */
 import { Injectable } from '@nestjs/common';
 import { Connection, node, relation } from 'cypher-query-builder';
-import { camelCase, compact, keyBy, mapValues, union, without } from 'lodash';
+import {
+  compact,
+  keyBy,
+  last,
+  mapValues,
+  startCase,
+  union,
+  without,
+} from 'lodash';
 import {
   getParentTypes,
   has,
@@ -121,7 +129,7 @@ export class AuthorizationService {
     resource: TResource,
     baseNode: TResource['prototype'],
     changes: ChangesOf<TResource['prototype']>,
-    pathPrefix = camelCase(resource.name)
+    pathPrefix?: string | null
   ) {
     for (const prop of keys(changes)) {
       await this.verifyCanEdit({
@@ -144,7 +152,7 @@ export class AuthorizationService {
     prop,
     propName,
     propPath,
-    pathPrefix = camelCase(resource.name),
+    pathPrefix: pathPrefixProp,
   }: {
     resource: TResource;
     baseNode: Partial<TResource['prototype']>;
@@ -152,15 +160,22 @@ export class AuthorizationService {
     /** @deprecated Use propPath instead */
     propName?: string;
     propPath?: string;
-    pathPrefix?: string;
+    pathPrefix?: string | null;
   }) {
-    const path = propPath ?? propName ?? prop;
-    if (isSecured(baseNode[prop]) && !baseNode[prop].canEdit) {
-      throw new UnauthorizedException(
-        `You do not have permission to update ${resource.name}.${path}`,
-        compact([pathPrefix, path]).join('.')
-      );
+    if (!isSecured(baseNode[prop]) || baseNode[prop].canEdit) {
+      return;
     }
+    const pathPrefix =
+      pathPrefixProp ?? pathPrefixProp === null
+        ? null
+        : // Guess the input field path based on name convention
+          last(startCase(resource.name).split(' '))!.toLowerCase();
+    const path = propPath ?? propName ?? prop;
+    const fullPath = compact([pathPrefix, path]).join('.');
+    throw new UnauthorizedException(
+      `You do not have permission to update ${resource.name}.${path}`,
+      fullPath
+    );
   }
 
   /**
