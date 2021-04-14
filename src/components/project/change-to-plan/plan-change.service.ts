@@ -20,7 +20,6 @@ import {
 } from '../../../core';
 import {
   calculateTotalAndPaginateList,
-  defaultSorter,
   matchMemberRoles,
   matchPropList,
 } from '../../../core/database/query';
@@ -167,13 +166,12 @@ export class PlanChangeService {
 
   async update(input: UpdatePlanChange, session: Session): Promise<PlanChange> {
     const object = await this.readOne(input.id, session);
+    const changes = this.db.getActualChanges(PlanChange, object, input);
 
     await this.db.updateProperties({
-      session,
+      type: PlanChange,
       object,
-      props: ['types', 'summary', 'status'],
-      changes: input,
-      nodevar: 'planChange',
+      changes,
     });
     return await this.readOne(input.id, session);
   }
@@ -196,9 +194,7 @@ export class PlanChangeService {
       );
 
     try {
-      await this.db.deleteNode({
-        object,
-      });
+      await this.db.deleteNode(object);
     } catch (exception) {
       this.logger.warning('Failed to delete plan change', {
         exception,
@@ -228,12 +224,7 @@ export class PlanChangeService {
             ]
           : []),
       ])
-      .call(
-        calculateTotalAndPaginateList,
-        input,
-        this.securedProperties,
-        defaultSorter
-      );
+      .call(calculateTotalAndPaginateList(PlanChange, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
