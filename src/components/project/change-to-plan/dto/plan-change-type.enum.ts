@@ -1,4 +1,5 @@
-import { registerEnumType } from '@nestjs/graphql';
+import { ObjectType, registerEnumType } from '@nestjs/graphql';
+import { SecuredEnumList } from '../../../../common';
 
 export enum PlanChangeType {
   Time = 'Time',
@@ -11,3 +12,10 @@ export enum PlanChangeType {
 registerEnumType(PlanChangeType, {
   name: 'PlanChangeType',
 });
+
+@ObjectType({
+  description: SecuredEnumList.descriptionFor('plan change types'),
+})
+export abstract class SecuredPlanChangeTypes extends SecuredEnumList(
+  PlanChangeType
+) {}

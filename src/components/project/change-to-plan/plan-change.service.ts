@@ -6,6 +6,7 @@ import {
   NotFoundException,
   ServerException,
   Session,
+  UnauthorizedException,
 } from '../../../common';
 import {
   ConfigService,
@@ -21,8 +22,6 @@ import {
   defaultSorter,
   matchMemberRoles,
   matchPropList,
-  permissionsOfNode,
-  requestingUser,
 } from '../../../core/database/query';
 import {
   DbPropsOfDto,
@@ -32,14 +31,9 @@ import {
   StandardReadResult,
 } from '../../../core/database/results';
 import { AuthorizationService } from '../../authorization/authorization.service';
-import { Role } from '../../authorization/dto';
-import {
-  CreatePlanChange,
-  PlanChange,
-  PlanChangeListInput,
-  PlanChangeListOutput,
-  UpdatePlanChange,
-} from './dto';
+import { Role, rolesForScope } from '../../authorization/dto';
+import { CreatePlanChange, PlanChange, UpdatePlanChange } from './dto';
+import { ChangeListInput, ChangeListOutput } from './dto/change-list.dto';
 
 @Injectable()
 export class PlanChangeService {
@@ -93,59 +87,32 @@ export class PlanChangeService {
       },
     ];
 
-    let result;
-    try {
-      const createPlanChange = this.db
-        .query()
-        .call(matchRequestingUser, session)
-        .call(createBaseNode, planChangeId, 'PlanChange', secureProps)
-        .return('node.id as id');
+    const createPlanChange = this.db
+      .query()
+      .call(matchRequestingUser, session)
+      .call(createBaseNode, planChangeId, 'PlanChange', secureProps)
+      .return('node.id as id');
 
-      try {
-        result = await createPlanChange.first();
-      } catch (e) {
-        this.logger.error('e :>> ', e);
-      }
-
-      if (!result) {
-        throw new ServerException('failed to create planChange');
-      }
-
-      // connect PlanChange to Project
-      await this.db
-        .query()
-        .match([
-          [node('planChange', 'PlanChange', { id: result.id })],
-          [node('project', 'Project', { id: projectId })],
-        ])
-        .create([
-          node('project'),
-          relation('out', '', 'planChange', { active: true, createdAt }),
-          node('planChange'),
-        ])
-        .return('planChange.id as id')
-        .first();
-
-      // await this.authorizationService.processNewBaseNode(
-      //   new DbPlanChange(),
-      //   result.id,
-      //   session.userId
-      // );
-
-      const planChange = await this.readOne(planChangeId, session);
-
-      // await this.eventBus.publish(
-      //   new PartnershipCreatedEvent(partnership, session)
-      // );
-
-      return planChange;
-    } catch (exception) {
-      this.logger.warning('Failed to create planChange', {
-        exception,
-      });
-
-      throw new ServerException('Failed to create planChange', exception);
+    const result = await createPlanChange.first();
+    if (!result) {
+      throw new ServerException('failed to create plan change');
     }
+
+    await this.db
+      .query()
+      .match([
+        [node('planChange', 'PlanChange', { id: result.id })],
+        [node('project', 'Project', { id: projectId })],
+      ])
+      .create([
+        node('project'),
+        relation('out', '', 'planChange', { active: true, createdAt }),
+        node('planChange'),
+      ])
+      .return('planChange.id as id')
+      .first();
+
+    return await this.readOne(planChangeId, session);
   }
 
   async readOne(id: string, session: Session): Promise<PlanChange> {
@@ -153,29 +120,23 @@ export class PlanChangeService {
       id,
       userId: session.userId,
     });
-    if (!id) {
-      throw new NotFoundException(
-        'No plan change id to search for',
-        'planChange.id'
-      );
-    }
 
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'PlanChange', { id })])
       .call(matchPropList)
-      .match([
+      .optionalMatch([
         node('project', 'Project'),
         relation('out', '', 'planChange', { active: true }),
-        node('', 'PlanChange', { id }),
+        node('change', 'PlanChange', { id }),
       ])
       .with(['project', 'node', 'propList'])
       .call(matchMemberRoles, session.userId)
       .return('node, propList, memberRoles')
       .asResult<
         StandardReadResult<DbPropsOfDto<PlanChange>> & {
-          memberRoles: Role[][];
+          memberRoles: Role[];
         }
       >();
 
@@ -187,64 +148,20 @@ export class PlanChangeService {
       );
     }
 
-    const props = parsePropList(result.propList);
+    const parsedProps = parsePropList(result.propList);
 
-    // const securedProps = await this.authorizationService.secureProperties(
-    //   PlanChange,
-    //   props,
-    //   session,
-    //   result.memberRoles.flat().map(rolesForScope('project'))
-    // );
+    const securedProps = await this.authorizationService.secureProperties(
+      PlanChange,
+      parsedProps,
+      session,
+      result.memberRoles.flat().map(rolesForScope('project'))
+    );
 
     return {
       ...parseBaseNodeProperties(result.node),
-      types: {
-        value: props.types ?? [],
-        canEdit: false,
-        canRead: false,
-      },
-      summary: {
-        value: props.summary,
-        canEdit: false,
-        canRead: false,
-      },
-      status: {
-        value: props.status,
-        canEdit: false,
-        canRead: false,
-      },
-      canDelete: await this.db.checkDeletePermission(id, session), // TODO
+      ...securedProps,
+      canDelete: await this.db.checkDeletePermission(id, session),
     };
-  }
-
-  async list(
-    { filter, ...input }: PlanChangeListInput,
-    session: Session
-  ): Promise<PlanChangeListOutput> {
-    const label = 'PlanChange';
-
-    const query = this.db
-      .query()
-      .match([
-        requestingUser(session),
-        ...permissionsOfNode(label),
-        ...(filter.projectId
-          ? [
-              relation('in', '', 'planChange'),
-              node('project', 'Project', {
-                id: filter.projectId,
-              }),
-            ]
-          : []),
-      ])
-      .call(
-        calculateTotalAndPaginateList,
-        input,
-        this.securedProperties,
-        defaultSorter
-      );
-
-    return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 
   async update(input: UpdatePlanChange, session: Session): Promise<PlanChange> {
@@ -254,9 +171,7 @@ export class PlanChangeService {
       session,
       object,
       props: ['types', 'summary', 'status'],
-      changes: {
-        ...input,
-      },
+      changes: input,
       nodevar: 'planChange',
     });
     return await this.readOne(input.id, session);
@@ -272,18 +187,53 @@ export class PlanChangeService {
       );
     }
 
+    const canDelete = await this.db.checkDeletePermission(id, session);
+
+    if (!canDelete)
+      throw new UnauthorizedException(
+        'You do not have the permission to delete this plan change'
+      );
+
     try {
-      await this.db.deleteNode({
-        session,
+      await this.db.deleteNodeNew({
         object,
-        aclEditProp: 'canDeleteOwnUser',
       });
     } catch (exception) {
       this.logger.warning('Failed to delete plan change', {
         exception,
       });
-
-      throw new ServerException('Failed to delete plan change', exception);
+      throw new ServerException('Failed to delete plan change');
     }
+  }
+
+  async list(
+    { filter, ...input }: ChangeListInput,
+    session: Session
+  ): Promise<ChangeListOutput> {
+    // const label = 'PlanChange';
+
+    const query = this.db
+      .query()
+      .match([
+        // requestingUser(session),
+        // ...permissionsOfNode(label),
+        node('node'),
+        ...(filter.projectId
+          ? [
+              relation('in', '', 'planChange', { active: true }),
+              node('project', 'Project', {
+                id: filter.projectId,
+              }),
+            ]
+          : []),
+      ])
+      .call(
+        calculateTotalAndPaginateList,
+        input,
+        this.securedProperties,
+        defaultSorter
+      );
+
+    return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 }

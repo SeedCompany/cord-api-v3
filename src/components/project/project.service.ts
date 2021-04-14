@@ -49,6 +49,11 @@ import {
   PartnershipService,
   SecuredPartnershipList,
 } from '../partnership';
+import { PlanChangeService } from './change-to-plan';
+import {
+  ChangeListInput,
+  SecuredChangeList,
+} from './change-to-plan/dto/change-list.dto';
 import {
   CreateProject,
   InternshipProject,
@@ -93,6 +98,7 @@ export class ProjectService {
     private readonly authorizationService: AuthorizationService,
     private readonly projectRules: ProjectRules,
     private readonly repo: ProjectRepository,
+    private readonly planChangeService: PlanChangeService,
     @Logger('project:service') private readonly logger: ILogger
   ) {}
 
@@ -510,6 +516,29 @@ export class ProjectService {
     return {
       ...result,
       ...permissions,
+    };
+  }
+
+  async listPlanChanges(
+    projectId: string,
+    input: ChangeListInput,
+    session: Session
+  ): Promise<SecuredChangeList> {
+    const result = await this.planChangeService.list(
+      {
+        ...input,
+        filter: {
+          ...input.filter,
+          projectId: projectId,
+        },
+      },
+      session
+    );
+
+    return {
+      ...result,
+      canRead: true, // TODO
+      canCreate: true, // TODO
     };
   }
 

@@ -14,10 +14,10 @@ export abstract class UpdatePlanChange {
   @Field(() => [PlanChangeType], { nullable: true })
   readonly types?: [PlanChangeType];
 
-  @Field(() => String)
+  @Field(() => String, { nullable: true })
   readonly summary?: string;
 
-  @Field(() => PlanChangeStatus)
+  @Field(() => PlanChangeStatus, { nullable: true })
   readonly status?: PlanChangeStatus;
 }
 

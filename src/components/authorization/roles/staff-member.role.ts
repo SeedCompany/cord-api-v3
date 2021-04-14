@@ -18,6 +18,7 @@ import { DbPartnership } from '../../partnership/model';
 import { DbPeriodicReport } from '../../periodic-report/model';
 import { DbPost } from '../../post/model';
 import { DbProduct } from '../../product/model';
+import { DbPlanChange } from '../../project/change-to-plan/model';
 /* eslint-disable @typescript-eslint/naming-convention */
 import { DbProject } from '../../project/model';
 import { DbProjectMember } from '../../project/project-member/model';
@@ -401,10 +402,19 @@ export const StaffMember = new DbRole({
     new DbBaseNodeGrant<DbStory>({
       __className: 'DbStory',
       properties: [
-        { propertyName: 'name', permission: { read, }, },
-        { propertyName: 'scriptureReferences', permission: { read, }, },
+        { propertyName: 'name',                       permission: { read, }, },
+        { propertyName: 'scriptureReferences',        permission: { read, }, },
       ],
       canDelete: false,
+    }),
+    new DbBaseNodeGrant<DbPlanChange>({
+      __className: 'DbPlanChange',
+      properties: [
+        { propertyName: 'types',                       permission: { read, }, },
+        { propertyName: 'summary',                     permission: { read, }, },
+        { propertyName: 'status',                      permission: { read, }, },
+      ],
+      canDelete: true,
     }),
   ],
 });

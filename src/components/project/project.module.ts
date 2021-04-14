@@ -32,6 +32,7 @@ import { ProjectService } from './project.service';
     forwardRef(() => AuthorizationModule),
     PartnerModule,
     forwardRef(() => OrganizationModule),
+    PlanChangeModule,
   ],
   providers: [
     ProjectResolver,

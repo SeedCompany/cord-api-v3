@@ -14,7 +14,6 @@ import {
   IdArg,
   IdField,
   LoggedInSession,
-  NotImplementedException,
   Session,
 } from '../../common';
 import { SecuredBudget } from '../budget';
@@ -29,6 +28,10 @@ import {
 } from '../location';
 import { OrganizationService, SecuredOrganization } from '../organization';
 import { PartnershipListInput, SecuredPartnershipList } from '../partnership';
+import {
+  ChangeListInput,
+  SecuredChangeList,
+} from './change-to-plan/dto/change-list.dto';
 import {
   CreateProjectInput,
   CreateProjectOutput,
@@ -100,8 +103,18 @@ export class ProjectResolver {
   }
 
   @ResolveField(() => SecuredChangeList)
-  async changes() {
-    throw new NotImplementedException();
+  async changes(
+    @AnonSession() session: Session,
+    @Parent() project: Project,
+    @Args({
+      name: 'input',
+      type: () => ChangeListInput,
+      nullable: true,
+      defaultValue: ChangeListInput.defaultVal,
+    })
+    input: ChangeListInput
+  ): Promise<SecuredChangeList> {
+    return this.projectService.listPlanChanges(project.id, input, session);
   }
 
   @ResolveField(() => SecuredBudget, {
