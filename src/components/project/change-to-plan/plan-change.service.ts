@@ -3,6 +3,7 @@ import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   generateId,
+  ID,
   NotFoundException,
   ServerException,
   Session,
@@ -115,7 +116,7 @@ export class PlanChangeService {
     return await this.readOne(planChangeId, session);
   }
 
-  async readOne(id: string, session: Session): Promise<PlanChange> {
+  async readOne(id: ID, session: Session): Promise<PlanChange> {
     this.logger.debug(`read one`, {
       id,
       userId: session.userId,
@@ -167,7 +168,7 @@ export class PlanChangeService {
   async update(input: UpdatePlanChange, session: Session): Promise<PlanChange> {
     const object = await this.readOne(input.id, session);
 
-    await this.db.sgUpdateProperties({
+    await this.db.updateProperties({
       session,
       object,
       props: ['types', 'summary', 'status'],
@@ -177,7 +178,7 @@ export class PlanChangeService {
     return await this.readOne(input.id, session);
   }
 
-  async delete(id: string, session: Session): Promise<void> {
+  async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
     if (!object) {
@@ -195,7 +196,7 @@ export class PlanChangeService {
       );
 
     try {
-      await this.db.deleteNodeNew({
+      await this.db.deleteNode({
         object,
       });
     } catch (exception) {

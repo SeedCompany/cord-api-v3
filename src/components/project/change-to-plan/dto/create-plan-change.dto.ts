@@ -1,7 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { IdField } from '../../../../common';
+import { ID, IdField } from '../../../../common';
 import { PlanChangeStatus } from './plan-change-status.enum';
 import { PlanChangeType } from './plan-change-type.enum';
 import { PlanChange } from './plan-change.dto';
@@ -11,7 +11,7 @@ export abstract class CreatePlanChange {
   @IdField({
     description: 'A project ID',
   })
-  readonly projectId: string;
+  readonly projectId: ID;
 
   @Field(() => [PlanChangeType])
   readonly types: PlanChangeType[];

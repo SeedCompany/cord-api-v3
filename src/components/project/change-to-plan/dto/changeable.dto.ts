@@ -1,6 +1,6 @@
 import { InterfaceType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { IdField } from '../../../../common';
+import { ID, IdField } from '../../../../common';
 
 @InterfaceType({
   description: stripIndent`
@@ -13,7 +13,7 @@ export abstract class Changeable {
   @IdField({
     description: "The object's ID",
   })
-  readonly id: string;
+  readonly id: ID;
 
-  readonly changeId?: string;
+  readonly changeId?: ID;
 }

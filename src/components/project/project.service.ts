@@ -520,7 +520,7 @@ export class ProjectService {
   }
 
   async listPlanChanges(
-    projectId: string,
+    projectId: ID,
     input: ChangeListInput,
     session: Session
   ): Promise<SecuredChangeList> {
