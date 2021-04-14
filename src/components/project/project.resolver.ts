@@ -260,10 +260,10 @@ export class ProjectResolver {
     description: 'Update a project',
   })
   async updateProject(
-    @Args('input') { project: input }: UpdateProjectInput,
+    @Args('input') { project: input, changeId }: UpdateProjectInput,
     @LoggedInSession() session: Session
   ): Promise<UpdateProjectOutput> {
-    const project = await this.projectService.update(input, session);
+    const project = await this.projectService.update(input, session, changeId);
     const secured = await this.projectService.secure(project, session);
     return { project: secured };
   }

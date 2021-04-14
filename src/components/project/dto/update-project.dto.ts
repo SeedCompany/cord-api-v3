@@ -79,7 +79,7 @@ export abstract class UpdateProjectInput {
     description: 'The change object to associate these project changes with',
     nullable: true,
   })
-  readonly changeId?: string;
+  readonly changeId?: ID;
 
   @Field()
   @Type(() => UpdateProject)

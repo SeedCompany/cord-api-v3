@@ -290,7 +290,8 @@ export class ProjectService {
 
   async update(
     input: UpdateProject,
-    session: Session
+    session: Session,
+    _changeId?: ID
   ): Promise<UnsecuredDto<Project>> {
     const currentProject = await this.readOneUnsecured(input.id, session);
     if (input.sensitivity && currentProject.type === ProjectType.Translation)
