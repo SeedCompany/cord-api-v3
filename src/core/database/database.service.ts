@@ -17,6 +17,7 @@ import {
   getDbPropertyLabels,
   ID,
   InputException,
+  isIdLike,
   isSecured,
   many,
   MaybeUnsecuredInstance,
@@ -31,6 +32,7 @@ import { ILogger, Logger, ServiceUnavailableError, UniquenessError } from '..';
 import { AbortError, retry, RetryOptions } from '../../common/retry';
 import { ConfigService } from '../config/config.service';
 import { DbChanges, getChanges } from './changes';
+import { deleteBaseNode } from './query';
 import { determineSortValue } from './query.helpers';
 import { hasMore } from './results';
 import { Transactional } from './transactional.decorator';
@@ -552,103 +554,14 @@ export class DatabaseService {
     // return !!result;
   }
 
-  async deleteNodeNew<TObject extends { id: string }>({
-    object,
-  }: {
-    object: TObject;
-  }) {
-    const deletedAt = DateTime.local();
+  async deleteNode(objectOrId: { id: ID } | ID) {
+    const id = isIdLike(objectOrId) ? objectOrId : objectOrId.id;
     const query = this.db
       .query()
-      .match([
-        node('baseNode', { id: object.id }),
-        /**
-         in this case we want to set Deleted_ labels for all properties
-         including active = false
-         deleteProperties does this, but deletes from before that was changed only prefixed
-         unique property labels
-        */
-        relation('out', ''),
-        node('propertyNode', 'Property'),
-      ])
-      // Mark any parent base node relationships (pointing to the base node) as active = false.
-      .optionalMatch([
-        node('baseNode'),
-        relation('in', 'baseNodeRel'),
-        node('', 'BaseNode'),
-      ])
-      .setValues({
-        'baseNode.deletedAt': deletedAt,
-        'baseNodeRel.active': false,
-      })
-      /**
-       if we set anything on property nodes or property relationships in the query above (as was done previously)
-       we need to distinct propertyNode to avoid collecting and labeling each propertyNode more than once
-      */
-      .with('[baseNode] + collect(propertyNode) as nodeList')
-      /**
-       check if labels already have the "Deleted_" prefix to avoid "Deleted_Deleted_"
-       yielding a node from the label procedures is necessary I believe
-       they're not used in rest of the query and are aliased to avoid colliding with the unwound "node" alias
-      */
-      .raw(
-        `
-        unwind nodeList as node
-        with node,
-        reduce(
-          deletedLabels = [], label in labels(node) |
-            case
-              when label starts with "Deleted_" then deletedLabels + label
-              else deletedLabels + ("Deleted_" + label)
-            end
-        ) as deletedLabels
-        call apoc.create.removeLabels(node, labels(node)) yield node as nodeRemoved
-        with node, deletedLabels
-        call apoc.create.addLabels(node, deletedLabels) yield node as nodeAdded
-      `
-      )
+      .matchNode('baseNode', { id })
+      .call(deleteBaseNode)
       .return('*');
     await query.run();
-  }
-
-  async deleteNode<TObject extends Resource>({
-    session,
-    object,
-    // eslint-disable-next-line @seedcompany/no-unused-vars
-    aclEditProp, // example canCreateLangs
-  }: {
-    session: Session;
-    object: TObject;
-    aclEditProp: string;
-  }) {
-    await this.db
-      .query()
-      .raw(
-        `
-        MATCH
-        (token:Token {
-          active: true,
-          value: $token
-        })
-        <-[:token {active: true}]-
-        (requestingUser:User {
-
-          id: $requestingUserId
-        }),
-        (object {
-
-          id: $objectId
-        })
-        detach delete object
-
-        `,
-        {
-          requestingUserId: session.userId,
-          token: session.token,
-          objectId: object.id,
-        }
-      )
-      .run();
   }
 
   async hasProperties({

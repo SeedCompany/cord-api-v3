@@ -21,7 +21,6 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
-  defaultSorter,
   matchPropList,
   permissionsOfNode,
   requestingUser,
@@ -45,14 +44,6 @@ import { DbLocation } from './model';
 
 @Injectable()
 export class LocationService {
-  readonly securedProperties = {
-    name: true,
-    fundingAccount: true,
-    defaultFieldRegion: true,
-    isoAlpha3: true,
-    type: true,
-  };
-
   constructor(
     @Logger('location:service') private readonly logger: ILogger,
     private readonly config: ConfigService,
@@ -348,9 +339,7 @@ export class LocationService {
       );
 
     try {
-      await this.db.deleteNodeNew<Location>({
-        object,
-      });
+      await this.db.deleteNode(object);
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);
@@ -365,12 +354,7 @@ export class LocationService {
     const query = this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode(label)])
-      .call(
-        calculateTotalAndPaginateList,
-        input,
-        this.securedProperties,
-        defaultSorter
-      );
+      .call(calculateTotalAndPaginateList(Location, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
@@ -438,12 +422,7 @@ export class LocationService {
         relation('in', '', rel, { active: true }),
         node(`${label.toLowerCase()}`, label, { id }),
       ])
-      .call(
-        calculateTotalAndPaginateList,
-        input,
-        this.securedProperties,
-        defaultSorter
-      );
+      .call(calculateTotalAndPaginateList(Location, input));
 
     return {
       ...(await runListQuery(query, input, (id) => this.readOne(id, session))),

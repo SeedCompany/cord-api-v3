@@ -67,22 +67,6 @@ import { languageListFilter } from './query.helpers';
 
 @Injectable()
 export class LanguageService {
-  private readonly securedProperties = {
-    name: true,
-    displayName: true,
-    isDialect: true,
-    populationOverride: true,
-    registryOfDialectsCode: true,
-    leastOfThese: true,
-    leastOfTheseReason: true,
-    displayNamePronunciation: true,
-    isSignLanguage: true,
-    signLanguageCode: true,
-    sponsorEstimatedEndDate: true,
-    hasExternalFirstScripture: true,
-    tags: true,
-  };
-
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
@@ -406,9 +390,7 @@ export class LanguageService {
       );
 
     try {
-      await this.db.deleteNodeNew<Language>({
-        object,
-      });
+      await this.db.deleteNode(object);
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);
@@ -437,23 +419,21 @@ export class LanguageService {
       .match([requestingUser(session), ...permissionsOfNode('Language')])
       .call(languageListFilter, filter)
       .call(
-        calculateTotalAndPaginateList,
-        input,
-        this.securedProperties,
-        (q, sort, order) =>
-          ['id', 'createdAt'].includes(sort)
-            ? q.with('*').orderBy(`node.${sort}`, order)
+        calculateTotalAndPaginateList(Language, input, (q) =>
+          ['id', 'createdAt'].includes(input.sort)
+            ? q.with('*').orderBy(`node.${input.sort}`, input.order)
             : q
                 .match([
                   node('node'),
-                  relation('out', '', sort, { active: true }),
+                  relation('out', '', input.sort, { active: true }),
                   node('prop', 'Property'),
                 ])
                 .with([
                   '*',
                   ...(input.sort === 'sensitivity' ? [sensitivityCase] : []),
                 ])
-                .orderBy(sortBy, order)
+                .orderBy(sortBy, input.order)
+        )
       );
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));

@@ -1,28 +1,23 @@
 import { node, Query, relation } from 'cypher-query-builder';
-import { ID, Order, SortablePaginationInput } from '../../../common';
+import {
+  ID,
+  Order,
+  ResourceShape,
+  SortablePaginationInput,
+} from '../../../common';
 
-type SecuredProperties = Record<string, boolean>;
-
-export type Sorter = (
-  query: Query,
-  sortInput: string,
-  order: Order,
-  securedProperties: SecuredProperties,
-  sortValInput?: string
-) => Query | void;
-
-export function calculateTotalAndPaginateList(
-  query: Query,
-  { page, count, sort: sortInput, order }: SortablePaginationInput,
-  securedProperties: SecuredProperties,
-  sort: Sorter,
-  sortValInput?: string
-) {
+export const calculateTotalAndPaginateList = <
+  TResourceStatic extends ResourceShape<any>
+>(
+  resource: TResourceStatic,
+  { page, count, sort, order }: SortablePaginationInput,
+  sorter?: (q: Query) => Query
+) => (query: Query) => {
   query
     .with(['collect(distinct node) as nodes', 'count(distinct node) as total'])
     .raw(`unwind nodes as node`)
     // .with(['node', 'total']) TODO needed?
-    .call(sort, sortInput, order, securedProperties, sortValInput)
+    .call(sorter ?? defaultSorter(resource, sort, order))
     .with([
       `collect(distinct node.id)[${(page - 1) * count}..${
         page * count
@@ -32,28 +27,28 @@ export function calculateTotalAndPaginateList(
     .return(['items', 'total']);
 
   return query.asResult<{ items: ID[]; total: number }>();
-}
+};
 
-export const defaultSorter: Sorter = (
-  q,
-  sortInput,
-  order,
-  securedProperties,
-  sortValInput
-) => {
-  //The properties that are stored as strings
-  const stringProperties = ['name'];
+export const defaultSorter = <TResourceStatic extends ResourceShape<any>>(
+  resource: TResourceStatic,
+  sortInput: string,
+  order: Order
+) => (q: Query) => {
+  // The properties that are stored as strings
+  const stringProperties = ['name', 'displayFirstName', 'displayLastName'];
   const sortInputIsString = stringProperties.includes(sortInput);
 
-  //if the sortInput, e.g. name, is a string type, check to see if a custom sortVal is given.  If not, coerse the default prop.value to lower case in the orderBy clause
-  const sortValSecuredProp =
-    sortValInput || (sortInputIsString ? 'toLower(prop.value)' : 'prop.value');
+  // If the sortInput, e.g. name, is a string type, check to see if a custom sortVal is given.
+  // If not, coerce the default prop.value to lower case in the orderBy clause
+  const sortValSecuredProp = sortInputIsString
+    ? 'toLower(prop.value)'
+    : 'prop.value';
 
   const sortValBaseNodeProp = sortInputIsString
     ? `toLower(node.${sortInput})`
     : `node.${sortInput}`;
 
-  return sortInput in securedProperties
+  return resource.SecuredProps.includes(sortInput)
     ? q
         .match([
           node('node'),

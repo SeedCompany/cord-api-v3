@@ -467,9 +467,7 @@ export class FileRepository {
       );
 
     try {
-      await this.db.deleteNodeNew({
-        object: fileNode,
-      });
+      await this.db.deleteNode(fileNode);
     } catch (exception) {
       this.logger.error('Failed to delete', { id: fileNode.id, exception });
       throw new ServerException('Failed to delete', exception);

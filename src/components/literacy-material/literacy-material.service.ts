@@ -21,7 +21,6 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
-  defaultSorter,
   matchPropList,
   permissionsOfNode,
   requestingUser,
@@ -45,11 +44,6 @@ import { DbLiteracyMaterial } from './model';
 
 @Injectable()
 export class LiteracyMaterialService {
-  private readonly securedProperties = {
-    name: true,
-    scriptureReferences: true,
-  };
-
   constructor(
     @Logger('literacyMaterial:service') private readonly logger: ILogger,
     private readonly db: DatabaseService,
@@ -240,9 +234,7 @@ export class LiteracyMaterialService {
       );
 
     try {
-      await this.db.deleteNodeNew<LiteracyMaterial>({
-        object: literacyMaterial,
-      });
+      await this.db.deleteNode(literacyMaterial);
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);
@@ -261,12 +253,7 @@ export class LiteracyMaterialService {
         requestingUser(session),
         ...permissionsOfNode('LiteracyMaterial'),
       ])
-      .call(
-        calculateTotalAndPaginateList,
-        input,
-        this.securedProperties,
-        defaultSorter
-      );
+      .call(calculateTotalAndPaginateList(LiteracyMaterial, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

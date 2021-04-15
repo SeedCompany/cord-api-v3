@@ -25,7 +25,6 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
-  defaultSorter,
   matchMemberRoles,
   matchPropList,
   permissionsOfNode,
@@ -68,15 +67,6 @@ import { DbProduct } from './model';
 
 @Injectable()
 export class ProductService {
-  private readonly securedProperties = {
-    mediums: true,
-    purposes: true,
-    methodology: true,
-    scriptureReferences: true,
-    scriptureReferencesOverride: true,
-    produces: true,
-  };
-
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
@@ -571,9 +561,7 @@ export class ProductService {
       );
 
     try {
-      await this.db.deleteNodeNew({
-        object,
-      });
+      await this.db.deleteNode(object);
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);
@@ -600,12 +588,7 @@ export class ProductService {
             ]
           : []),
       ])
-      .call(
-        calculateTotalAndPaginateList,
-        input,
-        this.securedProperties,
-        defaultSorter
-      );
+      .call(calculateTotalAndPaginateList(Product, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

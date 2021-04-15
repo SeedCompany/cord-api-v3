@@ -20,7 +20,6 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
-  defaultSorter,
   matchPropList,
   permissionsOfNode,
   requestingUser,
@@ -43,11 +42,6 @@ import { DbFundingAccount } from './model';
 
 @Injectable()
 export class FundingAccountService {
-  private readonly securedProperties = {
-    name: true,
-    accountNumber: true,
-  };
-
   constructor(
     @Logger('funding-account:service') private readonly logger: ILogger,
     private readonly db: DatabaseService,
@@ -216,9 +210,7 @@ export class FundingAccountService {
       );
 
     try {
-      await this.db.deleteNodeNew({
-        object,
-      });
+      await this.db.deleteNode(object);
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);
@@ -234,12 +226,7 @@ export class FundingAccountService {
     const query = this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode(label)])
-      .call(
-        calculateTotalAndPaginateList,
-        input,
-        this.securedProperties,
-        defaultSorter
-      );
+      .call(calculateTotalAndPaginateList(FundingAccount, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

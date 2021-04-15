@@ -19,7 +19,6 @@ import {
 } from '../../../core';
 import {
   calculateTotalAndPaginateList,
-  defaultSorter,
   matchPropList,
   permissionsOfNode,
   requestingUser,
@@ -42,12 +41,6 @@ import {
 
 @Injectable()
 export class EducationService {
-  private readonly securedProperties = {
-    degree: true,
-    institution: true,
-    major: true,
-  };
-
   constructor(
     @Logger('education:service') private readonly logger: ILogger,
     private readonly config: ConfigService,
@@ -208,12 +201,7 @@ export class EducationService {
             ]
           : []),
       ])
-      .call(
-        calculateTotalAndPaginateList,
-        input,
-        this.securedProperties,
-        defaultSorter
-      );
+      .call(calculateTotalAndPaginateList(Education, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

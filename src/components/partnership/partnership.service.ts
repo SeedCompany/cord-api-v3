@@ -24,7 +24,6 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
-  defaultSorter,
   matchMemberRoles,
   matchPropList,
   permissionsOfNode,
@@ -59,21 +58,6 @@ import { DbPartnership } from './model';
 
 @Injectable()
 export class PartnershipService {
-  private readonly securedProperties = {
-    agreementStatus: true,
-    mouStatus: true,
-    mouStart: true,
-    mouEnd: true,
-    mouStartOverride: true,
-    mouEndOverride: true,
-    types: true,
-    financialReportingType: true,
-    mou: true,
-    agreement: true,
-    partner: true,
-    primary: true,
-  };
-
   constructor(
     private readonly files: FileService,
     private readonly db: DatabaseService,
@@ -466,9 +450,7 @@ export class PartnershipService {
     );
 
     try {
-      await this.db.deleteNodeNew({
-        object,
-      });
+      await this.db.deleteNode(object);
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);
@@ -500,12 +482,7 @@ export class PartnershipService {
             ]
           : []),
       ])
-      .call(
-        calculateTotalAndPaginateList,
-        listInput,
-        this.securedProperties,
-        defaultSorter
-      );
+      .call(calculateTotalAndPaginateList(Partnership, listInput));
 
     return await runListQuery(query, listInput, (id) =>
       this.readOne(id, session)
