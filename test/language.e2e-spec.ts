@@ -4,6 +4,7 @@ import * as faker from 'faker';
 import { times } from 'lodash';
 import { InputException, isValidId } from '../src/common';
 import { Powers } from '../src/components/authorization/dto/powers';
+import { UpdateLanguage } from '../src/components/language';
 import {
   createLanguage,
   createLanguageEngagement,
@@ -69,71 +70,31 @@ describe('Language e2e', () => {
     expect(actual.name.value).toEqual(language.name.value);
   });
 
-  // UPDATE LANGUAGE
   it('update language', async () => {
     const language = await createLanguage(app);
     const newName = faker.company.companyName();
 
     // run as admin because only admin role can edit properties on language
     await runAsAdmin(app, async () => {
-      const result = await app.graphql.mutate(
-        gql`
-          mutation updateLanguage($input: UpdateLanguageInput!) {
-            updateLanguage(input: $input) {
-              language {
-                ...language
-              }
-            }
-          }
-          ${fragments.language}
-        `,
-        {
-          input: {
-            language: {
-              id: language.id,
-              name: newName,
-            },
-          },
-        }
-      );
-      const updated = result.updateLanguage.language;
-      expect(updated).toBeTruthy();
-      expect(updated.id).toBe(language.id);
+      const updated = await updateLanguage(app, {
+        id: language.id,
+        name: newName,
+      });
       expect(updated.name.value).toBe(newName);
     });
   });
 
-  // UPDATE LANGUAGE: update a language ethnologue when language is minimally defined.
   it('update a single language ethnologue property when language is minimally defined', async () => {
-    const languageMinimal = await createLanguageMinimal(app);
+    const language = await createLanguageMinimal(app);
     const newEthnologueCode = faker.helpers.replaceSymbols('???').toLowerCase();
 
     await runAsAdmin(app, async () => {
-      const result = await app.graphql.mutate(
-        gql`
-          mutation UpdateLanguageEthnologue($input: UpdateLanguageInput!) {
-            updateLanguage(input: $input) {
-              language {
-                ...language
-              }
-            }
-          }
-          ${fragments.language}
-        `,
-        {
-          input: {
-            language: {
-              id: languageMinimal.id,
-              ethnologue: {
-                code: newEthnologueCode,
-              },
-            },
-          },
-        }
-      );
-      const updated = result.updateLanguage.language;
-      expect(updated).toBeTruthy();
-      expect(updated.id).toBe(languageMinimal.id);
+      const updated = await updateLanguage(app, {
+        id: language.id,
+        ethnologue: {
+          code: newEthnologueCode,
+        },
+      });
       expect(updated.ethnologue.code.value).toBe(newEthnologueCode);
     });
   });
@@ -362,30 +323,34 @@ describe('Language e2e', () => {
     });
 
     await runAsAdmin(app, async () => {
-      const result = await app.graphql.mutate(
-        gql`
-          mutation updateLanguage($input: UpdateLanguageInput!) {
-            updateLanguage(input: $input) {
-              language {
-                ...language
-              }
-            }
-          }
-          ${fragments.language}
-        `,
-        {
-          input: {
-            language: {
-              id: language.id,
-              hasExternalFirstScripture: true,
-            },
-          },
-        }
-      );
-      const updated = result.updateLanguage.language;
-      expect(updated).toBeTruthy();
-      expect(updated.id).toBe(language.id);
+      const updated = await updateLanguage(app, {
+        id: language.id,
+        hasExternalFirstScripture: true,
+      });
       expect(updated.hasExternalFirstScripture.value).toBe(true);
     });
   });
 });
+
+async function updateLanguage(app: TestApp, update: Partial<UpdateLanguage>) {
+  const result = await app.graphql.mutate(
+    gql`
+      mutation updateLanguage($input: UpdateLanguageInput!) {
+        updateLanguage(input: $input) {
+          language {
+            ...language
+          }
+        }
+      }
+      ${fragments.language}
+    `,
+    {
+      input: {
+        language: update,
+      },
+    }
+  );
+  const updated = result.updateLanguage.language;
+  expect(updated.id).toBe(update.id);
+  return updated;
+}
