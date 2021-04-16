@@ -70,32 +70,47 @@ describe('Language e2e', () => {
     expect(actual.name.value).toEqual(language.name.value);
   });
 
-  it('update language', async () => {
-    const language = await createLanguage(app);
-    const newName = faker.company.companyName();
+  describe('Updates', () => {
+    it('simple', async () => {
+      const language = await createLanguage(app);
+      const newName = faker.company.companyName();
 
-    // run as admin because only admin role can edit properties on language
-    await runAsAdmin(app, async () => {
-      const updated = await updateLanguage(app, {
-        id: language.id,
-        name: newName,
+      // run as admin because only admin role can edit properties on language
+      await runAsAdmin(app, async () => {
+        const updated = await updateLanguage(app, {
+          id: language.id,
+          name: newName,
+        });
+        expect(updated.name.value).toBe(newName);
       });
-      expect(updated.name.value).toBe(newName);
     });
-  });
 
-  it('update a single language ethnologue property when language is minimally defined', async () => {
-    const language = await createLanguageMinimal(app);
-    const newEthnologueCode = faker.helpers.replaceSymbols('???').toLowerCase();
-
-    await runAsAdmin(app, async () => {
-      const updated = await updateLanguage(app, {
-        id: language.id,
-        ethnologue: {
-          code: newEthnologueCode,
-        },
+    it('empty ethnologue', async () => {
+      const language = await createLanguage(app);
+      await runAsAdmin(app, async () => {
+        await updateLanguage(app, {
+          id: language.id,
+          ethnologue: {},
+        });
+        // no error, so all good
       });
-      expect(updated.ethnologue.code.value).toBe(newEthnologueCode);
+    });
+
+    it('a single language ethnologue property when language is minimally defined', async () => {
+      const language = await createLanguageMinimal(app);
+      const newEthnologueCode = faker.helpers
+        .replaceSymbols('???')
+        .toLowerCase();
+
+      await runAsAdmin(app, async () => {
+        const updated = await updateLanguage(app, {
+          id: language.id,
+          ethnologue: {
+            code: newEthnologueCode,
+          },
+        });
+        expect(updated.ethnologue.code.value).toBe(newEthnologueCode);
+      });
     });
   });
 
