@@ -1,5 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { Many } from 'lodash';
+import { Node, node } from 'cypher-query-builder';
+import { entries, Many } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
@@ -226,7 +227,8 @@ export class ProjectService {
 
   async readOneUnsecured(
     id: ID,
-    sessionOrUserId: Session | ID
+    sessionOrUserId: Session | ID,
+    changeId?: ID
   ): Promise<UnsecuredDto<Project>> {
     const userId = isIdLike(sessionOrUserId)
       ? sessionOrUserId
@@ -237,7 +239,7 @@ export class ProjectService {
     }
 
     const props = parsePropList(result.propList);
-    return {
+    let project = {
       ...parseBaseNodeProperties(result.node),
       ...props,
       // Sensitivity is calculated based on the highest language sensitivity (for Translation Projects).
@@ -254,6 +256,20 @@ export class ProjectService {
       pinned: !!result.pinnedRel,
       scope: result.memberRoles.flat().map(rolesForScope('project')),
     };
+
+    if (changeId) {
+      const planChangesProps = await this.getPlanChangesProps(id, changeId);
+      entries(planChangesProps).forEach(([key, prop]) => {
+        if (prop !== undefined) {
+          project = {
+            ...project,
+            [key]: prop,
+          };
+        }
+      });
+    }
+
+    return project;
   }
 
   async secure(
@@ -291,7 +307,7 @@ export class ProjectService {
   async update(
     input: UpdateProject,
     session: Session,
-    _changeId?: ID
+    changeId?: ID
   ): Promise<UnsecuredDto<Project>> {
     const currentProject = await this.readOneUnsecured(input.id, session);
     if (input.sensitivity && currentProject.type === ProjectType.Translation)
@@ -321,10 +337,19 @@ export class ProjectService {
       ...simpleChanges
     } = changes;
 
-    let result = await this.repo.updateProperties(
-      currentProject,
-      simpleChanges
-    );
+    let result = await this.db.updateProperties({
+      type:
+        currentProject.type === ProjectType.Translation
+          ? TranslationProject
+          : InternshipProject,
+      object: currentProject,
+      changes: simpleChanges,
+      changeId,
+    });
+
+    if (changeId) {
+      return currentProject;
+    }
 
     if (primaryLocationId) {
       try {
@@ -694,5 +719,27 @@ export class ProjectService {
         );
       })
     );
+  }
+
+  protected async getPlanChangesProps(
+    id: ID,
+    changeId: ID
+  ): Promise<Record<string, any>> {
+    const planChangeQuery = this.db
+      .query()
+      .match([node('node', 'Project', { id })])
+      .call(matchPropList, changeId)
+      .with(['node', 'propList'])
+      .return(['propList', 'node'])
+      .asResult<{
+        node: BaseNode & Node<{ type: ProjectType }>;
+        propList: PropListDbResult<DbPropsOfDto<Project>>;
+      }>();
+
+    const planChangeResult = await planChangeQuery.first();
+    if (planChangeResult) {
+      return await parsePropList(planChangeResult.propList);
+    }
+    return {};
   }
 }

@@ -57,6 +57,15 @@ class ModifyOtherLocationArgs {
   locationId: ID;
 }
 
+@ArgsType()
+class ReadProjectArgs {
+  @IdField()
+  id: ID;
+
+  @IdField({ nullable: true })
+  changeId?: ID;
+}
+
 @Resolver(IProject)
 export class ProjectResolver {
   constructor(
@@ -70,10 +79,14 @@ export class ProjectResolver {
     description: 'Look up a project by its ID',
   })
   async project(
-    @IdArg() id: ID,
-    @LoggedInSession() session: Session
+    @LoggedInSession() session: Session,
+    @Args() { id, changeId }: ReadProjectArgs
   ): Promise<Project> {
-    const project = await this.projectService.readOneUnsecured(id, session);
+    const project = await this.projectService.readOneUnsecured(
+      id,
+      session,
+      changeId
+    );
     const secured = await this.projectService.secure(project, session);
     return secured;
   }

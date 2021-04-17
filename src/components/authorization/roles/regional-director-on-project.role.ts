@@ -429,7 +429,7 @@ export const RegionalDirectorOnProject = new DbRole({
         { propertyName: 'scriptureReferences', permission: { read, write, }, },
       ],
       canDelete: false,
-    }),
+  }),
     new DbBaseNodeGrant<DbPlanChange>({
       __className: 'DbPlanChange',
       properties: [

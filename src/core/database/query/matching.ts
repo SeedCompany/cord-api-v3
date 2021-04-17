@@ -1,6 +1,6 @@
 import { stripIndent } from 'common-tags';
 import { node, Query, relation } from 'cypher-query-builder';
-import { Session } from '../../../common';
+import { ID, Session } from '../../../common';
 import { collect } from './cypher-functions';
 import { mapping } from './mapping';
 
@@ -24,12 +24,18 @@ export const permissionsOfNode = (nodeLabel?: string) => [
 /**
  * @deprecated use matchProps instead. It returns props as an object instead of the weird list.
  */
-export const matchPropList = (query: Query, nodeName = 'node') =>
+export const matchPropList = (query: Query, changeId?: ID, nodeName = 'node') =>
   query
     .match([
       node(nodeName),
-      relation('out', 'r', { active: true }),
+      relation('out', 'r', { active: !changeId }),
       node('props', 'Property'),
+      ...(changeId
+        ? [
+            relation('in', '', 'change', { active: true }),
+            node('planChange', 'PlanChange', { id: changeId }),
+          ]
+        : []),
     ])
     .with([
       collect(

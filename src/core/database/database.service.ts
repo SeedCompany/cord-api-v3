@@ -222,6 +222,7 @@ export class DatabaseService {
     type,
     object,
     changes,
+    changeId,
   }: {
     // This becomes the label of the base node
     type: TResourceStatic;
@@ -229,18 +230,31 @@ export class DatabaseService {
     object: TObject;
     // The changes
     changes: DbChanges<TResourceStatic['prototype']>;
+    // Plan Change ID
+    changeId?: ID;
   }): Promise<TObject> {
     let updated = object;
     for (const [prop, change] of entries(changes)) {
       if (change === undefined) {
         continue;
       }
-      await this.updateProperty({
-        type,
-        object,
-        key: prop as any,
-        value: change,
-      });
+      if (changeId) {
+        await this.updatePlanChangeProperty({
+          type,
+          object,
+          key: prop as any,
+          value: change,
+          changeId,
+        });
+        continue;
+      } else {
+        await this.updateProperty({
+          type,
+          object,
+          key: prop as any,
+          value: change,
+        });
+      }
 
       updated = {
         ...updated,
