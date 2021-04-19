@@ -13,6 +13,7 @@ import {
   ZoneOptions,
 } from 'luxon';
 import { inspect } from 'util';
+import { DateInterval } from './date-interval';
 
 /**
  * Calendar Dates have no times or timezones.
@@ -106,6 +107,10 @@ export class CalendarDate extends DateTime {
 
   static utc(year?: number, month?: number, day?: number): CalendarDate {
     return CalendarDate.fromDateTime(super.utc(year, month, day));
+  }
+
+  until(other: CalendarDate): DateInterval {
+    return DateInterval.fromDateTimes(this, other);
   }
 
   endOf(unit: DurationUnit): CalendarDate {
