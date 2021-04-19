@@ -18,6 +18,12 @@ declare module 'luxon/src/interval' {
       previous: Interval | null,
       updated: Interval | null
     ) => Record<'additions' | 'removals', Interval[]>;
+
+    export function tryFrom(start: DateTime, end: DateTime): Interval;
+    export function tryFrom(
+      start: DateTime | null | undefined,
+      end: DateTime | null | undefined
+    ): Interval | null;
   }
 }
 /* eslint-enable @typescript-eslint/method-signature-style */
@@ -35,11 +41,23 @@ Interval.prototype.expandToFull = function (
   return Interval.fromDateTimes(this.start.startOf(unit), this.end.endOf(unit));
 };
 
-(Interval as Mutable<typeof Interval>).compare = (
-  prev: Interval | null,
-  now: Interval | null
-) => {
+const IntervalStatic = Interval as Mutable<typeof Interval>;
+
+IntervalStatic.compare = (prev: Interval | null, now: Interval | null) => {
   const removals = !prev ? [] : !now ? [prev] : prev.difference(now);
   const additions = !now ? [] : !prev ? [now] : now.difference(prev);
   return { removals, additions };
 };
+
+function tryFrom(start: DateTime, end: DateTime): Interval;
+function tryFrom(
+  start: DateTime | null | undefined,
+  end: DateTime | null | undefined
+): Interval | null;
+function tryFrom(
+  start: DateTime | null | undefined,
+  end: DateTime | null | undefined
+): Interval | null {
+  return start && end ? Interval.fromDateTimes(start, end) : null;
+}
+IntervalStatic.tryFrom = tryFrom;

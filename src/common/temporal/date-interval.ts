@@ -69,6 +69,18 @@ export class DateInterval extends Interval {
     return super.xor(intervals.map(toSuper)).map(fromSuper);
   }
 
+  static tryFrom(start: CalendarDate, end: CalendarDate): DateInterval;
+  static tryFrom(
+    start: CalendarDate | null | undefined,
+    end: CalendarDate | null | undefined
+  ): DateInterval | null;
+  static tryFrom(
+    start: CalendarDate | null | undefined,
+    end: CalendarDate | null | undefined
+  ): DateInterval | null {
+    return start && end ? DateInterval.fromDateTimes(start, end) : null;
+  }
+
   abutsStart(other: DateInterval): boolean {
     return toSuper(this).abutsStart(toSuper(other));
   }
