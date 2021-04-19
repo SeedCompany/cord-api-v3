@@ -151,4 +151,10 @@ export class DateInterval extends Interval {
   [inspect.custom]() {
     return `[Dates ${this.start.toISO()} – ${this.end.toISO()}]`;
   }
+  expandToFull(unit: DurationUnit): DateInterval {
+    return DateInterval.fromDateTimes(
+      this.start.startOf(unit),
+      this.end.endOf(unit)
+    );
+  }
 }
