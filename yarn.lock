@@ -1491,15 +1491,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/graphql@npm:^14.5.0":
-  version: 14.5.0
-  resolution: "@types/graphql@npm:14.5.0"
-  dependencies:
-    graphql: "*"
-  checksum: 93ecac6502808bb6b043d7a651b895dbbf1017cfd412b8ea7a923325ad9ddfee1b7cf3ae6997f15eccf44a53bf045cd85c28d594966559dd8b261826a7434288
-  languageName: node
-  linkType: hard
-
 "@types/http-assert@npm:*":
   version: 1.5.1
   resolution: "@types/http-assert@npm:1.5.1"
@@ -3969,7 +3960,6 @@ __metadata:
     "@types/express": ^4.17.11
     "@types/express-serve-static-core": ^4.17.19
     "@types/faker": ^5.5.0
-    "@types/graphql": ^14.5.0
     "@types/jest": ^26.0.22
     "@types/js-yaml": ^4.0.0
     "@types/jsonwebtoken": ^8.5.1
@@ -6226,7 +6216,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql@npm:*, graphql@npm:^15.5.0":
+"graphql@npm:^15.5.0":
   version: 15.5.0
   resolution: "graphql@npm:15.5.0"
   checksum: 789cdcb069a3e00592e779002217a6bc5fd09efad63ee8c4190c4b3ea96c89010e74f085fb1cba876a0bb0e324e01df2eddb84d79dca90a28e582bc425fef9ef
