@@ -1,11 +1,7 @@
 import { Interval } from 'luxon';
-import {
-  fiscalQuarters,
-  getIntervalsDifference,
-  Session,
-} from '../../../common';
+import { DateInterval } from '../../../common';
 import { EventsHandler, IEventHandler, ILogger, Logger } from '../../../core';
-import { Engagement } from '../../engagement';
+import { Engagement, engagementRange } from '../../engagement';
 import {
   EngagementCreatedEvent,
   EngagementUpdatedEvent,
@@ -29,94 +25,47 @@ export class SyncProgressReportToEngagementDateRange
       event: event.constructor.name,
     });
 
-    const [startDate, endDate] = this.determineEngagementDateRange(
-      event instanceof EngagementCreatedEvent ? event.engagement : event.updated
-    );
-
-    if (event instanceof EngagementCreatedEvent) {
-      const quarterIntervals = fiscalQuarters(startDate, endDate);
-      await this.addRecords(event.engagement, quarterIntervals, event.session);
-    } else {
-      const engagement = event.updated;
-      const previous = event.previous;
-
-      const [
-        previousStartDate,
-        previousEndDate,
-      ] = this.determineEngagementDateRange(previous);
-
-      const isDateRangeChanged =
-        startDate &&
-        endDate &&
-        (startDate.toMillis() !== previousStartDate?.toMillis() ||
-          endDate.toMillis() !== previousEndDate?.toMillis());
-
-      if (isDateRangeChanged) {
-        const [newQuarters, oldQuarters] = this.getNewPeriodIntervals(
-          engagement,
-          previous
-        );
-        await this.periodicReports.removeProgressReports(
-          engagement,
-          oldQuarters,
-          event.session
-        );
-        await this.addRecords(engagement, newQuarters, event.session);
-      }
-    }
+    await this.syncProgress(event);
   }
 
-  private async addRecords(
-    engagement: Engagement,
-    intervals: Interval[],
-    session: Session
-  ) {
-    const reports = intervals.map((interval) =>
-      this.periodicReports.create(
-        {
-          start: interval.start,
-          end: interval.start.endOf('quarter'),
-          type: ReportType.Progress,
-          projectOrEngagementId: engagement.id,
-        },
-        session
+  private async syncProgress(event: SubscribedEvent) {
+    const [prev, updated] =
+      event instanceof EngagementUpdatedEvent
+        ? [event.previous, event.updated]
+        : [null, event.engagement];
+
+    const diff = this.diff(prev, updated);
+
+    await this.periodicReports.removeProgressReports(
+      updated.id,
+      diff.removals,
+      event.session
+    );
+
+    await Promise.all(
+      diff.additions.map((interval) =>
+        this.periodicReports.create(
+          {
+            start: interval.start,
+            end: interval.end,
+            type: ReportType.Progress,
+            projectOrEngagementId: updated.id,
+          },
+          event.session
+        )
       )
     );
-
-    await Promise.all(reports);
   }
 
-  private determineEngagementDateRange(engagement: Engagement) {
-    const startDate = engagement.startDateOverride.value
-      ? engagement.startDateOverride.value
-      : engagement.startDate.value;
-
-    const endDate = engagement.endDateOverride.value
-      ? engagement.endDateOverride.value
-      : engagement.endDate.value;
-
-    return [startDate, endDate];
-  }
-
-  private getNewPeriodIntervals(engagement: Engagement, previous: Engagement) {
-    const [startDate, endDate] = this.determineEngagementDateRange(engagement);
-    const [prevStartDate, prevEndDate] = this.determineEngagementDateRange(
-      previous
+  private diff(prev: Engagement | null, updated: Engagement) {
+    const diff = DateInterval.compare(
+      prev ? engagementRange(prev)?.expandToFull('quarter') : null,
+      engagementRange(updated)?.expandToFull('quarter')
     );
-
-    const quarterIntervals = fiscalQuarters(startDate, endDate);
-    const prevQuarterIntervals = fiscalQuarters(prevStartDate, prevEndDate);
-
-    const newQuarters = getIntervalsDifference(
-      quarterIntervals,
-      prevQuarterIntervals
-    );
-
-    const oldQuarters = getIntervalsDifference(
-      prevQuarterIntervals,
-      quarterIntervals
-    );
-
-    return [newQuarters, oldQuarters];
+    const splitByUnit = (range: Interval) => range.splitBy({ quarter: 1 });
+    return {
+      additions: diff.additions.flatMap(splitByUnit),
+      removals: diff.removals.flatMap(splitByUnit),
+    };
   }
 }

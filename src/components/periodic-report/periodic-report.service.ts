@@ -29,7 +29,6 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { Engagement } from '../engagement';
 import { CreateDefinedFileVersionInput, FileId, FileService } from '../file';
 import {
   CreatePeriodicReport,
@@ -379,14 +378,18 @@ export class PeriodicReportService {
   }
 
   async removeProgressReports(
-    engagement: Engagement,
+    engagementId: ID,
     intervals: Interval[],
     session: Session
   ) {
+    if (intervals.length === 0) {
+      return;
+    }
+
     const reports = await this.db
       .query()
       .match([
-        node('engagement', 'Engagement', { id: engagement.id }),
+        node('engagement', 'Engagement', { id: engagementId }),
         relation('out', '', 'report', { active: true }),
         node('report', 'PeriodicReport'),
       ])
@@ -408,9 +411,7 @@ export class PeriodicReportService {
       .with('report, rel, start, end')
       .where({
         rel: isNull(),
-        'date(start.value)': inArray(
-          intervals.map((interval) => interval.start.startOf('quarter'))
-        ),
+        'start.value': inArray(intervals.map((interval) => interval.start)),
       })
       .return('report.id as reportId')
       .asResult<{ reportId: ID }>()
