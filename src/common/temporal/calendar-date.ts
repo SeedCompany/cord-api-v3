@@ -147,11 +147,9 @@ export class CalendarDate extends DateTime {
   toUTC(): CalendarDate {
     return this; // noop
   }
-}
 
-(CalendarDate.prototype as any)[inspect.custom] = function (
-  this: CalendarDate
-) {
-  const str = this.toLocaleString(DateTime.DATE_SHORT);
-  return `[Date] ${str}`;
-};
+  [inspect.custom]() {
+    const str = this.toLocaleString(DateTime.DATE_SHORT);
+    return `[Date] ${str}`;
+  }
+}
