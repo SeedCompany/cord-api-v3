@@ -23,7 +23,7 @@ const defaultFilters = {};
 export class PeriodicReportListInput extends SortablePaginationInput<
   keyof PeriodicReport
 >({
-  defaultSort: 'createdAt',
+  defaultSort: 'end',
 }) {
   static defaultVal = new PeriodicReportListInput();
 
