@@ -1,5 +1,4 @@
-import { isNumber } from 'lodash';
-import { Duration, DurationObject } from 'luxon';
+import { Duration, DurationInput } from 'luxon';
 
 export type Many<T> = T | readonly T[];
 export const many = <T>(item: Many<T>): readonly T[] =>
@@ -9,20 +8,9 @@ export const maybeMany = <T>(
   item: Many<T> | null | undefined
 ): readonly T[] | undefined => (item != null ? many(item) : undefined);
 
-export type MsDurationInput = number | Duration | DurationObject;
-export const parseMilliseconds = (durationOrMs: MsDurationInput) => {
-  const duration =
-    durationOrMs instanceof Duration
-      ? durationOrMs
-      : Duration.fromObject(
-          isNumber(durationOrMs) ? { milliseconds: durationOrMs } : durationOrMs
-        );
-  return duration.as('milliseconds');
-};
-
-export const sleep = (durationOrMs: MsDurationInput) =>
+export const sleep = (duration: DurationInput) =>
   new Promise((resolve) =>
-    setTimeout(resolve, parseMilliseconds(durationOrMs))
+    setTimeout(resolve, Duration.from(duration).toMillis())
   );
 
 export const simpleSwitch = <T>(
