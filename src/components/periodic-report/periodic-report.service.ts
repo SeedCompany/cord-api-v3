@@ -187,20 +187,17 @@ export class PeriodicReportService {
     const props = parsePropList(result.propList);
     const securedProps = await this.authorizationService.secureProperties(
       IPeriodicReport,
-      props,
+      {
+        ...props,
+        reportFile: result.reportFileId,
+      },
       session
     );
 
     return {
       ...parseBaseNodeProperties(result.node),
+      ...props,
       ...securedProps,
-      type: props.type,
-      start: props.start,
-      end: props.end,
-      reportFile: {
-        ...securedProps.reportFile,
-        value: result.reportFileId,
-      },
       canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
