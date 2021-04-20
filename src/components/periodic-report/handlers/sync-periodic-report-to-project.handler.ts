@@ -35,10 +35,10 @@ export class SyncPeriodicReportsToProjectDateRange
         : 'quarters'
     );
 
-    await this.periodicReports.removeFinancialReports(
+    await this.periodicReports.delete(
       project.id,
-      diff.removals,
-      event.session
+      ReportType.Financial,
+      diff.removals
     );
     await Promise.all(
       diff.additions.map((interval) =>
@@ -57,10 +57,10 @@ export class SyncPeriodicReportsToProjectDateRange
 
   private async syncNarrative(event: SubscribedEvent) {
     const diff = this.diffBy(event, 'quarter');
-    await this.periodicReports.removeNarrativeReports(
+    await this.periodicReports.delete(
       event.updated.id,
-      diff.removals,
-      event.session
+      ReportType.Narrative,
+      diff.removals
     );
     await Promise.all(
       diff.additions.map((interval) =>

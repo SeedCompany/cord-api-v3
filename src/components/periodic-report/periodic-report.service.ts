@@ -1,5 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { inArray, isNull, node, relation } from 'cypher-query-builder';
+import { stripIndent } from 'common-tags';
+import { node, relation } from 'cypher-query-builder';
 import { DateTime, Interval } from 'luxon';
 import {
   generateId,
@@ -18,6 +19,7 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
+  deleteBaseNode,
   matchPropList,
 } from '../../core/database/query';
 import {
@@ -203,27 +205,6 @@ export class PeriodicReportService {
     };
   }
 
-  async delete(id: ID, session: Session): Promise<void> {
-    const object = await this.readOne(id, session);
-
-    if (!object) {
-      throw new NotFoundException(
-        'Could not find periodic report',
-        'periodicReport.id'
-      );
-    }
-
-    try {
-      await this.db.deleteNode(object);
-    } catch (exception) {
-      this.logger.warning('Failed to delete periodic report', {
-        exception,
-      });
-
-      throw new ServerException('Failed to delete periodic report', exception);
-    }
-  }
-
   async listProjectReports(
     projectId: string,
     reportType: ReportType,
@@ -273,123 +254,38 @@ export class PeriodicReportService {
     };
   }
 
-  getProjectReportsQuery(projectId: ID) {
-    return this.db
-      .query()
-      .match([
-        node('project', 'Project', { id: projectId }),
-        relation('out', '', 'report', { active: true }),
-        node('report', 'PeriodicReport'),
-      ])
-      .optionalMatch([
-        node('report'),
-        relation('out', 'rel', 'reportFile', { active: true }),
-        node('file', 'File'),
-      ])
-      .optionalMatch([
-        node('report'),
-        relation('out', '', 'start', { active: true }),
-        node('start', 'Property'),
-      ])
-      .optionalMatch([
-        node('report'),
-        relation('out', '', 'end', { active: true }),
-        node('end', 'Property'),
-      ])
-      .optionalMatch([
-        node('report'),
-        relation('out', '', 'type', { active: true }),
-        node('type', 'Property'),
-      ])
-      .with('report, rel, start, end, type');
-  }
-
-  async removeFinancialReports(
-    projectId: ID,
-    intervals: Interval[],
-    session: Session
-  ) {
-    const reports = await this.getProjectReportsQuery(projectId)
-      .where({
-        rel: isNull(),
-        'start.value': inArray(intervals.map((interval) => interval.start)),
-        type: {
-          value: ReportType.Financial,
-        },
-      })
-      .return('report.id as reportId')
-      .asResult<{ reportId: ID }>()
-      .run();
-
-    await Promise.all(
-      reports.map((report) => this.delete(report.reportId, session))
-    );
-  }
-
-  async removeNarrativeReports(
-    projectId: ID,
-    intervals: Interval[],
-    session: Session
-  ) {
-    const reports = await this.getProjectReportsQuery(projectId)
-      .where({
-        rel: isNull(),
-        'start.value': inArray(intervals.map((interval) => interval.start)),
-        type: {
-          value: ReportType.Narrative,
-        },
-      })
-      .return('report.id as reportId')
-      .asResult<{ reportId: ID }>()
-      .run();
-
-    await Promise.all(
-      reports.map((report) => this.delete(report.reportId, session))
-    );
-  }
-
-  async removeProgressReports(
-    engagementId: ID,
-    intervals: Interval[],
-    session: Session
-  ) {
+  async delete(baseNodeId: ID, type: ReportType, intervals: Interval[]) {
     if (intervals.length === 0) {
       return;
     }
 
-    const reports = await this.db
+    const result = await this.db
       .query()
       .match([
-        node('engagement', 'Engagement', { id: engagementId }),
+        node('node', 'BaseNode', { id: baseNodeId }),
         relation('out', '', 'report', { active: true }),
-        node('report', 'PeriodicReport'),
-      ])
-      .optionalMatch([
-        node('report'),
-        relation('out', 'rel', 'reportFile', { active: true }),
-        node('file', 'File'),
+        node('report', `${type}Report`),
       ])
       .optionalMatch([
         node('report'),
         relation('out', '', 'start', { active: true }),
         node('start', 'Property'),
       ])
-      .optionalMatch([
-        node('report'),
-        relation('out', '', 'end', { active: true }),
-        node('end', 'Property'),
-      ])
-      .with('report, rel, start, end')
-      .where({
-        rel: isNull(),
-        'start.value': inArray(intervals.map((interval) => interval.start)),
-      })
-      .return('report.id as reportId')
-      .asResult<{ reportId: ID }>()
-      .run();
-
-    await Promise.all(
-      reports.map((report) => this.delete(report.reportId, session))
-    );
+      .with('report, start')
+      .raw(
+        stripIndent`
+          WHERE NOT (report)-[:reportFileNode]->(:File)<-[:parent { active: true }]-(:FileVersion)
+            AND start.value IN $startDates
+      `,
+        {
+          startDates: intervals.map((interval) => interval.start),
+        }
+      )
+      .with('report as baseNode')
+      .call(deleteBaseNode)
+      .return('count(node) as count')
+      .asResult<{ count: number }>()
+      .first();
+    this.logger.debug('Deleted reports', { baseNodeId, type, ...result });
   }
 }

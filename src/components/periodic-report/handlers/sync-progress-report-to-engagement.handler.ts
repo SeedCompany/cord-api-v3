@@ -36,10 +36,10 @@ export class SyncProgressReportToEngagementDateRange
 
     const diff = this.diff(prev, updated);
 
-    await this.periodicReports.removeProgressReports(
+    await this.periodicReports.delete(
       updated.id,
-      diff.removals,
-      event.session
+      ReportType.Progress,
+      diff.removals
     );
 
     await Promise.all(
