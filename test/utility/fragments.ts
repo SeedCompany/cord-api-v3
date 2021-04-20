@@ -1029,6 +1029,28 @@ export const location = gql`
   ${fieldRegion}
 `;
 
+export const planChange = gql`
+  fragment planChange on PlanChange {
+    id
+    status {
+      value
+      canEdit
+      canRead
+    }
+    summary {
+      value
+      canEdit
+      canRead
+    }
+    types {
+      value
+      canEdit
+      canRead
+    }
+    createdAt
+  }
+`;
+
 export const fragments = {
   org,
   user,
@@ -1055,4 +1077,5 @@ export const fragments = {
   ceremony,
   partner,
   fundingAccount,
+  planChange,
 };
