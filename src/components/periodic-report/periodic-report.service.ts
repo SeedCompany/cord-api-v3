@@ -142,7 +142,7 @@ export class PeriodicReportService {
       session
     );
 
-    return await this.files.resolveDefinedFile(report.reportFile, session);
+    return report;
   }
 
   async readOne(id: ID, session: Session): Promise<PeriodicReport> {

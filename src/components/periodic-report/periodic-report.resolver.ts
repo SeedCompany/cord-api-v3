@@ -17,19 +17,19 @@ export class PeriodicReportResolver {
     private readonly files: FileService
   ) {}
 
-  @Mutation(() => SecuredFile, {
+  @Mutation(() => IPeriodicReport, {
     description: 'Update a report file',
   })
   async uploadPeriodicReport(
     @LoggedInSession() session: Session,
     @Args('input') input: UploadPeriodicReportInput
-  ): Promise<SecuredFile> {
-    const reportFile = await this.service.uploadFile(
+  ): Promise<IPeriodicReport> {
+    const report = await this.service.uploadFile(
       input.reportId,
       input.file,
       session
     );
-    return reportFile;
+    return report;
   }
 
   @ResolveField(() => SecuredFile)
