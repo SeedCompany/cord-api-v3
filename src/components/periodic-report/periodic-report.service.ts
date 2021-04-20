@@ -18,7 +18,6 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
-  defaultSorter,
   matchPropList,
 } from '../../core/database/query';
 import {
@@ -32,22 +31,18 @@ import { AuthorizationService } from '../authorization/authorization.service';
 import { CreateDefinedFileVersionInput, FileId, FileService } from '../file';
 import {
   CreatePeriodicReport,
+  FinancialReport,
   IPeriodicReport,
+  NarrativeReport,
   PeriodicReport,
   PeriodicReportListInput,
+  ProgressReport,
   ReportType,
   SecuredPeriodicReportList,
 } from './dto';
 
 @Injectable()
 export class PeriodicReportService {
-  private readonly securedProperties = {
-    type: true,
-    start: true,
-    end: true,
-    reportFile: true,
-  };
-
   constructor(
     private readonly db: DatabaseService,
     private readonly files: FileService,
@@ -234,11 +229,7 @@ export class PeriodicReportService {
     }
 
     try {
-      await this.db.deleteNode({
-        session,
-        object,
-        aclEditProp: 'canDeleteOwnUser',
-      });
+      await this.db.deleteNode(object);
     } catch (exception) {
       this.logger.warning('Failed to delete periodic report', {
         exception,
@@ -262,10 +253,10 @@ export class PeriodicReportService {
         node('node', ['PeriodicReport', `${reportType}Report`]),
       ])
       .call(
-        calculateTotalAndPaginateList,
-        input,
-        this.securedProperties,
-        defaultSorter
+        calculateTotalAndPaginateList(
+          reportType === 'Financial' ? FinancialReport : NarrativeReport,
+          input
+        )
       );
 
     return {
@@ -288,12 +279,7 @@ export class PeriodicReportService {
         relation('out', '', 'report', { active: true }),
         node('node', `PeriodicReport:${reportType}Report`),
       ])
-      .call(
-        calculateTotalAndPaginateList,
-        input,
-        this.securedProperties,
-        defaultSorter
-      );
+      .call(calculateTotalAndPaginateList(ProgressReport, input));
 
     return {
       ...(await runListQuery(query, input, (id) => this.readOne(id, session))),
