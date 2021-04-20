@@ -29,6 +29,7 @@ type AnyPeriodicReport = MergeExclusive<
 
     throw new ServerException('Could not resolve periodic report type');
   },
+  implements: [Resource],
 })
 class PeriodicReport extends Resource {
   static readonly Props = keysOf<PeriodicReport>();
@@ -37,10 +38,10 @@ class PeriodicReport extends Resource {
   @Field(() => ReportType)
   readonly type: ReportType;
 
-  @Field(() => CalendarDate)
+  @Field()
   readonly start: CalendarDate;
 
-  @Field(() => CalendarDate)
+  @Field()
   readonly end: CalendarDate;
 
   readonly reportFile: DefinedFile;
@@ -52,7 +53,7 @@ export {
 };
 
 @ObjectType({
-  implements: [PeriodicReport, Resource],
+  implements: [PeriodicReport],
 })
 export class FinancialReport extends PeriodicReport {
   static readonly Props = keysOf<FinancialReport>();
@@ -62,7 +63,7 @@ export class FinancialReport extends PeriodicReport {
 }
 
 @ObjectType({
-  implements: [PeriodicReport, Resource],
+  implements: [PeriodicReport],
 })
 export class NarrativeReport extends PeriodicReport {
   static readonly Props = keysOf<NarrativeReport>();
@@ -72,7 +73,7 @@ export class NarrativeReport extends PeriodicReport {
 }
 
 @ObjectType({
-  implements: [PeriodicReport, Resource],
+  implements: [PeriodicReport],
 })
 export class ProgressReport extends PeriodicReport {
   static readonly Props = keysOf<ProgressReport>();
