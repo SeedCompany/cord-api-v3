@@ -66,6 +66,8 @@ export class PeriodicReportService {
     const id = await generateId();
     const createdAt = DateTime.local();
 
+    const reportFileId = await generateId();
+
     try {
       const createPeriodicReport = this.db
         .query()
@@ -83,6 +85,7 @@ export class PeriodicReportService {
           ...property('type', input.type, 'newPeriodicReport'),
           ...property('start', input.start, 'newPeriodicReport'),
           ...property('end', input.end, 'newPeriodicReport'),
+          ...property('reportFile', reportFileId, 'newPeriodicReport'),
         ])
         .return('newPeriodicReport.id as id');
       const result = await createPeriodicReport.first();
@@ -111,6 +114,14 @@ export class PeriodicReportService {
         ])
         .run();
 
+      await this.files.createDefinedFile(
+        reportFileId,
+        input.end.toISODate(),
+        session,
+        id,
+        'reportFile'
+      );
+
       return await this.readOne(id, session);
     } catch (exception) {
       throw new ServerException('Could not create periodic report', exception);
@@ -122,42 +133,16 @@ export class PeriodicReportService {
     file: CreateDefinedFileVersionInput,
     session: Session
   ) {
-    const reportFileId = (await generateId()) as FileId;
-
     const report = await this.readOne(reportId, session);
 
-    await this.files.createDefinedFile(
-      reportFileId,
-      report.end.toISODate(),
-      session,
-      reportId,
-      'reportFile',
+    await this.files.updateDefinedFile(
+      report.reportFile,
+      'file',
       file,
-      'periodicReport.reportFile'
-    );
-
-    await this.db
-      .query()
-      .match(node('periodicReport', 'PeriodicReport', { id: reportId }))
-      .match(node('file', 'File', { id: reportFileId }))
-      .create([
-        node('periodicReport'),
-        relation('out', '', 'reportFile', {
-          active: true,
-          createdAt: DateTime.local(),
-        }),
-        node('file'),
-      ])
-      .run();
-
-    return await this.files.resolveDefinedFile(
-      {
-        value: reportFileId,
-        canRead: true,
-        canEdit: true,
-      },
       session
     );
+
+    return await this.files.resolveDefinedFile(report.reportFile, session);
   }
 
   async readOne(id: ID, session: Session): Promise<PeriodicReport> {

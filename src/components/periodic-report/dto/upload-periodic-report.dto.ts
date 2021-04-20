@@ -10,8 +10,7 @@ export abstract class UploadPeriodicReportInput {
   readonly reportId: ID;
 
   @Field({
-    description: 'Initial version of the report file',
-    nullable: true,
+    description: 'New version of the report file',
   })
   @Type(() => CreateDefinedFileVersionInput)
   @ValidateNested()
