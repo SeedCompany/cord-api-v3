@@ -1338,25 +1338,27 @@ describe('Engagement e2e', () => {
         await changeProjectStep(app, project.id, next);
       }
       await changeProjectStep(app, project.id, ProjectStep.Active);
-
-      await expect(
-        createLanguageEngagement(app, {
-          projectId: project.id,
-        })
-      ).rejects.toThrowError('The Project status is not in development');
-
-      await expect(
-        app.graphql.mutate(
-          gql`
-            mutation deleteEngagement($id: ID!) {
-              deleteEngagement(id: $id)
-            }
-          `,
-          {
-            id: engagement.id,
-          }
-        )
-      ).rejects.toThrowError('The Project status is not in development');
     });
+
+    await expect(
+      createLanguageEngagement(app, {
+        projectId: project.id,
+      })
+    ).rejects.toThrowError('The Project status is not in development');
+
+    await expect(
+      app.graphql.mutate(
+        gql`
+          mutation deleteEngagement($id: ID!) {
+            deleteEngagement(id: $id)
+          }
+        `,
+        {
+          id: engagement.id,
+        }
+      )
+    ).rejects.toThrowError(
+      'You do not have the permission to delete this Engagement'
+    );
   });
 });
