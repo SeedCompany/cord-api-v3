@@ -20,25 +20,17 @@ import {
   IEventBus,
   ILogger,
   Logger,
-  matchRequestingUser,
   matchSession,
   property,
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
-  matchMemberRoles,
-  matchPropList,
+  matchPropsAndProjectSensAndScopedRoles,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
-import {
-  DbPropsOfDto,
-  parseBaseNodeProperties,
-  parsePropList,
-  runListQuery,
-  StandardReadResult,
-} from '../../core/database/results';
-import { Role, rolesForScope } from '../authorization';
+import { DbPropsOfDto, runListQuery } from '../../core/database/results';
+import { ScopedRole } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { CeremonyService } from '../ceremony';
 import { FileService } from '../file';
@@ -569,20 +561,17 @@ export class EngagementService {
 
     const query = this.db
       .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'Engagement', { id })])
-      .apply(matchPropList)
-      .optionalMatch([
+      .match([
         node('project'),
         relation('out', '', 'engagement', { active: true }),
-        node('node'),
+        node('node', 'Engagement', { id }),
       ])
-      .apply(matchMemberRoles(session.userId))
+      .apply(matchPropsAndProjectSensAndScopedRoles(session))
       .with([
-        'propList',
+        'props',
         'node',
         'project',
-        'memberRoles',
+        'scopedRoles',
         `case
           when 'InternshipEngagement' IN labels(node)
           then 'InternshipEngagement'
@@ -622,39 +611,38 @@ export class EngagementService {
         node('pnpData'),
       ])
       .return([
-        'propList, node, project.id as project',
-        '__typename, ceremony.id as ceremony',
+        'props',
+        'project.id as project',
+        '__typename',
+        'ceremony.id as ceremony',
         'language.id as language',
         'intern.id as intern',
         'countryOfOrigin.id as countryOfOrigin',
         'mentor.id as mentor',
         'pnpData',
-        'memberRoles',
+        'scopedRoles',
       ])
-      .asResult<
-        StandardReadResult<
-          Omit<
-            DbPropsOfDto<LanguageEngagement & InternshipEngagement>,
-            | '__typename'
-            | 'ceremony'
-            | 'language'
-            | 'pnpData'
-            | 'countryOfOrigin'
-            | 'intern'
-            | 'mentor'
-          >
-        > & {
-          __typename: 'LanguageEngagement' | 'InternshipEngagement';
-          language: ID;
-          ceremony: ID;
-          project: ID;
-          intern: ID;
-          countryOfOrigin: ID;
-          mentor: ID;
-          pnpData?: Node<PnpData>;
-          memberRoles: Role[][];
-        }
-      >();
+      .asResult<{
+        props: Omit<
+          DbPropsOfDto<LanguageEngagement & InternshipEngagement, true>,
+          | '__typename'
+          | 'ceremony'
+          | 'language'
+          | 'pnpData'
+          | 'countryOfOrigin'
+          | 'intern'
+          | 'mentor'
+        >;
+        __typename: 'LanguageEngagement' | 'InternshipEngagement';
+        language: ID;
+        ceremony: ID;
+        project: ID;
+        intern: ID;
+        countryOfOrigin: ID;
+        mentor: ID;
+        pnpData?: Node<PnpData>;
+        scopedRoles: ScopedRole[];
+      }>();
 
     const result = await query.first();
 
@@ -664,7 +652,7 @@ export class EngagementService {
 
     const props = {
       __typename: result.__typename,
-      ...parsePropList(result.propList),
+      ...result.props,
       language: result.language,
       ceremony: result.ceremony,
       intern: result.intern,
@@ -674,11 +662,15 @@ export class EngagementService {
 
     const isLanguageEngagement = props.__typename === 'LanguageEngagement';
 
-    const securedProperties = await this.authorizationService.secureProperties(
+    const {
+      startDate: _, // both of these are composed manually below, so exclude them
+      endDate: __,
+      ...securedProperties
+    } = await this.authorizationService.secureProperties(
       isLanguageEngagement ? LanguageEngagement : InternshipEngagement,
       props,
       session,
-      result.memberRoles.flat().map(rolesForScope('project'))
+      result.scopedRoles
     );
 
     const project = await this.projectService.readOne(result.project, session);
@@ -696,8 +688,7 @@ export class EngagementService {
 
     const common = {
       __typename: result.__typename,
-      ...parseBaseNodeProperties(result.node),
-      modifiedAt: props.modifiedAt,
+      ...result.props,
       startDate: {
         value: startDate,
         canRead: canReadStartDate,
@@ -722,8 +713,8 @@ export class EngagementService {
         false
       >;
       return {
-        ...secured,
         ...common,
+        ...secured,
         pnpData: result.pnpData?.properties,
       };
     } else {
@@ -733,8 +724,8 @@ export class EngagementService {
         false
       >;
       return {
-        ...secured,
         ...common,
+        ...secured,
         methodologies: {
           ...secured.methodologies,
           value: secured.methodologies.value ?? [],

@@ -20,24 +20,16 @@ import {
   IEventBus,
   ILogger,
   Logger,
-  matchRequestingUser,
   OnIndex,
   property,
 } from '../../../core';
 import {
   calculateTotalAndPaginateList,
-  matchMemberRoles,
-  matchPropList,
+  matchPropsAndProjectSensAndScopedRoles,
   permissionsOfNode,
   requestingUser,
 } from '../../../core/database/query';
-import {
-  DbPropsOfDto,
-  parseBaseNodeProperties,
-  parsePropList,
-  runListQuery,
-  StandardReadResult,
-} from '../../../core/database/results';
+import { DbPropsOfDto, runListQuery } from '../../../core/database/results';
 import { AuthorizationService } from '../../authorization/authorization.service';
 import { User, UserService } from '../../user';
 import {
@@ -46,7 +38,7 @@ import {
   ProjectMemberListInput,
   ProjectMemberListOutput,
   Role,
-  rolesForScope,
+  ScopedRole,
   UpdateProjectMember,
 } from './dto';
 import { DbProjectMember } from './model';
@@ -197,24 +189,20 @@ export class ProjectMemberService {
 
     const query = this.db
       .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'ProjectMember', { id })])
-      .apply(matchPropList)
       .match([
         node('project', 'Project'),
         relation('out', '', 'member', { active: true }),
-        node('', 'ProjectMember', { id }),
+        node('node', 'ProjectMember', { id }),
+        relation('out', '', 'user'),
+        node('user', 'User'),
       ])
-      .with(['project', 'node', 'propList'])
-      .apply(matchMemberRoles(session.userId))
-      .match([node('node'), relation('out', '', 'user'), node('user', 'User')])
-      .return('node, propList, user.id as userId, memberRoles')
-      .asResult<
-        StandardReadResult<DbPropsOfDto<ProjectMember>> & {
-          userId: ID;
-          memberRoles: Role[][];
-        }
-      >();
+      .apply(matchPropsAndProjectSensAndScopedRoles(session))
+      .return(['props', 'user.id as userId', 'scopedRoles'])
+      .asResult<{
+        props: DbPropsOfDto<ProjectMember, true>;
+        userId: ID;
+        scopedRoles: ScopedRole[];
+      }>();
 
     const result = await query.first();
     if (!result) {
@@ -224,22 +212,20 @@ export class ProjectMemberService {
       );
     }
 
-    const props = parsePropList(result.propList);
     const securedProps = await this.authorizationService.secureProperties(
       ProjectMember,
-      props,
+      result.props,
       session,
-      result.memberRoles.flat().map(rolesForScope('project'))
+      result.scopedRoles
     );
 
     return {
-      ...parseBaseNodeProperties(result.node),
+      ...result.props,
       ...securedProps,
       user: {
         ...securedProps.user,
         value: await this.userService.readOne(result.userId, session),
       },
-      modifiedAt: props.modifiedAt,
       roles: {
         ...securedProps.roles,
         value: securedProps.roles.value ?? [],

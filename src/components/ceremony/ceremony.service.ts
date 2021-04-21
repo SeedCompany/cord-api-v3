@@ -21,19 +21,12 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
-  matchMemberRoles,
-  matchPropList,
+  matchPropsAndProjectSensAndScopedRoles,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
-import {
-  DbPropsOfDto,
-  parseBaseNodeProperties,
-  parsePropList,
-  runListQuery,
-  StandardReadResult,
-} from '../../core/database/results';
-import { Role, rolesForScope } from '../authorization';
+import { DbPropsOfDto, runListQuery } from '../../core/database/results';
+import { ScopedRole } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import {
   Ceremony,
@@ -126,43 +119,35 @@ export class CeremonyService {
     }
     const readCeremony = this.db
       .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'Ceremony', { id })])
-      .apply(matchPropList)
-      .optionalMatch([
+      .match([
         node('project', 'Project'),
         relation('out', '', 'engagement', { active: true }),
         node('', 'Engagement'),
         relation('out', '', { active: true }),
         node('node', 'Ceremony', { id }),
       ])
-      .with(['node', 'propList', 'project'])
-      .apply(matchMemberRoles(session.userId))
-      .return(['node', 'propList', 'memberRoles'])
-      .asResult<
-        StandardReadResult<DbPropsOfDto<Ceremony>> & {
-          memberRoles: Role[];
-        }
-      >();
+      .apply(matchPropsAndProjectSensAndScopedRoles(session))
+      .return(['props', 'scopedRoles'])
+      .asResult<{
+        props: DbPropsOfDto<Ceremony, true>;
+        scopedRoles: ScopedRole[];
+      }>();
 
     const result = await readCeremony.first();
     if (!result) {
       throw new NotFoundException('Could not find ceremony', 'ceremony.id');
     }
 
-    const parsedProps = parsePropList(result.propList);
-
     const securedProps = await this.authorizationService.secureProperties(
       Ceremony,
-      parsedProps,
+      result.props,
       session,
-      result.memberRoles.flat().map(rolesForScope('project'))
+      result.scopedRoles
     );
 
     return {
-      ...parseBaseNodeProperties(result.node),
+      ...result.props,
       ...securedProps,
-      type: parsedProps.type,
       canDelete: await this.db.checkDeletePermission(id, session),
     };
   }

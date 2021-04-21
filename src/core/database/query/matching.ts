@@ -1,6 +1,6 @@
 import { stripIndent } from 'common-tags';
 import { node, Query, relation } from 'cypher-query-builder';
-import { ID, Session } from '../../../common';
+import { Session } from '../../../common';
 import { collect } from './cypher-functions';
 import { mapping } from './mapping';
 
@@ -67,24 +67,3 @@ export const matchProps = ({ nodeName = 'node' } = {}) => (query: Query) =>
           ) as props`,
       ])
   );
-
-// Have to match project before using this
-export const matchMemberRoles = (userId: ID) => (query: Query) =>
-  query
-    .with(['project', 'node', 'propList'])
-    .optionalMatch([
-      [node('user', 'User', { id: userId })],
-      [node('projectMember'), relation('out', '', 'user'), node('user')],
-      [node('projectMember'), relation('in', '', 'member'), node('project')],
-      [
-        node('projectMember'),
-        relation('out', '', 'roles', { active: true }),
-        node('props', 'Property'),
-      ],
-    ])
-    .with([
-      collect('props.value', 'memberRoles'),
-      'propList',
-      'node',
-      'project',
-    ]);

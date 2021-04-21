@@ -24,19 +24,12 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
-  matchMemberRoles,
-  matchPropList,
+  matchPropsAndProjectSensAndScopedRoles,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
-import {
-  DbPropsOfDto,
-  parseBaseNodeProperties,
-  parsePropList,
-  runListQuery,
-  StandardReadResult,
-} from '../../core/database/results';
-import { Role, rolesForScope } from '../authorization';
+import { DbPropsOfDto, runListQuery } from '../../core/database/results';
+import { ScopedRole } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { FileService } from '../file';
 import {
@@ -309,29 +302,24 @@ export class BudgetService {
   }
 
   async readOne(id: ID, session: Session): Promise<Budget> {
-    this.logger.debug(`Query readOne Budget: `, {
+    this.logger.debug(`readOne budget`, {
       id,
       userId: session.userId,
     });
 
     const query = this.db
       .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'Budget', { id })])
-      .apply(matchPropList)
-      .optionalMatch([
+      .match([
         node('project', 'Project'),
         relation('out', '', 'budget', { active: true }),
         node('node', 'Budget', { id }),
       ])
-      .with(['project', 'node', 'propList'])
-      .apply(matchMemberRoles(session.userId))
-      .return(['propList', 'node', 'memberRoles'])
-      .asResult<
-        StandardReadResult<DbPropsOfDto<Budget>> & {
-          memberRoles: Role[][];
-        }
-      >();
+      .apply(matchPropsAndProjectSensAndScopedRoles(session))
+      .return(['props', 'scopedRoles'])
+      .asResult<{
+        props: DbPropsOfDto<Budget, true>;
+        scopedRoles: ScopedRole[];
+      }>();
 
     const result = await query.first();
     if (!result) {
@@ -349,59 +337,47 @@ export class BudgetService {
       session
     );
 
-    const props = parsePropList(result.propList);
     const securedProps = await this.authorizationService.secureProperties(
       Budget,
-      props,
+      result.props,
       session,
-      result.memberRoles.flat().map(rolesForScope('project'))
+      result.scopedRoles
     );
 
     return {
-      ...parseBaseNodeProperties(result.node),
+      ...result.props,
       ...securedProps,
-      status: props.status,
       records: records.items,
       canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 
   async readOneRecord(id: ID, session: Session): Promise<BudgetRecord> {
-    this.logger.debug(`Query readOne Budget Record: `, {
+    this.logger.debug(`readOne BudgetRecord`, {
       id,
       userId: session.userId,
     });
 
     const query = this.db
       .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'BudgetRecord', { id })])
-      .apply(matchPropList)
       .match([
         node('project', 'Project'),
         relation('out', '', 'budget', { active: true }),
         node('', 'Budget'),
         relation('out', '', 'record', { active: true }),
         node('node', 'BudgetRecord', { id }),
-      ])
-      .with(['project', 'node', 'propList'])
-      .apply(matchMemberRoles(session.userId))
-      .match([
-        node('node'),
         relation('out', '', 'organization', { active: true }),
         node('organization', 'Organization'),
       ])
-      .with(['node', 'propList', 'organization', 'memberRoles'])
+      .apply(matchPropsAndProjectSensAndScopedRoles(session))
       .return([
-        'propList + [{value: organization.id, property: "organization"}] as propList',
-        'node',
-        'memberRoles',
+        'apoc.map.merge(props, { organization: organization.id }) as props',
+        'scopedRoles',
       ])
-      .asResult<
-        StandardReadResult<DbPropsOfDto<BudgetRecord>> & {
-          memberRoles: Role[][];
-        }
-      >();
+      .asResult<{
+        props: DbPropsOfDto<BudgetRecord, true>;
+        scopedRoles: ScopedRole[];
+      }>();
 
     const result = await query.first();
 
@@ -414,13 +390,13 @@ export class BudgetService {
 
     const securedProps = await this.authorizationService.secureProperties(
       BudgetRecord,
-      result.propList,
+      result.props,
       session,
-      result.memberRoles.flat().map(rolesForScope('project'))
+      result.scopedRoles
     );
 
     return {
-      ...parseBaseNodeProperties(result.node),
+      ...result.props,
       ...securedProps,
       canDelete: await this.db.checkDeletePermission(id, session),
     };

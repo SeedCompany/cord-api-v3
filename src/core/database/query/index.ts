@@ -3,3 +3,4 @@ export * from './lists';
 export * from './mapping';
 export * from './matching';
 export * from './deletes';
+export * from './match-project-based-props';

@@ -13,6 +13,7 @@ import {
   SecuredDateTime,
   SecuredProps,
   SecuredString,
+  Sensitivity,
 } from '../../../common';
 import { DefinedFile } from '../../file/dto';
 import { Product, SecuredMethodologies } from '../../product/dto';
@@ -75,6 +76,11 @@ class Engagement extends Resource {
 
   @Field()
   readonly endDateOverride: SecuredDateNullable;
+
+  @Field(() => Sensitivity, {
+    description: "Based on the project's sensitivity",
+  })
+  readonly sensitivity: Sensitivity;
 
   @Field()
   // this should match project mouEnd, until it becomes active, then this is final.

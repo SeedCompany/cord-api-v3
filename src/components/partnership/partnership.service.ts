@@ -24,19 +24,13 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
-  matchMemberRoles,
-  matchPropList,
+  matchPropsAndProjectSensAndScopedRoles,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
-import {
-  DbPropsOfDto,
-  parseBaseNodeProperties,
-  runListQuery,
-  StandardReadResult,
-} from '../../core/database/results';
+import { DbPropsOfDto, runListQuery } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { Role, rolesForScope } from '../authorization/dto';
+import { ScopedRole } from '../authorization/dto';
 import { FileService } from '../file';
 import { Partner, PartnerService, PartnerType } from '../partner';
 import { ProjectService } from '../project';
@@ -251,36 +245,26 @@ export class PartnershipService {
 
     const query = this.db
       .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'Partnership', { id })])
-      .apply(matchPropList)
       .match([
         node('project', 'Project'),
         relation('out', '', 'partnership', { active: true }),
-        node('', 'Partnership', { id: id }),
-      ])
-      .with(['project', 'node', 'propList'])
-      .apply(matchMemberRoles(session.userId))
-      .match([
-        node('node'),
-        relation('in', '', 'partnership'),
-        node('project', 'Project'),
-      ])
-      .match([
-        node('node'),
+        node('node', 'Partnership', { id }),
         relation('out', '', 'partner'),
         node('partner', 'Partner'),
       ])
-      .return(
-        'propList, memberRoles, node, project.id as projectId, partner.id as partnerId'
-      )
-      .asResult<
-        StandardReadResult<DbPropsOfDto<Partnership>> & {
-          projectId: ID;
-          partnerId: ID;
-          memberRoles: Role[][];
-        }
-      >();
+      .apply(matchPropsAndProjectSensAndScopedRoles(session))
+      .return([
+        'props',
+        'scopedRoles',
+        'project.id as projectId',
+        'partner.id as partnerId',
+      ])
+      .asResult<{
+        props: DbPropsOfDto<Partnership, true>;
+        projectId: ID;
+        partnerId: ID;
+        scopedRoles: ScopedRole[];
+      }>();
 
     const result = await query.first();
 
@@ -291,32 +275,32 @@ export class PartnershipService {
       );
     }
 
-    const readProject = await this.projectService.readOne(
+    const project = await this.projectService.readOne(
       result.projectId,
       session
     );
 
     const securedProps = await this.authorizationService.secureProperties(
       Partnership,
-      result.propList,
+      result.props,
       session,
-      result.memberRoles.flat().map(rolesForScope('project'))
+      result.scopedRoles
     );
 
     const canReadMouStart =
-      readProject.mouStart.canRead && securedProps.mouStartOverride.canRead;
+      project.mouStart.canRead && securedProps.mouStartOverride.canRead;
     const canReadMouEnd =
-      readProject.mouEnd.canRead && securedProps.mouEndOverride.canRead;
+      project.mouEnd.canRead && securedProps.mouEndOverride.canRead;
 
     const mouStart = canReadMouStart
-      ? securedProps.mouStartOverride.value ?? readProject.mouStart.value
+      ? securedProps.mouStartOverride.value ?? project.mouStart.value
       : null;
     const mouEnd = canReadMouEnd
-      ? securedProps.mouEndOverride.value ?? readProject.mouEnd.value
+      ? securedProps.mouEndOverride.value ?? project.mouEnd.value
       : null;
 
     return {
-      ...parseBaseNodeProperties(result.node),
+      ...result.props,
       ...securedProps,
       mouStart: {
         value: mouStart,

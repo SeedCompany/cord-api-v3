@@ -25,20 +25,16 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
-  matchMemberRoles,
-  matchPropList,
+  matchPropsAndProjectSensAndScopedRoles,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
 import {
   BaseNode,
   DbPropsOfDto,
-  parseBaseNodeProperties,
-  parsePropList,
   runListQuery,
-  StandardReadResult,
 } from '../../core/database/results';
-import { Role, rolesForScope } from '../authorization';
+import { ScopedRole } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Film, FilmService } from '../film';
 import {
@@ -255,31 +251,25 @@ export class ProductService {
   async readOne(id: ID, session: Session): Promise<AnyProduct> {
     const query = this.db
       .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'Product', { id })])
-      .apply(matchPropList)
       .match([
         node('project', 'Project'),
         relation('out', '', 'engagement', { active: true }),
         node('', 'Engagement'),
         relation('out', '', 'product', { active: true }),
-        node('', 'Product', { id }),
+        node('node', 'Product', { id }),
       ])
-      .with(['project', 'node', 'propList'])
-      .apply(matchMemberRoles(session.userId))
-      .return(['propList, node, memberRoles'])
-      .asResult<
-        StandardReadResult<
-          DbPropsOfDto<
-            DirectScriptureProduct &
-              DerivativeScriptureProduct & {
-                isOverriding: boolean;
-              }
-          >
-        > & {
-          memberRoles: Role[][];
-        }
-      >();
+      .apply(matchPropsAndProjectSensAndScopedRoles(session))
+      .return(['props', 'scopedRoles'])
+      .asResult<{
+        props: DbPropsOfDto<
+          DirectScriptureProduct &
+            DerivativeScriptureProduct & {
+              isOverriding: boolean;
+            },
+          true
+        >;
+        scopedRoles: ScopedRole[];
+      }>();
     const result = await query.first();
 
     if (!result) {
@@ -287,7 +277,7 @@ export class ProductService {
       throw new NotFoundException('Could not find product', 'product.id');
     }
 
-    const { isOverriding, ...props } = parsePropList(result.propList);
+    const { isOverriding, ...props } = result.props;
     const {
       produces,
       scriptureReferencesOverride,
@@ -296,7 +286,7 @@ export class ProductService {
       DerivativeScriptureProduct,
       props,
       session,
-      result.memberRoles.flat().map(rolesForScope('project'))
+      result.scopedRoles
     );
 
     const connectedProducible = await this.db
@@ -318,8 +308,10 @@ export class ProductService {
 
     if (!connectedProducible) {
       return {
-        ...parseBaseNodeProperties(result.node),
+        id: props.id,
+        createdAt: props.createdAt,
         ...rest,
+        sensitivity: props.sensitivity,
         scriptureReferences: {
           ...rest.scriptureReferences,
           value: scriptureReferencesValue,
@@ -348,8 +340,10 @@ export class ProductService {
     );
 
     return {
-      ...parseBaseNodeProperties(result.node),
+      id: props.id,
+      createdAt: props.createdAt,
       ...rest,
+      sensitivity: props.sensitivity,
       scriptureReferences: {
         ...rest.scriptureReferences,
         value: !isOverriding

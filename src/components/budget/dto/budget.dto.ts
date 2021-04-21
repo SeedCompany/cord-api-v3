@@ -5,6 +5,7 @@ import {
   Resource,
   SecuredProperty,
   SecuredProps,
+  Sensitivity,
 } from '../../../common';
 import { DefinedFile } from '../../file/dto';
 import { BudgetRecord } from './budget-record.dto';
@@ -25,6 +26,11 @@ export class Budget extends Resource {
   readonly records: readonly BudgetRecord[];
 
   readonly universalTemplateFile: DefinedFile;
+
+  @Field(() => Sensitivity, {
+    description: "Based on the project's sensitivity",
+  })
+  readonly sensitivity: Sensitivity;
 }
 
 @ObjectType({
