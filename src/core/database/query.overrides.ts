@@ -1,6 +1,7 @@
 import { Query } from 'cypher-query-builder';
 import { Except } from 'type-fest';
 import { LogLevel } from '../logger';
+import './subquery.override';
 
 /* eslint-disable @typescript-eslint/method-signature-style -- this is enforced
    to treat functions arguments as contravariant instead of bivariant. this
