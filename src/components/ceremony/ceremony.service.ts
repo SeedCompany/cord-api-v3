@@ -29,7 +29,7 @@ export class CeremonyService {
     @Logger('ceremony:service') private readonly logger: ILogger
   ) {}
 
-  async create(input: CreateCeremony, session: Session): Promise<Ceremony> {
+  async create(input: CreateCeremony, session: Session): Promise<ID> {
     const secureProps: Property[] = [
       {
         key: 'type',
@@ -81,7 +81,7 @@ export class CeremonyService {
       //   session.userId
       // );
 
-      return await this.readOne(result.id, session);
+      return result.id;
     } catch (exception) {
       this.logger.warning('Failed to create ceremony', {
         exception,
