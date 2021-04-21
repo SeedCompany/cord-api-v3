@@ -1,5 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { AuthorizationModule } from '../authorization/authorization.module';
+import { EngagementModule } from '../engagement/engagement.module';
 import { FileModule } from '../file/file.module';
 import { UserModule } from '../user/user.module';
 import * as handlers from './handlers';
@@ -11,6 +12,7 @@ import { PeriodicReportService } from './periodic-report.service';
     FileModule,
     forwardRef(() => UserModule),
     forwardRef(() => AuthorizationModule),
+    forwardRef(() => EngagementModule),
   ],
   providers: [
     PeriodicReportService,
