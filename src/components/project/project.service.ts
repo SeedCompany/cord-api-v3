@@ -73,6 +73,7 @@ import {
   Project,
   ProjectListInput,
   ProjectListOutput,
+  ProjectStatus,
   ProjectStep,
   ProjectType,
   stepToStatus,
@@ -884,7 +885,10 @@ export class ProjectService {
     return {
       ...result,
       canRead: !!permission?.canReadEngagementRead,
-      canCreate: !!permission?.canReadEngagementCreate,
+      canCreate:
+        !!permission?.canReadEngagementCreate &&
+        (project.status === ProjectStatus.InDevelopment ||
+          session.roles.includes('global:Administrator')),
     };
   }
 

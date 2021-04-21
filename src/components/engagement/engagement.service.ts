@@ -1355,7 +1355,10 @@ export class EngagementService {
    * [BUSINESS RULE] Only Projects with a Status of 'In Development' can have Engagements created or deleted.
    */
   protected async verifyProjectStatus(projectId: ID, session: Session) {
-    if (this.config.migration) {
+    if (
+      this.config.migration ||
+      session.roles.includes('global:Administrator')
+    ) {
       return;
     }
 
