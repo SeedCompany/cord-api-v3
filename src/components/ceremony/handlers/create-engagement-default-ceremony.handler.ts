@@ -24,15 +24,15 @@ export class CreateEngagementDefaultCeremonyHandler
           ? CeremonyType.Dedication
           : CeremonyType.Certification,
     };
-    const ceremony = await this.ceremonies.create(input, session);
+    const ceremonyId = await this.ceremonies.create(input, session);
 
-    // connect ceremony to engagement
+    // connect ceremonyId to engagement
     await this.db
       .query()
       .matchNode('engagement', 'Engagement', {
         id: engagement.id,
       })
-      .matchNode('ceremony', 'Ceremony', { id: ceremony.id })
+      .matchNode('ceremony', 'Ceremony', { id: ceremonyId })
       .create([
         node('ceremony'),
         relation('in', 'ceremonyRel', 'ceremony', {
@@ -46,7 +46,7 @@ export class CreateEngagementDefaultCeremonyHandler
     const dbCeremony = new DbCeremony();
     await this.authorizationService.processNewBaseNode(
       dbCeremony,
-      ceremony.id,
+      ceremonyId,
       session.userId
     );
 
@@ -54,7 +54,7 @@ export class CreateEngagementDefaultCeremonyHandler
       ...engagement,
       ceremony: {
         ...engagement.ceremony, // permissions
-        value: ceremony.id,
+        value: ceremonyId,
       },
     };
   }
