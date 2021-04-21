@@ -1004,10 +1004,7 @@ describe('Engagement e2e', () => {
     const project = await createProject(app, {
       type: ProjectType.Internship,
     });
-    const intern = await registerUserWithPower(app, [
-      Powers.CreateLanguage,
-      Powers.CreateEthnologueLanguage,
-    ]);
+    const intern = await createPerson(app);
 
     await createInternshipEngagement(app, {
       projectId: project.id,
@@ -1226,8 +1223,6 @@ describe('Engagement e2e', () => {
       ).toMillis();
       expect(modAtMillis).toBe(statusModMillis);
     });
-    // Login back to the user
-    await login(app, { email: user.email.value, password });
   });
 
   /**
@@ -1269,8 +1264,6 @@ describe('Engagement e2e', () => {
       expect(actual.statusModifiedAt.value).toBe(actual.modifiedAt);
       expect(actual.lastSuspendedAt.value).toBe(actual.modifiedAt);
     });
-    // Login back to the user
-    await login(app, { email: user.email.value, password });
   });
 
   /**
@@ -1325,8 +1318,6 @@ describe('Engagement e2e', () => {
       //   actual.statusModifiedAt.value
       // );
     });
-    // Login back to the user
-    await login(app, { email: user.email.value, password });
   });
 
   it('should not Create/Delete Engagement if Project status is not InDevelopment', async () => {
