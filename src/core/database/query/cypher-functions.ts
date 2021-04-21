@@ -32,7 +32,7 @@ export const count = (
  * `null` will be returned if all the arguments are `null`.
  *
  * @param expressions An expression which may return null.
- * @see https://neo4j.com/docs/cypher-manual/current/functions/aggregating/#functions-coalesce
+ * @see https://neo4j.com/docs/cypher-manual/current/functions/scalar/#functions-coalesce
  */
 export const coalesce = (...expressions: any[]) =>
   `coalesce(${expressions.join(', ')})`;
