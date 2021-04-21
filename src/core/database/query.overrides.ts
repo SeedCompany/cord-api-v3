@@ -2,6 +2,11 @@ import { Query } from 'cypher-query-builder';
 import { Except } from 'type-fest';
 import { LogLevel } from '../logger';
 
+/* eslint-disable @typescript-eslint/method-signature-style -- this is enforced
+   to treat functions arguments as contravariant instead of bivariant. this
+   doesn't matter here as this class won't be overridden. Declaring them as
+   methods keeps their color the same as the rest of the query methods. */
+
 // Work around `Dictionary` return type
 export type QueryWithResult<R> = Except<Query, 'run' | 'first'> & {
   run: () => Promise<R[]>;
@@ -26,23 +31,22 @@ declare module 'cypher-query-builder/dist/typings/query' {
      *   .first();
      * ```
      */
-    call: <A extends any[], R extends this | QueryWithResult<any> | void>(
+    call<A extends any[], R extends this | QueryWithResult<any> | void>(
       fn: (query: this, ...args: A) => R,
       ...args: A
-    ) => R extends void ? this : R;
+    ): R extends void ? this : R;
 
     /**
      * Defines the result type of the query.
      * Only useful for TypeScript.
      * Must be called directly before run()/first().
      */
-    asResult: <R>() => QueryWithResult<R>;
+    asResult<R>(): QueryWithResult<R>;
 
-    logIt: (level?: LogLevel) => this;
+    logIt(level?: LogLevel): this;
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/unbound-method
 Query.prototype.call = function call<
   A extends any[],
   R extends Query | QueryWithResult<any> | void
