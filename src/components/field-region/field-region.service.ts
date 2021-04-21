@@ -107,7 +107,7 @@ export class FieldRegionService {
     // create field region
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([
         node('director', 'User', {
           id: directorId,
@@ -118,7 +118,7 @@ export class FieldRegionService {
           id: fieldZoneId,
         }),
       ])
-      .call(createBaseNode, await generateId(), 'FieldRegion', secureProps)
+      .apply(createBaseNode(await generateId(), 'FieldRegion', secureProps))
       .create([
         node('node'),
         relation('out', '', 'director', { active: true, createdAt }),
@@ -156,9 +156,9 @@ export class FieldRegionService {
 
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([node('node', 'FieldRegion', { id: id })])
-      .call(matchPropList)
+      .apply(matchPropList)
       .optionalMatch([
         node('node'),
         relation('out', '', 'director', { active: true }),
@@ -261,7 +261,7 @@ export class FieldRegionService {
     const query = this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode(label)])
-      .call(calculateTotalAndPaginateList(FieldRegion, input));
+      .apply(calculateTotalAndPaginateList(FieldRegion, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
