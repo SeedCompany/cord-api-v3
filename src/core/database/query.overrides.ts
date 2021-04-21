@@ -18,22 +18,43 @@ declare module 'cypher-query-builder/dist/typings/query' {
     /**
      * Apply custom query modifications while maintaining the fluent chain.
      *
-     * ```
+     * @deprecated Use {@link apply}() instead.
+     *
+     * In the future this could be changed to utilize native neo4j call logic.
+     */
+    call<A extends any[], R extends this | QueryWithResult<any> | void>(
+      fn: (query: this, ...args: A) => R,
+      ...args: A
+    ): R extends void ? this : R;
+
+    /**
+     * Apply custom query modifications while maintaining the fluent chain.
+     *
+     * Note: Unlike call() this does not have varargs that forward to the given
+     * function. This not necessary as helpers can just be written as higher-order
+     * functions, see second example. It also made generics on the function
+     * impossible to be applied.
+     *
+     * @example Using an if condition
      * await this.db.query()
      *   .raw(`
      *     ...
      *   `)
-     *   .call(q => {
+     *   .apply(q => {
      *     if (addTheThing) {
      *       q.raw('...');
      *     }
      *   })
      *   .first();
-     * ```
+     *
+     * @example Abstracting a query fragment with args
+     * const matchFoo = (label: string) => (query: Query) =>
+     *   query.matchNode('', label, ...)...
+     *
+     * db.query().apply(matchFoo('Movie'));
      */
-    call<A extends any[], R extends this | QueryWithResult<any> | void>(
-      fn: (query: this, ...args: A) => R,
-      ...args: A
+    apply<R extends this | QueryWithResult<any> | void>(
+      fn: (query: this) => R
     ): R extends void ? this : R;
 
     /**
@@ -56,6 +77,12 @@ Query.prototype.call = function call<
   ...args: A
 ): R extends void ? Query : R {
   return (fn(this, ...args) || this) as Exclude<R, void>;
+};
+
+Query.prototype.apply = function apply<
+  R extends Query | QueryWithResult<any> | void
+>(fn: (q: Query) => R): R extends void ? Query : R {
+  return (fn(this) || this) as Exclude<R, void>;
 };
 
 Query.prototype.asResult = function asResult<R>(this: Query) {
