@@ -159,8 +159,8 @@ export class PartnershipService {
     try {
       const createPartnership = this.db
         .query()
-        .call(matchRequestingUser, session)
-        .call(createBaseNode, partnershipId, 'Partnership', secureProps)
+        .apply(matchRequestingUser(session))
+        .apply(createBaseNode(partnershipId, 'Partnership', secureProps))
         .return('node.id as id');
 
       try {
@@ -251,7 +251,7 @@ export class PartnershipService {
 
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([node('node', 'Partnership', { id })])
       .apply(matchPropList)
       .match([
@@ -260,7 +260,7 @@ export class PartnershipService {
         node('', 'Partnership', { id: id }),
       ])
       .with(['project', 'node', 'propList'])
-      .call(matchMemberRoles, session.userId)
+      .apply(matchMemberRoles(session.userId))
       .match([
         node('node'),
         relation('in', '', 'partnership'),

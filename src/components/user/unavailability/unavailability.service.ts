@@ -70,13 +70,9 @@ export class UnavailabilityService {
     try {
       const createUnavailability = this.db
         .query()
-        .call(matchRequestingUser, session)
-        .call(
-          createBaseNode,
-          await generateId(),
-          'Unavailability',
-          secureProps,
-          {}
+        .apply(matchRequestingUser(session))
+        .apply(
+          createBaseNode(await generateId(), 'Unavailability', secureProps)
         )
         .return('node.id as id')
         .asResult<{ id: ID }>();
@@ -130,7 +126,7 @@ export class UnavailabilityService {
   async readOne(id: ID, session: Session): Promise<Unavailability> {
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([node('node', 'Unavailability', { id })])
       .apply(matchPropList)
       .return('propList, node')
@@ -162,7 +158,7 @@ export class UnavailabilityService {
 
     const result = await this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([
         node('user', 'User'),
         relation('out', '', 'unavailability', { active: true }),

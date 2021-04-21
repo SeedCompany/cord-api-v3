@@ -107,7 +107,7 @@ export class FieldRegionService {
     // create field region
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([
         node('director', 'User', {
           id: directorId,
@@ -118,7 +118,7 @@ export class FieldRegionService {
           id: fieldZoneId,
         }),
       ])
-      .call(createBaseNode, await generateId(), 'FieldRegion', secureProps)
+      .apply(createBaseNode(await generateId(), 'FieldRegion', secureProps))
       .create([
         node('node'),
         relation('out', '', 'director', { active: true, createdAt }),
@@ -156,7 +156,7 @@ export class FieldRegionService {
 
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([node('node', 'FieldRegion', { id: id })])
       .apply(matchPropList)
       .optionalMatch([

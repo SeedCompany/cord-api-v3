@@ -569,7 +569,7 @@ export class EngagementService {
 
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([node('node', 'Engagement', { id })])
       .apply(matchPropList)
       .optionalMatch([
@@ -577,7 +577,7 @@ export class EngagementService {
         relation('out', '', 'engagement', { active: true }),
         node('node'),
       ])
-      .call(matchMemberRoles, session.userId)
+      .apply(matchMemberRoles(session.userId))
       .with([
         'propList',
         'node',

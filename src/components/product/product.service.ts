@@ -168,17 +168,18 @@ export class ProductService {
     }
 
     query
-      .call(matchRequestingUser, session)
-      .call(
-        createBaseNode,
-        await generateId(),
-        [
-          'Product',
-          input.produces
-            ? 'DerivativeScriptureProduct'
-            : 'DirectScriptureProduct',
-        ],
-        secureProps
+      .apply(matchRequestingUser(session))
+      .apply(
+        createBaseNode(
+          await generateId(),
+          [
+            'Product',
+            input.produces
+              ? 'DerivativeScriptureProduct'
+              : 'DirectScriptureProduct',
+          ],
+          secureProps
+        )
       );
 
     if (engagementId) {
@@ -254,7 +255,7 @@ export class ProductService {
   async readOne(id: ID, session: Session): Promise<AnyProduct> {
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([node('node', 'Product', { id })])
       .apply(matchPropList)
       .match([
@@ -265,7 +266,7 @@ export class ProductService {
         node('', 'Product', { id }),
       ])
       .with(['project', 'node', 'propList'])
-      .call(matchMemberRoles, session.userId)
+      .apply(matchMemberRoles(session.userId))
       .return(['propList, node, memberRoles'])
       .asResult<
         StandardReadResult<

@@ -11,7 +11,7 @@ export class PinRepository {
   async isPinned(id: ID, session: Session): Promise<boolean> {
     const result = await this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([
         node('requestingUser'),
         relation('out', '', 'pinned'),
@@ -26,7 +26,7 @@ export class PinRepository {
     const createdAt = DateTime.local();
     await this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([node('node', 'BaseNode', { id })])
       .merge([
         node('requestingUser'),
@@ -42,7 +42,7 @@ export class PinRepository {
   async remove(id: ID, session: Session): Promise<void> {
     await this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .optionalMatch([
         node('requestingUser'),
         relation('out', 'rel', 'pinned'),

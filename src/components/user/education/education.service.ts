@@ -79,13 +79,13 @@ export class EducationService {
     // create education
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([
         node('user', 'User', {
           id: userId,
         }),
       ])
-      .call(createBaseNode, await generateId(), 'Education', secureProps)
+      .apply(createBaseNode(await generateId(), 'Education', secureProps))
       .create([
         node('user'),
         relation('out', '', 'education', { active: true, createdAt }),
@@ -117,7 +117,7 @@ export class EducationService {
 
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([node('node', 'Education', { id })])
       .apply(matchPropList)
       .return('propList, node')
@@ -146,7 +146,7 @@ export class EducationService {
     const ed = await this.readOne(input.id, session);
     const result = await this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([
         node('user', 'User'),
         relation('out', '', 'education', { active: true }),

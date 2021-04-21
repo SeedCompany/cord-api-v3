@@ -77,12 +77,9 @@ export class EthnologueLanguageService {
 
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
-      .call(
-        createBaseNode,
-        await generateId(),
-        'EthnologueLanguage',
-        secureProps
+      .apply(matchRequestingUser(session))
+      .apply(
+        createBaseNode(await generateId(), 'EthnologueLanguage', secureProps)
       )
       .return('node.id as id');
 
@@ -108,7 +105,7 @@ export class EthnologueLanguageService {
   async readOne(id: ID, session: Session): Promise<EthnologueLanguage> {
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([node('node', 'EthnologueLanguage', { id: id })])
       .apply(matchPropList)
       .return('propList, node')

@@ -537,7 +537,7 @@ export class DatabaseService {
     return true;
     // const query = this.db
     //   .query()
-    //   .call(matchRequestingUser, session)
+    //   .apply(matchRequestingUser(session))
     //   .match(node('node', { id }))
     //   .match([
     //     node('requestingUser'),

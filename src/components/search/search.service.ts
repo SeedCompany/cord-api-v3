@@ -93,7 +93,7 @@ export class SearchService {
     // which is based on their first valid search label.
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .apply(matchUserPermissions)
       .match([
         node('node'),

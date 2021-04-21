@@ -105,12 +105,13 @@ export class LiteracyMaterialService {
     try {
       const result = await this.db
         .query()
-        .call(matchRequestingUser, session)
-        .call(
-          createBaseNode,
-          await generateId(),
-          ['LiteracyMaterial', 'Producible'],
-          secureProps
+        .apply(matchRequestingUser(session))
+        .apply(
+          createBaseNode(
+            await generateId(),
+            ['LiteracyMaterial', 'Producible'],
+            secureProps
+          )
         )
         .return('node.id as id')
         .first();
@@ -154,7 +155,7 @@ export class LiteracyMaterialService {
 
     const readLiteracyMaterial = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([node('node', 'LiteracyMaterial', { id })])
       .apply(matchPropList)
       .return('node, propList')

@@ -112,8 +112,10 @@ export class FundingAccountService {
     try {
       const query = this.db
         .query()
-        .call(matchRequestingUser, session)
-        .call(createBaseNode, await generateId(), 'FundingAccount', secureProps)
+        .apply(matchRequestingUser(session))
+        .apply(
+          createBaseNode(await generateId(), 'FundingAccount', secureProps)
+        )
         .return('node.id as id');
 
       const result = await query.first();
@@ -149,7 +151,7 @@ export class FundingAccountService {
 
     const readFundingAccount = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([node('node', 'FundingAccount', { id })])
       .apply(matchPropList)
       .return('propList, node')

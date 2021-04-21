@@ -197,7 +197,7 @@ export class ProjectMemberService {
 
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([node('node', 'ProjectMember', { id })])
       .apply(matchPropList)
       .match([
@@ -206,7 +206,7 @@ export class ProjectMemberService {
         node('', 'ProjectMember', { id }),
       ])
       .with(['project', 'node', 'propList'])
-      .call(matchMemberRoles, session.userId)
+      .apply(matchMemberRoles(session.userId))
       .match([node('node'), relation('out', '', 'user'), node('user', 'User')])
       .return('node, propList, user.id as userId, memberRoles')
       .asResult<

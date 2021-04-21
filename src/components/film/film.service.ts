@@ -98,12 +98,13 @@ export class FilmService {
     try {
       const result = await this.db
         .query()
-        .call(matchRequestingUser, session)
-        .call(
-          createBaseNode,
-          await generateId(),
-          ['Film', 'Producible'],
-          secureProps
+        .apply(matchRequestingUser(session))
+        .apply(
+          createBaseNode(
+            await generateId(),
+            ['Film', 'Producible'],
+            secureProps
+          )
         )
         .return('node.id as id')
         .first();
@@ -144,7 +145,7 @@ export class FilmService {
 
     const readFilm = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([node('node', 'Film', { id })])
       .apply(matchPropList)
       .return('node, propList')

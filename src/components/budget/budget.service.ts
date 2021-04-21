@@ -120,8 +120,8 @@ export class BudgetService {
     try {
       const createBudget = this.db
         .query()
-        .call(matchRequestingUser, session)
-        .call(createBaseNode, budgetId, 'Budget', secureProps)
+        .apply(matchRequestingUser(session))
+        .apply(createBaseNode(budgetId, 'Budget', secureProps))
         .return('node.id as id');
 
       const result = await createBudget.first();
@@ -219,14 +219,9 @@ export class BudgetService {
     try {
       const createBudgetRecord = this.db
         .query()
-        .call(matchRequestingUser, session);
-      createBudgetRecord.call(
-        createBaseNode,
-        await generateId(),
-        'BudgetRecord',
-        secureProps
-      );
-      createBudgetRecord.return('node.id as id');
+        .apply(matchRequestingUser(session))
+        .apply(createBaseNode(await generateId(), 'BudgetRecord', secureProps))
+        .return('node.id as id');
 
       const result = await createBudgetRecord.first();
 
@@ -321,7 +316,7 @@ export class BudgetService {
 
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([node('node', 'Budget', { id })])
       .apply(matchPropList)
       .optionalMatch([
@@ -330,7 +325,7 @@ export class BudgetService {
         node('node', 'Budget', { id }),
       ])
       .with(['project', 'node', 'propList'])
-      .call(matchMemberRoles, session.userId)
+      .apply(matchMemberRoles(session.userId))
       .return(['propList', 'node', 'memberRoles'])
       .asResult<
         StandardReadResult<DbPropsOfDto<Budget>> & {
@@ -379,7 +374,7 @@ export class BudgetService {
 
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([node('node', 'BudgetRecord', { id })])
       .apply(matchPropList)
       .match([
@@ -390,7 +385,7 @@ export class BudgetService {
         node('node', 'BudgetRecord', { id }),
       ])
       .with(['project', 'node', 'propList'])
-      .call(matchMemberRoles, session.userId)
+      .apply(matchMemberRoles(session.userId))
       .match([
         node('node'),
         relation('out', '', 'organization', { active: true }),

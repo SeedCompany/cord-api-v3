@@ -237,8 +237,8 @@ export class LanguageService {
 
       const createLanguage = this.db
         .query()
-        .call(matchRequestingUser, session)
-        .call(createBaseNode, await generateId(), 'Language', secureProps)
+        .apply(matchRequestingUser(session))
+        .apply(createBaseNode(await generateId(), 'Language', secureProps))
         .return('node.id as id');
 
       const resultLanguage = await createLanguage.first();
@@ -298,7 +298,7 @@ export class LanguageService {
   async readOne(langId: ID, session: Session): Promise<Language> {
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([node('node', 'Language', { id: langId })])
       .apply(matchPropList)
       .match([
@@ -417,7 +417,7 @@ export class LanguageService {
     const query = this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode('Language')])
-      .call(languageListFilter, filter)
+      .apply(languageListFilter(filter))
       .apply(
         calculateTotalAndPaginateList(Language, input, (q) =>
           ['id', 'createdAt'].includes(input.sort)

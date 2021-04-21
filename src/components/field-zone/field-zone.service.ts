@@ -106,13 +106,13 @@ export class FieldZoneService {
     // create field zone
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([
         node('director', 'User', {
           id: directorId,
         }),
       ])
-      .call(createBaseNode, await generateId(), 'FieldZone', secureProps)
+      .apply(createBaseNode(await generateId(), 'FieldZone', secureProps))
       .create([
         node('node'),
         relation('out', '', 'director', { active: true, createdAt }),
@@ -145,7 +145,7 @@ export class FieldZoneService {
 
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([node('node', 'FieldZone', { id: id })])
       .apply(matchPropList)
       .optionalMatch([

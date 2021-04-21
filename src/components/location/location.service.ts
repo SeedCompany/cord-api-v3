@@ -117,8 +117,8 @@ export class LocationService {
     // create location
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
-      .call(createBaseNode, await generateId(), 'Location', secureProps)
+      .apply(matchRequestingUser(session))
+      .apply(createBaseNode(await generateId(), 'Location', secureProps))
       .return('node.id as id');
 
     const result = await query.first();
@@ -185,7 +185,7 @@ export class LocationService {
 
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([node('node', 'Location', { id: id })])
       .apply(matchPropList)
       .optionalMatch([
@@ -261,7 +261,7 @@ export class LocationService {
       const createdAt = DateTime.local();
       await this.db
         .query()
-        .call(matchRequestingUser, session)
+        .apply(matchRequestingUser(session))
         .matchNode('location', 'Location', { id: input.id })
         .matchNode('newFundingAccount', 'FundingAccount', {
           id: fundingAccountId,
@@ -293,7 +293,7 @@ export class LocationService {
       const createdAt = DateTime.local();
       await this.db
         .query()
-        .call(matchRequestingUser, session)
+        .apply(matchRequestingUser(session))
         .matchNode('location', 'Location', { id: input.id })
         .matchNode('newDefaultFieldRegion', 'FieldRegion', {
           id: defaultFieldRegionId,

@@ -252,12 +252,9 @@ export class FileRepository {
 
     const createFile = this.db
       .query()
-      .call(matchRequestingUser, session)
-      .call(
-        createBaseNode,
-        await generateId(),
-        ['Directory', 'FileNode'],
-        props
+      .apply(matchRequestingUser(session))
+      .apply(
+        createBaseNode(await generateId(), ['Directory', 'FileNode'], props)
       )
       .return('node.id as id')
       .asResult<{ id: ID }>();
@@ -295,8 +292,8 @@ export class FileRepository {
 
     const createFile = this.db
       .query()
-      .call(matchRequestingUser, session)
-      .call(createBaseNode, fileId, ['File', 'FileNode'], props)
+      .apply(matchRequestingUser(session))
+      .apply(createBaseNode(fileId, ['File', 'FileNode'], props))
       .return('node.id as id')
       .asResult<{ id: ID }>();
 
@@ -349,8 +346,8 @@ export class FileRepository {
 
     const createFile = this.db
       .query()
-      .call(matchRequestingUser, session)
-      .call(createBaseNode, input.id, ['FileVersion', 'FileNode'], props)
+      .apply(matchRequestingUser(session))
+      .apply(createBaseNode(input.id, ['FileVersion', 'FileNode'], props))
       .return('node.id as id')
       .asResult<{ id: ID }>();
 
