@@ -110,7 +110,10 @@ export class EngagementRules {
               to: EngagementStatus.FinalizingCompletion,
               type: EngagementTransitionType.Approve,
               label: 'Finalize Completion',
-              projectStepRequirements: [ProjectStep.Active],
+              projectStepRequirements: [
+                ProjectStep.Active,
+                ProjectStep.FinalizingCompletion,
+              ],
             },
           ],
         };
@@ -152,7 +155,10 @@ export class EngagementRules {
               to: EngagementStatus.FinalizingCompletion,
               type: EngagementTransitionType.Approve,
               label: 'Finalize Completion',
-              projectStepRequirements: [ProjectStep.Active],
+              projectStepRequirements: [
+                ProjectStep.Active,
+                ProjectStep.FinalizingCompletion,
+              ],
             },
           ],
         };
