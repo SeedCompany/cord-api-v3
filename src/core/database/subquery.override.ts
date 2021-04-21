@@ -1,5 +1,4 @@
 import { ClauseCollection, Query } from 'cypher-query-builder';
-import { repeat } from 'lodash';
 
 /* eslint-disable @typescript-eslint/method-signature-style -- this is enforced
    to treat functions arguments as contravariant instead of bivariant. this
@@ -25,13 +24,8 @@ declare module 'cypher-query-builder/dist/typings/query' {
 }
 
 Query.prototype.subQuery = function subQuery(sub: (query: Query) => void) {
-  type Q = Query & {
-    indentationLevel?: number;
-  };
-  const self = this as Q;
-  const subQ = new Query() as Q;
-  subQ.indentationLevel = (self.indentationLevel || 0) + 1;
-  const subClause = new SubQueryClause(self.indentationLevel);
+  const subQ = new Query();
+  const subClause = new SubQueryClause();
   // @ts-expect-error yeah it's private, but it'll be ok.
   // SubQueryClause is also a ClauseCollection so it's all good.
   subQ.clauses = subClause;
@@ -43,18 +37,13 @@ Query.prototype.subQuery = function subQuery(sub: (query: Query) => void) {
 };
 
 class SubQueryClause extends ClauseCollection {
-  constructor(private readonly indentationLevel = 0) {
-    super();
-  }
-
   build(): string {
     return [
       `CALL {`,
-      ...this.clauses.map(
-        (clause) =>
-          `${repeat('  ', this.indentationLevel + 1)}${clause.build()}`
+      ...this.clauses.map((clause) =>
+        `  ${clause.build()}`.replace(/\n/g, `\n  `)
       ),
-      `${repeat('  ', this.indentationLevel)}}`,
+      `}`,
     ].join('\n');
   }
 }
