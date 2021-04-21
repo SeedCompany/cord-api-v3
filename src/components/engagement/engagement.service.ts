@@ -50,8 +50,8 @@ import { EngagementRepository } from './engagement.repository';
 import { EngagementRules } from './engagement.rules';
 import {
   EngagementCreatedEvent,
-  EngagementDeletedEvent,
   EngagementUpdatedEvent,
+  EngagementWillDeleteEvent,
 } from './events';
 import { DbInternshipEngagement, DbLanguageEngagement } from './model';
 import { PnpExtractor } from './pnp-extractor.service';
@@ -774,6 +774,8 @@ export class EngagementService {
       await this.verifyProjectStatus(result.projectId, session);
     }
 
+    await this.eventBus.publish(new EngagementWillDeleteEvent(object, session));
+
     try {
       await this.repo.deleteNode(object);
     } catch (e) {
@@ -782,8 +784,6 @@ export class EngagementService {
       });
       throw new ServerException('Failed to delete Engagement');
     }
-
-    await this.eventBus.publish(new EngagementDeletedEvent(object, session));
   }
 
   // LIST ///////////////////////////////////////////////////////////

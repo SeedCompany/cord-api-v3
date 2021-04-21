@@ -1,18 +1,18 @@
 import { node, relation } from 'cypher-query-builder';
 import { DatabaseService, EventsHandler, IEventHandler } from '../../../core';
-import { EngagementDeletedEvent } from '../../engagement/events';
+import { EngagementWillDeleteEvent } from '../../engagement/events';
 import { CeremonyService } from '../ceremony.service';
 
-@EventsHandler(EngagementDeletedEvent)
+@EventsHandler(EngagementWillDeleteEvent)
 export class DetachEngagementRootDirectoryHandler
-  implements IEventHandler<EngagementDeletedEvent>
+  implements IEventHandler<EngagementWillDeleteEvent>
 {
   constructor(
     private readonly ceremonies: CeremonyService,
     private readonly db: DatabaseService
   ) {}
 
-  async handle({ engagement, session }: EngagementDeletedEvent) {
+  async handle({ engagement, session }: EngagementWillDeleteEvent) {
     const ceremonyId = engagement?.ceremony?.value;
     if (!ceremonyId) {
       return;
