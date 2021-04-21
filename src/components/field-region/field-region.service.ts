@@ -158,7 +158,7 @@ export class FieldRegionService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'FieldRegion', { id: id })])
-      .call(matchPropList)
+      .apply(matchPropList)
       .optionalMatch([
         node('node'),
         relation('out', '', 'director', { active: true }),
@@ -261,7 +261,7 @@ export class FieldRegionService {
     const query = this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode(label)])
-      .call(calculateTotalAndPaginateList(FieldRegion, input));
+      .apply(calculateTotalAndPaginateList(FieldRegion, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

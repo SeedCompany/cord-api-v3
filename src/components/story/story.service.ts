@@ -147,7 +147,7 @@ export class StoryService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Story', { id })])
-      .call(matchPropList)
+      .apply(matchPropList)
       .return('node, propList')
       .asResult<StandardReadResult<DbPropsOfDto<Story>>>();
 
@@ -224,7 +224,7 @@ export class StoryService {
     const query = this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode('Story')])
-      .call(calculateTotalAndPaginateList(Story, input));
+      .apply(calculateTotalAndPaginateList(Story, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

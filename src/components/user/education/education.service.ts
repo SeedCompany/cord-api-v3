@@ -119,7 +119,7 @@ export class EducationService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Education', { id })])
-      .call(matchPropList)
+      .apply(matchPropList)
       .return('propList, node')
       .asResult<StandardReadResult<DbPropsOfDto<Education>>>();
 
@@ -201,7 +201,7 @@ export class EducationService {
             ]
           : []),
       ])
-      .call(calculateTotalAndPaginateList(Education, input));
+      .apply(calculateTotalAndPaginateList(Education, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

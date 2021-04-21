@@ -147,7 +147,7 @@ export class FieldZoneService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'FieldZone', { id: id })])
-      .call(matchPropList)
+      .apply(matchPropList)
       .optionalMatch([
         node('node'),
         relation('out', '', 'director', { active: true }),
@@ -263,7 +263,7 @@ export class FieldZoneService {
     const query = this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode(label)])
-      .call(calculateTotalAndPaginateList(FieldZone, input));
+      .apply(calculateTotalAndPaginateList(FieldZone, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

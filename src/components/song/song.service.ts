@@ -143,7 +143,7 @@ export class SongService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Song', { id })])
-      .call(matchPropList)
+      .apply(matchPropList)
       .return('propList, node')
       .asResult<StandardReadResult<DbPropsOfDto<Song>>>();
 
@@ -220,7 +220,7 @@ export class SongService {
     const query = this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode('Song')])
-      .call(calculateTotalAndPaginateList(Song, input));
+      .apply(calculateTotalAndPaginateList(Song, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

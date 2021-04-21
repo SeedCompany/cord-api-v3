@@ -571,7 +571,7 @@ export class EngagementService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Engagement', { id })])
-      .call(matchPropList)
+      .apply(matchPropList)
       .optionalMatch([
         node('project'),
         relation('out', '', 'engagement', { active: true }),
@@ -1043,7 +1043,7 @@ export class EngagementService {
             ]
           : []),
       ])
-      .call(calculateTotalAndPaginateList(IEngagement, input));
+      .apply(calculateTotalAndPaginateList(IEngagement, input));
 
     const engagements = await runListQuery(query, input, (id) =>
       this.readOne(id, session)
@@ -1287,7 +1287,7 @@ export class EngagementService {
     languageId,
   }: MergeExclusive<{ engagementId: ID }, { languageId: ID }>) {
     const startQuery = () =>
-      this.db.query().call((query) =>
+      this.db.query().apply((query) =>
         engagementId
           ? query.match([
               node('languageEngagement', 'LanguageEngagement', {

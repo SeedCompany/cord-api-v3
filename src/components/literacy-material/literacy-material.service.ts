@@ -156,7 +156,7 @@ export class LiteracyMaterialService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'LiteracyMaterial', { id })])
-      .call(matchPropList)
+      .apply(matchPropList)
       .return('node, propList')
       .asResult<StandardReadResult<DbPropsOfDto<LiteracyMaterial>>>();
 
@@ -253,7 +253,7 @@ export class LiteracyMaterialService {
         requestingUser(session),
         ...permissionsOfNode('LiteracyMaterial'),
       ])
-      .call(calculateTotalAndPaginateList(LiteracyMaterial, input));
+      .apply(calculateTotalAndPaginateList(LiteracyMaterial, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

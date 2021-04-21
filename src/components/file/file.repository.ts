@@ -106,7 +106,7 @@ export class FileRepository {
         matchCreatedBy(),
         matchName(),
       ])
-      .call((q) => {
+      .apply((q) => {
         const conditions: AnyConditions = {};
         if (options?.filter?.name) {
           conditions['name.value'] = contains(options.filter.name);
@@ -202,7 +202,7 @@ export class FileRepository {
     const query = this.db
       .query()
       .match(node('node', 'FileVersion', { id }))
-      .call(matchPropList)
+      .apply(matchPropList)
       .match([
         node('node'),
         relation('out', '', 'createdBy', { active: true }),

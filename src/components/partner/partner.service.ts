@@ -235,7 +235,7 @@ export class PartnerService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Partner', { id: id })])
-      .call(matchPropList)
+      .apply(matchPropList)
       .optionalMatch([
         node('node'),
         relation('out', '', 'organization', { active: true }),
@@ -406,7 +406,7 @@ export class PartnerService {
             ]
           : []),
       ])
-      .call(
+      .apply(
         calculateTotalAndPaginateList(
           Partner,
           input,

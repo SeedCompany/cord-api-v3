@@ -146,7 +146,7 @@ export class FilmService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Film', { id })])
-      .call(matchPropList)
+      .apply(matchPropList)
       .return('node, propList')
       .asResult<StandardReadResult<DbPropsOfDto<Film>>>();
 
@@ -224,7 +224,7 @@ export class FilmService {
     const query = this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode('Film')])
-      .call(calculateTotalAndPaginateList(Film, input));
+      .apply(calculateTotalAndPaginateList(Film, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

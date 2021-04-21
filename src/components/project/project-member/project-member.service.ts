@@ -199,7 +199,7 @@ export class ProjectMemberService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'ProjectMember', { id })])
-      .call(matchPropList)
+      .apply(matchPropList)
       .match([
         node('project', 'Project'),
         relation('out', '', 'member', { active: true }),
@@ -338,7 +338,7 @@ export class ProjectMemberService {
             ]
           : []),
       ])
-      .call(calculateTotalAndPaginateList(ProjectMember, input));
+      .apply(calculateTotalAndPaginateList(ProjectMember, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

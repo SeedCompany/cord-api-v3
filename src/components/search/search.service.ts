@@ -94,7 +94,7 @@ export class SearchService {
     const query = this.db
       .query()
       .call(matchRequestingUser, session)
-      .call(matchUserPermissions)
+      .apply(matchUserPermissions)
       .match([
         node('node'),
         relation('out', 'r', { active: true }),

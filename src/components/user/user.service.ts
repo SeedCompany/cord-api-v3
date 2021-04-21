@@ -273,7 +273,7 @@ export class UserService {
     const query = this.db
       .query()
       .match([node('node', 'User', { id })])
-      .call(matchPropList)
+      .apply(matchPropList)
       .return('propList, node')
       .asResult<StandardReadResult<DbPropsOfDto<User>>>();
 
@@ -350,7 +350,7 @@ export class UserService {
       await this.db
         .query()
         .match([node('node', ['User', 'BaseNode'], { id: user.id })])
-        .call(deleteProperties(User, 'email'))
+        .apply(deleteProperties(User, 'email'))
         .return('*')
         .run();
 
@@ -454,7 +454,7 @@ export class UserService {
     const query = this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode('User')])
-      .call(calculateTotalAndPaginateList(User, input));
+      .apply(calculateTotalAndPaginateList(User, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

@@ -256,7 +256,7 @@ export class ProductService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Product', { id })])
-      .call(matchPropList)
+      .apply(matchPropList)
       .match([
         node('project', 'Project'),
         relation('out', '', 'engagement', { active: true }),
@@ -588,7 +588,7 @@ export class ProductService {
             ]
           : []),
       ])
-      .call(calculateTotalAndPaginateList(Product, input));
+      .apply(calculateTotalAndPaginateList(Product, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

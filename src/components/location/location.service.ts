@@ -187,7 +187,7 @@ export class LocationService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Location', { id: id })])
-      .call(matchPropList)
+      .apply(matchPropList)
       .optionalMatch([
         node('node'),
         relation('out', '', 'fundingAccount', { active: true }),
@@ -354,7 +354,7 @@ export class LocationService {
     const query = this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode(label)])
-      .call(calculateTotalAndPaginateList(Location, input));
+      .apply(calculateTotalAndPaginateList(Location, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
@@ -422,7 +422,7 @@ export class LocationService {
         relation('in', '', rel, { active: true }),
         node(`${label.toLowerCase()}`, label, { id }),
       ])
-      .call(calculateTotalAndPaginateList(Location, input));
+      .apply(calculateTotalAndPaginateList(Location, input));
 
     return {
       ...(await runListQuery(query, input, (id) => this.readOne(id, session))),

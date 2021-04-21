@@ -128,7 +128,7 @@ export class CeremonyService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Ceremony', { id })])
-      .call(matchPropList)
+      .apply(matchPropList)
       .optionalMatch([
         node('project', 'Project'),
         relation('out', '', 'engagement', { active: true }),
@@ -223,7 +223,7 @@ export class CeremonyService {
             ]
           : []),
       ])
-      .call(calculateTotalAndPaginateList(Ceremony, input));
+      .apply(calculateTotalAndPaginateList(Ceremony, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

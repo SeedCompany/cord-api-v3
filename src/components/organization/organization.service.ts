@@ -190,7 +190,7 @@ export class OrganizationService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Organization', { id: orgId })])
-      .call(matchPropList)
+      .apply(matchPropList)
       .return('propList, node')
       .asResult<StandardReadResult<DbPropsOfDto<Organization>>>();
     const result = await query.first();
@@ -272,7 +272,7 @@ export class OrganizationService {
             ]
           : []),
       ])
-      .call(calculateTotalAndPaginateList(Organization, input));
+      .apply(calculateTotalAndPaginateList(Organization, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

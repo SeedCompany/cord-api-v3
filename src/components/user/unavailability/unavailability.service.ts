@@ -132,7 +132,7 @@ export class UnavailabilityService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Unavailability', { id })])
-      .call(matchPropList)
+      .apply(matchPropList)
       .return('propList, node')
       .asResult<StandardReadResult<DbPropsOfDto<Unavailability>>>();
 

@@ -300,7 +300,7 @@ export class LanguageService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Language', { id: langId })])
-      .call(matchPropList)
+      .apply(matchPropList)
       .match([
         node('node'),
         relation('out', '', 'ethnologue'),
@@ -418,7 +418,7 @@ export class LanguageService {
       .query()
       .match([requestingUser(session), ...permissionsOfNode('Language')])
       .call(languageListFilter, filter)
-      .call(
+      .apply(
         calculateTotalAndPaginateList(Language, input, (q) =>
           ['id', 'createdAt'].includes(input.sort)
             ? q.with('*').orderBy(`node.${input.sort}`, input.order)

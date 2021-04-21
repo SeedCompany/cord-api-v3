@@ -323,7 +323,7 @@ export class BudgetService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Budget', { id })])
-      .call(matchPropList)
+      .apply(matchPropList)
       .optionalMatch([
         node('project', 'Project'),
         relation('out', '', 'budget', { active: true }),
@@ -381,7 +381,7 @@ export class BudgetService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'BudgetRecord', { id })])
-      .call(matchPropList)
+      .apply(matchPropList)
       .match([
         node('project', 'Project'),
         relation('out', '', 'budget', { active: true }),
@@ -593,7 +593,7 @@ export class BudgetService {
             ]
           : []),
       ])
-      .call(calculateTotalAndPaginateList(Budget, listInput));
+      .apply(calculateTotalAndPaginateList(Budget, listInput));
 
     return await runListQuery(query, listInput, (id) =>
       this.readOne(id, session)
@@ -620,7 +620,7 @@ export class BudgetService {
             ]
           : []),
       ])
-      .call(calculateTotalAndPaginateList(BudgetRecord, input));
+      .apply(calculateTotalAndPaginateList(BudgetRecord, input));
 
     return await runListQuery(query, input, (id) =>
       this.readOneRecord(id, session)

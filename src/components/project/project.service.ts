@@ -455,7 +455,7 @@ export class ProjectService {
     const query = this.db
       .query()
       .match([node('node', 'Project', { id })])
-      .call(matchPropList)
+      .apply(matchPropList)
       .with(['node', 'propList'])
       .optionalMatch([
         [node('user', 'User', { id: userId })],
@@ -791,7 +791,7 @@ export class ProjectService {
       .match([requestingUser(session), ...permissionsOfNode(label)])
       .with('distinct(node) as node, requestingUser')
       .call(projectListFilter, filter)
-      .call(
+      .apply(
         calculateTotalAndPaginateList(IProject, input, (q) =>
           ['id', 'createdAt'].includes(input.sort)
             ? q.with('*').orderBy(`node.${input.sort}`, input.order)

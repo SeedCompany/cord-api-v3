@@ -253,7 +253,7 @@ export class PartnershipService {
       .query()
       .call(matchRequestingUser, session)
       .match([node('node', 'Partnership', { id })])
-      .call(matchPropList)
+      .apply(matchPropList)
       .match([
         node('project', 'Project'),
         relation('out', '', 'partnership', { active: true }),
@@ -482,7 +482,7 @@ export class PartnershipService {
             ]
           : []),
       ])
-      .call(calculateTotalAndPaginateList(Partnership, listInput));
+      .apply(calculateTotalAndPaginateList(Partnership, listInput));
 
     return await runListQuery(query, listInput, (id) =>
       this.readOne(id, session)
