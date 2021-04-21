@@ -5,23 +5,19 @@ import {
   CreateProjectMember,
   ProjectMember,
   ProjectMemberListInput,
+  ScopedRole,
   UpdateProjectMember,
 } from '.';
 import { ID, Session } from '../../../common';
-import { DatabaseService, matchRequestingUser, property } from '../../../core';
+import { DatabaseService, property } from '../../../core';
 import { DbChanges } from '../../../core/database/changes';
 import {
   calculateTotalAndPaginateList,
-  matchMemberRoles,
-  matchPropList,
+  matchPropsAndProjectSensAndScopedRoles,
   permissionsOfNode,
   requestingUser,
 } from '../../../core/database/query';
-import {
-  DbPropsOfDto,
-  StandardReadResult,
-} from '../../../core/database/results';
-import { Role } from './dto';
+import { DbPropsOfDto } from '../../../core/database/results';
 
 @Injectable()
 export class ProjectMemberRepository {
@@ -94,24 +90,20 @@ export class ProjectMemberRepository {
   async readOne(id: ID, session: Session) {
     const query = this.db
       .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'ProjectMember', { id })])
-      .apply(matchPropList)
       .match([
         node('project', 'Project'),
         relation('out', '', 'member', { active: true }),
-        node('', 'ProjectMember', { id }),
+        node('node', 'ProjectMember', { id }),
+        relation('out', '', 'user'),
+        node('user', 'User'),
       ])
-      .with(['project', 'node', 'propList'])
-      .apply(matchMemberRoles(session.userId))
-      .match([node('node'), relation('out', '', 'user'), node('user', 'User')])
-      .return('node, propList, user.id as userId, memberRoles')
-      .asResult<
-        StandardReadResult<DbPropsOfDto<ProjectMember>> & {
-          userId: ID;
-          memberRoles: Role[][];
-        }
-      >();
+      .apply(matchPropsAndProjectSensAndScopedRoles(session))
+      .return(['props', 'user.id as userId', 'scopedRoles'])
+      .asResult<{
+        props: DbPropsOfDto<ProjectMember, true>;
+        userId: ID;
+        scopedRoles: ScopedRole[];
+      }>();
     return await query.first();
   }
 

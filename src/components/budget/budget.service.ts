@@ -12,12 +12,7 @@ import {
   UnauthorizedException,
 } from '../../common';
 import { ILogger, Logger, Property } from '../../core';
-import {
-  parseBaseNodeProperties,
-  parsePropList,
-  runListQuery,
-} from '../../core/database/results';
-import { rolesForScope } from '../authorization';
+import { runListQuery } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { FileService } from '../file';
 import { BudgetRepository } from './budget.repository';
@@ -219,7 +214,7 @@ export class BudgetService {
   }
 
   async readOne(id: ID, session: Session): Promise<Budget> {
-    this.logger.debug(`Query readOne Budget: `, {
+    this.logger.debug(`readOne budget`, {
       id,
       userId: session.userId,
     });
@@ -242,25 +237,23 @@ export class BudgetService {
       session
     );
 
-    const props = parsePropList(result.propList);
     const securedProps = await this.authorizationService.secureProperties(
       Budget,
-      props,
+      result.props,
       session,
-      result.memberRoles.flat().map(rolesForScope('project'))
+      result.scopedRoles
     );
 
     return {
-      ...parseBaseNodeProperties(result.node),
+      ...result.props,
       ...securedProps,
-      status: props.status,
       records: records.items,
       canDelete: await this.budgetRepo.checkDeletePermission(id, session),
     };
   }
 
   async readOneRecord(id: ID, session: Session): Promise<BudgetRecord> {
-    this.logger.debug(`Query readOne Budget Record: `, {
+    this.logger.debug(`readOne BudgetRecord`, {
       id,
       userId: session.userId,
     });
@@ -278,13 +271,13 @@ export class BudgetService {
 
     const securedProps = await this.authorizationService.secureProperties(
       BudgetRecord,
-      result.propList,
+      result.props,
       session,
-      result.memberRoles.flat().map(rolesForScope('project'))
+      result.scopedRoles
     );
 
     return {
-      ...parseBaseNodeProperties(result.node),
+      ...result.props,
       ...securedProps,
       canDelete: await this.budgetRepo.checkDeletePermission(id, session),
     };

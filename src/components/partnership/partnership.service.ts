@@ -13,12 +13,8 @@ import {
   UnauthorizedException,
 } from '../../common';
 import { ConfigService, IEventBus, ILogger, Logger } from '../../core';
-import {
-  parseBaseNodeProperties,
-  runListQuery,
-} from '../../core/database/results';
+import { runListQuery } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { rolesForScope } from '../authorization/dto';
 import { FileService } from '../file';
 import { Partner, PartnerService, PartnerType } from '../partner';
 import { ProjectService } from '../project';
@@ -215,32 +211,32 @@ export class PartnershipService {
       );
     }
 
-    const readProject = await this.projectService.readOne(
+    const project = await this.projectService.readOne(
       result.projectId,
       session
     );
 
     const securedProps = await this.authorizationService.secureProperties(
       Partnership,
-      result.propList,
+      result.props,
       session,
-      result.memberRoles.flat().map(rolesForScope('project'))
+      result.scopedRoles
     );
 
     const canReadMouStart =
-      readProject.mouStart.canRead && securedProps.mouStartOverride.canRead;
+      project.mouStart.canRead && securedProps.mouStartOverride.canRead;
     const canReadMouEnd =
-      readProject.mouEnd.canRead && securedProps.mouEndOverride.canRead;
+      project.mouEnd.canRead && securedProps.mouEndOverride.canRead;
 
     const mouStart = canReadMouStart
-      ? securedProps.mouStartOverride.value ?? readProject.mouStart.value
+      ? securedProps.mouStartOverride.value ?? project.mouStart.value
       : null;
     const mouEnd = canReadMouEnd
-      ? securedProps.mouEndOverride.value ?? readProject.mouEnd.value
+      ? securedProps.mouEndOverride.value ?? project.mouEnd.value
       : null;
 
     return {
-      ...parseBaseNodeProperties(result.node),
+      ...result.props,
       ...securedProps,
       mouStart: {
         value: mouStart,

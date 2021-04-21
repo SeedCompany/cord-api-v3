@@ -8,12 +8,7 @@ import {
   UnauthorizedException,
 } from '../../common';
 import { ConfigService, ILogger, Logger, Property } from '../../core';
-import {
-  parseBaseNodeProperties,
-  parsePropList,
-  runListQuery,
-} from '../../core/database/results';
-import { rolesForScope } from '../authorization';
+import { runListQuery } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { CeremonyRepository } from './ceremony.repository';
 import {
@@ -108,19 +103,16 @@ export class CeremonyService {
       throw new NotFoundException('Could not find ceremony', 'ceremony.id');
     }
 
-    const parsedProps = parsePropList(result.propList);
-
     const securedProps = await this.authorizationService.secureProperties(
       Ceremony,
-      parsedProps,
+      result.props,
       session,
-      result.memberRoles.flat().map(rolesForScope('project'))
+      result.scopedRoles
     );
 
     return {
-      ...parseBaseNodeProperties(result.node),
+      ...result.props,
       ...securedProps,
-      type: parsedProps.type,
       canDelete: await this.ceremonyRepo.checkDeletePermission(id, session),
     };
   }

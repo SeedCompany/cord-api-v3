@@ -1,7 +1,12 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { DateTimeField, Resource, SecuredProps } from '../../../../common';
+import {
+  DateTimeField,
+  Resource,
+  SecuredProps,
+  Sensitivity,
+} from '../../../../common';
 import { SecuredRoles } from '../../../authorization';
 import { SecuredUser } from '../../../user';
 
@@ -17,6 +22,11 @@ export class ProjectMember extends Resource {
 
   @Field()
   readonly roles: SecuredRoles;
+
+  @Field(() => Sensitivity, {
+    description: "Based on the project's sensitivity",
+  })
+  readonly sensitivity: Sensitivity;
 
   @DateTimeField()
   readonly modifiedAt: DateTime;

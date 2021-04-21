@@ -22,11 +22,7 @@ import {
   Logger,
   OnIndex,
 } from '../../../core';
-import {
-  parseBaseNodeProperties,
-  parsePropList,
-  runListQuery,
-} from '../../../core/database/results';
+import { runListQuery } from '../../../core/database/results';
 import { AuthorizationService } from '../../authorization/authorization.service';
 import { User, UserService } from '../../user';
 import {
@@ -35,7 +31,6 @@ import {
   ProjectMemberListInput,
   ProjectMemberListOutput,
   Role,
-  rolesForScope,
   UpdateProjectMember,
 } from './dto';
 import { DbProjectMember } from './model';
@@ -151,22 +146,20 @@ export class ProjectMemberService {
       );
     }
 
-    const props = parsePropList(result.propList);
     const securedProps = await this.authorizationService.secureProperties(
       ProjectMember,
-      props,
+      result.props,
       session,
-      result.memberRoles.flat().map(rolesForScope('project'))
+      result.scopedRoles
     );
 
     return {
-      ...parseBaseNodeProperties(result.node),
+      ...result.props,
       ...securedProps,
       user: {
         ...securedProps.user,
         value: await this.userService.readOne(result.userId, session),
       },
-      modifiedAt: props.modifiedAt,
       roles: {
         ...securedProps.roles,
         value: securedProps.roles.value ?? [],

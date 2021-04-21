@@ -13,13 +13,12 @@ import {
 import { DbChanges } from '../../core/database/changes';
 import {
   calculateTotalAndPaginateList,
-  matchMemberRoles,
-  matchPropList,
+  matchPropsAndProjectSensAndScopedRoles,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
-import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
-import { Role } from '../authorization';
+import { DbPropsOfDto } from '../../core/database/results';
+import { ScopedRole } from '../authorization';
 import { Partnership, PartnershipFilters, UpdatePartnership } from './dto';
 
 @Injectable()
@@ -71,36 +70,26 @@ export class PartnershipRepository {
   async readOne(id: ID, session: Session) {
     const query = this.db
       .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'Partnership', { id })])
-      .apply(matchPropList)
       .match([
         node('project', 'Project'),
         relation('out', '', 'partnership', { active: true }),
-        node('', 'Partnership', { id: id }),
-      ])
-      .with(['project', 'node', 'propList'])
-      .apply(matchMemberRoles(session.userId))
-      .match([
-        node('node'),
-        relation('in', '', 'partnership'),
-        node('project', 'Project'),
-      ])
-      .match([
-        node('node'),
+        node('node', 'Partnership', { id }),
         relation('out', '', 'partner'),
         node('partner', 'Partner'),
       ])
-      .return(
-        'propList, memberRoles, node, project.id as projectId, partner.id as partnerId'
-      )
-      .asResult<
-        StandardReadResult<DbPropsOfDto<Partnership>> & {
-          projectId: ID;
-          partnerId: ID;
-          memberRoles: Role[][];
-        }
-      >();
+      .apply(matchPropsAndProjectSensAndScopedRoles(session))
+      .return([
+        'props',
+        'scopedRoles',
+        'project.id as projectId',
+        'partner.id as partnerId',
+      ])
+      .asResult<{
+        props: DbPropsOfDto<Partnership, true>;
+        projectId: ID;
+        partnerId: ID;
+        scopedRoles: ScopedRole[];
+      }>();
 
     return await query.first();
   }
