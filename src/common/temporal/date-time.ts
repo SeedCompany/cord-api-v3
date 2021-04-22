@@ -2,19 +2,20 @@ import { DateTime } from 'luxon';
 import * as Neo from 'neo4j-driver';
 import { inspect } from 'util';
 
-declare module 'luxon' {
+/* eslint-disable @typescript-eslint/method-signature-style */
+declare module 'luxon/src/datetime' {
   interface DateTime {
-    toNeo4JDate: (this: DateTime) => Neo.Date<number>;
-    toNeo4JDateTime: (this: DateTime) => Neo.DateTime<number>;
+    toNeo4JDate(this: DateTime): Neo.Date<number>;
+    toNeo4JDateTime(this: DateTime): Neo.DateTime<number>;
+    [inspect.custom](): string;
   }
 }
+/* eslint-enable @typescript-eslint/method-signature-style */
 
-// eslint-disable-next-line @typescript-eslint/unbound-method
 DateTime.prototype.toNeo4JDate = function (this: DateTime) {
   return new Neo.types.Date(this.year, this.month, this.day);
 };
 
-// eslint-disable-next-line @typescript-eslint/unbound-method
 DateTime.prototype.toNeo4JDateTime = function (this: DateTime) {
   return new Neo.types.DateTime(
     this.year,
@@ -29,7 +30,7 @@ DateTime.prototype.toNeo4JDateTime = function (this: DateTime) {
   );
 };
 
-(DateTime.prototype as any)[inspect.custom] = function (this: DateTime) {
+DateTime.prototype[inspect.custom] = function (this: DateTime) {
   const str = this.toLocaleString(DateTime.DATETIME_SHORT_WITH_SECONDS);
   return `[DateTime] ${str}`;
 };

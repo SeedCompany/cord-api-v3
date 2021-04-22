@@ -105,12 +105,13 @@ export class LiteracyMaterialService {
     try {
       const result = await this.db
         .query()
-        .call(matchRequestingUser, session)
-        .call(
-          createBaseNode,
-          await generateId(),
-          ['LiteracyMaterial', 'Producible'],
-          secureProps
+        .apply(matchRequestingUser(session))
+        .apply(
+          createBaseNode(
+            await generateId(),
+            ['LiteracyMaterial', 'Producible'],
+            secureProps
+          )
         )
         .return('node.id as id')
         .first();
@@ -154,9 +155,9 @@ export class LiteracyMaterialService {
 
     const readLiteracyMaterial = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([node('node', 'LiteracyMaterial', { id })])
-      .call(matchPropList)
+      .apply(matchPropList)
       .return('node, propList')
       .asResult<StandardReadResult<DbPropsOfDto<LiteracyMaterial>>>();
 
@@ -253,7 +254,7 @@ export class LiteracyMaterialService {
         requestingUser(session),
         ...permissionsOfNode('LiteracyMaterial'),
       ])
-      .call(calculateTotalAndPaginateList(LiteracyMaterial, input));
+      .apply(calculateTotalAndPaginateList(LiteracyMaterial, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

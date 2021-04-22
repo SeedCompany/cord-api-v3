@@ -98,12 +98,13 @@ export class FilmService {
     try {
       const result = await this.db
         .query()
-        .call(matchRequestingUser, session)
-        .call(
-          createBaseNode,
-          await generateId(),
-          ['Film', 'Producible'],
-          secureProps
+        .apply(matchRequestingUser(session))
+        .apply(
+          createBaseNode(
+            await generateId(),
+            ['Film', 'Producible'],
+            secureProps
+          )
         )
         .return('node.id as id')
         .first();
@@ -144,9 +145,9 @@ export class FilmService {
 
     const readFilm = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([node('node', 'Film', { id })])
-      .call(matchPropList)
+      .apply(matchPropList)
       .return('node, propList')
       .asResult<StandardReadResult<DbPropsOfDto<Film>>>();
 
@@ -224,7 +225,7 @@ export class FilmService {
     const query = this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode('Film')])
-      .call(calculateTotalAndPaginateList(Film, input));
+      .apply(calculateTotalAndPaginateList(Film, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

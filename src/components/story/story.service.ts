@@ -99,12 +99,13 @@ export class StoryService {
     try {
       const result = await this.db
         .query()
-        .call(matchRequestingUser, session)
-        .call(
-          createBaseNode,
-          await generateId(),
-          ['Story', 'Producible'],
-          secureProps
+        .apply(matchRequestingUser(session))
+        .apply(
+          createBaseNode(
+            await generateId(),
+            ['Story', 'Producible'],
+            secureProps
+          )
         )
         .return('node.id as id')
         .first();
@@ -145,9 +146,9 @@ export class StoryService {
 
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([node('node', 'Story', { id })])
-      .call(matchPropList)
+      .apply(matchPropList)
       .return('node, propList')
       .asResult<StandardReadResult<DbPropsOfDto<Story>>>();
 
@@ -224,7 +225,7 @@ export class StoryService {
     const query = this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode('Story')])
-      .call(calculateTotalAndPaginateList(Story, input));
+      .apply(calculateTotalAndPaginateList(Story, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

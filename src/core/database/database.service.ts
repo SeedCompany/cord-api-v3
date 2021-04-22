@@ -537,7 +537,7 @@ export class DatabaseService {
     return true;
     // const query = this.db
     //   .query()
-    //   .call(matchRequestingUser, session)
+    //   .apply(matchRequestingUser(session))
     //   .match(node('node', { id }))
     //   .match([
     //     node('requestingUser'),
@@ -559,7 +559,7 @@ export class DatabaseService {
     const query = this.db
       .query()
       .matchNode('baseNode', { id })
-      .call(deleteBaseNode)
+      .apply(deleteBaseNode)
       .return('*');
     await query.run();
   }

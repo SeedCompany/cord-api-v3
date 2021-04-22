@@ -1,7 +1,7 @@
 import { InputType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
-import { CalendarDate } from './calendar-date';
 import { DateField, DateTimeField } from './luxon.graphql';
+import { CalendarDate } from './temporal';
 
 @InputType({
   description: 'A filter range designed for date fields',

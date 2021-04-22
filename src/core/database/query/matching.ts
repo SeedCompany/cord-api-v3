@@ -36,7 +36,7 @@ export const matchPropList = (query: Query, nodeName = 'node') =>
     ]);
 
 // Have to match project before using this
-export const matchMemberRoles = (query: Query, userId: ID) =>
+export const matchMemberRoles = (userId: ID) => (query: Query) =>
   query
     .with(['project', 'node', 'propList'])
     .optionalMatch([

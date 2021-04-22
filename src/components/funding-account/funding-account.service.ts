@@ -112,8 +112,10 @@ export class FundingAccountService {
     try {
       const query = this.db
         .query()
-        .call(matchRequestingUser, session)
-        .call(createBaseNode, await generateId(), 'FundingAccount', secureProps)
+        .apply(matchRequestingUser(session))
+        .apply(
+          createBaseNode(await generateId(), 'FundingAccount', secureProps)
+        )
         .return('node.id as id');
 
       const result = await query.first();
@@ -149,9 +151,9 @@ export class FundingAccountService {
 
     const readFundingAccount = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([node('node', 'FundingAccount', { id })])
-      .call(matchPropList)
+      .apply(matchPropList)
       .return('propList, node')
       .asResult<StandardReadResult<DbPropsOfDto<FundingAccount>>>();
 
@@ -226,7 +228,7 @@ export class FundingAccountService {
     const query = this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode(label)])
-      .call(calculateTotalAndPaginateList(FundingAccount, input));
+      .apply(calculateTotalAndPaginateList(FundingAccount, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

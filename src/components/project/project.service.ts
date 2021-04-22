@@ -73,6 +73,7 @@ import {
   Project,
   ProjectListInput,
   ProjectListOutput,
+  ProjectStatus,
   ProjectStep,
   ProjectType,
   stepToStatus,
@@ -250,7 +251,7 @@ export class ProjectService {
       },
     ];
     try {
-      const createProject = this.db.query().call(matchRequestingUser, session);
+      const createProject = this.db.query().apply(matchRequestingUser(session));
 
       if (fieldRegionId) {
         await this.validateOtherResourceId(
@@ -300,14 +301,15 @@ export class ProjectService {
         node('organization', 'Organization', { id: this.config.defaultOrg.id }),
       ]);
 
-      createProject.call(
-        createBaseNode,
-        await generateId(),
-        `Project:${input.type}Project`,
-        secureProps,
-        {
-          type: createInput.type,
-        }
+      createProject.apply(
+        createBaseNode(
+          await generateId(),
+          `Project:${input.type}Project`,
+          secureProps,
+          {
+            type: createInput.type,
+          }
+        )
       );
 
       if (fieldRegionId) {
@@ -455,7 +457,7 @@ export class ProjectService {
     const query = this.db
       .query()
       .match([node('node', 'Project', { id })])
-      .call(matchPropList)
+      .apply(matchPropList)
       .with(['node', 'propList'])
       .optionalMatch([
         [node('user', 'User', { id: userId })],
@@ -790,8 +792,8 @@ export class ProjectService {
       .query()
       .match([requestingUser(session), ...permissionsOfNode(label)])
       .with('distinct(node) as node, requestingUser')
-      .call(projectListFilter, filter)
-      .call(
+      .apply(projectListFilter(filter))
+      .apply(
         calculateTotalAndPaginateList(IProject, input, (q) =>
           ['id', 'createdAt'].includes(input.sort)
             ? q.with('*').orderBy(`node.${input.sort}`, input.order)
@@ -883,7 +885,10 @@ export class ProjectService {
     return {
       ...result,
       canRead: !!permission?.canReadEngagementRead,
-      canCreate: !!permission?.canReadEngagementCreate,
+      canCreate:
+        !!permission?.canReadEngagementCreate &&
+        (project.status === ProjectStatus.InDevelopment ||
+          session.roles.includes('global:Administrator')),
     };
   }
 
