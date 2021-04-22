@@ -108,6 +108,3 @@ export async function registerUserWithPower(
 
   return user;
 }
-
-/** @deprecated use registerUser instead */
-export const createUser = registerUser;

@@ -1,6 +1,6 @@
+import { Duration, DurationInput } from 'luxon';
 import * as pRetry from 'p-retry';
 import { Merge } from 'type-fest';
-import { MsDurationInput, parseMilliseconds } from './util';
 
 export { AbortError } from 'p-retry';
 
@@ -11,17 +11,17 @@ export type RetryOptions = Merge<
      * The maximum time (in milliseconds) that the retried operation is allowed to run.
      * @default Infinity
      */
-    maxRetryTime?: MsDurationInput;
+    maxRetryTime?: DurationInput;
     /**
      * The duration before starting the first retry.
      * @default 1 second
      */
-    minTimeout?: MsDurationInput;
+    minTimeout?: DurationInput;
     /**
      * The maximum duration between two retries.
      * @default Infinity
      */
-    maxTimeout?: MsDurationInput;
+    maxTimeout?: DurationInput;
   }
 >;
 
@@ -32,12 +32,12 @@ export const retry = <T>(
   pRetry(input, {
     ...options,
     maxRetryTime: options?.maxRetryTime
-      ? parseMilliseconds(options.maxRetryTime)
+      ? Duration.from(options.maxRetryTime).toMillis()
       : undefined,
     minTimeout: options?.minTimeout
-      ? parseMilliseconds(options.minTimeout)
+      ? Duration.from(options.minTimeout).toMillis()
       : undefined,
     maxTimeout: options?.maxTimeout
-      ? parseMilliseconds(options.maxTimeout)
+      ? Duration.from(options.maxTimeout).toMillis()
       : undefined,
   });

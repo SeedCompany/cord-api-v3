@@ -100,12 +100,13 @@ export class SongService {
     try {
       const result = await this.db
         .query()
-        .call(matchRequestingUser, session)
-        .call(
-          createBaseNode,
-          await generateId(),
-          ['Song', 'Producible'],
-          secureProps
+        .apply(matchRequestingUser(session))
+        .apply(
+          createBaseNode(
+            await generateId(),
+            ['Song', 'Producible'],
+            secureProps
+          )
         )
         .return('node.id as id')
         .first();
@@ -141,9 +142,9 @@ export class SongService {
   async readOne(id: ID, session: Session): Promise<Song> {
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([node('node', 'Song', { id })])
-      .call(matchPropList)
+      .apply(matchPropList)
       .return('propList, node')
       .asResult<StandardReadResult<DbPropsOfDto<Song>>>();
 
@@ -220,7 +221,7 @@ export class SongService {
     const query = this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode('Song')])
-      .call(calculateTotalAndPaginateList(Song, input));
+      .apply(calculateTotalAndPaginateList(Song, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

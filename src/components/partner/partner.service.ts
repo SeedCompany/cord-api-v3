@@ -147,13 +147,13 @@ export class PartnerService {
     // create partner
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([
         node('organization', 'Organization', {
           id: input.organizationId,
         }),
       ])
-      .call(createBaseNode, await generateId(), 'Partner', secureProps)
+      .apply(createBaseNode(await generateId(), 'Partner', secureProps))
       .create([
         node('node'),
         relation('out', '', 'organization', { active: true, createdAt }),
@@ -233,9 +233,9 @@ export class PartnerService {
 
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([node('node', 'Partner', { id: id })])
-      .call(matchPropList)
+      .apply(matchPropList)
       .optionalMatch([
         node('node'),
         relation('out', '', 'organization', { active: true }),
@@ -334,7 +334,7 @@ export class PartnerService {
       const createdAt = DateTime.local();
       await this.db
         .query()
-        .call(matchRequestingUser, session)
+        .apply(matchRequestingUser(session))
         .matchNode('partner', 'Partner', { id: input.id })
         .matchNode('newPointOfContact', 'User', {
           id: input.pointOfContactId,
@@ -406,7 +406,7 @@ export class PartnerService {
             ]
           : []),
       ])
-      .call(
+      .apply(
         calculateTotalAndPaginateList(
           Partner,
           input,

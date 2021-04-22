@@ -3,11 +3,10 @@ import { CustomScalar, Field, FieldOptions, Scalar } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { Kind, ValueNode } from 'graphql';
 import { DateTime, Settings } from 'luxon';
-import { CalendarDate } from './calendar-date';
 import { InputException } from './exceptions';
+import { CalendarDate } from './temporal';
 import { Transform } from './transform.decorator';
 import { ValidateBy } from './validators/validateBy';
-import './luxon.neo4j'; // ensure our luxon methods are added
 
 Settings.throwOnInvalid = true;
 

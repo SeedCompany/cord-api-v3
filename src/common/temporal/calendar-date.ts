@@ -13,6 +13,7 @@ import {
   ZoneOptions,
 } from 'luxon';
 import { inspect } from 'util';
+import { DateInterval } from './date-interval';
 
 /**
  * Calendar Dates have no times or timezones.
@@ -108,6 +109,10 @@ export class CalendarDate extends DateTime {
     return CalendarDate.fromDateTime(super.utc(year, month, day));
   }
 
+  until(other: CalendarDate): DateInterval {
+    return DateInterval.fromDateTimes(this, other);
+  }
+
   endOf(unit: DurationUnit): CalendarDate {
     return CalendarDate.fromDateTime(super.endOf(unit));
   }
@@ -147,11 +152,9 @@ export class CalendarDate extends DateTime {
   toUTC(): CalendarDate {
     return this; // noop
   }
-}
 
-(CalendarDate.prototype as any)[inspect.custom] = function (
-  this: CalendarDate
-) {
-  const str = this.toLocaleString(DateTime.DATE_SHORT);
-  return `[Date] ${str}`;
-};
+  [inspect.custom]() {
+    const str = this.toLocaleString(DateTime.DATE_SHORT);
+    return `[Date] ${str}`;
+  }
+}

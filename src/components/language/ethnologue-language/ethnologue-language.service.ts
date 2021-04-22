@@ -77,12 +77,9 @@ export class EthnologueLanguageService {
 
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
-      .call(
-        createBaseNode,
-        await generateId(),
-        'EthnologueLanguage',
-        secureProps
+      .apply(matchRequestingUser(session))
+      .apply(
+        createBaseNode(await generateId(), 'EthnologueLanguage', secureProps)
       )
       .return('node.id as id');
 
@@ -108,9 +105,9 @@ export class EthnologueLanguageService {
   async readOne(id: ID, session: Session): Promise<EthnologueLanguage> {
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([node('node', 'EthnologueLanguage', { id: id })])
-      .call(matchPropList)
+      .apply(matchPropList)
       .return('propList, node')
       .asResult<StandardReadResult<EthLangDbProps>>();
 
@@ -145,6 +142,15 @@ export class EthnologueLanguageService {
       ethnologueLanguage,
       input
     );
+    await this.authorizationService.verifyCanEditChanges(
+      EthnologueLanguage,
+      ethnologueLanguage,
+      changes
+    );
+
+    if (Object.keys(changes).length === 0) {
+      return;
+    }
 
     // Make a mapping of the fields that we want to set in the db to the inputs
     const valueSet = pickBy(
@@ -155,13 +161,6 @@ export class EthnologueLanguageService {
         'population.value': changes.population,
       },
       (v) => v !== undefined
-    );
-
-    // even though we already have a cleaned value set, we still need to verify edit permission
-    await this.authorizationService.verifyCanEditChanges(
-      EthnologueLanguage,
-      ethnologueLanguage,
-      changes
     );
 
     try {

@@ -90,8 +90,8 @@ export class CeremonyService {
     try {
       const query = this.db
         .query()
-        .call(matchRequestingUser, session)
-        .call(createBaseNode, await generateId(), 'Ceremony', secureProps)
+        .apply(matchRequestingUser(session))
+        .apply(createBaseNode(await generateId(), 'Ceremony', secureProps))
         .return('node.id as id');
 
       const result = await query.first();
@@ -126,9 +126,9 @@ export class CeremonyService {
     }
     const readCeremony = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([node('node', 'Ceremony', { id })])
-      .call(matchPropList)
+      .apply(matchPropList)
       .optionalMatch([
         node('project', 'Project'),
         relation('out', '', 'engagement', { active: true }),
@@ -137,7 +137,7 @@ export class CeremonyService {
         node('node', 'Ceremony', { id }),
       ])
       .with(['node', 'propList', 'project'])
-      .call(matchMemberRoles, session.userId)
+      .apply(matchMemberRoles(session.userId))
       .return(['node', 'propList', 'memberRoles'])
       .asResult<
         StandardReadResult<DbPropsOfDto<Ceremony>> & {
@@ -223,7 +223,7 @@ export class CeremonyService {
             ]
           : []),
       ])
-      .call(calculateTotalAndPaginateList(Ceremony, input));
+      .apply(calculateTotalAndPaginateList(Ceremony, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

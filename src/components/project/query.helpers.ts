@@ -7,23 +7,17 @@ import {
 } from 'cypher-query-builder';
 import { ProjectFilters } from './dto';
 
-export function projectListFilter(query: Query, filter: ProjectFilters) {
-  query
-    .call((q) =>
-      filter.status
-        ? q
-            .match(propMatch('status'))
-            .where({ status: { value: inArray(filter.status) } })
-        : q
-    )
-    .call((q) =>
-      filter.sensitivity
-        ? q
-            .match(propMatch('sensitivity'))
-            .where({ sensitivity: { value: inArray(filter.sensitivity) } })
-        : q
-    );
-
+export const projectListFilter = (filter: ProjectFilters) => (query: Query) => {
+  if (filter.status) {
+    query
+      .match(propMatch('status'))
+      .where({ status: { value: inArray(filter.status) } });
+  }
+  if (filter.sensitivity) {
+    query
+      .match(propMatch('sensitivity'))
+      .where({ sensitivity: { value: inArray(filter.sensitivity) } });
+  }
   if (filter.onlyMultipleEngagements) {
     query
       .match([
@@ -56,7 +50,7 @@ export function projectListFilter(query: Query, filter: ProjectFilters) {
       query.raw('where not (requestingUser)-[:pinned]->(node)');
     }
   }
-}
+};
 
 export const propMatch = (property: string) => [
   node('node'),

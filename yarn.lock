@@ -1491,15 +1491,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/graphql@npm:^14.5.0":
-  version: 14.5.0
-  resolution: "@types/graphql@npm:14.5.0"
-  dependencies:
-    graphql: "*"
-  checksum: 93ecac6502808bb6b043d7a651b895dbbf1017cfd412b8ea7a923325ad9ddfee1b7cf3ae6997f15eccf44a53bf045cd85c28d594966559dd8b261826a7434288
-  languageName: node
-  linkType: hard
-
 "@types/http-assert@npm:*":
   version: 1.5.1
   resolution: "@types/http-assert@npm:1.5.1"
@@ -1632,10 +1623,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/luxon@npm:^1.26.3":
-  version: 1.26.3
-  resolution: "@types/luxon@npm:1.26.3"
-  checksum: d34b3ceaeed2fadd008b5b41357fce7e3a2d6e0a7feb7e6f39dab1d93d77cd30afae3bc1dfb09d9a4dae812a3f80da3ffcaf9b315422e6ae6c2362f6ae8d885d
+"@types/luxon@npm:^1.26.4":
+  version: 1.26.4
+  resolution: "@types/luxon@npm:1.26.4"
+  checksum: 4ddb55f1c73b1efe0dae407d79f10aba0e3f87945c6386a0c09742b66b39a4b1a81673bc5ddb2483b107684d052fbd953af1aaacdf43bd9bd882742a936791ec
   languageName: node
   linkType: hard
 
@@ -3969,12 +3960,11 @@ __metadata:
     "@types/express": ^4.17.11
     "@types/express-serve-static-core": ^4.17.19
     "@types/faker": ^5.5.0
-    "@types/graphql": ^14.5.0
     "@types/jest": ^26.0.22
     "@types/js-yaml": ^4.0.0
     "@types/jsonwebtoken": ^8.5.1
     "@types/lodash": ^4.14.168
-    "@types/luxon": ^1.26.3
+    "@types/luxon": ^1.26.4
     "@types/mjml-react": ^1.0.6
     "@types/node": ^14.14.37
     "@types/react": ^16.14.2
@@ -6226,7 +6216,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql@npm:*, graphql@npm:^15.5.0":
+"graphql@npm:^15.5.0":
   version: 15.5.0
   resolution: "graphql@npm:15.5.0"
   checksum: 789cdcb069a3e00592e779002217a6bc5fd09efad63ee8c4190c4b3ea96c89010e74f085fb1cba876a0bb0e324e01df2eddb84d79dca90a28e582bc425fef9ef

@@ -569,15 +569,15 @@ export class EngagementService {
 
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([node('node', 'Engagement', { id })])
-      .call(matchPropList)
+      .apply(matchPropList)
       .optionalMatch([
         node('project'),
         relation('out', '', 'engagement', { active: true }),
         node('node'),
       ])
-      .call(matchMemberRoles, session.userId)
+      .apply(matchMemberRoles(session.userId))
       .with([
         'propList',
         'node',
@@ -1043,7 +1043,7 @@ export class EngagementService {
             ]
           : []),
       ])
-      .call(calculateTotalAndPaginateList(IEngagement, input));
+      .apply(calculateTotalAndPaginateList(IEngagement, input));
 
     const engagements = await runListQuery(query, input, (id) =>
       this.readOne(id, session)
@@ -1287,7 +1287,7 @@ export class EngagementService {
     languageId,
   }: MergeExclusive<{ engagementId: ID }, { languageId: ID }>) {
     const startQuery = () =>
-      this.db.query().call((query) =>
+      this.db.query().apply((query) =>
         engagementId
           ? query.match([
               node('languageEngagement', 'LanguageEngagement', {
@@ -1355,7 +1355,10 @@ export class EngagementService {
    * [BUSINESS RULE] Only Projects with a Status of 'In Development' can have Engagements created or deleted.
    */
   protected async verifyProjectStatus(projectId: ID, session: Session) {
-    if (this.config.migration) {
+    if (
+      this.config.migration ||
+      session.roles.includes('global:Administrator')
+    ) {
       return;
     }
 

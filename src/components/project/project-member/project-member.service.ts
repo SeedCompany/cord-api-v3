@@ -197,16 +197,16 @@ export class ProjectMemberService {
 
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([node('node', 'ProjectMember', { id })])
-      .call(matchPropList)
+      .apply(matchPropList)
       .match([
         node('project', 'Project'),
         relation('out', '', 'member', { active: true }),
         node('', 'ProjectMember', { id }),
       ])
       .with(['project', 'node', 'propList'])
-      .call(matchMemberRoles, session.userId)
+      .apply(matchMemberRoles(session.userId))
       .match([node('node'), relation('out', '', 'user'), node('user', 'User')])
       .return('node, propList, user.id as userId, memberRoles')
       .asResult<
@@ -338,7 +338,7 @@ export class ProjectMemberService {
             ]
           : []),
       ])
-      .call(calculateTotalAndPaginateList(ProjectMember, input));
+      .apply(calculateTotalAndPaginateList(ProjectMember, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

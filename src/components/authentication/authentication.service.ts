@@ -271,7 +271,7 @@ export class AuthenticationService {
 
     const result = await this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([
         node('requestingUser'),
         relation('out', '', 'password', { active: true }),
@@ -288,7 +288,7 @@ export class AuthenticationService {
     const newPasswordHash = await this.crypto.hash(newPassword);
     await this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([
         node('requestingUser'),
         relation('out', '', 'password', { active: true }),
@@ -303,7 +303,7 @@ export class AuthenticationService {
     // inactivate all the relationships between the current user and all of their tokens except current one
     await this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([
         node('requestingUser'),
         relation('out', 'oldRel', 'token', { active: true }),

@@ -17,7 +17,7 @@ export const calculateTotalAndPaginateList = <
     .with(['collect(distinct node) as nodes', 'count(distinct node) as total'])
     .raw(`unwind nodes as node`)
     // .with(['node', 'total']) TODO needed?
-    .call(sorter ?? defaultSorter(resource, sort, order))
+    .apply(sorter ?? defaultSorter(resource, sort, order))
     .with([
       `collect(distinct node.id)[${(page - 1) * count}..${
         page * count

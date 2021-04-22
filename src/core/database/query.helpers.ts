@@ -25,13 +25,12 @@ export const determineSortValue = (value: unknown) =>
 
 // assumes 'requestingUser', and 'publicSG' cypher identifiers have been matched
 // add baseNodeProps and editableProps
-export function createBaseNode(
-  query: Query,
+export const createBaseNode = (
   id: ID,
   label: string | string[],
   props: Property[],
   baseNodeProps?: { owningOrgId?: string | undefined; type?: string }
-) {
+) => (query: Query) => {
   const createdAt = DateTime.local();
 
   if (typeof label === 'string') {
@@ -69,7 +68,7 @@ export function createBaseNode(
       node('', labels, nodeProps),
     ]);
   }
-}
+};
 
 export function matchUserPermissions(
   query: Query,
@@ -92,16 +91,14 @@ export function matchUserPermissions(
   query.with(`collect(perms) as permList, node, requestingUser`);
 }
 
-export function matchRequestingUser(
-  query: Query,
-  { userId }: Pick<Session, 'userId'>
-) {
+export const matchRequestingUser = ({ userId }: Pick<Session, 'userId'>) => (
+  query: Query
+) =>
   query.match([
     node('requestingUser', 'User', {
       id: userId,
     }),
   ]);
-}
 
 /**
  * This will set all relationships given to active false

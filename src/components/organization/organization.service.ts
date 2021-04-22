@@ -78,11 +78,10 @@ export class OrganizationService {
 
   // assumes 'root' cypher variable is declared in query
   private readonly createSG = (
-    query: Query,
     cypherIdentifier: string,
     id: ID,
     label?: string
-  ) => {
+  ) => (query: Query) => {
     const labels = ['SecurityGroup'];
     if (label) {
       labels.push(label);
@@ -150,14 +149,11 @@ export class OrganizationService {
           id: this.config.publicSecurityGroup.id,
         }),
       ])
-      .call(matchRequestingUser, session)
-      .call(
-        this.createSG,
-        'orgSG',
-        await generateId(),
-        'OrgPublicSecurityGroup'
+      .apply(matchRequestingUser(session))
+      .apply(
+        this.createSG('orgSG', await generateId(), 'OrgPublicSecurityGroup')
       )
-      .call(createBaseNode, await generateId(), 'Organization', secureProps)
+      .apply(createBaseNode(await generateId(), 'Organization', secureProps))
       .return('node.id as id');
 
     const result = await query.first();
@@ -188,9 +184,9 @@ export class OrganizationService {
 
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([node('node', 'Organization', { id: orgId })])
-      .call(matchPropList)
+      .apply(matchPropList)
       .return('propList, node')
       .asResult<StandardReadResult<DbPropsOfDto<Organization>>>();
     const result = await query.first();
@@ -272,7 +268,7 @@ export class OrganizationService {
             ]
           : []),
       ])
-      .call(calculateTotalAndPaginateList(Organization, input));
+      .apply(calculateTotalAndPaginateList(Organization, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

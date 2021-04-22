@@ -1,10 +1,7 @@
 import { Connection } from 'cypher-query-builder';
+import { Duration, DurationInput } from 'luxon';
 import { Transaction } from 'neo4j-driver';
-import {
-  MsDurationInput,
-  parseMilliseconds,
-  ServerException,
-} from '../../common';
+import { ServerException } from '../../common';
 import { PatchedConnection } from './cypher.factory';
 
 /**
@@ -33,7 +30,7 @@ export interface TransactionOptions {
    * Specified timeout overrides the default timeout configured in configured
    * in the database using `dbms.transaction.timeout` setting.
    */
-  timeout?: MsDurationInput;
+  timeout?: DurationInput;
 
   /**
    * The transaction's metadata.
@@ -107,7 +104,7 @@ Connection.prototype.runInTransaction = async function withTransaction<R>(
       (tx) => this.transactionStorage.run(tx, inner),
       {
         timeout: options?.timeout
-          ? parseMilliseconds(options.timeout)
+          ? Duration.from(options.timeout).toMillis()
           : undefined,
         metadata: options?.metadata,
       }
