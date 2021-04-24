@@ -330,6 +330,7 @@ export const Intern = new DbRole({
         { propertyName: 'sensitivity',                permission: { read, write, }, },
         { propertyName: 'tags',                       permission: { read, write, }, },
         { propertyName: 'financialReportReceivedAt',  permission: { read, write, }, },
+        { propertyName: 'financialReportPeriod',      permission: { read, write, }, },
         { propertyName: 'owningOrganization',         permission: { read, write, }, },
           ],
     canDelete: false,

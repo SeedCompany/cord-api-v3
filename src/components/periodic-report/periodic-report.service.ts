@@ -30,7 +30,7 @@ import {
   StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { CreateDefinedFileVersionInput, FileId, FileService } from '../file';
+import { CreateDefinedFileVersionInput, FileService } from '../file';
 import {
   CreatePeriodicReport,
   FinancialReport,
@@ -169,12 +169,8 @@ export class PeriodicReportService {
         relation('out', '', 'reportFile', { active: true }),
         node('reportFile', 'File'),
       ])
-      .return('node, propList, reportFile.id as reportFileId')
-      .asResult<
-        StandardReadResult<DbPropsOfDto<PeriodicReport>> & {
-          reportFileId: FileId;
-        }
-      >();
+      .return('node, propList')
+      .asResult<StandardReadResult<DbPropsOfDto<PeriodicReport>>>();
 
     const result = await query.first();
     if (!result) {
@@ -187,10 +183,7 @@ export class PeriodicReportService {
     const props = parsePropList(result.propList);
     const securedProps = await this.authorizationService.secureProperties(
       IPeriodicReport,
-      {
-        ...props,
-        reportFile: result.reportFileId,
-      },
+      props,
       session
     );
 
