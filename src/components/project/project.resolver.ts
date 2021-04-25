@@ -57,15 +57,6 @@ class ModifyOtherLocationArgs {
   locationId: ID;
 }
 
-@ArgsType()
-class ReadProjectArgs {
-  @IdField()
-  id: ID;
-
-  @IdField({ nullable: true })
-  changeId?: ID;
-}
-
 @Resolver(IProject)
 export class ProjectResolver {
   constructor(
@@ -80,13 +71,9 @@ export class ProjectResolver {
   })
   async project(
     @LoggedInSession() session: Session,
-    @Args() { id, changeId }: ReadProjectArgs
+    @IdArg() id: ID
   ): Promise<Project> {
-    const project = await this.projectService.readOneUnsecured(
-      id,
-      session,
-      changeId
-    );
+    const project = await this.projectService.readOneUnsecured(id, session);
     const secured = await this.projectService.secure(project, session);
     return secured;
   }
@@ -128,6 +115,21 @@ export class ProjectResolver {
     input: ChangeListInput
   ): Promise<SecuredChangeList> {
     return this.projectService.listPlanChanges(project.id, input, session);
+  }
+
+  @ResolveField(() => IProject)
+  async projectChanges(
+    @AnonSession() session: Session,
+    @Parent() project: Project,
+    @IdArg({ nullable: true }) id?: ID
+  ): Promise<Project> {
+    const projectChanges = await this.projectService.readOneUnsecured(
+      project.id,
+      session,
+      id
+    );
+    const secured = await this.projectService.secure(projectChanges, session);
+    return secured;
   }
 
   @ResolveField(() => SecuredBudget, {
