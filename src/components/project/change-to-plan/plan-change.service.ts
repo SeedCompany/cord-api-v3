@@ -89,8 +89,8 @@ export class PlanChangeService {
 
     const createPlanChange = this.db
       .query()
-      .call(matchRequestingUser, session)
-      .call(createBaseNode, planChangeId, 'PlanChange', secureProps)
+      .apply(matchRequestingUser(session))
+      .apply(createBaseNode(planChangeId, 'PlanChange', secureProps))
       .return('node.id as id');
 
     const result = await createPlanChange.first();
@@ -123,16 +123,16 @@ export class PlanChangeService {
 
     const query = this.db
       .query()
-      .call(matchRequestingUser, session)
+      .apply(matchRequestingUser(session))
       .match([node('node', 'PlanChange', { id })])
-      .call(matchPropList)
+      .apply(matchPropList)
       .optionalMatch([
         node('project', 'Project'),
         relation('out', '', 'planChange', { active: true }),
         node('change', 'PlanChange', { id }),
       ])
       .with(['project', 'node', 'propList'])
-      .call(matchMemberRoles, session.userId)
+      .apply(matchMemberRoles(session.userId))
       .return('node, propList, memberRoles')
       .asResult<
         StandardReadResult<DbPropsOfDto<PlanChange>> & {
