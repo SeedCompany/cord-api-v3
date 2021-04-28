@@ -14,6 +14,7 @@ import { DbLocation } from '../../location/model';
 import { DbOrganization } from '../../organization/model';
 import { DbPartner } from '../../partner/model';
 import { DbPartnership } from '../../partnership/model';
+import { DbPost } from '../../post/model';
 import { DbProduct } from '../../product/model';
 /* eslint-disable @typescript-eslint/naming-convention */
 import { DbProject } from '../../project/model';
@@ -292,6 +293,14 @@ export const ProjectManagerGlobal = new DbRole({
         { propertyName: 'primary',                    permission: { read, write, }, },
         ],
     canDelete: false,
+  }),
+    new DbBaseNodeGrant<DbPost>({
+      __className: 'DbPost',
+      properties: [
+        { propertyName: 'body',                       permission: { read, write, }, },
+        { propertyName: 'creator',                       permission: { read, write, }, },
+      ],
+      canDelete: true,
   }),
     new DbBaseNodeGrant<DbProduct>({
       __className: 'DbProduct',
