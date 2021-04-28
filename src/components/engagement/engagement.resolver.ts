@@ -9,12 +9,6 @@ import {
 import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
 import { CeremonyService, SecuredCeremony } from '../ceremony';
 import {
-  PeriodicReportListInput,
-  PeriodicReportService,
-  SecuredPeriodicReportList,
-} from '../periodic-report';
-import { ReportType } from '../periodic-report/dto';
-import {
   CreateInternshipEngagementInput,
   CreateInternshipEngagementOutput,
   CreateLanguageEngagementInput,
@@ -35,8 +29,7 @@ import { EngagementService } from './engagement.service';
 export class EngagementResolver {
   constructor(
     private readonly service: EngagementService,
-    private readonly ceremonies: CeremonyService,
-    private readonly periodicReports: PeriodicReportService
+    private readonly ceremonies: CeremonyService
   ) {}
 
   @Query(() => IEngagement, {
@@ -155,25 +148,6 @@ export class EngagementResolver {
   ): Promise<boolean> {
     return await this.service.checkEngagementConsistency(
       input.baseNode,
-      session
-    );
-  }
-
-  @ResolveField(() => SecuredPeriodicReportList)
-  async progressReports(
-    @AnonSession() session: Session,
-    @Parent() engagement: Engagement,
-    @Args({
-      name: 'input',
-      type: () => PeriodicReportListInput,
-      defaultValue: PeriodicReportListInput.defaultVal,
-    })
-    input: PeriodicReportListInput
-  ): Promise<SecuredPeriodicReportList> {
-    return this.periodicReports.listEngagementReports(
-      engagement.id,
-      ReportType.Progress,
-      input,
       session
     );
   }

@@ -47,7 +47,6 @@ export abstract class CreateDefinedFileVersionInput {
 
   @Field({
     description: 'An optional name. Defaults to file name.',
-    nullable: true,
   })
   readonly name?: string;
 

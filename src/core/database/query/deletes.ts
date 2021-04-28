@@ -1,4 +1,3 @@
-import { stripIndent } from 'common-tags';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 
@@ -36,7 +35,7 @@ export const deleteBaseNode = (query: Query) =>
        they're not used in rest of the query and are aliased to avoid colliding with the unwound "node" alias
        */
     .raw(
-      stripIndent`
+      `
         unwind nodeList as node
         with node,
         reduce(

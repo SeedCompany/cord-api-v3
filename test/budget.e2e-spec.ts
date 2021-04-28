@@ -56,7 +56,7 @@ describe('Budget e2e', () => {
   it.skip('create a budget', async () => {
     const budget = await createBudget(app, { projectId: project.id });
     expect(budget.id).toBeDefined();
-    const cd = (sd: Secured<string | null>) =>
+    const cd = (sd: Secured<string>) =>
       sd.value ? CalendarDate.fromISO(sd.value) : undefined;
     const fiscal = fiscalYears(cd(project.mouStart), cd(project.mouEnd)); // calculate the fiscalYears covered by this date range
     expect(budget.records.length).toBe(fiscal.length);

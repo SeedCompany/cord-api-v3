@@ -50,7 +50,7 @@ type ChangeKey<Key extends keyof T & string, T> = T[Key] extends SetChangeType<
     : never
   : UnwrapSecured<T[Key]> extends FileId
   ? Key
-  : NonNullable<UnwrapSecured<T[Key]>> extends ID
+  : UnwrapSecured<T[Key]> extends ID
   ? `${Key}Id` // our convention for relationships
   : Key;
 

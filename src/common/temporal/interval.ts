@@ -15,8 +15,8 @@ declare module 'luxon/src/interval' {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Interval {
     export const compare: (
-      previous: Interval | null | undefined,
-      updated: Interval | null | undefined
+      previous: Interval | null,
+      updated: Interval | null
     ) => Record<'additions' | 'removals', Interval[]>;
 
     export function tryFrom(start: DateTime, end: DateTime): Interval;
@@ -43,10 +43,7 @@ Interval.prototype.expandToFull = function (
 
 const IntervalStatic = Interval as Mutable<typeof Interval>;
 
-IntervalStatic.compare = (
-  prev: Interval | null | undefined,
-  now: Interval | null | undefined
-) => {
+IntervalStatic.compare = (prev: Interval | null, now: Interval | null) => {
   const removals = !prev ? [] : !now ? [prev] : prev.difference(now);
   const additions = !now ? [] : !prev ? [now] : now.difference(prev);
   return { removals, additions };

@@ -29,12 +29,6 @@ import {
 import { OrganizationService, SecuredOrganization } from '../organization';
 import { PartnershipListInput, SecuredPartnershipList } from '../partnership';
 import {
-  PeriodicReportListInput,
-  PeriodicReportService,
-  SecuredPeriodicReportList,
-} from '../periodic-report';
-import { ReportType } from '../periodic-report/dto';
-import {
   CreateProjectInput,
   CreateProjectOutput,
   IProject,
@@ -65,8 +59,7 @@ export class ProjectResolver {
     private readonly projectService: ProjectService,
     private readonly locationService: LocationService,
     private readonly fieldRegionService: FieldRegionService,
-    private readonly organizationService: OrganizationService,
-    private readonly periodicReportService: PeriodicReportService
+    private readonly organizationService: OrganizationService
   ) {}
 
   @Query(() => IProject, {
@@ -300,43 +293,5 @@ export class ProjectResolver {
     @LoggedInSession() session: Session
   ): Promise<boolean> {
     return await this.projectService.consistencyChecker(session);
-  }
-
-  @ResolveField(() => SecuredPeriodicReportList)
-  async financialReports(
-    @AnonSession() session: Session,
-    @Parent() project: Project,
-    @Args({
-      name: 'input',
-      type: () => PeriodicReportListInput,
-      defaultValue: PeriodicReportListInput.defaultVal,
-    })
-    input: PeriodicReportListInput
-  ): Promise<SecuredPeriodicReportList> {
-    return this.periodicReportService.listProjectReports(
-      project.id,
-      ReportType.Financial,
-      input,
-      session
-    );
-  }
-
-  @ResolveField(() => SecuredPeriodicReportList)
-  async narrativeReports(
-    @AnonSession() session: Session,
-    @Parent() project: Project,
-    @Args({
-      name: 'input',
-      type: () => PeriodicReportListInput,
-      defaultValue: PeriodicReportListInput.defaultVal,
-    })
-    input: PeriodicReportListInput
-  ): Promise<SecuredPeriodicReportList> {
-    return this.periodicReportService.listProjectReports(
-      project.id,
-      ReportType.Narrative,
-      input,
-      session
-    );
   }
 }

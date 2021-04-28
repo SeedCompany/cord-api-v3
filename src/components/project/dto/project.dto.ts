@@ -3,7 +3,6 @@ import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
 import {
-  DateInterval,
   DateTimeField,
   DbLabel,
   ID,
@@ -11,13 +10,12 @@ import {
   parentIdMiddleware,
   Resource,
   Secured,
+  SecuredDate,
   SecuredDateNullable,
   SecuredDateTime,
   SecuredProps,
   SecuredString,
-  SecuredStringNullable,
   Sensitivity,
-  UnsecuredDto,
 } from '../../../common';
 import { ScopedRole } from '../../authorization/dto';
 import { Budget } from '../../budget/dto';
@@ -26,7 +24,6 @@ import { Directory } from '../../file/dto';
 import { SecuredTags } from '../../language/dto/language.dto';
 import { Location } from '../../location/dto';
 import { Partnership } from '../../partnership/dto';
-import { SecuredReportPeriod } from '../../periodic-report/dto';
 import { Pinnable } from '../../pin/dto';
 import { ProjectMember } from '../project-member/dto';
 import { ProjectStatus } from './status.enum';
@@ -76,7 +73,7 @@ class Project extends IntersectionType(Resource, Pinnable) {
     description: 'The legacy department ID',
   })
   @DbLabel('DepartmentId')
-  readonly departmentId: SecuredStringNullable;
+  readonly departmentId: SecuredString;
 
   @Field({
     middleware: [parentIdMiddleware],
@@ -88,19 +85,19 @@ class Project extends IntersectionType(Resource, Pinnable) {
   @DbLabel('ProjectStatus')
   readonly status: ProjectStatus;
 
-  readonly primaryLocation: Secured<ID | null>;
+  readonly primaryLocation: Secured<ID>;
 
-  readonly marketingLocation: Secured<ID | null>;
+  readonly marketingLocation: Secured<ID>;
 
-  readonly fieldRegion: Secured<ID | null>;
+  readonly fieldRegion: Secured<ID>;
 
-  readonly owningOrganization: Secured<ID | null>;
-
-  @Field()
-  readonly mouStart: SecuredDateNullable;
+  readonly owningOrganization: Secured<ID>;
 
   @Field()
-  readonly mouEnd: SecuredDateNullable;
+  readonly mouStart: SecuredDate;
+
+  @Field()
+  readonly mouEnd: SecuredDate;
 
   @Field()
   // this should match project mouEnd, until it becomes active, then this is final.
@@ -110,7 +107,7 @@ class Project extends IntersectionType(Resource, Pinnable) {
   readonly stepChangedAt: SecuredDateTime;
 
   @Field()
-  readonly estimatedSubmission: SecuredDateNullable;
+  readonly estimatedSubmission: SecuredDate;
 
   @DateTimeField()
   readonly modifiedAt: DateTime;
@@ -120,9 +117,6 @@ class Project extends IntersectionType(Resource, Pinnable) {
 
   @Field()
   readonly financialReportReceivedAt: SecuredDateTime;
-
-  @Field()
-  readonly financialReportPeriod: SecuredReportPeriod;
 
   // A list of non-global roles the requesting user has available for this object.
   // This is just a cache, to prevent extra db lookups within the same request.
@@ -152,6 +146,3 @@ export class InternshipProject extends Project {
 
   readonly type: ProjectType.Internship;
 }
-
-export const projectRange = (project: UnsecuredDto<Project>) =>
-  DateInterval.tryFrom(project.mouStart, project.mouEnd);
