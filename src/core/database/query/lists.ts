@@ -2,6 +2,7 @@ import { node, Query, relation } from 'cypher-query-builder';
 import {
   ID,
   Order,
+  Resource,
   ResourceShape,
   SortablePaginationInput,
 } from '../../../common';
@@ -48,7 +49,11 @@ export const defaultSorter = <TResourceStatic extends ResourceShape<any>>(
     ? `toLower(node.${sortInput})`
     : `node.${sortInput}`;
 
-  return resource.SecuredProps.includes(sortInput)
+  const sortingOnBaseNodeProp = (
+    resource.BaseNodeProps ?? Resource.Props
+  ).includes(sortInput);
+
+  return !sortingOnBaseNodeProp
     ? q
         .match([
           node('node'),

@@ -14,6 +14,7 @@ import { DbLocation } from '../../location/model';
 import { DbOrganization } from '../../organization/model';
 import { DbPartner } from '../../partner/model';
 import { DbPartnership } from '../../partnership/model';
+import { DbPeriodicReport } from '../../periodic-report/model';
 import { DbProduct } from '../../product/model';
 /* eslint-disable @typescript-eslint/naming-convention */
 import { DbProject } from '../../project/model';
@@ -322,6 +323,7 @@ export const Administrator = new DbRole({
         { propertyName: 'sensitivity',                permission: { read, write, }, },
         { propertyName: 'tags',                       permission: { read, write, }, },
         { propertyName: 'financialReportReceivedAt',  permission: { read, write, }, },
+        { propertyName: 'financialReportPeriod',      permission: { read, write, }, },
         { propertyName: 'owningOrganization',         permission: { read, write, }, },
           ],
     canDelete: true,
@@ -333,6 +335,16 @@ export const Administrator = new DbRole({
         { propertyName: 'user',                       permission: { read, write, }, },
         { propertyName: 'modifiedAt',                 permission: { read, write, }, },
             ],
+    canDelete: true,
+  }),
+    new DbBaseNodeGrant<DbPeriodicReport>({
+      __className: 'DbPeriodicReport',
+      properties: [
+        { propertyName: 'type',                       permission: { read, write, }, },
+        { propertyName: 'start',                      permission: { read, write, }, },
+        { propertyName: 'end',                        permission: { read, write, }, },
+        { propertyName: 'reportFile',                 permission: { read, write, }, },
+      ],
     canDelete: true,
   }),
     new DbBaseNodeGrant<DbUser>({
