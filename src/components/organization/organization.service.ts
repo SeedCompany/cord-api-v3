@@ -197,11 +197,11 @@ export class OrganizationService {
       );
     }
 
-    const secured = await this.authorizationService.secureProperties(
-      Organization,
-      result.propList,
-      session
-    );
+    const secured = await this.authorizationService.secureProperties({
+      resource: Organization,
+      props: result.propList,
+      sessionOrUserId: session,
+    });
 
     return {
       ...parseBaseNodeProperties(result.node),

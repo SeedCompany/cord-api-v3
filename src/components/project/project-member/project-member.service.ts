@@ -212,12 +212,12 @@ export class ProjectMemberService {
       );
     }
 
-    const securedProps = await this.authorizationService.secureProperties(
-      ProjectMember,
-      result.props,
-      session,
-      result.scopedRoles
-    );
+    const securedProps = await this.authorizationService.secureProperties({
+      resource: ProjectMember,
+      props: result.props,
+      sessionOrUserId: session,
+      otherRoles: result.scopedRoles,
+    });
 
     return {
       ...result.props,

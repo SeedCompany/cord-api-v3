@@ -166,11 +166,11 @@ export class FieldZoneService {
       throw new NotFoundException('Could not find field zone', 'fieldZone.id');
     }
 
-    const secured = await this.authorizationService.secureProperties(
-      FieldZone,
-      result.propList,
-      session
-    );
+    const secured = await this.authorizationService.secureProperties({
+      resource: FieldZone,
+      props: result.propList,
+      sessionOrUserId: session,
+    });
 
     return {
       ...parseBaseNodeProperties(result.node),

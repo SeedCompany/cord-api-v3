@@ -1,6 +1,6 @@
 import type { Node } from 'cypher-query-builder';
 import type { DateTime } from 'luxon';
-import type { UnsecuredDto } from '../../../common';
+import type { Sensitivity, UnsecuredDto } from '../../../common';
 import type { BaseNode } from './parse-base-node';
 import type { PropListDbResult } from './parse-props';
 
@@ -41,4 +41,5 @@ export type NativeDbValue =
 export interface StandardReadResult<DbProps> {
   node: Node<BaseNode>;
   propList: PropListDbResult<DbProps>;
+  sensitivity?: Sensitivity;
 }

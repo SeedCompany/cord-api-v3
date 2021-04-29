@@ -129,11 +129,11 @@ export class EducationService {
       throw new NotFoundException('Could not find education', 'education.id');
     }
 
-    const secured = await this.authorizationService.secureProperties(
-      Education,
-      result.propList,
-      session
-    );
+    const secured = await this.authorizationService.secureProperties({
+      resource: Education,
+      props: result.propList,
+      sessionOrUserId: session,
+    });
 
     return {
       ...parseBaseNodeProperties(result.node),

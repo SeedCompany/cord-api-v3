@@ -163,11 +163,11 @@ export class FundingAccountService {
       throw new NotFoundException('FundingAccount.id', 'id');
     }
 
-    const secured = await this.authorizationService.secureProperties(
-      FundingAccount,
-      result.propList,
-      session
-    );
+    const secured = await this.authorizationService.secureProperties({
+      resource: FundingAccount,
+      props: result.propList,
+      sessionOrUserId: session,
+    });
     return {
       ...parseBaseNodeProperties(result.node),
       ...secured,

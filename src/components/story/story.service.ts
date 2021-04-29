@@ -163,11 +163,11 @@ export class StoryService {
       session
     );
 
-    const securedProps = await this.authorizationService.secureProperties(
-      Story,
-      result.propList,
-      session
-    );
+    const securedProps = await this.authorizationService.secureProperties({
+      resource: Story,
+      props: result.propList,
+      sessionOrUserId: session,
+    });
 
     return {
       ...parseBaseNodeProperties(result.node),

@@ -161,11 +161,11 @@ export class FilmService {
       id,
       session
     );
-    const securedProps = await this.authorizationService.secureProperties(
-      Film,
-      result.propList,
-      session
-    );
+    const securedProps = await this.authorizationService.secureProperties({
+      resource: Film,
+      props: result.propList,
+      sessionOrUserId: session,
+    });
 
     return {
       ...parseBaseNodeProperties(result.node),

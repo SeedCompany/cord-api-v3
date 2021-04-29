@@ -137,11 +137,11 @@ export class UnavailabilityService {
       throw new NotFoundException('Could not find user', 'user.id');
     }
 
-    const securedProps = await this.authorizationService.secureProperties(
-      Unavailability,
-      result.propList,
-      session
-    );
+    const securedProps = await this.authorizationService.secureProperties({
+      resource: Unavailability,
+      props: result.propList,
+      sessionOrUserId: session,
+    });
 
     return {
       ...parseBaseNodeProperties(result.node),

@@ -159,11 +159,11 @@ export class SongService {
       session
     );
 
-    const securedProps = await this.authorizationService.secureProperties(
-      Song,
-      result.propList,
-      session
-    );
+    const securedProps = await this.authorizationService.secureProperties({
+      resource: Song,
+      props: result.propList,
+      sessionOrUserId: session,
+    });
 
     return {
       ...parseBaseNodeProperties(result.node),

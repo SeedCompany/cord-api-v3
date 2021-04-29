@@ -120,11 +120,11 @@ export class EthnologueLanguageService {
     }
 
     const { id: _, ...props } = parsePropList(result.propList);
-    const secured = await this.authorizationService.secureProperties(
-      EthnologueLanguage,
+    const secured = await this.authorizationService.secureProperties({
+      resource: EthnologueLanguage,
       props,
-      session
-    );
+      sessionOrUserId: session,
+    });
 
     return {
       id,

@@ -139,12 +139,12 @@ export class CeremonyService {
       throw new NotFoundException('Could not find ceremony', 'ceremony.id');
     }
 
-    const securedProps = await this.authorizationService.secureProperties(
-      Ceremony,
-      result.props,
-      session,
-      result.scopedRoles
-    );
+    const securedProps = await this.authorizationService.secureProperties({
+      resource: Ceremony,
+      props: result.props,
+      sessionOrUserId: session,
+      otherRoles: result.scopedRoles,
+    });
 
     return {
       ...result.props,

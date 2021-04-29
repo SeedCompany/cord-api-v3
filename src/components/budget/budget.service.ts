@@ -24,10 +24,10 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
-  matchPropsAndProjectSensAndScopedRoles,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
+import { matchPropsAndProjectSensAndScopedRoles } from '../../core/database/query/match-project-based-props';
 import { DbPropsOfDto, runListQuery } from '../../core/database/results';
 import { ScopedRole } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
@@ -337,12 +337,12 @@ export class BudgetService {
       session
     );
 
-    const securedProps = await this.authorizationService.secureProperties(
-      Budget,
-      result.props,
-      session,
-      result.scopedRoles
-    );
+    const securedProps = await this.authorizationService.secureProperties({
+      resource: Budget,
+      props: result.props,
+      sessionOrUserId: session,
+      otherRoles: result.scopedRoles,
+    });
 
     return {
       ...result.props,
@@ -388,12 +388,12 @@ export class BudgetService {
       );
     }
 
-    const securedProps = await this.authorizationService.secureProperties(
-      BudgetRecord,
-      result.props,
-      session,
-      result.scopedRoles
-    );
+    const securedProps = await this.authorizationService.secureProperties({
+      resource: BudgetRecord,
+      props: result.props,
+      sessionOrUserId: session,
+      otherRoles: result.scopedRoles,
+    });
 
     return {
       ...result.props,

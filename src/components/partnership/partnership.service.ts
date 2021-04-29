@@ -280,12 +280,12 @@ export class PartnershipService {
       session
     );
 
-    const securedProps = await this.authorizationService.secureProperties(
-      Partnership,
-      result.props,
-      session,
-      result.scopedRoles
-    );
+    const securedProps = await this.authorizationService.secureProperties({
+      resource: Partnership,
+      props: result.props,
+      sessionOrUserId: session,
+      otherRoles: result.scopedRoles,
+    });
 
     const canReadMouStart =
       project.mouStart.canRead && securedProps.mouStartOverride.canRead;

@@ -666,12 +666,14 @@ export class EngagementService {
       startDate: _, // both of these are composed manually below, so exclude them
       endDate: __,
       ...securedProperties
-    } = await this.authorizationService.secureProperties(
-      isLanguageEngagement ? LanguageEngagement : InternshipEngagement,
+    } = await this.authorizationService.secureProperties({
+      resource: isLanguageEngagement
+        ? LanguageEngagement
+        : InternshipEngagement,
       props,
-      session,
-      result.scopedRoles
-    );
+      sessionOrUserId: session,
+      otherRoles: result.scopedRoles,
+    });
 
     const project = await this.projectService.readOne(result.project, session);
 
@@ -1047,11 +1049,11 @@ export class EngagementService {
     input: ProductListInput,
     session: Session
   ): Promise<SecuredProductList> {
-    const { product: perms } = await this.authorizationService.getPermissions(
-      LanguageEngagement,
-      session,
-      await this.repo.rolesInScope(engagement.id, session)
-    );
+    const { product: perms } = await this.authorizationService.getPermissions({
+      resource: LanguageEngagement,
+      sessionOrUserId: session,
+      otherRoles: await this.repo.rolesInScope(engagement.id, session),
+    });
     if (!perms.canRead) {
       return SecuredList.Redacted;
     }

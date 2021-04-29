@@ -214,11 +214,11 @@ export class LocationService {
       throw new NotFoundException('Could not find location', 'location.id');
     }
 
-    const secured = await this.authorizationService.secureProperties(
-      Location,
-      result.propList,
-      session
-    );
+    const secured = await this.authorizationService.secureProperties({
+      resource: Location,
+      props: result.propList,
+      sessionOrUserId: session,
+    });
 
     return {
       ...parseBaseNodeProperties(result.node),

@@ -265,11 +265,11 @@ export class PartnerService {
     }
 
     const props = parsePropList(result.propList);
-    const secured = await this.authorizationService.secureProperties(
-      Partner,
+    const secured = await this.authorizationService.secureProperties({
+      resource: Partner,
       props,
-      session
-    );
+      sessionOrUserId: session,
+    });
 
     return {
       ...parseBaseNodeProperties(result.node),

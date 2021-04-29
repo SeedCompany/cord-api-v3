@@ -1,4 +1,8 @@
-export type DbPermission = Partial<Record<Action, boolean>>;
+import { Sensitivity } from '../../../common';
+
+export type DbPermission = Partial<
+  Record<Action, boolean> & Record<'sensitivityAccess', Sensitivity>
+>;
 
 type Action = 'read' | 'write' | 'create' | 'delete' | 'admin';
 

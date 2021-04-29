@@ -282,12 +282,12 @@ export class ProductService {
       produces,
       scriptureReferencesOverride,
       ...rest
-    } = await this.authorizationService.secureProperties(
-      DerivativeScriptureProduct,
+    } = await this.authorizationService.secureProperties({
+      resource: DerivativeScriptureProduct,
       props,
-      session,
-      result.scopedRoles
-    );
+      sessionOrUserId: session,
+      otherRoles: result.scopedRoles,
+    });
 
     const connectedProducible = await this.db
       .query()

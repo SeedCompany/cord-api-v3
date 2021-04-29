@@ -20,6 +20,7 @@ import {
   mapFromList,
   ResourceShape,
   SecuredResource,
+  Sensitivity,
   ServerException,
   Session,
   UnauthorizedException,
@@ -35,7 +36,12 @@ import {
 import { InternalRole, Role, rolesForScope, ScopedRole } from './dto';
 import { Powers } from './dto/powers';
 import { MissingPowerException } from './missing-power.exception';
-import { DbRole, OneBaseNode, PermissionsForResource } from './model';
+import {
+  DbPermission,
+  DbRole,
+  OneBaseNode,
+  PermissionsForResource,
+} from './model';
 import * as AllRoles from './roles';
 
 const getDbRoles = (roles: ScopedRole[]) =>
@@ -108,19 +114,25 @@ export class AuthorizationService {
     };
   }
 
-  async secureProperties<Resource extends ResourceShape<any>>(
-    resource: Resource,
+  async secureProperties<Resource extends ResourceShape<any>>({
+    resource,
+    props,
+    sessionOrUserId,
+    otherRoles = [],
+  }: {
+    resource: Resource;
     props:
       | PropListDbResult<DbPropsOfDto<Resource['prototype']>>
-      | DbPropsOfDto<Resource['prototype']>,
-    sessionOrUserId: Session | ID,
-    otherRoles: ScopedRole[] = []
-  ): Promise<SecuredResource<Resource, false>> {
-    const permissions = await this.getPermissions(
+      | DbPropsOfDto<Resource['prototype']>;
+    sessionOrUserId: Session | ID;
+    otherRoles?: ScopedRole[];
+  }): Promise<SecuredResource<Resource, false>> {
+    const permissions = await this.getPermissions({
       resource,
       sessionOrUserId,
-      otherRoles
-    );
+      dto: props,
+      otherRoles,
+    });
     // @ts-expect-error not matching for some reason but declared return type is correct
     return parseSecuredProperties(props, permissions, resource.SecuredProps);
   }
@@ -187,11 +199,17 @@ export class AuthorizationService {
    *                        and merge them with the given roles
    * @param otherRoles      Other roles to apply, probably non-global context
    */
-  async getPermissions<Resource extends ResourceShape<any>>(
-    resource: Resource,
-    sessionOrUserId: Session | ID,
-    otherRoles: ScopedRole[] = []
-  ): Promise<PermissionsOf<SecuredResource<Resource>>> {
+  async getPermissions<Resource extends ResourceShape<any>>({
+    resource,
+    sessionOrUserId,
+    dto,
+    otherRoles = [],
+  }: {
+    resource: Resource;
+    sessionOrUserId: Session | ID;
+    dto?: Resource['prototype'];
+    otherRoles?: ScopedRole[];
+  }): Promise<PermissionsOf<SecuredResource<Resource>>> {
     const userGlobalRoles = isIdLike(sessionOrUserId)
       ? await this.getUserGlobalRoles(sessionOrUserId)
       : sessionOrUserId.roles;
@@ -225,9 +243,18 @@ export class AuthorizationService {
 
     // grab all the grants for the given roles & matching resources
     const grants = dbRoles.flatMap((role) =>
-      Object.entries(normalizeGrants(role)).flatMap(([name, grant]) =>
-        resources.includes(name) ? grant : []
-      )
+      Object.entries(normalizeGrants(role)).flatMap(([name, grant]) => {
+        if (resources.includes(name)) {
+          if (
+            dto?.sensitivity &&
+            !this.isSensitivityAllowed(grant, dto?.sensitivity)
+          ) {
+            return [];
+          }
+          return grant;
+        }
+        return [];
+      })
     ) as Array<PermissionsForResource<ResourceShape<Resource>>>;
 
     const keys = [
@@ -241,6 +268,21 @@ export class AuthorizationService {
       };
       return [key, value];
     }) as PermissionsOf<SecuredResource<Resource>>;
+  }
+
+  isSensitivityAllowed(
+    grant: DbPermission,
+    sensitivity?: Sensitivity
+  ): boolean {
+    const sensitivityRank = { High: 3, Medium: 2, Low: 1 };
+    if (
+      sensitivity &&
+      grant.sensitivityAccess &&
+      sensitivityRank[sensitivity] > sensitivityRank[grant.sensitivityAccess]
+    ) {
+      return false;
+    }
+    return true;
   }
 
   mapRoleToDbRoles(role: Role): InternalRole[] {

@@ -556,12 +556,12 @@ export class ProjectService {
     project: UnsecuredDto<Project>,
     sessionOrUserId: Session | ID
   ): Promise<Project> {
-    const securedProps = await this.authorizationService.secureProperties(
-      IProject,
-      project,
+    const securedProps = await this.authorizationService.secureProperties({
+      resource: IProject,
+      props: project,
       sessionOrUserId,
-      project.scope
-    );
+      otherRoles: project.scope,
+    });
 
     return {
       ...project,
@@ -1103,11 +1103,11 @@ export class ProjectService {
     const budgetToReturn = current ?? budgets.items[0];
 
     const membershipRoles = await this.getMembershipRoles(projectId, session);
-    const permsOfProject = await this.authorizationService.getPermissions(
-      IProject,
-      session,
-      membershipRoles
-    );
+    const permsOfProject = await this.authorizationService.getPermissions({
+      resource: IProject,
+      sessionOrUserId: session,
+      otherRoles: membershipRoles,
+    });
 
     return {
       value: budgetToReturn,

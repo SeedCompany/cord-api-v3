@@ -1,3 +1,4 @@
+import { Sensitivity } from '../../../common';
 import { DbBudget } from '../../budget/model';
 import { DbBudgetRecord } from '../../budget/model/budget-record.model.db';
 import { DbCeremony } from '../../ceremony/model';
@@ -201,7 +202,7 @@ export const FinancialAnalyst = new DbRole({
         { propertyName: 'ethnologue',                 permission: { read, }, },
         { propertyName: 'sensitivity',                permission: { read, }, },
         { propertyName: 'hasExternalFirstScripture',  permission: { read, }, },
-        { propertyName: 'locations',                  permission: { read, }, },
+        { propertyName: 'locations',                  permission: { read, sensitivityAccess: Sensitivity.Low }, },
         { propertyName: 'tags',                       permission: { read, }, },
         ],
     canDelete: false,
@@ -256,9 +257,9 @@ export const FinancialAnalyst = new DbRole({
     new DbBaseNodeGrant<DbOrganization>({
       __className: 'DbOrganization',
       properties: [
-        { propertyName: 'name',                       permission: { read, write, }, },
-        { propertyName: 'address',                    permission: { read, write, }, },
-        { propertyName: 'locations',                  permission: { read, write, }, },
+        { propertyName: 'name',                       permission: { read, write, sensitivityAccess: Sensitivity.Medium }, },
+        { propertyName: 'address',                    permission: { read, write, sensitivityAccess: Sensitivity.Medium }, },
+        { propertyName: 'locations',                  permission: { read, write, sensitivityAccess: Sensitivity.Medium }, },
         ],
     canDelete: false,
   }),
@@ -266,7 +267,7 @@ export const FinancialAnalyst = new DbRole({
       __className: 'DbPartner',
       properties: [
         { propertyName: 'organization',               permission: { read, write, }, },
-        { propertyName: 'pointOfContact',             permission: { read, write, }, },
+        { propertyName: 'pointOfContact',             permission: { read, write, sensitivityAccess: Sensitivity.Medium }, },
         { propertyName: 'types',                      permission: { read, write, }, },
         { propertyName: 'financialReportingTypes',    permission: { read, write, }, },
         { propertyName: 'pmcEntityCode',              permission: { read, write, }, },
@@ -290,8 +291,8 @@ export const FinancialAnalyst = new DbRole({
         { propertyName: 'mouStartOverride',           permission: { read, }, },
         { propertyName: 'mouStatus',                  permission: { read, }, },
         { propertyName: 'types',                      permission: { read, }, },
-        { propertyName: 'organization',               permission: { read, }, },
-        { propertyName: 'partner',                    permission: { read, }, },
+        { propertyName: 'organization',               permission: { read, sensitivityAccess: Sensitivity.Medium }, },
+        { propertyName: 'partner',                    permission: { read, sensitivityAccess: Sensitivity.Medium }, },
         { propertyName: 'primary',                    permission: { read, }, },
         ],
     canDelete: false,
@@ -321,10 +322,10 @@ export const FinancialAnalyst = new DbRole({
         { propertyName: 'mouEnd',                     permission: { read, write, }, },
         { propertyName: 'initialMouEnd',              permission: { read, write, }, },
         { propertyName: 'stepChangedAt',              permission: { read, write, }, },
-        { propertyName: 'rootDirectory',              permission: { read, write, }, },
+        { propertyName: 'rootDirectory',              permission: { read, write, sensitivityAccess: Sensitivity.Medium }, },
         { propertyName: 'member',                     permission: { read, write, }, },
-        { propertyName: 'otherLocations',             permission: { read, write, }, },
-        { propertyName: 'primaryLocation',            permission: { read, write, }, },
+        { propertyName: 'otherLocations',             permission: { read, write, sensitivityAccess: Sensitivity.Medium }, },
+        { propertyName: 'primaryLocation',            permission: { read, write, sensitivityAccess: Sensitivity.Medium }, },
         { propertyName: 'marketingLocation',          permission: { read, write, }, },
         { propertyName: 'partnership',                permission: { read, write, }, },
         { propertyName: 'budget',                     permission: { read, write, }, },

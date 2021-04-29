@@ -1,3 +1,4 @@
+import { Sensitivity } from '../../../common';
 import { DbBudget } from '../../budget/model';
 import { DbBudgetRecord } from '../../budget/model/budget-record.model.db';
 import { DbCeremony } from '../../ceremony/model';
@@ -51,7 +52,7 @@ export const ConsultantManagerGlobal = new DbRole({
     new DbBaseNodeGrant<DbBudget>({
       __className: 'DbBudget',
       properties: [
-        { propertyName: 'universalTemplateFile',      permission: { read, }, },
+        { propertyName: 'universalTemplateFile',      permission: { read, sensitivityAccess: Sensitivity.Medium, }, },
         { propertyName: 'records',                    permission: { read, }, },
         { propertyName: 'status',                     permission: { read, }, },
         ],
@@ -60,8 +61,8 @@ export const ConsultantManagerGlobal = new DbRole({
     new DbBaseNodeGrant<DbBudgetRecord>({
       __className: 'DbBudgetRecord',
       properties: [
-        { propertyName: 'amount',                     permission: { read, }, },
-        { propertyName: 'fiscalYear',                 permission: { read, }, },
+        { propertyName: 'amount',                     permission: { read, sensitivityAccess: Sensitivity.Medium }, },
+        { propertyName: 'fiscalYear',                 permission: { read, sensitivityAccess: Sensitivity.Medium }, },
         { propertyName: 'organization',               permission: { read, }, },
         ],
     canDelete: false,
@@ -195,13 +196,13 @@ export const ConsultantManagerGlobal = new DbRole({
         { propertyName: 'name',                       permission: { read, }, },
         { propertyName: 'leastOfTheseReason',         permission: { read, }, },
         { propertyName: 'populationOverride',         permission: { read, }, },
-        { propertyName: 'registryOfDialectsCode',     permission: { read, }, },
-        { propertyName: 'signLanguageCode',           permission: { read, }, },
+        { propertyName: 'registryOfDialectsCode',     permission: { read, sensitivityAccess: Sensitivity.Medium }, },
+        { propertyName: 'signLanguageCode',           permission: { read, sensitivityAccess: Sensitivity.Medium }, },
         { propertyName: 'sponsorEstimatedEndDate',    permission: { read, }, },
-        { propertyName: 'ethnologue',                 permission: { read, }, },
+        { propertyName: 'ethnologue',                 permission: { read, sensitivityAccess: Sensitivity.Medium }, },
         { propertyName: 'sensitivity',                permission: { read, }, },
         { propertyName: 'hasExternalFirstScripture',  permission: { read, }, },
-        { propertyName: 'locations',                  permission: { read, }, },
+        { propertyName: 'locations',                  permission: { read, sensitivityAccess: Sensitivity.Medium }, },
         { propertyName: 'tags',                       permission: { read, }, },
         ],
     canDelete: false,
@@ -221,7 +222,7 @@ export const ConsultantManagerGlobal = new DbRole({
         { propertyName: 'lastReactivatedAt',          permission: { read, write, }, },
         { propertyName: 'lastSuspendedAt',            permission: { read, write, }, },
         { propertyName: 'lukePartnership',            permission: { read, write, }, },
-        { propertyName: 'paratextRegistryId',         permission: { read, write, }, },
+        { propertyName: 'paratextRegistryId',         permission: { read, write, sensitivityAccess: Sensitivity.Medium }, },
         { propertyName: 'pnp',                        permission: { read, write, }, },
         { propertyName: 'historicGoal',               permission: { read, write, }, },
         { propertyName: 'sentPrintingDate',           permission: { read, write, }, },
@@ -258,7 +259,7 @@ export const ConsultantManagerGlobal = new DbRole({
       properties: [
         { propertyName: 'name',                       permission: { read, }, },
         { propertyName: 'address',                    permission: { read, }, },
-        { propertyName: 'locations',                  permission: { read, }, },
+        { propertyName: 'locations',                  permission: { read, sensitivityAccess: Sensitivity.Medium }, },
         ],
     canDelete: false,
   }),
@@ -290,9 +291,8 @@ export const ConsultantManagerGlobal = new DbRole({
         { propertyName: 'mouStartOverride',           permission: { read, }, },
         { propertyName: 'mouStatus',                  permission: { read, }, },
         { propertyName: 'types',                      permission: { read, }, },
-        { propertyName: 'organization',               permission: { read, }, },
-        { propertyName: 'partner',                    permission: { read, }, },
-        { propertyName: 'primary',                    permission: { read, }, },
+        { propertyName: 'organization',               permission: { read, sensitivityAccess: Sensitivity.Low }, },
+        { propertyName: 'partner',                    permission: { read, sensitivityAccess: Sensitivity.Low }, },
         ],
     canDelete: false,
   }),
@@ -323,11 +323,11 @@ export const ConsultantManagerGlobal = new DbRole({
         { propertyName: 'stepChangedAt',              permission: { read, write, }, },
         { propertyName: 'rootDirectory',              permission: { read, write, }, },
         { propertyName: 'member',                     permission: { read, write, }, },
-        { propertyName: 'otherLocations',             permission: { read, write, }, },
-        { propertyName: 'primaryLocation',            permission: { read, write, }, },
+        { propertyName: 'otherLocations',             permission: { read, write, sensitivityAccess: Sensitivity.Medium }, },
+        { propertyName: 'primaryLocation',            permission: { read, write, sensitivityAccess: Sensitivity.Medium }, },
         { propertyName: 'marketingLocation',          permission: { read, write, }, },
         { propertyName: 'partnership',                permission: { read, write, }, },
-        { propertyName: 'budget',                     permission: { read, write, }, },
+        { propertyName: 'budget',                     permission: { read, write, sensitivityAccess: Sensitivity.Medium }, },
         { propertyName: 'modifiedAt',                 permission: { read, write, }, },
         { propertyName: 'fieldRegion',                permission: { read, write, }, },
         { propertyName: 'engagement',                 permission: { read, write, }, },

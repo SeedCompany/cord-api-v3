@@ -324,11 +324,11 @@ export class LanguageService {
     );
 
     const props = parsePropList(result.propList);
-    const securedProps = await this.authorizationService.secureProperties(
-      Language,
+    const securedProps = await this.authorizationService.secureProperties({
+      resource: Language,
       props,
-      session
-    );
+      sessionOrUserId: session,
+    });
 
     return {
       ...parseBaseNodeProperties(result.node),

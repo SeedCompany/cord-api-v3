@@ -188,11 +188,11 @@ export class FieldRegionService {
       );
     }
 
-    const secured = await this.authorizationService.secureProperties(
-      FieldRegion,
-      result.propList,
-      session
-    );
+    const secured = await this.authorizationService.secureProperties({
+      resource: FieldRegion,
+      props: result.propList,
+      sessionOrUserId: session,
+    });
 
     return {
       ...parseBaseNodeProperties(result.node),

@@ -175,11 +175,11 @@ export class LiteracyMaterialService {
       session
     );
 
-    const securedProps = await this.authorizationService.secureProperties(
-      LiteracyMaterial,
-      result.propList,
-      session
-    );
+    const securedProps = await this.authorizationService.secureProperties({
+      resource: LiteracyMaterial,
+      props: result.propList,
+      sessionOrUserId: session,
+    });
 
     return {
       ...parseBaseNodeProperties(result.node),
