@@ -32,12 +32,16 @@ describe('Budget Security e2e', () => {
     email = faker.internet.email();
     password = faker.internet.password();
     await createSession(app);
-    await registerUserWithPower(app, [
-      Powers.CreateOrganization,
-      Powers.CreateProject,
-      Powers.CreatePartnership,
-      Powers.CreateBudget,
-    ]);
+    await registerUserWithPower(
+      app,
+      [
+        Powers.CreateOrganization,
+        Powers.CreateProject,
+        Powers.CreatePartnership,
+        Powers.CreateBudget,
+      ],
+      { email: email, password: password }
+    );
     project = await createProject(app);
     await createPartnership(app, {
       projectId: project.id,
