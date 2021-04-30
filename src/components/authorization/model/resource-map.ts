@@ -16,6 +16,12 @@ import { Organization } from '../../organization/dto';
 import { Partner } from '../../partner/dto';
 import { Partnership } from '../../partnership/dto';
 import {
+  FinancialReport,
+  NarrativeReport,
+  IPeriodicReport as PeriodicReport,
+  ProgressReport,
+} from '../../periodic-report/dto';
+import {
   DerivativeScriptureProduct,
   DirectScriptureProduct,
   Product,
@@ -58,6 +64,10 @@ export const ResourceMap = {
   TranslationProject,
   InternshipProject,
   ProjectMember,
+  PeriodicReport,
+  FinancialReport,
+  NarrativeReport,
+  ProgressReport,
   Song,
   Story,
   Unavailability,

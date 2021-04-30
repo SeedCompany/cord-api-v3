@@ -3,6 +3,7 @@ import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
 import {
+  DateInterval,
   DateTimeField,
   ID,
   parentIdMiddleware,
@@ -159,3 +160,6 @@ export class InternshipEngagement extends Engagement {
 
   readonly growthPlan: DefinedFile;
 }
+
+export const engagementRange = (engagement: Engagement) =>
+  DateInterval.tryFrom(engagement.startDate.value, engagement.endDate.value);

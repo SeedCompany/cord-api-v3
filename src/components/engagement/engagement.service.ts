@@ -1051,6 +1051,27 @@ export class EngagementService {
     return engagements;
   }
 
+  async listAllByProjectId(
+    projectId: string,
+    session: Session
+  ): Promise<IEngagement[]> {
+    const engagementIds = await this.db
+      .query()
+      .match([
+        node('project', 'Project', { id: projectId }),
+        relation('out', '', 'engagement', { active: true }),
+        node('engagement', 'Engagement'),
+      ])
+      .return('engagement.id as id')
+      .asResult<{ id: ID }>()
+      .run();
+
+    const engagements = await Promise.all(
+      engagementIds.map((e) => this.readOne(e.id, session))
+    );
+    return engagements;
+  }
+
   async listProducts(
     engagement: LanguageEngagement,
     input: ProductListInput,
