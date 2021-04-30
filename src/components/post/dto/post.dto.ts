@@ -8,6 +8,7 @@ import {
   SecuredProps,
   SecuredString,
 } from '../../../common';
+import { PostShareability } from './shareability.dto';
 import { PostType } from './type.enum';
 
 @ObjectType({
@@ -22,8 +23,8 @@ export class Post extends Resource {
   @Field(() => PostType)
   readonly type: PostType;
 
-  @Field(() => Boolean)
-  readonly shareable: boolean;
+  @Field(() => PostShareability)
+  readonly shareability: PostShareability;
 
   @Field()
   readonly body: SecuredString;
