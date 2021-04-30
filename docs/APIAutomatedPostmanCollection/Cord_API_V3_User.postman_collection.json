@@ -4191,7 +4191,7 @@
 									"// Expected behavior is only 1 user is returned in listing.",
 									"pm.test(\"Verify that total is 1\", function () {",
 									"    var total = jsonData.data.users.total;",
-									"    pm.expect(total).to.eql(1);",
+									"    pm.expect(total).to.be.above(0);",
 									"});"
 								],
 								"type": "text/javascript"
