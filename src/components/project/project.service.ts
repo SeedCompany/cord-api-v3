@@ -55,6 +55,7 @@ import {
   ChangeListInput,
   SecuredChangeList,
 } from './change-to-plan/dto/change-list.dto';
+import { PlanChangeStatus } from './change-to-plan/dto/plan-change-status.enum';
 import {
   CreateProject,
   InternshipProject,
@@ -299,8 +300,16 @@ export class ProjectService {
     };
   }
 
-  async readOne(id: ID, sessionOrUserId: Session | ID): Promise<Project> {
-    const unsecured = await this.readOneUnsecured(id, sessionOrUserId);
+  async readOne(
+    id: ID,
+    sessionOrUserId: Session | ID,
+    changeId?: ID
+  ): Promise<Project> {
+    const unsecured = await this.readOneUnsecured(
+      id,
+      sessionOrUserId,
+      changeId
+    );
     return await this.secure(unsecured, sessionOrUserId);
   }
 
@@ -327,7 +336,12 @@ export class ProjectService {
     );
 
     if (changes.step) {
-      await this.projectRules.verifyStepChange(input.id, session, changes.step);
+      await this.projectRules.verifyStepChange(
+        input.id,
+        session,
+        changes.step,
+        changeId
+      );
     }
 
     const {
@@ -336,6 +350,23 @@ export class ProjectService {
       fieldRegionId,
       ...simpleChanges
     } = changes;
+
+    // In CR mode, Project status should be Active and CR status is pending
+    if (changeId) {
+      const planChange = await this.planChangeService.readOne(
+        changeId,
+        session
+      );
+      if (
+        currentProject.status !== ProjectStatus.Active ||
+        planChange.status.value !== PlanChangeStatus.Pending
+      ) {
+        throw new InputException(
+          'Project status is not Active or CR is not pending',
+          'project.status'
+        );
+      }
+    }
 
     let result = await this.db.updateProperties({
       type:
@@ -721,7 +752,7 @@ export class ProjectService {
     );
   }
 
-  protected async getPlanChangesProps(
+  async getPlanChangesProps(
     id: ID,
     changeId: ID
   ): Promise<Record<string, any>> {

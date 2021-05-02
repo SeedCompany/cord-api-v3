@@ -8,7 +8,6 @@ import {
 import { PlanChangeStatus } from '../../src/components/project/change-to-plan/dto/plan-change-status.enum';
 import { PlanChangeType } from '../../src/components/project/change-to-plan/dto/plan-change-type.enum';
 import { TestApp } from './create-app';
-import { createProject } from './create-project';
 import { fragments } from './fragments';
 
 export async function createPlanChange(
@@ -16,7 +15,7 @@ export async function createPlanChange(
   input: Partial<CreatePlanChange>
 ) {
   const planChange: CreatePlanChange = {
-    projectId: input.projectId ?? (await createProject(app)).id,
+    projectId: input.projectId!, // Project status should be Active
     status: PlanChangeStatus.Pending,
     types: [PlanChangeType.Other],
     summary: faker.random.alpha(),

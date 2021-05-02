@@ -123,13 +123,12 @@ export class ProjectResolver {
     @Parent() project: Project,
     @IdArg({ nullable: true }) id?: ID
   ): Promise<Project> {
-    const projectChanges = await this.projectService.readOneUnsecured(
+    const projectChanges = await this.projectService.readOne(
       project.id,
       session,
       id
     );
-    const secured = await this.projectService.secure(projectChanges, session);
-    return secured;
+    return projectChanges;
   }
 
   @ResolveField(() => SecuredBudget, {

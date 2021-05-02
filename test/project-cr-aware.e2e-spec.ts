@@ -2,24 +2,36 @@ import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { Powers } from '../src/components/authorization/dto/powers';
-import { Role } from '../src/components/project';
+import { Project, ProjectStep, Role } from '../src/components/project';
+import { PlanChangeStatus } from '../src/components/project/change-to-plan/dto/plan-change-status.enum';
 import { User } from '../src/components/user/dto/user.dto';
 import {
+  createFundingAccount,
+  createLocation,
   createPlanChange,
   createProject,
+  createRegion,
   createSession,
   createTestApp,
   login,
+  Raw,
   registerUserWithPower,
+  runAsAdmin,
   TestApp,
+  updateProject,
 } from './utility';
 import { fragments } from './utility/fragments';
 import { resetDatabase } from './utility/reset-database';
+import {
+  changeProjectStep,
+  stepsFromEarlyConversationToBeforeActive,
+} from './utility/transition-project';
 
 describe('Project CR Aware e2e', () => {
   let app: TestApp;
   let director: User;
   let db: Connection;
+  let project: Raw<Project>;
   const password = faker.internet.password();
 
   beforeAll(async () => {
@@ -32,6 +44,27 @@ describe('Project CR Aware e2e', () => {
       password: password,
     });
 
+    // Change project status to Active
+    const fundingAccount = await createFundingAccount(app);
+    const location = await createLocation(app, {
+      fundingAccountId: fundingAccount.id,
+    });
+    const fieldRegion = await createRegion(app);
+    project = await createProject(app);
+    await updateProject(app, {
+      id: project.id,
+      primaryLocationId: location.id,
+      fieldRegionId: fieldRegion.id,
+    });
+    await runAsAdmin(app, async () => {
+      for (const next of [
+        ...stepsFromEarlyConversationToBeforeActive,
+        ProjectStep.Active,
+      ]) {
+        await changeProjectStep(app, project.id, next);
+      }
+    });
+
     await login(app, { email: director.email.value, password });
   });
 
@@ -41,7 +74,6 @@ describe('Project CR Aware e2e', () => {
   });
 
   it('CR aware project name', async () => {
-    const project = await createProject(app);
     const planChange = await createPlanChange(app, {
       projectId: project.id,
     });
@@ -103,5 +135,42 @@ describe('Project CR Aware e2e', () => {
       }
     );
     expect(result.project.projectChanges.name.value).toBe(newCRName);
+
+    // Approve CR
+    await app.graphql.mutate(
+      gql`
+        mutation updatePlanChange($input: UpdatePlanChangeInput!) {
+          updatePlanChange(input: $input) {
+            planChange {
+              ...planChange
+            }
+          }
+        }
+        ${fragments.planChange}
+      `,
+      {
+        input: {
+          planChange: {
+            id: planChange.id,
+            status: PlanChangeStatus.Approved,
+          },
+        },
+      }
+    );
+    // Project name is changed without changeId
+    result = await app.graphql.query(
+      gql`
+        query project($id: ID!) {
+          project(id: $id) {
+            ...project
+          }
+        }
+        ${fragments.project}
+      `,
+      {
+        id: project.id,
+      }
+    );
+    expect(result.project.name.value).toBe(newCRName);
   });
 });

@@ -4,6 +4,7 @@ import { DateTime } from 'luxon';
 import {
   generateId,
   ID,
+  InputException,
   NotFoundException,
   ServerException,
   Session,
@@ -13,6 +14,7 @@ import {
   ConfigService,
   createBaseNode,
   DatabaseService,
+  IEventBus,
   ILogger,
   Logger,
   matchRequestingUser,
@@ -32,8 +34,11 @@ import {
 } from '../../../core/database/results';
 import { AuthorizationService } from '../../authorization/authorization.service';
 import { Role, rolesForScope } from '../../authorization/dto';
+import { ProjectStatus } from '../dto';
+import { ProjectService } from '../project.service';
 import { CreatePlanChange, PlanChange, UpdatePlanChange } from './dto';
 import { ChangeListInput, ChangeListOutput } from './dto/change-list.dto';
+import { PlanChangeUpdatedEvent } from './events';
 
 @Injectable()
 export class PlanChangeService {
@@ -48,7 +53,10 @@ export class PlanChangeService {
     private readonly config: ConfigService,
     @Logger('project:plan-change:service') private readonly logger: ILogger,
     @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService
+    private readonly authorizationService: AuthorizationService,
+    private readonly eventBus: IEventBus,
+    @Inject(forwardRef(() => ProjectService))
+    private readonly projectService: ProjectService
   ) {}
 
   @OnIndex()
@@ -63,6 +71,14 @@ export class PlanChangeService {
     { projectId, ...input }: CreatePlanChange,
     session: Session
   ): Promise<PlanChange> {
+    // Project status should be active
+    const project = await this.projectService.readOne(projectId, session);
+    if (project.status !== ProjectStatus.Active) {
+      throw new InputException(
+        'Project status should be Active',
+        'project.status'
+      );
+    }
     const createdAt = DateTime.local();
     const planChangeId = await generateId();
 
@@ -173,7 +189,17 @@ export class PlanChangeService {
       object,
       changes,
     });
-    return await this.readOne(input.id, session);
+    const updated = await this.readOne(input.id, session);
+
+    const planChangeUpdatedEvent = new PlanChangeUpdatedEvent(
+      updated,
+      object,
+      input,
+      session
+    );
+    await this.eventBus.publish(planChangeUpdatedEvent);
+
+    return updated;
   }
 
   async delete(id: ID, session: Session): Promise<void> {

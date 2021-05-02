@@ -20,7 +20,7 @@ export abstract class CreatePlanChange {
   readonly summary: string;
 
   @Field(() => PlanChangeStatus)
-  readonly status: PlanChangeStatus;
+  readonly status: PlanChangeStatus = PlanChangeStatus.Pending;
 }
 
 @InputType()
