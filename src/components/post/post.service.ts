@@ -72,8 +72,8 @@ export class PostService {
         isOrgPublic: false,
       },
       {
-        key: 'shareable',
-        value: input.shareable,
+        key: 'shareability',
+        value: input.shareability,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -180,7 +180,7 @@ export class PostService {
       ...parseBaseNodeProperties(result.node),
       ...securedProps,
       type: props.type,
-      shareable: props.shareable,
+      shareability: props.shareability,
       body: {
         value: props.body,
         canRead: true,

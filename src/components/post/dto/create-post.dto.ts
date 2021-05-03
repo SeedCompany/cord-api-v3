@@ -3,6 +3,7 @@ import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { IdField } from '../../../common';
 import { Post } from './post.dto';
+import { PostShareability } from './shareability.dto';
 import { PostType } from './type.enum';
 
 @InputType()
@@ -13,8 +14,8 @@ export class CreatePost {
   @Field(() => PostType)
   readonly type: PostType;
 
-  @Field(() => Boolean)
-  readonly shareable: boolean;
+  @Field(() => PostShareability)
+  readonly shareability: PostShareability;
 
   @Field({
     description: 'the post body',
