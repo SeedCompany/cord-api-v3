@@ -274,7 +274,8 @@ export class ProjectResolver {
     description: 'Update a project',
   })
   async updateProject(
-    @Args('input') { project: input, changeId }: UpdateProjectInput,
+    @Args('input') { project: input }: UpdateProjectInput,
+    @IdArg({ name: 'changeId', nullable: true }) changeId: ID,
     @LoggedInSession() session: Session
   ): Promise<UpdateProjectOutput> {
     const project = await this.projectService.update(input, session, changeId);

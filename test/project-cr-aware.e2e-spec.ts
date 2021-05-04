@@ -83,8 +83,8 @@ describe('Project CR Aware e2e', () => {
     const newCRName = faker.random.word() + ' ' + faker.datatype.uuid();
     await app.graphql.query(
       gql`
-        mutation updateProject($input: UpdateProjectInput!) {
-          updateProject(input: $input) {
+        mutation updateProject($input: UpdateProjectInput!, $changeId: ID) {
+          updateProject(input: $input, changeId: $changeId) {
             project {
               ...project
             }
@@ -98,8 +98,8 @@ describe('Project CR Aware e2e', () => {
             id: project.id,
             name: newCRName,
           },
-          changeId: planChange.id,
         },
+        changeId: planChange.id,
       }
     );
     // Query project without changeId
