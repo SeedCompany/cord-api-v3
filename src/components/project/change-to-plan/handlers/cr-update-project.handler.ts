@@ -28,10 +28,13 @@ export class CRUpdateProject implements IEventHandler<SubscribedEvent> {
       ...event,
       event: event.constructor.name,
     });
-
+    const oldPlanChange = event.previous;
     const planChange = event.updated;
 
-    if (planChange.status.value !== PlanChangeStatus.Approved) {
+    if (
+      oldPlanChange.status.value !== PlanChangeStatus.Pending ||
+      planChange.status.value !== PlanChangeStatus.Approved
+    ) {
       return;
     }
 
