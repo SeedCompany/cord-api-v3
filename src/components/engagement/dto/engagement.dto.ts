@@ -162,4 +162,12 @@ export class InternshipEngagement extends Engagement {
 }
 
 export const engagementRange = (engagement: Engagement) =>
-  DateInterval.tryFrom(engagement.startDate.value, engagement.endDate.value);
+  engagement.startDateOverride.value
+    ? DateInterval.tryFrom(
+        engagement.startDateOverride.value,
+        engagement.endDateOverride.value
+      )
+    : DateInterval.tryFrom(
+        engagement.startDate.value,
+        engagement.endDate.value
+      );

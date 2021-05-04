@@ -22,7 +22,7 @@ import { ProjectService } from './project.service';
   imports: [
     forwardRef(() => FieldRegionModule),
     ProjectMemberModule,
-    PeriodicReportModule,
+    forwardRef(() => PeriodicReportModule),
     forwardRef(() => BudgetModule),
     forwardRef(() => PartnershipModule),
     forwardRef(() => UserModule),
