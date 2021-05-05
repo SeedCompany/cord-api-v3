@@ -272,7 +272,7 @@ export class PeriodicReportService {
         }
       )
       .with('report as baseNode')
-      .call(deleteBaseNode)
+      .apply(deleteBaseNode)
       .return('count(node) as count')
       .asResult<{ count: number }>()
       .first();

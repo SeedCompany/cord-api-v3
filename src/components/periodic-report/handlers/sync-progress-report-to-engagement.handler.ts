@@ -119,33 +119,4 @@ export class SyncProgressReportToEngagementDateRange
         !engagement.startDateOverride.value || !engagement.endDateOverride.value
     );
   }
-
-  private async syncOldEngagementReports(session: Session) {
-    const engagements = await this.engagements.listEngagementsWithDateRange();
-    await Promise.all(
-      engagements.flatMap((engagement) =>
-        (engagement.startDateOverride
-          ? DateInterval.tryFrom(
-              engagement.startDateOverride,
-              engagement.endDateOverride
-            )
-          : DateInterval.tryFrom(engagement.startDate, engagement.endDate)
-        )
-          .expandToFull('quarters')
-          .difference()
-          .flatMap((r) => r.splitBy({ quarters: 1 }))
-          .flatMap((interval) =>
-            this.periodicReports.create(
-              {
-                start: interval.start,
-                end: interval.end,
-                type: ReportType.Progress,
-                projectOrEngagementId: engagement.engagementId,
-              },
-              session
-            )
-          )
-      )
-    );
-  }
 }

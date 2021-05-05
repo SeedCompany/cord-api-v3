@@ -1,8 +1,7 @@
-import { forwardRef, Inject } from '@nestjs/common';
 import { DurationUnit } from 'luxon';
-import { DateInterval, Session } from '../../../common';
+import { DateInterval } from '../../../common';
 import { EventsHandler, IEventHandler, ILogger, Logger } from '../../../core';
-import { projectRange, ProjectService } from '../../project';
+import { projectRange } from '../../project';
 import { ProjectUpdatedEvent } from '../../project/events';
 import { ReportPeriod, ReportType } from '../dto';
 import { PeriodicReportService } from '../periodic-report.service';
@@ -14,8 +13,6 @@ export class SyncPeriodicReportsToProjectDateRange
   implements IEventHandler<SubscribedEvent> {
   constructor(
     private readonly periodicReports: PeriodicReportService,
-    @Inject(forwardRef(() => ProjectService))
-    private readonly projects: ProjectService,
     @Logger('periodic-reports:project-sync') private readonly logger: ILogger
   ) {}
 
@@ -90,37 +87,5 @@ export class SyncPeriodicReportsToProjectDateRange
       additions: diff.additions.flatMap(splitByUnit),
       removals: diff.removals.flatMap(splitByUnit),
     };
-  }
-
-  private async syncOldProjects(session: Session) {
-    const projects = await this.projects.listProjectsWithDateRange();
-    await Promise.all(
-      projects.flatMap((p) =>
-        DateInterval.tryFrom(p.mouStart, p.mouEnd)
-          .expandToFull('quarters')
-          .difference()
-          .flatMap((r) => r.splitBy({ quarters: 1 }))
-          .flatMap((interval) => [
-            this.periodicReports.create(
-              {
-                start: interval.start,
-                end: interval.end,
-                type: ReportType.Financial,
-                projectOrEngagementId: p.projectId,
-              },
-              session
-            ),
-            this.periodicReports.create(
-              {
-                start: interval.start,
-                end: interval.end,
-                type: ReportType.Narrative,
-                projectOrEngagementId: p.projectId,
-              },
-              session
-            ),
-          ])
-      )
-    );
   }
 }
