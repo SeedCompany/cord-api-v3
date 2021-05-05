@@ -3,6 +3,7 @@ import { node, Node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
 import {
+  CalendarDate,
   DuplicateException,
   generateId,
   ID,
@@ -1051,6 +1052,27 @@ export class EngagementService {
     return engagements;
   }
 
+  async listAllByProjectId(
+    projectId: string,
+    session: Session
+  ): Promise<IEngagement[]> {
+    const engagementIds = await this.db
+      .query()
+      .match([
+        node('project', 'Project', { id: projectId }),
+        relation('out', '', 'engagement', { active: true }),
+        node('engagement', 'Engagement'),
+      ])
+      .return('engagement.id as id')
+      .asResult<{ id: ID }>()
+      .run();
+
+    const engagements = await Promise.all(
+      engagementIds.map((e) => this.readOne(e.id, session))
+    );
+    return engagements;
+  }
+
   async listProducts(
     engagement: LanguageEngagement,
     input: ProductListInput,
@@ -1193,6 +1215,64 @@ export class EngagementService {
         )
       ).every((n) => n)
     );
+  }
+
+  async listEngagementsWithDateRange() {
+    const result = await this.db
+      .query()
+      .match(node('engagement', 'Engagement'))
+      .match([
+        node('project', 'Project'),
+        relation('out', '', 'engagement', { active: true }),
+        node('engagement'),
+      ])
+      .optionalMatch([
+        node('project'),
+        relation('out', '', 'mouStart', { active: true }),
+        node('mouStart', 'Property'),
+      ])
+      .optionalMatch([
+        node('project'),
+        relation('out', '', 'mouEnd', { active: true }),
+        node('mouEnd', 'Property'),
+      ])
+      .optionalMatch([
+        node('engagement'),
+        relation('out', '', 'startDateOverride', { active: true }),
+        node('startDateOverride', 'Property'),
+      ])
+      .optionalMatch([
+        node('engagement'),
+        relation('out', '', 'endDateOverride', { active: true }),
+        node('endDateOverride', 'Property'),
+      ])
+      .with([
+        'engagement',
+        'mouStart',
+        'mouEnd',
+        'startDateOverride',
+        'endDateOverride',
+      ])
+      .raw(
+        'WHERE (mouStart.value IS NOT NULL AND mouEnd.value IS NOT NULL) OR (startDateOverride.value IS NOT NULL AND endDateOverride.value IS NOT NULL)'
+      )
+      .return([
+        'engagement.id as engagementId',
+        'mouStart.value as startDate',
+        'mouEnd.value as endDate',
+        'startDateOverride.value as startDateOverride',
+        'endDateOverride.value as endDateOverride',
+      ])
+      .asResult<{
+        engagementId: ID;
+        startDate: CalendarDate;
+        endDate: CalendarDate;
+        startDateOverride: CalendarDate;
+        endDateOverride: CalendarDate;
+      }>()
+      .run();
+
+    return result;
   }
 
   private async savePnpData(id: ID, pnpData: PnpData | null) {

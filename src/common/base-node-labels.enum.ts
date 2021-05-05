@@ -23,6 +23,7 @@ export enum DbBaseNodeLabel {
   Post = 'DbPost',
   Project = 'DbProject',
   ProjectMember = 'DbProjectMember',
+  PeriodicReport = 'DbPeriodicReport',
   Producible = 'DbProducible',
   Product = 'DbProduct',
   Song = 'DbSong',

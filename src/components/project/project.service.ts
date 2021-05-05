@@ -3,6 +3,7 @@ import { Node, node, relation, Relation } from 'cypher-query-builder';
 import { Many } from 'lodash';
 import { DateTime } from 'luxon';
 import {
+  CalendarDate,
   DuplicateException,
   generateId,
   getHighestSensitivity,
@@ -66,6 +67,7 @@ import {
   PartnershipService,
   SecuredPartnershipList,
 } from '../partnership';
+import { ReportPeriod } from '../periodic-report';
 import {
   CreateProject,
   InternshipProject,
@@ -240,6 +242,12 @@ export class ProjectService {
       {
         key: 'financialReportReceivedAt',
         value: createInput.financialReportReceivedAt,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'financialReportPeriod',
+        value: createInput.financialReportPeriod,
         isPublic: false,
         isOrgPublic: false,
       },
@@ -535,6 +543,8 @@ export class ProjectService {
     const props = parsePropList(result.propList);
     return {
       ...parseBaseNodeProperties(result.node),
+      // @ts-expect-error this could be missing from props for all projects created/updated before this property was added
+      financialReportPeriod: ReportPeriod.Monthly,
       ...props,
       // Sensitivity is calculated based on the highest language sensitivity (for Translation Projects).
       // If project has no language engagements (new Translation projects and all Internship projects),
@@ -1223,6 +1233,34 @@ export class ProjectService {
         )
       ).every((n) => n)
     );
+  }
+
+  async listProjectsWithDateRange() {
+    const result = await this.db
+      .query()
+      .match(node('project', 'Project'))
+      .match([
+        node('project'),
+        relation('out', '', 'mouStart', { active: true }),
+        node('mouStart', 'Property'),
+      ])
+      .match([
+        node('project'),
+        relation('out', '', 'mouEnd', { active: true }),
+        node('mouEnd', 'Property'),
+      ])
+      .raw('WHERE mouStart.value IS NOT NULL AND mouEnd.value IS NOT NULL')
+      .return(
+        'project.id as projectId, mouStart.value as mouStart, mouEnd.value as mouEnd'
+      )
+      .asResult<{
+        projectId: ID;
+        mouStart: CalendarDate;
+        mouEnd: CalendarDate;
+      }>()
+      .run();
+
+    return result;
   }
 
   protected async validateOtherResourceId(
