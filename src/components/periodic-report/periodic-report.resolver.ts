@@ -59,16 +59,26 @@ export class PeriodicReportResolver {
               {
                 start: interval.start,
                 end: interval.end,
-                type: ReportType.Financial,
+                type: ReportType.Narrative,
                 projectOrEngagementId: p.projectId,
               },
               session
             ),
+          ])
+      )
+    );
+    const reports2 = await Promise.all(
+      projects.flatMap((p) =>
+        DateInterval.tryFrom(p.mouStart, p.mouEnd)
+          .expandToFull('months')
+          .difference()
+          .flatMap((r) => r.splitBy({ months: 1 }))
+          .flatMap((interval) => [
             this.service.create(
               {
                 start: interval.start,
                 end: interval.end,
-                type: ReportType.Narrative,
+                type: ReportType.Financial,
                 projectOrEngagementId: p.projectId,
               },
               session
@@ -78,7 +88,7 @@ export class PeriodicReportResolver {
     );
 
     const engagements = await this.engagements.listEngagementsWithDateRange();
-    const reports2 = await Promise.all(
+    const reports3 = await Promise.all(
       engagements.flatMap((engagement) =>
         (engagement.startDateOverride
           ? DateInterval.tryFrom(
@@ -103,7 +113,7 @@ export class PeriodicReportResolver {
           )
       )
     );
-    return [...reports1, ...reports2];
+    return [...reports1, ...reports2, ...reports3];
   }
 
   @ResolveField(() => SecuredFile)
