@@ -326,6 +326,15 @@ export class BudgetService {
       throw new NotFoundException('Could not find budget', 'budget.id');
     }
 
+    console.log(`sensitivity: ${result.props.sensitivity}`)
+    console.log(session.roles)
+    const securedProps = await this.authorizationService.secureProperties({
+      resource: Budget,
+      props: result.props,
+      sessionOrUserId: session,
+      otherRoles: result.scopedRoles,
+    });
+
     const records = await this.listRecords(
       {
         sort: 'fiscalYear',
@@ -337,12 +346,6 @@ export class BudgetService {
       session
     );
 
-    const securedProps = await this.authorizationService.secureProperties({
-      resource: Budget,
-      props: result.props,
-      sessionOrUserId: session,
-      otherRoles: result.scopedRoles,
-    });
 
     return {
       ...result.props,
@@ -388,6 +391,14 @@ export class BudgetService {
       );
     }
 
+    const securedPropsByParent = await this.authorizationService.getPermissionsByProp({
+      resource: BudgetRecord,
+      parentResource: Budget,
+      sessionOrUserId: session,
+      otherRoles: result.scopedRoles,
+      parentProp: 'records',
+    });
+
     const securedProps = await this.authorizationService.secureProperties({
       resource: BudgetRecord,
       props: result.props,
@@ -397,7 +408,7 @@ export class BudgetService {
 
     return {
       ...result.props,
-      ...securedProps,
+      ...securedPropsByParent,
       canDelete: await this.db.checkDeletePermission(id, session),
     };
   }

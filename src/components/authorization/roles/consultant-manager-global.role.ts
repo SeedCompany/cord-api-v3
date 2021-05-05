@@ -53,7 +53,7 @@ export const ConsultantManagerGlobal = new DbRole({
       __className: 'DbBudget',
       properties: [
         { propertyName: 'universalTemplateFile',      permission: { read, sensitivityAccess: Sensitivity.Medium, }, },
-        { propertyName: 'records',                    permission: { read, }, },
+        { propertyName: 'records',                    permission: { read, sensitivityAccess: Sensitivity.Medium,  }, },
         { propertyName: 'status',                     permission: { read, }, },
         ],
     canDelete: false,
@@ -61,8 +61,8 @@ export const ConsultantManagerGlobal = new DbRole({
     new DbBaseNodeGrant<DbBudgetRecord>({
       __className: 'DbBudgetRecord',
       properties: [
-        { propertyName: 'amount',                     permission: { read, sensitivityAccess: Sensitivity.Medium }, },
-        { propertyName: 'fiscalYear',                 permission: { read, sensitivityAccess: Sensitivity.Medium }, },
+        { propertyName: 'amount',                     permission: { read, }, },
+        { propertyName: 'fiscalYear',                 permission: { read, }, },
         { propertyName: 'organization',               permission: { read, }, },
         ],
     canDelete: false,

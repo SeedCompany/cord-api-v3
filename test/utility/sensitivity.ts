@@ -1,4 +1,5 @@
 import * as faker from 'faker';
+import { property } from 'lodash';
 import {
   createLanguage,
   createLanguageEngagement,
@@ -6,7 +7,8 @@ import {
   TestApp,
 } from '.';
 import { ID, ResourceShape, Sensitivity } from '../../src/common';
-import { Role } from '../../src/components/authorization';
+import { Role, ScopedRole } from '../../src/components/authorization';
+import { getPermissions } from '../security/permissions';
 import { registerUser } from './register';
 
 type ReadOneFunction<T extends ResourceShape<any>['prototype']> = (
@@ -32,29 +34,51 @@ export async function expectSensitivePropertyTranslationProject<
   propertyToCheck: keyof TResource;
   projectId: ID;
   resourceId: string;
-  resource: TResource;
+  resource: TResourceStatic;
   sensitivityRestriction: Sensitivity;
   readOneFunction: ReadOneFunction<TResource>;
 }) {
-  await runAsAdmin(app, () =>
-    doSensitivityLessThanEqualTo(sensitivityRestriction, projectId, app)
-  );
   const email = faker.internet.email();
   const password = faker.internet.password();
-  await registerUser(app, {
+  const testUser = await registerUser(app, {
     roles: [role],
     email: email,
     password: password,
   });
+
+  console.log('initial read');
+  const resourceObj = await readOneFunction(app, resourceId);
+  const perms = (await getPermissions({
+    resource: resource,
+    sessionOrUserId: testUser.id,
+    userRole: `global:${role}` as ScopedRole,
+    dto: resourceObj,
+  })) as Partial<TResource>;
+
+  await runAsAdmin(app, () =>
+    doSensitivityLessThanEqualTo(sensitivityRestriction, projectId, app)
+  );
+
+  console.log('Can read');
   const canReadProp = await readOneFunction(app, resourceId);
-  expect(canReadProp[propertyToCheck]).toEqual(resource[propertyToCheck]);
+
+  if (perms[propertyToCheck]) {
+    expect(canReadProp[propertyToCheck].canRead).toEqual(
+      perms[propertyToCheck].canRead
+    );
+    expect(canReadProp[propertyToCheck].canEdit).toEqual(
+      perms[propertyToCheck].canEdit
+    );
+  }
 
   if (sensitivityRestriction !== Sensitivity.High) {
     await runAsAdmin(app, () =>
       doSensitivityHigherThan(sensitivityRestriction, projectId, app)
     );
+    console.log('higher sensitivity');
     const cannotReadProp = await readOneFunction(app, resourceId);
-    expect(cannotReadProp[propertyToCheck]).toBeFalsy();
+    expect(cannotReadProp[propertyToCheck].canRead).toBeFalsy();
+    expect(cannotReadProp[propertyToCheck].canEdit).toBeFalsy();
   }
 }
 async function doSensitivityHigherThan(

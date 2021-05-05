@@ -742,6 +742,13 @@ export const budget = gql`
     id
     createdAt
     status
+    universalTemplateFile {
+      canRead
+      canEdit
+      value {
+        id
+      }
+    }
     records {
       ...budgetRecord
     }

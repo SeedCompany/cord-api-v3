@@ -190,6 +190,104 @@ export class AuthorizationService {
     );
   }
 
+  async getPermissionsByProp<
+    Resource extends ResourceShape<any>,
+    ParentResource extends ResourceShape<any>
+  >({
+    resource,
+    parentResource,
+    sessionOrUserId,
+    dto,
+    parentProp,
+    otherRoles = [],
+  }: {
+    resource: Resource;
+    parentResource: ParentResource;
+    sessionOrUserId: Session | ID;
+    dto?: Resource['prototype'];
+    parentProp: keyof ParentResource['prototype'];
+    otherRoles?: ScopedRole[];
+  }): Promise<PermissionsOf<SecuredResource<Resource>>> {
+    const userGlobalRoles = isIdLike(sessionOrUserId)
+      ? await this.getUserGlobalRoles(sessionOrUserId)
+      : sessionOrUserId.roles;
+    const roles = [...userGlobalRoles, ...otherRoles];
+
+    // convert resource to a list of resource names to check
+    const resources = getParentTypes(parentResource)
+      // if parent defines Props include it in mapping
+      .filter(
+        (r) => has('Props', r) && Array.isArray(r.Props) && r.Props.length > 0
+      )
+      .map((r) => r.name);
+
+    const permsOfParentProp = await this.parseGrantsRoles(
+      resources,
+      roles,
+      [parentProp],
+      dto?.sensitivity
+    );
+
+
+    const keys = [
+      ...resource.SecuredProps,
+      ...Object.keys(resource.Relations ?? {}),
+    ] as Array<keyof Resource & string>;
+
+    return mapFromList(keys, (key) => {
+      const value = {
+        canRead: permsOfParentProp[parentProp].canRead,
+        canEdit: permsOfParentProp[parentProp].canEdit,
+      };
+      return [key, value];
+    }) as PermissionsOf<SecuredResource<Resource>>;
+  }
+
+  async parseGrantsRoles<Resource extends ResourceShape<any>>(
+    resources: string[],
+    roles: any[],
+    props: Array<keyof Resource['prototype']>,
+    sensitivity?: Sensitivity
+  ): Promise<PermissionsOf<Resource>> {
+    const normalizeGrants = (role: DbRole) =>
+      !Array.isArray(role.grants)
+        ? role.grants
+        : mapValues(
+            // convert list of grants to object keyed by resource name
+            keyBy(role.grants, (resourceGrant) =>
+              resourceGrant.__className.substring(2)
+            ),
+            (resourceGrant) =>
+              // convert value of a grant to an object keyed by prop name and value is a permission set
+              mapValues(
+                keyBy(resourceGrant.properties, (prop) => prop.propertyName),
+                (prop) => prop.permission
+              )
+          );
+
+    const dbRoles = getDbRoles(roles);
+
+    // grab all the grants for the given roles & matching resources
+    const grants = dbRoles.flatMap((role) =>
+      Object.entries(normalizeGrants(role)).flatMap(([name, grant]) => {
+        if (resources.includes(name)) {
+          if (sensitivity && !this.isSensitivityAllowed(grant, sensitivity)) {
+            return [];
+          }
+          return grant;
+        }
+        return [];
+      })
+    ) as Array<PermissionsForResource<ResourceShape<Resource>>>;
+    const keys = [...props] as Array<keyof Resource & string>;
+    return mapFromList(keys, (key) => {
+      const value = {
+        canRead: grants.some((grant) => grant[key]?.read === true),
+        canEdit: grants.some((grant) => grant[key]?.write === true),
+      };
+      return [key, value];
+    }) as PermissionsOf<Resource>;
+  }
   /**
    * Get the permissions for a resource.
    *
@@ -242,9 +340,12 @@ export class AuthorizationService {
     const dbRoles = getDbRoles(roles);
 
     // grab all the grants for the given roles & matching resources
+    
     const grants = dbRoles.flatMap((role) =>
       Object.entries(normalizeGrants(role)).flatMap(([name, grant]) => {
         if (resources.includes(name)) {
+          console.log(dto?.sensitivity)
+          console.log(grant)
           if (
             dto?.sensitivity &&
             !this.isSensitivityAllowed(grant, dto?.sensitivity)

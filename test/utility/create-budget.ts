@@ -1,8 +1,32 @@
 import { gql } from 'apollo-server-core';
 import { generateId, isValidId } from '../../src/common';
-import { Budget, CreateBudget } from '../../src/components/budget/dto';
+import { Budget, BudgetRecord, CreateBudget } from '../../src/components/budget/dto';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
+import { stepsFromEarlyConversationToBeforeCompleted } from './transition-project';
+
+export async function readOneBudgetRecord(
+  app: TestApp,
+  id: string
+): Promise<BudgetRecord> {
+  const { budget: actual } = await app.graphql.query(
+    gql`
+      query budget($id: ID!) {
+        budget(id: $id) {
+          ...budget
+        }
+      }
+      ${fragments.budget}
+    `,
+    {
+      id: id,
+    }
+  );
+
+  expect(actual.id).toBe(id);
+  expect(isValidId(actual.id)).toBe(true);
+  return actual.records[0];
+}
 
 export async function readOneBudget(app: TestApp, id: string): Promise<Budget> {
   const { budget: actual } = await app.graphql.query(

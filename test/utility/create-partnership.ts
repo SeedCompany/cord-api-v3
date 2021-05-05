@@ -20,9 +20,15 @@ export async function createPartnership(
     projectId: input.projectId || (await createProject(app)).id,
     agreementStatus: PartnershipAgreementStatus.AwaitingSignature,
     mouStatus: PartnershipAgreementStatus.AwaitingSignature,
-    types: [PartnerType.Managing],
+    types: input.types || [PartnerType.Managing],
     financialReportingType: FinancialReportingType.Funded,
-    partnerId: input.partnerId || (await createPartner(app)).id,
+    partnerId:
+      input.partnerId ||
+      (
+        await createPartner(app, {
+          types: input.types || [PartnerType.Managing],
+        })
+      ).id,
     mouStartOverride: CalendarDate.local(),
     mouEndOverride: CalendarDate.local(),
     ...input,
