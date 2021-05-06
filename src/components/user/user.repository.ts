@@ -4,13 +4,10 @@ import { Dictionary, difference } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
-  isIdLike,
-  mapFromList,
-  SecuredResource,
   ID,
-  Session,
-  ServerException,
   NotFoundException,
+  ServerException,
+  Session,
 } from '../../common';
 import {
   ConfigService,
@@ -23,12 +20,7 @@ import {
   UniquenessError,
 } from '../../core';
 import { matchPropList } from '../../core/database/query';
-import {
-  DbPropsOfDto,
-  parseBaseNodeProperties,
-  parseSecuredProperties,
-  StandardReadResult,
-} from '../../core/database/results';
+import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
 import { Role } from '../authorization';
 import {
   PermissionsOf,
