@@ -84,6 +84,7 @@ import {
   UnavailabilityListInput,
   UnavailabilityService,
 } from './unavailability';
+import { UserRepository } from './user.repository';
 
 export const fullName = (
   user: Partial<
@@ -125,6 +126,7 @@ export class UserService {
     private readonly authorizationService: AuthorizationService,
     private readonly locationService: LocationService,
     private readonly languageService: LanguageService,
+    private readonly userRepo: UserRepository,
     @Logger('user:service') private readonly logger: ILogger
   ) {}
 
@@ -159,132 +161,34 @@ export class UserService {
 
   async create(input: CreatePerson, _session?: Session): Promise<ID> {
     const id = await generateId();
-    const createdAt = DateTime.local();
-
-    const query = this.db.query();
-    query.create([
-      [
-        node('user', ['User', 'BaseNode'], {
-          id,
-          createdAt,
-        }),
-      ],
-      ...property('email', input.email, 'user', 'email', 'EmailAddress'),
-      ...property('realFirstName', input.realFirstName, 'user'),
-      ...property('realLastName', input.realLastName, 'user'),
-      ...property('displayFirstName', input.displayFirstName, 'user'),
-      ...property('displayLastName', input.displayLastName, 'user'),
-      ...property('phone', input.phone, 'user'),
-      ...property('timezone', input.timezone, 'user'),
-      ...property('about', input.about, 'user'),
-      ...property('status', input.status, 'user'),
-      ...this.roleProperties(input.roles),
-      ...property('title', input.title, 'user'),
-      ...property('canDelete', true, 'user'),
-    ]);
-
-    query.return({
-      user: [{ id: 'id' }],
-    });
-    let result;
-    try {
-      result = await query.first();
-    } catch (e) {
-      if (e instanceof UniquenessError && e.label === 'EmailAddress') {
-        throw new DuplicateException(
-          'person.email',
-          'Email address is already in use',
-          e
-        );
-      }
-      throw new ServerException('Failed to create user', e);
-    }
-    if (!result) {
-      throw new ServerException('Failed to create user');
-    }
-
-    // attach user to publicSG
-
-    const attachUserToPublicSg = await this.db
-      .query()
-      .match(node('user', 'User', { id }))
-      .match(node('publicSg', 'PublicSecurityGroup'))
-
-      .create([node('publicSg'), relation('out', '', 'member'), node('user')])
-      .create([
-        node('publicSg'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property: 'displayFirstName',
-          read: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('user'),
-      ])
-      .create([
-        node('publicSg'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property: 'displayLastName',
-          read: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('user'),
-      ])
-      .return('user')
-      .first();
-
-    if (!attachUserToPublicSg) {
-      this.logger.error('failed to attach user to public securityGroup');
-    }
-
-    if (this.config.defaultOrg.id) {
-      const attachToOrgPublicSg = await this.db
-        .query()
-        .match(node('user', 'User', { id }))
-        .match([
-          node('orgPublicSg', 'OrgPublicSecurityGroup'),
-          relation('out', '', 'organization'),
-          node('defaultOrg', 'Organization', {
-            id: this.config.defaultOrg.id,
-          }),
-        ])
-        .create([
-          node('user'),
-          relation('in', '', 'member'),
-          node('orgPublicSg'),
-        ])
-        .run();
-
-      if (attachToOrgPublicSg) {
-        //
-      }
-    }
+    await this.userRepo.create(id, input);
     input.roles &&
       (await this.authorizationService.roleAddedToUser(id, input.roles));
-
     const dbUser = new DbUser();
     await this.authorizationService.processNewBaseNode(dbUser, id, id);
-
-    return result.id;
+    return id;
   }
 
   async readOne(id: ID, sessionOrUserId: Session | ID): Promise<User> {
-    const query = this.db
-      .query()
-      .match([node('node', 'User', { id })])
-      .apply(matchPropList)
-      .return('propList, node')
-      .asResult<StandardReadResult<DbPropsOfDto<User>>>();
+    // const query = this.db
+    //   .query()
+    //   .match([node('node', 'User', { id })])
+    //   .apply(matchPropList)
+    //   .return('propList, node')
+    //   .asResult<StandardReadResult<DbPropsOfDto<User>>>();
 
-    const result = await query.first();
+    // const result = await query.first();
+    const { result, canDelete } = await this.userRepo.readOne(
+      id,
+      sessionOrUserId
+    );
     if (!result) {
       throw new NotFoundException('Could not find user', 'user.id');
     }
 
     const rolesValue = result.propList
-      .filter((prop) => prop.property === 'roles')
-      .map((prop) => prop.value as Role);
+      .filter((prop:any) => prop.property === 'roles')
+      .map((prop: any) => prop.value as Role);
 
     let permsOfBaseNode: PermissionsOf<SecuredResource<typeof User, false>>;
     // -- let the user explicitly see all properties only if they're reading their own ID
@@ -318,7 +222,8 @@ export class UserService {
         ...securedProps.roles,
         value: rolesValue,
       },
-      canDelete: await this.db.checkDeletePermission(id, sessionOrUserId),
+      // canDelete: await this.db.checkDeletePermission(id, sessionOrUserId),
+      canDelete,
     };
   }
 
