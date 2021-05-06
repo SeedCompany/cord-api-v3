@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
-import { Dictionary } from 'lodash';
+import { node, relation, inArray } from 'cypher-query-builder';
+import { Dictionary, difference } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
@@ -15,6 +15,7 @@ import {
 import {
   ConfigService,
   DatabaseService,
+  deleteProperties,
   ILogger,
   Logger,
   OnIndex,
@@ -33,7 +34,8 @@ import {
   PermissionsOf,
   AuthorizationService,
 } from '../authorization/authorization.service';
-import { CreatePerson, UserListInput, User } from './dto';
+import { Powers } from '../authorization/dto/powers';
+import { CreatePerson, UserListInput, User, UpdateUser } from './dto';
 
 @Injectable()
 export class UserRepository {
@@ -166,7 +168,7 @@ export class UserRepository {
   async readOne(
     id: ID,
     sessionOrUserId: Session | ID
-  ): Promise<Dictionary<any>> {
+  ): Promise<any> {
     const query = this.db
       .query()
       .match([node('node', 'User', { id })])
@@ -183,5 +185,102 @@ export class UserRepository {
       result,
       canDelete,
     };
+  }
+  async update(input: UpdateUser, user: User, session: Session): Promise<any> {
+    const changes = this.db.getActualChanges(User, user, input);
+    if (user.id !== session.userId) {
+      await this.authorizationService.verifyCanEditChanges(User, user, changes);
+    }
+
+    const { roles, email, ...simpleChanges } = changes;
+    if (roles) {
+      await this.authorizationService.checkPower(Powers.GrantRole, session);
+    }
+
+    await this.db.updateProperties({
+      type: User,
+      object: user,
+      changes: simpleChanges,
+    });
+    // Update email
+    if (email) {
+      // Remove old emails and relations
+      await this.db
+        .query()
+        .match([node('node', ['User', 'BaseNode'], { id: user.id })])
+        .apply(deleteProperties(User, 'email'))
+        .return('*')
+        .run();
+
+      try {
+        const createdAt = DateTime.local();
+        await this.db
+          .query()
+          .match([node('user', ['User', 'BaseNode'], { id: user.id })])
+          .create([
+            node('user'),
+            relation('out', '', 'email', {
+              active: true,
+              createdAt,
+            }),
+            node('email', 'EmailAddress:Property', {
+              value: email,
+              createdAt,
+            }),
+          ])
+          .run();
+      } catch (e) {
+        if (e instanceof UniquenessError && e.label === 'EmailAddress') {
+          throw new DuplicateException(
+            'person.email',
+            'Email address is already in use',
+            e
+          );
+        }
+        throw new ServerException('Failed to create user', e);
+      }
+      return 0;
+    }
+    // Update roles
+    if (roles) {
+      const removals = difference(user.roles.value, roles);
+      const additions = difference(roles, user.roles.value);
+      if (removals.length > 0) {
+        await this.db
+          .query()
+          .match([
+            node('user', ['User', 'BaseNode'], {
+              id: input.id,
+            }),
+            relation('out', 'oldRoleRel', 'roles', { active: true }),
+            node('oldRoles', 'Property'),
+          ])
+          .where({
+            oldRoles: {
+              value: inArray(removals),
+            },
+          })
+          .set({
+            values: {
+              'oldRoleRel.active': false,
+            },
+          })
+          .run();
+      }
+
+      if (additions.length > 0) {
+        await this.db
+          .query()
+          .match([
+            node('user', ['User', 'BaseNode'], {
+              id: input.id,
+            }),
+          ])
+          .create([...this.roleProperties(additions)])
+          .run();
+      }
+
+      await this.authorizationService.roleAddedToUser(input.id, roles);
+    }
   }
 }

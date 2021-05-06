@@ -187,7 +187,7 @@ export class UserService {
     }
 
     const rolesValue = result.propList
-      .filter((prop:any) => prop.property === 'roles')
+      .filter((prop: any) => prop.property === 'roles')
       .map((prop: any) => prop.value as Role);
 
     let permsOfBaseNode: PermissionsOf<SecuredResource<typeof User, false>>;
@@ -231,105 +231,7 @@ export class UserService {
   async update(input: UpdateUser, session: Session): Promise<User> {
     this.logger.debug('mutation update User', { input, session });
     const user = await this.readOne(input.id, session);
-
-    const changes = this.db.getActualChanges(User, user, input);
-    if (user.id !== session.userId) {
-      await this.authorizationService.verifyCanEditChanges(User, user, changes);
-    }
-
-    const { roles, email, ...simpleChanges } = changes;
-
-    if (roles) {
-      await this.authorizationService.checkPower(Powers.GrantRole, session);
-    }
-
-    await this.db.updateProperties({
-      type: User,
-      object: user,
-      changes: simpleChanges,
-    });
-
-    // Update email
-    if (email) {
-      // Remove old emails and relations
-      await this.db
-        .query()
-        .match([node('node', ['User', 'BaseNode'], { id: user.id })])
-        .apply(deleteProperties(User, 'email'))
-        .return('*')
-        .run();
-
-      try {
-        const createdAt = DateTime.local();
-        await this.db
-          .query()
-          .match([node('user', ['User', 'BaseNode'], { id: user.id })])
-          .create([
-            node('user'),
-            relation('out', '', 'email', {
-              active: true,
-              createdAt,
-            }),
-            node('email', 'EmailAddress:Property', {
-              value: email,
-              createdAt,
-            }),
-          ])
-          .run();
-      } catch (e) {
-        if (e instanceof UniquenessError && e.label === 'EmailAddress') {
-          throw new DuplicateException(
-            'person.email',
-            'Email address is already in use',
-            e
-          );
-        }
-        throw new ServerException('Failed to create user', e);
-      }
-    }
-
-    // Update roles
-    if (roles) {
-      const removals = difference(user.roles.value, roles);
-      const additions = difference(roles, user.roles.value);
-      if (removals.length > 0) {
-        await this.db
-          .query()
-          .match([
-            node('user', ['User', 'BaseNode'], {
-              id: input.id,
-            }),
-            relation('out', 'oldRoleRel', 'roles', { active: true }),
-            node('oldRoles', 'Property'),
-          ])
-          .where({
-            oldRoles: {
-              value: inArray(removals),
-            },
-          })
-          .set({
-            values: {
-              'oldRoleRel.active': false,
-            },
-          })
-          .run();
-      }
-
-      if (additions.length > 0) {
-        await this.db
-          .query()
-          .match([
-            node('user', ['User', 'BaseNode'], {
-              id: input.id,
-            }),
-          ])
-          .create([...this.roleProperties(additions)])
-          .run();
-      }
-
-      await this.authorizationService.roleAddedToUser(input.id, roles);
-    }
-
+    await this.userRepo.update(input, user, session);
     return await this.readOne(input.id, session);
   }
 
