@@ -120,7 +120,7 @@ export class UserService {
     @Inject(forwardRef(() => PartnerService))
     private readonly partners: PartnerService,
     private readonly unavailabilities: UnavailabilityService,
-    private readonly db: DatabaseService,
+    // private readonly db: DatabaseService,
     private readonly config: ConfigService,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
@@ -785,7 +785,7 @@ export class UserService {
     const results = await this.userRepo.listKnownLanguages(userId, session);
 
     const knownLanguages = await Promise.all(
-      results.map(async (item) => {
+      results.map(async (item: any) => {
         return {
           language: item.languageId,
           proficiency: item.languageProficiency,
@@ -797,22 +797,7 @@ export class UserService {
   }
 
   async checkEmail(email: string): Promise<boolean> {
-    const result = await this.db
-      .query()
-      .raw(
-        `
-        MATCH
-        (email:EmailAddress {
-          value: $email
-        })
-        RETURN
-        email.value as email
-        `,
-        {
-          email: email,
-        }
-      )
-      .first();
+    const result = this.userRepo.checkEmail(email);
     if (result) {
       return false;
     }
@@ -824,86 +809,90 @@ export class UserService {
     session: Session
   ): Promise<void> {
     //TO DO: Refactor session in the future
-    const querySession = this.db.query();
-    if (session.userId) {
-      querySession.match([
-        matchSession(session, { withAclEdit: 'canCreateOrg' }),
-      ]);
-    }
 
-    const primary =
-      request.primary !== null && request.primary !== undefined
-        ? request.primary
-        : false;
+    // const querySession = this.db.query();
+    // if (session.userId) {
+    //   querySession.match([
+    //     matchSession(session, { withAclEdit: 'canCreateOrg' }),
+    //   ]);
+    // }
 
-    await this.db
-      .query()
-      .match([
-        node('user', 'User', {
-          id: request.userId,
-        }),
-        relation('out', 'oldRel', 'organization', {
-          active: true,
-        }),
-        node('primaryOrg', 'Organization', {
-          id: request.orgId,
-        }),
-      ])
-      .setValues({ 'oldRel.active': false })
-      .return('oldRel')
-      .first();
+    // const primary =
+    //   request.primary !== null && request.primary !== undefined
+    //     ? request.primary
+    //     : false;
 
-    if (primary) {
-      await this.db
-        .query()
-        .match([
-          node('user', 'User', {
-            id: request.userId,
-          }),
-          relation('out', 'oldRel', 'primaryOrganization', {
-            active: true,
-          }),
-          node('primaryOrg', 'Organization', {
-            id: request.orgId,
-          }),
-        ])
-        .setValues({ 'oldRel.active': false })
-        .return('oldRel')
-        .first();
-    }
+    // //2
+    // await this.db
+    //   .query()
+    //   .match([
+    //     node('user', 'User', {
+    //       id: request.userId,
+    //     }),
+    //     relation('out', 'oldRel', 'organization', {
+    //       active: true,
+    //     }),
+    //     node('primaryOrg', 'Organization', {
+    //       id: request.orgId,
+    //     }),
+    //   ])
+    //   .setValues({ 'oldRel.active': false })
+    //   .return('oldRel')
+    //   .first();
 
-    let queryCreate;
-    if (primary) {
-      queryCreate = this.db.query().raw(
-        `
-        MATCH (primaryOrg:Organization {id: $orgId}),
-        (user:User {id: $userId})
-        CREATE (primaryOrg)<-[:primaryOrganization {active: true, createdAt: datetime()}]-(user),
-        (primaryOrg)<-[:organization {active: true, createdAt: datetime()}]-(user)
-        RETURN  user.id as id
-      `,
-        {
-          userId: request.userId,
-          orgId: request.orgId,
-        }
-      );
-    } else {
-      queryCreate = this.db.query().raw(
-        `
-        MATCH (org:Organization {id: $orgId}),
-        (user:User {id: $userId})
-        CREATE (org)<-[:organization {active: true, createdAt: datetime()}]-(user)
-        RETURN  user.id as id
-      `,
-        {
-          userId: request.userId,
-          orgId: request.orgId,
-        }
-      );
-    }
-
+    // if (primary) {
+    //   await this.db
+    //     .query()
+    //     .match([
+    //       node('user', 'User', {
+    //         id: request.userId,
+    //       }),
+    //       relation('out', 'oldRel', 'primaryOrganization', {
+    //         active: true,
+    //       }),
+    //       node('primaryOrg', 'Organization', {
+    //         id: request.orgId,
+    //       }),
+    //     ])
+    //     .setValues({ 'oldRel.active': false })
+    //     .return('oldRel')
+    //     .first();
+    // }
+    // //3
+    // let queryCreate;
+    // if (primary) {
+    //   queryCreate = this.db.query().raw(
+    //     `
+    //     MATCH (primaryOrg:Organization {id: $orgId}),
+    //     (user:User {id: $userId})
+    //     CREATE (primaryOrg)<-[:primaryOrganization {active: true, createdAt: datetime()}]-(user),
+    //     (primaryOrg)<-[:organization {active: true, createdAt: datetime()}]-(user)
+    //     RETURN  user.id as id
+    //   `,
+    //     {
+    //       userId: request.userId,
+    //       orgId: request.orgId,
+    //     }
+    //   );
+    // } else {
+    //   queryCreate = this.db.query().raw(
+    //     `
+    //     MATCH (org:Organization {id: $orgId}),
+    //     (user:User {id: $userId})
+    //     CREATE (org)<-[:organization {active: true, createdAt: datetime()}]-(user)
+    //     RETURN  user.id as id
+    //   `,
+    //     {
+    //       userId: request.userId,
+    //       orgId: request.orgId,
+    //     }
+    //   );
+    // }
+    const queryCreate = await this.userRepo.assignOrganizationToUser(
+      request,
+      session
+    );
     const result = await queryCreate.first();
-
     if (!result) {
       throw new ServerException('Failed to assign organzation to user');
     }
@@ -913,55 +902,56 @@ export class UserService {
     request: RemoveOrganizationFromUser,
     _session: Session
   ): Promise<void> {
-    const removeOrg = this.db
-      .query()
-      .match([
-        node('user', 'User', {
-          id: request.userId,
-        }),
-        relation('out', 'oldRel', 'organization', {
-          active: true,
-        }),
-        node('org', 'Organization', {
-          id: request.orgId,
-        }),
-      ])
-      .optionalMatch([
-        node('user'),
-        relation('out', 'primary', 'primaryOrganization', { active: true }),
-        node('org'),
-      ])
-      .setValues({ 'oldRel.active': false })
-      .return({ oldRel: [{ id: 'oldId' }], primary: [{ id: 'primaryId' }] });
-    let resultOrg;
-    try {
-      resultOrg = await removeOrg.first();
-    } catch (e) {
-      throw new NotFoundException('user and org are not connected');
-    }
+    // const removeOrg = this.db
+    //   .query()
+    //   .match([
+    //     node('user', 'User', {
+    //       id: request.userId,
+    //     }),
+    //     relation('out', 'oldRel', 'organization', {
+    //       active: true,
+    //     }),
+    //     node('org', 'Organization', {
+    //       id: request.orgId,
+    //     }),
+    //   ])
+    //   .optionalMatch([
+    //     node('user'),
+    //     relation('out', 'primary', 'primaryOrganization', { active: true }),
+    //     node('org'),
+    //   ])
+    //   .setValues({ 'oldRel.active': false })
+    //   .return({ oldRel: [{ id: 'oldId' }], primary: [{ id: 'primaryId' }] });
+    // let resultOrg;
+    // try {
+    //   resultOrg = await removeOrg.first();
+    // } catch (e) {
+    //   throw new NotFoundException('user and org are not connected');
+    // }
 
-    if (resultOrg?.primaryId) {
-      const removePrimary = this.db
-        .query()
-        .match([
-          node('user', 'User', {
-            id: request.userId,
-          }),
-          relation('out', 'oldRel', 'primaryOrganization', {
-            active: true,
-          }),
-          node('primaryOrg', 'Organization', {
-            id: request.orgId,
-          }),
-        ])
-        .setValues({ 'oldRel.active': false })
-        .return('oldRel');
-      try {
-        await removePrimary.first();
-      } catch {
-        this.logger.debug('not primary');
-      }
-    }
+    // if (resultOrg?.primaryId) {
+    //   const removePrimary = this.db
+    //     .query()
+    //     .match([
+    //       node('user', 'User', {
+    //         id: request.userId,
+    //       }),
+    //       relation('out', 'oldRel', 'primaryOrganization', {
+    //         active: true,
+    //       }),
+    //       node('primaryOrg', 'Organization', {
+    //         id: request.orgId,
+    //       }),
+    //     ])
+    //     .setValues({ 'oldRel.active': false })
+    //     .return('oldRel');
+    //   try {
+    //     await removePrimary.first();
+    //   } catch {
+    //     this.logger.debug('not primary');
+    //   }
+    // }
+    const resultOrg = await this.userRepo.removeOrganizationFromUser(request);
 
     if (!resultOrg) {
       throw new ServerException('Failed to assign organzation to user');
@@ -969,52 +959,34 @@ export class UserService {
   }
 
   async checkUserConsistency(session: Session): Promise<boolean> {
-    const users = await this.db
-      .query()
-      .match([matchSession(session), [node('user', 'User')]])
-      .return('user.id as id')
-      .run();
-
+    const users = await this.userRepo.getUsers(session);
     return (
       (
         await Promise.all(
           users.map(async (user) => {
-            return await this.db.hasProperties({
-              session,
-              id: user.id,
-              props: [
-                'email',
-                'realFirstName',
-                'realLastName',
-                'displayFirstName',
-                'displayLastName',
-                'phone',
-                'timezone',
-                'about',
-              ],
-              nodevar: 'user',
-            });
+            return await this.userRepo.checkUserProperties(session, user);
           })
         )
       ).every((n) => n) &&
       (
         await Promise.all(
           users.map(async (user) => {
-            return await this.db.isUniqueProperties({
-              session,
-              id: user.id,
-              props: [
-                'email',
-                'realFirstName',
-                'realLastName',
-                'displayFirstName',
-                'displayLastName',
-                'phone',
-                'timezone',
-                'about',
-              ],
-              nodevar: 'user',
-            });
+            // return await this.db.isUniqueProperties({
+            //   session,
+            //   id: user.id,
+            //   props: [
+            //     'email',
+            //     'realFirstName',
+            //     'realLastName',
+            //     'displayFirstName',
+            //     'displayLastName',
+            //     'phone',
+            //     'timezone',
+            //     'about',
+            //   ],
+            //   nodevar: 'user',
+            // });
+            return await this.userRepo.checkUniqueProperties(session, user);
           })
         )
       ).every((n) => n)

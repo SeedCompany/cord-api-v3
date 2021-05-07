@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, relation } from 'cypher-query-builder';
-import { Query } from 'express-serve-static-core';
+import { inArray, node, Query, relation } from 'cypher-query-builder';
+
 import { Dictionary, difference } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
   ID,
   NotFoundException,
+  Resource,
   ServerException,
   Session,
   UnauthorizedException,
@@ -32,14 +33,14 @@ import { QueryWithResult } from '../../core/database/query.overrides';
 import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
 import { Role } from '../authorization';
 
-import { Powers } from '../authorization/dto/powers';
 import {
+  AssignOrganizationToUser,
   CreatePerson,
   LanguageProficiency,
+  RemoveOrganizationFromUser,
   UpdateUser,
   User,
   UserListInput,
-  UserListOutput,
 } from './dto';
 
 @Injectable()
@@ -191,7 +192,10 @@ export class UserRepository {
     };
   }
 
-  getActualChanges(input: UpdateUser, user: User): any {
+  getActualChanges(
+    input: UpdateUser,
+    user: User
+  ): Partial<Omit<UpdateUser, keyof Resource>> {
     //shouldn't there be an await here?
     return this.db.getActualChanges(User, user, input);
   }
@@ -316,7 +320,7 @@ export class UserRepository {
       .apply(calculateTotalAndPaginateList(User, input));
   }
 
-  listEducations(userId: ID, session: Session): any {
+  listEducations(userId: ID, session: Session): Query {
     return this.db
       .query()
       .match(matchSession(session)) // Michel Query Refactor Will Fix This
@@ -351,7 +355,7 @@ export class UserRepository {
       });
   }
 
-  listOrganizations(userId: ID, session: Session): any {
+  listOrganizations(userId: ID, session: Session): Query {
     return this.db
       .query()
       .match(matchSession(session))
@@ -385,7 +389,7 @@ export class UserRepository {
         canEdit: [{ edit: 'canEdit' }],
       });
   }
-  listPartners(userId: ID, session: Session): any {
+  listPartners(userId: ID, session: Session): Query {
     return this.db
       .query()
       .match(matchSession(session)) // Michel Query Refactor Will Fix This
@@ -419,7 +423,7 @@ export class UserRepository {
         canEdit: [{ edit: 'canEdit' }],
       });
   }
-  listUnavailabilities(userId: ID, session: Session) {
+  listUnavailabilities(userId: ID, session: Session): Query {
     return this.db
       .query()
       .match(matchSession(session))
@@ -498,7 +502,15 @@ export class UserRepository {
       .run();
   }
 
-  async listKnownLanguages(userId: ID, session: Session) {
+  async listKnownLanguages(
+    userId: ID,
+    session: Session
+  ): Promise<
+    {
+      languageProficiency: LanguageProficiency;
+      languageId: ID;
+    }[]
+  > {
     const results = await this.db
       .query()
       .match([
@@ -519,5 +531,215 @@ export class UserRepository {
       }>()
       .run();
     return results;
+  }
+  async checkEmail(email: string): Promise<Dictionary<any> | undefined> {
+    const result = await this.db
+      .query()
+      .raw(
+        `
+      MATCH
+      (email:EmailAddress {
+        value: $email
+      })
+      RETURN
+      email.value as email
+      `,
+        {
+          email: email,
+        }
+      )
+      .first();
+    return result;
+  }
+
+  async assignOrganizationToUser(
+    request: AssignOrganizationToUser,
+    session: Session
+  ): Promise<Query> {
+    const querySession = this.db.query();
+    if (session.userId) {
+      querySession.match([
+        matchSession(session, { withAclEdit: 'canCreateOrg' }),
+      ]);
+    }
+
+    const primary =
+      request.primary !== null && request.primary !== undefined
+        ? request.primary
+        : false;
+
+    //2
+    await this.db
+      .query()
+      .match([
+        node('user', 'User', {
+          id: request.userId,
+        }),
+        relation('out', 'oldRel', 'organization', {
+          active: true,
+        }),
+        node('primaryOrg', 'Organization', {
+          id: request.orgId,
+        }),
+      ])
+      .setValues({ 'oldRel.active': false })
+      .return('oldRel')
+      .first();
+
+    if (primary) {
+      await this.db
+        .query()
+        .match([
+          node('user', 'User', {
+            id: request.userId,
+          }),
+          relation('out', 'oldRel', 'primaryOrganization', {
+            active: true,
+          }),
+          node('primaryOrg', 'Organization', {
+            id: request.orgId,
+          }),
+        ])
+        .setValues({ 'oldRel.active': false })
+        .return('oldRel')
+        .first();
+    }
+    //3
+    let queryCreate;
+    if (primary) {
+      queryCreate = this.db.query().raw(
+        `
+        MATCH (primaryOrg:Organization {id: $orgId}),
+        (user:User {id: $userId})
+        CREATE (primaryOrg)<-[:primaryOrganization {active: true, createdAt: datetime()}]-(user),
+        (primaryOrg)<-[:organization {active: true, createdAt: datetime()}]-(user)
+        RETURN  user.id as id
+      `,
+        {
+          userId: request.userId,
+          orgId: request.orgId,
+        }
+      );
+    } else {
+      queryCreate = this.db.query().raw(
+        `
+        MATCH (org:Organization {id: $orgId}),
+        (user:User {id: $userId})
+        CREATE (org)<-[:organization {active: true, createdAt: datetime()}]-(user)
+        RETURN  user.id as id
+      `,
+        {
+          userId: request.userId,
+          orgId: request.orgId,
+        }
+      );
+    }
+    return queryCreate;
+  }
+
+  async removeOrganizationFromUser(
+    request: RemoveOrganizationFromUser
+  ): Promise<Dictionary<any> | undefined> {
+    const removeOrg = this.db
+      .query()
+      .match([
+        node('user', 'User', {
+          id: request.userId,
+        }),
+        relation('out', 'oldRel', 'organization', {
+          active: true,
+        }),
+        node('org', 'Organization', {
+          id: request.orgId,
+        }),
+      ])
+      .optionalMatch([
+        node('user'),
+        relation('out', 'primary', 'primaryOrganization', { active: true }),
+        node('org'),
+      ])
+      .setValues({ 'oldRel.active': false })
+      .return({ oldRel: [{ id: 'oldId' }], primary: [{ id: 'primaryId' }] });
+    let resultOrg;
+    try {
+      resultOrg = await removeOrg.first();
+    } catch (e) {
+      throw new NotFoundException('user and org are not connected');
+    }
+
+    if (resultOrg?.primaryId) {
+      const removePrimary = this.db
+        .query()
+        .match([
+          node('user', 'User', {
+            id: request.userId,
+          }),
+          relation('out', 'oldRel', 'primaryOrganization', {
+            active: true,
+          }),
+          node('primaryOrg', 'Organization', {
+            id: request.orgId,
+          }),
+        ])
+        .setValues({ 'oldRel.active': false })
+        .return('oldRel');
+      try {
+        await removePrimary.first();
+      } catch {
+        this.logger.debug('not primary');
+      }
+    }
+    return resultOrg;
+  }
+
+  async getUsers(session: Session): Promise<Dictionary<any>[]> {
+    const users = await this.db
+      .query()
+      .match([matchSession(session), [node('user', 'User')]])
+      .return('user.id as id')
+      .run();
+    return users;
+  }
+
+  async checkUserProperties(
+    session: Session,
+    user: Dictionary<any>
+  ): Promise<any> {
+    return await this.db.hasProperties({
+      session,
+      id: user.id,
+      props: [
+        'email',
+        'realFirstName',
+        'realLastName',
+        'displayFirstName',
+        'displayLastName',
+        'phone',
+        'timezone',
+        'about',
+      ],
+      nodevar: 'user',
+    });
+  }
+
+  async checkUniqueProperties(
+    session: Session,
+    user: Dictionary<any>
+  ): Promise<any> {
+    return await this.db.isUniqueProperties({
+      session,
+      id: user.id,
+      props: [
+        'email',
+        'realFirstName',
+        'realLastName',
+        'displayFirstName',
+        'displayLastName',
+        'phone',
+        'timezone',
+        'about',
+      ],
+      nodevar: 'user',
+    });
   }
 }
