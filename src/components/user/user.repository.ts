@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation, inArray } from 'cypher-query-builder';
+import { inArray, node, relation } from 'cypher-query-builder';
+import { Query } from 'express-serve-static-core';
 import { Dictionary, difference } from 'lodash';
 import { DateTime } from 'luxon';
 import {
@@ -16,6 +17,7 @@ import {
   deleteProperties,
   ILogger,
   Logger,
+  matchSession,
   OnIndex,
   property,
   UniquenessError,
@@ -33,6 +35,7 @@ import { Role } from '../authorization';
 import { Powers } from '../authorization/dto/powers';
 import {
   CreatePerson,
+  LanguageProficiency,
   UpdateUser,
   User,
   UserListInput,
@@ -286,103 +289,6 @@ export class UserRepository {
     }
   }
 
-  //   async update(input: UpdateUser, user: User, session: Session): Promise<any> {
-  //     const changes = this.db.getActualChanges(User, user, input);
-  //     if (user.id !== session.userId) {
-  //       await this.authorizationService.verifyCanEditChanges(User, user, changes);
-  //     }
-
-  //     const { roles, email, ...simpleChanges } = changes;
-  //     if (roles) {
-  //       await this.authorizationService.checkPower(Powers.GrantRole, session);
-  //     }
-
-  //     await this.db.updateProperties({
-  //       type: User,
-  //       object: user,
-  //       changes: simpleChanges,
-  //     });
-  //     // Update email
-  //     if (email) {
-  //       // Remove old emails and relations
-  //       await this.db
-  //         .query()
-  //         .match([node('node', ['User', 'BaseNode'], { id: user.id })])
-  //         .apply(deleteProperties(User, 'email'))
-  //         .return('*')
-  //         .run();
-
-  //       try {
-  //         const createdAt = DateTime.local();
-  //         await this.db
-  //           .query()
-  //           .match([node('user', ['User', 'BaseNode'], { id: user.id })])
-  //           .create([
-  //             node('user'),
-  //             relation('out', '', 'email', {
-  //               active: true,
-  //               createdAt,
-  //             }),
-  //             node('email', 'EmailAddress:Property', {
-  //               value: email,
-  //               createdAt,
-  //             }),
-  //           ])
-  //           .run();
-  //       } catch (e) {
-  //         if (e instanceof UniquenessError && e.label === 'EmailAddress') {
-  //           throw new DuplicateException(
-  //             'person.email',
-  //             'Email address is already in use',
-  //             e
-  //           );
-  //         }
-  //         throw new ServerException('Failed to create user', e);
-  //       }
-  //     }
-  //     // Update roles
-  //     if (roles) {
-  //       const removals = difference(user.roles.value, roles);
-  //       const additions = difference(roles, user.roles.value);
-  //       if (removals.length > 0) {
-  //         await this.db
-  //           .query()
-  //           .match([
-  //             node('user', ['User', 'BaseNode'], {
-  //               id: input.id,
-  //             }),
-  //             relation('out', 'oldRoleRel', 'roles', { active: true }),
-  //             node('oldRoles', 'Property'),
-  //           ])
-  //           .where({
-  //             oldRoles: {
-  //               value: inArray(removals),
-  //             },
-  //           })
-  //           .set({
-  //             values: {
-  //               'oldRoleRel.active': false,
-  //             },
-  //           })
-  //           .run();
-  //       }
-
-  //       if (additions.length > 0) {
-  //         await this.db
-  //           .query()
-  //           .match([
-  //             node('user', ['User', 'BaseNode'], {
-  //               id: input.id,
-  //             }),
-  //           ])
-  //           .create([...this.roleProperties(additions)])
-  //           .run();
-  //       }
-
-  //       await this.authorizationService.roleAddedToUser(input.id, roles);
-  //       return 0;
-  //     }
-  //   }
   async delete(id: ID, session: Session, object: User): Promise<void> {
     const canDelete = await this.db.checkDeletePermission(id, session);
     if (!canDelete)
@@ -408,5 +314,210 @@ export class UserRepository {
       .query()
       .match([requestingUser(session), ...permissionsOfNode('User')])
       .apply(calculateTotalAndPaginateList(User, input));
+  }
+
+  listEducations(userId: ID, session: Session): any {
+    return this.db
+      .query()
+      .match(matchSession(session)) // Michel Query Refactor Will Fix This
+      .match([node('user', 'User', { id: userId })])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', 'memberOfReadSecurityGroup', 'member'),
+        node('readSecurityGroup', 'SecurityGroup'),
+        relation('out', 'sgReadPerms', 'permission'),
+        node('canRead', 'Permission', {
+          property: 'education',
+          read: true,
+        }),
+        relation('out', 'readPermsOfBaseNode', 'baseNode'),
+        node('user'),
+      ])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', 'memberOfEditSecurityGroup', 'member'),
+        node('editSecurityGroup', 'SecurityGroup'),
+        relation('out', 'sgEditPerms', 'permission'),
+        node('canEdit', 'Permission', {
+          property: 'education',
+          edit: true,
+        }),
+        relation('out', 'editPermsOfBaseNode', 'baseNode'),
+        node('user'),
+      ])
+      .return({
+        canRead: [{ read: 'canRead' }],
+        canEdit: [{ edit: 'canEdit' }],
+      });
+  }
+
+  listOrganizations(userId: ID, session: Session): any {
+    return this.db
+      .query()
+      .match(matchSession(session))
+      .match([node('user', 'User', { id: userId })])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', 'memberOfReadSecurityGroup', 'member'),
+        node('readSecurityGroup', 'SecurityGroup'),
+        relation('out', 'sgReadPerms', 'permission'),
+        node('canRead', 'Permission', {
+          property: 'organization',
+          read: true,
+        }),
+        relation('out', 'readPermsOfBaseNode', 'baseNode'),
+        node('user'),
+      ])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', 'memberOfEditSecurityGroup', 'member'),
+        node('editSecurityGroup', 'SecurityGroup'),
+        relation('out', 'sgEditPerms', 'permission'),
+        node('canEdit', 'Permission', {
+          property: 'organization',
+          edit: true,
+        }),
+        relation('out', 'editPermsOfBaseNode', 'baseNode'),
+        node('user'),
+      ])
+      .return({
+        canRead: [{ read: 'canRead' }],
+        canEdit: [{ edit: 'canEdit' }],
+      });
+  }
+  listPartners(userId: ID, session: Session): any {
+    return this.db
+      .query()
+      .match(matchSession(session)) // Michel Query Refactor Will Fix This
+      .match([node('user', 'User', { id: userId })])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', 'memberOfReadSecurityGroup', 'member'),
+        node('readSecurityGroup', 'SecurityGroup'),
+        relation('out', 'sgReadPerms', 'permission'),
+        node('canRead', 'Permission', {
+          property: 'partners',
+          read: true,
+        }),
+        relation('out', 'readPermsOfBaseNode', 'baseNode'),
+        node('user'),
+      ])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', 'memberOfEditSecurityGroup', 'member'),
+        node('editSecurityGroup', 'SecurityGroup'),
+        relation('out', 'sgEditPerms', 'permission'),
+        node('canEdit', 'Permission', {
+          property: 'partners',
+          edit: true,
+        }),
+        relation('out', 'editPermsOfBaseNode', 'baseNode'),
+        node('user'),
+      ])
+      .return({
+        canRead: [{ read: 'canRead' }],
+        canEdit: [{ edit: 'canEdit' }],
+      });
+  }
+  listUnavailabilities(userId: ID, session: Session) {
+    return this.db
+      .query()
+      .match(matchSession(session))
+      .match([node('user', 'User', { id: userId })])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', 'memberOfReadSecurityGroup', 'member'),
+        node('readSecurityGroup', 'SecurityGroup'),
+        relation('out', 'sgReadPerms', 'permission'),
+        node('canRead', 'Permission', {
+          property: 'unavailability',
+          read: true,
+        }),
+        relation('out', 'readPermsOfBaseNode', 'baseNode'),
+        node('user'),
+      ])
+      .optionalMatch([
+        node('requestingUser'),
+        relation('in', 'memberOfEditSecurityGroup', 'member'),
+        node('editSecurityGroup', 'SecurityGroup'),
+        relation('out', 'sgEditPerms', 'permission'),
+        node('canEdit', 'Permission', {
+          property: 'unavailability',
+          edit: true,
+        }),
+        relation('out', 'editPermsOfBaseNode', 'baseNode'),
+        node('user'),
+      ])
+      .return({
+        canRead: [{ read: 'canRead' }],
+        canEdit: [{ edit: 'canEdit' }],
+      });
+  }
+  async createKnownLanguage(
+    userId: ID,
+    languageId: ID,
+    languageProficiency: LanguageProficiency
+  ): Promise<void> {
+    await this.db
+      .query()
+      .matchNode('user', 'User', { id: userId })
+      .matchNode('language', 'Language', { id: languageId })
+      .create([
+        node('user'),
+        relation('out', '', 'knownLanguage', {
+          active: true,
+          createdAt: DateTime.local(),
+          value: languageProficiency,
+        }),
+        node('language'),
+      ])
+      .run();
+  }
+  async deleteKnownLanguage(
+    userId: ID,
+    languageId: ID,
+    languageProficiency: LanguageProficiency
+  ): Promise<void> {
+    await this.db
+      .query()
+      .matchNode('user', 'User', { id: userId })
+      .matchNode('language', 'Language', { id: languageId })
+      .match([
+        [
+          node('user'),
+          relation('out', 'rel', 'knownLanguage', {
+            active: true,
+            value: languageProficiency,
+          }),
+          node('language'),
+        ],
+      ])
+      .setValues({
+        'rel.active': false,
+      })
+      .run();
+  }
+
+  async listKnownLanguages(userId: ID, session: Session) {
+    const results = await this.db
+      .query()
+      .match([
+        requestingUser(session),
+        ...permissionsOfNode('Language'),
+        relation('in', 'knownLanguageRel', 'knownLanguage', { active: true }),
+        node('user', 'User', { id: userId }),
+      ])
+      .with('collect(distinct user) as users, node, knownLanguageRel')
+      .raw(`unwind users as user`)
+      .return([
+        'knownLanguageRel.value as languageProficiency',
+        'node.id as languageId',
+      ])
+      .asResult<{
+        languageProficiency: LanguageProficiency;
+        languageId: ID;
+      }>()
+      .run();
+    return results;
   }
 }

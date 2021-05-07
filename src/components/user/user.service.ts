@@ -370,38 +370,41 @@ export class UserService {
     input: EducationListInput,
     session: Session
   ): Promise<SecuredEducationList> {
-    const query = this.db
-      .query()
-      .match(matchSession(session)) // Michel Query Refactor Will Fix This
-      .match([node('user', 'User', { id: userId })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', 'memberOfReadSecurityGroup', 'member'),
-        node('readSecurityGroup', 'SecurityGroup'),
-        relation('out', 'sgReadPerms', 'permission'),
-        node('canRead', 'Permission', {
-          property: 'education',
-          read: true,
-        }),
-        relation('out', 'readPermsOfBaseNode', 'baseNode'),
-        node('user'),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', 'memberOfEditSecurityGroup', 'member'),
-        node('editSecurityGroup', 'SecurityGroup'),
-        relation('out', 'sgEditPerms', 'permission'),
-        node('canEdit', 'Permission', {
-          property: 'education',
-          edit: true,
-        }),
-        relation('out', 'editPermsOfBaseNode', 'baseNode'),
-        node('user'),
-      ])
-      .return({
-        canRead: [{ read: 'canRead' }],
-        canEdit: [{ edit: 'canEdit' }],
-      });
+    // const query = this.db
+    //   .query()
+    //   .match(matchSession(session)) // Michel Query Refactor Will Fix This
+    //   .match([node('user', 'User', { id: userId })])
+    //   .optionalMatch([
+    //     node('requestingUser'),
+    //     relation('in', 'memberOfReadSecurityGroup', 'member'),
+    //     node('readSecurityGroup', 'SecurityGroup'),
+    //     relation('out', 'sgReadPerms', 'permission'),
+    //     node('canRead', 'Permission', {
+    //       property: 'education',
+    //       read: true,
+    //     }),
+    //     relation('out', 'readPermsOfBaseNode', 'baseNode'),
+    //     node('user'),
+    //   ])
+    //   .optionalMatch([
+    //     node('requestingUser'),
+    //     relation('in', 'memberOfEditSecurityGroup', 'member'),
+    //     node('editSecurityGroup', 'SecurityGroup'),
+    //     relation('out', 'sgEditPerms', 'permission'),
+    //     node('canEdit', 'Permission', {
+    //       property: 'education',
+    //       edit: true,
+    //     }),
+    //     relation('out', 'editPermsOfBaseNode', 'baseNode'),
+    //     node('user'),
+    //   ])
+    //   .return({
+    //     canRead: [{ read: 'canRead' }],
+    //     canEdit: [{ edit: 'canEdit' }],
+    //   });
+
+    const query = this.userRepo.listEducations(userId, session);
+
     let user;
     try {
       user = await query.first();
@@ -440,38 +443,39 @@ export class UserService {
     input: OrganizationListInput,
     session: Session
   ): Promise<SecuredOrganizationList> {
-    const query = this.db
-      .query()
-      .match(matchSession(session))
-      .match([node('user', 'User', { id: userId })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', 'memberOfReadSecurityGroup', 'member'),
-        node('readSecurityGroup', 'SecurityGroup'),
-        relation('out', 'sgReadPerms', 'permission'),
-        node('canRead', 'Permission', {
-          property: 'organization',
-          read: true,
-        }),
-        relation('out', 'readPermsOfBaseNode', 'baseNode'),
-        node('user'),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', 'memberOfEditSecurityGroup', 'member'),
-        node('editSecurityGroup', 'SecurityGroup'),
-        relation('out', 'sgEditPerms', 'permission'),
-        node('canEdit', 'Permission', {
-          property: 'organization',
-          edit: true,
-        }),
-        relation('out', 'editPermsOfBaseNode', 'baseNode'),
-        node('user'),
-      ])
-      .return({
-        canRead: [{ read: 'canRead' }],
-        canEdit: [{ edit: 'canEdit' }],
-      });
+    // const query = this.db
+    //   .query()
+    //   .match(matchSession(session))
+    //   .match([node('user', 'User', { id: userId })])
+    //   .optionalMatch([
+    //     node('requestingUser'),
+    //     relation('in', 'memberOfReadSecurityGroup', 'member'),
+    //     node('readSecurityGroup', 'SecurityGroup'),
+    //     relation('out', 'sgReadPerms', 'permission'),
+    //     node('canRead', 'Permission', {
+    //       property: 'organization',
+    //       read: true,
+    //     }),
+    //     relation('out', 'readPermsOfBaseNode', 'baseNode'),
+    //     node('user'),
+    //   ])
+    //   .optionalMatch([
+    //     node('requestingUser'),
+    //     relation('in', 'memberOfEditSecurityGroup', 'member'),
+    //     node('editSecurityGroup', 'SecurityGroup'),
+    //     relation('out', 'sgEditPerms', 'permission'),
+    //     node('canEdit', 'Permission', {
+    //       property: 'organization',
+    //       edit: true,
+    //     }),
+    //     relation('out', 'editPermsOfBaseNode', 'baseNode'),
+    //     node('user'),
+    //   ])
+    //   .return({
+    //     canRead: [{ read: 'canRead' }],
+    //     canEdit: [{ edit: 'canEdit' }],
+    //   });
+    const query = this.userRepo.listOrganizations(userId, session);
     let user;
     try {
       user = await query.first();
@@ -511,39 +515,39 @@ export class UserService {
     input: PartnerListInput,
     session: Session
   ): Promise<SecuredPartnerList> {
-    const query = this.db
-      .query()
-      .match(matchSession(session)) // Michel Query Refactor Will Fix This
-      .match([node('user', 'User', { id: userId })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', 'memberOfReadSecurityGroup', 'member'),
-        node('readSecurityGroup', 'SecurityGroup'),
-        relation('out', 'sgReadPerms', 'permission'),
-        node('canRead', 'Permission', {
-          property: 'partners',
-          read: true,
-        }),
-        relation('out', 'readPermsOfBaseNode', 'baseNode'),
-        node('user'),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', 'memberOfEditSecurityGroup', 'member'),
-        node('editSecurityGroup', 'SecurityGroup'),
-        relation('out', 'sgEditPerms', 'permission'),
-        node('canEdit', 'Permission', {
-          property: 'partners',
-          edit: true,
-        }),
-        relation('out', 'editPermsOfBaseNode', 'baseNode'),
-        node('user'),
-      ])
-      .return({
-        canRead: [{ read: 'canRead' }],
-        canEdit: [{ edit: 'canEdit' }],
-      });
-
+    // const query = this.db
+    //   .query()
+    //   .match(matchSession(session)) // Michel Query Refactor Will Fix This
+    //   .match([node('user', 'User', { id: userId })])
+    //   .optionalMatch([
+    //     node('requestingUser'),
+    //     relation('in', 'memberOfReadSecurityGroup', 'member'),
+    //     node('readSecurityGroup', 'SecurityGroup'),
+    //     relation('out', 'sgReadPerms', 'permission'),
+    //     node('canRead', 'Permission', {
+    //       property: 'partners',
+    //       read: true,
+    //     }),
+    //     relation('out', 'readPermsOfBaseNode', 'baseNode'),
+    //     node('user'),
+    //   ])
+    //   .optionalMatch([
+    //     node('requestingUser'),
+    //     relation('in', 'memberOfEditSecurityGroup', 'member'),
+    //     node('editSecurityGroup', 'SecurityGroup'),
+    //     relation('out', 'sgEditPerms', 'permission'),
+    //     node('canEdit', 'Permission', {
+    //       property: 'partners',
+    //       edit: true,
+    //     }),
+    //     relation('out', 'editPermsOfBaseNode', 'baseNode'),
+    //     node('user'),
+    //   ])
+    //   .return({
+    //     canRead: [{ read: 'canRead' }],
+    //     canEdit: [{ edit: 'canEdit' }],
+    //   });
+    const query = this.userRepo.listPartners(userId, session);
     let user;
     try {
       user = await query.first();
@@ -586,38 +590,39 @@ export class UserService {
     input: UnavailabilityListInput,
     session: Session
   ): Promise<SecuredUnavailabilityList> {
-    const query = this.db
-      .query()
-      .match(matchSession(session))
-      .match([node('user', 'User', { id: userId })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', 'memberOfReadSecurityGroup', 'member'),
-        node('readSecurityGroup', 'SecurityGroup'),
-        relation('out', 'sgReadPerms', 'permission'),
-        node('canRead', 'Permission', {
-          property: 'unavailability',
-          read: true,
-        }),
-        relation('out', 'readPermsOfBaseNode', 'baseNode'),
-        node('user'),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', 'memberOfEditSecurityGroup', 'member'),
-        node('editSecurityGroup', 'SecurityGroup'),
-        relation('out', 'sgEditPerms', 'permission'),
-        node('canEdit', 'Permission', {
-          property: 'unavailability',
-          edit: true,
-        }),
-        relation('out', 'editPermsOfBaseNode', 'baseNode'),
-        node('user'),
-      ])
-      .return({
-        canRead: [{ read: 'canRead' }],
-        canEdit: [{ edit: 'canEdit' }],
-      });
+    // const query = this.db
+    //   .query()
+    //   .match(matchSession(session))
+    //   .match([node('user', 'User', { id: userId })])
+    //   .optionalMatch([
+    //     node('requestingUser'),
+    //     relation('in', 'memberOfReadSecurityGroup', 'member'),
+    //     node('readSecurityGroup', 'SecurityGroup'),
+    //     relation('out', 'sgReadPerms', 'permission'),
+    //     node('canRead', 'Permission', {
+    //       property: 'unavailability',
+    //       read: true,
+    //     }),
+    //     relation('out', 'readPermsOfBaseNode', 'baseNode'),
+    //     node('user'),
+    //   ])
+    //   .optionalMatch([
+    //     node('requestingUser'),
+    //     relation('in', 'memberOfEditSecurityGroup', 'member'),
+    //     node('editSecurityGroup', 'SecurityGroup'),
+    //     relation('out', 'sgEditPerms', 'permission'),
+    //     node('canEdit', 'Permission', {
+    //       property: 'unavailability',
+    //       edit: true,
+    //     }),
+    //     relation('out', 'editPermsOfBaseNode', 'baseNode'),
+    //     node('user'),
+    //   ])
+    //   .return({
+    //     canRead: [{ read: 'canRead' }],
+    //     canEdit: [{ edit: 'canEdit' }],
+    //   });
+    const query = this.userRepo.listUnavailabilities(userId, session);
     let user;
     try {
       user = await query.first();
@@ -713,20 +718,25 @@ export class UserService {
         languageProficiency,
         _session
       );
-      await this.db
-        .query()
-        .matchNode('user', 'User', { id: userId })
-        .matchNode('language', 'Language', { id: languageId })
-        .create([
-          node('user'),
-          relation('out', '', 'knownLanguage', {
-            active: true,
-            createdAt: DateTime.local(),
-            value: languageProficiency,
-          }),
-          node('language'),
-        ])
-        .run();
+      await this.userRepo.createKnownLanguage(
+        userId,
+        languageId,
+        languageProficiency
+      );
+      // await this.db
+      //   .query()
+      //   .matchNode('user', 'User', { id: userId })
+      //   .matchNode('language', 'Language', { id: languageId })
+      //   .create([
+      //     node('user'),
+      //     relation('out', '', 'knownLanguage', {
+      //       active: true,
+      //       createdAt: DateTime.local(),
+      //       value: languageProficiency,
+      //     }),
+      //     node('language'),
+      //   ])
+      //   .run();
     } catch (e) {
       throw new ServerException('Could not create known language', e);
     }
@@ -739,24 +749,11 @@ export class UserService {
     _session: Session
   ): Promise<void> {
     try {
-      await this.db
-        .query()
-        .matchNode('user', 'User', { id: userId })
-        .matchNode('language', 'Language', { id: languageId })
-        .match([
-          [
-            node('user'),
-            relation('out', 'rel', 'knownLanguage', {
-              active: true,
-              value: languageProficiency,
-            }),
-            node('language'),
-          ],
-        ])
-        .setValues({
-          'rel.active': false,
-        })
-        .run();
+      await this.userRepo.deleteKnownLanguage(
+        userId,
+        languageId,
+        languageProficiency
+      );
     } catch (e) {
       throw new ServerException('Could not delete known language', e);
     }
@@ -766,25 +763,26 @@ export class UserService {
     userId: ID,
     session: Session
   ): Promise<KnownLanguage[]> {
-    const results = await this.db
-      .query()
-      .match([
-        requestingUser(session),
-        ...permissionsOfNode('Language'),
-        relation('in', 'knownLanguageRel', 'knownLanguage', { active: true }),
-        node('user', 'User', { id: userId }),
-      ])
-      .with('collect(distinct user) as users, node, knownLanguageRel')
-      .raw(`unwind users as user`)
-      .return([
-        'knownLanguageRel.value as languageProficiency',
-        'node.id as languageId',
-      ])
-      .asResult<{
-        languageProficiency: LanguageProficiency;
-        languageId: ID;
-      }>()
-      .run();
+    // const results = await this.db
+    //   .query()
+    //   .match([
+    //     requestingUser(session),
+    //     ...permissionsOfNode('Language'),
+    //     relation('in', 'knownLanguageRel', 'knownLanguage', { active: true }),
+    //     node('user', 'User', { id: userId }),
+    //   ])
+    //   .with('collect(distinct user) as users, node, knownLanguageRel')
+    //   .raw(`unwind users as user`)
+    //   .return([
+    //     'knownLanguageRel.value as languageProficiency',
+    //     'node.id as languageId',
+    //   ])
+    //   .asResult<{
+    //     languageProficiency: LanguageProficiency;
+    //     languageId: ID;
+    //   }>()
+    //   .run();
+    const results = await this.userRepo.listKnownLanguages(userId, session);
 
     const knownLanguages = await Promise.all(
       results.map(async (item) => {
