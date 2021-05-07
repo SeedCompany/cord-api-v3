@@ -170,14 +170,6 @@ export class UserService {
   }
 
   async readOne(id: ID, sessionOrUserId: Session | ID): Promise<User> {
-    // const query = this.db
-    //   .query()
-    //   .match([node('node', 'User', { id })])
-    //   .apply(matchPropList)
-    //   .return('propList, node')
-    //   .asResult<StandardReadResult<DbPropsOfDto<User>>>();
-
-    // const result = await query.first();
     const { result, canDelete } = await this.userRepo.readOne(
       id,
       sessionOrUserId
@@ -222,47 +214,154 @@ export class UserService {
         ...securedProps.roles,
         value: rolesValue,
       },
-      // canDelete: await this.db.checkDeletePermission(id, sessionOrUserId),
       canDelete,
     };
   }
 
   @Transactional()
   async update(input: UpdateUser, session: Session): Promise<User> {
+    // this.logger.debug('mutation update User', { input, session });
+    // const user = await this.readOne(input.id, session);
+    // await this.userRepo.update(input, user, session);
+    // return await this.readOne(input.id, session);
     this.logger.debug('mutation update User', { input, session });
     const user = await this.readOne(input.id, session);
-    await this.userRepo.update(input, user, session);
+    // const changes = this.db.getActualChanges(User, user, input);
+
+    const changes = this.userRepo.getActualChanges(input, user);
+
+    if (user.id !== session.userId) {
+      await this.authorizationService.verifyCanEditChanges(User, user, changes);
+    }
+
+    const { roles, email, ...simpleChanges } = changes;
+
+    if (roles) {
+      await this.authorizationService.checkPower(Powers.GrantRole, session);
+    }
+
+    // await this.db.updateProperties({
+    //   type: User,
+    //   object: user,
+    //   changes: simpleChanges,
+    // });
+    await this.userRepo.updateProperties(user, simpleChanges);
+
+    // Update email
+    if (email) {
+      // Remove old emails and relations
+      // await this.db
+      //   .query()
+      //   .match([node('node', ['User', 'BaseNode'], { id: user.id })])
+      //   .apply(deleteProperties(User, 'email'))
+      //   .return('*')
+      //   .run();
+
+      try {
+        const createdAt = DateTime.local();
+        await this.userRepo.updateEmail(user, email, createdAt);
+        // await this.db
+        //   .query()
+        //   .match([node('user', ['User', 'BaseNode'], { id: user.id })])
+        //   .create([
+        //     node('user'),
+        //     relation('out', '', 'email', {
+        //       active: true,
+        //       createdAt,
+        //     }),
+        //     node('email', 'EmailAddress:Property', {
+        //       value: email,
+        //       createdAt,
+        //     }),
+        //   ])
+        //   .run();
+      } catch (e) {
+        if (e instanceof UniquenessError && e.label === 'EmailAddress') {
+          throw new DuplicateException(
+            'person.email',
+            'Email address is already in use',
+            e
+          );
+        }
+        throw new ServerException('Failed to create user', e);
+      }
+    }
+
+    // Update roles
+    if (roles) {
+      const removals = difference(user.roles.value, roles);
+      const additions = difference(roles, user.roles.value);
+      await this.userRepo.updateRoles(input, removals, additions);
+      // if (removals.length > 0) {
+      //   await this.db
+      //     .query()
+      //     .match([
+      //       node('user', ['User', 'BaseNode'], {
+      //         id: input.id,
+      //       }),
+      //       relation('out', 'oldRoleRel', 'roles', { active: true }),
+      //       node('oldRoles', 'Property'),
+      //     ])
+      //     .where({
+      //       oldRoles: {
+      //         value: inArray(removals),
+      //       },
+      //     })
+      //     .set({
+      //       values: {
+      //         'oldRoleRel.active': false,
+      //       },
+      //     })
+      //     .run();
+      // }
+
+      // if (additions.length > 0) {
+      //   await this.db
+      //     .query()
+      //     .match([
+      //       node('user', ['User', 'BaseNode'], {
+      //         id: input.id,
+      //       }),
+      //     ])
+      //     .create([...this.roleProperties(additions)])
+      //     .run();
+      // }
+      await this.authorizationService.roleAddedToUser(input.id, roles);
+    }
+
     return await this.readOne(input.id, session);
   }
 
   async delete(id: ID, session: Session): Promise<void> {
+    //object should be renamed to user?
     const object = await this.readOne(id, session);
 
     if (!object) {
       throw new NotFoundException('Could not find User');
     }
+    this.userRepo.delete(id, session, object);
 
-    const canDelete = await this.db.checkDeletePermission(id, session);
+    // const canDelete = await this.db.checkDeletePermission(id, session);
 
-    if (!canDelete)
-      throw new UnauthorizedException(
-        'You do not have the permission to delete this User'
-      );
+    // if (!canDelete)
+    //   throw new UnauthorizedException(
+    //     'You do not have the permission to delete this User'
+    //   );
 
-    try {
-      await this.db.deleteNode(object);
-    } catch (exception) {
-      this.logger.error('Failed to delete', { id, exception });
-      throw new ServerException('Failed to delete', exception);
-    }
+    // try {
+    //   await this.db.deleteNode(object);
+    // } catch (exception) {
+    //   this.logger.error('Failed to delete', { id, exception });
+    //   throw new ServerException('Failed to delete', exception);
+    // }
   }
 
   async list(input: UserListInput, session: Session): Promise<UserListOutput> {
-    const query = this.db
-      .query()
-      .match([requestingUser(session), ...permissionsOfNode('User')])
-      .apply(calculateTotalAndPaginateList(User, input));
-
+    // const query = this.db
+    //   .query()
+    //   .match([requestingUser(session), ...permissionsOfNode('User')])
+    //   .apply(calculateTotalAndPaginateList(User, input));
+    const query = this.userRepo.list(input, session);
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 
