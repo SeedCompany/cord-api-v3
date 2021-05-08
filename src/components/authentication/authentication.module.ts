@@ -6,6 +6,7 @@ import { AuthenticationResolver } from './authentication.resolver';
 import { AuthenticationService } from './authentication.service';
 import { CryptoService } from './crypto.service';
 import { SessionPipe } from './session.pipe';
+import { AuthenticationRepository } from './authentication.repository';
 
 const ProvideSessionPipe: Provider = {
   provide: SESSION_PIPE_TOKEN,
@@ -21,6 +22,7 @@ const ProvideSessionPipe: Provider = {
   providers: [
     AuthenticationResolver,
     AuthenticationService,
+    AuthenticationRepository,
     CryptoService,
     SessionPipe,
     ProvideSessionPipe,
@@ -30,6 +32,7 @@ const ProvideSessionPipe: Provider = {
     CryptoService,
     SessionPipe,
     SESSION_PIPE_TOKEN,
+    AuthenticationRepository,
   ],
 })
 export class AuthenticationModule {}

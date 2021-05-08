@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, Query, relation } from 'cypher-query-builder';
 
-import { Dictionary, difference } from 'lodash';
+import { Dictionary } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
