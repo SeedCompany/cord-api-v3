@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
@@ -12,31 +12,13 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
+import { ILogger, Logger, Property } from '../../core';
 import {
-  ConfigService,
-  createBaseNode,
-  DatabaseService,
-  ILogger,
-  Logger,
-  matchRequestingUser,
-  matchSession,
-  Property,
-} from '../../core';
-import {
-  calculateTotalAndPaginateList,
-  matchMemberRoles,
-  matchPropList,
-  permissionsOfNode,
-  requestingUser,
-} from '../../core/database/query';
-import {
-  DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
   runListQuery,
-  StandardReadResult,
 } from '../../core/database/results';
-import { Role, rolesForScope } from '../authorization';
+import { rolesForScope } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { FileService } from '../file';
 import { BudgetRepository } from './budget.repository';
@@ -59,8 +41,6 @@ import { DbBudgetRecord } from './model/budget-record.model.db';
 @Injectable()
 export class BudgetService {
   constructor(
-    private readonly db: DatabaseService,
-    private readonly config: ConfigService,
     private readonly files: FileService,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
@@ -337,24 +317,26 @@ export class BudgetService {
       userId: session.userId,
     });
 
-    const query = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'Budget', { id })])
-      .apply(matchPropList)
-      .optionalMatch([
-        node('project', 'Project'),
-        relation('out', '', 'budget', { active: true }),
-        node('node', 'Budget', { id }),
-      ])
-      .with(['project', 'node', 'propList'])
-      .apply(matchMemberRoles(session.userId))
-      .return(['propList', 'node', 'memberRoles'])
-      .asResult<
-        StandardReadResult<DbPropsOfDto<Budget>> & {
-          memberRoles: Role[][];
-        }
-      >();
+    // const { query, canDelete } = this.budgetRepo.readOne(id, session);
+    const query = this.budgetRepo.readOne(id, session);
+    // const query = this.db
+    //   .query()
+    //   .apply(matchRequestingUser(session))
+    //   .match([node('node', 'Budget', { id })])
+    //   .apply(matchPropList)
+    //   .optionalMatch([
+    //     node('project', 'Project'),
+    //     relation('out', '', 'budget', { active: true }),
+    //     node('node', 'Budget', { id }),
+    //   ])
+    //   .with(['project', 'node', 'propList'])
+    //   .apply(matchMemberRoles(session.userId))
+    //   .return(['propList', 'node', 'memberRoles'])
+    //   .asResult<
+    //     StandardReadResult<DbPropsOfDto<Budget>> & {
+    //       memberRoles: Role[][];
+    //     }
+    //   >();
 
     const result = await query.first();
     if (!result) {
@@ -385,7 +367,8 @@ export class BudgetService {
       ...securedProps,
       status: props.status,
       records: records.items,
-      canDelete: await this.db.checkDeletePermission(id, session),
+      canDelete: await this.budgetRepo.checkDeletePermission(id, session),
+      // canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 
@@ -395,8 +378,7 @@ export class BudgetService {
       userId: session.userId,
     });
 
-    const { query, canDelete } = await this.budgetRepo.readOne(id, session);
-
+    const query = await this.budgetRepo.readOneRecord(id, session);
     // const query = this.db
     //   .query()
     //   .apply(matchRequestingUser(session))
@@ -447,7 +429,7 @@ export class BudgetService {
     return {
       ...parseBaseNodeProperties(result.node),
       ...securedProps,
-      canDelete: await this.db.checkDeletePermission(id, session),
+      canDelete: await this.budgetRepo.checkDeletePermission(id, session),
     };
   }
 
@@ -549,7 +531,8 @@ export class BudgetService {
     );
 
     try {
-      await this.db.deleteNode(budget);
+      // await this.db.deleteNode(budget);
+      await this.budgetRepo.deleteNode(budget);
     } catch (e) {
       this.logger.warning('Failed to delete budget', {
         exception: e,
@@ -573,7 +556,7 @@ export class BudgetService {
       );
 
     try {
-      await this.db.deleteNode(br);
+      await this.budgetRepo.deleteNode(br);
     } catch (e) {
       this.logger.warning('Failed to delete Budget Record', {
         exception: e,

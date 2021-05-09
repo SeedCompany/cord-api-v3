@@ -9,6 +9,7 @@ import {
   generateId,
   Resource,
   Order,
+  UnsecuredDto,
 } from '../../common';
 import {
   createBaseNode,
@@ -26,15 +27,15 @@ import {
 } from '../../core/database/query';
 import { QueryWithResult } from '../../core/database/query.overrides';
 import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
+import { NativeDbProps } from '../../core/database/results/types';
 import { Role } from '../authorization';
+import { BaseNode } from '../file';
 import {
   Budget,
   BudgetFilters,
-  BudgetListOutput,
   BudgetRecord,
   BudgetRecordFilters,
   BudgetStatus,
-  CreateBudget,
   CreateBudgetRecord,
   UpdateBudget,
 } from './dto';
@@ -186,7 +187,16 @@ export class BudgetRepository {
     return existingRecord;
   }
   //vivek - what to replace promise<any> with
-  async readOne(id: ID, session: Session): Promise<any> {
+  readOne(
+    id: ID,
+    session: Session
+  ): QueryWithResult<
+    StandardReadResult<
+      NativeDbProps<Omit<UnsecuredDto<Budget>, keyof BaseNode>>
+    > & {
+      memberRoles: Role[][];
+    }
+  > {
     const query = this.db
       .query()
       .apply(matchRequestingUser(session))
@@ -206,12 +216,43 @@ export class BudgetRepository {
         }
       >();
 
-    const canDelete = await this.db.checkDeletePermission(id, session);
+    // const canDelete = await this.db.checkDeletePermission(id, session);
 
-    return {
-      query,
-      canDelete,
-    };
+    return query;
+  }
+  //vivek - don't know how to assign the type
+  readOneRecord(id: ID, session: Session): any {
+    const query = this.db
+      .query()
+      .apply(matchRequestingUser(session))
+      .match([node('node', 'BudgetRecord', { id })])
+      .apply(matchPropList)
+      .match([
+        node('project', 'Project'),
+        relation('out', '', 'budget', { active: true }),
+        node('', 'Budget'),
+        relation('out', '', 'record', { active: true }),
+        node('node', 'BudgetRecord', { id }),
+      ])
+      .with(['project', 'node', 'propList'])
+      .apply(matchMemberRoles(session.userId))
+      .match([
+        node('node'),
+        relation('out', '', 'organization', { active: true }),
+        node('organization', 'Organization'),
+      ])
+      .with(['node', 'propList', 'organization', 'memberRoles'])
+      .return([
+        'propList + [{value: organization.id, property: "organization"}] as propList',
+        'node',
+        'memberRoles',
+      ])
+      .asResult<
+        StandardReadResult<DbPropsOfDto<BudgetRecord>> & {
+          memberRoles: Role[][];
+        }
+      >();
+    return query;
   }
   getActualChanges(budget: Budget, input: UpdateBudget) {
     return this.db.getActualChanges(Budget, budget, input);
@@ -288,6 +329,10 @@ export class BudgetRepository {
 
   async checkDeletePermission(id: ID, session: Session): Promise<boolean> {
     return await this.db.checkDeletePermission(id, session);
+  }
+
+  async deleteNode(node: Budget | BudgetRecord) {
+    await this.db.deleteNode(node);
   }
 
   list(
