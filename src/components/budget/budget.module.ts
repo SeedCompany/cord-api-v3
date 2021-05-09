@@ -10,6 +10,7 @@ import { UnavailabilityModule } from '../user/unavailability/unavailability.modu
 import { UserModule } from '../user/user.module';
 import { BudgetRecordResolver } from './budget-record.resolver';
 import { BudgetResolver } from './budget.resolver';
+import { BudgetRepository } from './budget.repository';
 import { BudgetService } from './budget.service';
 import * as handlers from './handlers';
 
@@ -29,8 +30,9 @@ import * as handlers from './handlers';
     BudgetResolver,
     BudgetRecordResolver,
     BudgetService,
+    BudgetRepository,
     ...Object.values(handlers),
   ],
-  exports: [BudgetService],
+  exports: [BudgetService, BudgetRepository],
 })
 export class BudgetModule {}
