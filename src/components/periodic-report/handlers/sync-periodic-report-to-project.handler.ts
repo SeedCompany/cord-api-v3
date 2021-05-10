@@ -28,12 +28,39 @@ export class SyncPeriodicReportsToProjectDateRange
 
   private async syncFinancial(event: SubscribedEvent) {
     const project = event.updated;
-    const diff = this.diffBy(
-      event,
+    const previous = event.previous;
+
+    const previousIntervalUnit =
+      previous.financialReportPeriod === ReportPeriod.Monthly
+        ? 'months'
+        : 'quarters';
+    const projectIntervalUnit =
       project.financialReportPeriod === ReportPeriod.Monthly
         ? 'months'
-        : 'quarters'
-    );
+        : 'quarters';
+
+    const diff =
+      project.financialReportPeriod !== previous.financialReportPeriod
+        ? {
+            additions:
+              projectRange(project)
+                ?.expandToFull(projectIntervalUnit)
+                .splitBy({
+                  [projectIntervalUnit]: 1,
+                }) || [],
+            removals:
+              projectRange(previous)
+                ?.expandToFull(previousIntervalUnit)
+                .splitBy({
+                  [previousIntervalUnit]: 1,
+                }) || [],
+          }
+        : this.diffBy(
+            event,
+            project.financialReportPeriod === ReportPeriod.Monthly
+              ? 'months'
+              : 'quarters'
+          );
 
     await this.periodicReports.delete(
       project.id,
