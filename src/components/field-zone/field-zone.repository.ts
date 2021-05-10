@@ -9,7 +9,7 @@ import {
 
 import { Session, ID, generateId } from '../../common';
 import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
-import { FieldRegion, FieldRegionListInput, UpdateFieldRegion } from './dto';
+
 import {
   calculateTotalAndPaginateList,
   matchPropList,
@@ -17,15 +17,16 @@ import {
   requestingUser,
 } from '../../core/database/query';
 import { DbChanges } from '../../core/database/changes';
+import { FieldZone, FieldZoneListInput, UpdateFieldZone } from './dto';
 
 @Injectable()
-export class FieldRegionRepository {
+export class FieldZoneRepository {
   constructor(private readonly db: DatabaseService) {}
 
   async checkName(name: string) {
     return await this.db
       .query()
-      .match([node('name', 'FieldRegionName', { value: name })])
+      .match([node('name', 'FieldZoneName', { value: name })])
       .return('name')
       .first();
   }
@@ -33,8 +34,8 @@ export class FieldRegionRepository {
   async create(
     session: Session,
     name: string,
-    directorId: ID,
-    fieldZoneId: ID
+    directorId: ID
+    // fieldZoneId: ID
   ) {
     const createdAt = DateTime.local();
 
@@ -44,7 +45,7 @@ export class FieldRegionRepository {
         value: name,
         isPublic: false,
         isOrgPublic: false,
-        label: 'FieldRegionName',
+        label: 'FieldZoneName',
       },
       {
         key: 'canDelete',
@@ -54,7 +55,7 @@ export class FieldRegionRepository {
       },
     ];
 
-    // create field region
+    // create field zone
     const query = this.db
       .query()
       .apply(matchRequestingUser(session))
@@ -63,23 +64,15 @@ export class FieldRegionRepository {
           id: directorId,
         }),
       ])
-      .match([
-        node('fieldZone', 'FieldZone', {
-          id: fieldZoneId,
-        }),
-      ])
-      .apply(createBaseNode(await generateId(), 'FieldRegion', secureProps))
+      .apply(createBaseNode(await generateId(), 'FieldZone', secureProps))
       .create([
         node('node'),
         relation('out', '', 'director', { active: true, createdAt }),
         node('director'),
       ])
-      .create([
-        node('node'),
-        relation('out', '', 'zone', { active: true, createdAt }),
-        node('fieldZone'),
-      ])
       .return('node.id as id');
+
+    // const result = await query.first();
 
     return await query.first();
   }
@@ -88,25 +81,17 @@ export class FieldRegionRepository {
     const query = this.db
       .query()
       .apply(matchRequestingUser(session))
-      .match([node('node', 'FieldRegion', { id: id })])
+      .match([node('node', 'FieldZone', { id: id })])
       .apply(matchPropList)
       .optionalMatch([
         node('node'),
         relation('out', '', 'director', { active: true }),
         node('director', 'User'),
       ])
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'zone', { active: true }),
-        node('fieldZone', 'FieldZone'),
-      ])
-      .return(
-        'propList, node, director.id as directorId, fieldZone.id as fieldZoneId'
-      )
+      .return('propList, node, director.id as directorId')
       .asResult<
-        StandardReadResult<DbPropsOfDto<FieldRegion>> & {
+        StandardReadResult<DbPropsOfDto<FieldZone>> & {
           directorId: ID;
-          fieldZoneId: ID;
         }
       >();
 
@@ -117,31 +102,56 @@ export class FieldRegionRepository {
     return await this.db.checkDeletePermission(id, session);
   }
 
-  getActualChanges(fieldRegion: FieldRegion, input: UpdateFieldRegion) {
-    return this.db.getActualChanges(FieldRegion, fieldRegion, input);
+  getActualChanges(fieldZone: FieldZone, input: UpdateFieldZone) {
+    return this.db.getActualChanges(FieldZone, fieldZone, input);
   }
 
-  async updateProperties(
-    fieldRegion: FieldRegion,
-    changes: DbChanges<FieldRegion>
-  ) {
+  async updateDirector(directorId: ID, id: ID) {
+    const createdAt = DateTime.local();
+    const query = this.db
+      .query()
+      .match(node('fieldZone', 'FieldZone', { id }))
+      .with('fieldZone')
+      .limit(1)
+      .match([node('director', 'User', { id: directorId })])
+      .optionalMatch([
+        node('fieldZone'),
+        relation('out', 'oldRel', 'director', { active: true }),
+        node(''),
+      ])
+      .setValues({ 'oldRel.active': false })
+      .with('fieldZone, director')
+      .limit(1)
+      .create([
+        node('fieldZone'),
+        relation('out', '', 'director', {
+          active: true,
+          createdAt,
+        }),
+        node('director'),
+      ]);
+
+    await query.run();
+  }
+
+  async updateProperties(fieldZone: FieldZone, changes: DbChanges<FieldZone>) {
     await this.db.updateProperties({
-      type: FieldRegion,
-      object: fieldRegion,
+      type: FieldZone,
+      object: fieldZone,
       changes: changes,
     });
   }
 
-  async deleteNode(node: FieldRegion) {
+  async deleteNode(node: FieldZone) {
     await this.db.deleteNode(node);
   }
 
-  list({ filter, ...input }: FieldRegionListInput, session: Session) {
-    const label = 'FieldRegion';
-    const query = this.db
+  list({ filter, ...input }: FieldZoneListInput, session: Session) {
+    const label = 'FieldZone';
+    return this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode(label)])
-      .apply(calculateTotalAndPaginateList(FieldRegion, input));
-    return query;
+      .apply(calculateTotalAndPaginateList(FieldZone, input));
+    // return query;
   }
 }
