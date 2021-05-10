@@ -35,6 +35,7 @@ import {
 } from '../../core/database/results';
 import { Role, rolesForScope } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { CeremonyRepository } from './ceremony.repository';
 import {
   Ceremony,
   CeremonyListInput,
@@ -50,6 +51,7 @@ export class CeremonyService {
     private readonly config: ConfigService,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
+    private readonly ceremonyRepo: CeremonyRepository,
     @Logger('ceremony:service') private readonly logger: ILogger
   ) {}
 
@@ -88,11 +90,13 @@ export class CeremonyService {
     ];
 
     try {
-      const query = this.db
-        .query()
-        .apply(matchRequestingUser(session))
-        .apply(createBaseNode(await generateId(), 'Ceremony', secureProps))
-        .return('node.id as id');
+      // const query = this.db
+      //   .query()
+      //   .apply(matchRequestingUser(session))
+      //   .apply(createBaseNode(await generateId(), 'Ceremony', secureProps))
+      //   .return('node.id as id');
+
+      const query = await this.ceremonyRepo.create(session, secureProps);
 
       const result = await query.first();
 
@@ -124,6 +128,7 @@ export class CeremonyService {
     if (!id) {
       throw new InputException('No ceremony id to search for', 'ceremony.id');
     }
+    // const readCeremony = this.ceremonyRepo.readOne(id, session);
     const readCeremony = this.db
       .query()
       .apply(matchRequestingUser(session))
@@ -146,6 +151,7 @@ export class CeremonyService {
       >();
 
     const result = await readCeremony.first();
+    // const result = this.ceremonyRepo.readOne(id, session);
     if (!result) {
       throw new NotFoundException('Could not find ceremony', 'ceremony.id');
     }
@@ -163,7 +169,8 @@ export class CeremonyService {
       ...parseBaseNodeProperties(result.node),
       ...securedProps,
       type: parsedProps.type,
-      canDelete: await this.db.checkDeletePermission(id, session),
+      canDelete: await this.ceremonyRepo.checkDeletePermission(id, session),
+      // canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 
