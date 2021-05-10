@@ -194,10 +194,7 @@ export class EngagementRepository {
   getActualLanguageChanges(
     object: LanguageEngagement,
     input: UpdateLanguageEngagement
-  ): Partial<
-    Omit<UpdateLanguageEngagement, keyof Resource> &
-      Pick<LanguageEngagement, 'modifiedAt'>
-  > {
+  ) {
     return this.db.getActualChanges(LanguageEngagement, object, input);
   }
 
