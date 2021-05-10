@@ -124,7 +124,7 @@ export class EngagementService {
     const createdAt = DateTime.local();
     const pnpId = await generateId();
 
-    const createLE = this.db.query();
+    const createLE = this.repo.create();
     if (projectId) {
       createLE.match([node('project', 'Project', { id: projectId })]);
     }
@@ -234,11 +234,12 @@ export class EngagementService {
     if (!le) {
       if (
         projectId &&
-        !(await this.db
-          .query()
-          .match([node('project', 'Project', { id: projectId })])
-          .return('project.id')
-          .first())
+        // !(await this.db
+        //   .query()
+        //   .match([node('project', 'Project', { id: projectId })])
+        //   .return('project.id')
+        //   .first())
+        !(await this.repo.findNode('project', projectId))
       ) {
         throw new InputException(
           'projectId is invalid',
@@ -247,11 +248,12 @@ export class EngagementService {
       }
       if (
         languageId &&
-        !(await this.db
-          .query()
-          .match([node('language', 'Language', { id: languageId })])
-          .return('language.id')
-          .first())
+        // !(await this.db
+        //   .query()
+        //   .match([node('language', 'Language', { id: languageId })])
+        //   .return('language.id')
+        //   .first())
+        !(await this.repo.findNode('language', languageId))
       ) {
         throw new InputException(
           'languageId is invalid',
@@ -323,7 +325,7 @@ export class EngagementService {
     const createdAt = DateTime.local();
     const growthPlanId = await generateId();
 
-    const createIE = this.db.query();
+    const createIE = this.repo.create();
     if (projectId) {
       createIE.match([node('project', 'Project', { id: projectId })]);
     }
@@ -462,31 +464,34 @@ export class EngagementService {
     if (!IE) {
       if (
         internId &&
-        !(await this.db
-          .query()
-          .match([node('intern', 'User', { id: internId })])
-          .return('intern.id')
-          .first())
+        // !(await this.db
+        //   .query()
+        //   .match([node('intern', 'User', { id: internId })])
+        //   .return('intern.id')
+        //   .first())
+        !(await this.repo.findNode('intern', internId))
       ) {
         throw new InputException('internId is invalid', 'engagement.internId');
       }
       if (
         mentorId &&
-        !(await this.db
-          .query()
-          .match([node('mentor', 'User', { id: mentorId })])
-          .return('mentor.id')
-          .first())
+        // !(await this.db
+        //   .query()
+        //   .match([node('mentor', 'User', { id: mentorId })])
+        //   .return('mentor.id')
+        //   .first())
+        !(await this.repo.findNode('mentor', mentorId))
       ) {
         throw new InputException('mentorId is invalid', 'engagement.mentorId');
       }
       if (
         projectId &&
-        !(await this.db
-          .query()
-          .match([node('project', 'Project', { id: projectId })])
-          .return('project.id')
-          .first())
+        // !(await this.db
+        //   .query()
+        //   .match([node('project', 'Project', { id: projectId })])
+        //   .return('project.id')
+        //   .first())
+        !(await this.repo.findNode('project', projectId))
       ) {
         throw new InputException(
           'projectId is invalid',
@@ -495,15 +500,16 @@ export class EngagementService {
       }
       if (
         countryOfOriginId &&
-        !(await this.db
-          .query()
-          .match([
-            node('country', 'Location', {
-              id: countryOfOriginId,
-            }),
-          ])
-          .return('country.id')
-          .first())
+        // !(await this.db
+        //   .query()
+        //   .match([
+        //     node('country', 'Location', {
+        //       id: countryOfOriginId,
+        //     }),
+        //   ])
+        //   .return('country.id')
+        //   .first())
+        !(await this.repo.findNode('countryOfOrigin', countryOfOriginId))
       ) {
         throw new InputException(
           'countryOfOriginId is invalid',
@@ -567,96 +573,97 @@ export class EngagementService {
     if (!id) {
       throw new NotFoundException('no id given', 'engagement.id');
     }
+    const query = this.repo.readOne(id, session);
+    // const query = this.db
+    //   .query()
+    //   .apply(matchRequestingUser(session))
+    //   .match([node('node', 'Engagement', { id })])
+    //   .apply(matchPropList)
+    //   .optionalMatch([
+    //     node('project'),
+    //     relation('out', '', 'engagement', { active: true }),
+    //     node('node'),
+    //   ])
+    //   .apply(matchMemberRoles(session.userId))
+    //   .with([
+    //     'propList',
+    //     'node',
+    //     'project',
+    //     'memberRoles',
+    //     `case
+    //       when 'InternshipEngagement' IN labels(node)
+    //       then 'InternshipEngagement'
+    //       when 'LanguageEngagement' IN labels(node)
+    //       then 'LanguageEngagement'
+    //       end as __typename
+    //       `,
+    //   ])
+    //   .optionalMatch([
+    //     node('node'),
+    //     relation('out', '', 'ceremony', { active: true }),
+    //     node('ceremony'),
+    //   ])
+    //   .optionalMatch([
+    //     node('node'),
+    //     relation('out', '', 'language', { active: true }),
+    //     node('language'),
+    //   ])
+    //   .optionalMatch([
+    //     node('node'),
+    //     relation('out', '', 'intern', { active: true }),
+    //     node('intern'),
+    //   ])
+    //   .optionalMatch([
+    //     node('node'),
+    //     relation('out', '', 'countryOfOrigin', { active: true }),
+    //     node('countryOfOrigin'),
+    //   ])
+    //   .optionalMatch([
+    //     node('node'),
+    //     relation('out', '', 'mentor', { active: true }),
+    //     node('mentor'),
+    //   ])
+    //   .optionalMatch([
+    //     node('node'),
+    //     relation('out', '', 'pnpData', { active: true }),
+    //     node('pnpData'),
+    //   ])
+    //   .return([
+    //     'propList, node, project.id as project',
+    //     '__typename, ceremony.id as ceremony',
+    //     'language.id as language',
+    //     'intern.id as intern',
+    //     'countryOfOrigin.id as countryOfOrigin',
+    //     'mentor.id as mentor',
+    //     'pnpData',
+    //     'memberRoles',
+    //   ])
+    //   .asResult<
+    //     StandardReadResult<
+    //       Omit<
+    //         DbPropsOfDto<LanguageEngagement & InternshipEngagement>,
+    //         | '__typename'
+    //         | 'ceremony'
+    //         | 'language'
+    //         | 'pnpData'
+    //         | 'countryOfOrigin'
+    //         | 'intern'
+    //         | 'mentor'
+    //       >
+    //     > & {
+    //       __typename: 'LanguageEngagement' | 'InternshipEngagement';
+    //       language: ID;
+    //       ceremony: ID;
+    //       project: ID;
+    //       intern: ID;
+    //       countryOfOrigin: ID;
+    //       mentor: ID;
+    //       pnpData?: Node<PnpData>;
+    //       memberRoles: Role[][];
+    //     }
+    //   >();
 
-    const query = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'Engagement', { id })])
-      .apply(matchPropList)
-      .optionalMatch([
-        node('project'),
-        relation('out', '', 'engagement', { active: true }),
-        node('node'),
-      ])
-      .apply(matchMemberRoles(session.userId))
-      .with([
-        'propList',
-        'node',
-        'project',
-        'memberRoles',
-        `case
-          when 'InternshipEngagement' IN labels(node)
-          then 'InternshipEngagement'
-          when 'LanguageEngagement' IN labels(node)
-          then 'LanguageEngagement'
-          end as __typename
-          `,
-      ])
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'ceremony', { active: true }),
-        node('ceremony'),
-      ])
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'language', { active: true }),
-        node('language'),
-      ])
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'intern', { active: true }),
-        node('intern'),
-      ])
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'countryOfOrigin', { active: true }),
-        node('countryOfOrigin'),
-      ])
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'mentor', { active: true }),
-        node('mentor'),
-      ])
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'pnpData', { active: true }),
-        node('pnpData'),
-      ])
-      .return([
-        'propList, node, project.id as project',
-        '__typename, ceremony.id as ceremony',
-        'language.id as language',
-        'intern.id as intern',
-        'countryOfOrigin.id as countryOfOrigin',
-        'mentor.id as mentor',
-        'pnpData',
-        'memberRoles',
-      ])
-      .asResult<
-        StandardReadResult<
-          Omit<
-            DbPropsOfDto<LanguageEngagement & InternshipEngagement>,
-            | '__typename'
-            | 'ceremony'
-            | 'language'
-            | 'pnpData'
-            | 'countryOfOrigin'
-            | 'intern'
-            | 'mentor'
-          >
-        > & {
-          __typename: 'LanguageEngagement' | 'InternshipEngagement';
-          language: ID;
-          ceremony: ID;
-          project: ID;
-          intern: ID;
-          countryOfOrigin: ID;
-          mentor: ID;
-          pnpData?: Node<PnpData>;
-          memberRoles: Role[][];
-        }
-      >();
-
+    console.log(typeof query);
     const result = await query.first();
 
     if (!result) {
@@ -767,7 +774,8 @@ export class EngagementService {
       session
     )) as LanguageEngagement;
 
-    const changes = this.db.getActualChanges(LanguageEngagement, object, input);
+    // const changes = this.db.getActualChanges(LanguageEngagement, object, input);
+    const changes = this.repo.getActualChanges(object, input);
     await this.authorizationService.verifyCanEditChanges(
       LanguageEngagement,
       object,
@@ -788,11 +796,12 @@ export class EngagementService {
     }
 
     try {
-      await this.db.updateProperties({
-        type: LanguageEngagement,
-        object: object,
-        changes: simpleChanges,
-      });
+      // await this.db.updateProperties({
+      //   type: LanguageEngagement,
+      //   object: object,
+      //   changes: simpleChanges,
+      // });
+      await this.repo.updateProperties(object, simpleChanges);
     } catch (exception) {
       this.logger.error('Error updating language engagement', { exception });
       throw new ServerException(
