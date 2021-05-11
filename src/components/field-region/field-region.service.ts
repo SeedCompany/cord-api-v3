@@ -80,7 +80,7 @@ export class FieldRegionService {
     //   .match([node('name', 'FieldRegionName', { value: input.name })])
     //   .return('name')
     //   .first();
-    const checkName = this.repo.checkName(input.name);
+    const checkName = await this.repo.checkName(input.name);
 
     if (checkName) {
       throw new DuplicateException(
