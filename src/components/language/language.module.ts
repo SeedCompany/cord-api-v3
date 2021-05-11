@@ -6,6 +6,7 @@ import { ProjectModule } from '../project/project.module';
 import { EthnologueLanguageService } from './ethnologue-language';
 import { LanguageResolver } from './language.resolver';
 import { LanguageService } from './language.service';
+import { LanguageRepository } from './language.repository';
 
 @Module({
   imports: [
@@ -14,7 +15,15 @@ import { LanguageService } from './language.service';
     forwardRef(() => LocationModule),
     forwardRef(() => EngagementModule),
   ],
-  providers: [LanguageResolver, LanguageService, EthnologueLanguageService],
-  exports: [LanguageService],
+  providers: [
+    LanguageResolver,
+    LanguageService,
+    EthnologueLanguageService,
+    LanguageRepository,
+  ],
+  exports: [LanguageService, LanguageRepository],
 })
-export class LanguageModule {}
+export class LanguageModule {
+
+  
+}

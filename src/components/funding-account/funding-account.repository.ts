@@ -23,7 +23,6 @@ import {
   FundingAccountListInput,
   UpdateFundingAccount,
 } from './dto';
-import { session } from 'neo4j-driver';
 
 @Injectable()
 export class FundingAccountRepository {
