@@ -39,16 +39,18 @@ import {
   FilmListOutput,
   UpdateFilm,
 } from './dto';
+import { FilmRepository } from './film.repository';
 import { DbFilm } from './model';
 
 @Injectable()
 export class FilmService {
   constructor(
     @Logger('film:service') private readonly logger: ILogger,
-    private readonly db: DatabaseService,
+    // private readonly db: DatabaseService,
     private readonly config: ConfigService,
     private readonly scriptureRefService: ScriptureReferenceService,
-    private readonly authorizationService: AuthorizationService
+    private readonly authorizationService: AuthorizationService,
+    private readonly repo: FilmRepository
   ) {}
 
   @OnIndex()
@@ -67,11 +69,13 @@ export class FilmService {
   }
 
   async create(input: CreateFilm, session: Session): Promise<Film> {
-    const checkFm = await this.db
-      .query()
-      .match([node('film', 'FilmName', { value: input.name })])
-      .return('film')
-      .first();
+    // const checkFm = await this.db
+    //   .query()
+    //   .match([node('film', 'FilmName', { value: input.name })])
+    //   .return('film')
+    //   .first();
+
+    const checkFm = await this.repo.checkFilm(input.name);
 
     if (checkFm) {
       throw new DuplicateException(
@@ -80,34 +84,35 @@ export class FilmService {
       );
     }
 
-    const secureProps = [
-      {
-        key: 'name',
-        value: input.name,
-        isPublic: true,
-        isOrgPublic: true,
-        label: 'FilmName',
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
+    // const secureProps = [
+    //   {
+    //     key: 'name',
+    //     value: input.name,
+    //     isPublic: true,
+    //     isOrgPublic: true,
+    //     label: 'FilmName',
+    //   },
+    //   {
+    //     key: 'canDelete',
+    //     value: true,
+    //     isPublic: false,
+    //     isOrgPublic: false,
+    //   },
+    // ];
     try {
-      const result = await this.db
-        .query()
-        .apply(matchRequestingUser(session))
-        .apply(
-          createBaseNode(
-            await generateId(),
-            ['Film', 'Producible'],
-            secureProps
-          )
-        )
-        .return('node.id as id')
-        .first();
+      const result = await this.repo.createFilm(input.name, session);
+      // const result = await this.db
+      //   .query()
+      //   .apply(matchRequestingUser(session))
+      //   .apply(
+      //     createBaseNode(
+      //       await generateId(),
+      //       ['Film', 'Producible'],
+      //       secureProps
+      //     )
+      //   )
+      //   .return('node.id as id')
+      //   .first();
 
       if (!result) {
         throw new ServerException('failed to create a film');
@@ -143,15 +148,17 @@ export class FilmService {
       userId: session.userId,
     });
 
-    const readFilm = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'Film', { id })])
-      .apply(matchPropList)
-      .return('node, propList')
-      .asResult<StandardReadResult<DbPropsOfDto<Film>>>();
+    // const readFilm = this.db
+    //   .query()
+    //   .apply(matchRequestingUser(session))
+    //   .match([node('node', 'Film', { id })])
+    //   .apply(matchPropList)
+    //   .return('node, propList')
+    //   .asResult<StandardReadResult<DbPropsOfDto<Film>>>();
 
-    const result = await readFilm.first();
+    // const result = await readFilm.first();
+
+    const result = await this.repo.readOne(id, session);
 
     if (!result) {
       throw new NotFoundException('Could not find film', 'film.id');
@@ -174,22 +181,25 @@ export class FilmService {
         ...securedProps.scriptureReferences,
         value: scriptureReferences,
       },
-      canDelete: await this.db.checkDeletePermission(id, session),
+      canDelete: await this.repo.checkDeletePermission(id, session),
+      // canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 
   async update(input: UpdateFilm, session: Session): Promise<Film> {
     const film = await this.readOne(input.id, session);
-    const changes = this.db.getActualChanges(Film, film, input);
+    const changes = this.repo.getActualChanges(film, input);
     await this.authorizationService.verifyCanEditChanges(Film, film, changes);
     const { scriptureReferences, ...simpleChanges } = changes;
 
     await this.scriptureRefService.update(input.id, scriptureReferences);
-    await this.db.updateProperties({
-      type: Film,
-      object: film,
-      changes: simpleChanges,
-    });
+
+    await this.repo.updateProperties(film, simpleChanges);
+    // await this.db.updateProperties({
+    //   type: Film,
+    //   object: film,
+    //   changes: simpleChanges,
+    // });
 
     return await this.readOne(input.id, session);
   }
@@ -201,7 +211,7 @@ export class FilmService {
       throw new NotFoundException('Could not find Film');
     }
 
-    const canDelete = await this.db.checkDeletePermission(id, session);
+    const canDelete = await this.repo.checkDeletePermission(id, session);
 
     if (!canDelete)
       throw new UnauthorizedException(
@@ -209,7 +219,7 @@ export class FilmService {
       );
 
     try {
-      await this.db.deleteNode(film);
+      await this.repo.deleteNode(film);
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);
@@ -222,10 +232,11 @@ export class FilmService {
     { filter, ...input }: FilmListInput,
     session: Session
   ): Promise<FilmListOutput> {
-    const query = this.db
-      .query()
-      .match([requestingUser(session), ...permissionsOfNode('Film')])
-      .apply(calculateTotalAndPaginateList(Film, input));
+    const query = this.repo.list({ filter, ...input }, session);
+    // const query = this.db
+    //   .query()
+    //   .match([requestingUser(session), ...permissionsOfNode('Film')])
+    //   .apply(calculateTotalAndPaginateList(Film, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

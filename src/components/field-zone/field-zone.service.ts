@@ -47,7 +47,7 @@ export class FieldZoneService {
   constructor(
     @Logger('field-zone:service') private readonly logger: ILogger,
     private readonly config: ConfigService,
-    private readonly db: DatabaseService,
+    // private readonly db: DatabaseService,
     private readonly authorizationService: AuthorizationService,
     private readonly repo: FieldZoneRepository
   ) {}
