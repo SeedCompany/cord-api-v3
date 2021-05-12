@@ -1,38 +1,18 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
 import { range } from 'lodash';
-import { DateTime } from 'luxon';
 import {
   DuplicateException,
-  generateId,
   ID,
   NotFoundException,
   ServerException,
   Session,
   UnauthorizedException,
 } from '../../common';
+import { ConfigService, ILogger, Logger, OnIndex } from '../../core';
+
 import {
-  ConfigService,
-  createBaseNode,
-  DatabaseService,
-  ILogger,
-  Logger,
-  matchRequestingUser,
-  matchSession,
-  OnIndex,
-  Property,
-} from '../../core';
-import {
-  calculateTotalAndPaginateList,
-  matchPropList,
-  permissionsOfNode,
-  requestingUser,
-} from '../../core/database/query';
-import {
-  DbPropsOfDto,
   parseBaseNodeProperties,
   runListQuery,
-  StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
@@ -49,16 +29,18 @@ import {
   UpdateOrganization,
 } from './dto';
 import { DbOrganization } from './model';
+import { OrganizationRepository } from './organization.repository';
 
 @Injectable()
 export class OrganizationService {
   constructor(
     @Logger('org:service') private readonly logger: ILogger,
     private readonly config: ConfigService,
-    private readonly db: DatabaseService,
+    // private readonly db: DatabaseService,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
-    private readonly locationService: LocationService
+    private readonly locationService: LocationService,
+    private readonly repo: OrganizationRepository
   ) {}
 
   @OnIndex()
@@ -76,25 +58,6 @@ export class OrganizationService {
     ];
   }
 
-  // assumes 'root' cypher variable is declared in query
-  private readonly createSG = (
-    cypherIdentifier: string,
-    id: ID,
-    label?: string
-  ) => (query: Query) => {
-    const labels = ['SecurityGroup'];
-    if (label) {
-      labels.push(label);
-    }
-    const createdAt = DateTime.local();
-
-    query.create([
-      node('root'),
-      relation('in', '', 'member'),
-      node(cypherIdentifier, labels, { createdAt, id }),
-    ]);
-  };
-
   async create(
     input: CreateOrganization,
     session: Session
@@ -104,12 +67,7 @@ export class OrganizationService {
       session
     );
 
-    const checkOrg = await this.db
-      .query()
-      .raw(`MATCH(org:OrgName {value: $name}) return org`, {
-        name: input.name,
-      })
-      .first();
+    const checkOrg = await this.repo.checkOrg(input.name);
 
     if (checkOrg) {
       throw new DuplicateException(
@@ -118,45 +76,9 @@ export class OrganizationService {
       );
     }
 
-    // create org
-    const secureProps: Property[] = [
-      {
-        key: 'name',
-        value: input.name,
-        isPublic: true,
-        isOrgPublic: false,
-        label: 'OrgName',
-      },
-      {
-        key: 'address',
-        value: input.address,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
-    // const baseMetaProps = [];
+    const publicSecurityId = this.config.publicSecurityGroup.id;
 
-    const query = this.db
-      .query()
-      .match([
-        node('publicSG', 'PublicSecurityGroup', {
-          id: this.config.publicSecurityGroup.id,
-        }),
-      ])
-      .apply(matchRequestingUser(session))
-      .apply(
-        this.createSG('orgSG', await generateId(), 'OrgPublicSecurityGroup')
-      )
-      .apply(createBaseNode(await generateId(), 'Organization', secureProps))
-      .return('node.id as id');
-
-    const result = await query.first();
+    const result = await this.repo.create(input, session, publicSecurityId);
 
     if (!result) {
       throw new ServerException('failed to create default org');
@@ -182,14 +104,8 @@ export class OrganizationService {
       userId: session.userId,
     });
 
-    const query = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'Organization', { id: orgId })])
-      .apply(matchPropList)
-      .return('propList, node')
-      .asResult<StandardReadResult<DbPropsOfDto<Organization>>>();
-    const result = await query.first();
+    const result = await this.repo.readOne(orgId, session);
+
     if (!result) {
       throw new NotFoundException(
         'Could not find organization',
@@ -206,7 +122,7 @@ export class OrganizationService {
     return {
       ...parseBaseNodeProperties(result.node),
       ...secured,
-      canDelete: await this.db.checkDeletePermission(orgId, session),
+      canDelete: await this.repo.checkDeletePermission(orgId, session),
     };
   }
 
@@ -215,17 +131,16 @@ export class OrganizationService {
     session: Session
   ): Promise<Organization> {
     const organization = await this.readOne(input.id, session);
-    const changes = this.db.getActualChanges(Organization, organization, input);
+
+    const changes = await this.repo.getActualChanges(organization, input);
+
     await this.authorizationService.verifyCanEditChanges(
       Organization,
       organization,
       changes
     );
-    return await this.db.updateProperties({
-      type: Organization,
-      object: organization,
-      changes,
-    });
+
+    return await this.repo.updateProperties(organization, changes);
   }
 
   async delete(id: ID, session: Session): Promise<void> {
@@ -235,7 +150,7 @@ export class OrganizationService {
       throw new NotFoundException('Could not find Organization');
     }
 
-    const canDelete = await this.db.checkDeletePermission(id, session);
+    const canDelete = await this.repo.checkDeletePermission(id, session);
 
     if (!canDelete)
       throw new UnauthorizedException(
@@ -243,7 +158,7 @@ export class OrganizationService {
       );
 
     try {
-      await this.db.deleteNode(object);
+      await this.repo.deleteNode(object);
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);
@@ -256,19 +171,7 @@ export class OrganizationService {
     { filter, ...input }: OrganizationListInput,
     session: Session
   ): Promise<OrganizationListOutput> {
-    const query = this.db
-      .query()
-      .match([
-        requestingUser(session),
-        ...permissionsOfNode('Organization'),
-        ...(filter.userId && session.userId
-          ? [
-              relation('in', '', 'organization', { active: true }),
-              node('user', 'User', { id: filter.userId }),
-            ]
-          : []),
-      ])
-      .apply(calculateTotalAndPaginateList(Organization, input));
+    const query = this.repo.list({ filter, ...input }, session);
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
@@ -326,25 +229,7 @@ export class OrganizationService {
 
   async checkAllOrgs(session: Session): Promise<boolean> {
     try {
-      const result = await this.db
-        .query()
-        .raw(
-          `
-          MATCH
-          (token:Token {active: true, value: $token})
-          <-[:token {active: true}]-
-          (user:User {
-            isAdmin: true
-          }),
-            (org:Organization)
-          RETURN
-            count(org) as orgCount
-          `,
-          {
-            token: session.token,
-          }
-        )
-        .first();
+      const result = await this.repo.checkAllOrgs(session);
 
       const orgCount = result?.orgCount;
 
@@ -362,27 +247,7 @@ export class OrganizationService {
   }
 
   private async pullOrg(index: number, session: Session): Promise<boolean> {
-    const result = await this.db
-      .query()
-      .raw(
-        `
-        MATCH
-          (org:Organization)
-          -[:name {active: true}]->
-          (name:Property)
-        RETURN
-          org.id as id,
-          org.createdAt as createdAt,
-          name.value as name
-        ORDER BY
-          createdAt
-        SKIP
-          ${index}
-        LIMIT
-          1
-        `
-      )
-      .first();
+    const result = await this.repo.pullOrg(index);
 
     const isGood = this.validateOrg({
       id: result?.id,
@@ -397,7 +262,7 @@ export class OrganizationService {
         canRead: false,
         canEdit: false,
       },
-      canDelete: await this.db.checkDeletePermission(result?.id, session), // TODO
+      canDelete: await this.repo.checkDeletePermission(result?.id, session), // TODO
     });
 
     return isGood;
@@ -424,34 +289,20 @@ export class OrganizationService {
   }
 
   async checkOrganizationConsistency(session: Session): Promise<boolean> {
-    const organizations = await this.db
-      .query()
-      .match([matchSession(session), [node('organization', 'Organization')]])
-      .return('organization.id as id')
-      .run();
+    const organizations = await this.repo.getOrganizations(session);
 
     return (
       (
         await Promise.all(
           organizations.map(async (organization) => {
-            return await this.db.hasProperties({
-              session,
-              id: organization.id,
-              props: ['name'],
-              nodevar: 'organization',
-            });
+            return await this.repo.hasProperties(session, organization.id);
           })
         )
       ).every((n) => n) &&
       (
         await Promise.all(
           organizations.map(async (organization) => {
-            return await this.db.isUniqueProperties({
-              session,
-              id: organization.id,
-              props: ['name'],
-              nodevar: 'organization',
-            });
+            return await this.repo.isUniqueProperties(session, organization.id);
           })
         )
       ).every((n) => n)
