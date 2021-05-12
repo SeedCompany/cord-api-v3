@@ -17,6 +17,8 @@ import { FileService, SecuredFile } from '../file';
 import { ProjectService } from '../project';
 import { IPeriodicReport, ReportType, UploadPeriodicReportInput } from './dto';
 import { PeriodicReportService } from './periodic-report.service';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+import asyncPool = require('tiny-async-pool');
 
 @Resolver(IPeriodicReport)
 export class PeriodicReportResolver {
@@ -52,76 +54,79 @@ export class PeriodicReportResolver {
   @Mutation(() => [IPeriodicReport], {
     description: 'Update a report file',
   })
-  async syncReports(
-    @LoggedInSession() session: Session
-  ): Promise<IPeriodicReport[]> {
+  async syncReports(@LoggedInSession() session: Session) {
     const projects = await this.projects.listProjectsWithDateRange();
-    const reports1 = await Promise.all(
-      projects.flatMap((p) =>
-        DateInterval.tryFrom(p.mouStart, p.mouEnd)
-          .expandToFull('quarters')
-          .difference()
-          .flatMap((r) => r.splitBy({ quarters: 1 }))
-          .flatMap((interval) => [
-            this.service.create(
-              {
-                start: interval.start,
-                end: interval.end,
-                type: ReportType.Narrative,
-                projectOrEngagementId: p.projectId,
-              },
-              session
-            ),
-          ])
+
+    const syncProject = async (project: any) => {
+      const narrativeIntervals = DateInterval.tryFrom(
+        project.mouStart,
+        project.mouEnd
       )
-    );
-    const reports2 = await Promise.all(
-      projects.flatMap((p) =>
-        DateInterval.tryFrom(p.mouStart, p.mouEnd)
-          .expandToFull('months')
-          .difference()
-          .flatMap((r) => r.splitBy({ months: 1 }))
-          .flatMap((interval) => [
-            this.service.create(
-              {
-                start: interval.start,
-                end: interval.end,
-                type: ReportType.Financial,
-                projectOrEngagementId: p.projectId,
-              },
-              session
-            ),
-          ])
+        .expandToFull('quarters')
+        .difference()
+        .flatMap((r) => r.splitBy({ quarters: 1 }));
+
+      const financialIntervals = DateInterval.tryFrom(
+        project.mouStart,
+        project.mouEnd
       )
-    );
+        .expandToFull('months')
+        .difference()
+        .flatMap((r) => r.splitBy({ months: 1 }));
+      for (const interval of financialIntervals) {
+        await this.service.create(
+          {
+            start: interval.start,
+            end: interval.end,
+            type: ReportType.Financial,
+            projectOrEngagementId: project.projectId,
+          },
+          session
+        );
+      }
+
+      for (const interval of narrativeIntervals) {
+        await this.service.create(
+          {
+            start: interval.start,
+            end: interval.end,
+            type: ReportType.Narrative,
+            projectOrEngagementId: project.projectId,
+          },
+          session
+        );
+      }
+    };
+    await asyncPool(10, projects, syncProject);
+
+    const syncEngagement = async (engagement: any) => {
+      const intervals = (engagement.startDateOverride
+        ? DateInterval.tryFrom(
+            engagement.startDateOverride,
+            engagement.endDateOverride
+          )
+        : DateInterval.tryFrom(engagement.startDate, engagement.endDate)
+      )
+        .expandToFull('quarters')
+        .difference()
+        .flatMap((r) => r.splitBy({ quarters: 1 }));
+
+      for (const interval of intervals) {
+        await this.service.create(
+          {
+            start: interval.start,
+            end: interval.end,
+            type: ReportType.Progress,
+            projectOrEngagementId: engagement.engagementId,
+          },
+          session
+        );
+      }
+    };
 
     const engagements = await this.engagements.listEngagementsWithDateRange();
-    const reports3 = await Promise.all(
-      engagements.flatMap((engagement) =>
-        (engagement.startDateOverride
-          ? DateInterval.tryFrom(
-              engagement.startDateOverride,
-              engagement.endDateOverride
-            )
-          : DateInterval.tryFrom(engagement.startDate, engagement.endDate)
-        )
-          .expandToFull('quarters')
-          .difference()
-          .flatMap((r) => r.splitBy({ quarters: 1 }))
-          .flatMap((interval) =>
-            this.service.create(
-              {
-                start: interval.start,
-                end: interval.end,
-                type: ReportType.Progress,
-                projectOrEngagementId: engagement.engagementId,
-              },
-              session
-            )
-          )
-      )
-    );
-    return [...reports1, ...reports2, ...reports3];
+    await asyncPool(10, engagements, syncEngagement);
+    return true;
   }
 
   @ResolveField(() => SecuredFile)
