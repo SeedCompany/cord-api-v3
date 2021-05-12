@@ -4,6 +4,7 @@ import { FieldRegionModule } from '../field-region/field-region.module';
 import { FundingAccountModule } from '../funding-account/funding-account.module';
 import { LocationResolver } from './location.resolver';
 import { LocationService } from './location.service';
+import { LocationRepository } from './location.repository';
 
 @Module({
   imports: [
@@ -11,7 +12,7 @@ import { LocationService } from './location.service';
     forwardRef(() => FundingAccountModule),
     FieldRegionModule,
   ],
-  providers: [LocationResolver, LocationService],
-  exports: [LocationService],
+  providers: [LocationResolver, LocationService, LocationRepository],
+  exports: [LocationService, LocationRepository],
 })
 export class LocationModule {}
