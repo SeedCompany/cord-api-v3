@@ -122,7 +122,6 @@ export class LocationRepository {
         .run();
     }
   }
-  // forced to use any for some reason
   readOne(id: ID, session: Session) {
     return this.db
       .query()

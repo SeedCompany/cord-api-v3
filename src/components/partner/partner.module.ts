@@ -4,6 +4,7 @@ import { OrganizationModule } from '../organization/organization.module';
 import { UserModule } from '../user/user.module';
 import { PartnerResolver } from './partner.resolver';
 import { PartnerService } from './partner.service';
+import { PartnerRepository } from './partner.repository';
 
 @Module({
   imports: [
@@ -11,7 +12,7 @@ import { PartnerService } from './partner.service';
     forwardRef(() => OrganizationModule),
     forwardRef(() => UserModule),
   ],
-  providers: [PartnerResolver, PartnerService],
-  exports: [PartnerService],
+  providers: [PartnerResolver, PartnerService, PartnerRepository],
+  exports: [PartnerService, PartnerRepository],
 })
 export class PartnerModule {}
