@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import {
   Args,
   Mutation,
@@ -7,7 +8,9 @@ import {
 } from '@nestjs/graphql';
 import {
   AnonSession,
+  CalendarDate,
   DateInterval,
+  ID,
   LoggedInSession,
   Session,
 } from '../../common';
@@ -28,6 +31,8 @@ export class PeriodicReportResolver {
     private readonly files: FileService
   ) {}
 
+  private readonly logger = new Logger();
+
   @Mutation(() => IPeriodicReport, {
     description: 'Update a report file',
   })
@@ -43,81 +48,191 @@ export class PeriodicReportResolver {
     return report;
   }
 
-  @Mutation(() => [IPeriodicReport], {
-    description: 'Update a report file',
+  @Mutation(() => [Boolean], {
+    description: 'Create project report files for existing projects',
   })
-  async syncReports(@LoggedInSession() session: Session) {
+  async syncProjectReports(@LoggedInSession() session: Session) {
     const projects = await this.projects.listProjectsWithDateRange();
 
-    const syncProject = async (project: any) => {
-      const narrativeIntervals = DateInterval.tryFrom(
-        project.mouStart,
-        project.mouEnd
-      )
+    const syncProject = async ({
+      projectId,
+      mouStart,
+      mouEnd,
+    }: {
+      projectId: ID;
+      mouStart?: CalendarDate;
+      mouEnd?: CalendarDate;
+    }) => {
+      if (!mouStart || !mouEnd) {
+        this.logger.log('missing mou date(s)', projectId);
+        return;
+      }
+      const narrativeIntervals = DateInterval.tryFrom(mouStart, mouEnd)
         .expandToFull('quarters')
         .difference()
         .flatMap((r) => r.splitBy({ quarters: 1 }));
 
-      const financialIntervals = DateInterval.tryFrom(
-        project.mouStart,
-        project.mouEnd
-      )
+      const financialIntervals = DateInterval.tryFrom(mouStart, mouEnd)
         .expandToFull('months')
         .difference()
         .flatMap((r) => r.splitBy({ months: 1 }));
       for (const interval of financialIntervals) {
-        await this.service.create(
-          {
-            start: interval.start,
-            end: interval.end,
-            type: ReportType.Financial,
-            projectOrEngagementId: project.projectId,
-          },
-          session
-        );
+        try {
+          await this.service.create(
+            {
+              start: interval.start,
+              end: interval.end,
+              type: ReportType.Financial,
+              projectOrEngagementId: projectId,
+            },
+            session
+          );
+        } catch (e) {
+          this.logger.log(e, projectId);
+        }
       }
 
       for (const interval of narrativeIntervals) {
-        await this.service.create(
-          {
-            start: interval.start,
-            end: interval.end,
-            type: ReportType.Narrative,
-            projectOrEngagementId: project.projectId,
-          },
-          session
-        );
+        try {
+          await this.service.create(
+            {
+              start: interval.start,
+              end: interval.end,
+              type: ReportType.Narrative,
+              projectOrEngagementId: projectId,
+            },
+            session
+          );
+        } catch (e) {
+          this.logger.log(e, projectId);
+        }
       }
     };
     await asyncPool(10, projects, syncProject);
 
-    const syncEngagement = async (engagement: any) => {
-      const intervals = (engagement.startDateOverride
-        ? DateInterval.tryFrom(
-            engagement.startDateOverride,
-            engagement.endDateOverride
-          )
-        : DateInterval.tryFrom(engagement.startDate, engagement.endDate)
-      )
-        .expandToFull('quarters')
-        .difference()
-        .flatMap((r) => r.splitBy({ quarters: 1 }));
+    return true;
+  }
 
-      for (const interval of intervals) {
-        await this.service.create(
+  @Mutation(() => [Boolean], {
+    description: 'Create engagement progress reports for existing engagements',
+  })
+  async syncEngagementReports(@LoggedInSession() session: Session) {
+    const getFyFromCalendarDate = (cd: CalendarDate) => {
+      const month = cd.month;
+      return month >= 10 ? cd.year + 1 : cd.year;
+    };
+    const syncEngagement = async ({
+      engagementId,
+      startDate,
+      endDate,
+      startDateOverride,
+      endDateOverride,
+    }: {
+      engagementId: ID;
+      startDate?: CalendarDate;
+      endDate?: CalendarDate;
+      startDateOverride?: CalendarDate;
+      endDateOverride?: CalendarDate;
+    }) => {
+      if (!startDate || !endDate) {
+        this.logger.log('missing project date(s)', engagementId);
+        return;
+      }
+      const noOverrides = !startDateOverride && !endDateOverride;
+      const missingEndOverride = startDateOverride && !endDateOverride;
+      const wrongEndOverride =
+        startDateOverride &&
+        endDateOverride &&
+        startDateOverride.toMillis() > endDateOverride.toMillis();
+      if (missingEndOverride || wrongEndOverride) {
+        if (!startDate) {
+          this.logger.log(
+            'no start override or start date on project',
+            engagementId
+          );
+          return;
+        }
+        // startDateOverride will always be defined here
+        const startDateOverrideFy = getFyFromCalendarDate(startDateOverride!);
+        const startDateFy = getFyFromCalendarDate(startDate);
+        if (startDateOverrideFy !== startDateFy) {
+          this.logger.log(
+            `cannot delete start date override since FY doesn't match project start on ${engagementId}`
+          );
+          return;
+        }
+        // per Seth, remove start date override if we have no end override (if missingEndOverride is true) and the FY of start override matches project start
+        // there was bad data from v2 that got migrated
+        // also if the end date override is before the start date override (if wrongEndOverride is true) remove them both
+        const res = await this.engagements.updateLanguageEngagement(
           {
-            start: interval.start,
-            end: interval.end,
-            type: ReportType.Progress,
-            projectOrEngagementId: engagement.engagementId,
+            id: engagementId,
+            // these fields are nullable in fact, but since it's not coming through gql TS is complaining
+            // hence the ts-ignore
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            startDateOverride: null,
+            ...(wrongEndOverride ? { endDateOverride: null } : {}),
           },
           session
         );
+        this.logger.log(
+          `updated ${
+            startDateOverride !== res.startDateOverride.value
+              ? // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+                `start date override from ${startDateOverride} to ${res.startDateOverride.value}`
+              : endDateOverride !== res.endDateOverride.value
+              ? // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+                `end date override from ${endDateOverride} to ${res.endDateOverride.value}`
+              : 'nothing'
+          } on ${engagementId}`
+        );
+      }
+
+      let intervals;
+
+      if (noOverrides || missingEndOverride || wrongEndOverride) {
+        intervals = DateInterval.tryFrom(startDate, endDate)
+          .expandToFull('quarters')
+          .difference()
+          .flatMap((r) => r.splitBy({ quarters: 1 }));
+      } else if (startDateOverride && endDateOverride) {
+        intervals = DateInterval.tryFrom(startDateOverride, endDateOverride)
+          .expandToFull('quarters')
+          .difference()
+          .flatMap((r) => r.splitBy({ quarters: 1 }));
+      } else {
+        this.logger.log({
+          message: 'unable to create reports for engagement',
+          id: engagementId,
+          startOverride: startDateOverride,
+          endOverride: endDateOverride,
+          projectStart: startDate,
+          projectEnd: endDate,
+        });
+        return;
+      }
+
+      for (const interval of intervals) {
+        try {
+          await this.service.create(
+            {
+              start: interval.start,
+              end: interval.end,
+              type: ReportType.Progress,
+              projectOrEngagementId: engagementId,
+            },
+            session
+          );
+        } catch (e) {
+          this.logger.log(e, engagementId);
+        }
       }
     };
 
     const engagements = await this.engagements.listEngagementsWithDateRange();
-    await asyncPool(10, engagements, syncEngagement);
+    await asyncPool(20, engagements, syncEngagement);
+
     return true;
   }
 

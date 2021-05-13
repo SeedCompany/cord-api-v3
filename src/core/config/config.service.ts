@@ -34,6 +34,11 @@ export class ConfigService implements EmailOptionsFactory {
   // Should app be configured for migration?
   migration = this.env.boolean('MIGRATION').optional(false);
 
+  // disable engagement update handler for this migration
+  periodicReportMigration = this.env
+    .boolean('PERIODIC_REPORT_MIGRATION')
+    .optional(false);
+
   jwtKey = this.env.string('JWT_AUTH_KEY').optional('cord-field');
 
   createEmailOptions(): EmailModuleOptions {
