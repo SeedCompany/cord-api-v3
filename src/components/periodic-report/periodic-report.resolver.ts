@@ -55,7 +55,7 @@ export class PeriodicReportResolver {
     return report;
   }
 
-  @Mutation(() => [Boolean], {
+  @Mutation(() => Boolean, {
     description: 'Create project report files for existing projects',
   })
   async syncProjectReports(@LoggedInSession() session: Session) {
@@ -70,10 +70,9 @@ export class PeriodicReportResolver {
       mouStart?: CalendarDate;
       mouEnd?: CalendarDate;
     }) => {
-      if (!mouStart || !mouEnd) {
-        this.logger.log('missing mou date(s)', projectId);
-        return;
-      }
+      // can't generate reports with no dates
+      if (!mouStart || !mouEnd) return;
+
       const narrativeIntervals = DateInterval.tryFrom(mouStart, mouEnd)
         .expandToFull('quarters')
         .difference()
@@ -115,19 +114,15 @@ export class PeriodicReportResolver {
         }
       }
     };
-    await asyncPool(10, projects, syncProject);
+    await asyncPool(20, projects, syncProject);
 
     return true;
   }
 
-  @Mutation(() => [Boolean], {
+  @Mutation(() => Boolean, {
     description: 'Create engagement progress reports for existing engagements',
   })
   async syncEngagementReports(@LoggedInSession() session: Session) {
-    const getFyFromCalendarDate = (cd: CalendarDate) => {
-      const month = cd.month;
-      return month >= 10 ? cd.year + 1 : cd.year;
-    };
     const syncEngagement = async ({
       engagementId,
       startDate,
@@ -141,84 +136,63 @@ export class PeriodicReportResolver {
       startDateOverride?: CalendarDate;
       endDateOverride?: CalendarDate;
     }) => {
-      if (!startDate || !endDate) {
-        this.logger.log('missing project date(s)', engagementId);
-        return;
-      }
-      const noOverrides = !startDateOverride && !endDateOverride;
-      const missingEndOverride = startDateOverride && !endDateOverride;
-      const wrongEndOverride =
+      // if we're missing either project date, don't generate reports
+      if (!startDate || !endDate) return;
+
+      const useStartOverride =
+        startDateOverride &&
+        // override must come after the project start
+        startDateOverride.toMillis() > startDate.toMillis() &&
+        // can't have an override outside of the limits of the project dates
+        startDateOverride.toMillis() < endDate.toMillis();
+
+      const useEndOverride =
+        endDateOverride &&
+        // override must come before the project end
+        endDateOverride.toMillis() < endDate.toMillis() &&
+        // there's some bad data where we have end overrides
+        // that are before either the project start or the override start
+        // it must come after the project start
+        endDateOverride.toMillis() > startDate.toMillis();
+
+      const deleteStartOverride = startDateOverride && !useStartOverride;
+      const deleteEndOverride = endDateOverride && !useEndOverride;
+      const deleteBothOverrides =
         startDateOverride &&
         endDateOverride &&
-        startDateOverride.toMillis() > endDateOverride.toMillis();
-      if (missingEndOverride || wrongEndOverride) {
-        if (!startDate) {
-          this.logger.log(
-            'no start override or start date on project',
-            engagementId
-          );
-          return;
-        }
-        // startDateOverride will always be defined here
-        const startDateOverrideFy = getFyFromCalendarDate(startDateOverride!);
-        const startDateFy = getFyFromCalendarDate(startDate);
-        if (startDateOverrideFy !== startDateFy) {
-          this.logger.log(
-            `cannot delete start date override since FY doesn't match project start on ${engagementId}`
-          );
-          return;
-        }
-        // per Seth, remove start date override if we have no end override (if missingEndOverride is true) and the FY of start override matches project start
-        // there was bad data from v2 that got migrated
-        // also if the end date override is before the start date override (if wrongEndOverride is true) remove them both
-        const res = await this.engagements.updateLanguageEngagement(
+        // invalid end override in relation to the start override
+        endDateOverride.toMillis() < startDateOverride.toMillis();
+
+      // the start date to use to generate the periodic reports
+      const start =
+        useStartOverride && !deleteBothOverrides
+          ? startDateOverride
+          : startDate;
+
+      const end =
+        useEndOverride && !deleteBothOverrides ? endDateOverride : endDate;
+
+      if (deleteStartOverride || deleteEndOverride || deleteBothOverrides) {
+        await this.engagements.updateLanguageEngagement(
           {
             id: engagementId,
             // these fields are nullable in fact, but since it's not coming through gql TS is complaining
-            // hence the ts-ignore
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            startDateOverride: null,
-            ...(wrongEndOverride ? { endDateOverride: null } : {}),
+            ...(deleteStartOverride || deleteBothOverrides
+              ? { startDateOverride: null as any }
+              : {}),
+            ...(deleteEndOverride || deleteBothOverrides
+              ? { endDateOverride: null as any }
+              : {}),
           },
           session
         );
-        this.logger.log(
-          `updated ${
-            startDateOverride !== res.startDateOverride.value
-              ? // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-                `start date override from ${startDateOverride} to ${res.startDateOverride.value}`
-              : endDateOverride !== res.endDateOverride.value
-              ? // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-                `end date override from ${endDateOverride} to ${res.endDateOverride.value}`
-              : 'nothing'
-          } on ${engagementId}`
-        );
       }
 
-      let intervals;
-
-      if (noOverrides || missingEndOverride || wrongEndOverride) {
-        intervals = DateInterval.tryFrom(startDate, endDate)
-          .expandToFull('quarters')
-          .difference()
-          .flatMap((r) => r.splitBy({ quarters: 1 }));
-      } else if (startDateOverride && endDateOverride) {
-        intervals = DateInterval.tryFrom(startDateOverride, endDateOverride)
-          .expandToFull('quarters')
-          .difference()
-          .flatMap((r) => r.splitBy({ quarters: 1 }));
-      } else {
-        this.logger.log({
-          message: 'unable to create reports for engagement',
-          id: engagementId,
-          startOverride: startDateOverride,
-          endOverride: endDateOverride,
-          projectStart: startDate,
-          projectEnd: endDate,
-        });
-        return;
-      }
+      // // dependant booleans of start, end check for non-nullishness already
+      const intervals = DateInterval.tryFrom(start!, end!)
+        .expandToFull('quarters')
+        .difference()
+        .flatMap((r) => r.splitBy({ quarters: 1 }));
 
       for (const interval of intervals) {
         try {
