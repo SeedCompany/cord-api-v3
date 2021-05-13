@@ -1,22 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
-import { DateTime } from 'luxon';
+import { node } from 'cypher-query-builder';
+import { generateId, ID, Session } from '../../common';
 import {
   createBaseNode,
   DatabaseService,
   matchRequestingUser,
 } from '../../core';
-
-import { Session, ID, generateId } from '../../common';
-import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
-
+import { DbChanges } from '../../core/database/changes';
 import {
   calculateTotalAndPaginateList,
   matchPropList,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
-import { DbChanges } from '../../core/database/changes';
+import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
 import {
   CreateFundingAccount,
   FundingAccount,
@@ -103,10 +100,10 @@ export class FundingAccountRepository {
   }
 
   async deleteNode(node: FundingAccount) {
-    return await this.db.deleteNode(node);
+    return void (await this.db.deleteNode(node));
   }
 
- list(input: FundingAccountListInput, session: Session) {
+  list(input: FundingAccountListInput, session: Session) {
     const label = 'FundingAccount';
     const query = this.db
       .query()

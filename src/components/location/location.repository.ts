@@ -1,29 +1,27 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
+import { Dictionary } from 'lodash';
 import { DateTime } from 'luxon';
+import { generateId, ID, Session } from '../../common';
 import {
   createBaseNode,
   DatabaseService,
   matchRequestingUser,
 } from '../../core';
-
-import { Session, ID, generateId } from '../../common';
-import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
-
+import { DbChanges } from '../../core/database/changes';
 import {
   calculateTotalAndPaginateList,
   matchPropList,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
-import { DbChanges } from '../../core/database/changes';
+import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
 import {
   CreateLocation,
   Location,
   LocationListInput,
   UpdateLocation,
 } from './dto';
-import { Dictionary } from 'lodash';
 
 @Injectable()
 export class LocationRepository {

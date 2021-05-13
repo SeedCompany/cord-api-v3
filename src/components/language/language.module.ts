@@ -4,9 +4,9 @@ import { EngagementModule } from '../engagement/engagement.module';
 import { LocationModule } from '../location/location.module';
 import { ProjectModule } from '../project/project.module';
 import { EthnologueLanguageService } from './ethnologue-language';
+import { LanguageRepository } from './language.repository';
 import { LanguageResolver } from './language.resolver';
 import { LanguageService } from './language.service';
-import { LanguageRepository } from './language.repository';
 
 @Module({
   imports: [
@@ -23,7 +23,4 @@ import { LanguageRepository } from './language.repository';
   ],
   exports: [LanguageService, LanguageRepository],
 })
-export class LanguageModule {
-
-  
-}
+export class LanguageModule {}

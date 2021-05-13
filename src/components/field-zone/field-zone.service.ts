@@ -1,35 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
-import { DateTime } from 'luxon';
 import {
   DuplicateException,
-  generateId,
   ID,
   NotFoundException,
   ServerException,
   Session,
   UnauthorizedException,
 } from '../../common';
+import { ConfigService, ILogger, Logger, OnIndex } from '../../core';
 import {
-  ConfigService,
-  createBaseNode,
-  DatabaseService,
-  ILogger,
-  Logger,
-  matchRequestingUser,
-  OnIndex,
-} from '../../core';
-import {
-  calculateTotalAndPaginateList,
-  matchPropList,
-  permissionsOfNode,
-  requestingUser,
-} from '../../core/database/query';
-import {
-  DbPropsOfDto,
   parseBaseNodeProperties,
   runListQuery,
-  StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import {
@@ -233,7 +214,7 @@ export class FieldZoneService {
       // await query.run();
     }
 
-    await this.repo.updateProperties(fieldZone, changes);
+    await this.repo.updateProperties(fieldZone, simpleChanges);
     // await this.db.updateProperties({
     //   type: FieldZone,
     //   object: fieldZone,

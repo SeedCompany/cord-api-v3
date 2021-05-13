@@ -1,5 +1,4 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { inArray, node, relation } from 'cypher-query-builder';
 import { compact, difference } from 'lodash';
 import { DateTime } from 'luxon';
 import {
@@ -13,32 +12,21 @@ import {
   SecuredResource,
   ServerException,
   Session,
-  UnauthorizedException,
 } from '../../common';
 import {
   ConfigService,
   DatabaseService,
-  deleteProperties,
   ILogger,
   Logger,
-  matchSession,
   OnIndex,
   property,
   Transactional,
   UniquenessError,
 } from '../../core';
 import {
-  calculateTotalAndPaginateList,
-  matchPropList,
-  permissionsOfNode,
-  requestingUser,
-} from '../../core/database/query';
-import {
-  DbPropsOfDto,
   parseBaseNodeProperties,
   parseSecuredProperties,
   runListQuery,
-  StandardReadResult,
 } from '../../core/database/results';
 import { Role } from '../authorization';
 import {
@@ -120,7 +108,7 @@ export class UserService {
     @Inject(forwardRef(() => PartnerService))
     private readonly partners: PartnerService,
     private readonly unavailabilities: UnavailabilityService,
-    // private readonly db: DatabaseService,
+    private readonly db: DatabaseService,
     private readonly config: ConfigService,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
@@ -339,7 +327,7 @@ export class UserService {
     if (!object) {
       throw new NotFoundException('Could not find User');
     }
-    this.userRepo.delete(id, session, object);
+    await this.userRepo.delete(id, session, object);
 
     // const canDelete = await this.db.checkDeletePermission(id, session);
 
@@ -797,7 +785,7 @@ export class UserService {
   }
 
   async checkEmail(email: string): Promise<boolean> {
-    const result = this.userRepo.checkEmail(email);
+    const result = await this.userRepo.checkEmail(email);
     if (result) {
       return false;
     }

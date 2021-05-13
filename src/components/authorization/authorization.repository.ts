@@ -1,21 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { Dictionary } from 'lodash';
-import { DateTime } from 'luxon';
-import { DuplicateException, ID, ServerException, Session } from '../../common';
-import {
-  ConfigService,
-  DatabaseService,
-  ILogger,
-  Logger,
-  OnIndex,
-  property,
-  UniquenessError,
-} from '../../core';
+import { ID, Session } from '../../common';
+import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import { QueryWithResult } from '../../core/database/query.overrides';
+import { InternalRole, Role } from './dto';
 import { Powers } from './dto/powers';
 import { OneBaseNode } from './model';
-import { InternalRole, Role } from './dto';
 
 @Injectable()
 export class AuthorizationRepository {
@@ -91,7 +82,7 @@ export class AuthorizationRepository {
   async updateUserPowers(
     userId: ID | string,
     newPowers: Powers[]
-  ): Promise<Dictionary<any>[]> {
+  ): Promise<Array<Dictionary<any>>> {
     const result = await this.db
       .query()
       .optionalMatch([node('userOrSg', 'User', { id: userId })])

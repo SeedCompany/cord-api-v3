@@ -1,11 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
 import { compact, Dictionary } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   CalendarDate,
   DuplicateException,
-  generateId,
   ID,
   InputException,
   NotFoundException,
@@ -17,28 +15,15 @@ import {
 } from '../../common';
 import {
   ConfigService,
-  createBaseNode,
-  DatabaseService,
   ILogger,
   Logger,
-  matchRequestingUser,
-  matchSession,
   OnIndex,
   UniquenessError,
 } from '../../core';
 import {
-  calculateTotalAndPaginateList,
-  collect,
-  matchPropList,
-  permissionsOfNode,
-  requestingUser,
-} from '../../core/database/query';
-import {
-  DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
   runListQuery,
-  StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
@@ -64,7 +49,6 @@ import {
 import { EthnologueLanguageService } from './ethnologue-language';
 import { LanguageRepository } from './language.repository';
 import { DbLanguage } from './model';
-import { languageListFilter } from './query.helpers';
 
 @Injectable()
 export class LanguageService {

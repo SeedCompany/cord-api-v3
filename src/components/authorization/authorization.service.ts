@@ -1,6 +1,6 @@
 /* eslint-disable no-case-declarations */
 import { Injectable } from '@nestjs/common';
-import { Connection, node, relation } from 'cypher-query-builder';
+import { Connection, node } from 'cypher-query-builder';
 import {
   compact,
   keyBy,

@@ -1,17 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
-import { Dictionary } from 'lodash';
-import { DateTime } from 'luxon';
-import { DuplicateException, ServerException } from '../../common';
-import {
-  ConfigService,
-  DatabaseService,
-  ILogger,
-  Logger,
-  OnIndex,
-  property,
-  UniquenessError,
-} from '../../core';
+import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 
 @Injectable()
 export class AdminRepository {

@@ -3,12 +3,12 @@ import { node, Query, relation } from 'cypher-query-builder';
 import { Dictionary } from 'lodash';
 import { DateTime } from 'luxon';
 import {
-  Session,
-  ID,
-  ServerException,
   generateId,
-  Resource,
+  ID,
   Order,
+  Resource,
+  ServerException,
+  Session,
   UnsecuredDto,
 } from '../../common';
 import {
@@ -400,7 +400,7 @@ export class BudgetRepository {
     return query;
   }
 
-  async findBudgets(session: Session): Promise<Dictionary<any>[]> {
+  async findBudgets(session: Session): Promise<Array<Dictionary<any>>> {
     const budgets = await this.db
       .query()
       .match([matchSession(session), [node('budget', 'Budget')]])

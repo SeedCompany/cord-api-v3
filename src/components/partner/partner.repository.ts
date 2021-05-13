@@ -1,26 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
+import { Dictionary } from 'lodash';
 import { DateTime } from 'luxon';
+import { generateId, ID, Order, Session } from '../../common';
 import {
   createBaseNode,
   DatabaseService,
   matchRequestingUser,
-  matchSession,
-  Property,
 } from '../../core';
-
-import { Session, ID, generateId, Order } from '../../common';
-import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
-
+import { DbChanges } from '../../core/database/changes';
 import {
   calculateTotalAndPaginateList,
   matchPropList,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
-import { DbChanges } from '../../core/database/changes';
+import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
 import { CreatePartner, Partner, PartnerListInput, UpdatePartner } from './dto';
-import { Dictionary } from 'lodash';
 
 @Injectable()
 export class PartnerRepository {

@@ -1,5 +1,4 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
@@ -302,7 +301,7 @@ export class BudgetService {
     //   ])
     //   .return('br')
     //   .first();
-    const existingRecord = this.budgetRepo.verifyRecordUniqueness(input);
+    const existingRecord = await this.budgetRepo.verifyRecordUniqueness(input);
     if (existingRecord) {
       throw new DuplicateException(
         'fiscalYear',
@@ -518,7 +517,7 @@ export class BudgetService {
     }
 
     // const canDelete = await this.db.checkDeletePermission(id, session);
-    const canDelete = this.budgetRepo.verifyCanEdit(id);
+    const canDelete = await this.budgetRepo.verifyCanEdit(id);
 
     if (!canDelete)
       throw new UnauthorizedException(

@@ -1,9 +1,8 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, Node, Query, relation } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
 import {
-  CalendarDate,
   DuplicateException,
   generateId,
   ID,
@@ -17,29 +16,17 @@ import {
 } from '../../common';
 import {
   ConfigService,
-  DatabaseService,
   IEventBus,
   ILogger,
   Logger,
-  matchRequestingUser,
-  matchSession,
   property,
 } from '../../core';
 import {
-  calculateTotalAndPaginateList,
-  matchMemberRoles,
-  matchPropList,
-  permissionsOfNode,
-  requestingUser,
-} from '../../core/database/query';
-import {
-  DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
   runListQuery,
-  StandardReadResult,
 } from '../../core/database/results';
-import { Role, rolesForScope } from '../authorization';
+import { rolesForScope } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { CeremonyService } from '../ceremony';
 import { FileService } from '../file';
@@ -663,7 +650,6 @@ export class EngagementService {
     //     }
     //   >();
 
-    console.log(typeof query);
     const result = await query.first();
 
     if (!result) {

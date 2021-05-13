@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, Query, relation } from 'cypher-query-builder';
-
 import { Dictionary } from 'lodash';
 import { DateTime } from 'luxon';
 import {
@@ -23,6 +22,7 @@ import {
   property,
   UniquenessError,
 } from '../../core';
+import { DbChanges } from '../../core/database/changes';
 import {
   calculateTotalAndPaginateList,
   matchPropList,
@@ -32,7 +32,6 @@ import {
 import { QueryWithResult } from '../../core/database/query.overrides';
 import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
 import { Role } from '../authorization';
-
 import {
   AssignOrganizationToUser,
   CreatePerson,
@@ -202,7 +201,7 @@ export class UserRepository {
 
   async updateProperties(
     user: User,
-    simpleChanges: object
+    simpleChanges: DbChanges<User>
     // fieldToUpdate: string
   ): Promise<void> {
     await this.db.updateProperties({
@@ -506,10 +505,10 @@ export class UserRepository {
     userId: ID,
     session: Session
   ): Promise<
-    {
+    Array<{
       languageProficiency: LanguageProficiency;
       languageId: ID;
-    }[]
+    }>
   > {
     const results = await this.db
       .query()
@@ -692,7 +691,7 @@ export class UserRepository {
     return resultOrg;
   }
 
-  async getUsers(session: Session): Promise<Dictionary<any>[]> {
+  async getUsers(session: Session): Promise<Array<Dictionary<any>>> {
     const users = await this.db
       .query()
       .match([matchSession(session), [node('user', 'User')]])

@@ -1,38 +1,19 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
-  generateId,
   ID,
   InputException,
   NotFoundException,
-  Order,
   ServerException,
   Session,
   UnauthorizedException,
 } from '../../common';
+import { ConfigService, ILogger, Logger, OnIndex } from '../../core';
 import {
-  ConfigService,
-  createBaseNode,
-  DatabaseService,
-  ILogger,
-  Logger,
-  matchRequestingUser,
-  OnIndex,
-} from '../../core';
-import {
-  calculateTotalAndPaginateList,
-  matchPropList,
-  permissionsOfNode,
-  requestingUser,
-} from '../../core/database/query';
-import {
-  DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
   runListQuery,
-  StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { FinancialReportingType } from '../partnership/dto/financial-reporting-type';
@@ -72,7 +53,6 @@ export class PartnerService {
       input.financialReportingTypes,
       input.types
     );
-    
 
     const checkPartner = await this.repo.checkPartner(input.organizationId);
 
@@ -92,7 +72,6 @@ export class PartnerService {
 
     if (input.pointOfContactId) {
       await this.repo.createProperty(input, result, createdAt);
-
     }
 
     const dbPartner = new DbPartner();
@@ -183,7 +162,6 @@ export class PartnerService {
       };
     }
 
-
     const changes = this.repo.getActualChanges(object, input);
     await this.authorizationService.verifyCanEditChanges(
       Partner,
@@ -191,8 +169,6 @@ export class PartnerService {
       changes
     );
     const { pointOfContactId, ...simpleChanges } = changes;
-
-  
 
     await this.repo.updateProperties(object, simpleChanges);
 
@@ -231,12 +207,9 @@ export class PartnerService {
   ): Promise<PartnerListOutput> {
     const label = 'Partner';
     const query = this.repo.list({ filter, ...input }, session);
-  
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
-
- 
 
   protected verifyFinancialReportingType(
     financialReportingTypes: FinancialReportingType[] | undefined,

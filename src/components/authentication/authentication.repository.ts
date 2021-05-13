@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { node, not, relation } from 'cypher-query-builder';
 import { Dictionary } from 'lodash';
 import { DateTime } from 'luxon';
-import { Session, ID } from '../../common';
+import { ID, Session } from '../../common';
 import { DatabaseService, matchRequestingUser } from '../../core';
 import { LoginInput } from './authentication.dto';
 

@@ -9,7 +9,6 @@ import {
   UnauthorizedException,
 } from '../../common';
 import { ConfigService, ILogger, Logger, OnIndex } from '../../core';
-
 import {
   parseBaseNodeProperties,
   runListQuery,
@@ -132,7 +131,7 @@ export class OrganizationService {
   ): Promise<Organization> {
     const organization = await this.readOne(input.id, session);
 
-    const changes = await this.repo.getActualChanges(organization, input);
+    const changes = this.repo.getActualChanges(organization, input);
 
     await this.authorizationService.verifyCanEditChanges(
       Organization,

@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { AuthorizationResolver } from './authorization.resolver';
 import { AuthorizationRepository } from './authorization.repository';
+import { AuthorizationResolver } from './authorization.resolver';
 
 @Module({
   imports: [],

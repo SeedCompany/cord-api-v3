@@ -1,21 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
 import {
   DuplicateException,
-  generateId,
   ID,
   NotFoundException,
   ServerException,
   Session,
   UnauthorizedException,
 } from '../../common';
-import {
-  ConfigService,
-  DatabaseService,
-  ILogger,
-  Logger,
-  OnIndex,
-} from '../../core';
+import { ILogger, Logger, OnIndex } from '../../core';
 // import {
 //   calculateTotalAndPaginateList,
 //   matchPropList,
