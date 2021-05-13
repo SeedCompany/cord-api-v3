@@ -42,15 +42,16 @@ import {
   ReportType,
   SecuredPeriodicReportList,
 } from './dto';
+import { PeriodicReportRepository } from './periodic-report.repository';
 
 @Injectable()
 export class PeriodicReportService {
   constructor(
-    private readonly db: DatabaseService,
     private readonly files: FileService,
     @Logger('periodic:report:service') private readonly logger: ILogger,
     @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService
+    private readonly authorizationService: AuthorizationService,
+    private readonly repo: PeriodicReportRepository
   ) {}
 
   @OnIndex()
@@ -71,50 +72,19 @@ export class PeriodicReportService {
     const reportFileId = await generateId();
 
     try {
-      const createPeriodicReport = this.db
-        .query()
-        .create([
-          [
-            node(
-              'newPeriodicReport',
-              ['PeriodicReport', 'BaseNode', `${input.type}Report`],
-              {
-                createdAt,
-                id,
-              }
-            ),
-          ],
-          ...property('type', input.type, 'newPeriodicReport'),
-          ...property('start', input.start, 'newPeriodicReport'),
-          ...property('end', input.end, 'newPeriodicReport'),
-          ...property('reportFile', reportFileId, 'newPeriodicReport'),
-        ])
-        .return('newPeriodicReport.id as id');
-      const result = await createPeriodicReport.first();
+      const result = await this.repo.create(
+        input,
+
+        createdAt,
+        id,
+        reportFileId
+      );
 
       if (!result) {
         throw new ServerException('Failed to create a periodic report');
       }
 
-      await this.db
-        .query()
-        .match(
-          node(
-            'node',
-            input.type === ReportType.Progress ? 'Engagement' : 'Project',
-            { id: input.projectOrEngagementId }
-          )
-        )
-        .match(node('periodicReport', 'PeriodicReport', { id: result.id }))
-        .create([
-          node('node'),
-          relation('out', '', 'report', {
-            active: true,
-            createdAt: DateTime.local(),
-          }),
-          node('periodicReport'),
-        ])
-        .run();
+      await this.repo.createProperties(input, result);
 
       await this.files.createDefinedFile(
         reportFileId,
@@ -159,20 +129,8 @@ export class PeriodicReportService {
       );
     }
 
-    const query = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'PeriodicReport', { id })])
-      .apply(matchPropList)
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'reportFile', { active: true }),
-        node('reportFile', 'File'),
-      ])
-      .return('node, propList')
-      .asResult<StandardReadResult<DbPropsOfDto<PeriodicReport>>>();
+    const result = await this.repo.readOne(id, session);
 
-    const result = await query.first();
     if (!result) {
       throw new NotFoundException(
         'Could not find periodic report',
@@ -191,7 +149,7 @@ export class PeriodicReportService {
       ...parseBaseNodeProperties(result.node),
       ...props,
       ...securedProps,
-      canDelete: await this.db.checkDeletePermission(id, session),
+      canDelete: await this.repo.checkDeletePermission(id, session),
     };
   }
 
@@ -201,19 +159,10 @@ export class PeriodicReportService {
     { filter, ...input }: PeriodicReportListInput,
     session: Session
   ): Promise<SecuredPeriodicReportList> {
-    const query = this.db
-      .query()
-      .match([
-        node('project', 'Project', { id: projectId }),
-        relation('out', '', 'report', { active: true }),
-        node('node', ['PeriodicReport', `${reportType}Report`]),
-      ])
-      .call(
-        calculateTotalAndPaginateList(
-          reportType === 'Financial' ? FinancialReport : NarrativeReport,
-          input
-        )
-      );
+    const query = this.repo.listProjectReports(projectId, reportType, {
+      filter,
+      ...input,
+    });
 
     return {
       ...(await runListQuery(query, input, (id) => this.readOne(id, session))),
@@ -228,14 +177,10 @@ export class PeriodicReportService {
     { filter, ...input }: PeriodicReportListInput,
     session: Session
   ): Promise<SecuredPeriodicReportList> {
-    const query = this.db
-      .query()
-      .match([
-        node('engagement', 'Engagement', { id: engagementId }),
-        relation('out', '', 'report', { active: true }),
-        node('node', `PeriodicReport:${reportType}Report`),
-      ])
-      .call(calculateTotalAndPaginateList(ProgressReport, input));
+    const query = this.repo.listEngagementReports(engagementId, reportType, {
+      filter,
+      ...input,
+    });
 
     return {
       ...(await runListQuery(query, input, (id) => this.readOne(id, session))),
@@ -248,34 +193,8 @@ export class PeriodicReportService {
     if (intervals.length === 0) {
       return;
     }
+    const result = await this.repo.delete(baseNodeId, type, intervals);
 
-    const result = await this.db
-      .query()
-      .match([
-        node('node', 'BaseNode', { id: baseNodeId }),
-        relation('out', '', 'report', { active: true }),
-        node('report', `${type}Report`),
-      ])
-      .optionalMatch([
-        node('report'),
-        relation('out', '', 'start', { active: true }),
-        node('start', 'Property'),
-      ])
-      .with('report, start')
-      .raw(
-        stripIndent`
-          WHERE NOT (report)-[:reportFileNode]->(:File)<-[:parent { active: true }]-(:FileVersion)
-            AND start.value IN $startDates
-      `,
-        {
-          startDates: intervals.map((interval) => interval.start),
-        }
-      )
-      .with('report as baseNode')
-      .apply(deleteBaseNode)
-      .return('count(node) as count')
-      .asResult<{ count: number }>()
-      .first();
     this.logger.debug('Deleted reports', { baseNodeId, type, ...result });
   }
 }
