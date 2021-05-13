@@ -3,7 +3,7 @@ import { inArray, node, Node, Query, relation } from 'cypher-query-builder';
 import { Dictionary } from 'lodash';
 import { DateTime } from 'luxon';
 import { CalendarDate, ID, Session } from '../../common';
-// import { DateTime } from '../../common/temporal';
+
 import { DatabaseService, matchRequestingUser, matchSession } from '../../core';
 import { DbChanges } from '../../core/database/changes';
 import {
@@ -61,15 +61,7 @@ export class EngagementRepository {
         .match([node('mentor', 'User', { id })])
         .return('mentor.id')
         .first();
-    }
-    // else if (type === 'project') {
-    //   return await this.db
-    //     .query()
-    //     .match([node('project', 'Project', { id })])
-    //     .return('project.id')
-    //     .first();
-    // }
-    else if (type === 'countryOfOrigin') {
+    } else if (type === 'countryOfOrigin') {
       return await this.db
         .query()
         .match([

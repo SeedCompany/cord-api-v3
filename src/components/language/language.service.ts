@@ -128,131 +128,12 @@ export class LanguageService {
 
       const resultLanguage = await this.repo.create(input, session);
 
-      // const secureProps = [
-      //   {
-      //     key: 'name',
-      //     value: input.name,
-      //     isPublic: true,
-      //     isOrgPublic: false,
-      //     label: 'LanguageName',
-      //   },
-      //   {
-      //     key: 'displayName',
-      //     value: input.displayName,
-      //     isPublic: false,
-      //     isOrgPublic: false,
-      //     label: 'LanguageDisplayName',
-      //   },
-      //   {
-      //     key: 'sensitivity',
-      //     value: input.sensitivity,
-      //     isPublic: false,
-      //     isOrgPublic: false,
-      //   },
-      //   {
-      //     key: 'isDialect',
-      //     value: input.isDialect,
-      //     isPublic: false,
-      //     isOrgPublic: false,
-      //   },
-      //   {
-      //     key: 'populationOverride',
-      //     value: input.populationOverride,
-      //     isPublic: false,
-      //     isOrgPublic: false,
-      //   },
-      //   {
-      //     key: 'registryOfDialectsCode',
-      //     value: input.registryOfDialectsCode,
-      //     isPublic: false,
-      //     isOrgPublic: false,
-      //   },
-      //   {
-      //     key: 'leastOfThese',
-      //     value: input.leastOfThese,
-      //     isPublic: false,
-      //     isOrgPublic: false,
-      //   },
-      //   {
-      //     key: 'leastOfTheseReason',
-      //     value: input.leastOfTheseReason,
-      //     isPublic: false,
-      //     isOrgPublic: false,
-      //   },
-      //   {
-      //     key: 'displayNamePronunciation',
-      //     value: input.displayNamePronunciation,
-      //     isPublic: false,
-      //     isOrgPublic: false,
-      //   },
-      //   {
-      //     key: 'isSignLanguage',
-      //     value: input.isSignLanguage,
-      //     isPublic: false,
-      //     isOrgPublic: false,
-      //   },
-      //   {
-      //     key: 'signLanguageCode',
-      //     value: input.signLanguageCode,
-      //     isPublic: false,
-      //     isOrgPublic: false,
-      //   },
-      //   {
-      //     key: 'sponsorEstimatedEndDate',
-      //     value: input.sponsorEstimatedEndDate,
-      //     isPublic: false,
-      //     isOrgPublic: false,
-      //   },
-      //   {
-      //     key: 'hasExternalFirstScripture',
-      //     value: input.hasExternalFirstScripture,
-      //     isPublic: false,
-      //     isOrgPublic: false,
-      //   },
-      //   {
-      //     key: 'tags',
-      //     value: input.tags,
-      //     isPublic: false,
-      //     isOrgPublic: false,
-      //   },
-      //   {
-      //     key: 'canDelete',
-      //     value: true,
-      //     isPublic: false,
-      //     isOrgPublic: false,
-      //   },
-      // ];
-
-      // const createLanguage = this.db
-      //   .query()
-      //   .apply(matchRequestingUser(session))
-      //   .apply(createBaseNode(await generateId(), 'Language', secureProps))
-      //   .return('node.id as id');
-
-      // const resultLanguage = await createLanguage.first();
-
       if (!resultLanguage) {
         throw new ServerException('failed to create language');
       }
-      await this.repo.connect(resultLanguage.id, ethnologueId, createdAt);
       // connect ethnologueLanguage to language
-      // await this.db
-      //   .query()
-      //   .matchNode('language', 'Language', {
-      //     id: resultLanguage.id,
-      //   })
-      //   .matchNode('ethnologueLanguage', 'EthnologueLanguage', {
-      //     id: ethnologueId,
-      //   })
-      //   .create([
-      //     node('language'),
-      //     relation('out', '', 'ethnologue', {
-      //       active: true,
-      //       createdAt,
-      //     }),
-      //     node('ethnologueLanguage'),
-      //   ])
-      //   .run();
+
+      await this.repo.connect(resultLanguage.id, ethnologueId, createdAt);
 
       const dbLanguage = new DbLanguage();
       await this.authorizationService.processNewBaseNode(
@@ -284,24 +165,6 @@ export class LanguageService {
   }
 
   async readOne(langId: ID, session: Session): Promise<Language> {
-    // const query = this.db
-    //   .query()
-    //   .apply(matchRequestingUser(session))
-    //   .match([node('node', 'Language', { id: langId })])
-    //   .apply(matchPropList)
-    //   .match([
-    //     node('node'),
-    //     relation('out', '', 'ethnologue'),
-    //     node('eth', 'EthnologueLanguage'),
-    //   ])
-    //   .return('propList, node, eth.id as ethnologueLanguageId')
-    //   .asResult<
-    //     StandardReadResult<DbPropsOfDto<Language>> & {
-    //       ethnologueLanguageId: ID;
-    //     }
-    //   >();
-
-    // const result = await query.first();
     const result = await this.repo.readOne(langId, session);
     if (!result) {
       throw new NotFoundException('Could not find language', 'language.id');
@@ -338,7 +201,6 @@ export class LanguageService {
     }
 
     const object = await this.readOne(input.id, session);
-    // const changes = this.db.getActualChanges(Language, object, input);
     const changes = this.repo.getActualChanges(object, input);
     await this.authorizationService.verifyCanEditChanges(
       Language,
@@ -357,11 +219,6 @@ export class LanguageService {
     }
 
     await this.repo.updateProperties(object, simpleChanges);
-    // await this.db.updateProperties({
-    //   type: Language,
-    //   object: object,
-    //   changes: simpleChanges,
-    // });
 
     return await this.readOne(input.id, session);
   }
@@ -392,40 +249,6 @@ export class LanguageService {
     { filter, ...input }: LanguageListInput,
     session: Session
   ): Promise<LanguageListOutput> {
-    // const languageSortMap: Partial<Record<typeof input.sort, string>> = {
-    //   name: 'toLower(prop.value)',
-    //   sensitivity: 'sensitivityValue',
-    // };
-
-    // const sortBy = languageSortMap[input.sort] ?? 'prop.value';
-
-    // const sensitivityCase = `case prop.value
-    //     when 'High' then 3
-    //     when 'Medium' then 2
-    //     when 'Low' then 1
-    //   end as sensitivityValue`;
-
-    // const query = this.db
-    //   .query()
-    //   .match([requestingUser(session), ...permissionsOfNode('Language')])
-    //   .apply(languageListFilter(filter))
-    //   .apply(
-    //     calculateTotalAndPaginateList(Language, input, (q) =>
-    //       ['id', 'createdAt'].includes(input.sort)
-    //         ? q.with('*').orderBy(`node.${input.sort}`, input.order)
-    //         : q
-    //             .match([
-    //               node('node'),
-    //               relation('out', '', input.sort, { active: true }),
-    //               node('prop', 'Property'),
-    //             ])
-    //             .with([
-    //               '*',
-    //               ...(input.sort === 'sensitivity' ? [sensitivityCase] : []),
-    //             ])
-    //             .orderBy(sortBy, input.order)
-    //     )
-    //   );
     const query = this.repo.list({ filter, ...input }, session);
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
@@ -462,19 +285,7 @@ export class LanguageService {
     } = { items: [], hasMore: false, total: 0 };
 
     let readProject = await this.repo.listProjects(language);
-    // const queryProject = this.db
-    //   .query()
-    //   .match([node('language', 'Language', { id: language.id })])
-    //   .match([
-    //     node('language'),
-    //     relation('in', '', 'language', { active: true }),
-    //     node('', 'LanguageEngagement'),
-    //     relation('in', '', 'engagement', { active: true }),
-    //     node('project', 'Project'),
-    //   ])
-    //   .return({ project: [{ id: 'id', createdAt: 'createdAt' }] });
 
-    // let readProject = await queryProject.run();
     this.logger.debug(`list projects results`, { total: readProject.length });
 
     result.total = readProject.length;
@@ -503,17 +314,6 @@ export class LanguageService {
     language: Language,
     session: Session
   ): Promise<SecuredDate> {
-    // const result = await this.db
-    //   .query()
-    //   .match([
-    //     node('', 'Language', { id: language.id }),
-    //     relation('in', '', 'language', { active: true }),
-    //     node('engagement', 'LanguageEngagement'),
-    //   ])
-    //   .return(collect('engagement.id', 'engagementIds'))
-    //   .asResult<{ engagementIds: ID[] }>()
-    //   .first();
-
     const result = await this.repo.sponsorStartDate(language);
 
     if (!result) {
@@ -598,22 +398,10 @@ export class LanguageService {
   }
 
   async checkLanguageConsistency(session: Session): Promise<boolean> {
-    // const languages = await this.db
-    //   .query()
-    //   .match([matchSession(session), [node('lang', 'Language')]])
-    //   .return('lang.id as id')
-    //   .run();
-
     const languages = await this.repo.findLanguages(session);
 
     const yayNay = await Promise.all(
       languages.map(async (lang: Dictionary<any>) => {
-        // return await this.db.hasProperties({
-        //   session,
-        //   id: lang.id,
-        //   props: ['name', 'displayName'],
-        //   nodevar: 'Language',
-        // });
         return await this.repo.hasProperties(session, lang.id);
       })
     );
@@ -625,22 +413,6 @@ export class LanguageService {
    * Check if the language has no engagements that have firstScripture=true.
    */
   protected async verifyExternalFirstScripture(id: ID) {
-    // const engagement = await this.db
-    //   .query()
-    //   .match([
-    //     node('language', 'Language', { id }),
-    //     relation('in', '', 'language', { active: true }),
-    //     node('languageEngagement', 'LanguageEngagement'),
-    //     relation('out', '', 'firstScripture', { active: true }),
-    //     node('firstScripture', 'Property'),
-    //   ])
-    //   .where({
-    //     firstScripture: {
-    //       value: true,
-    //     },
-    //   })
-    //   .return('languageEngagement')
-    //   .first();
     const engagement = await this.repo.verifyExternalFirstScripture(id);
     if (engagement) {
       throw new InputException(

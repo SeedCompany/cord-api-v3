@@ -186,7 +186,6 @@ export class BudgetRepository {
       .first();
     return existingRecord;
   }
-  //vivek - what to replace promise<any> with
   readOne(
     id: ID,
     session: Session
@@ -216,12 +215,9 @@ export class BudgetRepository {
         }
       >();
 
-    // const canDelete = await this.db.checkDeletePermission(id, session);
-
     return query;
   }
-  //vivek - don't know how to assign the type
-  readOneRecord(id: ID, session: Session): any {
+  readOneRecord(id: ID, session: Session) {
     const query = this.db
       .query()
       .apply(matchRequestingUser(session))

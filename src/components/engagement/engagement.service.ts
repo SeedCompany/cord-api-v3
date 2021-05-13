@@ -64,7 +64,6 @@ import { PnpExtractor } from './pnp-extractor.service';
 @Injectable()
 export class EngagementService {
   constructor(
-    // private readonly db: DatabaseService,
     private readonly repo: EngagementRepository,
     private readonly ceremonyService: CeremonyService,
     private readonly products: ProductService,
@@ -219,29 +218,13 @@ export class EngagementService {
       );
     }
     if (!le) {
-      if (
-        projectId &&
-        // !(await this.db
-        //   .query()
-        //   .match([node('project', 'Project', { id: projectId })])
-        //   .return('project.id')
-        //   .first())
-        !(await this.repo.findNode('project', projectId))
-      ) {
+      if (projectId && !(await this.repo.findNode('project', projectId))) {
         throw new InputException(
           'projectId is invalid',
           'engagement.projectId'
         );
       }
-      if (
-        languageId &&
-        // !(await this.db
-        //   .query()
-        //   .match([node('language', 'Language', { id: languageId })])
-        //   .return('language.id')
-        //   .first())
-        !(await this.repo.findNode('language', languageId))
-      ) {
+      if (languageId && !(await this.repo.findNode('language', languageId))) {
         throw new InputException(
           'languageId is invalid',
           'engagement.languageId'
@@ -449,37 +432,13 @@ export class EngagementService {
     }
 
     if (!IE) {
-      if (
-        internId &&
-        // !(await this.db
-        //   .query()
-        //   .match([node('intern', 'User', { id: internId })])
-        //   .return('intern.id')
-        //   .first())
-        !(await this.repo.findNode('intern', internId))
-      ) {
+      if (internId && !(await this.repo.findNode('intern', internId))) {
         throw new InputException('internId is invalid', 'engagement.internId');
       }
-      if (
-        mentorId &&
-        // !(await this.db
-        //   .query()
-        //   .match([node('mentor', 'User', { id: mentorId })])
-        //   .return('mentor.id')
-        //   .first())
-        !(await this.repo.findNode('mentor', mentorId))
-      ) {
+      if (mentorId && !(await this.repo.findNode('mentor', mentorId))) {
         throw new InputException('mentorId is invalid', 'engagement.mentorId');
       }
-      if (
-        projectId &&
-        // !(await this.db
-        //   .query()
-        //   .match([node('project', 'Project', { id: projectId })])
-        //   .return('project.id')
-        //   .first())
-        !(await this.repo.findNode('project', projectId))
-      ) {
+      if (projectId && !(await this.repo.findNode('project', projectId))) {
         throw new InputException(
           'projectId is invalid',
           'engagement.projectId'
@@ -487,15 +446,6 @@ export class EngagementService {
       }
       if (
         countryOfOriginId &&
-        // !(await this.db
-        //   .query()
-        //   .match([
-        //     node('country', 'Location', {
-        //       id: countryOfOriginId,
-        //     }),
-        //   ])
-        //   .return('country.id')
-        //   .first())
         !(await this.repo.findNode('countryOfOrigin', countryOfOriginId))
       ) {
         throw new InputException(
@@ -561,94 +511,6 @@ export class EngagementService {
       throw new NotFoundException('no id given', 'engagement.id');
     }
     const query = this.repo.readOne(id, session);
-    // const query = this.db
-    //   .query()
-    //   .apply(matchRequestingUser(session))
-    //   .match([node('node', 'Engagement', { id })])
-    //   .apply(matchPropList)
-    //   .optionalMatch([
-    //     node('project'),
-    //     relation('out', '', 'engagement', { active: true }),
-    //     node('node'),
-    //   ])
-    //   .apply(matchMemberRoles(session.userId))
-    //   .with([
-    //     'propList',
-    //     'node',
-    //     'project',
-    //     'memberRoles',
-    //     `case
-    //       when 'InternshipEngagement' IN labels(node)
-    //       then 'InternshipEngagement'
-    //       when 'LanguageEngagement' IN labels(node)
-    //       then 'LanguageEngagement'
-    //       end as __typename
-    //       `,
-    //   ])
-    //   .optionalMatch([
-    //     node('node'),
-    //     relation('out', '', 'ceremony', { active: true }),
-    //     node('ceremony'),
-    //   ])
-    //   .optionalMatch([
-    //     node('node'),
-    //     relation('out', '', 'language', { active: true }),
-    //     node('language'),
-    //   ])
-    //   .optionalMatch([
-    //     node('node'),
-    //     relation('out', '', 'intern', { active: true }),
-    //     node('intern'),
-    //   ])
-    //   .optionalMatch([
-    //     node('node'),
-    //     relation('out', '', 'countryOfOrigin', { active: true }),
-    //     node('countryOfOrigin'),
-    //   ])
-    //   .optionalMatch([
-    //     node('node'),
-    //     relation('out', '', 'mentor', { active: true }),
-    //     node('mentor'),
-    //   ])
-    //   .optionalMatch([
-    //     node('node'),
-    //     relation('out', '', 'pnpData', { active: true }),
-    //     node('pnpData'),
-    //   ])
-    //   .return([
-    //     'propList, node, project.id as project',
-    //     '__typename, ceremony.id as ceremony',
-    //     'language.id as language',
-    //     'intern.id as intern',
-    //     'countryOfOrigin.id as countryOfOrigin',
-    //     'mentor.id as mentor',
-    //     'pnpData',
-    //     'memberRoles',
-    //   ])
-    //   .asResult<
-    //     StandardReadResult<
-    //       Omit<
-    //         DbPropsOfDto<LanguageEngagement & InternshipEngagement>,
-    //         | '__typename'
-    //         | 'ceremony'
-    //         | 'language'
-    //         | 'pnpData'
-    //         | 'countryOfOrigin'
-    //         | 'intern'
-    //         | 'mentor'
-    //       >
-    //     > & {
-    //       __typename: 'LanguageEngagement' | 'InternshipEngagement';
-    //       language: ID;
-    //       ceremony: ID;
-    //       project: ID;
-    //       intern: ID;
-    //       countryOfOrigin: ID;
-    //       mentor: ID;
-    //       pnpData?: Node<PnpData>;
-    //       memberRoles: Role[][];
-    //     }
-    //   >();
 
     const result = await query.first();
 
@@ -760,12 +622,7 @@ export class EngagementService {
       session
     )) as LanguageEngagement;
 
-    // const changes = this.db.getActualChanges(LanguageEngagement, object, input);
-    const changes = this.repo.getActualLanguageChanges(
-      // 'language',
-      object,
-      input
-    );
+    const changes = this.repo.getActualLanguageChanges(object, input);
     await this.authorizationService.verifyCanEditChanges(
       LanguageEngagement,
       object,
@@ -786,11 +643,6 @@ export class EngagementService {
     }
 
     try {
-      // await this.db.updateProperties({
-      //   type: LanguageEngagement,
-      //   object: object,
-      //   changes: simpleChanges,
-      // });
       await this.repo.updateLanguageProperties(object, simpleChanges);
     } catch (exception) {
       this.logger.error('Error updating language engagement', { exception });
@@ -833,11 +685,6 @@ export class EngagementService {
       session
     )) as InternshipEngagement;
 
-    // const changes = this.db.getActualChanges(
-    //   InternshipEngagement,
-    //   object,
-    //   input
-    // );
     const changes = this.repo.getActualInternshipChanges(object, input);
     await this.authorizationService.verifyCanEditChanges(
       InternshipEngagement,
@@ -863,36 +710,7 @@ export class EngagementService {
     try {
       if (mentorId) {
         const mentorQ = this.repo.mentorQ(mentorId, session, input, createdAt);
-        // const mentorQ = this.db
-        //   .query()
-        //   .match(matchSession(session))
-        //   .match([node('newMentorUser', 'User', { id: mentorId })])
-        //   .match([
-        //     node('internshipEngagement', 'InternshipEngagement', {
-        //       id: input.id,
-        //     }),
-        //   ])
-        //   .optionalMatch([
-        //     node('internshipEngagement'),
-        //     relation('out', 'rel', 'mentor', { active: true }),
-        //     node('oldMentorUser', 'User'),
-        //   ])
-        //   .set({
-        //     values: {
-        //       rel: {
-        //         active: false,
-        //       },
-        //     },
-        //   })
-        //   .create([
-        //     node('internshipEngagement'),
-        //     relation('out', '', 'mentor', {
-        //       active: true,
-        //       createdAt,
-        //     }),
-        //     node('newMentorUser'),
-        //   ])
-        //   .return('internshipEngagement.id as id');
+
         await mentorQ.first();
       }
 
@@ -902,63 +720,18 @@ export class EngagementService {
           input,
           createdAt
         );
-        // const countryQ = this.db
-        //   .query()
-        //   .match([
-        //     node('newCountry', 'Location', {
-        //       id: countryOfOriginId,
-        //     }),
-        //   ])
-        //   .match([
-        //     node('internshipEngagement', 'InternshipEngagement', {
-        //       id: input.id,
-        //     }),
-        //   ])
-        //   .optionalMatch([
-        //     node('internshipEngagement'),
-        //     relation('out', 'rel', 'countryOfOrigin', { active: true }),
-        //     node('oldCountry', 'Location'),
-        //   ])
-        //   .set({
-        //     values: {
-        //       rel: {
-        //         active: false,
-        //       },
-        //     },
-        //   })
-        //   .create([
-        //     node('internshipEngagement'),
-        //     relation('out', '', 'countryOfOrigin', {
-        //       active: true,
-        //       createdAt,
-        //     }),
-        //     node('newCountry'),
-        //   ])
-        //   .return('internshipEngagement.id as id');
 
         await countryQ.first();
       }
-
-      // await this.db.updateProperties({
-      //   type: InternshipEngagement,
-      //   object,
-      //   changes: simpleChanges,
-      // });
 
       await this.repo.updateInternshipProperties(object, simpleChanges);
 
       // update property node labels
       Object.keys(input).map(async (ele) => {
         if (ele === 'position') {
-          // await this.db.addLabelsToPropNodes(input.id, 'position', [
-          //   'InternPosition',
-          // ]);
           await this.repo.addLabelsToNodes('position', input);
         }
         if (ele === 'methodologies') {
-          // await this.db.addLabelsToPropNodes(input.id, 'methodologies', [
-          //   'ProductMethodology',
-          // ]);
           await this.repo.addLabelsToNodes('methodologies', input);
         }
       });
@@ -1001,16 +774,6 @@ export class EngagementService {
         'You do not have the permission to delete this Engagement'
       );
 
-    // const result = await this.db
-    //   .query()
-    //   .match([
-    //     node('engagement', 'Engagement', { id }),
-    //     relation('in', '', 'engagement'),
-    //     node('project', 'Project'),
-    //   ])
-    //   .return('project.id as projectId')
-    //   .asResult<{ projectId: ID }>()
-    //   .first();
     const result = await this.repo.findNodeToDelete(id);
 
     if (result) {
@@ -1043,21 +806,6 @@ export class EngagementService {
     }
 
     const query = this.repo.list(session, { filter, ...input });
-    // const query = this.db
-    //   .query()
-    //   .match([
-    //     requestingUser(session),
-    //     ...permissionsOfNode(label),
-    //     ...(filter.projectId
-    //       ? [
-    //           relation('in', '', 'engagement', { active: true }),
-    //           node('project', 'Project', {
-    //             id: filter.projectId,
-    //           }),
-    //         ]
-    //       : []),
-    //   ])
-    //   .apply(calculateTotalAndPaginateList(IEngagement, input));
 
     const engagements = await runListQuery(query, input, (id) =>
       this.readOne(id, session)
@@ -1071,16 +819,6 @@ export class EngagementService {
     session: Session
   ): Promise<IEngagement[]> {
     const engagementIds = await this.repo.listAllByProjectId(projectId);
-    // const engagementIds = await this.db
-    //   .query()
-    //   .match([
-    //     node('project', 'Project', { id: projectId }),
-    //     relation('out', '', 'engagement', { active: true }),
-    //     node('engagement', 'Engagement'),
-    //   ])
-    //   .return('engagement.id as id')
-    //   .asResult<{ id: ID }>()
-    //   .run();
 
     const engagements = await Promise.all(
       engagementIds.map((e) => this.readOne(e.id, session))
@@ -1132,11 +870,7 @@ export class EngagementService {
     session: Session
   ): Promise<boolean> {
     const nodes = await this.repo.checkEngagementConsistency(baseNode);
-    // const nodes = await this.db
-    //   .query()
-    //   .match([node('eng', baseNode)])
-    //   .return('eng.id as id')
-    //   .run();
+
     if (baseNode === 'InternshipEngagement') {
       return await this.isInternshipEngagementConsistent(
         nodes,
@@ -1166,12 +900,6 @@ export class EngagementService {
           nodes.map(async (ie: { id: any }) =>
             ['language'] // singletons
               .map((rel) =>
-                // this.db.isRelationshipUnique({
-                //   session,
-                //   id: ie.id,
-                //   relName: rel,
-                //   srcNodeLabel: 'LanguageEngagement',
-                // })
                 this.repo.isRelationshipUnique('language', session, ie, rel)
               )
               .every((n) => n)
@@ -1182,12 +910,6 @@ export class EngagementService {
         await Promise.all(
           nodes.map(
             async (ie: { id: any }) =>
-              // await this.db.hasProperties({
-              //   session,
-              //   id: ie.id,
-              //   props: requiredProperties,
-              //   nodevar: 'LanguageEngagement',
-              // })
               await this.repo.hasProperties(
                 'language',
                 session,
@@ -1213,12 +935,6 @@ export class EngagementService {
           nodes.map(async (ie: { id: any }) =>
             ['intern'] // optional – mentor, status, ceremony, countryOfOrigin
               .map((rel) =>
-                // this.db.isRelationshipUnique({
-                //   session,
-                //   id: ie.id,
-                //   relName: rel,
-                //   srcNodeLabel: 'InternshipEngagement',
-                // })
                 this.repo.isRelationshipUnique('intern', session, ie, rel)
               )
               .every((n) => n)
@@ -1229,12 +945,6 @@ export class EngagementService {
         await Promise.all(
           nodes.map(
             async (ie: { id: any }) =>
-              // await this.db.hasProperties({
-              //   session,
-              //   id: ie.id,
-              //   props: requiredProperties,
-              //   nodevar: 'InternshipEngagement',
-              // })
               await this.repo.hasProperties(
                 'intern',
                 session,
@@ -1249,59 +959,6 @@ export class EngagementService {
 
   async listEngagementsWithDateRange() {
     const result = await this.repo.listEngagementsWithDateRange();
-    // const result = await this.db
-    //   .query()
-    //   .match(node('engagement', 'Engagement'))
-    //   .match([
-    //     node('project', 'Project'),
-    //     relation('out', '', 'engagement', { active: true }),
-    //     node('engagement'),
-    //   ])
-    //   .optionalMatch([
-    //     node('project'),
-    //     relation('out', '', 'mouStart', { active: true }),
-    //     node('mouStart', 'Property'),
-    //   ])
-    //   .optionalMatch([
-    //     node('project'),
-    //     relation('out', '', 'mouEnd', { active: true }),
-    //     node('mouEnd', 'Property'),
-    //   ])
-    //   .optionalMatch([
-    //     node('engagement'),
-    //     relation('out', '', 'startDateOverride', { active: true }),
-    //     node('startDateOverride', 'Property'),
-    //   ])
-    //   .optionalMatch([
-    //     node('engagement'),
-    //     relation('out', '', 'endDateOverride', { active: true }),
-    //     node('endDateOverride', 'Property'),
-    //   ])
-    //   .with([
-    //     'engagement',
-    //     'mouStart',
-    //     'mouEnd',
-    //     'startDateOverride',
-    //     'endDateOverride',
-    //   ])
-    //   .raw(
-    //     'WHERE (mouStart.value IS NOT NULL AND mouEnd.value IS NOT NULL) OR (startDateOverride.value IS NOT NULL AND endDateOverride.value IS NOT NULL)'
-    //   )
-    //   .return([
-    //     'engagement.id as engagementId',
-    //     'mouStart.value as startDate',
-    //     'mouEnd.value as endDate',
-    //     'startDateOverride.value as startDateOverride',
-    //     'endDateOverride.value as endDateOverride',
-    //   ])
-    //   .asResult<{
-    //     engagementId: ID;
-    //     startDate: CalendarDate;
-    //     endDate: CalendarDate;
-    //     startDateOverride: CalendarDate;
-    //     endDateOverride: CalendarDate;
-    //   }>()
-    //   .run();
 
     return result;
   }
@@ -1339,28 +996,6 @@ export class EngagementService {
       isTranslation,
       property
     );
-    // const result = await this.db
-    //   .query()
-    //   .optionalMatch(node('project', 'Project', { id: projectId }))
-    //   .optionalMatch(
-    //     node('other', isTranslation ? 'Language' : 'User', {
-    //       id: otherId,
-    //     })
-    //   )
-    //   .optionalMatch([
-    //     node('project'),
-    //     relation('out', '', 'engagement', { active: true }),
-    //     node('engagement'),
-    //     relation('out', '', property, { active: true }),
-    //     node('other'),
-    //   ])
-    //   .return(['project', 'other', 'engagement'])
-    //   .asResult<{
-    //     project?: Node<{ type: ProjectType }>;
-    //     other?: Node;
-    //     engagement?: Node;
-    //   }>()
-    //   .first();
 
     if (!result?.project) {
       throw new NotFoundException(
@@ -1404,19 +1039,7 @@ export class EngagementService {
     languageId,
   }: MergeExclusive<{ engagementId: ID }, { languageId: ID }>) {
     const startQuery = this.repo.startQuery(engagementId, languageId);
-    // const startQuery = () =>
-    //   this.db.query().apply((query) =>
-    //     engagementId
-    //       ? query.match([
-    //           node('languageEngagement', 'LanguageEngagement', {
-    //             id: engagementId,
-    //           }),
-    //           relation('out', '', 'language', { active: true }),
-    //           node('language', 'Language'),
-    //         ])
-    //       : query.match([node('language', 'Language', { id: languageId })])
-    //   );
-
+    
     await this.verifyFirstScriptureWithLanguage(startQuery());
     await this.verifyFirstScriptureWithEngagement(startQuery());
   }

@@ -113,4 +113,16 @@ export class AuthorizationRepository {
       .first();
     return roleQuery;
   }
+
+  async readPowerByUserId(id: ID | string) {
+    return await this.db
+      .query()
+      .match([node('user', 'User', { id })])
+      .raw('return user.powers as powers')
+      .unionAll()
+      .match([node('sg', 'SecurityGroup', { id })])
+      .raw('return sg.powers as powers')
+      .asResult<{ powers?: Powers[] }>()
+      .first();
+  }
 }

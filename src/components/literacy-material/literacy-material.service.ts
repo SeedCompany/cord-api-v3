@@ -8,12 +8,7 @@ import {
   UnauthorizedException,
 } from '../../common';
 import { ILogger, Logger, OnIndex } from '../../core';
-// import {
-//   calculateTotalAndPaginateList,
-//   matchPropList,
-//   permissionsOfNode,
-//   requestingUser,
-// } from '../../core/database/query';
+
 import {
   parseBaseNodeProperties,
   runListQuery,

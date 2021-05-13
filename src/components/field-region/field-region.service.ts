@@ -56,11 +56,6 @@ export class FieldRegionService {
     { fieldZoneId, directorId, ...input }: CreateFieldRegion,
     session: Session
   ): Promise<FieldRegion> {
-    // const checkName = await this.db
-    //   .query()
-    //   .match([node('name', 'FieldRegionName', { value: input.name })])
-    //   .return('name')
-    //   .first();
     const checkName = await this.repo.checkName(input.name);
 
     if (checkName) {
@@ -69,53 +64,6 @@ export class FieldRegionService {
         'FieldRegion with this name already exists.'
       );
     }
-
-    // const createdAt = DateTime.local();
-
-    // const secureProps = [
-    //   {
-    //     key: 'name',
-    //     value: input.name,
-    //     isPublic: false,
-    //     isOrgPublic: false,
-    //     label: 'FieldRegionName',
-    //   },
-    //   {
-    //     key: 'canDelete',
-    //     value: true,
-    //     isPublic: false,
-    //     isOrgPublic: false,
-    //   },
-    // ];
-
-    // // create field region
-    // const query = this.db
-    //   .query()
-    //   .apply(matchRequestingUser(session))
-    //   .match([
-    //     node('director', 'User', {
-    //       id: directorId,
-    //     }),
-    //   ])
-    //   .match([
-    //     node('fieldZone', 'FieldZone', {
-    //       id: fieldZoneId,
-    //     }),
-    //   ])
-    //   .apply(createBaseNode(await generateId(), 'FieldRegion', secureProps))
-    //   .create([
-    //     node('node'),
-    //     relation('out', '', 'director', { active: true, createdAt }),
-    //     node('director'),
-    //   ])
-    //   .create([
-    //     node('node'),
-    //     relation('out', '', 'zone', { active: true, createdAt }),
-    //     node('fieldZone'),
-    //   ])
-    //   .return('node.id as id');
-
-    // const result = await query.first();
 
     const result = await this.repo.create(
       session,
@@ -145,32 +93,6 @@ export class FieldRegionService {
       userId: session.userId,
     });
 
-    // const query = this.db
-    //   .query()
-    //   .apply(matchRequestingUser(session))
-    //   .match([node('node', 'FieldRegion', { id: id })])
-    //   .apply(matchPropList)
-    //   .optionalMatch([
-    //     node('node'),
-    //     relation('out', '', 'director', { active: true }),
-    //     node('director', 'User'),
-    //   ])
-    //   .optionalMatch([
-    //     node('node'),
-    //     relation('out', '', 'zone', { active: true }),
-    //     node('fieldZone', 'FieldZone'),
-    //   ])
-    //   .return(
-    //     'propList, node, director.id as directorId, fieldZone.id as fieldZoneId'
-    //   )
-    //   .asResult<
-    //     StandardReadResult<DbPropsOfDto<FieldRegion>> & {
-    //       directorId: ID;
-    //       fieldZoneId: ID;
-    //     }
-    //   >();
-
-    // const result = await query.first();
     const result = await this.repo.readOne(id, session);
 
     if (!result) {
@@ -197,7 +119,7 @@ export class FieldRegionService {
         ...secured.fieldZone,
         value: result.fieldZoneId,
       },
-      // canDelete: await this.db.checkDeletePermission(id, session),
+
       canDelete: await this.repo.checkDeletePermission(id, session),
     };
   }
@@ -215,11 +137,6 @@ export class FieldRegionService {
     );
     // update director
 
-    // await this.db.updateProperties({
-    //   type: FieldRegion,
-    //   object: fieldRegion,
-    //   changes: changes,
-    // });
     await this.repo.updateProperties(fieldRegion, changes);
 
     return await this.readOne(input.id, session);
@@ -240,7 +157,6 @@ export class FieldRegionService {
       );
 
     try {
-      // await this.db.deleteNode(object);
       await this.repo.deleteNode(object);
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });
@@ -253,11 +169,6 @@ export class FieldRegionService {
     session: Session
   ): Promise<FieldRegionListOutput> {
     const query = this.repo.list({ filter, ...input }, session);
-    // const label = 'FieldRegion';
-    // const query = this.db
-    //   .query()
-    //   .match([requestingUser(session), ...permissionsOfNode(label)])
-    //   .apply(calculateTotalAndPaginateList(FieldRegion, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

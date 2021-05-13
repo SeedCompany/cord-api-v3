@@ -53,19 +53,6 @@ export class BudgetService {
   ): Promise<Budget> {
     this.logger.debug('Creating budget', { projectId });
 
-    // const readProject = this.db
-    //   .query()
-    //   .match(matchSession(session, { withAclRead: 'canReadProjects' }))
-    //   .match([node('project', 'Project', { id: projectId })]);
-    // readProject.return({
-    //   project: [{ id: 'id', createdAt: 'createdAt' }],
-    //   requestingUser: [
-    //     {
-    //       canReadProjects: 'canReadProjects',
-    //       canCreateProject: 'canCreateProject',
-    //     },
-    //   ],
-    // });
     const readProject = this.budgetRepo.readProject(projectId, session);
 
     const result = await readProject.first();
@@ -100,40 +87,12 @@ export class BudgetService {
     ];
 
     try {
-      // console.log(projectId, budgetId, secureProps, session);
       const result = await this.budgetRepo.createBudget(
         projectId,
         budgetId,
         secureProps,
         session
       );
-
-      // const createBudget = this.db
-      //   .query()
-      //   .apply(matchRequestingUser(session))
-      //   .apply(createBaseNode(budgetId, 'Budget', secureProps))
-      //   .return('node.id as id');
-
-      // const result = await createBudget.first();
-
-      // if (!result) {
-      //   throw new ServerException('failed to create a budget');
-      // }
-
-      // // connect budget to project
-      // await this.db
-      //   .query()
-      //   .matchNode('project', 'Project', { id: projectId })
-      //   .matchNode('budget', 'Budget', { id: result.id })
-      //   .create([
-      //     node('project'),
-      //     relation('out', '', 'budget', {
-      //       active: true,
-      //       createdAt: DateTime.local(),
-      //     }),
-      //     node('budget'),
-      //   ])
-      //   .run();
 
       this.logger.debug(`Created Budget`, {
         id: result?.id,
@@ -207,13 +166,6 @@ export class BudgetService {
     ];
 
     try {
-      //not sure?
-      // const createBudgetRecord = this.db
-      //   .query()
-      //   .apply(matchRequestingUser(session))
-      //   .apply(createBaseNode(await generateId(), 'BudgetRecord', secureProps))
-      //   .return('node.id as id');
-
       const createBudgetRecord = await this.budgetRepo.createBudgetRecord(
         session,
         secureProps
@@ -224,34 +176,6 @@ export class BudgetService {
         throw new ServerException('failed to create a budget record');
       }
 
-      // // connect to budget
-      // const query = this.db
-      //   .query()
-      //   .match([node('budget', 'Budget', { id: budgetId })])
-      //   .match([node('br', 'BudgetRecord', { id: result.id })])
-      //   .create([
-      //     node('budget'),
-      //     relation('out', '', 'record', { active: true, createdAt }),
-      //     node('br'),
-      //   ])
-      //   .return('br');
-      // await query.first();
-
-      // // connect budget record to org
-      // const orgQuery = this.db
-      //   .query()
-      //   .match([
-      //     node('organization', 'Organization', {
-      //       id: organizationId,
-      //     }),
-      //   ])
-      //   .match([node('br', 'BudgetRecord', { id: result.id })])
-      //   .create([
-      //     node('br'),
-      //     relation('out', '', 'organization', { active: true, createdAt }),
-      //     node('organization'),
-      //   ])
-      //   .return('br');
       const orgQuery = await this.budgetRepo.connectBudget(
         budgetId,
         organizationId,
@@ -285,22 +209,6 @@ export class BudgetService {
   }
 
   private async verifyRecordUniqueness(input: CreateBudgetRecord) {
-    // const existingRecord = await this.db
-    //   .query()
-    //   .match([
-    //     node('budget', 'Budget', { id: input.budgetId }),
-    //     relation('out', '', 'record', { active: true }),
-    //     node('br', 'BudgetRecord'),
-    //     relation('out', '', 'organization', { active: true }),
-    //     node('', 'Organization', { id: input.organizationId }),
-    //   ])
-    //   .match([
-    //     node('br'),
-    //     relation('out', '', 'fiscalYear', { active: true }),
-    //     node('', 'Property', { value: input.fiscalYear }),
-    //   ])
-    //   .return('br')
-    //   .first();
     const existingRecord = await this.budgetRepo.verifyRecordUniqueness(input);
     if (existingRecord) {
       throw new DuplicateException(
@@ -316,26 +224,7 @@ export class BudgetService {
       userId: session.userId,
     });
 
-    // const { query, canDelete } = this.budgetRepo.readOne(id, session);
     const query = this.budgetRepo.readOne(id, session);
-    // const query = this.db
-    //   .query()
-    //   .apply(matchRequestingUser(session))
-    //   .match([node('node', 'Budget', { id })])
-    //   .apply(matchPropList)
-    //   .optionalMatch([
-    //     node('project', 'Project'),
-    //     relation('out', '', 'budget', { active: true }),
-    //     node('node', 'Budget', { id }),
-    //   ])
-    //   .with(['project', 'node', 'propList'])
-    //   .apply(matchMemberRoles(session.userId))
-    //   .return(['propList', 'node', 'memberRoles'])
-    //   .asResult<
-    //     StandardReadResult<DbPropsOfDto<Budget>> & {
-    //       memberRoles: Role[][];
-    //     }
-    //   >();
 
     const result = await query.first();
     if (!result) {
@@ -367,7 +256,6 @@ export class BudgetService {
       status: props.status,
       records: records.items,
       canDelete: await this.budgetRepo.checkDeletePermission(id, session),
-      // canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 
@@ -378,36 +266,6 @@ export class BudgetService {
     });
 
     const query = await this.budgetRepo.readOneRecord(id, session);
-    // const query = this.db
-    //   .query()
-    //   .apply(matchRequestingUser(session))
-    //   .match([node('node', 'BudgetRecord', { id })])
-    //   .apply(matchPropList)
-    //   .match([
-    //     node('project', 'Project'),
-    //     relation('out', '', 'budget', { active: true }),
-    //     node('', 'Budget'),
-    //     relation('out', '', 'record', { active: true }),
-    //     node('node', 'BudgetRecord', { id }),
-    //   ])
-    //   .with(['project', 'node', 'propList'])
-    //   .apply(matchMemberRoles(session.userId))
-    //   .match([
-    //     node('node'),
-    //     relation('out', '', 'organization', { active: true }),
-    //     node('organization', 'Organization'),
-    //   ])
-    //   .with(['node', 'propList', 'organization', 'memberRoles'])
-    //   .return([
-    //     'propList + [{value: organization.id, property: "organization"}] as propList',
-    //     'node',
-    //     'memberRoles',
-    //   ])
-    //   .asResult<
-    //     StandardReadResult<DbPropsOfDto<BudgetRecord>> & {
-    //       memberRoles: Role[][];
-    //     }
-    //   >();
 
     const result = await query.first();
 
@@ -485,18 +343,6 @@ export class BudgetService {
     }
     const result = await this.budgetRepo.verifyCanEdit(id);
 
-    // const result = await this.db
-    //   .query()
-    //   .match([
-    //     node('budgetRecord', 'BudgetRecord', { id }),
-    //     relation('in', '', 'record', { active: true }),
-    //     node('budget', 'Budget'),
-    //     relation('out', '', 'status', { active: true }),
-    //     node('status', 'Property'),
-    //   ])
-    //   .return('status.value as status')
-    //   .asResult<{ status: BudgetStatus }>()
-    //   .first();
     if (!result) {
       throw new NotFoundException('Budget could not be found');
     }
@@ -516,7 +362,6 @@ export class BudgetService {
       throw new NotFoundException('Could not find Budget');
     }
 
-    // const canDelete = await this.db.checkDeletePermission(id, session);
     const canDelete = await this.budgetRepo.verifyCanEdit(id);
 
     if (!canDelete)
@@ -530,7 +375,6 @@ export class BudgetService {
     );
 
     try {
-      // await this.db.deleteNode(budget);
       await this.budgetRepo.deleteNode(budget);
     } catch (e) {
       this.logger.warning('Failed to delete budget', {
@@ -574,24 +418,6 @@ export class BudgetService {
     };
     const query = this.budgetRepo.list(filter, listInput, session);
 
-    // const label = 'Budget';
-
-    // const query = this.db
-    //   .query()
-    //   .match([
-    //     requestingUser(session),
-    //     ...permissionsOfNode(label),
-    //     ...(filter.projectId
-    //       ? [
-    //           relation('in', '', 'budget', { active: true }),
-    //           node('project', 'Project', {
-    //             id: filter.projectId,
-    //           }),
-    //         ]
-    //       : []),
-    //   ])
-    //   .apply(calculateTotalAndPaginateList(Budget, listInput));
-
     return await runListQuery(query, listInput, (id) =>
       this.readOne(id, session)
     );
@@ -602,23 +428,6 @@ export class BudgetService {
     session: Session
   ): Promise<BudgetRecordListOutput> {
     const query = this.budgetRepo.listRecords(filter, input, session);
-    // const label = 'BudgetRecord';
-
-    // const query = this.db
-    //   .query()
-    //   .match([
-    //     requestingUser(session),
-    //     ...permissionsOfNode(label),
-    //     ...(filter.budgetId
-    //       ? [
-    //           relation('in', '', 'record', { active: true }),
-    //           node('budget', 'Budget', {
-    //             id: filter.budgetId,
-    //           }),
-    //         ]
-    //       : []),
-    //   ])
-    //   .apply(calculateTotalAndPaginateList(BudgetRecord, input));
 
     return await runListQuery(query, input, (id) =>
       this.readOneRecord(id, session)
@@ -626,24 +435,12 @@ export class BudgetService {
   }
 
   async checkBudgetConsistency(session: Session): Promise<boolean> {
-    // const budgets = await this.db
-    //   .query()
-    //   .match([matchSession(session), [node('budget', 'Budget')]])
-    //   .return('budget.id as id')
-    //   .run();
-
     const budgets = await this.budgetRepo.findBudgets(session);
 
     return (
       (
         await Promise.all(
           budgets.map(async (budget) => {
-            // return await this.db.hasProperties({
-            //   session,
-            //   id: budget.id,
-            //   props: ['status'],
-            //   nodevar: 'budget',
-            // });
             return await this.budgetRepo.budgetHasProperties(budget, session);
           })
         )

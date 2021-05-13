@@ -27,7 +27,6 @@ import { DbFundingAccount } from './model';
 export class FundingAccountService {
   constructor(
     @Logger('funding-account:service') private readonly logger: ILogger,
-    // private readonly db: DatabaseService,
     private readonly config: ConfigService,
     private readonly authorizationService: AuthorizationService,
     private readonly repo: FundingAccountRepository
@@ -57,12 +56,6 @@ export class FundingAccountService {
     input: CreateFundingAccount,
     session: Session
   ): Promise<FundingAccount> {
-    // const checkFundingAccount = await this.db
-    //   .query()
-    //   .match([node('fundingAccount', 'FieldZoneName', { value: input.name })])
-    //   .return('fundingAccount')
-    //   .first();
-
     const checkFundingAccount = await this.repo.checkFundingAccount(input.name);
 
     if (checkFundingAccount) {
@@ -72,40 +65,9 @@ export class FundingAccountService {
       );
     }
 
-    // const secureProps = [
-    //   {
-    //     key: 'name',
-    //     value: input.name,
-    //     isPublic: false,
-    //     isOrgPublic: false,
-    //     label: 'FundingAccountName',
-    //   },
-    //   {
-    //     key: 'accountNumber',
-    //     value: input.accountNumber,
-    //     isPublic: false,
-    //     isOrgPublic: false,
-    //     label: 'FundingAccountNumber',
-    //   },
-    //   {
-    //     key: 'canDelete',
-    //     value: true,
-    //     isPublic: false,
-    //     isOrgPublic: false,
-    //   },
-    // ];
-
     try {
       const result = await this.repo.create(input, session);
-      // const query = this.db
-      //   .query()
-      //   .apply(matchRequestingUser(session))
-      //   .apply(
-      //     createBaseNode(await generateId(), 'FundingAccount', secureProps)
-      //   )
-      //   .return('node.id as id');
 
-      // const result = await query.first();
       if (!result) {
         throw new ServerException('Failed to create funding account');
       }
@@ -137,15 +99,6 @@ export class FundingAccountService {
     }
 
     const result = await this.repo.readOne(id, session);
-    // const readFundingAccount = this.db
-    //   .query()
-    //   .apply(matchRequestingUser(session))
-    //   .match([node('node', 'FundingAccount', { id })])
-    //   .apply(matchPropList)
-    //   .return('propList, node')
-    //   .asResult<StandardReadResult<DbPropsOfDto<FundingAccount>>>();
-
-    // const result = await readFundingAccount.first();
 
     if (!result) {
       throw new NotFoundException('FundingAccount.id', 'id');
@@ -160,7 +113,6 @@ export class FundingAccountService {
       ...parseBaseNodeProperties(result.node),
       ...secured,
       canDelete: await this.repo.checkDeletePermission(id, session),
-      // canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 
@@ -169,11 +121,7 @@ export class FundingAccountService {
     session: Session
   ): Promise<FundingAccount> {
     const fundingAccount = await this.readOne(input.id, session);
-    // const changes = this.db.getActualChanges(
-    //   FundingAccount,
-    //   fundingAccount,
-    //   input
-    // );
+
     const changes = this.repo.getActualChanges(fundingAccount, input);
     await this.authorizationService.verifyCanEditChanges(
       FundingAccount,
@@ -181,12 +129,6 @@ export class FundingAccountService {
       changes
     );
     return await this.repo.updateProperties(fundingAccount, changes);
-    // return await this.db.updateProperties({
-    //   type: FundingAccount,
-    //   object: fundingAccount,
-    //   changes: changes,
-    // });
-    //shoudln't there be readOne again here?
   }
 
   async delete(id: ID, session: Session): Promise<void> {
@@ -215,13 +157,6 @@ export class FundingAccountService {
     input: FundingAccountListInput,
     session: Session
   ): Promise<FundingAccountListOutput> {
-    // const label = 'FundingAccount';
-
-    // const query = this.db
-    //   .query()
-    //   .match([requestingUser(session), ...permissionsOfNode(label)])
-    //   .apply(calculateTotalAndPaginateList(FundingAccount, input));
-
     const query = this.repo.list(input, session);
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

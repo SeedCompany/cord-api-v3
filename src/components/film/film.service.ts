@@ -51,12 +51,6 @@ export class FilmService {
   }
 
   async create(input: CreateFilm, session: Session): Promise<Film> {
-    // const checkFm = await this.db
-    //   .query()
-    //   .match([node('film', 'FilmName', { value: input.name })])
-    //   .return('film')
-    //   .first();
-
     const checkFm = await this.repo.checkFilm(input.name);
 
     if (checkFm) {
@@ -66,35 +60,8 @@ export class FilmService {
       );
     }
 
-    // const secureProps = [
-    //   {
-    //     key: 'name',
-    //     value: input.name,
-    //     isPublic: true,
-    //     isOrgPublic: true,
-    //     label: 'FilmName',
-    //   },
-    //   {
-    //     key: 'canDelete',
-    //     value: true,
-    //     isPublic: false,
-    //     isOrgPublic: false,
-    //   },
-    // ];
     try {
       const result = await this.repo.createFilm(input.name, session);
-      // const result = await this.db
-      //   .query()
-      //   .apply(matchRequestingUser(session))
-      //   .apply(
-      //     createBaseNode(
-      //       await generateId(),
-      //       ['Film', 'Producible'],
-      //       secureProps
-      //     )
-      //   )
-      //   .return('node.id as id')
-      //   .first();
 
       if (!result) {
         throw new ServerException('failed to create a film');
@@ -130,16 +97,6 @@ export class FilmService {
       userId: session.userId,
     });
 
-    // const readFilm = this.db
-    //   .query()
-    //   .apply(matchRequestingUser(session))
-    //   .match([node('node', 'Film', { id })])
-    //   .apply(matchPropList)
-    //   .return('node, propList')
-    //   .asResult<StandardReadResult<DbPropsOfDto<Film>>>();
-
-    // const result = await readFilm.first();
-
     const result = await this.repo.readOne(id, session);
 
     if (!result) {
@@ -164,7 +121,6 @@ export class FilmService {
         value: scriptureReferences,
       },
       canDelete: await this.repo.checkDeletePermission(id, session),
-      // canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 
@@ -177,11 +133,6 @@ export class FilmService {
     await this.scriptureRefService.update(input.id, scriptureReferences);
 
     await this.repo.updateProperties(film, simpleChanges);
-    // await this.db.updateProperties({
-    //   type: Film,
-    //   object: film,
-    //   changes: simpleChanges,
-    // });
 
     return await this.readOne(input.id, session);
   }
@@ -215,10 +166,6 @@ export class FilmService {
     session: Session
   ): Promise<FilmListOutput> {
     const query = this.repo.list({ filter, ...input }, session);
-    // const query = this.db
-    //   .query()
-    //   .match([requestingUser(session), ...permissionsOfNode('Film')])
-    //   .apply(calculateTotalAndPaginateList(Film, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

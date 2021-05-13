@@ -55,11 +55,6 @@ export class FieldZoneService {
     { directorId, ...input }: CreateFieldZone,
     session: Session
   ): Promise<FieldZone> {
-    // const checkName = await this.db
-    //   .query()
-    //   .match([node('name', 'FieldZoneName', { value: input.name })])
-    //   .return('name')
-    //   .first();
     const checkName = await this.repo.checkName(input.name);
 
     if (checkName) {
@@ -69,43 +64,6 @@ export class FieldZoneService {
       );
     }
     const result = await this.repo.create(session, input.name, directorId);
-
-    // const createdAt = DateTime.local();
-
-    // const secureProps = [
-    //   {
-    //     key: 'name',
-    //     value: input.name,
-    //     isPublic: false,
-    //     isOrgPublic: false,
-    //     label: 'FieldZoneName',
-    //   },
-    //   {
-    //     key: 'canDelete',
-    //     value: true,
-    //     isPublic: false,
-    //     isOrgPublic: false,
-    //   },
-    // ];
-
-    // // create field zone
-    // const query = this.db
-    //   .query()
-    //   .apply(matchRequestingUser(session))
-    //   .match([
-    //     node('director', 'User', {
-    //       id: directorId,
-    //     }),
-    //   ])
-    //   .apply(createBaseNode(await generateId(), 'FieldZone', secureProps))
-    //   .create([
-    //     node('node'),
-    //     relation('out', '', 'director', { active: true, createdAt }),
-    //     node('director'),
-    //   ])
-    //   .return('node.id as id');
-
-    // const result = await query.first();
 
     if (!result) {
       throw new ServerException('failed to create field zone');
@@ -129,25 +87,6 @@ export class FieldZoneService {
     });
 
     const result = await this.repo.readOne(id, session);
-
-    // const query = this.db
-    //   .query()
-    //   .apply(matchRequestingUser(session))
-    //   .match([node('node', 'FieldZone', { id: id })])
-    //   .apply(matchPropList)
-    //   .optionalMatch([
-    //     node('node'),
-    //     relation('out', '', 'director', { active: true }),
-    //     node('director', 'User'),
-    //   ])
-    //   .return('propList, node, director.id as directorId')
-    //   .asResult<
-    //     StandardReadResult<DbPropsOfDto<FieldZone>> & {
-    //       directorId: ID;
-    //     }
-    //   >();
-
-    // const result = await query.first();
 
     if (!result) {
       throw new NotFoundException('Could not find field zone', 'fieldZone.id');
@@ -173,8 +112,6 @@ export class FieldZoneService {
   async update(input: UpdateFieldZone, session: Session): Promise<FieldZone> {
     const fieldZone = await this.readOne(input.id, session);
 
-    // const changes = this.db.getActualChanges(FieldZone, fieldZone, input);
-
     const changes = this.repo.getActualChanges(fieldZone, input);
     await this.authorizationService.verifyCanEditChanges(
       FieldZone,
@@ -187,39 +124,9 @@ export class FieldZoneService {
     // update director
     if (directorId) {
       await this.repo.updateDirector(directorId, input.id);
-      // const createdAt = DateTime.local();
-      // const query = this.db
-      //   .query()
-      //   .match(node('fieldZone', 'FieldZone', { id: input.id }))
-      //   .with('fieldZone')
-      //   .limit(1)
-      //   .match([node('director', 'User', { id: directorId })])
-      //   .optionalMatch([
-      //     node('fieldZone'),
-      //     relation('out', 'oldRel', 'director', { active: true }),
-      //     node(''),
-      //   ])
-      //   .setValues({ 'oldRel.active': false })
-      //   .with('fieldZone, director')
-      //   .limit(1)
-      //   .create([
-      //     node('fieldZone'),
-      //     relation('out', '', 'director', {
-      //       active: true,
-      //       createdAt,
-      //     }),
-      //     node('director'),
-      //   ]);
-
-      // await query.run();
     }
 
     await this.repo.updateProperties(fieldZone, simpleChanges);
-    // await this.db.updateProperties({
-    //   type: FieldZone,
-    //   object: fieldZone,
-    //   changes: simpleChanges,
-    // });
 
     return await this.readOne(input.id, session);
   }
@@ -251,11 +158,6 @@ export class FieldZoneService {
     session: Session
   ): Promise<FieldZoneListOutput> {
     const query = this.repo.list({ filter, ...input }, session);
-    // const label = 'FieldZone';
-    // const query = this.db
-    //   .query()
-    //   .match([requestingUser(session), ...permissionsOfNode(label)])
-    //   .apply(calculateTotalAndPaginateList(FieldZone, input));
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
