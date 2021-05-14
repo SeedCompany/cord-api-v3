@@ -7,6 +7,7 @@ import { SongModule } from '../song/song.module';
 import { StoryModule } from '../story/story.module';
 import { ProductResolver } from './product.resolver';
 import { ProductService } from './product.service';
+import { ProductRepository } from './product.repository';
 
 @Module({
   imports: [
@@ -17,7 +18,7 @@ import { ProductService } from './product.service';
     SongModule,
     ScriptureModule,
   ],
-  providers: [ProductResolver, ProductService],
-  exports: [ProductService],
+  providers: [ProductResolver, ProductService, ProductRepository],
+  exports: [ProductService, ProductRepository],
 })
 export class ProductModule {}
