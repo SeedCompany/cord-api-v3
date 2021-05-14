@@ -115,15 +115,18 @@ describe('Budget Security e2e', () => {
         }
       );
       test.each`
-        property        | readFunction                       | staticResource  | parentResource
-        ${'amount'}     | ${readOneBudgetRecord}             | ${BudgetRecord} | ${Budget}
-        ${'fiscalYear'} | ${readOneBudgetRecord}             | ${BudgetRecord} | ${Budget}
-        ${'name'}       | ${readOneBudgetRecordOrganization} | ${Organization} | ${BudgetRecord}
-        ${'address'}    | ${readOneBudgetRecordOrganization} | ${Organization} | ${BudgetRecord}
-        ${'locations'}  | ${readOneBudgetRecordOrganization} | ${Organization} | ${BudgetRecord}
+        property        | readFunction           | staticResource  | parentResource | parentProp
+        ${'amount'}     | ${readOneBudgetRecord} | ${BudgetRecord} | ${Budget}      | ${'records'}
+        ${'fiscalYear'} | ${readOneBudgetRecord} | ${BudgetRecord} | ${Budget}      | ${'records'}
       `(
-        ' reading records: $property',
-        async ({ property, readFunction, staticResource, parentResource }) => {
+        ' reading budget $parentProp -> $property',
+        async ({
+          property,
+          readFunction,
+          staticResource,
+          parentResource,
+          parentProp,
+        }) => {
           await testRoleOnRelationArrayProp({
             app: app,
             resource: { ...testBudget, sensitivity: testProject.sensitivity },
@@ -132,7 +135,7 @@ describe('Budget Security e2e', () => {
             role: role,
             readOneFunction: readFunction,
             propToTest: property,
-            parentProp: 'records',
+            parentProp: parentProp,
           });
         }
       );
