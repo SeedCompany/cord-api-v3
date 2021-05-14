@@ -3,13 +3,14 @@ import { AuthorizationModule } from '../../authorization/authorization.module';
 import { UserModule } from '../../user/user.module';
 import { PostService } from '../post.service';
 import { PostableResolver } from './postable.resolver';
+import { PostRepository } from '../post.repository';
 
 @Module({
   imports: [
     forwardRef(() => UserModule),
     forwardRef(() => AuthorizationModule),
   ],
-  providers: [PostableResolver, PostService],
-  exports: [PostService],
+  providers: [PostableResolver, PostService, PostRepository],
+  exports: [PostService, PostRepository],
 })
 export class PostableModule {}
