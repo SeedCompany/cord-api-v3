@@ -40,15 +40,16 @@ import {
   UpdateStory,
 } from './dto';
 import { DbStory } from './model';
+import { StoryRepository } from './story.repository';
 
 @Injectable()
 export class StoryService {
   constructor(
     @Logger('story:service') private readonly logger: ILogger,
-    private readonly db: DatabaseService,
     private readonly config: ConfigService,
     private readonly scriptureRefService: ScriptureReferenceService,
-    private readonly authorizationService: AuthorizationService
+    private readonly authorizationService: AuthorizationService,
+    private readonly repo: StoryRepository
   ) {}
 
   @OnIndex()
@@ -68,11 +69,7 @@ export class StoryService {
   }
 
   async create(input: CreateStory, session: Session): Promise<Story> {
-    const checkStory = await this.db
-      .query()
-      .match([node('story', 'StoryName', { value: input.name })])
-      .return('story')
-      .first();
+    const checkStory = await this.repo.checkStory(input.name);
 
     if (checkStory) {
       throw new DuplicateException(
@@ -97,18 +94,7 @@ export class StoryService {
       },
     ];
     try {
-      const result = await this.db
-        .query()
-        .apply(matchRequestingUser(session))
-        .apply(
-          createBaseNode(
-            await generateId(),
-            ['Story', 'Producible'],
-            secureProps
-          )
-        )
-        .return('node.id as id')
-        .first();
+      const result = await this.repo.create(session, secureProps);
 
       if (!result) {
         throw new ServerException('failed to create a story');
@@ -144,15 +130,7 @@ export class StoryService {
       userId: session.userId,
     });
 
-    const query = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'Story', { id })])
-      .apply(matchPropList)
-      .return('node, propList')
-      .asResult<StandardReadResult<DbPropsOfDto<Story>>>();
-
-    const result = await query.first();
+    const result = await this.repo.readOne(id, session);
 
     if (!result) {
       throw new NotFoundException('Could not find story', 'story.id');
@@ -176,22 +154,18 @@ export class StoryService {
         ...securedProps.scriptureReferences,
         value: scriptureReferences,
       },
-      canDelete: await this.db.checkDeletePermission(id, session),
+      canDelete: await this.repo.checkDeletePermission(id, session),
     };
   }
 
   async update(input: UpdateStory, session: Session): Promise<Story> {
     const story = await this.readOne(input.id, session);
-    const changes = this.db.getActualChanges(Story, story, input);
+    const changes = this.repo.getActualChanges(story, input);
     await this.authorizationService.verifyCanEditChanges(Story, story, changes);
     const { scriptureReferences, ...simpleChanges } = changes;
 
     await this.scriptureRefService.update(input.id, scriptureReferences);
-    await this.db.updateProperties({
-      type: Story,
-      object: story,
-      changes: simpleChanges,
-    });
+    await this.repo.updateProperties(story, simpleChanges);
 
     return await this.readOne(input.id, session);
   }
@@ -201,7 +175,7 @@ export class StoryService {
     if (!story) {
       throw new NotFoundException('Could not find Story');
     }
-    const canDelete = await this.db.checkDeletePermission(id, session);
+    const canDelete = await this.repo.checkDeletePermission(id, session);
 
     if (!canDelete)
       throw new UnauthorizedException(
@@ -209,7 +183,7 @@ export class StoryService {
       );
 
     try {
-      await this.db.deleteNode(story);
+      await this.repo.deleteNode(story);
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);
@@ -222,11 +196,7 @@ export class StoryService {
     { filter, ...input }: StoryListInput,
     session: Session
   ): Promise<StoryListOutput> {
-    const query = this.db
-      .query()
-      .match([requestingUser(session), ...permissionsOfNode('Story')])
-      .apply(calculateTotalAndPaginateList(Story, input));
-
+    const query = this.repo.list({ filter, ...input }, session);
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 }
