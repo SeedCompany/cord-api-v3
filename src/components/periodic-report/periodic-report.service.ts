@@ -181,11 +181,11 @@ export class PeriodicReportService {
     }
 
     const props = parsePropList(result.propList);
-    const securedProps = await this.authorizationService.secureProperties(
-      IPeriodicReport,
-      props,
-      session
-    );
+    const securedProps = await this.authorizationService.secureProperties({
+      resource: IPeriodicReport,
+      props: props,
+      sessionOrUserId: session,
+    });
 
     return {
       ...parseBaseNodeProperties(result.node),

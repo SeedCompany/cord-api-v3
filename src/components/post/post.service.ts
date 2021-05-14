@@ -170,11 +170,11 @@ export class PostService {
     }
 
     const props = parsePropList(result.propList);
-    const securedProps = await this.authorizationService.secureProperties(
-      Post,
-      result.propList,
-      session
-    );
+    const securedProps = await this.authorizationService.secureProperties({
+      resource: Post,
+      props: result.propList,
+      sessionOrUserId: session,
+    });
 
     return {
       ...parseBaseNodeProperties(result.node),
