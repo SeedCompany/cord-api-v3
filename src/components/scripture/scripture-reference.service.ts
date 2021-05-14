@@ -4,11 +4,13 @@ import { DateTime } from 'luxon';
 import { ID, Range, Session } from '../../common';
 import { DatabaseService, ILogger, Logger } from '../../core';
 import { ScriptureRange, ScriptureRangeInput } from './dto';
+import { ScriptureReferenceRepository } from './scripture-reference.repository';
 
 export class ScriptureReferenceService {
   constructor(
     @Logger('scripture-reference:service') private readonly logger: ILogger,
-    private readonly db: DatabaseService
+    private readonly db: DatabaseService,
+    private readonly repo: ScriptureReferenceRepository
   ) {}
 
   async create(
@@ -22,24 +24,7 @@ export class ScriptureReferenceService {
     }
 
     for (const sr of scriptureRefs) {
-      await this.db
-        .query()
-        .match([
-          node('node', 'BaseNode', {
-            id: producibleId,
-          }),
-        ])
-        .create([
-          node('node'),
-          relation('out', '', 'scriptureReferences', { active: true }),
-          node('sr', ['ScriptureRange', 'BaseNode'], {
-            ...ScriptureRange.fromReferences(sr),
-
-            createdAt: DateTime.local(),
-          }),
-        ])
-        .return('node')
-        .run();
+      await this.repo.create(sr, producibleId);
     }
   }
 
@@ -56,50 +41,16 @@ export class ScriptureReferenceService {
       ? 'scriptureReferencesOverride'
       : 'scriptureReferences';
 
-    if (options.isOverriding) {
-      await this.db
-        .query()
-        .match([
-          node('product', 'Product', { id: producibleId }),
-          relation('out', 'rel', 'isOverriding', { active: true }),
-          node('propertyNode', 'Property'),
-        ])
-        .setValues({
-          'propertyNode.value': scriptureRefs !== null,
-        })
-        .run();
-    }
-
-    await this.db
-      .query()
-      .match([
-        node('node', 'BaseNode', { id: producibleId }),
-        relation('out', 'rel', rel, { active: true }),
-        node('sr', 'ScriptureRange'),
-      ])
-      .setValues({
-        'rel.active': false,
-        'sr.active': false,
-      })
-      .return('sr')
-      .run();
+    await this.repo.update(
+      options.isOverriding,
+      producibleId,
+      scriptureRefs,
+      rel
+    );
 
     if (scriptureRefs !== null) {
       for (const sr of scriptureRefs) {
-        await this.db
-          .query()
-          .match([node('node', 'BaseNode', { id: producibleId })])
-          .create([
-            node('node'),
-            relation('out', '', rel, { active: true }),
-            node('', ['ScriptureRange', 'BaseNode'], {
-              ...ScriptureRange.fromReferences(sr),
-
-              createdAt: DateTime.local(),
-            }),
-          ])
-          .return('node')
-          .run();
+        await this.repo.updateScriptureRefs(sr, producibleId, rel);
       }
     }
   }
@@ -109,27 +60,10 @@ export class ScriptureReferenceService {
     session: Session,
     options: { isOverriding?: boolean } = {}
   ): Promise<ScriptureRange[]> {
-    const results = await this.db
-      .query()
-      .match([
-        node('node', 'BaseNode', {
-          id: producibleId,
-        }),
-        relation(
-          'out',
-          '',
-          options.isOverriding
-            ? 'scriptureReferencesOverride'
-            : 'scriptureReferences',
-          {
-            active: true,
-          }
-        ),
-        node('scriptureRanges', 'ScriptureRange'),
-      ])
-      .return('scriptureRanges')
-      .asResult<{ scriptureRanges: Node<Range<number>> }>()
-      .run();
+    const results = await this.repo.listScriptureRanges(
+      options.isOverriding,
+      producibleId
+    );
 
     return sortBy(
       results.map((row) => row.scriptureRanges.properties),
