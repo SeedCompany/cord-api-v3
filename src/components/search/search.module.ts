@@ -14,6 +14,7 @@ import { StoryModule } from '../story/story.module';
 import { UserModule } from '../user/user.module';
 import { SearchResolver } from './search.resolver';
 import { SearchService } from './search.service';
+import { SearchRepository } from './search.repository';
 
 @Module({
   imports: [
@@ -31,7 +32,7 @@ import { SearchService } from './search.service';
     FieldRegionModule,
     FundingAccountModule,
   ],
-  providers: [SearchResolver, SearchService],
-  exports: [SearchService],
+  providers: [SearchResolver, SearchService, SearchRepository],
+  exports: [SearchService, SearchRepository],
 })
 export class SearchModule {}
