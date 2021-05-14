@@ -2,11 +2,14 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { range } from 'lodash';
 import { DateTime } from 'luxon';
+import { Mutable } from 'type-fest';
 import {
   DuplicateException,
   generateId,
   ID,
   NotFoundException,
+  ResourceShape,
+  Sensitivity,
   ServerException,
   Session,
   UnauthorizedException,
@@ -24,16 +27,11 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
-  matchPropList,
+  matchProps,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
-import {
-  DbPropsOfDto,
-  parseBaseNodeProperties,
-  runListQuery,
-  StandardReadResult,
-} from '../../core/database/results';
+import { DbPropsOfDto, runListQuery } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
 import {
@@ -176,7 +174,13 @@ export class OrganizationService {
     return await this.readOne(id, session);
   }
 
-  async readOne(orgId: ID, session: Session): Promise<Organization> {
+  async readOne<TResource extends ResourceShape<any>>(
+    orgId: ID,
+    session: Session,
+    parentProp?: keyof TResource['prototype'],
+    parentResource?: TResource,
+    parentSensitivity?: Sensitivity
+  ): Promise<Organization> {
     this.logger.debug(`Read Organization`, {
       id: orgId,
       userId: session.userId,
@@ -186,9 +190,9 @@ export class OrganizationService {
       .query()
       .apply(matchRequestingUser(session))
       .match([node('node', 'Organization', { id: orgId })])
-      .apply(matchPropList)
-      .return('propList, node')
-      .asResult<StandardReadResult<DbPropsOfDto<Organization>>>();
+      .apply(matchProps())
+      .return('props, node')
+      .asResult<{ props: DbPropsOfDto<Organization, true> }>();
     const result = await query.first();
     if (!result) {
       throw new NotFoundException(
@@ -197,16 +201,29 @@ export class OrganizationService {
       );
     }
 
-    const secured = await this.authorizationService.secureProperties({
-      resource: Organization,
-      props: result.propList,
-      sessionOrUserId: session,
-    });
+    let secured;
+    if (parentProp && parentResource) {
+      secured = await this.authorizationService.getPermissionsByProp({
+        resource: Organization,
+        parentResource: parentResource,
+        sessionOrUserId: session,
+        sensitivity: parentSensitivity,
+        parentProp: parentProp,
+        props: result.props,
+      });
+    } else {
+      secured = await this.authorizationService.secureProperties({
+        resource: Organization,
+        props: result.props,
+        sessionOrUserId: session,
+      });
+    }
 
     return {
-      ...parseBaseNodeProperties(result.node),
+      ...result.props,
       ...secured,
       canDelete: await this.db.checkDeletePermission(orgId, session),
+      sensitivity: parentSensitivity,
     };
   }
 
@@ -310,18 +327,33 @@ export class OrganizationService {
     }
   }
 
-  async listLocations(
+  async listLocations<TResource extends ResourceShape<any>>(
     organizationId: ID,
     input: LocationListInput,
-    session: Session
+    session: Session,
+    parentProp: keyof TResource['Relations'],
+    parentResource: TResource,
+    parentSensitivity?: Sensitivity
   ): Promise<SecuredLocationList> {
-    return await this.locationService.listLocationsFromNode(
+    const locList: Mutable<SecuredLocationList> = await this.locationService.listLocationsFromNode(
       'Organization',
       organizationId,
       'locations',
       input,
-      session
+      session,
+      parentProp,
+      parentResource,
+      parentSensitivity
     );
+
+    const secured = await this.authorizationService.getPermissions({
+      resource: Organization,
+      sessionOrUserId: session,
+    });
+
+    locList.canRead = secured.locations.canRead;
+    locList.canCreate = secured.locations.canEdit;
+    return locList;
   }
 
   async checkAllOrgs(session: Session): Promise<boolean> {

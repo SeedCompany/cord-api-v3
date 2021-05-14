@@ -6,6 +6,8 @@ import {
   generateId,
   ID,
   NotFoundException,
+  ResourceShape,
+  Sensitivity,
   ServerException,
   Session,
   UnauthorizedException,
@@ -21,16 +23,11 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
-  matchPropList,
+  matchProps,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
-import {
-  DbPropsOfDto,
-  parseBaseNodeProperties,
-  runListQuery,
-  StandardReadResult,
-} from '../../core/database/results';
+import { DbPropsOfDto, runListQuery } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import {
   CreateLocation,
@@ -177,7 +174,13 @@ export class LocationService {
     return await this.readOne(result.id, session);
   }
 
-  async readOne(id: ID, session: Session): Promise<Location> {
+  async readOne<TResource extends ResourceShape<any>>(
+    id: ID,
+    session: Session,
+    parentProp?: keyof TResource['prototype'],
+    parentResource?: TResource,
+    parentSensitivity?: Sensitivity
+  ): Promise<Location> {
     this.logger.debug(`Read Location`, {
       id: id,
       userId: session.userId,
@@ -187,7 +190,7 @@ export class LocationService {
       .query()
       .apply(matchRequestingUser(session))
       .match([node('node', 'Location', { id: id })])
-      .apply(matchPropList)
+      .apply(matchProps())
       .optionalMatch([
         node('node'),
         relation('out', '', 'fundingAccount', { active: true }),
@@ -199,14 +202,9 @@ export class LocationService {
         node('defaultFieldRegion', 'FieldRegion'),
       ])
       .return(
-        'propList, node, fundingAccount.id as fundingAccountId, defaultFieldRegion.id as defaultFieldRegionId'
+        'apoc.map.merge(props, { fundingAccountId: fundingAccount.id, defaultFieldRegionId: defaultFieldRegion.id }) as props'
       )
-      .asResult<
-        StandardReadResult<DbPropsOfDto<Location>> & {
-          fundingAccountId: ID;
-          defaultFieldRegionId: ID;
-        }
-      >();
+      .asResult<{ props: DbPropsOfDto<Location, true> }>();
 
     const result = await query.first();
 
@@ -214,23 +212,27 @@ export class LocationService {
       throw new NotFoundException('Could not find location', 'location.id');
     }
 
-    const secured = await this.authorizationService.secureProperties({
-      resource: Location,
-      props: result.propList,
-      sessionOrUserId: session,
-    });
+    let secured;
+    if (parentProp && parentResource) {
+      secured = await this.authorizationService.getPermissionsByProp({
+        resource: Location,
+        parentResource: parentResource,
+        sessionOrUserId: session,
+        sensitivity: parentSensitivity,
+        parentProp: parentProp,
+        props: result.props,
+      });
+    } else {
+      secured = await this.authorizationService.secureProperties({
+        resource: Location,
+        props: result.props,
+        sessionOrUserId: session,
+      });
+    }
 
     return {
-      ...parseBaseNodeProperties(result.node),
+      ...result.props,
       ...secured,
-      defaultFieldRegion: {
-        ...secured.defaultFieldRegion,
-        value: result.defaultFieldRegionId,
-      },
-      fundingAccount: {
-        ...secured.fundingAccount,
-        value: result.fundingAccountId,
-      },
       canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
@@ -407,12 +409,15 @@ export class LocationService {
     }
   }
 
-  async listLocationsFromNode(
+  async listLocationsFromNode<TResource extends ResourceShape<any>>(
     label: string,
     id: ID,
     rel: string,
     input: LocationListInput,
-    session: Session
+    session: Session,
+    parentProp?: keyof TResource['prototype'],
+    parentResource?: TResource,
+    parentSensitivity?: Sensitivity
   ): Promise<SecuredLocationList> {
     const query = this.db
       .query()
@@ -425,7 +430,9 @@ export class LocationService {
       .apply(calculateTotalAndPaginateList(Location, input));
 
     return {
-      ...(await runListQuery(query, input, (id) => this.readOne(id, session))),
+      ...(await runListQuery(query, input, (id) =>
+        this.readOne(id, session, parentProp, parentResource, parentSensitivity)
+      )),
       canRead: true, // TODO
       canCreate: true, // TODO
     };

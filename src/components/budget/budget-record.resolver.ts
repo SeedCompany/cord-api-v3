@@ -29,7 +29,13 @@ export class BudgetRecordResolver {
   ): Promise<SecuredOrganization> {
     const id = record.organization.value;
     const value = id
-      ? await this.organizations.readOne(id, session)
+      ? await this.organizations.readOne(
+          id,
+          session,
+          'organization',
+          BudgetRecord,
+          record.sensitivity
+        )
       : undefined;
     return {
       ...record.organization,

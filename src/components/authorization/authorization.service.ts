@@ -36,12 +36,7 @@ import {
 import { InternalRole, Role, rolesForScope, ScopedRole } from './dto';
 import { Powers } from './dto/powers';
 import { MissingPowerException } from './missing-power.exception';
-import {
-  DbPermission,
-  DbRole,
-  OneBaseNode,
-  PermissionsForResource,
-} from './model';
+import { Action, DbRole, OneBaseNode, PermissionsForResource } from './model';
 import * as AllRoles from './roles';
 
 const getDbRoles = (roles: ScopedRole[]) =>
@@ -197,17 +192,21 @@ export class AuthorizationService {
     resource,
     parentResource,
     sessionOrUserId,
-    dto,
+    sensitivity,
     parentProp,
     otherRoles = [],
+    props,
   }: {
     resource: Resource;
     parentResource: ParentResource;
     sessionOrUserId: Session | ID;
-    dto?: Resource['prototype'];
+    sensitivity?: Sensitivity;
     parentProp: keyof ParentResource['prototype'];
     otherRoles?: ScopedRole[];
-  }): Promise<PermissionsOf<SecuredResource<Resource>>> {
+    props?:
+      | PropListDbResult<DbPropsOfDto<Resource['prototype']>>
+      | DbPropsOfDto<Resource['prototype']>;
+  }): Promise<SecuredResource<Resource, false>> {
     const userGlobalRoles = isIdLike(sessionOrUserId)
       ? await this.getUserGlobalRoles(sessionOrUserId)
       : sessionOrUserId.roles;
@@ -225,22 +224,26 @@ export class AuthorizationService {
       resources,
       roles,
       [parentProp],
-      dto?.sensitivity
+      sensitivity
     );
-
 
     const keys = [
       ...resource.SecuredProps,
       ...Object.keys(resource.Relations ?? {}),
     ] as Array<keyof Resource & string>;
 
-    return mapFromList(keys, (key) => {
+    const permissions = mapFromList(keys, (key) => {
       const value = {
         canRead: permsOfParentProp[parentProp].canRead,
         canEdit: permsOfParentProp[parentProp].canEdit,
       };
       return [key, value];
     }) as PermissionsOf<SecuredResource<Resource>>;
+
+    if (props)
+      // @ts-expect-error not matching for some reason but declared return type is correct
+      return parseSecuredProperties(props, permissions, resource.SecuredProps);
+    else return permissions;
   }
 
   async parseGrantsRoles<Resource extends ResourceShape<any>>(
@@ -271,10 +274,12 @@ export class AuthorizationService {
     const grants = dbRoles.flatMap((role) =>
       Object.entries(normalizeGrants(role)).flatMap(([name, grant]) => {
         if (resources.includes(name)) {
-          if (sensitivity && !this.isSensitivityAllowed(grant, sensitivity)) {
-            return [];
-          }
-          return grant;
+          const filtered = mapValues(grant, (propPerm) => {
+            return this.isSensitivityAllowed(propPerm, sensitivity)
+              ? propPerm
+              : {};
+          });
+          return filtered;
         }
         return [];
       })
@@ -340,24 +345,20 @@ export class AuthorizationService {
     const dbRoles = getDbRoles(roles);
 
     // grab all the grants for the given roles & matching resources
-    
+
     const grants = dbRoles.flatMap((role) =>
       Object.entries(normalizeGrants(role)).flatMap(([name, grant]) => {
         if (resources.includes(name)) {
-          console.log(dto?.sensitivity)
-          console.log(grant)
-          if (
-            dto?.sensitivity &&
-            !this.isSensitivityAllowed(grant, dto?.sensitivity)
-          ) {
-            return [];
-          }
-          return grant;
+          const filtered = mapValues(grant, (propPerm) => {
+            return this.isSensitivityAllowed(propPerm, dto?.sensitivity)
+              ? propPerm
+              : {};
+          });
+          return filtered;
         }
         return [];
       })
     ) as Array<PermissionsForResource<ResourceShape<Resource>>>;
-
     const keys = [
       ...resource.SecuredProps,
       ...Object.keys(resource.Relations ?? {}),
@@ -372,7 +373,9 @@ export class AuthorizationService {
   }
 
   isSensitivityAllowed(
-    grant: DbPermission,
+    grant: Partial<
+      Record<Action, boolean> & Record<'sensitivityAccess', Sensitivity>
+    >,
     sensitivity?: Sensitivity
   ): boolean {
     const sensitivityRank = { High: 3, Medium: 2, Low: 1 };

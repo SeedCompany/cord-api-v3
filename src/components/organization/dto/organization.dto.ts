@@ -6,6 +6,7 @@ import {
   SecuredProperty,
   SecuredProps,
   SecuredString,
+  Sensitivity,
 } from '../../../common';
 import { Location } from '../../location/dto';
 
@@ -25,6 +26,12 @@ export class Organization extends Resource {
 
   @Field()
   readonly address: SecuredString;
+
+  @Field(() => Sensitivity, {
+    description:
+      "Based on the project's sensitivity. Usually comes from a distant affiliation with a project.",
+  })
+  readonly sensitivity?: Sensitivity;
 }
 
 @ObjectType({

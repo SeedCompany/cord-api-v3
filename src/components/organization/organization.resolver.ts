@@ -95,7 +95,14 @@ export class OrganizationResolver {
     })
     input: LocationListInput
   ): Promise<SecuredLocationList> {
-    return this.orgs.listLocations(organization.id, input, session);
+    return this.orgs.listLocations(
+      organization.id,
+      input,
+      session,
+      'locations',
+      Organization,
+      organization.sensitivity
+    );
   }
 
   @Mutation(() => UpdateOrganizationOutput, {

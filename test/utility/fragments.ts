@@ -20,6 +20,7 @@ import { Raw } from './raw.type';
 
 export const org = gql`
   fragment org on Organization {
+    createdAt
     id
     name {
       value
@@ -31,7 +32,55 @@ export const org = gql`
       canRead
       canEdit
     }
-    createdAt
+    locations {
+      canRead
+      canCreate
+      items {
+        id
+        createdAt
+        name {
+          value
+          canEdit
+          canRead
+        }
+        type {
+          value
+          canEdit
+          canRead
+        }
+        isoAlpha3 {
+          value
+          canEdit
+          canRead
+        }
+        fundingAccount {
+          value {
+            id
+            name {
+              value
+              canRead
+              canEdit
+            }
+            accountNumber {
+              value
+              canRead
+              canEdit
+            }
+            createdAt
+          }
+          canEdit
+          canRead
+        }
+        defaultFieldRegion {
+          value {
+            id
+            name {
+              value
+            }
+          }
+        }
+      }
+    }
   }
 `;
 
