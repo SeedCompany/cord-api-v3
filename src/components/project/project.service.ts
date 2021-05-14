@@ -93,13 +93,13 @@ import {
   ProjectMemberService,
   SecuredProjectMemberList,
 } from './project-member';
+import { ProjectRepository } from './project.repository';
 import { ProjectRules } from './project.rules';
 import { projectListFilter } from './query.helpers';
 
 @Injectable()
 export class ProjectService {
   constructor(
-    private readonly db: DatabaseService,
     private readonly projectMembers: ProjectMemberService,
     private readonly locationService: LocationService,
     @Inject(forwardRef(() => BudgetService))
@@ -115,6 +115,7 @@ export class ProjectService {
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
     private readonly projectRules: ProjectRules,
+    private readonly repo: ProjectRepository,
     @Logger('project:service') private readonly logger: ILogger
   ) {}
 
@@ -259,7 +260,7 @@ export class ProjectService {
       },
     ];
     try {
-      const createProject = this.db.query().apply(matchRequestingUser(session));
+      const createProject = this.repo.createProject(session);
 
       if (fieldRegionId) {
         await this.validateOtherResourceId(
@@ -385,15 +386,8 @@ export class ProjectService {
 
       // get the creating user's roles. Assign them on this project.
       // I'm going direct for performance reasons
-      const roles = await this.db
-        .query()
-        .match([
-          node('user', 'User', { id: session.userId }),
-          relation('out', '', 'roles', { active: true }),
-          node('roles', 'Property'),
-        ])
-        .raw('RETURN roles.value as roles')
-        .first();
+
+      const roles = await this.repo.getRoles(session);
 
       if (!this.config.migration) {
         // Add creator to the project team if not in migration
@@ -462,80 +456,7 @@ export class ProjectService {
     const userId = isIdLike(sessionOrUserId)
       ? sessionOrUserId
       : sessionOrUserId.userId;
-    const query = this.db
-      .query()
-      .match([node('node', 'Project', { id })])
-      .apply(matchPropList)
-      .with(['node', 'propList'])
-      .optionalMatch([
-        [node('user', 'User', { id: userId })],
-        [node('projectMember'), relation('out', '', 'user'), node('user')],
-        [node('projectMember'), relation('in', '', 'member'), node('node')],
-        [
-          node('projectMember'),
-          relation('out', '', 'roles', { active: true }),
-          node('props', 'Property'),
-        ],
-      ])
-      .with([collect('props.value', 'memberRoles'), 'propList', 'node'])
-      .optionalMatch([
-        node('requestingUser', 'User', { id: userId }),
-        relation('out', 'pinnedRel', 'pinned'),
-        node('node'),
-      ])
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'primaryLocation', { active: true }),
-        node('primaryLocation', 'Location'),
-      ])
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'marketingLocation', { active: true }),
-        node('marketingLocation', 'Location'),
-      ])
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'fieldRegion', { active: true }),
-        node('fieldRegion', 'FieldRegion'),
-      ])
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'owningOrganization', { active: true }),
-        node('organization', 'Organization'),
-      ])
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'engagement', { active: true }),
-        node('', 'LanguageEngagement'),
-        relation('out', '', 'language', { active: true }),
-        node('', 'Language'),
-        relation('out', '', 'sensitivity', { active: true }),
-        node('sensitivity', 'Property'),
-      ])
-      .return([
-        'propList',
-        'node',
-        'memberRoles',
-        'pinnedRel',
-        'primaryLocation.id as primaryLocationId',
-        'marketingLocation.id as marketingLocationId',
-        'fieldRegion.id as fieldRegionId',
-        'organization.id as owningOrganizationId',
-        'collect(distinct sensitivity.value) as languageSensitivityList',
-      ])
-      .asResult<{
-        node: Node<BaseNode & { type: ProjectType }>;
-        propList: PropListDbResult<DbPropsOfDto<Project>>;
-        pinnedRel?: Relation;
-        primaryLocationId: ID;
-        memberRoles: Role[][];
-        marketingLocationId: ID;
-        fieldRegionId: ID;
-        owningOrganizationId: ID;
-        languageSensitivityList: Sensitivity[];
-      }>();
-
-    const result = await query.first();
+    const result = await this.repo.readOneUnsecured(id, userId);
     if (!result) {
       throw new NotFoundException('Could not find project');
     }
@@ -576,7 +497,7 @@ export class ProjectService {
     return {
       ...project,
       ...securedProps,
-      canDelete: await this.db.checkDeletePermission(
+      canDelete: await this.repo.checkDeletePermission(
         project.id,
         sessionOrUserId
       ),
@@ -599,11 +520,7 @@ export class ProjectService {
         'project.sensitivity'
       );
 
-    const changes = this.db.getActualChanges(IProject, currentProject, {
-      ...input,
-      ...(input.step ? { status: stepToStatus(input.step) } : {}),
-    });
-
+    const changes = this.repo.getActualChanges(currentProject, input);
     await this.authorizationService.verifyCanEditChanges(
       currentProject.type === 'Translation'
         ? TranslationProject
@@ -624,14 +541,10 @@ export class ProjectService {
       ...simpleChanges
     } = changes;
 
-    let result = await this.db.updateProperties({
-      type:
-        currentProject.type === ProjectType.Translation
-          ? TranslationProject
-          : InternshipProject,
-      object: currentProject,
-      changes: simpleChanges,
-    });
+    let result = await this.repo.updateProperties(
+      currentProject,
+      simpleChanges
+    );
 
     if (primaryLocationId) {
       try {
@@ -657,30 +570,9 @@ export class ProjectService {
       }
 
       const createdAt = DateTime.local();
-      const query = this.db
-        .query()
-        .match(node('project', 'Project', { id: input.id }))
-        .match(node('location', 'Location', { id: input.primaryLocationId }))
-        .with('project, location')
-        .limit(1)
-        .optionalMatch([
-          node('project', 'Project', { id: input.id }),
-          relation('out', 'oldRel', 'primaryLocation', { active: true }),
-          node(''),
-        ])
-        .setValues({ 'oldRel.active': false })
-        .with('project, location')
-        .limit(1)
-        .create([
-          node('project'),
-          relation('out', '', 'primaryLocation', {
-            active: true,
-            createdAt,
-          }),
-          node('location'),
-        ]);
 
-      await query.run();
+      await this.repo.updateLocation(input, createdAt);
+
       result = {
         ...result,
         primaryLocation: primaryLocationId,
@@ -695,30 +587,7 @@ export class ProjectService {
         'Field region not found'
       );
       const createdAt = DateTime.local();
-      const query = this.db
-        .query()
-        .match(node('project', 'Project', { id: input.id }))
-        .with('project')
-        .limit(1)
-        .match([node('region', 'FieldRegion', { id: input.fieldRegionId })])
-        .optionalMatch([
-          node('project'),
-          relation('out', 'oldRel', 'fieldRegion', { active: true }),
-          node(''),
-        ])
-        .setValues({ 'oldRel.active': false })
-        .with('project, region')
-        .limit(1)
-        .create([
-          node('project'),
-          relation('out', '', 'fieldRegion', {
-            active: true,
-            createdAt,
-          }),
-          node('region'),
-        ]);
-
-      await query.run();
+      await this.repo.updateFieldRegion(input, createdAt);
       result = {
         ...result,
         fieldRegion: fieldRegionId,
@@ -741,7 +610,7 @@ export class ProjectService {
       throw new NotFoundException('Could not find project');
     }
 
-    const canDelete = await this.db.checkDeletePermission(id, session);
+    const canDelete = await this.repo.checkDeletePermission(id, session);
 
     if (!canDelete)
       throw new UnauthorizedException(
@@ -749,7 +618,7 @@ export class ProjectService {
       );
 
     try {
-      await this.db.deleteNode(object);
+      await this.repo.deleteNode(object);
     } catch (e) {
       this.logger.warning('Failed to delete project', {
         exception: e,
@@ -770,57 +639,9 @@ export class ProjectService {
       sensitivity: 'sensitivityValue',
     };
 
-    // Subquery to get the sensitivity value for a Translation Project.
-    // Get the highest sensitivity of the connected Language Engagement's Language
-    // If an Engagement doesn't exist, then default to 3 (high)
-    const sensitivitySubquery = `call {
-      with node
-      optional match (node)-[:engagement { active: true }]->(:LanguageEngagement)-[:language { active: true }]->
-      (:Language)-[:sensitivity { active: true }]->(sensitivityProp:Property)
-      WITH *, case sensitivityProp.value
-        when null then 3
-        when 'High' then 3
-        when 'Medium' then 2
-        when 'Low' then 1
-        end as langSensitivityVal
-      ORDER BY langSensitivityVal desc
-      limit 1
-      return langSensitivityVal
-      }`;
-
-    // In the first case, if the node is a translation project, use the langSensitivityVal from above.
-    // Else use the sensitivity prop value
-    const sensitivityCase = `case
-      when 'TranslationProject' in labels(node) then langSensitivityVal
-      when prop.value = 'High' then 3
-      when prop.value = 'Medium' then 2
-      when prop.value = 'Low' then 1
-      end as sensitivityValue`;
-
     const sortBy = projectSortMap[input.sort] ?? 'prop.value';
-    const query = this.db
-      .query()
-      .match([requestingUser(session), ...permissionsOfNode(label)])
-      .with('distinct(node) as node, requestingUser')
-      .apply(projectListFilter(filter))
-      .apply(
-        calculateTotalAndPaginateList(IProject, input, (q) =>
-          ['id', 'createdAt'].includes(input.sort)
-            ? q.with('*').orderBy(`node.${input.sort}`, input.order)
-            : q
-                .raw(input.sort === 'sensitivity' ? sensitivitySubquery : '')
-                .match([
-                  node('node'),
-                  relation('out', '', input.sort, { active: true }),
-                  node('prop', 'Property'),
-                ])
-                .with([
-                  '*',
-                  ...(input.sort === 'sensitivity' ? [sensitivityCase] : []),
-                ])
-                .orderBy(sortBy, input.order)
-        )
-      );
+
+    const query = this.repo.list(label, sortBy, { filter, ...input }, session);
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
@@ -847,50 +668,10 @@ export class ProjectService {
       session
     );
 
-    const permission = await this.db
-      .query()
-      .match([requestingUser(session)])
-      .match([
-        [
-          node('requestingUser'),
-          relation('in', 'memberOfReadSecurityGroup', 'member'),
-          node('readSecurityGroup', 'SecurityGroup'),
-          relation('out', 'sgReadPerms', 'permission'),
-          node('canReadEngagement', 'Permission', {
-            property: 'engagement',
-            read: true,
-          }),
-          relation('out', 'readPermsOfBaseNode', 'baseNode'),
-          node('project', 'Project', { id: project.id }),
-        ],
-      ])
-      .match([
-        [
-          node('requestingUser'),
-          relation('in', 'memberOfEditSecurityGroup', 'member'),
-          node('editSecurityGroup', 'SecurityGroup'),
-          relation('out', 'sgEditPerms', 'permission'),
-          node('canEditEngagement', 'Permission', {
-            property: 'engagement',
-            edit: true,
-          }),
-          relation('out', 'editPermsOfBaseNode', 'baseNode'),
-          node('project'),
-        ],
-      ])
-      .return({
-        canReadEngagement: [
-          {
-            read: 'canReadEngagementRead',
-          },
-        ],
-        canEditEngagement: [
-          {
-            edit: 'canReadEngagementCreate',
-          },
-        ],
-      })
-      .first();
+    const permission = await this.repo.getEngagementPermission(
+      session,
+      project.id
+    );
 
     return {
       ...result,
@@ -918,50 +699,10 @@ export class ProjectService {
       session
     );
 
-    const permission = await this.db
-      .query()
-      .match([requestingUser(session)])
-      .match([
-        [
-          node('requestingUser'),
-          relation('in', 'memberOfReadSecurityGroup', 'member'),
-          node('readSecurityGroup', 'SecurityGroup'),
-          relation('out', 'sgReadPerms', 'permission'),
-          node('canReadTeamMember', 'Permission', {
-            property: 'member',
-            read: true,
-          }),
-          relation('out', 'readPermsOfBaseNode', 'baseNode'),
-          node('project', 'Project', { id: projectId }),
-        ],
-      ])
-      .match([
-        [
-          node('requestingUser'),
-          relation('in', 'memberOfEditSecurityGroup', 'member'),
-          node('editSecurityGroup', 'SecurityGroup'),
-          relation('out', 'sgEditPerms', 'permission'),
-          node('canEditTeamMember', 'Permission', {
-            property: 'member',
-            edit: true,
-          }),
-          relation('out', 'editPermsOfBaseNode', 'baseNode'),
-          node('project'),
-        ],
-      ])
-      .return({
-        canReadTeamMember: [
-          {
-            read: 'canReadTeamMemberRead',
-          },
-        ],
-        canEditTeamMember: [
-          {
-            edit: 'canReadTeamMemberCreate',
-          },
-        ],
-      })
-      .first();
+    const permission = await this.repo.getTeamMemberPermission(
+      session,
+      projectId
+    );
 
     return {
       ...result,
@@ -986,50 +727,10 @@ export class ProjectService {
       session
     );
 
-    const permission = await this.db
-      .query()
-      .match([requestingUser(session)])
-      .match([
-        [
-          node('requestingUser'),
-          relation('in', 'memberOfReadSecurityGroup', 'member'),
-          node('readSecurityGroup', 'SecurityGroup'),
-          relation('out', 'sgReadPerms', 'permission'),
-          node('canReadPartnership', 'Permission', {
-            property: 'partnership',
-            read: true,
-          }),
-          relation('out', 'readPermsOfBaseNode', 'baseNode'),
-          node('project', 'Project', { id: projectId }),
-        ],
-      ])
-      .match([
-        [
-          node('requestingUser'),
-          relation('in', 'memberOfEditSecurityGroup', 'member'),
-          node('editSecurityGroup', 'SecurityGroup'),
-          relation('out', 'sgEditPerms', 'permission'),
-          node('canEditPartnership', 'Permission', {
-            property: 'partnership',
-            edit: true,
-          }),
-          relation('out', 'editPermsOfBaseNode', 'baseNode'),
-          node('project'),
-        ],
-      ])
-      .return({
-        canReadPartnership: [
-          {
-            read: 'canReadPartnershipRead',
-          },
-        ],
-        canEditPartnership: [
-          {
-            edit: 'canReadPartnershipCreate',
-          },
-        ],
-      })
-      .first();
+    const permission = await this.repo.getPartnershipPermission(
+      session,
+      projectId
+    );
 
     return {
       ...result,
@@ -1137,25 +838,8 @@ export class ProjectService {
       return projectId.scope;
     }
 
-    const query = this.db
-      .query()
-      .match([
-        node('node', 'Project', { projectId }),
-        relation('out', '', 'member', { active: true }),
-        node('projectMember', 'ProjectMember'),
-        relation('out', '', 'user', { active: true }),
-        node('user', 'User', { id: session.userId }),
-      ])
-      .match([
-        node('projectMember'),
-        relation('out', 'r', 'roles', { active: true }),
-        node('roles', 'Property'),
-      ])
-      .return('collect(roles.value) as memberRoles')
-      .asResult<{
-        memberRoles: Role[][];
-      }>();
-    const result = await query.first();
+    const result = await this.repo.getMembershipRoles(projectId, session);
+
     return result?.memberRoles.flat().map(rolesForScope('project')) ?? [];
   }
 
@@ -1163,20 +847,7 @@ export class ProjectService {
     projectId: ID,
     session: Session
   ): Promise<SecuredDirectory> {
-    const rootRef = await this.db
-      .query()
-      .match(matchSession(session, { withAclRead: 'canReadProjects' }))
-      .optionalMatch([
-        [
-          node('project', 'Project', { id: projectId }),
-          relation('out', 'rootDirectory', { active: true }),
-          node('directory', 'BaseNode:Directory'),
-        ],
-      ])
-      .return({
-        directory: [{ id: 'id' }],
-      })
-      .first();
+    const rootRef = await this.repo.getRootDirectory(projectId, session);
 
     if (!rootRef) {
       return {
@@ -1200,35 +871,20 @@ export class ProjectService {
   }
 
   async consistencyChecker(session: Session): Promise<boolean> {
-    const projects = await this.db
-      .query()
-      .match([matchSession(session), [node('project', 'Project')]])
-      .return('project.id as id')
-      .run();
+    const projects = await this.repo.getProjects(session);
 
     return (
       (
         await Promise.all(
           projects.map(async (project) => {
-            return await this.db.isRelationshipUnique({
-              session,
-              id: project.id,
-              relName: 'location',
-              srcNodeLabel: 'Project',
-            });
+            return await this.repo.isRelationshipUnique(session, project.id);
           })
         )
       ).every((n) => n) &&
       (
         await Promise.all(
           projects.map(async (project) => {
-            return await this.db.hasProperties({
-              session,
-              id: project.id,
-              // props: ['type', 'status', 'name', 'step'],
-              props: ['status', 'name', 'step'],
-              nodevar: 'Project',
-            });
+            return await this.repo.hasProperties(session, project.id);
           })
         )
       ).every((n) => n)
@@ -1236,31 +892,7 @@ export class ProjectService {
   }
 
   async listProjectsWithDateRange() {
-    const result = await this.db
-      .query()
-      .match(node('project', 'Project'))
-      .match([
-        node('project'),
-        relation('out', '', 'mouStart', { active: true }),
-        node('mouStart', 'Property'),
-      ])
-      .match([
-        node('project'),
-        relation('out', '', 'mouEnd', { active: true }),
-        node('mouEnd', 'Property'),
-      ])
-      .raw('WHERE mouStart.value IS NOT NULL AND mouEnd.value IS NOT NULL')
-      .return(
-        'project.id as projectId, mouStart.value as mouStart, mouEnd.value as mouEnd'
-      )
-      .asResult<{
-        projectId: ID;
-        mouStart: CalendarDate;
-        mouEnd: CalendarDate;
-      }>()
-      .run();
-
-    return result;
+    return await this.repo.listProjectsWithDateRange();
   }
 
   protected async validateOtherResourceId(
@@ -1271,11 +903,7 @@ export class ProjectService {
   ): Promise<void> {
     let index = 0;
     for (const id of many(ids)) {
-      const result = await this.db
-        .query()
-        .match([node('node', label, { id })])
-        .return('node')
-        .first();
+      const result = await this.repo.validateOtherResourceId(id, label);
 
       if (!result) {
         throw new NotFoundException(

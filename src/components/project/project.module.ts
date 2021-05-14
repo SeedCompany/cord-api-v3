@@ -17,6 +17,7 @@ import { ProjectStepResolver } from './project-step.resolver';
 import { ProjectResolver } from './project.resolver';
 import { ProjectRules } from './project.rules';
 import { ProjectService } from './project.service';
+import { ProjectRepository } from './project.repository';
 
 @Module({
   imports: [
@@ -39,8 +40,14 @@ import { ProjectService } from './project.service';
     ProjectService,
     ProjectStepResolver,
     ProjectRules,
+    ProjectRepository,
     ...Object.values(handlers),
   ],
-  exports: [ProjectService, ProjectMemberModule, ProjectRules],
+  exports: [
+    ProjectService,
+    ProjectMemberModule,
+    ProjectRules,
+    ProjectRepository,
+  ],
 })
 export class ProjectModule {}
