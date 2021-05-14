@@ -736,6 +736,400 @@
 					"response": []
 				},
 				{
+					"name": "Create Song Not  Mandatory Field Blank -  ScriptRef start book",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;",
+									"    pm.expect(error_message).to.eql(\"Input validation failed\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error status is 400\", function () {",
+									"    var error_status = jsonData.errors[0].extensions.status;",
+									"    pm.expect(error_status).to.eql(400);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const moment = require('moment');\r",
+									"\r",
+									"pm.globals.set(\"songName\", \"SongName\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
+									"\r",
+									"// ScriptureReferences Value\r",
+									"\r",
+									"pm.globals.set('songScriptRefBookStart', \"Genesis\");\r",
+									"\r",
+									"pm.globals.set('songScriptRefChapterStart', 3);\r",
+									"\r",
+									"pm.globals.set('songScriptRefVerseStart', 4);\r",
+									"\r",
+									"let expectedLabelStart = `${pm.globals.get('songScriptRefBookStart')} ${pm.globals.get('songScriptRefChapterStart')}:${pm.globals.get('songScriptRefVerseStart')}`;\r",
+									"\r",
+									"pm.globals.set('songScriptRefLabelStart', expectedLabelStart);\r",
+									"\r",
+									"pm.globals.set('songScriptRefBookEnd', \"Genesis\");\r",
+									"\r",
+									"pm.globals.set('songScriptRefChapterEnd', 3);\r",
+									"\r",
+									"pm.globals.set('songScriptRefVerseEnd', 4);\r",
+									"\r",
+									"let expectedLabelEnd = `${pm.globals.get('songScriptRefBookEnd')} ${pm.globals.get('songScriptRefChapterEnd')}:${pm.globals.get('songScriptRefVerseEnd')}`\r",
+									"\r",
+									"pm.globals.set('songScriptRefLabelEnd', expectedLabelEnd);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"song\": {\r\n            \"name\": \"{{songName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"\",\r\n                    \"chapter\": {{songScriptRefChapterStart}},\r\n                    \"verse\": {{songScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{songScriptRefBookEnd}}\",\r\n                    \"chapter\": {{songScriptRefChapterEnd}},\r\n                    \"verse\": {{songScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Song Not  Mandatory Field Removed  -  ScriptRef start book",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 400 Bad Request\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;",
+									"    pm.expect(error_message).to.include(\"Field \\\"book\\\" of required type \\\"String!\\\" was not provided.\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
+									"    var error_code = jsonData.errors[0].extensions.code;",
+									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const moment = require('moment');\r",
+									"\r",
+									"pm.globals.set(\"songName\", \"SongName\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
+									"\r",
+									"// ScriptureReferences Value\r",
+									"\r",
+									"pm.globals.set('songScriptRefBookStart', \"Genesis\");\r",
+									"\r",
+									"pm.globals.set('songScriptRefChapterStart', 3);\r",
+									"\r",
+									"pm.globals.set('songScriptRefVerseStart', 4);\r",
+									"\r",
+									"let expectedLabelStart = `${pm.globals.get('songScriptRefBookStart')} ${pm.globals.get('songScriptRefChapterStart')}:${pm.globals.get('songScriptRefVerseStart')}`;\r",
+									"\r",
+									"pm.globals.set('songScriptRefLabelStart', expectedLabelStart);\r",
+									"\r",
+									"pm.globals.set('songScriptRefBookEnd', \"Genesis\");\r",
+									"\r",
+									"pm.globals.set('songScriptRefChapterEnd', 3);\r",
+									"\r",
+									"pm.globals.set('songScriptRefVerseEnd', 4);\r",
+									"\r",
+									"let expectedLabelEnd = `${pm.globals.get('songScriptRefBookEnd')} ${pm.globals.get('songScriptRefChapterEnd')}:${pm.globals.get('songScriptRefVerseEnd')}`\r",
+									"\r",
+									"pm.globals.set('songScriptRefLabelEnd', expectedLabelEnd);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"song\": {\r\n            \"name\": \"{{songName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"chapter\": {{songScriptRefChapterStart}},\r\n                    \"verse\": {{songScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{songScriptRefBookEnd}}\",\r\n                    \"chapter\": {{songScriptRefChapterEnd}},\r\n                    \"verse\": {{songScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Song Not  Mandatory Field Blank -  ScriptRef end book",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;",
+									"    pm.expect(error_message).to.eql(\"Input validation failed\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error status is 400\", function () {",
+									"    var error_status = jsonData.errors[0].extensions.status;",
+									"    pm.expect(error_status).to.eql(400);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const moment = require('moment');\r",
+									"\r",
+									"pm.globals.set(\"songName\", \"SongName\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
+									"\r",
+									"// ScriptureReferences Value\r",
+									"\r",
+									"pm.globals.set('songScriptRefBookStart', \"Genesis\");\r",
+									"\r",
+									"pm.globals.set('songScriptRefChapterStart', 3);\r",
+									"\r",
+									"pm.globals.set('songScriptRefVerseStart', 4);\r",
+									"\r",
+									"let expectedLabelStart = `${pm.globals.get('songScriptRefBookStart')} ${pm.globals.get('songScriptRefChapterStart')}:${pm.globals.get('songScriptRefVerseStart')}`;\r",
+									"\r",
+									"pm.globals.set('songScriptRefLabelStart', expectedLabelStart);\r",
+									"\r",
+									"// pm.globals.set('songScriptRefBookEnd', \"Genesis\");\r",
+									"\r",
+									"pm.globals.set('songScriptRefChapterEnd', 3);\r",
+									"\r",
+									"pm.globals.set('songScriptRefVerseEnd', 4);\r",
+									"\r",
+									"let expectedLabelEnd = `${pm.globals.get('songScriptRefBookEnd')} ${pm.globals.get('songScriptRefChapterEnd')}:${pm.globals.get('songScriptRefVerseEnd')}`\r",
+									"\r",
+									"pm.globals.set('songScriptRefLabelEnd', expectedLabelEnd);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"song\": {\r\n            \"name\": \"{{songName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{songScriptRefBookStart}}\",\r\n                    \"chapter\": {{songScriptRefChapterStart}},\r\n                    \"verse\": {{songScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"\",\r\n                    \"chapter\": {{songScriptRefChapterEnd}},\r\n                    \"verse\": {{songScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Song Not  Mandatory Field Removed  -  ScriptRef end book",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 400 Bad Request\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;",
+									"    pm.expect(error_message).to.include(\"Field \\\"book\\\" of required type \\\"String!\\\" was not provided.\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
+									"    var error_code = jsonData.errors[0].extensions.code;",
+									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const moment = require('moment');\r",
+									"\r",
+									"pm.globals.set(\"songName\", \"SongName\" + moment().format(\"DDMMYYYYhhmmss\"));\r",
+									"\r",
+									"// ScriptureReferences Value\r",
+									"\r",
+									"pm.globals.set('songScriptRefBookStart', \"Genesis\");\r",
+									"\r",
+									"pm.globals.set('songScriptRefChapterStart', 3);\r",
+									"\r",
+									"pm.globals.set('songScriptRefVerseStart', 4);\r",
+									"\r",
+									"let expectedLabelStart = `${pm.globals.get('songScriptRefBookStart')} ${pm.globals.get('songScriptRefChapterStart')}:${pm.globals.get('songScriptRefVerseStart')}`;\r",
+									"\r",
+									"pm.globals.set('songScriptRefLabelStart', expectedLabelStart);\r",
+									"\r",
+									"pm.globals.set('songScriptRefBookEnd', \"Genesis\");\r",
+									"\r",
+									"pm.globals.set('songScriptRefChapterEnd', 3);\r",
+									"\r",
+									"pm.globals.set('songScriptRefVerseEnd', 4);\r",
+									"\r",
+									"let expectedLabelEnd = `${pm.globals.get('songScriptRefBookEnd')} ${pm.globals.get('songScriptRefChapterEnd')}:${pm.globals.get('songScriptRefVerseEnd')}`\r",
+									"\r",
+									"pm.globals.set('songScriptRefLabelEnd', expectedLabelEnd);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation createSong($input: CreateSongInput!) {\r\n  createSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"song\": {\r\n            \"name\": \"{{songName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"chapter\": {{songScriptRefChapterStart}},\r\n                    \"verse\": {{songScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"chapter\": {{songScriptRefChapterEnd}},\r\n                    \"verse\": {{songScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Create Song Success - Only Requird Inputs",
 					"event": [
 						{
@@ -2724,6 +3118,304 @@
 							"graphql": {
 								"query": "mutation updateSong($input: UpdateSongInput!) {\r\n  updateSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 								"variables": "{\r\n  \"input\": {\r\n    \"song\": {\r\n      \"id\": \"{{songId}}\",\r\n      \"name\": \"\"\r\n    }\r\n  }\r\n}"
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Song Not  Mandatory Field Removed  -  ScriptRef start book",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 400 Bad Request\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;",
+									"    pm.expect(error_message).to.include(\"Field \\\"book\\\" of required type \\\"String!\\\" was not provided.\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
+									"    var error_code = jsonData.errors[0].extensions.code;",
+									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation updateSong($input: UpdateSongInput!) {\r\n  updateSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"song\": {\r\n            \"id\": \"{{songId}}\",\r\n            \"name\": \"{{songName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"chapter\": {{songScriptRefChapterStart}},\r\n                    \"verse\": {{songScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{songScriptRefBookEnd}}\",\r\n                    \"chapter\": {{songScriptRefChapterEnd}},\r\n                    \"verse\": {{songScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Song Not  Mandatory Field Blank  -  ScriptRef start book",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;",
+									"    pm.expect(error_message).to.eql(\"Input validation failed\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error status is 400\", function () {",
+									"    var error_status = jsonData.errors[0].extensions.status;",
+									"    pm.expect(error_status).to.eql(400);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation updateSong($input: UpdateSongInput!) {\r\n  updateSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"song\": {\r\n            \"id\": \"{{songId}}\",\r\n            \"name\": \"{{songName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"\",\r\n                    \"chapter\": {{songScriptRefChapterStart}},\r\n                    \"verse\": {{songScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{songScriptRefBookEnd}}\",\r\n                    \"chapter\": {{songScriptRefChapterEnd}},\r\n                    \"verse\": {{songScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Song Not  Mandatory Field Removed  -  ScriptRef end book",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 400 Bad Request\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;",
+									"    pm.expect(error_message).to.include(\"Field \\\"book\\\" of required type \\\"String!\\\" was not provided.\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error code is INTERNAL_SERVER_ERROR\", function () {",
+									"    var error_code = jsonData.errors[0].extensions.code;",
+									"    pm.expect(error_code).to.eql(\"INTERNAL_SERVER_ERROR\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation updateSong($input: UpdateSongInput!) {\r\n  updateSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"song\": {\r\n            \"id\": \"{{songId}}\",\r\n            \"name\": \"{{songName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"{{songScriptRefBookStart}}\",\r\n                    \"chapter\": {{songScriptRefChapterStart}},\r\n                    \"verse\": {{songScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"chapter\": {{songScriptRefChapterEnd}},\r\n                    \"verse\": {{songScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
+							}
+						},
+						"url": {
+							"raw": "{{env}}/graphql",
+							"host": [
+								"{{env}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Song Not  Mandatory Field Blank  -  ScriptRef end book",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"//Common Verification",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
+									"});",
+									"",
+									"//Test Specific",
+									"pm.test(\"Verify that error message is correct\", function () {",
+									"    var error_message = jsonData.errors[0].message;",
+									"    pm.expect(error_message).to.eql(\"Input validation failed\");",
+									"});",
+									"",
+									"pm.test(\"Verify that error status is 400\", function () {",
+									"    var error_status = jsonData.errors[0].extensions.status;",
+									"    pm.expect(error_status).to.eql(400);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation updateSong($input: UpdateSongInput!) {\r\n  updateSong(input: $input) {\r\n    song {\r\n      id\r\n      createdAt\r\n      name {\r\n        value\r\n        canEdit\r\n        canRead\r\n      }\r\n      scriptureReferences {\r\n        value {\r\n          start {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          end {\r\n            book\r\n            chapter\r\n            verse\r\n            label\r\n          }\r\n          label\r\n          totalVerses\r\n        }\r\n        canEdit\r\n        canRead\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+								"variables": "{\r\n    \"input\": {\r\n        \"song\": {\r\n            \"id\": \"{{songId}}\",\r\n            \"name\": \"{{songName}}\",\r\n            \"scriptureReferences\": {\r\n                \"start\": {\r\n                    \"book\": \"\",\r\n                    \"chapter\": {{songScriptRefChapterStart}},\r\n                    \"verse\": {{songScriptRefVerseStart}}\r\n                },\r\n                \"end\": {\r\n                    \"book\": \"{{songScriptRefBookEnd}}\",\r\n                    \"chapter\": {{songScriptRefChapterEnd}},\r\n                    \"verse\": {{songScriptRefVerseEnd}}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}"
 							}
 						},
 						"url": {
