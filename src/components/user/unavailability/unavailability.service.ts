@@ -31,15 +31,16 @@ import {
   UnavailabilityListOutput,
   UpdateUnavailability,
 } from './dto';
+import { UnavailabilityRepository } from './unavailability.repository';
 
 @Injectable()
 export class UnavailabilityService {
   constructor(
     @Logger('unavailability:service') private readonly logger: ILogger,
-    private readonly db: DatabaseService,
     private readonly config: ConfigService,
     @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService
+    private readonly authorizationService: AuthorizationService,
+    private readonly repo: UnavailabilityRepository
   ) {}
 
   async create(
@@ -68,16 +69,10 @@ export class UnavailabilityService {
     ];
 
     try {
-      const createUnavailability = this.db
-        .query()
-        .apply(matchRequestingUser(session))
-        .apply(
-          createBaseNode(await generateId(), 'Unavailability', secureProps)
-        )
-        .return('node.id as id')
-        .asResult<{ id: ID }>();
-
-      const createUnavailabilityResult = await createUnavailability.first();
+      const createUnavailabilityResult = await this.repo.create(
+        session,
+        secureProps
+      );
 
       if (!createUnavailabilityResult) {
         this.logger.error(`Could not create unavailability`, {
@@ -93,20 +88,10 @@ export class UnavailabilityService {
 
       // connect the Unavailability to the User.
 
-      const query = `
-        MATCH (user: User {id: $userId}),
-        (unavailability:Unavailability {id: $id})
-        CREATE (user)-[:unavailability {active: true, createdAt: datetime()}]->(unavailability)
-        RETURN  unavailability.id as id
-        `;
-      await this.db
-        .query()
-        .raw(query, {
-          userId,
-          id: createUnavailabilityResult.id,
-        })
-        .run();
-
+      await this.repo.connectUnavailability(
+        createUnavailabilityResult.id,
+        userId
+      );
       const dbUnavailability = new DbUnavailability();
       await this.authorizationService.processNewBaseNode(
         dbUnavailability,
@@ -124,15 +109,7 @@ export class UnavailabilityService {
   }
 
   async readOne(id: ID, session: Session): Promise<Unavailability> {
-    const query = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'Unavailability', { id })])
-      .apply(matchPropList)
-      .return('propList, node')
-      .asResult<StandardReadResult<DbPropsOfDto<Unavailability>>>();
-
-    const result = await query.first();
+    const result = await this.repo.readOne(id, session);
     if (!result) {
       throw new NotFoundException('Could not find user', 'user.id');
     }
@@ -146,7 +123,7 @@ export class UnavailabilityService {
     return {
       ...parseBaseNodeProperties(result.node),
       ...securedProps,
-      canDelete: await this.db.checkDeletePermission(id, session), // TODO
+      canDelete: await this.repo.checkDeletePermission(id, session), // TODO
     };
   }
 
@@ -156,27 +133,15 @@ export class UnavailabilityService {
   ): Promise<Unavailability> {
     const unavailability = await this.readOne(input.id, session);
 
-    const result = await this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([
-        node('user', 'User'),
-        relation('out', '', 'unavailability', { active: true }),
-        node('unavailability', 'Unavailability', { id: input.id }),
-      ])
-      .return('user')
-      .first();
+    const result = await this.repo.getUnavailability(session, input);
     if (!result) {
       throw new NotFoundException(
         'Could not find user associated with unavailability',
         'user.unavailability'
       );
     }
-    const changes = this.db.getActualChanges(
-      Unavailability,
-      unavailability,
-      input
-    );
+
+    const changes = this.repo.getActualChanges(unavailability, input);
 
     if (result.user.properties.id !== session.userId) {
       await this.authorizationService.verifyCanEditChanges(
@@ -185,11 +150,7 @@ export class UnavailabilityService {
         changes
       );
     }
-    return await this.db.updateProperties({
-      type: Unavailability,
-      object: unavailability,
-      changes,
-    });
+    return await this.repo.updateProperties(unavailability, changes);
   }
 
   async delete(id: ID, session: Session): Promise<void> {
@@ -201,27 +162,17 @@ export class UnavailabilityService {
         'unavailability.id'
       );
     }
-    await this.db.deleteNode(ua);
+    await this.repo.deleteNode(ua);
   }
 
   async list(
     { page, count, sort, order, filter }: UnavailabilityListInput,
     session: Session
   ): Promise<UnavailabilityListOutput> {
-    const result = await this.db.list<Unavailability>({
-      session,
-      nodevar: 'unavailability',
-      aclReadProp: 'canReadUnavailabilityList',
-      aclEditProp: 'canCreateUnavailability',
-      props: ['description', 'start', 'end'],
-      input: {
-        page,
-        count,
-        sort,
-        order,
-        filter,
-      },
-    });
+    const result = await this.repo.list(
+      { page, count, sort, order, filter },
+      session
+    );
 
     return {
       items: result.items,
@@ -230,37 +181,20 @@ export class UnavailabilityService {
     };
   }
   async checkUnavailabilityConsistency(session: Session): Promise<boolean> {
-    const unavailabilities = await this.db
-      .query()
-      .match([
-        matchSession(session),
-        [node('unavailability', 'Unavailability')],
-      ])
-      .return('unavailability.id as id')
-      .run();
+    const unavailabilities = await this.repo.getUnavailabilities(session);
 
     return (
       (
         await Promise.all(
           unavailabilities.map(async (unavailability) => {
-            return await this.db.hasProperties({
-              session,
-              id: unavailability.id,
-              props: ['description', 'start', 'end'],
-              nodevar: 'unavailability',
-            });
+            return await this.repo.hasProperties(session, unavailability);
           })
         )
       ).every((n) => n) &&
       (
         await Promise.all(
           unavailabilities.map(async (unavailability) => {
-            return await this.db.isUniqueProperties({
-              session,
-              id: unavailability.id,
-              props: ['description', 'start', 'end'],
-              nodevar: 'unavailability',
-            });
+            return await this.repo.isUniqueProperties(session, unavailability);
           })
         )
       ).every((n) => n)

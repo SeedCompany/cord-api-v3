@@ -95,15 +95,7 @@ export class EthnologueLanguageService {
   }
 
   async readOne(id: ID, session: Session): Promise<EthnologueLanguage> {
-    const query = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'EthnologueLanguage', { id: id })])
-      .apply(matchPropList)
-      .return('propList, node')
-      .asResult<StandardReadResult<EthLangDbProps>>();
-
-    const result = await query.first();
+    const result = await this.repo.readOne(id, session);
     if (!result) {
       throw new NotFoundException(
         'Could not find ethnologue language',
