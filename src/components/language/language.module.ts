@@ -7,6 +7,7 @@ import { EthnologueLanguageService } from './ethnologue-language';
 import { LanguageRepository } from './language.repository';
 import { LanguageResolver } from './language.resolver';
 import { LanguageService } from './language.service';
+import { EthnologueLanguageRepository } from './ethnologue-language/ethnologue-language.repository';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { LanguageService } from './language.service';
     LanguageResolver,
     LanguageService,
     EthnologueLanguageService,
+    EthnologueLanguageRepository,
     LanguageRepository,
   ],
   exports: [LanguageService, LanguageRepository],

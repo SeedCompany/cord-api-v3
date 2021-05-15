@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { node } from 'cypher-query-builder';
 import { pickBy } from 'lodash';
 import {
-  generateId,
   ID,
   NotFoundException,
   ServerException,
@@ -10,7 +9,6 @@ import {
 } from '../../../common';
 import {
   ConfigService,
-  createBaseNode,
   DatabaseService,
   ILogger,
   Logger,
@@ -31,6 +29,7 @@ import {
   UpdateEthnologueLanguage,
 } from '../dto';
 import { DbEthnologueLanguage } from '../model';
+import { EthnologueLanguageRepository } from './ethnologue-language.repository';
 
 type EthLangDbProps = DbPropsOfDto<EthnologueLanguage> & { id: ID };
 
@@ -40,7 +39,8 @@ export class EthnologueLanguageService {
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
     private readonly authorizationService: AuthorizationService,
-    @Logger('language:ethnologue:service') private readonly logger: ILogger
+    @Logger('language:ethnologue:service') private readonly logger: ILogger,
+    private readonly repo: EthnologueLanguageRepository
   ) {}
 
   async create(
@@ -75,15 +75,7 @@ export class EthnologueLanguageService {
       },
     ];
 
-    const query = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .apply(
-        createBaseNode(await generateId(), 'EthnologueLanguage', secureProps)
-      )
-      .return('node.id as id');
-
-    const result = await query.first();
+    const result = await this.repo.create(secureProps, session);
     if (!result) {
       throw new ServerException('Failed to create ethnologue language');
     }
@@ -129,7 +121,7 @@ export class EthnologueLanguageService {
     return {
       id,
       ...secured,
-      canDelete: await this.db.checkDeletePermission(id, session),
+      canDelete: await this.repo.checkDeletePermission(id, session),
     };
   }
 
@@ -137,11 +129,7 @@ export class EthnologueLanguageService {
     if (!input) return;
     const ethnologueLanguage = await this.readOne(id, session);
 
-    const changes = this.db.getActualChanges(
-      EthnologueLanguage,
-      ethnologueLanguage,
-      input
-    );
+    const changes = this.repo.getActualChanges(ethnologueLanguage, input);
     await this.authorizationService.verifyCanEditChanges(
       EthnologueLanguage,
       ethnologueLanguage,
@@ -164,37 +152,7 @@ export class EthnologueLanguageService {
     );
 
     try {
-      const query = this.db
-        .query()
-        .match([
-          node('ethnologueLanguage', 'EthnologueLanguage', {
-            id: id,
-          }),
-        ])
-        .match([
-          [
-            node('ethnologueLanguage'),
-            relation('out', '', 'code', { active: true }),
-            node('code', 'Property'),
-          ],
-          [
-            node('ethnologueLanguage'),
-            relation('out', '', 'provisionalCode', { active: true }),
-            node('provisionalCode', 'Property'),
-          ],
-          [
-            node('ethnologueLanguage'),
-            relation('out', '', 'name', { active: true }),
-            node('name', 'Property'),
-          ],
-          [
-            node('ethnologueLanguage'),
-            relation('out', '', 'population', { active: true }),
-            node('population', 'Property'),
-          ],
-        ])
-        .setValues(valueSet);
-      await query.run();
+      await this.repo.updateProperties(id, valueSet);
     } catch (exception) {
       this.logger.error('update failed', { exception });
       throw new ServerException(
