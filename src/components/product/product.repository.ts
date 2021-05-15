@@ -116,7 +116,7 @@ export class ProductRepository {
       input
     );
   }
-
+  //fix type later
   async updateProperties(
     object: any,
     changes: DbChanges<DirectScriptureProduct>
@@ -187,7 +187,7 @@ export class ProductRepository {
       .return('rel')
       .first();
   }
-
+  //fix type later
   async updateDerivativeProperties(
     object: any,
     changes: DbChanges<DerivativeScriptureProduct>
@@ -198,7 +198,7 @@ export class ProductRepository {
       changes,
     });
   }
-
+  //fix type later
   async deleteNode(node: any) {
     await this.db.deleteNode(node);
   }
@@ -222,5 +222,4 @@ export class ProductRepository {
       ])
       .apply(calculateTotalAndPaginateList(Product, input));
   }
-  
 }
