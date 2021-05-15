@@ -1,5 +1,4 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
 import {
   ID,
   InputException,
@@ -45,7 +44,6 @@ import {
 @Injectable()
 export class CeremonyService {
   constructor(
-    private readonly db: DatabaseService,
     private readonly config: ConfigService,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
@@ -88,12 +86,6 @@ export class CeremonyService {
     ];
 
     try {
-      // const query = this.db
-      //   .query()
-      //   .apply(matchRequestingUser(session))
-      //   .apply(createBaseNode(await generateId(), 'Ceremony', secureProps))
-      //   .return('node.id as id');
-
       const query = await this.ceremonyRepo.create(session, secureProps);
 
       const result = await query.first();
@@ -126,30 +118,9 @@ export class CeremonyService {
     if (!id) {
       throw new InputException('No ceremony id to search for', 'ceremony.id');
     }
-    // const readCeremony = this.ceremonyRepo.readOne(id, session);
-    const readCeremony = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'Ceremony', { id })])
-      .apply(matchPropList)
-      .optionalMatch([
-        node('project', 'Project'),
-        relation('out', '', 'engagement', { active: true }),
-        node('', 'Engagement'),
-        relation('out', '', { active: true }),
-        node('node', 'Ceremony', { id }),
-      ])
-      .with(['node', 'propList', 'project'])
-      .apply(matchMemberRoles(session.userId))
-      .return(['node', 'propList', 'memberRoles'])
-      .asResult<
-        StandardReadResult<DbPropsOfDto<Ceremony>> & {
-          memberRoles: Role[];
-        }
-      >();
 
-    const result = await readCeremony.first();
-    // const result = this.ceremonyRepo.readOne(id, session);
+    const result = await this.ceremonyRepo.readOne(id, session);
+
     if (!result) {
       throw new NotFoundException('Could not find ceremony', 'ceremony.id');
     }
@@ -168,23 +139,18 @@ export class CeremonyService {
       ...securedProps,
       type: parsedProps.type,
       canDelete: await this.ceremonyRepo.checkDeletePermission(id, session),
-      // canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
 
   async update(input: UpdateCeremony, session: Session): Promise<Ceremony> {
     const object = await this.readOne(input.id, session);
-    const changes = this.db.getActualChanges(Ceremony, object, input);
+    const changes = this.ceremonyRepo.getActualChanges(object, input);
     await this.authorizationService.verifyCanEditChanges(
       Ceremony,
       object,
       changes
     );
-    return await this.db.updateProperties({
-      type: Ceremony,
-      object,
-      changes,
-    });
+    return await this.ceremonyRepo.updateProperties(object, changes);
   }
 
   async delete(id: ID, session: Session): Promise<void> {
@@ -194,7 +160,10 @@ export class CeremonyService {
       throw new NotFoundException('Could not find ceremony', 'ceremony.id');
     }
 
-    const canDelete = await this.db.checkDeletePermission(id, session);
+    const canDelete = await this.ceremonyRepo.checkDeletePermission(
+      id,
+      session
+    );
 
     if (!canDelete)
       throw new UnauthorizedException(
@@ -202,7 +171,7 @@ export class CeremonyService {
       );
 
     try {
-      await this.db.deleteNode(object);
+      await this.ceremonyRepo.deleteNode(object);
     } catch (exception) {
       this.logger.warning('Failed to delete Ceremony', {
         exception,
@@ -215,40 +184,18 @@ export class CeremonyService {
     { filter, ...input }: CeremonyListInput,
     session: Session
   ): Promise<CeremonyListOutput> {
-    const label = 'Ceremony';
-    const query = this.db
-      .query()
-      .match([
-        requestingUser(session),
-        ...permissionsOfNode(label),
-        ...(filter.type
-          ? [
-              relation('out', '', 'type', { active: true }),
-              node('name', 'Property', { value: filter.type }),
-            ]
-          : []),
-      ])
-      .apply(calculateTotalAndPaginateList(Ceremony, input));
+    const query = this.ceremonyRepo.list({ filter, ...input }, session);
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 
   async checkCeremonyConsistency(session: Session): Promise<boolean> {
-    const ceremonies = await this.db
-      .query()
-      .match([matchSession(session), [node('ceremony', 'Ceremony')]])
-      .return('ceremony.id as id')
-      .run();
+    const ceremonies = await this.ceremonyRepo.getCeremonies(session);
 
     return (
       await Promise.all(
         ceremonies.map(async (ceremony) => {
-          return await this.db.hasProperties({
-            session,
-            id: ceremony.id,
-            props: ['type'],
-            nodevar: 'ceremony',
-          });
+          return await this.ceremonyRepo.hasProperties(session, ceremony);
         })
       )
     ).every((n) => n);
