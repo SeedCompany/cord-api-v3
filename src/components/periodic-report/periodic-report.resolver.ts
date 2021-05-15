@@ -166,19 +166,23 @@ export class PeriodicReportResolver {
         useEndOverride && !deleteBothOverrides ? endDateOverride : endDate;
 
       if (deleteStartOverride || deleteEndOverride || deleteBothOverrides) {
-        await this.engagements.updateLanguageEngagement(
-          {
-            id: engagementId,
-            // these fields are nullable in fact, but since it's not coming through gql TS is complaining
-            ...(deleteStartOverride || deleteBothOverrides
-              ? { startDateOverride: null as any }
-              : {}),
-            ...(deleteEndOverride || deleteBothOverrides
-              ? { endDateOverride: null as any }
-              : {}),
-          },
-          session
-        );
+        try {
+          await this.engagements.updateLanguageEngagement(
+            {
+              id: engagementId,
+              // these fields are nullable in fact, but since it's not coming through gql TS is complaining
+              ...(deleteStartOverride || deleteBothOverrides
+                ? { startDateOverride: null as any }
+                : {}),
+              ...(deleteEndOverride || deleteBothOverrides
+                ? { endDateOverride: null as any }
+                : {}),
+            },
+            session
+          );
+        } catch (error) {
+          this.logger.log({ error, engagementId });
+        }
       }
 
       // // dependant booleans of start, end check for non-nullishness already
