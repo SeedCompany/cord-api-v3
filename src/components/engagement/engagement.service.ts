@@ -798,13 +798,6 @@ export class EngagementService {
     { filter, ...input }: EngagementListInput,
     session: Session
   ): Promise<EngagementListOutput> {
-    let label = 'Engagement';
-    if (filter.type === 'language') {
-      label = 'LanguageEngagement';
-    } else if (filter.type === 'internship') {
-      label = 'InternshipEngagement';
-    }
-
     const query = this.repo.list(session, { filter, ...input });
 
     const engagements = await runListQuery(query, input, (id) =>
@@ -1039,7 +1032,7 @@ export class EngagementService {
     languageId,
   }: MergeExclusive<{ engagementId: ID }, { languageId: ID }>) {
     const startQuery = this.repo.startQuery(engagementId, languageId);
-    
+
     await this.verifyFirstScriptureWithLanguage(startQuery());
     await this.verifyFirstScriptureWithEngagement(startQuery());
   }

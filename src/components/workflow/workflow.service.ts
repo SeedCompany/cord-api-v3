@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
 import {
   generateId,
   ID,
@@ -8,12 +7,11 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
+import { DatabaseService, ILogger, Logger } from '../../core';
 import {
   AddState,
   ChangeCurrentState,
   CreateWorkflow,
-  FieldObject,
   GroupState,
   PossibleState,
   RequiredField,

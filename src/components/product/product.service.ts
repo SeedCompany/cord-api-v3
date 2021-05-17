@@ -1,6 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
-import type { Node } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { difference } from 'lodash';
 import { DateTime } from 'luxon';
@@ -17,28 +16,17 @@ import {
 import {
   ConfigService,
   createBaseNode,
-  DatabaseService,
   ILogger,
   Logger,
   matchRequestingUser,
   Property,
 } from '../../core';
 import {
-  calculateTotalAndPaginateList,
-  matchMemberRoles,
-  matchPropList,
-  permissionsOfNode,
-  requestingUser,
-} from '../../core/database/query';
-import {
-  BaseNode,
-  DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
   runListQuery,
-  StandardReadResult,
 } from '../../core/database/results';
-import { Role, rolesForScope } from '../authorization';
+import { rolesForScope } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Film, FilmService } from '../film';
 import {

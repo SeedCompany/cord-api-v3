@@ -8,7 +8,6 @@ import {
   UnauthorizedException,
 } from '../../common';
 import { ILogger, Logger, OnIndex } from '../../core';
-
 import {
   parseBaseNodeProperties,
   runListQuery,

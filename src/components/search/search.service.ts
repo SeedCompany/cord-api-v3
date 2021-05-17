@@ -1,12 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { node, regexp, relation } from 'cypher-query-builder';
 import { compact } from 'lodash';
 import { ID, NotFoundException, ServerException, Session } from '../../common';
-import {
-  DatabaseService,
-  matchRequestingUser,
-  matchUserPermissions,
-} from '../../core';
+import { DatabaseService } from '../../core';
 import { FieldRegionService } from '../field-region';
 import { FieldZoneService } from '../field-zone';
 import { FilmService } from '../film';

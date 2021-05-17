@@ -1,13 +1,7 @@
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { DateTime } from 'luxon';
 import { generateId, ID, ServerException } from '../../common';
-import {
-  ConfigService,
-  DatabaseService,
-  ILogger,
-  Logger,
-  Transactional,
-} from '../../core';
+import { ConfigService, ILogger, Logger, Transactional } from '../../core';
 import { AuthenticationService } from '../authentication';
 import { CryptoService } from '../authentication/crypto.service';
 import { AuthorizationService } from '../authorization/authorization.service';
@@ -264,7 +258,6 @@ export class AdminService implements OnApplicationBootstrap {
           defaultOrgId,
           defaultOrgName
         );
-   
 
         if (!createOrgResult) {
           throw new ServerException('failed to create default org');

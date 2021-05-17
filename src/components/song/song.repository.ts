@@ -1,47 +1,27 @@
 import { Injectable } from '@nestjs/common';
-import { Node, node, regexp, Relation, relation } from 'cypher-query-builder';
-import { Dictionary } from 'lodash';
-import { DateTime } from 'luxon';
-
-import {
-  CalendarDate,
-  generateId,
-  ID,
-  Sensitivity,
-  Session,
-  UnsecuredDto,
-} from '../../common';
+import { node } from 'cypher-query-builder';
+import { generateId, ID, Session } from '../../common';
 import {
   createBaseNode,
   DatabaseService,
   matchRequestingUser,
-  matchSession,
-  matchUserPermissions,
   Property,
-  property,
 } from '../../core';
 import { DbChanges } from '../../core/database/changes';
 import {
   calculateTotalAndPaginateList,
-  collect,
-  matchMemberRoles,
   matchPropList,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
-import {
-  DbPropsOfDto,
-  BaseNode,
-  PropListDbResult,
-  StandardReadResult,
-} from '../../core/database/results';
+import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
 import { CreateSong, Song, SongListInput, UpdateSong } from './dto';
 
 @Injectable()
 export class SongRepository {
   constructor(private readonly db: DatabaseService) {}
 
-  async checkSong(input: CreateSong, session: Session) {
+  async checkSong(input: CreateSong) {
     return await this.db
       .query()
       .match([node('song', 'SongName', { value: input.name })])
@@ -89,7 +69,7 @@ export class SongRepository {
   }
 
   async deleteNode(node: Song) {
-    return await this.db.deleteNode(node);
+    return void (await this.db.deleteNode(node));
   }
 
   list({ filter, ...input }: SongListInput, session: Session) {

@@ -265,7 +265,7 @@ export class BudgetService {
       userId: session.userId,
     });
 
-    const query = await this.budgetRepo.readOneRecord(id, session);
+    const query = this.budgetRepo.readOneRecord(id, session);
 
     const result = await query.first();
 

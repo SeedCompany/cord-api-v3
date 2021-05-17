@@ -1,21 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Node, node, relation } from 'cypher-query-builder';
-import { Dictionary } from 'lodash';
 import { DateTime } from 'luxon';
-import { generateId, ID, Session, Range } from '../../common';
-import {
-  createBaseNode,
-  DatabaseService,
-  matchRequestingUser,
-} from '../../core';
-import { DbChanges } from '../../core/database/changes';
-import {
-  calculateTotalAndPaginateList,
-  matchPropList,
-  permissionsOfNode,
-  requestingUser,
-} from '../../core/database/query';
-import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
+import { ID, Range } from '../../common';
+import { DatabaseService } from '../../core';
 import { ScriptureRange, ScriptureRangeInput } from './dto';
 
 @Injectable()

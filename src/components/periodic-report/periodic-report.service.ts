@@ -1,6 +1,4 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { stripIndent } from 'common-tags';
-import { node, relation } from 'cypher-query-builder';
 import { DateTime, Interval } from 'luxon';
 import {
   generateId,
@@ -9,36 +7,19 @@ import {
   ServerException,
   Session,
 } from '../../common';
+import { ILogger, Logger, OnIndex } from '../../core';
 import {
-  DatabaseService,
-  ILogger,
-  Logger,
-  matchRequestingUser,
-  OnIndex,
-  property,
-} from '../../core';
-import {
-  calculateTotalAndPaginateList,
-  deleteBaseNode,
-  matchPropList,
-} from '../../core/database/query';
-import {
-  DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
   runListQuery,
-  StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { CreateDefinedFileVersionInput, FileService } from '../file';
 import {
   CreatePeriodicReport,
-  FinancialReport,
   IPeriodicReport,
-  NarrativeReport,
   PeriodicReport,
   PeriodicReportListInput,
-  ProgressReport,
   ReportType,
   SecuredPeriodicReportList,
 } from './dto';

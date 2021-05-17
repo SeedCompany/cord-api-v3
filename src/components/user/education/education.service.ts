@@ -1,33 +1,15 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
-  generateId,
   ID,
   NotFoundException,
   ServerException,
   Session,
 } from '../../../common';
+import { ConfigService, DatabaseService, ILogger, Logger } from '../../../core';
 import {
-  ConfigService,
-  createBaseNode,
-  DatabaseService,
-  ILogger,
-  Logger,
-  matchRequestingUser,
-  matchSession,
-} from '../../../core';
-import {
-  calculateTotalAndPaginateList,
-  matchPropList,
-  permissionsOfNode,
-  requestingUser,
-} from '../../../core/database/query';
-import {
-  DbPropsOfDto,
   parseBaseNodeProperties,
   runListQuery,
-  StandardReadResult,
 } from '../../../core/database/results';
 import { AuthorizationService } from '../../authorization/authorization.service';
 import { DbEducation } from '../model';
@@ -85,7 +67,7 @@ export class EducationService {
       createdAt,
       session
     );
-    3;
+
     if (!result) {
       throw new ServerException('failed to create education');
     }

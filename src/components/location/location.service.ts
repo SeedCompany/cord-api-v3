@@ -61,7 +61,7 @@ export class LocationService {
     }
     const createdAt = DateTime.local();
 
-    const result = await this.repo.create(session, input, createdAt);
+    const result = await this.repo.create(session, input);
 
     if (!result) {
       throw new ServerException('failed to create location');

@@ -1,40 +1,20 @@
 import { Injectable } from '@nestjs/common';
-import { Node, node, regexp, Relation, relation } from 'cypher-query-builder';
-import { Dictionary } from 'lodash';
-import { DateTime } from 'luxon';
-
-import {
-  CalendarDate,
-  generateId,
-  ID,
-  Sensitivity,
-  Session,
-  UnsecuredDto,
-} from '../../common';
+import { node } from 'cypher-query-builder';
+import { generateId, ID, Session } from '../../common';
 import {
   createBaseNode,
   DatabaseService,
   matchRequestingUser,
-  matchSession,
-  matchUserPermissions,
   Property,
-  property,
 } from '../../core';
 import { DbChanges } from '../../core/database/changes';
 import {
   calculateTotalAndPaginateList,
-  collect,
-  matchMemberRoles,
   matchPropList,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
-import {
-  DbPropsOfDto,
-  BaseNode,
-  PropListDbResult,
-  StandardReadResult,
-} from '../../core/database/results';
+import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
 import { Story, StoryListInput, UpdateStory } from './dto';
 
 @Injectable()
@@ -89,14 +69,13 @@ export class StoryRepository {
   }
 
   async deleteNode(node: Story) {
-    return await this.db.deleteNode(node);
+    return void (await this.db.deleteNode(node));
   }
 
-   list({ filter, ...input }: StoryListInput, session: Session) {
+  list({ filter, ...input }: StoryListInput, session: Session) {
     return this.db
-    .query()
-    .match([requestingUser(session), ...permissionsOfNode('Story')])
-    .apply(calculateTotalAndPaginateList(Story, input));
-
-   }
+      .query()
+      .match([requestingUser(session), ...permissionsOfNode('Story')])
+      .apply(calculateTotalAndPaginateList(Story, input));
+  }
 }

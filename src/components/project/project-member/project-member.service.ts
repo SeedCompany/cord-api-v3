@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { Node, node, Query, relation } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { difference } from 'lodash';
 import { DateTime } from 'luxon';
@@ -20,23 +20,12 @@ import {
   IEventBus,
   ILogger,
   Logger,
-  matchRequestingUser,
   OnIndex,
-  property,
 } from '../../../core';
 import {
-  calculateTotalAndPaginateList,
-  matchMemberRoles,
-  matchPropList,
-  permissionsOfNode,
-  requestingUser,
-} from '../../../core/database/query';
-import {
-  DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
   runListQuery,
-  StandardReadResult,
 } from '../../../core/database/results';
 import { AuthorizationService } from '../../authorization/authorization.service';
 import { User, UserService } from '../../user';
@@ -78,8 +67,6 @@ export class ProjectMemberService {
     projectId: ID,
     userId: ID
   ): Promise<void> {
-   
-
     const result = await this.repo.verifyRelationshipEligibility(
       projectId,
       userId

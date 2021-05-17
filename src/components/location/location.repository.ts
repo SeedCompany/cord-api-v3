@@ -35,7 +35,7 @@ export class LocationRepository {
       .first();
   }
 
-  async create(session: Session, input: CreateLocation, createdAt: DateTime) {
+  async create(session: Session, input: CreateLocation) {
     const secureProps = [
       {
         key: 'name',

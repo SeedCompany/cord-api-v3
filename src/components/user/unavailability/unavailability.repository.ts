@@ -1,37 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { Node, node, Relation, relation } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
 import { Dictionary } from 'lodash';
-import { DateTime } from 'luxon';
-
-import {
-  CalendarDate,
-  generateId,
-  ID,
-  Sensitivity,
-  Session,
-  UnsecuredDto,
-} from '../../../common';
+import { generateId, ID, Session } from '../../../common';
 import {
   createBaseNode,
   DatabaseService,
   matchRequestingUser,
   matchSession,
   Property,
-  property,
 } from '../../../core';
 import { DbChanges } from '../../../core/database/changes';
-import {
-  calculateTotalAndPaginateList,
-  collect,
-  matchMemberRoles,
-  matchPropList,
-  permissionsOfNode,
-  requestingUser,
-} from '../../../core/database/query';
+import { matchPropList } from '../../../core/database/query';
 import {
   DbPropsOfDto,
-  BaseNode,
-  PropListDbResult,
   StandardReadResult,
 } from '../../../core/database/results';
 import {
@@ -84,7 +65,7 @@ export class UnavailabilityRepository {
   }
 
   async checkDeletePermission(id: ID, session: Session) {
-    return this.db.checkDeletePermission(id, session);
+    return await this.db.checkDeletePermission(id, session);
   }
 
   async getUnavailability(session: Session, input: UpdateUnavailability) {

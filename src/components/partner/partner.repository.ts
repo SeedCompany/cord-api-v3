@@ -181,7 +181,7 @@ export class PartnerRepository {
       .run();
   }
 
-  async readOnePartnerByOrgId(id: ID, session: Session) {
+  async readOnePartnerByOrgId(id: ID) {
     const query = this.db
       .query()
       .match([node('node', 'Organization', { id: id })])

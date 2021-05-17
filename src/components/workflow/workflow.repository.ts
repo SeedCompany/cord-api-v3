@@ -1,40 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { Node, node, regexp, Relation, relation } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
 import { Dictionary } from 'lodash';
-import { DateTime } from 'luxon';
-
-import {
-  CalendarDate,
-  generateId,
-  ID,
-  Sensitivity,
-  Session,
-  UnsecuredDto,
-} from '../../common';
-import {
-  createBaseNode,
-  DatabaseService,
-  matchRequestingUser,
-  matchSession,
-  matchUserPermissions,
-  Property,
-  property,
-} from '../../core';
-import { DbChanges } from '../../core/database/changes';
-import {
-  calculateTotalAndPaginateList,
-  collect,
-  matchMemberRoles,
-  matchPropList,
-  permissionsOfNode,
-  requestingUser,
-} from '../../core/database/query';
-import {
-  DbPropsOfDto,
-  BaseNode,
-  PropListDbResult,
-  StandardReadResult,
-} from '../../core/database/results';
+import { generateId, ID, Session } from '../../common';
+import { DatabaseService, matchSession } from '../../core';
 import {
   AddState,
   ChangeCurrentState,

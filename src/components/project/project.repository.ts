@@ -1,21 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { Node, node, Relation, relation } from 'cypher-query-builder';
-import { Dictionary } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   CalendarDate,
-  generateId,
   ID,
   Sensitivity,
   Session,
   UnsecuredDto,
 } from '../../common';
-import {
-  createBaseNode,
-  DatabaseService,
-  matchRequestingUser,
-  matchSession,
-} from '../../core';
+import { DatabaseService, matchRequestingUser, matchSession } from '../../core';
 import { DbChanges } from '../../core/database/changes';
 import {
   calculateTotalAndPaginateList,
@@ -25,10 +18,9 @@ import {
   requestingUser,
 } from '../../core/database/query';
 import {
-  DbPropsOfDto,
   BaseNode,
+  DbPropsOfDto,
   PropListDbResult,
-  StandardReadResult,
 } from '../../core/database/results';
 import { Role } from '../authorization';
 import {

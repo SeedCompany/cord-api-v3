@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Node, node, Relation, relation } from 'cypher-query-builder';
-import { Dictionary } from 'lodash';
+import { Node, node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   CreateProjectMember,
@@ -8,25 +7,11 @@ import {
   ProjectMemberListInput,
   UpdateProjectMember,
 } from '.';
-import {
-  CalendarDate,
-  generateId,
-  ID,
-  Sensitivity,
-  Session,
-  UnsecuredDto,
-} from '../../../common';
-import {
-  createBaseNode,
-  DatabaseService,
-  matchRequestingUser,
-  matchSession,
-  property,
-} from '../../../core';
+import { ID, Session } from '../../../common';
+import { DatabaseService, matchRequestingUser, property } from '../../../core';
 import { DbChanges } from '../../../core/database/changes';
 import {
   calculateTotalAndPaginateList,
-  collect,
   matchMemberRoles,
   matchPropList,
   permissionsOfNode,
@@ -34,8 +19,6 @@ import {
 } from '../../../core/database/query';
 import {
   DbPropsOfDto,
-  BaseNode,
-  PropListDbResult,
   StandardReadResult,
 } from '../../../core/database/results';
 import { Role } from './dto';
@@ -155,7 +138,7 @@ export class ProjectMemberRepository {
     await this.db.deleteNode(node);
   }
 
-   list({ filter, ...input }: ProjectMemberListInput, session: Session) {
+  list({ filter, ...input }: ProjectMemberListInput, session: Session) {
     const label = 'ProjectMember';
 
     return this.db

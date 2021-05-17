@@ -1,27 +1,12 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
 import {
-  generateId,
   ID,
   NotFoundException,
   ServerException,
   Session,
 } from '../../../common';
-import {
-  ConfigService,
-  createBaseNode,
-  DatabaseService,
-  ILogger,
-  Logger,
-  matchRequestingUser,
-  matchSession,
-} from '../../../core';
-import { matchPropList } from '../../../core/database/query';
-import {
-  DbPropsOfDto,
-  parseBaseNodeProperties,
-  StandardReadResult,
-} from '../../../core/database/results';
+import { ConfigService, ILogger, Logger } from '../../../core';
+import { parseBaseNodeProperties } from '../../../core/database/results';
 import { AuthorizationService } from '../../authorization/authorization.service';
 import { DbUnavailability } from '../model';
 import {

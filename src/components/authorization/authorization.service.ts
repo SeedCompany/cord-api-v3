@@ -1,6 +1,6 @@
 /* eslint-disable no-case-declarations */
 import { Injectable } from '@nestjs/common';
-import { Connection, node } from 'cypher-query-builder';
+import { Connection } from 'cypher-query-builder';
 import {
   compact,
   keyBy,
@@ -25,7 +25,7 @@ import {
   UnauthorizedException,
 } from '../../common';
 import { retry } from '../../common/retry';
-import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
+import { ConfigService, ILogger, Logger } from '../../core';
 import { ChangesOf, isRelation } from '../../core/database/changes';
 import {
   DbPropsOfDto,

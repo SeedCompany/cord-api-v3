@@ -1,7 +1,5 @@
-import { Node, node, relation } from 'cypher-query-builder';
 import { sortBy } from 'lodash';
-import { DateTime } from 'luxon';
-import { ID, Range, Session } from '../../common';
+import { ID, Session } from '../../common';
 import { DatabaseService, ILogger, Logger } from '../../core';
 import { ScriptureRange, ScriptureRangeInput } from './dto';
 import { ScriptureReferenceRepository } from './scripture-reference.repository';

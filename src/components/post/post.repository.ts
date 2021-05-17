@@ -1,23 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { Dictionary } from 'lodash';
 import { DateTime } from 'luxon';
-import { generateId, ID, Session } from '../../common';
+import { ID, Session } from '../../common';
 import {
   createBaseNode,
   DatabaseService,
   matchRequestingUser,
   Property,
 } from '../../core';
-import { DbChanges } from '../../core/database/changes';
 import {
   calculateTotalAndPaginateList,
   matchPropList,
-  permissionsOfNode,
-  requestingUser,
 } from '../../core/database/query';
 import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
-import { CreatePost, Post, UpdatePost } from './dto';
+import { Post, UpdatePost } from './dto';
 import { PostListInput } from './dto/list-posts.dto';
 
 @Injectable()
@@ -98,7 +94,7 @@ export class PostRepository {
     await this.db.deleteNode(node);
   }
 
-  securedList({ filter, ...input }: PostListInput, session: Session) {
+  securedList({ filter, ...input }: PostListInput) {
     const label = 'Post';
     // FIXME: we haven't implemented permissioning here yet
 

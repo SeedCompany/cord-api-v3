@@ -1,34 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
 import {
   DuplicateException,
-  generateId,
   ID,
   NotFoundException,
   ServerException,
   Session,
   UnauthorizedException,
 } from '../../common';
+import { ConfigService, ILogger, Logger, OnIndex } from '../../core';
 import {
-  ConfigService,
-  createBaseNode,
-  DatabaseService,
-  ILogger,
-  Logger,
-  matchRequestingUser,
-  OnIndex,
-} from '../../core';
-import {
-  calculateTotalAndPaginateList,
-  matchPropList,
-  permissionsOfNode,
-  requestingUser,
-} from '../../core/database/query';
-import {
-  DbPropsOfDto,
   parseBaseNodeProperties,
   runListQuery,
-  StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
@@ -69,7 +51,7 @@ export class SongService {
   }
 
   async create(input: CreateSong, session: Session): Promise<Song> {
-    const checkSong = await this.repo.checkSong(input, session);
+    const checkSong = await this.repo.checkSong(input);
 
     if (checkSong) {
       throw new DuplicateException(
@@ -191,7 +173,6 @@ export class SongService {
     { filter, ...input }: SongListInput,
     session: Session
   ): Promise<SongListOutput> {
-
     const query = this.repo.list({ filter, ...input }, session);
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

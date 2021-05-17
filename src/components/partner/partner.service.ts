@@ -91,7 +91,7 @@ export class PartnerService {
       userId: session.userId,
     });
 
-    const result = await this.repo.readOnePartnerByOrgId(id, session);
+    const result = await this.repo.readOnePartnerByOrgId(id);
     if (!result)
       throw new NotFoundException('No Partner Exists for this Org Id');
 
@@ -205,7 +205,6 @@ export class PartnerService {
     { filter, ...input }: PartnerListInput,
     session: Session
   ): Promise<PartnerListOutput> {
-    const label = 'Partner';
     const query = this.repo.list({ filter, ...input }, session);
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));

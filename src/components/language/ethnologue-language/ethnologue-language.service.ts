@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
 import { pickBy } from 'lodash';
 import {
   ID,
@@ -12,15 +11,9 @@ import {
   DatabaseService,
   ILogger,
   Logger,
-  matchRequestingUser,
   Property,
 } from '../../../core';
-import { matchPropList } from '../../../core/database/query';
-import {
-  DbPropsOfDto,
-  parsePropList,
-  StandardReadResult,
-} from '../../../core/database/results';
+import { parsePropList } from '../../../core/database/results';
 import { AuthorizationService } from '../../authorization/authorization.service';
 import { Powers } from '../../authorization/dto/powers';
 import {
@@ -30,8 +23,6 @@ import {
 } from '../dto';
 import { DbEthnologueLanguage } from '../model';
 import { EthnologueLanguageRepository } from './ethnologue-language.repository';
-
-type EthLangDbProps = DbPropsOfDto<EthnologueLanguage> & { id: ID };
 
 @Injectable()
 export class EthnologueLanguageService {

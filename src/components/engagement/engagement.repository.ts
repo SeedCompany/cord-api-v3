@@ -3,7 +3,6 @@ import { inArray, node, Node, Query, relation } from 'cypher-query-builder';
 import { Dictionary } from 'lodash';
 import { DateTime } from 'luxon';
 import { CalendarDate, ID, Session } from '../../common';
-
 import { DatabaseService, matchRequestingUser, matchSession } from '../../core';
 import { DbChanges } from '../../core/database/changes';
 import {

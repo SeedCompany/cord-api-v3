@@ -1,9 +1,8 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { Node, node, relation, Relation } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
 import { Many } from 'lodash';
 import { DateTime } from 'luxon';
 import {
-  CalendarDate,
   DuplicateException,
   generateId,
   getHighestSensitivity,
@@ -21,33 +20,20 @@ import {
 import {
   ConfigService,
   createBaseNode,
-  DatabaseService,
   IEventBus,
   ILogger,
   Logger,
-  matchRequestingUser,
-  matchSession,
   OnIndex,
   Property,
   UniquenessError,
 } from '../../core';
 import {
-  calculateTotalAndPaginateList,
-  collect,
-  matchPropList,
-  permissionsOfNode,
-  requestingUser,
-} from '../../core/database/query';
-import {
-  BaseNode,
-  DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
-  PropListDbResult,
   runListQuery,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { Role, rolesForScope, ScopedRole } from '../authorization/dto';
+import { rolesForScope, ScopedRole } from '../authorization/dto';
 import { Powers } from '../authorization/dto/powers';
 import { BudgetService, BudgetStatus, SecuredBudget } from '../budget';
 import {
@@ -95,7 +81,6 @@ import {
 } from './project-member';
 import { ProjectRepository } from './project.repository';
 import { ProjectRules } from './project.rules';
-import { projectListFilter } from './query.helpers';
 
 @Injectable()
 export class ProjectService {

@@ -1,21 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { Dictionary } from 'lodash';
 import { DateTime } from 'luxon';
-import { generateId, ID, Session } from '../../common';
-import {
-  createBaseNode,
-  DatabaseService,
-  matchRequestingUser,
-} from '../../core';
-import { DbChanges } from '../../core/database/changes';
-import {
-  calculateTotalAndPaginateList,
-  matchPropList,
-  permissionsOfNode,
-  requestingUser,
-} from '../../core/database/query';
-import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
+import { ID } from '../../common';
+import { DatabaseService } from '../../core';
 
 @Injectable()
 export class AdminRepository {
@@ -226,7 +213,7 @@ export class AdminRepository {
       .query()
       .match(
         node('publicSg', 'PublicSecurityGroup', {
-          id:publicSecurityGroupId,
+          id: publicSecurityGroupId,
         })
       )
       .match(node('rootuser', 'RootUser'))

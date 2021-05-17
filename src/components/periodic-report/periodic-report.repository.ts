@@ -3,20 +3,12 @@ import { stripIndent } from 'common-tags';
 import { node, relation } from 'cypher-query-builder';
 import { Dictionary } from 'lodash';
 import { DateTime, Interval } from 'luxon';
-import { generateId, ID, Session } from '../../common';
-import {
-  createBaseNode,
-  DatabaseService,
-  matchRequestingUser,
-  property,
-} from '../../core';
-import { DbChanges } from '../../core/database/changes';
+import { ID, Session } from '../../common';
+import { DatabaseService, matchRequestingUser, property } from '../../core';
 import {
   calculateTotalAndPaginateList,
   deleteBaseNode,
   matchPropList,
-  permissionsOfNode,
-  requestingUser,
 } from '../../core/database/query';
 import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
 import {
@@ -101,7 +93,7 @@ export class PeriodicReportRepository {
   }
 
   async checkDeletePermission(id: ID, session: Session) {
-    return this.db.checkDeletePermission(id, session);
+    return await this.db.checkDeletePermission(id, session);
   }
 
   listProjectReports(

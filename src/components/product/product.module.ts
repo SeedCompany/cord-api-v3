@@ -5,9 +5,9 @@ import { LiteracyMaterialModule } from '../literacy-material/literacy-material.m
 import { ScriptureModule } from '../scripture/scripture.module';
 import { SongModule } from '../song/song.module';
 import { StoryModule } from '../story/story.module';
+import { ProductRepository } from './product.repository';
 import { ProductResolver } from './product.resolver';
 import { ProductService } from './product.service';
-import { ProductRepository } from './product.repository';
 
 @Module({
   imports: [

@@ -1,6 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from 'aws-sdk';
-import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   generateId,
@@ -10,23 +9,11 @@ import {
   ServerException,
   Session,
 } from '../../common';
+import { ILogger, Logger } from '../../core';
 import {
-  createBaseNode,
-  DatabaseService,
-  ILogger,
-  Logger,
-  matchRequestingUser,
-} from '../../core';
-import {
-  calculateTotalAndPaginateList,
-  matchPropList,
-} from '../../core/database/query';
-import {
-  DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
   runListQuery,
-  StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { UserService } from '../user';
@@ -114,7 +101,7 @@ export class PostService {
         exception,
       });
 
-      if (!this.repo.checkParentIdValidity(parentId)) {
+      if (!(await this.repo.checkParentIdValidity(parentId))) {
         throw new InputException('parentId is invalid', 'post.parentId');
       }
 
@@ -190,7 +177,7 @@ export class PostService {
     //   .query()
     //   .match([requestingUser(session), ...permissionsOfNode(label)])
     //   .call(calculateTotalAndPaginateList(Post, input));
-    const query = this.repo.securedList({ filter, ...input }, session);
+    const query = this.repo.securedList({ filter, ...input });
 
     return {
       ...(await runListQuery(query, input, (id) => this.readOne(id, session))),
