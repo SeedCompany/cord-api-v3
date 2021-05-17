@@ -1,4 +1,8 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { node, Query, relation } from 'cypher-query-builder';
+import { entries } from 'lodash';
+import { DateTime } from 'luxon';
+import { MergeExclusive } from 'type-fest';
 import {
   DuplicateException,
   ID,
@@ -75,7 +79,8 @@ export class EngagementService {
 
   async createLanguageEngagement(
     input: CreateLanguageEngagement,
-    session: Session
+    session: Session,
+    changeset?: ID
   ): Promise<LanguageEngagement> {
     const { languageId, projectId } = input;
     await this.verifyRelationshipEligibility(
@@ -96,7 +101,7 @@ export class EngagementService {
       userId: session.userId,
     });
 
-    const { id, pnpId } = await this.repo.createLanguageEngagement(input);
+    const { id, pnpId } = await this.repo.createLanguageEngagement(input, changeset);
 
     await this.files.createDefinedFile(
       pnpId,
@@ -126,7 +131,8 @@ export class EngagementService {
 
   async createInternshipEngagement(
     input: CreateInternshipEngagement,
-    session: Session
+    session: Session,
+    changeset?: ID
   ): Promise<InternshipEngagement> {
     const { projectId, internId, mentorId, countryOfOriginId } = input;
     await this.verifyRelationshipEligibility(
@@ -148,7 +154,7 @@ export class EngagementService {
     let growthPlanId;
     try {
       ({ id, growthPlanId } = await this.repo.createInternshipEngagement(
-        input
+        input, changeset
       ));
     } catch (e) {
       if (!(e instanceof NotFoundException)) {
@@ -219,7 +225,8 @@ export class EngagementService {
   @HandleIdLookup([LanguageEngagement, InternshipEngagement])
   async readOne(
     id: ID,
-    session: Session
+    session: Session,
+    changeId?: ID
   ): Promise<LanguageEngagement | InternshipEngagement> {
     this.logger.debug('readOne', { id, userId: session.userId });
 
@@ -228,7 +235,7 @@ export class EngagementService {
     }
     const result = await this.repo.readOne(id, session);
 
-    const props = {
+    let props = {
       __typename: result.__typename,
       ...result.props,
       language: result.language,
@@ -237,6 +244,18 @@ export class EngagementService {
       countryOfOrigin: result.countryOfOrigin,
       mentor: result.mentor,
     };
+
+    if (changeId) {
+      const planChangesProps = await this.getPlanChangesProps(id, changeId);
+      entries(planChangesProps).forEach(([key, prop]) => {
+        if (prop !== undefined) {
+          props = {
+            ...props,
+            [key]: prop,
+          };
+        }
+      });
+    }
 
     const isLanguageEngagement = props.__typename === 'LanguageEngagement';
 
@@ -315,7 +334,8 @@ export class EngagementService {
 
   async updateLanguageEngagement(
     input: UpdateLanguageEngagement,
-    session: Session
+    session: Session,
+    changeId?: ID
   ): Promise<LanguageEngagement> {
     if (input.firstScripture) {
       await this.verifyFirstScripture({ engagementId: input.id });
@@ -325,13 +345,15 @@ export class EngagementService {
       await this.engagementRules.verifyStatusChange(
         input.id,
         session,
-        input.status
+        input.status,
+        changeId
       );
     }
 
     const object = (await this.readOne(
       input.id,
-      session
+      session,
+      changeId
     )) as LanguageEngagement;
 
     const changes = this.repo.getActualLanguageChanges(object, input);
@@ -351,7 +373,12 @@ export class EngagementService {
     );
 
     try {
-      await this.repo.updateLanguageProperties(object, simpleChanges);
+      await this.db.updateProperties({
+        type: LanguageEngagement,
+        object: object,
+        changes: simpleChanges,
+        changeId,
+      });
     } catch (exception) {
       this.logger.error('Error updating language engagement', { exception });
       throw new ServerException(
@@ -362,8 +389,14 @@ export class EngagementService {
 
     const updated = (await this.readOne(
       input.id,
-      session
+      session,
+      changeId
     )) as LanguageEngagement;
+
+    if (changeId) {
+      return updated;
+    }
+
     const engagementUpdatedEvent = new EngagementUpdatedEvent(
       updated,
       object,
@@ -377,19 +410,22 @@ export class EngagementService {
 
   async updateInternshipEngagement(
     input: UpdateInternshipEngagement,
-    session: Session
+    session: Session,
+    changeId?: ID
   ): Promise<InternshipEngagement> {
     if (input.status) {
       await this.engagementRules.verifyStatusChange(
         input.id,
         session,
-        input.status
+        input.status,
+        changeId
       );
     }
 
     const object = (await this.readOne(
       input.id,
-      session
+      session,
+      changeId
     )) as InternshipEngagement;
 
     const changes = this.repo.getActualInternshipChanges(object, input);
@@ -434,6 +470,11 @@ export class EngagementService {
       input.id,
       session
     )) as InternshipEngagement;
+
+    if (changeId) {
+      return updated;
+    }
+
     const engagementUpdatedEvent = new EngagementUpdatedEvent(
       updated,
       object,
@@ -629,5 +670,33 @@ export class EngagementService {
         'project.status'
       );
     }
+  }
+
+  async getPlanChangesProps(
+    id: ID,
+    changeId: ID
+  ): Promise<Record<string, any>> {
+    const planChangeQuery = this.db
+      .query()
+      .match([node('node', 'Engagement', { id })])
+      .call(matchPropList, changeId)
+      .with(['node', 'propList'])
+      .return(['propList', 'node'])
+      .asResult<
+        StandardReadResult<
+          Omit<
+            DbPropsOfDto<LanguageEngagement & InternshipEngagement>,
+            '__typename'
+          >
+        > & {
+          __typename: 'LanguageEngagement' | 'InternshipEngagement';
+        }
+      >();
+
+    const planChangeResult = await planChangeQuery.first();
+    if (planChangeResult) {
+      return parsePropList(planChangeResult.propList);
+    }
+    return {};
   }
 }

@@ -91,7 +91,7 @@ export abstract class CreateLanguageEngagementInput {
     description: 'The change object to associate these engagement changes with',
     nullable: true,
   })
-  readonly changeId?: string;
+  readonly changeId?: ID;
 
   @Field()
   @Type(() => CreateLanguageEngagement)
@@ -111,7 +111,7 @@ export abstract class CreateInternshipEngagementInput {
     description: 'The change object to associate these engagement changes with',
     nullable: true,
   })
-  readonly changeId?: string;
+  readonly changeId?: ID;
 
   @Field()
   @Type(() => CreateInternshipEngagement)

@@ -156,7 +156,10 @@ export class EngagementRepository extends CommonRepository {
 
   // CREATE ///////////////////////////////////////////////////////////
 
-  async createLanguageEngagement(input: CreateLanguageEngagement) {
+  async createLanguageEngagement(
+    input: CreateLanguageEngagement,
+    changeset?: ID
+  ) {
     const pnpId = (await generateId()) as FileId;
 
     const { projectId, languageId, ...initialProps } = {
@@ -191,7 +194,10 @@ export class EngagementRepository extends CommonRepository {
     return { id: result.id, pnpId };
   }
 
-  async createInternshipEngagement(input: CreateInternshipEngagement) {
+  async createInternshipEngagement(
+    input: CreateInternshipEngagement,
+    changeset?: ID
+  ) {
     const growthPlanId = (await generateId()) as FileId;
 
     const {
