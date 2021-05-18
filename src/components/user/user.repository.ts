@@ -169,10 +169,7 @@ export class UserRepository {
     }
     return result;
   }
-  async readOne(
-    id: ID,
-    sessionOrUserId: Session | ID
-  ): Promise<any> {
+  async readOne(id: ID, sessionOrUserId: Session | ID): Promise<any> {
     const query = this.db
       .query()
       .match([node('node', 'User', { id })])
