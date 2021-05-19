@@ -1,6 +1,8 @@
 import { forwardRef, Module } from '@nestjs/common';
+import { DatabaseModule } from '../../core/database/database.module';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { EngagementModule } from '../engagement/engagement.module';
+import { PnpExtractor } from '../engagement/pnp-extractor.service';
 import { FileModule } from '../file/file.module';
 import { ProjectModule } from '../project/project.module';
 import { UserModule } from '../user/user.module';
@@ -18,6 +20,7 @@ import { PeriodicReportService } from './periodic-report.service';
     forwardRef(() => AuthorizationModule),
     forwardRef(() => EngagementModule),
     forwardRef(() => ProjectModule),
+    DatabaseModule, // Remove after periodic report migration
   ],
   providers: [
     PeriodicReportService,
@@ -25,6 +28,7 @@ import { PeriodicReportService } from './periodic-report.service';
     PeriodicReportProjectConnectionResolver,
     PeriodicReportEngagementConnectionResolver,
     PeriodicReportRepository,
+    PnpExtractor, // Remove after periodic report migration
     ...Object.values(handlers),
   ],
   exports: [PeriodicReportService, PeriodicReportRepository],
