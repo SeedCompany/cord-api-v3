@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { DateTime } from 'luxon';
 import { read, utils, WorkBook } from 'xlsx';
 import { Session } from '../../common';
-import { ILogger, Logger } from '../../core';
+import { ConfigService, ILogger, Logger } from '../../core';
 import {
   CreateDefinedFileVersionInput,
   FileService,
@@ -14,8 +14,32 @@ import { PnpData } from './dto';
 export class PnpExtractor {
   constructor(
     private readonly files: FileService,
-    @Logger('pnp:extractor') private readonly logger: ILogger
+    @Logger('pnp:extractor') private readonly logger: ILogger,
+    private readonly config: ConfigService
   ) {}
+
+  async extractFyAndQuarter(
+    input: CreateDefinedFileVersionInput,
+    session: Session
+  ): Promise<{ extractedYear: number; extractedQuarter: number }> {
+    const file = await this.files.getFileVersion(input.uploadId, session);
+    const pnp = await this.downloadWorkbook(file);
+    const sheet = pnp.Sheets.Progress;
+
+    const rows = utils.sheet_to_json<any>(sheet, {
+      header: 'A',
+      raw: false,
+    });
+    for (const row of rows) {
+      if (row?.AE === 'Verse Equivalents in Project     =======>') {
+        return {
+          extractedYear: Number(row.AB),
+          extractedQuarter: Number(row.AA.replace('Q', '')),
+        };
+      }
+    }
+    return { extractedYear: 0, extractedQuarter: 0 };
+  }
 
   async extract(
     input: CreateDefinedFileVersionInput,
@@ -99,7 +123,7 @@ export class PnpExtractor {
     };
   }
 
-  private parseYearAndQuarter(fileName: string) {
+  parseYearAndQuarter(fileName: string) {
     // I don't want to mess with this since there are some files names with a range
     // i.e. fy18-20. I think this naming has become outmoded anyway.
     const fyReg = /fy19|fy20|fy21/i;

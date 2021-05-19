@@ -1,6 +1,8 @@
 import { forwardRef, Module } from '@nestjs/common';
+import { DatabaseModule } from '../../core/database/database.module';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { EngagementModule } from '../engagement/engagement.module';
+import { PnpExtractor } from '../engagement/pnp-extractor.service';
 import { FileModule } from '../file/file.module';
 import { ProjectModule } from '../project/project.module';
 import { UserModule } from '../user/user.module';
@@ -15,10 +17,12 @@ import { PeriodicReportService } from './periodic-report.service';
     forwardRef(() => AuthorizationModule),
     forwardRef(() => EngagementModule),
     forwardRef(() => ProjectModule),
+    DatabaseModule,
   ],
   providers: [
     PeriodicReportService,
     PeriodicReportResolver,
+    PnpExtractor,
     ...Object.values(handlers),
   ],
   exports: [PeriodicReportService],

@@ -6,6 +6,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
+import { node, relation } from 'cypher-query-builder';
 import {
   AnonSession,
   CalendarDate,
@@ -14,7 +15,9 @@ import {
   LoggedInSession,
   Session,
 } from '../../common';
+import { DatabaseService } from '../../core';
 import { EngagementService } from '../engagement';
+import { PnpExtractor } from '../engagement/pnp-extractor.service';
 import { FileService, SecuredFile } from '../file';
 import { ProjectService } from '../project';
 import { IPeriodicReport, ReportType, UploadPeriodicReportInput } from './dto';
@@ -28,7 +31,9 @@ export class PeriodicReportResolver {
     private readonly service: PeriodicReportService,
     private readonly projects: ProjectService,
     private readonly engagements: EngagementService,
-    private readonly files: FileService
+    private readonly files: FileService,
+    private readonly db: DatabaseService,
+    private readonly pnp: PnpExtractor
   ) {}
 
   private readonly logger = new Logger();
@@ -185,7 +190,7 @@ export class PeriodicReportResolver {
         }
       }
 
-      // // dependant booleans of start, end check for non-nullishness already
+      // dependant booleans of start, end check for non-nullishness already
       const intervals = DateInterval.tryFrom(start!, end!)
         .expandToFull('quarters')
         .difference()
@@ -211,6 +216,171 @@ export class PeriodicReportResolver {
     const engagements = await this.engagements.listEngagementsWithDateRange();
     await asyncPool(20, engagements, syncEngagement);
 
+    return true;
+  }
+
+  @Mutation(() => Boolean, {
+    description: 'Move P&P files from old schema to new periodic report schema',
+  })
+  async migratePnps(@LoggedInSession() session: Session) {
+    const res = await this.db
+      .query()
+      .match([
+        node('p', 'Project'),
+        relation('out', '', 'engagement', { active: true }),
+        node('e', 'Engagement', { id: '5cdaf7131c6585554b8af8cb' }),
+        relation('out', '', 'pnpNode', { active: true }),
+        node('pn', 'FileNode'),
+        relation('out', '', 'name', { active: true }),
+        node('na', 'Property'),
+      ])
+      .match([
+        node('pn'),
+        relation('in', '', 'parent', { active: true }),
+        node('fv', 'FileVersion'),
+      ])
+      .match([
+        node('p'),
+        relation('out', '', 'mouStart', { active: true }),
+        node('ms', 'Property'),
+      ])
+      .match([
+        node('p'),
+        relation('out', '', 'mouEnd', { active: true }),
+        node('me', 'Property'),
+      ])
+      .match([
+        node('p'),
+        relation('out', '', 'step', { active: true }),
+        node('s', 'Property'),
+      ])
+      .match([
+        node('e'),
+        relation('out', '', 'startDateOverride', { active: true }),
+        node('so', 'Property'),
+      ])
+      .match([
+        node('e'),
+        relation('out', '', 'endDateOverride', { active: true }),
+        node('eo', 'Property'),
+      ])
+      .match([
+        node('e'),
+        relation('out', '', 'report', { active: true }),
+        node('rn', 'ProgressReport'),
+      ])
+      .raw(`where not na.value =~ "PNP"`)
+      .return(
+        'na.value as pnpName, e.id as engagementId, p.id as projectId, ms.value as mouStart, me.value as mouEnd, so.value as startDateOverride, eo.value as endDateOverride, s.value as step, fv.id as fileVersionId'
+      )
+      .orderBy('fv.createdAt', 'DESC')
+      .limit(1)
+      .asResult<{
+        pnpName: string;
+        engagementId: ID;
+        projectId: ID;
+        mouStart: any;
+        mouEnd: any;
+        startDateOverride: any;
+        endDateOverride: any;
+        step: string;
+        fileVersionId: ID;
+      }>()
+      .run();
+
+    const mapped = res.map((i) => {
+      const { year, quarter } = this.pnp.parseYearAndQuarter(i.pnpName);
+      return { ...i, year, quarter };
+    });
+
+    for (const {
+      year: fileNameYear,
+      quarter: fileNameQuarter,
+      engagementId,
+      pnpName,
+      projectId,
+      mouStart,
+      mouEnd,
+      startDateOverride,
+      endDateOverride,
+      step,
+      fileVersionId,
+    } of mapped) {
+      const { extractedYear, extractedQuarter } =
+        !fileNameYear || !fileNameQuarter
+          ? await this.pnp.extractFyAndQuarter(
+              { uploadId: fileVersionId },
+              session
+            )
+          : { extractedYear: 0, extractedQuarter: 0 };
+
+      const year = fileNameYear || extractedYear;
+      const quarter = fileNameQuarter || extractedQuarter;
+      if (!year || !quarter) {
+        this.logger.log({
+          message: 'no year or quarter',
+          engagementId,
+          projectId,
+          step,
+          pnpName,
+          year,
+          quarter,
+        });
+        continue;
+      }
+
+      const startDate = `${quarter === 1 ? year - 1 : year}-${
+        quarter === 1
+          ? '10'
+          : quarter === 2
+          ? '01'
+          : quarter === 3
+          ? '04'
+          : '07'
+      }-01`;
+
+      const {
+        neo4jStart,
+      } = (await this.db
+        .query()
+        .raw(
+          `match(:Engagement {id: $id})-[:report]->(:ProgressReport)-[:start]->(st:Property {value: date($startDate)})`,
+          { id: engagementId, startDate }
+        )
+        .return('st.value as neo4jStart')
+        .first()) ?? { neo4jStart: null };
+      if (!neo4jStart) {
+        this.logger.log({
+          message: 'no matching report period',
+          engagementId,
+          projectId,
+          mouStart,
+          mouEnd,
+          startDateOverride,
+          endDateOverride,
+          step,
+          pnpName,
+          year,
+          quarter,
+          startDate,
+        });
+      }
+    }
+
+    // if we have a P&P that matches a reporting period, move it. otherwise just keep it where it is.
+
+    // sometimes P&Ps are brought over from other projects–– like project3 ––> project4. in these cases, we should put them on the planning card (the defined place where P&Ps were uploaded previously)
+    // other times they are submitted late for the last reporting period when a project is completed (per Sue). in these cases we need to add them for that last period
+
+    // const mapped = pnpNames.map((n: string) => {
+    //   return this.pnp.parseYearAndQuarter(n);
+    // });
+
+    // this.logger.log(res);
+    // just need to grab the main file node and replace that, then you don't worry about individual versions
+    // 1. grab pnp file version nodes, detach from pnp file node and attach them to correct periodic report file node
+    // -- use pnp extract code to grab FY/Q from file name to determine correct periodic report file node
+    // 2. grab most recent pnp data and attach it to
     return true;
   }
 
