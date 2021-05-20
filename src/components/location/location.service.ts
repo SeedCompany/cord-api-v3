@@ -202,7 +202,7 @@ export class LocationService {
         node('defaultFieldRegion', 'FieldRegion'),
       ])
       .return(
-        'apoc.map.merge(props, { fundingAccountId: fundingAccount.id, defaultFieldRegionId: defaultFieldRegion.id }) as props'
+        'apoc.map.merge(props, { fundingAccount: fundingAccount.id, defaultFieldRegion: defaultFieldRegion.id }) as props'
       )
       .asResult<{ props: DbPropsOfDto<Location, true> }>();
 
@@ -211,7 +211,6 @@ export class LocationService {
     if (!result) {
       throw new NotFoundException('Could not find location', 'location.id');
     }
-
     let secured;
     if (parentProp && parentResource) {
       secured = await this.authorizationService.getPermissionsByProp({
