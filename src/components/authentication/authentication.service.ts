@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { EmailService } from '@seedcompany/nestjs-email';
-import { node, not, relation } from 'cypher-query-builder';
 import { sign, verify } from 'jsonwebtoken';
 import { DateTime } from 'luxon';
 import {
@@ -12,17 +11,12 @@ import {
   UnauthenticatedException,
 } from '../../common';
 import { RawSession } from '../../common/session';
-import {
-  ConfigService,
-  DatabaseService,
-  ILogger,
-  Logger,
-  matchRequestingUser,
-} from '../../core';
+import { ConfigService, ILogger, Logger } from '../../core';
 import { ForgotPassword } from '../../core/email/templates';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { User, UserService } from '../user';
 import { LoginInput, ResetPasswordInput } from './authentication.dto';
+import { AuthenticationRepository } from './authentication.repository';
 import { CryptoService } from './crypto.service';
 import { RegisterInput } from './dto';
 import { NoSessionException } from './no-session.exception';
@@ -34,59 +28,28 @@ interface JwtPayload {
 @Injectable()
 export class AuthenticationService {
   constructor(
-    private readonly db: DatabaseService,
+    // private readonly db: DatabaseService,
     private readonly config: ConfigService,
     private readonly crypto: CryptoService,
     private readonly email: EmailService,
     private readonly userService: UserService,
     private readonly authorizationService: AuthorizationService,
-    @Logger('authentication:service') private readonly logger: ILogger
+    @Logger('authentication:service') private readonly logger: ILogger,
+    private readonly authenticationRepo: AuthenticationRepository
   ) {}
 
   async createToken(): Promise<string> {
     const token = this.encodeJWT();
 
-    const result = await this.db
-      .query()
-      .raw(
-        `
-      CREATE
-        (token:Token {
-          active: true,
-          createdAt: datetime(),
-          value: $token
-        })
-      RETURN
-        token.value as token
-      `,
-        {
-          token,
-        }
-      )
-      .first();
+    const result = await this.authenticationRepo.createToken(token);
     if (!result) {
       throw new ServerException('Failed to start session');
     }
-
     return result.token;
   }
 
   async userFromSession(session: Session): Promise<User | null> {
-    const userRes = await this.db
-      .query()
-      .match([
-        node('token', 'Token', {
-          active: true,
-          value: session.token,
-        }),
-        relation('in', '', 'token', {
-          active: true,
-        }),
-        node('user', 'User'),
-      ])
-      .return({ user: [{ id: 'id' }] })
-      .first();
-
+    const userRes = await this.authenticationRepo.userFromSession(session);
     if (!userRes) {
       return null;
     }
@@ -112,84 +75,19 @@ export class AuthenticationService {
     }
 
     const passwordHash = await this.crypto.hash(input.password);
-    await this.db
-      .query()
-      .match([
-        node('user', 'User', {
-          id: userId,
-        }),
-      ])
-      .create([
-        node('user'),
-        relation('out', '', 'password', {
-          active: true,
-          createdAt: DateTime.local(),
-        }),
-        node('password', 'Property', {
-          value: passwordHash,
-        }),
-      ])
-      .run();
+    await this.authenticationRepo.register(userId, passwordHash);
 
     return userId;
   }
 
   async login(input: LoginInput, session: Session): Promise<ID> {
-    const result1 = await this.db
-      .query()
-      .raw(
-        `
-      MATCH
-        (token:Token {
-          active: true,
-          value: $token
-        })
-      MATCH
-        (:EmailAddress {value: $email})
-        <-[:email {active: true}]-
-        (user:User)
-        -[:password {active: true}]->
-        (password:Property)
-      RETURN
-        password.value as pash
-      `,
-        {
-          token: session.token,
-          email: input.email,
-        }
-      )
-      .first();
+    const result1 = await this.authenticationRepo.login1(input, session);
 
     if (!(await this.crypto.verify(result1?.pash, input.password))) {
       throw new UnauthenticatedException('Invalid credentials');
     }
 
-    const result2 = await this.db
-      .query()
-      .raw(
-        `
-          MATCH
-            (token:Token {
-              active: true,
-              value: $token
-            }),
-            (:EmailAddress {value: $email})
-            <-[:email {active: true}]-
-            (user:User)
-          OPTIONAL MATCH
-            (token)-[r]-()
-          DELETE r
-          CREATE
-            (user)-[:token {active: true, createdAt: datetime()}]->(token)
-          RETURN
-            user.id as id
-        `,
-        {
-          token: session.token,
-          email: input.email,
-        }
-      )
-      .first();
+    const result2 = await this.authenticationRepo.login2(input, session);
 
     if (!result2 || !result2.id) {
       throw new ServerException('Login failed');
@@ -199,22 +97,7 @@ export class AuthenticationService {
   }
 
   async logout(token: string): Promise<void> {
-    await this.db
-      .query()
-      .raw(
-        `
-      MATCH
-        (token:Token {value: $token})-[r]-()
-      DELETE
-        r
-      RETURN
-        token.value as token
-      `,
-        {
-          token,
-        }
-      )
-      .run();
+    await this.authenticationRepo.logout(token);
   }
 
   async createSession(token: string): Promise<RawSession> {
@@ -223,21 +106,8 @@ export class AuthenticationService {
     const { iat } = this.decodeJWT(token);
 
     // check token in db to verify the user id and owning org id.
-    const result = await this.db
-      .query()
-      .match([
-        node('token', 'Token', {
-          active: true,
-          value: token,
-        }),
-      ])
-      .optionalMatch([
-        node('token'),
-        relation('in', '', 'token', { active: true }),
-        node('user', 'User'),
-      ])
-      .return('token, user.id AS userId')
-      .first();
+
+    const result = await this.authenticationRepo.createSession(token);
 
     if (!result) {
       this.logger.debug('Failed to find active token in database', { token });
@@ -269,68 +139,22 @@ export class AuthenticationService {
     if (!oldPassword)
       throw new InputException('Old Password Required', 'oldPassword');
 
-    const result = await this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([
-        node('requestingUser'),
-        relation('out', '', 'password', { active: true }),
-        node('password', 'Property'),
-      ])
-      .return('password.value as passwordHash')
-      .asResult<{ passwordHash: string }>()
-      .first();
+    const result = await this.authenticationRepo.changePassword(session);
 
     if (!(await this.crypto.verify(result?.passwordHash, oldPassword))) {
       throw new UnauthenticatedException('Invalid credentials');
     }
 
     const newPasswordHash = await this.crypto.hash(newPassword);
-    await this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([
-        node('requestingUser'),
-        relation('out', '', 'password', { active: true }),
-        node('password', 'Property'),
-      ])
-      .setValues({
-        'password.value': newPasswordHash,
-      })
-      .return('password.value as passwordHash')
-      .first();
 
     // inactivate all the relationships between the current user and all of their tokens except current one
-    await this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([
-        node('requestingUser'),
-        relation('out', 'oldRel', 'token', { active: true }),
-        node('token', 'Token'),
-      ])
-      .where(not([{ 'token.value': session.token }]))
-      .setValues({ 'oldRel.active': false })
-      .run();
+
+    await this.authenticationRepo.createNewPassword(newPasswordHash, session);
   }
 
   async forgotPassword(email: string): Promise<void> {
-    const result = await this.db
-      .query()
-      .raw(
-        `
-        MATCH
-        (email:EmailAddress {
-          value: $email
-        })
-        RETURN
-        email.value as email
-        `,
-        {
-          email: email,
-        }
-      )
-      .first();
+    await this.authenticationRepo.forgotPasswordFindEmail(email);
+    const result = await this.authenticationRepo.forgotPasswordFindEmail(email);
 
     if (!result) {
       this.logger.warning('Email not found; Skipping reset email', { email });
@@ -338,19 +162,8 @@ export class AuthenticationService {
     }
 
     const token = this.encodeJWT();
-    await this.db
-      .query()
-      .raw(
-        `
-      CREATE(et:EmailToken{value:$value, token: $token, createdOn:datetime()})
-      RETURN et as emailToken
-      `,
-        {
-          value: email,
-          token,
-        }
-      )
-      .first();
+
+    await this.authenticationRepo.forgotPasswordCreateToken(email, token);
     await this.email.send(email, ForgotPassword, {
       token,
     });
@@ -360,18 +173,8 @@ export class AuthenticationService {
     { token, password }: ResetPasswordInput,
     session: Session
   ): Promise<void> {
-    const result = await this.db
-      .query()
-      .raw(
-        `
-        MATCH(emailToken: EmailToken{token: $token})
-        RETURN emailToken.value as email, emailToken.token as token, emailToken.createdOn as createdOn
-        `,
-        {
-          token: token,
-        }
-      )
-      .first();
+    const result = await this.authenticationRepo.resetPassword(token);
+
     if (!result) {
       throw new InputException('Token is invalid', 'TokenInvalid');
     }
@@ -383,50 +186,14 @@ export class AuthenticationService {
 
     const pash = await this.crypto.hash(password);
 
-    await this.db
-      .query()
-      .raw(
-        `
-          MATCH(e:EmailToken {token: $token})
-          DELETE e
-          WITH *
-          MATCH (:EmailAddress {value: $email})<-[:email {active: true}]-(user:User)
-          OPTIONAL MATCH (user)-[oldPasswordRel:password]->(oldPassword)
-          SET oldPasswordRel.active = false
-          WITH user
-          LIMIT 1
-          MERGE (user)-[:password {active: true, createdAt: $createdAt}]->(password:Property)
-          SET password.value = $password
-          RETURN password
-        `,
-        {
-          token,
-          email: result.email,
-          password: pash,
-          createdAt: DateTime.local(),
-        }
-      )
-      .first();
+    await this.authenticationRepo.resetPasswordRemoveOldData(
+      token,
+      result,
+      pash,
+      session
+    );
 
     // remove all the email tokens and invalidate old tokens
-    await this.db
-      .query()
-      .match([node('emailToken', 'EmailToken', { value: result.email })])
-      .delete('emailToken')
-      .run();
-
-    await this.db
-      .query()
-      .match([
-        node('emailAddress', 'EmailAddress', { value: result.email }),
-        relation('in', '', 'email', { active: true }),
-        node('user', 'User'),
-        relation('out', 'oldRel', 'token', { active: true }),
-        node('token', 'Token'),
-      ])
-      .where(not([{ 'token.value': session.token }]))
-      .setValues({ 'oldRel.active': false })
-      .run();
   }
 
   private encodeJWT() {

@@ -1,38 +1,19 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
-  generateId,
   ID,
   InputException,
   NotFoundException,
-  Order,
   ServerException,
   Session,
   UnauthorizedException,
 } from '../../common';
+import { ConfigService, ILogger, Logger, OnIndex } from '../../core';
 import {
-  ConfigService,
-  createBaseNode,
-  DatabaseService,
-  ILogger,
-  Logger,
-  matchRequestingUser,
-  OnIndex,
-} from '../../core';
-import {
-  calculateTotalAndPaginateList,
-  matchPropList,
-  permissionsOfNode,
-  requestingUser,
-} from '../../core/database/query';
-import {
-  DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
   runListQuery,
-  StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { FinancialReportingType } from '../partnership/dto/financial-reporting-type';
@@ -45,15 +26,16 @@ import {
   UpdatePartner,
 } from './dto';
 import { DbPartner } from './model';
+import { PartnerRepository } from './partner.repository';
 
 @Injectable()
 export class PartnerService {
   constructor(
     @Logger('partner:service') private readonly logger: ILogger,
     private readonly config: ConfigService,
-    private readonly db: DatabaseService,
     @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService
+    private readonly authorizationService: AuthorizationService,
+    private readonly repo: PartnerRepository
   ) {}
 
   @OnIndex()
@@ -71,120 +53,25 @@ export class PartnerService {
       input.financialReportingTypes,
       input.types
     );
-    const partnerByOrgQ = this.db
-      .query()
-      .match([node('node', 'Organization', { id: input.organizationId })])
-      .match([
-        node('node'),
-        relation('in', '', 'organization', { active: true }),
-        node('partner', 'Partner'),
-      ])
-      .return({
-        partner: [{ id: 'partnerId' }],
-      })
-      .asResult<{
-        partnerId: ID;
-      }>();
-    const checkPartner = await partnerByOrgQ.first();
+
+    const checkPartner = await this.repo.checkPartner(input.organizationId);
+
     if (checkPartner) {
       throw new DuplicateException(
         'partner.organizationId',
         'Partner for organization already exists.'
       );
     }
-
     const createdAt = DateTime.local();
-    const secureProps = [
-      {
-        key: 'types',
-        value: input.types,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'financialReportingTypes',
-        value: input.financialReportingTypes,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'pmcEntityCode',
-        value: input.pmcEntityCode,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'globalInnovationsClient',
-        value: input.globalInnovationsClient,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'active',
-        value: input.active,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'address',
-        value: input.address,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'modifiedAt',
-        value: createdAt,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
-    // create partner
-    const query = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([
-        node('organization', 'Organization', {
-          id: input.organizationId,
-        }),
-      ])
-      .apply(createBaseNode(await generateId(), 'Partner', secureProps))
-      .create([
-        node('node'),
-        relation('out', '', 'organization', { active: true, createdAt }),
-        node('organization'),
-      ])
-      .return('node.id as id');
 
-    const result = await query.first();
+    const result = await this.repo.create(input, session, createdAt);
 
     if (!result) {
       throw new ServerException('failed to create partner');
     }
 
     if (input.pointOfContactId) {
-      await this.db
-        .query()
-        .matchNode('partner', 'Partner', {
-          id: result.id,
-        })
-        .matchNode('pointOfContact', 'User', {
-          id: input.pointOfContactId,
-        })
-        .create([
-          node('partner'),
-          relation('out', '', 'pointOfContact', {
-            active: true,
-            createdAt,
-          }),
-          node('pointOfContact'),
-        ])
-        .run();
+      await this.repo.createProperty(input, result, createdAt);
     }
 
     const dbPartner = new DbPartner();
@@ -203,22 +90,8 @@ export class PartnerService {
       id: id,
       userId: session.userId,
     });
-    const query = this.db
 
-      .query()
-      .match([node('node', 'Organization', { id: id })])
-      .match([
-        node('node'),
-        relation('in', '', 'organization', { active: true }),
-        node('partner', 'Partner'),
-      ])
-      .return({
-        partner: [{ id: 'partnerId' }],
-      })
-      .asResult<{
-        partnerId: ID;
-      }>();
-    const result = await query.first();
+    const result = await this.repo.readOnePartnerByOrgId(id);
     if (!result)
       throw new NotFoundException('No Partner Exists for this Org Id');
 
@@ -231,34 +104,7 @@ export class PartnerService {
       userId: session.userId,
     });
 
-    const query = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'Partner', { id: id })])
-      .apply(matchPropList)
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'organization', { active: true }),
-        node('organization', 'Organization'),
-      ])
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'pointOfContact', { active: true }),
-        node('pointOfContact', 'User'),
-      ])
-      .return([
-        'propList, node',
-        'organization.id as organizationId',
-        'pointOfContact.id as pointOfContactId',
-      ])
-      .asResult<
-        StandardReadResult<DbPropsOfDto<Partner>> & {
-          organizationId: ID;
-          pointOfContactId: ID;
-        }
-      >();
-
-    const result = await query.first();
+    const result = await this.repo.readOne(id, session);
 
     if (!result) {
       throw new NotFoundException('Could not find partner', 'partner.id');
@@ -291,7 +137,7 @@ export class PartnerService {
         ...secured.financialReportingTypes,
         value: secured.financialReportingTypes.value || [],
       },
-      canDelete: await this.db.checkDeletePermission(id, session),
+      canDelete: await this.repo.checkDeletePermission(id, session),
     };
   }
 
@@ -316,7 +162,7 @@ export class PartnerService {
       };
     }
 
-    const changes = this.db.getActualChanges(Partner, object, input);
+    const changes = this.repo.getActualChanges(object, input);
     await this.authorizationService.verifyCanEditChanges(
       Partner,
       object,
@@ -324,43 +170,11 @@ export class PartnerService {
     );
     const { pointOfContactId, ...simpleChanges } = changes;
 
-    await this.db.updateProperties({
-      type: Partner,
-      object,
-      changes: simpleChanges,
-    });
+    await this.repo.updateProperties(object, simpleChanges);
 
     if (pointOfContactId) {
-      const createdAt = DateTime.local();
-      await this.db
-        .query()
-        .apply(matchRequestingUser(session))
-        .matchNode('partner', 'Partner', { id: input.id })
-        .matchNode('newPointOfContact', 'User', {
-          id: input.pointOfContactId,
-        })
-        .optionalMatch([
-          node('org'),
-          relation('out', 'oldPointOfContactRel', 'pointOfContact', {
-            active: true,
-          }),
-          node('pointOfContact', 'User'),
-        ])
-        .setValues({
-          'oldPointOfContactRel.active': false,
-        })
-        .with('*')
-        .create([
-          node('partner'),
-          relation('out', '', 'pointOfContact', {
-            active: true,
-            createdAt,
-          }),
-          node('newPointOfContact'),
-        ])
-        .run();
+      await this.repo.updatePartnerProperties(input, session);
     }
-
     return await this.readOne(input.id, session);
   }
 
@@ -370,7 +184,7 @@ export class PartnerService {
       throw new NotFoundException('Could not find Partner');
     }
 
-    const canDelete = await this.db.checkDeletePermission(id, session);
+    const canDelete = await this.repo.checkDeletePermission(id, session);
 
     if (!canDelete)
       throw new UnauthorizedException(
@@ -378,7 +192,7 @@ export class PartnerService {
       );
 
     try {
-      await this.db.deleteNode(object);
+      await this.repo.deleteNode(object);
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);
@@ -391,78 +205,10 @@ export class PartnerService {
     { filter, ...input }: PartnerListInput,
     session: Session
   ): Promise<PartnerListOutput> {
-    const label = 'Partner';
-    const query = this.db
-      .query()
-      .match([
-        requestingUser(session),
-        ...permissionsOfNode(label),
-        ...(filter.userId && session.userId
-          ? [
-              relation('out', '', 'organization', { active: true }),
-              node('', 'Organization'),
-              relation('in', '', 'organization', { active: true }),
-              node('user', 'User', { id: filter.userId }),
-            ]
-          : []),
-      ])
-      .apply(
-        calculateTotalAndPaginateList(
-          Partner,
-          input,
-          this.orgNameSorter(input.sort, input.order)
-        )
-      );
+    const query = this.repo.list({ filter, ...input }, session);
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
-
-  private readonly orgNameSorter = (sortInput: string, order: Order) => (
-    q: Query
-  ) => {
-    // If the user inputs orgName as the sort value, then match the organization node for the sortValue match
-    const orgProperties = ['name'];
-
-    //The properties that are stored as strings
-    const stringProperties = ['name'];
-    const sortInputIsString = stringProperties.includes(sortInput);
-
-    //if the sortInput, e.g. name, is a string type, check to see if a custom sortVal is given.  If not, coerse the default prop.value to lower case in the orderBy clause
-    const sortValSecuredProp = sortInputIsString
-      ? 'toLower(prop.value)'
-      : 'prop.value';
-    const sortValBaseNodeProp = sortInputIsString
-      ? `toLower(node.${sortInput})`
-      : `node.${sortInput}`;
-
-    if (orgProperties.includes(sortInput)) {
-      return q
-        .match([
-          node('node'),
-          relation('out', '', 'organization', { active: true }),
-          node('organization', 'Organization'),
-        ])
-        .with('*')
-        .match([
-          node('organization'),
-          relation('out', '', sortInput, { active: true }),
-          node('prop', 'Property'),
-        ])
-        .with('*')
-        .orderBy(sortValSecuredProp, order);
-    }
-    return (Partner.SecuredProps as string[]).includes(sortInput)
-      ? q
-          .with('*')
-          .match([
-            node(node),
-            relation('out', '', sortInput, { active: true }),
-            node('prop', 'Property'),
-          ])
-          .with('*')
-          .orderBy(sortValSecuredProp, order)
-      : q.with('*').orderBy(sortValBaseNodeProp, order);
-  };
 
   protected verifyFinancialReportingType(
     financialReportingTypes: FinancialReportingType[] | undefined,

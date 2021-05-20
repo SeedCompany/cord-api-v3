@@ -1,6 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
-import type { Node } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { difference } from 'lodash';
 import { DateTime } from 'luxon';
@@ -17,28 +16,17 @@ import {
 import {
   ConfigService,
   createBaseNode,
-  DatabaseService,
   ILogger,
   Logger,
   matchRequestingUser,
   Property,
 } from '../../core';
 import {
-  calculateTotalAndPaginateList,
-  matchMemberRoles,
-  matchPropList,
-  permissionsOfNode,
-  requestingUser,
-} from '../../core/database/query';
-import {
-  BaseNode,
-  DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
   runListQuery,
-  StandardReadResult,
 } from '../../core/database/results';
-import { Role, rolesForScope } from '../authorization';
+import { rolesForScope } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Film, FilmService } from '../film';
 import {
@@ -64,11 +52,11 @@ import {
   UpdateProduct,
 } from './dto';
 import { DbProduct } from './model';
+import { ProductRepository } from './product.repository';
 
 @Injectable()
 export class ProductService {
   constructor(
-    private readonly db: DatabaseService,
     private readonly config: ConfigService,
     private readonly film: FilmService,
     private readonly story: StoryService,
@@ -77,6 +65,7 @@ export class ProductService {
     private readonly scriptureRefService: ScriptureReferenceService,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
+    private readonly repo: ProductRepository,
     @Logger('product:service') private readonly logger: ILogger
   ) {}
 
@@ -122,14 +111,10 @@ export class ProductService {
       },
     ];
 
-    const query = this.db.query();
+    const query = this.repo.query();
 
     if (engagementId) {
-      const engagement = await this.db
-        .query()
-        .match([node('engagement', 'Engagement', { id: engagementId })])
-        .return('engagement')
-        .first();
+      const engagement = await this.repo.findNode('engagement', engagementId);
       if (!engagement) {
         this.logger.warning(`Could not find engagement`, {
           id: engagementId,
@@ -143,15 +128,7 @@ export class ProductService {
     }
 
     if (input.produces) {
-      const producible = await this.db
-        .query()
-        .match([
-          node('producible', 'Producible', {
-            id: input.produces,
-          }),
-        ])
-        .return('producible')
-        .first();
+      const producible = await this.repo.findNode('producible', input.produces);
       if (!producible) {
         this.logger.warning(`Could not find producible node`, {
           id: input.produces,
@@ -253,34 +230,7 @@ export class ProductService {
   }
 
   async readOne(id: ID, session: Session): Promise<AnyProduct> {
-    const query = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'Product', { id })])
-      .apply(matchPropList)
-      .match([
-        node('project', 'Project'),
-        relation('out', '', 'engagement', { active: true }),
-        node('', 'Engagement'),
-        relation('out', '', 'product', { active: true }),
-        node('', 'Product', { id }),
-      ])
-      .with(['project', 'node', 'propList'])
-      .apply(matchMemberRoles(session.userId))
-      .return(['propList, node, memberRoles'])
-      .asResult<
-        StandardReadResult<
-          DbPropsOfDto<
-            DirectScriptureProduct &
-              DerivativeScriptureProduct & {
-                isOverriding: boolean;
-              }
-          >
-        > & {
-          memberRoles: Role[][];
-        }
-      >();
-    const result = await query.first();
+    const result = await this.repo.readOne(id, session);
 
     if (!result) {
       this.logger.warning(`Could not find product`, { id });
@@ -298,17 +248,7 @@ export class ProductService {
       session,
       result.memberRoles.flat().map(rolesForScope('project'))
     );
-
-    const connectedProducible = await this.db
-      .query()
-      .match([
-        node('product', 'Product', { id }),
-        relation('out', 'produces', { active: true }),
-        node('producible', 'Producible'),
-      ])
-      .return('producible')
-      .asResult<{ producible: Node<BaseNode> }>()
-      .first();
+    const connectedProducible = await this.repo.connectedProducible(id);
 
     const scriptureReferencesValue = await this.scriptureRefService.list(
       id,
@@ -332,7 +272,7 @@ export class ProductService {
           ...rest.purposes,
           value: rest.purposes.value ?? [],
         },
-        canDelete: await this.db.checkDeletePermission(id, session),
+        canDelete: await this.repo.checkDeletePermission(id, session),
       };
     }
 
@@ -375,7 +315,7 @@ export class ProductService {
         ...scriptureReferencesOverride,
         value: !isOverriding ? null : scriptureReferencesValue,
       },
-      canDelete: await this.db.checkDeletePermission(id, session),
+      canDelete: await this.repo.checkDeletePermission(id, session),
     };
   }
 
@@ -419,11 +359,7 @@ export class ProductService {
     input: Except<UpdateProduct, 'produces' | 'scriptureReferencesOverride'>,
     session: Session
   ) {
-    const changes = this.db.getActualChanges(
-      DirectScriptureProduct,
-      currentProduct,
-      input
-    );
+    const changes = this.repo.getActualDirectChanges(currentProduct, input);
     await this.authorizationService.verifyCanEditChanges(
       Product,
       currentProduct,
@@ -439,11 +375,16 @@ export class ProductService {
       session
     );
 
-    return await this.db.updateProperties({
-      type: DirectScriptureProduct,
-      object: productUpdatedScriptureReferences,
-      changes: simpleChanges,
-    });
+    // return await this.db.updateProperties({
+    //   type: DirectScriptureProduct,
+    //   object: productUpdatedScriptureReferences,
+    //   changes: simpleChanges,
+    // });
+
+    return await this.repo.updateProperties(
+      productUpdatedScriptureReferences,
+      simpleChanges
+    );
   }
 
   private async updateDerivative(
@@ -451,11 +392,7 @@ export class ProductService {
     input: Except<UpdateProduct, 'scriptureReferences'>,
     session: Session
   ) {
-    let changes = this.db.getActualChanges(
-      DerivativeScriptureProduct,
-      currentProduct,
-      input
-    );
+    let changes = this.repo.getActualDerivativeChanges(currentProduct, input);
     changes = {
       ...changes,
       // This needs to be manually checked for changes as the existing value
@@ -477,15 +414,8 @@ export class ProductService {
 
     // If given an new produces id, update the producible
     if (produces) {
-      const producible = await this.db
-        .query()
-        .match([
-          node('producible', 'Producible', {
-            id: produces,
-          }),
-        ])
-        .return('producible')
-        .first();
+      const producible = await this.repo.findProducible(produces);
+
       if (!producible) {
         this.logger.warning(`Could not find producible node`, {
           id: produces,
@@ -495,37 +425,7 @@ export class ProductService {
           'product.produces'
         );
       }
-      await this.db
-        .query()
-        .match([
-          node('product', 'Product', { id: input.id }),
-          relation('out', 'rel', 'produces', { active: true }),
-          node('', 'Producible'),
-        ])
-        .setValues({
-          'rel.active': false,
-        })
-        .return('rel')
-        .first();
-
-      await this.db
-        .query()
-        .match([node('product', 'Product', { id: input.id })])
-        .match([
-          node('producible', 'Producible', {
-            id: produces,
-          }),
-        ])
-        .create([
-          node('product'),
-          relation('out', 'rel', 'produces', {
-            active: true,
-            createdAt: DateTime.local(),
-          }),
-          node('producible'),
-        ])
-        .return('rel')
-        .first();
+      await this.repo.updateProducible(input, produces);
     }
 
     // update the scripture references (override)
@@ -540,11 +440,10 @@ export class ProductService {
       session
     );
 
-    return await this.db.updateProperties({
-      type: DerivativeScriptureProduct,
-      object: productUpdatedScriptureReferences,
-      changes: simpleChanges,
-    });
+    return await this.repo.updateDerivativeProperties(
+      productUpdatedScriptureReferences,
+      simpleChanges
+    );
   }
 
   async delete(id: ID, session: Session): Promise<void> {
@@ -554,7 +453,7 @@ export class ProductService {
       throw new NotFoundException('Could not find product', 'product.id');
     }
 
-    const canDelete = await this.db.checkDeletePermission(id, session);
+    const canDelete = await this.repo.checkDeletePermission(id, session);
 
     if (!canDelete)
       throw new UnauthorizedException(
@@ -562,7 +461,7 @@ export class ProductService {
       );
 
     try {
-      await this.db.deleteNode(object);
+      await this.repo.deleteNode(object);
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);
@@ -573,23 +472,7 @@ export class ProductService {
     { filter, ...input }: ProductListInput,
     session: Session
   ): Promise<ProductListOutput> {
-    const label = 'Product';
-
-    const query = this.db
-      .query()
-      .match([
-        requestingUser(session),
-        ...permissionsOfNode(label),
-        ...(filter.engagementId
-          ? [
-              relation('in', '', 'product', { active: true }),
-              node('engagement', 'Engagement', {
-                id: filter.engagementId,
-              }),
-            ]
-          : []),
-      ])
-      .apply(calculateTotalAndPaginateList(Product, input));
+    const query = this.repo.list({ filter, ...input }, session);
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

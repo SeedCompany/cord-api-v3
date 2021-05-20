@@ -1,6 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from 'aws-sdk';
-import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   generateId,
@@ -10,28 +9,17 @@ import {
   ServerException,
   Session,
 } from '../../common';
+import { ILogger, Logger } from '../../core';
 import {
-  createBaseNode,
-  DatabaseService,
-  ILogger,
-  Logger,
-  matchRequestingUser,
-} from '../../core';
-import {
-  calculateTotalAndPaginateList,
-  matchPropList,
-} from '../../core/database/query';
-import {
-  DbPropsOfDto,
   parseBaseNodeProperties,
   parsePropList,
   runListQuery,
-  StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { UserService } from '../user';
 import { CreatePost, Post, UpdatePost } from './dto';
 import { PostListInput, SecuredPostList } from './dto/list-posts.dto';
+import { PostRepository } from './post.repository';
 
 @Injectable()
 export class PostService {
@@ -42,12 +30,12 @@ export class PostService {
   };
 
   constructor(
-    private readonly db: DatabaseService,
     private readonly config: ConfigService,
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
+    private readonly repo: PostRepository,
     @Logger('post:service') private readonly logger: ILogger
   ) {}
 
@@ -98,30 +86,7 @@ export class PostService {
     }
 
     try {
-      const createPost = this.db
-        .query()
-        .apply(matchRequestingUser(session))
-        .apply(createBaseNode(postId, ['Post'], secureProps))
-        .return('node.id as id');
-
-      await createPost.first();
-
-      await this.db
-        .query()
-        .match([
-          [node('baseNode', 'BaseNode', { id: parentId })],
-          [node('post', 'Post', { id: postId })],
-        ])
-        .create([
-          node('baseNode'),
-          relation('out', '', 'baseNode', {
-            active: true,
-            createdAt: DateTime.local(),
-          }),
-          node('post'),
-        ])
-        .return('post.id as id')
-        .first();
+      await this.repo.create(parentId, postId, secureProps, session);
 
       // FIXME: This is being refactored - leaving it commented out per Michael's instructions for now
       // await this.authorizationService.processNewBaseNode(
@@ -136,17 +101,7 @@ export class PostService {
         exception,
       });
 
-      if (
-        !(await this.db
-          .query()
-          .match([
-            node('baseNode', 'BaseNode', {
-              id: parentId,
-            }),
-          ])
-          .return('baseNode.id')
-          .first())
-      ) {
+      if (!(await this.repo.checkParentIdValidity(parentId))) {
         throw new InputException('parentId is invalid', 'post.parentId');
       }
 
@@ -155,15 +110,7 @@ export class PostService {
   }
 
   async readOne(postId: ID, session: Session): Promise<Post> {
-    const query = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'Post', { id: postId })])
-      .apply(matchPropList)
-      .return('node, propList')
-      .asResult<StandardReadResult<DbPropsOfDto<Post>>>();
-
-    const result = await query.first();
+    const result = await this.repo.readOne(postId, session);
 
     if (!result) {
       throw new NotFoundException('Could not find post', 'post.id');
@@ -192,20 +139,14 @@ export class PostService {
         canEdit: true,
       },
       modifiedAt: props.modifiedAt,
-      canDelete: await this.db.checkDeletePermission(postId, session),
+      canDelete: await this.repo.checkDeletePermission(postId, session),
     };
   }
 
   async update(input: UpdatePost, session: Session): Promise<Post> {
     const object = await this.readOne(input.id, session);
 
-    await this.db.updateProperties({
-      type: Post,
-      object,
-      changes: {
-        body: input.body,
-      },
-    });
+    await this.repo.updateProperties(input, object);
 
     return await this.readOne(input.id, session);
   }
@@ -218,7 +159,7 @@ export class PostService {
     }
 
     try {
-      await this.db.deleteNode(object);
+      await this.repo.deleteNode(object);
     } catch (exception) {
       this.logger.warning('Failed to delete post', {
         exception,
@@ -232,33 +173,11 @@ export class PostService {
     { filter, ...input }: PostListInput,
     session: Session
   ): Promise<SecuredPostList> {
-    const label = 'Post';
-
     // const query = this.db
     //   .query()
     //   .match([requestingUser(session), ...permissionsOfNode(label)])
     //   .call(calculateTotalAndPaginateList(Post, input));
-
-    // FIXME: we haven't implemented permissioning here yet
-    const query = this.db
-      .query()
-      .match([
-        // FIXME: Until the authorizationService.processNewBaseNode refactor is complete, commenting the two lines below out and
-        // simply querying the Post nodes directly
-        // requestingUser(session),
-        // ...permissionsOfNode(label),
-        node('node', label),
-
-        ...(filter.parentId
-          ? [
-              relation('in', 'member'),
-              node('baseNode', 'BaseNode', {
-                id: filter.parentId,
-              }),
-            ]
-          : []),
-      ])
-      .call(calculateTotalAndPaginateList(Post, input));
+    const query = this.repo.securedList({ filter, ...input });
 
     return {
       ...(await runListQuery(query, input, (id) => this.readOne(id, session))),

@@ -19,7 +19,7 @@ export type DbPropsOfDto<Dto extends Record<string, any>> = NativeDbProps<
   Omit<UnsecuredDto<Dto>, keyof BaseNode>
 >;
 
-type NativeDbProps<Dto extends Record<string, any>> = {
+export type NativeDbProps<Dto extends Record<string, any>> = {
   [Key in keyof Dto]: Dto[Key] extends NativeDbValue ? Dto[Key] : unknown;
 };
 

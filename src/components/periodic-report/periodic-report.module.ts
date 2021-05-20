@@ -5,6 +5,7 @@ import { FileModule } from '../file/file.module';
 import { ProjectModule } from '../project/project.module';
 import { UserModule } from '../user/user.module';
 import * as handlers from './handlers';
+import { PeriodicReportRepository } from './periodic-report.repository';
 import { PeriodicReportResolver } from './periodic-report.resolver';
 import { PeriodicReportService } from './periodic-report.service';
 
@@ -19,8 +20,9 @@ import { PeriodicReportService } from './periodic-report.service';
   providers: [
     PeriodicReportService,
     PeriodicReportResolver,
+    PeriodicReportRepository,
     ...Object.values(handlers),
   ],
-  exports: [PeriodicReportService],
+  exports: [PeriodicReportService, PeriodicReportRepository],
 })
 export class PeriodicReportModule {}

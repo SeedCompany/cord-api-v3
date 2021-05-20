@@ -1,35 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
 import {
   DuplicateException,
-  generateId,
   ID,
   NotFoundException,
   ServerException,
   Session,
   UnauthorizedException,
 } from '../../common';
+import { ILogger, Logger, OnIndex } from '../../core';
 import {
-  ConfigService,
-  createBaseNode,
-  DatabaseService,
-  ILogger,
-  Logger,
-  matchRequestingUser,
-  OnIndex,
-  Property,
-} from '../../core';
-import {
-  calculateTotalAndPaginateList,
-  matchPropList,
-  permissionsOfNode,
-  requestingUser,
-} from '../../core/database/query';
-import {
-  DbPropsOfDto,
   parseBaseNodeProperties,
   runListQuery,
-  StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
@@ -40,16 +21,16 @@ import {
   LiteracyMaterialListOutput,
   UpdateLiteracyMaterial,
 } from './dto';
+import { LiteracyMaterialRepository } from './literacy-material.repository';
 import { DbLiteracyMaterial } from './model';
 
 @Injectable()
 export class LiteracyMaterialService {
   constructor(
     @Logger('literacyMaterial:service') private readonly logger: ILogger,
-    private readonly db: DatabaseService,
-    private readonly config: ConfigService,
     private readonly scriptureRefService: ScriptureReferenceService,
-    private readonly authorizationService: AuthorizationService
+    private readonly authorizationService: AuthorizationService,
+    private readonly repo: LiteracyMaterialRepository
   ) {}
 
   @OnIndex()
@@ -72,11 +53,7 @@ export class LiteracyMaterialService {
     input: CreateLiteracyMaterial,
     session: Session
   ): Promise<LiteracyMaterial> {
-    const checkLiteracy = await this.db
-      .query()
-      .match([node('literacyMaterial', 'LiteracyName', { value: input.name })])
-      .return('literacyMaterial')
-      .first();
+    const checkLiteracy = await this.repo.checkLiteracy(input.name);
 
     if (checkLiteracy) {
       throw new DuplicateException(
@@ -85,36 +62,8 @@ export class LiteracyMaterialService {
       );
     }
 
-    // create literacy-material
-    const secureProps: Property[] = [
-      {
-        key: 'name',
-        value: input.name,
-        isPublic: true,
-        isOrgPublic: true,
-        label: 'LiteracyName',
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
-
     try {
-      const result = await this.db
-        .query()
-        .apply(matchRequestingUser(session))
-        .apply(
-          createBaseNode(
-            await generateId(),
-            ['LiteracyMaterial', 'Producible'],
-            secureProps
-          )
-        )
-        .return('node.id as id')
-        .first();
+      const result = await this.repo.create(session, input.name);
 
       if (!result) {
         throw new ServerException('failed to create a literacy material');
@@ -153,15 +102,7 @@ export class LiteracyMaterialService {
       userId: session.userId,
     });
 
-    const readLiteracyMaterial = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'LiteracyMaterial', { id })])
-      .apply(matchPropList)
-      .return('node, propList')
-      .asResult<StandardReadResult<DbPropsOfDto<LiteracyMaterial>>>();
-
-    const result = await readLiteracyMaterial.first();
+    const result = await this.repo.readOne(id, session);
 
     if (!result) {
       throw new NotFoundException(
@@ -188,7 +129,7 @@ export class LiteracyMaterialService {
         ...securedProps.scriptureReferences,
         value: scriptureReferences,
       },
-      canDelete: await this.db.checkDeletePermission(id, session),
+      canDelete: await this.repo.checkDeletePermission(id, session),
     };
   }
 
@@ -197,11 +138,8 @@ export class LiteracyMaterialService {
     session: Session
   ): Promise<LiteracyMaterial> {
     const literacyMaterial = await this.readOne(input.id, session);
-    const changes = this.db.getActualChanges(
-      LiteracyMaterial,
-      literacyMaterial,
-      input
-    );
+
+    const changes = this.repo.getActualChanges(literacyMaterial, input);
     await this.authorizationService.verifyCanEditChanges(
       LiteracyMaterial,
       literacyMaterial,
@@ -211,11 +149,7 @@ export class LiteracyMaterialService {
 
     await this.scriptureRefService.update(input.id, scriptureReferences);
 
-    await this.db.updateProperties({
-      type: LiteracyMaterial,
-      object: literacyMaterial,
-      changes: simpleChanges,
-    });
+    await this.repo.updateProperties(literacyMaterial, simpleChanges);
 
     return await this.readOne(input.id, session);
   }
@@ -227,7 +161,7 @@ export class LiteracyMaterialService {
       throw new NotFoundException('Could not find Literacy Material');
     }
 
-    const canDelete = await this.db.checkDeletePermission(id, session);
+    const canDelete = await this.repo.checkDeletePermission(id, session);
 
     if (!canDelete)
       throw new UnauthorizedException(
@@ -235,7 +169,7 @@ export class LiteracyMaterialService {
       );
 
     try {
-      await this.db.deleteNode(literacyMaterial);
+      await this.repo.deleteNode(literacyMaterial);
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);
@@ -248,13 +182,7 @@ export class LiteracyMaterialService {
     { filter, ...input }: LiteracyMaterialListInput,
     session: Session
   ): Promise<LiteracyMaterialListOutput> {
-    const query = this.db
-      .query()
-      .match([
-        requestingUser(session),
-        ...permissionsOfNode('LiteracyMaterial'),
-      ])
-      .apply(calculateTotalAndPaginateList(LiteracyMaterial, input));
+    const query = this.repo.list({ filter, ...input }, session);
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
