@@ -1,28 +1,22 @@
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { generateId, ID, ServerException } from '../../common';
-import {
-  ConfigService,
-  DatabaseService,
-  ILogger,
-  Logger,
-  Transactional,
-} from '../../core';
+import { ConfigService, ILogger, Logger, Transactional } from '../../core';
 import { AuthenticationService } from '../authentication';
 import { CryptoService } from '../authentication/crypto.service';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
 import { Role } from '../project';
+import { AdminRepository } from './admin.repository';
 
 @Injectable()
 export class AdminService implements OnApplicationBootstrap {
   constructor(
-    private readonly db: DatabaseService,
     private readonly config: ConfigService,
     private readonly authentication: AuthenticationService,
     private readonly crypto: CryptoService,
     private readonly authorizationService: AuthorizationService,
+    private readonly repo: AdminRepository,
     @Logger('admin:service') private readonly logger: ILogger
   ) {}
 
@@ -114,9 +108,7 @@ export class AdminService implements OnApplicationBootstrap {
   }
 
   async onApplicationBootstrap(): Promise<void> {
-    const finishing = this.db.runOnceUntilCompleteAfterConnecting(() =>
-      this.setupRootObjects()
-    );
+    const finishing = this.repo.finishing(() => this.setupRootObjects());
     // Wait for root object setup when running tests, else just let it run in
     // background and allow webserver to start.
     if (this.config.jest) {
@@ -153,61 +145,22 @@ export class AdminService implements OnApplicationBootstrap {
     // merge root security group
 
     const powers = Object.keys(Powers);
+    const id = this.config.rootSecurityGroup.id;
 
-    await this.db
-      .query()
-      .merge([
-        node('sg', 'RootSecurityGroup', {
-          id: this.config.rootSecurityGroup.id,
-        }),
-      ])
-      .onCreate.setLabels({ sg: ['RootSecurityGroup', 'SecurityGroup'] })
-      .setValues({
-        sg: {
-          id: this.config.rootSecurityGroup.id,
-          powers,
-        },
-      })
-      .run();
+    await this.repo.mergeRootSecurityGroup(powers, id);
   }
 
   private async mergePublicSecurityGroup() {
-    await this.db
-      .query()
-      .merge([
-        node('sg', 'PublicSecurityGroup', {
-          id: this.config.publicSecurityGroup.id,
-        }),
-      ])
-      .onCreate.setLabels({ sg: ['PublicSecurityGroup', 'SecurityGroup'] })
-      .setValues({
-        'sg.id': this.config.publicSecurityGroup.id,
-      })
-      .run();
+    const id = this.config.publicSecurityGroup.id;
+    await this.repo.mergePublicSecurityGroup(id);
   }
 
   private async mergeAnonUser() {
     const createdAt = DateTime.local();
-    await this.db
-      .query()
-      .merge([
-        node('anon', 'AnonUser', {
-          id: this.config.anonUser.id,
-        }),
-      ])
-      .onCreate.setLabels({ anon: ['AnonUser', 'User', 'BaseNode'] })
-      .setValues({
-        'anon.createdAt': createdAt,
-        'anon.id': this.config.anonUser.id,
-      })
-      .with('*')
-      .match([
-        node('publicSg', 'PublicSecurityGroup', {
-          id: this.config.publicSecurityGroup.id,
-        }),
-      ])
-      .merge([node('publicSg'), relation('out', '', 'member'), node('anon')])
-      .run();
+    const anonUserId = this.config.anonUser.id;
+    const publicSecurityGroupId = this.config.publicSecurityGroup.id;
+
+    await this.repo.mergeAnonUser(createdAt, anonUserId, publicSecurityGroupId);
   }
 
   private async mergeRootAdminUser(): Promise<void> {
@@ -216,38 +169,15 @@ export class AdminService implements OnApplicationBootstrap {
     let id: ID;
 
     // see if root already exists
-    const existing = await this.db
-      .query()
-      .match([
-        node('email', 'EmailAddress'),
-        relation('in', '', 'email', { active: true }),
-        node('root', ['RootUser']),
-        relation('out', '', 'password', { active: true }),
-        node('pw', 'Property'),
-      ])
-      .return(['root.id as id', 'email.value as email', 'pw.value as hash'])
-      .asResult<{ id: ID; email: string; hash: string }>()
-      .first();
+    const existing = await this.repo.checkExistingRoot();
     if (existing) {
       if (
         existing.email !== email ||
         !(await this.crypto.verify(existing.hash, password))
       ) {
         this.logger.notice('Updating root user to match app configuration');
-        await this.db
-          .query()
-          .match([
-            node('email', 'EmailAddress'),
-            relation('in', '', 'email', { active: true }),
-            node('root', ['RootUser']),
-            relation('out', '', 'password', { active: true }),
-            node('pw', 'Property'),
-          ])
-          .setValues({
-            email: { value: email },
-            pw: { value: await this.crypto.hash(password) },
-          })
-          .run();
+        const hashedPassword = await this.crypto.hash(password);
+        await this.repo.mergeRootAdminUser(email, hashedPassword);
       }
       id = existing.id;
     } else {
@@ -265,12 +195,7 @@ export class AdminService implements OnApplicationBootstrap {
 
       // set root user label & give all powers
       const powers = Object.keys(Powers);
-      await this.db
-        .query()
-        .matchNode('user', 'User', { id })
-        .setLabels({ user: 'RootUser' })
-        .setValues({ user: { powers } }, true)
-        .run();
+      await this.repo.setUserLabel(powers, id);
     }
 
     // TODO do this a different way. Using a global like this can cause race conditions.
@@ -279,28 +204,8 @@ export class AdminService implements OnApplicationBootstrap {
   }
 
   private async mergeRootAdminUserToSecurityGroup(): Promise<void> {
-    const makeAdmin = await this.db
-      .query()
-      .match([
-        [
-          node('sg', 'RootSecurityGroup', {
-            id: this.config.rootSecurityGroup.id,
-          }),
-        ],
-      ])
-      .with('*')
-      .match(node('newRootAdmin', 'RootUser'))
-      .with('*')
-      .merge([
-        [
-          node('sg'),
-          relation('out', 'adminLink', 'member'),
-          node('newRootAdmin'),
-        ],
-      ])
-      // .setValues({ sg: RootSecurityGroup })
-      .return('newRootAdmin')
-      .first();
+    const id = this.config.rootSecurityGroup.id;
+    const makeAdmin = await this.repo.mergeRootAdminUserToSecurityGroup(id);
 
     if (!makeAdmin) {
       throw new ServerException(
@@ -310,65 +215,30 @@ export class AdminService implements OnApplicationBootstrap {
   }
 
   private async mergePublicSecurityGroupWithRootSg(): Promise<void> {
-    await this.db
-      .query()
-      .merge([
-        node('publicSg', ['PublicSecurityGroup', 'SecurityGroup'], {
-          id: this.config.publicSecurityGroup.id,
-        }),
-      ])
-      .onCreate.setValues({
-        publicSg: {
-          id: this.config.publicSecurityGroup.id,
-        },
-      })
-      .setLabels({ publicSg: 'SecurityGroup' })
-      .with('*')
-      .match([
-        node('rootSg', 'RootSecurityGroup', {
-          id: this.config.rootSecurityGroup.id,
-        }),
-      ])
-      .merge([node('publicSg'), relation('out', '', 'member'), node('rootSg')])
-      .run();
+    const publicSecurityGroupId = this.config.publicSecurityGroup.id;
+    const rootSecurityGroupId = this.config.rootSecurityGroup.id;
+
+    await this.repo.mergePublicSecurityGroupWithRootSg(
+      publicSecurityGroupId,
+      rootSecurityGroupId
+    );
   }
 
   private async mergeDefaultOrg(): Promise<void> {
     // is there a default org
-    const isDefaultOrgResult = await this.db
-      .query()
-      .match([node('org', 'DefaultOrganization')])
-      .return('org.id as id')
-      .first();
+    const isDefaultOrgResult = await this.repo.checkDefaultOrg();
 
     if (!isDefaultOrgResult) {
       // is there an org with the soon-to-be-created defaultOrg's name
-      const doesOrgExist = await this.db
-        .query()
-        .match([
-          node('org', 'Organization'),
-          relation('out', '', 'name'),
-          node('name', 'Property', {
-            value: this.config.defaultOrg.name,
-          }),
-        ])
-        .return('org')
-        .first();
+      const defaultOrgName = this.config.defaultOrg.name;
+      const doesOrgExist = await this.repo.doesOrgExist(defaultOrgName);
 
       if (doesOrgExist) {
         // add label to org
-        const giveOrgDefaultLabel = await this.db
-          .query()
-          .match([
-            node('org', 'Organization'),
-            relation('out', '', 'name'),
-            node('name', 'Property', {
-              value: this.config.defaultOrg.name,
-            }),
-          ])
-          .setLabels({ org: 'DefaultOrganization' })
-          .return('org.id as id')
-          .first();
+
+        const giveOrgDefaultLabel = await this.repo.giveOrgDefaultLabel(
+          defaultOrgName
+        );
 
         if (!giveOrgDefaultLabel) {
           throw new ServerException('could not create default org');
@@ -377,48 +247,17 @@ export class AdminService implements OnApplicationBootstrap {
         // create org
         const orgSgId = await generateId();
         const createdAt = DateTime.local();
-        const createOrgResult = await this.db
-          .query()
-          .match(
-            node('publicSg', 'PublicSecurityGroup', {
-              id: this.config.publicSecurityGroup.id,
-            })
-          )
-          .match(node('rootuser', 'RootUser'))
-          .create([
-            node('orgSg', ['OrgPublicSecurityGroup', 'SecurityGroup'], {
-              id: orgSgId,
-            }),
-            relation('out', '', 'organization'),
-            node('org', ['DefaultOrganization', 'Organization'], {
-              id: this.config.defaultOrg.id,
-              createdAt,
-            }),
-            relation('out', '', 'name', { active: true, createdAt }),
-            node('name', 'Property', {
-              createdAt,
-              value: this.config.defaultOrg.name,
-            }),
-          ])
-          .with('*')
-          .create([
-            node('publicSg'),
-            relation('out', '', 'permission'),
-            node('perm', 'Permission', {
-              property: 'name',
-              read: true,
-            }),
-            relation('out', '', 'baseNode'),
-            node('org'),
-          ])
-          .with('*')
-          .create([
-            node('orgSg'),
-            relation('out', '', 'member'),
-            node('rootuser'),
-          ])
-          .return('org.id as id')
-          .first();
+        const publicSecurityGroupId = this.config.publicSecurityGroup.id;
+        const defaultOrgId = this.config.defaultOrg.id;
+        const defaultOrgName = this.config.defaultOrg.name;
+
+        const createOrgResult = await this.repo.createOrgResult(
+          orgSgId,
+          createdAt,
+          publicSecurityGroupId,
+          defaultOrgId,
+          defaultOrgName
+        );
 
         if (!createOrgResult) {
           throw new ServerException('failed to create default org');

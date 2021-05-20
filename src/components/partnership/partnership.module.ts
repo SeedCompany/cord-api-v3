@@ -4,6 +4,7 @@ import { BudgetModule } from '../budget/budget.module';
 import { FileModule } from '../file/file.module';
 import { PartnerModule } from '../partner/partner.module';
 import { ProjectModule } from '../project/project.module';
+import { PartnershipRepository } from './partnership.repository';
 import { PartnershipResolver } from './partnership.resolver';
 import { PartnershipService } from './partnership.service';
 
@@ -15,7 +16,7 @@ import { PartnershipService } from './partnership.service';
     forwardRef(() => ProjectModule),
     PartnerModule,
   ],
-  providers: [PartnershipResolver, PartnershipService],
-  exports: [PartnershipService],
+  providers: [PartnershipResolver, PartnershipService, PartnershipRepository],
+  exports: [PartnershipService, PartnershipRepository],
 })
 export class PartnershipModule {}

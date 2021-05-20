@@ -2,6 +2,7 @@ import { forwardRef, Global, Module, Provider } from '@nestjs/common';
 import { SESSION_PIPE_TOKEN } from '../../common/session';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { UserModule } from '../user/user.module';
+import { AuthenticationRepository } from './authentication.repository';
 import { AuthenticationResolver } from './authentication.resolver';
 import { AuthenticationService } from './authentication.service';
 import { CryptoService } from './crypto.service';
@@ -21,6 +22,7 @@ const ProvideSessionPipe: Provider = {
   providers: [
     AuthenticationResolver,
     AuthenticationService,
+    AuthenticationRepository,
     CryptoService,
     SessionPipe,
     ProvideSessionPipe,
@@ -30,6 +32,7 @@ const ProvideSessionPipe: Provider = {
     CryptoService,
     SessionPipe,
     SESSION_PIPE_TOKEN,
+    AuthenticationRepository,
   ],
 })
 export class AuthenticationModule {}

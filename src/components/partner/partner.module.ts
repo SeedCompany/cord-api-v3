@@ -2,6 +2,7 @@ import { forwardRef, Module } from '@nestjs/common';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { OrganizationModule } from '../organization/organization.module';
 import { UserModule } from '../user/user.module';
+import { PartnerRepository } from './partner.repository';
 import { PartnerResolver } from './partner.resolver';
 import { PartnerService } from './partner.service';
 
@@ -11,7 +12,7 @@ import { PartnerService } from './partner.service';
     forwardRef(() => OrganizationModule),
     forwardRef(() => UserModule),
   ],
-  providers: [PartnerResolver, PartnerService],
-  exports: [PartnerService],
+  providers: [PartnerResolver, PartnerService, PartnerRepository],
+  exports: [PartnerService, PartnerRepository],
 })
 export class PartnerModule {}

@@ -1,5 +1,4 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { inArray, node, relation } from 'cypher-query-builder';
 import { compact, difference } from 'lodash';
 import { DateTime } from 'luxon';
 import {
@@ -13,32 +12,21 @@ import {
   SecuredResource,
   ServerException,
   Session,
-  UnauthorizedException,
 } from '../../common';
 import {
   ConfigService,
   DatabaseService,
-  deleteProperties,
   ILogger,
   Logger,
-  matchSession,
   OnIndex,
   property,
   Transactional,
   UniquenessError,
 } from '../../core';
 import {
-  calculateTotalAndPaginateList,
-  matchPropList,
-  permissionsOfNode,
-  requestingUser,
-} from '../../core/database/query';
-import {
-  DbPropsOfDto,
   parseBaseNodeProperties,
   parseSecuredProperties,
   runListQuery,
-  StandardReadResult,
 } from '../../core/database/results';
 import { Role } from '../authorization';
 import {
@@ -84,6 +72,7 @@ import {
   UnavailabilityListInput,
   UnavailabilityService,
 } from './unavailability';
+import { UserRepository } from './user.repository';
 
 export const fullName = (
   user: Partial<
@@ -125,6 +114,7 @@ export class UserService {
     private readonly authorizationService: AuthorizationService,
     private readonly locationService: LocationService,
     private readonly languageService: LanguageService,
+    private readonly userRepo: UserRepository,
     @Logger('user:service') private readonly logger: ILogger
   ) {}
 
@@ -159,132 +149,26 @@ export class UserService {
 
   async create(input: CreatePerson, _session?: Session): Promise<ID> {
     const id = await generateId();
-    const createdAt = DateTime.local();
-
-    const query = this.db.query();
-    query.create([
-      [
-        node('user', ['User', 'BaseNode'], {
-          id,
-          createdAt,
-        }),
-      ],
-      ...property('email', input.email, 'user', 'email', 'EmailAddress'),
-      ...property('realFirstName', input.realFirstName, 'user'),
-      ...property('realLastName', input.realLastName, 'user'),
-      ...property('displayFirstName', input.displayFirstName, 'user'),
-      ...property('displayLastName', input.displayLastName, 'user'),
-      ...property('phone', input.phone, 'user'),
-      ...property('timezone', input.timezone, 'user'),
-      ...property('about', input.about, 'user'),
-      ...property('status', input.status, 'user'),
-      ...this.roleProperties(input.roles),
-      ...property('title', input.title, 'user'),
-      ...property('canDelete', true, 'user'),
-    ]);
-
-    query.return({
-      user: [{ id: 'id' }],
-    });
-    let result;
-    try {
-      result = await query.first();
-    } catch (e) {
-      if (e instanceof UniquenessError && e.label === 'EmailAddress') {
-        throw new DuplicateException(
-          'person.email',
-          'Email address is already in use',
-          e
-        );
-      }
-      throw new ServerException('Failed to create user', e);
-    }
-    if (!result) {
-      throw new ServerException('Failed to create user');
-    }
-
-    // attach user to publicSG
-
-    const attachUserToPublicSg = await this.db
-      .query()
-      .match(node('user', 'User', { id }))
-      .match(node('publicSg', 'PublicSecurityGroup'))
-
-      .create([node('publicSg'), relation('out', '', 'member'), node('user')])
-      .create([
-        node('publicSg'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property: 'displayFirstName',
-          read: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('user'),
-      ])
-      .create([
-        node('publicSg'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property: 'displayLastName',
-          read: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('user'),
-      ])
-      .return('user')
-      .first();
-
-    if (!attachUserToPublicSg) {
-      this.logger.error('failed to attach user to public securityGroup');
-    }
-
-    if (this.config.defaultOrg.id) {
-      const attachToOrgPublicSg = await this.db
-        .query()
-        .match(node('user', 'User', { id }))
-        .match([
-          node('orgPublicSg', 'OrgPublicSecurityGroup'),
-          relation('out', '', 'organization'),
-          node('defaultOrg', 'Organization', {
-            id: this.config.defaultOrg.id,
-          }),
-        ])
-        .create([
-          node('user'),
-          relation('in', '', 'member'),
-          node('orgPublicSg'),
-        ])
-        .run();
-
-      if (attachToOrgPublicSg) {
-        //
-      }
-    }
+    await this.userRepo.create(id, input);
     input.roles &&
       (await this.authorizationService.roleAddedToUser(id, input.roles));
-
     const dbUser = new DbUser();
     await this.authorizationService.processNewBaseNode(dbUser, id, id);
-
-    return result.id;
+    return id;
   }
 
   async readOne(id: ID, sessionOrUserId: Session | ID): Promise<User> {
-    const query = this.db
-      .query()
-      .match([node('node', 'User', { id })])
-      .apply(matchPropList)
-      .return('propList, node')
-      .asResult<StandardReadResult<DbPropsOfDto<User>>>();
-
-    const result = await query.first();
+    const { result, canDelete } = await this.userRepo.readOne(
+      id,
+      sessionOrUserId
+    );
     if (!result) {
       throw new NotFoundException('Could not find user', 'user.id');
     }
 
     const rolesValue = result.propList
-      .filter((prop) => prop.property === 'roles')
-      .map((prop) => prop.value as Role);
+      .filter((prop: any) => prop.property === 'roles')
+      .map((prop: any) => prop.value as Role);
 
     let permsOfBaseNode: PermissionsOf<SecuredResource<typeof User, false>>;
     // -- let the user explicitly see all properties only if they're reading their own ID
@@ -318,7 +202,7 @@ export class UserService {
         ...securedProps.roles,
         value: rolesValue,
       },
-      canDelete: await this.db.checkDeletePermission(id, sessionOrUserId),
+      canDelete,
     };
   }
 
@@ -327,7 +211,8 @@ export class UserService {
     this.logger.debug('mutation update User', { input, session });
     const user = await this.readOne(input.id, session);
 
-    const changes = this.db.getActualChanges(User, user, input);
+    const changes = this.userRepo.getActualChanges(input, user);
+
     if (user.id !== session.userId) {
       await this.authorizationService.verifyCanEditChanges(User, user, changes);
     }
@@ -338,39 +223,13 @@ export class UserService {
       await this.authorizationService.checkPower(Powers.GrantRole, session);
     }
 
-    await this.db.updateProperties({
-      type: User,
-      object: user,
-      changes: simpleChanges,
-    });
+    await this.userRepo.updateProperties(user, simpleChanges);
 
     // Update email
     if (email) {
-      // Remove old emails and relations
-      await this.db
-        .query()
-        .match([node('node', ['User', 'BaseNode'], { id: user.id })])
-        .apply(deleteProperties(User, 'email'))
-        .return('*')
-        .run();
-
       try {
         const createdAt = DateTime.local();
-        await this.db
-          .query()
-          .match([node('user', ['User', 'BaseNode'], { id: user.id })])
-          .create([
-            node('user'),
-            relation('out', '', 'email', {
-              active: true,
-              createdAt,
-            }),
-            node('email', 'EmailAddress:Property', {
-              value: email,
-              createdAt,
-            }),
-          ])
-          .run();
+        await this.userRepo.updateEmail(user, email, createdAt);
       } catch (e) {
         if (e instanceof UniquenessError && e.label === 'EmailAddress') {
           throw new DuplicateException(
@@ -387,40 +246,7 @@ export class UserService {
     if (roles) {
       const removals = difference(user.roles.value, roles);
       const additions = difference(roles, user.roles.value);
-      if (removals.length > 0) {
-        await this.db
-          .query()
-          .match([
-            node('user', ['User', 'BaseNode'], {
-              id: input.id,
-            }),
-            relation('out', 'oldRoleRel', 'roles', { active: true }),
-            node('oldRoles', 'Property'),
-          ])
-          .where({
-            oldRoles: {
-              value: inArray(removals),
-            },
-          })
-          .set({
-            values: {
-              'oldRoleRel.active': false,
-            },
-          })
-          .run();
-      }
-
-      if (additions.length > 0) {
-        await this.db
-          .query()
-          .match([
-            node('user', ['User', 'BaseNode'], {
-              id: input.id,
-            }),
-          ])
-          .create([...this.roleProperties(additions)])
-          .run();
-      }
+      await this.userRepo.updateRoles(input, removals, additions);
 
       await this.authorizationService.roleAddedToUser(input.id, roles);
     }
@@ -434,28 +260,11 @@ export class UserService {
     if (!object) {
       throw new NotFoundException('Could not find User');
     }
-
-    const canDelete = await this.db.checkDeletePermission(id, session);
-
-    if (!canDelete)
-      throw new UnauthorizedException(
-        'You do not have the permission to delete this User'
-      );
-
-    try {
-      await this.db.deleteNode(object);
-    } catch (exception) {
-      this.logger.error('Failed to delete', { id, exception });
-      throw new ServerException('Failed to delete', exception);
-    }
+    await this.userRepo.delete(id, session, object);
   }
 
   async list(input: UserListInput, session: Session): Promise<UserListOutput> {
-    const query = this.db
-      .query()
-      .match([requestingUser(session), ...permissionsOfNode('User')])
-      .apply(calculateTotalAndPaginateList(User, input));
-
+    const query = this.userRepo.list(input, session);
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 
@@ -464,38 +273,8 @@ export class UserService {
     input: EducationListInput,
     session: Session
   ): Promise<SecuredEducationList> {
-    const query = this.db
-      .query()
-      .match(matchSession(session)) // Michel Query Refactor Will Fix This
-      .match([node('user', 'User', { id: userId })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', 'memberOfReadSecurityGroup', 'member'),
-        node('readSecurityGroup', 'SecurityGroup'),
-        relation('out', 'sgReadPerms', 'permission'),
-        node('canRead', 'Permission', {
-          property: 'education',
-          read: true,
-        }),
-        relation('out', 'readPermsOfBaseNode', 'baseNode'),
-        node('user'),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', 'memberOfEditSecurityGroup', 'member'),
-        node('editSecurityGroup', 'SecurityGroup'),
-        relation('out', 'sgEditPerms', 'permission'),
-        node('canEdit', 'Permission', {
-          property: 'education',
-          edit: true,
-        }),
-        relation('out', 'editPermsOfBaseNode', 'baseNode'),
-        node('user'),
-      ])
-      .return({
-        canRead: [{ read: 'canRead' }],
-        canEdit: [{ edit: 'canEdit' }],
-      });
+    const query = this.userRepo.listEducations(userId, session);
+
     let user;
     try {
       user = await query.first();
@@ -534,38 +313,7 @@ export class UserService {
     input: OrganizationListInput,
     session: Session
   ): Promise<SecuredOrganizationList> {
-    const query = this.db
-      .query()
-      .match(matchSession(session))
-      .match([node('user', 'User', { id: userId })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', 'memberOfReadSecurityGroup', 'member'),
-        node('readSecurityGroup', 'SecurityGroup'),
-        relation('out', 'sgReadPerms', 'permission'),
-        node('canRead', 'Permission', {
-          property: 'organization',
-          read: true,
-        }),
-        relation('out', 'readPermsOfBaseNode', 'baseNode'),
-        node('user'),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', 'memberOfEditSecurityGroup', 'member'),
-        node('editSecurityGroup', 'SecurityGroup'),
-        relation('out', 'sgEditPerms', 'permission'),
-        node('canEdit', 'Permission', {
-          property: 'organization',
-          edit: true,
-        }),
-        relation('out', 'editPermsOfBaseNode', 'baseNode'),
-        node('user'),
-      ])
-      .return({
-        canRead: [{ read: 'canRead' }],
-        canEdit: [{ edit: 'canEdit' }],
-      });
+    const query = this.userRepo.listOrganizations(userId, session);
     let user;
     try {
       user = await query.first();
@@ -605,39 +353,7 @@ export class UserService {
     input: PartnerListInput,
     session: Session
   ): Promise<SecuredPartnerList> {
-    const query = this.db
-      .query()
-      .match(matchSession(session)) // Michel Query Refactor Will Fix This
-      .match([node('user', 'User', { id: userId })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', 'memberOfReadSecurityGroup', 'member'),
-        node('readSecurityGroup', 'SecurityGroup'),
-        relation('out', 'sgReadPerms', 'permission'),
-        node('canRead', 'Permission', {
-          property: 'partners',
-          read: true,
-        }),
-        relation('out', 'readPermsOfBaseNode', 'baseNode'),
-        node('user'),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', 'memberOfEditSecurityGroup', 'member'),
-        node('editSecurityGroup', 'SecurityGroup'),
-        relation('out', 'sgEditPerms', 'permission'),
-        node('canEdit', 'Permission', {
-          property: 'partners',
-          edit: true,
-        }),
-        relation('out', 'editPermsOfBaseNode', 'baseNode'),
-        node('user'),
-      ])
-      .return({
-        canRead: [{ read: 'canRead' }],
-        canEdit: [{ edit: 'canEdit' }],
-      });
-
+    const query = this.userRepo.listPartners(userId, session);
     let user;
     try {
       user = await query.first();
@@ -680,38 +396,7 @@ export class UserService {
     input: UnavailabilityListInput,
     session: Session
   ): Promise<SecuredUnavailabilityList> {
-    const query = this.db
-      .query()
-      .match(matchSession(session))
-      .match([node('user', 'User', { id: userId })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', 'memberOfReadSecurityGroup', 'member'),
-        node('readSecurityGroup', 'SecurityGroup'),
-        relation('out', 'sgReadPerms', 'permission'),
-        node('canRead', 'Permission', {
-          property: 'unavailability',
-          read: true,
-        }),
-        relation('out', 'readPermsOfBaseNode', 'baseNode'),
-        node('user'),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', 'memberOfEditSecurityGroup', 'member'),
-        node('editSecurityGroup', 'SecurityGroup'),
-        relation('out', 'sgEditPerms', 'permission'),
-        node('canEdit', 'Permission', {
-          property: 'unavailability',
-          edit: true,
-        }),
-        relation('out', 'editPermsOfBaseNode', 'baseNode'),
-        node('user'),
-      ])
-      .return({
-        canRead: [{ read: 'canRead' }],
-        canEdit: [{ edit: 'canEdit' }],
-      });
+    const query = this.userRepo.listUnavailabilities(userId, session);
     let user;
     try {
       user = await query.first();
@@ -807,20 +492,11 @@ export class UserService {
         languageProficiency,
         _session
       );
-      await this.db
-        .query()
-        .matchNode('user', 'User', { id: userId })
-        .matchNode('language', 'Language', { id: languageId })
-        .create([
-          node('user'),
-          relation('out', '', 'knownLanguage', {
-            active: true,
-            createdAt: DateTime.local(),
-            value: languageProficiency,
-          }),
-          node('language'),
-        ])
-        .run();
+      await this.userRepo.createKnownLanguage(
+        userId,
+        languageId,
+        languageProficiency
+      );
     } catch (e) {
       throw new ServerException('Could not create known language', e);
     }
@@ -833,24 +509,11 @@ export class UserService {
     _session: Session
   ): Promise<void> {
     try {
-      await this.db
-        .query()
-        .matchNode('user', 'User', { id: userId })
-        .matchNode('language', 'Language', { id: languageId })
-        .match([
-          [
-            node('user'),
-            relation('out', 'rel', 'knownLanguage', {
-              active: true,
-              value: languageProficiency,
-            }),
-            node('language'),
-          ],
-        ])
-        .setValues({
-          'rel.active': false,
-        })
-        .run();
+      await this.userRepo.deleteKnownLanguage(
+        userId,
+        languageId,
+        languageProficiency
+      );
     } catch (e) {
       throw new ServerException('Could not delete known language', e);
     }
@@ -860,28 +523,10 @@ export class UserService {
     userId: ID,
     session: Session
   ): Promise<KnownLanguage[]> {
-    const results = await this.db
-      .query()
-      .match([
-        requestingUser(session),
-        ...permissionsOfNode('Language'),
-        relation('in', 'knownLanguageRel', 'knownLanguage', { active: true }),
-        node('user', 'User', { id: userId }),
-      ])
-      .with('collect(distinct user) as users, node, knownLanguageRel')
-      .raw(`unwind users as user`)
-      .return([
-        'knownLanguageRel.value as languageProficiency',
-        'node.id as languageId',
-      ])
-      .asResult<{
-        languageProficiency: LanguageProficiency;
-        languageId: ID;
-      }>()
-      .run();
+    const results = await this.userRepo.listKnownLanguages(userId, session);
 
     const knownLanguages = await Promise.all(
-      results.map(async (item) => {
+      results.map(async (item: any) => {
         return {
           language: item.languageId,
           proficiency: item.languageProficiency,
@@ -893,22 +538,7 @@ export class UserService {
   }
 
   async checkEmail(email: string): Promise<boolean> {
-    const result = await this.db
-      .query()
-      .raw(
-        `
-        MATCH
-        (email:EmailAddress {
-          value: $email
-        })
-        RETURN
-        email.value as email
-        `,
-        {
-          email: email,
-        }
-      )
-      .first();
+    const result = await this.userRepo.checkEmail(email);
     if (result) {
       return false;
     }
@@ -920,86 +550,12 @@ export class UserService {
     session: Session
   ): Promise<void> {
     //TO DO: Refactor session in the future
-    const querySession = this.db.query();
-    if (session.userId) {
-      querySession.match([
-        matchSession(session, { withAclEdit: 'canCreateOrg' }),
-      ]);
-    }
 
-    const primary =
-      request.primary !== null && request.primary !== undefined
-        ? request.primary
-        : false;
-
-    await this.db
-      .query()
-      .match([
-        node('user', 'User', {
-          id: request.userId,
-        }),
-        relation('out', 'oldRel', 'organization', {
-          active: true,
-        }),
-        node('primaryOrg', 'Organization', {
-          id: request.orgId,
-        }),
-      ])
-      .setValues({ 'oldRel.active': false })
-      .return('oldRel')
-      .first();
-
-    if (primary) {
-      await this.db
-        .query()
-        .match([
-          node('user', 'User', {
-            id: request.userId,
-          }),
-          relation('out', 'oldRel', 'primaryOrganization', {
-            active: true,
-          }),
-          node('primaryOrg', 'Organization', {
-            id: request.orgId,
-          }),
-        ])
-        .setValues({ 'oldRel.active': false })
-        .return('oldRel')
-        .first();
-    }
-
-    let queryCreate;
-    if (primary) {
-      queryCreate = this.db.query().raw(
-        `
-        MATCH (primaryOrg:Organization {id: $orgId}),
-        (user:User {id: $userId})
-        CREATE (primaryOrg)<-[:primaryOrganization {active: true, createdAt: datetime()}]-(user),
-        (primaryOrg)<-[:organization {active: true, createdAt: datetime()}]-(user)
-        RETURN  user.id as id
-      `,
-        {
-          userId: request.userId,
-          orgId: request.orgId,
-        }
-      );
-    } else {
-      queryCreate = this.db.query().raw(
-        `
-        MATCH (org:Organization {id: $orgId}),
-        (user:User {id: $userId})
-        CREATE (org)<-[:organization {active: true, createdAt: datetime()}]-(user)
-        RETURN  user.id as id
-      `,
-        {
-          userId: request.userId,
-          orgId: request.orgId,
-        }
-      );
-    }
-
+    const queryCreate = await this.userRepo.assignOrganizationToUser(
+      request,
+      session
+    );
     const result = await queryCreate.first();
-
     if (!result) {
       throw new ServerException('Failed to assign organzation to user');
     }
@@ -1009,55 +565,7 @@ export class UserService {
     request: RemoveOrganizationFromUser,
     _session: Session
   ): Promise<void> {
-    const removeOrg = this.db
-      .query()
-      .match([
-        node('user', 'User', {
-          id: request.userId,
-        }),
-        relation('out', 'oldRel', 'organization', {
-          active: true,
-        }),
-        node('org', 'Organization', {
-          id: request.orgId,
-        }),
-      ])
-      .optionalMatch([
-        node('user'),
-        relation('out', 'primary', 'primaryOrganization', { active: true }),
-        node('org'),
-      ])
-      .setValues({ 'oldRel.active': false })
-      .return({ oldRel: [{ id: 'oldId' }], primary: [{ id: 'primaryId' }] });
-    let resultOrg;
-    try {
-      resultOrg = await removeOrg.first();
-    } catch (e) {
-      throw new NotFoundException('user and org are not connected');
-    }
-
-    if (resultOrg?.primaryId) {
-      const removePrimary = this.db
-        .query()
-        .match([
-          node('user', 'User', {
-            id: request.userId,
-          }),
-          relation('out', 'oldRel', 'primaryOrganization', {
-            active: true,
-          }),
-          node('primaryOrg', 'Organization', {
-            id: request.orgId,
-          }),
-        ])
-        .setValues({ 'oldRel.active': false })
-        .return('oldRel');
-      try {
-        await removePrimary.first();
-      } catch {
-        this.logger.debug('not primary');
-      }
-    }
+    const resultOrg = await this.userRepo.removeOrganizationFromUser(request);
 
     if (!resultOrg) {
       throw new ServerException('Failed to assign organzation to user');
@@ -1065,52 +573,19 @@ export class UserService {
   }
 
   async checkUserConsistency(session: Session): Promise<boolean> {
-    const users = await this.db
-      .query()
-      .match([matchSession(session), [node('user', 'User')]])
-      .return('user.id as id')
-      .run();
-
+    const users = await this.userRepo.getUsers(session);
     return (
       (
         await Promise.all(
           users.map(async (user) => {
-            return await this.db.hasProperties({
-              session,
-              id: user.id,
-              props: [
-                'email',
-                'realFirstName',
-                'realLastName',
-                'displayFirstName',
-                'displayLastName',
-                'phone',
-                'timezone',
-                'about',
-              ],
-              nodevar: 'user',
-            });
+            return await this.userRepo.checkUserProperties(session, user);
           })
         )
       ).every((n) => n) &&
       (
         await Promise.all(
           users.map(async (user) => {
-            return await this.db.isUniqueProperties({
-              session,
-              id: user.id,
-              props: [
-                'email',
-                'realFirstName',
-                'realLastName',
-                'displayFirstName',
-                'displayLastName',
-                'phone',
-                'timezone',
-                'about',
-              ],
-              nodevar: 'user',
-            });
+            return await this.userRepo.checkUniqueProperties(session, user);
           })
         )
       ).every((n) => n)

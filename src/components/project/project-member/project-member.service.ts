@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { Node, node, Query, relation } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { difference } from 'lodash';
 import { DateTime } from 'luxon';
@@ -21,15 +21,8 @@ import {
   ILogger,
   Logger,
   OnIndex,
-  property,
 } from '../../../core';
-import {
-  calculateTotalAndPaginateList,
-  matchPropsAndProjectSensAndScopedRoles,
-  permissionsOfNode,
-  requestingUser,
-} from '../../../core/database/query';
-import { DbPropsOfDto, runListQuery } from '../../../core/database/results';
+import { runListQuery } from '../../../core/database/results';
 import { AuthorizationService } from '../../authorization/authorization.service';
 import { User, UserService } from '../../user';
 import {
@@ -38,10 +31,10 @@ import {
   ProjectMemberListInput,
   ProjectMemberListOutput,
   Role,
-  ScopedRole,
   UpdateProjectMember,
 } from './dto';
 import { DbProjectMember } from './model';
+import { ProjectMemberRepository } from './project-member.repository';
 
 @Injectable()
 export class ProjectMemberService {
@@ -53,7 +46,8 @@ export class ProjectMemberService {
     private readonly eventBus: IEventBus,
     @Logger('project:member:service') private readonly logger: ILogger,
     @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService
+    private readonly authorizationService: AuthorizationService,
+    private readonly repo: ProjectMemberRepository
   ) {}
 
   @OnIndex()
@@ -68,20 +62,10 @@ export class ProjectMemberService {
     projectId: ID,
     userId: ID
   ): Promise<void> {
-    const result = await this.db
-      .query()
-      .optionalMatch(node('user', 'User', { id: userId }))
-      .optionalMatch(node('project', 'Project', { id: projectId }))
-      .optionalMatch([
-        node('project'),
-        relation('out', '', 'member', { active: true }),
-        node('member', 'ProjectMember'),
-        relation('out', '', 'user', { active: true }),
-        node('user'),
-      ])
-      .return(['user', 'project', 'member'])
-      .asResult<{ user?: Node; project?: Node; member?: Node }>()
-      .first();
+    const result = await this.repo.verifyRelationshipEligibility(
+      projectId,
+      userId
+    );
 
     if (!result?.project) {
       throw new NotFoundException(
@@ -119,45 +103,12 @@ export class ProjectMemberService {
     );
 
     try {
-      const createProjectMember = this.db
-        .query()
-        .create([
-          [
-            node('newProjectMember', 'ProjectMember:BaseNode', {
-              createdAt,
-              id,
-            }),
-          ],
-          ...property('roles', input.roles, 'newProjectMember'),
-          ...property('modifiedAt', createdAt, 'newProjectMember'),
-        ])
-        .return('newProjectMember.id as id');
-      await createProjectMember.first();
-
-      // connect the Project to the ProjectMember
-      // and connect ProjectMember to User
-      const memberQuery = await this.db
-        .query()
-        .match([
-          [node('user', 'User', { id: userId })],
-          [node('project', 'Project', { id: projectId })],
-          [node('projectMember', 'ProjectMember', { id })],
-        ])
-        .create([
-          node('project'),
-          relation('out', '', 'member', {
-            active: true,
-            createdAt: DateTime.local(),
-          }),
-          node('projectMember'),
-          relation('out', '', 'user', {
-            active: true,
-            createdAt: DateTime.local(),
-          }),
-          node('user'),
-        ])
-        .return('projectMember.id as id')
-        .first();
+      const memberQuery = await this.repo.create(
+        { userId, projectId, ...input },
+        id,
+        session,
+        createdAt
+      );
 
       // creating user must be an admin, use role change event
       const dbProjectMember = new DbProjectMember();
@@ -187,24 +138,7 @@ export class ProjectMemberService {
       );
     }
 
-    const query = this.db
-      .query()
-      .match([
-        node('project', 'Project'),
-        relation('out', '', 'member', { active: true }),
-        node('node', 'ProjectMember', { id }),
-        relation('out', '', 'user'),
-        node('user', 'User'),
-      ])
-      .apply(matchPropsAndProjectSensAndScopedRoles(session))
-      .return(['props', 'user.id as userId', 'scopedRoles'])
-      .asResult<{
-        props: DbPropsOfDto<ProjectMember, true>;
-        userId: ID;
-        scopedRoles: ScopedRole[];
-      }>();
-
-    const result = await query.first();
+    const result = await this.repo.readOne(id, session);
     if (!result) {
       throw new NotFoundException(
         'Could not find project member',
@@ -230,7 +164,7 @@ export class ProjectMemberService {
         ...securedProps.roles,
         value: securedProps.roles.value ?? [],
       },
-      canDelete: await this.db.checkDeletePermission(id, session), // TODO
+      canDelete: await this.repo.checkDeletePermission(id, session), // TODO
     };
   }
 
@@ -250,17 +184,13 @@ export class ProjectMemberService {
       return user;
     });
 
-    const changes = this.db.getActualChanges(ProjectMember, object, input);
+    const changes = this.repo.getActualChanges(object, input);
     await this.authorizationService.verifyCanEditChanges(
       ProjectMember,
       object,
       changes
     );
-    await this.db.updateProperties({
-      type: ProjectMember,
-      object,
-      changes,
-    });
+    await this.repo.updateProperties(object, changes);
     return await this.readOne(input.id, session);
   }
 
@@ -294,7 +224,7 @@ export class ProjectMemberService {
     }
 
     try {
-      await this.db.deleteNode(object);
+      await this.repo.deleteNode(object);
     } catch (exception) {
       this.logger.warning('Failed to delete project member', {
         exception,
@@ -308,23 +238,7 @@ export class ProjectMemberService {
     { filter, ...input }: ProjectMemberListInput,
     session: Session
   ): Promise<ProjectMemberListOutput> {
-    const label = 'ProjectMember';
-
-    const query = this.db
-      .query()
-      .match([
-        requestingUser(session),
-        ...permissionsOfNode(label),
-        ...(filter.projectId
-          ? [
-              relation('in', '', 'member'),
-              node('project', 'Project', {
-                id: filter.projectId,
-              }),
-            ]
-          : []),
-      ])
-      .apply(calculateTotalAndPaginateList(ProjectMember, input));
+    const query = this.repo.list({ filter, ...input }, session);
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

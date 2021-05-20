@@ -14,6 +14,7 @@ import { UserModule } from '../user/user.module';
 import * as handlers from './handlers';
 import { ProjectMemberModule } from './project-member/project-member.module';
 import { ProjectStepResolver } from './project-step.resolver';
+import { ProjectRepository } from './project.repository';
 import { ProjectResolver } from './project.resolver';
 import { ProjectRules } from './project.rules';
 import { ProjectService } from './project.service';
@@ -39,8 +40,14 @@ import { ProjectService } from './project.service';
     ProjectService,
     ProjectStepResolver,
     ProjectRules,
+    ProjectRepository,
     ...Object.values(handlers),
   ],
-  exports: [ProjectService, ProjectMemberModule, ProjectRules],
+  exports: [
+    ProjectService,
+    ProjectMemberModule,
+    ProjectRules,
+    ProjectRepository,
+  ],
 })
 export class ProjectModule {}
