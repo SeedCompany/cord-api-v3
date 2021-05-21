@@ -13,6 +13,7 @@ export enum ProductMedium {
   App = 'App',
   TrainedStoryTellers = 'TrainedStoryTellers',
   OBSTrainers = 'OBSTrainers',
+  OralTranslation = 'OralTranslation',
   Audio = 'Audio',
   Video = 'Video',
   Other = 'Other',
