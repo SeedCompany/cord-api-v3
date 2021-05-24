@@ -52,9 +52,8 @@ export class DirectScriptureProduct extends Product {
 })
 export class DerivativeScriptureProduct extends Product {
   static readonly Props = keysOf<DerivativeScriptureProduct>();
-  static readonly SecuredProps = keysOf<
-    SecuredProps<DerivativeScriptureProduct>
-  >();
+  static readonly SecuredProps =
+    keysOf<SecuredProps<DerivativeScriptureProduct>>();
 
   @Field(() => SecuredProducible, {
     description: stripIndent`

@@ -25,50 +25,52 @@ export const determineSortValue = (value: unknown) =>
 
 // assumes 'requestingUser', and 'publicSG' cypher identifiers have been matched
 // add baseNodeProps and editableProps
-export const createBaseNode = (
-  id: ID,
-  label: string | string[],
-  props: Property[],
-  baseNodeProps?: { owningOrgId?: string | undefined; type?: string }
-) => (query: Query) => {
-  const createdAt = DateTime.local();
+export const createBaseNode =
+  (
+    id: ID,
+    label: string | string[],
+    props: Property[],
+    baseNodeProps?: { owningOrgId?: string | undefined; type?: string }
+  ) =>
+  (query: Query) => {
+    const createdAt = DateTime.local();
 
-  if (typeof label === 'string') {
-    query.create([
-      node('node', [label, 'BaseNode'], {
-        createdAt,
-        id,
-        ...baseNodeProps,
-      }),
-    ]);
-  } else {
-    query.create([
-      node('node', [...label, 'BaseNode'], {
-        createdAt,
-        id,
-        ...baseNodeProps,
-      }),
-    ]);
-  }
-
-  for (const prop of props) {
-    const labels = ['Property'];
-    if (prop.label) {
-      labels.push(prop.label);
+    if (typeof label === 'string') {
+      query.create([
+        node('node', [label, 'BaseNode'], {
+          createdAt,
+          id,
+          ...baseNodeProps,
+        }),
+      ]);
+    } else {
+      query.create([
+        node('node', [...label, 'BaseNode'], {
+          createdAt,
+          id,
+          ...baseNodeProps,
+        }),
+      ]);
     }
-    const nodeProps = {
-      createdAt,
-      value: prop.value,
-      sortValue: determineSortValue(prop.value),
-    };
 
-    query.create([
-      node('node'),
-      relation('out', '', prop.key, { active: true, createdAt }),
-      node('', labels, nodeProps),
-    ]);
-  }
-};
+    for (const prop of props) {
+      const labels = ['Property'];
+      if (prop.label) {
+        labels.push(prop.label);
+      }
+      const nodeProps = {
+        createdAt,
+        value: prop.value,
+        sortValue: determineSortValue(prop.value),
+      };
+
+      query.create([
+        node('node'),
+        relation('out', '', prop.key, { active: true, createdAt }),
+        node('', labels, nodeProps),
+      ]);
+    }
+  };
 
 export function matchUserPermissions(
   query: Query,
@@ -91,39 +93,41 @@ export function matchUserPermissions(
   query.with(`collect(perms) as permList, node, requestingUser`);
 }
 
-export const matchRequestingUser = ({ userId }: Pick<Session, 'userId'>) => (
-  query: Query
-) =>
-  query.match([
-    node('requestingUser', 'User', {
-      id: userId,
-    }),
-  ]);
+export const matchRequestingUser =
+  ({ userId }: Pick<Session, 'userId'>) =>
+  (query: Query) =>
+    query.match([
+      node('requestingUser', 'User', {
+        id: userId,
+      }),
+    ]);
 
 /**
  * This will set all relationships given to active false
  * and add deleted prefix to its labels.
  */
-export const deleteProperties = <Resource extends ResourceShape<any>>(
-  _resource: Resource,
-  ...relationLabels: ReadonlyArray<keyof Resource['prototype']>
-) => (query: Query) => {
-  if (relationLabels.length === 0) {
-    return query;
-  }
-  const deletedAt = DateTime.local();
-  return query
-    .match([
-      node('node'),
-      relation('out', 'propertyRel', relationLabels, { active: true }),
-      node('property', 'Property'),
-    ])
-    .setValues({
-      'property.deletedAt': deletedAt,
-      'propertyRel.active': false,
-    })
-    .raw(
-      `
+export const deleteProperties =
+  <Resource extends ResourceShape<any>>(
+    _resource: Resource,
+    ...relationLabels: ReadonlyArray<keyof Resource['prototype']>
+  ) =>
+  (query: Query) => {
+    if (relationLabels.length === 0) {
+      return query;
+    }
+    const deletedAt = DateTime.local();
+    return query
+      .match([
+        node('node'),
+        relation('out', 'propertyRel', relationLabels, { active: true }),
+        node('property', 'Property'),
+      ])
+      .setValues({
+        'property.deletedAt': deletedAt,
+        'propertyRel.active': false,
+      })
+      .raw(
+        `
     with property,
     reduce(
       deletedLabels = [], label in labels(property) |
@@ -137,5 +141,5 @@ export const deleteProperties = <Resource extends ResourceShape<any>>(
     call apoc.create.addLabels(property, deletedLabels) yield node as nodeAdded
     with *
   `
-    );
-};
+      );
+  };

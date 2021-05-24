@@ -80,9 +80,10 @@ export const createGraphqlClient = async (
   };
 };
 
-function validateResult(
-  res: GraphQLResponse
-): asserts res is Omit<GraphQLResponse, 'data' | 'errors'> & {
+function validateResult(res: GraphQLResponse): asserts res is Omit<
+  GraphQLResponse,
+  'data' | 'errors'
+> & {
   data: Record<string, any>;
 } {
   if (res.errors && res.errors.length > 0) {

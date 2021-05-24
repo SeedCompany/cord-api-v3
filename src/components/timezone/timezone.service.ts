@@ -49,7 +49,7 @@ export class TimeZoneService {
     // Convert lists of codes to lists of their objects
     // This creates circular references but GQL should handle it
     const countries = mapValues(data.countries, (c) => {
-      const o = (c as unknown) as IanaCountry;
+      const o = c as unknown as IanaCountry;
       o.code = c.abbr;
       // @ts-expect-error we are converting c to o here. Using the same object is
       // necessary so that we can maintain the cyclic references between countries & zones.
@@ -59,7 +59,7 @@ export class TimeZoneService {
     });
     const zones = mapValues(data.zones, (z) => {
       z.countries = z.countries.map((c) => data.countries[c]) as any;
-      return (z as unknown) as TimeZone;
+      return z as unknown as TimeZone;
     });
 
     return { zones, countries };

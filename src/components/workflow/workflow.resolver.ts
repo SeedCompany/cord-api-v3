@@ -14,6 +14,7 @@ import {
   UpdateStateInput,
 } from './dto';
 import { WorkflowService } from './workflow.service';
+
 @Resolver('Workflow')
 export class WorkflowResolver {
   constructor(private readonly service: WorkflowService) {}

@@ -5,7 +5,8 @@ import { CeremonyService } from '../ceremony.service';
 
 @EventsHandler(EngagementDeletedEvent)
 export class DetachEngagementRootDirectoryHandler
-  implements IEventHandler<EngagementDeletedEvent> {
+  implements IEventHandler<EngagementDeletedEvent>
+{
   constructor(
     private readonly ceremonies: CeremonyService,
     private readonly db: DatabaseService

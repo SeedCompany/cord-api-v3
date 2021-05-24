@@ -13,7 +13,8 @@ import { DbDirectory } from '../model';
 
 @EventsHandler(ProjectCreatedEvent)
 export class AttachProjectRootDirectoryHandler
-  implements IEventHandler<ProjectCreatedEvent> {
+  implements IEventHandler<ProjectCreatedEvent>
+{
   constructor(
     private readonly files: FileService,
     private readonly db: DatabaseService,

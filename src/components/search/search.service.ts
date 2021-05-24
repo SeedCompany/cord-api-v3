@@ -111,12 +111,10 @@ export class SearchService {
                   : []),
               ]
         )
-        .map(
-          async ({ id, type }): Promise<SearchResult | null> => {
-            const hydrator = this.hydrate(type);
-            return await hydrator(id, session);
-          }
-        )
+        .map(async ({ id, type }): Promise<SearchResult | null> => {
+          const hydrator = this.hydrate(type);
+          return await hydrator(id, session);
+        })
     );
 
     return {

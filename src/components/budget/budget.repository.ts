@@ -301,9 +301,7 @@ export class BudgetRepository {
     });
   }
 
-  async verifyCanEdit(
-    id: ID
-  ): Promise<
+  async verifyCanEdit(id: ID): Promise<
     | {
         status: BudgetStatus;
       }

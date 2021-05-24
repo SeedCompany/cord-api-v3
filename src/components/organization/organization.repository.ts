@@ -28,23 +28,20 @@ import {
 export class OrganizationRepository {
   constructor(private readonly db: DatabaseService) {}
   // assumes 'root' cypher variable is declared in query
-  private readonly createSG = (
-    cypherIdentifier: string,
-    id: ID,
-    label?: string
-  ) => (query: Query) => {
-    const labels = ['SecurityGroup'];
-    if (label) {
-      labels.push(label);
-    }
-    const createdAt = DateTime.local();
+  private readonly createSG =
+    (cypherIdentifier: string, id: ID, label?: string) => (query: Query) => {
+      const labels = ['SecurityGroup'];
+      if (label) {
+        labels.push(label);
+      }
+      const createdAt = DateTime.local();
 
-    query.create([
-      node('root'),
-      relation('in', '', 'member'),
-      node(cypherIdentifier, labels, { createdAt, id }),
-    ]);
-  };
+      query.create([
+        node('root'),
+        relation('in', '', 'member'),
+        node(cypherIdentifier, labels, { createdAt, id }),
+      ]);
+    };
 
   async checkOrg(name: string) {
     return await this.db

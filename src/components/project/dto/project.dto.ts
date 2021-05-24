@@ -37,9 +37,8 @@ import { ProjectType } from './type.enum';
 
 type AnyProject = MergeExclusive<TranslationProject, InternshipProject>;
 
-const PinnablePostableResource: Type<
-  Resource & Postable & Pinnable
-> = IntersectionType(Resource, IntersectionType(Postable, Pinnable));
+const PinnablePostableResource: Type<Resource & Postable & Pinnable> =
+  IntersectionType(Resource, IntersectionType(Postable, Pinnable));
 
 @InterfaceType({
   resolveType: (val: Project) => {

@@ -21,7 +21,8 @@ export function PaginatedList<Type, ListItem = Type>(
 ) {
   @ObjectType({ isAbstract: true, implements: [IPaginatedList] })
   abstract class PaginatedListClass
-    implements PaginatedListType<ListItem>, IPaginatedList {
+    implements PaginatedListType<ListItem>, IPaginatedList
+  {
     @Field(() => [itemClass], {
       description:
         options.itemsDescription ||

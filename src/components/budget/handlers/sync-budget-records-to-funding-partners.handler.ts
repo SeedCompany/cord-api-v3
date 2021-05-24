@@ -42,7 +42,8 @@ type SubscribedEvent =
   PartnershipWillDeleteEvent
 )
 export class SyncBudgetRecordsToFundingPartners
-  implements IEventHandler<SubscribedEvent> {
+  implements IEventHandler<SubscribedEvent>
+{
   constructor(
     private readonly db: DatabaseService,
     private readonly budgets: BudgetService,

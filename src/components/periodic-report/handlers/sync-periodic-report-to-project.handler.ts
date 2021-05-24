@@ -10,7 +10,8 @@ type SubscribedEvent = ProjectUpdatedEvent;
 
 @EventsHandler(ProjectUpdatedEvent)
 export class SyncPeriodicReportsToProjectDateRange
-  implements IEventHandler<SubscribedEvent> {
+  implements IEventHandler<SubscribedEvent>
+{
   constructor(
     private readonly periodicReports: PeriodicReportService,
     @Logger('periodic-reports:project-sync') private readonly logger: ILogger

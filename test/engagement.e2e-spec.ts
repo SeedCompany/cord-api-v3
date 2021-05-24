@@ -393,13 +393,11 @@ describe('Engagement e2e', () => {
       type: ProjectType.Internship,
     });
     const mentor = await createPerson(app);
-    const internshipEngagement = await createInternshipEngagementWithMinimumValues(
-      app,
-      {
+    const internshipEngagement =
+      await createInternshipEngagementWithMinimumValues(app, {
         projectId: internshipProject.id,
         internId: intern.id,
-      }
-    );
+      });
     const updatePosition = InternshipPosition.LanguageProgramManager;
     const updateMethodologies = [
       ProductMethodology.Paratext,
@@ -1090,9 +1088,10 @@ describe('Engagement e2e', () => {
         }
       );
 
-      const toCompletedTransition = projectQueryResult.project.step.transitions.find(
-        (t: ProjectStepTransition) => t.to === 'Completed'
-      );
+      const toCompletedTransition =
+        projectQueryResult.project.step.transitions.find(
+          (t: ProjectStepTransition) => t.to === 'Completed'
+        );
 
       expect(projectQueryResult.project.step.value).toBe(
         ProjectStep.FinalizingCompletion

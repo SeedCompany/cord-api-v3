@@ -35,9 +35,8 @@ export type ResourceShape<T> = AbstractClassType<T> & {
   Relations?: Record<string, any>;
 };
 
-export type MaybeUnsecuredInstance<
-  TResourceStatic extends ResourceShape<any>
-> = TResourceStatic['prototype'] | UnsecuredDto<TResourceStatic['prototype']>;
+export type MaybeUnsecuredInstance<TResourceStatic extends ResourceShape<any>> =
+  TResourceStatic['prototype'] | UnsecuredDto<TResourceStatic['prototype']>;
 
 // Get the secured props of the resource
 // merged with all of the relations which are assumed to be secure.

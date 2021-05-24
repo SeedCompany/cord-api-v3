@@ -693,12 +693,8 @@ export class EngagementService {
       'engagement'
     );
 
-    const {
-      mentorId,
-      countryOfOriginId,
-      growthPlan,
-      ...simpleChanges
-    } = changes;
+    const { mentorId, countryOfOriginId, growthPlan, ...simpleChanges } =
+      changes;
 
     await this.files.updateDefinedFile(
       object.growthPlan,

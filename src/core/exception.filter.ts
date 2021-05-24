@@ -154,10 +154,13 @@ export class ExceptionFilter implements GqlExceptionFilter {
 
   private httpException(ex: HttpException) {
     const res = ex.getResponse();
-    const { message, error = undefined, ...data } =
-      typeof res === 'string'
-        ? { message: res }
-        : (res as { message: string; error?: string });
+    const {
+      message,
+      error = undefined,
+      ...data
+    } = typeof res === 'string'
+      ? { message: res }
+      : (res as { message: string; error?: string });
 
     let codes = this.errorToCodes(ex);
     if (error) {

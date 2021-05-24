@@ -6,7 +6,8 @@ import { BudgetStatus } from '../dto';
 
 @EventsHandler(ProjectUpdatedEvent)
 export class UpdateProjectBudgetStatusHandler
-  implements IEventHandler<ProjectUpdatedEvent> {
+  implements IEventHandler<ProjectUpdatedEvent>
+{
   constructor(private readonly budgets: BudgetService) {}
 
   async handle({ previous, updates, session }: ProjectUpdatedEvent) {

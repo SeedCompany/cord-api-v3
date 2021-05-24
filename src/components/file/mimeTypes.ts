@@ -105,8 +105,7 @@ export const mimeTypes: MimeType[] = [
     extensions: ['oth'],
   },
   {
-    name:
-      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    name: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
     extensions: ['pptx'],
   },
   {
@@ -114,13 +113,11 @@ export const mimeTypes: MimeType[] = [
     extensions: ['sldx'],
   },
   {
-    name:
-      'application/vnd.openxmlformats-officedocument.presentationml.slideshow',
+    name: 'application/vnd.openxmlformats-officedocument.presentationml.slideshow',
     extensions: ['ppsx'],
   },
   {
-    name:
-      'application/vnd.openxmlformats-officedocument.presentationml.template',
+    name: 'application/vnd.openxmlformats-officedocument.presentationml.template',
     extensions: ['potx'],
   },
   {
@@ -128,18 +125,15 @@ export const mimeTypes: MimeType[] = [
     extensions: ['xlsx'],
   },
   {
-    name:
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.template',
+    name: 'application/vnd.openxmlformats-officedocument.spreadsheetml.template',
     extensions: ['xltx'],
   },
   {
-    name:
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    name: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     extensions: ['docx'],
   },
   {
-    name:
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.template',
+    name: 'application/vnd.openxmlformats-officedocument.wordprocessingml.template',
     extensions: ['dotx'],
   },
   {

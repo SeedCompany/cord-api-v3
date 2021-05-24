@@ -423,9 +423,9 @@ export class DatabaseService {
 
       // with the rest of the requested properties
       ...props.map((prop) => {
-        const propName = (typeof prop === 'object'
-          ? prop.name
-          : prop) as string;
+        const propName = (
+          typeof prop === 'object' ? prop.name : prop
+        ) as string;
         return propName;
       }),
     ]);
@@ -471,9 +471,9 @@ export class DatabaseService {
 
         // return the rest of the requested properties
         ...props.map((prop) => {
-          const propName = (typeof prop === 'object'
-            ? prop.name
-            : prop) as string;
+          const propName = (
+            typeof prop === 'object' ? prop.name : prop
+          ) as string;
           return { [propName + '.value']: propName };
         }),
       ])
@@ -493,9 +493,9 @@ export class DatabaseService {
       };
 
       for (const prop of props) {
-        const propName = (typeof prop === 'object'
-          ? prop.name
-          : prop) as string;
+        const propName = (
+          typeof prop === 'object' ? prop.name : prop
+        ) as string;
         const secure = typeof prop === 'object' ? prop.secure : true;
         const list = typeof prop === 'object' ? prop.list : false;
 
