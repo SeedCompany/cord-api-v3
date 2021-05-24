@@ -74,6 +74,7 @@ export class ConfigService implements EmailOptionsFactory {
     .string('FRONTEND_URL')
     .optional('http://localhost:3001');
 
+// use this for postgres service
   @Lazy() get neo4j() {
     const driverConfig: Neo4JDriverConfig = {
       maxTransactionRetryTime: 30_000,
@@ -96,6 +97,7 @@ export class ConfigService implements EmailOptionsFactory {
       driverConfig,
     };
   }
+//
 
   dbIndexesCreate = this.env.boolean('DB_CREATE_INDEXES').optional(true);
 
