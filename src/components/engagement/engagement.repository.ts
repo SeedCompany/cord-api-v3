@@ -52,8 +52,8 @@ export class EngagementRepository extends CommonRepository {
     return !!result;
   }
 
-  async readOne(id: ID, session: Session) {
-    const query = this.db
+  readOne(id: ID, session: Session, changeId?: ID) {
+    return this.db
       .query()
       .match([
         node('project'),
@@ -61,6 +61,21 @@ export class EngagementRepository extends CommonRepository {
         node('node', 'Engagement', { id }),
       ])
       .apply(matchPropsAndProjectSensAndScopedRoles(session))
+      .optionalMatch(
+        !changeId
+          ? [
+              node('project'),
+              relation('out', '', 'engagement', { active: true }),
+              node('node'),
+            ]
+          : [
+              node('project'),
+              relation('out', '', 'engagement', { active: false }),
+              node('node'),
+              relation('in', '', 'change', { active: true }),
+              node('planChange', 'PlanChange', { id: changeId }),
+            ]
+      )
       .with([
         'props',
         'node',
@@ -341,7 +356,11 @@ export class EngagementRepository extends CommonRepository {
 
   // LIST ///////////////////////////////////////////////////////////
 
-  list({ filter, ...input }: EngagementListInput, session: Session) {
+  list(
+    session: Session,
+    { filter, ...input }: EngagementListInput,
+    changeId?: ID
+  ) {
     let label = 'Engagement';
     if (filter.type === 'language') {
       label = 'LanguageEngagement';
@@ -353,9 +372,16 @@ export class EngagementRepository extends CommonRepository {
       .match([
         requestingUser(session),
         ...permissionsOfNode(label),
-        ...(filter.projectId
+        ...(filter.projectId && !changeId
           ? [
               relation('in', '', 'engagement', { active: true }),
+              node('project', 'Project', {
+                id: filter.projectId,
+              }),
+            ]
+          : filter.projectId && changeId
+          ? [
+              relation('in', '', 'engagement', { active: false }),
               node('project', 'Project', {
                 id: filter.projectId,
               }),

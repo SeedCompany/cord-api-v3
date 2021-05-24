@@ -151,9 +151,15 @@ export class ProjectResolver {
       nullable: true,
       defaultValue: EngagementListInput.defaultVal,
     })
-    input: EngagementListInput
+    input: EngagementListInput,
+    @IdArg({ name: 'changeId', nullable: true }) changeId?: ID
   ): Promise<SecuredEngagementList> {
-    return this.projectService.listEngagements(project, input, session);
+    return this.projectService.listEngagements(
+      project,
+      input,
+      session,
+      changeId
+    );
   }
 
   @ResolveField(() => SecuredProjectMemberList, {

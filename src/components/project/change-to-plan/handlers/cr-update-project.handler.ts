@@ -71,12 +71,37 @@ export class CRUpdateProject implements IEventHandler<SubscribedEvent> {
             };
           }
         });
-
+        // Update project pending changes
         await this.db.updateProperties({
           type: IProject,
           object: project,
           changes,
         });
+        // Update project engagement pending changes
+        await this.db
+          .query()
+          .match([node('planChange', 'PlanChange', { id: planChange.id })])
+          .match([
+            node('project', 'Project', { id: result.projectId }),
+            relation('out', 'engagementRel', 'engagement', { active: false }),
+            node('engagement', 'Engagement'),
+            relation('in', 'changeRel', 'change', { active: true }),
+            node('planChange'),
+          ])
+          .optionalMatch([
+            node('engagement'),
+            relation('out', 'propRel', { active: false }),
+            node('property', 'Property'),
+            relation('in', 'propChangeRel', 'change', { active: true }),
+            node('planChange'),
+          ])
+          .setValues({
+            'engagementRel.active': true,
+            'changeRel.active': false,
+            'propRel.active': true,
+            'propChangeRel.active': false,
+          })
+          .run();
       }
     } catch (exception) {
       this.logger.error(`Could not update project in CR mode`, {

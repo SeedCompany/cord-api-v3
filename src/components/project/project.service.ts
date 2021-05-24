@@ -485,7 +485,8 @@ export class ProjectService {
   async listEngagements(
     project: Project,
     input: EngagementListInput,
-    session: Session
+    session: Session,
+    changeId?: ID
   ): Promise<SecuredEngagementList> {
     this.logger.debug('list engagements ', {
       projectId: project.id,
@@ -501,7 +502,8 @@ export class ProjectService {
           projectId: project.id,
         },
       },
-      session
+      session,
+      changeId
     );
 
     const permissions = await this.repo.permissionsForListProp(

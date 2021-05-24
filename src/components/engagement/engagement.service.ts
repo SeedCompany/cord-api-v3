@@ -86,7 +86,8 @@ export class EngagementService {
     await this.verifyRelationshipEligibility(
       projectId,
       languageId,
-      ProjectType.Translation
+      ProjectType.Translation,
+      changeId
     );
 
     if (input.firstScripture) {
@@ -121,8 +122,12 @@ export class EngagementService {
 
     const languageEngagement = (await this.readOne(
       id,
-      session
+      session,
+      changeId
     )) as LanguageEngagement;
+    if (changeId) {
+      return languageEngagement;
+    }
     const event = new EngagementCreatedEvent(languageEngagement, session);
     await this.eventBus.publish(event);
 
@@ -138,7 +143,8 @@ export class EngagementService {
     await this.verifyRelationshipEligibility(
       projectId,
       internId,
-      ProjectType.Internship
+      ProjectType.Internship,
+      changeId
     );
 
     await this.verifyProjectStatus(projectId, session);
@@ -196,8 +202,12 @@ export class EngagementService {
 
     const internshipEngagement = (await this.readOne(
       id,
-      session
+      session,
+      changeId
     )) as InternshipEngagement;
+    if (changeId) {
+      return internshipEngagement;
+    }
     const engagementCreatedEvent = new EngagementCreatedEvent(
       internshipEngagement,
       session
@@ -524,7 +534,7 @@ export class EngagementService {
     const query = this.repo.list(input, session);
 
     const engagements = await runListQuery(query, input, (id) =>
-      this.readOne(id, session)
+      this.readOne(id, session, changeId)
     );
     return engagements;
   }
@@ -582,16 +592,44 @@ export class EngagementService {
   protected async verifyRelationshipEligibility(
     projectId: ID,
     otherId: ID,
-    type: ProjectType
+    type: ProjectType,
+    changeId?: ID
   ): Promise<void> {
     const isTranslation = type === ProjectType.Translation;
     const property = isTranslation ? 'language' : 'intern';
-    const result = await this.repo.verifyRelationshipEligibility(
-      projectId,
-      otherId,
-      isTranslation,
-      property
-    );
+    const result = await this.db
+      .query()
+      .optionalMatch(node('project', 'Project', { id: projectId }))
+      .optionalMatch(
+        node('other', isTranslation ? 'Language' : 'User', {
+          id: otherId,
+        })
+      )
+      .optionalMatch([
+        node('project'),
+        !changeId
+          ? relation('out', '', 'engagement', { active: true })
+          : relation('out', '', 'engagement', { active: false }),
+        node('engagement'),
+        relation('out', '', property, { active: true }),
+        node('other'),
+      ])
+      .optionalMatch(
+        changeId
+          ? [
+              node('engagement'),
+              relation('in', '', 'change', { active: true }),
+              node('planChange', 'PlanChange', { id: changeId }),
+            ]
+          : [node('engagement')]
+      )
+      .return(['project', 'other', 'engagement'])
+      .asResult<{
+        project?: Node<{ type: ProjectType }>;
+        other?: Node;
+        engagement?: Node;
+      }>()
+      .first();
 
     if (!result?.project) {
       throw new NotFoundException(
