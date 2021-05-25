@@ -79,13 +79,4 @@ export class EducationResolver {
     await this.service.delete(id, session);
     return true;
   }
-
-  @Query(() => Boolean, {
-    description: 'Check Consistency across Education Nodes',
-  })
-  async checkEducationConsistency(
-    @AnonSession() session: Session
-  ): Promise<boolean> {
-    return await this.service.checkEducationConsistency(session);
-  }
 }

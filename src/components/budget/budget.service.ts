@@ -426,28 +426,4 @@ export class BudgetService {
       this.readOneRecord(id, session)
     );
   }
-
-  async checkBudgetConsistency(session: Session): Promise<boolean> {
-    const budgets = await this.budgetRepo.findBudgets(session);
-
-    return (
-      (
-        await Promise.all(
-          budgets.map(async (budget) => {
-            return await this.budgetRepo.budgetHasProperties(budget, session);
-          })
-        )
-      ).every((n) => n) &&
-      (
-        await Promise.all(
-          budgets.map(async (budget) => {
-            return await this.budgetRepo.budgetIsUniqueProperties(
-              budget,
-              session
-            );
-          })
-        )
-      ).every((n) => n)
-    );
-  }
 }

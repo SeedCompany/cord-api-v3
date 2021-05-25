@@ -1,12 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { Dictionary } from 'lodash';
 import { generateId, ID, Session } from '../../../common';
 import {
   createBaseNode,
   DatabaseService,
   matchRequestingUser,
-  matchSession,
   Property,
 } from '../../../core';
 import { DbChanges } from '../../../core/database/changes';
@@ -120,35 +118,6 @@ export class UnavailabilityRepository {
         order,
         filter,
       },
-    });
-  }
-
-  async getUnavailabilities(session: Session) {
-    return await this.db
-      .query()
-      .match([
-        matchSession(session),
-        [node('unavailability', 'Unavailability')],
-      ])
-      .return('unavailability.id as id')
-      .run();
-  }
-
-  async hasProperties(session: Session, unavailability: Dictionary<any>) {
-    return await this.db.hasProperties({
-      session,
-      id: unavailability.id,
-      props: ['description', 'start', 'end'],
-      nodevar: 'unavailability',
-    });
-  }
-
-  async isUniqueProperties(session: Session, unavailability: Dictionary<any>) {
-    return await this.db.isUniqueProperties({
-      session,
-      id: unavailability.id,
-      props: ['description', 'start', 'end'],
-      nodevar: 'unavailability',
     });
   }
 }

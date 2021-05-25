@@ -293,15 +293,6 @@ export class ProjectResolver {
     return await this.projectService.readOne(projectId, session);
   }
 
-  @Query(() => Boolean, {
-    description: 'Check Consistency in Project Nodes',
-  })
-  async checkProjectConsistency(
-    @LoggedInSession() session: Session
-  ): Promise<boolean> {
-    return await this.projectService.consistencyChecker(session);
-  }
-
   @ResolveField(() => SecuredPeriodicReportList)
   async financialReports(
     @AnonSession() session: Session,

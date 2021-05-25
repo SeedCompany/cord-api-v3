@@ -1,13 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { Dictionary } from 'lodash';
 import { DateTime } from 'luxon';
 import { generateId, ID, Session } from '../../../common';
 import {
   createBaseNode,
   DatabaseService,
   matchRequestingUser,
-  matchSession,
   Property,
 } from '../../../core';
 import { DbChanges } from '../../../core/database/changes';
@@ -111,31 +109,5 @@ export class EducationRepository {
           : []),
       ])
       .apply(calculateTotalAndPaginateList(Education, input));
-  }
-
-  async getEducations(session: Session) {
-    return await this.db
-      .query()
-      .match([matchSession(session), [node('education', 'Education')]])
-      .return('education.id as id')
-      .run();
-  }
-
-  async hasProperties(session: Session, education: Dictionary<any>) {
-    return await this.db.hasProperties({
-      session,
-      id: education.id,
-      props: ['degree', 'major', 'institution'],
-      nodevar: 'education',
-    });
-  }
-
-  async isUniqueProperties(session: Session, education: Dictionary<any>) {
-    return await this.db.isUniqueProperties({
-      session,
-      id: education.id,
-      props: ['degree', 'major', 'institution'],
-      nodevar: 'education',
-    });
   }
 }

@@ -191,13 +191,4 @@ export class LanguageResolver {
     await this.langService.removeLocation(languageId, locationId, session);
     return await this.langService.readOne(languageId, session);
   }
-
-  @Query(() => Boolean, {
-    description: 'Check language node consistency',
-  })
-  async checkLanguageConsistency(
-    @AnonSession() session: Session
-  ): Promise<boolean> {
-    return await this.langService.checkLanguageConsistency(session);
-  }
 }

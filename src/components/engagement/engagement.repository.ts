@@ -420,48 +420,6 @@ export class EngagementRepository {
     return roles?.memberRoles.map(rolesForScope('project')) ?? [];
   }
 
-  // CONSISTENCY ////////////////////////////////////////////////////
-
-  async checkEngagementConsistency(
-    baseNode: string
-  ): Promise<Array<Dictionary<any>>> {
-    return await this.db
-      .query()
-      .match([node('eng', baseNode)])
-      .return('eng.id as id')
-      .run();
-  }
-
-  isRelationshipUnique(
-    type: string,
-    session: Session,
-    ie: any,
-    rel: string
-  ): Promise<boolean> {
-    return this.db.isRelationshipUnique({
-      session,
-      id: ie.id,
-      relName: rel,
-      srcNodeLabel:
-        type === 'language' ? 'LanguageEngagement' : 'InternshipEngagement',
-    });
-  }
-
-  async hasProperties(
-    type: string,
-    session: Session,
-    ie: any,
-    requiredProperties: string[]
-  ): Promise<boolean> {
-    return await this.db.hasProperties({
-      session,
-      id: ie.id,
-      props: requiredProperties,
-      nodevar:
-        type === 'language' ? 'LanguageEngagement' : 'InternshipEngagement',
-    });
-  }
-
   async listEngagementsWithDateRange() {
     return await this.db
       .query()

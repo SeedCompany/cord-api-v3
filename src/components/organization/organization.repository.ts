@@ -6,7 +6,6 @@ import {
   createBaseNode,
   DatabaseService,
   matchRequestingUser,
-  matchSession,
   Property,
 } from '../../core';
 import { DbChanges } from '../../core/database/changes';
@@ -141,77 +140,5 @@ export class OrganizationRepository {
           : []),
       ])
       .apply(calculateTotalAndPaginateList(Organization, input));
-  }
-
-  async checkAllOrgs(session: Session) {
-    return await this.db
-      .query()
-      .raw(
-        `
-      MATCH
-      (token:Token {active: true, value: $token})
-      <-[:token {active: true}]-
-      (user:User {
-        isAdmin: true
-      }),
-        (org:Organization)
-      RETURN
-        count(org) as orgCount
-      `,
-        {
-          token: session.token,
-        }
-      )
-      .first();
-  }
-
-  async pullOrg(index: number) {
-    return await this.db
-      .query()
-      .raw(
-        `
-      MATCH
-        (org:Organization)
-        -[:name {active: true}]->
-        (name:Property)
-      RETURN
-        org.id as id,
-        org.createdAt as createdAt,
-        name.value as name
-      ORDER BY
-        createdAt
-      SKIP
-        ${index}
-      LIMIT
-        1
-      `
-      )
-      .first();
-  }
-
-  async getOrganizations(session: Session) {
-    return await this.db
-      .query()
-      .match([matchSession(session), [node('organization', 'Organization')]])
-      .return('organization.id as id')
-      .run();
-  }
-
-  async hasProperties(session: Session, id: ID) {
-    return await this.db.hasProperties({
-      session,
-      id,
-      props: ['name'],
-      nodevar: 'organization',
-    });
-  }
-
-  async isUniqueProperties(session: Session, id: ID) {
-    return await this.db.isUniqueProperties({
-      session,
-      id,
-      props: ['name'],
-      nodevar: 'organization',
-    });
   }
 }

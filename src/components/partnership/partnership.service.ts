@@ -1,6 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
-import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
@@ -387,41 +386,6 @@ export class PartnershipService {
     return await runListQuery(query, listInput, (id) =>
       this.readOne(id, session)
     );
-  }
-
-  async checkPartnershipConsistency(session: Session): Promise<boolean> {
-    const partnerships = await this.repo.getPartnerships(session);
-
-    return (
-      (
-        await Promise.all(
-          partnerships.map(async (partnership) => {
-            return await this.repo.hasProperties(partnership.id, session);
-          })
-        )
-      ).every((n) => n) &&
-      (
-        await Promise.all(
-          partnerships.map(async (partnership) => {
-            return await this.repo.isUniqueProperties(partnership.id, session);
-          })
-        )
-      ).every((n) => n)
-    );
-  }
-
-  protected filterByProject(
-    query: Query,
-    projectId: ID,
-    relationshipType: string,
-    relationshipDirection: RelationDirection,
-    label: string
-  ) {
-    query.match([
-      node('project', 'Project', { id: projectId }),
-      relation(relationshipDirection, '', relationshipType, { active: true }),
-      node('node', label),
-    ]);
   }
 
   protected verifyFinancialReportingType(

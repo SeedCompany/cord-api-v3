@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { compact, Dictionary } from 'lodash';
+import { compact } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   CalendarDate,
@@ -395,18 +395,6 @@ export class LanguageService {
     } catch (e) {
       throw new ServerException('Could not remove location from language', e);
     }
-  }
-
-  async checkLanguageConsistency(session: Session): Promise<boolean> {
-    const languages = await this.repo.findLanguages(session);
-
-    const yayNay = await Promise.all(
-      languages.map(async (lang: Dictionary<any>) => {
-        return await this.repo.hasProperties(session, lang.id);
-      })
-    );
-
-    return yayNay.every((n) => n);
   }
 
   /**

@@ -855,27 +855,6 @@ export class ProjectService {
     };
   }
 
-  async consistencyChecker(session: Session): Promise<boolean> {
-    const projects = await this.repo.getProjects(session);
-
-    return (
-      (
-        await Promise.all(
-          projects.map(async (project) => {
-            return await this.repo.isRelationshipUnique(session, project.id);
-          })
-        )
-      ).every((n) => n) &&
-      (
-        await Promise.all(
-          projects.map(async (project) => {
-            return await this.repo.hasProperties(session, project.id);
-          })
-        )
-      ).every((n) => n)
-    );
-  }
-
   async listProjectsWithDateRange() {
     return await this.repo.listProjectsWithDateRange();
   }

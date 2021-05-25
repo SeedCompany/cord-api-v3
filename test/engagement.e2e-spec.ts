@@ -487,45 +487,6 @@ describe('Engagement e2e', () => {
     );
   });
 
-  it.skip('has consistency in ceremony basenode', async () => {
-    project = await createProject(app, { type: ProjectType.Translation });
-    language = await createLanguage(app);
-    const languageEngagement = await createLanguageEngagement(app, {
-      languageId: language.id,
-      projectId: project.id,
-    });
-
-    expect(languageEngagement.id).toBeDefined();
-    const testResult = await app.graphql.query(
-      gql`
-        query checkCeremonyConsistency {
-          checkCeremonyConsistency
-        }
-      `
-    );
-    expect(testResult.checkCeremonyConsistency).toBeTruthy();
-  });
-
-  it.skip('has consistency in language engagement nodes', async () => {
-    project = await createProject(app);
-    language = await createLanguage(app);
-    await createLanguageEngagement(app, {
-      languageId: language.id,
-      projectId: project.id,
-    });
-    const result = await app.graphql.query(
-      gql`
-        query checkEngagementConsistency($input: EngagementConsistencyInput!) {
-          checkEngagementConsistency(input: $input)
-        }
-      `,
-      {
-        input: { baseNode: 'LanguageEngagement' },
-      }
-    );
-    expect(result.checkEngagementConsistency).toBeTruthy();
-  });
-
   it('returns the correct products in language engagement', async () => {
     project = await createProject(app);
     language = await createLanguage(app);
@@ -568,26 +529,6 @@ describe('Engagement e2e', () => {
         }),
       ])
     );
-  });
-
-  it('has consistency in language engagement nodes', async () => {
-    project = await createProject(app);
-    language = await createLanguage(app);
-    await createLanguageEngagement(app, {
-      languageId: language.id,
-      projectId: project.id,
-    });
-    const result = await app.graphql.query(
-      gql`
-        query checkEngagementConsistency($input: EngagementConsistencyInput!) {
-          checkEngagementConsistency(input: $input)
-        }
-      `,
-      {
-        input: { baseNode: 'LanguageEngagement' },
-      }
-    );
-    expect(result.checkEngagementConsistency).toBeTruthy();
   });
 
   it('creates ceremony upon engagement creation', async () => {

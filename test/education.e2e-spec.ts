@@ -141,27 +141,4 @@ describe('Education e2e', () => {
       numEducations
     );
   });
-
-  it.skip('Check consistency across education nodes', async () => {
-    // create an education
-    const education = await createEducation(app, { userId: user.id });
-    // test it has proper schema
-    const result = await app.graphql.query(gql`
-      query {
-        checkEducationConsistency
-      }
-    `);
-    expect(result.checkEducationConsistency).toBeTruthy();
-    // delete education node so next test will pass
-    await app.graphql.mutate(
-      gql`
-        mutation deleteEducation($id: ID!) {
-          deleteEducation(id: $id)
-        }
-      `,
-      {
-        id: education.id,
-      }
-    );
-  });
 });

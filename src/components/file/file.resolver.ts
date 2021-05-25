@@ -15,7 +15,6 @@ import {
   FileListInput,
   FileListOutput,
   FileNode,
-  FileNodeType,
   IFileNode,
   MoveFileInput,
   RenameFileInput,
@@ -131,21 +130,5 @@ export class FileResolver {
     @LoggedInSession() session: Session
   ): Promise<FileNode> {
     return this.service.move(input, session);
-  }
-
-  @Query(() => Boolean, {
-    description: 'Check Consistency in File Nodes',
-    deprecationReason: 'This should have never existed',
-  })
-  async checkFileConsistency(
-    @Args({ name: 'type', type: () => FileNodeType }) type: FileNodeType,
-    @LoggedInSession() session: Session
-  ): Promise<boolean> {
-    try {
-      await this.service.checkConsistency(type, session);
-      return true;
-    } catch (e) {
-      return false;
-    }
   }
 }

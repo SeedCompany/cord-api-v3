@@ -6,7 +6,6 @@ import {
   createBaseNode,
   DatabaseService,
   matchRequestingUser,
-  matchSession,
 } from '../../core';
 import { DbChanges } from '../../core/database/changes';
 import {
@@ -255,23 +254,6 @@ export class LanguageRepository {
       .return(collect('engagement.id', 'engagementIds'))
       .asResult<{ engagementIds: ID[] }>()
       .first();
-  }
-
-  async findLanguages(session: Session) {
-    return await this.db
-      .query()
-      .match([matchSession(session), [node('lang', 'Language')]])
-      .return('lang.id as id')
-      .run();
-  }
-
-  async hasProperties(session: Session, id: ID) {
-    return await this.db.hasProperties({
-      session,
-      id,
-      props: ['name', 'displayName'],
-      nodevar: 'Language',
-    });
   }
 
   async verifyExternalFirstScripture(id: ID) {
