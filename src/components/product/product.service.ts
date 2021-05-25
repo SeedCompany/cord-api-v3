@@ -21,12 +21,7 @@ import {
   matchRequestingUser,
   Property,
 } from '../../core';
-import {
-  parseBaseNodeProperties,
-  parsePropList,
-  runListQuery,
-} from '../../core/database/results';
-import { rolesForScope } from '../authorization';
+import { runListQuery } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Film, FilmService } from '../film';
 import {
@@ -237,14 +232,15 @@ export class ProductService {
       throw new NotFoundException('Could not find product', 'product.id');
     }
 
-    const { isOverriding, ...props } = parsePropList(result.propList);
+    const { isOverriding, ...props } = result.props;
     const { produces, scriptureReferencesOverride, ...rest } =
       await this.authorizationService.secureProperties(
         DerivativeScriptureProduct,
         props,
         session,
-        result.memberRoles.flat().map(rolesForScope('project'))
+        result.scopedRoles
       );
+
     const connectedProducible = await this.repo.connectedProducible(id);
 
     const scriptureReferencesValue = await this.scriptureRefService.list(
@@ -255,8 +251,10 @@ export class ProductService {
 
     if (!connectedProducible) {
       return {
-        ...parseBaseNodeProperties(result.node),
+        id: props.id,
+        createdAt: props.createdAt,
         ...rest,
+        sensitivity: props.sensitivity,
         scriptureReferences: {
           ...rest.scriptureReferences,
           value: scriptureReferencesValue,
@@ -287,8 +285,10 @@ export class ProductService {
     );
 
     return {
-      ...parseBaseNodeProperties(result.node),
+      id: props.id,
+      createdAt: props.createdAt,
       ...rest,
+      sensitivity: props.sensitivity,
       scriptureReferences: {
         ...rest.scriptureReferences,
         value: !isOverriding

@@ -12,13 +12,12 @@ import {
 import { DbChanges } from '../../core/database/changes';
 import {
   calculateTotalAndPaginateList,
-  matchMemberRoles,
-  matchPropList,
+  matchPropsAndProjectSensAndScopedRoles,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
-import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
-import { Role } from '../authorization';
+import { DbPropsOfDto } from '../../core/database/results';
+import { ScopedRole } from '../authorization';
 import { Ceremony, CeremonyListInput, UpdateCeremony } from './dto';
 
 @Injectable()
@@ -36,24 +35,19 @@ export class CeremonyRepository {
   async readOne(id: ID, session: Session) {
     const readCeremony = this.db
       .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'Ceremony', { id })])
-      .apply(matchPropList)
-      .optionalMatch([
+      .match([
         node('project', 'Project'),
         relation('out', '', 'engagement', { active: true }),
         node('', 'Engagement'),
         relation('out', '', { active: true }),
         node('node', 'Ceremony', { id }),
       ])
-      .with(['node', 'propList', 'project'])
-      .apply(matchMemberRoles(session.userId))
-      .return(['node', 'propList', 'memberRoles'])
-      .asResult<
-        StandardReadResult<DbPropsOfDto<Ceremony>> & {
-          memberRoles: Role[];
-        }
-      >();
+      .apply(matchPropsAndProjectSensAndScopedRoles(session))
+      .return(['props', 'scopedRoles'])
+      .asResult<{
+        props: DbPropsOfDto<Ceremony, true>;
+        scopedRoles: ScopedRole[];
+      }>();
 
     return await readCeremony.first();
   }

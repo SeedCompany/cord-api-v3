@@ -7,6 +7,7 @@ import {
   SecuredFloatNullable,
   SecuredInt,
   SecuredProps,
+  Sensitivity,
 } from '../../../common';
 
 @ObjectType({
@@ -23,4 +24,9 @@ export class BudgetRecord extends Resource {
 
   @Field()
   readonly amount: SecuredFloatNullable;
+
+  @Field(() => Sensitivity, {
+    description: "Based on the project's sensitivity",
+  })
+  readonly sensitivity: Sensitivity;
 }

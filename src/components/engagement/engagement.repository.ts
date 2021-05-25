@@ -3,17 +3,16 @@ import { inArray, node, Node, Query, relation } from 'cypher-query-builder';
 import { Dictionary } from 'lodash';
 import { DateTime } from 'luxon';
 import { CalendarDate, ID, Session } from '../../common';
-import { DatabaseService, matchRequestingUser, matchSession } from '../../core';
+import { DatabaseService, matchSession } from '../../core';
 import { DbChanges } from '../../core/database/changes';
 import {
   calculateTotalAndPaginateList,
-  matchMemberRoles,
-  matchPropList,
+  matchPropsAndProjectSensAndScopedRoles,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
-import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
-import { Role, rolesForScope } from '../authorization';
+import { DbPropsOfDto } from '../../core/database/results';
+import { Role, rolesForScope, ScopedRole } from '../authorization';
 import { ProjectType } from '../project';
 import {
   EngagementListInput,
@@ -78,20 +77,17 @@ export class EngagementRepository {
   readOne(id: ID, session: Session) {
     return this.db
       .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'Engagement', { id })])
-      .apply(matchPropList)
-      .optionalMatch([
+      .match([
         node('project'),
         relation('out', '', 'engagement', { active: true }),
-        node('node'),
+        node('node', 'Engagement', { id }),
       ])
-      .apply(matchMemberRoles(session.userId))
+      .apply(matchPropsAndProjectSensAndScopedRoles(session))
       .with([
-        'propList',
+        'props',
         'node',
         'project',
-        'memberRoles',
+        'scopedRoles',
         `case
     when 'InternshipEngagement' IN labels(node)
     then 'InternshipEngagement'
@@ -131,39 +127,38 @@ export class EngagementRepository {
         node('pnpData'),
       ])
       .return([
-        'propList, node, project.id as project',
-        '__typename, ceremony.id as ceremony',
+        'props',
+        'project.id as project',
+        '__typename',
+        'ceremony.id as ceremony',
         'language.id as language',
         'intern.id as intern',
         'countryOfOrigin.id as countryOfOrigin',
         'mentor.id as mentor',
         'pnpData',
-        'memberRoles',
+        'scopedRoles',
       ])
-      .asResult<
-        StandardReadResult<
-          Omit<
-            DbPropsOfDto<LanguageEngagement & InternshipEngagement>,
-            | '__typename'
-            | 'ceremony'
-            | 'language'
-            | 'pnpData'
-            | 'countryOfOrigin'
-            | 'intern'
-            | 'mentor'
-          >
-        > & {
-          __typename: 'LanguageEngagement' | 'InternshipEngagement';
-          language: ID;
-          ceremony: ID;
-          project: ID;
-          intern: ID;
-          countryOfOrigin: ID;
-          mentor: ID;
-          pnpData?: Node<PnpData>;
-          memberRoles: Role[][];
-        }
-      >();
+      .asResult<{
+        props: Omit<
+          DbPropsOfDto<LanguageEngagement & InternshipEngagement, true>,
+          | '__typename'
+          | 'ceremony'
+          | 'language'
+          | 'pnpData'
+          | 'countryOfOrigin'
+          | 'intern'
+          | 'mentor'
+        >;
+        __typename: 'LanguageEngagement' | 'InternshipEngagement';
+        language: ID;
+        ceremony: ID;
+        project: ID;
+        intern: ID;
+        countryOfOrigin: ID;
+        mentor: ID;
+        pnpData?: Node<PnpData>;
+        scopedRoles: ScopedRole[];
+      }>();
   }
 
   // getActualChanges(

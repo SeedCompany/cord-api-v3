@@ -1,4 +1,6 @@
 import { keyBy, mapValues } from 'lodash';
+// eslint-disable-next-line @seedcompany/no-unused-vars -- used in jsdoc below.
+import type { matchProps } from '../query';
 
 /**
  * Converts an object `DbProps` to a list of objects from a cypher result.
@@ -13,6 +15,7 @@ export type PropListDbResult<DbProps extends Record<string, any>> = Array<
 
 /**
  * Parses a list of objects from a cypher result to an object.
+ * @deprecated Use {@link matchProps} instead which doesn't need this post-transformation
  */
 export const parsePropList = <DbProps extends Record<string, any>>(
   propList: PropListDbResult<DbProps>

@@ -9,7 +9,6 @@ import {
   Resource,
   ServerException,
   Session,
-  UnsecuredDto,
 } from '../../common';
 import {
   createBaseNode,
@@ -20,16 +19,13 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
-  matchMemberRoles,
-  matchPropList,
+  matchPropsAndProjectSensAndScopedRoles,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
 import { QueryWithResult } from '../../core/database/query.overrides';
-import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
-import { NativeDbProps } from '../../core/database/results/types';
-import { Role } from '../authorization';
-import { BaseNode } from '../file';
+import { DbPropsOfDto } from '../../core/database/results';
+import { ScopedRole } from '../authorization';
 import {
   Budget,
   BudgetFilters,
@@ -186,70 +182,50 @@ export class BudgetRepository {
       .first();
     return existingRecord;
   }
-  readOne(
-    id: ID,
-    session: Session
-  ): QueryWithResult<
-    StandardReadResult<
-      NativeDbProps<Omit<UnsecuredDto<Budget>, keyof BaseNode>>
-    > & {
-      memberRoles: Role[][];
-    }
-  > {
+
+  readOne(id: ID, session: Session) {
     const query = this.db
       .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'Budget', { id })])
-      .apply(matchPropList)
-      .optionalMatch([
+      .match([
         node('project', 'Project'),
         relation('out', '', 'budget', { active: true }),
         node('node', 'Budget', { id }),
       ])
-      .with(['project', 'node', 'propList'])
-      .apply(matchMemberRoles(session.userId))
-      .return(['propList', 'node', 'memberRoles'])
-      .asResult<
-        StandardReadResult<DbPropsOfDto<Budget>> & {
-          memberRoles: Role[][];
-        }
-      >();
+      .apply(matchPropsAndProjectSensAndScopedRoles(session))
+      .return(['props', 'scopedRoles'])
+      .asResult<{
+        props: DbPropsOfDto<Budget, true>;
+        scopedRoles: ScopedRole[];
+      }>();
 
     return query;
   }
+
   readOneRecord(id: ID, session: Session) {
     const query = this.db
       .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'BudgetRecord', { id })])
-      .apply(matchPropList)
       .match([
         node('project', 'Project'),
         relation('out', '', 'budget', { active: true }),
         node('', 'Budget'),
         relation('out', '', 'record', { active: true }),
         node('node', 'BudgetRecord', { id }),
-      ])
-      .with(['project', 'node', 'propList'])
-      .apply(matchMemberRoles(session.userId))
-      .match([
-        node('node'),
         relation('out', '', 'organization', { active: true }),
         node('organization', 'Organization'),
       ])
-      .with(['node', 'propList', 'organization', 'memberRoles'])
+      .apply(matchPropsAndProjectSensAndScopedRoles(session))
       .return([
-        'propList + [{value: organization.id, property: "organization"}] as propList',
-        'node',
-        'memberRoles',
+        'apoc.map.merge(props, { organization: organization.id }) as props',
+        'scopedRoles',
       ])
-      .asResult<
-        StandardReadResult<DbPropsOfDto<BudgetRecord>> & {
-          memberRoles: Role[][];
-        }
-      >();
+      .asResult<{
+        props: DbPropsOfDto<BudgetRecord, true>;
+        scopedRoles: ScopedRole[];
+      }>();
+
     return query;
   }
+
   getActualChanges(budget: Budget, input: UpdateBudget) {
     return this.db.getActualChanges(Budget, budget, input);
   }

@@ -3,21 +3,16 @@ import { Node, node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { Except } from 'type-fest';
 import { ID, Session } from '../../common';
-import { DatabaseService, matchRequestingUser } from '../../core';
+import { DatabaseService } from '../../core';
 import { DbChanges } from '../../core/database/changes';
 import {
   calculateTotalAndPaginateList,
-  matchMemberRoles,
-  matchPropList,
+  matchPropsAndProjectSensAndScopedRoles,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
-import {
-  BaseNode,
-  DbPropsOfDto,
-  StandardReadResult,
-} from '../../core/database/results';
-import { Role } from '../authorization';
+import { BaseNode, DbPropsOfDto } from '../../core/database/results';
+import { ScopedRole } from '../authorization';
 import {
   DerivativeScriptureProduct,
   DirectScriptureProduct,
@@ -57,31 +52,25 @@ export class ProductRepository {
   async readOne(id: ID, session: Session) {
     const query = this.db
       .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'Product', { id })])
-      .apply(matchPropList)
       .match([
         node('project', 'Project'),
         relation('out', '', 'engagement', { active: true }),
         node('', 'Engagement'),
         relation('out', '', 'product', { active: true }),
-        node('', 'Product', { id }),
+        node('node', 'Product', { id }),
       ])
-      .with(['project', 'node', 'propList'])
-      .apply(matchMemberRoles(session.userId))
-      .return(['propList, node, memberRoles'])
-      .asResult<
-        StandardReadResult<
-          DbPropsOfDto<
-            DirectScriptureProduct &
-              DerivativeScriptureProduct & {
-                isOverriding: boolean;
-              }
-          >
-        > & {
-          memberRoles: Role[][];
-        }
-      >();
+      .apply(matchPropsAndProjectSensAndScopedRoles(session))
+      .return(['props', 'scopedRoles'])
+      .asResult<{
+        props: DbPropsOfDto<
+          DirectScriptureProduct &
+            DerivativeScriptureProduct & {
+              isOverriding: boolean;
+            },
+          true
+        >;
+        scopedRoles: ScopedRole[];
+      }>();
     return await query.first();
   }
 

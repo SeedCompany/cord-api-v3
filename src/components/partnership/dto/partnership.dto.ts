@@ -8,6 +8,7 @@ import {
   SecuredDateNullable,
   SecuredEnum,
   SecuredProps,
+  Sensitivity,
 } from '../../../common';
 import { DefinedFile } from '../../file/dto';
 import { Organization } from '../../organization/dto';
@@ -73,4 +74,9 @@ export class Partnership extends Resource {
 
   @Field()
   readonly primary: SecuredBoolean;
+
+  @Field(() => Sensitivity, {
+    description: "Based on the project's sensitivity",
+  })
+  readonly sensitivity: Sensitivity;
 }

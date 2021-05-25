@@ -21,12 +21,7 @@ import {
   Logger,
   property,
 } from '../../core';
-import {
-  parseBaseNodeProperties,
-  parsePropList,
-  runListQuery,
-} from '../../core/database/results';
-import { rolesForScope } from '../authorization';
+import { runListQuery } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { CeremonyService } from '../ceremony';
 import { FileService } from '../file';
@@ -55,8 +50,8 @@ import { EngagementRepository } from './engagement.repository';
 import { EngagementRules } from './engagement.rules';
 import {
   EngagementCreatedEvent,
-  EngagementDeletedEvent,
   EngagementUpdatedEvent,
+  EngagementWillDeleteEvent,
 } from './events';
 import { DbInternshipEngagement, DbLanguageEngagement } from './model';
 import { PnpExtractor } from './pnp-extractor.service';
@@ -520,7 +515,7 @@ export class EngagementService {
 
     const props = {
       __typename: result.__typename,
-      ...parsePropList(result.propList),
+      ...result.props,
       language: result.language,
       ceremony: result.ceremony,
       intern: result.intern,
@@ -530,11 +525,15 @@ export class EngagementService {
 
     const isLanguageEngagement = props.__typename === 'LanguageEngagement';
 
-    const securedProperties = await this.authorizationService.secureProperties(
+    const {
+      startDate: _, // both of these are composed manually below, so exclude them
+      endDate: __,
+      ...securedProperties
+    } = await this.authorizationService.secureProperties(
       isLanguageEngagement ? LanguageEngagement : InternshipEngagement,
       props,
       session,
-      result.memberRoles.flat().map(rolesForScope('project'))
+      result.scopedRoles
     );
 
     const project = await this.projectService.readOne(result.project, session);
@@ -552,8 +551,7 @@ export class EngagementService {
 
     const common = {
       __typename: result.__typename,
-      ...parseBaseNodeProperties(result.node),
-      modifiedAt: props.modifiedAt,
+      ...result.props,
       startDate: {
         value: startDate,
         canRead: canReadStartDate,
@@ -578,8 +576,8 @@ export class EngagementService {
         false
       >;
       return {
-        ...secured,
         ...common,
+        ...secured,
         pnpData: result.pnpData?.properties,
       };
     } else {
@@ -589,8 +587,8 @@ export class EngagementService {
         false
       >;
       return {
-        ...secured,
         ...common,
+        ...secured,
         methodologies: {
           ...secured.methodologies,
           value: secured.methodologies.value ?? [],
@@ -776,6 +774,8 @@ export class EngagementService {
       await this.verifyProjectStatus(result.projectId, session);
     }
 
+    await this.eventBus.publish(new EngagementWillDeleteEvent(object, session));
+
     try {
       await this.repo.deleteNode(object);
     } catch (e) {
@@ -784,8 +784,6 @@ export class EngagementService {
       });
       throw new ServerException('Failed to delete Engagement');
     }
-
-    await this.eventBus.publish(new EngagementDeletedEvent(object, session));
   }
 
   // LIST ///////////////////////////////////////////////////////////
