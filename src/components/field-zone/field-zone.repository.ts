@@ -3,6 +3,13 @@ import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID, NotFoundException, Session, UnsecuredDto } from '../../common';
 import { DtoRepository, matchRequestingUser } from '../../core';
+import { generateId, ID, Session } from '../../common';
+import {
+  createBaseNode,
+  DatabaseService,
+  DtoRepository,
+  matchRequestingUser,
+} from '../../core';
 import {
   createNode,
   createRelationships,
@@ -13,10 +20,16 @@ import {
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { CreateFieldZone, FieldZone, FieldZoneListInput } from './dto';
+import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
+import { PostgresService } from '../../core/postgres/postgres.service';
+import { FieldZone, FieldZoneListInput } from './dto';
 
 @Injectable()
 export class FieldZoneRepository extends DtoRepository(FieldZone) {
+  constructor(db: DatabaseService, private readonly pg: PostgresService) {
+    super(db);
+  }
+
   async checkName(name: string) {
     return await this.db
       .query()
@@ -46,6 +59,13 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
     const pgClient = await this.pg.connectedClient;
     await pgClient.query(
       'INSERT INTO sc_field_zone (director_sys_person_id, name) VALUES($1, $2)',
+      [directorId, name]
+    );
+    await pgClient.end();
+
+    const pgClient = await this.pg.connectedClient;
+    await pgClient.query(
+      'INSERT INTO sc_field_zone (sc_director_field, name) VALUES($1, $2)',
       [directorId, name]
     );
     await pgClient.end();
