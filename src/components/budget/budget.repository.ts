@@ -2,14 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { Dictionary } from 'lodash';
 import { DateTime } from 'luxon';
-import {
-  generateId,
-  ID,
-  Order,
-  Resource,
-  ServerException,
-  Session,
-} from '../../common';
+import { generateId, ID, Order, ServerException, Session } from '../../common';
 import {
   createBaseNode,
   DatabaseService,
@@ -26,15 +19,7 @@ import {
 import { QueryWithResult } from '../../core/database/query.overrides';
 import { DbPropsOfDto } from '../../core/database/results';
 import { ScopedRole } from '../authorization';
-import {
-  Budget,
-  BudgetFilters,
-  BudgetRecord,
-  BudgetRecordFilters,
-  BudgetStatus,
-  CreateBudgetRecord,
-  UpdateBudget,
-} from './dto';
+import { Budget, BudgetFilters, BudgetStatus, UpdateBudget } from './dto';
 
 @Injectable()
 export class BudgetRepository {
@@ -101,88 +86,6 @@ export class BudgetRepository {
     return createBudgetRecord;
   }
 
-  async connectBudget(
-    budgetId: ID,
-    organizationId: ID,
-    result: Dictionary<any> | undefined,
-    createdAt: DateTime
-  ): Promise<Query> {
-    // connect to budget
-    const query = this.db
-      .query()
-      .match([node('budget', 'Budget', { id: budgetId })])
-      .match([node('br', 'BudgetRecord', { id: result?.id })])
-      .create([
-        node('budget'),
-        relation('out', '', 'record', { active: true, createdAt }),
-        node('br'),
-      ])
-      .return('br');
-    await query.first();
-
-    // connect budget record to org
-    const orgQuery = this.db
-      .query()
-      .match([
-        node('organization', 'Organization', {
-          id: organizationId,
-        }),
-      ])
-      .match([node('br', 'BudgetRecord', { id: result?.id })])
-      .create([
-        node('br'),
-        relation('out', '', 'organization', { active: true, createdAt }),
-        node('organization'),
-      ])
-      .return('br');
-
-    return orgQuery;
-  }
-
-  async existingRecord(
-    input: CreateBudgetRecord
-  ): Promise<Dictionary<any> | undefined> {
-    const existingRecord = await this.db
-      .query()
-      .match([
-        node('budget', 'Budget', { id: input.budgetId }),
-        relation('out', '', 'record', { active: true }),
-        node('br', 'BudgetRecord'),
-        relation('out', '', 'organization', { active: true }),
-        node('', 'Organization', { id: input.organizationId }),
-      ])
-      .match([
-        node('br'),
-        relation('out', '', 'fiscalYear', { active: true }),
-        node('', 'Property', { value: input.fiscalYear }),
-      ])
-      .return('br')
-      .first();
-    return existingRecord;
-  }
-
-  async verifyRecordUniqueness(
-    input: CreateBudgetRecord
-  ): Promise<Dictionary<any> | undefined> {
-    const existingRecord = await this.db
-      .query()
-      .match([
-        node('budget', 'Budget', { id: input.budgetId }),
-        relation('out', '', 'record', { active: true }),
-        node('br', 'BudgetRecord'),
-        relation('out', '', 'organization', { active: true }),
-        node('', 'Organization', { id: input.organizationId }),
-      ])
-      .match([
-        node('br'),
-        relation('out', '', 'fiscalYear', { active: true }),
-        node('', 'Property', { value: input.fiscalYear }),
-      ])
-      .return('br')
-      .first();
-    return existingRecord;
-  }
-
   readOne(id: ID, session: Session) {
     const query = this.db
       .query()
@@ -195,31 +98,6 @@ export class BudgetRepository {
       .return(['props', 'scopedRoles'])
       .asResult<{
         props: DbPropsOfDto<Budget, true>;
-        scopedRoles: ScopedRole[];
-      }>();
-
-    return query;
-  }
-
-  readOneRecord(id: ID, session: Session) {
-    const query = this.db
-      .query()
-      .match([
-        node('project', 'Project'),
-        relation('out', '', 'budget', { active: true }),
-        node('', 'Budget'),
-        relation('out', '', 'record', { active: true }),
-        node('node', 'BudgetRecord', { id }),
-        relation('out', '', 'organization', { active: true }),
-        node('organization', 'Organization'),
-      ])
-      .apply(matchPropsAndProjectSensAndScopedRoles(session))
-      .return([
-        'apoc.map.merge(props, { organization: organization.id }) as props',
-        'scopedRoles',
-      ])
-      .asResult<{
-        props: DbPropsOfDto<BudgetRecord, true>;
         scopedRoles: ScopedRole[];
       }>();
 
@@ -240,40 +118,6 @@ export class BudgetRepository {
       type: Budget,
       object: budget,
       changes: simpleChanges,
-    });
-  }
-
-  getActualRecordChanges(
-    br: BudgetRecord,
-    input: {
-      amount: number | null;
-    }
-  ): Partial<
-    Omit<
-      {
-        amount: number | null;
-      },
-      keyof Resource
-    >
-  > {
-    return this.db.getActualChanges(BudgetRecord, br, input);
-  }
-
-  async updateRecordProperties(
-    br: BudgetRecord,
-    changes: Partial<
-      Omit<
-        {
-          amount: number | null;
-        },
-        keyof Resource
-      >
-    >
-  ): Promise<BudgetRecord> {
-    return await this.db.updateProperties({
-      type: BudgetRecord,
-      object: br,
-      changes: changes,
     });
   }
 
@@ -301,7 +145,7 @@ export class BudgetRepository {
     return await this.db.checkDeletePermission(id, session);
   }
 
-  async deleteNode(node: Budget | BudgetRecord) {
+  async deleteNode(node: Budget) {
     await this.db.deleteNode(node);
   }
 
@@ -335,38 +179,6 @@ export class BudgetRepository {
           : []),
       ])
       .apply(calculateTotalAndPaginateList(Budget, listInput));
-    return query;
-  }
-  listRecords(
-    filter: BudgetRecordFilters,
-    input: {
-      sort: keyof BudgetRecord;
-      order: Order;
-      count: number;
-      page: number;
-    },
-    session: Session
-  ): QueryWithResult<{
-    items: ID[];
-    total: number;
-  }> {
-    const label = 'BudgetRecord';
-
-    const query = this.db
-      .query()
-      .match([
-        requestingUser(session),
-        ...permissionsOfNode(label),
-        ...(filter.budgetId
-          ? [
-              relation('in', '', 'record', { active: true }),
-              node('budget', 'Budget', {
-                id: filter.budgetId,
-              }),
-            ]
-          : []),
-      ])
-      .apply(calculateTotalAndPaginateList(BudgetRecord, input));
     return query;
   }
 }
