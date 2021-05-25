@@ -43,6 +43,15 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
       )
       .return<{ id: ID }>('node.id as id');
 
+    const pgClient = await this.pg.connectedClient;
+    await pgClient.query(
+      'INSERT INTO sc_field_zone (sc_director_field, name) VALUES($1, $2)',
+      [directorId, name]
+    );
+    await pgClient.end();
+
+    // const result = await query.first();
+
     return await query.first();
   }
 
@@ -100,8 +109,6 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
         }),
         node('director'),
       ]);
-
-    await query.run();
   }
 
   async list({ filter, ...input }: FieldZoneListInput, session: Session) {
