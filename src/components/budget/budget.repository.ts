@@ -5,7 +5,7 @@ import { DateTime } from 'luxon';
 import { generateId, ID, Order, ServerException, Session } from '../../common';
 import {
   createBaseNode,
-  DatabaseService,
+  DtoRepository,
   matchRequestingUser,
   matchSession,
   Property,
@@ -19,12 +19,10 @@ import {
 import { QueryWithResult } from '../../core/database/query.overrides';
 import { DbPropsOfDto } from '../../core/database/results';
 import { ScopedRole } from '../authorization';
-import { Budget, BudgetFilters, BudgetStatus, UpdateBudget } from './dto';
+import { Budget, BudgetFilters, BudgetStatus } from './dto';
 
 @Injectable()
-export class BudgetRepository {
-  constructor(private readonly db: DatabaseService) {}
-
+export class BudgetRepository extends DtoRepository(Budget) {
   readProject(projectId: ID, session: Session): Query {
     const readProject = this.db
       .query()
@@ -104,23 +102,6 @@ export class BudgetRepository {
     return query;
   }
 
-  getActualChanges(budget: Budget, input: UpdateBudget) {
-    return this.db.getActualChanges(Budget, budget, input);
-  }
-
-  async updateProperties(
-    budget: Budget,
-    simpleChanges: {
-      status?: BudgetStatus | undefined;
-    }
-  ): Promise<Budget> {
-    return await this.db.updateProperties({
-      type: Budget,
-      object: budget,
-      changes: simpleChanges,
-    });
-  }
-
   async verifyCanEdit(id: ID): Promise<
     | {
         status: BudgetStatus;
@@ -139,14 +120,6 @@ export class BudgetRepository {
       .return('status.value as status')
       .asResult<{ status: BudgetStatus }>()
       .first();
-  }
-
-  async checkDeletePermission(id: ID, session: Session): Promise<boolean> {
-    return await this.db.checkDeletePermission(id, session);
-  }
-
-  async deleteNode(node: Budget) {
-    await this.db.deleteNode(node);
   }
 
   list(

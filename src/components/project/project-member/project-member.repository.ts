@@ -6,11 +6,9 @@ import {
   ProjectMember,
   ProjectMemberListInput,
   ScopedRole,
-  UpdateProjectMember,
 } from '.';
 import { ID, Session } from '../../../common';
-import { DatabaseService, property } from '../../../core';
-import { DbChanges } from '../../../core/database/changes';
+import { DtoRepository, property } from '../../../core';
 import {
   calculateTotalAndPaginateList,
   matchPropsAndProjectSensAndScopedRoles,
@@ -20,9 +18,7 @@ import {
 import { DbPropsOfDto } from '../../../core/database/results';
 
 @Injectable()
-export class ProjectMemberRepository {
-  constructor(private readonly db: DatabaseService) {}
-
+export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
   async verifyRelationshipEligibility(projectId: ID, userId: ID) {
     return await this.db
       .query()
@@ -105,29 +101,6 @@ export class ProjectMemberRepository {
         scopedRoles: ScopedRole[];
       }>();
     return await query.first();
-  }
-
-  async checkDeletePermission(id: ID, session: Session) {
-    return await this.db.checkDeletePermission(id, session);
-  }
-
-  getActualChanges(object: ProjectMember, input: UpdateProjectMember) {
-    return this.db.getActualChanges(ProjectMember, object, input);
-  }
-
-  async updateProperties(
-    object: ProjectMember,
-    changes: DbChanges<ProjectMember>
-  ) {
-    await this.db.updateProperties({
-      type: ProjectMember,
-      object,
-      changes,
-    });
-  }
-
-  async deleteNode(node: ProjectMember) {
-    await this.db.deleteNode(node);
   }
 
   list({ filter, ...input }: ProjectMemberListInput, session: Session) {

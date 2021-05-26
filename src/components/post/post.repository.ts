@@ -4,7 +4,7 @@ import { DateTime } from 'luxon';
 import { ID, Session } from '../../common';
 import {
   createBaseNode,
-  DatabaseService,
+  DtoRepository,
   matchRequestingUser,
   Property,
 } from '../../core';
@@ -13,13 +13,11 @@ import {
   matchPropList,
 } from '../../core/database/query';
 import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
-import { Post, UpdatePost } from './dto';
+import { Post } from './dto';
 import { PostListInput } from './dto/list-posts.dto';
 
 @Injectable()
-export class PostRepository {
-  constructor(private readonly db: DatabaseService) {}
-
+export class PostRepository extends DtoRepository(Post) {
   async create(
     parentId: string,
     postId: ID,
@@ -74,24 +72,6 @@ export class PostRepository {
       .asResult<StandardReadResult<DbPropsOfDto<Post>>>();
 
     return await query.first();
-  }
-
-  async checkDeletePermission(id: ID, session: Session) {
-    return await this.db.checkDeletePermission(id, session);
-  }
-
-  async updateProperties(input: UpdatePost, object: Post) {
-    await this.db.updateProperties({
-      type: Post,
-      object,
-      changes: {
-        body: input.body,
-      },
-    });
-  }
-
-  async deleteNode(node: Post) {
-    await this.db.deleteNode(node);
   }
 
   securedList({ filter, ...input }: PostListInput) {

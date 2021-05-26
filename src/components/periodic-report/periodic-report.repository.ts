@@ -4,7 +4,7 @@ import { node, relation } from 'cypher-query-builder';
 import { Dictionary } from 'lodash';
 import { DateTime, Interval } from 'luxon';
 import { ID, Session } from '../../common';
-import { DatabaseService, matchRequestingUser, property } from '../../core';
+import { DtoRepository, matchRequestingUser, property } from '../../core';
 import {
   calculateTotalAndPaginateList,
   deleteBaseNode,
@@ -14,6 +14,7 @@ import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
 import {
   CreatePeriodicReport,
   FinancialReport,
+  IPeriodicReport,
   NarrativeReport,
   PeriodicReport,
   PeriodicReportListInput,
@@ -22,9 +23,7 @@ import {
 } from './dto';
 
 @Injectable()
-export class PeriodicReportRepository {
-  constructor(private readonly db: DatabaseService) {}
-
+export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
   async create(
     input: CreatePeriodicReport,
     createdAt: DateTime,
@@ -90,10 +89,6 @@ export class PeriodicReportRepository {
       .asResult<StandardReadResult<DbPropsOfDto<PeriodicReport>>>();
 
     return await query.first();
-  }
-
-  async checkDeletePermission(id: ID, session: Session) {
-    return await this.db.checkDeletePermission(id, session);
   }
 
   listProjectReports(

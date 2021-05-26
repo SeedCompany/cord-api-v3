@@ -3,11 +3,10 @@ import { node, relation } from 'cypher-query-builder';
 import { generateId, ID, Session } from '../../common';
 import {
   createBaseNode,
-  DatabaseService,
+  DtoRepository,
   matchRequestingUser,
   Property,
 } from '../../core';
-import { DbChanges } from '../../core/database/changes';
 import {
   calculateTotalAndPaginateList,
   matchPropsAndProjectSensAndScopedRoles,
@@ -16,12 +15,10 @@ import {
 } from '../../core/database/query';
 import { DbPropsOfDto } from '../../core/database/results';
 import { ScopedRole } from '../authorization';
-import { Ceremony, CeremonyListInput, UpdateCeremony } from './dto';
+import { Ceremony, CeremonyListInput } from './dto';
 
 @Injectable()
-export class CeremonyRepository {
-  constructor(private readonly db: DatabaseService) {}
-
+export class CeremonyRepository extends DtoRepository(Ceremony) {
   async create(session: Session, secureProps: Property[]) {
     return this.db
       .query()
@@ -48,26 +45,6 @@ export class CeremonyRepository {
       }>();
 
     return await readCeremony.first();
-  }
-
-  async checkDeletePermission(id: ID, session: Session) {
-    return await this.db.checkDeletePermission(id, session);
-  }
-
-  getActualChanges(object: Ceremony, input: UpdateCeremony) {
-    return this.db.getActualChanges(Ceremony, object, input);
-  }
-
-  async updateProperties(object: Ceremony, changes: DbChanges<Ceremony>) {
-    return await this.db.updateProperties({
-      type: Ceremony,
-      object,
-      changes,
-    });
-  }
-
-  async deleteNode(node: Ceremony) {
-    await this.db.deleteNode(node);
   }
 
   list({ filter, ...input }: CeremonyListInput, session: Session) {

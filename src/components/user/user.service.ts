@@ -211,7 +211,7 @@ export class UserService {
     this.logger.debug('mutation update User', { input, session });
     const user = await this.readOne(input.id, session);
 
-    const changes = this.userRepo.getActualChanges(input, user);
+    const changes = this.userRepo.getActualChanges(user, input);
 
     if (user.id !== session.userId) {
       await this.authorizationService.verifyCanEditChanges(User, user, changes);

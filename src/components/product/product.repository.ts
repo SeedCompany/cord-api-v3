@@ -3,8 +3,8 @@ import { Node, node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { Except } from 'type-fest';
 import { ID, Session } from '../../common';
-import { DatabaseService } from '../../core';
-import { DbChanges } from '../../core/database/changes';
+import { CommonRepository } from '../../core';
+import { DbChanges, getChanges } from '../../core/database/changes';
 import {
   calculateTotalAndPaginateList,
   matchPropsAndProjectSensAndScopedRoles,
@@ -22,9 +22,7 @@ import {
 } from './dto';
 
 @Injectable()
-export class ProductRepository {
-  constructor(private readonly db: DatabaseService) {}
-
+export class ProductRepository extends CommonRepository {
   query() {
     return this.db.query();
   }
@@ -86,22 +84,11 @@ export class ProductRepository {
       .asResult<{ producible: Node<BaseNode> }>()
       .first();
   }
-  async checkDeletePermission(id: ID, session: Session) {
-    return await this.db.checkDeletePermission(id, session);
-  }
-  getActualDirectChanges(
-    currentProduct: DirectScriptureProduct,
-    input: Except<UpdateProduct, 'produces' | 'scriptureReferencesOverride'>
-  ) {
-    return this.db.getActualChanges(
-      DirectScriptureProduct,
-      currentProduct,
-      input
-    );
-  }
-  //fix type later
+
+  getActualDirectChanges = getChanges(DirectScriptureProduct);
+
   async updateProperties(
-    object: any,
+    object: DirectScriptureProduct,
     changes: DbChanges<DirectScriptureProduct>
   ) {
     return await this.db.updateProperties({
@@ -111,16 +98,7 @@ export class ProductRepository {
     });
   }
 
-  getActualDerivativeChanges(
-    currentProduct: DerivativeScriptureProduct,
-    input: Except<UpdateProduct, 'scriptureReferences'>
-  ) {
-    return this.db.getActualChanges(
-      DerivativeScriptureProduct,
-      currentProduct,
-      input
-    );
-  }
+  getActualDerivativeChanges = getChanges(DerivativeScriptureProduct);
 
   async findProducible(produces: ID | undefined) {
     return await this.db
@@ -170,9 +148,12 @@ export class ProductRepository {
       .return('rel')
       .first();
   }
-  //fix type later
+
   async updateDerivativeProperties(
-    object: any,
+    object: Except<
+      DerivativeScriptureProduct,
+      'produces' | 'scriptureReferencesOverride'
+    >,
     changes: DbChanges<DerivativeScriptureProduct>
   ) {
     return await this.db.updateProperties({
@@ -180,10 +161,6 @@ export class ProductRepository {
       object,
       changes,
     });
-  }
-  //fix type later
-  async deleteNode(node: any) {
-    await this.db.deleteNode(node);
   }
 
   list({ filter, ...input }: ProductListInput, session: Session) {

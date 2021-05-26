@@ -2,12 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { generateId, ID, Session } from '../../common';
-import {
-  createBaseNode,
-  DatabaseService,
-  matchRequestingUser,
-} from '../../core';
-import { DbChanges } from '../../core/database/changes';
+import { createBaseNode, DtoRepository, matchRequestingUser } from '../../core';
 import {
   calculateTotalAndPaginateList,
   collect,
@@ -16,18 +11,11 @@ import {
   requestingUser,
 } from '../../core/database/query';
 import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
-import {
-  CreateLanguage,
-  Language,
-  LanguageListInput,
-  UpdateLanguage,
-} from './dto';
+import { CreateLanguage, Language, LanguageListInput } from './dto';
 import { languageListFilter } from './query.helpers';
 
 @Injectable()
-export class LanguageRepository {
-  constructor(private readonly db: DatabaseService) {}
-
+export class LanguageRepository extends DtoRepository(Language) {
   async create(input: CreateLanguage, session: Session) {
     const secureProps = [
       {
@@ -171,25 +159,6 @@ export class LanguageRepository {
         }
       >();
     return await query.first();
-  }
-  async checkDeletePermission(id: ID, session: Session) {
-    return await this.db.checkDeletePermission(id, session);
-  }
-
-  getActualChanges(object: Language, input: UpdateLanguage) {
-    return this.db.getActualChanges(Language, object, input);
-  }
-
-  async updateProperties(object: Language, changes: DbChanges<Language>) {
-    await this.db.updateProperties({
-      type: Language,
-      object,
-      changes,
-    });
-  }
-
-  async deleteNode(node: Language) {
-    await this.db.deleteNode(node);
   }
 
   list({ filter, ...input }: LanguageListInput, session: Session) {

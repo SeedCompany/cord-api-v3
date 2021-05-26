@@ -4,11 +4,10 @@ import { DateTime } from 'luxon';
 import { generateId, ID, Session } from '../../common';
 import {
   createBaseNode,
-  DatabaseService,
+  DtoRepository,
   matchRequestingUser,
   Property,
 } from '../../core';
-import { DbChanges } from '../../core/database/changes';
 import {
   calculateTotalAndPaginateList,
   matchPropList,
@@ -16,16 +15,10 @@ import {
   requestingUser,
 } from '../../core/database/query';
 import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
-import {
-  CreateOrganization,
-  Organization,
-  OrganizationListInput,
-  UpdateOrganization,
-} from './dto';
+import { CreateOrganization, Organization, OrganizationListInput } from './dto';
 
 @Injectable()
-export class OrganizationRepository {
-  constructor(private readonly db: DatabaseService) {}
+export class OrganizationRepository extends DtoRepository(Organization) {
   // assumes 'root' cypher variable is declared in query
   private readonly createSG =
     (cypherIdentifier: string, id: ID, label?: string) => (query: Query) => {
@@ -101,29 +94,6 @@ export class OrganizationRepository {
       .return('propList, node')
       .asResult<StandardReadResult<DbPropsOfDto<Organization>>>();
     return await query.first();
-  }
-
-  async checkDeletePermission(orgId: ID, session: Session) {
-    return await this.db.checkDeletePermission(orgId, session);
-  }
-
-  getActualChanges(organization: Organization, input: UpdateOrganization) {
-    return this.db.getActualChanges(Organization, organization, input);
-  }
-
-  async updateProperties(
-    object: Organization,
-    changes: DbChanges<Organization>
-  ) {
-    return await this.db.updateProperties({
-      type: Organization,
-      object,
-      changes,
-    });
-  }
-
-  async deleteNode(node: Organization) {
-    await this.db.deleteNode(node);
   }
 
   list({ filter, ...input }: OrganizationListInput, session: Session) {

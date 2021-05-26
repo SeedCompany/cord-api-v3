@@ -146,7 +146,8 @@ export class PostService {
   async update(input: UpdatePost, session: Session): Promise<Post> {
     const object = await this.readOne(input.id, session);
 
-    await this.repo.updateProperties(input, object);
+    const changes = this.repo.getActualChanges(object, input);
+    await this.repo.updateProperties(object, changes);
 
     return await this.readOne(input.id, session);
   }

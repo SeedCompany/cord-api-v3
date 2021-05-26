@@ -3,11 +3,10 @@ import { node } from 'cypher-query-builder';
 import { generateId, ID, Session } from '../../common';
 import {
   createBaseNode,
-  DatabaseService,
+  DtoRepository,
   matchRequestingUser,
   Property,
 } from '../../core';
-import { DbChanges } from '../../core/database/changes';
 import {
   calculateTotalAndPaginateList,
   matchPropList,
@@ -15,12 +14,10 @@ import {
   requestingUser,
 } from '../../core/database/query';
 import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
-import { Story, StoryListInput, UpdateStory } from './dto';
+import { Story, StoryListInput } from './dto';
 
 @Injectable()
-export class StoryRepository {
-  constructor(private readonly db: DatabaseService) {}
-
+export class StoryRepository extends DtoRepository(Story) {
   async checkStory(name: string) {
     return await this.db
       .query()
@@ -50,26 +47,6 @@ export class StoryRepository {
       .asResult<StandardReadResult<DbPropsOfDto<Story>>>();
 
     return await query.first();
-  }
-
-  async checkDeletePermission(id: ID, session: Session) {
-    return await this.db.checkDeletePermission(id, session);
-  }
-
-  getActualChanges(story: Story, input: UpdateStory) {
-    return this.db.getActualChanges(Story, story, input);
-  }
-
-  async updateProperties(story: Story, simpleChanges: DbChanges<Story>) {
-    await this.db.updateProperties({
-      type: Story,
-      object: story,
-      changes: simpleChanges,
-    });
-  }
-
-  async deleteNode(node: Story) {
-    return void (await this.db.deleteNode(node));
   }
 
   list({ filter, ...input }: StoryListInput, session: Session) {

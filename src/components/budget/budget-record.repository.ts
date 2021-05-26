@@ -2,10 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { Dictionary } from 'lodash';
 import { DateTime } from 'luxon';
-import { generateId, ID, Order, Resource, Session } from '../../common';
+import { generateId, ID, Order, Session } from '../../common';
 import {
   createBaseNode,
-  DatabaseService,
+  DtoRepository,
   matchRequestingUser,
   Property,
 } from '../../core';
@@ -21,9 +21,7 @@ import { ScopedRole } from '../authorization';
 import { BudgetRecord, BudgetRecordFilters, CreateBudgetRecord } from './dto';
 
 @Injectable()
-export class BudgetRecordRepository {
-  constructor(private readonly db: DatabaseService) {}
-
+export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
   async create(session: Session, secureProps: Property[]): Promise<Query> {
     const createBudgetRecord = this.db
       .query()
@@ -116,48 +114,6 @@ export class BudgetRecordRepository {
       }>();
 
     return query;
-  }
-
-  getActualChanges(
-    br: BudgetRecord,
-    input: {
-      amount: number | null;
-    }
-  ): Partial<
-    Omit<
-      {
-        amount: number | null;
-      },
-      keyof Resource
-    >
-  > {
-    return this.db.getActualChanges(BudgetRecord, br, input);
-  }
-
-  async updateProperties(
-    br: BudgetRecord,
-    changes: Partial<
-      Omit<
-        {
-          amount: number | null;
-        },
-        keyof Resource
-      >
-    >
-  ): Promise<BudgetRecord> {
-    return await this.db.updateProperties({
-      type: BudgetRecord,
-      object: br,
-      changes: changes,
-    });
-  }
-
-  async checkDeletePermission(id: ID, session: Session): Promise<boolean> {
-    return await this.db.checkDeletePermission(id, session);
-  }
-
-  async deleteNode(node: BudgetRecord) {
-    await this.db.deleteNode(node);
   }
 
   list(

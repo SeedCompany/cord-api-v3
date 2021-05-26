@@ -3,12 +3,7 @@ import { node, Query, relation } from 'cypher-query-builder';
 import { Dictionary } from 'lodash';
 import { DateTime } from 'luxon';
 import { generateId, ID, Order, Session } from '../../common';
-import {
-  createBaseNode,
-  DatabaseService,
-  matchRequestingUser,
-} from '../../core';
-import { DbChanges } from '../../core/database/changes';
+import { createBaseNode, DtoRepository, matchRequestingUser } from '../../core';
 import {
   calculateTotalAndPaginateList,
   matchPropList,
@@ -19,8 +14,7 @@ import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
 import { CreatePartner, Partner, PartnerListInput, UpdatePartner } from './dto';
 
 @Injectable()
-export class PartnerRepository {
-  constructor(private readonly db: DatabaseService) {}
+export class PartnerRepository extends DtoRepository(Partner) {
   private readonly orgNameSorter =
     (sortInput: string, order: Order) => (q: Query) => {
       // If the user inputs orgName as the sort value, then match the organization node for the sortValue match
@@ -229,22 +223,6 @@ export class PartnerRepository {
     return await query.first();
   }
 
-  async checkDeletePermission(id: ID, session: Session) {
-    return await this.db.checkDeletePermission(id, session);
-  }
-
-  getActualChanges(object: Partner, input: UpdatePartner) {
-    return this.db.getActualChanges(Partner, object, input);
-  }
-
-  async updateProperties(object: Partner, changes: DbChanges<Partner>) {
-    await this.db.updateProperties({
-      type: Partner,
-      object,
-      changes,
-    });
-  }
-
   async updatePartnerProperties(input: UpdatePartner, session: Session) {
     const createdAt = DateTime.local();
     await this.db
@@ -274,10 +252,6 @@ export class PartnerRepository {
         node('newPointOfContact'),
       ])
       .run();
-  }
-
-  async deleteNode(node: Partner) {
-    await this.db.deleteNode(node);
   }
 
   list({ filter, ...input }: PartnerListInput, session: Session) {

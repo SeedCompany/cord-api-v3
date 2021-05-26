@@ -5,11 +5,10 @@ import { DateTime } from 'luxon';
 import { ID, Order, Session } from '../../common';
 import {
   createBaseNode,
-  DatabaseService,
+  DtoRepository,
   matchRequestingUser,
   Property,
 } from '../../core';
-import { DbChanges } from '../../core/database/changes';
 import {
   calculateTotalAndPaginateList,
   matchPropsAndProjectSensAndScopedRoles,
@@ -18,12 +17,10 @@ import {
 } from '../../core/database/query';
 import { DbPropsOfDto } from '../../core/database/results';
 import { ScopedRole } from '../authorization';
-import { Partnership, PartnershipFilters, UpdatePartnership } from './dto';
+import { Partnership, PartnershipFilters } from './dto';
 
 @Injectable()
-export class PartnershipRepository {
-  constructor(private readonly db: DatabaseService) {}
-
+export class PartnershipRepository extends DtoRepository(Partnership) {
   create(partnershipId: ID, session: Session, secureProps: Property[]) {
     return this.db
       .query()
@@ -91,26 +88,6 @@ export class PartnershipRepository {
       }>();
 
     return await query.first();
-  }
-
-  async checkDeletePermission(id: ID, session: Session) {
-    return await this.db.checkDeletePermission(id, session);
-  }
-
-  getActualChanges(object: Partnership, input: UpdatePartnership) {
-    return this.db.getActualChanges(Partnership, object, input);
-  }
-
-  async updateProperties(object: Partnership, changes: DbChanges<Partnership>) {
-    await this.db.updateProperties({
-      type: Partnership,
-      object,
-      changes,
-    });
-  }
-
-  async deleteNode(node: Partnership) {
-    await this.db.deleteNode(node);
   }
 
   list(

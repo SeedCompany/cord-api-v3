@@ -3,12 +3,7 @@ import { node, relation } from 'cypher-query-builder';
 import { Dictionary } from 'lodash';
 import { DateTime } from 'luxon';
 import { generateId, ID, Session } from '../../common';
-import {
-  createBaseNode,
-  DatabaseService,
-  matchRequestingUser,
-} from '../../core';
-import { DbChanges } from '../../core/database/changes';
+import { createBaseNode, DtoRepository, matchRequestingUser } from '../../core';
 import {
   calculateTotalAndPaginateList,
   matchPropList,
@@ -16,17 +11,10 @@ import {
   requestingUser,
 } from '../../core/database/query';
 import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
-import {
-  CreateLocation,
-  Location,
-  LocationListInput,
-  UpdateLocation,
-} from './dto';
+import { CreateLocation, Location, LocationListInput } from './dto';
 
 @Injectable()
-export class LocationRepository {
-  constructor(private readonly db: DatabaseService) {}
-
+export class LocationRepository extends DtoRepository(Location) {
   async checkName(name: string) {
     return await this.db
       .query()
@@ -149,22 +137,6 @@ export class LocationRepository {
     // return await query.first();
   }
 
-  async checkDeletePermission(id: ID, session: Session) {
-    return await this.db.checkDeletePermission(id, session);
-  }
-
-  getActualChanges(location: Location, input: UpdateLocation) {
-    return this.db.getActualChanges(Location, location, input);
-  }
-
-  async updateProperties(object: Location, changes: DbChanges<Location>) {
-    await this.db.updateProperties({
-      type: Location,
-      object,
-      changes,
-    });
-  }
-
   async updateLocationProperties(
     type: 'fundingAccount' | 'defaultFieldRegion',
     session: Session,
@@ -232,10 +204,6 @@ export class LocationRepository {
         })
         .run();
     }
-  }
-
-  async deleteNode(node: Location) {
-    await this.db.deleteNode(node);
   }
 
   list({ filter, ...input }: LocationListInput, session: Session) {

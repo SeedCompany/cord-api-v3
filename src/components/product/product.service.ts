@@ -374,12 +374,6 @@ export class ProductService {
       session
     );
 
-    // return await this.db.updateProperties({
-    //   type: DirectScriptureProduct,
-    //   object: productUpdatedScriptureReferences,
-    //   changes: simpleChanges,
-    // });
-
     return await this.repo.updateProperties(
       productUpdatedScriptureReferences,
       simpleChanges

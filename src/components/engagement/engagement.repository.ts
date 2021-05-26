@@ -3,8 +3,8 @@ import { inArray, node, Node, Query, relation } from 'cypher-query-builder';
 import { Dictionary } from 'lodash';
 import { DateTime } from 'luxon';
 import { CalendarDate, ID, Session } from '../../common';
-import { DatabaseService, matchSession } from '../../core';
-import { DbChanges } from '../../core/database/changes';
+import { CommonRepository, matchSession } from '../../core';
+import { DbChanges, getChanges } from '../../core/database/changes';
 import {
   calculateTotalAndPaginateList,
   matchPropsAndProjectSensAndScopedRoles,
@@ -22,13 +22,10 @@ import {
   OngoingEngagementStatuses,
   PnpData,
   UpdateInternshipEngagement,
-  UpdateLanguageEngagement,
 } from './dto';
 
 @Injectable()
-export class EngagementRepository {
-  constructor(private readonly db: DatabaseService) {}
-
+export class EngagementRepository extends CommonRepository {
   // CREATE ///////////////////////////////////////////////////////////
   query(): Query {
     return this.db.query();
@@ -161,29 +158,9 @@ export class EngagementRepository {
       }>();
   }
 
-  // getActualChanges(
-  //   type: string,
-  //   object: LanguageEngagement | InternshipEngagement,
-  //   input: UpdateLanguageEngagement | UpdateInternshipEngagement
-  // ): ChangesOf<LanguageEngagement> | ChangesOf<InternshipEngagement> {
-  //   if (type === 'language') {
-  //     return this.db.getActualChanges(LanguageEngagement, object, input);
-  //   }
-  //   // else if (type === 'internship')
-  //   else {
-  //     return this.db.getActualChanges(InternshipEngagement, object, input);
-  //   }
-  //   // return undefined;
-  // }
-
   // UPDATE ///////////////////////////////////////////////////////////
 
-  getActualLanguageChanges(
-    object: LanguageEngagement,
-    input: UpdateLanguageEngagement
-  ) {
-    return this.db.getActualChanges(LanguageEngagement, object, input);
-  }
+  getActualLanguageChanges = getChanges(LanguageEngagement);
 
   async updateLanguageProperties(
     object: LanguageEngagement,
@@ -196,12 +173,7 @@ export class EngagementRepository {
     });
   }
 
-  getActualInternshipChanges(
-    object: InternshipEngagement,
-    input: UpdateInternshipEngagement
-  ) {
-    return this.db.getActualChanges(InternshipEngagement, object, input);
-  }
+  getActualInternshipChanges = getChanges(InternshipEngagement);
 
   mentorQ(
     mentorId: ID,
@@ -310,10 +282,6 @@ export class EngagementRepository {
 
   // DELETE /////////////////////////////////////////////////////////
 
-  async checkDeletePermission(id: ID, session: Session) {
-    return await this.db.checkDeletePermission(id, session);
-  }
-
   async findNodeToDelete(id: ID) {
     return await this.db
       .query()
@@ -326,12 +294,6 @@ export class EngagementRepository {
       .asResult<{ projectId: ID }>()
       .first();
     // return result;
-  }
-
-  async deleteNode(
-    object: LanguageEngagement | InternshipEngagement
-  ): Promise<void> {
-    await this.db.deleteNode(object);
   }
 
   // LIST ///////////////////////////////////////////////////////////
