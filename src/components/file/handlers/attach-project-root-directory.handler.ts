@@ -58,9 +58,7 @@ export class AttachProjectRootDirectoryHandler
     }
     const folders = [
       'Approval Documents',
-      'Financial Reports',
       'Consultant Reports',
-      'Narrative Reports',
       'Field Correspondence',
       'Photos',
     ];
