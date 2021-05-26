@@ -223,96 +223,50 @@ export class PeriodicReportResolver {
     description: 'Move P&P files from old schema to new periodic report schema',
   })
   async migratePnps(@LoggedInSession() session: Session) {
-    const res = await this.db
-      .query()
-      .match([
-        node('p', 'Project'),
-        relation('out', '', 'engagement', { active: true }),
-        node('e', 'Engagement', { id: '5cdaf7131c6585554b8af8cb' }),
-        relation('out', '', 'pnpNode', { active: true }),
-        node('pn', 'FileNode'),
-        relation('out', '', 'name', { active: true }),
-        node('na', 'Property'),
-      ])
-      .match([
-        node('pn'),
-        relation('in', '', 'parent', { active: true }),
-        node('fv', 'FileVersion'),
-      ])
-      .match([
-        node('p'),
-        relation('out', '', 'mouStart', { active: true }),
-        node('ms', 'Property'),
-      ])
-      .match([
-        node('p'),
-        relation('out', '', 'mouEnd', { active: true }),
-        node('me', 'Property'),
-      ])
-      .match([
-        node('p'),
-        relation('out', '', 'step', { active: true }),
-        node('s', 'Property'),
-      ])
-      .match([
-        node('e'),
-        relation('out', '', 'startDateOverride', { active: true }),
-        node('so', 'Property'),
-      ])
-      .match([
-        node('e'),
-        relation('out', '', 'endDateOverride', { active: true }),
-        node('eo', 'Property'),
-      ])
-      .match([
-        node('e'),
-        relation('out', '', 'report', { active: true }),
-        node('rn', 'ProgressReport'),
-      ])
-      .raw(`where not na.value =~ "PNP"`)
-      .return(
-        'na.value as pnpName, e.id as engagementId, p.id as projectId, ms.value as mouStart, me.value as mouEnd, so.value as startDateOverride, eo.value as endDateOverride, s.value as step, fv.id as fileVersionId'
-      )
-      .orderBy('fv.createdAt', 'DESC')
-      .limit(1)
-      .asResult<{
-        pnpName: string;
-        engagementId: ID;
-        projectId: ID;
-        mouStart: any;
-        mouEnd: any;
-        startDateOverride: any;
-        endDateOverride: any;
-        step: string;
-        fileVersionId: ID;
-      }>()
-      .run();
-
-    const mapped = res.map((i) => {
-      const { year, quarter } = this.pnp.parseYearAndQuarter(i.pnpName);
-      return { ...i, year, quarter };
-    });
-
-    for (const {
+    const migratePnp = async ({
       year: fileNameYear,
       quarter: fileNameQuarter,
       engagementId,
       pnpName,
-      projectId,
-      mouStart,
-      mouEnd,
-      startDateOverride,
-      endDateOverride,
-      step,
-      fileVersionId,
-    } of mapped) {
-      const { extractedYear, extractedQuarter } =
-        !fileNameYear || !fileNameQuarter
-          ? await this.pnp.extractFyAndQuarter(
-              { uploadId: fileVersionId },
-              session
-            )
-          : { extractedYear: 0, extractedQuarter: 0 };
+    }: {
+      year: number;
+      quarter: number;
+      engagementId: ID;
+      pnpName: string;
+    }) => {
+      const getMostRecentFileVersionId = async (eId: ID) => {
+        const { mostRecentPnpFileVersionId } = (await this.db
+          .query()
+          .raw(
+            `
+            match(e {id: $id})-[:pnpNode { active: true }]->()<-[:parent { active: true }]-(pnpFileVersion)
+            return pnpFileVersion.id as mostRecentPnpFileVersionId
+            order by pnpFileVersion.createdAt desc
+            limit 1
+            `,
+            { id: eId }
+          )
+          .asResult<{ mostRecentPnpFileVersionId: ID }>()
+          .first()) ?? { mostRecentPnpFileVersionId: null };
+        return mostRecentPnpFileVersionId;
+      };
+      let extractedYear;
+      let extractedQuarter;
+
+      if (!fileNameYear || !fileNameQuarter) {
+        const mostRecentId = await getMostRecentFileVersionId(engagementId);
+        if (!mostRecentId) {
+          this.logger.log({ message: 'no pnp version', engagementId });
+          return;
+        }
+        // this goes into the file itself to see if it can find FY/Q if we're missing it in the file name
+        const res = await this.pnp.extractFyAndQuarter(
+          { uploadId: mostRecentId },
+          session
+        );
+        extractedYear = res.extractedYear;
+        extractedQuarter = res.extractedQuarter;
+      }
 
       const year = fileNameYear || extractedYear;
       const quarter = fileNameQuarter || extractedQuarter;
@@ -320,15 +274,13 @@ export class PeriodicReportResolver {
         this.logger.log({
           message: 'no year or quarter',
           engagementId,
-          projectId,
-          step,
           pnpName,
           year,
           quarter,
         });
-        continue;
+        return;
       }
-
+      // non-fiscal date
       const startDate = `${quarter === 1 ? year - 1 : year}-${
         quarter === 1
           ? '10'
@@ -339,48 +291,172 @@ export class PeriodicReportResolver {
           : '07'
       }-01`;
 
+      const pnpDateMillis = CalendarDate.fromISO(startDate).toMillis();
+
+      // if pnpDate is after end, then assign that pnp to the last reporting period
+      let startToUse;
+
       const {
-        neo4jStart,
+        matchingStart,
       } = (await this.db
         .query()
         .raw(
-          `match(:Engagement {id: $id})-[:report]->(:ProgressReport)-[:start]->(st:Property {value: date($startDate)})`,
+          `match(e:Engagement {id: $id})-[:report { active: true }]->(pr:ProgressReport)-[:start { active: true }]->(start:Property {value: date($startDate)})`,
           { id: engagementId, startDate }
         )
-        .return('st.value as neo4jStart')
-        .first()) ?? { neo4jStart: null };
-      if (!neo4jStart) {
-        this.logger.log({
-          message: 'no matching report period',
-          engagementId,
-          projectId,
-          mouStart,
-          mouEnd,
-          startDateOverride,
-          endDateOverride,
-          step,
-          pnpName,
-          year,
-          quarter,
-          startDate,
-        });
+        .return('start.value as matchingStart')
+        .first()) ?? { matchingStart: null };
+
+      if (!matchingStart) {
+        // the start and end of the last reporting period –– if the pnp is from after the PR end
+        // then we map the P&P to that (the last) reporting period
+        const { latestPrStart, latestPrEnd } = (await this.db
+          .query()
+          .match([
+            node('', 'Engagement', { id: engagementId }),
+            relation('out', '', 'report', { active: true }),
+            node('rn', 'PeriodicReport'),
+            relation('out', '', 'start', { active: true }),
+            node('sn', 'Property'),
+          ])
+          .match([
+            node('rn'),
+            relation('out', '', 'end', { active: true }),
+            node('en', 'Property'),
+          ])
+          .return('sn.value as latestStart, en.value as latestEnd')
+          .orderBy('sn.value', 'desc')
+          .limit(1)
+          .asResult<{
+            latestPrStart?: CalendarDate;
+            latestPrEnd?: CalendarDate;
+          }>()
+          .first()) ?? { latestPrStart: undefined, latestPrEnd: undefined };
+        // if we can't match it, leave the P&P where it was and move on
+        if (!latestPrStart || !latestPrEnd) return;
+
+        startToUse =
+          latestPrEnd.toMillis() < pnpDateMillis ? latestPrStart : null;
+      } else {
+        startToUse = matchingStart;
       }
-    }
 
-    // if we have a P&P that matches a reporting period, move it. otherwise just keep it where it is.
+      // we cannot match a P&P to a report period, so we leave it where it is
+      if (!startToUse) {
+        this.logger.log({ message: 'no start to match on', engagementId });
+        return;
+      }
 
-    // sometimes P&Ps are brought over from other projects–– like project3 ––> project4. in these cases, we should put them on the planning card (the defined place where P&Ps were uploaded previously)
-    // other times they are submitted late for the last reporting period when a project is completed (per Sue). in these cases we need to add them for that last period
+      // move pnp node file versions to the matching periodic report file node
+      // and remove the old parent relationships
+      const { reportFileNodeId } = (await this.db
+        .query()
+        .raw(
+          `
+          match(e { id: $id })-[:pnpNode { active: true }]->()<-[pnpParentRel:parent { active: true }]-(pnpFileVersion)
+          match(e)-[:report]->(rn)-[:start { active: true }]->({ value: date($startDate) })
+          match(rn)-[:reportFileNode { active: true }]->(reportFileNode)
+          create(pnpFileVersion)-[:parent { active: true, createdAt: pnpFileVersion.createdAt }]->(reportFileNode)
+          delete pnpParentRel
+          return reportFileNode.id as reportFileNodeId
+          `,
+          { id: engagementId, startDate: startToUse }
+        )
+        .first()) ?? { reportFileNodeId: null };
 
-    // const mapped = pnpNames.map((n: string) => {
-    //   return this.pnp.parseYearAndQuarter(n);
-    // });
+      // deactivate the default PR name node
+      await this.db
+        .query()
+        .raw(
+          `
+          match(reportFileNode { id: $reportFileNodeId })-[nameRel:name { active: true }]->(name)
+          set nameRel.active = false, name:Deleted_Property
+          remove name:Property
+          return *
+          `,
+          { reportFileNodeId }
+        )
+        .run();
 
-    // this.logger.log(res);
-    // just need to grab the main file node and replace that, then you don't worry about individual versions
-    // 1. grab pnp file version nodes, detach from pnp file node and attach them to correct periodic report file node
-    // -- use pnp extract code to grab FY/Q from file name to determine correct periodic report file node
-    // 2. grab most recent pnp data and attach it to
+      // move pnp node name properties to periodic report
+      // this is the history of file version names
+      await this.db
+        .query()
+        .raw(
+          `
+          match(e { id: $id })-[:pnpNode { active: true }]->()-[pnpNameRel:name]->(pnpName)
+          match(reportFileNode { id: $reportFileNodeId })
+          where not pnpName.value =~ "PNP"
+          create(reportFileNode)-[:name { active: pnpNameRel.active, createdAt: pnpName.createdAt }]->(pnpName)
+          delete pnpNameRel
+          return *
+          `,
+          { id: engagementId, reportFileNodeId }
+        )
+        .run();
+
+      // set default pnp name to active = true
+      // it's the only name node left after the previous query
+      await this.db
+        .query()
+        .raw(
+          `
+          match(e { id: $id })-[p:pnpNode { active: true }]->()-[pnpNameRel:name]->(pnpName)
+          set pnpNameRel.active = true, pnpName:Property
+          remove pnpName:Deleted_Property
+          return *
+          `,
+          { id: engagementId }
+        )
+        .run();
+    };
+
+    // get all engagements with previously uploaded P&Ps in the former designated location
+    const res = await this.db
+      .query()
+      .match([
+        node('e', 'Engagement'),
+        relation('out', '', 'pnpNode', { active: true }),
+        node('pn', 'FileNode'),
+        relation('out', '', 'name', { active: true }),
+        node('na', 'Property'),
+      ])
+      // ensure the engagement has periodic reports generated
+      // we didn't generate them if project is missing one of its dates (per Seth)
+      .match([
+        node('e'),
+        relation('out', '', 'report', { active: true }),
+        node('rn', 'ProgressReport'),
+      ])
+      // these are engagements that have a previously uploaded P&P
+      // this is the default name
+      .raw(`where not na.value =~ "PNP"`)
+      .with(
+        `
+        {
+          pnpName: na.value,
+          engagementId: e.id
+        } as engagementData
+        `
+      )
+      .return('distinct(engagementData)')
+      .asResult<{
+        engagementData: {
+          pnpName: string;
+          engagementId: ID;
+        };
+      }>()
+      .run();
+
+    const mapped = res.map(({ engagementData }) => {
+      const { year, quarter } = this.pnp.parseYearAndQuarter(
+        engagementData.pnpName
+      );
+      return { ...engagementData, year, quarter };
+    });
+
+    await asyncPool(30, mapped, migratePnp);
+
     return true;
   }
 
