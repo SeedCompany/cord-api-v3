@@ -53,7 +53,6 @@ import {
   EngagementUpdatedEvent,
   EngagementWillDeleteEvent,
 } from './events';
-import { DbInternshipEngagement, DbLanguageEngagement } from './model';
 import { PnpExtractor } from './pnp-extractor.service';
 
 @Injectable()
@@ -242,9 +241,8 @@ export class EngagementService {
       await this.savePnpData(id, pnpData);
     }
 
-    const dbLanguageEngagement = new DbLanguageEngagement();
     await this.authorizationService.processNewBaseNode(
-      dbLanguageEngagement,
+      LanguageEngagement,
       id,
       session.userId
     );
@@ -461,9 +459,8 @@ export class EngagementService {
       'engagement.growthPlan'
     );
 
-    const dbInternshipEngagement = new DbInternshipEngagement();
     await this.authorizationService.processNewBaseNode(
-      dbInternshipEngagement,
+      InternshipEngagement,
       id,
       session.userId
     );

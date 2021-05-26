@@ -48,7 +48,6 @@ import {
 } from './dto';
 import { EthnologueLanguageService } from './ethnologue-language';
 import { LanguageRepository } from './language.repository';
-import { DbLanguage } from './model';
 
 @Injectable()
 export class LanguageService {
@@ -135,9 +134,8 @@ export class LanguageService {
 
       await this.repo.connect(resultLanguage.id, ethnologueId, createdAt);
 
-      const dbLanguage = new DbLanguage();
       await this.authorizationService.processNewBaseNode(
-        dbLanguage,
+        Language,
         resultLanguage.id,
         session.userId
       );

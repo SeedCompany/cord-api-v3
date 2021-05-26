@@ -36,7 +36,7 @@ import { AuthorizationRepository } from './authorization.repository';
 import { InternalRole, Role, rolesForScope, ScopedRole } from './dto';
 import { Powers } from './dto/powers';
 import { MissingPowerException } from './missing-power.exception';
-import { DbRole, OneBaseNode, PermissionsForResource } from './model';
+import { DbRole, PermissionsForResource } from './model';
 import * as AllRoles from './roles';
 
 const getDbRoles = (roles: ScopedRole[]) =>
@@ -61,13 +61,13 @@ export class AuthorizationService {
   ) {}
 
   async processNewBaseNode(
-    baseNodeObj: OneBaseNode,
+    resource: ResourceShape<any>,
     baseNodeId: ID,
     creatorUserId: ID
   ) {
     await this.afterTransaction(async () => {
       await this.authorizationRepo.processNewBaseNode(
-        baseNodeObj,
+        resource.name,
         baseNodeId,
         creatorUserId
       );

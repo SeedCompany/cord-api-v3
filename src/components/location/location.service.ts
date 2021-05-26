@@ -23,7 +23,6 @@ import {
   UpdateLocation,
 } from './dto';
 import { LocationRepository } from './location.repository';
-import { DbLocation } from './model';
 
 @Injectable()
 export class LocationService {
@@ -85,9 +84,8 @@ export class LocationService {
       );
     }
 
-    const dbLocation = new DbLocation();
     await this.authorizationService.processNewBaseNode(
-      dbLocation,
+      Location,
       result.id,
       session.userId
     );

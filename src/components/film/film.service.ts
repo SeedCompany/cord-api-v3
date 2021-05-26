@@ -22,7 +22,6 @@ import {
   UpdateFilm,
 } from './dto';
 import { FilmRepository } from './film.repository';
-import { DbFilm } from './model';
 
 @Injectable()
 export class FilmService {
@@ -67,9 +66,8 @@ export class FilmService {
         throw new ServerException('failed to create a film');
       }
 
-      const dbFilm = new DbFilm();
       await this.authorizationService.processNewBaseNode(
-        dbFilm,
+        Film,
         result.id,
         session.userId
       );

@@ -12,7 +12,6 @@ import {
   runListQuery,
 } from '../../../core/database/results';
 import { AuthorizationService } from '../../authorization/authorization.service';
-import { DbEducation } from '../model';
 import {
   CreateEducation,
   Education,
@@ -72,9 +71,8 @@ export class EducationService {
       throw new ServerException('failed to create education');
     }
 
-    const dbEducation = new DbEducation();
     await this.authorizationService.processNewBaseNode(
-      dbEducation,
+      Education,
       result.id,
       userId
     );

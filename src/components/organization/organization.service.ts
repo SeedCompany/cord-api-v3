@@ -26,7 +26,6 @@ import {
   OrganizationListOutput,
   UpdateOrganization,
 } from './dto';
-import { DbOrganization } from './model';
 import { OrganizationRepository } from './organization.repository';
 
 @Injectable()
@@ -82,9 +81,8 @@ export class OrganizationService {
       throw new ServerException('failed to create default org');
     }
 
-    const dbOrganization = new DbOrganization();
     await this.authorizationService.processNewBaseNode(
-      dbOrganization,
+      Organization,
       result.id,
       session.userId
     );

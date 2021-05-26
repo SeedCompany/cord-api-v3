@@ -66,7 +66,6 @@ import {
   EducationService,
   SecuredEducationList,
 } from './education';
-import { DbUser } from './model';
 import {
   SecuredUnavailabilityList,
   UnavailabilityListInput,
@@ -152,8 +151,7 @@ export class UserService {
     await this.userRepo.create(id, input);
     input.roles &&
       (await this.authorizationService.roleAddedToUser(id, input.roles));
-    const dbUser = new DbUser();
-    await this.authorizationService.processNewBaseNode(dbUser, id, id);
+    await this.authorizationService.processNewBaseNode(User, id, id);
     return id;
   }
 

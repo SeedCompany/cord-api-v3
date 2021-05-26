@@ -46,7 +46,6 @@ import {
   ProductMethodology,
   UpdateProduct,
 } from './dto';
-import { DbProduct } from './model';
 import { ProductRepository } from './product.repository';
 
 @Injectable()
@@ -213,9 +212,8 @@ export class ProductService {
       throw new ServerException('failed to create default product');
     }
 
-    const dbProduct = new DbProduct();
     await this.authorizationService.processNewBaseNode(
-      dbProduct,
+      Product,
       result.id,
       session.userId
     );

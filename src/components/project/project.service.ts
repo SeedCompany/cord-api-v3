@@ -73,7 +73,6 @@ import {
   ProjectDeletedEvent,
   ProjectUpdatedEvent,
 } from './events';
-import { DbProject } from './model';
 import {
   ProjectMemberListInput,
   ProjectMemberService,
@@ -386,9 +385,8 @@ export class ProjectService {
         );
       }
 
-      const dbProject = new DbProject();
       await this.authorizationService.processNewBaseNode(
-        dbProject,
+        IProject,
         result.id,
         session.userId
       );

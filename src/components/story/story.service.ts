@@ -21,7 +21,6 @@ import {
   StoryListOutput,
   UpdateStory,
 } from './dto';
-import { DbStory } from './model';
 import { StoryRepository } from './story.repository';
 
 @Injectable()
@@ -82,9 +81,8 @@ export class StoryService {
         throw new ServerException('failed to create a story');
       }
 
-      const dbStory = new DbStory();
       await this.authorizationService.processNewBaseNode(
-        dbStory,
+        Story,
         result.id,
         session.userId
       );
