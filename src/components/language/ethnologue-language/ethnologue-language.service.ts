@@ -21,7 +21,6 @@ import {
   EthnologueLanguage,
   UpdateEthnologueLanguage,
 } from '../dto';
-import { DbEthnologueLanguage } from '../model';
 import { EthnologueLanguageRepository } from './ethnologue-language.repository';
 
 @Injectable()
@@ -71,9 +70,8 @@ export class EthnologueLanguageService {
       throw new ServerException('Failed to create ethnologue language');
     }
 
-    const dbEthnologueLanguage = new DbEthnologueLanguage();
     await this.authorizationService.processNewBaseNode(
-      dbEthnologueLanguage,
+      EthnologueLanguage,
       result.id,
       session.userId
     );

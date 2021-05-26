@@ -21,7 +21,6 @@ import {
   UpdateFundingAccount,
 } from './dto';
 import { FundingAccountRepository } from './funding-account.repository';
-import { DbFundingAccount } from './model';
 
 @Injectable()
 export class FundingAccountService {
@@ -72,9 +71,8 @@ export class FundingAccountService {
         throw new ServerException('Failed to create funding account');
       }
 
-      const dbFundingAccount = new DbFundingAccount();
       await this.authorizationService.processNewBaseNode(
-        dbFundingAccount,
+        FundingAccount,
         result.id,
         session.userId
       );

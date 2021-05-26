@@ -21,7 +21,6 @@ import {
   SongListOutput,
   UpdateSong,
 } from './dto';
-import { DbSong } from './model';
 import { SongRepository } from './song.repository';
 
 @Injectable()
@@ -83,9 +82,8 @@ export class SongService {
         throw new ServerException('failed to create a song');
       }
 
-      const dbSong = new DbSong();
       await this.authorizationService.processNewBaseNode(
-        dbSong,
+        Song,
         result.id,
         session.userId
       );

@@ -25,7 +25,6 @@ import {
   PartnerType,
   UpdatePartner,
 } from './dto';
-import { DbPartner } from './model';
 import { PartnerRepository } from './partner.repository';
 
 @Injectable()
@@ -74,9 +73,8 @@ export class PartnerService {
       await this.repo.createProperty(input, result, createdAt);
     }
 
-    const dbPartner = new DbPartner();
     await this.authorizationService.processNewBaseNode(
-      dbPartner,
+      Partner,
       result.id,
       session.userId
     );

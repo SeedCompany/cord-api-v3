@@ -29,8 +29,6 @@ import {
   UpdateBudget,
   UpdateBudgetRecord,
 } from './dto';
-import { DbBudget } from './model';
-import { DbBudgetRecord } from './model/budget-record.model.db';
 
 @Injectable()
 export class BudgetService {
@@ -104,9 +102,8 @@ export class BudgetService {
         'budget.universalTemplateFile'
       );
 
-      const dbBudget = new DbBudget();
       await this.authorizationService.processNewBaseNode(
-        dbBudget,
+        Budget,
         result?.id,
         session.userId
       );
@@ -179,9 +176,8 @@ export class BudgetService {
       );
       await orgQuery.first();
 
-      const dbBudgetRecord = new DbBudgetRecord();
       await this.authorizationService.processNewBaseNode(
-        dbBudgetRecord,
+        BudgetRecord,
         result.id,
         session.userId
       );

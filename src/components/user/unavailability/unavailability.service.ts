@@ -8,7 +8,6 @@ import {
 import { ConfigService, ILogger, Logger } from '../../../core';
 import { parseBaseNodeProperties } from '../../../core/database/results';
 import { AuthorizationService } from '../../authorization/authorization.service';
-import { DbUnavailability } from '../model';
 import {
   CreateUnavailability,
   Unavailability,
@@ -77,9 +76,8 @@ export class UnavailabilityService {
         createUnavailabilityResult.id,
         userId
       );
-      const dbUnavailability = new DbUnavailability();
       await this.authorizationService.processNewBaseNode(
-        dbUnavailability,
+        Unavailability,
         createUnavailabilityResult.id,
         userId
       );

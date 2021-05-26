@@ -21,7 +21,6 @@ import {
   UpdateFieldRegion,
 } from './dto';
 import { FieldRegionRepository } from './field-region.repository';
-import { DbFieldRegion } from './model';
 
 @Injectable()
 export class FieldRegionService {
@@ -76,9 +75,8 @@ export class FieldRegionService {
       throw new ServerException('failed to create field region');
     }
 
-    const dbFieldRegion = new DbFieldRegion();
     await this.authorizationService.processNewBaseNode(
-      dbFieldRegion,
+      FieldRegion,
       result.id,
       session.userId
     );

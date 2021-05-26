@@ -31,7 +31,6 @@ import {
   PartnershipUpdatedEvent,
   PartnershipWillDeleteEvent,
 } from './events';
-import { DbPartnership } from './model';
 import { PartnershipRepository } from './partnership.repository';
 
 @Injectable()
@@ -174,7 +173,7 @@ export class PartnershipService {
       );
 
       await this.authorizationService.processNewBaseNode(
-        new DbPartnership(),
+        Partnership,
         result.id,
         session.userId
       );

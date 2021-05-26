@@ -22,7 +22,6 @@ import {
   UpdateLiteracyMaterial,
 } from './dto';
 import { LiteracyMaterialRepository } from './literacy-material.repository';
-import { DbLiteracyMaterial } from './model';
 
 @Injectable()
 export class LiteracyMaterialService {
@@ -69,9 +68,8 @@ export class LiteracyMaterialService {
         throw new ServerException('failed to create a literacy material');
       }
 
-      const dbLiteracyMaterial = new DbLiteracyMaterial();
       await this.authorizationService.processNewBaseNode(
-        dbLiteracyMaterial,
+        LiteracyMaterial,
         result.id,
         session.userId
       );

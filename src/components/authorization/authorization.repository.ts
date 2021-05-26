@@ -6,7 +6,6 @@ import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import { QueryWithResult } from '../../core/database/query.overrides';
 import { InternalRole, Role } from './dto';
 import { Powers } from './dto/powers';
-import { OneBaseNode } from './model';
 
 @Injectable()
 export class AuthorizationRepository {
@@ -16,7 +15,7 @@ export class AuthorizationRepository {
     @Logger('user:repository') private readonly logger: ILogger
   ) {}
   async processNewBaseNode(
-    baseNodeObj: OneBaseNode,
+    label: string,
     baseNodeId: ID,
     creatorUserId: ID
   ): Promise<void> {
@@ -26,7 +25,7 @@ export class AuthorizationRepository {
         `CALL cord.processNewBaseNode($baseNodeId, $label, $creatorUserId)`,
         {
           baseNodeId,
-          label: baseNodeObj.__className.substring(2),
+          label,
           creatorUserId,
         }
       )

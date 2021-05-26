@@ -8,8 +8,8 @@ import {
 } from '../../../core';
 import { AuthorizationService } from '../../authorization/authorization.service';
 import { ProjectCreatedEvent } from '../../project/events';
+import { Directory } from '../dto';
 import { FileService } from '../file.service';
-import { DbDirectory } from '../model';
 
 @EventsHandler(ProjectCreatedEvent)
 export class AttachProjectRootDirectoryHandler
@@ -47,9 +47,8 @@ export class AttachProjectRootDirectoryHandler
       ])
       .run();
 
-    const dbDirectory = new DbDirectory();
     await this.authorizationService.processNewBaseNode(
-      dbDirectory,
+      Directory,
       rootDir.id,
       session.userId
     );

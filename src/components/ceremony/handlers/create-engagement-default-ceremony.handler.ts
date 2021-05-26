@@ -4,8 +4,8 @@ import { DatabaseService, EventsHandler, IEventHandler } from '../../../core';
 import { AuthorizationService } from '../../authorization/authorization.service';
 import { EngagementCreatedEvent } from '../../engagement/events';
 import { CeremonyService } from '../ceremony.service';
+import { Ceremony } from '../dto';
 import { CeremonyType } from '../dto/type.enum';
-import { DbCeremony } from '../model';
 
 @EventsHandler(EngagementCreatedEvent)
 export class CreateEngagementDefaultCeremonyHandler
@@ -44,9 +44,8 @@ export class CreateEngagementDefaultCeremonyHandler
       ])
       .run();
 
-    const dbCeremony = new DbCeremony();
     await this.authorizationService.processNewBaseNode(
-      dbCeremony,
+      Ceremony,
       ceremonyId,
       session.userId
     );

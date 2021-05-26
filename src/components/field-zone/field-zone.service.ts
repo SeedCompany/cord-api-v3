@@ -21,7 +21,6 @@ import {
   UpdateFieldZone,
 } from './dto';
 import { FieldZoneRepository } from './field-zone.repository';
-import { DbFieldZone } from './model';
 
 @Injectable()
 export class FieldZoneService {
@@ -69,9 +68,8 @@ export class FieldZoneService {
       throw new ServerException('failed to create field zone');
     }
 
-    const dbFieldZone = new DbFieldZone();
     await this.authorizationService.processNewBaseNode(
-      dbFieldZone,
+      FieldZone,
       result.id,
       session.userId
     );
