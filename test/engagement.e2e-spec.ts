@@ -232,16 +232,9 @@ describe('Engagement e2e', () => {
 
   it('reads a an language engagement by id', async () => {
     project = await createProject(app);
-    const upload = await requestFileUpload(app);
-    const fakeFile = await uploadFileContents(app, upload.url);
-
     const languageEngagement = await createLanguageEngagement(app, {
       languageId: language.id,
       projectId: project.id,
-      pnp: {
-        uploadId: upload.id,
-        name: fakeFile.name,
-      },
     });
 
     const { engagement: actual } = await app.graphql.query(

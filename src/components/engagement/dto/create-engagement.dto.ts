@@ -49,11 +49,6 @@ export abstract class CreateLanguageEngagement extends CreateEngagement {
   readonly paratextRegistryId?: string;
 
   @Field({ nullable: true })
-  @Type(() => CreateDefinedFileVersionInput)
-  @ValidateNested()
-  readonly pnp?: CreateDefinedFileVersionInput;
-
-  @Field({ nullable: true })
   readonly historicGoal?: string;
 }
 

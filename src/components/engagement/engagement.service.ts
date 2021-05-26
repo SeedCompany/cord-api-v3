@@ -233,13 +233,9 @@ export class EngagementService {
       session,
       id,
       'pnp',
-      input.pnp,
+      undefined,
       'engagement.pnp'
     );
-    if (input.pnp) {
-      const pnpData = await this.pnpExtractor.extract(input.pnp, session);
-      await this.savePnpData(id, pnpData);
-    }
 
     await this.authorizationService.processNewBaseNode(
       LanguageEngagement,
@@ -632,10 +628,6 @@ export class EngagementService {
       pnp,
       session
     );
-    if (pnp) {
-      const pnpData = await this.pnpExtractor.extract(pnp, session);
-      await this.savePnpData(object.id, pnpData);
-    }
 
     try {
       await this.repo.updateLanguageProperties(object, simpleChanges);
