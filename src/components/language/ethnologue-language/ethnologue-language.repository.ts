@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
-import { Dictionary } from 'lodash';
+import { node } from 'cypher-query-builder';
 import { generateId, ID, Session } from '../../../common';
 import {
   createBaseNode,
@@ -61,39 +60,13 @@ export class EthnologueLanguageRepository {
   }
 
   async updateProperties(
-    id: ID,
-    valueSet: Dictionary<string | number | undefined>
+    object: EthnologueLanguage,
+    changes: UpdateEthnologueLanguage
   ) {
-    const query = this.db
-      .query()
-      .match([
-        node('ethnologueLanguage', 'EthnologueLanguage', {
-          id: id,
-        }),
-      ])
-      .match([
-        [
-          node('ethnologueLanguage'),
-          relation('out', '', 'code', { active: true }),
-          node('code', 'Property'),
-        ],
-        [
-          node('ethnologueLanguage'),
-          relation('out', '', 'provisionalCode', { active: true }),
-          node('provisionalCode', 'Property'),
-        ],
-        [
-          node('ethnologueLanguage'),
-          relation('out', '', 'name', { active: true }),
-          node('name', 'Property'),
-        ],
-        [
-          node('ethnologueLanguage'),
-          relation('out', '', 'population', { active: true }),
-          node('population', 'Property'),
-        ],
-      ])
-      .setValues(valueSet);
-    await query.run();
+    return await this.db.updateProperties({
+      type: EthnologueLanguage,
+      object: object,
+      changes,
+    });
   }
 }
