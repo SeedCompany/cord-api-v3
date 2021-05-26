@@ -21,7 +21,11 @@ import {
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
-import { DbPropsOfDto } from '../../core/database/results';
+import {
+  DbPropsOfDto,
+  parsePropList,
+  StandardReadResult,
+} from '../../core/database/results';
 import { Role, rolesForScope, ScopedRole } from '../authorization';
 import { FileId } from '../file';
 import { ProjectType } from '../project';
@@ -262,12 +266,14 @@ export class EngagementRepository extends CommonRepository {
 
   async updateLanguageProperties(
     object: LanguageEngagement,
-    changes: DbChanges<LanguageEngagement>
+    changes: DbChanges<LanguageEngagement>,
+    changeId?: ID
   ): Promise<void> {
     await this.db.updateProperties({
       type: LanguageEngagement,
       object,
       changes,
+      changeId,
     });
   }
 
@@ -345,12 +351,14 @@ export class EngagementRepository extends CommonRepository {
 
   async updateInternshipProperties(
     object: InternshipEngagement,
-    changes: DbChanges<InternshipEngagement>
+    changes: DbChanges<InternshipEngagement>,
+    changeId?: ID
   ): Promise<void> {
     await this.db.updateProperties({
       type: InternshipEngagement,
       object,
       changes,
+      changeId,
     });
   }
 
@@ -455,7 +463,8 @@ export class EngagementRepository extends CommonRepository {
     projectId: ID,
     otherId: ID,
     isTranslation: boolean,
-    property: 'language' | 'intern'
+    property: 'language' | 'intern',
+    changeId?: ID
   ) {
     return await this.db
       .query()
@@ -472,6 +481,15 @@ export class EngagementRepository extends CommonRepository {
         relation('out', '', property, { active: true }),
         node('other'),
       ])
+      .optionalMatch(
+        changeId
+          ? [
+              node('engagement'),
+              relation('in', '', 'change', { active: true }),
+              node('planChange', 'PlanChange', { id: changeId }),
+            ]
+          : [node('engagement')]
+      )
       .return(['project', 'other', 'engagement'])
       .asResult<{
         project?: Node<{ type: ProjectType }>;
@@ -525,5 +543,33 @@ export class EngagementRepository extends CommonRepository {
             node('language', 'Language'),
           ])
         : query.match([node('language', 'Language', { id: languageId })]);
+  }
+
+  async getPlanChangesProps(
+    id: ID,
+    changeId: ID
+  ): Promise<Record<string, any>> {
+    const planChangeQuery = this.db
+      .query()
+      .match([node('node', 'Engagement', { id })])
+      .call(matchPropList, changeId)
+      .with(['node', 'propList'])
+      .return(['propList', 'node'])
+      .asResult<
+        StandardReadResult<
+          Omit<
+            DbPropsOfDto<LanguageEngagement & InternshipEngagement>,
+            '__typename'
+          >
+        > & {
+          __typename: 'LanguageEngagement' | 'InternshipEngagement';
+        }
+      >();
+
+    const planChangeResult = await planChangeQuery.first();
+    if (planChangeResult) {
+      return parsePropList(planChangeResult.propList);
+    }
+    return {};
   }
 }

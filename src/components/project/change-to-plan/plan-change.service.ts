@@ -2,7 +2,6 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
-  generateId,
   ID,
   InputException,
   NotFoundException,
@@ -12,33 +11,20 @@ import {
 } from '../../../common';
 import {
   ConfigService,
-  createBaseNode,
   DatabaseService,
   IEventBus,
   ILogger,
   Logger,
-  matchRequestingUser,
   OnIndex,
 } from '../../../core';
-import {
-  calculateTotalAndPaginateList,
-  matchMemberRoles,
-  matchPropList,
-} from '../../../core/database/query';
-import {
-  DbPropsOfDto,
-  parseBaseNodeProperties,
-  parsePropList,
-  runListQuery,
-  StandardReadResult,
-} from '../../../core/database/results';
+import { runListQuery } from '../../../core/database/results';
 import { AuthorizationService } from '../../authorization/authorization.service';
-import { Role, rolesForScope } from '../../authorization/dto';
 import { ProjectStatus } from '../dto';
 import { ProjectService } from '../project.service';
 import { CreatePlanChange, PlanChange, UpdatePlanChange } from './dto';
 import { ChangeListInput, ChangeListOutput } from './dto/change-list.dto';
 import { PlanChangeUpdatedEvent } from './events';
+import { PlanChangeRepository } from './plan-change.repository';
 
 @Injectable()
 export class PlanChangeService {
@@ -56,7 +42,8 @@ export class PlanChangeService {
     private readonly authorizationService: AuthorizationService,
     private readonly eventBus: IEventBus,
     @Inject(forwardRef(() => ProjectService))
-    private readonly projectService: ProjectService
+    private readonly projectService: ProjectService,
+    private readonly repo: PlanChangeRepository
   ) {}
 
   @OnIndex()
@@ -80,7 +67,6 @@ export class PlanChangeService {
       );
     }
     const createdAt = DateTime.local();
-    const planChangeId = await generateId();
 
     const secureProps = [
       {
@@ -103,13 +89,7 @@ export class PlanChangeService {
       },
     ];
 
-    const createPlanChange = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .apply(createBaseNode(planChangeId, 'PlanChange', secureProps))
-      .return('node.id as id');
-
-    const result = await createPlanChange.first();
+    const result = await this.repo.create(session, secureProps);
     if (!result) {
       throw new ServerException('failed to create plan change');
     }
@@ -128,7 +108,7 @@ export class PlanChangeService {
       .return('planChange.id as id')
       .first();
 
-    return await this.readOne(planChangeId, session);
+    return await this.readOne(result.id, session);
   }
 
   async readOne(id: ID, session: Session): Promise<PlanChange> {
@@ -137,26 +117,8 @@ export class PlanChangeService {
       userId: session.userId,
     });
 
-    const query = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'PlanChange', { id })])
-      .apply(matchPropList)
-      .optionalMatch([
-        node('project', 'Project'),
-        relation('out', '', 'planChange', { active: true }),
-        node('change', 'PlanChange', { id }),
-      ])
-      .with(['project', 'node', 'propList'])
-      .apply(matchMemberRoles(session.userId))
-      .return('node, propList, memberRoles')
-      .asResult<
-        StandardReadResult<DbPropsOfDto<PlanChange>> & {
-          memberRoles: Role[];
-        }
-      >();
+    const result = await this.repo.readOne(id, session);
 
-    const result = await query.first();
     if (!result) {
       throw new NotFoundException(
         'Could not find plan change',
@@ -164,17 +126,15 @@ export class PlanChangeService {
       );
     }
 
-    const parsedProps = parsePropList(result.propList);
-
     const securedProps = await this.authorizationService.secureProperties(
       PlanChange,
-      parsedProps,
+      result.props,
       session,
-      result.memberRoles.flat().map(rolesForScope('project'))
+      result.scopedRoles
     );
 
     return {
-      ...parseBaseNodeProperties(result.node),
+      ...result.props,
       ...securedProps,
       canDelete: await this.db.checkDeletePermission(id, session),
     };
@@ -182,7 +142,7 @@ export class PlanChangeService {
 
   async update(input: UpdatePlanChange, session: Session): Promise<PlanChange> {
     const object = await this.readOne(input.id, session);
-    const changes = this.db.getActualChanges(PlanChange, object, input);
+    const changes = this.repo.getActualChanges(object, input);
 
     await this.db.updateProperties({
       type: PlanChange,
@@ -233,25 +193,7 @@ export class PlanChangeService {
     { filter, ...input }: ChangeListInput,
     session: Session
   ): Promise<ChangeListOutput> {
-    // const label = 'PlanChange';
-
-    const query = this.db
-      .query()
-      .match([
-        // requestingUser(session),
-        // ...permissionsOfNode(label),
-        node('node'),
-        ...(filter.projectId
-          ? [
-              relation('in', '', 'planChange', { active: true }),
-              node('project', 'Project', {
-                id: filter.projectId,
-              }),
-            ]
-          : []),
-      ])
-      .call(calculateTotalAndPaginateList(PlanChange, input));
-
+    const query = this.repo.list({ filter, ...input }, session);
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 }

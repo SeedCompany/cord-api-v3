@@ -256,7 +256,10 @@ export class EngagementService {
     };
 
     if (changeId) {
-      const planChangesProps = await this.getPlanChangesProps(id, changeId);
+      const planChangesProps = await this.repo.getPlanChangesProps(
+        id,
+        changeId
+      );
       entries(planChangesProps).forEach(([key, prop]) => {
         if (prop !== undefined) {
           props = {
@@ -383,12 +386,7 @@ export class EngagementService {
     );
 
     try {
-      await this.db.updateProperties({
-        type: LanguageEngagement,
-        object: object,
-        changes: simpleChanges,
-        changeId,
-      });
+      await this.repo.updateLanguageProperties(object, simpleChanges, changeId);
     } catch (exception) {
       this.logger.error('Error updating language engagement', { exception });
       throw new ServerException(
@@ -597,39 +595,13 @@ export class EngagementService {
   ): Promise<void> {
     const isTranslation = type === ProjectType.Translation;
     const property = isTranslation ? 'language' : 'intern';
-    const result = await this.db
-      .query()
-      .optionalMatch(node('project', 'Project', { id: projectId }))
-      .optionalMatch(
-        node('other', isTranslation ? 'Language' : 'User', {
-          id: otherId,
-        })
-      )
-      .optionalMatch([
-        node('project'),
-        !changeId
-          ? relation('out', '', 'engagement', { active: true })
-          : relation('out', '', 'engagement', { active: false }),
-        node('engagement'),
-        relation('out', '', property, { active: true }),
-        node('other'),
-      ])
-      .optionalMatch(
-        changeId
-          ? [
-              node('engagement'),
-              relation('in', '', 'change', { active: true }),
-              node('planChange', 'PlanChange', { id: changeId }),
-            ]
-          : [node('engagement')]
-      )
-      .return(['project', 'other', 'engagement'])
-      .asResult<{
-        project?: Node<{ type: ProjectType }>;
-        other?: Node;
-        engagement?: Node;
-      }>()
-      .first();
+    const result = await this.repo.verifyRelationshipEligibility(
+      projectId,
+      otherId,
+      isTranslation,
+      property,
+      changeId
+    );
 
     if (!result?.project) {
       throw new NotFoundException(
@@ -708,33 +680,5 @@ export class EngagementService {
         'project.status'
       );
     }
-  }
-
-  async getPlanChangesProps(
-    id: ID,
-    changeId: ID
-  ): Promise<Record<string, any>> {
-    const planChangeQuery = this.db
-      .query()
-      .match([node('node', 'Engagement', { id })])
-      .call(matchPropList, changeId)
-      .with(['node', 'propList'])
-      .return(['propList', 'node'])
-      .asResult<
-        StandardReadResult<
-          Omit<
-            DbPropsOfDto<LanguageEngagement & InternshipEngagement>,
-            '__typename'
-          >
-        > & {
-          __typename: 'LanguageEngagement' | 'InternshipEngagement';
-        }
-      >();
-
-    const planChangeResult = await planChangeQuery.first();
-    if (planChangeResult) {
-      return parsePropList(planChangeResult.propList);
-    }
-    return {};
   }
 }

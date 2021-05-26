@@ -9,6 +9,7 @@ import {
   ILogger,
   Logger,
 } from '../../../../core';
+import { ProjectRepository } from '../../project.repository';
 import { ProjectService } from '../../project.service';
 import { PlanChangeStatus } from '../dto/plan-change-status.enum';
 import { PlanChangeUpdatedEvent } from '../events';
@@ -20,6 +21,7 @@ export class CRUpdateProject implements IEventHandler<SubscribedEvent> {
   constructor(
     private readonly db: DatabaseService,
     private readonly projectService: ProjectService,
+    private readonly projectRepo: ProjectRepository,
     @Logger('plan-change:cr-update-project') private readonly logger: ILogger
   ) {}
 
@@ -57,7 +59,7 @@ export class CRUpdateProject implements IEventHandler<SubscribedEvent> {
           result.projectId,
           event.session
         );
-        const planChangesProps = await this.projectService.getPlanChangesProps(
+        const planChangesProps = await this.projectRepo.getPlanChangesProps(
           result.projectId,
           planChange.id
         );
