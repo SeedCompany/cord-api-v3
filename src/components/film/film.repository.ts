@@ -1,11 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
 import { generateId, ID, Session } from '../../common';
-import {
-  createBaseNode,
-  DatabaseService,
-  matchRequestingUser,
-} from '../../core';
+import { createBaseNode, DtoRepository, matchRequestingUser } from '../../core';
 import {
   calculateTotalAndPaginateList,
   matchPropList,
@@ -13,12 +9,10 @@ import {
   requestingUser,
 } from '../../core/database/query';
 import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
-import { Film, FilmListInput, UpdateFilm } from './dto';
+import { Film, FilmListInput } from './dto';
 
 @Injectable()
-export class FilmRepository {
-  constructor(private readonly db: DatabaseService) {}
-
+export class FilmRepository extends DtoRepository(Film) {
   async checkFilm(name: string) {
     return await this.db
       .query()
@@ -63,30 +57,6 @@ export class FilmRepository {
       .asResult<StandardReadResult<DbPropsOfDto<Film>>>();
 
     return await readFilm.first();
-  }
-  async checkDeletePermission(id: ID, session: Session) {
-    return await this.db.checkDeletePermission(id, session);
-  }
-
-  getActualChanges(film: Film, input: UpdateFilm) {
-    return this.db.getActualChanges(Film, film, input);
-  }
-
-  async updateProperties(
-    object: Film,
-    changes: {
-      name?: string | undefined;
-    }
-  ) {
-    await this.db.updateProperties({
-      type: Film,
-      object,
-      changes,
-    });
-  }
-
-  async deleteNode(node: Film) {
-    return void (await this.db.deleteNode(node));
   }
 
   list({ filter, ...input }: FilmListInput, session: Session) {

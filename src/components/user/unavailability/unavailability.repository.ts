@@ -3,11 +3,10 @@ import { node, relation } from 'cypher-query-builder';
 import { generateId, ID, Session } from '../../../common';
 import {
   createBaseNode,
-  DatabaseService,
+  DtoRepository,
   matchRequestingUser,
   Property,
 } from '../../../core';
-import { DbChanges } from '../../../core/database/changes';
 import { matchPropList } from '../../../core/database/query';
 import {
   DbPropsOfDto,
@@ -20,9 +19,7 @@ import {
 } from './dto';
 
 @Injectable()
-export class UnavailabilityRepository {
-  constructor(private readonly db: DatabaseService) {}
-
+export class UnavailabilityRepository extends DtoRepository(Unavailability) {
   async create(session: Session, secureProps: Property[]) {
     const createUnavailability = this.db
       .query()
@@ -62,10 +59,6 @@ export class UnavailabilityRepository {
     return await query.first();
   }
 
-  async checkDeletePermission(id: ID, session: Session) {
-    return await this.db.checkDeletePermission(id, session);
-  }
-
   async getUnavailability(session: Session, input: UpdateUnavailability) {
     return await this.db
       .query()
@@ -77,28 +70,6 @@ export class UnavailabilityRepository {
       ])
       .return('user')
       .first();
-  }
-
-  getActualChanges(
-    unavailability: Unavailability,
-    input: UpdateUnavailability
-  ) {
-    return this.db.getActualChanges(Unavailability, unavailability, input);
-  }
-
-  async updateProperties(
-    unavailability: Unavailability,
-    changes: DbChanges<Unavailability>
-  ) {
-    return await this.db.updateProperties({
-      type: Unavailability,
-      object: unavailability,
-      changes,
-    });
-  }
-
-  async deleteNode(node: Unavailability) {
-    await this.db.deleteNode(node);
   }
 
   async list(

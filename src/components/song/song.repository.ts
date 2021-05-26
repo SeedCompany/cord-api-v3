@@ -3,11 +3,10 @@ import { node } from 'cypher-query-builder';
 import { generateId, ID, Session } from '../../common';
 import {
   createBaseNode,
-  DatabaseService,
+  DtoRepository,
   matchRequestingUser,
   Property,
 } from '../../core';
-import { DbChanges } from '../../core/database/changes';
 import {
   calculateTotalAndPaginateList,
   matchPropList,
@@ -15,12 +14,10 @@ import {
   requestingUser,
 } from '../../core/database/query';
 import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
-import { CreateSong, Song, SongListInput, UpdateSong } from './dto';
+import { CreateSong, Song, SongListInput } from './dto';
 
 @Injectable()
-export class SongRepository {
-  constructor(private readonly db: DatabaseService) {}
-
+export class SongRepository extends DtoRepository(Song) {
   async checkSong(input: CreateSong) {
     return await this.db
       .query()
@@ -50,26 +47,6 @@ export class SongRepository {
       .asResult<StandardReadResult<DbPropsOfDto<Song>>>();
 
     return await query.first();
-  }
-
-  async checkDeletePermission(id: ID, session: Session) {
-    return await this.db.checkDeletePermission(id, session);
-  }
-
-  getActualChanges(song: Song, input: UpdateSong) {
-    return this.db.getActualChanges(Song, song, input);
-  }
-
-  async updateProperties(song: Song, simpleChanges: DbChanges<Song>) {
-    await this.db.updateProperties({
-      type: Song,
-      object: song,
-      changes: simpleChanges,
-    });
-  }
-
-  async deleteNode(node: Song) {
-    return void (await this.db.deleteNode(node));
   }
 
   list({ filter, ...input }: SongListInput, session: Session) {

@@ -2,12 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { generateId, ID, Session } from '../../common';
-import {
-  createBaseNode,
-  DatabaseService,
-  matchRequestingUser,
-} from '../../core';
-import { DbChanges } from '../../core/database/changes';
+import { createBaseNode, DtoRepository, matchRequestingUser } from '../../core';
 import {
   calculateTotalAndPaginateList,
   matchPropList,
@@ -15,12 +10,10 @@ import {
   requestingUser,
 } from '../../core/database/query';
 import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
-import { FieldRegion, FieldRegionListInput, UpdateFieldRegion } from './dto';
+import { FieldRegion, FieldRegionListInput } from './dto';
 
 @Injectable()
-export class FieldRegionRepository {
-  constructor(private readonly db: DatabaseService) {}
-
+export class FieldRegionRepository extends DtoRepository(FieldRegion) {
   async checkName(name: string) {
     return await this.db
       .query()
@@ -110,29 +103,6 @@ export class FieldRegionRepository {
       >();
 
     return await query.first();
-  }
-
-  async checkDeletePermission(id: ID, session: Session) {
-    return await this.db.checkDeletePermission(id, session);
-  }
-
-  getActualChanges(fieldRegion: FieldRegion, input: UpdateFieldRegion) {
-    return this.db.getActualChanges(FieldRegion, fieldRegion, input);
-  }
-
-  async updateProperties(
-    fieldRegion: FieldRegion,
-    changes: DbChanges<FieldRegion>
-  ) {
-    await this.db.updateProperties({
-      type: FieldRegion,
-      object: fieldRegion,
-      changes: changes,
-    });
-  }
-
-  async deleteNode(node: FieldRegion) {
-    await this.db.deleteNode(node);
   }
 
   list({ filter, ...input }: FieldRegionListInput, session: Session) {

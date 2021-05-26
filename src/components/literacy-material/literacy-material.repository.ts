@@ -3,11 +3,10 @@ import { node } from 'cypher-query-builder';
 import { generateId, ID, Session } from '../../common';
 import {
   createBaseNode,
-  DatabaseService,
+  DtoRepository,
   matchRequestingUser,
   Property,
 } from '../../core';
-import { DbChanges } from '../../core/database/changes';
 import {
   calculateTotalAndPaginateList,
   matchPropList,
@@ -15,16 +14,12 @@ import {
   requestingUser,
 } from '../../core/database/query';
 import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
-import {
-  LiteracyMaterial,
-  LiteracyMaterialListInput,
-  UpdateLiteracyMaterial,
-} from './dto';
+import { LiteracyMaterial, LiteracyMaterialListInput } from './dto';
 
 @Injectable()
-export class LiteracyMaterialRepository {
-  constructor(private readonly db: DatabaseService) {}
-
+export class LiteracyMaterialRepository extends DtoRepository(
+  LiteracyMaterial
+) {
   async checkLiteracy(name: string) {
     return await this.db
       .query()
@@ -75,31 +70,6 @@ export class LiteracyMaterialRepository {
     return await readLiteracyMaterial.first();
   }
 
-  async checkDeletePermission(id: ID, session: Session) {
-    return await this.db.checkDeletePermission(id, session);
-  }
-
-  getActualChanges(
-    literacyMaterial: LiteracyMaterial,
-    input: UpdateLiteracyMaterial
-  ) {
-    return this.db.getActualChanges(LiteracyMaterial, literacyMaterial, input);
-  }
-
-  async updateProperties(
-    object: LiteracyMaterial,
-    changes: DbChanges<LiteracyMaterial>
-  ) {
-    await this.db.updateProperties({
-      type: LiteracyMaterial,
-      object,
-      changes,
-    });
-  }
-
-  async deleteNode(node: LiteracyMaterial) {
-    await this.db.deleteNode(node);
-  }
   list({ filter, ...input }: LiteracyMaterialListInput, session: Session) {
     return this.db
       .query()

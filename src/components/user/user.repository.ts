@@ -6,7 +6,6 @@ import {
   DuplicateException,
   ID,
   NotFoundException,
-  Resource,
   ServerException,
   Session,
   UnauthorizedException,
@@ -15,6 +14,7 @@ import {
   ConfigService,
   DatabaseService,
   deleteProperties,
+  DtoRepository,
   ILogger,
   Logger,
   matchSession,
@@ -22,7 +22,6 @@ import {
   property,
   UniquenessError,
 } from '../../core';
-import { DbChanges } from '../../core/database/changes';
 import {
   calculateTotalAndPaginateList,
   matchPropList,
@@ -43,12 +42,15 @@ import {
 } from './dto';
 
 @Injectable()
-export class UserRepository {
+export class UserRepository extends DtoRepository(User) {
   constructor(
-    private readonly db: DatabaseService,
+    db: DatabaseService,
     private readonly config: ConfigService,
     @Logger('user:repository') private readonly logger: ILogger
-  ) {}
+  ) {
+    super(db);
+  }
+
   @OnIndex()
   async createIndexes() {
     // language=Cypher (for webstorm)
@@ -186,35 +188,6 @@ export class UserRepository {
       result,
       canDelete,
     };
-  }
-
-  getActualChanges(
-    input: UpdateUser,
-    user: User
-  ): Partial<Omit<UpdateUser, keyof Resource>> {
-    //shouldn't there be an await here?
-    return this.db.getActualChanges(User, user, input);
-  }
-
-  async updateProperties(
-    user: User,
-    simpleChanges: DbChanges<User>
-    // fieldToUpdate: string
-  ): Promise<void> {
-    await this.db.updateProperties({
-      type: User,
-      object: user,
-      changes: simpleChanges,
-    });
-    // if (fieldToUpdate === 'email') {
-    //   await this.db
-    //     .query()
-    //     .match([node('node', ['User', 'BaseNode'], { id: user.id })])
-    //     .apply(deleteProperties(User, 'email'))
-    //     .return('*')
-    //     .run();
-
-    // }
   }
 
   async updateEmail(

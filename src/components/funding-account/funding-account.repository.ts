@@ -1,12 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
 import { generateId, ID, Session } from '../../common';
-import {
-  createBaseNode,
-  DatabaseService,
-  matchRequestingUser,
-} from '../../core';
-import { DbChanges } from '../../core/database/changes';
+import { createBaseNode, DtoRepository, matchRequestingUser } from '../../core';
 import {
   calculateTotalAndPaginateList,
   matchPropList,
@@ -18,13 +13,10 @@ import {
   CreateFundingAccount,
   FundingAccount,
   FundingAccountListInput,
-  UpdateFundingAccount,
 } from './dto';
 
 @Injectable()
-export class FundingAccountRepository {
-  constructor(private readonly db: DatabaseService) {}
-
+export class FundingAccountRepository extends DtoRepository(FundingAccount) {
   async checkFundingAccount(name: string) {
     return await this.db
       .query()
@@ -75,32 +67,6 @@ export class FundingAccountRepository {
       .asResult<StandardReadResult<DbPropsOfDto<FundingAccount>>>();
 
     return await readFundingAccount.first();
-  }
-
-  async checkDeletePermission(id: ID, session: Session) {
-    return await this.db.checkDeletePermission(id, session);
-  }
-
-  getActualChanges(
-    fundingAccount: FundingAccount,
-    input: UpdateFundingAccount
-  ) {
-    return this.db.getActualChanges(FundingAccount, fundingAccount, input);
-  }
-
-  async updateProperties(
-    object: FundingAccount,
-    changes: DbChanges<FundingAccount>
-  ) {
-    return await this.db.updateProperties({
-      type: FundingAccount,
-      object,
-      changes,
-    });
-  }
-
-  async deleteNode(node: FundingAccount) {
-    return void (await this.db.deleteNode(node));
   }
 
   list(input: FundingAccountListInput, session: Session) {

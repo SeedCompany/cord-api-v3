@@ -31,7 +31,7 @@ import {
 import { ILogger, Logger, ServiceUnavailableError, UniquenessError } from '..';
 import { AbortError, retry, RetryOptions } from '../../common/retry';
 import { ConfigService } from '../config/config.service';
-import { DbChanges, getChanges } from './changes';
+import { DbChanges } from './changes';
 import { deleteBaseNode } from './query';
 import { determineSortValue } from './query.helpers';
 import { hasMore } from './results';
@@ -214,8 +214,6 @@ export class DatabaseService {
     }
     return info;
   }
-
-  getActualChanges = getChanges;
 
   async updateProperties<
     TResourceStatic extends ResourceShape<any>,

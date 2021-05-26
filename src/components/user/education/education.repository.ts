@@ -4,11 +4,10 @@ import { DateTime } from 'luxon';
 import { generateId, ID, Session } from '../../../common';
 import {
   createBaseNode,
-  DatabaseService,
+  DtoRepository,
   matchRequestingUser,
   Property,
 } from '../../../core';
-import { DbChanges } from '../../../core/database/changes';
 import {
   calculateTotalAndPaginateList,
   matchPropList,
@@ -19,12 +18,10 @@ import {
   DbPropsOfDto,
   StandardReadResult,
 } from '../../../core/database/results';
-import { Education, EducationListInput, UpdateEducation } from './dto';
+import { Education, EducationListInput } from './dto';
 
 @Injectable()
-export class EducationRepository {
-  constructor(private readonly db: DatabaseService) {}
-
+export class EducationRepository extends DtoRepository(Education) {
   async create(
     userId: ID,
     secureProps: Property[],
@@ -62,10 +59,6 @@ export class EducationRepository {
     return await query.first();
   }
 
-  async checkDeletePermission(id: ID, session: Session) {
-    return await this.db.checkDeletePermission(id, session);
-  }
-
   async getUserEducation(session: Session, id: ID) {
     return await this.db
       .query()
@@ -77,18 +70,6 @@ export class EducationRepository {
       ])
       .return('user')
       .first();
-  }
-
-  getActualChanges(ed: Education, input: UpdateEducation) {
-    return this.db.getActualChanges(Education, ed, input);
-  }
-
-  async updateProperties(ed: Education, changes: DbChanges<Education>) {
-    await this.db.updateProperties({
-      type: Education,
-      object: ed,
-      changes,
-    });
   }
 
   list({ filter, ...input }: EducationListInput, session: Session) {

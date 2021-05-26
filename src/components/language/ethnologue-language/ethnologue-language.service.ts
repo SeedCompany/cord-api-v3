@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { pickBy } from 'lodash';
 import {
   ID,
   NotFoundException,
@@ -117,23 +116,8 @@ export class EthnologueLanguageService {
       changes
     );
 
-    if (Object.keys(changes).length === 0) {
-      return;
-    }
-
-    // Make a mapping of the fields that we want to set in the db to the inputs
-    const valueSet = pickBy(
-      {
-        'code.value': changes.code,
-        'provisionalCode.value': changes.provisionalCode,
-        'name.value': changes.name,
-        'population.value': changes.population,
-      },
-      (v) => v !== undefined
-    );
-
     try {
-      await this.repo.updateProperties(id, valueSet);
+      await this.repo.updateProperties(ethnologueLanguage, changes);
     } catch (exception) {
       this.logger.error('update failed', { exception });
       throw new ServerException(

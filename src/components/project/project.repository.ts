@@ -8,8 +8,12 @@ import {
   Session,
   UnsecuredDto,
 } from '../../common';
-import { DatabaseService, matchRequestingUser, matchSession } from '../../core';
-import { DbChanges } from '../../core/database/changes';
+import {
+  CommonRepository,
+  matchRequestingUser,
+  matchSession,
+} from '../../core';
+import { DbChanges, getChanges } from '../../core/database/changes';
 import {
   calculateTotalAndPaginateList,
   collect,
@@ -36,9 +40,7 @@ import {
 import { projectListFilter } from './query.helpers';
 
 @Injectable()
-export class ProjectRepository {
-  constructor(private readonly db: DatabaseService) {}
-
+export class ProjectRepository extends CommonRepository {
   createProject(session: Session) {
     return this.db.query().apply(matchRequestingUser(session));
   }
@@ -132,15 +134,11 @@ export class ProjectRepository {
     return await query.first();
   }
 
-  async checkDeletePermission(id: ID, sessionOrUserId: Session | ID) {
-    return await this.db.checkDeletePermission(id, sessionOrUserId);
-  }
-
   getActualChanges(
     currentProject: UnsecuredDto<Project>,
     input: UpdateProject
   ) {
-    return this.db.getActualChanges(IProject, currentProject, {
+    return getChanges(IProject)(currentProject, {
       ...input,
       ...(input.step ? { status: stepToStatus(input.step) } : {}),
     });
@@ -212,10 +210,6 @@ export class ProjectRepository {
       ]);
 
     await query.run();
-  }
-
-  async deleteNode(node: UnsecuredDto<Project>) {
-    await this.db.deleteNode(node);
   }
 
   list(

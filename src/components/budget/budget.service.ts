@@ -15,6 +15,7 @@ import { ILogger, Logger, Property } from '../../core';
 import { runListQuery } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { FileService } from '../file';
+import { BudgetRecordRepository } from './budget-record.repository';
 import { BudgetRepository } from './budget.repository';
 import {
   Budget,
@@ -37,6 +38,7 @@ export class BudgetService {
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
     private readonly budgetRepo: BudgetRepository,
+    private readonly budgetRecordsRepo: BudgetRecordRepository,
     @Logger('budget:service') private readonly logger: ILogger
   ) {}
 
@@ -158,7 +160,7 @@ export class BudgetService {
     ];
 
     try {
-      const createBudgetRecord = await this.budgetRepo.createBudgetRecord(
+      const createBudgetRecord = await this.budgetRecordsRepo.create(
         session,
         secureProps
       );
@@ -168,7 +170,7 @@ export class BudgetService {
         throw new ServerException('failed to create a budget record');
       }
 
-      const orgQuery = await this.budgetRepo.connectBudget(
+      const orgQuery = await this.budgetRecordsRepo.connectToBudget(
         budgetId,
         organizationId,
         result,
@@ -200,7 +202,7 @@ export class BudgetService {
   }
 
   private async verifyRecordUniqueness(input: CreateBudgetRecord) {
-    const existingRecord = await this.budgetRepo.verifyRecordUniqueness(input);
+    const existingRecord = await this.budgetRecordsRepo.verifyUniqueness(input);
     if (existingRecord) {
       throw new DuplicateException(
         'fiscalYear',
@@ -254,7 +256,7 @@ export class BudgetService {
       userId: session.userId,
     });
 
-    const query = this.budgetRepo.readOneRecord(id, session);
+    const query = this.budgetRecordsRepo.readOne(id, session);
 
     const result = await query.first();
 
@@ -307,7 +309,7 @@ export class BudgetService {
     await this.verifyCanEdit(id, session);
 
     const br = await this.readOneRecord(id, session);
-    const changes = this.budgetRepo.getActualRecordChanges(br, input);
+    const changes = this.budgetRecordsRepo.getActualChanges(br, input);
     await this.authorizationService.verifyCanEditChanges(
       BudgetRecord,
       br,
@@ -315,7 +317,7 @@ export class BudgetService {
     );
 
     try {
-      const result = await this.budgetRepo.updateRecordProperties(br, changes);
+      const result = await this.budgetRecordsRepo.updateProperties(br, changes);
       return result;
     } catch (e) {
       this.logger.error('Could not update budget Record ', {
@@ -380,7 +382,10 @@ export class BudgetService {
       throw new NotFoundException('Could not find Budget Record');
     }
 
-    const canDelete = await this.budgetRepo.checkDeletePermission(id, session);
+    const canDelete = await this.budgetRecordsRepo.checkDeletePermission(
+      id,
+      session
+    );
 
     if (!canDelete)
       throw new UnauthorizedException(
@@ -388,7 +393,7 @@ export class BudgetService {
       );
 
     try {
-      await this.budgetRepo.deleteNode(br);
+      await this.budgetRecordsRepo.deleteNode(br);
     } catch (e) {
       this.logger.warning('Failed to delete Budget Record', {
         exception: e,
@@ -416,7 +421,7 @@ export class BudgetService {
     { filter, ...input }: BudgetRecordListInput,
     session: Session
   ): Promise<BudgetRecordListOutput> {
-    const query = this.budgetRepo.listRecords(filter, input, session);
+    const query = this.budgetRecordsRepo.list(filter, input, session);
 
     return await runListQuery(query, input, (id) =>
       this.readOneRecord(id, session)
