@@ -96,6 +96,6 @@ export class PostRepository extends DtoRepository(Post) {
             ]
           : []),
       ])
-      .call(calculateTotalAndPaginateList(Post, input));
+      .apply(calculateTotalAndPaginateList(Post, input));
   }
 }

@@ -103,7 +103,7 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
         relation('out', '', 'report', { active: true }),
         node('node', ['PeriodicReport', `${reportType}Report`]),
       ])
-      .call(
+      .apply(
         calculateTotalAndPaginateList(
           reportType === 'Financial' ? FinancialReport : NarrativeReport,
           input
@@ -123,7 +123,7 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
         relation('out', '', 'report', { active: true }),
         node('node', `PeriodicReport:${reportType}Report`),
       ])
-      .call(calculateTotalAndPaginateList(ProgressReport, input));
+      .apply(calculateTotalAndPaginateList(ProgressReport, input));
   }
 
   async delete(baseNodeId: ID, type: ReportType, intervals: Interval[]) {
