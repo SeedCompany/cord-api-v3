@@ -1,5 +1,4 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { range } from 'lodash';
 import {
   DuplicateException,
   ID,
@@ -223,88 +222,6 @@ export class OrganizationService {
       'locations',
       input,
       session
-    );
-  }
-
-  async checkAllOrgs(session: Session): Promise<boolean> {
-    try {
-      const result = await this.repo.checkAllOrgs(session);
-
-      const orgCount = result?.orgCount;
-
-      for (const i of range(orgCount)) {
-        const isGood = await this.pullOrg(i, session);
-        if (!isGood) {
-          return false;
-        }
-      }
-    } catch (e) {
-      this.logger.error('Checks failed', { exception: e });
-    }
-
-    return true;
-  }
-
-  private async pullOrg(index: number, session: Session): Promise<boolean> {
-    const result = await this.repo.pullOrg(index);
-
-    const isGood = this.validateOrg({
-      id: result?.id,
-      createdAt: result?.createdAt,
-      name: {
-        value: result?.name,
-        canRead: false,
-        canEdit: false,
-      },
-      address: {
-        value: result?.address,
-        canRead: false,
-        canEdit: false,
-      },
-      canDelete: await this.repo.checkDeletePermission(result?.id, session), // TODO
-    });
-
-    return isGood;
-  }
-
-  private validateOrg(org: Organization): boolean {
-    // org has an id
-    if (org.id === undefined || org.id === null) {
-      this.logger.error('bad org id', org);
-      return false;
-    }
-    // org has a name
-    if (org.name.value === undefined || org.name.value === null) {
-      this.logger.error('org has a bad name', org);
-      return false;
-    }
-    // created after 1990
-    if (org.createdAt.year <= 1990) {
-      this.logger.error('org has a bad createdAt: ', org);
-      return false;
-    }
-
-    return true;
-  }
-
-  async checkOrganizationConsistency(session: Session): Promise<boolean> {
-    const organizations = await this.repo.getOrganizations(session);
-
-    return (
-      (
-        await Promise.all(
-          organizations.map(async (organization) => {
-            return await this.repo.hasProperties(session, organization.id);
-          })
-        )
-      ).every((n) => n) &&
-      (
-        await Promise.all(
-          organizations.map(async (organization) => {
-            return await this.repo.isUniqueProperties(session, organization.id);
-          })
-        )
-      ).every((n) => n)
     );
   }
 }

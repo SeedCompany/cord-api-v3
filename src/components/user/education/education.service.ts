@@ -142,25 +142,4 @@ export class EducationService {
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
-
-  async checkEducationConsistency(session: Session): Promise<boolean> {
-    const educations = await this.repo.getEducations(session);
-
-    return (
-      (
-        await Promise.all(
-          educations.map(async (education) => {
-            return await this.repo.hasProperties(session, education);
-          })
-        )
-      ).every((n) => n) &&
-      (
-        await Promise.all(
-          educations.map(async (education) => {
-            return await this.repo.isUniqueProperties(session, education);
-          })
-        )
-      ).every((n) => n)
-    );
-  }
 }

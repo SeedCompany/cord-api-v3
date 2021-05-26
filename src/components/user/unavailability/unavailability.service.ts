@@ -165,24 +165,4 @@ export class UnavailabilityService {
       total: result.total,
     };
   }
-  async checkUnavailabilityConsistency(session: Session): Promise<boolean> {
-    const unavailabilities = await this.repo.getUnavailabilities(session);
-
-    return (
-      (
-        await Promise.all(
-          unavailabilities.map(async (unavailability) => {
-            return await this.repo.hasProperties(session, unavailability);
-          })
-        )
-      ).every((n) => n) &&
-      (
-        await Promise.all(
-          unavailabilities.map(async (unavailability) => {
-            return await this.repo.isUniqueProperties(session, unavailability);
-          })
-        )
-      ).every((n) => n)
-    );
-  }
 }

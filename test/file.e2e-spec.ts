@@ -4,8 +4,6 @@ import * as faker from 'faker';
 import { startCase, times } from 'lodash';
 import { DateTime, Duration, DurationObject, Settings } from 'luxon';
 import { ID } from '../src/common';
-import { anonymousSession } from '../src/common/session';
-import { AuthenticationService } from '../src/components/authentication';
 import { Role } from '../src/components/authorization';
 import {
   Directory,
@@ -13,7 +11,6 @@ import {
   RequestUploadOutput,
 } from '../src/components/file';
 import { LocalBucket } from '../src/components/file/bucket';
-import { FileRepository } from '../src/components/file/file.repository';
 import { FilesBucketToken } from '../src/components/file/files-bucket.factory';
 import { User } from '../src/components/user';
 import { DatabaseService } from '../src/core';
@@ -478,105 +475,6 @@ describe('File e2e', () => {
       expect(
         children.items.every((n) => n.type === FileNodeType.FileVersion)
       ).toBeTruthy();
-    });
-  });
-
-  describe.skip('check consistency', () => {
-    const expectConsistency = async (type: FileNodeType, expected = true) => {
-      const session = anonymousSession(
-        await app
-          .get(AuthenticationService)
-          .createSession(app.graphql.authToken)
-      );
-
-      const expecting = expect(
-        app.get(FileRepository).checkConsistency(type, session)
-      );
-      if (expected) {
-        await expecting.resolves.toBeUndefined();
-      } else {
-        await expecting.rejects.toThrowError();
-      }
-    };
-
-    it('File', async () => {
-      const file = await uploadFile(app, root.id);
-      await expectConsistency(FileNodeType.File);
-
-      // Validate that we correctly check for name
-      // TODO createdBy, parent, ...?
-      await app
-        .get(DatabaseService)
-        .query()
-        .raw(
-          `
-        MATCH
-          (file: File {active: true, id: $id}),
-          (file)-[rel:name {active: true}]->(nm: Property {active: true})
-        SET rel.active = false
-        RETURN
-          file, rel
-        `,
-          {
-            id: file.id,
-          }
-        )
-        .run();
-      await expectConsistency(FileNodeType.File, false);
-    });
-
-    it('Directory', async () => {
-      await uploadFile(app, root.id);
-      await expectConsistency(FileNodeType.Directory);
-
-      // Validate that we correctly check for name
-      // TODO createdBy, parent, ...?
-      await app
-        .get(DatabaseService)
-        .query()
-        .raw(
-          `
-          MATCH
-            (dir: Directory {active: true, id: $id}),
-            (dir)-[rel:name {active: true}]->(nm: Property {active: true})
-          SET rel.active = false
-          RETURN
-          dir, rel
-          `,
-          {
-            id: root.id,
-          }
-        )
-        .run();
-      await expectConsistency(FileNodeType.Directory, false);
-    });
-
-    it('FileVersion', async () => {
-      const file = await uploadFile(app, root.id);
-      await expectConsistency(FileNodeType.FileVersion);
-
-      // Validate that we correctly check for mimeType
-      // TODO size, createdBy, parent, ...?
-      await app
-        .get(DatabaseService)
-        .query()
-        .raw(
-          `
-        MATCH
-          (file: FileNode {active: true, id: $id}),
-          (file)<-[:parent {active: true}]-(fv: FileVersion {active: true}),
-          (fv)-[:mimeType {active: true}]->(mt: Property {active: true})
-        SET
-          mt.active = false
-        RETURN
-          fv, mt
-        `,
-          {
-            id: file.id,
-          }
-        )
-        .run();
-      await expectConsistency(FileNodeType.FileVersion, false);
     });
   });
 });

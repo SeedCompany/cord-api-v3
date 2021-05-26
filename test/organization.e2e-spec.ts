@@ -362,29 +362,6 @@ describe('Organization e2e', () => {
     ).rejects.toThrow('Input validation failed');
   });
 
-  it.skip('Check consistency across organization nodes', async () => {
-    // create an organization
-    const organization = await createOrganization(app);
-    // test it has proper schema
-    const result = await app.graphql.query(gql`
-      query {
-        checkOrganizationConsistency
-      }
-    `);
-    expect(result.checkOrganizationConsistency).toBeTruthy();
-    // delete organization node so next test will pass
-    await app.graphql.mutate(
-      gql`
-        mutation deleteOrganization($id: ID!) {
-          deleteOrganization(id: $id)
-        }
-      `,
-      {
-        id: organization.id,
-      }
-    );
-  });
-
   it('shows canEdit true when it can be edited', async () => {
     // create an org
     const org = await createOrganization(app);

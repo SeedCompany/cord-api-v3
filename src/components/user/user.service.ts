@@ -571,24 +571,4 @@ export class UserService {
       throw new ServerException('Failed to assign organzation to user');
     }
   }
-
-  async checkUserConsistency(session: Session): Promise<boolean> {
-    const users = await this.userRepo.getUsers(session);
-    return (
-      (
-        await Promise.all(
-          users.map(async (user) => {
-            return await this.userRepo.checkUserProperties(session, user);
-          })
-        )
-      ).every((n) => n) &&
-      (
-        await Promise.all(
-          users.map(async (user) => {
-            return await this.userRepo.checkUniqueProperties(session, user);
-          })
-        )
-      ).every((n) => n)
-    );
-  }
 }

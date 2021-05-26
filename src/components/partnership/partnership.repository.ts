@@ -7,7 +7,6 @@ import {
   createBaseNode,
   DatabaseService,
   matchRequestingUser,
-  matchSession,
   Property,
 } from '../../core';
 import { DbChanges } from '../../core/database/changes';
@@ -141,32 +140,6 @@ export class PartnershipRepository {
           : []),
       ])
       .apply(calculateTotalAndPaginateList(Partnership, listInput));
-  }
-
-  async getPartnerships(session: Session) {
-    return await this.db
-      .query()
-      .match([matchSession(session), [node('partnership', 'Partnership')]])
-      .return('partnership.id as id')
-      .run();
-  }
-
-  async hasProperties(id: ID, session: Session) {
-    return await this.db.hasProperties({
-      session,
-      id,
-      props: ['agreementStatus', 'mouStatus', 'mouStart', 'mouEnd', 'types'],
-      nodevar: 'partnership',
-    });
-  }
-
-  async isUniqueProperties(id: ID, session: Session) {
-    return await this.db.isUniqueProperties({
-      session,
-      id,
-      props: ['agreementStatus', 'mouStatus', 'mouStart', 'mouEnd', 'types'],
-      nodevar: 'partnership',
-    });
   }
 
   async verifyRelationshipEligibility(projectId: ID, partnerId: ID) {

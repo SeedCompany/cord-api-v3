@@ -369,37 +369,4 @@ export class BudgetRepository {
       .apply(calculateTotalAndPaginateList(BudgetRecord, input));
     return query;
   }
-
-  async findBudgets(session: Session): Promise<Array<Dictionary<any>>> {
-    const budgets = await this.db
-      .query()
-      .match([matchSession(session), [node('budget', 'Budget')]])
-      .return('budget.id as id')
-      .run();
-    return budgets;
-  }
-
-  async budgetHasProperties(
-    budget: Dictionary<any>,
-    session: Session
-  ): Promise<boolean> {
-    return await this.db.hasProperties({
-      session,
-      id: budget.id,
-      props: ['status'],
-      nodevar: 'budget',
-    });
-  }
-
-  async budgetIsUniqueProperties(
-    budget: Dictionary<any>,
-    session: Session
-  ): Promise<boolean> {
-    return await this.db.isUniqueProperties({
-      session,
-      id: budget.id,
-      props: ['status'],
-      nodevar: 'budget',
-    });
-  }
 }

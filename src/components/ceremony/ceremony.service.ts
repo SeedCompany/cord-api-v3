@@ -163,16 +163,4 @@ export class CeremonyService {
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
-
-  async checkCeremonyConsistency(session: Session): Promise<boolean> {
-    const ceremonies = await this.ceremonyRepo.getCeremonies(session);
-
-    return (
-      await Promise.all(
-        ceremonies.map(async (ceremony) => {
-          return await this.ceremonyRepo.hasProperties(session, ceremony);
-        })
-      )
-    ).every((n) => n);
-  }
 }

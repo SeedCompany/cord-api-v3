@@ -456,32 +456,6 @@ export class ProjectRepository {
       .first();
   }
 
-  async getProjects(session: Session) {
-    return await this.db
-      .query()
-      .match([matchSession(session), [node('project', 'Project')]])
-      .return('project.id as id')
-      .run();
-  }
-
-  async isRelationshipUnique(session: Session, id: ID) {
-    return await this.db.isRelationshipUnique({
-      session,
-      id,
-      relName: 'location',
-      srcNodeLabel: 'Project',
-    });
-  }
-  async hasProperties(session: Session, id: ID) {
-    return await this.db.hasProperties({
-      session,
-      id,
-      props: ['status', 'name', 'step'],
-      // props: ['type', 'status', 'name', 'step'],
-      nodevar: 'Project',
-    });
-  }
-
   async listProjectsWithDateRange() {
     return await this.db
       .query()

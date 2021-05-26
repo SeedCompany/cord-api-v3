@@ -248,15 +248,6 @@ export class UserResolver {
     return await this.userService.readOne(userId, session);
   }
 
-  @Query(() => Boolean, {
-    description: 'Check Consistency across User Nodes',
-  })
-  async checkUserConsistency(
-    @AnonSession() session: Session
-  ): Promise<boolean> {
-    return await this.userService.checkUserConsistency(session);
-  }
-
   @Mutation(() => Boolean, {
     description: 'Assign organization OR primaryOrganization to user',
   })

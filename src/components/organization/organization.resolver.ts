@@ -141,20 +141,4 @@ export class OrganizationResolver {
     await this.orgs.removeLocation(organizationId, locationId, session);
     return await this.orgs.readOne(organizationId, session);
   }
-
-  @Query(() => Boolean, {
-    description: 'Check all organization nodes for consistency',
-  })
-  async checkOrganizations(@AnonSession() session: Session): Promise<boolean> {
-    return await this.orgs.checkAllOrgs(session);
-  }
-
-  @Query(() => Boolean, {
-    description: 'Check Consistency in Organization Nodes',
-  })
-  async checkOrganizationConsistency(
-    @AnonSession() session: Session
-  ): Promise<boolean> {
-    return await this.orgs.checkOrganizationConsistency(session);
-  }
 }

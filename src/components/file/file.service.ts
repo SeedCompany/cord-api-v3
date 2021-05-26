@@ -519,8 +519,4 @@ export class FileService {
     const fileNode = await this.repo.getBaseNodeById(id, session);
     await this.repo.delete(fileNode, session);
   }
-
-  async checkConsistency(type: FileNodeType, session: Session): Promise<void> {
-    await this.repo.checkConsistency(type, session);
-  }
 }

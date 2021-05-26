@@ -1,12 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { Dictionary } from 'lodash';
 import { generateId, ID, Session } from '../../common';
 import {
   createBaseNode,
   DatabaseService,
   matchRequestingUser,
-  matchSession,
   Property,
 } from '../../core';
 import { DbChanges } from '../../core/database/changes';
@@ -87,22 +85,5 @@ export class CeremonyRepository {
           : []),
       ])
       .apply(calculateTotalAndPaginateList(Ceremony, input));
-  }
-
-  async getCeremonies(session: Session) {
-    return await this.db
-      .query()
-      .match([matchSession(session), [node('ceremony', 'Ceremony')]])
-      .return('ceremony.id as id')
-      .run();
-  }
-
-  async hasProperties(session: Session, ceremony: Dictionary<any>) {
-    return await this.db.hasProperties({
-      session,
-      id: ceremony.id,
-      props: ['type'],
-      nodevar: 'ceremony',
-    });
   }
 }
