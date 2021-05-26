@@ -482,4 +482,53 @@ export class EngagementRepository extends CommonRepository {
           : query.match([node('language', 'Language', { id: languageId })])
       );
   }
+
+  async savePnpData(reportId: ID, pnpData: PnpData | null) {
+    const date = DateTime.local();
+    const deactivateQuery = this.db
+      .query()
+      .match([
+        node('report', 'PeriodicReport', { id: reportId }),
+        relation('in', '', 'report', { active: true }),
+        node('node', 'LanguageEngagement'),
+        relation('out', 'engPnp', 'pnpData', { active: true }),
+        node('pnp', 'PnpData'),
+      ])
+      .setValues({ 'engPnp.active': false, 'pnp.deletedAt': date })
+      .raw(
+        `
+        with node, pnp,
+        reduce(deletedLabels = [], label in labels(pnp) | deletedLabels + ("Deleted_" + label)) as deletedLabels
+        call apoc.create.removeLabels(pnp, labels(pnp)) yield node as nodeRemoved
+        with node, pnp, deletedLabels
+        call apoc.create.addLabels(pnp, deletedLabels) yield node as nodeAdded
+        return pnp
+        `
+      );
+    if (pnpData) {
+      // first deactivate any old nodes
+      await deactivateQuery.run();
+      // then create a new node
+      await this.db
+        .query()
+        .match([
+          node('report', 'PeriodicReport', { id: reportId }),
+          relation('in', '', 'report', { active: true }),
+          node('node', 'LanguageEngagement'),
+        ])
+        .create([
+          node('node'),
+          relation('out', '', 'pnpData', {
+            active: true,
+            createdAt: date,
+          }),
+          node('pnp', 'PnpData', pnpData),
+        ])
+        .return('pnp')
+        .run();
+    } else {
+      // if no pnp data is found in the newly uploaded progress report, deactivate old pnp data
+      await deactivateQuery.run();
+    }
+  }
 }

@@ -3,7 +3,7 @@ import { stripIndent } from 'common-tags';
 import { node, relation } from 'cypher-query-builder';
 import { Dictionary } from 'lodash';
 import { DateTime, Interval } from 'luxon';
-import { ID, Session } from '../../common';
+import { CalendarDate, ID, Session } from '../../common';
 import { DtoRepository, matchRequestingUser, property } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -124,6 +124,34 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
         node('node', `PeriodicReport:${reportType}Report`),
       ])
       .apply(calculateTotalAndPaginateList(ProgressReport, input));
+  }
+
+  async getMostRecentReportWithFiles(reportId: ID) {
+    const { id, start } = (await this.db
+      .query()
+      .match([
+        node('', 'PeriodicReport', { id: reportId }),
+        relation('in', '', 'report', { active: true }),
+        node('', 'BaseNode'), // project or engagement
+        relation('out', '', 'report', { active: true }),
+        node('rn', 'PeriodicReport'),
+        relation('out', '', 'start', { active: true }),
+        node('sn', 'Property'),
+      ])
+      .match([
+        node('rn'),
+        relation('out', '', 'reportFileNode'),
+        node('', 'FileNode'),
+        relation('in', '', 'parent', { active: true }),
+        node('', 'FileVersion'),
+      ])
+      .return('rn.id as id, sn.value as start')
+      .orderBy('sn.value', 'desc')
+      .limit(1)
+      .asResult<{ id?: ID; start?: CalendarDate }>()
+      .first()) ?? { id: undefined, start: undefined };
+
+    return { id, start };
   }
 
   async delete(baseNodeId: ID, type: ReportType, intervals: Interval[]) {

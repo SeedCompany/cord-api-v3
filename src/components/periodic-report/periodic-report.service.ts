@@ -1,6 +1,7 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { DateTime, Interval } from 'luxon';
 import {
+  CalendarDate,
   generateId,
   ID,
   NotFoundException,
@@ -14,6 +15,7 @@ import {
   runListQuery,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { EngagementService } from '../engagement';
 import { CreateDefinedFileVersionInput, FileService } from '../file';
 import {
   CreatePeriodicReport,
@@ -32,7 +34,9 @@ export class PeriodicReportService {
     @Logger('periodic:report:service') private readonly logger: ILogger,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
-    private readonly repo: PeriodicReportRepository
+    private readonly repo: PeriodicReportRepository,
+    @Inject(forwardRef(() => EngagementService))
+    private readonly engagements: EngagementService
   ) {}
 
   @OnIndex()
@@ -95,7 +99,45 @@ export class PeriodicReportService {
       session
     );
 
+    if (report.type === 'Progress') {
+      const mostRecentReportWithFiles = await this.getMostRecentReportWithFiles(
+        reportId
+      );
+
+      const newerReport =
+        mostRecentReportWithFiles.start &&
+        report.start.toMillis() > mostRecentReportWithFiles.start.toMillis();
+
+      if (
+        // if this is the first file uploaded, extract progress data
+        !mostRecentReportWithFiles.id ||
+        // if id matches, we're updating the most recent P&P and want to update progress data
+        reportId === mostRecentReportWithFiles.id ||
+        // if it's newer we want to update
+        newerReport
+      ) {
+        await this.engagements.savePnpData(report.id, file, session);
+      }
+    }
+
     return report;
+  }
+
+  // grab the most recent report id that has previous file versions
+  async getMostRecentReportWithFiles(
+    reportId: ID
+  ): Promise<{ id?: ID; start?: CalendarDate }> {
+    if (!reportId) {
+      throw new NotFoundException(
+        'No periodic report id to search for',
+        'periodicReport.id'
+      );
+    }
+    const { id, start } = (await this.repo.getMostRecentReportWithFiles(
+      reportId
+    )) ?? { id: undefined, start: undefined };
+
+    return { id, start };
   }
 
   async readOne(id: ID, session: Session): Promise<PeriodicReport> {

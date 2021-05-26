@@ -24,7 +24,7 @@ import {
 import { runListQuery } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { CeremonyService } from '../ceremony';
-import { FileService } from '../file';
+import { CreateDefinedFileVersionInput, FileService } from '../file';
 import {
   ProductListInput,
   ProductService,
@@ -42,7 +42,6 @@ import {
   IEngagement,
   InternshipEngagement,
   LanguageEngagement,
-  PnpData,
   UpdateInternshipEngagement,
   UpdateLanguageEngagement,
 } from './dto';
@@ -845,24 +844,13 @@ export class EngagementService {
     return result;
   }
 
-  private async savePnpData(id: ID, pnpData: PnpData | null) {
-    const query = this.repo.query();
-    pnpData
-      ? query
-          .match(node('node', 'LanguageEngagement', { id }))
-          .merge([
-            node('node'),
-            relation('out', 'engPnp', 'pnpData', { active: true }),
-            node('pnp', 'PnpData', pnpData),
-          ])
-      : query
-          .match([
-            node('node', 'LanguageEngagement', { id }),
-            relation('out', 'engPnp', 'pnpData', { active: true }),
-            node('pnp', 'PnpData'),
-          ])
-          .detachDelete('pnp');
-    await query.run();
+  async savePnpData(
+    reportId: ID,
+    pnp: CreateDefinedFileVersionInput,
+    session: Session
+  ) {
+    const pnpData = await this.pnpExtractor.extract(pnp, session);
+    await this.repo.savePnpData(reportId, pnpData);
   }
 
   protected async verifyRelationshipEligibility(
