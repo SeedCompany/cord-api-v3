@@ -166,8 +166,6 @@ describe('Project e2e', () => {
       { name: 'Approval Documents' },
       { name: 'Consultant Reports' },
       { name: 'Field Correspondence' },
-      { name: 'Financial Reports' },
-      { name: 'Narrative Reports' },
       { name: 'Photos' },
     ];
 
