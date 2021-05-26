@@ -35,6 +35,7 @@ export class ConfigService implements EmailOptionsFactory {
   migration = this.env.boolean('MIGRATION').optional(false);
 
   // disable engagement update handler for this migration
+  // Remove after periodic report migration
   periodicReportMigration = this.env
     .boolean('PERIODIC_REPORT_MIGRATION')
     .optional(false);

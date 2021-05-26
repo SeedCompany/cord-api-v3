@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { DateTime } from 'luxon';
 import { read, utils, WorkBook } from 'xlsx';
 import { Session } from '../../common';
-import { ConfigService, ILogger, Logger } from '../../core';
+import { ILogger, Logger } from '../../core';
 import {
   CreateDefinedFileVersionInput,
   FileService,
@@ -14,10 +14,9 @@ import { PnpData } from './dto';
 export class PnpExtractor {
   constructor(
     private readonly files: FileService,
-    @Logger('pnp:extractor') private readonly logger: ILogger,
-    private readonly config: ConfigService
+    @Logger('pnp:extractor') private readonly logger: ILogger
   ) {}
-
+  // Remove after periodic report migration
   async extractFyAndQuarter(
     input: CreateDefinedFileVersionInput,
     session: Session
@@ -122,7 +121,7 @@ export class PnpExtractor {
       variance: parsePercent(variance),
     };
   }
-
+  // make private after periodic report migration
   parseYearAndQuarter(fileName: string) {
     // I don't want to mess with this since there are some files names with a range
     // i.e. fy18-20. I think this naming has become outmoded anyway.

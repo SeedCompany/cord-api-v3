@@ -59,7 +59,7 @@ export class PeriodicReportResolver {
     );
     return report;
   }
-
+  // Remove after periodic report migration
   @Mutation(() => Boolean, {
     description: 'Create project report files for existing projects',
   })
@@ -123,7 +123,7 @@ export class PeriodicReportResolver {
 
     return true;
   }
-
+  // Remove after periodic report migration
   @Mutation(() => Boolean, {
     description: 'Create engagement progress reports for existing engagements',
   })
@@ -225,7 +225,7 @@ export class PeriodicReportResolver {
 
     return true;
   }
-
+  // Remove after periodic report migration
   @Mutation(() => Boolean, {
     description: 'Move P&P files from old schema to new periodic report schema',
   })
@@ -303,9 +303,7 @@ export class PeriodicReportResolver {
       // if pnpDate is after end, then assign that pnp to the last reporting period
       let startToUse;
 
-      const {
-        matchingStart,
-      } = (await this.db
+      const { matchingStart } = (await this.db
         .query()
         .raw(
           `match(e:Engagement {id: $id})-[:report { active: true }]->(pr:ProgressReport)-[:start { active: true }]->(start:Property {value: date($startDate)})`,

@@ -33,11 +33,12 @@ export class SyncProgressReportToEngagementDateRange
   constructor(
     private readonly periodicReports: PeriodicReportService,
     private readonly engagements: EngagementService,
-    private readonly config: ConfigService,
+    private readonly config: ConfigService, // Remove after periodic report migration
     @Logger('progress-report:engagement-sync') private readonly logger: ILogger
   ) {}
 
   async handle(event: SubscribedEvent) {
+    // Remove after periodic report migration
     if (this.config.periodicReportMigration) {
       return;
     }
