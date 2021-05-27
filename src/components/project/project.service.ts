@@ -271,6 +271,10 @@ export class ProjectService {
           };
         }
       });
+      project = {
+        ...project,
+        changeId,
+      };
     }
 
     return project;
