@@ -99,7 +99,7 @@ export const matchProps =
         .return([
           stripIndent`
           apoc.map.mergeList(
-            ${excludeBaseProps ? '' : '[node] + '}collect(
+            ${excludeBaseProps ? '' : `[${nodeName}] + `}collect(
               apoc.map.fromValues([type(r), prop.value])
             )
           ) as ${outputVar}`,
