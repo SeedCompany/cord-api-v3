@@ -57,6 +57,8 @@ export interface MatchPropsOptions {
   optional?: boolean;
   // The optional change ID to reference
   changeId?: ID;
+  // Don't merge in the actual BaseNode's properties into the resulting output object
+  excludeBaseProps?: boolean;
 }
 
 /**
@@ -72,6 +74,7 @@ export const matchProps =
     outputVar = 'props',
     optional = false,
     changeId,
+    excludeBaseProps = false,
   }: MatchPropsOptions = {}) =>
   (query: Query) =>
     query.subQuery((sub) =>
@@ -96,7 +99,7 @@ export const matchProps =
         .return([
           stripIndent`
           apoc.map.mergeList(
-            [node] + collect(
+            ${excludeBaseProps ? '' : '[node] + '}collect(
               apoc.map.fromValues([type(r), prop.value])
             )
           ) as ${outputVar}`,

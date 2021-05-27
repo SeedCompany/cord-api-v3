@@ -415,7 +415,7 @@ export class ProjectRepository extends CommonRepository {
     const query = this.db
       .query()
       .match([node('node', 'Project', { id })])
-      .apply(matchProps({ changeId, optional: true }))
+      .apply(matchProps({ changeId, optional: true, excludeBaseProps: true }))
       .return(['props'])
       .asResult<{
         props: Partial<DbPropsOfDto<Project>>;
