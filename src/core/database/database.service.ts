@@ -246,7 +246,6 @@ export class DatabaseService {
           value: change,
           changeId,
         });
-        continue;
       } else {
         await this.updateProperty({
           type,

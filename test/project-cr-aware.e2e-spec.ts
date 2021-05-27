@@ -27,6 +27,22 @@ import {
   stepsFromEarlyConversationToBeforeActive,
 } from './utility/transition-project';
 
+const readProject = (app: TestApp, id: string, changeId?: string) =>
+  app.graphql.query(
+    gql`
+      query project($id: ID!, $changeId: ID) {
+        project(id: $id, changeId: $changeId) {
+          ...project
+        }
+      }
+      ${fragments.project}
+    `,
+    {
+      id,
+      changeId,
+    }
+  );
+
 describe('Project CR Aware e2e', () => {
   let app: TestApp;
   let director: User;
@@ -81,7 +97,7 @@ describe('Project CR Aware e2e', () => {
 
     // Update project with changeId
     const newCRName = faker.random.word() + ' ' + faker.datatype.uuid();
-    await app.graphql.query(
+    const mutationResult = await app.graphql.mutate(
       gql`
         mutation updateProject($input: UpdateProjectInput!, $changeId: ID) {
           updateProject(input: $input, changeId: $changeId) {
@@ -102,36 +118,14 @@ describe('Project CR Aware e2e', () => {
         changeId: planChange.id,
       }
     );
+    expect(mutationResult.updateProject.project.name.value).toBe(newCRName);
+
     // Query project without changeId
-    let result = await app.graphql.query(
-      gql`
-        query project($id: ID!) {
-          project(id: $id) {
-            ...project
-          }
-        }
-        ${fragments.project}
-      `,
-      {
-        id: project.id,
-      }
-    );
+    let result = await readProject(app, project.id);
     expect(result.project.name.value).toBe(project.name.value);
+
     // Query project with changeId
-    result = await app.graphql.query(
-      gql`
-        query project($id: ID!, $changeId: ID!) {
-          project(id: $id, changeId: $changeId) {
-            ...project
-          }
-        }
-        ${fragments.project}
-      `,
-      {
-        id: project.id,
-        changeId: planChange.id,
-      }
-    );
+    result = await readProject(app, project.id, planChange.id);
     expect(result.project.name.value).toBe(newCRName);
 
     // Approve CR
@@ -155,20 +149,9 @@ describe('Project CR Aware e2e', () => {
         },
       }
     );
+
     // Project name is changed without changeId
-    result = await app.graphql.query(
-      gql`
-        query project($id: ID!) {
-          project(id: $id) {
-            ...project
-          }
-        }
-        ${fragments.project}
-      `,
-      {
-        id: project.id,
-      }
-    );
+    result = await readProject(app, project.id);
     expect(result.project.name.value).toBe(newCRName);
   });
 });
