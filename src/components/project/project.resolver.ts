@@ -14,6 +14,7 @@ import {
   IdArg,
   IdField,
   LoggedInSession,
+  ReadPlanChangeArgs,
   Session,
 } from '../../common';
 import { SecuredBudget } from '../budget';
@@ -71,9 +72,13 @@ export class ProjectResolver {
   })
   async project(
     @LoggedInSession() session: Session,
-    @IdArg() id: ID
+    @Args() { id, changeId }: ReadPlanChangeArgs
   ): Promise<Project> {
-    const project = await this.projectService.readOneUnsecured(id, session);
+    const project = await this.projectService.readOneUnsecured(
+      id,
+      session,
+      changeId
+    );
     const secured = await this.projectService.secure(project, session);
     return secured;
   }
@@ -115,20 +120,6 @@ export class ProjectResolver {
     input: ChangeListInput
   ): Promise<SecuredChangeList> {
     return this.projectService.listPlanChanges(project.id, input, session);
-  }
-
-  @ResolveField(() => IProject)
-  async projectChanges(
-    @AnonSession() session: Session,
-    @Parent() project: Project,
-    @IdArg({ nullable: true }) id?: ID
-  ): Promise<Project> {
-    const projectChanges = await this.projectService.readOne(
-      project.id,
-      session,
-      id
-    );
-    return projectChanges;
   }
 
   @ResolveField(() => SecuredBudget, {

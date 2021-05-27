@@ -1,6 +1,5 @@
 import {
   Args,
-  ArgsType,
   Mutation,
   Parent,
   Query,
@@ -11,8 +10,8 @@ import {
   AnonSession,
   ID,
   IdArg,
-  IdField,
   LoggedInSession,
+  ReadPlanChangeArgs,
   Session,
 } from '../../common';
 import { CeremonyService, SecuredCeremony } from '../ceremony';
@@ -32,15 +31,6 @@ import {
 } from './dto';
 import { EngagementService } from './engagement.service';
 
-@ArgsType()
-class ReadEngagementArgs {
-  @IdField()
-  id: ID;
-
-  @IdField({ nullable: true })
-  changeId: ID;
-}
-
 @Resolver(IEngagement)
 export class EngagementResolver {
   constructor(
@@ -52,7 +42,7 @@ export class EngagementResolver {
     description: 'Lookup an engagement by ID',
   })
   async engagement(
-    @Args() { id, changeId }: ReadEngagementArgs,
+    @Args() { id, changeId }: ReadPlanChangeArgs,
     @AnonSession() session: Session
   ): Promise<Engagement> {
     const engagement = await this.service.readOne(id, session, changeId);

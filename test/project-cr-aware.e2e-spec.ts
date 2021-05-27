@@ -121,10 +121,8 @@ describe('Project CR Aware e2e', () => {
     result = await app.graphql.query(
       gql`
         query project($id: ID!, $changeId: ID!) {
-          project(id: $id) {
-            projectChanges(id: $changeId) {
-              ...project
-            }
+          project(id: $id, changeId: $changeId) {
+            ...project
           }
         }
         ${fragments.project}
@@ -134,7 +132,7 @@ describe('Project CR Aware e2e', () => {
         changeId: planChange.id,
       }
     );
-    expect(result.project.projectChanges.name.value).toBe(newCRName);
+    expect(result.project.name.value).toBe(newCRName);
 
     // Approve CR
     await app.graphql.mutate(
