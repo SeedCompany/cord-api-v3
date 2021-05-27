@@ -1,10 +1,8 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
-import { entries, Many } from 'lodash';
+import { Many } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
-  getHighestSensitivity,
   ID,
   InputException,
   isIdLike,
@@ -24,11 +22,7 @@ import {
   OnIndex,
   UniquenessError,
 } from '../../core';
-import {
-  parseBaseNodeProperties,
-  parsePropList,
-  runListQuery,
-} from '../../core/database/results';
+import { runListQuery } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { rolesForScope, ScopedRole } from '../authorization/dto';
 import { Powers } from '../authorization/dto/powers';
@@ -234,50 +228,7 @@ export class ProjectService {
     const userId = isIdLike(sessionOrUserId)
       ? sessionOrUserId
       : sessionOrUserId.userId;
-    const result = await this.repo.readOneUnsecured(id, userId);
-    if (!result) {
-      throw new NotFoundException('Could not find project');
-    }
-
-    const props = parsePropList(result.propList);
-    let project = {
-      ...parseBaseNodeProperties(result.node),
-      ...props,
-      // Sensitivity is calculated based on the highest language sensitivity (for Translation Projects).
-      // If project has no language engagements (new Translation projects and all Internship projects),
-      // then falls back to the sensitivity prop which defaulted to High on create for all projects.
-      sensitivity:
-        getHighestSensitivity(result.languageSensitivityList) ??
-        props.sensitivity,
-      type: result.node.properties.type,
-      primaryLocation: result.primaryLocationId,
-      marketingLocation: result.marketingLocationId,
-      fieldRegion: result.fieldRegionId,
-      owningOrganization: result.owningOrganizationId,
-      pinned: !!result.pinnedRel,
-      scope: result.memberRoles.flat().map(rolesForScope('project')),
-    };
-
-    if (changeId) {
-      const planChangesProps = await this.repo.getPlanChangesProps(
-        id,
-        changeId
-      );
-      entries(planChangesProps).forEach(([key, prop]) => {
-        if (prop !== undefined) {
-          project = {
-            ...project,
-            [key]: prop,
-          };
-        }
-      });
-      project = {
-        ...project,
-        changeId,
-      };
-    }
-
-    return project;
+    return await this.repo.readOneUnsecured(id, userId, changeId);
   }
 
   async secure(
@@ -325,7 +276,11 @@ export class ProjectService {
     session: Session,
     changeId?: ID
   ): Promise<UnsecuredDto<Project>> {
-    const currentProject = await this.readOneUnsecured(input.id, session);
+    const currentProject = await this.readOneUnsecured(
+      input.id,
+      session,
+      changeId
+    );
     if (input.sensitivity && currentProject.type === ProjectType.Translation)
       throw new InputException(
         'Cannot update sensitivity on Translation Project',
@@ -381,7 +336,7 @@ export class ProjectService {
     );
 
     if (changeId) {
-      return currentProject;
+      return result;
     }
 
     if (primaryLocationId) {
@@ -598,7 +553,7 @@ export class ProjectService {
 
     return {
       ...result,
-      canRead: true, // TODO
+      canRead: true, // TODO false if project is not active since that's what's enforced elsewhere
       canCreate: true, // TODO
     };
   }

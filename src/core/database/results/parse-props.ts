@@ -3,6 +3,8 @@ import { keyBy, mapValues } from 'lodash';
 import type { matchProps } from '../query';
 
 /**
+ * @deprecated Use {@link matchProps} instead which doesn't need this post-transformation
+ *
  * Converts an object `DbProps` to a list of objects from a cypher result.
  *
  * like this: [{ property: string, value: unknown }, ...]

@@ -1,5 +1,4 @@
 import { node, relation } from 'cypher-query-builder';
-import { entries } from 'lodash';
 import { IProject } from '../..';
 import { ID, ServerException } from '../../../../common';
 import {
@@ -59,20 +58,11 @@ export class CRUpdateProject implements IEventHandler<SubscribedEvent> {
           result.projectId,
           event.session
         );
-        const planChangesProps = await this.projectRepo.getPlanChangesProps(
+        const changes = await this.projectRepo.getPlanChangesProps(
           result.projectId,
           planChange.id
         );
 
-        let changes = {};
-        entries(planChangesProps).forEach(([key, prop]) => {
-          if (prop !== undefined) {
-            changes = {
-              ...changes,
-              [key]: prop,
-            };
-          }
-        });
         // Update project pending changes
         await this.db.updateProperties({
           type: IProject,

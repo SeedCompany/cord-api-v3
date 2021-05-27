@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { Node, node, Relation, relation } from 'cypher-query-builder';
+import { stripIndent } from 'common-tags';
+import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   ID,
-  Sensitivity,
+  NotFoundException,
   ServerException,
+  Sensitivity,
   Session,
   UnsecuredDto,
 } from '../../common';
@@ -17,19 +19,14 @@ import {
 import { DbChanges, getChanges } from '../../core/database/changes';
 import {
   calculateTotalAndPaginateList,
-  collect,
   createNode,
   createRelationships,
-  matchPropList,
+  matchProps,
+  matchPropsAndProjectSensAndScopedRoles,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
-import {
-  BaseNode,
-  DbPropsOfDto,
-  parsePropList,
-  PropListDbResult,
-} from '../../core/database/results';
+import { DbPropsOfDto } from '../../core/database/results';
 import { Role } from '../authorization';
 import {
   CreateProject,
@@ -64,28 +61,27 @@ export class ProjectRepository extends CommonRepository {
     return result.map((row) => row.roles);
   }
 
-  async readOneUnsecured(id: ID, userId: ID) {
+  async readOneUnsecured(id: ID, userId: ID, changeId?: ID) {
     const query = this.db
       .query()
       .match([node('node', 'Project', { id })])
-      .apply(matchPropList)
-      .with(['node', 'propList'])
-      .optionalMatch([
-        [node('user', 'User', { id: userId })],
-        [node('projectMember'), relation('out', '', 'user'), node('user')],
-        [node('projectMember'), relation('in', '', 'member'), node('node')],
-        [
-          node('projectMember'),
-          relation('out', '', 'roles', { active: true }),
-          node('props', 'Property'),
-        ],
-      ])
-      .with([collect('props.value', 'memberRoles'), 'propList', 'node'])
-      .optionalMatch([
-        node('requestingUser', 'User', { id: userId }),
-        relation('out', 'pinnedRel', 'pinned'),
-        node('node'),
-      ])
+      .with(['node', 'node as project'])
+      .apply(matchPropsAndProjectSensAndScopedRoles(userId))
+      .apply((q) =>
+        changeId
+          ? q
+              .apply(
+                matchProps({
+                  changeId,
+                  outputVar: 'changedProps',
+                  optional: true,
+                })
+              )
+              .match(node('planChange', 'PlanChange', { id: changeId }))
+          : q.subQuery((sub) =>
+              sub.return(['null as planChange', '{} as changedProps'])
+            )
+      )
       .optionalMatch([
         node('node'),
         relation('out', '', 'primaryLocation', { active: true }),
@@ -106,39 +102,34 @@ export class ProjectRepository extends CommonRepository {
         relation('out', '', 'owningOrganization', { active: true }),
         node('organization', 'Organization'),
       ])
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'engagement', { active: true }),
-        node('', 'LanguageEngagement'),
-        relation('out', '', 'language', { active: true }),
-        node('', 'Language'),
-        relation('out', '', 'sensitivity', { active: true }),
-        node('sensitivity', 'Property'),
-      ])
+      .raw('', { requestingUserId: userId })
       .return([
-        'propList',
-        'node',
-        'memberRoles',
-        'pinnedRel',
-        'primaryLocation.id as primaryLocationId',
-        'marketingLocation.id as marketingLocationId',
-        'fieldRegion.id as fieldRegionId',
-        'organization.id as owningOrganizationId',
-        'collect(distinct sensitivity.value) as languageSensitivityList',
+        stripIndent`
+          apoc.map.mergeList([
+            props,
+            changedProps,
+            {
+              type: node.type,
+              pinned: exists((:User { id: $requestingUserId })-[:pinned]->(node)),
+              primaryLocation: primaryLocation.id,
+              marketingLocation: marketingLocation.id,
+              fieldRegion: fieldRegion.id,
+              owningOrganization: organization.id,
+              scope: scopedRoles,
+              changeId: coalesce(planChange.id)
+            }
+          ]) as project`,
       ])
       .asResult<{
-        node: BaseNode & Node<{ type: ProjectType }>;
-        propList: PropListDbResult<DbPropsOfDto<Project>>;
-        pinnedRel?: Relation;
-        primaryLocationId: ID;
-        memberRoles: Role[][];
-        marketingLocationId: ID;
-        fieldRegionId: ID;
-        owningOrganizationId: ID;
-        languageSensitivityList: Sensitivity[];
+        project: UnsecuredDto<Project>;
       }>();
 
-    return await query.first();
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException('Could not find project');
+    }
+
+    return result.project;
   }
 
   getActualChanges(
@@ -420,25 +411,17 @@ export class ProjectRepository extends CommonRepository {
       .first();
   }
 
-  async getPlanChangesProps(
-    id: ID,
-    changeId: ID
-  ): Promise<Record<string, any>> {
-    const planChangeQuery = this.db
+  async getPlanChangesProps(id: ID, changeId: ID) {
+    const query = this.db
       .query()
       .match([node('node', 'Project', { id })])
-      .call(matchPropList, changeId)
-      .with(['node', 'propList'])
-      .return(['propList', 'node'])
+      .apply(matchProps({ changeId, optional: true }))
+      .return(['props'])
       .asResult<{
-        node: Node<BaseNode & { type: ProjectType }>;
-        propList: PropListDbResult<DbPropsOfDto<Project>>;
+        props: Partial<DbPropsOfDto<Project>>;
       }>();
 
-    const planChangeResult = await planChangeQuery.first();
-    if (planChangeResult) {
-      return parsePropList(planChangeResult.propList);
-    }
-    return {};
+    const result = await query.first();
+    return result?.props ?? {};
   }
 }

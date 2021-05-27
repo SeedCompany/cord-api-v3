@@ -48,6 +48,17 @@ export const matchPropList = (query: Query, changeId?: ID, nodeName = 'node') =>
       nodeName,
     ]);
 
+export interface MatchPropsOptions {
+  // The node var to pull properties from
+  nodeName?: string;
+  // The variable name to output as
+  outputVar?: string;
+  // Whether we should move forward even without any properties matched
+  optional?: boolean;
+  // The optional change ID to reference
+  changeId?: ID;
+}
+
 /**
  * Matches all the given `node`s properties and returns them plus the props on
  * the base node as an object at the `props` key
@@ -56,22 +67,38 @@ export const matchPropList = (query: Query, changeId?: ID, nodeName = 'node') =>
  * transparently.
  */
 export const matchProps =
-  ({ nodeName = 'node' } = {}) =>
+  ({
+    nodeName = 'node',
+    outputVar = 'props',
+    optional = false,
+    changeId,
+  }: MatchPropsOptions = {}) =>
   (query: Query) =>
     query.subQuery((sub) =>
       sub
         .with(nodeName)
-        .match([
-          node(nodeName),
-          relation('out', 'r', { active: true }),
-          node('prop', 'Property'),
-        ])
+        .match(
+          [
+            node(nodeName),
+            relation('out', 'r', { active: !changeId }),
+            node('prop', 'Property'),
+            ...(changeId
+              ? [
+                  relation('in', '', 'change', { active: true }),
+                  node('planChange', 'PlanChange', { id: changeId }),
+                ]
+              : []),
+          ],
+          {
+            optional,
+          }
+        )
         .return([
           stripIndent`
           apoc.map.mergeList(
             [node] + collect(
               apoc.map.fromValues([type(r), prop.value])
             )
-          ) as props`,
+          ) as ${outputVar}`,
         ])
     );

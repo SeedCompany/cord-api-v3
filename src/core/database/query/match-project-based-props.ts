@@ -1,21 +1,23 @@
 import { oneLine, stripIndent } from 'common-tags';
 import { node, Query, relation } from 'cypher-query-builder';
-import { Session } from '../../../common';
-import { matchProps } from './matching';
+import { ID, isIdLike, Session } from '../../../common';
+import { matchProps, MatchPropsOptions } from './matching';
 
 export const matchPropsAndProjectSensAndScopedRoles =
-  (session: Session) => (query: Query) =>
+  (session: Session | ID, propsOptions?: MatchPropsOptions) => (query: Query) =>
     query.subQuery((sub) =>
       sub
         .with(['node', 'project'])
-        .apply(matchProps())
+        .apply(matchProps(propsOptions))
         .optionalMatch([
           [
             node('project'),
             relation('out', '', 'member'),
             node('projectMember'),
             relation('out', '', 'user'),
-            node('user', 'User', { id: session.userId }),
+            node('user', 'User', {
+              id: isIdLike(session) ? session : session.userId,
+            }),
           ],
           [
             node('projectMember'),
@@ -40,9 +42,9 @@ export const matchPropsAndProjectSensAndScopedRoles =
         .return(
           [
             stripIndent`
-apoc.map.merge(props, {
+apoc.map.merge(${propsOptions?.outputVar ?? 'props'}, {
   sensitivity: ${determineSensitivity}
-}) as props
+}) as ${propsOptions?.outputVar ?? 'props'}
         `,
             stripIndent`
           reduce(
