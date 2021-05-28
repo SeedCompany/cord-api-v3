@@ -238,22 +238,13 @@ export class DatabaseService {
       if (change === undefined) {
         continue;
       }
-      if (changeId) {
-        await this.updatePlanChangeProperty({
-          type,
-          object,
-          key: prop as any,
-          value: change,
-          changeId,
-        });
-      } else {
-        await this.updateProperty({
-          type,
-          object,
-          key: prop as any,
-          value: change,
-        });
-      }
+      await this.updateProperty({
+        type,
+        object,
+        key: prop as any,
+        value: change,
+        changeId,
+      });
 
       updated = {
         ...updated,
@@ -282,11 +273,13 @@ export class DatabaseService {
     object: { id },
     key,
     value,
+    changeId,
   }: {
     type: TResourceStatic;
     object: TObject;
     key: Key;
     value?: UnwrapSecured<TObject[Key]>;
+    changeId?: ID;
   }): Promise<void> {
     const label = type.name;
 
@@ -300,14 +293,19 @@ export class DatabaseService {
     };
     const update = this.db
       .query()
-      .match(node('node', label, { id }))
       .match([
-        node('node'),
-        relation('out', 'oldToProp', key, { active: true }),
+        node('node', label, { id }),
+        relation('out', 'oldToProp', key, { active: !changeId }),
         node('oldPropVar', 'Property'),
+        ...(changeId
+          ? [
+              relation('in', 'oldChange', { active: true }),
+              node('changeNode', 'PlanChange', { id: changeId }),
+            ]
+          : []),
       ])
       .setValues({
-        'oldToProp.active': false,
+        [`${changeId ? 'oldChange' : 'oldToProp'}.active`]: false,
       })
       .raw(
         `
@@ -322,10 +320,13 @@ export class DatabaseService {
       .create([
         node('node'),
         relation('out', 'toProp', key, {
-          active: true,
+          active: !changeId,
           createdAt,
         }),
         node('newPropNode', propLabels, newPropertyNodeProps),
+        ...(changeId
+          ? [relation('in', '', 'change', { active: true }), node('changeNode')]
+          : []),
       ])
       .return('newPropNode');
 
