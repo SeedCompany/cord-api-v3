@@ -283,14 +283,13 @@ export class DatabaseService {
   }): Promise<void> {
     const label = type.name;
 
-    const propLabels = getDbPropertyLabels(type, key);
+    const propLabels = !changeId
+      ? getDbPropertyLabels(type, key)
+      : // Do not give properties unique labels if inside a changeset.
+        // They'll get them when they are applied for real.
+        ['Property'];
 
     const createdAt = DateTime.local();
-    const newPropertyNodeProps = {
-      createdAt,
-      value,
-      sortValue: determineSortValue(value),
-    };
     const update = this.db
       .query()
       .match([
@@ -323,7 +322,11 @@ export class DatabaseService {
           active: !changeId,
           createdAt,
         }),
-        node('newPropNode', propLabels, newPropertyNodeProps),
+        node('newPropNode', propLabels, {
+          createdAt,
+          value,
+          sortValue: determineSortValue(value),
+        }),
         ...(changeId
           ? [relation('in', '', 'change', { active: true }), node('changeNode')]
           : []),
