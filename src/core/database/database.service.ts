@@ -292,30 +292,36 @@ export class DatabaseService {
     const createdAt = DateTime.local();
     const update = this.db
       .query()
-      .match([
-        node('node', label, { id }),
-        relation('out', 'oldToProp', key, { active: !changeId }),
-        node('oldPropVar', 'Property'),
-        ...(changeId
-          ? [
-              relation('in', 'oldChange', { active: true }),
-              node('changeNode', 'PlanChange', { id: changeId }),
-            ]
-          : []),
-      ])
-      .setValues({
-        [`${changeId ? 'oldChange' : 'oldToProp'}.active`]: false,
-      })
-      .raw(
-        `
+      .match(node('node', label, { id }))
+      // Deactivate existing prop(s) & adjust labels as needed
+      // This is an optional step
+      .subQuery((sub) =>
+        sub
+          .with('node')
+          .match([
+            node('node'),
+            relation('out', 'oldToProp', key, { active: !changeId }),
+            node('oldPropVar', 'Property'),
+            ...(changeId
+              ? [
+                  relation('in', 'oldChange', { active: true }),
+                  node('changeNode', 'PlanChange', { id: changeId }),
+                ]
+              : []),
+          ])
+          .setValues({
+            [`${changeId ? 'oldChange' : 'oldToProp'}.active`]: false,
+          })
+          .raw(
+            `
         with node, oldPropVar, reduce(deletedLabels = [], label in labels(oldPropVar) | deletedLabels + ("Deleted_" + label)) as deletedLabels
         call apoc.create.removeLabels(oldPropVar, labels(oldPropVar)) yield node as nodeRemoved
         with node, oldPropVar, deletedLabels
         call apoc.create.addLabels(oldPropVar, deletedLabels) yield node as nodeAdded
         `
+          )
+          .return(['count(oldPropVar) as numPropsDeactivated'])
       )
-      .with('*')
-      .limit(1)
       .create([
         node('node'),
         relation('out', 'toProp', key, {
