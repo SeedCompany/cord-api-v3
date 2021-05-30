@@ -293,6 +293,11 @@ export class DatabaseService {
     const update = this.db
       .query()
       .match(node('node', label, { id }))
+      .apply((q) =>
+        changeId
+          ? q.match(node('changeNode', 'PlanChange', { id: changeId }))
+          : q
+      )
       // Deactivate existing prop(s) & adjust labels as needed
       // This is an optional step
       .subQuery((sub) =>
@@ -304,7 +309,7 @@ export class DatabaseService {
             node('oldPropVar', 'Property'),
             ...(changeId
               ? [
-                  relation('in', 'oldChange', { active: true }),
+                  relation('in', 'oldChange', 'change', { active: true }),
                   node('changeNode', 'PlanChange', { id: changeId }),
                 ]
               : []),
