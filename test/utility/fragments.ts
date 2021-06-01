@@ -20,6 +20,7 @@ import { Raw } from './raw.type';
 
 export const org = gql`
   fragment org on Organization {
+    createdAt
     id
     name {
       value
@@ -31,7 +32,55 @@ export const org = gql`
       canRead
       canEdit
     }
-    createdAt
+    locations {
+      canRead
+      canCreate
+      items {
+        id
+        createdAt
+        name {
+          value
+          canEdit
+          canRead
+        }
+        type {
+          value
+          canEdit
+          canRead
+        }
+        isoAlpha3 {
+          value
+          canEdit
+          canRead
+        }
+        fundingAccount {
+          value {
+            id
+            name {
+              value
+              canRead
+              canEdit
+            }
+            accountNumber {
+              value
+              canRead
+              canEdit
+            }
+            createdAt
+          }
+          canEdit
+          canRead
+        }
+        defaultFieldRegion {
+          value {
+            id
+            name {
+              value
+            }
+          }
+        }
+      }
+    }
   }
 `;
 
@@ -103,6 +152,18 @@ export const language = gql`
     }
     isDialect {
       value
+      canEdit
+      canRead
+    }
+    signLanguageCode {
+      value
+      canEdit
+      canRead
+    }
+    isSignLanguage {
+      value
+      canEdit
+      canRead
     }
     populationOverride {
       value
@@ -120,6 +181,11 @@ export const language = gql`
       canRead
     }
     leastOfTheseReason {
+      value
+      canEdit
+      canRead
+    }
+    sponsorEstimatedEndDate {
       value
       canEdit
       canRead
@@ -161,6 +227,55 @@ export const language = gql`
       value
       canRead
       canEdit
+    }
+    locations {
+      canRead
+      canCreate
+      items {
+        id
+        createdAt
+        name {
+          value
+          canEdit
+          canRead
+        }
+        type {
+          value
+          canEdit
+          canRead
+        }
+        isoAlpha3 {
+          value
+          canEdit
+          canRead
+        }
+        fundingAccount {
+          value {
+            id
+            name {
+              value
+              canRead
+              canEdit
+            }
+            accountNumber {
+              value
+              canRead
+              canEdit
+            }
+            createdAt
+          }
+          canEdit
+          canRead
+        }
+        defaultFieldRegion {
+          value {
+            id
+            name {
+              value
+            }
+          }
+        }
+      }
     }
   }
 `;
@@ -742,6 +857,13 @@ export const budget = gql`
     id
     createdAt
     status
+    universalTemplateFile {
+      canRead
+      canEdit
+      value {
+        id
+      }
+    }
     records {
       ...budgetRecord
     }
