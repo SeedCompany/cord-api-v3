@@ -1,3 +1,4 @@
+import { Sensitivity } from '../../../common';
 import { DbBudget } from '../../budget/model';
 import { DbBudgetRecord } from '../../budget/model/budget-record.model.db';
 import { DbCeremony } from '../../ceremony/model';
@@ -53,8 +54,8 @@ export const ConsultantManagerGlobal = new DbRole({
     new DbBaseNodeGrant<DbBudget>({
       __className: 'DbBudget',
       properties: [
-        { propertyName: 'universalTemplateFile', permission: { read, }, },
-        { propertyName: 'records', permission: { read, }, },
+        { propertyName: 'universalTemplateFile', permission: { read, sensitivityAccess: Sensitivity.Medium}, },
+        { propertyName: 'records', permission: { read, sensitivityAccess: Sensitivity.Medium }, },
         { propertyName: 'status', permission: { read, }, },
       ],
       canDelete: false,
@@ -62,9 +63,9 @@ export const ConsultantManagerGlobal = new DbRole({
     new DbBaseNodeGrant<DbBudgetRecord>({
       __className: 'DbBudgetRecord',
       properties: [
-        { propertyName: 'amount', permission: { read, }, },
-        { propertyName: 'fiscalYear', permission: { read, }, },
-        { propertyName: 'organization', permission: { read, }, },
+        { propertyName: 'amount', permission: { read, sensitivityAccess: Sensitivity.Medium}, },
+        { propertyName: 'fiscalYear', permission: { read, sensitivityAccess: Sensitivity.Medium }, },
+        { propertyName: 'organization', permission: { read, sensitivityAccess: Sensitivity.Medium }, },
       ],
       canDelete: false,
     }),

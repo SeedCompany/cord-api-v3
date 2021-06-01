@@ -20,6 +20,7 @@ import {
   mapFromList,
   ResourceShape,
   SecuredResource,
+  Sensitivity,
   ServerException,
   Session,
   UnauthorizedException,
@@ -36,7 +37,7 @@ import { AuthorizationRepository } from './authorization.repository';
 import { InternalRole, Role, rolesForScope, ScopedRole } from './dto';
 import { Powers } from './dto/powers';
 import { MissingPowerException } from './missing-power.exception';
-import { DbRole, PermissionsForResource } from './model';
+import { Action, DbRole, PermissionsForResource } from './model';
 import * as AllRoles from './roles';
 
 const getDbRoles = (roles: ScopedRole[]) =>
@@ -114,7 +115,8 @@ export class AuthorizationService {
     const permissions = await this.getPermissions(
       resource,
       sessionOrUserId,
-      otherRoles
+      otherRoles,
+      props
     );
     // @ts-expect-error not matching for some reason but declared return type is correct
     return parseSecuredProperties(props, permissions, resource.SecuredProps);
@@ -185,7 +187,8 @@ export class AuthorizationService {
   async getPermissions<Resource extends ResourceShape<any>>(
     resource: Resource,
     sessionOrUserId: Session | ID,
-    otherRoles: ScopedRole[] = []
+    otherRoles: ScopedRole[] = [],
+    dto?: Resource['prototype']
   ): Promise<PermissionsOf<SecuredResource<Resource>>> {
     const userGlobalRoles = isIdLike(sessionOrUserId)
       ? await this.getUserGlobalRoles(sessionOrUserId)
@@ -220,9 +223,17 @@ export class AuthorizationService {
 
     // grab all the grants for the given roles & matching resources
     const grants = dbRoles.flatMap((role) =>
-      Object.entries(normalizeGrants(role)).flatMap(([name, grant]) =>
-        resources.includes(name) ? grant : []
-      )
+      Object.entries(normalizeGrants(role)).flatMap(([name, grant]) => {
+        if (resources.includes(name)) {
+          const filtered = mapValues(grant, (propPerm) => {
+            return this.isSensitivityAllowed(propPerm, dto?.sensitivity)
+              ? propPerm
+              : {};
+          });
+          return filtered;
+        }
+        return [];
+      })
     ) as Array<PermissionsForResource<ResourceShape<Resource>>>;
 
     const keys = [
@@ -252,6 +263,23 @@ export class AuthorizationService {
       default:
         return [(role + 'Role') as InternalRole];
     }
+  }
+
+  isSensitivityAllowed(
+    grant: Partial<
+      Record<Action, boolean> & Record<'sensitivityAccess', Sensitivity>
+    >,
+    sensitivity?: Sensitivity
+  ): boolean {
+    const sensitivityRank = { High: 3, Medium: 2, Low: 1 };
+    if (
+      sensitivity &&
+      grant.sensitivityAccess &&
+      sensitivityRank[sensitivity] > sensitivityRank[grant.sensitivityAccess]
+    ) {
+      return false;
+    }
+    return true;
   }
 
   async roleAddedToUser(id: ID | string, roles: Role[]) {
