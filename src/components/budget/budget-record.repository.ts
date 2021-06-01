@@ -96,18 +96,27 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
     return !!result;
   }
 
-  async readOne(id: ID, session: Session) {
+  readOne(id: ID, session: Session, changeId?: ID) {
     const query = this.db
       .query()
       .match([
         node('project', 'Project'),
         relation('out', '', 'budget', { active: true }),
         node('', 'Budget'),
-        relation('out', '', 'record', { active: true }),
+        relation('out', '', 'record', { active: !changeId ? true : false }),
         node('node', 'BudgetRecord', { id }),
         relation('out', '', 'organization', { active: true }),
         node('organization', 'Organization'),
       ])
+      .apply((q) =>
+        changeId
+          ? q.match([
+              node('node'),
+              relation('in', '', 'change', { active: true }),
+              node('planChange', 'PlanChange', { id: changeId }),
+            ])
+          : q
+      )
       .apply(matchPropsAndProjectSensAndScopedRoles(session))
       .return([
         'apoc.map.merge(props, { organization: organization.id }) as props',
@@ -136,13 +145,24 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
         ...permissionsOfNode('BudgetRecord'),
         ...(input.filter.budgetId
           ? [
-              relation('in', '', 'record', { active: true }),
+              relation('in', '', 'record', {
+                active: !changeId ? true : false,
+              }),
               node('budget', 'Budget', {
                 id: input.filter.budgetId,
               }),
             ]
           : []),
       ])
+      .apply((q) =>
+        changeId
+          ? q.match([
+              node('node'),
+              relation('in', '', 'change', { active: true }),
+              node('changeNode', 'PlanChange', { id: changeId }),
+            ])
+          : q
+      )
       .apply(calculateTotalAndPaginateList(BudgetRecord, input));
   }
 }

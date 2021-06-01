@@ -129,7 +129,11 @@ export class ProjectResolver {
     @Parent() project: Project,
     @AnonSession() session: Session
   ): Promise<SecuredBudget> {
-    return await this.projectService.currentBudget(project, session);
+    return await this.projectService.currentBudget(
+      project,
+      session,
+      project.changeId
+    );
   }
 
   @ResolveField(() => SecuredEngagementList)
@@ -271,8 +275,7 @@ export class ProjectResolver {
     description: 'Update a project',
   })
   async updateProject(
-    @Args('input') { project: input }: UpdateProjectInput,
-    @IdArg({ name: 'changeId', nullable: true }) changeId: ID,
+    @Args('input') { project: input, changeId }: UpdateProjectInput,
     @LoggedInSession() session: Session
   ): Promise<UpdateProjectOutput> {
     const project = await this.projectService.update(input, session, changeId);

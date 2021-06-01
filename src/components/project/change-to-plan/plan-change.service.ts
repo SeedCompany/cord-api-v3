@@ -3,7 +3,6 @@ import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   ID,
-  InputException,
   NotFoundException,
   ServerException,
   Session,
@@ -19,7 +18,6 @@ import {
 } from '../../../core';
 import { runListQuery } from '../../../core/database/results';
 import { AuthorizationService } from '../../authorization/authorization.service';
-import { ProjectStatus } from '../dto';
 import { ProjectService } from '../project.service';
 import { CreatePlanChange, PlanChange, UpdatePlanChange } from './dto';
 import { ChangeListInput, ChangeListOutput } from './dto/change-list.dto';
@@ -58,14 +56,15 @@ export class PlanChangeService {
     { projectId, ...input }: CreatePlanChange,
     session: Session
   ): Promise<PlanChange> {
+    // TODO
     // Project status should be active
-    const project = await this.projectService.readOne(projectId, session);
-    if (project.status !== ProjectStatus.Active) {
-      throw new InputException(
-        'Project status should be Active',
-        'project.status'
-      );
-    }
+    // const project = await this.projectService.readOne(projectId, session);
+    // if (project.status !== ProjectStatus.Active) {
+    //   throw new InputException(
+    //     'Project status should be Active',
+    //     'project.status'
+    //   );
+    // }
     const createdAt = DateTime.local();
 
     const secureProps = [

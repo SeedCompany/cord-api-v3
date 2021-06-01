@@ -274,7 +274,8 @@ export class ProjectService {
   async update(
     input: UpdateProject,
     session: Session,
-    changeId?: ID
+    changeId?: ID,
+    stepValidation = true
   ): Promise<UnsecuredDto<Project>> {
     const currentProject = await this.readOneUnsecured(
       input.id,
@@ -297,7 +298,7 @@ export class ProjectService {
       'project'
     );
 
-    if (changes.step) {
+    if (changes.step && stepValidation) {
       await this.projectRules.verifyStepChange(
         input.id,
         session,
@@ -320,7 +321,8 @@ export class ProjectService {
         session
       );
       if (
-        currentProject.status !== ProjectStatus.Active ||
+        // TODO
+        // currentProject.status !== ProjectStatus.Active ||
         planChange.status.value !== PlanChangeStatus.Pending
       ) {
         throw new InputException(
@@ -335,9 +337,9 @@ export class ProjectService {
       changeId
     );
 
-    if (changeId) {
-      return result;
-    }
+    // if (changeId) {
+    //   return result;
+    // }
 
     if (primaryLocationId) {
       try {
@@ -391,7 +393,8 @@ export class ProjectService {
       result,
       currentProject,
       input,
-      session
+      session,
+      changeId
     );
     await this.eventBus.publish(event);
     return event.updated;
@@ -611,7 +614,8 @@ export class ProjectService {
 
   async currentBudget(
     { id, sensitivity }: Pick<Project, 'id' | 'sensitivity'>,
-    session: Session
+    session: Session,
+    changeset?: ID
   ): Promise<SecuredBudget> {
     let budgetToReturn;
 
@@ -630,7 +634,8 @@ export class ProjectService {
             projectId: id,
           },
         },
-        session
+        session,
+        changeset
       );
 
       const current = budgets.items.find(

@@ -1,13 +1,18 @@
 import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
+import { CalendarDate } from '../src/common';
 import { Powers } from '../src/components/authorization/dto/powers';
-import { Project, ProjectStep, Role } from '../src/components/project';
+import { PartnerType } from '../src/components/partner';
+import { CreatePartnership } from '../src/components/partnership';
+import { Project, Role } from '../src/components/project';
 import { PlanChangeStatus } from '../src/components/project/change-to-plan/dto/plan-change-status.enum';
 import { User } from '../src/components/user/dto/user.dto';
 import {
   createFundingAccount,
   createLocation,
+  createOrganization,
+  createPartner,
   createPlanChange,
   createProject,
   createRegion,
@@ -33,6 +38,14 @@ const readProject = (app: TestApp, id: string, changeId?: string) =>
       query project($id: ID!, $changeId: ID) {
         project(id: $id, changeId: $changeId) {
           ...project
+          budget {
+            value {
+              id
+              records {
+                id
+              }
+            }
+          }
         }
       }
       ${fragments.project}
@@ -66,7 +79,10 @@ describe('Project CR Aware e2e', () => {
       fundingAccountId: fundingAccount.id,
     });
     const fieldRegion = await createRegion(app);
-    project = await createProject(app);
+    project = await createProject(app, {
+      mouStart: undefined,
+      mouEnd: undefined,
+    });
     await updateProject(app, {
       id: project.id,
       primaryLocationId: location.id,
@@ -75,7 +91,7 @@ describe('Project CR Aware e2e', () => {
     await runAsAdmin(app, async () => {
       for (const next of [
         ...stepsFromEarlyConversationToBeforeActive,
-        ProjectStep.Active,
+        // ProjectStep.Active,
       ]) {
         await changeProjectStep(app, project.id, next);
       }
@@ -99,8 +115,8 @@ describe('Project CR Aware e2e', () => {
     const newCRName = faker.random.word() + ' ' + faker.datatype.uuid();
     const mutationResult = await app.graphql.mutate(
       gql`
-        mutation updateProject($input: UpdateProjectInput!, $changeId: ID) {
-          updateProject(input: $input, changeId: $changeId) {
+        mutation updateProject($input: UpdateProjectInput!) {
+          updateProject(input: $input) {
             project {
               ...project
             }
@@ -114,8 +130,8 @@ describe('Project CR Aware e2e', () => {
             id: project.id,
             name: newCRName,
           },
+          changeId: planChange.id,
         },
-        changeId: planChange.id,
       }
     );
     expect(mutationResult.updateProject.project.name.value).toBe(newCRName);
@@ -153,5 +169,103 @@ describe('Project CR Aware e2e', () => {
     // Project name is changed without changeId
     result = await readProject(app, project.id);
     expect(result.project.name.value).toBe(newCRName);
+  });
+
+  it('CR aware budget records', async () => {
+    const planChange = await createPlanChange(app, {
+      projectId: project.id,
+    });
+
+    await registerUserWithPower(app, [Powers.CreateOrganization]);
+    const org = await createOrganization(app);
+    const partnership: CreatePartnership = {
+      projectId: project.id,
+      partnerId: (await createPartner(app, { organizationId: org.id })).id,
+      types: [PartnerType.Funding],
+    };
+
+    // Create Partnership with Funding type
+    await app.graphql.mutate(
+      gql`
+        mutation createPartnership($input: CreatePartnershipInput!) {
+          createPartnership(input: $input) {
+            partnership {
+              ...partnership
+            }
+          }
+        }
+        ${fragments.partnership}
+      `,
+      {
+        input: {
+          partnership,
+        },
+      }
+    );
+
+    // Update Project with mou dates
+    await app.graphql.mutate(
+      gql`
+        mutation updateProject($input: UpdateProjectInput!) {
+          updateProject(input: $input) {
+            project {
+              ...project
+              budget {
+                value {
+                  id
+                  records {
+                    id
+                  }
+                }
+              }
+            }
+          }
+        }
+        ${fragments.project}
+      `,
+      {
+        input: {
+          project: {
+            id: project.id,
+            mouStart: CalendarDate.fromISO('2020-08-23'),
+            mouEnd: CalendarDate.fromISO('2021-08-22'),
+          },
+          changeId: planChange.id,
+        },
+      }
+    );
+
+    // Query project without changeId
+    let result = await readProject(app, project.id);
+    expect(result.project.budget.value.records.length).toBe(0);
+
+    // Query project with changeId
+    result = await readProject(app, project.id, planChange.id);
+    expect(result.project.budget.value.records.length).toBe(2);
+
+    // Approve CR
+    await app.graphql.mutate(
+      gql`
+        mutation updatePlanChange($input: UpdatePlanChangeInput!) {
+          updatePlanChange(input: $input) {
+            planChange {
+              ...planChange
+            }
+          }
+        }
+        ${fragments.planChange}
+      `,
+      {
+        input: {
+          planChange: {
+            id: planChange.id,
+            status: PlanChangeStatus.Approved,
+          },
+        },
+      }
+    );
+    // Query project without changeId
+    result = await readProject(app, project.id);
+    expect(result.project.budget.value.records.length).toBe(2);
   });
 });

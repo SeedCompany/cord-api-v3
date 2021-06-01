@@ -126,7 +126,8 @@ export class BudgetService {
 
   async createRecord(
     input: CreateBudgetRecord,
-    session: Session
+    session: Session,
+    changeId?: ID
   ): Promise<BudgetRecord> {
     const { budgetId, organizationId, fiscalYear } = input;
 
@@ -191,7 +192,11 @@ export class BudgetService {
         userId: session.userId,
       });
 
-      const budgetRecord = await this.readOneRecord(recordId, session);
+      const budgetRecord = await this.readOneRecord(
+        result.id,
+        session,
+        changeId
+      );
 
       return budgetRecord;
     } catch (exception) {
@@ -214,7 +219,7 @@ export class BudgetService {
   }
 
   @HandleIdLookup(Budget)
-  async readOne(id: ID, session: Session): Promise<Budget> {
+  async readOne(id: ID, session: Session, changeId?: ID): Promise<Budget> {
     this.logger.debug(`readOne budget`, {
       id,
       userId: session.userId,
@@ -258,7 +263,11 @@ export class BudgetService {
   }
 
   @HandleIdLookup(BudgetRecord)
-  async readOneRecord(id: ID, session: Session): Promise<BudgetRecord> {
+  async readOneRecord(
+    id: ID,
+    session: Session,
+    changeId?: ID
+  ): Promise<BudgetRecord> {
     this.logger.debug(`readOne BudgetRecord`, {
       id,
       userId: session.userId,
@@ -368,8 +377,8 @@ export class BudgetService {
     }
   }
 
-  async deleteRecord(id: ID, session: Session): Promise<void> {
-    const br = await this.readOneRecord(id, session);
+  async deleteRecord(id: ID, session: Session, changeId?: ID): Promise<void> {
+    const br = await this.readOneRecord(id, session, changeId);
 
     if (!br) {
       throw new NotFoundException('Could not find Budget Record');
@@ -428,7 +437,7 @@ export class BudgetService {
     const query = this.budgetRecordsRepo.list(input, session);
 
     return await runListQuery(query, input, (id) =>
-      this.readOneRecord(id, session)
+      this.readOneRecord(id, session, changeId)
     );
   }
 }

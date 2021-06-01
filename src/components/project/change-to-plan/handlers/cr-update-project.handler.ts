@@ -1,6 +1,6 @@
 import { node, relation } from 'cypher-query-builder';
-import { IProject } from '../..';
-import { ID, ServerException } from '../../../../common';
+import { UpdateProject } from '../..';
+import { CalendarDate, ID, ServerException } from '../../../../common';
 import {
   DatabaseService,
   EventsHandler,
@@ -64,11 +64,22 @@ export class CRUpdateProject implements IEventHandler<SubscribedEvent> {
         );
 
         // Update project pending changes
-        await this.db.updateProperties({
-          type: IProject,
-          object: project,
-          changes,
-        });
+        const updateProject: UpdateProject = {
+          ...changes,
+          id: project.id,
+          mouStart: changes.mouStart as CalendarDate | undefined,
+          mouEnd: changes.mouEnd as CalendarDate | undefined,
+          estimatedSubmission: changes.estimatedSubmission as
+            | CalendarDate
+            | undefined,
+        };
+        await this.projectService.update(
+          updateProject,
+          event.session,
+          undefined,
+          false
+        );
+
         // Update project engagement pending changes
         await this.db
           .query()
