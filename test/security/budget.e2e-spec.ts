@@ -22,12 +22,16 @@ import {
   login,
   Raw,
   readOneBudget,
+  readOneBudgetRecord,
   registerUserWithPower,
   TestApp,
 } from '../utility';
 import { resetDatabase } from '../utility/reset-database';
 import { testRole } from '../utility/roles';
-import { expectSensitiveProperty } from '../utility/sensitivity';
+import {
+  expectSensitiveProperty,
+  expectSensitiveRelationList,
+} from '../utility/sensitivity';
 import { getPermissions } from './permissions';
 
 describe('Budget Security e2e', () => {
@@ -133,12 +137,44 @@ describe('Budget Security e2e', () => {
             resourceId: budget.id,
             resource: Budget,
             sensitivityRestriction: sensitivityToTest,
-            permissions: (await getPermissions({
+            permissions: await getPermissions({
               resource: Budget,
               userRole: `global:${role as Role}` as ScopedRole,
-            })) as Partial<Budget>,
+            }),
             readOneFunction: readOneBudget,
             projectType: projectType,
+          });
+        });
+        it(' reading records', async () => {
+          await login(app, { email: email, password: password });
+          const proj = await createProject(app, { type: projectType });
+          const budget = await createBudget(app, { projectId: proj.id });
+          const org = await createOrganization(app);
+          const partner = await createPartner(app, {
+            organizationId: org.id,
+          });
+          await createPartnership(app, {
+            partnerId: partner.id,
+            projectId: proj.id,
+            types: [PartnerType.Funding, PartnerType.Managing],
+            financialReportingType: undefined,
+            mouStartOverride: CalendarDate.fromISO('2000-01-01'),
+            mouEndOverride: CalendarDate.fromISO('2004-01-01'),
+          });
+          await addLocationToOrganization(app, org.id);
+          await expectSensitiveRelationList({
+            app,
+            role,
+            sensitivityRestriction: sensitivityToTest,
+            projectId: proj.id,
+            projectType: projectType,
+            propertyToCheck: 'records',
+            readFunction: readOneBudgetRecord,
+            resourceId: budget.id,
+            perms: await getPermissions({
+              resource: Budget,
+              userRole: `global:${role as Role}` as ScopedRole,
+            }),
           });
         });
       }

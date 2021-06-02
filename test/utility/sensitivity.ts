@@ -7,7 +7,7 @@ import {
   runAsAdmin,
   TestApp,
 } from '.';
-import { ID, ResourceShape, Sensitivity } from '../../src/common';
+import { ID, ResourceShape, SecuredProps, Sensitivity } from '../../src/common';
 import { Role } from '../../src/components/authorization';
 import { ProjectType } from '../../src/components/project';
 import { registerUser } from './register';
@@ -16,6 +16,74 @@ export type ReadOneFunction<T extends ResourceShape<any>['prototype']> = (
   app: TestApp,
   id: string
 ) => Promise<T>;
+
+export type ReadOneRelationArray = (app: TestApp, id: string) => Promise<any[]>;
+
+interface Permission {
+  canRead: boolean;
+  canEdit: boolean;
+}
+type PermissionsOf<T> = Record<keyof SecuredProps<T>, Permission>;
+
+export async function expectSensitiveRelationList<
+  TResourceStatic extends ResourceShape<any>,
+  TResource extends TResourceStatic['prototype']
+>({
+  app,
+  role,
+  sensitivityRestriction,
+  projectId,
+  projectType,
+  readFunction,
+  resourceId,
+  propertyToCheck,
+  perms,
+}: {
+  app: TestApp;
+  role: Role;
+  sensitivityRestriction: Sensitivity;
+  projectId: ID;
+  projectType: ProjectType;
+  readFunction: ReadOneRelationArray;
+  resourceId: ID;
+  propertyToCheck: keyof TResource;
+  perms: PermissionsOf<TResource>;
+}) {
+  const email = faker.internet.email();
+  const password = faker.internet.password();
+  await registerUser(app, {
+    roles: [role],
+    email: email,
+    password: password,
+  });
+
+  await runAsAdmin(app, () =>
+    doSensitivityLessThanEqualTo(
+      sensitivityRestriction,
+      projectId,
+      app,
+      projectType
+    )
+  );
+  const canReadProp = await readFunction(app, resourceId);
+  const permProp = propertyToCheck as keyof typeof perms;
+
+  if (perms[permProp]) {
+    expect(canReadProp).not.toHaveLength(0);
+  }
+  if (sensitivityRestriction !== Sensitivity.High) {
+    await runAsAdmin(app, () =>
+      doSensitivityHigherThan(
+        sensitivityRestriction,
+        projectId,
+        app,
+        projectType
+      )
+    );
+    const cannotReadProp = await readFunction(app, resourceId);
+    expect(cannotReadProp).toHaveLength(0);
+  }
+}
 
 export async function expectSensitiveProperty<
   TResourceStatic extends ResourceShape<any>,
@@ -38,7 +106,7 @@ export async function expectSensitiveProperty<
   resourceId: string;
   resource: TResourceStatic;
   sensitivityRestriction: Sensitivity;
-  permissions: Partial<TResource>;
+  permissions: PermissionsOf<TResource>;
   readOneFunction: ReadOneFunction<TResource>;
   projectType: ProjectType;
 }) {
@@ -60,19 +128,20 @@ export async function expectSensitiveProperty<
   );
 
   const canReadProp = await readOneFunction(app, resourceId);
+  const permProp = propertyToCheck as keyof typeof permissions;
 
-  if (permissions[propertyToCheck]) {
+  if (permissions[permProp]) {
     expect(canReadProp[propertyToCheck].canRead).toEqual(
-      permissions[propertyToCheck].canRead
+      permissions[permProp].canRead
     );
     try {
       expect(canReadProp[propertyToCheck].canEdit).toEqual(
-        permissions[propertyToCheck].canEdit
+        permissions[permProp].canEdit
       );
     } catch (error) {
       if (canReadProp[propertyToCheck].canEdit === undefined) {
         expect(canReadProp[propertyToCheck].canCreate).toEqual(
-          permissions[propertyToCheck].canEdit
+          permissions[permProp].canEdit
         );
       }
     }
@@ -101,7 +170,7 @@ export async function expectSensitiveProperty<
       }
       if (canReadProp[propertyToCheck].canEdit === undefined) {
         expect(canReadProp[propertyToCheck].canCreate).toEqual(
-          permissions[propertyToCheck].canEdit
+          permissions[permProp].canEdit
         );
       }
     }

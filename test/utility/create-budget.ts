@@ -39,7 +39,7 @@ export async function readOneBudgetRecordOrganization(
 export async function readOneBudgetRecord(
   app: TestApp,
   id: string
-): Promise<BudgetRecord> {
+): Promise<BudgetRecord[]> {
   const { budget: actual } = await app.graphql.query(
     gql`
       query budget($id: ID!) {
@@ -56,7 +56,7 @@ export async function readOneBudgetRecord(
 
   expect(actual.id).toBe(id);
   expect(isValidId(actual.id)).toBe(true);
-  return actual.records[0];
+  return actual.records;
 }
 
 export async function readOneBudget(app: TestApp, id: string): Promise<Budget> {
