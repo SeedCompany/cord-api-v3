@@ -4,6 +4,7 @@ import { ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
 import { uniq } from 'lodash';
 import { ID, IdField } from '../../../common';
+import { CreateOrUpdateProductStep } from '../../product-step/dto';
 import { ScriptureRangeInput } from '../../scripture';
 import { ProductMedium } from './product-medium';
 import { ProductMethodology } from './product-methodology';
@@ -63,6 +64,9 @@ export abstract class CreateProduct {
 
   @Field(() => ProductMethodology, { nullable: true })
   readonly methodology?: ProductMethodology;
+
+  @Field(() => [CreateOrUpdateProductStep], { nullable: true })
+  readonly productSteps?: CreateOrUpdateProductStep[] = [];
 }
 
 @InputType()

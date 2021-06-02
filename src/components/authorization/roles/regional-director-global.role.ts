@@ -16,6 +16,7 @@ import { DbPartner } from '../../partner/model';
 import { DbPartnership } from '../../partnership/model';
 import { DbPeriodicReport } from '../../periodic-report/model';
 import { DbPost } from '../../post/model';
+import { DbProductStep } from '../../product-step/model';
 import { DbProduct } from '../../product/model';
 /* eslint-disable @typescript-eslint/naming-convention */
 import { DbProject } from '../../project/model';
@@ -332,6 +333,24 @@ export const RegionalDirectorGlobal = new DbRole({
         { propertyName: 'isOverriding', permission: { read, }, },
       ],
       canDelete: false,
+    }),
+    new DbBaseNodeGrant<DbProductStep>({
+      __className: 'DbProductStep',
+      properties: [
+        { propertyName: 'name', permission: { read, }, },
+        { propertyName: 'progress', permission: { read, }, },
+        { propertyName: 'description', permission: { read, }, },
+      ],
+      canDelete: true,
+    }),
+    new DbBaseNodeGrant<DbProductStep>({
+      __className: 'DbProductStep',
+      properties: [
+        { propertyName: 'name', permission: { read, write, }, },
+        { propertyName: 'progress', permission: { read, write, }, },
+        { propertyName: 'description', permission: { read, write, }, },
+      ],
+      canDelete: true,
     }),
     new DbBaseNodeGrant<DbProject>({
       __className: 'DbProject',

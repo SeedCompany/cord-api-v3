@@ -7,6 +7,11 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
+import { ProductStepService } from '../product-step';
+import {
+  ProductStepListInput,
+  SecuredProductStepList,
+} from '../product-step/dto';
 import {
   AnyProduct,
   CreateProductInput,
@@ -25,7 +30,10 @@ import { ProductService } from './product.service';
 
 @Resolver(Product)
 export class ProductResolver {
-  constructor(private readonly productService: ProductService) {}
+  constructor(
+    private readonly productService: ProductService,
+    private readonly productStepService: ProductStepService
+  ) {}
 
   @Query(() => Product, {
     description: 'Read a product by id',
@@ -112,5 +120,19 @@ export class ProductResolver {
   ): Promise<boolean> {
     await this.productService.delete(id, session);
     return true;
+  }
+
+  @ResolveField(() => SecuredProductStepList)
+  async productSteps(
+    @AnonSession() session: Session,
+    @Parent() product: Product,
+    @Args({
+      name: 'input',
+      type: () => ProductStepListInput,
+      defaultValue: ProductStepListInput.defaultVal,
+    })
+    input: ProductStepListInput
+  ): Promise<SecuredProductStepList> {
+    return this.productStepService.list(product.id, input, session);
   }
 }

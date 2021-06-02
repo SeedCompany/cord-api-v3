@@ -30,4 +30,5 @@ export enum DbBaseNodeLabel {
   Story = 'DbStory',
   Unavailability = 'DbUnavailability',
   User = 'DbUser',
+  ProductStep = 'DbProductStep',
 }

@@ -14,7 +14,6 @@ import {
   UnauthorizedException,
 } from '../../common';
 import {
-  ConfigService,
   createBaseNode,
   ILogger,
   Logger,
@@ -28,6 +27,7 @@ import {
   LiteracyMaterial,
   LiteracyMaterialService,
 } from '../literacy-material';
+import { ProductStepService } from '../product-step';
 import { ScriptureRange } from '../scripture/dto';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import { Song, SongService } from '../song';
@@ -51,12 +51,12 @@ import { ProductRepository } from './product.repository';
 @Injectable()
 export class ProductService {
   constructor(
-    private readonly config: ConfigService,
     private readonly film: FilmService,
     private readonly story: StoryService,
     private readonly song: SongService,
     private readonly literacyMaterial: LiteracyMaterialService,
     private readonly scriptureRefService: ScriptureReferenceService,
+    private readonly productStepService: ProductStepService,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
     private readonly repo: ProductRepository,
@@ -218,6 +218,20 @@ export class ProductService {
       session.userId
     );
 
+    if (input.productSteps) {
+      await Promise.all(
+        input.productSteps.map((step) =>
+          this.productStepService.create(
+            {
+              ...step,
+              productId: result.id,
+            },
+            session
+          )
+        )
+      );
+    }
+
     this.logger.debug(`product created`, { id: result.id });
     return await this.readOne(result.id, session);
   }
@@ -316,9 +330,38 @@ export class ProductService {
     };
   }
 
-  async update(input: UpdateProduct, session: Session): Promise<AnyProduct> {
+  async update(
+    { productSteps, ...input }: UpdateProduct,
+    session: Session
+  ): Promise<AnyProduct> {
     const currentProduct = await this.readOne(input.id, session);
     const isDirectScriptureProduct = !currentProduct.produces;
+
+    if (productSteps) {
+      await Promise.all(
+        productSteps?.map((step) =>
+          step.id
+            ? this.productStepService.update(
+                {
+                  id: step.id,
+                  name: step.name,
+                  description: step.description,
+                  progress: step.progress,
+                },
+                session
+              )
+            : this.productStepService.create(
+                {
+                  productId: input.id,
+                  name: step.name,
+                  description: step.description,
+                  progress: step.progress,
+                },
+                session
+              )
+        )
+      );
+    }
 
     if (isDirectScriptureProduct) {
       if (input.produces) {
@@ -344,6 +387,7 @@ export class ProductService {
         'product.scriptureReferences'
       );
     }
+
     return await this.updateDerivative(
       currentProduct as DerivativeScriptureProduct,
       input,
@@ -353,7 +397,10 @@ export class ProductService {
 
   private async updateDirect(
     currentProduct: DirectScriptureProduct,
-    input: Except<UpdateProduct, 'produces' | 'scriptureReferencesOverride'>,
+    input: Except<
+      UpdateProduct,
+      'produces' | 'scriptureReferencesOverride' | 'productSteps'
+    >,
     session: Session
   ) {
     const changes = this.repo.getActualDirectChanges(currentProduct, input);
@@ -380,7 +427,7 @@ export class ProductService {
 
   private async updateDerivative(
     currentProduct: DerivativeScriptureProduct,
-    input: Except<UpdateProduct, 'scriptureReferences'>,
+    input: Except<UpdateProduct, 'scriptureReferences' | 'productSteps'>,
     session: Session
   ) {
     let changes = this.repo.getActualDerivativeChanges(currentProduct, input);

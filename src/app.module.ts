@@ -22,6 +22,7 @@ import { PartnershipModule } from './components/partnership/partnership.module';
 import { PinModule } from './components/pin/pin.module';
 import { PostModule } from './components/post/post.module';
 import { PostableModule } from './components/post/postable/postable.module';
+import { ProductStepModule } from './components/product-step/product-step.module';
 import { ProductModule } from './components/product/product.module';
 import { ProjectModule } from './components/project/project.module';
 import { ScriptureModule } from './components/scripture/scripture.module';
@@ -53,6 +54,7 @@ assert(
     LiteracyMaterialModule,
     EngagementModule,
     ProductModule,
+    ProductStepModule,
     ProjectModule,
     LocationModule,
     OrganizationModule,
