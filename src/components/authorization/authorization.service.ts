@@ -14,6 +14,7 @@ import {
   getParentTypes,
   has,
   ID,
+  InputException,
   isIdLike,
   isSecured,
   keys,
@@ -225,8 +226,13 @@ export class AuthorizationService {
     const grants = dbRoles.flatMap((role) =>
       Object.entries(normalizeGrants(role)).flatMap(([name, grant]) => {
         if (resources.includes(name)) {
-          const filtered = mapValues(grant, (propPerm) => {
-            return this.isSensitivityAllowed(propPerm, dto?.sensitivity)
+          const filtered = mapValues(grant, (propPerm, key) => {
+            return this.isSensitivityAllowed(
+              propPerm,
+              resource,
+              key,
+              dto?.sensitivity
+            )
               ? propPerm
               : {};
           });
@@ -265,13 +271,22 @@ export class AuthorizationService {
     }
   }
 
-  isSensitivityAllowed(
+  isSensitivityAllowed<TResource extends ResourceShape<any>>(
     grant: Partial<
       Record<Action, boolean> & Record<'sensitivityAccess', Sensitivity>
     >,
+    resource: TResource,
+    prop: string,
     sensitivity?: Sensitivity
   ): boolean {
     const sensitivityRank = { High: 3, Medium: 2, Low: 1 };
+    if (grant.sensitivityAccess && !sensitivity) {
+      throw new InputException(
+        `Sensitivity check required, but no sensitivity provided ${resource.name}.${prop}`,
+        `${resource.name}.${prop}`
+      );
+    }
+
     if (
       sensitivity &&
       grant.sensitivityAccess &&
