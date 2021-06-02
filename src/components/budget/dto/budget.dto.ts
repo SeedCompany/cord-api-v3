@@ -4,6 +4,7 @@ import {
   DbLabel,
   Resource,
   SecuredProperty,
+  SecuredPropertyList,
   SecuredProps,
   Sensitivity,
 } from '../../../common';
@@ -17,6 +18,9 @@ import { BudgetStatus } from './budget-status.enum';
 export class Budget extends Resource {
   static readonly Props = keysOf<Budget>();
   static readonly SecuredProps = keysOf<SecuredProps<Budget>>();
+  static readonly Relations = {
+    records: [BudgetRecord],
+  };
 
   @Field()
   @DbLabel('BudgetStatus')
@@ -32,6 +36,13 @@ export class Budget extends Resource {
   })
   readonly sensitivity: Sensitivity;
 }
+
+@ObjectType({
+  description: SecuredProperty.descriptionFor("a budget's budget records"),
+})
+export class SecuredBudgetRecord extends SecuredPropertyList(BudgetRecord, {
+  nullable: true,
+}) {}
 
 @ObjectType({
   description: SecuredProperty.descriptionFor('a budget'),
