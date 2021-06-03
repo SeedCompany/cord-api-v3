@@ -30,4 +30,5 @@ export class DbProject extends DbBaseNode {
   financialReportReceivedAt: any = null;
   financialReportPeriod: any = null;
   owningOrganization: any = null;
+  posts: any = null;
 }

@@ -1,5 +1,7 @@
-import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { LoggedInSession, Session } from '../../../common';
+import { Args, Info, Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { GraphQLResolveInfo } from 'graphql';
+import { LoggedInSession, Resource, Session } from '../../../common';
+import { resourceFromName } from '../../authorization/model/resource-map';
 import { PostListInput, SecuredPostList } from '../dto/list-posts.dto';
 import { PostService } from '../post.service';
 import { Postable } from './dto/postable.dto';
@@ -12,7 +14,8 @@ export class PostableResolver {
     description: 'List of posts belonging to the parent node.',
   })
   async posts(
-    @Parent() object: Postable,
+    @Info() info: GraphQLResolveInfo,
+    @Parent() parent: Postable & Resource,
     @Args({
       name: 'input',
       type: () => PostListInput,
@@ -22,11 +25,13 @@ export class PostableResolver {
     @LoggedInSession() session: Session
   ): Promise<SecuredPostList> {
     return this.service.securedList(
+      resourceFromName(info.parentType.name),
+      parent,
       {
         ...input,
         filter: {
           ...input.filter,
-          parentId: object.id,
+          parentId: parent.id,
         },
       },
       session

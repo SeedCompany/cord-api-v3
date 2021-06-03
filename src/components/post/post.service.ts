@@ -5,16 +5,21 @@ import {
   ID,
   InputException,
   NotFoundException,
+  Resource,
+  ResourceShape,
+  SecuredList,
   ServerException,
   Session,
 } from '../../common';
 import { ILogger, Logger } from '../../core';
 import { runListQuery } from '../../core/database/results';
+import { ScopedRole } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { UserService } from '../user';
 import { CreatePost, Post, UpdatePost } from './dto';
 import { PostListInput, SecuredPostList } from './dto/list-posts.dto';
 import { PostRepository } from './post.repository';
+import { Postable } from './postable/dto/postable.dto';
 
 @Injectable()
 export class PostService {
@@ -141,19 +146,26 @@ export class PostService {
   }
 
   async securedList(
+    parentType: ResourceShape<Postable>,
+    parent: Postable & Resource & { scope?: ScopedRole[] },
     { filter, ...input }: PostListInput,
     session: Session
   ): Promise<SecuredPostList> {
-    // const query = this.db
-    //   .query()
-    //   .match([requestingUser(session), ...permissionsOfNode(label)])
-    //   .call(calculateTotalAndPaginateList(Post, input));
+    const perms = await this.authorizationService.getPermissions(
+      parentType,
+      session,
+      parent.scope
+    );
+    if (!perms.posts.canRead) {
+      return SecuredList.Redacted;
+    }
+
     const query = this.repo.securedList({ filter, ...input });
 
     return {
       ...(await runListQuery(query, input, (id) => this.readOne(id, session))),
-      canRead: true, // FIXME: implement permissioning
-      canCreate: true, // FIXME: implement permissioning
+      canRead: true, // false handled above
+      canCreate: perms.posts.canEdit,
     };
   }
 }
