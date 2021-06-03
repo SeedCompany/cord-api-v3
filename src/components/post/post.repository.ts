@@ -39,7 +39,7 @@ export class PostRepository extends DtoRepository(Post) {
       ])
       .create([
         node('baseNode'),
-        relation('out', '', 'baseNode', {
+        relation('out', '', 'post', {
           active: true,
           createdAt: DateTime.local(),
         }),
