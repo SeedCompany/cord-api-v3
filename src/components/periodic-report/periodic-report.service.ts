@@ -1,6 +1,7 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { DateTime, DurationUnit, Interval } from 'luxon';
 import {
+  CalendarDate,
   generateId,
   ID,
   NotFoundException,
@@ -18,7 +19,6 @@ import { CreateDefinedFileVersionInput, FileService } from '../file';
 import { ProjectService } from '../project';
 import {
   CreatePeriodicReport,
-  DueReport,
   IPeriodicReport,
   PeriodicReport,
   PeriodicReportListInput,
@@ -157,16 +157,27 @@ export class PeriodicReportService {
     };
   }
 
-  async getSingleProjectReport(
-    projectId: ID,
+  async getDueReport(
+    parentId: ID,
     reportType: ReportType,
-    startDate: DateTime,
     session: Session
   ): Promise<PeriodicReport | null> {
-    const result = await this.repo.currentProjectReport(
-      projectId,
+    let interval: DurationUnit = 'quarter';
+    if (reportType === ReportType.Financial) {
+      const project = await this.project.readOne(parentId, session);
+      if (project.financialReportPeriod.value === ReportPeriod.Monthly) {
+        interval = 'month';
+      }
+    }
+
+    const currentReportStartDate = CalendarDate.local()
+      .minus({ [interval]: 1 })
+      .startOf(interval);
+
+    const result = await this.repo.reportForDate(
+      parentId,
       reportType,
-      startDate
+      currentReportStartDate
     );
 
     if (!result) {
@@ -174,43 +185,6 @@ export class PeriodicReportService {
     }
 
     return await this.readOne(result.id, session);
-  }
-
-  async getDueProjectReport(
-    projectId: ID,
-    reportType: ReportType,
-    session: Session
-  ): Promise<DueReport> {
-    let interval: DurationUnit = 'quarter';
-    if (reportType === ReportType.Financial) {
-      const project = await this.project.readOne(projectId, session);
-      if (project.financialReportPeriod.value === ReportPeriod.Monthly) {
-        interval = 'month';
-      }
-    }
-
-    const currentReportStartDate = DateTime.now()
-      .minus({ [interval]: 1 })
-      .startOf(interval);
-
-    const current = await this.getSingleProjectReport(
-      projectId,
-      reportType,
-      currentReportStartDate,
-      session
-    );
-
-    const next = await this.getSingleProjectReport(
-      projectId,
-      reportType,
-      DateTime.now().startOf(interval),
-      session
-    );
-
-    return {
-      current,
-      next,
-    };
   }
 
   async listEngagementReports(
@@ -227,49 +201,6 @@ export class PeriodicReportService {
       ...(await runListQuery(query, input, (id) => this.readOne(id, session))),
       canRead: true,
       canCreate: true,
-    };
-  }
-
-  async getSingleEngagementReport(
-    engagementId: ID,
-    startDate: DateTime,
-    session: Session
-  ): Promise<PeriodicReport | null> {
-    const result = await this.repo.currentEngagementReport(
-      engagementId,
-      startDate
-    );
-
-    if (!result) {
-      return null;
-    }
-
-    return await this.readOne(result.id, session);
-  }
-
-  async getDueEngagementReport(
-    projectId: ID,
-    session: Session
-  ): Promise<DueReport> {
-    const currentReportStartDate = DateTime.now()
-      .minus({ quarter: 1 })
-      .startOf('quarter');
-
-    const current = await this.getSingleEngagementReport(
-      projectId,
-      currentReportStartDate,
-      session
-    );
-
-    const next = await this.getSingleEngagementReport(
-      projectId,
-      DateTime.now().startOf('quarter'),
-      session
-    );
-
-    return {
-      current,
-      next,
     };
   }
 

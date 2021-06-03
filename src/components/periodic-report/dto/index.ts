@@ -5,4 +5,3 @@ export * from './list-periodic-reports.dto';
 export * from './upload-periodic-report.dto';
 export * from './report-period.enum';
 export * from './report-type.enum';
-export * from './due-report.dto';
