@@ -51,7 +51,7 @@ export class PostResolver {
     @LoggedInSession() session: Session
   ): Promise<SecuredUser> {
     const { value: id, ...rest } = post.creator;
-    const value = id ? await this.user.readOne(id as ID, session) : undefined;
+    const value = id ? await this.user.readOne(id, session) : undefined;
 
     return {
       value,

@@ -1,5 +1,4 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { ConfigService } from 'aws-sdk';
 import { DateTime } from 'luxon';
 import {
   generateId,
@@ -23,14 +22,7 @@ import { PostRepository } from './post.repository';
 
 @Injectable()
 export class PostService {
-  private readonly securedProperties = {
-    body: true,
-    user: true,
-    modifiedAt: true,
-  };
-
   constructor(
-    private readonly config: ConfigService,
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
     @Inject(forwardRef(() => AuthorizationService))
