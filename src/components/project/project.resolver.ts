@@ -33,7 +33,7 @@ import {
   PeriodicReportService,
   SecuredPeriodicReportList,
 } from '../periodic-report';
-import { ReportType } from '../periodic-report/dto';
+import { DueReport, ReportType } from '../periodic-report/dto';
 import {
   CreateProjectInput,
   CreateProjectOutput,
@@ -308,6 +308,30 @@ export class ProjectResolver {
       project.id,
       ReportType.Financial,
       input,
+      session
+    );
+  }
+
+  @ResolveField(() => DueReport)
+  async dueFinancialReport(
+    @AnonSession() session: Session,
+    @Parent() project: Project
+  ): Promise<DueReport> {
+    return await this.periodicReportService.getDueProjectReport(
+      project.id,
+      ReportType.Financial,
+      session
+    );
+  }
+
+  @ResolveField(() => DueReport)
+  async dueNarrativeReport(
+    @AnonSession() session: Session,
+    @Parent() project: Project
+  ): Promise<DueReport> {
+    return await this.periodicReportService.getDueProjectReport(
+      project.id,
+      ReportType.Narrative,
       session
     );
   }

@@ -111,9 +111,64 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
       );
   }
 
+  async currentProjectReport(
+    projectId: string,
+    reportType: ReportType,
+    startDate: DateTime
+  ) {
+    return await this.db
+      .query()
+      .match([
+        node('project', 'Project', { id: projectId }),
+        relation('out', '', 'report', { active: true }),
+        node('node', `${reportType}Report`),
+      ])
+      .match([
+        node('node'),
+        relation('out', '', 'start', { active: true }),
+        node('start', 'Property'),
+      ])
+      .match([
+        node('node'),
+        relation('out', '', 'end', { active: true }),
+        node('end', 'Property'),
+      ])
+      .raw(`WHERE start.value = date($date)`, {
+        date: startDate,
+      })
+      .return('node.id as id')
+      .asResult<{ id: ID }>()
+      .first();
+  }
+
+  async currentEngagementReport(engagementId: string, startDate: DateTime) {
+    return await this.db
+      .query()
+      .match([
+        node('engagement', 'Engagement', { id: engagementId }),
+        relation('out', '', 'report', { active: true }),
+        node('node', 'ProgressReport'),
+      ])
+      .match([
+        node('node'),
+        relation('out', '', 'start', { active: true }),
+        node('start', 'Property'),
+      ])
+      .match([
+        node('node'),
+        relation('out', '', 'end', { active: true }),
+        node('end', 'Property'),
+      ])
+      .raw(`WHERE start.value = date($date)`, {
+        date: startDate,
+      })
+      .return('node.id as id')
+      .asResult<{ id: ID }>()
+      .first();
+  }
+
   listEngagementReports(
     engagementId: string,
-    reportType: ReportType,
     { filter, ...input }: PeriodicReportListInput
   ) {
     return this.db
@@ -121,7 +176,7 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
       .match([
         node('engagement', 'Engagement', { id: engagementId }),
         relation('out', '', 'report', { active: true }),
-        node('node', `PeriodicReport:${reportType}Report`),
+        node('node', `PeriodicReport:ProgressReport`),
       ])
       .apply(calculateTotalAndPaginateList(ProgressReport, input));
   }
