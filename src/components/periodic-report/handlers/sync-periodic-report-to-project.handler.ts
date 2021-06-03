@@ -1,5 +1,5 @@
 import { DurationUnit } from 'luxon';
-import { DateInterval } from '../../../common';
+import { DateInterval, runPromises } from '../../../common';
 import { EventsHandler, IEventHandler, ILogger, Logger } from '../../../core';
 import { projectRange } from '../../project';
 import { ProjectUpdatedEvent } from '../../project/events';
@@ -68,7 +68,8 @@ export class SyncPeriodicReportsToProjectDateRange
       ReportType.Financial,
       diff.removals
     );
-    await Promise.all(
+
+    await runPromises(
       diff.additions.map((interval) =>
         this.periodicReports.create(
           {
@@ -90,7 +91,8 @@ export class SyncPeriodicReportsToProjectDateRange
       ReportType.Narrative,
       diff.removals
     );
-    await Promise.all(
+
+    await runPromises(
       diff.additions.map((interval) =>
         this.periodicReports.create(
           {
