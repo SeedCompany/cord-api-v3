@@ -359,6 +359,7 @@ export const RegionalDirectorOnProject = new DbRole({
         { propertyName: 'tags', permission: { read, write, }, },
         { propertyName: 'financialReportReceivedAt', permission: { read, write, }, },
         { propertyName: 'financialReportPeriod', permission: { read, write, }, },
+        { propertyName: 'posts', permission: { read, write, }, },
       ],
       canDelete: false,
     }),
