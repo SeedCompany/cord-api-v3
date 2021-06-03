@@ -4,6 +4,7 @@ import { MergeExclusive } from 'type-fest';
 import {
   CalendarDate,
   Resource,
+  SecuredProperty,
   SecuredProps,
   ServerException,
 } from '../../../common';
@@ -81,3 +82,8 @@ export class ProgressReport extends PeriodicReport {
 
   readonly type: ReportType.Progress;
 }
+
+@ObjectType({
+  description: SecuredProperty.descriptionFor('Secured Periodic Report'),
+})
+export class SecuredPeriodicReport extends SecuredProperty(PeriodicReport) {}

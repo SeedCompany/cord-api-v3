@@ -9,11 +9,10 @@ import {
 import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
 import { CeremonyService, SecuredCeremony } from '../ceremony';
 import {
-  PeriodicReport,
   PeriodicReportListInput,
   PeriodicReportService,
-  ProgressReport,
   ReportType,
+  SecuredPeriodicReport,
   SecuredPeriodicReportList,
 } from '../periodic-report';
 import {
@@ -165,15 +164,20 @@ export class EngagementResolver {
     );
   }
 
-  @ResolveField(() => ProgressReport)
+  @ResolveField(() => SecuredPeriodicReport)
   async dueProgressReport(
     @AnonSession() session: Session,
     @Parent() engagement: Engagement
-  ): Promise<PeriodicReport | null> {
-    return await this.periodicReports.getDueReport(
+  ): Promise<SecuredPeriodicReport> {
+    const value = await this.periodicReports.getCurrentReport(
       engagement.id,
       ReportType.Progress,
       session
     );
+    return {
+      canEdit: true,
+      canRead: true,
+      value,
+    };
   }
 }

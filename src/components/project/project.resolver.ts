@@ -33,12 +33,7 @@ import {
   PeriodicReportService,
   SecuredPeriodicReportList,
 } from '../periodic-report';
-import {
-  FinancialReport,
-  NarrativeReport,
-  PeriodicReport,
-  ReportType,
-} from '../periodic-report/dto';
+import { ReportType, SecuredPeriodicReport } from '../periodic-report/dto';
 import {
   CreateProjectInput,
   CreateProjectOutput,
@@ -317,28 +312,38 @@ export class ProjectResolver {
     );
   }
 
-  @ResolveField(() => FinancialReport, { nullable: true })
-  async dueFinancialReport(
+  @ResolveField(() => SecuredPeriodicReport, { nullable: true })
+  async currentFinancialReport(
     @AnonSession() session: Session,
     @Parent() project: Project
-  ): Promise<PeriodicReport | null> {
-    return await this.periodicReportService.getDueReport(
+  ): Promise<SecuredPeriodicReport> {
+    const value = await this.periodicReportService.getCurrentReport(
       project.id,
       ReportType.Financial,
       session
     );
+    return {
+      canRead: true,
+      canEdit: true,
+      value,
+    };
   }
 
-  @ResolveField(() => NarrativeReport, { nullable: true })
-  async dueNarrativeReport(
+  @ResolveField(() => SecuredPeriodicReport, { nullable: true })
+  async currentNarrativeReport(
     @AnonSession() session: Session,
     @Parent() project: Project
-  ): Promise<PeriodicReport | null> {
-    return await this.periodicReportService.getDueReport(
+  ): Promise<SecuredPeriodicReport> {
+    const value = await this.periodicReportService.getCurrentReport(
       project.id,
       ReportType.Narrative,
       session
     );
+    return {
+      canRead: true,
+      canEdit: true,
+      value,
+    };
   }
 
   @ResolveField(() => SecuredPeriodicReportList)

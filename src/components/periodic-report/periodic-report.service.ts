@@ -157,11 +157,11 @@ export class PeriodicReportService {
     };
   }
 
-  async getDueReport(
+  async getCurrentReport(
     parentId: ID,
     reportType: ReportType,
     session: Session
-  ): Promise<PeriodicReport | null> {
+  ): Promise<PeriodicReport | undefined> {
     let interval: DurationUnit = 'quarter';
     if (reportType === ReportType.Financial) {
       const project = await this.project.readOne(parentId, session);
@@ -181,7 +181,7 @@ export class PeriodicReportService {
     );
 
     if (!result) {
-      return null;
+      return undefined;
     }
 
     return await this.readOne(result.id, session);

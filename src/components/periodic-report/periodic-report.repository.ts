@@ -112,7 +112,7 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
   }
 
   async reportForDate(
-    parentId: string,
+    parentId: ID,
     reportType: ReportType,
     startDate: CalendarDate
   ) {
