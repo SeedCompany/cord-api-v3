@@ -176,7 +176,7 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
       .match([
         node('engagement', 'Engagement', { id: engagementId }),
         relation('out', '', 'report', { active: true }),
-        node('node', `PeriodicReport:ProgressReport`),
+        node('node', 'ProgressReport'),
       ])
       .apply(calculateTotalAndPaginateList(ProgressReport, input));
   }
