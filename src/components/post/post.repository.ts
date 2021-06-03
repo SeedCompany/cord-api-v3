@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { ID, Session } from '../../common';
+import { ID, NotFoundException, Session, UnsecuredDto } from '../../common';
 import {
   createBaseNode,
   DtoRepository,
@@ -10,9 +10,8 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
-  matchPropList,
+  matchProps,
 } from '../../core/database/query';
-import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
 import { Post } from './dto';
 import { PostListInput } from './dto/list-posts.dto';
 
@@ -62,16 +61,19 @@ export class PostRepository extends DtoRepository(Post) {
       .first();
   }
 
-  async readOne(postId: ID, session: Session) {
+  async readOne(postId: ID): Promise<UnsecuredDto<Post>> {
     const query = this.db
       .query()
-      .apply(matchRequestingUser(session))
       .match([node('node', 'Post', { id: postId })])
-      .apply(matchPropList)
-      .return('node, propList')
-      .asResult<StandardReadResult<DbPropsOfDto<Post>>>();
+      .apply(matchProps())
+      .return('props')
+      .asResult<{ props: UnsecuredDto<Post> }>();
 
-    return await query.first();
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException('Could not find post', 'post.id');
+    }
+    return result.props;
   }
 
   securedList({ filter, ...input }: PostListInput) {

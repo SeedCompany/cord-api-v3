@@ -9,11 +9,7 @@ import {
   Session,
 } from '../../common';
 import { ILogger, Logger } from '../../core';
-import {
-  parseBaseNodeProperties,
-  parsePropList,
-  runListQuery,
-} from '../../core/database/results';
+import { runListQuery } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { UserService } from '../user';
 import { CreatePost, Post, UpdatePost } from './dto';
@@ -102,35 +98,17 @@ export class PostService {
   }
 
   async readOne(postId: ID, session: Session): Promise<Post> {
-    const result = await this.repo.readOne(postId, session);
+    const result = await this.repo.readOne(postId);
 
-    if (!result) {
-      throw new NotFoundException('Could not find post', 'post.id');
-    }
-
-    const props = parsePropList(result.propList);
     const securedProps = await this.authorizationService.secureProperties(
       Post,
-      result.propList,
+      result,
       session
     );
 
     return {
-      ...parseBaseNodeProperties(result.node),
+      ...result,
       ...securedProps,
-      type: props.type,
-      shareability: props.shareability,
-      body: {
-        value: props.body,
-        canRead: true,
-        canEdit: true,
-      },
-      creator: {
-        value: props.creator,
-        canRead: true,
-        canEdit: true,
-      },
-      modifiedAt: props.modifiedAt,
       canDelete: await this.repo.checkDeletePermission(postId, session),
     };
   }
