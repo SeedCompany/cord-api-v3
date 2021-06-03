@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { stripIndent } from 'common-tags';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID, NotFoundException, Session, UnsecuredDto } from '../../common';
@@ -14,6 +15,7 @@ import {
 } from '../../core/database/query';
 import { Post } from './dto';
 import { PostListInput } from './dto/list-posts.dto';
+import { PostShareability } from './dto/shareability.dto';
 
 @Injectable()
 export class PostRepository extends DtoRepository(Post) {
@@ -76,28 +78,39 @@ export class PostRepository extends DtoRepository(Post) {
     return result.props;
   }
 
-  securedList({ filter, ...input }: PostListInput) {
-    const label = 'Post';
-    // FIXME: we haven't implemented permissioning here yet
-
-    return this.db
-      .query()
-      .match([
-        // FIXME: Until the authorizationService.processNewBaseNode refactor is complete, commenting the two lines below out and
-        // simply querying the Post nodes directly
-        // requestingUser(session),
-        // ...permissionsOfNode(label),
-        node('node', label),
-
-        ...(filter.parentId
-          ? [
-              relation('in', 'member'),
-              node('baseNode', 'BaseNode', {
-                id: filter.parentId,
-              }),
-            ]
-          : []),
-      ])
-      .apply(calculateTotalAndPaginateList(Post, input));
+  securedList({ filter, ...input }: PostListInput, session: Session) {
+    return (
+      this.db
+        .query()
+        .match([
+          node('node', 'Post'),
+          ...(filter.parentId
+            ? [
+                relation('in', '', 'post'),
+                node('', 'BaseNode', {
+                  id: filter.parentId,
+                }),
+              ]
+            : []),
+        ])
+        .apply(matchProps())
+        .with('node, props') // needed directly before where clause
+        // Only match posts whose shareability is ProjectTeam if the current user
+        // is a member of the parent object
+        .raw(
+          // Parentheses for readability only, neo4j doesn't require them
+          stripIndent`
+            WHERE (
+              NOT props.shareability = '${PostShareability.ProjectTeam}'
+            ) OR (
+              props.shareability = '${PostShareability.ProjectTeam}'
+              AND
+              (node)<-[:post]-(:BaseNode)-[:member]-(:BaseNode)-[:user]->(:User { id: $requestingUserId })
+            )
+      `,
+          { requestingUserId: session.userId }
+        )
+        .apply(calculateTotalAndPaginateList(Post, input))
+    );
   }
 }

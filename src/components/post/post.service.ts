@@ -148,7 +148,7 @@ export class PostService {
   async securedList(
     parentType: ResourceShape<Postable>,
     parent: Postable & Resource & { scope?: ScopedRole[] },
-    { filter, ...input }: PostListInput,
+    input: PostListInput,
     session: Session
   ): Promise<SecuredPostList> {
     const perms = await this.authorizationService.getPermissions(
@@ -160,7 +160,7 @@ export class PostService {
       return SecuredList.Redacted;
     }
 
-    const query = this.repo.securedList({ filter, ...input });
+    const query = this.repo.securedList(input, session);
 
     return {
       ...(await runListQuery(query, input, (id) => this.readOne(id, session))),
