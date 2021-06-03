@@ -164,8 +164,10 @@ export class EngagementResolver {
     );
   }
 
-  @ResolveField(() => SecuredPeriodicReport)
-  async dueProgressReport(
+  @ResolveField(() => SecuredPeriodicReport, {
+    description: 'This is the report whose range is within the current date.',
+  })
+  async currentProgressReport(
     @AnonSession() session: Session,
     @Parent() engagement: Engagement
   ): Promise<SecuredPeriodicReport> {
@@ -175,7 +177,7 @@ export class EngagementResolver {
       session
     );
     return {
-      canEdit: true,
+      canEdit: false,
       canRead: true,
       value,
     };

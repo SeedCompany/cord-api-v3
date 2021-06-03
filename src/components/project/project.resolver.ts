@@ -312,7 +312,9 @@ export class ProjectResolver {
     );
   }
 
-  @ResolveField(() => SecuredPeriodicReport, { nullable: true })
+  @ResolveField(() => SecuredPeriodicReport, {
+    description: 'This is the report whose range is within the current date.',
+  })
   async currentFinancialReport(
     @AnonSession() session: Session,
     @Parent() project: Project
@@ -324,12 +326,14 @@ export class ProjectResolver {
     );
     return {
       canRead: true,
-      canEdit: true,
+      canEdit: false,
       value,
     };
   }
 
-  @ResolveField(() => SecuredPeriodicReport, { nullable: true })
+  @ResolveField(() => SecuredPeriodicReport, {
+    description: 'This is the report whose range is within the current date.',
+  })
   async currentNarrativeReport(
     @AnonSession() session: Session,
     @Parent() project: Project
@@ -341,7 +345,7 @@ export class ProjectResolver {
     );
     return {
       canRead: true,
-      canEdit: true,
+      canEdit: false,
       value,
     };
   }
