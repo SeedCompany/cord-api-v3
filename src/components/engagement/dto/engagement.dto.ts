@@ -19,7 +19,6 @@ import {
 import { DefinedFile } from '../../file/dto';
 import { Product, SecuredMethodologies } from '../../product/dto';
 import { SecuredInternPosition } from './intern-position.enum';
-import { PnpData } from './pnp-data.dto';
 import { SecuredEngagementStatus } from './status.enum';
 
 /**
@@ -137,8 +136,6 @@ export class LanguageEngagement extends Engagement {
   readonly paratextRegistryId: SecuredString;
 
   readonly pnp: DefinedFile;
-
-  readonly pnpData?: PnpData; // TODO Remove from here and resolve with new summary in mind
 
   @Field()
   readonly historicGoal: SecuredString;

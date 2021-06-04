@@ -1,20 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { DateTime } from 'luxon';
 import { read, utils, WorkBook } from 'xlsx';
-import { Session } from '../../common';
+import { ID, Session } from '../../common';
 import { ILogger, Logger } from '../../core';
-import {
-  CreateDefinedFileVersionInput,
-  FileService,
-  FileVersion,
-} from '../file';
-import { PnpData } from './dto';
+import { FileService, FileVersion } from '../file';
+import { ProgressSummary } from './dto';
 
 @Injectable()
-export class PnpExtractor {
+export class ProgressExtractor {
   constructor(
     private readonly files: FileService,
-    @Logger('pnp:extractor') private readonly logger: ILogger
+    @Logger('progress:extractor') private readonly logger: ILogger
   ) {}
   // Remove after periodic report migration
   async extractFyAndQuarter(
@@ -41,17 +36,16 @@ export class PnpExtractor {
   }
 
   async extract(
-    input: CreateDefinedFileVersionInput,
+    versionId: ID,
     session: Session
-  ): Promise<PnpData | null> {
-    const file = await this.files.getFileVersion(input.uploadId, session);
+  ): Promise<ProgressSummary | null> {
+    const file = await this.files.getFileVersion(versionId, session);
     const pnp = await this.downloadWorkbook(file);
     const workbookData = this.parseWorkbook(pnp, file);
     if (!workbookData) {
       return null;
     }
-    const timeData = this.parseYearAndQuarter(file.name);
-    return { ...workbookData, ...timeData };
+    return workbookData;
   }
 
   private parseWorkbook(pnp: WorkBook, file: FileVersion) {
@@ -116,39 +110,10 @@ export class PnpExtractor {
   ) {
     if (!progressPlanned || !progressActual || !variance) return null;
     return {
-      progressPlanned: parsePercent(progressPlanned),
-      progressActual: parsePercent(progressActual),
+      planned: parsePercent(progressPlanned),
+      actual: parsePercent(progressActual),
       variance: parsePercent(variance),
     };
-  }
-  // make private after periodic report migration
-  parseYearAndQuarter(fileName: string) {
-    // I don't want to mess with this since there are some files names with a range
-    // i.e. fy18-20. I think this naming has become outmoded anyway.
-    const fyReg = /fy19|fy20|fy21/i;
-    const quarterReg = /q[1-4]/i;
-
-    const currentYear = DateTime.local().year;
-
-    // split by anything that's not a digit
-    // this removes any non-digit characters and allows for distinction
-    // between 4 digit and larger numbers (2021 vs 201983)
-    const fourDigitYears = fileName
-      .split(/[^\d]/)
-      .filter((i) => i && i.length === 4)
-      .map((i) => Number(i))
-      .filter((i) => i <= currentYear && i > 1990);
-
-    const year = fourDigitYears.length
-      ? Math.max(...fourDigitYears)
-      : fyReg.exec(fileName)
-      ? Number('20' + fyReg.exec(fileName)![0].toLowerCase().replace('fy', ''))
-      : 0;
-    const quarter = quarterReg.exec(fileName)
-      ? Number(quarterReg.exec(fileName)![0].toLowerCase().replace('q', ''))
-      : 0;
-
-    return { year, quarter };
   }
 }
 
