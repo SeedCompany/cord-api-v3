@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { read, utils, WorkBook } from 'xlsx';
-import { ID, Session } from '../../common';
 import { ILogger, Logger } from '../../core';
 import { FileService, FileVersion } from '../file';
 import { ProgressSummary } from './dto';
@@ -35,17 +34,9 @@ export class ProgressExtractor {
     return { extractedYear: 0, extractedQuarter: 0 };
   }
 
-  async extract(
-    versionId: ID,
-    session: Session
-  ): Promise<ProgressSummary | null> {
-    const file = await this.files.getFileVersion(versionId, session);
+  async extract(file: FileVersion): Promise<ProgressSummary | null> {
     const pnp = await this.downloadWorkbook(file);
-    const workbookData = this.parseWorkbook(pnp, file);
-    if (!workbookData) {
-      return null;
-    }
-    return workbookData;
+    return this.parseWorkbook(pnp, file);
   }
 
   private parseWorkbook(pnp: WorkBook, file: FileVersion) {
