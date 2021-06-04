@@ -5,7 +5,6 @@ import {
   generateId,
   ID,
   NotFoundException,
-  NotImplementedException,
   ServerException,
   Session,
 } from '../../common';
@@ -218,8 +217,11 @@ export class PeriodicReportService {
     type: ReportType,
     session: Session
   ): Promise<PeriodicReport | undefined> {
-    // TODO
-    throw new NotImplementedException().with(parentId, type, session);
+    const res = await this.repo.getLatestReportSubmitted(parentId, type);
+    if (!res) {
+      return undefined;
+    }
+    return await this.readOne(res.id, session);
   }
 
   async listEngagementReports(
