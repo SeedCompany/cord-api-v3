@@ -5,6 +5,7 @@ import {
   generateId,
   ID,
   NotFoundException,
+  NotImplementedException,
   ServerException,
   Session,
 } from '../../common';
@@ -210,6 +211,15 @@ export class PeriodicReportService {
       CalendarDate.local(),
       session
     );
+  }
+
+  async getLatestReportSubmitted(
+    parentId: ID,
+    type: ReportType,
+    session: Session
+  ): Promise<PeriodicReport | undefined> {
+    // TODO
+    throw new NotImplementedException().with(parentId, type, session);
   }
 
   async listEngagementReports(
