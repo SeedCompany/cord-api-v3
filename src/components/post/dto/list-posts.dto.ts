@@ -4,6 +4,7 @@ import { ValidateNested } from 'class-validator';
 import {
   ID,
   IdField,
+  Order,
   PaginatedList,
   SecuredList,
   SortablePaginationInput,
@@ -21,6 +22,7 @@ const defaultFilters = {};
 @InputType()
 export class PostListInput extends SortablePaginationInput<keyof Post>({
   defaultSort: 'createdAt',
+  defaultOrder: Order.DESC,
 }) {
   static defaultVal = new PostListInput();
 
