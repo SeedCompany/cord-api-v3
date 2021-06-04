@@ -1,5 +1,5 @@
 import { Interval } from 'luxon';
-import { DateInterval, ID, runPromises, Session } from '../../../common';
+import { DateInterval, ID, Session } from '../../../common';
 import { EventsHandler, IEventHandler, ILogger, Logger } from '../../../core';
 import { engagementRange, EngagementService } from '../../engagement';
 import {
@@ -68,7 +68,7 @@ export class SyncProgressReportToEngagementDateRange
     range: Interval[],
     session: Session
   ) {
-    await runPromises(
+    await Promise.all(
       range.map((interval) =>
         this.periodicReports.create(
           {
