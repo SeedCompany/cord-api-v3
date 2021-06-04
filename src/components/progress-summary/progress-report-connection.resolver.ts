@@ -1,5 +1,4 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { AnonSession, Session } from '../../common';
 import { ProgressReport } from '../periodic-report';
 import { ProgressSummary } from './dto';
 import { ProgressSummaryRepository } from './progress-summary.repository';
@@ -12,9 +11,8 @@ export class ProgressReportConnectionResolver {
     nullable: true,
   })
   async summary(
-    @Parent() report: ProgressReport,
-    @AnonSession() session: Session
+    @Parent() report: ProgressReport
   ): Promise<ProgressSummary | undefined> {
-    return await this.repo.readOne(report.id, session);
+    return await this.repo.readOne(report.id);
   }
 }

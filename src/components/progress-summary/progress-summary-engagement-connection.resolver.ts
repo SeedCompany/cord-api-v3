@@ -29,7 +29,7 @@ export class ProgressSummaryEngagementConnectionResolver {
       return undefined;
     }
 
-    const summary = await this.repo.readOne(report.id, session);
+    const summary = await this.repo.readOne(report.id);
     if (!summary) {
       return undefined;
     }

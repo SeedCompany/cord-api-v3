@@ -1,27 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { ID, Session } from '../../common';
-import { DtoRepository, matchRequestingUser } from '../../core';
+import { ID } from '../../common';
+import { DtoRepository } from '../../core';
 import { ProgressReport } from '../periodic-report/dto';
 import { ProgressSummary } from './dto';
 
 @Injectable()
 export class ProgressSummaryRepository extends DtoRepository(ProgressSummary) {
-  async readOne(
-    reportId: ID,
-    session: Session
-  ): Promise<ProgressSummary | undefined> {
-    return await this.db
+  async readOne(reportId: ID): Promise<ProgressSummary | undefined> {
+    const result = await this.db
       .query()
-      .apply(matchRequestingUser(session))
       .match([
         node('', 'ProgressReport', { id: reportId }),
-        relation('out', '', 'progressSummary', { active: true }),
+        relation('out', '', 'summary', { active: true }),
         node('ps', 'ProgressSummary'),
       ])
-      .return('ps as progressSummary')
-      .asResult<ProgressSummary>()
+      .return('ps as summary')
+      .asResult<{ summary: ProgressSummary }>()
       .first();
+    return result?.summary;
   }
 
   async save(report: ProgressReport, data: ProgressSummary) {
@@ -29,13 +26,13 @@ export class ProgressSummaryRepository extends DtoRepository(ProgressSummary) {
     data
       ? query.merge([
           node('', 'ProgressReport', { id: report.id }),
-          relation('out', '', 'progressSummary', { active: true }),
+          relation('out', '', 'summary', { active: true }),
           node('', 'ProgressSummary', data),
         ])
       : query
           .match([
             node('', 'ProgressReport', { id: report.id }),
-            relation('out', '', 'progressSummary', { active: true }),
+            relation('out', '', 'summary', { active: true }),
             node('ps', 'ProgressSummary'),
           ])
           .detachDelete('ps');
