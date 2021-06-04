@@ -1,6 +1,6 @@
 import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { AnonSession, Session } from '../../common';
-import { Engagement, IEngagement } from '../engagement/dto';
+import { Engagement, LanguageEngagement } from '../engagement/dto';
 import {
   PeriodicReportListInput,
   ReportType,
@@ -9,7 +9,7 @@ import {
 } from './dto';
 import { PeriodicReportService } from './periodic-report.service';
 
-@Resolver(IEngagement)
+@Resolver(LanguageEngagement)
 export class PeriodicReportEngagementConnectionResolver {
   constructor(private readonly service: PeriodicReportService) {}
 
