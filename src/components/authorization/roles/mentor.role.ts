@@ -338,6 +338,7 @@ export const Mentor = new DbRole({
         { propertyName: 'sensitivity', permission: { read, }, },
         { propertyName: 'tags', permission: { read, }, },
         { propertyName: 'financialReportReceivedAt', permission: { read, }, },
+        { propertyName: 'posts', permission: { read, write, }, },
       ],
       canDelete: false,
     }),

@@ -1,6 +1,6 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
+import { IsNotEmpty, ValidateNested } from 'class-validator';
 import { ID, IdField } from '../../../common';
 import { Post } from './post.dto';
 import { PostShareability } from './shareability.dto';
@@ -18,8 +18,9 @@ export abstract class UpdatePost {
   readonly shareability: PostShareability;
 
   @Field({
-    description: 'the post body',
+    description: 'The post body',
   })
+  @IsNotEmpty()
   readonly body: string;
 }
 

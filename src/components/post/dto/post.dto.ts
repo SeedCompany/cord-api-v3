@@ -3,6 +3,7 @@ import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
   DateTimeField,
+  ID,
   Resource,
   Secured,
   SecuredProps,
@@ -18,7 +19,7 @@ export class Post extends Resource {
   static readonly Props = keysOf<Post>();
   static readonly SecuredProps = keysOf<SecuredProps<Post>>();
 
-  readonly creator: Secured<string>;
+  readonly creator: Secured<ID>;
 
   @Field(() => PostType)
   readonly type: PostType;

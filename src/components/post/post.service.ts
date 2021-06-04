@@ -1,36 +1,29 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { ConfigService } from 'aws-sdk';
 import { DateTime } from 'luxon';
 import {
   generateId,
   ID,
   InputException,
   NotFoundException,
+  Resource,
+  ResourceShape,
+  SecuredList,
   ServerException,
   Session,
 } from '../../common';
 import { ILogger, Logger } from '../../core';
-import {
-  parseBaseNodeProperties,
-  parsePropList,
-  runListQuery,
-} from '../../core/database/results';
+import { runListQuery } from '../../core/database/results';
+import { ScopedRole } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { UserService } from '../user';
 import { CreatePost, Post, UpdatePost } from './dto';
 import { PostListInput, SecuredPostList } from './dto/list-posts.dto';
 import { PostRepository } from './post.repository';
+import { Postable } from './postable/dto/postable.dto';
 
 @Injectable()
 export class PostService {
-  private readonly securedProperties = {
-    body: true,
-    user: true,
-    modifiedAt: true,
-  };
-
   constructor(
-    private readonly config: ConfigService,
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
     @Inject(forwardRef(() => AuthorizationService))
@@ -110,35 +103,17 @@ export class PostService {
   }
 
   async readOne(postId: ID, session: Session): Promise<Post> {
-    const result = await this.repo.readOne(postId, session);
+    const result = await this.repo.readOne(postId);
 
-    if (!result) {
-      throw new NotFoundException('Could not find post', 'post.id');
-    }
-
-    const props = parsePropList(result.propList);
     const securedProps = await this.authorizationService.secureProperties(
       Post,
-      result.propList,
+      result,
       session
     );
 
     return {
-      ...parseBaseNodeProperties(result.node),
+      ...result,
       ...securedProps,
-      type: props.type,
-      shareability: props.shareability,
-      body: {
-        value: props.body,
-        canRead: true,
-        canEdit: true,
-      },
-      creator: {
-        value: props.creator,
-        canRead: true,
-        canEdit: true,
-      },
-      modifiedAt: props.modifiedAt,
       canDelete: await this.repo.checkDeletePermission(postId, session),
     };
   }
@@ -171,19 +146,26 @@ export class PostService {
   }
 
   async securedList(
-    { filter, ...input }: PostListInput,
+    parentType: ResourceShape<Postable>,
+    parent: Postable & Resource & { scope?: ScopedRole[] },
+    input: PostListInput,
     session: Session
   ): Promise<SecuredPostList> {
-    // const query = this.db
-    //   .query()
-    //   .match([requestingUser(session), ...permissionsOfNode(label)])
-    //   .call(calculateTotalAndPaginateList(Post, input));
-    const query = this.repo.securedList({ filter, ...input });
+    const perms = await this.authorizationService.getPermissions(
+      parentType,
+      session,
+      parent.scope
+    );
+    if (!perms.posts.canRead) {
+      return SecuredList.Redacted;
+    }
+
+    const query = this.repo.securedList(input, session);
 
     return {
       ...(await runListQuery(query, input, (id) => this.readOne(id, session))),
-      canRead: true, // FIXME: implement permissioning
-      canCreate: true, // FIXME: implement permissioning
+      canRead: true, // false handled above
+      canCreate: perms.posts.canEdit,
     };
   }
 }

@@ -2,6 +2,8 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import {
+  ID,
+  IdField,
   PaginatedList,
   SecuredList,
   SortablePaginationInput,
@@ -10,8 +12,8 @@ import { Post } from './post.dto';
 
 @InputType()
 export abstract class PostFilters {
-  @Field({ nullable: true })
-  readonly parentId?: string;
+  @IdField({ nullable: true })
+  readonly parentId?: ID;
 }
 
 const defaultFilters = {};

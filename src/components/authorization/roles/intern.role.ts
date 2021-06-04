@@ -341,6 +341,7 @@ export const Intern = new DbRole({
         { propertyName: 'financialReportReceivedAt', permission: { read, write, }, },
         { propertyName: 'financialReportPeriod', permission: { read, write, }, },
         { propertyName: 'owningOrganization', permission: { read, write, }, },
+        { propertyName: 'posts', permission: { read, write, }, },
       ],
       canDelete: false,
     }),

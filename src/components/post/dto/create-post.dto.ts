@@ -1,7 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
-import { IdField } from '../../../common';
+import { IsNotEmpty, ValidateNested } from 'class-validator';
+import { ID, IdField } from '../../../common';
 import { Post } from './post.dto';
 import { PostShareability } from './shareability.dto';
 import { PostType } from './type.enum';
@@ -9,7 +9,7 @@ import { PostType } from './type.enum';
 @InputType()
 export class CreatePost {
   @IdField({ nullable: true })
-  readonly parentId?: string;
+  readonly parentId?: ID;
 
   @Field(() => PostType)
   readonly type: PostType;
@@ -18,8 +18,9 @@ export class CreatePost {
   readonly shareability: PostShareability;
 
   @Field({
-    description: 'the post body',
+    description: 'The post body',
   })
+  @IsNotEmpty()
   readonly body: string;
 }
 

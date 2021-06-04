@@ -29,6 +29,7 @@ import { Location } from '../../location/dto';
 import { Partnership } from '../../partnership/dto';
 import { SecuredReportPeriod } from '../../periodic-report/dto';
 import { Pinnable } from '../../pin/dto';
+import { Post } from '../../post/dto';
 import { Postable } from '../../post/postable/dto/postable.dto';
 import { ProjectMember } from '../project-member/dto';
 import { ProjectStatus } from './status.enum';
@@ -65,6 +66,7 @@ class Project extends PinnablePostableResource {
     engagement: [Engagement], // why singular
     // edge case because it's writable for internships but not secured
     sensitivity: Sensitivity,
+    posts: [Post], // from Postable interface
   };
 
   @Field(() => ProjectType)
