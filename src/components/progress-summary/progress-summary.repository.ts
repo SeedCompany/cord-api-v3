@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { ID, NotImplementedException, Session } from '../../common';
-import { DtoRepository } from '../../core';
+import { node, relation } from 'cypher-query-builder';
+import { ID, Session } from '../../common';
+import { DtoRepository, matchRequestingUser } from '../../core';
 import { ProgressReport } from '../periodic-report/dto';
 import { ProgressSummary } from './dto';
 
@@ -10,10 +11,34 @@ export class ProgressSummaryRepository extends DtoRepository(ProgressSummary) {
     reportId: ID,
     session: Session
   ): Promise<ProgressSummary | undefined> {
-    throw new NotImplementedException().with(reportId, session);
+    return await this.db
+      .query()
+      .apply(matchRequestingUser(session))
+      .match([
+        node('', 'ProgressReport', { id: reportId }),
+        relation('out', '', 'progressSummary', { active: true }),
+        node('ps', 'ProgressSummary'),
+      ])
+      .return('ps as progressSummary')
+      .asResult<ProgressSummary>()
+      .first();
   }
 
   async save(report: ProgressReport, data: ProgressSummary) {
-    throw new NotImplementedException().with(report, data);
+    const query = this.db.query();
+    data
+      ? query.merge([
+          node('', 'ProgressReport', { id: report.id }),
+          relation('out', '', 'progressSummary', { active: true }),
+          node('', 'ProgressSummary', data),
+        ])
+      : query
+          .match([
+            node('', 'ProgressReport', { id: report.id }),
+            relation('out', '', 'progressSummary', { active: true }),
+            node('ps', 'ProgressSummary'),
+          ])
+          .detachDelete('ps');
+    await query.run();
   }
 }
