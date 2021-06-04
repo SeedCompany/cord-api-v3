@@ -138,8 +138,7 @@ export class LanguageEngagement extends Engagement {
 
   readonly pnp: DefinedFile;
 
-  @Field({ nullable: true })
-  readonly pnpData?: PnpData;
+  readonly pnpData?: PnpData; // TODO Remove from here and resolve with new summary in mind
 
   @Field()
   readonly historicGoal: SecuredString;
