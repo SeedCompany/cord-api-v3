@@ -1,12 +1,6 @@
 import { Interval } from 'luxon';
 import { DateInterval, ID, Session } from '../../../common';
-import {
-  ConfigService,
-  EventsHandler,
-  IEventHandler,
-  ILogger,
-  Logger,
-} from '../../../core';
+import { EventsHandler, IEventHandler, ILogger, Logger } from '../../../core';
 import { engagementRange, EngagementService } from '../../engagement';
 import {
   EngagementCreatedEvent,
@@ -33,15 +27,10 @@ export class SyncProgressReportToEngagementDateRange
   constructor(
     private readonly periodicReports: PeriodicReportService,
     private readonly engagements: EngagementService,
-    private readonly config: ConfigService, // Remove after periodic report migration
     @Logger('progress-report:engagement-sync') private readonly logger: ILogger
   ) {}
 
   async handle(event: SubscribedEvent) {
-    // Remove after periodic report migration
-    if (this.config.periodicReportMigration) {
-      return;
-    }
     this.logger.debug('Engagement mutation, syncing progress reports', {
       ...event,
       event: event.constructor.name,
