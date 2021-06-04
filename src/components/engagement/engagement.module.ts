@@ -4,7 +4,6 @@ import { CeremonyModule } from '../ceremony/ceremony.module';
 import { FileModule } from '../file/file.module';
 import { LanguageModule } from '../language/language.module';
 import { LocationModule } from '../location/location.module';
-import { PeriodicReportModule } from '../periodic-report/periodic-report.module';
 import { ProductModule } from '../product/product.module';
 import { ProjectModule } from '../project/project.module';
 import { UserModule } from '../user/user.module';
@@ -29,7 +28,6 @@ import { PnpExtractor } from './pnp-extractor.service';
     forwardRef(() => LanguageModule),
     forwardRef(() => LocationModule),
     forwardRef(() => ProjectModule),
-    PeriodicReportModule,
   ],
   providers: [
     EngagementResolver,

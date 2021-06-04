@@ -29,12 +29,6 @@ import {
 import { OrganizationService, SecuredOrganization } from '../organization';
 import { PartnershipListInput, SecuredPartnershipList } from '../partnership';
 import {
-  PeriodicReportListInput,
-  PeriodicReportService,
-  SecuredPeriodicReportList,
-} from '../periodic-report';
-import { ReportType, SecuredPeriodicReport } from '../periodic-report/dto';
-import {
   CreateProjectInput,
   CreateProjectOutput,
   IProject,
@@ -65,8 +59,7 @@ export class ProjectResolver {
     private readonly projectService: ProjectService,
     private readonly locationService: LocationService,
     private readonly fieldRegionService: FieldRegionService,
-    private readonly organizationService: OrganizationService,
-    private readonly periodicReportService: PeriodicReportService
+    private readonly organizationService: OrganizationService
   ) {}
 
   @Query(() => IProject, {
@@ -291,121 +284,5 @@ export class ProjectResolver {
       session
     );
     return await this.projectService.readOne(projectId, session);
-  }
-
-  @ResolveField(() => SecuredPeriodicReportList)
-  async financialReports(
-    @AnonSession() session: Session,
-    @Parent() project: Project,
-    @Args({
-      name: 'input',
-      type: () => PeriodicReportListInput,
-      defaultValue: PeriodicReportListInput.defaultVal,
-    })
-    input: PeriodicReportListInput
-  ): Promise<SecuredPeriodicReportList> {
-    return this.periodicReportService.listProjectReports(
-      project.id,
-      ReportType.Financial,
-      input,
-      session
-    );
-  }
-
-  @ResolveField(() => SecuredPeriodicReportList)
-  async narrativeReports(
-    @AnonSession() session: Session,
-    @Parent() project: Project,
-    @Args({
-      name: 'input',
-      type: () => PeriodicReportListInput,
-      defaultValue: PeriodicReportListInput.defaultVal,
-    })
-    input: PeriodicReportListInput
-  ): Promise<SecuredPeriodicReportList> {
-    return this.periodicReportService.listProjectReports(
-      project.id,
-      ReportType.Narrative,
-      input,
-      session
-    );
-  }
-
-  @ResolveField(() => SecuredPeriodicReport, {
-    description: 'This is the report whose range is within the current date.',
-  })
-  async currentFinancialReportDue(
-    @AnonSession() session: Session,
-    @Parent() project: Project
-  ): Promise<SecuredPeriodicReport> {
-    const value = await this.periodicReportService.getCurrentReportDue(
-      project.id,
-      ReportType.Financial,
-      session
-    );
-    return {
-      canRead: true,
-      canEdit: false,
-      value,
-    };
-  }
-
-  @ResolveField(() => SecuredPeriodicReport, {
-    description:
-      'This is the report whose range is within the previous quarter/month.',
-  })
-  async currentNarrativeReportDue(
-    @AnonSession() session: Session,
-    @Parent() project: Project
-  ): Promise<SecuredPeriodicReport> {
-    const value = await this.periodicReportService.getCurrentReportDue(
-      project.id,
-      ReportType.Narrative,
-      session
-    );
-    return {
-      canRead: true,
-      canEdit: false,
-      value,
-    };
-  }
-
-  @ResolveField(() => SecuredPeriodicReport, {
-    description:
-      'This is the report whose range is within the previous quarter/month.',
-  })
-  async nextFinancialReportDue(
-    @AnonSession() session: Session,
-    @Parent() project: Project
-  ): Promise<SecuredPeriodicReport> {
-    const value = await this.periodicReportService.getNextReportDue(
-      project.id,
-      ReportType.Financial,
-      session
-    );
-    return {
-      canRead: true,
-      canEdit: false,
-      value,
-    };
-  }
-
-  @ResolveField(() => SecuredPeriodicReport, {
-    description: 'This is the report whose range is within the current date.',
-  })
-  async nextNarrativeReportDue(
-    @AnonSession() session: Session,
-    @Parent() project: Project
-  ): Promise<SecuredPeriodicReport> {
-    const value = await this.periodicReportService.getNextReportDue(
-      project.id,
-      ReportType.Narrative,
-      session
-    );
-    return {
-      canRead: true,
-      canEdit: false,
-      value,
-    };
   }
 }

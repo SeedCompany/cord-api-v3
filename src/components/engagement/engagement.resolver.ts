@@ -9,13 +9,6 @@ import {
 import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
 import { CeremonyService, SecuredCeremony } from '../ceremony';
 import {
-  PeriodicReportListInput,
-  PeriodicReportService,
-  ReportType,
-  SecuredPeriodicReport,
-  SecuredPeriodicReportList,
-} from '../periodic-report';
-import {
   CreateInternshipEngagementInput,
   CreateInternshipEngagementOutput,
   CreateLanguageEngagementInput,
@@ -35,8 +28,7 @@ import { EngagementService } from './engagement.service';
 export class EngagementResolver {
   constructor(
     private readonly service: EngagementService,
-    private readonly ceremonies: CeremonyService,
-    private readonly periodicReports: PeriodicReportService
+    private readonly ceremonies: CeremonyService
   ) {}
 
   @Query(() => IEngagement, {
@@ -144,62 +136,5 @@ export class EngagementResolver {
   ): Promise<boolean> {
     await this.service.delete(id, session);
     return true;
-  }
-
-  @ResolveField(() => SecuredPeriodicReportList)
-  async progressReports(
-    @AnonSession() session: Session,
-    @Parent() engagement: Engagement,
-    @Args({
-      name: 'input',
-      type: () => PeriodicReportListInput,
-      defaultValue: PeriodicReportListInput.defaultVal,
-    })
-    input: PeriodicReportListInput
-  ): Promise<SecuredPeriodicReportList> {
-    return this.periodicReports.listEngagementReports(
-      engagement.id,
-      input,
-      session
-    );
-  }
-
-  @ResolveField(() => SecuredPeriodicReport, {
-    description:
-      'This is the report whose range is within the previous quarter/month.',
-  })
-  async currentProgressReport(
-    @AnonSession() session: Session,
-    @Parent() engagement: Engagement
-  ): Promise<SecuredPeriodicReport> {
-    const value = await this.periodicReports.getCurrentReportDue(
-      engagement.id,
-      ReportType.Progress,
-      session
-    );
-    return {
-      canEdit: false,
-      canRead: true,
-      value,
-    };
-  }
-
-  @ResolveField(() => SecuredPeriodicReport, {
-    description: 'This is the report whose range is within the current date.',
-  })
-  async nextProgressReport(
-    @AnonSession() session: Session,
-    @Parent() engagement: Engagement
-  ): Promise<SecuredPeriodicReport> {
-    const value = await this.periodicReports.getNextReportDue(
-      engagement.id,
-      ReportType.Progress,
-      session
-    );
-    return {
-      canEdit: false,
-      canRead: true,
-      value,
-    };
   }
 }
