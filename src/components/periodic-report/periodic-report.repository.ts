@@ -3,7 +3,7 @@ import { stripIndent } from 'common-tags';
 import { node, relation } from 'cypher-query-builder';
 import { Dictionary } from 'lodash';
 import { DateTime, Interval } from 'luxon';
-import { ID, Session } from '../../common';
+import { CalendarDate, ID, Session } from '../../common';
 import { DtoRepository, matchRequestingUser, property } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -111,9 +111,38 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
       );
   }
 
+  async reportForDate(
+    parentId: ID,
+    reportType: ReportType,
+    date: CalendarDate
+  ) {
+    return await this.db
+      .query()
+      .match([
+        node('baseNode', 'BaseNode', { id: parentId }),
+        relation('out', '', 'report', { active: true }),
+        node('node', `${reportType}Report`),
+      ])
+      .match([
+        node('node'),
+        relation('out', '', 'start', { active: true }),
+        node('start', 'Property'),
+      ])
+      .match([
+        node('node'),
+        relation('out', '', 'end', { active: true }),
+        node('end', 'Property'),
+      ])
+      .raw(`WHERE start.value <= $date AND end.value >= $date`, {
+        date,
+      })
+      .return('node.id as id')
+      .asResult<{ id: ID }>()
+      .first();
+  }
+
   listEngagementReports(
     engagementId: string,
-    reportType: ReportType,
     { filter, ...input }: PeriodicReportListInput
   ) {
     return this.db
@@ -121,7 +150,7 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
       .match([
         node('engagement', 'Engagement', { id: engagementId }),
         relation('out', '', 'report', { active: true }),
-        node('node', `PeriodicReport:${reportType}Report`),
+        node('node', 'ProgressReport'),
       ])
       .apply(calculateTotalAndPaginateList(ProgressReport, input));
   }

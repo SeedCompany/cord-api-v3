@@ -68,6 +68,7 @@ export class SyncPeriodicReportsToProjectDateRange
       ReportType.Financial,
       diff.removals
     );
+
     await Promise.all(
       diff.additions.map((interval) =>
         this.periodicReports.create(
@@ -90,6 +91,7 @@ export class SyncPeriodicReportsToProjectDateRange
       ReportType.Narrative,
       diff.removals
     );
+
     await Promise.all(
       diff.additions.map((interval) =>
         this.periodicReports.create(
