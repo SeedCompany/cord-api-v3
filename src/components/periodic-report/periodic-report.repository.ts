@@ -114,7 +114,7 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
   async reportForDate(
     parentId: ID,
     reportType: ReportType,
-    startDate: CalendarDate
+    date: CalendarDate
   ) {
     return await this.db
       .query()
@@ -133,8 +133,8 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
         relation('out', '', 'end', { active: true }),
         node('end', 'Property'),
       ])
-      .raw(`WHERE start.value = $date`, {
-        date: startDate,
+      .raw(`WHERE start.value <= $date AND end.value >= $date`, {
+        date,
       })
       .return('node.id as id')
       .asResult<{ id: ID }>()

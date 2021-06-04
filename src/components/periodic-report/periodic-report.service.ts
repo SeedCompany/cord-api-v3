@@ -157,7 +157,22 @@ export class PeriodicReportService {
     };
   }
 
-  async getCurrentReport(
+  async getReportForDate(
+    parentId: ID,
+    reportType: ReportType,
+    date: CalendarDate,
+    session: Session
+  ): Promise<PeriodicReport | undefined> {
+    const result = await this.repo.reportForDate(parentId, reportType, date);
+
+    if (!result) {
+      return undefined;
+    }
+
+    return await this.readOne(result.id, session);
+  }
+
+  async getCurrentReportDue(
     parentId: ID,
     reportType: ReportType,
     session: Session
@@ -170,21 +185,25 @@ export class PeriodicReportService {
       }
     }
 
-    const currentReportStartDate = CalendarDate.local()
-      .minus({ [interval]: 1 })
-      .startOf(interval);
-
-    const result = await this.repo.reportForDate(
+    return await this.getReportForDate(
       parentId,
       reportType,
-      currentReportStartDate
+      CalendarDate.local().minus({ [interval]: 1 }),
+      session
     );
+  }
 
-    if (!result) {
-      return undefined;
-    }
-
-    return await this.readOne(result.id, session);
+  async getNextReportDue(
+    parentId: ID,
+    reportType: ReportType,
+    session: Session
+  ): Promise<PeriodicReport | undefined> {
+    return await this.getReportForDate(
+      parentId,
+      reportType,
+      CalendarDate.local(),
+      session
+    );
   }
 
   async listEngagementReports(

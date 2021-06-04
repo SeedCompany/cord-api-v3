@@ -312,44 +312,6 @@ export class ProjectResolver {
     );
   }
 
-  @ResolveField(() => SecuredPeriodicReport, {
-    description: 'This is the report whose range is within the current date.',
-  })
-  async currentFinancialReport(
-    @AnonSession() session: Session,
-    @Parent() project: Project
-  ): Promise<SecuredPeriodicReport> {
-    const value = await this.periodicReportService.getCurrentReport(
-      project.id,
-      ReportType.Financial,
-      session
-    );
-    return {
-      canRead: true,
-      canEdit: false,
-      value,
-    };
-  }
-
-  @ResolveField(() => SecuredPeriodicReport, {
-    description: 'This is the report whose range is within the current date.',
-  })
-  async currentNarrativeReport(
-    @AnonSession() session: Session,
-    @Parent() project: Project
-  ): Promise<SecuredPeriodicReport> {
-    const value = await this.periodicReportService.getCurrentReport(
-      project.id,
-      ReportType.Narrative,
-      session
-    );
-    return {
-      canRead: true,
-      canEdit: false,
-      value,
-    };
-  }
-
   @ResolveField(() => SecuredPeriodicReportList)
   async narrativeReports(
     @AnonSession() session: Session,
@@ -367,5 +329,83 @@ export class ProjectResolver {
       input,
       session
     );
+  }
+
+  @ResolveField(() => SecuredPeriodicReport, {
+    description: 'This is the report whose range is within the current date.',
+  })
+  async currentFinancialReportDue(
+    @AnonSession() session: Session,
+    @Parent() project: Project
+  ): Promise<SecuredPeriodicReport> {
+    const value = await this.periodicReportService.getCurrentReportDue(
+      project.id,
+      ReportType.Financial,
+      session
+    );
+    return {
+      canRead: true,
+      canEdit: false,
+      value,
+    };
+  }
+
+  @ResolveField(() => SecuredPeriodicReport, {
+    description:
+      'This is the report whose range is within the previous quarter/month.',
+  })
+  async currentNarrativeReportDue(
+    @AnonSession() session: Session,
+    @Parent() project: Project
+  ): Promise<SecuredPeriodicReport> {
+    const value = await this.periodicReportService.getCurrentReportDue(
+      project.id,
+      ReportType.Narrative,
+      session
+    );
+    return {
+      canRead: true,
+      canEdit: false,
+      value,
+    };
+  }
+
+  @ResolveField(() => SecuredPeriodicReport, {
+    description:
+      'This is the report whose range is within the previous quarter/month.',
+  })
+  async nextFinancialReportDue(
+    @AnonSession() session: Session,
+    @Parent() project: Project
+  ): Promise<SecuredPeriodicReport> {
+    const value = await this.periodicReportService.getNextReportDue(
+      project.id,
+      ReportType.Financial,
+      session
+    );
+    return {
+      canRead: true,
+      canEdit: false,
+      value,
+    };
+  }
+
+  @ResolveField(() => SecuredPeriodicReport, {
+    description: 'This is the report whose range is within the current date.',
+  })
+  async nextNarrativeReportDue(
+    @AnonSession() session: Session,
+    @Parent() project: Project
+  ): Promise<SecuredPeriodicReport> {
+    const value = await this.periodicReportService.getNextReportDue(
+      project.id,
+      ReportType.Narrative,
+      session
+    );
+    return {
+      canRead: true,
+      canEdit: false,
+      value,
+    };
   }
 }

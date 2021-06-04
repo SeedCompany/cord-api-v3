@@ -165,13 +165,33 @@ export class EngagementResolver {
   }
 
   @ResolveField(() => SecuredPeriodicReport, {
-    description: 'This is the report whose range is within the current date.',
+    description:
+      'This is the report whose range is within the previous quarter/month.',
   })
   async currentProgressReport(
     @AnonSession() session: Session,
     @Parent() engagement: Engagement
   ): Promise<SecuredPeriodicReport> {
-    const value = await this.periodicReports.getCurrentReport(
+    const value = await this.periodicReports.getCurrentReportDue(
+      engagement.id,
+      ReportType.Progress,
+      session
+    );
+    return {
+      canEdit: false,
+      canRead: true,
+      value,
+    };
+  }
+
+  @ResolveField(() => SecuredPeriodicReport, {
+    description: 'This is the report whose range is within the current date.',
+  })
+  async nextProgressReport(
+    @AnonSession() session: Session,
+    @Parent() engagement: Engagement
+  ): Promise<SecuredPeriodicReport> {
+    const value = await this.periodicReports.getNextReportDue(
       engagement.id,
       ReportType.Progress,
       session
