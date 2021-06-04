@@ -86,7 +86,7 @@ export class PostRepository extends DtoRepository(Post) {
           node('node', 'Post'),
           ...(filter.parentId
             ? [
-                relation('in', '', 'post'),
+                relation('in', '', 'post', { active: true }),
                 node('', 'BaseNode', {
                   id: filter.parentId,
                 }),
