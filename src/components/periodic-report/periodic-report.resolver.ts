@@ -7,6 +7,7 @@ import {
 } from '@nestjs/graphql';
 import {
   AnonSession,
+  CalendarDate,
   DateInterval,
   LoggedInSession,
   Session,
@@ -25,6 +26,13 @@ export class PeriodicReportResolver {
     private readonly engagements: EngagementService,
     private readonly files: FileService
   ) {}
+
+  @ResolveField(() => CalendarDate, {
+    description: 'When this report is due',
+  })
+  due(@Parent() report: IPeriodicReport) {
+    return report.end.plus({ month: 1 }).endOf('month');
+  }
 
   @Mutation(() => IPeriodicReport, {
     description: 'Update a report file',
