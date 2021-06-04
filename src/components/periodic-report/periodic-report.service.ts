@@ -8,7 +8,7 @@ import {
   ServerException,
   Session,
 } from '../../common';
-import { ILogger, Logger, OnIndex } from '../../core';
+import { IEventBus, ILogger, Logger, OnIndex } from '../../core';
 import {
   parseBaseNodeProperties,
   parsePropList,
@@ -26,6 +26,7 @@ import {
   ReportType,
   SecuredPeriodicReportList,
 } from './dto';
+import { PeriodicReportUploadedEvent } from './events';
 import { PeriodicReportRepository } from './periodic-report.repository';
 
 @Injectable()
@@ -33,6 +34,7 @@ export class PeriodicReportService {
   constructor(
     private readonly files: FileService,
     @Logger('periodic:report:service') private readonly logger: ILogger,
+    private readonly eventBus: IEventBus,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
     private readonly repo: PeriodicReportRepository,
@@ -98,6 +100,10 @@ export class PeriodicReportService {
       'file',
       file,
       session
+    );
+    const newVersion = await this.files.getFileVersion(file.uploadId, session);
+    await this.eventBus.publish(
+      new PeriodicReportUploadedEvent(report, newVersion, session)
     );
 
     return report;
