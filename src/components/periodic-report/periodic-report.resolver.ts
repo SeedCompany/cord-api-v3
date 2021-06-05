@@ -72,6 +72,7 @@ export class PeriodicReportResolver {
     description: 'Create project report files for existing projects',
   })
   async syncProjectReports(@LoggedInSession() session: Session) {
+    let count = 1;
     const projects = await this.projects.listProjectsWithDateRange();
 
     const syncProject = async ({
@@ -83,6 +84,10 @@ export class PeriodicReportResolver {
       mouStart?: CalendarDate;
       mouEnd?: CalendarDate;
     }) => {
+      count++;
+      if (count % 100 === 0) {
+        this.logger.log(`${count} of ${projects.length} projects synced`);
+      }
       // can't generate reports with no dates
       if (!mouStart || !mouEnd) return;
 
@@ -125,8 +130,9 @@ export class PeriodicReportResolver {
         }
       }
     };
+    this.logger.log(`starting project sync`);
     await asyncPool(20, projects, syncProject);
-
+    this.logger.log(`project sync finished`);
     return true;
   }
   // Remove after periodic report migration
@@ -134,6 +140,7 @@ export class PeriodicReportResolver {
     description: 'Create engagement progress reports for existing engagements',
   })
   async syncEngagementReports(@LoggedInSession() session: Session) {
+    let count = 0;
     const syncEngagement = async ({
       engagementId,
       startDate,
@@ -147,6 +154,10 @@ export class PeriodicReportResolver {
       startDateOverride?: CalendarDate;
       endDateOverride?: CalendarDate;
     }) => {
+      count++;
+      if (count % 100 === 0) {
+        this.logger.log(`${count} of ${engagements.length} engagements synced`);
+      }
       // if we're missing either project date, don't generate reports
       if (!startDate || !endDate) return;
 
@@ -225,7 +236,9 @@ export class PeriodicReportResolver {
     };
 
     const engagements = await this.engagements.listEngagementsWithDateRange();
+    this.logger.log(`starting engagement sync`);
     await asyncPool(20, engagements, syncEngagement);
+    this.logger.log(`finished engagement sync`);
 
     return true;
   }
