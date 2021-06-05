@@ -60,6 +60,15 @@ rules:
             - ServiceUnavailableException
             - GatewayTimeoutException
           message: Use our exceptions in common folder instead
+  no-restricted-syntax:
+    - error
+    - selector: NewExpression[callee.name="Logger"]
+      message: >
+        Inject a logger instead
+
+        constructor(
+          @Logger('name') private logger: ILogger
+        ) {}
 
   # TODO Enable this and fix errors (both types & logic changes will be needed)
   '@typescript-eslint/no-unnecessary-condition': off
