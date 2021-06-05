@@ -61,10 +61,15 @@ export class PeriodicReportResolver {
     description: 'Create periodic reports for projects and engagements',
   })
   async syncAllReports(@LoggedInSession() session: Session) {
-    await this.syncProjectReports(session);
-    await this.syncEngagementReports(session);
+    void this.doSync(session);
     return true;
   }
+
+  async doSync(session: Session) {
+    await this.syncProjectReports(session);
+    await this.syncEngagementReports(session);
+  }
+
   // Remove after periodic report migration
   @Mutation(() => Boolean, {
     description: 'Create project report files for existing projects',
@@ -138,7 +143,7 @@ export class PeriodicReportResolver {
       }
     };
     this.logger.info(`starting project sync`);
-    await asyncPool(20, projects, syncProject);
+    await asyncPool(10, projects, syncProject);
     this.logger.info(`project sync finished`);
     return true;
   }
@@ -253,7 +258,7 @@ export class PeriodicReportResolver {
 
     const engagements = await this.engagements.listEngagementsWithDateRange();
     this.logger.info(`starting engagement sync`);
-    await asyncPool(20, engagements, syncEngagement);
+    await asyncPool(10, engagements, syncEngagement);
     this.logger.info(`finished engagement sync`);
 
     return true;
