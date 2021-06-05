@@ -110,8 +110,11 @@ export class PeriodicReportResolver {
             },
             session
           );
-        } catch (e) {
-          this.logger.log(e, projectId);
+        } catch (exception) {
+          this.logger.error('Error creating financial report', {
+            exception,
+            projectId,
+          });
         }
       }
 
@@ -126,8 +129,11 @@ export class PeriodicReportResolver {
             },
             session
           );
-        } catch (e) {
-          this.logger.log(e, projectId);
+        } catch (exception) {
+          this.logger.error('Error creating narrative report', {
+            exception,
+            projectId,
+          });
         }
       }
     };
@@ -236,8 +242,11 @@ export class PeriodicReportResolver {
             },
             session
           );
-        } catch (e) {
-          this.logger.log(e, engagementId);
+        } catch (exception) {
+          this.logger.error('Error creating progress report', {
+            exception,
+            engagementId,
+          });
         }
       }
     };
