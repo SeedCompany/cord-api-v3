@@ -16,6 +16,29 @@ export class PnpExtractor {
     private readonly files: FileService,
     @Logger('pnp:extractor') private readonly logger: ILogger
   ) {}
+  // Remove after periodic report migration
+  async extractFyAndQuarter(
+    input: CreateDefinedFileVersionInput,
+    session: Session
+  ): Promise<{ extractedYear: number; extractedQuarter: number }> {
+    const file = await this.files.getFileVersion(input.uploadId, session);
+    const pnp = await this.downloadWorkbook(file);
+    const sheet = pnp.Sheets.Progress;
+
+    const rows = utils.sheet_to_json<any>(sheet, {
+      header: 'A',
+      raw: false,
+    });
+    for (const row of rows) {
+      if (row?.AE === 'Verse Equivalents in Project     =======>') {
+        return {
+          extractedYear: Number(row.AB),
+          extractedQuarter: Number(row.AA.replace('Q', '')),
+        };
+      }
+    }
+    return { extractedYear: 0, extractedQuarter: 0 };
+  }
 
   async extract(
     input: CreateDefinedFileVersionInput,
@@ -98,8 +121,8 @@ export class PnpExtractor {
       variance: parsePercent(variance),
     };
   }
-
-  private parseYearAndQuarter(fileName: string) {
+  // make private after periodic report migration
+  parseYearAndQuarter(fileName: string) {
     // I don't want to mess with this since there are some files names with a range
     // i.e. fy18-20. I think this naming has become outmoded anyway.
     const fyReg = /fy19|fy20|fy21/i;
