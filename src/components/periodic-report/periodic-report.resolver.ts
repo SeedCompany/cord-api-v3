@@ -84,7 +84,10 @@ export class PeriodicReportResolver {
     }) => {
       count++;
       if (count % 100 === 0) {
-        this.logger.log(`${count} of ${projects.length} projects synced`);
+        this.logger.info(`project sync progress`, {
+          count,
+          total: projects.length,
+        });
       }
       // can't generate reports with no dates
       if (!mouStart || !mouEnd) return;
@@ -128,9 +131,9 @@ export class PeriodicReportResolver {
         }
       }
     };
-    this.logger.log(`starting project sync`);
+    this.logger.info(`starting project sync`);
     await asyncPool(20, projects, syncProject);
-    this.logger.log(`project sync finished`);
+    this.logger.info(`project sync finished`);
     return true;
   }
   // Remove after periodic report migration
@@ -154,7 +157,10 @@ export class PeriodicReportResolver {
     }) => {
       count++;
       if (count % 100 === 0) {
-        this.logger.log(`${count} of ${engagements.length} engagements synced`);
+        this.logger.info(`engagements sync progress`, {
+          count,
+          total: engagements.length,
+        });
       }
       // if we're missing either project date, don't generate reports
       if (!startDate || !endDate) return;
@@ -197,8 +203,11 @@ export class PeriodicReportResolver {
                 : {}),
             },
           });
-        } catch (error) {
-          this.logger.log({ error, engagementId });
+        } catch (exception) {
+          this.logger.error('Error updating engagement dates', {
+            exception,
+            engagementId,
+          });
         }
       }
 
@@ -234,9 +243,9 @@ export class PeriodicReportResolver {
     };
 
     const engagements = await this.engagements.listEngagementsWithDateRange();
-    this.logger.log(`starting engagement sync`);
+    this.logger.info(`starting engagement sync`);
     await asyncPool(20, engagements, syncEngagement);
-    this.logger.log(`finished engagement sync`);
+    this.logger.info(`finished engagement sync`);
 
     return true;
   }
