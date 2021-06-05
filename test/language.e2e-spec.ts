@@ -224,29 +224,6 @@ describe('Language e2e', () => {
     expect(result).toBeTruthy();
   });
 
-  it.skip('should check language has all required properties', async () => {
-    // create a test language
-    const language = await createLanguage(app);
-    // test it has proper schema
-    const result = await app.graphql.query(gql`
-      query {
-        checkLanguageConsistency
-      }
-    `);
-    expect(result.checkLanguageConsistency).toBeTruthy();
-    // delete the node
-    await app.graphql.mutate(
-      gql`
-        mutation deleteLanguage($id: ID!) {
-          deleteLanguage(id: $id)
-        }
-      `,
-      {
-        id: language.id,
-      }
-    );
-  });
-
   it('The list of projects the language is engagement in', async () => {
     const numProjects = 1;
     const language = await createLanguage(app);

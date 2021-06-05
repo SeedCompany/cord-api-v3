@@ -76,7 +76,8 @@ export class ConnectionTimeoutError extends Neo4jError {
 }
 
 export class ConstraintError extends Neo4jError {
-  static readonly code = 'Neo.ClientError.Schema.ConstraintValidationFailed' as const;
+  static readonly code =
+    'Neo.ClientError.Schema.ConstraintValidationFailed' as const;
   constructor(message: string) {
     super(message);
     this.name = this.constructor.name;
@@ -152,7 +153,8 @@ export const createBetterError = (e: Error) => {
   return e;
 };
 
-const uniqueMsgRegex = /^Node\((\d+)\) already exists with label `(\w+)` and property `(.+)` = '(.+)'$/;
+const uniqueMsgRegex =
+  /^Node\((\d+)\) already exists with label `(\w+)` and property `(.+)` = '(.+)'$/;
 const getUniqueFailureInfo = (e: Neo4jError) => {
   const matches = uniqueMsgRegex.exec(e.message);
   if (!matches) {

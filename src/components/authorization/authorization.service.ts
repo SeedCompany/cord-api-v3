@@ -1,6 +1,6 @@
 /* eslint-disable no-case-declarations */
 import { Injectable } from '@nestjs/common';
-import { Connection, node, relation } from 'cypher-query-builder';
+import { Connection } from 'cypher-query-builder';
 import {
   compact,
   keyBy,
@@ -25,17 +25,18 @@ import {
   UnauthorizedException,
 } from '../../common';
 import { retry } from '../../common/retry';
-import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
+import { ConfigService, ILogger, Logger } from '../../core';
 import { ChangesOf, isRelation } from '../../core/database/changes';
 import {
   DbPropsOfDto,
   parseSecuredProperties,
   PropListDbResult,
 } from '../../core/database/results';
+import { AuthorizationRepository } from './authorization.repository';
 import { InternalRole, Role, rolesForScope, ScopedRole } from './dto';
 import { Powers } from './dto/powers';
 import { MissingPowerException } from './missing-power.exception';
-import { DbRole, OneBaseNode, PermissionsForResource } from './model';
+import { DbRole, PermissionsForResource } from './model';
 import * as AllRoles from './roles';
 
 const getDbRoles = (roles: ScopedRole[]) =>
@@ -53,29 +54,23 @@ export type PermissionsOf<T> = Record<keyof T, Permission>;
 @Injectable()
 export class AuthorizationService {
   constructor(
-    private readonly db: DatabaseService,
     private readonly dbConn: Connection,
     private readonly config: ConfigService,
+    private readonly authorizationRepo: AuthorizationRepository,
     @Logger('authorization:service') private readonly logger: ILogger
   ) {}
 
   async processNewBaseNode(
-    baseNodeObj: OneBaseNode,
+    resource: ResourceShape<any>,
     baseNodeId: ID,
     creatorUserId: ID
   ) {
     await this.afterTransaction(async () => {
-      await this.db
-        .query()
-        .raw(
-          `CALL cord.processNewBaseNode($baseNodeId, $label, $creatorUserId)`,
-          {
-            baseNodeId,
-            label: baseNodeObj.__className.substring(2),
-            creatorUserId,
-          }
-        )
-        .run();
+      await this.authorizationRepo.processNewBaseNode(
+        resource.name,
+        baseNodeId,
+        creatorUserId
+      );
     });
   }
 
@@ -268,19 +263,7 @@ export class AuthorizationService {
     // iterate through all roles and assign to all SGs with that role
 
     for (const role of roles.flatMap((role) => this.mapRoleToDbRoles(role))) {
-      await this.db
-        .query()
-        .raw(
-          `
-          call apoc.periodic.iterate(
-            "MATCH (u:User {id:'${id}'}), (sg:SecurityGroup {role:'${role}'})
-            WHERE NOT (u)<-[:member]-(sg)
-            RETURN u, sg",
-            "MERGE (u)<-[:member]-(sg)", {batchSize:1000})
-          yield batches, total return batches, total
-      `
-        )
-        .run();
+      await this.authorizationRepo.doRoleAddedToUser(id, role);
     }
 
     const powers = getDbRoles(roles.map(rolesForScope('global'))).flatMap(
@@ -294,30 +277,7 @@ export class AuthorizationService {
   async checkPower(power: Powers, session: Session): Promise<void> {
     const id = session.userId;
 
-    const query = this.db
-      .query()
-      .match(
-        // if anonymous we check the public sg for public powers
-        session.anonymous
-          ? [
-              node('user', 'User', { id }),
-              relation('in', '', 'member'),
-              node('sg', 'SecurityGroup'),
-            ]
-          : [
-              node('sg', 'PublicSecurityGroup', {
-                id: this.config.publicSecurityGroup.id,
-              }),
-            ]
-      )
-      .raw('where $power IN sg.powers', { power })
-      .raw('return $power IN sg.powers as hasPower')
-      .union()
-      .match([node('user', 'User', { id })])
-      .raw('where $power IN user.powers')
-      .raw('return $power IN user.powers as hasPower')
-      .asResult<{ hasPower: boolean }>();
-
+    const query = this.authorizationRepo.checkPower(power, session, id);
     const result = await query.first();
     const hasPower = result?.hasPower ?? false;
 
@@ -388,45 +348,23 @@ export class AuthorizationService {
     userId: ID | string,
     newPowers: Powers[]
   ): Promise<void> {
-    const result = await this.db
-      .query()
-      .optionalMatch([node('userOrSg', 'User', { id: userId })])
-      .setValues({ 'userOrSg.powers': newPowers })
-      .with('*')
-      .optionalMatch([node('userOrSg', 'SecurityGroup', { id: userId })])
-      .setValues({ 'userOrSg.powers': newPowers })
-      .run();
-
+    const result = await this.authorizationRepo.updateUserPowers(
+      userId,
+      newPowers
+    );
     if (!result) {
       throw new ServerException('Failed to grant power');
     }
   }
 
   private async readPowerByUserId(id: ID | string): Promise<Powers[]> {
-    const result = await this.db
-      .query()
-      .match([node('user', 'User', { id })])
-      .raw('return user.powers as powers')
-      .unionAll()
-      .match([node('sg', 'SecurityGroup', { id })])
-      .raw('return sg.powers as powers')
-      .asResult<{ powers?: Powers[] }>()
-      .first();
+    const result = await this.authorizationRepo.readPowerByUserId(id);
 
     return result?.powers ?? [];
   }
 
   async getUserGlobalRoles(id: ID): Promise<ScopedRole[]> {
-    const roleQuery = await this.db
-      .query()
-      .match([
-        node('user', 'User', { id }),
-        relation('out', '', 'roles', { active: true }),
-        node('role', 'Property'),
-      ])
-      .raw(`RETURN collect(role.value) as roles`)
-      .asResult<{ roles: Role[] }>()
-      .first();
+    const roleQuery = await this.authorizationRepo.getUserGlobalRoles(id);
     const roles = compact(roleQuery?.roles.map(rolesForScope('global')));
     return roles;
   }

@@ -2,7 +2,7 @@ import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
-import { DbLabel, ID, SecuredProps } from '../../../common';
+import { DbLabel, ID, SecuredProps, Sensitivity } from '../../../common';
 import { SetChangeType } from '../../../core/database/changes';
 import { SecuredScriptureRangesOverride } from '../../scripture';
 import { Producible, SecuredProducible } from './producible.dto';
@@ -30,6 +30,11 @@ export class Product extends Producible {
   @Field()
   @DbLabel('ProductMethodology')
   readonly methodology: SecuredMethodology;
+
+  @Field(() => Sensitivity, {
+    description: "Based on the project's sensitivity",
+  })
+  readonly sensitivity: Sensitivity;
 }
 
 @ObjectType({
@@ -52,9 +57,8 @@ export class DirectScriptureProduct extends Product {
 })
 export class DerivativeScriptureProduct extends Product {
   static readonly Props = keysOf<DerivativeScriptureProduct>();
-  static readonly SecuredProps = keysOf<
-    SecuredProps<DerivativeScriptureProduct>
-  >();
+  static readonly SecuredProps =
+    keysOf<SecuredProps<DerivativeScriptureProduct>>();
 
   @Field(() => SecuredProducible, {
     description: stripIndent`

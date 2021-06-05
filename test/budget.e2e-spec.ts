@@ -56,7 +56,7 @@ describe('Budget e2e', () => {
   it.skip('create a budget', async () => {
     const budget = await createBudget(app, { projectId: project.id });
     expect(budget.id).toBeDefined();
-    const cd = (sd: Secured<string>) =>
+    const cd = (sd: Secured<string | null>) =>
       sd.value ? CalendarDate.fromISO(sd.value) : undefined;
     const fiscal = fiscalYears(cd(project.mouStart), cd(project.mouEnd)); // calculate the fiscalYears covered by this date range
     expect(budget.records.length).toBe(fiscal.length);
@@ -117,30 +117,6 @@ describe('Budget e2e', () => {
         }
       )
     ).rejects.toThrowError(new NotFoundException('Could not find budget'));
-  });
-
-  it.skip('Check consistency across budget nodes', async () => {
-    // create a new budget for that project
-    const budget = await createBudget(app, { projectId: project.id });
-    // test it has proper schema
-    const result = await app.graphql.query(gql`
-      query {
-        checkBudgetConsistency
-      }
-    `);
-    expect(result.checkBudgetConsistency).toBeTruthy();
-
-    // delete budget node so next test will pass
-    await app.graphql.mutate(
-      gql`
-        mutation deleteBudget($id: ID!) {
-          deleteBudget(id: $id)
-        }
-      `,
-      {
-        id: budget.id,
-      }
-    );
   });
 
   it('List budget nodes', async () => {

@@ -1,3 +1,4 @@
+import { ServerException } from '../../../common';
 import { Budget, BudgetRecord } from '../../budget/dto';
 import { Ceremony } from '../../ceremony/dto';
 import {
@@ -15,6 +16,12 @@ import { Location } from '../../location/dto';
 import { Organization } from '../../organization/dto';
 import { Partner } from '../../partner/dto';
 import { Partnership } from '../../partnership/dto';
+import {
+  FinancialReport,
+  NarrativeReport,
+  IPeriodicReport as PeriodicReport,
+  ProgressReport,
+} from '../../periodic-report/dto';
 import {
   DerivativeScriptureProduct,
   DirectScriptureProduct,
@@ -58,9 +65,23 @@ export const ResourceMap = {
   TranslationProject,
   InternshipProject,
   ProjectMember,
+  PeriodicReport,
+  FinancialReport,
+  NarrativeReport,
+  ProgressReport,
   Song,
   Story,
   Unavailability,
   User,
 } as const;
 export type ResourceMap = typeof ResourceMap;
+
+export const resourceFromName = (name: string) => {
+  const resource = ResourceMap[name as keyof ResourceMap];
+  if (!resource) {
+    throw new ServerException(
+      `Unable to determine resource from ResourceMap for type: ${name}`
+    );
+  }
+  return resource;
+};

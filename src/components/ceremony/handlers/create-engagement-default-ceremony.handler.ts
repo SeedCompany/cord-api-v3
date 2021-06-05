@@ -4,12 +4,13 @@ import { DatabaseService, EventsHandler, IEventHandler } from '../../../core';
 import { AuthorizationService } from '../../authorization/authorization.service';
 import { EngagementCreatedEvent } from '../../engagement/events';
 import { CeremonyService } from '../ceremony.service';
+import { Ceremony } from '../dto';
 import { CeremonyType } from '../dto/type.enum';
-import { DbCeremony } from '../model';
 
 @EventsHandler(EngagementCreatedEvent)
 export class CreateEngagementDefaultCeremonyHandler
-  implements IEventHandler<EngagementCreatedEvent> {
+  implements IEventHandler<EngagementCreatedEvent>
+{
   constructor(
     private readonly ceremonies: CeremonyService,
     private readonly db: DatabaseService,
@@ -24,15 +25,15 @@ export class CreateEngagementDefaultCeremonyHandler
           ? CeremonyType.Dedication
           : CeremonyType.Certification,
     };
-    const ceremony = await this.ceremonies.create(input, session);
+    const ceremonyId = await this.ceremonies.create(input, session);
 
-    // connect ceremony to engagement
+    // connect ceremonyId to engagement
     await this.db
       .query()
       .matchNode('engagement', 'Engagement', {
         id: engagement.id,
       })
-      .matchNode('ceremony', 'Ceremony', { id: ceremony.id })
+      .matchNode('ceremony', 'Ceremony', { id: ceremonyId })
       .create([
         node('ceremony'),
         relation('in', 'ceremonyRel', 'ceremony', {
@@ -43,10 +44,9 @@ export class CreateEngagementDefaultCeremonyHandler
       ])
       .run();
 
-    const dbCeremony = new DbCeremony();
     await this.authorizationService.processNewBaseNode(
-      dbCeremony,
-      ceremony.id,
+      Ceremony,
+      ceremonyId,
       session.userId
     );
 
@@ -54,7 +54,7 @@ export class CreateEngagementDefaultCeremonyHandler
       ...engagement,
       ceremony: {
         ...engagement.ceremony, // permissions
-        value: ceremony.id,
+        value: ceremonyId,
       },
     };
   }

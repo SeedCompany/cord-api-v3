@@ -1,34 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
 import {
   DuplicateException,
-  generateId,
   ID,
   NotFoundException,
   ServerException,
   Session,
   UnauthorizedException,
 } from '../../common';
+import { ConfigService, ILogger, Logger, OnIndex } from '../../core';
 import {
-  ConfigService,
-  createBaseNode,
-  DatabaseService,
-  ILogger,
-  Logger,
-  matchRequestingUser,
-  OnIndex,
-} from '../../core';
-import {
-  calculateTotalAndPaginateList,
-  matchPropList,
-  permissionsOfNode,
-  requestingUser,
-} from '../../core/database/query';
-import {
-  DbPropsOfDto,
   parseBaseNodeProperties,
   runListQuery,
-  StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import {
@@ -38,15 +20,15 @@ import {
   FundingAccountListOutput,
   UpdateFundingAccount,
 } from './dto';
-import { DbFundingAccount } from './model';
+import { FundingAccountRepository } from './funding-account.repository';
 
 @Injectable()
 export class FundingAccountService {
   constructor(
     @Logger('funding-account:service') private readonly logger: ILogger,
-    private readonly db: DatabaseService,
     private readonly config: ConfigService,
-    private readonly authorizationService: AuthorizationService
+    private readonly authorizationService: AuthorizationService,
+    private readonly repo: FundingAccountRepository
   ) {}
 
   @OnIndex()
@@ -73,11 +55,7 @@ export class FundingAccountService {
     input: CreateFundingAccount,
     session: Session
   ): Promise<FundingAccount> {
-    const checkFundingAccount = await this.db
-      .query()
-      .match([node('fundingAccount', 'FieldZoneName', { value: input.name })])
-      .return('fundingAccount')
-      .first();
+    const checkFundingAccount = await this.repo.checkFundingAccount(input.name);
 
     if (checkFundingAccount) {
       throw new DuplicateException(
@@ -86,46 +64,15 @@ export class FundingAccountService {
       );
     }
 
-    const secureProps = [
-      {
-        key: 'name',
-        value: input.name,
-        isPublic: false,
-        isOrgPublic: false,
-        label: 'FundingAccountName',
-      },
-      {
-        key: 'accountNumber',
-        value: input.accountNumber,
-        isPublic: false,
-        isOrgPublic: false,
-        label: 'FundingAccountNumber',
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
-
     try {
-      const query = this.db
-        .query()
-        .apply(matchRequestingUser(session))
-        .apply(
-          createBaseNode(await generateId(), 'FundingAccount', secureProps)
-        )
-        .return('node.id as id');
+      const result = await this.repo.create(input, session);
 
-      const result = await query.first();
       if (!result) {
         throw new ServerException('Failed to create funding account');
       }
 
-      const dbFundingAccount = new DbFundingAccount();
       await this.authorizationService.processNewBaseNode(
-        dbFundingAccount,
+        FundingAccount,
         result.id,
         session.userId
       );
@@ -149,15 +96,7 @@ export class FundingAccountService {
       throw new NotFoundException('Invalid: Blank ID');
     }
 
-    const readFundingAccount = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'FundingAccount', { id })])
-      .apply(matchPropList)
-      .return('propList, node')
-      .asResult<StandardReadResult<DbPropsOfDto<FundingAccount>>>();
-
-    const result = await readFundingAccount.first();
+    const result = await this.repo.readOne(id, session);
 
     if (!result) {
       throw new NotFoundException('FundingAccount.id', 'id');
@@ -171,7 +110,7 @@ export class FundingAccountService {
     return {
       ...parseBaseNodeProperties(result.node),
       ...secured,
-      canDelete: await this.db.checkDeletePermission(id, session),
+      canDelete: await this.repo.checkDeletePermission(id, session),
     };
   }
 
@@ -180,21 +119,14 @@ export class FundingAccountService {
     session: Session
   ): Promise<FundingAccount> {
     const fundingAccount = await this.readOne(input.id, session);
-    const changes = this.db.getActualChanges(
-      FundingAccount,
-      fundingAccount,
-      input
-    );
+
+    const changes = this.repo.getActualChanges(fundingAccount, input);
     await this.authorizationService.verifyCanEditChanges(
       FundingAccount,
       fundingAccount,
       changes
     );
-    return await this.db.updateProperties({
-      type: FundingAccount,
-      object: fundingAccount,
-      changes: changes,
-    });
+    return await this.repo.updateProperties(fundingAccount, changes);
   }
 
   async delete(id: ID, session: Session): Promise<void> {
@@ -204,7 +136,7 @@ export class FundingAccountService {
       throw new NotFoundException('Could not find Funding Account');
     }
 
-    const canDelete = await this.db.checkDeletePermission(id, session);
+    const canDelete = await this.repo.checkDeletePermission(id, session);
 
     if (!canDelete)
       throw new UnauthorizedException(
@@ -212,7 +144,7 @@ export class FundingAccountService {
       );
 
     try {
-      await this.db.deleteNode(object);
+      await this.repo.deleteNode(object);
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);
@@ -223,13 +155,7 @@ export class FundingAccountService {
     input: FundingAccountListInput,
     session: Session
   ): Promise<FundingAccountListOutput> {
-    const label = 'FundingAccount';
-
-    const query = this.db
-      .query()
-      .match([requestingUser(session), ...permissionsOfNode(label)])
-      .apply(calculateTotalAndPaginateList(FundingAccount, input));
-
+    const query = this.repo.list(input, session);
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 }

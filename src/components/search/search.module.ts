@@ -12,6 +12,7 @@ import { ProjectModule } from '../project/project.module';
 import { SongModule } from '../song/song.module';
 import { StoryModule } from '../story/story.module';
 import { UserModule } from '../user/user.module';
+import { SearchRepository } from './search.repository';
 import { SearchResolver } from './search.resolver';
 import { SearchService } from './search.service';
 
@@ -31,7 +32,7 @@ import { SearchService } from './search.service';
     FieldRegionModule,
     FundingAccountModule,
   ],
-  providers: [SearchResolver, SearchService],
-  exports: [SearchService],
+  providers: [SearchResolver, SearchService, SearchRepository],
+  exports: [SearchService, SearchRepository],
 })
 export class SearchModule {}

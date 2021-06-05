@@ -393,13 +393,11 @@ describe('Engagement e2e', () => {
       type: ProjectType.Internship,
     });
     const mentor = await createPerson(app);
-    const internshipEngagement = await createInternshipEngagementWithMinimumValues(
-      app,
-      {
+    const internshipEngagement =
+      await createInternshipEngagementWithMinimumValues(app, {
         projectId: internshipProject.id,
         internId: intern.id,
-      }
-    );
+      });
     const updatePosition = InternshipPosition.LanguageProgramManager;
     const updateMethodologies = [
       ProductMethodology.Paratext,
@@ -489,45 +487,6 @@ describe('Engagement e2e', () => {
     );
   });
 
-  it.skip('has consistency in ceremony basenode', async () => {
-    project = await createProject(app, { type: ProjectType.Translation });
-    language = await createLanguage(app);
-    const languageEngagement = await createLanguageEngagement(app, {
-      languageId: language.id,
-      projectId: project.id,
-    });
-
-    expect(languageEngagement.id).toBeDefined();
-    const testResult = await app.graphql.query(
-      gql`
-        query checkCeremonyConsistency {
-          checkCeremonyConsistency
-        }
-      `
-    );
-    expect(testResult.checkCeremonyConsistency).toBeTruthy();
-  });
-
-  it.skip('has consistency in language engagement nodes', async () => {
-    project = await createProject(app);
-    language = await createLanguage(app);
-    await createLanguageEngagement(app, {
-      languageId: language.id,
-      projectId: project.id,
-    });
-    const result = await app.graphql.query(
-      gql`
-        query checkEngagementConsistency($input: EngagementConsistencyInput!) {
-          checkEngagementConsistency(input: $input)
-        }
-      `,
-      {
-        input: { baseNode: 'LanguageEngagement' },
-      }
-    );
-    expect(result.checkEngagementConsistency).toBeTruthy();
-  });
-
   it('returns the correct products in language engagement', async () => {
     project = await createProject(app);
     language = await createLanguage(app);
@@ -570,26 +529,6 @@ describe('Engagement e2e', () => {
         }),
       ])
     );
-  });
-
-  it('has consistency in language engagement nodes', async () => {
-    project = await createProject(app);
-    language = await createLanguage(app);
-    await createLanguageEngagement(app, {
-      languageId: language.id,
-      projectId: project.id,
-    });
-    const result = await app.graphql.query(
-      gql`
-        query checkEngagementConsistency($input: EngagementConsistencyInput!) {
-          checkEngagementConsistency(input: $input)
-        }
-      `,
-      {
-        input: { baseNode: 'LanguageEngagement' },
-      }
-    );
-    expect(result.checkEngagementConsistency).toBeTruthy();
   });
 
   it('creates ceremony upon engagement creation', async () => {
@@ -1090,9 +1029,10 @@ describe('Engagement e2e', () => {
         }
       );
 
-      const toCompletedTransition = projectQueryResult.project.step.transitions.find(
-        (t: ProjectStepTransition) => t.to === 'Completed'
-      );
+      const toCompletedTransition =
+        projectQueryResult.project.step.transitions.find(
+          (t: ProjectStepTransition) => t.to === 'Completed'
+        );
 
       expect(projectQueryResult.project.step.value).toBe(
         ProjectStep.FinalizingCompletion

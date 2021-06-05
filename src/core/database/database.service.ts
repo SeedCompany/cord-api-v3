@@ -31,7 +31,7 @@ import {
 import { ILogger, Logger, ServiceUnavailableError, UniquenessError } from '..';
 import { AbortError, retry, RetryOptions } from '../../common/retry';
 import { ConfigService } from '../config/config.service';
-import { DbChanges, getChanges } from './changes';
+import { DbChanges } from './changes';
 import { deleteBaseNode } from './query';
 import { determineSortValue } from './query.helpers';
 import { hasMore } from './results';
@@ -214,8 +214,6 @@ export class DatabaseService {
     }
     return info;
   }
-
-  getActualChanges = getChanges;
 
   async updateProperties<
     TResourceStatic extends ResourceShape<any>,
@@ -423,9 +421,9 @@ export class DatabaseService {
 
       // with the rest of the requested properties
       ...props.map((prop) => {
-        const propName = (typeof prop === 'object'
-          ? prop.name
-          : prop) as string;
+        const propName = (
+          typeof prop === 'object' ? prop.name : prop
+        ) as string;
         return propName;
       }),
     ]);
@@ -471,9 +469,9 @@ export class DatabaseService {
 
         // return the rest of the requested properties
         ...props.map((prop) => {
-          const propName = (typeof prop === 'object'
-            ? prop.name
-            : prop) as string;
+          const propName = (
+            typeof prop === 'object' ? prop.name : prop
+          ) as string;
           return { [propName + '.value']: propName };
         }),
       ])
@@ -493,9 +491,9 @@ export class DatabaseService {
       };
 
       for (const prop of props) {
-        const propName = (typeof prop === 'object'
-          ? prop.name
-          : prop) as string;
+        const propName = (
+          typeof prop === 'object' ? prop.name : prop
+        ) as string;
         const secure = typeof prop === 'object' ? prop.secure : true;
         const list = typeof prop === 'object' ? prop.list : false;
 
@@ -562,152 +560,6 @@ export class DatabaseService {
       .apply(deleteBaseNode)
       .return('*');
     await query.run();
-  }
-
-  async hasProperties({
-    session,
-    id,
-    props,
-    nodevar,
-  }: {
-    id: ID;
-    session: Session;
-    props: string[];
-    nodevar: string;
-  }): Promise<boolean> {
-    const resultingArr = [];
-    for (const prop of props) {
-      const hasProp = await this.hasProperty({
-        session,
-        id,
-        prop,
-        nodevar,
-      });
-      resultingArr.push(hasProp);
-    }
-    return resultingArr.every((n) => n);
-  }
-
-  async hasProperty({
-    id,
-    session,
-    prop,
-    nodevar,
-  }: {
-    id: ID;
-    session: Session;
-    prop: string;
-    nodevar: string;
-  }): Promise<boolean> {
-    const result = await this.db
-      .query()
-      .match([
-        matchSession(session),
-        [
-          node(nodevar, upperFirst(nodevar), {
-            id,
-            active: true,
-          }),
-          relation('out', 'rel', prop, { active: true }),
-          node(prop, 'Property', { active: true }),
-        ],
-      ])
-      .return('count(rel) as total')
-      .first();
-
-    const totalNumber = result?.total || 0;
-    const hasPropertyNode = totalNumber > 0;
-    return hasPropertyNode;
-  }
-
-  async isRelationshipUnique({
-    session,
-    id,
-    relName,
-    srcNodeLabel,
-  }: {
-    session: Session;
-    id: ID;
-    relName: string;
-    srcNodeLabel: string;
-  }): Promise<boolean> {
-    const result = await this.db
-      .query()
-      .match([
-        matchSession(session),
-        [
-          node('n', srcNodeLabel, {
-            id,
-            active: true,
-          }),
-          relation('out', 'rel', relName, { active: true }),
-          node('', { active: true }),
-        ],
-      ])
-      .return('count(rel) as total')
-      .first();
-
-    const totalNumber = result?.total || 0;
-    const isUnique = totalNumber <= 1;
-
-    return isUnique;
-  }
-
-  async isUniqueProperties({
-    session,
-    id,
-    props,
-    nodevar,
-  }: {
-    id: ID;
-    session: Session;
-    props: string[];
-    nodevar: string;
-  }): Promise<boolean> {
-    const resultingArr = [];
-    for (const prop of props) {
-      const isUnique = await this.isUniqueProperty({
-        session,
-        id,
-        prop,
-        nodevar,
-      });
-      resultingArr.push(isUnique);
-    }
-    return resultingArr.every((n) => n);
-  }
-
-  async isUniqueProperty({
-    id,
-    session,
-    prop,
-    nodevar,
-  }: {
-    id: ID;
-    session: Session;
-    prop: string;
-    nodevar: string;
-  }): Promise<boolean> {
-    const query = this.db
-      .query()
-      .match([
-        matchSession(session),
-        [
-          node(nodevar, upperFirst(nodevar), {
-            id,
-            active: true,
-          }),
-          relation('out', 'rel', prop, { active: true }),
-          node(prop, 'Property', { active: true }),
-        ],
-      ])
-      .return('count(rel) as total');
-
-    const result = await query.first();
-    const totalNumber = result?.total || 0;
-
-    const isUniqueProperty = totalNumber <= 1;
-    return isUniqueProperty;
   }
 
   async addLabelsToPropNodes(

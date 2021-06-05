@@ -1,8 +1,10 @@
+import { Type } from '@nestjs/common';
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
 import {
+  DateInterval,
   DateTimeField,
   DbLabel,
   ID,
@@ -10,12 +12,13 @@ import {
   parentIdMiddleware,
   Resource,
   Secured,
-  SecuredDate,
   SecuredDateNullable,
   SecuredDateTime,
   SecuredProps,
   SecuredString,
+  SecuredStringNullable,
   Sensitivity,
+  UnsecuredDto,
 } from '../../../common';
 import { ScopedRole } from '../../authorization/dto';
 import { Budget } from '../../budget/dto';
@@ -24,13 +27,19 @@ import { Directory } from '../../file/dto';
 import { SecuredTags } from '../../language/dto/language.dto';
 import { Location } from '../../location/dto';
 import { Partnership } from '../../partnership/dto';
+import { SecuredReportPeriod } from '../../periodic-report/dto';
 import { Pinnable } from '../../pin/dto';
+import { Post } from '../../post/dto';
+import { Postable } from '../../post/postable/dto/postable.dto';
 import { ProjectMember } from '../project-member/dto';
 import { ProjectStatus } from './status.enum';
 import { SecuredProjectStep } from './step.enum';
 import { ProjectType } from './type.enum';
 
 type AnyProject = MergeExclusive<TranslationProject, InternshipProject>;
+
+const PinnablePostableResource: Type<Resource & Postable & Pinnable> =
+  IntersectionType(Resource, IntersectionType(Postable, Pinnable));
 
 @InterfaceType({
   resolveType: (val: Project) => {
@@ -45,7 +54,7 @@ type AnyProject = MergeExclusive<TranslationProject, InternshipProject>;
   },
   implements: [Resource, Pinnable],
 })
-class Project extends IntersectionType(Resource, Pinnable) {
+class Project extends PinnablePostableResource {
   static readonly Props: string[] = keysOf<Project>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Project>>();
   static readonly Relations = {
@@ -57,6 +66,7 @@ class Project extends IntersectionType(Resource, Pinnable) {
     engagement: [Engagement], // why singular
     // edge case because it's writable for internships but not secured
     sensitivity: Sensitivity,
+    posts: [Post], // from Postable interface
   };
 
   @Field(() => ProjectType)
@@ -73,7 +83,7 @@ class Project extends IntersectionType(Resource, Pinnable) {
     description: 'The legacy department ID',
   })
   @DbLabel('DepartmentId')
-  readonly departmentId: SecuredString;
+  readonly departmentId: SecuredStringNullable;
 
   @Field({
     middleware: [parentIdMiddleware],
@@ -85,19 +95,19 @@ class Project extends IntersectionType(Resource, Pinnable) {
   @DbLabel('ProjectStatus')
   readonly status: ProjectStatus;
 
-  readonly primaryLocation: Secured<ID>;
+  readonly primaryLocation: Secured<ID | null>;
 
-  readonly marketingLocation: Secured<ID>;
+  readonly marketingLocation: Secured<ID | null>;
 
-  readonly fieldRegion: Secured<ID>;
+  readonly fieldRegion: Secured<ID | null>;
 
-  readonly owningOrganization: Secured<ID>;
-
-  @Field()
-  readonly mouStart: SecuredDate;
+  readonly owningOrganization: Secured<ID | null>;
 
   @Field()
-  readonly mouEnd: SecuredDate;
+  readonly mouStart: SecuredDateNullable;
+
+  @Field()
+  readonly mouEnd: SecuredDateNullable;
 
   @Field()
   // this should match project mouEnd, until it becomes active, then this is final.
@@ -107,7 +117,7 @@ class Project extends IntersectionType(Resource, Pinnable) {
   readonly stepChangedAt: SecuredDateTime;
 
   @Field()
-  readonly estimatedSubmission: SecuredDate;
+  readonly estimatedSubmission: SecuredDateNullable;
 
   @DateTimeField()
   readonly modifiedAt: DateTime;
@@ -117,6 +127,9 @@ class Project extends IntersectionType(Resource, Pinnable) {
 
   @Field()
   readonly financialReportReceivedAt: SecuredDateTime;
+
+  @Field()
+  readonly financialReportPeriod: SecuredReportPeriod;
 
   // A list of non-global roles the requesting user has available for this object.
   // This is just a cache, to prevent extra db lookups within the same request.
@@ -128,7 +141,7 @@ class Project extends IntersectionType(Resource, Pinnable) {
 export { Project as IProject, AnyProject as Project };
 
 @ObjectType({
-  implements: [Project],
+  implements: [Project, Resource, Pinnable, Postable],
 })
 export class TranslationProject extends Project {
   static readonly Props = keysOf<TranslationProject>();
@@ -138,7 +151,7 @@ export class TranslationProject extends Project {
 }
 
 @ObjectType({
-  implements: [Project],
+  implements: [Project, Resource, Pinnable, Postable],
 })
 export class InternshipProject extends Project {
   static readonly Props = keysOf<InternshipProject>();
@@ -146,3 +159,6 @@ export class InternshipProject extends Project {
 
   readonly type: ProjectType.Internship;
 }
+
+export const projectRange = (project: UnsecuredDto<Project>) =>
+  DateInterval.tryFrom(project.mouStart, project.mouEnd);

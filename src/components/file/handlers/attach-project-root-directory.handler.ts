@@ -8,12 +8,13 @@ import {
 } from '../../../core';
 import { AuthorizationService } from '../../authorization/authorization.service';
 import { ProjectCreatedEvent } from '../../project/events';
+import { Directory } from '../dto';
 import { FileService } from '../file.service';
-import { DbDirectory } from '../model';
 
 @EventsHandler(ProjectCreatedEvent)
 export class AttachProjectRootDirectoryHandler
-  implements IEventHandler<ProjectCreatedEvent> {
+  implements IEventHandler<ProjectCreatedEvent>
+{
   constructor(
     private readonly files: FileService,
     private readonly db: DatabaseService,
@@ -46,9 +47,8 @@ export class AttachProjectRootDirectoryHandler
       ])
       .run();
 
-    const dbDirectory = new DbDirectory();
     await this.authorizationService.processNewBaseNode(
-      dbDirectory,
+      Directory,
       rootDir.id,
       session.userId
     );
@@ -58,9 +58,7 @@ export class AttachProjectRootDirectoryHandler
     }
     const folders = [
       'Approval Documents',
-      'Financial Reports',
       'Consultant Reports',
-      'Narrative Reports',
       'Field Correspondence',
       'Photos',
     ];

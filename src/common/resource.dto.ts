@@ -29,12 +29,14 @@ export abstract class Resource {
 export type ResourceShape<T> = AbstractClassType<T> & {
   Props: string[];
   SecuredProps: string[];
+  // An optional list of props that exist on the BaseNode in the DB.
+  // Default should probably be considered the props on Resource class.
+  BaseNodeProps?: string[];
   Relations?: Record<string, any>;
 };
 
-export type MaybeUnsecuredInstance<
-  TResourceStatic extends ResourceShape<any>
-> = TResourceStatic['prototype'] | UnsecuredDto<TResourceStatic['prototype']>;
+export type MaybeUnsecuredInstance<TResourceStatic extends ResourceShape<any>> =
+  TResourceStatic['prototype'] | UnsecuredDto<TResourceStatic['prototype']>;
 
 // Get the secured props of the resource
 // merged with all of the relations which are assumed to be secure.

@@ -470,44 +470,6 @@ export class FileRepository {
       throw new ServerException('Failed to delete', exception);
     }
   }
-
-  async checkConsistency(type: FileNodeType, session: Session): Promise<void> {
-    const fileNodes = await this.db
-      .query()
-      .matchNode('fileNode', type)
-      .return('fileNode.id as id')
-      .run();
-
-    const requiredProperties =
-      type === FileNodeType.FileVersion ? ['size', 'mimeType'] : ['name'];
-    const uniqueRelationships = ['createdBy', 'parent'];
-
-    for (const fn of fileNodes) {
-      const id = fn.id as ID;
-      for (const rel of uniqueRelationships) {
-        const unique = await this.db.isRelationshipUnique({
-          session,
-          id,
-          relName: rel,
-          srcNodeLabel: type,
-        });
-        if (!unique) {
-          throw new Error(`Node ${id} has multiple ${rel} relationships`);
-        }
-      }
-      for (const prop of requiredProperties) {
-        const hasIt = await this.db.hasProperty({
-          session,
-          id,
-          prop,
-          nodevar: type,
-        });
-        if (!hasIt) {
-          throw new Error(`Node ${id} is missing ${prop}`);
-        }
-      }
-    }
-  }
 }
 
 const matchName = () => [

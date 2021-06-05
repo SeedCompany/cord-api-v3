@@ -12,9 +12,8 @@ type PropGrants = {
 };
 
 // An object defining the permissions for each property of the resource
-export type PermissionsForResource<
-  Resource extends ResourceShape<any>
-> = Partial<Record<keyof SecuredResource<Resource>, DbPermission>>;
+export type PermissionsForResource<Resource extends ResourceShape<any>> =
+  Partial<Record<keyof SecuredResource<Resource>, DbPermission>>;
 
 export class DbRole {
   name: ScopedRole;

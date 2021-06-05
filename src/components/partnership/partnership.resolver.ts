@@ -120,13 +120,4 @@ export class PartnershipResolver {
     await this.service.delete(id, session);
     return true;
   }
-
-  @Query(() => Boolean, {
-    description: 'Check partnership node consistency',
-  })
-  async checkPartnershipConsistency(
-    @LoggedInSession() session: Session
-  ): Promise<boolean> {
-    return await this.service.checkPartnershipConsistency(session);
-  }
 }

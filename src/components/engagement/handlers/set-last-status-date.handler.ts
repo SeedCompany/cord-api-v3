@@ -15,7 +15,8 @@ import { EngagementUpdatedEvent } from '../events';
 
 @EventsHandler(EngagementUpdatedEvent)
 export class SetLastStatusDate
-  implements IEventHandler<EngagementUpdatedEvent> {
+  implements IEventHandler<EngagementUpdatedEvent>
+{
   constructor(
     private readonly db: DatabaseService,
     @Logger('engagement:set-last-status-date') private readonly logger: ILogger

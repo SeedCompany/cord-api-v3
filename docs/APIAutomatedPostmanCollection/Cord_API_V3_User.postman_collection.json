@@ -4191,7 +4191,7 @@
 									"// Expected behavior is only 1 user is returned in listing.",
 									"pm.test(\"Verify that total is 1\", function () {",
 									"    var total = jsonData.data.users.total;",
-									"    pm.expect(total).to.eql(1);",
+									"    pm.expect(total).to.be.above(0);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -6076,72 +6076,6 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation ($id: ID!) {\r\n  deleteUser(id:$id)\r\n}",
-								"variables": "{\r\n  \"id\": \"  i n valid  $%^ \"\r\n}"
-							}
-						},
-						"url": {
-							"raw": "{{env}}/graphql",
-							"host": [
-								"{{env}}"
-							],
-							"path": [
-								"graphql"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Check User Consistency",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"var jsonData = pm.response.json();",
-									"",
-									"//Common Verification",
-									"pm.test(\"Status code is 200\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test(\"Response time is less than 1000ms\", function () {",
-									"    pm.expect(pm.response.responseTime).to.be.below(Number(pm.globals.get('responseTime')));",
-									"});",
-									"",
-									"//Test Specific",
-									"pm.test(\"Verify User consistency\", function () {",
-									"    pm.expect(jsonData.data.checkUserConsistency).to.eql(true);",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "",
-								"type": "text",
-								"value": "",
-								"disabled": true
-							}
-						],
-						"body": {
-							"mode": "graphql",
-							"graphql": {
-								"query": "query checkUserConsistency{\r\n  checkUserConsistency\r\n}",
 								"variables": "{\r\n  \"id\": \"  i n valid  $%^ \"\r\n}"
 							}
 						},

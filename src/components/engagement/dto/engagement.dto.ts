@@ -3,6 +3,7 @@ import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
 import {
+  DateInterval,
   DateTimeField,
   ID,
   parentIdMiddleware,
@@ -13,6 +14,7 @@ import {
   SecuredDateTime,
   SecuredProps,
   SecuredString,
+  Sensitivity,
 } from '../../../common';
 import { DefinedFile } from '../../file/dto';
 import { Product, SecuredMethodologies } from '../../product/dto';
@@ -75,6 +77,11 @@ class Engagement extends Resource {
 
   @Field()
   readonly endDateOverride: SecuredDateNullable;
+
+  @Field(() => Sensitivity, {
+    description: "Based on the project's sensitivity",
+  })
+  readonly sensitivity: Sensitivity;
 
   @Field()
   // this should match project mouEnd, until it becomes active, then this is final.
@@ -159,3 +166,14 @@ export class InternshipEngagement extends Engagement {
 
   readonly growthPlan: DefinedFile;
 }
+
+export const engagementRange = (engagement: Engagement) =>
+  engagement.startDateOverride.value
+    ? DateInterval.tryFrom(
+        engagement.startDateOverride.value,
+        engagement.endDateOverride.value
+      )
+    : DateInterval.tryFrom(
+        engagement.startDate.value,
+        engagement.endDate.value
+      );

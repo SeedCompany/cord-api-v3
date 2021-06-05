@@ -200,29 +200,6 @@ describe('User e2e', () => {
     expect(users.items.length).toBeGreaterThanOrEqual(2);
   });
 
-  it.skip('Check consistency across user nodes', async () => {
-    // create a user
-    const user = await registerUser(app, { email: faker.internet.email() });
-    // test it has proper schema
-    const result = await app.graphql.query(gql`
-      query {
-        checkUserConsistency
-      }
-    `);
-    expect(result.checkUserConsistency).toBeTruthy();
-    // delete user node so next test will pass
-    await app.graphql.mutate(
-      gql`
-        mutation deleteUser($id: ID!) {
-          deleteUser(id: $id)
-        }
-      `,
-      {
-        id: user.id,
-      }
-    );
-  });
-
   it('assign organization to user', async () => {
     const newUser = await registerUserWithPower(app, [
       Powers.CreateOrganization,

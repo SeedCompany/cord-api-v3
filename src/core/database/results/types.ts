@@ -15,11 +15,15 @@ import type { PropListDbResult } from './parse-props';
  *   to unknown as they probably need to be handled explicitly.
  *   This allows them to be used for permissions, but not for values.
  */
-export type DbPropsOfDto<Dto extends Record<string, any>> = NativeDbProps<
-  Omit<UnsecuredDto<Dto>, keyof BaseNode>
+export type DbPropsOfDto<
+  Dto extends Record<string, any>,
+  // Specify this as true when using new matchProps query fragment
+  IncludeBaseNode extends boolean | undefined = false
+> = NativeDbProps<
+  Omit<UnsecuredDto<Dto>, IncludeBaseNode extends true ? never : keyof BaseNode>
 >;
 
-type NativeDbProps<Dto extends Record<string, any>> = {
+export type NativeDbProps<Dto extends Record<string, any>> = {
   [Key in keyof Dto]: Dto[Key] extends NativeDbValue ? Dto[Key] : unknown;
 };
 

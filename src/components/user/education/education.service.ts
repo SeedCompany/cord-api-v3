@@ -1,36 +1,17 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
-  generateId,
   ID,
   NotFoundException,
   ServerException,
   Session,
 } from '../../../common';
+import { ConfigService, DatabaseService, ILogger, Logger } from '../../../core';
 import {
-  ConfigService,
-  createBaseNode,
-  DatabaseService,
-  ILogger,
-  Logger,
-  matchRequestingUser,
-  matchSession,
-} from '../../../core';
-import {
-  calculateTotalAndPaginateList,
-  matchPropList,
-  permissionsOfNode,
-  requestingUser,
-} from '../../../core/database/query';
-import {
-  DbPropsOfDto,
   parseBaseNodeProperties,
   runListQuery,
-  StandardReadResult,
 } from '../../../core/database/results';
 import { AuthorizationService } from '../../authorization/authorization.service';
-import { DbEducation } from '../model';
 import {
   CreateEducation,
   Education,
@@ -38,6 +19,7 @@ import {
   EducationListOutput,
   UpdateEducation,
 } from './dto';
+import { EducationRepository } from './education.repository';
 
 @Injectable()
 export class EducationService {
@@ -46,7 +28,8 @@ export class EducationService {
     private readonly config: ConfigService,
     private readonly db: DatabaseService,
     @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService
+    private readonly authorizationService: AuthorizationService,
+    private readonly repo: EducationRepository
   ) {}
 
   async create(
@@ -77,30 +60,19 @@ export class EducationService {
     ];
 
     // create education
-    const query = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([
-        node('user', 'User', {
-          id: userId,
-        }),
-      ])
-      .apply(createBaseNode(await generateId(), 'Education', secureProps))
-      .create([
-        node('user'),
-        relation('out', '', 'education', { active: true, createdAt }),
-        node('node'),
-      ])
-      .return('node.id as id');
+    const result = await this.repo.create(
+      userId,
+      secureProps,
+      createdAt,
+      session
+    );
 
-    const result = await query.first();
     if (!result) {
       throw new ServerException('failed to create education');
     }
 
-    const dbEducation = new DbEducation();
     await this.authorizationService.processNewBaseNode(
-      dbEducation,
+      Education,
       result.id,
       userId
     );
@@ -115,15 +87,7 @@ export class EducationService {
       userId: session.userId,
     });
 
-    const query = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'Education', { id })])
-      .apply(matchPropList)
-      .return('propList, node')
-      .asResult<StandardReadResult<DbPropsOfDto<Education>>>();
-
-    const result = await query.first();
+    const result = await this.repo.readOne(id, session);
 
     if (!result) {
       throw new NotFoundException('Could not find education', 'education.id');
@@ -138,29 +102,20 @@ export class EducationService {
     return {
       ...parseBaseNodeProperties(result.node),
       ...secured,
-      canDelete: await this.db.checkDeletePermission(id, session), // TODO
+      canDelete: await this.repo.checkDeletePermission(id, session), // TODO
     };
   }
 
   async update(input: UpdateEducation, session: Session): Promise<Education> {
     const ed = await this.readOne(input.id, session);
-    const result = await this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([
-        node('user', 'User'),
-        relation('out', '', 'education', { active: true }),
-        node('education', 'Education', { id: input.id }),
-      ])
-      .return('user')
-      .first();
+    const result = await this.repo.getUserEducation(session, input.id);
     if (!result) {
       throw new NotFoundException(
         'Could not find user associated with education',
         'user.education'
       );
     }
-    const changes = this.db.getActualChanges(Education, ed, input);
+    const changes = this.repo.getActualChanges(ed, input);
     if (result.user.properties.id !== session.userId) {
       await this.authorizationService.verifyCanEditChanges(
         Education,
@@ -169,11 +124,7 @@ export class EducationService {
       );
     }
 
-    await this.db.updateProperties({
-      type: Education,
-      object: ed,
-      changes,
-    });
+    await this.repo.updateProperties(ed, changes);
     return await this.readOne(input.id, session);
   }
 
@@ -185,59 +136,8 @@ export class EducationService {
     { filter, ...input }: EducationListInput,
     session: Session
   ): Promise<EducationListOutput> {
-    const label = 'Education';
-
-    const query = this.db
-      .query()
-      .match([
-        requestingUser(session),
-        ...permissionsOfNode(label),
-        ...(filter.userId
-          ? [
-              relation('in', '', 'education', { active: true }),
-              node('user', 'User', {
-                id: filter.userId,
-              }),
-            ]
-          : []),
-      ])
-      .apply(calculateTotalAndPaginateList(Education, input));
+    const query = this.repo.list({ filter, ...input }, session);
 
     return await runListQuery(query, input, (id) => this.readOne(id, session));
-  }
-
-  async checkEducationConsistency(session: Session): Promise<boolean> {
-    const educations = await this.db
-      .query()
-      .match([matchSession(session), [node('education', 'Education')]])
-      .return('education.id as id')
-      .run();
-
-    return (
-      (
-        await Promise.all(
-          educations.map(async (education) => {
-            return await this.db.hasProperties({
-              session,
-              id: education.id,
-              props: ['degree', 'major', 'institution'],
-              nodevar: 'education',
-            });
-          })
-        )
-      ).every((n) => n) &&
-      (
-        await Promise.all(
-          educations.map(async (education) => {
-            return await this.db.isUniqueProperties({
-              session,
-              id: education.id,
-              props: ['degree', 'major', 'institution'],
-              nodevar: 'education',
-            });
-          })
-        )
-      ).every((n) => n)
-    );
   }
 }

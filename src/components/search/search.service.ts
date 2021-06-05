@@ -1,12 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { node, regexp, relation } from 'cypher-query-builder';
 import { compact } from 'lodash';
 import { ID, NotFoundException, ServerException, Session } from '../../common';
-import {
-  DatabaseService,
-  matchRequestingUser,
-  matchUserPermissions,
-} from '../../core';
+import { DatabaseService } from '../../core';
 import { FieldRegionService } from '../field-region';
 import { FieldZoneService } from '../field-zone';
 import { FilmService } from '../film';
@@ -28,6 +23,7 @@ import {
   SearchResultMap,
   SearchResultTypes,
 } from './dto';
+import { SearchRepository } from './search.repository';
 
 type HydratorMap = {
   [K in keyof SearchableMap]?: Hydrator<SearchableMap[K]>;
@@ -75,7 +71,8 @@ export class SearchService {
     private readonly song: SongService,
     private readonly zone: FieldZoneService,
     private readonly region: FieldRegionService,
-    private readonly fundingAccount: FundingAccountService
+    private readonly fundingAccount: FundingAccountService,
+    private readonly repo: SearchRepository
   ) {}
 
   async search(input: SearchInput, session: Session): Promise<SearchOutput> {
@@ -91,28 +88,12 @@ export class SearchService {
 
     // Search for nodes based on input, only returning their id and "type"
     // which is based on their first valid search label.
-    const query = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .apply(matchUserPermissions)
-      .match([
-        node('node'),
-        relation('out', 'r', { active: true }),
-        node('property', 'Property'),
-      ])
-      // reduce to nodes with a label of one of the specified types
-      .raw('WHERE size([l in labels(node) where l in $types | 1]) > 0', {
-        types,
-      })
-      .with(['node', 'property'])
-      .where({
-        property: { value: regexp(`.*${input.query}.*`, true) },
-      })
-      .returnDistinct(['node.id as id', typeFromLabels])
-      .limit(input.count)
-      .asResult<{ id: ID; type: keyof SearchResultMap }>();
-
-    const results = await query.run();
+    const results = await this.repo.search(
+      input,
+      session,
+      typeFromLabels,
+      types
+    );
 
     // Individually convert each result (id & type) to its search result
     // based on this.hydrators
@@ -130,12 +111,10 @@ export class SearchService {
                   : []),
               ]
         )
-        .map(
-          async ({ id, type }): Promise<SearchResult | null> => {
-            const hydrator = this.hydrate(type);
-            return await hydrator(id, session);
-          }
-        )
+        .map(async ({ id, type }): Promise<SearchResult | null> => {
+          const hydrator = this.hydrate(type);
+          return await hydrator(id, session);
+        })
     );
 
     return {

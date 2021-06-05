@@ -141,27 +141,4 @@ describe('Unavailability e2e', () => {
       numUnavail
     );
   });
-
-  it.skip('Check consistency across unavailability nodes', async () => {
-    // create an unavailability
-    const unavailability = await createUnavailability(app, { userId: user.id });
-    // test it has proper schema
-    const result = await app.graphql.query(gql`
-      query {
-        checkUnavailabilityConsistency
-      }
-    `);
-    expect(result.checkUnavailabilityConsistency).toBeTruthy();
-    // delete unavailability node so next test will pass
-    await app.graphql.mutate(
-      gql`
-        mutation deleteUnavailability($id: ID!) {
-          deleteUnavailability(id: $id)
-        }
-      `,
-      {
-        id: unavailability.id,
-      }
-    );
-  });
 });

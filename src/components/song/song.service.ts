@@ -1,34 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
 import {
   DuplicateException,
-  generateId,
   ID,
   NotFoundException,
   ServerException,
   Session,
   UnauthorizedException,
 } from '../../common';
+import { ConfigService, ILogger, Logger, OnIndex } from '../../core';
 import {
-  ConfigService,
-  createBaseNode,
-  DatabaseService,
-  ILogger,
-  Logger,
-  matchRequestingUser,
-  OnIndex,
-} from '../../core';
-import {
-  calculateTotalAndPaginateList,
-  matchPropList,
-  permissionsOfNode,
-  requestingUser,
-} from '../../core/database/query';
-import {
-  DbPropsOfDto,
   parseBaseNodeProperties,
   runListQuery,
-  StandardReadResult,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
@@ -39,16 +21,16 @@ import {
   SongListOutput,
   UpdateSong,
 } from './dto';
-import { DbSong } from './model';
+import { SongRepository } from './song.repository';
 
 @Injectable()
 export class SongService {
   constructor(
     @Logger('song:service') private readonly logger: ILogger,
-    private readonly db: DatabaseService,
     private readonly config: ConfigService,
     private readonly scriptureRefService: ScriptureReferenceService,
-    private readonly authorizationService: AuthorizationService
+    private readonly authorizationService: AuthorizationService,
+    private readonly repo: SongRepository
   ) {}
 
   @OnIndex()
@@ -68,11 +50,7 @@ export class SongService {
   }
 
   async create(input: CreateSong, session: Session): Promise<Song> {
-    const checkSong = await this.db
-      .query()
-      .match([node('song', 'SongName', { value: input.name })])
-      .return('song')
-      .first();
+    const checkSong = await this.repo.checkSong(input);
 
     if (checkSong) {
       throw new DuplicateException(
@@ -98,26 +76,14 @@ export class SongService {
     ];
 
     try {
-      const result = await this.db
-        .query()
-        .apply(matchRequestingUser(session))
-        .apply(
-          createBaseNode(
-            await generateId(),
-            ['Song', 'Producible'],
-            secureProps
-          )
-        )
-        .return('node.id as id')
-        .first();
+      const result = await this.repo.create(session, secureProps);
 
       if (!result) {
         throw new ServerException('failed to create a song');
       }
 
-      const dbSong = new DbSong();
       await this.authorizationService.processNewBaseNode(
-        dbSong,
+        Song,
         result.id,
         session.userId
       );
@@ -140,16 +106,7 @@ export class SongService {
   }
 
   async readOne(id: ID, session: Session): Promise<Song> {
-    const query = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'Song', { id })])
-      .apply(matchPropList)
-      .return('propList, node')
-      .asResult<StandardReadResult<DbPropsOfDto<Song>>>();
-
-    const result = await query.first();
-
+    const result = await this.repo.readOne(id, session);
     if (!result) {
       throw new NotFoundException('Could not find song', 'song.id');
     }
@@ -172,22 +129,18 @@ export class SongService {
         ...securedProps.scriptureReferences,
         value: scriptureReferences,
       },
-      canDelete: await this.db.checkDeletePermission(id, session),
+      canDelete: await this.repo.checkDeletePermission(id, session),
     };
   }
 
   async update(input: UpdateSong, session: Session): Promise<Song> {
     const song = await this.readOne(input.id, session);
-    const changes = this.db.getActualChanges(Song, song, input);
+    const changes = this.repo.getActualChanges(song, input);
     await this.authorizationService.verifyCanEditChanges(Song, song, changes);
     const { scriptureReferences, ...simpleChanges } = changes;
 
     await this.scriptureRefService.update(input.id, scriptureReferences);
-    await this.db.updateProperties({
-      type: Song,
-      object: song,
-      changes: simpleChanges,
-    });
+    await this.repo.updateProperties(song, simpleChanges);
 
     return await this.readOne(input.id, session);
   }
@@ -197,7 +150,7 @@ export class SongService {
     if (!song) {
       throw new NotFoundException('Could not find Song');
     }
-    const canDelete = await this.db.checkDeletePermission(id, session);
+    const canDelete = await this.repo.checkDeletePermission(id, session);
 
     if (!canDelete)
       throw new UnauthorizedException(
@@ -205,7 +158,7 @@ export class SongService {
       );
 
     try {
-      await this.db.deleteNode(song);
+      await this.repo.deleteNode(song);
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);
@@ -218,11 +171,7 @@ export class SongService {
     { filter, ...input }: SongListInput,
     session: Session
   ): Promise<SongListOutput> {
-    const query = this.db
-      .query()
-      .match([requestingUser(session), ...permissionsOfNode('Song')])
-      .apply(calculateTotalAndPaginateList(Song, input));
-
+    const query = this.repo.list({ filter, ...input }, session);
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 }
