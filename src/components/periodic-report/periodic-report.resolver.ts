@@ -1,4 +1,3 @@
-import { Logger } from '@nestjs/common';
 import {
   Args,
   Mutation,
@@ -14,7 +13,7 @@ import {
   LoggedInSession,
   Session,
 } from '../../common';
-import { DatabaseService } from '../../core';
+import { DatabaseService, ILogger, Logger } from '../../core';
 import { EngagementService, LanguageEngagement } from '../engagement';
 import { PnpExtractor } from '../engagement/pnp-extractor.service';
 import { FileService, SecuredFile } from '../file';
@@ -32,10 +31,9 @@ export class PeriodicReportResolver {
     private readonly engagements: EngagementService,
     private readonly files: FileService,
     private readonly db: DatabaseService,
+    @Logger('periodic-report:migration') private readonly logger: ILogger,
     private readonly pnp: PnpExtractor
   ) {}
-
-  private readonly logger = new Logger();
 
   @ResolveField(() => CalendarDate, {
     description: 'When this report is due',
