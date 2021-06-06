@@ -7,6 +7,7 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { node, relation } from 'cypher-query-builder';
+import { uniqBy } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   AnonSession,
@@ -249,21 +250,28 @@ export class PeriodicReportResolver {
     description: 'Move P&P files from old schema to new periodic report schema',
   })
   async migratePnps() {
+    let count = 1;
     const migratePnp = async ({
-      pnpData: { year, quarter, progressPlanned, progressActual, variance },
+      year,
+      quarter,
+      planned,
+      actual,
+      variance,
       latestPnpVersionId,
       engagementId,
     }: {
-      pnpData: {
-        year: number;
-        quarter: number;
-        progressPlanned: number;
-        progressActual: number;
-        variance: number;
-      };
+      year: number;
+      quarter: number;
+      planned: number;
+      actual: number;
+      variance: number;
       latestPnpVersionId: ID;
       engagementId: ID;
     }) => {
+      count++;
+      if (count % 100 === 0) {
+        this.logger.log(`${count} of ${unique.length} pnps synced`);
+      }
       if (!year || !quarter) {
         this.logger.log({
           message: 'no year or quarter',
@@ -406,13 +414,14 @@ export class PeriodicReportResolver {
         .query()
         .raw(
           `
-          create({id: $periodicReportId})-[:progressSummary{active: true, createdAt: $createdAt}]->(:ProgressSummary{planned: $planned, actual: $actual, variance: $variance})
+          match(pr{id:$periodicReportId})
+          create(pr)-[:progressSummary{active: true, createdAt: $createdAt}]->(:ProgressSummary{planned: $planned, actual: $actual, variance: $variance})
         `,
           {
             periodicReportId,
             createdAt,
-            planned: progressPlanned,
-            actual: progressActual,
+            planned: planned,
+            actual: actual,
             variance,
           }
         )
@@ -453,21 +462,25 @@ export class PeriodicReportResolver {
           .orderBy('fv.createdAt', 'desc')
           .limit(1)
       )
-      .return('pn as pnpData, e.id as engagementId, latestPnpVersionId')
+      .return(
+        'pn.progressPlanned as planned, pn.progressActual as actual, pn.variance as variance, pn.year as year, pn.quarter as quarter, e.id as engagementId, latestPnpVersionId'
+      )
       .asResult<{
         engagementId: ID;
         latestPnpVersionId: ID;
-        pnpData: {
-          progressPlanned: number;
-          progressActual: number;
-          variance: number;
-          year: number;
-          quarter: number;
-        };
+        planned: number;
+        actual: number;
+        variance: number;
+        year: number;
+        quarter: number;
       }>()
       .run();
 
-    await asyncPool(20, res, migratePnp);
+    // this could be better, but it works
+    const unique = uniqBy(res, 'engagementId');
+    this.logger.log(`starting pnp migration`);
+    await asyncPool(20, unique, migratePnp);
+    this.logger.log(`finished pnp migration`);
 
     return true;
   }
