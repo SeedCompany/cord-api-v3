@@ -1,5 +1,5 @@
 import { ObjectType, registerEnumType } from '@nestjs/graphql';
-import { SecuredEnumList } from '../../../../common';
+import { SecuredEnumList } from '../../../common';
 
 export enum PlanChangeType {
   Time = 'Time',

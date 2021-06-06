@@ -7,7 +7,7 @@ import {
   ServerException,
   Session,
   UnauthorizedException,
-} from '../../../common';
+} from '../../common';
 import {
   ConfigService,
   DatabaseService,
@@ -15,10 +15,10 @@ import {
   ILogger,
   Logger,
   OnIndex,
-} from '../../../core';
-import { runListQuery } from '../../../core/database/results';
-import { AuthorizationService } from '../../authorization/authorization.service';
-import { ProjectService } from '../project.service';
+} from '../../core';
+import { runListQuery } from '../../core/database/results';
+import { AuthorizationService } from '../authorization/authorization.service';
+import { ProjectService } from '../project/project.service';
 import { CreatePlanChange, PlanChange, UpdatePlanChange } from './dto';
 import { ChangeListInput, ChangeListOutput } from './dto/change-list.dto';
 import { PlanChangeUpdatedEvent } from './events';

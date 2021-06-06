@@ -5,8 +5,8 @@ import { CalendarDate } from '../src/common';
 import { Powers } from '../src/components/authorization/dto/powers';
 import { PartnerType } from '../src/components/partner';
 import { CreatePartnership } from '../src/components/partnership';
+import { PlanChangeStatus } from '../src/components/plan-change/dto/plan-change-status.enum';
 import { Project, Role } from '../src/components/project';
-import { PlanChangeStatus } from '../src/components/project/change-to-plan/dto/plan-change-status.enum';
 import { User } from '../src/components/user/dto/user.dto';
 import {
   createFundingAccount,

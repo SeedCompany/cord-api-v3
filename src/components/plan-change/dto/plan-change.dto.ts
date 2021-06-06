@@ -1,6 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { Resource, SecuredProps, SecuredString } from '../../../../common';
+import { Resource, SecuredProps, SecuredString } from '../../../common';
 import { SecuredPlanChangeStatus } from './plan-change-status.enum';
 import { SecuredPlanChangeTypes } from './plan-change-type.enum';
 

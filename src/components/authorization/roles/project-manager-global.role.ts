@@ -16,9 +16,9 @@ import { DbOrganization } from '../../organization/model';
 import { DbPartner } from '../../partner/model';
 import { DbPartnership } from '../../partnership/model';
 import { DbPeriodicReport } from '../../periodic-report/model';
+import { DbPlanChange } from '../../plan-change/model';
 import { DbPost } from '../../post/model';
 import { DbProduct } from '../../product/model';
-import { DbPlanChange } from '../../project/change-to-plan/model';
 /* eslint-disable @typescript-eslint/naming-convention */
 import { DbProject } from '../../project/model';
 import { DbProjectMember } from '../../project/project-member/model';

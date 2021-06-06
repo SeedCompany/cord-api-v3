@@ -1,5 +1,5 @@
 import { ObjectType, registerEnumType } from '@nestjs/graphql';
-import { SecuredEnum } from '../../../../common';
+import { SecuredEnum } from '../../../common';
 
 export enum PlanChangeStatus {
   Pending = 'Pending',

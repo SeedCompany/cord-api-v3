@@ -1,6 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { AuthorizationModule } from '../../authorization/authorization.module';
-import { ProjectModule } from '../project.module';
+import { AuthorizationModule } from '../authorization/authorization.module';
+import { ProjectModule } from '../project/project.module';
 import { ChangeableResolver } from './changeable.resolver';
 import * as handlers from './handlers';
 import { PlanChangeRepository } from './plan-change.repository';

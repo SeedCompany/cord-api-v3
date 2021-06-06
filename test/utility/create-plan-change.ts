@@ -4,9 +4,9 @@ import { isValidId } from '../../src/common';
 import {
   CreatePlanChange,
   PlanChange,
-} from '../../src/components/project/change-to-plan/dto';
-import { PlanChangeStatus } from '../../src/components/project/change-to-plan/dto/plan-change-status.enum';
-import { PlanChangeType } from '../../src/components/project/change-to-plan/dto/plan-change-type.enum';
+} from '../../src/components/plan-change/dto';
+import { PlanChangeStatus } from '../../src/components/plan-change/dto/plan-change-status.enum';
+import { PlanChangeType } from '../../src/components/plan-change/dto/plan-change-type.enum';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
 

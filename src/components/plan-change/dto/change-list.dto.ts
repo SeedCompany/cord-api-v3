@@ -6,7 +6,7 @@ import {
   PaginatedList,
   SecuredList,
   SortablePaginationInput,
-} from '../../../../common';
+} from '../../../common';
 import { PlanChange } from './plan-change.dto';
 
 @InputType()

@@ -44,12 +44,12 @@ import {
   PartnershipService,
   SecuredPartnershipList,
 } from '../partnership';
-import { PlanChangeService } from './change-to-plan';
+import { PlanChangeService } from '../plan-change';
 import {
   ChangeListInput,
   SecuredChangeList,
-} from './change-to-plan/dto/change-list.dto';
-import { PlanChangeStatus } from './change-to-plan/dto/plan-change-status.enum';
+} from '../plan-change/dto/change-list.dto';
+import { PlanChangeStatus } from '../plan-change/dto/plan-change-status.enum';
 import {
   CreateProject,
   InternshipProject,

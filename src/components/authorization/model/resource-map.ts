@@ -22,12 +22,12 @@ import {
   IPeriodicReport as PeriodicReport,
   ProgressReport,
 } from '../../periodic-report/dto';
+import { PlanChange } from '../../plan-change/dto';
 import {
   DerivativeScriptureProduct,
   DirectScriptureProduct,
   Product,
 } from '../../product/dto';
-import { PlanChange } from '../../project/change-to-plan/dto';
 import {
   InternshipProject,
   IProject as Project,

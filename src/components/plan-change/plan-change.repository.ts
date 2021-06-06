@@ -1,18 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { generateId, ID, Session } from '../../../common';
+import { generateId, ID, Session } from '../../common';
 import {
   createBaseNode,
   DtoRepository,
   matchRequestingUser,
   Property,
-} from '../../../core';
+} from '../../core';
 import {
   calculateTotalAndPaginateList,
   matchPropsAndProjectSensAndScopedRoles,
-} from '../../../core/database/query';
-import { DbPropsOfDto } from '../../../core/database/results';
-import { ScopedRole } from '../project-member';
+} from '../../core/database/query';
+import { DbPropsOfDto } from '../../core/database/results';
+import { ScopedRole } from '../project/project-member';
 import { ChangeListInput, PlanChange } from './dto';
 
 @Injectable()

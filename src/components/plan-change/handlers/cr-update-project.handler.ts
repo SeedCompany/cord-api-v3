@@ -1,15 +1,15 @@
 import { node, relation } from 'cypher-query-builder';
-import { UpdateProject } from '../..';
-import { CalendarDate, ID, ServerException } from '../../../../common';
+import { CalendarDate, ID, ServerException } from '../../../common';
 import {
   DatabaseService,
   EventsHandler,
   IEventHandler,
   ILogger,
   Logger,
-} from '../../../../core';
-import { ProjectRepository } from '../../project.repository';
-import { ProjectService } from '../../project.service';
+} from '../../../core';
+import { UpdateProject } from '../../project';
+import { ProjectRepository } from '../../project/project.repository';
+import { ProjectService } from '../../project/project.service';
 import { PlanChangeStatus } from '../dto/plan-change-status.enum';
 import { PlanChangeUpdatedEvent } from '../events';
 

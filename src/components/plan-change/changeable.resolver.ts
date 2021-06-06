@@ -1,5 +1,5 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { LoggedInSession, Session } from '../../../common';
+import { LoggedInSession, Session } from '../../common';
 import { Changeable, PlanChange } from './dto';
 import { PlanChangeService } from './plan-change.service';
 

@@ -32,7 +32,7 @@ import { PartnershipListInput, SecuredPartnershipList } from '../partnership';
 import {
   ChangeListInput,
   SecuredChangeList,
-} from './change-to-plan/dto/change-list.dto';
+} from '../plan-change/dto/change-list.dto';
 import {
   CreateProjectInput,
   CreateProjectOutput,
