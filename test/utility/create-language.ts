@@ -13,7 +13,7 @@ export async function readOneLanguage(app: TestApp, id: ID): Promise<Language> {
   const result = await app.graphql.query(
     gql`
       query {
-        language(id: id) {
+        language(id: "${id}") {
           ...language
         }
       }

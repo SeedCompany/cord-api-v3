@@ -1,37 +1,27 @@
 import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
-import { CalendarDate, Sensitivity } from '../../src/common';
+import { SecuredProps, SecuredResource, Sensitivity } from '../../src/common';
+import { PermissionsOf } from '../../src/components/authorization/authorization.service';
 import { Powers } from '../../src/components/authorization/dto/powers';
-import { Budget } from '../../src/components/budget';
-import { Language } from '../../src/components/language/dto';
+import {
+  EthnologueLanguage,
+  Language,
+} from '../../src/components/language/dto';
 import { Location } from '../../src/components/location';
-import { PartnerType } from '../../src/components/partner';
-import { Role, ScopedRole } from '../../src/components/project';
+import { Role } from '../../src/components/project';
 import {
   addLocationToLanguage,
-  addLocationToOrganization,
-  createBudget,
   createLanguage,
   createLocation,
-  createOrganization,
-  createPartner,
-  createPartnership,
-  createProject,
   createSession,
   createTestApp,
   login,
-  readOneBudget,
-  readOneBudgetRecord,
   readOneLanguage,
   registerUserWithPower,
   TestApp,
 } from '../utility';
 import { resetDatabase } from '../utility/reset-database';
 import { testRole } from '../utility/roles';
-import {
-  expectSensitiveProperty,
-  expectSensitiveRelationList,
-} from '../utility/sensitivity';
 import { getPermissions } from './permissions';
 
 describe('Language Security e2e', () => {
@@ -122,65 +112,154 @@ describe('Language Security e2e', () => {
       ${Role.ConsultantManager} | ${Sensitivity.Medium}
       ${Role.ConsultantManager} | ${Sensitivity.Medium}
     `(
-      'Role: $role - Sensitivity: $sensitivityToTest on $projectType Project',
-      ({ role, sensitivityToTest, projectType }) => {
+      'Role: $role - Sensitivity: $sensitivityToTest',
+      ({ role, sensitivityToTest }) => {
         test.each`
-          property
-          registryOfDialectsCode
-          signLanguageCode
-        `(' reading $property', async ({ property }) => {
+          property                    | resource
+          ${'registryOfDialectsCode'} | ${Language}
+          ${'signLanguageCode'}       | ${Language}
+          ${'code'}                   | ${EthnologueLanguage}
+          ${'name'}                   | ${EthnologueLanguage}
+          ${'population'}             | ${EthnologueLanguage}
+          ${'provisionalCode'}        | ${EthnologueLanguage}
+        `(' reading $property', async (property) => {
           await login(app, { email: email, password: password });
-          const budget = await createBudget(app, { projectId: proj.id });
-          await expectSensitiveProperty({
-            app,
-            role: role,
-            propertyToCheck: 'universalTemplateFile',
-            projectId: proj.id,
-            resourceId: budget.id,
-            resource: Budget,
-            sensitivityRestriction: sensitivityToTest,
-            permissions: await getPermissions({
-              resource: Budget,
-              userRole: `global:${role as Role}` as ScopedRole,
-            }),
-            readOneFunction: readOneBudget,
-            projectType: projectType,
+          const perms = await getPermissions({
+            resource: Language,
+            userRole: role,
           });
+          await testSensitivityLowerThanEqualTo(
+            app,
+            sensitivityToTest,
+            property as keyof SecuredProps<Language>,
+            perms
+          );
+          await login(app, { email, password });
+          await testSensitivityHigherThan(
+            app,
+            sensitivityToTest,
+            property as keyof SecuredProps<Language>,
+            role
+          );
+          await login(app, { email, password });
         });
 
-        it(' reading records', async () => {
-          await login(app, { email: email, password: password });
-          const proj = await createProject(app, { type: projectType });
-          const budget = await createBudget(app, { projectId: proj.id });
-          const org = await createOrganization(app);
-          const partner = await createPartner(app, {
-            organizationId: org.id,
-          });
-          await createPartnership(app, {
-            partnerId: partner.id,
-            projectId: proj.id,
-            types: [PartnerType.Funding, PartnerType.Managing],
-            financialReportingType: undefined,
-            mouStartOverride: CalendarDate.fromISO('2000-01-01'),
-            mouEndOverride: CalendarDate.fromISO('2004-01-01'),
-          });
-          await addLocationToOrganization(app, org.id);
-          await expectSensitiveRelationList({
-            app,
-            role,
-            sensitivityRestriction: sensitivityToTest,
-            projectId: proj.id,
-            projectType: projectType,
-            propertyToCheck: 'records',
-            readFunction: readOneBudgetRecord,
-            resourceId: budget.id,
-            perms: await getPermissions({
-              resource: Budget,
-              userRole: `global:${role as Role}` as ScopedRole,
-            }),
-          });
-        });
+        // it(' reading records', async () => {
+        //   await login(app, { email: email, password: password });
+        //   const proj = await createProject(app, { type: projectType });
+        //   const budget = await createBudget(app, { projectId: proj.id });
+        //   const org = await createOrganization(app);
+        //   const partner = await createPartner(app, {
+        //     organizationId: org.id,
+        //   });
+        //   await createPartnership(app, {
+        //     partnerId: partner.id,
+        //     projectId: proj.id,
+        //     types: [PartnerType.Funding, PartnerType.Managing],
+        //     financialReportingType: undefined,
+        //     mouStartOverride: CalendarDate.fromISO('2000-01-01'),
+        //     mouEndOverride: CalendarDate.fromISO('2004-01-01'),
+        //   });
+        //   await addLocationToOrganization(app, org.id);
+        //   await expectSensitiveRelationList({
+        //     app,
+        //     role,
+        //     sensitivityRestriction: sensitivityToTest,
+        //     projectId: proj.id,
+        //     projectType: projectType,
+        //     propertyToCheck: 'records',
+        //     readFunction: readOneBudgetRecord,
+        //     resourceId: budget.id,
+        //     perms: await getPermissions({
+        //       resource: Budget,
+        //       userRole: `global:${role as Role}` as ScopedRole,
+        //     }),
+        //   });
+        // });
       }
     );
   });
 });
+async function testSensitivityHigherThan(
+  app: TestApp,
+  sensitivity: Sensitivity,
+  property: keyof SecuredProps<Language>,
+  role: Role
+) {
+  switch (sensitivity) {
+    case Sensitivity.Low: {
+      const medSenslanguage = await createLanguage(app, {
+        sensitivity: Sensitivity.Medium,
+      });
+      const highSenslanguage = await createLanguage(app, {
+        sensitivity: Sensitivity.High,
+      });
+      await registerUserWithPower(app, [], { roles: [role] });
+      expect(medSenslanguage[property].canRead).toBeFalsy();
+      expect(medSenslanguage[property].canEdit).toBeFalsy();
+      expect(highSenslanguage[property].canRead).toBeFalsy();
+      expect(highSenslanguage[property].canEdit).toBeFalsy();
+      break;
+    }
+    case Sensitivity.Medium: {
+      const highSenslanguage = await createLanguage(app, {
+        sensitivity: Sensitivity.High,
+      });
+      expect(highSenslanguage[property].canRead).toBeFalsy();
+      expect(highSenslanguage[property].canEdit).toBeFalsy();
+      break;
+    }
+    case Sensitivity.High: {
+      // nothing higher than High, so just break.
+      break;
+    }
+  }
+}
+async function testSensitivityLowerThanEqualTo(
+  app: TestApp,
+  sensitivity: Sensitivity,
+  property: keyof SecuredProps<Language>,
+  perms: PermissionsOf<SecuredResource<typeof Language>>
+) {
+  //test languages with sensitivity lower than/equal to what we're testing.
+  switch (sensitivity) {
+    case Sensitivity.High: {
+      const highSenslanguage = await createLanguage(app, {
+        sensitivity: Sensitivity.High,
+      });
+      expect(highSenslanguage[property].canRead).toEqual(
+        perms[property].canRead
+      );
+      expect(highSenslanguage[property].canEdit).toEqual(
+        perms[property].canEdit
+      );
+    }
+    // disabling fallthrough because I for realz want to do it. I want to create High, Med, and Low for the high sensitivity case
+    //    keeps me from having to repeat code
+    // eslint-disable-next-line no-fallthrough
+    case Sensitivity.Medium: {
+      const medSenslanguage = await createLanguage(app, {
+        sensitivity: Sensitivity.Medium,
+      });
+      expect(medSenslanguage[property].canRead).toEqual(
+        perms[property].canRead
+      );
+      expect(medSenslanguage[property].canEdit).toEqual(
+        perms[property].canEdit
+      );
+    }
+    // I for realz want to fallthrough, because I want to create medium and low for medium sensitivity
+    // eslint-disable-next-line no-fallthrough
+    case Sensitivity.Low: {
+      const lowSenslanguage = await createLanguage(app, {
+        sensitivity: Sensitivity.Low,
+      });
+      expect(lowSenslanguage[property].canRead).toEqual(
+        perms[property].canRead
+      );
+      expect(lowSenslanguage[property].canEdit).toEqual(
+        perms[property].canEdit
+      );
+    }
+  }
+}
