@@ -110,12 +110,12 @@ export class AuthorizationService {
     sessionOrUserId: Session | ID,
     otherRoles: ScopedRole[] = []
   ): Promise<SecuredResource<Resource, false>> {
-    const permissions = await this.getPermissions(
+    const permissions = await this.getPermissions({
       resource,
       sessionOrUserId,
       otherRoles,
-      props
-    );
+      dto: props,
+    });
     // @ts-expect-error not matching for some reason but declared return type is correct
     return parseSecuredProperties(props, permissions, resource.SecuredProps);
   }
@@ -182,12 +182,17 @@ export class AuthorizationService {
    *                        and merge them with the given roles
    * @param otherRoles      Other roles to apply, probably non-global context
    */
-  async getPermissions<Resource extends ResourceShape<any>>(
-    resource: Resource,
-    sessionOrUserId: Session | ID,
-    otherRoles: ScopedRole[] = [],
-    dto?: Resource['prototype']
-  ): Promise<PermissionsOf<SecuredResource<Resource>>> {
+  async getPermissions<Resource extends ResourceShape<any>>({
+    resource,
+    sessionOrUserId,
+    otherRoles = [],
+    dto,
+  }: {
+    resource: Resource;
+    sessionOrUserId: Session | ID;
+    otherRoles?: ScopedRole[];
+    dto?: Resource['prototype'];
+  }): Promise<PermissionsOf<SecuredResource<Resource>>> {
     const userGlobalRoles = isIdLike(sessionOrUserId)
       ? await this.getUserGlobalRoles(sessionOrUserId)
       : sessionOrUserId.roles;

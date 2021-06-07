@@ -4,7 +4,6 @@ import {
   DbLabel,
   Resource,
   SecuredProperty,
-  SecuredPropertyList,
   SecuredProps,
   Sensitivity,
 } from '../../../common';
@@ -36,13 +35,6 @@ export class Budget extends Resource {
   })
   readonly sensitivity: Sensitivity;
 }
-
-@ObjectType({
-  description: SecuredProperty.descriptionFor("a budget's budget records"),
-})
-export class SecuredBudgetRecord extends SecuredPropertyList(BudgetRecord, {
-  nullable: true,
-}) {}
 
 @ObjectType({
   description: SecuredProperty.descriptionFor('a budget'),

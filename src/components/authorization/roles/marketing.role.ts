@@ -1,3 +1,4 @@
+import { Sensitivity } from '../../../common';
 import { DbBudget } from '../../budget/model';
 import { DbBudgetRecord } from '../../budget/model/budget-record.model.db';
 import { DbCeremony } from '../../ceremony/model';
@@ -92,10 +93,10 @@ export const Marketing = new DbRole({
     new DbBaseNodeGrant<DbEthnologueLanguage>({
       __className: 'DbEthnologueLanguage',
       properties: [
-        { propertyName: 'code', permission: { read, }, },
-        { propertyName: 'name', permission: { read, }, },
-        { propertyName: 'population', permission: { read, }, },
-        { propertyName: 'provisionalCode', permission: { read, }, },
+        { propertyName: 'code',            permission: { read, sensitivityAccess: Sensitivity.Low }, },
+        { propertyName: 'name',            permission: { read, sensitivityAccess: Sensitivity.Low }, },
+        { propertyName: 'population',      permission: { read, sensitivityAccess: Sensitivity.Low }, },
+        { propertyName: 'provisionalCode', permission: { read, sensitivityAccess: Sensitivity.Low }, },
       ],
       canDelete: false,
     }),
@@ -190,15 +191,15 @@ export const Marketing = new DbRole({
         { propertyName: 'name', permission: { read, }, },
         { propertyName: 'leastOfTheseReason', permission: { read, }, },
         { propertyName: 'populationOverride', permission: { read, }, },
-        { propertyName: 'registryOfDialectsCode', permission: { read, }, },
+        { propertyName: 'registryOfDialectsCode', permission: { read, sensitivityAccess: Sensitivity.Low }, },
         { propertyName: 'name', permission: { read, }, },
-        { propertyName: 'signLanguageCode', permission: { read, }, },
+        { propertyName: 'signLanguageCode', permission: { read, sensitivityAccess: Sensitivity.Low }, },
         { propertyName: 'sponsorEstimatedEndDate', permission: { read, }, },
         { propertyName: 'ethnologue', permission: { read, }, },
         { propertyName: 'name', permission: { read, }, },
         { propertyName: 'sensitivity', permission: { read, }, },
         { propertyName: 'hasExternalFirstScripture', permission: { read, }, },
-        { propertyName: 'locations', permission: { read, }, },
+        { propertyName: 'locations', permission: { read, sensitivityAccess: Sensitivity.Low }, },
         { propertyName: 'tags', permission: { read, }, },
       ],
       canDelete: false,

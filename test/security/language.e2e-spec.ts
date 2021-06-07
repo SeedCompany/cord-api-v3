@@ -6,12 +6,7 @@ import { Budget } from '../../src/components/budget';
 import { Language } from '../../src/components/language/dto';
 import { Location } from '../../src/components/location';
 import { PartnerType } from '../../src/components/partner';
-import {
-  Project,
-  ProjectType,
-  Role,
-  ScopedRole,
-} from '../../src/components/project';
+import { Role, ScopedRole } from '../../src/components/project';
 import {
   addLocationToLanguage,
   addLocationToOrganization,
@@ -25,7 +20,6 @@ import {
   createSession,
   createTestApp,
   login,
-  Raw,
   readOneBudget,
   readOneBudgetRecord,
   readOneLanguage,
@@ -124,17 +118,17 @@ describe('Language Security e2e', () => {
   });
   describe('Restricted by Sensitivity', () => {
     describe.each`
-      role                      | sensitivityToTest    
+      role                      | sensitivityToTest
       ${Role.ConsultantManager} | ${Sensitivity.Medium}
       ${Role.ConsultantManager} | ${Sensitivity.Medium}
     `(
       'Role: $role - Sensitivity: $sensitivityToTest on $projectType Project',
       ({ role, sensitivityToTest, projectType }) => {
         test.each`
-        property
-        registryOfDialectsCode
-        signLanguageCode
-        `(' reading $property', async ({property}) => {
+          property
+          registryOfDialectsCode
+          signLanguageCode
+        `(' reading $property', async ({ property }) => {
           await login(app, { email: email, password: password });
           const budget = await createBudget(app, { projectId: proj.id });
           await expectSensitiveProperty({
@@ -152,7 +146,6 @@ describe('Language Security e2e', () => {
             readOneFunction: readOneBudget,
             projectType: projectType,
           });
-
         });
 
         it(' reading records', async () => {

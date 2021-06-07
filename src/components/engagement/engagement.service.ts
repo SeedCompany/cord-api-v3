@@ -499,11 +499,11 @@ export class EngagementService {
     input: ProductListInput,
     session: Session
   ): Promise<SecuredProductList> {
-    const { product: perms } = await this.authorizationService.getPermissions(
-      LanguageEngagement,
-      session,
-      await this.repo.rolesInScope(engagement.id, session)
-    );
+    const { product: perms } = await this.authorizationService.getPermissions({
+      resource: LanguageEngagement,
+      sessionOrUserId: session,
+      otherRoles: await this.repo.rolesInScope(engagement.id, session),
+    });
     if (!perms.canRead) {
       return SecuredList.Redacted;
     }

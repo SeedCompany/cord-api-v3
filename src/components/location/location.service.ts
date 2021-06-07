@@ -3,6 +3,8 @@ import {
   DuplicateException,
   ID,
   NotFoundException,
+  ResourceShape,
+  SecuredList,
   ServerException,
   Session,
   UnauthorizedException,
@@ -180,6 +182,38 @@ export class LocationService {
     } catch (e) {
       throw new ServerException(`Could not remove location from ${label}`, e);
     }
+  }
+
+  async listLocationForResource<TResource extends ResourceShape<any>>(
+    label: TResource,
+    dto: TResource['prototype'],
+    rel: keyof TResource['prototype'] | keyof TResource['Relations'],
+    input: LocationListInput,
+    session: Session
+  ): Promise<SecuredLocationList> {
+    const perms = await this.authorizationService.getPermissions({
+      resource: label,
+      sessionOrUserId: session,
+      dto: dto,
+    });
+    let query;
+    if (perms[rel].canRead) {
+      query = this.repo.listLocationsFromNode(
+        label.name,
+        dto.id,
+        rel.toString(),
+        input,
+        session
+      );
+    }
+
+    return {
+      ...(query
+        ? await runListQuery(query, input, (id) => this.readOne(id, session))
+        : SecuredList.Redacted),
+      canRead: perms[rel].canRead,
+      canCreate: perms[rel].canEdit,
+    };
   }
 
   async listLocationsFromNode(

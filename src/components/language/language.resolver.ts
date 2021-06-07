@@ -93,7 +93,7 @@ export class LanguageResolver {
     })
     input: LocationListInput
   ): Promise<SecuredLocationList> {
-    return this.langService.listLocations(language.id, input, session);
+    return this.langService.listLocations(language, input, session);
   }
 
   @ResolveField(() => SecuredDate, {
