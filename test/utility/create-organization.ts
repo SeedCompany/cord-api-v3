@@ -1,5 +1,6 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
+import { createLocation } from '.';
 import {
   CreateOrganization,
   Organization,
@@ -40,4 +41,37 @@ export async function createOrganization(
   expect(org).toBeTruthy();
 
   return org;
+}
+
+export async function addLocationToOrganization(
+  app: TestApp,
+  orgId?: string,
+  locId?: string
+) {
+  const locationId = locId || (await createLocation(app)).id;
+  const organizationId = orgId || (await createOrganization(app)).id;
+  const result = await app.graphql.mutate(
+    gql`
+      mutation addLocationToOrganization(
+        $organizationId: ID!
+        $locationId: ID!
+      ) {
+        addLocationToOrganization(
+          organizationId: $organizationId
+          locationId: $locationId
+        ) {
+          ...org
+        }
+      }
+      ${fragments.org}
+    `,
+    {
+      organizationId: organizationId,
+      locationId: locationId,
+    }
+  );
+  expect(result.addLocationToOrganization.id).toEqual(organizationId);
+  expect(result.addLocationToOrganization.locations.items[0].id).toEqual(
+    locationId
+  );
 }
