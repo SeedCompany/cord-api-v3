@@ -1,4 +1,3 @@
-/* eslint-disable no-case-declarations */
 import { Injectable } from '@nestjs/common';
 import { Connection } from 'cypher-query-builder';
 import {
@@ -14,7 +13,6 @@ import {
   getParentTypes,
   has,
   ID,
-  InputException,
   isIdLike,
   isSecured,
   keys,
@@ -279,22 +277,18 @@ export class AuthorizationService {
     prop: string,
     sensitivity?: Sensitivity
   ): boolean {
-    const sensitivityRank = { High: 3, Medium: 2, Low: 1 };
     if (grant.sensitivityAccess && !sensitivity) {
-      throw new InputException(
-        `Sensitivity check required, but no sensitivity provided ${resource.name}.${prop}`,
-        `${resource.name}.${prop}`
+      throw new ServerException(
+        `Sensitivity check required, but no sensitivity provided ${resource.name}.${prop}`
       );
     }
 
-    if (
+    const sensitivityRank = { High: 3, Medium: 2, Low: 1 };
+    return !(
       sensitivity &&
       grant.sensitivityAccess &&
       sensitivityRank[sensitivity] > sensitivityRank[grant.sensitivityAccess]
-    ) {
-      return false;
-    }
-    return true;
+    );
   }
 
   async roleAddedToUser(id: ID | string, roles: Role[]) {
