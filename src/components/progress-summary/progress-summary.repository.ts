@@ -22,20 +22,14 @@ export class ProgressSummaryRepository extends DtoRepository(ProgressSummary) {
   }
 
   async save(report: ProgressReport, data: ProgressSummary) {
-    const query = this.db.query();
-    data
-      ? query.merge([
-          node('', 'ProgressReport', { id: report.id }),
-          relation('out', '', 'summary', { active: true }),
-          node('', 'ProgressSummary', data),
-        ])
-      : query
-          .match([
-            node('', 'ProgressReport', { id: report.id }),
-            relation('out', '', 'summary', { active: true }),
-            node('ps', 'ProgressSummary'),
-          ])
-          .detachDelete('ps');
-    await query.run();
+    await this.db
+      .query()
+      .merge([
+        node('', 'ProgressReport', { id: report.id }),
+        relation('out', '', 'summary', { active: true }),
+        node('summary', 'ProgressSummary'),
+      ])
+      .setValues({ summary: data })
+      .run();
   }
 }
