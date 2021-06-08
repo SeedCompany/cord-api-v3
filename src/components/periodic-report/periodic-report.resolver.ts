@@ -16,7 +16,7 @@ import {
   LoggedInSession,
   Session,
 } from '../../common';
-import { DatabaseService, ILogger, Logger } from '../../core';
+import { DatabaseService, ILogger, Logger, Transactional } from '../../core';
 import { EngagementService, LanguageEngagement, PnpData } from '../engagement';
 import { FileService, FileVersion, SecuredFile } from '../file';
 import { ProgressExtractor } from '../progress-summary/progress-extractor.service';
@@ -301,246 +301,6 @@ export class PeriodicReportResolver {
     description: 'Move P&P files from old schema to new periodic report schema',
   })
   async migratePnps() {
-    let count = 1;
-    const migratePnp = async ({
-      year,
-      quarter,
-      planned,
-      actual,
-      variance,
-      latestPnpVersionId,
-      engagementId,
-      extract,
-    }: {
-      year: number;
-      quarter: number;
-      planned: number;
-      actual: number;
-      variance: number;
-      latestPnpVersionId: ID;
-      engagementId: ID;
-      extract: boolean;
-    }) => {
-      count++;
-      if (count % 100 === 0) {
-        this.logger.info(`${count} of ${mapped.length} pnps synced`);
-      }
-      if (!year || !quarter) {
-        this.logger.info({
-          message: 'no year or quarter',
-          engagementId,
-          year,
-          quarter,
-        });
-        return;
-      }
-
-      if (!planned && !actual) {
-        this.logger.info({
-          message: 'no progress data',
-          engagementId,
-          planned,
-          actual,
-          variance,
-        });
-        return;
-      }
-      // non-fiscal date
-      const startDate = `${quarter === 1 ? year - 1 : year}-${
-        quarter === 1
-          ? '10'
-          : quarter === 2
-          ? '01'
-          : quarter === 3
-          ? '04'
-          : '07'
-      }-01`;
-
-      const pnpDate = CalendarDate.fromISO(startDate);
-
-      // if pnpDate is after end, then assign that pnp to the last reporting period
-      let startToUse;
-
-      const { matchingStart } = (await this.db
-        .query()
-        .raw(
-          `match(e:Engagement {id: $id})-[:report { active: true }]->(pr:ProgressReport)-[:start { active: true }]->(start:Property {value: date($startDate)})`,
-          { id: engagementId, startDate }
-        )
-        .return('start.value as matchingStart')
-        .first()) ?? { matchingStart: null };
-
-      if (!matchingStart) {
-        // the start and end of the last reporting period –– if the pnp is from after the PR end
-        // then we map the P&P to that (the last) reporting period
-        const { latestPrStart, latestPrEnd } = (await this.db
-          .query()
-          .match([
-            node('', 'Engagement', { id: engagementId }),
-            relation('out', '', 'report', { active: true }),
-            node('rn', 'PeriodicReport'),
-            relation('out', '', 'start', { active: true }),
-            node('sn', 'Property'),
-          ])
-          .match([
-            node('rn'),
-            relation('out', '', 'end', { active: true }),
-            node('en', 'Property'),
-          ])
-          .return('sn.value as latestStart, en.value as latestEnd')
-          .orderBy('sn.value', 'desc')
-          .limit(1)
-          .asResult<{
-            latestPrStart?: CalendarDate;
-            latestPrEnd?: CalendarDate;
-          }>()
-          .first()) ?? { latestPrStart: undefined, latestPrEnd: undefined };
-        // if we can't match it, leave the P&P where it was and move on
-        if (!latestPrStart || !latestPrEnd) return;
-
-        startToUse = latestPrEnd < pnpDate ? latestPrStart : null;
-      } else {
-        startToUse = matchingStart;
-      }
-
-      // we cannot match a P&P to a report period, so we leave it where it is
-      if (!startToUse) {
-        this.logger.info({ message: 'no start to match on', engagementId });
-        return;
-      }
-
-      const existing = await this.db
-        .query()
-        .raw(
-          `
-          match(e {id: $id})-[:report]->(rn)-[:start { active: true }]->({ value: date($startDate) })
-          where (rn)-->(:FileNode)<--(:FileVersion)
-          return rn
-          `,
-          {
-            id: engagementId,
-            startDate: startToUse,
-          }
-        )
-        .first();
-      // if a file has been uploaded to this periodic report, don't move the pnp there, but extract later
-      if (existing) {
-        return;
-      }
-
-      // move latest pnp node file version to the matching periodic report file node
-      // and remove the old parent relationship
-      const { reportFileNodeId, periodicReportId } = (await this.db
-        .query()
-        .raw(
-          `
-          match(e { id: $id })-[:pnpNode { active: true }]->(file)<-[pnpParentRel:parent { active: true }]-(pnpFileVersion {id: $latestPnpVersionId})
-          match(e)-[:report]->(rn)-[:start { active: true }]->({ value: date($startDate) })
-          match(rn)-[:reportFileNode { active: true }]->(reportFileNode)
-          create(pnpFileVersion)-[:parent { active: true, createdAt: pnpFileVersion.createdAt }]->(reportFileNode)
-          set pnpFileVersion.originalParentId = file.id
-          delete pnpParentRel
-          return reportFileNode.id as reportFileNodeId, rn.id as periodicReportId
-          `,
-          { id: engagementId, startDate: startToUse, latestPnpVersionId }
-        )
-        .first()) ?? { reportFileNodeId: null, periodicReportId: null };
-
-      // deactivate the default PR name node
-      await this.db
-        .query()
-        .raw(
-          `
-          match(reportFileNode { id: $reportFileNodeId })-[nameRel:name { active: true }]->(name)
-          set nameRel.active = false, name:Deleted_Property
-          remove name:Property
-          return *
-          `,
-          { reportFileNodeId }
-        )
-        .run();
-
-      // move most recent (active) pnp node name property to periodic report file node
-      await this.db
-        .query()
-        .raw(
-          `
-          match(e { id: $id })-[:pnpNode { active: true }]->(file)-[pnpNameRel:name {active: true}]->(pnpName)
-          match(reportFileNode { id: $reportFileNodeId })
-          create(reportFileNode)-[:name { active: pnpNameRel.active, createdAt: pnpName.createdAt }]->(pnpName)
-          set pnpName.originalParentId = file.id
-          delete pnpNameRel
-          return *
-          `,
-
-          { id: engagementId, reportFileNodeId }
-        )
-        .run();
-
-      // set next most recent pnp name to active
-      await this.db
-        .query()
-        .raw(
-          `
-          match(e { id: $id })-[p:pnpNode { active: true }]->()-[pnpNameRel:name]->(pnpName)
-          with e, pnpNameRel, pnpName
-          order by pnpName.createdAt desc limit 1
-          set pnpNameRel.active = true, pnpName:Property
-          remove pnpName:Deleted_Property
-          return *
-          `,
-          { id: engagementId }
-        )
-        .run();
-
-      // we create this after the fact if we have more than one pnp data node with the same year and quarter
-      if (!extract) {
-        const createdAt = DateTime.local();
-
-        // write pnp data to new progress node
-        await this.db
-          .query()
-          .raw(
-            `
-        match(pr{id:$periodicReportId})
-        create(pr)-[:summary{active: true, createdAt: $createdAt}]->(:ProgressSummary{planned: $planned, actual: $actual, variance: $variance})
-      `,
-            {
-              periodicReportId,
-              createdAt,
-              planned: planned,
-              actual: actual,
-              variance,
-            }
-          )
-          .run();
-      }
-
-      // delete old pnp data node
-      await this.db
-        .query()
-        .match([
-          node('e', 'Engagement', { id: engagementId }),
-          relation('out', 'pdr', 'pnpData', { active: true }),
-          node('pd'),
-        ])
-        .raw(
-          `
-          set pdr.active = false, pd:Deleted_PnpData
-          remove pd:PnpData
-        `
-        )
-        .run();
-
-      // steps to reverse pnp migration
-      // 1. Move migrated file version nodes back to original parent using originalParentId on file version node
-      // 2. Deactivate active name on pnpNode (this would be the previous version when the migrated file version was present before)
-      // 3. Move migrated name to original parent using same method as 1
-      // 4. Reactivate default report file node name property
-      // 5. Detach/Delete all (:ProgressSummary) nodes
-      // 6. Restore all pnpData nodes that were marked with label (:Deleted_PnpData) and set pnpData relationships to active
-    };
-
     const res = await this.db
       .query()
       .match([
@@ -594,10 +354,247 @@ export class PeriodicReportResolver {
     });
 
     this.logger.info(`starting pnp migration`);
-    await asyncPool(5, mapped, migratePnp);
+    let count = 1;
+    await asyncPool(5, mapped, async (...args) => {
+      count++;
+      if (count % 100 === 0) {
+        this.logger.info(`${count} of ${mapped.length} pnps synced`);
+      }
+      await this.migratePnp(...args);
+    });
     this.logger.info(`finished pnp migration`);
 
     return true;
+  }
+
+  @Transactional()
+  private async migratePnp({
+    year,
+    quarter,
+    planned,
+    actual,
+    variance,
+    latestPnpVersionId,
+    engagementId,
+    extract,
+  }: {
+    year: number;
+    quarter: number;
+    planned: number;
+    actual: number;
+    variance: number;
+    latestPnpVersionId: ID;
+    engagementId: ID;
+    extract: boolean;
+  }) {
+    if (!year || !quarter) {
+      this.logger.info({
+        message: 'no year or quarter',
+        engagementId,
+        year,
+        quarter,
+      });
+      return;
+    }
+
+    if (!planned && !actual) {
+      this.logger.info({
+        message: 'no progress data',
+        engagementId,
+        planned,
+        actual,
+        variance,
+      });
+      return;
+    }
+    // non-fiscal date
+    const startDate = `${quarter === 1 ? year - 1 : year}-${
+      quarter === 1 ? '10' : quarter === 2 ? '01' : quarter === 3 ? '04' : '07'
+    }-01`;
+
+    const pnpDate = CalendarDate.fromISO(startDate);
+
+    // if pnpDate is after end, then assign that pnp to the last reporting period
+    let startToUse;
+
+    const { matchingStart } = (await this.db
+      .query()
+      .raw(
+        `match(e:Engagement {id: $id})-[:report { active: true }]->(pr:ProgressReport)-[:start { active: true }]->(start:Property {value: date($startDate)})`,
+        { id: engagementId, startDate }
+      )
+      .return('start.value as matchingStart')
+      .first()) ?? { matchingStart: null };
+
+    if (!matchingStart) {
+      // the start and end of the last reporting period –– if the pnp is from after the PR end
+      // then we map the P&P to that (the last) reporting period
+      const { latestPrStart, latestPrEnd } = (await this.db
+        .query()
+        .match([
+          node('', 'Engagement', { id: engagementId }),
+          relation('out', '', 'report', { active: true }),
+          node('rn', 'PeriodicReport'),
+          relation('out', '', 'start', { active: true }),
+          node('sn', 'Property'),
+        ])
+        .match([
+          node('rn'),
+          relation('out', '', 'end', { active: true }),
+          node('en', 'Property'),
+        ])
+        .return('sn.value as latestStart, en.value as latestEnd')
+        .orderBy('sn.value', 'desc')
+        .limit(1)
+        .asResult<{
+          latestPrStart?: CalendarDate;
+          latestPrEnd?: CalendarDate;
+        }>()
+        .first()) ?? { latestPrStart: undefined, latestPrEnd: undefined };
+      // if we can't match it, leave the P&P where it was and move on
+      if (!latestPrStart || !latestPrEnd) return;
+
+      startToUse = latestPrEnd < pnpDate ? latestPrStart : null;
+    } else {
+      startToUse = matchingStart;
+    }
+
+    // we cannot match a P&P to a report period, so we leave it where it is
+    if (!startToUse) {
+      this.logger.info({ message: 'no start to match on', engagementId });
+      return;
+    }
+
+    const existing = await this.db
+      .query()
+      .raw(
+        `
+          match(e {id: $id})-[:report]->(rn)-[:start { active: true }]->({ value: date($startDate) })
+          where (rn)-->(:FileNode)<--(:FileVersion)
+          return rn
+          `,
+        {
+          id: engagementId,
+          startDate: startToUse,
+        }
+      )
+      .first();
+    // if a file has been uploaded to this periodic report, don't move the pnp there, but extract later
+    if (existing) {
+      return;
+    }
+
+    // move latest pnp node file version to the matching periodic report file node
+    // and remove the old parent relationship
+    const { reportFileNodeId, periodicReportId } = (await this.db
+      .query()
+      .raw(
+        `
+          match(e { id: $id })-[:pnpNode { active: true }]->(file)<-[pnpParentRel:parent { active: true }]-(pnpFileVersion {id: $latestPnpVersionId})
+          match(e)-[:report]->(rn)-[:start { active: true }]->({ value: date($startDate) })
+          match(rn)-[:reportFileNode { active: true }]->(reportFileNode)
+          create(pnpFileVersion)-[:parent { active: true, createdAt: pnpFileVersion.createdAt }]->(reportFileNode)
+          set pnpFileVersion.originalParentId = file.id
+          delete pnpParentRel
+          return reportFileNode.id as reportFileNodeId, rn.id as periodicReportId
+          `,
+        { id: engagementId, startDate: startToUse, latestPnpVersionId }
+      )
+      .first()) ?? { reportFileNodeId: null, periodicReportId: null };
+
+    // deactivate the default PR name node
+    await this.db
+      .query()
+      .raw(
+        `
+          match(reportFileNode { id: $reportFileNodeId })-[nameRel:name { active: true }]->(name)
+          set nameRel.active = false, name:Deleted_Property
+          remove name:Property
+          return *
+          `,
+        { reportFileNodeId }
+      )
+      .run();
+
+    // move most recent (active) pnp node name property to periodic report file node
+    await this.db
+      .query()
+      .raw(
+        `
+          match(e { id: $id })-[:pnpNode { active: true }]->(file)-[pnpNameRel:name {active: true}]->(pnpName)
+          match(reportFileNode { id: $reportFileNodeId })
+          create(reportFileNode)-[:name { active: pnpNameRel.active, createdAt: pnpName.createdAt }]->(pnpName)
+          set pnpName.originalParentId = file.id
+          delete pnpNameRel
+          return *
+          `,
+
+        { id: engagementId, reportFileNodeId }
+      )
+      .run();
+
+    // set next most recent pnp name to active
+    await this.db
+      .query()
+      .raw(
+        `
+          match(e { id: $id })-[p:pnpNode { active: true }]->()-[pnpNameRel:name]->(pnpName)
+          with e, pnpNameRel, pnpName
+          order by pnpName.createdAt desc limit 1
+          set pnpNameRel.active = true, pnpName:Property
+          remove pnpName:Deleted_Property
+          return *
+          `,
+        { id: engagementId }
+      )
+      .run();
+
+    // we create this after the fact if we have more than one pnp data node with the same year and quarter
+    if (!extract) {
+      const createdAt = DateTime.local();
+
+      // write pnp data to new progress node
+      await this.db
+        .query()
+        .raw(
+          `
+        match(pr{id:$periodicReportId})
+        create(pr)-[:summary{active: true, createdAt: $createdAt}]->(:ProgressSummary{planned: $planned, actual: $actual, variance: $variance})
+      `,
+          {
+            periodicReportId,
+            createdAt,
+            planned: planned,
+            actual: actual,
+            variance,
+          }
+        )
+        .run();
+    }
+
+    // delete old pnp data node
+    await this.db
+      .query()
+      .match([
+        node('e', 'Engagement', { id: engagementId }),
+        relation('out', 'pdr', 'pnpData', { active: true }),
+        node('pd'),
+      ])
+      .raw(
+        `
+          set pdr.active = false, pd:Deleted_PnpData
+          remove pd:PnpData
+        `
+      )
+      .run();
+
+    // steps to reverse pnp migration
+    // 1. Move migrated file version nodes back to original parent using originalParentId on file version node
+    // 2. Deactivate active name on pnpNode (this would be the previous version when the migrated file version was present before)
+    // 3. Move migrated name to original parent using same method as 1
+    // 4. Reactivate default report file node name property
+    // 5. Detach/Delete all (:ProgressSummary) nodes
+    // 6. Restore all pnpData nodes that were marked with label (:Deleted_PnpData) and set pnpData relationships to active
   }
 
   // Remove after periodic report migration
