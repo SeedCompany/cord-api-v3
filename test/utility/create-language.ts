@@ -9,6 +9,26 @@ import {
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
 
+export async function readOneLanguageEthnologue(
+  app: TestApp,
+  langId: ID
+): Promise<Language> {
+  const result = await app.graphql.query(
+    gql`
+      query {
+        language(id: "${langId}") {
+          ...language
+        }
+      }
+      ${fragments.language}
+    `
+  );
+
+  const actual = result.ethnologue;
+  expect(actual).toBeTruthy();
+  return actual;
+}
+
 export async function readOneLanguage(app: TestApp, id: ID): Promise<Language> {
   const result = await app.graphql.query(
     gql`

@@ -1,6 +1,11 @@
 import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
-import { SecuredProps, SecuredResource, Sensitivity } from '../../src/common';
+import {
+  ResourceShape,
+  SecuredProps,
+  SecuredResource,
+  Sensitivity,
+} from '../../src/common';
 import { PermissionsOf } from '../../src/components/authorization/authorization.service';
 import { Powers } from '../../src/components/authorization/dto/powers';
 import {
@@ -17,11 +22,13 @@ import {
   createTestApp,
   login,
   readOneLanguage,
+  readOneLanguageEthnologue,
   registerUserWithPower,
   TestApp,
 } from '../utility';
 import { resetDatabase } from '../utility/reset-database';
 import { testRole } from '../utility/roles';
+import { ReadOneFunction } from '../utility/sensitivity';
 import { getPermissions } from './permissions';
 
 describe('Language Security e2e', () => {
@@ -110,39 +117,42 @@ describe('Language Security e2e', () => {
     describe.each`
       role                      | sensitivityToTest
       ${Role.ConsultantManager} | ${Sensitivity.Medium}
-      ${Role.ConsultantManager} | ${Sensitivity.Medium}
     `(
       'Role: $role - Sensitivity: $sensitivityToTest',
       ({ role, sensitivityToTest }) => {
         test.each`
-          property                    | resource
-          ${'registryOfDialectsCode'} | ${Language}
-          ${'signLanguageCode'}       | ${Language}
-          ${'code'}                   | ${EthnologueLanguage}
-          ${'name'}                   | ${EthnologueLanguage}
-          ${'population'}             | ${EthnologueLanguage}
-          ${'provisionalCode'}        | ${EthnologueLanguage}
-        `(' reading $property', async (property) => {
-          await login(app, { email: email, password: password });
-          const perms = await getPermissions({
-            resource: Language,
-            userRole: role,
-          });
-          await testSensitivityLowerThanEqualTo(
-            app,
-            sensitivityToTest,
-            property as keyof SecuredProps<Language>,
-            perms
-          );
-          await login(app, { email, password });
-          await testSensitivityHigherThan(
-            app,
-            sensitivityToTest,
-            property as keyof SecuredProps<Language>,
-            role
-          );
-          await login(app, { email, password });
-        });
+          property                    | resource              | readFunction
+          ${'registryOfDialectsCode'} | ${Language}           | ${readOneLanguage}
+          ${'signLanguageCode'}       | ${Language}           | ${readOneLanguage}
+          ${'code'}                   | ${EthnologueLanguage} | ${readOneLanguageEthnologue}
+          ${'name'}                   | ${EthnologueLanguage} | ${readOneLanguageEthnologue}
+          ${'population'}             | ${EthnologueLanguage} | ${readOneLanguageEthnologue}
+          ${'provisionalCode'}        | ${EthnologueLanguage} | ${readOneLanguageEthnologue}
+        `(
+          ' reading $property',
+          async ({ property, resource, readFunction }) => {
+            await login(app, { email: email, password: password });
+            const perms = await getPermissions({
+              resource: resource,
+              userRole: role,
+            });
+            // await testSensitivityLowerThanEqualTo(
+            //   app,
+            //   sensitivityToTest,
+            //   property as keyof SecuredProps<Language>,
+            //   perms
+            // );
+            await login(app, { email, password });
+            await testSensitivityHigherThan(
+              app,
+              sensitivityToTest,
+              property,
+              role,
+              readFunction
+            );
+            await login(app, { email, password });
+          }
+        );
 
         // it(' reading records', async () => {
         //   await login(app, { email: email, password: password });
@@ -180,33 +190,34 @@ describe('Language Security e2e', () => {
     );
   });
 });
-async function testSensitivityHigherThan(
+async function testSensitivityHigherThan<TResource extends ResourceShape<any>>(
   app: TestApp,
   sensitivity: Sensitivity,
-  property: keyof SecuredProps<Language>,
-  role: Role
+  property: keyof SecuredProps<TResource>,
+  role: Role,
+  readFunction: ReadOneFunction<TResource['prototype']>
 ) {
+  const medSenslanguage = await createLanguage(app, {
+    sensitivity: Sensitivity.Medium,
+  });
+  const highSenslanguage = await createLanguage(app, {
+    sensitivity: Sensitivity.High,
+  });
+
+  await registerUserWithPower(app, [], { roles: [role] });
+  const medRead = await readFunction(app, medSenslanguage.id);
+  const highRead = await readFunction(app, highSenslanguage.id);
   switch (sensitivity) {
     case Sensitivity.Low: {
-      const medSenslanguage = await createLanguage(app, {
-        sensitivity: Sensitivity.Medium,
-      });
-      const highSenslanguage = await createLanguage(app, {
-        sensitivity: Sensitivity.High,
-      });
-      await registerUserWithPower(app, [], { roles: [role] });
-      expect(medSenslanguage[property].canRead).toBeFalsy();
-      expect(medSenslanguage[property].canEdit).toBeFalsy();
-      expect(highSenslanguage[property].canRead).toBeFalsy();
-      expect(highSenslanguage[property].canEdit).toBeFalsy();
+      expect(medRead[property].canRead).toBeFalsy();
+      expect(medRead[property].canEdit).toBeFalsy();
+      expect(highRead[property].canRead).toBeFalsy();
+      expect(highRead[property].canEdit).toBeFalsy();
       break;
     }
     case Sensitivity.Medium: {
-      const highSenslanguage = await createLanguage(app, {
-        sensitivity: Sensitivity.High,
-      });
-      expect(highSenslanguage[property].canRead).toBeFalsy();
-      expect(highSenslanguage[property].canEdit).toBeFalsy();
+      expect(highRead[property].canRead).toBeFalsy();
+      expect(highRead[property].canEdit).toBeFalsy();
       break;
     }
     case Sensitivity.High: {
@@ -215,19 +226,29 @@ async function testSensitivityHigherThan(
     }
   }
 }
-async function testSensitivityLowerThanEqualTo(
+async function testSensitivityLowerThanEqualTo<TResource extends ResourceShape<any>>(
   app: TestApp,
   sensitivity: Sensitivity,
-  property: keyof SecuredProps<Language>,
-  perms: PermissionsOf<SecuredResource<typeof Language>>
+  property: keyof SecuredProps<TResource>,
+  perms: PermissionsOf<SecuredResource<TResource>>,
+  readFunction: ReadOneFunction<TResource['prototype']>
 ) {
   //test languages with sensitivity lower than/equal to what we're testing.
+  const highSenslanguage = await createLanguage(app, {
+    sensitivity: Sensitivity.High,
+  });
+  const medSenslanguage = await createLanguage(app, {
+    sensitivity: Sensitivity.Medium,
+  });
+  const lowSenslanguage = await createLanguage(app, {
+    sensitivity: Sensitivity.Low,
+  });
+  const readHigh = await readFunction(app, highSenslanguage.id);
+  const readMed = await readFunction(app, medSenslanguage.id);
+  const readLow = await readFunction(app, lowSenslanguage.id);
   switch (sensitivity) {
     case Sensitivity.High: {
-      const highSenslanguage = await createLanguage(app, {
-        sensitivity: Sensitivity.High,
-      });
-      expect(highSenslanguage[property].canRead).toEqual(
+      expect(readHigh[property].canRead).toEqual(
         perms[property].canRead
       );
       expect(highSenslanguage[property].canEdit).toEqual(
@@ -238,9 +259,6 @@ async function testSensitivityLowerThanEqualTo(
     //    keeps me from having to repeat code
     // eslint-disable-next-line no-fallthrough
     case Sensitivity.Medium: {
-      const medSenslanguage = await createLanguage(app, {
-        sensitivity: Sensitivity.Medium,
-      });
       expect(medSenslanguage[property].canRead).toEqual(
         perms[property].canRead
       );
@@ -251,9 +269,6 @@ async function testSensitivityLowerThanEqualTo(
     // I for realz want to fallthrough, because I want to create medium and low for medium sensitivity
     // eslint-disable-next-line no-fallthrough
     case Sensitivity.Low: {
-      const lowSenslanguage = await createLanguage(app, {
-        sensitivity: Sensitivity.Low,
-      });
       expect(lowSenslanguage[property].canRead).toEqual(
         perms[property].canRead
       );
