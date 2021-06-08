@@ -355,7 +355,7 @@ export class PeriodicReportResolver {
 
     this.logger.info(`starting pnp migration`);
     let count = 1;
-    await asyncPool(5, mapped, async (...args) => {
+    await asyncPool(10, mapped, async (...args) => {
       count++;
       if (count % 100 === 0) {
         this.logger.info(`${count} of ${mapped.length} pnps synced`);
@@ -597,12 +597,41 @@ export class PeriodicReportResolver {
     // 6. Restore all pnpData nodes that were marked with label (:Deleted_PnpData) and set pnpData relationships to active
   }
 
+  @Transactional()
+  private async extractPnp({
+    latestFileVersionId,
+    latestFileVersionName,
+    reportId,
+  }: {
+    latestFileVersionId: ID;
+    latestFileVersionName: string;
+    reportId: ID;
+  }) {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+    const extracted = await this.extractor.extract({
+      id: latestFileVersionId,
+      name: latestFileVersionName,
+      // the extracting only requires the id and name
+    } as FileVersion);
+
+    if (!extracted) {
+      return;
+    }
+
+    await this.summaryRepo.save(
+      // we only need the id to save the data
+      { id: reportId } as unknown as ProgressReport,
+      extracted
+    );
+  }
+
   // Remove after periodic report migration
   @Mutation(() => Boolean, {
     description:
       'Extract progress from P&Ps attached to reports that have no Progress Summary',
   })
   async extractProgress() {
+    this.logger.info(`starting pnp extraction`);
     const pnpsToExtract = await this.db
       .query()
       .match([
@@ -622,33 +651,33 @@ export class PeriodicReportResolver {
             node('', 'FileNode'),
             relation('in', '', 'parent', { active: true }),
             node('fv', 'FileVersion'),
+            relation('out', '', 'name', { active: true }),
+            node('na', 'Property'),
           ])
-          .return('fv.id as latestFileVersionId')
+          .return(
+            'fv.id as latestFileVersionId, na.value as latestFileVersionName'
+          )
           .orderBy('fv.createdAt', 'desc')
           .limit(1)
       )
-      .return('pr.id as reportId, latestFileVersionId')
-      .asResult<{ reportId: ID; latestFileVersionId: ID }>()
+      .return('pr.id as reportId, latestFileVersionId, latestFileVersionName')
+      .asResult<{
+        reportId: ID;
+        latestFileVersionId: ID;
+        latestFileVersionName: string;
+      }>()
       .run();
+    let count = 0;
 
-    for (const pnp of pnpsToExtract) {
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-      const extracted = await this.extractor.extract({
-        id: pnp.latestFileVersionId,
-        // the extracting only requires the id
-      } as FileVersion);
-      // do nothing
-      if (!extracted) {
-        return;
+    await asyncPool(10, pnpsToExtract, async (...args) => {
+      count++;
+      if (count % 10 === 0) {
+        this.logger.info(`${count} of ${pnpsToExtract.length} pnps extracted`);
       }
+      await this.extractPnp(...args);
+    });
 
-      await this.summaryRepo.save(
-        // as above, we only need the id to save the data
-        { id: pnp.reportId } as unknown as ProgressReport,
-        extracted
-      );
-    }
-
+    this.logger.info(`pnp extraction finished`);
     return true;
   }
 
