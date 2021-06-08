@@ -1,22 +1,22 @@
 # GLOBALS
-* @michaelmarshall
+* @CarsonF
 
 # OPS
-/.github/workflows/ @michaelmarshall
-Dockerfile @michaelmarshall
+/.github/workflows/ @CarsonF
+Dockerfile @CarsonF
 
 # Tooling
-tsconfig* @michaelmarshall
-.eslint* @michaelmarshall
-/eslint-local-rules.js @michaelmarshall
-/.prettierrc.yml @michaelmarshall
-/tools/ @michaelmarshall
-/scripts/ @michaelmarshall
+tsconfig* @CarsonF
+.eslint* @CarsonF
+/eslint-local-rules.js @CarsonF
+/.prettierrc.yml @CarsonF
+/tools/ @CarsonF
+/scripts/ @CarsonF
 
 # API Schema
-*.dto.ts @michaelmarshall
-*.resolver.ts @michaelmarshall
+*.dto.ts @CarsonF
+*.resolver.ts @CarsonF
 
 # Foundation
-/src/common/ @michaelmarshall
-/src/core/ @michaelmarshall
+/src/common/ @CarsonF
+/src/core/ @CarsonF
