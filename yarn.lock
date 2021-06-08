@@ -1779,13 +1779,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/tiny-async-pool@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "@types/tiny-async-pool@npm:1.0.0"
-  checksum: d8db90e6ef704f92bc01163036a6a2608eb021ca4c5602b3b7c7e0efcd635faeb5164a75ad872145f26356e8dc5dcd892363d4ca82ae37129e0589a6edcb34d1
-  languageName: node
-  linkType: hard
-
 "@types/triple-beam@npm:^1.3.2":
   version: 1.3.2
   resolution: "@types/triple-beam@npm:1.3.2"
@@ -3948,7 +3941,6 @@ __metadata:
     "@types/node": ^14.14.37
     "@types/react": ^16.14.2
     "@types/stack-trace": ^0.0.29
-    "@types/tiny-async-pool": ^1.0.0
     "@types/triple-beam": ^1.3.2
     apollo-server-core: ^2.22.2
     apollo-server-express: ^2.22.2
@@ -3988,7 +3980,6 @@ __metadata:
     rimraf: ^3.0.2
     rxjs: ^6.6.7
     source-map-support: ^0.5.19
-    tiny-async-pool: ^1.2.0
     ts-essentials: ^7.0.1
     ts-jest: ^26.5.4
     ts-node: ^9.1.1
@@ -12022,16 +12013,6 @@ resolve@^2.0.0-next.3:
   languageName: node
   linkType: hard
 
-"tiny-async-pool@npm:^1.2.0":
-  version: 1.2.0
-  resolution: "tiny-async-pool@npm:1.2.0"
-  dependencies:
-    semver: ^5.5.0
-    yaassertion: ^1.0.0
-  checksum: aeffb813d83e59890581d660b540dffd04d11e4265e32f043f839115e476b4720c9943271843b2c2ff3efbc1a555d00a31d8acbeffc0b1d70e69436f10596a67
-  languageName: node
-  linkType: hard
-
 "tmp@npm:^0.0.33":
   version: 0.0.33
   resolution: "tmp@npm:0.0.33"
@@ -13109,13 +13090,6 @@ resolve@^2.0.0-next.3:
   version: 4.0.0
   resolution: "y18n@npm:4.0.0"
   checksum: 5b7434c95d31ffa2b9b97df98e2d786446a0ff21c30e0265088caa4818a3335559a425763e55b6d9370d9fcecb75a36ae5bb901184676bd255f96ee3c743f667
-  languageName: node
-  linkType: hard
-
-"yaassertion@npm:^1.0.0":
-  version: 1.0.2
-  resolution: "yaassertion@npm:1.0.2"
-  checksum: fc7c5ae11381ddbc546855dde3c2db3e2b6d0f8427527dcf91ce2e641f17967b4d279fc1bf39baf78bf1e4e4acfb73cbb42965e422829aefcd082978065c3746
   languageName: node
   linkType: hard
 
