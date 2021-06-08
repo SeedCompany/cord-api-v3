@@ -24,8 +24,9 @@ export class ProgressSummaryRepository extends DtoRepository(ProgressSummary) {
   async save(report: ProgressReport, data: ProgressSummary) {
     await this.db
       .query()
+      .matchNode('pr', 'ProgressReport', { id: report.id })
       .merge([
-        node('', 'ProgressReport', { id: report.id }),
+        node('pr'),
         relation('out', '', 'summary', { active: true }),
         node('summary', 'ProgressSummary'),
       ])
