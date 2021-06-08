@@ -124,6 +124,13 @@ export class AdminService implements OnApplicationBootstrap {
 
   @Transactional()
   private async setupRootObjects(): Promise<void> {
+    const apoc = await this.repo.apocVersion();
+    if (apoc) {
+      this.logger.info('Found Neo4j APOC plugin', { version: apoc });
+    } else {
+      this.logger.error('Neo4j APOC plugin not loaded');
+    }
+
     this.logger.debug('Setting up root objects');
 
     await this.mergeRootSecurityGroup();

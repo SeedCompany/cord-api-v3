@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID } from '../../common';
-import { DatabaseService } from '../../core';
+import { DatabaseService, SyntaxError } from '../../core';
 
 @Injectable()
 export class AdminRepository {
@@ -10,6 +10,22 @@ export class AdminRepository {
 
   finishing(callback: () => Promise<void>) {
     return this.db.runOnceUntilCompleteAfterConnecting(callback);
+  }
+
+  async apocVersion() {
+    try {
+      const res = await this.db
+        .query()
+        .return('apoc.version() as version')
+        .asResult<{ version: string }>()
+        .first();
+      return res?.version;
+    } catch (e) {
+      if (e instanceof SyntaxError) {
+        return undefined;
+      }
+      throw e;
+    }
   }
 
   async mergeRootSecurityGroup(powers: string[], id: string) {
