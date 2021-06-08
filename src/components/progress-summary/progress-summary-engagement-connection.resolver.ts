@@ -1,7 +1,8 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { AnonSession, fiscalQuarter, fiscalYear, Session } from '../../common';
-import { LanguageEngagement, PnpData } from '../engagement';
+import { LanguageEngagement } from '../engagement/dto';
 import { PeriodicReportService, ReportType } from '../periodic-report';
+import { PnpData } from './dto/pnp-data.dto';
 import { ProgressSummaryRepository } from './progress-summary.repository';
 
 @Resolver(LanguageEngagement)

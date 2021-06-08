@@ -4,4 +4,3 @@ export * from './create-engagement.dto';
 export * from './list-engagements.dto';
 export * from './engagement.dto';
 export * from './update-engagement.dto';
-export * from './pnp-data.dto';
