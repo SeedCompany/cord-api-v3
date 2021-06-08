@@ -20,7 +20,10 @@ import { runListQuery } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { ProjectService } from '../project/project.service';
 import { CreatePlanChange, PlanChange, UpdatePlanChange } from './dto';
-import { ChangeListInput, ChangeListOutput } from './dto/change-list.dto';
+import {
+  ChangesetListInput,
+  ChangesetListOutput,
+} from './dto/changeset-list.dto';
 import { PlanChangeUpdatedEvent } from './events';
 import { PlanChangeRepository } from './plan-change.repository';
 
@@ -96,12 +99,12 @@ export class PlanChangeService {
     await this.db
       .query()
       .match([
-        [node('planChange', 'PlanChange', { id: result.id })],
+        [node('planChange', 'PlanChange:Changeset', { id: result.id })],
         [node('project', 'Project', { id: projectId })],
       ])
       .create([
         node('project'),
-        relation('out', '', 'planChange', { active: true, createdAt }),
+        relation('out', '', 'changeset', { active: true, createdAt }),
         node('planChange'),
       ])
       .return('planChange.id as id')
@@ -189,9 +192,9 @@ export class PlanChangeService {
   }
 
   async list(
-    { filter, ...input }: ChangeListInput,
+    { filter, ...input }: ChangesetListInput,
     session: Session
-  ): Promise<ChangeListOutput> {
+  ): Promise<ChangesetListOutput> {
     const query = this.repo.list({ filter, ...input }, session);
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

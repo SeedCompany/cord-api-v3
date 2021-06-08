@@ -222,7 +222,7 @@ export class DatabaseService {
     type,
     object,
     changes,
-    changeId,
+    changeset,
   }: {
     // This becomes the label of the base node
     type: TResourceStatic;
@@ -231,7 +231,7 @@ export class DatabaseService {
     // The changes
     changes: DbChanges<TResourceStatic['prototype']>;
     // Plan Change ID
-    changeId?: ID;
+    changeset?: ID;
   }): Promise<TObject> {
     let updated = object;
     for (const [prop, change] of entries(changes)) {
@@ -243,7 +243,7 @@ export class DatabaseService {
         object,
         key: prop as any,
         value: change,
-        changeId,
+        changeset,
       });
 
       updated = {
@@ -273,17 +273,17 @@ export class DatabaseService {
     object: { id },
     key,
     value,
-    changeId,
+    changeset,
   }: {
     type: TResourceStatic;
     object: TObject;
     key: Key;
     value?: UnwrapSecured<TObject[Key]>;
-    changeId?: ID;
+    changeset?: ID;
   }): Promise<void> {
     const label = type.name;
 
-    const propLabels = !changeId
+    const propLabels = !changeset
       ? getDbPropertyLabels(type, key)
       : // Do not give properties unique labels if inside a changeset.
         // They'll get them when they are applied for real.
@@ -294,8 +294,8 @@ export class DatabaseService {
       .query()
       .match(node('node', label, { id }))
       .apply((q) =>
-        changeId
-          ? q.match(node('changeNode', 'PlanChange', { id: changeId }))
+        changeset
+          ? q.match(node('changeNode', 'Changeset', { id: changeset }))
           : q
       )
       // Deactivate existing prop(s) & adjust labels as needed
@@ -305,32 +305,32 @@ export class DatabaseService {
           .with('node')
           .match([
             node('node'),
-            relation('out', 'oldToProp', key, { active: !changeId }),
+            relation('out', 'oldToProp', key, { active: !changeset }),
             node('oldPropVar', 'Property'),
-            ...(changeId
+            ...(changeset
               ? [
-                  relation('in', 'oldChange', 'change', { active: true }),
-                  node('changeNode', 'PlanChange', { id: changeId }),
+                  relation('in', 'oldChange', 'changeset', { active: true }),
+                  node('changeNode', 'PlanChange', { id: changeset }),
                 ]
               : []),
           ])
           .setValues({
-            [`${changeId ? 'oldChange' : 'oldToProp'}.active`]: false,
+            [`${changeset ? 'oldChange' : 'oldToProp'}.active`]: false,
           })
           .raw(
             `
-        with node, oldPropVar, reduce(deletedLabels = [], label in labels(oldPropVar) | deletedLabels + ("Deleted_" + label)) as deletedLabels
-        call apoc.create.removeLabels(oldPropVar, labels(oldPropVar)) yield node as nodeRemoved
-        with node, oldPropVar, deletedLabels
-        call apoc.create.addLabels(oldPropVar, deletedLabels) yield node as nodeAdded
-        `
+              with node, oldPropVar, reduce(deletedLabels = [], label in labels(oldPropVar) | deletedLabels + ("Deleted_" + label)) as deletedLabels
+              call apoc.create.removeLabels(oldPropVar, labels(oldPropVar)) yield node as nodeRemoved
+              with node, oldPropVar, deletedLabels
+              call apoc.create.addLabels(oldPropVar, deletedLabels) yield node as nodeAdded
+            `
           )
           .return(['count(oldPropVar) as numPropsDeactivated'])
       )
       .create([
         node('node'),
         relation('out', 'toProp', key, {
-          active: !changeId,
+          active: !changeset,
           createdAt,
         }),
         node('newPropNode', propLabels, {
@@ -338,8 +338,11 @@ export class DatabaseService {
           value,
           sortValue: determineSortValue(value),
         }),
-        ...(changeId
-          ? [relation('in', '', 'change', { active: true }), node('changeNode')]
+        ...(changeset
+          ? [
+              relation('in', '', 'changeset', { active: true }),
+              node('changeNode'),
+            ]
           : []),
       ])
       .return('newPropNode');

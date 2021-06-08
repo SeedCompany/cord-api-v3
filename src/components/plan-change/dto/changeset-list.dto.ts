@@ -10,27 +10,29 @@ import {
 import { PlanChange } from './plan-change.dto';
 
 @InputType()
-export abstract class ChangeFilters {
+export abstract class ChangesetFilters {
   readonly projectId?: ID;
 }
 
 const defaultFilters = {};
 
 @InputType()
-export class ChangeListInput extends SortablePaginationInput<keyof PlanChange>({
+export class ChangesetListInput extends SortablePaginationInput<
+  keyof PlanChange
+>({
   defaultSort: 'createdAt',
 }) {
-  static defaultVal = new ChangeListInput();
+  static defaultVal = new ChangesetListInput();
 
-  @Type(() => ChangeFilters)
+  @Type(() => ChangesetFilters)
   @ValidateNested()
-  readonly filter: ChangeFilters = defaultFilters;
+  readonly filter: ChangesetFilters = defaultFilters;
 }
 
 @ObjectType()
-export class ChangeListOutput extends PaginatedList(PlanChange) {}
+export class ChangesetListOutput extends PaginatedList(PlanChange) {}
 
 @ObjectType({
-  description: SecuredList.descriptionFor('changes'),
+  description: SecuredList.descriptionFor('changesets'),
 })
-export abstract class SecuredChangeList extends SecuredList(PlanChange) {}
+export abstract class SecuredChangesetList extends SecuredList(PlanChange) {}

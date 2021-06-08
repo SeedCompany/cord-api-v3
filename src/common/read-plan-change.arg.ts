@@ -7,5 +7,5 @@ export class ReadPlanChangeArgs {
   id: ID;
 
   @IdField({ nullable: true })
-  changeId: ID;
+  changeset: ID;
 }

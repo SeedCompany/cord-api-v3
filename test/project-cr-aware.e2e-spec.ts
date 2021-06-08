@@ -32,11 +32,11 @@ import {
   stepsFromEarlyConversationToBeforeActive,
 } from './utility/transition-project';
 
-const readProject = (app: TestApp, id: string, changeId?: string) =>
+const readProject = (app: TestApp, id: string, changeset?: string) =>
   app.graphql.query(
     gql`
-      query project($id: ID!, $changeId: ID) {
-        project(id: $id, changeId: $changeId) {
+      query project($id: ID!, $changeset: ID) {
+        project(id: $id, changeset: $changeset) {
           ...project
           budget {
             value {
@@ -52,7 +52,7 @@ const readProject = (app: TestApp, id: string, changeId?: string) =>
     `,
     {
       id,
-      changeId,
+      changeset,
     }
   );
 
@@ -111,7 +111,7 @@ describe('Project CR Aware e2e', () => {
     });
     expect(planChange.id).toBeTruthy();
 
-    // Update project with changeId
+    // Update project with changeset
     const newCRName = faker.random.word() + ' ' + faker.datatype.uuid();
     const mutationResult = await app.graphql.mutate(
       gql`
@@ -130,17 +130,17 @@ describe('Project CR Aware e2e', () => {
             id: project.id,
             name: newCRName,
           },
-          changeId: planChange.id,
+          changeset: planChange.id,
         },
       }
     );
     expect(mutationResult.updateProject.project.name.value).toBe(newCRName);
 
-    // Query project without changeId
+    // Query project without changeset
     let result = await readProject(app, project.id);
     expect(result.project.name.value).toBe(project.name.value);
 
-    // Query project with changeId
+    // Query project with changeset
     result = await readProject(app, project.id, planChange.id);
     expect(result.project.name.value).toBe(newCRName);
 
@@ -166,7 +166,7 @@ describe('Project CR Aware e2e', () => {
       }
     );
 
-    // Project name is changed without changeId
+    // Project name is changed without changeset
     result = await readProject(app, project.id);
     expect(result.project.name.value).toBe(newCRName);
   });
@@ -230,16 +230,16 @@ describe('Project CR Aware e2e', () => {
             mouStart: CalendarDate.fromISO('2020-08-23'),
             mouEnd: CalendarDate.fromISO('2021-08-22'),
           },
-          changeId: planChange.id,
+          changeset: planChange.id,
         },
       }
     );
 
-    // Query project without changeId
+    // Query project without changeset
     let result = await readProject(app, project.id);
     expect(result.project.budget.value.records.length).toBe(0);
 
-    // Query project with changeId
+    // Query project with changeset
     result = await readProject(app, project.id, planChange.id);
     expect(result.project.budget.value.records.length).toBe(2);
 
@@ -264,7 +264,7 @@ describe('Project CR Aware e2e', () => {
         },
       }
     );
-    // Query project without changeId
+    // Query project without changeset
     result = await readProject(app, project.id);
     expect(result.project.budget.value.records.length).toBe(2);
   });

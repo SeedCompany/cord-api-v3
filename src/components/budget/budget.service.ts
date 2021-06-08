@@ -127,7 +127,7 @@ export class BudgetService {
   async createRecord(
     input: CreateBudgetRecord,
     session: Session,
-    changeId?: ID
+    changeset?: ID
   ): Promise<BudgetRecord> {
     const { budgetId, organizationId, fiscalYear } = input;
 
@@ -195,7 +195,7 @@ export class BudgetService {
       const budgetRecord = await this.readOneRecord(
         result.id,
         session,
-        changeId
+        changeset
       );
 
       return budgetRecord;
@@ -219,7 +219,7 @@ export class BudgetService {
   }
 
   @HandleIdLookup(Budget)
-  async readOne(id: ID, session: Session, changeId?: ID): Promise<Budget> {
+  async readOne(id: ID, session: Session, changeset?: ID): Promise<Budget> {
     this.logger.debug(`readOne budget`, {
       id,
       userId: session.userId,
@@ -266,7 +266,7 @@ export class BudgetService {
   async readOneRecord(
     id: ID,
     session: Session,
-    changeId?: ID
+    changeset?: ID
   ): Promise<BudgetRecord> {
     this.logger.debug(`readOne BudgetRecord`, {
       id,
@@ -377,8 +377,8 @@ export class BudgetService {
     }
   }
 
-  async deleteRecord(id: ID, session: Session, changeId?: ID): Promise<void> {
-    const br = await this.readOneRecord(id, session, changeId);
+  async deleteRecord(id: ID, session: Session, changeset?: ID): Promise<void> {
+    const br = await this.readOneRecord(id, session, changeset);
 
     if (!br) {
       throw new NotFoundException('Could not find Budget Record');
@@ -437,7 +437,7 @@ export class BudgetService {
     const query = this.budgetRecordsRepo.list(input, session);
 
     return await runListQuery(query, input, (id) =>
-      this.readOneRecord(id, session, changeId)
+      this.readOneRecord(id, session, changeset)
     );
   }
 }

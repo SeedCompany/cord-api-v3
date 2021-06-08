@@ -24,16 +24,20 @@ export const permissionsOfNode = (nodeLabel?: string) => [
 /**
  * @deprecated use matchProps instead. It returns props as an object instead of the weird list.
  */
-export const matchPropList = (query: Query, changeId?: ID, nodeName = 'node') =>
+export const matchPropList = (
+  query: Query,
+  changeset?: ID,
+  nodeName = 'node'
+) =>
   query
     .match([
       node(nodeName),
-      relation('out', 'r', { active: !changeId }),
+      relation('out', 'r', { active: !changeset }),
       node('props', 'Property'),
-      ...(changeId
+      ...(changeset
         ? [
-            relation('in', '', 'change', { active: true }),
-            node('planChange', 'PlanChange', { id: changeId }),
+            relation('in', '', 'changeset', { active: true }),
+            node('changesetNode', 'Changeset', { id: changeset }),
           ]
         : []),
     ])
@@ -56,7 +60,7 @@ export interface MatchPropsOptions {
   // Whether we should move forward even without any properties matched
   optional?: boolean;
   // The optional change ID to reference
-  changeId?: ID;
+  changeset?: ID;
   // Don't merge in the actual BaseNode's properties into the resulting output object
   excludeBaseProps?: boolean;
 }
@@ -73,7 +77,7 @@ export const matchProps =
     nodeName = 'node',
     outputVar = 'props',
     optional = false,
-    changeId,
+    changeset,
     excludeBaseProps = false,
   }: MatchPropsOptions = {}) =>
   (query: Query) =>
@@ -83,12 +87,12 @@ export const matchProps =
         .match(
           [
             node(nodeName),
-            relation('out', 'r', { active: !changeId }),
+            relation('out', 'r', { active: !changeset }),
             node('prop', 'Property'),
-            ...(changeId
+            ...(changeset
               ? [
-                  relation('in', '', 'change', { active: true }),
-                  node('planChange', 'PlanChange', { id: changeId }),
+                  relation('in', '', 'changeset', { active: true }),
+                  node('changeset', 'Changeset', { id: changeset }),
                 ]
               : []),
           ],

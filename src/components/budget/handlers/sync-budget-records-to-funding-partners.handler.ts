@@ -77,7 +77,7 @@ export class SyncBudgetRecordsToFundingPartners
     }
 
     const projectIdAndSensitivity = await this.determineProjectId(event);
-    const changeId = await this.determineChangeId(event);
+    const changeset = await this.determineChangeset(event);
 
     // Fetch budget & only continue if it is pending
     const projectsCurrentBudget = await this.projects.currentBudget(
@@ -86,7 +86,7 @@ export class SyncBudgetRecordsToFundingPartners
         sensitivity: projectIdAndSensitivity.sensitivity,
       },
       event.session,
-      changeId
+      changeset
     );
     const budget = readSecured(projectsCurrentBudget, 'budget');
     if (budget?.status !== BudgetStatus.Pending) {
@@ -94,10 +94,10 @@ export class SyncBudgetRecordsToFundingPartners
       return;
     }
 
-    const partnerships = await this.determinePartnerships(event, changeId);
+    const partnerships = await this.determinePartnerships(event, changeset);
 
     for (const partnership of partnerships) {
-      await this.syncRecords(budget, partnership, event, changeId);
+      await this.syncRecords(budget, partnership, event, changeset);
     }
   }
 
@@ -115,14 +115,14 @@ export class SyncBudgetRecordsToFundingPartners
     );
   }
 
-  private async determineChangeId(event: SubscribedEvent) {
+  private async determineChangeset(event: SubscribedEvent) {
     if (event instanceof ProjectUpdatedEvent) {
-      return event.changeId;
+      return event.updated.changeset;
     }
     return;
   }
 
-  private async determinePartnerships(event: SubscribedEvent, changeId?: ID) {
+  private async determinePartnerships(event: SubscribedEvent, changeset?: ID) {
     if (event instanceof PartnershipCreatedEvent) {
       return [event.partnership];
     }
@@ -139,7 +139,7 @@ export class SyncBudgetRecordsToFundingPartners
     const list = await this.partnershipService.list(
       { filter: { projectId: event.updated.id } },
       event.session,
-      changeId
+      changeset
     );
     return list.items.filter(isFunding);
   }
@@ -148,7 +148,7 @@ export class SyncBudgetRecordsToFundingPartners
     budget: Budget,
     partnership: Partnership,
     event: SubscribedEvent,
-    changeId?: ID
+    changeset?: ID
   ) {
     const organizationId = await this.getOrganizationIdByPartnership(
       partnership
@@ -170,14 +170,14 @@ export class SyncBudgetRecordsToFundingPartners
       organizationId,
       removals,
       event.session,
-      changeId
+      changeset
     );
     await this.addRecords(
       budget,
       organizationId,
       additions,
       event.session,
-      changeId
+      changeset
     );
   }
 
@@ -186,7 +186,7 @@ export class SyncBudgetRecordsToFundingPartners
     organizationId: ID,
     additions: readonly FiscalYear[],
     session: Session,
-    changeId?: ID
+    changeset?: ID
   ) {
     await Promise.all(
       additions.map((fiscalYear) =>
@@ -198,7 +198,7 @@ export class SyncBudgetRecordsToFundingPartners
               organizationId,
             },
             session,
-            changeId
+            changeset
           )
           .catch((e) => {
             if (e instanceof DuplicateException) {
@@ -217,7 +217,7 @@ export class SyncBudgetRecordsToFundingPartners
     organizationId: ID,
     removals: readonly FiscalYear[],
     session: Session,
-    changeId?: ID
+    changeset?: ID
   ) {
     const recordsToDelete = budget.records.filter(
       (record) =>
@@ -227,7 +227,7 @@ export class SyncBudgetRecordsToFundingPartners
 
     await Promise.all(
       recordsToDelete.map((record) =>
-        this.budgets.deleteRecord(record.id, session, changeId)
+        this.budgets.deleteRecord(record.id, session, changeset)
       )
     );
   }

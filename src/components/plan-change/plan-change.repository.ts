@@ -13,7 +13,7 @@ import {
 } from '../../core/database/query';
 import { DbPropsOfDto } from '../../core/database/results';
 import { ScopedRole } from '../project/project-member';
-import { ChangeListInput, PlanChange } from './dto';
+import { ChangesetListInput, PlanChange } from './dto';
 
 @Injectable()
 export class PlanChangeRepository extends DtoRepository(PlanChange) {
@@ -21,7 +21,9 @@ export class PlanChangeRepository extends DtoRepository(PlanChange) {
     return await this.db
       .query()
       .apply(matchRequestingUser(session))
-      .apply(createBaseNode(await generateId(), 'PlanChange', secureProps))
+      .apply(
+        createBaseNode(await generateId(), 'PlanChange:Changeset', secureProps)
+      )
       .return('node.id as id')
       .first();
   }
@@ -31,8 +33,8 @@ export class PlanChangeRepository extends DtoRepository(PlanChange) {
       .query()
       .apply(matchRequestingUser(session))
       .match([
-        node('node', 'PlanChange', { id }),
-        relation('in', '', 'planChange', { active: true }),
+        node('node', 'PlanChange:Changeset', { id }),
+        relation('in', '', 'changeset', { active: true }),
         node('project', 'Project'),
       ])
       .apply(matchPropsAndProjectSensAndScopedRoles(session))
@@ -45,7 +47,7 @@ export class PlanChangeRepository extends DtoRepository(PlanChange) {
     return await query.first();
   }
 
-  list({ filter, ...input }: ChangeListInput, _session: Session) {
+  list({ filter, ...input }: ChangesetListInput, _session: Session) {
     return this.db
       .query()
       .match([
@@ -54,7 +56,7 @@ export class PlanChangeRepository extends DtoRepository(PlanChange) {
         node('node'),
         ...(filter.projectId
           ? [
-              relation('in', '', 'planChange', { active: true }),
+              relation('in', '', 'changeset', { active: true }),
               node('project', 'Project', {
                 id: filter.projectId,
               }),

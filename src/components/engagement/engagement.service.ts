@@ -87,7 +87,7 @@ export class EngagementService {
       projectId,
       languageId,
       ProjectType.Translation,
-      changeId
+      changeset
     );
 
     if (input.firstScripture) {
@@ -123,9 +123,9 @@ export class EngagementService {
     const languageEngagement = (await this.readOne(
       id,
       session,
-      changeId
+      changeset
     )) as LanguageEngagement;
-    if (changeId) {
+    if (changeset) {
       return languageEngagement;
     }
     const event = new EngagementCreatedEvent(languageEngagement, session);
@@ -144,7 +144,7 @@ export class EngagementService {
       projectId,
       internId,
       ProjectType.Internship,
-      changeId
+      changeset
     );
 
     await this.verifyProjectStatus(projectId, session);
@@ -203,9 +203,9 @@ export class EngagementService {
     const internshipEngagement = (await this.readOne(
       id,
       session,
-      changeId
+      changeset
     )) as InternshipEngagement;
-    if (changeId) {
+    if (changeset) {
       return internshipEngagement;
     }
     const engagementCreatedEvent = new EngagementCreatedEvent(
@@ -236,14 +236,24 @@ export class EngagementService {
   async readOne(
     id: ID,
     session: Session,
-    changeId?: ID
+    changeset?: ID
   ): Promise<LanguageEngagement | InternshipEngagement> {
     this.logger.debug('readOne', { id, userId: session.userId });
 
     if (!id) {
       throw new NotFoundException('no id given', 'engagement.id');
     }
+<<<<<<< HEAD
     const result = await this.repo.readOne(id, session);
+=======
+    const query = this.repo.readOne(id, session, changeset);
+
+    const result = await query.first();
+
+    if (!result) {
+      throw new NotFoundException('could not find Engagement', 'engagement.id');
+    }
+>>>>>>> Implement changeset
 
     let props = {
       __typename: result.__typename,
@@ -255,11 +265,8 @@ export class EngagementService {
       mentor: result.mentor,
     };
 
-    if (changeId) {
-      const planChangesProps = await this.repo.getPlanChangesProps(
-        id,
-        changeId
-      );
+    if (changeset) {
+      const planChangesProps = await this.repo.getChangesetProps(id, changeset);
       entries(planChangesProps).forEach(([key, prop]) => {
         if (prop !== undefined) {
           props = {
@@ -348,7 +355,7 @@ export class EngagementService {
   async updateLanguageEngagement(
     input: UpdateLanguageEngagement,
     session: Session,
-    changeId?: ID
+    changeset?: ID
   ): Promise<LanguageEngagement> {
     if (input.firstScripture) {
       await this.verifyFirstScripture({ engagementId: input.id });
@@ -359,14 +366,14 @@ export class EngagementService {
         input.id,
         session,
         input.status,
-        changeId
+        changeset
       );
     }
 
     const object = (await this.readOne(
       input.id,
       session,
-      changeId
+      changeset
     )) as LanguageEngagement;
 
     const changes = this.repo.getActualLanguageChanges(object, input);
@@ -386,7 +393,11 @@ export class EngagementService {
     );
 
     try {
-      await this.repo.updateLanguageProperties(object, simpleChanges, changeId);
+      await this.repo.updateLanguageProperties(
+        object,
+        simpleChanges,
+        changeset
+      );
     } catch (exception) {
       this.logger.error('Error updating language engagement', { exception });
       throw new ServerException(
@@ -398,10 +409,10 @@ export class EngagementService {
     const updated = (await this.readOne(
       input.id,
       session,
-      changeId
+      changeset
     )) as LanguageEngagement;
 
-    if (changeId) {
+    if (changeset) {
       return updated;
     }
 
@@ -419,21 +430,21 @@ export class EngagementService {
   async updateInternshipEngagement(
     input: UpdateInternshipEngagement,
     session: Session,
-    changeId?: ID
+    changeset?: ID
   ): Promise<InternshipEngagement> {
     if (input.status) {
       await this.engagementRules.verifyStatusChange(
         input.id,
         session,
         input.status,
-        changeId
+        changeset
       );
     }
 
     const object = (await this.readOne(
       input.id,
       session,
-      changeId
+      changeset
     )) as InternshipEngagement;
 
     const changes = this.repo.getActualInternshipChanges(object, input);
@@ -463,7 +474,24 @@ export class EngagementService {
         await this.repo.updateCountryOfOrigin(input.id, countryOfOriginId);
       }
 
+<<<<<<< HEAD
       await this.repo.updateInternshipProperties(object, simpleChanges);
+=======
+      await this.repo.updateInternshipProperties(
+        object,
+        simpleChanges,
+        changeset
+      );
+      // update property node labels
+      Object.keys(input).map(async (ele) => {
+        if (ele === 'position') {
+          await this.repo.addLabelsToNodes('position', input);
+        }
+        if (ele === 'methodologies') {
+          await this.repo.addLabelsToNodes('methodologies', input);
+        }
+      });
+>>>>>>> Implement changeset
     } catch (exception) {
       this.logger.warning('Failed to update InternshipEngagement', {
         exception,
@@ -479,7 +507,7 @@ export class EngagementService {
       session
     )) as InternshipEngagement;
 
-    if (changeId) {
+    if (changeset) {
       return updated;
     }
 
@@ -526,13 +554,21 @@ export class EngagementService {
   // LIST ///////////////////////////////////////////////////////////
 
   async list(
+<<<<<<< HEAD
     input: EngagementListInput,
     session: Session
   ): Promise<EngagementListOutput> {
     const query = this.repo.list(input, session);
+=======
+    { filter, ...input }: EngagementListInput,
+    session: Session,
+    changeset?: ID
+  ): Promise<EngagementListOutput> {
+    const query = this.repo.list(session, { filter, ...input }, changeset);
+>>>>>>> Implement changeset
 
     const engagements = await runListQuery(query, input, (id) =>
-      this.readOne(id, session, changeId)
+      this.readOne(id, session, changeset)
     );
     return engagements;
   }
@@ -591,7 +627,7 @@ export class EngagementService {
     projectId: ID,
     otherId: ID,
     type: ProjectType,
-    changeId?: ID
+    changeset?: ID
   ): Promise<void> {
     const isTranslation = type === ProjectType.Translation;
     const property = isTranslation ? 'language' : 'intern';
@@ -600,7 +636,7 @@ export class EngagementService {
       otherId,
       isTranslation,
       property,
-      changeId
+      changeset
     );
 
     if (!result?.project) {

@@ -15,8 +15,8 @@ export class ChangeableResolver {
     @Parent() object: Changeable,
     @LoggedInSession() session: Session
   ): Promise<PlanChange | null> {
-    return object.changeId
-      ? await this.service.readOne(object.changeId, session)
+    return object.changeset
+      ? await this.service.readOne(object.changeset, session)
       : null;
   }
 }

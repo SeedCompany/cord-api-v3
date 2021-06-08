@@ -96,24 +96,24 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
     return !!result;
   }
 
-  readOne(id: ID, session: Session, changeId?: ID) {
+  readOne(id: ID, session: Session, changeset?: ID) {
     const query = this.db
       .query()
       .match([
         node('project', 'Project'),
         relation('out', '', 'budget', { active: true }),
         node('', 'Budget'),
-        relation('out', '', 'record', { active: !changeId ? true : false }),
+        relation('out', '', 'record', { active: !changeset }),
         node('node', 'BudgetRecord', { id }),
         relation('out', '', 'organization', { active: true }),
         node('organization', 'Organization'),
       ])
       .apply((q) =>
-        changeId
+        changeset
           ? q.match([
               node('node'),
-              relation('in', '', 'change', { active: true }),
-              node('planChange', 'PlanChange', { id: changeId }),
+              relation('in', '', 'changeset', { active: true }),
+              node('changesetNode', 'Changeset', { id: changeset }),
             ])
           : q
       )
@@ -146,7 +146,7 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
         ...(input.filter.budgetId
           ? [
               relation('in', '', 'record', {
-                active: !changeId ? true : false,
+                active: !changeset,
               }),
               node('budget', 'Budget', {
                 id: input.filter.budgetId,
@@ -155,11 +155,11 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
           : []),
       ])
       .apply((q) =>
-        changeId
+        changeset
           ? q.match([
               node('node'),
-              relation('in', '', 'change', { active: true }),
-              node('changeNode', 'PlanChange', { id: changeId }),
+              relation('in', '', 'changeset', { active: true }),
+              node('changesetNode', 'Changeset', { id: changeset }),
             ])
           : q
       )

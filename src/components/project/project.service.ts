@@ -46,9 +46,9 @@ import {
 } from '../partnership';
 import { PlanChangeService } from '../plan-change';
 import {
-  ChangeListInput,
-  SecuredChangeList,
-} from '../plan-change/dto/change-list.dto';
+  ChangesetListInput,
+  SecuredChangesetList,
+} from '../plan-change/dto/changeset-list.dto';
 import { PlanChangeStatus } from '../plan-change/dto/plan-change-status.enum';
 import {
   CreateProject,
@@ -223,12 +223,12 @@ export class ProjectService {
   async readOneUnsecured(
     id: ID,
     sessionOrUserId: Session | ID,
-    changeId?: ID
+    changeset?: ID
   ): Promise<UnsecuredDto<Project>> {
     const userId = isIdLike(sessionOrUserId)
       ? sessionOrUserId
       : sessionOrUserId.userId;
-    return await this.repo.readOneUnsecured(id, userId, changeId);
+    return await this.repo.readOneUnsecured(id, userId, changeset);
   }
 
   async secure(
@@ -261,12 +261,12 @@ export class ProjectService {
   async readOne(
     id: ID,
     sessionOrUserId: Session | ID,
-    changeId?: ID
+    changeset?: ID
   ): Promise<Project> {
     const unsecured = await this.readOneUnsecured(
       id,
       sessionOrUserId,
-      changeId
+      changeset
     );
     return await this.secure(unsecured, sessionOrUserId);
   }
@@ -274,13 +274,13 @@ export class ProjectService {
   async update(
     input: UpdateProject,
     session: Session,
-    changeId?: ID,
+    changeset?: ID,
     stepValidation = true
   ): Promise<UnsecuredDto<Project>> {
     const currentProject = await this.readOneUnsecured(
       input.id,
       session,
-      changeId
+      changeset
     );
     if (input.sensitivity && currentProject.type === ProjectType.Translation)
       throw new InputException(
@@ -303,7 +303,7 @@ export class ProjectService {
         input.id,
         session,
         changes.step,
-        changeId
+        changeset
       );
     }
 
@@ -315,9 +315,9 @@ export class ProjectService {
     } = changes;
 
     // In CR mode, Project status should be Active and CR status is pending
-    if (changeId) {
+    if (changeset) {
       const planChange = await this.planChangeService.readOne(
-        changeId,
+        changeset,
         session
       );
       if (
@@ -334,12 +334,8 @@ export class ProjectService {
     let result = await this.repo.updateProperties(
       currentProject,
       simpleChanges,
-      changeId
+      changeset
     );
-
-    // if (changeId) {
-    //   return result;
-    // }
 
     if (primaryLocationId) {
       try {
@@ -393,8 +389,7 @@ export class ProjectService {
       result,
       currentProject,
       input,
-      session,
-      changeId
+      session
     );
     await this.eventBus.publish(event);
     return event.updated;
@@ -446,7 +441,7 @@ export class ProjectService {
     project: Project,
     input: EngagementListInput,
     session: Session,
-    changeId?: ID
+    changeset?: ID
   ): Promise<SecuredEngagementList> {
     this.logger.debug('list engagements ', {
       projectId: project.id,
@@ -463,7 +458,7 @@ export class ProjectService {
         },
       },
       session,
-      changeId
+      changeset
     );
 
     const permissions = await this.repo.permissionsForListProp(
@@ -540,15 +535,15 @@ export class ProjectService {
 
   async listPlanChanges(
     projectId: ID,
-    input: ChangeListInput,
+    input: ChangesetListInput,
     session: Session
-  ): Promise<SecuredChangeList> {
+  ): Promise<SecuredChangesetList> {
     const result = await this.planChangeService.list(
       {
         ...input,
         filter: {
           ...input.filter,
-          projectId: projectId,
+          projectId,
         },
       },
       session

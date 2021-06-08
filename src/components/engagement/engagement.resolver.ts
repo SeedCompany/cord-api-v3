@@ -42,10 +42,10 @@ export class EngagementResolver {
     description: 'Lookup an engagement by ID',
   })
   async engagement(
-    @Args() { id, changeId }: ReadPlanChangeArgs,
+    @Args() { id, changeset }: ReadPlanChangeArgs,
     @AnonSession() session: Session
   ): Promise<Engagement> {
-    const engagement = await this.service.readOne(id, session, changeId);
+    const engagement = await this.service.readOne(id, session, changeset);
     return engagement;
   }
 
@@ -83,13 +83,13 @@ export class EngagementResolver {
   })
   async createLanguageEngagement(
     @Args('input')
-    { engagement: input, changeId }: CreateLanguageEngagementInput,
+    { engagement: input, changeset }: CreateLanguageEngagementInput,
     @LoggedInSession() session: Session
   ): Promise<CreateLanguageEngagementOutput> {
     const engagement = await this.service.createLanguageEngagement(
       input,
       session,
-      changeId
+      changeset
     );
     return { engagement };
   }
@@ -99,13 +99,13 @@ export class EngagementResolver {
   })
   async createInternshipEngagement(
     @Args('input')
-    { engagement: input, changeId }: CreateInternshipEngagementInput,
+    { engagement: input, changeset }: CreateInternshipEngagementInput,
     @LoggedInSession() session: Session
   ): Promise<CreateInternshipEngagementOutput> {
     const engagement = await this.service.createInternshipEngagement(
       input,
       session,
-      changeId
+      changeset
     );
     return { engagement };
   }
@@ -115,13 +115,13 @@ export class EngagementResolver {
   })
   async updateLanguageEngagement(
     @Args('input')
-    { engagement: input, changeId }: UpdateLanguageEngagementInput,
+    { engagement: input, changeset }: UpdateLanguageEngagementInput,
     @LoggedInSession() session: Session
   ): Promise<UpdateLanguageEngagementOutput> {
     const engagement = await this.service.updateLanguageEngagement(
       input,
       session,
-      changeId
+      changeset
     );
     return { engagement };
   }
@@ -131,13 +131,13 @@ export class EngagementResolver {
   })
   async updateInternshipEngagement(
     @Args('input')
-    { engagement: input, changeId }: UpdateInternshipEngagementInput,
+    { engagement: input, changeset }: UpdateInternshipEngagementInput,
     @LoggedInSession() session: Session
   ): Promise<UpdateInternshipEngagementOutput> {
     const engagement = await this.service.updateInternshipEngagement(
       input,
       session,
-      changeId
+      changeset
     );
     return { engagement };
   }

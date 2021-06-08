@@ -30,9 +30,9 @@ import {
 import { OrganizationService, SecuredOrganization } from '../organization';
 import { PartnershipListInput, SecuredPartnershipList } from '../partnership';
 import {
-  ChangeListInput,
-  SecuredChangeList,
-} from '../plan-change/dto/change-list.dto';
+  ChangesetListInput,
+  SecuredChangesetList,
+} from '../plan-change/dto/changeset-list.dto';
 import {
   CreateProjectInput,
   CreateProjectOutput,
@@ -72,12 +72,12 @@ export class ProjectResolver {
   })
   async project(
     @LoggedInSession() session: Session,
-    @Args() { id, changeId }: ReadPlanChangeArgs
+    @Args() { id, changeset }: ReadPlanChangeArgs
   ): Promise<Project> {
     const project = await this.projectService.readOneUnsecured(
       id,
       session,
-      changeId
+      changeset
     );
     const secured = await this.projectService.secure(project, session);
     return secured;
@@ -107,18 +107,18 @@ export class ProjectResolver {
       : undefined;
   }
 
-  @ResolveField(() => SecuredChangeList)
-  async changes(
+  @ResolveField(() => SecuredChangesetList)
+  async changesets(
     @AnonSession() session: Session,
     @Parent() project: Project,
     @Args({
       name: 'input',
-      type: () => ChangeListInput,
+      type: () => ChangesetListInput,
       nullable: true,
-      defaultValue: ChangeListInput.defaultVal,
+      defaultValue: ChangesetListInput.defaultVal,
     })
-    input: ChangeListInput
-  ): Promise<SecuredChangeList> {
+    input: ChangesetListInput
+  ): Promise<SecuredChangesetList> {
     return this.projectService.listPlanChanges(project.id, input, session);
   }
 
@@ -132,7 +132,7 @@ export class ProjectResolver {
     return await this.projectService.currentBudget(
       project,
       session,
-      project.changeId
+      project.changeset
     );
   }
 
@@ -147,13 +147,13 @@ export class ProjectResolver {
       defaultValue: EngagementListInput.defaultVal,
     })
     input: EngagementListInput,
-    @IdArg({ name: 'changeId', nullable: true }) changeId?: ID
+    @IdArg({ name: 'changeset', nullable: true }) changeset?: ID
   ): Promise<SecuredEngagementList> {
     return this.projectService.listEngagements(
       project,
       input,
       session,
-      changeId
+      changeset
     );
   }
 
@@ -275,10 +275,10 @@ export class ProjectResolver {
     description: 'Update a project',
   })
   async updateProject(
-    @Args('input') { project: input, changeId }: UpdateProjectInput,
+    @Args('input') { project: input, changeset }: UpdateProjectInput,
     @LoggedInSession() session: Session
   ): Promise<UpdateProjectOutput> {
-    const project = await this.projectService.update(input, session, changeId);
+    const project = await this.projectService.update(input, session, changeset);
     const secured = await this.projectService.secure(project, session);
     return { project: secured };
   }

@@ -15,5 +15,5 @@ export abstract class Changeable {
   })
   readonly id: ID;
 
-  readonly changeId: ID;
+  readonly changeset: ID;
 }

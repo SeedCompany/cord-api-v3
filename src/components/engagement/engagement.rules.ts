@@ -355,13 +355,13 @@ export class EngagementRules {
     engagementId: ID,
     session: Session,
     currentUserRoles?: Role[],
-    changeId?: ID
+    changeset?: ID
   ): Promise<EngagementStatusTransition[]> {
     if (session.anonymous) {
       return [];
     }
 
-    const currentStatus = await this.getCurrentStatus(engagementId, changeId);
+    const currentStatus = await this.getCurrentStatus(engagementId, changeset);
     // get roles that can approve the current status
     const { approvers, transitions } = await this.getStatusRule(
       currentStatus,
@@ -385,7 +385,7 @@ export class EngagementRules {
 
     const currentStep = await this.getCurrentProjectStep(
       engagementId,
-      changeId
+      changeset
     );
     const availableTransitionsAccordingToProject = transitions.filter(
       (transition) =>
@@ -404,7 +404,7 @@ export class EngagementRules {
     engagementId: ID,
     session: Session,
     nextStatus: EngagementStatus,
-    changeId?: ID
+    changeset?: ID
   ) {
     if (this.config.migration) {
       return;
@@ -421,7 +421,7 @@ export class EngagementRules {
       engagementId,
       session,
       currentUserRoles,
-      changeId
+      changeset
     );
 
     const validNextStatus = transitions.some(
@@ -435,10 +435,10 @@ export class EngagementRules {
     }
   }
 
-  private async getCurrentStatus(id: ID, changeId?: ID) {
+  private async getCurrentStatus(id: ID, changeset?: ID) {
     let currentStatus;
 
-    if (changeId) {
+    if (changeset) {
       const result = await this.db
         .query()
         .match([
@@ -446,7 +446,7 @@ export class EngagementRules {
           relation('out', '', 'status', { active: false }),
           node('status', 'Property'),
           relation('in', '', 'change', { active: true }),
-          node('planChange', 'PlanChange', { id: changeId }),
+          node('planChange', 'PlanChange', { id: changeset }),
         ])
         .raw('return status.value as status')
         .asResult<{ status: EngagementStatus }>()
@@ -474,7 +474,7 @@ export class EngagementRules {
     return currentStatus;
   }
 
-  private async getCurrentProjectStep(engagementId: ID, changeId?: ID) {
+  private async getCurrentProjectStep(engagementId: ID, changeset?: ID) {
     const result = await this.db
       .query()
       .match([
@@ -492,7 +492,7 @@ export class EngagementRules {
     const projectId = result.projectId;
 
     let currentStep;
-    if (changeId) {
+    if (changeset) {
       const result = await this.db
         .query()
         .match([
@@ -500,7 +500,7 @@ export class EngagementRules {
           relation('out', '', 'step', { active: false }),
           node('step', 'Property'),
           relation('in', '', 'change', { active: true }),
-          node('planChange', 'PlanChange', { id: changeId }),
+          node('planChange', 'PlanChange', { id: changeset }),
         ])
         .raw('return step.value as step')
         .asResult<{ step: ProjectStep }>()

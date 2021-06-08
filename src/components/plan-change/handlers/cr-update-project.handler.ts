@@ -45,20 +45,20 @@ export class CRUpdateProject implements IEventHandler<SubscribedEvent> {
         .query()
         .match([
           node('project', 'Project'),
-          relation('out', '', 'planChange', { active: true }),
+          relation('out', '', 'changeset', { active: true }),
           node('planChange', 'PlanChange', { id: planChange.id }),
         ])
         .return('project.id as projectId')
         .asResult<{ projectId: ID }>()
         .first();
 
-      // Get unsecured project with changeId
+      // Get unsecured project with changeset
       if (result?.projectId) {
         const project = await this.projectService.readOne(
           result.projectId,
           event.session
         );
-        const changes = await this.projectRepo.getPlanChangesProps(
+        const changes = await this.projectRepo.getChangesetProps(
           result.projectId,
           planChange.id
         );

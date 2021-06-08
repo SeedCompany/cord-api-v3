@@ -7,7 +7,10 @@ import {
   UpdatePlanChangeInput,
   UpdatePlanChangeOutput,
 } from './dto';
-import { ChangeListInput, ChangeListOutput } from './dto/change-list.dto';
+import {
+  ChangesetListInput,
+  ChangesetListOutput,
+} from './dto/changeset-list.dto';
 import { PlanChangeService } from './plan-change.service';
 
 @Resolver()
@@ -35,18 +38,18 @@ export class PlanChangeResolver {
     return await this.service.readOne(id, session);
   }
 
-  @Query(() => ChangeListOutput, {
+  @Query(() => ChangesetListOutput, {
     description: 'Look up planChanges',
   })
   async planChanges(
     @AnonSession() session: Session,
     @Args({
       name: 'input',
-      type: () => ChangeListInput,
-      defaultValue: ChangeListInput.defaultVal,
+      type: () => ChangesetListInput,
+      defaultValue: ChangesetListInput.defaultVal,
     })
-    input: ChangeListInput
-  ): Promise<ChangeListOutput> {
+    input: ChangesetListInput
+  ): Promise<ChangesetListOutput> {
     return this.service.list(input, session);
   }
 

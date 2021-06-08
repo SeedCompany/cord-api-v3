@@ -61,23 +61,23 @@ export class ProjectRepository extends CommonRepository {
     return result.map((row) => row.roles);
   }
 
-  async readOneUnsecured(id: ID, userId: ID, changeId?: ID) {
+  async readOneUnsecured(id: ID, userId: ID, changeset?: ID) {
     const query = this.db
       .query()
       .match([node('node', 'Project', { id })])
       .with(['node', 'node as project'])
       .apply(matchPropsAndProjectSensAndScopedRoles(userId))
       .apply((q) =>
-        changeId
+        changeset
           ? q
               .apply(
                 matchProps({
-                  changeId,
+                  changeset,
                   outputVar: 'changedProps',
                   optional: true,
                 })
               )
-              .match(node('planChange', 'PlanChange', { id: changeId }))
+              .match(node('planChange', 'PlanChange', { id: changeset }))
           : q.subQuery((sub) =>
               sub.return(['null as planChange', '{} as changedProps'])
             )
@@ -116,7 +116,7 @@ export class ProjectRepository extends CommonRepository {
               fieldRegion: fieldRegion.id,
               owningOrganization: organization.id,
               scope: scopedRoles,
-              changeId: coalesce(planChange.id)
+              changeset: coalesce(planChange.id)
             }
           ]) as project`,
       ])
@@ -201,7 +201,7 @@ export class ProjectRepository extends CommonRepository {
   async updateProperties(
     currentProject: UnsecuredDto<Project>,
     simpleChanges: DbChanges<TranslationProject | InternshipProject>,
-    changeId?: ID
+    changeset?: ID
   ) {
     return await this.db.updateProperties({
       type:
@@ -210,7 +210,7 @@ export class ProjectRepository extends CommonRepository {
           : InternshipProject,
       object: currentProject,
       changes: simpleChanges,
-      changeId,
+      changeset,
     });
   }
 
@@ -411,11 +411,11 @@ export class ProjectRepository extends CommonRepository {
       .first();
   }
 
-  async getPlanChangesProps(id: ID, changeId: ID) {
+  async getChangesetProps(id: ID, changeset: ID) {
     const query = this.db
       .query()
       .match([node('node', 'Project', { id })])
-      .apply(matchProps({ changeId, optional: true, excludeBaseProps: true }))
+      .apply(matchProps({ changeset, optional: true, excludeBaseProps: true }))
       .return(['props'])
       .asResult<{
         props: Partial<DbPropsOfDto<Project>>;

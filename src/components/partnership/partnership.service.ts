@@ -117,7 +117,11 @@ export class PartnershipService {
   }
 
   @HandleIdLookup(Partnership)
-  async readOne(id: ID, session: Session, changeId?: ID): Promise<Partnership> {
+  async readOne(
+    id: ID,
+    session: Session,
+    changeset?: ID
+  ): Promise<Partnership> {
     this.logger.debug('readOne', { id, userId: session.userId });
 
     const result = await this.repo.readOne(id, session);
@@ -125,7 +129,7 @@ export class PartnershipService {
     const project = await this.projectService.readOne(
       result.projectId,
       session,
-      changeId
+      changeset
     );
 
     const securedProps = await this.authorizationService.secureProperties(

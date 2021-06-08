@@ -800,13 +800,13 @@ export class ProjectRules {
     projectId: ID,
     session: Session,
     currentUserRoles?: Role[],
-    changeId?: ID
+    changeset?: ID
   ): Promise<ProjectStepTransition[]> {
     if (session.anonymous) {
       return [];
     }
 
-    const currentStep = await this.getCurrentStep(projectId, changeId);
+    const currentStep = await this.getCurrentStep(projectId, changeset);
 
     // get roles that can approve the current step
     const { approvers, transitions } = await this.getStepRule(
@@ -832,7 +832,7 @@ export class ProjectRules {
     projectId: ID,
     session: Session,
     nextStep: ProjectStep,
-    changeId?: ID
+    changeset?: ID
   ) {
     if (this.configService.migration) {
       return;
@@ -849,7 +849,7 @@ export class ProjectRules {
       projectId,
       session,
       currentUserRoles,
-      changeId
+      changeset
     );
 
     const validNextStep = transitions.some(
@@ -863,9 +863,9 @@ export class ProjectRules {
     }
   }
 
-  private async getCurrentStep(id: ID, changeId?: ID) {
+  private async getCurrentStep(id: ID, changeset?: ID) {
     let currentStep;
-    if (changeId) {
+    if (changeset) {
       const result = await this.db
         .query()
         .match([
@@ -873,7 +873,7 @@ export class ProjectRules {
           relation('out', '', 'step', { active: false }),
           node('step', 'Property'),
           relation('in', '', 'change', { active: true }),
-          node('planChange', 'PlanChange', { id: changeId }),
+          node('planChange', 'PlanChange', { id: changeset }),
         ])
         .raw('return step.value as step')
         .asResult<{ step: ProjectStep }>()

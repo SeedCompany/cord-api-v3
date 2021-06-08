@@ -84,7 +84,7 @@ export abstract class UpdateProjectInput {
     description: 'The change object to associate these engagement changes with',
     nullable: true,
   })
-  readonly changeId?: ID;
+  readonly changeset?: ID;
 }
 
 @ObjectType()

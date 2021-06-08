@@ -1,4 +1,4 @@
-import { ID, Session, UnsecuredDto } from '../../../common';
+import { Session, UnsecuredDto } from '../../../common';
 import { Project, UpdateProject } from '../dto';
 
 export class ProjectUpdatedEvent {
@@ -6,7 +6,6 @@ export class ProjectUpdatedEvent {
     public updated: UnsecuredDto<Project>,
     readonly previous: UnsecuredDto<Project>,
     readonly updates: UpdateProject,
-    readonly session: Session,
-    readonly changeId?: ID
+    readonly session: Session
   ) {}
 }
