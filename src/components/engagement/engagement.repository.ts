@@ -20,7 +20,6 @@ import {
   InternshipEngagement,
   LanguageEngagement,
   OngoingEngagementStatuses,
-  PnpData,
   UpdateInternshipEngagement,
 } from './dto';
 
@@ -118,11 +117,6 @@ export class EngagementRepository extends CommonRepository {
         relation('out', '', 'mentor', { active: true }),
         node('mentor'),
       ])
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'pnpData', { active: true }),
-        node('pnpData'),
-      ])
       .return([
         'props',
         'project.id as project',
@@ -132,7 +126,6 @@ export class EngagementRepository extends CommonRepository {
         'intern.id as intern',
         'countryOfOrigin.id as countryOfOrigin',
         'mentor.id as mentor',
-        'pnpData',
         'scopedRoles',
       ])
       .asResult<{
@@ -141,7 +134,6 @@ export class EngagementRepository extends CommonRepository {
           | '__typename'
           | 'ceremony'
           | 'language'
-          | 'pnpData'
           | 'countryOfOrigin'
           | 'intern'
           | 'mentor'
@@ -153,7 +145,6 @@ export class EngagementRepository extends CommonRepository {
         intern: ID;
         countryOfOrigin: ID;
         mentor: ID;
-        pnpData?: Node<PnpData>;
         scopedRoles: ScopedRole[];
       }>();
   }

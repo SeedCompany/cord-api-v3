@@ -155,6 +155,24 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
       .apply(calculateTotalAndPaginateList(ProgressReport, input));
   }
 
+  async getLatestReportSubmitted(parentId: ID, type: ReportType) {
+    return await this.db
+      .query()
+      .match([
+        node('', '', { id: parentId }),
+        relation('out', '', 'report', { active: true }),
+        node('pr', `${type}Report`),
+        relation('out', '', 'start', { active: true }),
+        node('sn', 'Property'),
+      ])
+      .raw(`where (pr)-->(:FileNode)<--(:FileVersion)`)
+      .return('pr.id as id')
+      .orderBy('sn.value', 'desc')
+      .limit(1)
+      .asResult<{ id: ID }>()
+      .first();
+  }
+
   async delete(baseNodeId: ID, type: ReportType, intervals: Interval[]) {
     return await this.db
       .query()

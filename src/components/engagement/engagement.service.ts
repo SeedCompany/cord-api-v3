@@ -42,7 +42,6 @@ import {
   IEngagement,
   InternshipEngagement,
   LanguageEngagement,
-  PnpData,
   UpdateInternshipEngagement,
   UpdateLanguageEngagement,
 } from './dto';
@@ -53,7 +52,6 @@ import {
   EngagementUpdatedEvent,
   EngagementWillDeleteEvent,
 } from './events';
-import { PnpExtractor } from './pnp-extractor.service';
 
 @Injectable()
 export class EngagementService {
@@ -63,7 +61,6 @@ export class EngagementService {
     private readonly products: ProductService,
     private readonly config: ConfigService,
     private readonly files: FileService,
-    private readonly pnpExtractor: PnpExtractor,
     private readonly engagementRules: EngagementRules,
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService,
@@ -236,10 +233,6 @@ export class EngagementService {
       input.pnp,
       'engagement.pnp'
     );
-    if (input.pnp) {
-      const pnpData = await this.pnpExtractor.extract(input.pnp, session);
-      await this.savePnpData(id, pnpData);
-    }
 
     await this.authorizationService.processNewBaseNode(
       LanguageEngagement,
@@ -575,7 +568,6 @@ export class EngagementService {
       return {
         ...common,
         ...secured,
-        pnpData: result.pnpData?.properties,
       };
     } else {
       // help TS understand that the secured props are for a InternshipEngagement
@@ -632,10 +624,6 @@ export class EngagementService {
       pnp,
       session
     );
-    if (pnp) {
-      const pnpData = await this.pnpExtractor.extract(pnp, session);
-      await this.savePnpData(object.id, pnpData);
-    }
 
     try {
       await this.repo.updateLanguageProperties(object, simpleChanges);
@@ -851,26 +839,6 @@ export class EngagementService {
     const result = await this.repo.listEngagementsWithDateRange();
 
     return result;
-  }
-
-  private async savePnpData(id: ID, pnpData: PnpData | null) {
-    const query = this.repo.query();
-    pnpData
-      ? query
-          .match(node('node', 'LanguageEngagement', { id }))
-          .merge([
-            node('node'),
-            relation('out', 'engPnp', 'pnpData', { active: true }),
-            node('pnp', 'PnpData', pnpData),
-          ])
-      : query
-          .match([
-            node('node', 'LanguageEngagement', { id }),
-            relation('out', 'engPnp', 'pnpData', { active: true }),
-            node('pnp', 'PnpData'),
-          ])
-          .detachDelete('pnp');
-    await query.run();
   }
 
   protected async verifyRelationshipEligibility(
