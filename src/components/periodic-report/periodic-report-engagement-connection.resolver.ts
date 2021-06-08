@@ -48,6 +48,25 @@ export class PeriodicReportEngagementConnectionResolver {
   }
 
   @ResolveField(() => SecuredPeriodicReport, {
+    description: 'The latest progress report that has a report submitted',
+  })
+  async latestProgressReportSubmitted(
+    @AnonSession() session: Session,
+    @Parent() engagement: Engagement
+  ): Promise<SecuredPeriodicReport> {
+    const value = await this.service.getLatestReportSubmitted(
+      engagement.id,
+      ReportType.Progress,
+      session
+    );
+    return {
+      canEdit: false,
+      canRead: true,
+      value,
+    };
+  }
+
+  @ResolveField(() => SecuredPeriodicReport, {
     description:
       'The progress report due next. This is the period currently in progress.',
   })

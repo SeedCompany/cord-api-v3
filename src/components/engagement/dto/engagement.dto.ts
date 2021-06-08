@@ -19,7 +19,6 @@ import {
 import { DefinedFile } from '../../file/dto';
 import { Product, SecuredMethodologies } from '../../product/dto';
 import { SecuredInternPosition } from './intern-position.enum';
-import { PnpData } from './pnp-data.dto';
 import { SecuredEngagementStatus } from './status.enum';
 
 /**
@@ -137,9 +136,6 @@ export class LanguageEngagement extends Engagement {
   readonly paratextRegistryId: SecuredString;
 
   readonly pnp: DefinedFile;
-
-  @Field({ nullable: true })
-  readonly pnpData?: PnpData;
 
   @Field()
   readonly historicGoal: SecuredString;

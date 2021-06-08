@@ -7,13 +7,20 @@ import {
   InputException,
   NotFoundException,
   Order,
+  ResourceShape,
   ServerException,
   Session,
   UnauthorizedException,
 } from '../../common';
 import { ILogger, Logger, Property } from '../../core';
-import { runListQuery } from '../../core/database/results';
-import { AuthorizationService } from '../authorization/authorization.service';
+import {
+  parseSecuredProperties,
+  runListQuery,
+} from '../../core/database/results';
+import {
+  AuthorizationService,
+  PermissionsOf,
+} from '../authorization/authorization.service';
 import { FileService } from '../file';
 import { BudgetRecordRepository } from './budget-record.repository';
 import { BudgetRepository } from './budget.repository';
@@ -224,28 +231,37 @@ export class BudgetService {
       throw new NotFoundException('Could not find budget', 'budget.id');
     }
 
-    const records = await this.listRecords(
-      {
-        sort: 'fiscalYear',
-        order: Order.ASC,
-        page: 1,
-        count: 25,
-        filter: { budgetId: id },
-      },
-      session
+    const perms = await this.authorizationService.getPermissions(
+      Budget,
+      session,
+      result.scopedRoles,
+      result.props as ResourceShape<Budget>['prototype']
     );
 
-    const securedProps = await this.authorizationService.secureProperties(
-      Budget,
+    const securedProps = parseSecuredProperties(
       result.props,
-      session,
-      result.scopedRoles
+      perms as PermissionsOf<Budget>,
+      Budget.SecuredProps
     );
+
+    let records = null;
+    if (perms.records.canRead) {
+      records = await this.listRecords(
+        {
+          sort: 'fiscalYear',
+          order: Order.ASC,
+          page: 1,
+          count: 25,
+          filter: { budgetId: id },
+        },
+        session
+      );
+    }
 
     return {
       ...result.props,
       ...securedProps,
-      records: records.items,
+      records: records?.items || [],
       canDelete: await this.budgetRepo.checkDeletePermission(id, session),
     };
   }
