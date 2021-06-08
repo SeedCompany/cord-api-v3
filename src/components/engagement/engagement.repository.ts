@@ -473,7 +473,7 @@ export class EngagementRepository extends CommonRepository {
       )
       .optionalMatch([
         node('project'),
-        relation('out', '', 'engagement', { active: !!changeset }),
+        relation('out', '', 'engagement', { active: !changeset }),
         node('engagement'),
         relation('out', '', property, { active: true }),
         node('other'),
