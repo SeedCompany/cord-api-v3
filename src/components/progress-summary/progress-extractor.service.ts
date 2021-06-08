@@ -10,29 +10,6 @@ export class ProgressExtractor {
     private readonly files: FileService,
     @Logger('progress:extractor') private readonly logger: ILogger
   ) {}
-  // Remove after periodic report migration
-  async extractFyAndQuarter(
-    input: CreateDefinedFileVersionInput,
-    session: Session
-  ): Promise<{ extractedYear: number; extractedQuarter: number }> {
-    const file = await this.files.getFileVersion(input.uploadId, session);
-    const pnp = await this.downloadWorkbook(file);
-    const sheet = pnp.Sheets.Progress;
-
-    const rows = utils.sheet_to_json<any>(sheet, {
-      header: 'A',
-      raw: false,
-    });
-    for (const row of rows) {
-      if (row?.AE === 'Verse Equivalents in Project     =======>') {
-        return {
-          extractedYear: Number(row.AB),
-          extractedQuarter: Number(row.AA.replace('Q', '')),
-        };
-      }
-    }
-    return { extractedYear: 0, extractedQuarter: 0 };
-  }
 
   async extract(file: FileVersion): Promise<ProgressSummary | null> {
     const pnp = await this.downloadWorkbook(file);

@@ -2,8 +2,9 @@ import { forwardRef, Module } from '@nestjs/common';
 import { DatabaseModule } from '../../core/database/database.module';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { EngagementModule } from '../engagement/engagement.module';
-import { PnpExtractor } from '../engagement/pnp-extractor.service';
 import { FileModule } from '../file/file.module';
+import { ProgressExtractor } from '../progress-summary/progress-extractor.service';
+import { ProgressSummaryRepository } from '../progress-summary/progress-summary.repository';
 import { ProjectModule } from '../project/project.module';
 import { UserModule } from '../user/user.module';
 import * as handlers from './handlers';
@@ -28,7 +29,8 @@ import { PeriodicReportService } from './periodic-report.service';
     PeriodicReportProjectConnectionResolver,
     PeriodicReportEngagementConnectionResolver,
     PeriodicReportRepository,
-    PnpExtractor, // Remove after periodic report migration
+    ProgressExtractor, // Remove after periodic report migration
+    ProgressSummaryRepository, // Remove after periodic report migration
     ...Object.values(handlers),
   ],
   exports: [PeriodicReportService, PeriodicReportRepository],
