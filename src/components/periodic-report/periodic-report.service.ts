@@ -7,13 +7,10 @@ import {
   NotFoundException,
   ServerException,
   Session,
+  UnsecuredDto,
 } from '../../common';
 import { IEventBus, ILogger, Logger, OnIndex } from '../../core';
-import {
-  parseBaseNodeProperties,
-  parsePropList,
-  runListQuery,
-} from '../../core/database/results';
+import { runListQuery } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { CreateDefinedFileVersionInput, FileService } from '../file';
 import { ProjectService } from '../project';
@@ -121,27 +118,24 @@ export class PeriodicReportService {
       );
     }
 
-    const result = await this.repo.readOne(id, session);
+    const result = await this.repo.readOne(id);
+    return await this.secure(result, session);
+  }
 
-    if (!result) {
-      throw new NotFoundException(
-        'Could not find periodic report',
-        'periodicReport.id'
-      );
-    }
-
-    const props = parsePropList(result.propList);
+  private async secure(
+    dto: UnsecuredDto<PeriodicReport>,
+    session: Session
+  ): Promise<PeriodicReport> {
     const securedProps = await this.authorizationService.secureProperties(
       IPeriodicReport,
-      props,
+      dto,
       session
     );
 
     return {
-      ...parseBaseNodeProperties(result.node),
-      ...props,
+      ...dto,
       ...securedProps,
-      canDelete: await this.repo.checkDeletePermission(id, session),
+      canDelete: false, // Auto generated, no user deleting.
     };
   }
 
@@ -169,13 +163,8 @@ export class PeriodicReportService {
     date: CalendarDate,
     session: Session
   ): Promise<PeriodicReport | undefined> {
-    const result = await this.repo.reportForDate(parentId, reportType, date);
-
-    if (!result) {
-      return undefined;
-    }
-
-    return await this.readOne(result.id, session);
+    const report = await this.repo.reportForDate(parentId, reportType, date);
+    return report ? await this.secure(report, session) : undefined;
   }
 
   async getCurrentReportDue(
@@ -217,11 +206,8 @@ export class PeriodicReportService {
     type: ReportType,
     session: Session
   ): Promise<PeriodicReport | undefined> {
-    const res = await this.repo.getLatestReportSubmitted(parentId, type);
-    if (!res) {
-      return undefined;
-    }
-    return await this.readOne(res.id, session);
+    const report = await this.repo.getLatestReportSubmitted(parentId, type);
+    return report ? await this.secure(report, session) : undefined;
   }
 
   async listEngagementReports(
