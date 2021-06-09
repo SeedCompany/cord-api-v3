@@ -159,7 +159,7 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
     return await this.db
       .query()
       .match([
-        node('', '', { id: parentId }),
+        node('', 'BaseNode', { id: parentId }),
         relation('out', '', 'report', { active: true }),
         node('pr', `${type}Report`),
         relation('out', '', 'start', { active: true }),
