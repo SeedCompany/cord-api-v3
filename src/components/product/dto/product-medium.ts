@@ -12,8 +12,6 @@ export enum ProductMedium {
   EBook = 'EBook',
   App = 'App',
   TrainedStoryTellers = 'TrainedStoryTellers',
-  OBSTrainers = 'OBSTrainers',
-  OralTranslation = 'OralTranslation',
   Audio = 'Audio',
   Video = 'Video',
   Other = 'Other',
