@@ -196,19 +196,16 @@ export class LocationService {
       sessionOrUserId: session,
       dto: dto,
     });
-    let query;
-    if (perms[rel].canRead) {
-      query = this.repo.listLocationsFromNode(
-        label.name,
-        dto.id,
-        rel.toString(),
-        input,
-        session
-      );
-    }
+
+    const query = this.repo.listLocationsFromNodeNoSecGroups(
+      label.name,
+      rel as string,
+      dto.id,
+      input
+    );
 
     return {
-      ...(query
+      ...(perms[rel].canRead
         ? await runListQuery(query, input, (id) => this.readOne(id, session))
         : SecuredList.Redacted),
       canRead: perms[rel].canRead,
