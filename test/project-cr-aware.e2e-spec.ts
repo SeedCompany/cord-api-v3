@@ -6,7 +6,7 @@ import { Powers } from '../src/components/authorization/dto/powers';
 import { PartnerType } from '../src/components/partner';
 import { CreatePartnership } from '../src/components/partnership';
 import { PlanChangeStatus } from '../src/components/plan-change/dto/plan-change-status.enum';
-import { Project, Role } from '../src/components/project';
+import { Role } from '../src/components/project';
 import { User } from '../src/components/user/dto/user.dto';
 import {
   createFundingAccount,
@@ -19,7 +19,6 @@ import {
   createSession,
   createTestApp,
   login,
-  Raw,
   registerUserWithPower,
   runAsAdmin,
   TestApp,
@@ -56,11 +55,37 @@ const readProject = (app: TestApp, id: string, changeset?: string) =>
     }
   );
 
+const activeProject = async (app: TestApp) => {
+  const fundingAccount = await createFundingAccount(app);
+  const location = await createLocation(app, {
+    fundingAccountId: fundingAccount.id,
+  });
+  const fieldRegion = await createRegion(app);
+  const project = await createProject(app, {
+    mouStart: undefined,
+    mouEnd: undefined,
+  });
+  await updateProject(app, {
+    id: project.id,
+    primaryLocationId: location.id,
+    fieldRegionId: fieldRegion.id,
+  });
+  await runAsAdmin(app, async () => {
+    for (const next of [
+      ...stepsFromEarlyConversationToBeforeActive,
+      // ProjectStep.Active,
+    ]) {
+      await changeProjectStep(app, project.id, next);
+    }
+  });
+
+  return project;
+};
+
 describe('Project CR Aware e2e', () => {
   let app: TestApp;
   let director: User;
   let db: Connection;
-  let project: Raw<Project>;
   const password = faker.internet.password();
 
   beforeAll(async () => {
@@ -73,30 +98,6 @@ describe('Project CR Aware e2e', () => {
       password: password,
     });
 
-    // Change project status to Active
-    const fundingAccount = await createFundingAccount(app);
-    const location = await createLocation(app, {
-      fundingAccountId: fundingAccount.id,
-    });
-    const fieldRegion = await createRegion(app);
-    project = await createProject(app, {
-      mouStart: undefined,
-      mouEnd: undefined,
-    });
-    await updateProject(app, {
-      id: project.id,
-      primaryLocationId: location.id,
-      fieldRegionId: fieldRegion.id,
-    });
-    await runAsAdmin(app, async () => {
-      for (const next of [
-        ...stepsFromEarlyConversationToBeforeActive,
-        // ProjectStep.Active,
-      ]) {
-        await changeProjectStep(app, project.id, next);
-      }
-    });
-
     await login(app, { email: director.email.value, password });
   });
 
@@ -106,6 +107,7 @@ describe('Project CR Aware e2e', () => {
   });
 
   it('CR aware project name', async () => {
+    const project = await activeProject(app);
     const planChange = await createPlanChange(app, {
       projectId: project.id,
     });
@@ -171,7 +173,81 @@ describe('Project CR Aware e2e', () => {
     expect(result.project.name.value).toBe(newCRName);
   });
 
+  it('CR aware project mouStart and mouEnd', async () => {
+    const project = await activeProject(app);
+    const planChange = await createPlanChange(app, {
+      projectId: project.id,
+    });
+    expect(planChange.id).toBeTruthy();
+
+    // Update project with changeset
+    const mouStart = '2020-08-23';
+    const mouEnd = '2021-08-22';
+    const mutationResult = await app.graphql.mutate(
+      gql`
+        mutation updateProject($input: UpdateProjectInput!) {
+          updateProject(input: $input) {
+            project {
+              ...project
+            }
+          }
+        }
+        ${fragments.project}
+      `,
+      {
+        input: {
+          project: {
+            id: project.id,
+            mouStart: CalendarDate.fromISO(mouStart),
+            mouEnd: CalendarDate.fromISO(mouEnd),
+          },
+          changeset: planChange.id,
+        },
+      }
+    );
+    expect(mutationResult.updateProject.project.mouStart.value).toBe(mouStart);
+    expect(mutationResult.updateProject.project.mouEnd.value).toBe(mouEnd);
+
+    // Query project without changeset
+    let result = await readProject(app, project.id);
+    expect(result.project.mouStart.value).toBeNull();
+    expect(result.project.mouEnd.value).toBeNull();
+
+    // Query project with changeset
+    result = await readProject(app, project.id, planChange.id);
+    expect(result.project.mouStart.value).toBe(mouStart);
+    expect(result.project.mouEnd.value).toBe(mouEnd);
+
+    // Approve CR
+    await app.graphql.mutate(
+      gql`
+        mutation updatePlanChange($input: UpdatePlanChangeInput!) {
+          updatePlanChange(input: $input) {
+            planChange {
+              ...planChange
+            }
+          }
+        }
+        ${fragments.planChange}
+      `,
+      {
+        input: {
+          planChange: {
+            id: planChange.id,
+            status: PlanChangeStatus.Approved,
+          },
+        },
+      }
+    );
+
+    // Project mouStart/mouEnd are changed
+    result = await readProject(app, project.id);
+    expect(result.project.mouStart.value).toBe(mouStart);
+    expect(result.project.mouEnd.value).toBe(mouEnd);
+  });
+
   it('CR aware budget records', async () => {
+    const project = await activeProject(app);
     const planChange = await createPlanChange(app, {
       projectId: project.id,
     });
