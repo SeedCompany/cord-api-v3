@@ -204,7 +204,7 @@ export const FinancialAnalyst = new DbRole({
         { propertyName: 'ethnologue', permission: { read, }, },
         { propertyName: 'sensitivity', permission: { read, }, },
         { propertyName: 'hasExternalFirstScripture', permission: { read, }, },
-        { propertyName: 'locations', permission: { read, sensitivityAccess: Sensitivity.Medium }, },
+        { propertyName: 'locations', permission: { read, sensitivityAccess: Sensitivity.Low }, },
         { propertyName: 'tags', permission: { read, }, },
       ],
       canDelete: false,
