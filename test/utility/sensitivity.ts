@@ -17,7 +17,18 @@ export type ReadOneFunction<T extends ResourceShape<any>['prototype']> = (
   id: string
 ) => Promise<T>;
 
-export type ReadOneRelationArray = (app: TestApp, id: string) => Promise<any[]>;
+export interface SecuredList<T> {
+  canRead: boolean;
+  canCreate: boolean;
+  items: T[];
+  total: number;
+  hasMore: boolean;
+}
+
+export type ReadOneRelationArray = (
+  app: TestApp,
+  id: string
+) => Promise<any[] | SecuredList<ResourceShape<any>['prototype']>>;
 
 interface Permission {
   canRead: boolean;

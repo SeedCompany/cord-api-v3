@@ -1,19 +1,14 @@
 import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
-import {
-  ResourceShape,
-  SecuredProps,
-  SecuredResource,
-  Sensitivity,
-} from '../../src/common';
+import { ResourceShape, SecuredResource, Sensitivity } from '../../src/common';
 import { PermissionsOf } from '../../src/components/authorization/authorization.service';
 import { Powers } from '../../src/components/authorization/dto/powers';
 import {
   EthnologueLanguage,
   Language,
 } from '../../src/components/language/dto';
-import { Location } from '../../src/components/location';
-import { Role } from '../../src/components/project';
+import { Location, SecuredLocationList } from '../../src/components/location';
+import { Role, ScopedRole } from '../../src/components/project';
 import {
   addLocationToLanguage,
   createLanguage,
@@ -23,12 +18,17 @@ import {
   login,
   readOneLanguage,
   readOneLanguageEthnologue,
+  readOneLanguageLocation,
   registerUserWithPower,
   TestApp,
 } from '../utility';
 import { resetDatabase } from '../utility/reset-database';
 import { testRole } from '../utility/roles';
-import { ReadOneFunction } from '../utility/sensitivity';
+import {
+  ReadOneFunction,
+  ReadOneRelationArray,
+  SecuredList,
+} from '../utility/sensitivity';
 import { getPermissions } from './permissions';
 
 describe('Language Security e2e', () => {
@@ -55,7 +55,7 @@ describe('Language Security e2e', () => {
       { email: email, password: password }
     );
     testLocation = await createLocation(app);
-    testLanguage = await createLanguage(app);
+    testLanguage = await createLanguage(app, { sensitivity: Sensitivity.Low });
     await addLocationToLanguage(app, testLocation.id, testLanguage.id);
   });
 
@@ -84,22 +84,26 @@ describe('Language Security e2e', () => {
       ${Role.RegionalCommunicationsCoordinator}
     `('Global $role', ({ role }) => {
       test.each`
-        property                       | readFunction       | staticResource
-        ${'displayName'}               | ${readOneLanguage} | ${Language}
-        ${'displayNamePronunciation'}  | ${readOneLanguage} | ${Language}
-        ${'isDialect'}                 | ${readOneLanguage} | ${Language}
-        ${'isSignLanguage'}            | ${readOneLanguage} | ${Language}
-        ${'leastOfThese'}              | ${readOneLanguage} | ${Language}
-        ${'name'}                      | ${readOneLanguage} | ${Language}
-        ${'leastOfTheseReason'}        | ${readOneLanguage} | ${Language}
-        ${'populationOverride'}        | ${readOneLanguage} | ${Language}
-        ${'registryOfDialectsCode'}    | ${readOneLanguage} | ${Language}
-        ${'signLanguageCode'}          | ${readOneLanguage} | ${Language}
-        ${'sponsorEstimatedEndDate'}   | ${readOneLanguage} | ${Language}
-        ${'hasExternalFirstScripture'} | ${readOneLanguage} | ${Language}
-        ${'tags'}                      | ${readOneLanguage} | ${Language}
+        property                       | readFunction                 | staticResource
+        ${'displayName'}               | ${readOneLanguage}           | ${Language}
+        ${'displayNamePronunciation'}  | ${readOneLanguage}           | ${Language}
+        ${'isDialect'}                 | ${readOneLanguage}           | ${Language}
+        ${'isSignLanguage'}            | ${readOneLanguage}           | ${Language}
+        ${'leastOfThese'}              | ${readOneLanguage}           | ${Language}
+        ${'name'}                      | ${readOneLanguage}           | ${Language}
+        ${'leastOfTheseReason'}        | ${readOneLanguage}           | ${Language}
+        ${'populationOverride'}        | ${readOneLanguage}           | ${Language}
+        ${'registryOfDialectsCode'}    | ${readOneLanguage}           | ${Language}
+        ${'signLanguageCode'}          | ${readOneLanguage}           | ${Language}
+        ${'sponsorEstimatedEndDate'}   | ${readOneLanguage}           | ${Language}
+        ${'hasExternalFirstScripture'} | ${readOneLanguage}           | ${Language}
+        ${'tags'}                      | ${readOneLanguage}           | ${Language}
+        ${'code'}                      | ${readOneLanguageEthnologue} | ${EthnologueLanguage}
+        ${'name'}                      | ${readOneLanguageEthnologue} | ${EthnologueLanguage}
+        ${'population'}                | ${readOneLanguageEthnologue} | ${EthnologueLanguage}
+        ${'provisionalCode'}           | ${readOneLanguageEthnologue} | ${EthnologueLanguage}
       `(
-        ' reading $property',
+        ' reading $staticResource.name $property',
         async ({ property, readFunction, staticResource }) => {
           await testRole({
             app: app,
@@ -111,12 +115,35 @@ describe('Language Security e2e', () => {
           });
         }
       );
+
+      it('reading locations', async () => {
+        await login(app, { email, password });
+        await registerUserWithPower(app, [], { roles: role });
+        const perms = await getPermissions({
+          resource: Language,
+          userRole: `global:${role as Role}` as ScopedRole,
+          sensitivity: testLanguage.sensitivity,
+        });
+
+        const read = await readOneLanguageLocation(app, testLanguage.id);
+
+        expect(read.canRead).toEqual(perms.locations.canRead);
+        expect(read.canCreate).toEqual(perms.locations.canEdit);
+
+        if (!perms.locations.canRead) {
+          expect(read.items).toHaveLength(0);
+        } else {
+          expect(read.items).not.toHaveLength(0);
+        }
+      });
     });
   });
   describe('Restricted by Sensitivity', () => {
     describe.each`
       role                      | sensitivityToTest
       ${Role.ConsultantManager} | ${Sensitivity.Medium}
+      ${Role.Marketing}         | ${Sensitivity.Low}
+      ${Role.Fundraising}       | ${Sensitivity.Medium}
     `(
       'Role: $role - Sensitivity: $sensitivityToTest',
       ({ role, sensitivityToTest }) => {
@@ -129,23 +156,22 @@ describe('Language Security e2e', () => {
           ${'population'}             | ${EthnologueLanguage} | ${readOneLanguageEthnologue}
           ${'provisionalCode'}        | ${EthnologueLanguage} | ${readOneLanguageEthnologue}
         `(
-          ' reading $property',
+          ' reading $resource.name $property',
           async ({ property, resource, readFunction }) => {
             await login(app, { email: email, password: password });
-            const perms = await getPermissions({
-              resource: resource,
-              userRole: role,
-            });
-            // await testSensitivityLowerThanEqualTo(
-            //   app,
-            //   sensitivityToTest,
-            //   property as keyof SecuredProps<Language>,
-            //   perms
-            // );
+            await testSensitivityLowerThanEqualTo(
+              app,
+              sensitivityToTest,
+              property,
+              readFunction,
+              role,
+              resource
+            );
             await login(app, { email, password });
             await testSensitivityHigherThan(
               app,
               sensitivityToTest,
+              resource,
               property,
               role,
               readFunction
@@ -153,49 +179,55 @@ describe('Language Security e2e', () => {
             await login(app, { email, password });
           }
         );
-
-        // it(' reading records', async () => {
-        //   await login(app, { email: email, password: password });
-        //   const proj = await createProject(app, { type: projectType });
-        //   const budget = await createBudget(app, { projectId: proj.id });
-        //   const org = await createOrganization(app);
-        //   const partner = await createPartner(app, {
-        //     organizationId: org.id,
-        //   });
-        //   await createPartnership(app, {
-        //     partnerId: partner.id,
-        //     projectId: proj.id,
-        //     types: [PartnerType.Funding, PartnerType.Managing],
-        //     financialReportingType: undefined,
-        //     mouStartOverride: CalendarDate.fromISO('2000-01-01'),
-        //     mouEndOverride: CalendarDate.fromISO('2004-01-01'),
-        //   });
-        //   await addLocationToOrganization(app, org.id);
-        //   await expectSensitiveRelationList({
-        //     app,
-        //     role,
-        //     sensitivityRestriction: sensitivityToTest,
-        //     projectId: proj.id,
-        //     projectType: projectType,
-        //     propertyToCheck: 'records',
-        //     readFunction: readOneBudgetRecord,
-        //     resourceId: budget.id,
-        //     perms: await getPermissions({
-        //       resource: Budget,
-        //       userRole: `global:${role as Role}` as ScopedRole,
-        //     }),
-        //   });
-        // });
+      }
+    );
+    describe.each`
+      role                         | sensitivityToTest
+      ${Role.StaffMember}          | ${Sensitivity.Low}
+      ${Role.Marketing}            | ${Sensitivity.Low}
+      ${Role.Fundraising}          | ${Sensitivity.Medium}
+      ${Role.ConsultantManager}    | ${Sensitivity.Medium}
+      ${Role.FinancialAnalyst}     | ${Sensitivity.Low}
+      ${Role.LeadFinancialAnalyst} | ${Sensitivity.Medium}
+      ${Role.Controller}           | ${Sensitivity.Medium}
+    `(
+      'Role: $role - Sensitivity: $sensitivityToTest',
+      ({ role, sensitivityToTest }) => {
+        it('reading locations', async () => {
+          await login(app, { email, password });
+          await testSensitivityHigherThan(
+            app,
+            sensitivityToTest,
+            Language,
+            'locations',
+            role,
+            readOneLanguageLocation,
+            true
+          );
+          await login(app, { email, password });
+          await testSensitivityLowerThanEqualTo(
+            app,
+            sensitivityToTest,
+            'locations',
+            readOneLanguageLocation,
+            role,
+            Language,
+            true
+          );
+        });
       }
     );
   });
 });
+
 async function testSensitivityHigherThan<TResource extends ResourceShape<any>>(
   app: TestApp,
   sensitivity: Sensitivity,
-  property: keyof SecuredProps<TResource>,
+  resource: TResource,
+  property: keyof TResource['prototype'] | keyof TResource['Relations'],
   role: Role,
-  readFunction: ReadOneFunction<TResource['prototype']>
+  readFunction: ReadOneFunction<TResource['prototype']> | ReadOneRelationArray,
+  isRelationList = false
 ) {
   const medSenslanguage = await createLanguage(app, {
     sensitivity: Sensitivity.Medium,
@@ -207,17 +239,64 @@ async function testSensitivityHigherThan<TResource extends ResourceShape<any>>(
   await registerUserWithPower(app, [], { roles: [role] });
   const medRead = await readFunction(app, medSenslanguage.id);
   const highRead = await readFunction(app, highSenslanguage.id);
+
+  async function expectPropSensitivity(read: TResource['prototype']) {
+    expect(read[property].canRead).toBeFalsy();
+    expect(read[property].canEdit).toBeFalsy();
+  }
+
+  async function expectLocationList(
+    read: SecuredList<Location>,
+    canRead: boolean
+  ) {
+    if (canRead) {
+      expect(read.items).not.toHaveLength(0);
+    } else {
+      expect(read.items).toHaveLength(0);
+    }
+  }
+
   switch (sensitivity) {
     case Sensitivity.Low: {
-      expect(medRead[property].canRead).toBeFalsy();
-      expect(medRead[property].canEdit).toBeFalsy();
-      expect(highRead[property].canRead).toBeFalsy();
-      expect(highRead[property].canEdit).toBeFalsy();
+      if (isRelationList) {
+        const medPerms = await getPermissions({
+          resource: resource,
+          userRole: `global:${role}` as ScopedRole,
+          sensitivity: medSenslanguage.sensitivity,
+        });
+        const highPerms = await getPermissions({
+          resource: resource,
+          userRole: `global:${role}` as ScopedRole,
+          sensitivity: highSenslanguage.sensitivity,
+        });
+        await expectLocationList(
+          medRead as SecuredList<Location>,
+          medPerms[property].canRead
+        );
+        await expectLocationList(
+          highRead as SecuredList<Location>,
+          highPerms[property].canRead
+        );
+      } else {
+        await expectPropSensitivity(medRead);
+        await expectPropSensitivity(highRead);
+      }
       break;
     }
     case Sensitivity.Medium: {
-      expect(highRead[property].canRead).toBeFalsy();
-      expect(highRead[property].canEdit).toBeFalsy();
+      if (isRelationList) {
+        const highPerms = await getPermissions({
+          resource: resource,
+          userRole: `global:${role}` as ScopedRole,
+          sensitivity: highSenslanguage.sensitivity,
+        });
+        await expectLocationList(
+          highRead as SecuredList<Location>,
+          highPerms[property].canRead
+        );
+      } else {
+        await expectPropSensitivity(highRead);
+      }
       break;
     }
     case Sensitivity.High: {
@@ -226,55 +305,95 @@ async function testSensitivityHigherThan<TResource extends ResourceShape<any>>(
     }
   }
 }
-async function testSensitivityLowerThanEqualTo<TResource extends ResourceShape<any>>(
+async function testSensitivityLowerThanEqualTo<
+  TResource extends ResourceShape<any>
+>(
   app: TestApp,
   sensitivity: Sensitivity,
-  property: keyof SecuredProps<TResource>,
-  perms: PermissionsOf<SecuredResource<TResource>>,
-  readFunction: ReadOneFunction<TResource['prototype']>
+  property: keyof TResource['prototype'] | keyof TResource['Relations'],
+  readFunction: ReadOneFunction<TResource['prototype']> | ReadOneRelationArray,
+  role: Role,
+  resource: TResource,
+  isRelationList = false
 ) {
   //test languages with sensitivity lower than/equal to what we're testing.
   const highSenslanguage = await createLanguage(app, {
     sensitivity: Sensitivity.High,
   });
+  const highPerms = await getPermissions({
+    resource: resource,
+    userRole: `global:${role}` as ScopedRole,
+    sensitivity: highSenslanguage.sensitivity,
+  });
+
   const medSenslanguage = await createLanguage(app, {
     sensitivity: Sensitivity.Medium,
+  });
+  const medPerms = await getPermissions({
+    resource: resource,
+    userRole: `global:${role}` as ScopedRole,
+    sensitivity: medSenslanguage.sensitivity,
   });
   const lowSenslanguage = await createLanguage(app, {
     sensitivity: Sensitivity.Low,
   });
+  const lowPerms = await getPermissions({
+    resource: resource,
+    userRole: `global:${role}` as ScopedRole,
+    sensitivity: lowSenslanguage.sensitivity,
+  });
+  await registerUserWithPower(app, [], { roles: [role] });
   const readHigh = await readFunction(app, highSenslanguage.id);
   const readMed = await readFunction(app, medSenslanguage.id);
   const readLow = await readFunction(app, lowSenslanguage.id);
+
+  async function expectPropSensitivity(
+    read: TResource['prototype'],
+    perms: PermissionsOf<SecuredResource<TResource>>
+  ) {
+    expect(read[property].canRead).toEqual(perms[property].canRead);
+    expect(read[property].canEdit).toEqual(perms[property].canEdit);
+  }
+
+  async function expectRelationList(
+    read: SecuredLocationList,
+    perms: PermissionsOf<SecuredResource<TResource>>
+  ) {
+    if (perms[property].canRead) {
+      expect(read.items).toHaveLength(0);
+      expect(read.canCreate).toEqual(perms[property].canEdit);
+    } else {
+      expect(read.items).not.toHaveLength(0);
+      expect(read.canCreate).toEqual(perms[property].canEdit);
+    }
+  }
+
   switch (sensitivity) {
     case Sensitivity.High: {
-      expect(readHigh[property].canRead).toEqual(
-        perms[property].canRead
-      );
-      expect(highSenslanguage[property].canEdit).toEqual(
-        perms[property].canEdit
-      );
+      if (isRelationList) {
+        await expectRelationList(readHigh as SecuredList<Location>, highPerms);
+      } else {
+        await expectPropSensitivity(readHigh, highPerms);
+      }
     }
     // disabling fallthrough because I for realz want to do it. I want to create High, Med, and Low for the high sensitivity case
     //    keeps me from having to repeat code
     // eslint-disable-next-line no-fallthrough
     case Sensitivity.Medium: {
-      expect(medSenslanguage[property].canRead).toEqual(
-        perms[property].canRead
-      );
-      expect(medSenslanguage[property].canEdit).toEqual(
-        perms[property].canEdit
-      );
+      if (isRelationList) {
+        await expectRelationList(readMed as SecuredList<Location>, medPerms);
+      } else {
+        await expectPropSensitivity(readMed, medPerms);
+      }
     }
     // I for realz want to fallthrough, because I want to create medium and low for medium sensitivity
     // eslint-disable-next-line no-fallthrough
     case Sensitivity.Low: {
-      expect(lowSenslanguage[property].canRead).toEqual(
-        perms[property].canRead
-      );
-      expect(lowSenslanguage[property].canEdit).toEqual(
-        perms[property].canEdit
-      );
+      if (isRelationList) {
+        await expectRelationList(readLow as SecuredList<Location>, lowPerms);
+      } else {
+        await expectPropSensitivity(readLow, lowPerms);
+      }
     }
   }
 }

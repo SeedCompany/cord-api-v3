@@ -8,7 +8,27 @@ import {
 } from '../../src/components/language';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
+import { SecuredList } from './sensitivity';
 
+export async function readOneLanguageLocation(
+  app: TestApp,
+  langId: string
+): Promise<SecuredList<Location>> {
+  const result = await app.graphql.query(
+    gql`
+      query {
+        language(id: "${langId}") {
+          ...language
+        }
+      }
+      ${fragments.language}
+    `
+  );
+
+  const actual = result.language.locations;
+  expect(actual).toBeTruthy();
+  return actual;
+}
 export async function readOneLanguageEthnologue(
   app: TestApp,
   langId: ID
@@ -24,7 +44,7 @@ export async function readOneLanguageEthnologue(
     `
   );
 
-  const actual = result.ethnologue;
+  const actual = result.language.ethnologue;
   expect(actual).toBeTruthy();
   return actual;
 }
