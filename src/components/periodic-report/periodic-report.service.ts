@@ -1,7 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { DateTime, DurationUnit, Interval } from 'luxon';
+import { DateTime, Interval } from 'luxon';
 import {
-  CalendarDate,
   generateId,
   ID,
   NotFoundException,
@@ -13,13 +12,11 @@ import { IEventBus, ILogger, Logger, OnIndex } from '../../core';
 import { runListQuery } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { CreateDefinedFileVersionInput, FileService } from '../file';
-import { ProjectService } from '../project';
 import {
   CreatePeriodicReport,
   IPeriodicReport,
   PeriodicReport,
   PeriodicReportListInput,
-  ReportPeriod,
   ReportType,
   SecuredPeriodicReportList,
 } from './dto';
@@ -34,9 +31,7 @@ export class PeriodicReportService {
     private readonly eventBus: IEventBus,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
-    private readonly repo: PeriodicReportRepository,
-    @Inject(forwardRef(() => ProjectService))
-    private readonly project: ProjectService
+    private readonly repo: PeriodicReportRepository
   ) {}
 
   @OnIndex()
@@ -157,35 +152,13 @@ export class PeriodicReportService {
     };
   }
 
-  async getReportForDate(
-    parentId: ID,
-    reportType: ReportType,
-    date: CalendarDate,
-    session: Session
-  ): Promise<PeriodicReport | undefined> {
-    const report = await this.repo.reportForDate(parentId, reportType, date);
-    return report ? await this.secure(report, session) : undefined;
-  }
-
   async getCurrentReportDue(
     parentId: ID,
     reportType: ReportType,
     session: Session
   ): Promise<PeriodicReport | undefined> {
-    let interval: DurationUnit = 'quarter';
-    if (reportType === ReportType.Financial) {
-      const project = await this.project.readOne(parentId, session);
-      if (project.financialReportPeriod.value === ReportPeriod.Monthly) {
-        interval = 'month';
-      }
-    }
-
-    return await this.getReportForDate(
-      parentId,
-      reportType,
-      CalendarDate.local().minus({ [interval]: 1 }),
-      session
-    );
+    const report = await this.repo.getCurrentDue(parentId, reportType);
+    return report ? await this.secure(report, session) : undefined;
   }
 
   async getNextReportDue(
@@ -193,12 +166,8 @@ export class PeriodicReportService {
     reportType: ReportType,
     session: Session
   ): Promise<PeriodicReport | undefined> {
-    return await this.getReportForDate(
-      parentId,
-      reportType,
-      CalendarDate.local(),
-      session
-    );
+    const report = await this.repo.getNextDue(parentId, reportType);
+    return report ? await this.secure(report, session) : undefined;
   }
 
   async getLatestReportSubmitted(

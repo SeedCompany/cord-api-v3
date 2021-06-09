@@ -3,12 +3,7 @@ import { stripIndent } from 'common-tags';
 import { node, Query, relation } from 'cypher-query-builder';
 import { Dictionary } from 'lodash';
 import { DateTime, Interval } from 'luxon';
-import {
-  CalendarDate,
-  ID,
-  NotFoundException,
-  UnsecuredDto,
-} from '../../common';
+import { ID, NotFoundException, UnsecuredDto } from '../../common';
 import { DtoRepository, property } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -117,41 +112,46 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
       );
   }
 
-  async reportForDate(
-    parentId: ID,
-    reportType: ReportType,
-    date: CalendarDate
-  ) {
+  async getCurrentDue(parentId: ID, reportType: ReportType) {
     const res = await this.db
       .query()
       .match([
         node('baseNode', 'BaseNode', { id: parentId }),
         relation('out', '', 'report', { active: true }),
         node('node', `${reportType}Report`),
+        relation('out', '', 'end', { active: true }),
+        node('end', 'Property'),
       ])
-      .apply(this.hydrate())
-      .raw(`WHERE dto.start <= $date AND dto.end >= $date`, {
-        date,
-      })
-      .return('dto')
+      .raw(`WHERE end.value < date()`)
+      .with('node, end')
+      .orderBy('end.value', 'desc')
       .limit(1)
+      .apply(this.hydrate())
+      .return('dto')
       .asResult<{ dto: UnsecuredDto<PeriodicReport> }>()
       .first();
     return res?.dto;
   }
 
-  listEngagementReports(
-    engagementId: string,
-    { filter, ...input }: PeriodicReportListInput
-  ) {
-    return this.db
+  async getNextDue(parentId: ID, reportType: ReportType) {
+    const res = await this.db
       .query()
       .match([
-        node('engagement', 'Engagement', { id: engagementId }),
+        node('baseNode', 'BaseNode', { id: parentId }),
         relation('out', '', 'report', { active: true }),
-        node('node', 'ProgressReport'),
+        node('node', `${reportType}Report`),
+        relation('out', '', 'end', { active: true }),
+        node('end', 'Property'),
       ])
-      .apply(calculateTotalAndPaginateList(ProgressReport, input));
+      .raw(`WHERE end.value > date()`)
+      .with('node, end')
+      .orderBy('end.value', 'asc')
+      .limit(1)
+      .apply(this.hydrate())
+      .return('dto')
+      .asResult<{ dto: UnsecuredDto<PeriodicReport> }>()
+      .first();
+    return res?.dto;
   }
 
   async getLatestReportSubmitted(parentId: ID, type: ReportType) {
@@ -173,6 +173,20 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
       .asResult<{ dto: UnsecuredDto<PeriodicReport> }>()
       .first();
     return res?.dto;
+  }
+
+  listEngagementReports(
+    engagementId: string,
+    { filter, ...input }: PeriodicReportListInput
+  ) {
+    return this.db
+      .query()
+      .match([
+        node('engagement', 'Engagement', { id: engagementId }),
+        relation('out', '', 'report', { active: true }),
+        node('node', 'ProgressReport'),
+      ])
+      .apply(calculateTotalAndPaginateList(ProgressReport, input));
   }
 
   /**
