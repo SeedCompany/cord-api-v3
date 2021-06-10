@@ -1,16 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { stripIndent } from 'common-tags';
-import { node, relation } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
 import { Dictionary } from 'lodash';
 import { DateTime, Interval } from 'luxon';
-import { CalendarDate, ID, Session } from '../../common';
-import { DtoRepository, matchRequestingUser, property } from '../../core';
+import { ID, NotFoundException, UnsecuredDto } from '../../common';
+import { DtoRepository, property } from '../../core';
 import {
   calculateTotalAndPaginateList,
   deleteBaseNode,
-  matchPropList,
+  matchProps,
 } from '../../core/database/query';
-import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
 import {
   CreatePeriodicReport,
   FinancialReport,
@@ -74,21 +73,23 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
       .run();
   }
 
-  async readOne(id: ID, session: Session) {
+  async readOne(id: ID) {
     const query = this.db
       .query()
-      .apply(matchRequestingUser(session))
       .match([node('node', 'PeriodicReport', { id })])
-      .apply(matchPropList)
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'reportFile', { active: true }),
-        node('reportFile', 'File'),
-      ])
-      .return('node, propList')
-      .asResult<StandardReadResult<DbPropsOfDto<PeriodicReport>>>();
+      .apply(this.hydrate())
+      .return('dto')
+      .asResult<{ dto: UnsecuredDto<PeriodicReport> }>();
 
-    return await query.first();
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException(
+        'Could not find periodic report',
+        'periodicReport.id'
+      );
+    }
+
+    return result.dto;
   }
 
   listProjectReports(
@@ -111,34 +112,67 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
       );
   }
 
-  async reportForDate(
-    parentId: ID,
-    reportType: ReportType,
-    date: CalendarDate
-  ) {
-    return await this.db
+  async getCurrentDue(parentId: ID, reportType: ReportType) {
+    const res = await this.db
       .query()
       .match([
         node('baseNode', 'BaseNode', { id: parentId }),
         relation('out', '', 'report', { active: true }),
         node('node', `${reportType}Report`),
-      ])
-      .match([
-        node('node'),
-        relation('out', '', 'start', { active: true }),
-        node('start', 'Property'),
-      ])
-      .match([
-        node('node'),
         relation('out', '', 'end', { active: true }),
         node('end', 'Property'),
       ])
-      .raw(`WHERE start.value <= $date AND end.value >= $date`, {
-        date,
-      })
-      .return('node.id as id')
-      .asResult<{ id: ID }>()
+      .raw(`WHERE end.value < date()`)
+      .with('node, end')
+      .orderBy('end.value', 'desc')
+      .limit(1)
+      .apply(this.hydrate())
+      .return('dto')
+      .asResult<{ dto: UnsecuredDto<PeriodicReport> }>()
       .first();
+    return res?.dto;
+  }
+
+  async getNextDue(parentId: ID, reportType: ReportType) {
+    const res = await this.db
+      .query()
+      .match([
+        node('baseNode', 'BaseNode', { id: parentId }),
+        relation('out', '', 'report', { active: true }),
+        node('node', `${reportType}Report`),
+        relation('out', '', 'end', { active: true }),
+        node('end', 'Property'),
+      ])
+      .raw(`WHERE end.value > date()`)
+      .with('node, end')
+      .orderBy('end.value', 'asc')
+      .limit(1)
+      .apply(this.hydrate())
+      .return('dto')
+      .asResult<{ dto: UnsecuredDto<PeriodicReport> }>()
+      .first();
+    return res?.dto;
+  }
+
+  async getLatestReportSubmitted(parentId: ID, type: ReportType) {
+    const res = await this.db
+      .query()
+      .match([
+        node('', 'BaseNode', { id: parentId }),
+        relation('out', '', 'report', { active: true }),
+        node('node', `${type}Report`),
+        relation('out', '', 'start', { active: true }),
+        node('sn', 'Property'),
+      ])
+      .raw(`where (node)-->(:FileNode)<--(:FileVersion)`)
+      .with('node, sn')
+      .orderBy('sn.value', 'desc')
+      .limit(1)
+      .apply(this.hydrate())
+      .return('dto')
+      .asResult<{ dto: UnsecuredDto<PeriodicReport> }>()
+      .first();
+    return res?.dto;
   }
 
   listEngagementReports(
@@ -155,22 +189,12 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
       .apply(calculateTotalAndPaginateList(ProgressReport, input));
   }
 
-  async getLatestReportSubmitted(parentId: ID, type: ReportType) {
-    return await this.db
-      .query()
-      .match([
-        node('', 'BaseNode', { id: parentId }),
-        relation('out', '', 'report', { active: true }),
-        node('pr', `${type}Report`),
-        relation('out', '', 'start', { active: true }),
-        node('sn', 'Property'),
-      ])
-      .raw(`where (pr)-->(:FileNode)<--(:FileVersion)`)
-      .return('pr.id as id')
-      .orderBy('sn.value', 'desc')
-      .limit(1)
-      .asResult<{ id: ID }>()
-      .first();
+  /**
+   * Given a `(node:PeriodicReport)`
+   * output `dto as UnsecuredDto<PeriodicReport>`
+   */
+  private hydrate() {
+    return (q: Query) => q.apply(matchProps()).with('props as dto');
   }
 
   async delete(baseNodeId: ID, type: ReportType, intervals: Interval[]) {
