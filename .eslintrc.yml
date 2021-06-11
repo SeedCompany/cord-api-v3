@@ -60,6 +60,16 @@ rules:
             - ServiceUnavailableException
             - GatewayTimeoutException
           message: Use our exceptions in common folder instead
+        - name: lodash
+          importNames: [Dictionary, NumericDictionary, AnyKindOfDictionary]
+          message: Use a type with strict keys instead
+        - name: ts-essentials
+          importNames: [Dictionary, SafeDictionary]
+          message: Use a type with strict keys instead
+        - name: express-serve-static-core
+          importNames: [Dictionary]
+          message: Use a type with strict keys instead
+
   no-restricted-syntax:
     - error
     - selector: NewExpression[callee.name="Logger"]
