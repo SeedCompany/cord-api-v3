@@ -241,7 +241,7 @@
 									"// pm.globals.set('userStatus', userStatusArray[randomNumber]);\r",
 									"pm.globals.set(\"userStatus\", \"Active\");\r",
 									"\r",
-									"pm.globals.set(\"userRoles\", \"ProjectManager\");\r",
+									"pm.globals.set(\"userRoles\", \"Administrator\");\r",
 									""
 								],
 								"type": "text/javascript"
