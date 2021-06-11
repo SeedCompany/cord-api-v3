@@ -426,16 +426,6 @@ export class EngagementService {
       }
 
       await this.repo.updateInternshipProperties(object, simpleChanges);
-
-      // update property node labels
-      Object.keys(input).map(async (ele) => {
-        if (ele === 'position') {
-          await this.repo.addLabelsToNodes('position', input);
-        }
-        if (ele === 'methodologies') {
-          await this.repo.addLabelsToNodes('methodologies', input);
-        }
-      });
     } catch (exception) {
       this.logger.warning('Failed to update InternshipEngagement', {
         exception,

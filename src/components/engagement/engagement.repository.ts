@@ -420,21 +420,6 @@ export class EngagementRepository extends CommonRepository {
     });
   }
 
-  async addLabelsToNodes(
-    type: string,
-    input: UpdateInternshipEngagement
-  ): Promise<void> {
-    if (type === 'position') {
-      await this.db.addLabelsToPropNodes(input.id, 'position', [
-        'InternPosition',
-      ]);
-    } else if (type === 'methodologies') {
-      await this.db.addLabelsToPropNodes(input.id, 'methodologies', [
-        'ProductMethodology',
-      ]);
-    }
-  }
-
   // DELETE /////////////////////////////////////////////////////////
 
   async findNodeToDelete(id: ID) {

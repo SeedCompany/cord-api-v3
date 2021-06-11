@@ -562,28 +562,6 @@ export class DatabaseService {
     await query.run();
   }
 
-  async addLabelsToPropNodes(
-    baseNodeId: ID,
-    property: string,
-    lables: string[]
-  ): Promise<void> {
-    const addLabel = this.db
-      .query()
-      .match([node('baseNode', { active: true, id: baseNodeId })])
-      .match([
-        node('baseNode'),
-        relation('out', 'rel', property, { active: true }),
-        node('prop', 'Property', { active: true }),
-      ])
-      .set({
-        labels: {
-          prop: lables,
-        },
-      })
-      .return('baseNode');
-    await addLabel.run();
-  }
-
   assertPatternsIncludeIdentifier(
     patterns: Pattern[][],
     ...identifiers: string[]
