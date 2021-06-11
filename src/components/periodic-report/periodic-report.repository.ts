@@ -1,9 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { stripIndent } from 'common-tags';
 import { node, Query, relation } from 'cypher-query-builder';
-import { Dictionary } from 'lodash';
 import { DateTime, Interval } from 'luxon';
-import { ID, NotFoundException, UnsecuredDto } from '../../common';
+import {
+  generateId,
+  ID,
+  NotFoundException,
+  ServerException,
+  UnsecuredDto,
+} from '../../common';
 import { DtoRepository, property } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -23,13 +28,12 @@ import {
 
 @Injectable()
 export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
-  async create(
-    input: CreatePeriodicReport,
-    createdAt: DateTime,
-    id: ID,
-    reportFileId: ID
-  ) {
-    const createPeriodicReport = this.db
+  async create(input: CreatePeriodicReport) {
+    const id = await generateId();
+    const createdAt = DateTime.local();
+    const reportFileId = await generateId();
+
+    const query = this.db
       .query()
       .create([
         [
@@ -47,30 +51,22 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
         ...property('end', input.end, 'newPeriodicReport'),
         ...property('reportFile', reportFileId, 'newPeriodicReport'),
       ])
-      .return('newPeriodicReport.id as id');
-    return await createPeriodicReport.first();
-  }
-
-  async createProperties(input: CreatePeriodicReport, result: Dictionary<any>) {
-    await this.db
-      .query()
-      .match(
-        node(
-          'node',
-          input.type === ReportType.Progress ? 'Engagement' : 'Project',
-          { id: input.projectOrEngagementId }
-        )
-      )
-      .match(node('periodicReport', 'PeriodicReport', { id: result.id }))
+      .with('newPeriodicReport')
+      .match(node('parent', 'BaseNode', { id: input.projectOrEngagementId }))
       .create([
-        node('node'),
+        node('parent'),
         relation('out', '', 'report', {
           active: true,
-          createdAt: DateTime.local(),
+          createdAt,
         }),
-        node('periodicReport'),
+        node('newPeriodicReport'),
       ])
-      .run();
+      .return('newPeriodicReport.id as id');
+    const result = await query.first();
+    if (!result) {
+      throw new ServerException('Failed to create a periodic report');
+    }
+    return { id, reportFileId };
   }
 
   async readOne(id: ID) {
@@ -83,10 +79,7 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
 
     const result = await query.first();
     if (!result) {
-      throw new NotFoundException(
-        'Could not find periodic report',
-        'periodicReport.id'
-      );
+      throw new NotFoundException('Could not find periodic report');
     }
 
     return result.dto;

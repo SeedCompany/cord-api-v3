@@ -1,7 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { DateTime, Interval } from 'luxon';
+import { Interval } from 'luxon';
 import {
-  generateId,
   ID,
   NotFoundException,
   ServerException,
@@ -46,25 +45,8 @@ export class PeriodicReportService {
     input: CreatePeriodicReport,
     session: Session
   ): Promise<PeriodicReport> {
-    const id = await generateId();
-    const createdAt = DateTime.local();
-
-    const reportFileId = await generateId();
-
     try {
-      const result = await this.repo.create(
-        input,
-
-        createdAt,
-        id,
-        reportFileId
-      );
-
-      if (!result) {
-        throw new ServerException('Failed to create a periodic report');
-      }
-
-      await this.repo.createProperties(input, result);
+      const { id, reportFileId } = await this.repo.create(input);
 
       await this.files.createDefinedFile(
         reportFileId,
