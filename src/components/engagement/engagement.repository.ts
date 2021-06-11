@@ -3,7 +3,6 @@ import { inArray, node, Node, Query, relation } from 'cypher-query-builder';
 import { Dictionary } from 'lodash';
 import { DateTime } from 'luxon';
 import {
-  CalendarDate,
   entries,
   generateId,
   getDbPropertyLabels,
@@ -520,62 +519,6 @@ export class EngagementRepository extends CommonRepository {
     const roles = await query.first();
 
     return roles?.memberRoles.map(rolesForScope('project')) ?? [];
-  }
-
-  async listEngagementsWithDateRange() {
-    return await this.db
-      .query()
-      .match(node('engagement', 'Engagement'))
-      .match([
-        node('project', 'Project'),
-        relation('out', '', 'engagement', { active: true }),
-        node('engagement'),
-      ])
-      .optionalMatch([
-        node('project'),
-        relation('out', '', 'mouStart', { active: true }),
-        node('mouStart', 'Property'),
-      ])
-      .optionalMatch([
-        node('project'),
-        relation('out', '', 'mouEnd', { active: true }),
-        node('mouEnd', 'Property'),
-      ])
-      .optionalMatch([
-        node('engagement'),
-        relation('out', '', 'startDateOverride', { active: true }),
-        node('startDateOverride', 'Property'),
-      ])
-      .optionalMatch([
-        node('engagement'),
-        relation('out', '', 'endDateOverride', { active: true }),
-        node('endDateOverride', 'Property'),
-      ])
-      .with([
-        'engagement',
-        'mouStart',
-        'mouEnd',
-        'startDateOverride',
-        'endDateOverride',
-      ])
-      .raw(
-        'WHERE (mouStart.value IS NOT NULL AND mouEnd.value IS NOT NULL) OR (startDateOverride.value IS NOT NULL AND endDateOverride.value IS NOT NULL)'
-      )
-      .return([
-        'engagement.id as engagementId',
-        'mouStart.value as startDate',
-        'mouEnd.value as endDate',
-        'startDateOverride.value as startDateOverride',
-        'endDateOverride.value as endDateOverride',
-      ])
-      .asResult<{
-        engagementId: ID;
-        startDate: CalendarDate;
-        endDate: CalendarDate;
-        startDateOverride: CalendarDate;
-        endDateOverride: CalendarDate;
-      }>()
-      .run();
   }
 
   async verifyRelationshipEligibility(

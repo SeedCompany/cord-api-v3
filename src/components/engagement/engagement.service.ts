@@ -547,12 +547,6 @@ export class EngagementService {
     return ids.length > 0;
   }
 
-  async listEngagementsWithDateRange() {
-    const result = await this.repo.listEngagementsWithDateRange();
-
-    return result;
-  }
-
   protected async verifyRelationshipEligibility(
     projectId: ID,
     otherId: ID,
