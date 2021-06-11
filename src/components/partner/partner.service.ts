@@ -1,5 +1,4 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { DateTime } from 'luxon';
 import {
   DuplicateException,
   ID,
@@ -53,34 +52,24 @@ export class PartnerService {
       input.types
     );
 
-    const checkPartner = await this.repo.checkPartner(input.organizationId);
-
-    if (checkPartner) {
+    const partnerExists = await this.repo.partnerIdByOrg(input.organizationId);
+    if (partnerExists) {
       throw new DuplicateException(
         'partner.organizationId',
         'Partner for organization already exists.'
       );
     }
-    const createdAt = DateTime.local();
 
-    const result = await this.repo.create(input, session, createdAt);
-
-    if (!result) {
-      throw new ServerException('failed to create partner');
-    }
-
-    if (input.pointOfContactId) {
-      await this.repo.createProperty(input, result, createdAt);
-    }
+    const id = await this.repo.create(input, session);
 
     await this.authorizationService.processNewBaseNode(
       Partner,
-      result.id,
+      id,
       session.userId
     );
 
-    this.logger.debug(`partner created`, { id: result.id });
-    return await this.readOne(result.id, session);
+    this.logger.debug(`Partner created`, { id });
+    return await this.readOne(id, session);
   }
 
   async readOnePartnerByOrgId(id: ID, session: Session): Promise<Partner> {
@@ -89,11 +78,11 @@ export class PartnerService {
       userId: session.userId,
     });
 
-    const result = await this.repo.readOnePartnerByOrgId(id);
-    if (!result)
+    const partnerId = await this.repo.partnerIdByOrg(id);
+    if (!partnerId)
       throw new NotFoundException('No Partner Exists for this Org Id');
 
-    return await this.readOne(result.partnerId, session);
+    return await this.readOne(partnerId, session);
   }
 
   async readOne(id: ID, session: Session): Promise<Partner> {
@@ -103,10 +92,6 @@ export class PartnerService {
     });
 
     const result = await this.repo.readOne(id, session);
-
-    if (!result) {
-      throw new NotFoundException('Could not find partner', 'partner.id');
-    }
 
     const props = parsePropList(result.propList);
     const secured = await this.authorizationService.secureProperties(
@@ -171,8 +156,9 @@ export class PartnerService {
     await this.repo.updateProperties(object, simpleChanges);
 
     if (pointOfContactId) {
-      await this.repo.updatePartnerProperties(input, session);
+      await this.repo.updatePointOfContact(input.id, pointOfContactId, session);
     }
+
     return await this.readOne(input.id, session);
   }
 
