@@ -8,7 +8,7 @@ import {
   relation,
 } from 'cypher-query-builder';
 import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
-import { cloneDeep, last, Many, startCase, upperFirst } from 'lodash';
+import { cloneDeep, last, Many, startCase, uniq, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { Driver, Session as Neo4jSession } from 'neo4j-driver';
 import { assert } from 'ts-essentials';
@@ -50,7 +50,7 @@ export const property = (
       active: true,
       createdAt: DateTime.local(),
     }),
-    node(propVar, ['Property', ...many(extraPropLabel ?? [])], {
+    node(propVar, uniq(['Property', ...many(extraPropLabel ?? [])]), {
       value,
     }),
   ],

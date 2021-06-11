@@ -1,6 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
+import { keys as keysOf } from 'ts-transformer-keys';
 import { CalendarDate, DateField, ID, IdField } from '../../../common';
 import { CreateDefinedFileVersionInput } from '../../file/dto';
 import { ProductMethodology } from '../../product/dto';
@@ -36,6 +37,8 @@ export abstract class CreateEngagement {
 
 @InputType()
 export abstract class CreateLanguageEngagement extends CreateEngagement {
+  static readonly Props = keysOf<CreateLanguageEngagement>();
+
   @IdField()
   readonly languageId: ID;
 
@@ -59,6 +62,8 @@ export abstract class CreateLanguageEngagement extends CreateEngagement {
 
 @InputType()
 export abstract class CreateInternshipEngagement extends CreateEngagement {
+  static readonly Props = keysOf<CreateInternshipEngagement>();
+
   @IdField()
   readonly internId: ID;
 

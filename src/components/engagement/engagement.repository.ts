@@ -2,8 +2,18 @@ import { Injectable } from '@nestjs/common';
 import { inArray, node, Node, Query, relation } from 'cypher-query-builder';
 import { Dictionary } from 'lodash';
 import { DateTime } from 'luxon';
-import { CalendarDate, ID, Session } from '../../common';
-import { CommonRepository, matchSession } from '../../core';
+import {
+  CalendarDate,
+  entries,
+  generateId,
+  getDbPropertyLabels,
+  ID,
+  mapFromList,
+  NotFoundException,
+  ServerException,
+  Session,
+} from '../../common';
+import { CommonRepository, matchSession, property } from '../../core';
 import { DbChanges, getChanges } from '../../core/database/changes';
 import {
   calculateTotalAndPaginateList,
@@ -15,7 +25,10 @@ import { DbPropsOfDto } from '../../core/database/results';
 import { Role, rolesForScope, ScopedRole } from '../authorization';
 import { ProjectType } from '../project';
 import {
+  CreateInternshipEngagement,
+  CreateLanguageEngagement,
   EngagementListInput,
+  EngagementStatus,
   IEngagement,
   InternshipEngagement,
   LanguageEngagement,
@@ -25,11 +38,6 @@ import {
 
 @Injectable()
 export class EngagementRepository extends CommonRepository {
-  // CREATE ///////////////////////////////////////////////////////////
-  query(): Query {
-    return this.db.query();
-  }
-
   async findNode(type: string, id: ID): Promise<Dictionary<any> | undefined> {
     if (type === 'project') {
       return await this.db
@@ -147,6 +155,162 @@ export class EngagementRepository extends CommonRepository {
         mentor: ID;
         scopedRoles: ScopedRole[];
       }>();
+  }
+
+  // CREATE ///////////////////////////////////////////////////////////
+
+  async createLanguageEngagement(input: CreateLanguageEngagement) {
+    const id = await generateId();
+    const createdAt = DateTime.local();
+    const pnpId = await generateId();
+
+    const { projectId, languageId, ...initial } = {
+      ...mapFromList(CreateLanguageEngagement.Props, (k) => [k, undefined]),
+      ...input,
+      status: input.status || EngagementStatus.InDevelopment,
+      pnp: pnpId,
+      initialEndDate: undefined,
+      statusModifiedAt: undefined,
+      lastSuspendedAt: undefined,
+      lastReactivatedAt: undefined,
+      modifiedAt: createdAt,
+      canDelete: true,
+    };
+
+    const query = this.db
+      .query()
+      .match([node('project', 'Project', { id: projectId })])
+      .match([node('language', 'Language', { id: languageId })])
+      .create([
+        [
+          node('node', ['LanguageEngagement', 'Engagement', 'BaseNode'], {
+            createdAt,
+            id,
+          }),
+        ],
+        ...entries(initial).flatMap(([prop, val]) =>
+          property(
+            prop,
+            val,
+            'node',
+            prop,
+            getDbPropertyLabels(LanguageEngagement, prop)
+          )
+        ),
+      ])
+      .create([
+        node('project'),
+        relation('out', 'engagementRel', 'engagement', {
+          active: true,
+          createdAt,
+        }),
+        node('node'),
+      ])
+      .create([
+        node('language'),
+        relation('in', 'languageRel', 'language', { active: true, createdAt }),
+        node('node'),
+      ])
+      .return('node');
+
+    const result = await query.first();
+    if (!result) {
+      throw new ServerException('Could not create Language Engagement');
+    }
+
+    return { id, pnpId };
+  }
+
+  async createInternshipEngagement(input: CreateInternshipEngagement) {
+    const id = await generateId();
+    const createdAt = DateTime.local();
+    const growthPlanId = await generateId();
+
+    const { projectId, internId, mentorId, countryOfOriginId, ...initial } = {
+      ...mapFromList(CreateInternshipEngagement.Props, (k) => [k, undefined]),
+      ...input,
+      status: input.status || EngagementStatus.InDevelopment,
+      growthPlan: growthPlanId,
+      initialEndDate: undefined,
+      statusModifiedAt: undefined,
+      lastSuspendedAt: undefined,
+      lastReactivatedAt: undefined,
+      modifiedAt: createdAt,
+      canDelete: true,
+    };
+
+    const query = this.db
+      .query()
+      .match(node('project', 'Project', { id: projectId }))
+      .match(node('intern', 'User', { id: internId }))
+      .apply((q) => {
+        if (mentorId) {
+          q.match(node('mentor', 'User', { id: mentorId }));
+        }
+        if (countryOfOriginId) {
+          q.match([
+            node('countryOfOrigin', 'Location', {
+              id: countryOfOriginId,
+            }),
+          ]);
+        }
+      })
+      .create([
+        [
+          node('node', ['InternshipEngagement', 'Engagement', 'BaseNode'], {
+            createdAt,
+            id,
+          }),
+        ],
+        ...entries(initial).flatMap(([prop, val]) =>
+          property(
+            prop,
+            val,
+            'node',
+            prop,
+            getDbPropertyLabels(InternshipEngagement, prop)
+          )
+        ),
+      ])
+      .create([
+        node('project'),
+        relation('out', 'engagementRel', 'engagement', {
+          active: true,
+          createdAt,
+        }),
+        node('node'),
+      ])
+      .create([
+        node('intern'),
+        relation('in', 'internRel', 'intern', { active: true, createdAt }),
+        node('node'),
+      ])
+      .apply((q) => {
+        if (mentorId) {
+          q.create([
+            node('mentor'),
+            relation('in', 'mentorRel', 'mentor', { active: true, createdAt }),
+            node('node'),
+          ]);
+        }
+        if (countryOfOriginId) {
+          q.create([
+            node('countryOfOrigin'),
+            relation('in', 'countryRel', 'countryOfOrigin', {
+              active: true,
+              createdAt,
+            }),
+            node('node'),
+          ]);
+        }
+      })
+      .return('node');
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException();
+    }
+
+    return { id, growthPlanId };
   }
 
   // UPDATE ///////////////////////////////////////////////////////////

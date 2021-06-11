@@ -4,7 +4,6 @@ import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
 import {
   DuplicateException,
-  generateId,
   ID,
   InputException,
   NotFoundException,
@@ -14,13 +13,7 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import {
-  ConfigService,
-  IEventBus,
-  ILogger,
-  Logger,
-  property,
-} from '../../core';
+import { ConfigService, IEventBus, ILogger, Logger } from '../../core';
 import { runListQuery } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { CeremonyService } from '../ceremony';
@@ -73,9 +66,10 @@ export class EngagementService {
   // CREATE /////////////////////////////////////////////////////////
 
   async createLanguageEngagement(
-    { languageId, projectId, ...input }: CreateLanguageEngagement,
+    input: CreateLanguageEngagement,
     session: Session
   ): Promise<LanguageEngagement> {
+    const { languageId, projectId } = input;
     await this.verifyRelationshipEligibility(
       projectId,
       languageId,
@@ -89,140 +83,12 @@ export class EngagementService {
 
     this.verifyCreationStatus(input.status);
 
-    this.logger.debug('Mutation create language engagement ', {
+    this.logger.debug('Creating language engagement', {
       input,
-      projectId,
-      languageId,
       userId: session.userId,
     });
 
-    // Initial LanguageEngagement
-    const id = await generateId();
-    const createdAt = DateTime.local();
-    const pnpId = await generateId();
-
-    const createLE = this.repo.query();
-    if (projectId) {
-      createLE.match([node('project', 'Project', { id: projectId })]);
-    }
-    if (languageId) {
-      createLE.match([node('language', 'Language', { id: languageId })]);
-    }
-    createLE.create([
-      [
-        node(
-          'languageEngagement',
-          ['LanguageEngagement', 'Engagement', 'BaseNode'],
-          {
-            createdAt,
-            id,
-          }
-        ),
-      ],
-      ...property(
-        'completeDate',
-        input.completeDate || undefined,
-        'languageEngagement'
-      ),
-      ...property(
-        'disbursementCompleteDate',
-        input.disbursementCompleteDate || undefined,
-        'languageEngagement'
-      ),
-      ...property(
-        'communicationsCompleteDate',
-        input.communicationsCompleteDate || undefined,
-        'languageEngagement'
-      ),
-      ...property(
-        'startDateOverride',
-        input.startDateOverride || undefined,
-        'languageEngagement'
-      ),
-      ...property(
-        'endDateOverride',
-        input.endDateOverride || undefined,
-        'languageEngagement'
-      ),
-      ...property('initialEndDate', undefined, 'languageEngagement'),
-      ...property(
-        'lukePartnership',
-        input.lukePartnership || undefined,
-        'languageEngagement'
-      ),
-      ...property(
-        'firstScripture',
-        input.firstScripture || undefined,
-        'languageEngagement'
-      ),
-      ...property(
-        'paratextRegistryId',
-        input.paratextRegistryId,
-        'languageEngagement'
-      ),
-      ...property('pnp', pnpId || undefined, 'languageEngagement'),
-      ...property(
-        'historicGoal',
-        input.historicGoal || undefined,
-        'languageEngagement'
-      ),
-      ...property('statusModifiedAt', undefined, 'languageEngagement'),
-      ...property('lastSuspendedAt', undefined, 'languageEngagement'),
-      ...property('lastReactivatedAt', undefined, 'languageEngagement'),
-      ...property(
-        'status',
-        input.status || EngagementStatus.InDevelopment,
-        'languageEngagement',
-        'status',
-        'EngagementStatus'
-      ),
-      ...property('modifiedAt', createdAt, 'languageEngagement'),
-      ...property('canDelete', true, 'languageEngagement'),
-    ]);
-    if (projectId) {
-      createLE.create([
-        node('project'),
-        relation('out', 'engagementRel', 'engagement', {
-          active: true,
-          createdAt,
-        }),
-        node('languageEngagement'),
-      ]);
-    }
-    if (languageId) {
-      createLE.create([
-        node('language'),
-        relation('in', 'languageRel', 'language', { active: true, createdAt }),
-        node('languageEngagement'),
-      ]);
-    }
-    createLE.return('languageEngagement');
-
-    let le;
-    try {
-      le = await createLE.first();
-    } catch (exception) {
-      this.logger.error('could not create Language Engagement ', { exception });
-      throw new ServerException(
-        'Could not create Langauge Engagement',
-        exception
-      );
-    }
-    if (!le) {
-      if (projectId && !(await this.repo.findNode('project', projectId))) {
-        throw new InputException(
-          'projectId is invalid',
-          'engagement.projectId'
-        );
-      }
-      if (languageId && !(await this.repo.findNode('language', languageId))) {
-        throw new InputException(
-          'languageId is invalid',
-          'engagement.languageId'
-        );
-      }
-      throw new ServerException('Could not create Language Engagement');
-    }
+    const { id, pnpId } = await this.repo.createLanguageEngagement(input);
 
     await this.files.createDefinedFile(
       pnpId,
@@ -251,15 +117,10 @@ export class EngagementService {
   }
 
   async createInternshipEngagement(
-    {
-      projectId,
-      internId,
-      mentorId,
-      countryOfOriginId,
-      ...input
-    }: CreateInternshipEngagement,
+    input: CreateInternshipEngagement,
     session: Session
   ): Promise<InternshipEngagement> {
+    const { projectId, internId, mentorId, countryOfOriginId } = input;
     await this.verifyRelationshipEligibility(
       projectId,
       internId,
@@ -270,176 +131,37 @@ export class EngagementService {
 
     this.verifyCreationStatus(input.status);
 
-    this.logger.debug('Mutation create internship engagement ', {
+    this.logger.debug('Creating internship engagement', {
       input,
-      projectId,
-      mentorId,
-      countryOfOriginId,
       userId: session.userId,
     });
-    const id = await generateId();
-    const createdAt = DateTime.local();
-    const growthPlanId = await generateId();
 
-    const createIE = this.repo.query();
-    if (projectId) {
-      createIE.match([node('project', 'Project', { id: projectId })]);
-    }
-    if (internId) {
-      createIE.match([node('intern', 'User', { id: internId })]);
-    }
-    if (mentorId) {
-      createIE.match([node('mentor', 'User', { id: mentorId })]);
-    }
-    if (countryOfOriginId) {
-      createIE.match([
-        node('countryOfOrigin', 'Location', {
-          id: countryOfOriginId,
-        }),
-      ]);
-    }
-    createIE.create([
-      [
-        node(
-          'internshipEngagement',
-          ['InternshipEngagement', 'Engagement', 'BaseNode'],
-          {
-            createdAt,
-            id,
-          }
-        ),
-      ],
-      ...property('modifiedAt', createdAt, 'internshipEngagement'),
-      ...property(
-        'completeDate',
-        input.completeDate || undefined,
-        'internshipEngagement'
-      ),
-      ...property(
-        'disbursementCompleteDate',
-        input.disbursementCompleteDate || undefined,
-        'internshipEngagement'
-      ),
-      ...property(
-        'communicationsCompleteDate',
-        input.communicationsCompleteDate || undefined,
-        'internshipEngagement'
-      ),
-      ...property(
-        'startDateOverride',
-        input.startDateOverride || undefined,
-        'internshipEngagement'
-      ),
-      ...property(
-        'endDateOverride',
-        input.endDateOverride || undefined,
-        'internshipEngagement'
-      ),
-      ...property('initialEndDate', undefined, 'internshipEngagement'),
-      ...property(
-        'methodologies',
-        input.methodologies || undefined,
-        'internshipEngagement',
-        'methodologies',
-        'ProductMethodology'
-      ),
-      ...property(
-        'position',
-        input.position || undefined,
-        'internshipEngagement',
-        'position',
-        'InternPosition'
-      ),
-      ...property(
-        'growthPlan',
-        growthPlanId || undefined,
-        'internshipEngagement'
-      ),
-      ...property('statusModifiedAt', undefined, 'internshipEngagement'),
-      ...property('lastSuspendedAt', undefined, 'internshipEngagement'),
-      ...property('lastReactivatedAt', undefined, 'internshipEngagement'),
-      ...property(
-        'status',
-        input.status || EngagementStatus.InDevelopment,
-        'internshipEngagement'
-      ),
-      ...property('canDelete', true, 'internshipEngagement'),
-    ]);
-    if (projectId) {
-      createIE.create([
-        node('project'),
-        relation('out', 'engagementRel', 'engagement', {
-          active: true,
-          createdAt,
-        }),
-        node('internshipEngagement'),
-      ]);
-    }
-    if (internId) {
-      createIE.create([
-        node('intern'),
-        relation('in', 'internRel', 'intern', { active: true, createdAt }),
-        node('internshipEngagement'),
-      ]);
-    }
-    if (mentorId) {
-      createIE.create([
-        node('mentor'),
-        relation('in', 'mentorRel', 'mentor', { active: true, createdAt }),
-        node('internshipEngagement'),
-      ]);
-    }
-    if (countryOfOriginId) {
-      createIE.create([
-        node('countryOfOrigin'),
-        relation('in', 'countryRel', 'countryOfOrigin', {
-          active: true,
-          createdAt,
-        }),
-        node('internshipEngagement'),
-      ]);
-    }
-    createIE.return('internshipEngagement');
-
-    let IE;
+    let id;
+    let growthPlanId;
     try {
-      IE = await createIE.first();
-    } catch (exception) {
-      // secondary queries to see what ID is bad
-      // check internId
-
-      this.logger.error('could not create Internship Engagement ', {
-        exception,
-      });
-      throw new ServerException(
-        'Could not create Internship Engagement',
-        exception
-      );
-    }
-
-    if (!IE) {
-      if (internId && !(await this.repo.findNode('intern', internId))) {
-        throw new InputException('internId is invalid', 'engagement.internId');
+      ({ id, growthPlanId } = await this.repo.createInternshipEngagement(
+        input
+      ));
+    } catch (e) {
+      if (!(e instanceof NotFoundException)) {
+        throw e;
       }
       if (mentorId && !(await this.repo.findNode('mentor', mentorId))) {
-        throw new InputException('mentorId is invalid', 'engagement.mentorId');
-      }
-      if (projectId && !(await this.repo.findNode('project', projectId))) {
-        throw new InputException(
-          'projectId is invalid',
-          'engagement.projectId'
+        throw new NotFoundException(
+          'Could not find mentor',
+          'engagement.mentorId'
         );
       }
       if (
         countryOfOriginId &&
         !(await this.repo.findNode('countryOfOrigin', countryOfOriginId))
       ) {
-        throw new InputException(
-          'countryOfOriginId is invalid',
+        throw new NotFoundException(
+          'Could not find country of origin',
           'engagement.countryOfOriginId'
         );
       }
-      throw new ServerException('Could not create Internship Engagement');
+      throw new ServerException('Could not create Internship Engagement', e);
     }
 
     await this.files.createDefinedFile(
@@ -965,7 +687,9 @@ export class EngagementService {
     try {
       project = await this.projectService.readOne(projectId, session);
     } catch (e) {
-      throw new InputException('projectId is invalid', 'engagement.projectId');
+      throw e instanceof NotFoundException
+        ? e.withField('engagement.projectId')
+        : e;
     }
     if (project.status !== ProjectStatus.InDevelopment) {
       throw new InputException(
