@@ -1,7 +1,4 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
-import { DateTime } from 'luxon';
-import { MergeExclusive } from 'type-fest';
 import {
   DuplicateException,
   ID,
@@ -18,6 +15,7 @@ import { runListQuery } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { CeremonyService } from '../ceremony';
 import { FileService } from '../file';
+import { Location } from '../location/dto';
 import {
   ProductListInput,
   ProductService,
@@ -26,6 +24,7 @@ import {
 import { ProjectStatus } from '../project';
 import { ProjectType } from '../project/dto/type.enum';
 import { ProjectService } from '../project/project.service';
+import { User } from '../user/dto';
 import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,
@@ -38,7 +37,10 @@ import {
   UpdateInternshipEngagement,
   UpdateLanguageEngagement,
 } from './dto';
-import { EngagementRepository } from './engagement.repository';
+import {
+  EngagementRepository,
+  LanguageOrEngagementId,
+} from './engagement.repository';
 import { EngagementRules } from './engagement.rules';
 import {
   EngagementCreatedEvent,
@@ -146,7 +148,7 @@ export class EngagementService {
       if (!(e instanceof NotFoundException)) {
         throw e;
       }
-      if (mentorId && !(await this.repo.findNode('mentor', mentorId))) {
+      if (mentorId && !(await this.repo.doesNodeExist(User, mentorId))) {
         throw new NotFoundException(
           'Could not find mentor',
           'engagement.mentorId'
@@ -154,7 +156,7 @@ export class EngagementService {
       }
       if (
         countryOfOriginId &&
-        !(await this.repo.findNode('countryOfOrigin', countryOfOriginId))
+        !(await this.repo.doesNodeExist(Location, countryOfOriginId))
       ) {
         throw new NotFoundException(
           'Could not find country of origin',
@@ -217,13 +219,7 @@ export class EngagementService {
     if (!id) {
       throw new NotFoundException('no id given', 'engagement.id');
     }
-    const query = this.repo.readOne(id, session);
-
-    const result = await query.first();
-
-    if (!result) {
-      throw new NotFoundException('could not find Engagement', 'engagement.id');
-    }
+    const result = await this.repo.readOne(id, session);
 
     const props = {
       __typename: result.__typename,
@@ -376,7 +372,6 @@ export class EngagementService {
     input: UpdateInternshipEngagement,
     session: Session
   ): Promise<InternshipEngagement> {
-    const createdAt = DateTime.local();
     if (input.status) {
       await this.engagementRules.verifyStatusChange(
         input.id,
@@ -410,19 +405,11 @@ export class EngagementService {
 
     try {
       if (mentorId) {
-        const mentorQ = this.repo.mentorQ(mentorId, session, input, createdAt);
-
-        await mentorQ.first();
+        await this.repo.updateMentor(input.id, mentorId);
       }
 
       if (countryOfOriginId) {
-        const countryQ = this.repo.countryQ(
-          countryOfOriginId,
-          input,
-          createdAt
-        );
-
-        await countryQ.first();
+        await this.repo.updateCountryOfOrigin(input.id, countryOfOriginId);
       }
 
       await this.repo.updateInternshipProperties(object, simpleChanges);
@@ -465,11 +452,8 @@ export class EngagementService {
         'You do not have the permission to delete this Engagement'
       );
 
-    const result = await this.repo.findNodeToDelete(id);
-
-    if (result) {
-      await this.verifyProjectStatus(result.projectId, session);
-    }
+    const projectId = await this.repo.getProjectIdByEngagement(id);
+    await this.verifyProjectStatus(projectId, session);
 
     await this.eventBus.publish(new EngagementWillDeleteEvent(object, session));
 
@@ -486,10 +470,10 @@ export class EngagementService {
   // LIST ///////////////////////////////////////////////////////////
 
   async list(
-    { filter, ...input }: EngagementListInput,
+    input: EngagementListInput,
     session: Session
   ): Promise<EngagementListOutput> {
-    const query = this.repo.list(session, { filter, ...input });
+    const query = this.repo.list(input, session);
 
     const engagements = await runListQuery(query, input, (id) =>
       this.readOne(id, session)
@@ -598,59 +582,16 @@ export class EngagementService {
    * is the only engagement for the language that has firstScripture=true
    * that the language doesn't have hasExternalFirstScripture=true
    */
-  protected async verifyFirstScripture({
-    engagementId,
-    languageId,
-  }: MergeExclusive<{ engagementId: ID }, { languageId: ID }>) {
-    const startQuery = this.repo.startQuery(engagementId, languageId);
-
-    await this.verifyFirstScriptureWithLanguage(startQuery());
-    await this.verifyFirstScriptureWithEngagement(startQuery());
-  }
-
-  protected async verifyFirstScriptureWithLanguage(query: Query) {
-    const languageResult = await query
-      .match([
-        node('language', 'Language'),
-        relation('out', '', 'hasExternalFirstScripture', { active: true }),
-        node('hasExternalFirstScripture', 'Property'),
-      ])
-      .where({
-        hasExternalFirstScripture: {
-          value: true,
-        },
-      })
-      .return('language')
-      .first();
-
-    if (languageResult) {
+  protected async verifyFirstScripture(id: LanguageOrEngagementId) {
+    if (await this.repo.doesLanguageHaveExternalFirstScripture(id)) {
       throw new InputException(
-        'firstScripture can not be set to true if the language has hasExternalFirstScripture=true',
+        'First scripture has already been marked as having been done externally',
         'languageEngagement.firstScripture'
       );
     }
-  }
-
-  protected async verifyFirstScriptureWithEngagement(query: Query) {
-    const engagementResult = await query
-      .match([
-        node('language', 'Language'),
-        relation('in', '', 'language', { active: true }),
-        node('otherLanguageEngagements', 'LanguageEngagement'),
-        relation('out', '', 'firstScripture', { active: true }),
-        node('firstScripture', 'Property'),
-      ])
-      .where({
-        firstScripture: {
-          value: true,
-        },
-      })
-      .return('otherLanguageEngagements')
-      .first();
-
-    if (engagementResult) {
+    if (await this.repo.doOtherEngagementsHaveFirstScripture(id)) {
       throw new InputException(
-        'firstScripture can not be set to true if it is not the only engagement for the language that has firstScripture=true',
+        'Another engagement has already been marked as having done the first scripture',
         'languageEngagement.firstScripture'
       );
     }
