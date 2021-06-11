@@ -167,36 +167,34 @@ export class BudgetService {
     ];
 
     try {
-      const createBudgetRecord = await this.budgetRecordsRepo.create(
+      const recordId = await this.budgetRecordsRepo.create(
         session,
         secureProps
       );
-      const result = await createBudgetRecord.first();
 
-      if (!result) {
-        throw new ServerException('failed to create a budget record');
-      }
-
-      const orgQuery = await this.budgetRecordsRepo.connectToBudget(
+      await this.budgetRecordsRepo.connectToBudget(
+        recordId,
         budgetId,
-        organizationId,
-        result,
         createdAt
       );
-      await orgQuery.first();
+      await this.budgetRecordsRepo.connectToOrganization(
+        recordId,
+        organizationId,
+        createdAt
+      );
 
       await this.authorizationService.processNewBaseNode(
         BudgetRecord,
-        result.id,
+        recordId,
         session.userId
       );
 
       this.logger.debug(`Created Budget Record`, {
-        id: result.id,
+        id: recordId,
         userId: session.userId,
       });
 
-      const budgetRecord = await this.readOneRecord(result.id, session);
+      const budgetRecord = await this.readOneRecord(recordId, session);
 
       return budgetRecord;
     } catch (exception) {
@@ -209,8 +207,8 @@ export class BudgetService {
   }
 
   private async verifyRecordUniqueness(input: CreateBudgetRecord) {
-    const existingRecord = await this.budgetRecordsRepo.verifyUniqueness(input);
-    if (existingRecord) {
+    const exists = await this.budgetRecordsRepo.doesRecordExist(input);
+    if (exists) {
       throw new DuplicateException(
         'fiscalYear',
         'A record for given partner and fiscal year already exists in this budget'
@@ -272,16 +270,7 @@ export class BudgetService {
       userId: session.userId,
     });
 
-    const query = this.budgetRecordsRepo.readOne(id, session);
-
-    const result = await query.first();
-
-    if (!result) {
-      throw new NotFoundException(
-        'Could not find BudgetRecord',
-        'budgetRecord.budgetId'
-      );
-    }
+    const result = await this.budgetRecordsRepo.readOne(id, session);
 
     const securedProps = await this.authorizationService.secureProperties(
       BudgetRecord,
@@ -434,10 +423,10 @@ export class BudgetService {
   }
 
   async listRecords(
-    { filter, ...input }: BudgetRecordListInput,
+    input: BudgetRecordListInput,
     session: Session
   ): Promise<BudgetRecordListOutput> {
-    const query = this.budgetRecordsRepo.list(filter, input, session);
+    const query = this.budgetRecordsRepo.list(input, session);
 
     return await runListQuery(query, input, (id) =>
       this.readOneRecord(id, session)
