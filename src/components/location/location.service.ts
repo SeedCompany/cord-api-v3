@@ -1,5 +1,4 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { DateTime } from 'luxon';
 import {
   DuplicateException,
   ID,
@@ -50,48 +49,24 @@ export class LocationService {
   }
 
   async create(input: CreateLocation, session: Session): Promise<Location> {
-    const checkName = await this.repo.checkName(input.name);
-
+    const checkName = await this.repo.doesNameExist(input.name);
     if (checkName) {
       throw new DuplicateException(
         'location.name',
         'Location with this name already exists.'
       );
     }
-    const createdAt = DateTime.local();
 
-    const result = await this.repo.create(session, input);
-
-    if (!result) {
-      throw new ServerException('failed to create location');
-    }
-
-    if (input.fundingAccountId) {
-      await this.repo.createProperties(
-        'fundingAccount',
-        result,
-        input,
-        createdAt
-      );
-    }
-
-    if (input.defaultFieldRegionId) {
-      await this.repo.createProperties(
-        'defaultFieldRegion',
-        result,
-        input,
-        createdAt
-      );
-    }
+    const id = await this.repo.create(input, session);
 
     await this.authorizationService.processNewBaseNode(
       Location,
-      result.id,
+      id,
       session.userId
     );
 
-    this.logger.debug(`location created`, { id: result.id });
-    return await this.readOne(result.id, session);
+    this.logger.debug(`location created`, { id: id });
+    return await this.readOne(id, session);
   }
 
   async readOne(id: ID, session: Session): Promise<Location> {
@@ -100,13 +75,7 @@ export class LocationService {
       userId: session.userId,
     });
 
-    const query = this.repo.readOne(id, session);
-
-    const result = await query.first();
-
-    if (!result) {
-      throw new NotFoundException('Could not find location', 'location.id');
-    }
+    const result = await this.repo.readOne(id, session);
 
     const secured = await this.authorizationService.secureProperties(
       Location,
@@ -145,20 +114,14 @@ export class LocationService {
     await this.repo.updateProperties(location, simpleChanges);
 
     if (fundingAccountId) {
-      await this.repo.updateLocationProperties(
-        'fundingAccount',
-        session,
-        fundingAccountId,
-        input.id
-      );
+      await this.repo.updateFundingAccount(input.id, fundingAccountId, session);
     }
 
     if (defaultFieldRegionId) {
-      await this.repo.updateLocationProperties(
-        'defaultFieldRegion',
-        session,
+      await this.repo.updateDefaultFieldRegion(
+        input.id,
         defaultFieldRegionId,
-        input.id
+        session
       );
     }
 
