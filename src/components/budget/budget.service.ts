@@ -55,10 +55,11 @@ export class BudgetService {
   ): Promise<Budget> {
     this.logger.debug('Creating budget', { projectId });
 
-    const readProject = this.budgetRepo.readProject(projectId, session);
-
-    const result = await readProject.first();
-    if (!result) {
+    const projectExists = await this.budgetRepo.doesProjectExist(
+      projectId,
+      session
+    );
+    if (!projectExists) {
       throw new NotFoundException('project does not exist', 'budget.projectId');
     }
 
@@ -89,15 +90,11 @@ export class BudgetService {
     ];
 
     try {
-      const result = await this.budgetRepo.createBudget(
-        projectId,
-        budgetId,
-        secureProps,
-        session
-      );
+      await this.budgetRepo.create(budgetId, secureProps, session);
+      await this.budgetRepo.connectToProject(budgetId, projectId);
 
       this.logger.debug(`Created Budget`, {
-        id: result?.id,
+        id: budgetId,
         userId: session.userId,
       });
 
@@ -113,11 +110,11 @@ export class BudgetService {
 
       await this.authorizationService.processNewBaseNode(
         Budget,
-        result?.id,
+        budgetId,
         session.userId
       );
 
-      return await this.readOne(result?.id, session);
+      return await this.readOne(budgetId, session);
     } catch (exception) {
       this.logger.error(`Could not create budget`, {
         userId: session.userId,
@@ -222,12 +219,7 @@ export class BudgetService {
       userId: session.userId,
     });
 
-    const query = this.budgetRepo.readOne(id, session);
-
-    const result = await query.first();
-    if (!result) {
-      throw new NotFoundException('Could not find budget', 'budget.id');
-    }
+    const result = await this.budgetRepo.readOne(id, session);
 
     const perms = await this.authorizationService.getPermissions(
       Budget,
@@ -333,17 +325,12 @@ export class BudgetService {
     }
   }
 
-  private async verifyCanEdit(id: ID, session: Session) {
+  private async verifyCanEdit(recordId: ID, session: Session) {
     if (session.roles.includes('global:Administrator')) {
       return;
     }
-    const result = await this.budgetRepo.verifyCanEdit(id);
-
-    if (!result) {
-      throw new NotFoundException('Budget could not be found');
-    }
-
-    if (result.status !== BudgetStatus.Pending) {
+    const status = await this.budgetRepo.getStatusByRecord(recordId);
+    if (status !== BudgetStatus.Pending) {
       throw new InputException(
         'Budget cannot be modified',
         'budgetRecord.amount'
@@ -358,8 +345,7 @@ export class BudgetService {
       throw new NotFoundException('Could not find Budget');
     }
 
-    const canDelete = await this.budgetRepo.verifyCanEdit(id);
-
+    const canDelete = await this.budgetRepo.checkDeletePermission(id, session);
     if (!canDelete)
       throw new UnauthorizedException(
         'You do not have the permission to delete this Budget'
@@ -408,18 +394,16 @@ export class BudgetService {
   }
 
   async list(
-    input: Partial<BudgetListInput>,
+    partialInput: Partial<BudgetListInput>,
     session: Session
   ): Promise<BudgetListOutput> {
-    const { filter, ...listInput } = {
+    const input = {
       ...BudgetListInput.defaultVal,
-      ...input,
+      ...partialInput,
     };
-    const query = this.budgetRepo.list(filter, listInput, session);
+    const query = this.budgetRepo.list(input, session);
 
-    return await runListQuery(query, listInput, (id) =>
-      this.readOne(id, session)
-    );
+    return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 
   async listRecords(
