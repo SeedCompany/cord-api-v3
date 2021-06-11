@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { Dictionary } from 'lodash';
 import { generateId, ID, Session } from '../../common';
 import { DatabaseService, matchSession } from '../../core';
 import {
@@ -583,12 +582,13 @@ export class WorkflowRepository {
         state: [{ value: 'value' }],
         newState: [{ value: 'newValue' }],
       })
+      .asResult<{ value: any; newValue: any }>()
       .first();
   }
 
   async changeCurrentState(
     session: Session,
-    possibleState: Dictionary<any> | undefined,
+    possibleState: { value: any; newValue: any },
     stateIdentifier: string
   ) {
     await this.db
@@ -607,7 +607,7 @@ export class WorkflowRepository {
           node('baseNode', 'BaseNode'),
           relation('out', 'oldRel', `${stateIdentifier}`),
           node('currentState', 'CurrentState:Property', {
-            value: possibleState?.value,
+            value: possibleState.value,
           }),
         ],
       ])
@@ -623,7 +623,7 @@ export class WorkflowRepository {
             active: true,
           }),
           node('newCurrentState', 'CurrentState:Property', {
-            value: possibleState?.newValue,
+            value: possibleState.newValue,
           }),
         ],
       ])
