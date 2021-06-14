@@ -13,6 +13,6 @@ import { FieldRegionService } from './field-region.service';
     forwardRef(() => UserModule),
   ],
   providers: [FieldRegionResolver, FieldRegionService, FieldRegionRepository],
-  exports: [FieldRegionService, FieldRegionRepository],
+  exports: [FieldRegionService],
 })
 export class FieldRegionModule {}

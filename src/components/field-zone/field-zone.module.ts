@@ -11,6 +11,6 @@ import { FieldZoneService } from './field-zone.service';
     forwardRef(() => UserModule),
   ],
   providers: [FieldZoneResolver, FieldZoneService, FieldZoneRepository],
-  exports: [FieldZoneService, FieldZoneRepository],
+  exports: [FieldZoneService],
 })
 export class FieldZoneModule {}

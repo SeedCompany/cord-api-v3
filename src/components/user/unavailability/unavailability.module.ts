@@ -11,6 +11,6 @@ import { UnavailabilityService } from './unavailability.service';
     UnavailabilityService,
     UnavailabilityRepository,
   ],
-  exports: [UnavailabilityService, UnavailabilityRepository],
+  exports: [UnavailabilityService],
 })
 export class UnavailabilityModule {}

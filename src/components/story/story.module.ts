@@ -8,6 +8,6 @@ import { StoryService } from './story.service';
 @Module({
   imports: [forwardRef(() => AuthorizationModule), ScriptureModule],
   providers: [StoryResolver, StoryService, StoryRepository],
-  exports: [StoryService, StoryRepository],
+  exports: [StoryService],
 })
 export class StoryModule {}
