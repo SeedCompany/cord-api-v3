@@ -19,22 +19,18 @@ import {
 import { runListQuery } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { ProjectService } from '../project/project.service';
-import { CreatePlanChange, PlanChange, UpdatePlanChange } from './dto';
 import {
-  ChangesetListInput,
-  ChangesetListOutput,
-} from './dto/changeset-list.dto';
+  CreatePlanChange,
+  PlanChange,
+  PlanChangeListInput,
+  PlanChangeListOutput,
+  UpdatePlanChange,
+} from './dto';
 import { PlanChangeUpdatedEvent } from './events';
 import { PlanChangeRepository } from './plan-change.repository';
 
 @Injectable()
 export class PlanChangeService {
-  private readonly securedProperties = {
-    types: true,
-    summary: true,
-    status: true,
-  };
-
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
@@ -192,9 +188,9 @@ export class PlanChangeService {
   }
 
   async list(
-    { filter, ...input }: ChangesetListInput,
+    { filter, ...input }: PlanChangeListInput,
     session: Session
-  ): Promise<ChangesetListOutput> {
+  ): Promise<PlanChangeListOutput> {
     const query = this.repo.list({ filter, ...input }, session);
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

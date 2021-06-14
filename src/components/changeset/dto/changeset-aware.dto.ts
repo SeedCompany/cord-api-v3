@@ -5,7 +5,7 @@ import { ID, IdField } from '../../../common';
 @InterfaceType({
   description: stripIndent`
     An object that can be associated with change objects.
-    The data returned in this object could be unique for the associated change
+    The data returned in this object could be unique for the associated changeset
     returned.
   `,
 })

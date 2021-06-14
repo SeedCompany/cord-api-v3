@@ -1,6 +1,7 @@
 import { ServerException } from '../../../common';
 import { Budget, BudgetRecord } from '../../budget/dto';
 import { Ceremony } from '../../ceremony/dto';
+import { Changeset } from '../../changeset/dto';
 import {
   IEngagement as Engagement,
   InternshipEngagement,
@@ -44,6 +45,7 @@ export const ResourceMap = {
   Budget,
   BudgetRecord,
   Ceremony,
+  Changeset,
   Education,
   Engagement,
   EthnologueLanguage,

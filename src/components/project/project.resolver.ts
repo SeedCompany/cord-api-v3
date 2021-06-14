@@ -29,10 +29,7 @@ import {
 } from '../location';
 import { OrganizationService, SecuredOrganization } from '../organization';
 import { PartnershipListInput, SecuredPartnershipList } from '../partnership';
-import {
-  ChangesetListInput,
-  SecuredPlanChangeList,
-} from '../plan-change/dto/changeset-list.dto';
+import { PlanChangeListInput, SecuredPlanChangeList } from '../plan-change/dto';
 import {
   CreateProjectInput,
   CreateProjectOutput,
@@ -113,11 +110,11 @@ export class ProjectResolver {
     @Parent() project: Project,
     @Args({
       name: 'input',
-      type: () => ChangesetListInput,
+      type: () => PlanChangeListInput,
       nullable: true,
-      defaultValue: ChangesetListInput.defaultVal,
+      defaultValue: PlanChangeListInput.defaultVal,
     })
-    input: ChangesetListInput
+    input: PlanChangeListInput
   ): Promise<SecuredPlanChangeList> {
     return this.projectService.listPlanChanges(project.id, input, session);
   }

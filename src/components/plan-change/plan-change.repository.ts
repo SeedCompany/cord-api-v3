@@ -13,7 +13,7 @@ import {
 } from '../../core/database/query';
 import { DbPropsOfDto } from '../../core/database/results';
 import { ScopedRole } from '../project/project-member';
-import { ChangesetListInput, PlanChange } from './dto';
+import { PlanChange, PlanChangeListInput } from './dto';
 
 @Injectable()
 export class PlanChangeRepository extends DtoRepository(PlanChange) {
@@ -47,7 +47,7 @@ export class PlanChangeRepository extends DtoRepository(PlanChange) {
     return await query.first();
   }
 
-  list({ filter, ...input }: ChangesetListInput, _session: Session) {
+  list({ filter, ...input }: PlanChangeListInput, _session: Session) {
     return this.db
       .query()
       .match([

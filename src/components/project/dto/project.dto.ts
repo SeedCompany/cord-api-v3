@@ -22,6 +22,7 @@ import {
 } from '../../../common';
 import { ScopedRole } from '../../authorization/dto';
 import { Budget } from '../../budget/dto';
+import { ChangesetAware } from '../../changeset/dto';
 import { IEngagement as Engagement } from '../../engagement/dto';
 import { Directory } from '../../file/dto';
 import { SecuredTags } from '../../language/dto/language.dto';
@@ -29,7 +30,7 @@ import { Location } from '../../location/dto';
 import { Partnership } from '../../partnership/dto';
 import { SecuredReportPeriod } from '../../periodic-report/dto';
 import { Pinnable } from '../../pin/dto';
-import { ChangesetAware, PlanChange } from '../../plan-change/dto';
+import { PlanChange } from '../../plan-change/dto';
 import { Post } from '../../post/dto';
 import { Postable } from '../../post/postable/dto/postable.dto';
 import { ProjectMember } from '../project-member/dto';

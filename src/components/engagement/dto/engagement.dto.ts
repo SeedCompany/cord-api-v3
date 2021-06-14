@@ -19,8 +19,8 @@ import {
   SecuredString,
   Sensitivity,
 } from '../../../common';
+import { ChangesetAware } from '../../changeset/dto';
 import { DefinedFile } from '../../file/dto';
-import { ChangesetAware } from '../../plan-change/dto';
 import { Product, SecuredMethodologies } from '../../product/dto';
 import { SecuredInternPosition } from './intern-position.enum';
 import { SecuredEngagementStatus } from './status.enum';
