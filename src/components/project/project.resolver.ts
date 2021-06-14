@@ -146,14 +146,13 @@ export class ProjectResolver {
       nullable: true,
       defaultValue: EngagementListInput.defaultVal,
     })
-    input: EngagementListInput,
-    @IdArg({ name: 'changeset', nullable: true }) changeset?: ID
+    input: EngagementListInput
   ): Promise<SecuredEngagementList> {
     return this.projectService.listEngagements(
       project,
       input,
       session,
-      changeset
+      project.changeset
     );
   }
 

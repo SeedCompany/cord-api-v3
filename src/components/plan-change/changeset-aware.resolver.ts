@@ -1,10 +1,10 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { LoggedInSession, Session } from '../../common';
-import { Changeable, PlanChange } from './dto';
+import { ChangesetAware, PlanChange } from './dto';
 import { PlanChangeService } from './plan-change.service';
 
-@Resolver(Changeable)
-export class ChangeableResolver {
+@Resolver(ChangesetAware)
+export class ChangesetAwareResolver {
   constructor(private readonly service: PlanChangeService) {}
 
   @ResolveField(() => PlanChange, {
@@ -12,7 +12,7 @@ export class ChangeableResolver {
     nullable: true,
   })
   async change(
-    @Parent() object: Changeable,
+    @Parent() object: ChangesetAware,
     @LoggedInSession() session: Session
   ): Promise<PlanChange | null> {
     return object.changeset

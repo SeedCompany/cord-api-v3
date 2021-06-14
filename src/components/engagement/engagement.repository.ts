@@ -56,27 +56,38 @@ export class EngagementRepository extends CommonRepository {
   readOne(id: ID, session: Session, changeset?: ID) {
     return this.db
       .query()
-      .match([
-        node('project'),
-        relation('out', '', 'engagement', { active: true }),
-        node('node', 'Engagement', { id }),
-      ])
-      .apply(matchPropsAndProjectSensAndScopedRoles(session))
-      .optionalMatch(
-        !changeset
-          ? [
-              node('project'),
-              relation('out', '', 'engagement', { active: true }),
-              node('node'),
-            ]
-          : [
-              node('project'),
-              relation('out', '', 'engagement', { active: false }),
-              node('node'),
-              relation('in', '', 'changeset', { active: true }),
-              node('changesetNode', 'Changeset', { id: changeset }),
-            ]
+      .match(
+        [
+          node('project'),
+          relation('out', '', 'engagement', { active: true }),
+          node('node', 'Engagement', { id }),
+        ],
+        {
+          optional: !!changeset,
+        }
       )
+      .apply((q) =>
+        changeset
+          ? q
+              .optionalMatch([
+                node('project1'),
+                relation('out', '', 'engagement', { active: false }),
+                node('node1', 'Engagement', { id }),
+                relation('in', '', 'changeset', { active: true }),
+                node('changesetNode', 'Changeset', { id: changeset }),
+              ])
+              .raw(
+                `CALL apoc.when(
+                node is null,
+                'RETURN node1 as engagement, project1 as project',
+                'RETURN node as engagement, project',
+                {node:node, node1:node1, project:project, project1:project1}
+              ) YIELD value
+              WITH value.engagement as node, value.project as project`
+              )
+          : q
+      )
+      .apply(matchPropsAndProjectSensAndScopedRoles(session))
       .with([
         'props',
         'node',

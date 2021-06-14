@@ -1,3 +1,4 @@
+import { Type } from '@nestjs/common';
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
@@ -7,6 +8,7 @@ import {
   DateTimeField,
   DbLabel,
   ID,
+  IntersectionType,
   parentIdMiddleware,
   Resource,
   Secured,
@@ -18,6 +20,7 @@ import {
   Sensitivity,
 } from '../../../common';
 import { DefinedFile } from '../../file/dto';
+import { ChangesetAware } from '../../plan-change/dto';
 import { Product, SecuredMethodologies } from '../../product/dto';
 import { SecuredInternPosition } from './intern-position.enum';
 import { SecuredEngagementStatus } from './status.enum';
@@ -31,6 +34,9 @@ export type AnyEngagement = MergeExclusive<
   InternshipEngagement
 >;
 
+const ChangesetAwareResource: Type<Resource & ChangesetAware> =
+  IntersectionType(Resource, ChangesetAware);
+
 @InterfaceType({
   resolveType: (val: AnyEngagement) => val.__typename,
   implements: [Resource],
@@ -38,7 +44,7 @@ export type AnyEngagement = MergeExclusive<
 /**
  * This should be used for GraphQL but never for TypeScript types.
  */
-class Engagement extends Resource {
+class Engagement extends ChangesetAwareResource {
   static readonly Props: string[] = keysOf<Engagement>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Engagement>>();
 
@@ -111,7 +117,7 @@ class Engagement extends Resource {
 export { Engagement as IEngagement, AnyEngagement as Engagement };
 
 @ObjectType({
-  implements: [Engagement],
+  implements: [Engagement, ChangesetAware],
 })
 export class LanguageEngagement extends Engagement {
   static readonly Props = keysOf<LanguageEngagement>();
@@ -144,7 +150,7 @@ export class LanguageEngagement extends Engagement {
 }
 
 @ObjectType({
-  implements: [Engagement],
+  implements: [Engagement, ChangesetAware],
 })
 export class InternshipEngagement extends Engagement {
   static readonly Props = keysOf<InternshipEngagement>();

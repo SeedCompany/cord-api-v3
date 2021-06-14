@@ -445,8 +445,8 @@ export class EngagementRules {
           node('engagement', 'Engagement', { id }),
           relation('out', '', 'status', { active: false }),
           node('status', 'Property'),
-          relation('in', '', 'change', { active: true }),
-          node('planChange', 'PlanChange', { id: changeset }),
+          relation('in', '', 'changeset', { active: true }),
+          node('', 'Changeset', { id: changeset }),
         ])
         .raw('return status.value as status')
         .asResult<{ status: EngagementStatus }>()
@@ -499,8 +499,8 @@ export class EngagementRules {
           node('project', 'Project', { id: projectId }),
           relation('out', '', 'step', { active: false }),
           node('step', 'Property'),
-          relation('in', '', 'change', { active: true }),
-          node('planChange', 'PlanChange', { id: changeset }),
+          relation('in', '', 'changeset', { active: true }),
+          node('', 'Changeset', { id: changeset }),
         ])
         .raw('return step.value as step')
         .asResult<{ step: ProjectStep }>()

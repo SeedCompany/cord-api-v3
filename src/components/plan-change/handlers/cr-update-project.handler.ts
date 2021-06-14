@@ -7,6 +7,10 @@ import {
   ILogger,
   Logger,
 } from '../../../core';
+import { collect } from '../../../core/database/query';
+import { EngagementService } from '../../engagement';
+import { LanguageEngagement } from '../../engagement/dto/engagement.dto';
+import { EngagementRepository } from '../../engagement/engagement.repository';
 import { UpdateProject } from '../../project';
 import { ProjectRepository } from '../../project/project.repository';
 import { ProjectService } from '../../project/project.service';
@@ -21,6 +25,8 @@ export class CRUpdateProject implements IEventHandler<SubscribedEvent> {
     private readonly db: DatabaseService,
     private readonly projectService: ProjectService,
     private readonly projectRepo: ProjectRepository,
+    private readonly engagementService: EngagementService,
+    private readonly engagementRepo: EngagementRepository,
     @Logger('plan-change:cr-update-project') private readonly logger: ILogger
   ) {}
 
@@ -88,23 +94,40 @@ export class CRUpdateProject implements IEventHandler<SubscribedEvent> {
             node('project', 'Project', { id: result.projectId }),
             relation('out', 'engagementRel', 'engagement', { active: false }),
             node('engagement', 'Engagement'),
-            relation('in', 'changeRel', 'change', { active: true }),
-            node('planChange'),
-          ])
-          .optionalMatch([
-            node('engagement'),
-            relation('out', 'propRel', { active: false }),
-            node('property', 'Property'),
-            relation('in', 'propChangeRel', 'change', { active: true }),
+            relation('in', 'changeRel', 'changeset', { active: true }),
             node('planChange'),
           ])
           .setValues({
             'engagementRel.active': true,
             'changeRel.active': false,
-            'propRel.active': true,
-            'propChangeRel.active': false,
           })
           .run();
+        const engagementsResult = await this.db
+          .query()
+          .match([
+            node('project', 'Project', { id: result.projectId }),
+            relation('out', '', 'engagement', { active: true }),
+            node('engagement', 'Engagement'),
+          ])
+          .return(collect('engagement.id', 'engagementIds'))
+          .asResult<{ engagementIds: ID[] }>()
+          .first();
+
+        engagementsResult?.engagementIds.map(async (id) => {
+          const object = await this.engagementService.readOne(
+            id,
+            event.session
+          );
+          const changes = await this.engagementRepo.getChangesetProps(
+            id,
+            planChange.id
+          );
+          await this.db.updateProperties({
+            type: LanguageEngagement,
+            object,
+            changes,
+          });
+        });
       }
     } catch (exception) {
       this.logger.error(`Could not update project in CR mode`, {

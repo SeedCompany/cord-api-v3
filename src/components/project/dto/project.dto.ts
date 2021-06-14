@@ -29,7 +29,7 @@ import { Location } from '../../location/dto';
 import { Partnership } from '../../partnership/dto';
 import { SecuredReportPeriod } from '../../periodic-report/dto';
 import { Pinnable } from '../../pin/dto';
-import { Changeable, PlanChange } from '../../plan-change/dto';
+import { ChangesetAware, PlanChange } from '../../plan-change/dto';
 import { Post } from '../../post/dto';
 import { Postable } from '../../post/postable/dto/postable.dto';
 import { ProjectMember } from '../project-member/dto';
@@ -39,11 +39,11 @@ import { ProjectType } from './type.enum';
 
 type AnyProject = MergeExclusive<TranslationProject, InternshipProject>;
 
-const PinnablePostableChangeableResource: Type<
-  Resource & Postable & Changeable & Pinnable
+const PinnablePostableChangesetAwareResource: Type<
+  Resource & Postable & ChangesetAware & Pinnable
 > = IntersectionType(
   Resource,
-  IntersectionType(Postable, IntersectionType(Changeable, Pinnable))
+  IntersectionType(Postable, IntersectionType(ChangesetAware, Pinnable))
 );
 
 @InterfaceType({
@@ -59,7 +59,7 @@ const PinnablePostableChangeableResource: Type<
   },
   implements: [Resource, Pinnable],
 })
-class Project extends PinnablePostableChangeableResource {
+class Project extends PinnablePostableChangesetAwareResource {
   static readonly Props: string[] = keysOf<Project>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Project>>();
   static readonly Relations = {
@@ -147,7 +147,7 @@ class Project extends PinnablePostableChangeableResource {
 export { Project as IProject, AnyProject as Project };
 
 @ObjectType({
-  implements: [Project, Resource, Pinnable, Postable, Changeable],
+  implements: [Project, Resource, Pinnable, Postable, ChangesetAware],
 })
 export class TranslationProject extends Project {
   static readonly Props = keysOf<TranslationProject>();
@@ -157,7 +157,7 @@ export class TranslationProject extends Project {
 }
 
 @ObjectType({
-  implements: [Project, Resource, Pinnable, Postable, Changeable],
+  implements: [Project, Resource, Pinnable, Postable, ChangesetAware],
 })
 export class InternshipProject extends Project {
   static readonly Props = keysOf<InternshipProject>();

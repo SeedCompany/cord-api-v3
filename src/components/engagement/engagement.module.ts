@@ -39,6 +39,6 @@ import { LanguageEngagementResolver } from './language-engagement.resolver';
     EngagementRepository,
     ...Object.values(handlers),
   ],
-  exports: [EngagementService],
+  exports: [EngagementService, EngagementRepository],
 })
 export class EngagementModule {}

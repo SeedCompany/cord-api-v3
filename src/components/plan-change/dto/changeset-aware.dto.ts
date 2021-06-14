@@ -9,7 +9,7 @@ import { ID, IdField } from '../../../common';
     returned.
   `,
 })
-export abstract class Changeable {
+export abstract class ChangesetAware {
   @IdField({
     description: "The object's ID",
   })

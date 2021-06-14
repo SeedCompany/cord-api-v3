@@ -872,8 +872,8 @@ export class ProjectRules {
           node('project', 'Project', { id }),
           relation('out', '', 'step', { active: false }),
           node('step', 'Property'),
-          relation('in', '', 'change', { active: true }),
-          node('planChange', 'PlanChange', { id: changeset }),
+          relation('in', '', 'changeset', { active: true }),
+          node('', 'Changeset', { id: changeset }),
         ])
         .raw('return step.value as step')
         .asResult<{ step: ProjectStep }>()

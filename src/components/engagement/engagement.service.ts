@@ -247,7 +247,6 @@ export class EngagementService {
     const result = await this.repo.readOne(id, session);
 =======
     const query = this.repo.readOne(id, session, changeset);
-
     const result = await query.first();
 
     if (!result) {
