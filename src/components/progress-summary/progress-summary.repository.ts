@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { Node, node, relation } from 'cypher-query-builder';
 import { ID } from '../../common';
 import { DtoRepository } from '../../core';
 import { ProgressReport } from '../periodic-report/dto';
@@ -16,9 +16,9 @@ export class ProgressSummaryRepository extends DtoRepository(ProgressSummary) {
         node('ps', 'ProgressSummary'),
       ])
       .return('ps as summary')
-      .asResult<{ summary: ProgressSummary }>()
+      .asResult<{ summary: Node<ProgressSummary> }>()
       .first();
-    return result?.summary;
+    return result?.summary.properties;
   }
 
   async save(report: ProgressReport, data: ProgressSummary) {
