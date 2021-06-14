@@ -108,7 +108,7 @@ export class ProjectResolver {
   }
 
   @ResolveField(() => SecuredChangesetList)
-  async changesets(
+  async planChanges(
     @AnonSession() session: Session,
     @Parent() project: Project,
     @Args({
