@@ -33,6 +33,6 @@ export class ChangesetListInput extends SortablePaginationInput<
 export class ChangesetListOutput extends PaginatedList(PlanChange) {}
 
 @ObjectType({
-  description: SecuredList.descriptionFor('changesets'),
+  description: SecuredList.descriptionFor('plan changes'),
 })
-export abstract class SecuredChangesetList extends SecuredList(PlanChange) {}
+export abstract class SecuredPlanChangeList extends SecuredList(PlanChange) {}

@@ -47,7 +47,7 @@ import {
 import { PlanChangeService } from '../plan-change';
 import {
   ChangesetListInput,
-  SecuredChangesetList,
+  SecuredPlanChangeList,
 } from '../plan-change/dto/changeset-list.dto';
 import { PlanChangeStatus } from '../plan-change/dto/plan-change-status.enum';
 import {
@@ -537,7 +537,7 @@ export class ProjectService {
     projectId: ID,
     input: ChangesetListInput,
     session: Session
-  ): Promise<SecuredChangesetList> {
+  ): Promise<SecuredPlanChangeList> {
     const result = await this.planChangeService.list(
       {
         ...input,

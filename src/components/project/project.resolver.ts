@@ -31,7 +31,7 @@ import { OrganizationService, SecuredOrganization } from '../organization';
 import { PartnershipListInput, SecuredPartnershipList } from '../partnership';
 import {
   ChangesetListInput,
-  SecuredChangesetList,
+  SecuredPlanChangeList,
 } from '../plan-change/dto/changeset-list.dto';
 import {
   CreateProjectInput,
@@ -107,7 +107,7 @@ export class ProjectResolver {
       : undefined;
   }
 
-  @ResolveField(() => SecuredChangesetList)
+  @ResolveField(() => SecuredPlanChangeList)
   async planChanges(
     @AnonSession() session: Session,
     @Parent() project: Project,
@@ -118,7 +118,7 @@ export class ProjectResolver {
       defaultValue: ChangesetListInput.defaultVal,
     })
     input: ChangesetListInput
-  ): Promise<SecuredChangesetList> {
+  ): Promise<SecuredPlanChangeList> {
     return this.projectService.listPlanChanges(project.id, input, session);
   }
 
