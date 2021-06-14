@@ -1,5 +1,5 @@
 import { node, relation } from 'cypher-query-builder';
-import { CalendarDate, ID, ServerException } from '../../../common';
+import { ID, ServerException } from '../../../common';
 import {
   DatabaseService,
   EventsHandler,
@@ -73,11 +73,6 @@ export class CRUpdateProject implements IEventHandler<SubscribedEvent> {
         const updateProject: UpdateProject = {
           ...changes,
           id: project.id,
-          mouStart: changes.mouStart as CalendarDate | undefined,
-          mouEnd: changes.mouEnd as CalendarDate | undefined,
-          estimatedSubmission: changes.estimatedSubmission as
-            | CalendarDate
-            | undefined,
         };
         await this.projectService.update(
           updateProject,

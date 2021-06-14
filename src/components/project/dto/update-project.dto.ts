@@ -28,30 +28,30 @@ export abstract class UpdateProject {
     description: 'A primary location ID',
     nullable: true,
   })
-  readonly primaryLocationId?: ID;
+  readonly primaryLocationId?: ID | null;
 
   @IdField({
     description: 'A marketing primary location ID',
     nullable: true,
   })
-  readonly marketingLocationId?: ID;
+  readonly marketingLocationId?: ID | null;
 
   @IdField({
     description: 'A field region ID',
     nullable: true,
   })
-  readonly fieldRegionId?: ID;
+  readonly fieldRegionId?: ID | null;
 
   @DateField({ nullable: true })
-  readonly mouStart?: CalendarDate;
+  readonly mouStart?: CalendarDate | null;
 
   @DateField({ nullable: true })
-  readonly mouEnd?: CalendarDate;
+  readonly mouEnd?: CalendarDate | null;
 
   readonly initialMouEnd?: CalendarDate | null;
 
   @DateField({ nullable: true })
-  readonly estimatedSubmission?: CalendarDate;
+  readonly estimatedSubmission?: CalendarDate | null;
 
   @Field(() => ProjectStep, { nullable: true })
   readonly step?: ProjectStep;
