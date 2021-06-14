@@ -7,7 +7,7 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import { ConfigService, ILogger, Logger, OnIndex } from '../../core';
+import { ILogger, Logger, OnIndex } from '../../core';
 import {
   parseBaseNodeProperties,
   runListQuery,
@@ -26,7 +26,6 @@ import { FundingAccountRepository } from './funding-account.repository';
 export class FundingAccountService {
   constructor(
     @Logger('funding-account:service') private readonly logger: ILogger,
-    private readonly config: ConfigService,
     private readonly authorizationService: AuthorizationService,
     private readonly repo: FundingAccountRepository
   ) {}

@@ -7,7 +7,7 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import { DatabaseService, ILogger, Logger } from '../../core';
+import { ILogger, Logger } from '../../core';
 import {
   AddState,
   ChangeCurrentState,
@@ -26,7 +26,6 @@ import { WorkflowRepository } from './workflow.repository';
 @Injectable()
 export class WorkflowService {
   constructor(
-    private readonly db: DatabaseService,
     @Logger('workflow.service') private readonly logger: ILogger,
     private readonly repo: WorkflowRepository
   ) {}

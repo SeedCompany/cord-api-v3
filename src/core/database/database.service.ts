@@ -30,7 +30,6 @@ import {
 } from '../../common';
 import { ILogger, Logger, ServiceUnavailableError, UniquenessError } from '..';
 import { AbortError, retry, RetryOptions } from '../../common/retry';
-import { ConfigService } from '../config/config.service';
 import { DbChanges } from './changes';
 import { deleteBaseNode } from './query';
 import { determineSortValue } from './query.helpers';
@@ -93,7 +92,6 @@ export interface ServerInfo {
 export class DatabaseService {
   constructor(
     private readonly db: Connection,
-    private readonly config: ConfigService,
     @Logger('database:service') private readonly logger: ILogger
   ) {}
 

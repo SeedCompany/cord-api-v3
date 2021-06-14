@@ -8,7 +8,7 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import { ConfigService, ILogger, Logger, OnIndex } from '../../core';
+import { ILogger, Logger, OnIndex } from '../../core';
 import {
   parseBaseNodeProperties,
   parsePropList,
@@ -30,7 +30,6 @@ import { PartnerRepository } from './partner.repository';
 export class PartnerService {
   constructor(
     @Logger('partner:service') private readonly logger: ILogger,
-    private readonly config: ConfigService,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
     private readonly repo: PartnerRepository

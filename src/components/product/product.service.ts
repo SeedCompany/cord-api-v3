@@ -14,7 +14,6 @@ import {
   UnauthorizedException,
 } from '../../common';
 import {
-  ConfigService,
   createBaseNode,
   ILogger,
   Logger,
@@ -51,7 +50,6 @@ import { ProductRepository } from './product.repository';
 @Injectable()
 export class ProductService {
   constructor(
-    private readonly config: ConfigService,
     private readonly film: FilmService,
     private readonly story: StoryService,
     private readonly song: SongService,

@@ -1,13 +1,12 @@
 import { sortBy } from 'lodash';
 import { ID, Session } from '../../common';
-import { DatabaseService, ILogger, Logger } from '../../core';
+import { ILogger, Logger } from '../../core';
 import { ScriptureRange, ScriptureRangeInput } from './dto';
 import { ScriptureReferenceRepository } from './scripture-reference.repository';
 
 export class ScriptureReferenceService {
   constructor(
     @Logger('scripture-reference:service') private readonly logger: ILogger,
-    private readonly db: DatabaseService,
     private readonly repo: ScriptureReferenceRepository
   ) {}
 

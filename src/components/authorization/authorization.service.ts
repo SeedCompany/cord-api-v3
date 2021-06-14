@@ -25,7 +25,7 @@ import {
   UnauthorizedException,
 } from '../../common';
 import { retry } from '../../common/retry';
-import { ConfigService, ILogger, Logger } from '../../core';
+import { ILogger, Logger } from '../../core';
 import { ChangesOf, isRelation } from '../../core/database/changes';
 import {
   DbPropsOfDto,
@@ -55,7 +55,6 @@ export type PermissionsOf<T> = Record<keyof T, Permission>;
 export class AuthorizationService {
   constructor(
     private readonly dbConn: Connection,
-    private readonly config: ConfigService,
     private readonly repo: AuthorizationRepository,
     @Logger('authorization:service') private readonly logger: ILogger
   ) {}

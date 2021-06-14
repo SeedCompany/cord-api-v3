@@ -13,8 +13,6 @@ import {
   Session,
 } from '../../common';
 import {
-  ConfigService,
-  DatabaseService,
   ILogger,
   Logger,
   OnIndex,
@@ -106,8 +104,6 @@ export class UserService {
     @Inject(forwardRef(() => PartnerService))
     private readonly partners: PartnerService,
     private readonly unavailabilities: UnavailabilityService,
-    private readonly db: DatabaseService,
-    private readonly config: ConfigService,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
     private readonly locationService: LocationService,

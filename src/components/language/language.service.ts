@@ -13,13 +13,7 @@ import {
   simpleSwitch,
   UnauthorizedException,
 } from '../../common';
-import {
-  ConfigService,
-  ILogger,
-  Logger,
-  OnIndex,
-  UniquenessError,
-} from '../../core';
+import { ILogger, Logger, OnIndex, UniquenessError } from '../../core';
 import {
   parseBaseNodeProperties,
   parsePropList,
@@ -52,8 +46,6 @@ import { LanguageRepository } from './language.repository';
 @Injectable()
 export class LanguageService {
   constructor(
-    // private readonly db: DatabaseService,
-    private readonly config: ConfigService,
     private readonly ethnologueLanguageService: EthnologueLanguageService,
     private readonly locationService: LocationService,
     private readonly projectService: ProjectService,

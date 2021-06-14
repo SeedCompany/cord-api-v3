@@ -7,7 +7,7 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import { ConfigService, ILogger, Logger, Property } from '../../core';
+import { ILogger, Logger, Property } from '../../core';
 import { runListQuery } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { CeremonyRepository } from './ceremony.repository';
@@ -22,7 +22,6 @@ import {
 @Injectable()
 export class CeremonyService {
   constructor(
-    private readonly config: ConfigService,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
     private readonly ceremonyRepo: CeremonyRepository,

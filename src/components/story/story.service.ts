@@ -7,7 +7,7 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import { ConfigService, ILogger, Logger, OnIndex } from '../../core';
+import { ILogger, Logger, OnIndex } from '../../core';
 import {
   parseBaseNodeProperties,
   runListQuery,
@@ -27,7 +27,6 @@ import { StoryRepository } from './story.repository';
 export class StoryService {
   constructor(
     @Logger('story:service') private readonly logger: ILogger,
-    private readonly config: ConfigService,
     private readonly scriptureRefService: ScriptureReferenceService,
     private readonly authorizationService: AuthorizationService,
     private readonly repo: StoryRepository
