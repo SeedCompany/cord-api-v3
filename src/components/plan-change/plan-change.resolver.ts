@@ -1,16 +1,11 @@
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
+import { Args, Mutation, Resolver } from '@nestjs/graphql';
+import { ID, IdArg, LoggedInSession, Session } from '../../common';
 import {
   CreatePlanChangeInput,
   CreatePlanChangeOutput,
-  PlanChange,
   UpdatePlanChangeInput,
   UpdatePlanChangeOutput,
 } from './dto';
-import {
-  ChangesetListInput,
-  ChangesetListOutput,
-} from './dto/changeset-list.dto';
 import { PlanChangeService } from './plan-change.service';
 
 @Resolver()
@@ -26,31 +21,6 @@ export class PlanChangeResolver {
   ): Promise<CreatePlanChangeOutput> {
     const planChange = await this.service.create(input, session);
     return { planChange };
-  }
-
-  @Query(() => PlanChange, {
-    description: 'Look up a planChange by ID',
-  })
-  async planChange(
-    @AnonSession() session: Session,
-    @IdArg() id: ID
-  ): Promise<PlanChange> {
-    return await this.service.readOne(id, session);
-  }
-
-  @Query(() => ChangesetListOutput, {
-    description: 'Look up planChanges',
-  })
-  async planChanges(
-    @AnonSession() session: Session,
-    @Args({
-      name: 'input',
-      type: () => ChangesetListInput,
-      defaultValue: ChangesetListInput.defaultVal,
-    })
-    input: ChangesetListInput
-  ): Promise<ChangesetListOutput> {
-    return this.service.list(input, session);
   }
 
   @Mutation(() => UpdatePlanChangeOutput, {
