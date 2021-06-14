@@ -1,6 +1,6 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-import { CalendarDate, isValidId } from '../../src/common';
+import { CalendarDate, ID, isValidId } from '../../src/common';
 import {
   CreateProject,
   Project,
@@ -11,6 +11,83 @@ import { TestApp } from './create-app';
 import { createRegion } from './create-region';
 import { fragments } from './fragments';
 import { Raw } from './raw.type';
+import { SecuredList } from './sensitivity';
+
+export async function readOneProjectOtherLocationsItems(
+  app: TestApp,
+  id: string
+): Promise<SecuredList<Location>> {
+  const result = await app.graphql.query(
+    gql`
+      query {
+        project(id: "${id}") {
+          ...project
+        }
+      }
+      ${fragments.project}
+    `
+  );
+
+  const actual = result.project.otherLocations.items;
+  expect(actual).toBeTruthy();
+  return actual;
+}
+export async function readOneProjectPrimaryLocation(
+  app: TestApp,
+  id: string
+): Promise<SecuredList<Location>> {
+  const result = await app.graphql.query(
+    gql`
+      query {
+        project(id: "${id}") {
+          ...project
+        }
+      }
+      ${fragments.project}
+    `
+  );
+
+  const actual = result.project.primaryLocation;
+  expect(actual).toBeTruthy();
+  return actual;
+}
+
+export async function readOneProjectOtherLocations(
+  app: TestApp,
+  id: string
+): Promise<SecuredList<Location>> {
+  const result = await app.graphql.query(
+    gql`
+      query {
+        project(id: "${id}") {
+          ...project
+        }
+      }
+      ${fragments.project}
+    `
+  );
+
+  const actual = result.project.otherLocations;
+  expect(actual).toBeTruthy();
+  return actual;
+}
+export async function readOneProject(app: TestApp, id: ID) {
+  const result = await app.graphql.query(
+    gql`
+      query {
+        project(id: "${id}") {
+          ...project
+        }
+      }
+      ${fragments.project}
+    `
+  );
+
+  const actual = result.project;
+  expect(actual).toBeTruthy();
+  expect(actual.id).toEqual(id);
+  return actual;
+}
 
 export async function createProject(
   app: TestApp,

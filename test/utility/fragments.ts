@@ -469,6 +469,11 @@ export const project = gql`
       canRead
       canEdit
     }
+    stepChangedAt {
+      value
+      canRead
+      canEdit
+    }
     status
     pinned
     fieldRegion {
@@ -480,8 +485,59 @@ export const project = gql`
       }
     }
     primaryLocation {
+      canRead
+      canEdit
       value {
         id
+      }
+    }
+    otherLocations {
+      canRead
+      canCreate
+      items {
+        id
+        createdAt
+        name {
+          value
+          canEdit
+          canRead
+        }
+        type {
+          value
+          canEdit
+          canRead
+        }
+        isoAlpha3 {
+          value
+          canEdit
+          canRead
+        }
+        fundingAccount {
+          value {
+            id
+            name {
+              value
+              canRead
+              canEdit
+            }
+            accountNumber {
+              value
+              canRead
+              canEdit
+            }
+            createdAt
+          }
+          canEdit
+          canRead
+        }
+        defaultFieldRegion {
+          value {
+            id
+            name {
+              value
+            }
+          }
+        }
       }
     }
     mouStart {
@@ -508,6 +564,11 @@ export const project = gql`
       value
       canRead
       canEdit
+    }
+    financialReportReceivedAt {
+      canRead
+      canEdit
+      value
     }
     engagements {
       canRead

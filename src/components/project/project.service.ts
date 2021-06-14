@@ -476,10 +476,16 @@ export class ProjectService {
       sessionOrUserId,
       project.scope
     );
-
     return {
       ...project,
       ...securedProps,
+      primaryLocation: {
+        value: securedProps.primaryLocation.canRead
+          ? securedProps.primaryLocation.value
+          : null,
+        canRead: securedProps.primaryLocation.canRead,
+        canEdit: securedProps.primaryLocation.canEdit,
+      },
       canDelete: await this.repo.checkDeletePermission(
         project.id,
         sessionOrUserId
@@ -760,13 +766,13 @@ export class ProjectService {
   }
 
   async listOtherLocations(
-    projectId: ID,
+    project: Project,
     input: LocationListInput,
     session: Session
   ): Promise<SecuredLocationList> {
-    return await this.locationService.listLocationsFromNode(
-      'Project',
-      projectId,
+    return await this.locationService.listLocationForResource(
+      IProject,
+      project,
       'otherLocations',
       input,
       session
