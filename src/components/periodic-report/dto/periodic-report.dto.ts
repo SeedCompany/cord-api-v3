@@ -25,7 +25,7 @@ type AnyPeriodicReport = MergeExclusive<
       return NarrativeReport;
     }
     if (val.type === ReportType.Progress) {
-      return FinancialReport;
+      return ProgressReport;
     }
 
     throw new ServerException('Could not resolve periodic report type');
