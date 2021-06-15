@@ -288,7 +288,8 @@ export class PartnershipService {
 
   async list(
     partialInput: Partial<PartnershipListInput>,
-    session: Session
+    session: Session,
+    changeset?: ID
   ): Promise<PartnershipListOutput> {
     const input = {
       ...PartnershipListInput.defaultVal,
@@ -297,7 +298,9 @@ export class PartnershipService {
 
     const query = this.repo.list(input, session);
 
-    return await runListQuery(query, input, (id) => this.readOne(id, session));
+    return await runListQuery(query, input, (id) =>
+      this.readOne(id, session, changeset)
+    );
   }
 
   protected verifyFinancialReportingType(

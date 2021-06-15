@@ -1,8 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
 import { entries } from 'lodash';
-import { DateTime } from 'luxon';
-import { MergeExclusive } from 'type-fest';
 import {
   DuplicateException,
   ID,
@@ -102,7 +99,10 @@ export class EngagementService {
       userId: session.userId,
     });
 
-    const { id, pnpId } = await this.repo.createLanguageEngagement(input, changeset);
+    const { id, pnpId } = await this.repo.createLanguageEngagement(
+      input,
+      changeset
+    );
 
     await this.files.createDefinedFile(
       pnpId,
@@ -160,7 +160,8 @@ export class EngagementService {
     let growthPlanId;
     try {
       ({ id, growthPlanId } = await this.repo.createInternshipEngagement(
-        input, changeset
+        input,
+        changeset
       ));
     } catch (e) {
       if (!(e instanceof NotFoundException)) {
@@ -243,16 +244,7 @@ export class EngagementService {
     if (!id) {
       throw new NotFoundException('no id given', 'engagement.id');
     }
-<<<<<<< HEAD
-    const result = await this.repo.readOne(id, session);
-=======
-    const query = this.repo.readOne(id, session, changeset);
-    const result = await query.first();
-
-    if (!result) {
-      throw new NotFoundException('could not find Engagement', 'engagement.id');
-    }
->>>>>>> Implement changeset
+    const result = await this.repo.readOne(id, session, changeset);
 
     let props = {
       __typename: result.__typename,
@@ -473,24 +465,11 @@ export class EngagementService {
         await this.repo.updateCountryOfOrigin(input.id, countryOfOriginId);
       }
 
-<<<<<<< HEAD
-      await this.repo.updateInternshipProperties(object, simpleChanges);
-=======
       await this.repo.updateInternshipProperties(
         object,
         simpleChanges,
         changeset
       );
-      // update property node labels
-      Object.keys(input).map(async (ele) => {
-        if (ele === 'position') {
-          await this.repo.addLabelsToNodes('position', input);
-        }
-        if (ele === 'methodologies') {
-          await this.repo.addLabelsToNodes('methodologies', input);
-        }
-      });
->>>>>>> Implement changeset
     } catch (exception) {
       this.logger.warning('Failed to update InternshipEngagement', {
         exception,
@@ -553,18 +532,11 @@ export class EngagementService {
   // LIST ///////////////////////////////////////////////////////////
 
   async list(
-<<<<<<< HEAD
     input: EngagementListInput,
-    session: Session
-  ): Promise<EngagementListOutput> {
-    const query = this.repo.list(input, session);
-=======
-    { filter, ...input }: EngagementListInput,
     session: Session,
     changeset?: ID
   ): Promise<EngagementListOutput> {
-    const query = this.repo.list(session, { filter, ...input }, changeset);
->>>>>>> Implement changeset
+    const query = this.repo.list(input, session, changeset);
 
     const engagements = await runListQuery(query, input, (id) =>
       this.readOne(id, session, changeset)

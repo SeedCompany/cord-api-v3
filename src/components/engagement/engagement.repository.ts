@@ -29,6 +29,7 @@ import { ProjectType } from '../project';
 import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,
+  Engagement,
   EngagementListInput,
   EngagementStatus,
   IEngagement,
@@ -53,8 +54,8 @@ export class EngagementRepository extends CommonRepository {
     return !!result;
   }
 
-  readOne(id: ID, session: Session, changeset?: ID) {
-    return this.db
+  async readOne(id: ID, session: Session, changeset?: ID) {
+    const query = this.db
       .query()
       .match(
         [
@@ -207,7 +208,10 @@ export class EngagementRepository extends CommonRepository {
       .apply(await createNode(LanguageEngagement, { initialProps }))
       .apply(
         createRelationships(LanguageEngagement, {
-          in: { engagement: ['Project', projectId] },
+          in: {
+            engagement: ['Project', projectId],
+            changeset: ['Changeset', changeset],
+          },
           out: { language: ['Language', languageId] },
         })
       )
@@ -251,7 +255,10 @@ export class EngagementRepository extends CommonRepository {
       .apply(await createNode(InternshipEngagement, { initialProps }))
       .apply(
         createRelationships(InternshipEngagement, {
-          in: { engagement: ['Project', projectId] },
+          in: {
+            engagement: ['Project', projectId],
+            changeset: ['Changeset', changeset],
+          },
           out: {
             intern: ['User', internId],
             mentor: ['User', mentorId],
@@ -373,8 +380,8 @@ export class EngagementRepository extends CommonRepository {
   // LIST ///////////////////////////////////////////////////////////
 
   list(
-    session: Session,
     { filter, ...input }: EngagementListInput,
+    session: Session,
     changeset?: ID
   ) {
     let label = 'Engagement';

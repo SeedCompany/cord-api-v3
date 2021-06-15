@@ -42,6 +42,11 @@ import { ProjectService } from './project.service';
     ProjectRepository,
     ...Object.values(handlers),
   ],
-  exports: [ProjectService, ProjectMemberModule, ProjectRules],
+  exports: [
+    ProjectService,
+    ProjectMemberModule,
+    ProjectRules,
+    ProjectRepository,
+  ],
 })
 export class ProjectModule {}

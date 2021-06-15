@@ -173,7 +173,8 @@ export class BudgetService {
       await this.budgetRecordsRepo.connectToBudget(
         recordId,
         budgetId,
-        createdAt
+        createdAt,
+        changeset
       );
       await this.budgetRecordsRepo.connectToOrganization(
         recordId,
@@ -193,7 +194,7 @@ export class BudgetService {
       });
 
       const budgetRecord = await this.readOneRecord(
-        result.id,
+        recordId,
         session,
         changeset
       );
@@ -274,7 +275,7 @@ export class BudgetService {
       userId: session.userId,
     });
 
-    const result = await this.budgetRecordsRepo.readOne(id, session);
+    const result = await this.budgetRecordsRepo.readOne(id, session, changeset);
 
     const securedProps = await this.authorizationService.secureProperties(
       BudgetRecord,
@@ -407,7 +408,8 @@ export class BudgetService {
 
   async list(
     partialInput: Partial<BudgetListInput>,
-    session: Session
+    session: Session,
+    changeset?: ID
   ): Promise<BudgetListOutput> {
     const input = {
       ...BudgetListInput.defaultVal,
@@ -415,7 +417,9 @@ export class BudgetService {
     };
     const query = this.budgetRepo.list(input, session);
 
-    return await runListQuery(query, input, (id) => this.readOne(id, session));
+    return await runListQuery(query, input, (id) =>
+      this.readOne(id, session, changeset)
+    );
   }
 
   async listNoSecGroups(
@@ -433,9 +437,10 @@ export class BudgetService {
 
   async listRecords(
     input: BudgetRecordListInput,
-    session: Session
+    session: Session,
+    changeset?: ID
   ): Promise<BudgetRecordListOutput> {
-    const query = this.budgetRecordsRepo.list(input, session);
+    const query = this.budgetRecordsRepo.list(input, session, changeset);
 
     return await runListQuery(query, input, (id) =>
       this.readOneRecord(id, session, changeset)

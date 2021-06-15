@@ -40,15 +40,31 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
     return result.id;
   }
 
-  async connectToBudget(recordId: ID, budgetId: ID, createdAt: DateTime) {
+  async connectToBudget(
+    recordId: ID,
+    budgetId: ID,
+    createdAt: DateTime,
+    changeset?: ID
+  ) {
     await this.db
       .query()
       .match([node('budget', 'Budget', { id: budgetId })])
       .match([node('br', 'BudgetRecord', { id: recordId })])
+      .apply((q) =>
+        changeset
+          ? q.match([node('changesetNode', 'Changeset', { id: changeset })])
+          : q
+      )
       .create([
         node('budget'),
-        relation('out', '', 'record', { active: true, createdAt }),
+        relation('out', '', 'record', { active: !changeset, createdAt }),
         node('br'),
+        ...(changeset
+          ? [
+              relation('in', '', 'changeset', { active: true }),
+              node('changesetNode'),
+            ]
+          : []),
       ])
       .return('br')
       .run();
@@ -96,7 +112,7 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
     return !!result;
   }
 
-  readOne(id: ID, session: Session, changeset?: ID) {
+  async readOne(id: ID, session: Session, changeset?: ID) {
     const query = this.db
       .query()
       .match([
@@ -137,7 +153,7 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
     return result;
   }
 
-  list(input: BudgetRecordListInput, session: Session) {
+  list(input: BudgetRecordListInput, session: Session, changeset?: ID) {
     return this.db
       .query()
       .match([
