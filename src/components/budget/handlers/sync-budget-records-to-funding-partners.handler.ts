@@ -6,6 +6,7 @@ import {
   ID,
   NotFoundException,
   Secured,
+  Sensitivity,
   Session,
   UnauthorizedException,
 } from '../../../common';
@@ -16,6 +17,7 @@ import {
   ILogger,
   Logger,
 } from '../../../core';
+import { determineSensitivity } from '../../../core/database/query';
 import { PartnerType } from '../../partner';
 import { PartnershipService } from '../../partnership';
 import { Partnership } from '../../partnership/dto';
@@ -74,11 +76,14 @@ export class SyncBudgetRecordsToFundingPartners
       return;
     }
 
-    const projectId = await this.determineProjectId(event);
+    const projectIdAndSensitivity = await this.determineProjectId(event);
 
     // Fetch budget & only continue if it is pending
     const projectsCurrentBudget = await this.projects.currentBudget(
-      projectId,
+      {
+        id: projectIdAndSensitivity.id,
+        sensitivity: projectIdAndSensitivity.sensitivity,
+      },
       event.session
     );
     const budget = readSecured(projectsCurrentBudget, 'budget');
@@ -96,12 +101,16 @@ export class SyncBudgetRecordsToFundingPartners
 
   private async determineProjectId(event: SubscribedEvent) {
     if (event instanceof ProjectUpdatedEvent) {
-      return event.updated.id;
+      return { id: event.updated.id, sensitivity: event.updated.sensitivity };
     }
     if (event instanceof PartnershipUpdatedEvent) {
-      return await this.getProjectIdFromPartnership(event.updated);
+      return await this.getProjectIdAndSensitivityFromPartnership(
+        event.updated
+      );
     }
-    return await this.getProjectIdFromPartnership(event.partnership);
+    return await this.getProjectIdAndSensitivityFromPartnership(
+      event.partnership
+    );
   }
 
   private async determinePartnerships(event: SubscribedEvent) {
@@ -217,7 +226,7 @@ export class SyncBudgetRecordsToFundingPartners
     return result.id;
   }
 
-  private async getProjectIdFromPartnership({ id }: Partnership) {
+  private async getProjectIdAndSensitivityFromPartnership({ id }: Partnership) {
     const result = await this.db
       .query()
       .match([
@@ -225,13 +234,35 @@ export class SyncBudgetRecordsToFundingPartners
         relation('either', '', 'partnership', { active: true }),
         node('project', 'Project'),
       ])
-      .return('project.id as id')
-      .asResult<{ id: ID }>()
+      .subQuery((sub) =>
+        sub
+          .with('project')
+          .match([
+            node('project'),
+            relation('out', '', 'sensitivity', { active: true }),
+            node('projSens', 'Property'),
+          ])
+          .optionalMatch([
+            node('project'),
+            relation('out', '', 'engagement', { active: true }),
+            node('', 'LanguageEngagement'),
+            relation('out', '', 'language', { active: true }),
+            node('', 'Language'),
+            relation('out', '', 'sensitivity', { active: true }),
+            node('langSens', 'Property'),
+          ])
+          .return([
+            `${determineSensitivity} as sensitivity`,
+            'project.id as id',
+          ])
+      )
+      .return('id, sensitivity')
+      .asResult<{ id: ID; sensitivity: Sensitivity }>()
       .first();
     if (!result) {
       throw new NotFoundException("Unable to find partnership's project");
     }
-    return result.id;
+    return { id: result.id, sensitivity: result.sensitivity };
   }
 }
 

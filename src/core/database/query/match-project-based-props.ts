@@ -63,7 +63,7 @@ const rankSens = (variable: string) => oneLine`
   end
 `;
 
-const determineSensitivity = `
+export const determineSensitivity = `
   case langSens
     when null then projSens.value
     else reduce(
