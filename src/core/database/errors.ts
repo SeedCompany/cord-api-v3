@@ -135,6 +135,8 @@ export const createBetterError = (e: Error) => {
   if (!isNeo4jError(e)) {
     return e;
   }
+  e.message ??= ''; // I've seen message is null
+
   if (e.code === ServiceUnavailableError.code) {
     return ServiceUnavailableError.fromNeo(e);
   }
