@@ -19,7 +19,7 @@ export class ChangesetRepository extends DtoRepository(Changeset) {
       .apply(matchProps())
       .return([
         'props',
-        `[l in labels(node) where l not in ['Changeset', 'BaseNode'][0] as type`,
+        `[l in labels(node) where not l in ['Changeset', 'BaseNode']][0] as type`,
       ])
       .asResult<{
         props: DbPropsOfDto<Changeset, true>;
