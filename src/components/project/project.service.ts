@@ -783,21 +783,7 @@ export class ProjectService {
     { id, sensitivity }: Pick<Project, 'id' | 'sensitivity'>,
     session: Session
   ): Promise<SecuredBudget> {
-    const budgets = await this.budgetService.list(
-      {
-        filter: {
-          projectId: id,
-        },
-      },
-      session
-    );
-
-    const current = budgets.items.find(
-      (b) => b.status === BudgetStatus.Current
-    );
-
-    // #574 - if no current budget, then fallback to the first pending budget
-    const budgetToReturn = current ?? budgets.items[0];
+    let budgetToReturn;
 
     const membershipRoles = await this.getMembershipRoles(id, session);
     const permsOfProject = await this.authorizationService.getPermissions({
@@ -807,13 +793,31 @@ export class ProjectService {
       dtoOrSensitivity: sensitivity,
     });
 
+    if (permsOfProject.budget.canRead) {
+      const budgets = await this.budgetService.list(
+        {
+          filter: {
+            projectId: id,
+          },
+        },
+        session
+      );
+
+      const current = budgets.items.find(
+        (b) => b.status === BudgetStatus.Current
+      );
+
+      // #574 - if no current budget, then fallback to the first pending budget
+      budgetToReturn = current ?? budgets.items[0];
+    }
+
     return {
-      value: permsOfProject.budget.canRead ? budgetToReturn : undefined,
+      value: budgetToReturn,
       canRead: permsOfProject.budget.canRead,
       canEdit: session.roles.includes('global:Administrator')
         ? true
         : permsOfProject.budget.canEdit &&
-          budgetToReturn.status === BudgetStatus.Pending,
+          budgetToReturn?.status === BudgetStatus.Pending,
     };
   }
 
