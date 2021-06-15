@@ -780,16 +780,13 @@ export class ProjectService {
   }
 
   async currentBudget(
-    projectOrProjectId: Project | ID,
+    { id, sensitivity }: Pick<Project, 'id' | 'sensitivity'>,
     session: Session
   ): Promise<SecuredBudget> {
-    const projectId = isIdLike(projectOrProjectId)
-      ? projectOrProjectId
-      : projectOrProjectId.id;
     const budgets = await this.budgetService.list(
       {
         filter: {
-          projectId: projectId,
+          projectId: id,
         },
       },
       session
@@ -802,15 +799,16 @@ export class ProjectService {
     // #574 - if no current budget, then fallback to the first pending budget
     const budgetToReturn = current ?? budgets.items[0];
 
-    const membershipRoles = await this.getMembershipRoles(projectId, session);
+    const membershipRoles = await this.getMembershipRoles(id, session);
     const permsOfProject = await this.authorizationService.getPermissions({
       resource: IProject,
       sessionOrUserId: session,
       otherRoles: membershipRoles,
+      dtoOrSensitivity: sensitivity,
     });
 
     return {
-      value: budgetToReturn,
+      value: permsOfProject.budget.canRead ? budgetToReturn : undefined,
       canRead: permsOfProject.budget.canRead,
       canEdit: session.roles.includes('global:Administrator')
         ? true
