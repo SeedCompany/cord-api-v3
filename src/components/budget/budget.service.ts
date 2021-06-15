@@ -225,7 +225,7 @@ export class BudgetService {
       resource: Budget,
       sessionOrUserId: session,
       otherRoles: result.scopedRoles,
-      dto: result.props as ResourceShape<Budget>['prototype'],
+      dtoOrSensitivity: result.props as ResourceShape<Budget>['prototype'],
     });
 
     const securedProps = parseSecuredProperties(

@@ -47,6 +47,23 @@ export const permissionDefaults = {
   canEdit: false,
 };
 
+interface DtoWithSensitiveShape {
+  sensitivity: Sensitivity;
+}
+
+function hasSensitivityProp(object: any): object is DtoWithSensitiveShape {
+  if (object === undefined) {
+    return false;
+  }
+  if (
+    object === Sensitivity.High ||
+    object === Sensitivity.Low ||
+    object === Sensitivity.Medium
+  ) {
+    return false;
+  }
+  return 'sensitivity' in object;
+}
 export type Permission = typeof permissionDefaults;
 
 export type PermissionsOf<T> = Record<keyof T, Permission>;
@@ -114,7 +131,7 @@ export class AuthorizationService {
       resource,
       sessionOrUserId,
       otherRoles,
-      dto: props,
+      dtoOrSensitivity: props,
     });
     // @ts-expect-error not matching for some reason but declared return type is correct
     return parseSecuredProperties(props, permissions, resource.SecuredProps);
@@ -186,17 +203,20 @@ export class AuthorizationService {
     resource,
     sessionOrUserId,
     otherRoles = [],
-    dto,
+    dtoOrSensitivity,
   }: {
     resource: Resource;
     sessionOrUserId: Session | ID;
     otherRoles?: ScopedRole[];
-    dto?: Resource['prototype'];
+    dtoOrSensitivity?: Resource['prototype'] | Sensitivity;
   }): Promise<PermissionsOf<SecuredResource<Resource>>> {
     const userGlobalRoles = isIdLike(sessionOrUserId)
       ? await this.getUserGlobalRoles(sessionOrUserId)
       : sessionOrUserId.roles;
     const roles = [...userGlobalRoles, ...otherRoles];
+    const sensitivity = hasSensitivityProp(dtoOrSensitivity)
+      ? dtoOrSensitivity.sensitivity
+      : dtoOrSensitivity;
 
     // convert resource to a list of resource names to check
     const resources = getParentTypes(resource)
@@ -233,7 +253,7 @@ export class AuthorizationService {
               propPerm,
               resource,
               key,
-              dto?.sensitivity
+              sensitivity
             )
               ? propPerm
               : {};
