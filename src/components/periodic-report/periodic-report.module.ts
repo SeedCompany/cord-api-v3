@@ -25,6 +25,6 @@ import { PeriodicReportService } from './periodic-report.service';
     PeriodicReportRepository,
     ...Object.values(handlers),
   ],
-  exports: [PeriodicReportService, PeriodicReportRepository],
+  exports: [PeriodicReportService],
 })
 export class PeriodicReportModule {}

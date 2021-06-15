@@ -33,6 +33,6 @@ import { SearchService } from './search.service';
     FundingAccountModule,
   ],
   providers: [SearchResolver, SearchService, SearchRepository],
-  exports: [SearchService, SearchRepository],
+  exports: [SearchService],
 })
 export class SearchModule {}

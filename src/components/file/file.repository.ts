@@ -14,7 +14,6 @@ import {
   UnauthorizedException,
 } from '../../common';
 import {
-  ConfigService,
   createBaseNode,
   DatabaseService,
   ILogger,
@@ -48,7 +47,6 @@ import {
 export class FileRepository {
   constructor(
     private readonly db: DatabaseService,
-    private readonly config: ConfigService,
     @Logger('file:repository') private readonly logger: ILogger
   ) {}
 

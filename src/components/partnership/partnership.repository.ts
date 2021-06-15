@@ -1,8 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
-import { Dictionary } from 'lodash';
+import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { ID, Order, Session } from '../../common';
+import {
+  generateId,
+  ID,
+  NotFoundException,
+  ServerException,
+  Session,
+} from '../../common';
 import {
   createBaseNode,
   DtoRepository,
@@ -17,50 +22,115 @@ import {
 } from '../../core/database/query';
 import { DbPropsOfDto } from '../../core/database/results';
 import { ScopedRole } from '../authorization';
-import { Partnership, PartnershipFilters } from './dto';
+import {
+  CreatePartnership,
+  Partnership,
+  PartnershipAgreementStatus,
+  PartnershipListInput,
+} from './dto';
 
 @Injectable()
 export class PartnershipRepository extends DtoRepository(Partnership) {
-  create(partnershipId: ID, session: Session, secureProps: Property[]) {
-    return this.db
+  async create(input: CreatePartnership, session: Session) {
+    const partnershipId = await generateId();
+    const mouId = await generateId();
+    const agreementId = await generateId();
+
+    const props: Property[] = [
+      {
+        key: 'agreementStatus',
+        value: input.agreementStatus || PartnershipAgreementStatus.NotAttached,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'agreement',
+        value: agreementId,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'mou',
+        value: mouId,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'mouStatus',
+        value: input.mouStatus || PartnershipAgreementStatus.NotAttached,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'mouStartOverride',
+        value: input.mouStartOverride,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'mouEndOverride',
+        value: input.mouEndOverride,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'types',
+        value: input.types,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'financialReportingType',
+        value: input.financialReportingType,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'canDelete',
+        value: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'primary',
+        value: input.primary,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+    ];
+    const result = await this.db
       .query()
       .apply(matchRequestingUser(session))
-      .apply(createBaseNode(partnershipId, 'Partnership', secureProps))
-      .return('node.id as id');
-  }
-  // connect the Partner to the Partnership
-  // and connect Partnership to Project
-
-  async connect(
-    projectId: ID,
-    partnerId: ID,
-    createdAt: DateTime,
-    result: Dictionary<any>
-  ) {
-    await this.db
-      .query()
+      .apply(createBaseNode(partnershipId, 'Partnership', props))
+      .with('node')
       .match([
         [
           node('partner', 'Partner', {
-            id: partnerId,
+            id: input.partnerId,
           }),
         ],
-        [
-          node('partnership', 'Partnership', {
-            id: result.id,
-          }),
-        ],
-        [node('project', 'Project', { id: projectId })],
+        [node('project', 'Project', { id: input.projectId })],
       ])
       .create([
         node('project'),
-        relation('out', '', 'partnership', { active: true, createdAt }),
-        node('partnership'),
-        relation('out', '', 'partner', { active: true, createdAt }),
+        relation('out', '', 'partnership', {
+          active: true,
+          createdAt: DateTime.local(),
+        }),
+        node('node'),
+        relation('out', '', 'partner', {
+          active: true,
+          createdAt: DateTime.local(),
+        }),
         node('partner'),
       ])
-      .return('partnership.id as id')
+      .return('node.id as id')
+      .asResult<{ id: ID }>()
       .first();
+    if (!result) {
+      throw new ServerException('Failed to create partnership');
+    }
+    return { id: partnershipId, mouId, agreementId };
   }
 
   async readOne(id: ID, session: Session) {
@@ -87,26 +157,20 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
         scopedRoles: ScopedRole[];
       }>();
 
-    return await query.first();
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException('Could not find partnership');
+    }
+
+    return result;
   }
 
-  list(
-    filter: PartnershipFilters,
-    listInput: {
-      sort: keyof Partnership;
-      order: Order;
-      count: number;
-      page: number;
-    },
-    session: Session
-  ) {
-    const label = 'Partnership';
-
+  list({ filter, ...input }: PartnershipListInput, session: Session) {
     return this.db
       .query()
       .match([
         requestingUser(session),
-        ...permissionsOfNode(label),
+        ...permissionsOfNode('Partnership'),
         ...(filter.projectId
           ? [
               relation('in', '', 'partnership', { active: true }),
@@ -116,28 +180,30 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
             ]
           : []),
       ])
-      .apply(calculateTotalAndPaginateList(Partnership, listInput));
+      .apply(calculateTotalAndPaginateList(Partnership, input));
   }
 
   async verifyRelationshipEligibility(projectId: ID, partnerId: ID) {
-    return await this.db
-      .query()
-      .optionalMatch(node('partner', 'Partner', { id: partnerId }))
-      .optionalMatch(node('project', 'Project', { id: projectId }))
-      .optionalMatch([
-        node('project'),
-        relation('out', '', 'partnership', { active: true }),
-        node('partnership'),
-        relation('out', '', 'partner', { active: true }),
-        node('partner'),
-      ])
-      .return(['partner', 'project', 'partnership'])
-      .asResult<{ partner?: Node; project?: Node; partnership?: Node }>()
-      .first();
+    return (
+      (await this.db
+        .query()
+        .optionalMatch(node('partner', 'Partner', { id: partnerId }))
+        .optionalMatch(node('project', 'Project', { id: projectId }))
+        .optionalMatch([
+          node('project'),
+          relation('out', '', 'partnership', { active: true }),
+          node('partnership'),
+          relation('out', '', 'partner', { active: true }),
+          node('partner'),
+        ])
+        .return(['partner', 'project', 'partnership'])
+        .asResult<{ partner?: Node; project?: Node; partnership?: Node }>()
+        .first()) ?? {}
+    );
   }
 
   async isFirstPartnership(projectId: ID) {
-    return await this.db
+    const result = await this.db
       .query()
       .match([
         node('project', 'Project', { id: projectId }),
@@ -147,19 +213,58 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
       .return(['partnership'])
       .asResult<{ partnership?: Node }>()
       .first();
+    return !result?.partnership;
   }
 
-  otherPartnershipQuery(partnershipId: ID) {
-    return this.db
+  async isAnyOtherPartnerships(id: ID) {
+    const result = await this.db
       .query()
+      .apply(this.matchOtherPartnerships(id))
+      .return('otherPartnership.id')
+      .first();
+    return !!result;
+  }
+
+  async removePrimaryFromOtherPartnerships(id: ID) {
+    await this.db
+      .query()
+      .apply(this.matchOtherPartnerships(id))
       .match([
-        node('partnership', 'Partnership', { id: partnershipId }),
-        relation('in', '', 'partnership', { active: true }),
-        node('project', 'Project'),
-        relation('out', '', 'partnership', { active: true }),
         node('otherPartnership'),
+        relation('out', 'oldRel', 'primary', { active: true }),
+        node('', 'Property'),
       ])
-      .raw('WHERE partnership <> otherPartnership')
-      .with('otherPartnership');
+      .setValues({
+        'oldRel.active': false,
+      })
+      .with('otherPartnership')
+      .create([
+        node('otherPartnership'),
+        relation('out', '', 'primary', {
+          active: true,
+          createdAt: DateTime.local(),
+        }),
+        node('newProperty', 'Property', {
+          createdAt: DateTime.local(),
+          value: false,
+          sortValue: false,
+        }),
+      ])
+      .run();
+  }
+
+  private matchOtherPartnerships(id: ID) {
+    return (query: Query) => {
+      query
+        .match([
+          node('partnership', 'Partnership', { id }),
+          relation('in', '', 'partnership', { active: true }),
+          node('project', 'Project'),
+          relation('out', '', 'partnership', { active: true }),
+          node('otherPartnership'),
+        ])
+        .raw('WHERE partnership <> otherPartnership')
+        .with('otherPartnership');
+    };
   }
 }

@@ -11,6 +11,6 @@ import { FundingAccountService } from './funding-account.service';
     FundingAccountService,
     FundingAccountRepository,
   ],
-  exports: [FundingAccountService, FundingAccountRepository],
+  exports: [FundingAccountService],
 })
 export class FundingAccountModule {}

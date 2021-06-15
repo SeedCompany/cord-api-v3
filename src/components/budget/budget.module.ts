@@ -35,6 +35,6 @@ import * as handlers from './handlers';
     BudgetRecordRepository,
     ...Object.values(handlers),
   ],
-  exports: [BudgetService, BudgetRepository],
+  exports: [BudgetService],
 })
 export class BudgetModule {}

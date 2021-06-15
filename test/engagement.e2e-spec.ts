@@ -831,7 +831,7 @@ describe('Engagement e2e', () => {
         internId: intern.id,
         mentorId: mentor.id,
       })
-    ).rejects.toThrow('countryOfOriginId is invalid');
+    ).rejects.toThrow('Could not find country of origin');
 
     internshipProject = await createProject(app, {
       type: ProjectType.Internship,
@@ -857,7 +857,7 @@ describe('Engagement e2e', () => {
         internId: intern.id,
         mentorId: invalidId,
       })
-    ).rejects.toThrow('mentorId is invalid');
+    ).rejects.toThrow('Could not find mentor');
   });
 
   it('language engagement creation fails and lets you know why if your ids are bad', async () => {
@@ -970,7 +970,7 @@ describe('Engagement e2e', () => {
         firstScripture: true,
       })
     ).rejects.toThrowError(
-      'firstScripture can not be set to true if the language has hasExternalFirstScripture=true'
+      'First scripture has already been marked as having been done externally'
     );
   });
 
@@ -987,7 +987,7 @@ describe('Engagement e2e', () => {
         firstScripture: true,
       })
     ).rejects.toThrowError(
-      'firstScripture can not be set to true if it is not the only engagement for the language that has firstScripture=true'
+      'Another engagement has already been marked as having done the first scripture'
     );
   });
 

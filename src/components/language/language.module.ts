@@ -23,6 +23,6 @@ import { LanguageService } from './language.service';
     EthnologueLanguageRepository,
     LanguageRepository,
   ],
-  exports: [LanguageService, LanguageRepository],
+  exports: [LanguageService],
 })
 export class LanguageModule {}

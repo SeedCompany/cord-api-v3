@@ -8,7 +8,7 @@ import {
   relation,
 } from 'cypher-query-builder';
 import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
-import { cloneDeep, last, Many, startCase, upperFirst } from 'lodash';
+import { cloneDeep, last, Many, startCase, uniq, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { Driver, Session as Neo4jSession } from 'neo4j-driver';
 import { assert } from 'ts-essentials';
@@ -30,7 +30,6 @@ import {
 } from '../../common';
 import { ILogger, Logger, ServiceUnavailableError, UniquenessError } from '..';
 import { AbortError, retry, RetryOptions } from '../../common/retry';
-import { ConfigService } from '../config/config.service';
 import { DbChanges } from './changes';
 import { deleteBaseNode } from './query';
 import { determineSortValue } from './query.helpers';
@@ -50,7 +49,7 @@ export const property = (
       active: true,
       createdAt: DateTime.local(),
     }),
-    node(propVar, ['Property', ...many(extraPropLabel ?? [])], {
+    node(propVar, uniq(['Property', ...many(extraPropLabel ?? [])]), {
       value,
     }),
   ],
@@ -93,7 +92,6 @@ export interface ServerInfo {
 export class DatabaseService {
   constructor(
     private readonly db: Connection,
-    private readonly config: ConfigService,
     @Logger('database:service') private readonly logger: ILogger
   ) {}
 
@@ -560,28 +558,6 @@ export class DatabaseService {
       .apply(deleteBaseNode)
       .return('*');
     await query.run();
-  }
-
-  async addLabelsToPropNodes(
-    baseNodeId: ID,
-    property: string,
-    lables: string[]
-  ): Promise<void> {
-    const addLabel = this.db
-      .query()
-      .match([node('baseNode', { active: true, id: baseNodeId })])
-      .match([
-        node('baseNode'),
-        relation('out', 'rel', property, { active: true }),
-        node('prop', 'Property', { active: true }),
-      ])
-      .set({
-        labels: {
-          prop: lables,
-        },
-      })
-      .return('baseNode');
-    await addLabel.run();
   }
 
   assertPatternsIncludeIdentifier(

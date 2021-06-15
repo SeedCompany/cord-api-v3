@@ -13,6 +13,6 @@ import { PartnerService } from './partner.service';
     forwardRef(() => UserModule),
   ],
   providers: [PartnerResolver, PartnerService, PartnerRepository],
-  exports: [PartnerService, PartnerRepository],
+  exports: [PartnerService],
 })
 export class PartnerModule {}

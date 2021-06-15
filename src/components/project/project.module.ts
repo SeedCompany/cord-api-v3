@@ -5,7 +5,6 @@ import { EngagementModule } from '../engagement/engagement.module';
 import { FieldRegionModule } from '../field-region/field-region.module';
 import { FileModule } from '../file/file.module';
 import { LocationModule } from '../location/location.module';
-import { OrganizationService } from '../organization';
 import { OrganizationModule } from '../organization/organization.module';
 import { PartnerModule } from '../partner/partner.module';
 import { PartnershipModule } from '../partnership/partnership.module';
@@ -34,18 +33,12 @@ import { ProjectService } from './project.service';
   ],
   providers: [
     ProjectResolver,
-    OrganizationService,
     ProjectService,
     ProjectStepResolver,
     ProjectRules,
     ProjectRepository,
     ...Object.values(handlers),
   ],
-  exports: [
-    ProjectService,
-    ProjectMemberModule,
-    ProjectRules,
-    ProjectRepository,
-  ],
+  exports: [ProjectService, ProjectMemberModule, ProjectRules],
 })
 export class ProjectModule {}

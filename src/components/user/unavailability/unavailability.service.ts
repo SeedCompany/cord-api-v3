@@ -5,7 +5,7 @@ import {
   ServerException,
   Session,
 } from '../../../common';
-import { ConfigService, ILogger, Logger } from '../../../core';
+import { ILogger, Logger } from '../../../core';
 import { parseBaseNodeProperties } from '../../../core/database/results';
 import { AuthorizationService } from '../../authorization/authorization.service';
 import {
@@ -21,7 +21,6 @@ import { UnavailabilityRepository } from './unavailability.repository';
 export class UnavailabilityService {
   constructor(
     @Logger('unavailability:service') private readonly logger: ILogger,
-    private readonly config: ConfigService,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
     private readonly repo: UnavailabilityRepository

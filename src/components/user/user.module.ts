@@ -26,6 +26,6 @@ import { UserService } from './user.service';
     forwardRef(() => LanguageModule),
   ],
   providers: [KnownLanguageResolver, UserResolver, UserService, UserRepository],
-  exports: [UserService, EducationModule, UnavailabilityModule, UserRepository],
+  exports: [UserService, EducationModule, UnavailabilityModule],
 })
 export class UserModule {}

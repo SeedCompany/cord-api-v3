@@ -1,15 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { node, not, relation } from 'cypher-query-builder';
-import { Dictionary } from 'lodash';
 import { DateTime } from 'luxon';
-import { ID, Session } from '../../common';
+import { ID, ServerException, Session } from '../../common';
 import { DatabaseService, matchRequestingUser } from '../../core';
 import { LoginInput } from './authentication.dto';
+
+interface EmailToken {
+  email: string;
+  token: string;
+  createdOn: DateTime;
+}
 
 @Injectable()
 export class AuthenticationRepository {
   constructor(private readonly db: DatabaseService) {}
-  async createToken(token: string): Promise<Dictionary<any> | undefined> {
+
+  async saveSessionToken(token: string) {
     const result = await this.db
       .query()
       .raw(
@@ -28,12 +34,12 @@ export class AuthenticationRepository {
         }
       )
       .first();
-    return result;
+    if (!result) {
+      throw new ServerException('Failed to save session token');
+    }
   }
 
-  async userFromSession(
-    session: Session
-  ): Promise<Dictionary<any> | undefined> {
+  async getUserFromSession(session: Session) {
     const userRes = await this.db
       .query()
       .match([
@@ -47,11 +53,12 @@ export class AuthenticationRepository {
         node('user', 'User'),
       ])
       .return({ user: [{ id: 'id' }] })
+      .asResult<{ id: ID }>()
       .first();
-    return userRes;
+    return userRes?.id;
   }
 
-  async register(userId: ID, passwordHash: string): Promise<void> {
+  async savePasswordHashOnUser(userId: ID, passwordHash: string) {
     await this.db
       .query()
       .match([
@@ -72,11 +79,8 @@ export class AuthenticationRepository {
       .run();
   }
 
-  async login1(
-    input: LoginInput,
-    session: Session
-  ): Promise<Dictionary<any> | undefined> {
-    const result1 = await this.db
+  async getPasswordHash(input: LoginInput, session: Session) {
+    const result = await this.db
       .query()
       .raw(
         `
@@ -99,12 +103,13 @@ export class AuthenticationRepository {
           email: input.email,
         }
       )
+      .asResult<{ pash: string }>()
       .first();
-    return result1;
+    return result?.pash;
   }
 
-  async login2(input: LoginInput, session: Session) {
-    const result2 = await this.db
+  async connectSessionToUser(input: LoginInput, session: Session) {
+    const result = await this.db
       .query()
       .raw(
         `
@@ -129,10 +134,12 @@ export class AuthenticationRepository {
           email: input.email,
         }
       )
+      .asResult<{ id: ID }>()
       .first();
-    return result2;
+    return result?.id;
   }
-  async logout(token: string): Promise<void> {
+
+  async deleteSessionToken(token: string): Promise<void> {
     await this.db
       .query()
       .raw(
@@ -151,8 +158,7 @@ export class AuthenticationRepository {
       .run();
   }
 
-  async createSession(token: string): Promise<Dictionary<any> | undefined> {
-    // check token in db to verify the user id and owning org id.
+  async findSessionToken(token: string) {
     const result = await this.db
       .query()
       .match([
@@ -167,31 +173,27 @@ export class AuthenticationRepository {
         node('user', 'User'),
       ])
       .return('token, user.id AS userId')
+      .asResult<{ token: string; userId?: ID }>()
       .first();
 
     return result;
   }
 
-  async changePassword(session: Session): Promise<
-    | {
-        passwordHash: string;
-      }
-    | undefined
-  > {
+  async getCurrentPasswordHash(session: Session) {
     const result = await this.db
       .query()
-      .apply(matchRequestingUser(session))
       .match([
-        node('requestingUser'),
+        node('requestingUser', 'User', { id: session.userId }),
         relation('out', '', 'password', { active: true }),
         node('password', 'Property'),
       ])
       .return('password.value as passwordHash')
       .asResult<{ passwordHash: string }>()
       .first();
-    return result;
+    return result?.passwordHash;
   }
-  async createNewPassword(
+
+  async updatePassword(
     newPasswordHash: string,
     session: Session
   ): Promise<void> {
@@ -208,41 +210,18 @@ export class AuthenticationRepository {
       })
       .return('password.value as passwordHash')
       .first();
-
-    // inactivate all the relationships between the current user and all of their tokens except current one
-    await this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([
-        node('requestingUser'),
-        relation('out', 'oldRel', 'token', { active: true }),
-        node('token', 'Token'),
-      ])
-      .where(not([{ 'token.value': session.token }]))
-      .setValues({ 'oldRel.active': false })
-      .run();
   }
-  async forgotPasswordFindEmail(email: string) {
+
+  async doesEmailAddressExist(email: string) {
     const result = await this.db
       .query()
-      .raw(
-        `
-      MATCH
-      (email:EmailAddress {
-        value: $email
-      })
-      RETURN
-      email.value as email
-      `,
-        {
-          email: email,
-        }
-      )
+      .match([node('email', 'EmailAddress', { value: email })])
+      .return('email')
       .first();
-    return result;
+    return !!result;
   }
 
-  async forgotPasswordCreateToken(email: string, token: string): Promise<void> {
+  async saveEmailToken(email: string, token: string): Promise<void> {
     await this.db
       .query()
       .raw(
@@ -255,30 +234,26 @@ export class AuthenticationRepository {
           token,
         }
       )
-      .first();
+      .run();
   }
 
-  async resetPassword(token: string): Promise<Dictionary<any> | undefined> {
+  async findEmailToken(token: string) {
     const result = await this.db
       .query()
-      .raw(
-        `
-      MATCH(emailToken: EmailToken{token: $token})
-      RETURN emailToken.value as email, emailToken.token as token, emailToken.createdOn as createdOn
-      `,
-        {
-          token: token,
-        }
-      )
+      .match(node('emailToken', 'EmailToken', { token }))
+      .return([
+        'emailToken.value as email',
+        'emailToken.token as token',
+        'emailToken.createdOn as createdOn',
+      ])
+      .asResult<EmailToken>()
       .first();
     return result;
   }
 
-  async resetPasswordRemoveOldData(
-    token: string,
-    result: Dictionary<any>,
-    pash: string,
-    session: Session
+  async updatePasswordViaEmailToken(
+    { token, email }: EmailToken,
+    pash: string
   ): Promise<void> {
     await this.db
       .query()
@@ -298,24 +273,41 @@ export class AuthenticationRepository {
       `,
         {
           token,
-          email: result.email,
+          email,
           password: pash,
           createdAt: DateTime.local(),
         }
       )
       .first();
+  }
 
-    // remove all the email tokens and invalidate old tokens
+  async removeAllEmailTokensForEmail(email: string) {
     await this.db
       .query()
-      .match([node('emailToken', 'EmailToken', { value: result.email })])
+      .match([node('emailToken', 'EmailToken', { value: email })])
       .delete('emailToken')
       .run();
+  }
 
+  async deactivateAllOtherSessions(session: Session) {
+    await this.db
+      .query()
+      .apply(matchRequestingUser(session))
+      .match([
+        node('requestingUser'),
+        relation('out', 'oldRel', 'token', { active: true }),
+        node('token', 'Token'),
+      ])
+      .where(not([{ 'token.value': session.token }]))
+      .setValues({ 'oldRel.active': false })
+      .run();
+  }
+
+  async deactivateAllOtherSessionsByEmail(email: string, session: Session) {
     await this.db
       .query()
       .match([
-        node('emailAddress', 'EmailAddress', { value: result.email }),
+        node('emailAddress', 'EmailAddress', { value: email }),
         relation('in', '', 'email', { active: true }),
         node('user', 'User'),
         relation('out', 'oldRel', 'token', { active: true }),

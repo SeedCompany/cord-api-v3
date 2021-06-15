@@ -7,7 +7,7 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import { ConfigService, ILogger, Logger, OnIndex } from '../../core';
+import { ILogger, Logger, OnIndex } from '../../core';
 import {
   parseBaseNodeProperties,
   runListQuery,
@@ -26,8 +26,6 @@ import { FieldRegionRepository } from './field-region.repository';
 export class FieldRegionService {
   constructor(
     @Logger('field-region:service') private readonly logger: ILogger,
-    private readonly config: ConfigService,
-    // private readonly db: DatabaseService,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
     private readonly repo: FieldRegionRepository

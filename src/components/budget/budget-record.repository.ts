@@ -1,8 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
-import { Dictionary } from 'lodash';
+import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { generateId, ID, Order, Session } from '../../common';
+import {
+  generateId,
+  ID,
+  NotFoundException,
+  ServerException,
+  Session,
+} from '../../common';
 import {
   createBaseNode,
   DtoRepository,
@@ -15,64 +20,64 @@ import {
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
-import { QueryWithResult } from '../../core/database/query.overrides';
 import { DbPropsOfDto } from '../../core/database/results';
 import { ScopedRole } from '../authorization';
-import { BudgetRecord, BudgetRecordFilters, CreateBudgetRecord } from './dto';
+import { BudgetRecord, BudgetRecordListInput, CreateBudgetRecord } from './dto';
 
 @Injectable()
 export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
-  async create(session: Session, secureProps: Property[]): Promise<Query> {
-    const createBudgetRecord = this.db
+  async create(session: Session, secureProps: Property[]) {
+    const result = await this.db
       .query()
       .apply(matchRequestingUser(session))
       .apply(createBaseNode(await generateId(), 'BudgetRecord', secureProps))
-      .return('node.id as id');
-    return createBudgetRecord;
+      .return('node.id as id')
+      .asResult<{ id: ID }>()
+      .first();
+    if (!result) {
+      throw new ServerException('Failed to create a budget record');
+    }
+    return result.id;
   }
 
-  async connectToBudget(
-    budgetId: ID,
-    organizationId: ID,
-    result: Dictionary<any> | undefined,
-    createdAt: DateTime
-  ): Promise<Query> {
-    // connect to budget
-    const query = this.db
+  async connectToBudget(recordId: ID, budgetId: ID, createdAt: DateTime) {
+    await this.db
       .query()
       .match([node('budget', 'Budget', { id: budgetId })])
-      .match([node('br', 'BudgetRecord', { id: result?.id })])
+      .match([node('br', 'BudgetRecord', { id: recordId })])
       .create([
         node('budget'),
         relation('out', '', 'record', { active: true, createdAt }),
         node('br'),
       ])
-      .return('br');
-    await query.first();
+      .return('br')
+      .run();
+  }
 
-    // connect budget record to org
-    const orgQuery = this.db
+  async connectToOrganization(
+    recordId: ID,
+    organizationId: ID,
+    createdAt: DateTime
+  ) {
+    await this.db
       .query()
       .match([
         node('organization', 'Organization', {
           id: organizationId,
         }),
       ])
-      .match([node('br', 'BudgetRecord', { id: result?.id })])
+      .match([node('br', 'BudgetRecord', { id: recordId })])
       .create([
         node('br'),
         relation('out', '', 'organization', { active: true, createdAt }),
         node('organization'),
       ])
-      .return('br');
-
-    return orgQuery;
+      .return('br')
+      .run();
   }
 
-  async verifyUniqueness(
-    input: CreateBudgetRecord
-  ): Promise<Dictionary<any> | undefined> {
-    const existingRecord = await this.db
+  async doesRecordExist(input: CreateBudgetRecord) {
+    const result = await this.db
       .query()
       .match([
         node('budget', 'Budget', { id: input.budgetId }),
@@ -88,10 +93,10 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
       ])
       .return('br')
       .first();
-    return existingRecord;
+    return !!result;
   }
 
-  readOne(id: ID, session: Session) {
+  async readOne(id: ID, session: Session) {
     const query = this.db
       .query()
       .match([
@@ -112,40 +117,32 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
         props: DbPropsOfDto<BudgetRecord, true>;
         scopedRoles: ScopedRole[];
       }>();
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException(
+        'Could not find BudgetRecord',
+        'budgetRecord.budgetId'
+      );
+    }
 
-    return query;
+    return result;
   }
 
-  list(
-    filter: BudgetRecordFilters,
-    input: {
-      sort: keyof BudgetRecord;
-      order: Order;
-      count: number;
-      page: number;
-    },
-    session: Session
-  ): QueryWithResult<{
-    items: ID[];
-    total: number;
-  }> {
-    const label = 'BudgetRecord';
-
-    const query = this.db
+  list(input: BudgetRecordListInput, session: Session) {
+    return this.db
       .query()
       .match([
         requestingUser(session),
-        ...permissionsOfNode(label),
-        ...(filter.budgetId
+        ...permissionsOfNode('BudgetRecord'),
+        ...(input.filter.budgetId
           ? [
               relation('in', '', 'record', { active: true }),
               node('budget', 'Budget', {
-                id: filter.budgetId,
+                id: input.filter.budgetId,
               }),
             ]
           : []),
       ])
       .apply(calculateTotalAndPaginateList(BudgetRecord, input));
-    return query;
   }
 }

@@ -6,7 +6,7 @@ import {
   ServerException,
   Session,
 } from '../../../common';
-import { ConfigService, DatabaseService, ILogger, Logger } from '../../../core';
+import { ILogger, Logger } from '../../../core';
 import {
   parseBaseNodeProperties,
   runListQuery,
@@ -25,8 +25,6 @@ import { EducationRepository } from './education.repository';
 export class EducationService {
   constructor(
     @Logger('education:service') private readonly logger: ILogger,
-    private readonly config: ConfigService,
-    private readonly db: DatabaseService,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
     private readonly repo: EducationRepository

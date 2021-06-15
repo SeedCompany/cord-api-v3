@@ -4,13 +4,7 @@ import {
   Session,
   UnauthorizedException,
 } from '../../../common';
-import {
-  DatabaseService,
-  EventsHandler,
-  IEventHandler,
-  ILogger,
-  Logger,
-} from '../../../core';
+import { EventsHandler, IEventHandler, ILogger, Logger } from '../../../core';
 import { Engagement, EngagementStatus } from '../dto';
 import { EngagementService } from '../engagement.service';
 import { EngagementCreatedEvent, EngagementUpdatedEvent } from '../events';
@@ -20,7 +14,6 @@ type SubscribedEvent = EngagementCreatedEvent | EngagementUpdatedEvent;
 @EventsHandler(EngagementCreatedEvent, EngagementUpdatedEvent)
 export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
   constructor(
-    private readonly db: DatabaseService,
     private readonly engagementService: EngagementService,
     @Logger('engagement:set-initial-end-date') private readonly logger: ILogger
   ) {}

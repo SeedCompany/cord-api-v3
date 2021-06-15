@@ -12,6 +12,6 @@ import { OrganizationService } from './organization.service';
     OrganizationService,
     OrganizationRepository,
   ],
-  exports: [OrganizationService, OrganizationRepository],
+  exports: [OrganizationService],
 })
 export class OrganizationModule {}

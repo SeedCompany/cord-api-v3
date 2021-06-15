@@ -1,9 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { Dictionary } from 'lodash';
 import { ID, Session } from '../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
-import { QueryWithResult } from '../../core/database/query.overrides';
 import { InternalRole, Role } from './dto';
 import { Powers } from './dto/powers';
 
@@ -14,6 +12,7 @@ export class AuthorizationRepository {
     private readonly config: ConfigService,
     @Logger('user:repository') private readonly logger: ILogger
   ) {}
+
   async processNewBaseNode(
     label: string,
     baseNodeId: ID,
@@ -31,7 +30,8 @@ export class AuthorizationRepository {
       )
       .run();
   }
-  async doRoleAddedToUser(id: ID | string, role: InternalRole) {
+
+  async addUserToSecurityGroup(id: ID | string, role: InternalRole) {
     await this.db
       .query()
       .raw(
@@ -46,13 +46,8 @@ export class AuthorizationRepository {
       )
       .run();
   }
-  checkPower(
-    power: Powers,
-    session: Session,
-    id: ID
-  ): QueryWithResult<{
-    hasPower: boolean;
-  }> {
+
+  async hasPower(power: Powers, session: Session, id: ID) {
     const query = this.db
       .query()
       .match(
@@ -76,13 +71,13 @@ export class AuthorizationRepository {
       .raw('where $power IN user.powers')
       .raw('return $power IN user.powers as hasPower')
       .asResult<{ hasPower: boolean }>();
-    return query;
+
+    const result = await query.first();
+    return result?.hasPower ?? false;
   }
-  async updateUserPowers(
-    userId: ID | string,
-    newPowers: Powers[]
-  ): Promise<Array<Dictionary<any>>> {
-    const result = await this.db
+
+  async updateUserPowers(userId: ID | string, newPowers: Powers[]) {
+    await this.db
       .query()
       .optionalMatch([node('userOrSg', 'User', { id: userId })])
       .setValues({ 'userOrSg.powers': newPowers })
@@ -90,15 +85,10 @@ export class AuthorizationRepository {
       .optionalMatch([node('userOrSg', 'SecurityGroup', { id: userId })])
       .setValues({ 'userOrSg.powers': newPowers })
       .run();
-    return result;
   }
-  async getUserGlobalRoles(id: ID): Promise<
-    | {
-        roles: Role[];
-      }
-    | undefined
-  > {
-    const roleQuery = await this.db
+
+  async getUserGlobalRoles(id: ID) {
+    const result = await this.db
       .query()
       .match([
         node('user', 'User', { id }),
@@ -108,11 +98,11 @@ export class AuthorizationRepository {
       .raw(`RETURN collect(role.value) as roles`)
       .asResult<{ roles: Role[] }>()
       .first();
-    return roleQuery;
+    return result?.roles ?? [];
   }
 
   async readPowerByUserId(id: ID | string) {
-    return await this.db
+    const result = await this.db
       .query()
       .match([node('user', 'User', { id })])
       .raw('return user.powers as powers')
@@ -121,5 +111,6 @@ export class AuthorizationRepository {
       .raw('return sg.powers as powers')
       .asResult<{ powers?: Powers[] }>()
       .first();
+    return result?.powers ?? [];
   }
 }

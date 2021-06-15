@@ -1,8 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
-import { Dictionary } from 'lodash';
 import { DateTime } from 'luxon';
-import { generateId, ID, Order, Session } from '../../common';
+import {
+  generateId,
+  ID,
+  NotFoundException,
+  Order,
+  ServerException,
+  Session,
+} from '../../common';
 import { createBaseNode, DtoRepository, matchRequestingUser } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -11,7 +17,7 @@ import {
   requestingUser,
 } from '../../core/database/query';
 import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
-import { CreatePartner, Partner, PartnerListInput, UpdatePartner } from './dto';
+import { CreatePartner, Partner, PartnerListInput } from './dto';
 
 @Injectable()
 export class PartnerRepository extends DtoRepository(Partner) {
@@ -61,12 +67,11 @@ export class PartnerRepository extends DtoRepository(Partner) {
         : q.with('*').orderBy(sortValBaseNodeProp, order);
     };
 
-  async checkPartner(organizationId: ID) {
-    const partnerByOrgQ = this.db
+  async partnerIdByOrg(organizationId: ID) {
+    const result = await this.db
       .query()
-      .match([node('node', 'Organization', { id: organizationId })])
       .match([
-        node('node'),
+        node('node', 'Organization', { id: organizationId }),
         relation('in', '', 'organization', { active: true }),
         node('partner', 'Partner'),
       ])
@@ -75,11 +80,13 @@ export class PartnerRepository extends DtoRepository(Partner) {
       })
       .asResult<{
         partnerId: ID;
-      }>();
-    return await partnerByOrgQ.first();
+      }>()
+      .first();
+    return result?.partnerId;
   }
 
-  async create(input: CreatePartner, session: Session, createdAt: DateTime) {
+  async create(input: CreatePartner, session: Session) {
+    const createdAt = DateTime.local();
     const secureProps = [
       {
         key: 'types',
@@ -130,8 +137,7 @@ export class PartnerRepository extends DtoRepository(Partner) {
         isOrgPublic: false,
       },
     ];
-    // create partner
-    const query = this.db
+    const result = await this.db
       .query()
       .apply(matchRequestingUser(session))
       .match([
@@ -142,54 +148,35 @@ export class PartnerRepository extends DtoRepository(Partner) {
       .apply(createBaseNode(await generateId(), 'Partner', secureProps))
       .create([
         node('node'),
-        relation('out', '', 'organization', { active: true, createdAt }),
-        node('organization'),
-      ])
-      .return('node.id as id');
-
-    return await query.first();
-  }
-
-  async createProperty(
-    input: CreatePartner,
-    result: Dictionary<any>,
-    createdAt: DateTime
-  ) {
-    await this.db
-      .query()
-      .matchNode('partner', 'Partner', {
-        id: result.id,
-      })
-      .matchNode('pointOfContact', 'User', {
-        id: input.pointOfContactId,
-      })
-      .create([
-        node('partner'),
-        relation('out', '', 'pointOfContact', {
+        relation('out', '', 'organization', {
           active: true,
           createdAt,
         }),
-        node('pointOfContact'),
+        node('organization'),
       ])
-      .run();
-  }
-
-  async readOnePartnerByOrgId(id: ID) {
-    const query = this.db
-      .query()
-      .match([node('node', 'Organization', { id: id })])
-      .match([
-        node('node'),
-        relation('in', '', 'organization', { active: true }),
-        node('partner', 'Partner'),
-      ])
-      .return({
-        partner: [{ id: 'partnerId' }],
+      .apply((q) => {
+        if (input.pointOfContactId) {
+          q.with('node')
+            .matchNode('pointOfContact', 'User', {
+              id: input.pointOfContactId,
+            })
+            .create([
+              node('node'),
+              relation('out', '', 'pointOfContact', {
+                active: true,
+                createdAt,
+              }),
+              node('pointOfContact'),
+            ]);
+        }
       })
-      .asResult<{
-        partnerId: ID;
-      }>();
-    return await query.first();
+      .return('node.id as id')
+      .asResult<{ id: ID }>()
+      .first();
+    if (!result) {
+      throw new ServerException('Failed to create partner');
+    }
+    return result.id;
   }
 
   async readOne(id: ID, session: Session) {
@@ -220,17 +207,22 @@ export class PartnerRepository extends DtoRepository(Partner) {
         }
       >();
 
-    return await query.first();
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException('Could not find partner');
+    }
+
+    return result;
   }
 
-  async updatePartnerProperties(input: UpdatePartner, session: Session) {
+  async updatePointOfContact(id: ID, user: ID, session: Session) {
     const createdAt = DateTime.local();
     await this.db
       .query()
       .apply(matchRequestingUser(session))
-      .matchNode('partner', 'Partner', { id: input.id })
+      .matchNode('partner', 'Partner', { id })
       .matchNode('newPointOfContact', 'User', {
-        id: input.pointOfContactId,
+        id: user,
       })
       .optionalMatch([
         node('org'),

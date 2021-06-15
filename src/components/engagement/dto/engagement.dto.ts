@@ -5,6 +5,7 @@ import { MergeExclusive } from 'type-fest';
 import {
   DateInterval,
   DateTimeField,
+  DbLabel,
   ID,
   parentIdMiddleware,
   Resource,
@@ -46,6 +47,7 @@ class Engagement extends Resource {
   @Field(() => SecuredEngagementStatus, {
     middleware: [parentIdMiddleware],
   })
+  @DbLabel('EngagementStatus')
   readonly status: SecuredEngagementStatus;
 
   readonly ceremony: Secured<ID>;
@@ -155,9 +157,11 @@ export class InternshipEngagement extends Engagement {
   readonly mentor: Secured<ID>;
 
   @Field()
+  @DbLabel('InternPosition')
   readonly position: SecuredInternPosition;
 
   @Field()
+  @DbLabel('ProductMethodology')
   readonly methodologies: SecuredMethodologies;
 
   readonly growthPlan: DefinedFile;

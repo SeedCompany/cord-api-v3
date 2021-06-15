@@ -25,7 +25,7 @@ import {
   UnauthorizedException,
 } from '../../common';
 import { retry } from '../../common/retry';
-import { ConfigService, ILogger, Logger } from '../../core';
+import { ILogger, Logger } from '../../core';
 import { ChangesOf, isRelation } from '../../core/database/changes';
 import {
   DbPropsOfDto,
@@ -55,8 +55,7 @@ export type PermissionsOf<T> = Record<keyof T, Permission>;
 export class AuthorizationService {
   constructor(
     private readonly dbConn: Connection,
-    private readonly config: ConfigService,
-    private readonly authorizationRepo: AuthorizationRepository,
+    private readonly repo: AuthorizationRepository,
     @Logger('authorization:service') private readonly logger: ILogger
   ) {}
 
@@ -66,7 +65,7 @@ export class AuthorizationService {
     creatorUserId: ID
   ) {
     await this.afterTransaction(async () => {
-      await this.authorizationRepo.processNewBaseNode(
+      await this.repo.processNewBaseNode(
         resource.name,
         baseNodeId,
         creatorUserId
@@ -300,7 +299,7 @@ export class AuthorizationService {
     // iterate through all roles and assign to all SGs with that role
 
     for (const role of roles.flatMap((role) => this.mapRoleToDbRoles(role))) {
-      await this.authorizationRepo.doRoleAddedToUser(id, role);
+      await this.repo.addUserToSecurityGroup(id, role);
     }
 
     const powers = getDbRoles(roles.map(rolesForScope('global'))).flatMap(
@@ -314,10 +313,7 @@ export class AuthorizationService {
   async checkPower(power: Powers, session: Session): Promise<void> {
     const id = session.userId;
 
-    const query = this.authorizationRepo.checkPower(power, session, id);
-    const result = await query.first();
-    const hasPower = result?.hasPower ?? false;
-
+    const hasPower = await this.repo.hasPower(power, session, id);
     if (!hasPower) {
       throw new MissingPowerException(
         power,
@@ -332,7 +328,7 @@ export class AuthorizationService {
     if (session.anonymous) {
       return [];
     }
-    return await this.readPowerByUserId(session.userId);
+    return await this.repo.readPowerByUserId(session.userId);
   }
 
   async createPower(
@@ -340,8 +336,8 @@ export class AuthorizationService {
     power: Powers,
     session: Session
   ): Promise<void> {
-    const requestingUserPowers = await this.readPowerByUserId(session.userId);
-    if (!requestingUserPowers.includes(Powers.GrantPower)) {
+    const powers = await this.repo.readPowerByUserId(session.userId);
+    if (!powers.includes(Powers.GrantPower)) {
       throw new MissingPowerException(
         Powers.GrantPower,
         'user does not have the power to grant power to others'
@@ -356,8 +352,8 @@ export class AuthorizationService {
     power: Powers,
     session: Session
   ): Promise<void> {
-    const requestingUserPowers = await this.readPowerByUserId(session.userId);
-    if (!requestingUserPowers.includes(Powers.GrantPower)) {
+    const powers = await this.repo.readPowerByUserId(session.userId);
+    if (!powers.includes(Powers.GrantPower)) {
       throw new MissingPowerException(
         Powers.GrantPower,
         'user does not have the power to remove power from others'
@@ -368,41 +364,22 @@ export class AuthorizationService {
   }
 
   async grantPower(power: Powers, userId: ID | string): Promise<void> {
-    const powers = await this.readPowerByUserId(userId);
+    const powers = await this.repo.readPowerByUserId(userId);
 
     const newPowers = union(powers, [power]);
-    await this.updateUserPowers(userId, newPowers);
+    await this.repo.updateUserPowers(userId, newPowers);
   }
 
   async removePower(power: Powers, userId: ID): Promise<void> {
-    const powers = await this.readPowerByUserId(userId);
+    const powers = await this.repo.readPowerByUserId(userId);
 
     const newPowers = without(powers, power);
-    await this.updateUserPowers(userId, newPowers);
-  }
-
-  private async updateUserPowers(
-    userId: ID | string,
-    newPowers: Powers[]
-  ): Promise<void> {
-    const result = await this.authorizationRepo.updateUserPowers(
-      userId,
-      newPowers
-    );
-    if (!result) {
-      throw new ServerException('Failed to grant power');
-    }
-  }
-
-  private async readPowerByUserId(id: ID | string): Promise<Powers[]> {
-    const result = await this.authorizationRepo.readPowerByUserId(id);
-
-    return result?.powers ?? [];
+    await this.repo.updateUserPowers(userId, newPowers);
   }
 
   async getUserGlobalRoles(id: ID): Promise<ScopedRole[]> {
-    const roleQuery = await this.authorizationRepo.getUserGlobalRoles(id);
-    const roles = compact(roleQuery?.roles.map(rolesForScope('global')));
-    return roles;
+    const roles = await this.repo.getUserGlobalRoles(id);
+    const scopedRoles = compact(roles.map(rolesForScope('global')));
+    return scopedRoles;
   }
 }

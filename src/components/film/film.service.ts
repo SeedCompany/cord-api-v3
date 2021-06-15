@@ -7,7 +7,7 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import { ConfigService, ILogger, Logger, OnIndex } from '../../core';
+import { ILogger, Logger, OnIndex } from '../../core';
 import {
   parseBaseNodeProperties,
   runListQuery,
@@ -27,8 +27,6 @@ import { FilmRepository } from './film.repository';
 export class FilmService {
   constructor(
     @Logger('film:service') private readonly logger: ILogger,
-    // private readonly db: DatabaseService,
-    private readonly config: ConfigService,
     private readonly scriptureRefService: ScriptureReferenceService,
     private readonly authorizationService: AuthorizationService,
     private readonly repo: FilmRepository
