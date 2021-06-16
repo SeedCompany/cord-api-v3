@@ -20,41 +20,41 @@ import { runListQuery } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { ProjectService } from '../project/project.service';
 import {
-  CreatePlanChange,
-  PlanChange,
-  PlanChangeListInput,
-  PlanChangeListOutput,
-  UpdatePlanChange,
+  CreateProjectChangeRequest,
+  ProjectChangeRequest,
+  ProjectChangeRequestListInput,
+  ProjectChangeRequestListOutput,
+  UpdateProjectChangeRequest,
 } from './dto';
-import { PlanChangeUpdatedEvent } from './events';
-import { PlanChangeRepository } from './plan-change.repository';
+import { ProjectChangeRequestUpdatedEvent } from './events';
+import { ProjectChangeRequestRepository } from './project-change-request.repository';
 
 @Injectable()
-export class PlanChangeService {
+export class ProjectChangeRequestService {
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
-    @Logger('project:plan-change:service') private readonly logger: ILogger,
+    @Logger('project:change-request:service') private readonly logger: ILogger,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
     private readonly eventBus: IEventBus,
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService,
-    private readonly repo: PlanChangeRepository
+    private readonly repo: ProjectChangeRequestRepository
   ) {}
 
   @OnIndex()
   async createIndexes() {
     return [
-      'CREATE CONSTRAINT ON (n:PlanChange) ASSERT EXISTS(n.id)',
-      'CREATE CONSTRAINT ON (n:PlanChange) ASSERT n.id IS UNIQUE',
+      'CREATE CONSTRAINT ON (n:ProjectChangeRequest) ASSERT EXISTS(n.id)',
+      'CREATE CONSTRAINT ON (n:ProjectChangeRequest) ASSERT n.id IS UNIQUE',
     ];
   }
 
   async create(
-    { projectId, ...input }: CreatePlanChange,
+    { projectId, ...input }: CreateProjectChangeRequest,
     session: Session
-  ): Promise<PlanChange> {
+  ): Promise<ProjectChangeRequest> {
     // TODO
     // Project status should be active
     // const project = await this.projectService.readOne(projectId, session);
@@ -89,27 +89,27 @@ export class PlanChangeService {
 
     const result = await this.repo.create(session, secureProps);
     if (!result) {
-      throw new ServerException('failed to create plan change');
+      throw new ServerException('failed to create project change request');
     }
 
     await this.db
       .query()
       .match([
-        [node('planChange', 'PlanChange:Changeset', { id: result.id })],
+        [node('changeset', 'Changeset', { id: result.id })],
         [node('project', 'Project', { id: projectId })],
       ])
       .create([
         node('project'),
         relation('out', '', 'changeset', { active: true, createdAt }),
-        node('planChange'),
+        node('changeset'),
       ])
-      .return('planChange.id as id')
+      .return('changeset.id as id')
       .first();
 
     return await this.readOne(result.id, session);
   }
 
-  async readOne(id: ID, session: Session): Promise<PlanChange> {
+  async readOne(id: ID, session: Session): Promise<ProjectChangeRequest> {
     this.logger.debug(`read one`, {
       id,
       userId: session.userId,
@@ -118,14 +118,11 @@ export class PlanChangeService {
     const result = await this.repo.readOne(id, session);
 
     if (!result) {
-      throw new NotFoundException(
-        'Could not find plan change',
-        'planChange.id'
-      );
+      throw new NotFoundException('Could not find project change request');
     }
 
     const securedProps = await this.authorizationService.secureProperties(
-      PlanChange,
+      ProjectChangeRequest,
       result.props,
       session,
       result.scopedRoles
@@ -138,24 +135,27 @@ export class PlanChangeService {
     };
   }
 
-  async update(input: UpdatePlanChange, session: Session): Promise<PlanChange> {
+  async update(
+    input: UpdateProjectChangeRequest,
+    session: Session
+  ): Promise<ProjectChangeRequest> {
     const object = await this.readOne(input.id, session);
     const changes = this.repo.getActualChanges(object, input);
 
     await this.db.updateProperties({
-      type: PlanChange,
+      type: ProjectChangeRequest,
       object,
       changes,
     });
     const updated = await this.readOne(input.id, session);
 
-    const planChangeUpdatedEvent = new PlanChangeUpdatedEvent(
+    const event = new ProjectChangeRequestUpdatedEvent(
       updated,
       object,
       input,
       session
     );
-    await this.eventBus.publish(planChangeUpdatedEvent);
+    await this.eventBus.publish(event);
 
     return updated;
   }
@@ -163,34 +163,27 @@ export class PlanChangeService {
   async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
-    if (!object) {
-      throw new NotFoundException(
-        'Could not find plan change',
-        'planChange.id'
-      );
-    }
-
     const canDelete = await this.db.checkDeletePermission(id, session);
 
     if (!canDelete)
       throw new UnauthorizedException(
-        'You do not have the permission to delete this plan change'
+        'You do not have the permission to delete this project change request'
       );
 
     try {
       await this.db.deleteNode(object);
     } catch (exception) {
-      this.logger.warning('Failed to delete plan change', {
+      this.logger.warning('Failed to delete project change request', {
         exception,
       });
-      throw new ServerException('Failed to delete plan change');
+      throw new ServerException('Failed to delete project change request');
     }
   }
 
   async list(
-    { filter, ...input }: PlanChangeListInput,
+    { filter, ...input }: ProjectChangeRequestListInput,
     session: Session
-  ): Promise<PlanChangeListOutput> {
+  ): Promise<ProjectChangeRequestListOutput> {
     const query = this.repo.list({ filter, ...input }, session);
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }

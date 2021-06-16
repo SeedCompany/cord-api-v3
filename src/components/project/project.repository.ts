@@ -77,9 +77,9 @@ export class ProjectRepository extends CommonRepository {
                   optional: true,
                 })
               )
-              .match(node('planChange', 'PlanChange', { id: changeset }))
+              .match(node('changeset', 'Changeset', { id: changeset }))
           : q.subQuery((sub) =>
-              sub.return(['null as planChange', '{} as changedProps'])
+              sub.return(['null as changeset', '{} as changedProps'])
             )
       )
       .optionalMatch([
@@ -116,7 +116,7 @@ export class ProjectRepository extends CommonRepository {
               fieldRegion: fieldRegion.id,
               owningOrganization: organization.id,
               scope: scopedRoles,
-              changeset: coalesce(planChange.id)
+              changeset: coalesce(changeset.id)
             }
           ]) as project`,
       ])

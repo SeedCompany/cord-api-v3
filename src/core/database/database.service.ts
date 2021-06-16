@@ -230,7 +230,7 @@ export class DatabaseService {
     object: TObject;
     // The changes
     changes: DbChanges<TResourceStatic['prototype']>;
-    // Plan Change ID
+    // Changeset ID
     changeset?: ID;
   }): Promise<TObject> {
     let updated = object;
@@ -310,7 +310,7 @@ export class DatabaseService {
             ...(changeset
               ? [
                   relation('in', 'oldChange', 'changeset', { active: true }),
-                  node('changeNode', 'PlanChange', { id: changeset }),
+                  node('changeNode', 'Changeset', { id: changeset }),
                 ]
               : []),
           ])

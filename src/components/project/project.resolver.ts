@@ -29,7 +29,10 @@ import {
 } from '../location';
 import { OrganizationService, SecuredOrganization } from '../organization';
 import { PartnershipListInput, SecuredPartnershipList } from '../partnership';
-import { PlanChangeListInput, SecuredPlanChangeList } from '../plan-change/dto';
+import {
+  ProjectChangeRequestListInput,
+  SecuredProjectChangeRequestList,
+} from '../project-change-request/dto';
 import {
   CreateProjectInput,
   CreateProjectOutput,
@@ -104,19 +107,19 @@ export class ProjectResolver {
       : undefined;
   }
 
-  @ResolveField(() => SecuredPlanChangeList)
-  async planChanges(
+  @ResolveField(() => SecuredProjectChangeRequestList)
+  async changeRequests(
     @AnonSession() session: Session,
     @Parent() project: Project,
     @Args({
       name: 'input',
-      type: () => PlanChangeListInput,
+      type: () => ProjectChangeRequestListInput,
       nullable: true,
-      defaultValue: PlanChangeListInput.defaultVal,
+      defaultValue: ProjectChangeRequestListInput.defaultVal,
     })
-    input: PlanChangeListInput
-  ): Promise<SecuredPlanChangeList> {
-    return this.projectService.listPlanChanges(project.id, input, session);
+    input: ProjectChangeRequestListInput
+  ): Promise<SecuredProjectChangeRequestList> {
+    return this.projectService.listChangeRequests(project.id, input, session);
   }
 
   @ResolveField(() => SecuredBudget, {

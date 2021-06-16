@@ -257,8 +257,8 @@ export class EngagementService {
     };
 
     if (changeset) {
-      const planChangesProps = await this.repo.getChangesetProps(id, changeset);
-      entries(planChangesProps).forEach(([key, prop]) => {
+      const changesetProps = await this.repo.getChangesetProps(id, changeset);
+      entries(changesetProps).forEach(([key, prop]) => {
         if (prop !== undefined) {
           props = {
             ...props,

@@ -44,9 +44,12 @@ import {
   PartnershipService,
   SecuredPartnershipList,
 } from '../partnership';
-import { PlanChangeService } from '../plan-change';
-import { PlanChangeListInput, SecuredPlanChangeList } from '../plan-change/dto';
-import { PlanChangeStatus } from '../plan-change/dto/plan-change-status.enum';
+import { ProjectChangeRequestService } from '../project-change-request';
+import {
+  ProjectChangeRequestListInput,
+  ProjectChangeRequestStatus,
+  SecuredProjectChangeRequestList,
+} from '../project-change-request/dto';
 import {
   CreateProject,
   InternshipProject,
@@ -91,7 +94,7 @@ export class ProjectService {
     private readonly authorizationService: AuthorizationService,
     private readonly projectRules: ProjectRules,
     private readonly repo: ProjectRepository,
-    private readonly planChangeService: PlanChangeService,
+    private readonly projectChangeRequests: ProjectChangeRequestService,
     @Logger('project:service') private readonly logger: ILogger
   ) {}
 
@@ -311,19 +314,19 @@ export class ProjectService {
       ...simpleChanges
     } = changes;
 
-    // In CR mode, Project status should be Active and CR status is pending
+    // In changeset mode, Project status should be Active and change request status is pending
     if (changeset) {
-      const planChange = await this.planChangeService.readOne(
+      const changeRequest = await this.projectChangeRequests.readOne(
         changeset,
         session
       );
       if (
         // TODO
         // currentProject.status !== ProjectStatus.Active ||
-        planChange.status.value !== PlanChangeStatus.Pending
+        changeRequest.status.value !== ProjectChangeRequestStatus.Pending
       ) {
         throw new InputException(
-          'Project status is not Active or CR is not pending',
+          'Project status is not Active or change request is not pending',
           'project.status'
         );
       }
@@ -530,12 +533,12 @@ export class ProjectService {
     };
   }
 
-  async listPlanChanges(
+  async listChangeRequests(
     projectId: ID,
-    input: PlanChangeListInput,
+    input: ProjectChangeRequestListInput,
     session: Session
-  ): Promise<SecuredPlanChangeList> {
-    const result = await this.planChangeService.list(
+  ): Promise<SecuredProjectChangeRequestList> {
+    const result = await this.projectChangeRequests.list(
       {
         ...input,
         filter: {

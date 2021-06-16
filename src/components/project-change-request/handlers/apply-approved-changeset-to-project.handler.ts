@@ -14,33 +14,37 @@ import { EngagementRepository } from '../../engagement/engagement.repository';
 import { UpdateProject } from '../../project';
 import { ProjectRepository } from '../../project/project.repository';
 import { ProjectService } from '../../project/project.service';
-import { PlanChangeStatus } from '../dto/plan-change-status.enum';
-import { PlanChangeUpdatedEvent } from '../events';
+import { ProjectChangeRequestStatus } from '../dto';
+import { ProjectChangeRequestUpdatedEvent } from '../events';
 
-type SubscribedEvent = PlanChangeUpdatedEvent;
+type SubscribedEvent = ProjectChangeRequestUpdatedEvent;
 
-@EventsHandler(PlanChangeUpdatedEvent)
-export class CRUpdateProject implements IEventHandler<SubscribedEvent> {
+@EventsHandler(ProjectChangeRequestUpdatedEvent)
+export class ApplyApprovedChangesetToProject
+  implements IEventHandler<SubscribedEvent>
+{
   constructor(
     private readonly db: DatabaseService,
     private readonly projectService: ProjectService,
     private readonly projectRepo: ProjectRepository,
     private readonly engagementService: EngagementService,
     private readonly engagementRepo: EngagementRepository,
-    @Logger('plan-change:cr-update-project') private readonly logger: ILogger
+    @Logger('project:change-request:approved') private readonly logger: ILogger
   ) {}
 
   async handle(event: SubscribedEvent) {
-    this.logger.debug('Plan Change mutation, update project fields', {
-      ...event,
-      event: event.constructor.name,
-    });
-    const oldPlanChange = event.previous;
-    const planChange = event.updated;
+    this.logger.debug(
+      'Project Change Request mutation, update project fields',
+      {
+        ...event,
+        event: event.constructor.name,
+      }
+    );
+    const updated = event.updated;
 
     if (
-      oldPlanChange.status.value !== PlanChangeStatus.Pending ||
-      planChange.status.value !== PlanChangeStatus.Approved
+      event.previous.status.value !== ProjectChangeRequestStatus.Pending ||
+      updated.status.value !== ProjectChangeRequestStatus.Approved
     ) {
       return;
     }
@@ -52,7 +56,7 @@ export class CRUpdateProject implements IEventHandler<SubscribedEvent> {
         .match([
           node('project', 'Project'),
           relation('out', '', 'changeset', { active: true }),
-          node('planChange', 'PlanChange', { id: planChange.id }),
+          node('changeset', 'Changeset', { id: updated.id }),
         ])
         .return('project.id as projectId')
         .asResult<{ projectId: ID }>()
@@ -66,7 +70,7 @@ export class CRUpdateProject implements IEventHandler<SubscribedEvent> {
         );
         const changes = await this.projectRepo.getChangesetProps(
           result.projectId,
-          planChange.id
+          updated.id
         );
 
         // Update project pending changes
@@ -84,17 +88,17 @@ export class CRUpdateProject implements IEventHandler<SubscribedEvent> {
         // Update project engagement pending changes
         await this.db
           .query()
-          .match([node('planChange', 'PlanChange', { id: planChange.id })])
+          .match([node('changeset', 'Changeset', { id: updated.id })])
           .match([
             node('project', 'Project', { id: result.projectId }),
             relation('out', 'engagementRel', 'engagement', { active: false }),
             node('engagement', 'Engagement'),
-            relation('in', 'changeRel', 'changeset', { active: true }),
-            node('planChange'),
+            relation('in', 'changesetRel', 'changeset', { active: true }),
+            node('changeset'),
           ])
           .setValues({
             'engagementRel.active': true,
-            'changeRel.active': false,
+            'changesetRel.active': false,
           })
           .run();
         const engagementsResult = await this.db
@@ -115,7 +119,7 @@ export class CRUpdateProject implements IEventHandler<SubscribedEvent> {
           );
           const changes = await this.engagementRepo.getChangesetProps(
             id,
-            planChange.id
+            updated.id
           );
           await this.db.updateProperties({
             type: LanguageEngagement,
@@ -125,12 +129,8 @@ export class CRUpdateProject implements IEventHandler<SubscribedEvent> {
         });
       }
     } catch (exception) {
-      this.logger.error(`Could not update project in CR mode`, {
-        userId: event.session.userId,
-        exception,
-      });
       throw new ServerException(
-        'Could not update project in CR mode',
+        'Failed to apply changeset to project',
         exception
       );
     }

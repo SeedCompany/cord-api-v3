@@ -5,16 +5,16 @@ import { CalendarDate, sleep } from '../src/common';
 import { Powers } from '../src/components/authorization/dto/powers';
 import { EngagementStatus } from '../src/components/engagement';
 import { Language } from '../src/components/language';
-import { PlanChangeStatus } from '../src/components/plan-change/dto/plan-change-status.enum';
 import { Role } from '../src/components/project';
 import { User } from '../src/components/user/dto/user.dto';
 import {
+  approveProjectChangeRequest,
   createFundingAccount,
   createLanguage,
   createLanguageEngagement,
   createLocation,
-  createPlanChange,
   createProject,
+  createProjectChangeRequest,
   createRegion,
   createSession,
   createTestApp,
@@ -31,7 +31,7 @@ import {
   stepsFromEarlyConversationToBeforeActive,
 } from './utility/transition-project';
 
-const readProjectEnagements = (app: TestApp, id: string, changeset?: string) =>
+const readEngagements = (app: TestApp, id: string, changeset?: string) =>
   app.graphql.query(
     gql`
       query project($id: ID!, $changeset: ID) {
@@ -95,29 +95,7 @@ const activeProject = async (app: TestApp) => {
   return project;
 };
 
-const updateChangeset = (app: TestApp, id: string, status: PlanChangeStatus) =>
-  app.graphql.mutate(
-    gql`
-      mutation updatePlanChange($input: UpdatePlanChangeInput!) {
-        updatePlanChange(input: $input) {
-          planChange {
-            ...planChange
-          }
-        }
-      }
-      ${fragments.planChange}
-    `,
-    {
-      input: {
-        planChange: {
-          id,
-          status,
-        },
-      },
-    }
-  );
-
-describe('Engagement CR Aware e2e', () => {
+describe('Engagement Changeset Aware e2e', () => {
   let app: TestApp;
   let director: User;
   let db: Connection;
@@ -147,12 +125,11 @@ describe('Engagement CR Aware e2e', () => {
     await app.close();
   });
 
-  it('New Engagement CR aware', async () => {
+  it('Create', async () => {
     const project = await activeProject(app);
-    const planChange = await createPlanChange(app, {
+    const changeset = await createProjectChangeRequest(app, {
       projectId: project.id,
     });
-    expect(planChange.id).toBeTruthy();
 
     // Create new engagement with changeset
     const changesetEngagement = await app.graphql.mutate(
@@ -175,28 +152,27 @@ describe('Engagement CR Aware e2e', () => {
             projectId: project.id,
             status: EngagementStatus.InDevelopment,
           },
-          changeset: planChange.id,
+          changeset: changeset.id,
         },
       }
     );
     // list engagements without changeset
-    let result = await readProjectEnagements(app, project.id);
+    let result = await readEngagements(app, project.id);
     expect(result.project.engagements.items.length).toBe(0);
     // list engagements with changeset
-    result = await readProjectEnagements(app, project.id, planChange.id);
+    result = await readEngagements(app, project.id, changeset.id);
     expect(result.project.engagements.items.length).toBe(1);
     expect(result.project.engagements.items[0].id).toBe(
       changesetEngagement.createLanguageEngagement.engagement.id
     );
-    // aprove changeset
-    await updateChangeset(app, planChange.id, PlanChangeStatus.Approved);
-    result = await readProjectEnagements(app, project.id);
+    await approveProjectChangeRequest(app, changeset.id);
+    result = await readEngagements(app, project.id);
     expect(result.project.engagements.items.length).toBe(1);
   });
 
-  it('Engagement props CR aware', async () => {
+  it('Update', async () => {
     const project = await activeProject(app);
-    const planChange = await createPlanChange(app, {
+    const changeset = await createProjectChangeRequest(app, {
       projectId: project.id,
     });
     const languageEngagement = await createLanguageEngagement(app, {
@@ -224,7 +200,7 @@ describe('Engagement CR Aware e2e', () => {
             id: languageEngagement.id,
             completeDate: CalendarDate.fromISO('2100-08-22'),
           },
-          changeset: planChange.id,
+          changeset: changeset.id,
         },
       }
     );
@@ -236,11 +212,10 @@ describe('Engagement CR Aware e2e', () => {
     result = await readLanguageEngagement(
       app,
       languageEngagement.id,
-      planChange.id
+      changeset.id
     );
     expect(result.engagement.completeDate.value).toBe('2100-08-22');
-    // approve changeset
-    await updateChangeset(app, planChange.id, PlanChangeStatus.Approved);
+    await approveProjectChangeRequest(app, changeset.id);
     await sleep(1000);
     result = await readLanguageEngagement(app, languageEngagement.id);
     expect(result.engagement.completeDate.value).toBe('2100-08-22');

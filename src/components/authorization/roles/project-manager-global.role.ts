@@ -16,9 +16,9 @@ import { DbOrganization } from '../../organization/model';
 import { DbPartner } from '../../partner/model';
 import { DbPartnership } from '../../partnership/model';
 import { DbPeriodicReport } from '../../periodic-report/model';
-import { DbPlanChange } from '../../plan-change/model';
 import { DbPost } from '../../post/model';
 import { DbProduct } from '../../product/model';
+import { DbProjectChangeRequest } from '../../project-change-request/model';
 /* eslint-disable @typescript-eslint/naming-convention */
 import { DbProject } from '../../project/model';
 import { DbProjectMember } from '../../project/project-member/model';
@@ -432,8 +432,8 @@ export const ProjectManagerGlobal = new DbRole({
       ],
       canDelete: false,
     }),
-    new DbBaseNodeGrant<DbPlanChange>({
-      __className: 'DbPlanChange',
+    new DbBaseNodeGrant<DbProjectChangeRequest>({
+      __className: 'DbProjectChangeRequest',
       properties: [
         { propertyName: 'types',                       permission: { read, write, }, },
         { propertyName: 'summary',                     permission: { read, write, }, },

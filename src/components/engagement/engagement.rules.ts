@@ -479,7 +479,7 @@ export class EngagementRules {
       .query()
       .match([
         node('engagement', 'Engagement', { id: engagementId }),
-        relation('in', '', 'engagement'), // Removed active true due to CR aware
+        relation('in', '', 'engagement'), // Removed active true due to changeset aware
         node('project', 'Project'),
       ])
       .raw('return project.id as projectId')

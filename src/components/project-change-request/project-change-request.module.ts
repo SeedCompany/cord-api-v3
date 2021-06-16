@@ -3,9 +3,9 @@ import { AuthorizationModule } from '../authorization/authorization.module';
 import { EngagementModule } from '../engagement/engagement.module';
 import { ProjectModule } from '../project/project.module';
 import * as handlers from './handlers';
-import { PlanChangeRepository } from './plan-change.repository';
-import { PlanChangeResolver } from './plan-change.resolver';
-import { PlanChangeService } from './plan-change.service';
+import { ProjectChangeRequestRepository } from './project-change-request.repository';
+import { ProjectChangeRequestResolver } from './project-change-request.resolver';
+import { ProjectChangeRequestService } from './project-change-request.service';
 
 @Module({
   imports: [
@@ -14,11 +14,11 @@ import { PlanChangeService } from './plan-change.service';
     forwardRef(() => EngagementModule),
   ],
   providers: [
-    PlanChangeResolver,
-    PlanChangeService,
-    PlanChangeRepository,
+    ProjectChangeRequestResolver,
+    ProjectChangeRequestService,
+    ProjectChangeRequestRepository,
     ...Object.values(handlers),
   ],
-  exports: [PlanChangeService],
+  exports: [ProjectChangeRequestService],
 })
-export class PlanChangeModule {}
+export class ProjectChangeRequestModule {}

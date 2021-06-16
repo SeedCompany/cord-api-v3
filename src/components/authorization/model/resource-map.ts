@@ -23,12 +23,12 @@ import {
   IPeriodicReport as PeriodicReport,
   ProgressReport,
 } from '../../periodic-report/dto';
-import { PlanChange } from '../../plan-change/dto';
 import {
   DerivativeScriptureProduct,
   DirectScriptureProduct,
   Product,
 } from '../../product/dto';
+import { ProjectChangeRequest } from '../../project-change-request/dto';
 import {
   InternshipProject,
   IProject as Project,
@@ -72,7 +72,7 @@ export const ResourceMap = {
   FinancialReport,
   NarrativeReport,
   ProgressReport,
-  PlanChange,
+  ProjectChangeRequest,
   Song,
   Story,
   Unavailability,

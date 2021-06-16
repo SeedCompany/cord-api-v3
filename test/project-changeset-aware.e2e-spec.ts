@@ -5,16 +5,16 @@ import { CalendarDate } from '../src/common';
 import { Powers } from '../src/components/authorization/dto/powers';
 import { PartnerType } from '../src/components/partner';
 import { CreatePartnership } from '../src/components/partnership';
-import { PlanChangeStatus } from '../src/components/plan-change/dto/plan-change-status.enum';
 import { Role } from '../src/components/project';
 import { User } from '../src/components/user/dto/user.dto';
 import {
+  approveProjectChangeRequest,
   createFundingAccount,
   createLocation,
   createOrganization,
   createPartner,
-  createPlanChange,
   createProject,
+  createProjectChangeRequest,
   createRegion,
   createSession,
   createTestApp,
@@ -82,7 +82,7 @@ const activeProject = async (app: TestApp) => {
   return project;
 };
 
-describe('Project CR Aware e2e', () => {
+describe('Project Changeset Aware e2e', () => {
   let app: TestApp;
   let director: User;
   let db: Connection;
@@ -106,12 +106,11 @@ describe('Project CR Aware e2e', () => {
     await app.close();
   });
 
-  it('CR aware project name', async () => {
+  it('name', async () => {
     const project = await activeProject(app);
-    const planChange = await createPlanChange(app, {
+    const changeset = await createProjectChangeRequest(app, {
       projectId: project.id,
     });
-    expect(planChange.id).toBeTruthy();
 
     // Update project with changeset
     const newCRName = faker.random.word() + ' ' + faker.datatype.uuid();
@@ -132,7 +131,7 @@ describe('Project CR Aware e2e', () => {
             id: project.id,
             name: newCRName,
           },
-          changeset: planChange.id,
+          changeset: changeset.id,
         },
       }
     );
@@ -143,42 +142,21 @@ describe('Project CR Aware e2e', () => {
     expect(result.project.name.value).toBe(project.name.value);
 
     // Query project with changeset
-    result = await readProject(app, project.id, planChange.id);
+    result = await readProject(app, project.id, changeset.id);
     expect(result.project.name.value).toBe(newCRName);
 
-    // Approve CR
-    await app.graphql.mutate(
-      gql`
-        mutation updatePlanChange($input: UpdatePlanChangeInput!) {
-          updatePlanChange(input: $input) {
-            planChange {
-              ...planChange
-            }
-          }
-        }
-        ${fragments.planChange}
-      `,
-      {
-        input: {
-          planChange: {
-            id: planChange.id,
-            status: PlanChangeStatus.Approved,
-          },
-        },
-      }
-    );
+    await approveProjectChangeRequest(app, changeset.id);
 
     // Project name is changed without changeset
     result = await readProject(app, project.id);
     expect(result.project.name.value).toBe(newCRName);
   });
 
-  it('CR aware project mouStart and mouEnd', async () => {
+  it('mouStart and mouEnd', async () => {
     const project = await activeProject(app);
-    const planChange = await createPlanChange(app, {
+    const changeset = await createProjectChangeRequest(app, {
       projectId: project.id,
     });
-    expect(planChange.id).toBeTruthy();
 
     // Update project with changeset
     const mouStart = '2020-08-23';
@@ -201,7 +179,7 @@ describe('Project CR Aware e2e', () => {
             mouStart: CalendarDate.fromISO(mouStart),
             mouEnd: CalendarDate.fromISO(mouEnd),
           },
-          changeset: planChange.id,
+          changeset: changeset.id,
         },
       }
     );
@@ -214,31 +192,11 @@ describe('Project CR Aware e2e', () => {
     expect(result.project.mouEnd.value).toBeNull();
 
     // Query project with changeset
-    result = await readProject(app, project.id, planChange.id);
+    result = await readProject(app, project.id, changeset.id);
     expect(result.project.mouStart.value).toBe(mouStart);
     expect(result.project.mouEnd.value).toBe(mouEnd);
 
-    // Approve CR
-    await app.graphql.mutate(
-      gql`
-        mutation updatePlanChange($input: UpdatePlanChangeInput!) {
-          updatePlanChange(input: $input) {
-            planChange {
-              ...planChange
-            }
-          }
-        }
-        ${fragments.planChange}
-      `,
-      {
-        input: {
-          planChange: {
-            id: planChange.id,
-            status: PlanChangeStatus.Approved,
-          },
-        },
-      }
-    );
+    await approveProjectChangeRequest(app, changeset.id);
 
     // Project mouStart/mouEnd are changed
     result = await readProject(app, project.id);
@@ -246,9 +204,9 @@ describe('Project CR Aware e2e', () => {
     expect(result.project.mouEnd.value).toBe(mouEnd);
   });
 
-  it('CR aware budget records', async () => {
+  it('budget records', async () => {
     const project = await activeProject(app);
-    const planChange = await createPlanChange(app, {
+    const changeset = await createProjectChangeRequest(app, {
       projectId: project.id,
     });
 
@@ -306,7 +264,7 @@ describe('Project CR Aware e2e', () => {
             mouStart: CalendarDate.fromISO('2020-08-23'),
             mouEnd: CalendarDate.fromISO('2021-08-22'),
           },
-          changeset: planChange.id,
+          changeset: changeset.id,
         },
       }
     );
@@ -316,30 +274,11 @@ describe('Project CR Aware e2e', () => {
     expect(result.project.budget.value.records.length).toBe(0);
 
     // Query project with changeset
-    result = await readProject(app, project.id, planChange.id);
+    result = await readProject(app, project.id, changeset.id);
     expect(result.project.budget.value.records.length).toBe(2);
 
-    // Approve CR
-    await app.graphql.mutate(
-      gql`
-        mutation updatePlanChange($input: UpdatePlanChangeInput!) {
-          updatePlanChange(input: $input) {
-            planChange {
-              ...planChange
-            }
-          }
-        }
-        ${fragments.planChange}
-      `,
-      {
-        input: {
-          planChange: {
-            id: planChange.id,
-            status: PlanChangeStatus.Approved,
-          },
-        },
-      }
-    );
+    await approveProjectChangeRequest(app, changeset.id);
+
     // Query project without changeset
     result = await readProject(app, project.id);
     expect(result.project.budget.value.records.length).toBe(2);

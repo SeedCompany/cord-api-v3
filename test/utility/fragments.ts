@@ -1029,8 +1029,8 @@ export const location = gql`
   ${fieldRegion}
 `;
 
-export const planChange = gql`
-  fragment planChange on PlanChange {
+export const projectChangeRequest = gql`
+  fragment projectChangeRequest on ProjectChangeRequest {
     id
     status {
       value
@@ -1077,5 +1077,5 @@ export const fragments = {
   ceremony,
   partner,
   fundingAccount,
-  planChange,
+  projectChangeRequest,
 };

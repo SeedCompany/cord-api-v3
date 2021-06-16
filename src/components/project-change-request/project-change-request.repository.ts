@@ -13,16 +13,22 @@ import {
 } from '../../core/database/query';
 import { DbPropsOfDto } from '../../core/database/results';
 import { ScopedRole } from '../project/project-member';
-import { PlanChange, PlanChangeListInput } from './dto';
+import { ProjectChangeRequest, ProjectChangeRequestListInput } from './dto';
 
 @Injectable()
-export class PlanChangeRepository extends DtoRepository(PlanChange) {
+export class ProjectChangeRequestRepository extends DtoRepository(
+  ProjectChangeRequest
+) {
   async create(session: Session, secureProps: Property[]) {
     return await this.db
       .query()
       .apply(matchRequestingUser(session))
       .apply(
-        createBaseNode(await generateId(), 'PlanChange:Changeset', secureProps)
+        createBaseNode(
+          await generateId(),
+          ['ProjectChangeRequest', 'Changeset'],
+          secureProps
+        )
       )
       .return('node.id as id')
       .first();
@@ -33,21 +39,21 @@ export class PlanChangeRepository extends DtoRepository(PlanChange) {
       .query()
       .apply(matchRequestingUser(session))
       .match([
-        node('node', 'PlanChange:Changeset', { id }),
+        node('node', 'ProjectChangeRequest', { id }),
         relation('in', '', 'changeset', { active: true }),
         node('project', 'Project'),
       ])
       .apply(matchPropsAndProjectSensAndScopedRoles(session))
       .return(['props', 'scopedRoles'])
       .asResult<{
-        props: DbPropsOfDto<PlanChange, true>;
+        props: DbPropsOfDto<ProjectChangeRequest, true>;
         scopedRoles: ScopedRole[];
       }>();
 
     return await query.first();
   }
 
-  list({ filter, ...input }: PlanChangeListInput, _session: Session) {
+  list({ filter, ...input }: ProjectChangeRequestListInput, _session: Session) {
     return this.db
       .query()
       .match([
@@ -63,6 +69,6 @@ export class PlanChangeRepository extends DtoRepository(PlanChange) {
             ]
           : []),
       ])
-      .call(calculateTotalAndPaginateList(PlanChange, input));
+      .call(calculateTotalAndPaginateList(ProjectChangeRequest, input));
   }
 }
