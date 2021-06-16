@@ -7,10 +7,7 @@ import { Changeset, ChangesetAware } from './dto';
 export class ChangesetAwareResolver {
   constructor(private readonly repo: ChangesetRepository) {}
 
-  @ResolveField(() => Changeset, {
-    description: 'The current changeset that this object is for.',
-    nullable: true,
-  })
+  @ResolveField()
   async changeset(
     @Parent() object: ChangesetAware,
     @LoggedInSession() _session: Session

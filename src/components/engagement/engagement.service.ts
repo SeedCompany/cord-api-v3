@@ -297,6 +297,7 @@ export class EngagementService {
     const common = {
       __typename: result.__typename,
       ...result.props,
+      changeset,
       startDate: {
         value: startDate,
         canRead: canReadStartDate,

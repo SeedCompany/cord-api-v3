@@ -39,7 +39,7 @@ const ChangesetAwareResource: Type<Resource & ChangesetAware> =
 
 @InterfaceType({
   resolveType: (val: AnyEngagement) => val.__typename,
-  implements: [Resource],
+  implements: [Resource, ChangesetAware],
 })
 /**
  * This should be used for GraphQL but never for TypeScript types.
@@ -117,7 +117,7 @@ class Engagement extends ChangesetAwareResource {
 export { Engagement as IEngagement, AnyEngagement as Engagement };
 
 @ObjectType({
-  implements: [Engagement, ChangesetAware],
+  implements: [Engagement],
 })
 export class LanguageEngagement extends Engagement {
   static readonly Props = keysOf<LanguageEngagement>();
@@ -150,7 +150,7 @@ export class LanguageEngagement extends Engagement {
 }
 
 @ObjectType({
-  implements: [Engagement, ChangesetAware],
+  implements: [Engagement],
 })
 export class InternshipEngagement extends Engagement {
   static readonly Props = keysOf<InternshipEngagement>();

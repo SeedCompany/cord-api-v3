@@ -58,7 +58,7 @@ const PinnablePostableChangesetAwareResource: Type<
 
     throw new Error('Could not resolve project type');
   },
-  implements: [Resource, Pinnable],
+  implements: [Resource, Pinnable, ChangesetAware],
 })
 class Project extends PinnablePostableChangesetAwareResource {
   static readonly Props: string[] = keysOf<Project>();
@@ -148,7 +148,7 @@ class Project extends PinnablePostableChangesetAwareResource {
 export { Project as IProject, AnyProject as Project };
 
 @ObjectType({
-  implements: [Project, Resource, Pinnable, Postable, ChangesetAware],
+  implements: [Project, Postable],
 })
 export class TranslationProject extends Project {
   static readonly Props = keysOf<TranslationProject>();
@@ -158,7 +158,7 @@ export class TranslationProject extends Project {
 }
 
 @ObjectType({
-  implements: [Project, Resource, Pinnable, Postable, ChangesetAware],
+  implements: [Project, Postable],
 })
 export class InternshipProject extends Project {
   static readonly Props = keysOf<InternshipProject>();

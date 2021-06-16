@@ -1,6 +1,7 @@
-import { InterfaceType } from '@nestjs/graphql';
+import { Field, InterfaceType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { ID, IdField } from '../../../common';
+import { Changeset } from './changeset.dto';
 
 @InterfaceType({
   description: stripIndent`
@@ -15,5 +16,9 @@ export abstract class ChangesetAware {
   })
   readonly id: ID;
 
-  readonly changeset: ID;
+  @Field(() => Changeset, {
+    description: 'The current changeset that this object is for.',
+    nullable: true,
+  })
+  readonly changeset?: ID;
 }
