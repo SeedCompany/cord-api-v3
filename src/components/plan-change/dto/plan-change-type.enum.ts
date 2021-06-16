@@ -5,7 +5,7 @@ export enum PlanChangeType {
   Time = 'Time',
   Budget = 'Budget',
   Goal = 'Goal',
-  Language = 'Language',
+  Engagement = 'Engagement',
   Other = 'Other',
 }
 
