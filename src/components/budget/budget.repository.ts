@@ -119,4 +119,21 @@ export class BudgetRepository extends DtoRepository(Budget) {
       .apply(calculateTotalAndPaginateList(Budget, input));
     return query;
   }
+  listNoSecGroups({ filter, ...input }: BudgetListInput) {
+    const query = this.db
+      .query()
+      .match([
+        ...(filter.projectId
+          ? [
+              node('node', 'Budget'),
+              relation('in', '', 'budget', { active: true }),
+              node('project', 'Project', {
+                id: filter.projectId,
+              }),
+            ]
+          : [node('node', 'Budget')]),
+      ])
+      .apply(calculateTotalAndPaginateList(Budget, input));
+    return query;
+  }
 }

@@ -794,7 +794,7 @@ export class ProjectService {
     });
 
     if (permsOfProject.budget.canRead) {
-      const budgets = await this.budgetService.list(
+      const budgets = await this.budgetService.listNoSecGroups(
         {
           filter: {
             projectId: id,
