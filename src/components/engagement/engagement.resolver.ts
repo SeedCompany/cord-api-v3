@@ -6,15 +6,9 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import {
-  AnonSession,
-  ID,
-  IdArg,
-  LoggedInSession,
-  ReadPlanChangeArgs,
-  Session,
-} from '../../common';
+import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
 import { CeremonyService, SecuredCeremony } from '../ceremony';
+import { ChangesetIds } from '../changeset/dto';
 import {
   CreateInternshipEngagementInput,
   CreateInternshipEngagementOutput,
@@ -42,7 +36,7 @@ export class EngagementResolver {
     description: 'Lookup an engagement by ID',
   })
   async engagement(
-    @Args() { id, changeset }: ReadPlanChangeArgs,
+    @Args() { id, changeset }: ChangesetIds,
     @AnonSession() session: Session
   ): Promise<Engagement> {
     const engagement = await this.service.readOne(id, session, changeset);

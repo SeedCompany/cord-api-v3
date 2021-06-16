@@ -14,10 +14,10 @@ import {
   IdArg,
   IdField,
   LoggedInSession,
-  ReadPlanChangeArgs,
   Session,
 } from '../../common';
 import { SecuredBudget } from '../budget';
+import { ChangesetIds } from '../changeset/dto';
 import { EngagementListInput, SecuredEngagementList } from '../engagement';
 import { FieldRegionService, SecuredFieldRegion } from '../field-region';
 import { SecuredDirectory } from '../file';
@@ -69,7 +69,7 @@ export class ProjectResolver {
   })
   async project(
     @LoggedInSession() session: Session,
-    @Args() { id, changeset }: ReadPlanChangeArgs
+    @Args() { id, changeset }: ChangesetIds
   ): Promise<Project> {
     const project = await this.projectService.readOneUnsecured(
       id,

@@ -1,8 +1,11 @@
 import { ArgsType } from '@nestjs/graphql';
-import { ID, IdField } from './id-field';
+import { ID, IdField } from '../../../common';
 
+/**
+ * A helper for id & changeset arguments.
+ */
 @ArgsType()
-export class ReadPlanChangeArgs {
+export class ChangesetIds {
   @IdField()
   id: ID;
 
