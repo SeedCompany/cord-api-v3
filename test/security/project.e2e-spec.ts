@@ -1,8 +1,9 @@
 import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
-import { Sensitivity } from '../../src/common';
+import { CalendarDate, Sensitivity } from '../../src/common';
 import { Powers } from '../../src/components/authorization/dto/powers';
 import { Location } from '../../src/components/location';
+import { PartnerType } from '../../src/components/partner';
 import {
   IProject,
   Project,
@@ -11,7 +12,11 @@ import {
   ScopedRole,
 } from '../../src/components/project';
 import {
+  createBudget,
   createLocation,
+  createOrganization,
+  createPartner,
+  createPartnership,
   createProject,
   createSession,
   createTestApp,
@@ -54,6 +59,10 @@ describe('Project Security e2e', () => {
         Powers.CreateLanguage,
         Powers.CreateLanguageEngagement,
         Powers.CreateEthnologueLanguage,
+        Powers.CreateBudget,
+        Powers.CreateOrganization,
+        Powers.CreatePartner,
+        Powers.CreatePartnership,
       ],
       { email: email, password: password }
     );
@@ -101,6 +110,7 @@ describe('Project Security e2e', () => {
         ${'tags'}                      | ${readOneProject} | ${IProject}
         ${'financialReportReceivedAt'} | ${readOneProject} | ${IProject}
         ${'primaryLocation'}           | ${readOneProject} | ${IProject}
+        ${'budget'}                    | ${readOneProject} | ${IProject}
       `(
         ' reading $staticResource.name $property',
         async ({ property, readFunction, staticResource }) => {
@@ -182,6 +192,43 @@ describe('Project Security e2e', () => {
         );
       }
     );
+    it('reading currentBudget', async () => {
+      await login(app, { email, password });
+      const proj = await createProject(app);
+      await createBudget(app, { projectId: proj.id });
+      const org = await createOrganization(app);
+      const partner = await createPartner(app, {
+        organizationId: org.id,
+      });
+      await createPartnership(app, {
+        partnerId: partner.id,
+        projectId: proj.id,
+        types: [PartnerType.Funding, PartnerType.Managing],
+        financialReportingType: undefined,
+        mouStartOverride: CalendarDate.fromISO('2000-01-01'),
+        mouEndOverride: CalendarDate.fromISO('2004-01-01'),
+      });
+      await registerUserWithPower(app, [], { roles: [Role.ConsultantManager] });
+      const perms = await getPermissions({
+        resource: IProject,
+        userRole: `global:${Role.ConsultantManager as Role}` as ScopedRole,
+        sensitivity: Sensitivity.Medium,
+      });
+
+      await expectSensitiveProperty({
+        app,
+        role: Role.ConsultantManager,
+        propertyToCheck: 'budget',
+        projectId: proj.id,
+        resourceId: proj.id,
+        resource: IProject,
+        sensitivityRestriction: Sensitivity.Medium,
+        projectType: ProjectType.Translation,
+        permissions: perms,
+        readOneFunction: readOneProject,
+      });
+      await login(app, { email, password });
+    });
     describe.each`
       role                      | sensitivityToTest
       ${Role.StaffMember}       | ${Sensitivity.Low}

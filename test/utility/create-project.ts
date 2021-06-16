@@ -1,6 +1,6 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-import { CalendarDate, ID, isValidId } from '../../src/common';
+import { CalendarDate, isValidId } from '../../src/common';
 import {
   CreateProject,
   Project,
@@ -71,7 +71,7 @@ export async function readOneProjectOtherLocations(
   expect(actual).toBeTruthy();
   return actual;
 }
-export async function readOneProject(app: TestApp, id: ID) {
+export async function readOneProject(app: TestApp, id: string) {
   const result = await app.graphql.query(
     gql`
       query {

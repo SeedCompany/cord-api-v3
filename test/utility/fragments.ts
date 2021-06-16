@@ -444,6 +444,14 @@ export const project = gql`
     createdAt
     type
     sensitivity
+    budget {
+      canRead
+      canEdit
+      value {
+        status
+        id
+      }
+    }
     rootDirectory {
       value {
         id
