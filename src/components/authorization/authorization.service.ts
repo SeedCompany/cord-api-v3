@@ -181,22 +181,27 @@ export class AuthorizationService {
    * @param sessionOrUserId Give session or a user to grab their global roles
    *                        and merge them with the given roles
    * @param otherRoles      Other roles to apply, probably non-global context
+   * @param dto             The object to in question. Currently sensitivity is pulled from this.
+   * @param sensitivity     The sensitivity level to get permissions for.
    */
   async getPermissions<Resource extends ResourceShape<any>>({
     resource,
     sessionOrUserId,
     otherRoles = [],
     dto,
+    sensitivity,
   }: {
     resource: Resource;
     sessionOrUserId: Session | ID;
     otherRoles?: ScopedRole[];
     dto?: Resource['prototype'];
+    sensitivity?: Sensitivity;
   }): Promise<PermissionsOf<SecuredResource<Resource>>> {
     const userGlobalRoles = isIdLike(sessionOrUserId)
       ? await this.getUserGlobalRoles(sessionOrUserId)
       : sessionOrUserId.roles;
     const roles = [...userGlobalRoles, ...otherRoles];
+    sensitivity ??= dto?.sensitivity;
 
     // convert resource to a list of resource names to check
     const resources = getParentTypes(resource)
@@ -233,7 +238,7 @@ export class AuthorizationService {
               propPerm,
               resource,
               key,
-              dto?.sensitivity
+              sensitivity
             )
               ? propPerm
               : {};

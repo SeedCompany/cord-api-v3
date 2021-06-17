@@ -406,6 +406,19 @@ export class BudgetService {
     return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 
+  async listNoSecGroups(
+    partialInput: Partial<BudgetListInput>,
+    session: Session
+  ): Promise<BudgetListOutput> {
+    const input = {
+      ...BudgetListInput.defaultVal,
+      ...partialInput,
+    };
+    const query = this.budgetRepo.listNoSecGroups(input);
+
+    return await runListQuery(query, input, (id) => this.readOne(id, session));
+  }
+
   async listRecords(
     input: BudgetRecordListInput,
     session: Session

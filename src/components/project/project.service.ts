@@ -476,10 +476,16 @@ export class ProjectService {
       sessionOrUserId,
       project.scope
     );
-
     return {
       ...project,
       ...securedProps,
+      primaryLocation: {
+        value: securedProps.primaryLocation.canRead
+          ? securedProps.primaryLocation.value
+          : null,
+        canRead: securedProps.primaryLocation.canRead,
+        canEdit: securedProps.primaryLocation.canEdit,
+      },
       canDelete: await this.repo.checkDeletePermission(
         project.id,
         sessionOrUserId
@@ -760,13 +766,13 @@ export class ProjectService {
   }
 
   async listOtherLocations(
-    projectId: ID,
+    project: Project,
     input: LocationListInput,
     session: Session
   ): Promise<SecuredLocationList> {
-    return await this.locationService.listLocationsFromNode(
-      'Project',
-      projectId,
+    return await this.locationService.listLocationForResource(
+      IProject,
+      project,
       'otherLocations',
       input,
       session
@@ -774,34 +780,36 @@ export class ProjectService {
   }
 
   async currentBudget(
-    projectOrProjectId: Project | ID,
+    { id, sensitivity }: Pick<Project, 'id' | 'sensitivity'>,
     session: Session
   ): Promise<SecuredBudget> {
-    const projectId = isIdLike(projectOrProjectId)
-      ? projectOrProjectId
-      : projectOrProjectId.id;
-    const budgets = await this.budgetService.list(
-      {
-        filter: {
-          projectId: projectId,
-        },
-      },
-      session
-    );
+    let budgetToReturn;
 
-    const current = budgets.items.find(
-      (b) => b.status === BudgetStatus.Current
-    );
-
-    // #574 - if no current budget, then fallback to the first pending budget
-    const budgetToReturn = current ?? budgets.items[0];
-
-    const membershipRoles = await this.getMembershipRoles(projectId, session);
+    const membershipRoles = await this.getMembershipRoles(id, session);
     const permsOfProject = await this.authorizationService.getPermissions({
       resource: IProject,
       sessionOrUserId: session,
       otherRoles: membershipRoles,
+      sensitivity,
     });
+
+    if (permsOfProject.budget.canRead) {
+      const budgets = await this.budgetService.listNoSecGroups(
+        {
+          filter: {
+            projectId: id,
+          },
+        },
+        session
+      );
+
+      const current = budgets.items.find(
+        (b) => b.status === BudgetStatus.Current
+      );
+
+      // #574 - if no current budget, then fallback to the first pending budget
+      budgetToReturn = current ?? budgets.items[0];
+    }
 
     return {
       value: budgetToReturn,
@@ -809,7 +817,7 @@ export class ProjectService {
       canEdit: session.roles.includes('global:Administrator')
         ? true
         : permsOfProject.budget.canEdit &&
-          budgetToReturn.status === BudgetStatus.Pending,
+          budgetToReturn?.status === BudgetStatus.Pending,
     };
   }
 
