@@ -47,23 +47,6 @@ export const permissionDefaults = {
   canEdit: false,
 };
 
-interface DtoWithSensitiveShape {
-  sensitivity: Sensitivity;
-}
-
-function hasSensitivityProp(object: any): object is DtoWithSensitiveShape {
-  if (object === undefined) {
-    return false;
-  }
-  if (
-    object === Sensitivity.High ||
-    object === Sensitivity.Low ||
-    object === Sensitivity.Medium
-  ) {
-    return false;
-  }
-  return 'sensitivity' in object;
-}
 export type Permission = typeof permissionDefaults;
 
 export type PermissionsOf<T> = Record<keyof T, Permission>;
@@ -131,7 +114,7 @@ export class AuthorizationService {
       resource,
       sessionOrUserId,
       otherRoles,
-      dtoOrSensitivity: props,
+      dto: props,
     });
     // @ts-expect-error not matching for some reason but declared return type is correct
     return parseSecuredProperties(props, permissions, resource.SecuredProps);
@@ -198,25 +181,27 @@ export class AuthorizationService {
    * @param sessionOrUserId Give session or a user to grab their global roles
    *                        and merge them with the given roles
    * @param otherRoles      Other roles to apply, probably non-global context
+   * @param dto             The object to in question. Currently sensitivity is pulled from this.
+   * @param sensitivity     The sensitivity level to get permissions for.
    */
   async getPermissions<Resource extends ResourceShape<any>>({
     resource,
     sessionOrUserId,
     otherRoles = [],
-    dtoOrSensitivity,
+    dto,
+    sensitivity,
   }: {
     resource: Resource;
     sessionOrUserId: Session | ID;
     otherRoles?: ScopedRole[];
-    dtoOrSensitivity?: Resource['prototype'] | Sensitivity;
+    dto?: Resource['prototype'];
+    sensitivity?: Sensitivity;
   }): Promise<PermissionsOf<SecuredResource<Resource>>> {
     const userGlobalRoles = isIdLike(sessionOrUserId)
       ? await this.getUserGlobalRoles(sessionOrUserId)
       : sessionOrUserId.roles;
     const roles = [...userGlobalRoles, ...otherRoles];
-    const sensitivity = hasSensitivityProp(dtoOrSensitivity)
-      ? dtoOrSensitivity.sensitivity
-      : dtoOrSensitivity;
+    sensitivity ??= dto?.sensitivity;
 
     // convert resource to a list of resource names to check
     const resources = getParentTypes(resource)

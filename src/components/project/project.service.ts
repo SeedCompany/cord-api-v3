@@ -790,7 +790,7 @@ export class ProjectService {
       resource: IProject,
       sessionOrUserId: session,
       otherRoles: membershipRoles,
-      dtoOrSensitivity: sensitivity,
+      sensitivity,
     });
 
     if (permsOfProject.budget.canRead) {

@@ -194,7 +194,7 @@ export class LocationService {
     const perms = await this.authorizationService.getPermissions({
       resource: label,
       sessionOrUserId: session,
-      dtoOrSensitivity: dto,
+      dto,
     });
 
     const query = this.repo.listLocationsFromNodeNoSecGroups(
