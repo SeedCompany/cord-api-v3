@@ -1,12 +1,10 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
-import { DateTime } from 'luxon';
 import {
   ID,
-  NotFoundException,
   ServerException,
   Session,
   UnauthorizedException,
+  UnsecuredDto,
 } from '../../common';
 import {
   ConfigService,
@@ -18,13 +16,11 @@ import {
 } from '../../core';
 import { runListQuery } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { ProjectStatus } from '../project/dto';
 import {
   CreateProjectChangeRequest,
   ProjectChangeRequest,
   ProjectChangeRequestListInput,
   ProjectChangeRequestListOutput,
-  ProjectChangeRequestStatus,
   UpdateProjectChangeRequest,
 } from './dto';
 import { ProjectChangeRequestUpdatedEvent } from './events';
@@ -51,7 +47,7 @@ export class ProjectChangeRequestService {
   }
 
   async create(
-    { projectId, ...input }: CreateProjectChangeRequest,
+    input: CreateProjectChangeRequest,
     session: Session
   ): Promise<ProjectChangeRequest> {
     // TODO
@@ -63,77 +59,37 @@ export class ProjectChangeRequestService {
     //     'project.status'
     //   );
     // }
-    const createdAt = DateTime.local();
+    const id = await this.repo.create(input, session);
 
-    const secureProps = [
-      {
-        key: 'types',
-        value: input.types,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'summary',
-        value: input.summary,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'status',
-        value: input.status,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
-
-    const result = await this.repo.create(session, secureProps);
-    if (!result) {
-      throw new ServerException('failed to create project change request');
-    }
-
-    await this.db
-      .query()
-      .match([
-        [node('changeset', 'Changeset', { id: result.id })],
-        [node('project', 'Project', { id: projectId })],
-      ])
-      .create([
-        node('project'),
-        relation('out', '', 'changeset', { active: true, createdAt }),
-        node('changeset'),
-      ])
-      .return('changeset.id as id')
-      .first();
-
-    return await this.readOne(result.id, session);
+    return await this.readOne(id, session);
   }
 
   async readOne(id: ID, session: Session): Promise<ProjectChangeRequest> {
-    this.logger.debug(`read one`, {
-      id,
-      userId: session.userId,
-    });
+    const dto = await this.readOneUnsecured(id, session);
+    return await this.secure(dto, session);
+  }
 
-    const result = await this.repo.readOne(id, session);
+  async readOneUnsecured(
+    id: ID,
+    session: Session
+  ): Promise<UnsecuredDto<ProjectChangeRequest>> {
+    return await this.repo.readOne(id, session);
+  }
 
-    if (!result) {
-      throw new NotFoundException('Could not find project change request');
-    }
-
+  async secure(
+    dto: UnsecuredDto<ProjectChangeRequest>,
+    session: Session
+  ): Promise<ProjectChangeRequest> {
     const securedProps = await this.authorizationService.secureProperties(
       ProjectChangeRequest,
-      result.props,
+      dto,
       session,
-      result.scopedRoles
+      dto.scope
     );
-
     return {
-      ...result.props,
+      ...dto,
       ...securedProps,
-      canEdit:
-        result.projectStatus === ProjectStatus.Active &&
-        result.props.status === ProjectChangeRequestStatus.Pending,
-      canDelete: await this.db.checkDeletePermission(id, session),
+      canDelete: await this.db.checkDeletePermission(dto.id, session),
     };
   }
 

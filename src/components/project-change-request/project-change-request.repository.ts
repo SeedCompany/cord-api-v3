@@ -1,27 +1,55 @@
 import { Injectable } from '@nestjs/common';
+import { stripIndent } from 'common-tags';
 import { node, relation } from 'cypher-query-builder';
-import { generateId, ID, Session } from '../../common';
+import { DateTime } from 'luxon';
 import {
-  createBaseNode,
-  DtoRepository,
-  matchRequestingUser,
-  Property,
-} from '../../core';
+  generateId,
+  ID,
+  NotFoundException,
+  ServerException,
+  Session,
+  UnsecuredDto,
+} from '../../common';
+import { createBaseNode, DtoRepository, matchRequestingUser } from '../../core';
 import {
   calculateTotalAndPaginateList,
   matchPropsAndProjectSensAndScopedRoles,
 } from '../../core/database/query';
-import { DbPropsOfDto } from '../../core/database/results';
 import { ProjectStatus } from '../project';
-import { ScopedRole } from '../project/project-member';
-import { ProjectChangeRequest, ProjectChangeRequestListInput } from './dto';
+import {
+  CreateProjectChangeRequest,
+  ProjectChangeRequest,
+  ProjectChangeRequestListInput,
+  ProjectChangeRequestStatus as Status,
+} from './dto';
 
 @Injectable()
 export class ProjectChangeRequestRepository extends DtoRepository(
   ProjectChangeRequest
 ) {
-  async create(session: Session, secureProps: Property[]) {
-    return await this.db
+  async create(input: CreateProjectChangeRequest, session: Session) {
+    const secureProps = [
+      {
+        key: 'types',
+        value: input.types,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'summary',
+        value: input.summary,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'status',
+        value: input.status,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+    ];
+
+    const result = await this.db
       .query()
       .apply(matchRequestingUser(session))
       .apply(
@@ -31,8 +59,23 @@ export class ProjectChangeRequestRepository extends DtoRepository(
           secureProps
         )
       )
+      .with('node')
+      .match(node('project', 'Project', { id: input.projectId }))
+      .create([
+        node('project'),
+        relation('out', '', 'changeset', {
+          active: true,
+          createdAt: DateTime.local(),
+        }),
+        node('node'),
+      ])
       .return('node.id as id')
+      .asResult<{ id: ID }>()
       .first();
+    if (!result) {
+      throw new ServerException('Failed to create project change request');
+    }
+    return result.id;
   }
 
   async readOne(id: ID, session: Session) {
@@ -50,14 +93,25 @@ export class ProjectChangeRequestRepository extends DtoRepository(
         relation('out', '', 'status', { active: true }),
         node('projectStatus', 'Property'),
       ])
-      .return(['props', 'scopedRoles', 'projectStatus'])
+      .return([
+        stripIndent`
+          apoc.map.mergeList([
+            props,
+            {
+              scope: scopedRoles,
+              canEdit: projectStatus = "${ProjectStatus.Active}" and props.status = "${Status.Pending}"
+            }
+          ]) as dto`,
+      ])
       .asResult<{
-        props: DbPropsOfDto<ProjectChangeRequest, true>;
-        scopedRoles: ScopedRole[];
-        projectStatus: ProjectStatus;
+        dto: UnsecuredDto<ProjectChangeRequest>;
       }>();
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException('Could not find project change request');
+    }
 
-    return await query.first();
+    return result.dto;
   }
 
   list({ filter, ...input }: ProjectChangeRequestListInput, _session: Session) {
