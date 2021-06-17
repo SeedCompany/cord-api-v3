@@ -1,1 +1,1 @@
-export * from './project-change-request-updated.event';
+export * from './project-change-request-approved.event';

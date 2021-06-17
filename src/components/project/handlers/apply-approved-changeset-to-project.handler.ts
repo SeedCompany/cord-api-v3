@@ -8,14 +8,13 @@ import {
   Logger,
 } from '../../../core';
 import { UpdateProject } from '../../project';
-import { ProjectChangeRequestStatus } from '../../project-change-request/dto';
-import { ProjectChangeRequestUpdatedEvent } from '../../project-change-request/events';
+import { ProjectChangeRequestApprovedEvent } from '../../project-change-request/events';
 import { ProjectRepository } from '../../project/project.repository';
 import { ProjectService } from '../../project/project.service';
 
-type SubscribedEvent = ProjectChangeRequestUpdatedEvent;
+type SubscribedEvent = ProjectChangeRequestApprovedEvent;
 
-@EventsHandler(ProjectChangeRequestUpdatedEvent)
+@EventsHandler(ProjectChangeRequestApprovedEvent)
 export class ApplyApprovedChangesetToProject
   implements IEventHandler<SubscribedEvent>
 {
@@ -27,21 +26,9 @@ export class ApplyApprovedChangesetToProject
   ) {}
 
   async handle(event: SubscribedEvent) {
-    this.logger.debug(
-      'Project Change Request mutation, update project fields',
-      {
-        ...event,
-        event: event.constructor.name,
-      }
-    );
-    const updated = event.updated;
+    this.logger.debug('Applying changeset props');
 
-    if (
-      event.previous.status.value !== ProjectChangeRequestStatus.Pending ||
-      updated.status.value !== ProjectChangeRequestStatus.Approved
-    ) {
-      return;
-    }
+    const changesetId = event.changeRequest.id;
 
     try {
       // Get related project Id
@@ -50,7 +37,7 @@ export class ApplyApprovedChangesetToProject
         .match([
           node('project', 'Project'),
           relation('out', '', 'changeset', { active: true }),
-          node('changeset', 'Changeset', { id: updated.id }),
+          node('changeset', 'Changeset', { id: changesetId }),
         ])
         .return('project.id as projectId')
         .asResult<{ projectId: ID }>()
@@ -64,7 +51,7 @@ export class ApplyApprovedChangesetToProject
         );
         const changes = await this.projectRepo.getChangesetProps(
           result.projectId,
-          updated.id
+          changesetId
         );
 
         // Update project pending changes

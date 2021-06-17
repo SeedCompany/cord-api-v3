@@ -14,12 +14,11 @@ import {
   LanguageEngagement,
 } from '../../engagement/dto/engagement.dto';
 import { EngagementRepository } from '../../engagement/engagement.repository';
-import { ProjectChangeRequestStatus } from '../../project-change-request/dto';
-import { ProjectChangeRequestUpdatedEvent } from '../../project-change-request/events';
+import { ProjectChangeRequestApprovedEvent } from '../../project-change-request/events';
 
-type SubscribedEvent = ProjectChangeRequestUpdatedEvent;
+type SubscribedEvent = ProjectChangeRequestApprovedEvent;
 
-@EventsHandler(ProjectChangeRequestUpdatedEvent)
+@EventsHandler(ProjectChangeRequestApprovedEvent)
 export class ApplyApprovedChangesetToEngagement
   implements IEventHandler<SubscribedEvent>
 {
@@ -32,21 +31,9 @@ export class ApplyApprovedChangesetToEngagement
   ) {}
 
   async handle(event: SubscribedEvent) {
-    this.logger.debug(
-      'Project Change Request mutation, update engagement fields',
-      {
-        ...event,
-        event: event.constructor.name,
-      }
-    );
-    const updated = event.updated;
+    this.logger.debug('Applying changeset props');
 
-    if (
-      event.previous.status.value !== ProjectChangeRequestStatus.Pending ||
-      updated.status.value !== ProjectChangeRequestStatus.Approved
-    ) {
-      return;
-    }
+    const changesetId = event.changeRequest.id;
 
     try {
       // Get related project Id
@@ -55,7 +42,7 @@ export class ApplyApprovedChangesetToEngagement
         .match([
           node('project', 'Project'),
           relation('out', '', 'changeset', { active: true }),
-          node('changeset', 'Changeset', { id: updated.id }),
+          node('changeset', 'Changeset', { id: changesetId }),
         ])
         .return('project.id as projectId')
         .asResult<{ projectId: ID }>()
@@ -65,7 +52,7 @@ export class ApplyApprovedChangesetToEngagement
         // Update project engagement pending changes
         await this.db
           .query()
-          .match([node('changeset', 'Changeset', { id: updated.id })])
+          .match([node('changeset', 'Changeset', { id: changesetId })])
           .match([
             node('project', 'Project', { id: result.projectId }),
             relation('out', 'engagementRel', 'engagement', { active: false }),
@@ -96,7 +83,7 @@ export class ApplyApprovedChangesetToEngagement
           );
           const changes = await this.engagementRepo.getChangesetProps(
             id,
-            updated.id
+            changesetId
           );
           await this.db.updateProperties({
             type: LanguageEngagement || InternshipEngagement,

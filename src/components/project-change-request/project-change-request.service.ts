@@ -21,9 +21,10 @@ import {
   ProjectChangeRequest,
   ProjectChangeRequestListInput,
   ProjectChangeRequestListOutput,
+  ProjectChangeRequestStatus as Status,
   UpdateProjectChangeRequest,
 } from './dto';
-import { ProjectChangeRequestUpdatedEvent } from './events';
+import { ProjectChangeRequestApprovedEvent } from './events';
 import { ProjectChangeRequestRepository } from './project-change-request.repository';
 
 @Injectable()
@@ -97,7 +98,7 @@ export class ProjectChangeRequestService {
     input: UpdateProjectChangeRequest,
     session: Session
   ): Promise<ProjectChangeRequest> {
-    const object = await this.readOne(input.id, session);
+    const object = await this.readOneUnsecured(input.id, session);
     const changes = this.repo.getActualChanges(object, input);
 
     await this.db.updateProperties({
@@ -105,17 +106,18 @@ export class ProjectChangeRequestService {
       object,
       changes,
     });
-    const updated = await this.readOne(input.id, session);
+    const updated = await this.readOneUnsecured(input.id, session);
 
-    const event = new ProjectChangeRequestUpdatedEvent(
-      updated,
-      object,
-      input,
-      session
-    );
-    await this.eventBus.publish(event);
+    if (
+      object.status === Status.Pending &&
+      changes.status === Status.Approved
+    ) {
+      await this.eventBus.publish(
+        new ProjectChangeRequestApprovedEvent(updated, session)
+      );
+    }
 
-    return updated;
+    return await this.secure(updated, session);
   }
 
   async delete(id: ID, session: Session): Promise<void> {
