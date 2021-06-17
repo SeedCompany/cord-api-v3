@@ -1,6 +1,11 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-import { CalendarDate, isValidId } from '../../src/common';
+import {
+  CalendarDate,
+  isValidId,
+  SecuredListType as SecuredList,
+} from '../../src/common';
+import { Location } from '../../src/components/location';
 import {
   CreateProject,
   Project,
@@ -11,79 +16,77 @@ import { TestApp } from './create-app';
 import { createRegion } from './create-region';
 import { fragments } from './fragments';
 import { Raw } from './raw.type';
-import { SecuredList } from './sensitivity';
 
 export async function readOneProjectOtherLocationsItems(
   app: TestApp,
   id: string
-): Promise<SecuredList<Location>> {
-  const result = await app.graphql.query(
-    gql`
-      query {
-        project(id: "${id}") {
-          ...project
-        }
-      }
-      ${fragments.project}
-    `
-  );
-
-  const actual = result.project.otherLocations.items;
-  expect(actual).toBeTruthy();
-  return actual;
+) {
+  return (await readOneProjectOtherLocations(app, id)).items;
 }
-export async function readOneProjectPrimaryLocation(
-  app: TestApp,
-  id: string
-): Promise<SecuredList<Location>> {
+
+export async function readOneProjectPrimaryLocation(app: TestApp, id: string) {
   const result = await app.graphql.query(
     gql`
-      query {
-        project(id: "${id}") {
-          ...project
+      query ReadProjectPrimaryLocation($id: ID!) {
+        project(id: $id) {
+          primaryLocation {
+            canEdit
+            canRead
+            value {
+              ...location
+            }
+          }
         }
       }
-      ${fragments.project}
-    `
+      ${fragments.location}
+    `,
+    { id }
   );
 
-  const actual = result.project.primaryLocation;
+  const actual: Raw<SecuredList<Location>> = result.project.primaryLocation;
   expect(actual).toBeTruthy();
   return actual;
 }
 
-export async function readOneProjectOtherLocations(
-  app: TestApp,
-  id: string
-): Promise<SecuredList<Location>> {
+export async function readOneProjectOtherLocations(app: TestApp, id: string) {
   const result = await app.graphql.query(
     gql`
-      query {
-        project(id: "${id}") {
-          ...project
+      query ReadProjectOtherLocations($id: ID!) {
+        project(id: $id) {
+          otherLocations {
+            canRead
+            canCreate
+            total
+            items {
+              ...location
+            }
+          }
         }
       }
-      ${fragments.project}
-    `
+      ${fragments.location}
+    `,
+    { id }
   );
 
-  const actual = result.project.otherLocations;
+  const actual: SecuredList<Location> = result.project.otherLocations;
   expect(actual).toBeTruthy();
   return actual;
 }
+
 export async function readOneProject(app: TestApp, id: string) {
   const result = await app.graphql.query(
     gql`
-      query {
-        project(id: "${id}") {
+      query ReadProject($id: ID!) {
+        project(id: $id) {
           ...project
         }
       }
       ${fragments.project}
-    `
+    `,
+    { id }
   );
 
-  const actual = result.project;
+  const actual: Raw<Project> = result.project;
   expect(actual).toBeTruthy();
   expect(actual.id).toEqual(id);
   return actual;
