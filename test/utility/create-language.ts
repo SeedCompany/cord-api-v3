@@ -6,14 +6,14 @@ import {
   CreateLanguage,
   Language,
 } from '../../src/components/language';
+import { SecuredLocationList } from '../../src/components/location';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
-import { SecuredList } from './sensitivity';
 
 export async function readOneLanguageLocation(
   app: TestApp,
   langId: string
-): Promise<SecuredList<Location>> {
+): Promise<SecuredLocationList> {
   const result = await app.graphql.query(
     gql`
       query {

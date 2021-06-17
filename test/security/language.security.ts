@@ -1,6 +1,11 @@
 import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
-import { ResourceShape, SecuredResource, Sensitivity } from '../../src/common';
+import {
+  ResourceShape,
+  SecuredListType,
+  SecuredResource,
+  Sensitivity,
+} from '../../src/common';
 import { PermissionsOf } from '../../src/components/authorization/authorization.service';
 import { Powers } from '../../src/components/authorization/dto/powers';
 import {
@@ -24,11 +29,7 @@ import {
 } from '../utility';
 import { resetDatabase } from '../utility/reset-database';
 import { testRole } from '../utility/roles';
-import {
-  ReadOneFunction,
-  ReadOneRelationArray,
-  SecuredList,
-} from '../utility/sensitivity';
+import { ReadOneFunction, ResourceArrayRelation } from '../utility/sensitivity';
 import { getPermissions } from './permissions';
 
 describe('Language Security e2e', () => {
@@ -201,8 +202,7 @@ describe('Language Security e2e', () => {
             Language,
             'locations',
             role,
-            readOneLanguageLocation,
-            true
+            readOneLanguageLocation
           );
           await login(app, { email, password });
           await testSensitivityLowerThanEqualTo(
@@ -211,8 +211,7 @@ describe('Language Security e2e', () => {
             'locations',
             readOneLanguageLocation,
             role,
-            Language,
-            true
+            Language
           );
         });
       }
@@ -220,15 +219,27 @@ describe('Language Security e2e', () => {
   });
 });
 
-async function testSensitivityHigherThan<TResource extends ResourceShape<any>>(
+async function testSensitivityHigherThan<
+  TResource extends ResourceShape<any>,
+  Prop extends keyof TResource['prototype'] | keyof TResource['Relations']
+>(
   app: TestApp,
   sensitivity: Sensitivity,
   resource: TResource,
-  property: keyof TResource['prototype'] | keyof TResource['Relations'],
+  property: Prop,
   role: Role,
-  readFunction: ReadOneFunction<TResource['prototype']> | ReadOneRelationArray,
-  isRelationList = false
+  readFunction:
+    | (Prop extends keyof TResource['prototype']
+        ? ReadOneFunction<TResource['prototype']>
+        : never)
+    | (Prop extends keyof TResource['Relations'] & string
+        ? ReadOneFunction<
+            SecuredListType<ResourceArrayRelation<TResource, Prop>>
+          >
+        : never)
 ) {
+  const isRelationList = resource.Relations && property in resource.Relations;
+
   const medSenslanguage = await createLanguage(app, {
     sensitivity: Sensitivity.Medium,
   });
@@ -246,7 +257,7 @@ async function testSensitivityHigherThan<TResource extends ResourceShape<any>>(
   }
 
   async function expectLocationList(
-    read: SecuredList<Location>,
+    read: SecuredLocationList,
     canRead: boolean
   ) {
     if (canRead) {
@@ -269,14 +280,8 @@ async function testSensitivityHigherThan<TResource extends ResourceShape<any>>(
           userRole: `global:${role}` as ScopedRole,
           sensitivity: highSenslanguage.sensitivity,
         });
-        await expectLocationList(
-          medRead as SecuredList<Location>,
-          medPerms[property].canRead
-        );
-        await expectLocationList(
-          highRead as SecuredList<Location>,
-          highPerms[property].canRead
-        );
+        await expectLocationList(medRead, medPerms[property].canRead);
+        await expectLocationList(highRead, highPerms[property].canRead);
       } else {
         await expectPropSensitivity(medRead);
         await expectPropSensitivity(highRead);
@@ -290,10 +295,7 @@ async function testSensitivityHigherThan<TResource extends ResourceShape<any>>(
           userRole: `global:${role}` as ScopedRole,
           sensitivity: highSenslanguage.sensitivity,
         });
-        await expectLocationList(
-          highRead as SecuredList<Location>,
-          highPerms[property].canRead
-        );
+        await expectLocationList(highRead, highPerms[property].canRead);
       } else {
         await expectPropSensitivity(highRead);
       }
@@ -305,17 +307,28 @@ async function testSensitivityHigherThan<TResource extends ResourceShape<any>>(
     }
   }
 }
+
 async function testSensitivityLowerThanEqualTo<
-  TResource extends ResourceShape<any>
+  TResource extends ResourceShape<any>,
+  Prop extends keyof TResource['prototype'] | keyof TResource['Relations']
 >(
   app: TestApp,
   sensitivity: Sensitivity,
-  property: keyof TResource['prototype'] | keyof TResource['Relations'],
-  readFunction: ReadOneFunction<TResource['prototype']> | ReadOneRelationArray,
+  property: Prop,
+  readFunction:
+    | (Prop extends keyof TResource['prototype']
+        ? ReadOneFunction<TResource['prototype']>
+        : never)
+    | (Prop extends keyof TResource['Relations'] & string
+        ? ReadOneFunction<
+            SecuredListType<ResourceArrayRelation<TResource, Prop>>
+          >
+        : never),
   role: Role,
-  resource: TResource,
-  isRelationList = false
+  resource: TResource
 ) {
+  const isRelationList = resource.Relations && property in resource.Relations;
+
   //test languages with sensitivity lower than/equal to what we're testing.
   const highSenslanguage = await createLanguage(app, {
     sensitivity: Sensitivity.High,
@@ -371,7 +384,7 @@ async function testSensitivityLowerThanEqualTo<
   switch (sensitivity) {
     case Sensitivity.High: {
       if (isRelationList) {
-        await expectRelationList(readHigh as SecuredList<Location>, highPerms);
+        await expectRelationList(readHigh, highPerms);
       } else {
         await expectPropSensitivity(readHigh, highPerms);
       }
@@ -381,7 +394,7 @@ async function testSensitivityLowerThanEqualTo<
     // eslint-disable-next-line no-fallthrough
     case Sensitivity.Medium: {
       if (isRelationList) {
-        await expectRelationList(readMed as SecuredList<Location>, medPerms);
+        await expectRelationList(readMed, medPerms);
       } else {
         await expectPropSensitivity(readMed, medPerms);
       }
@@ -390,7 +403,7 @@ async function testSensitivityLowerThanEqualTo<
     // eslint-disable-next-line no-fallthrough
     case Sensitivity.Low: {
       if (isRelationList) {
-        await expectRelationList(readLow as SecuredList<Location>, lowPerms);
+        await expectRelationList(readLow, lowPerms);
       } else {
         await expectPropSensitivity(readLow, lowPerms);
       }
