@@ -797,11 +797,11 @@ export class ProjectService {
     const budgetToReturn = current ?? budgets.items[0];
 
     const membershipRoles = await this.getMembershipRoles(projectId, session);
-    const permsOfProject = await this.authorizationService.getPermissions(
-      IProject,
-      session,
-      membershipRoles
-    );
+    const permsOfProject = await this.authorizationService.getPermissions({
+      resource: IProject,
+      sessionOrUserId: session,
+      otherRoles: membershipRoles,
+    });
 
     return {
       value: budgetToReturn,

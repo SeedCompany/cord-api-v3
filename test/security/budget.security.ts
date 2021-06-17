@@ -21,8 +21,8 @@ import {
   createTestApp,
   login,
   Raw,
+  readBudgetRecords,
   readOneBudget,
-  readOneBudgetRecord,
   registerUserWithPower,
   TestApp,
 } from '../utility';
@@ -168,8 +168,9 @@ describe('Budget Security e2e', () => {
             sensitivityRestriction: sensitivityToTest,
             projectId: proj.id,
             projectType: projectType,
+            resource: Budget,
             propertyToCheck: 'records',
-            readFunction: readOneBudgetRecord,
+            readFunction: readBudgetRecords,
             resourceId: budget.id,
             perms: await getPermissions({
               resource: Budget,

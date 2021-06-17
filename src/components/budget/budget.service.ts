@@ -221,12 +221,12 @@ export class BudgetService {
 
     const result = await this.budgetRepo.readOne(id, session);
 
-    const perms = await this.authorizationService.getPermissions(
-      Budget,
-      session,
-      result.scopedRoles,
-      result.props as ResourceShape<Budget>['prototype']
-    );
+    const perms = await this.authorizationService.getPermissions({
+      resource: Budget,
+      sessionOrUserId: session,
+      otherRoles: result.scopedRoles,
+      dto: result.props as ResourceShape<Budget>['prototype'],
+    });
 
     const securedProps = parseSecuredProperties(
       result.props,

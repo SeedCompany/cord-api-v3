@@ -14,11 +14,7 @@ import {
   UnauthorizedException,
 } from '../../common';
 import { ILogger, Logger, OnIndex, UniquenessError } from '../../core';
-import {
-  parseBaseNodeProperties,
-  parsePropList,
-  runListQuery,
-} from '../../core/database/results';
+import { runListQuery } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
 import { EngagementService, EngagementStatus } from '../engagement';
@@ -160,26 +156,25 @@ export class LanguageService {
       throw new NotFoundException('Could not find language', 'language.id');
     }
 
-    const ethnologue = await this.ethnologueLanguageService.readOne(
-      result.ethnologueLanguageId,
+    const securedProps = await this.authorizationService.secureProperties(
+      Language,
+      result.props,
       session
     );
 
-    const props = parsePropList(result.propList);
-    const securedProps = await this.authorizationService.secureProperties(
-      Language,
-      props,
+    const ethnologue = await this.ethnologueLanguageService.readOne(
+      result.ethnologueLanguageId,
+      result.props.sensitivity,
       session
     );
 
     return {
-      ...parseBaseNodeProperties(result.node),
+      ...result.props,
       ...securedProps,
       tags: {
         ...securedProps.tags,
         value: securedProps.tags.value ?? [],
       },
-      sensitivity: props.sensitivity,
       ethnologue,
       canDelete: await this.repo.checkDeletePermission(langId, session),
     };
@@ -204,6 +199,7 @@ export class LanguageService {
       await this.ethnologueLanguageService.update(
         object.ethnologue.id,
         ethnologue,
+        object.sensitivity,
         session
       );
     }
@@ -245,13 +241,13 @@ export class LanguageService {
   }
 
   async listLocations(
-    languageId: ID,
+    dto: Language,
     input: LocationListInput,
     session: Session
   ): Promise<SecuredLocationList> {
-    return await this.locationService.listLocationsFromNode(
-      'Language',
-      languageId,
+    return await this.locationService.listLocationForResource(
+      Language,
+      dto,
       'locations',
       input,
       session

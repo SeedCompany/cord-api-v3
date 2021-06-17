@@ -1,13 +1,71 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-import { CalendarDate, generateId, isValidId } from '../../src/common';
+import { CalendarDate, generateId, ID, isValidId } from '../../src/common';
 import {
   CreateEthnologueLanguage,
   CreateLanguage,
   Language,
 } from '../../src/components/language';
+import { SecuredLocationList } from '../../src/components/location';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
+
+export async function readOneLanguageLocation(
+  app: TestApp,
+  langId: string
+): Promise<SecuredLocationList> {
+  const result = await app.graphql.query(
+    gql`
+      query {
+        language(id: "${langId}") {
+          ...language
+        }
+      }
+      ${fragments.language}
+    `
+  );
+
+  const actual = result.language.locations;
+  expect(actual).toBeTruthy();
+  return actual;
+}
+export async function readOneLanguageEthnologue(
+  app: TestApp,
+  langId: ID
+): Promise<Language> {
+  const result = await app.graphql.query(
+    gql`
+      query {
+        language(id: "${langId}") {
+          ...language
+        }
+      }
+      ${fragments.language}
+    `
+  );
+
+  const actual = result.language.ethnologue;
+  expect(actual).toBeTruthy();
+  return actual;
+}
+
+export async function readOneLanguage(app: TestApp, id: ID): Promise<Language> {
+  const result = await app.graphql.query(
+    gql`
+      query {
+        language(id: "${id}") {
+          ...language
+        }
+      }
+      ${fragments.language}
+    `
+  );
+
+  const actual = result.language;
+  expect(actual).toBeTruthy();
+  expect(actual.id).toEqual(id);
+  return actual;
+}
 
 export async function createLanguage(
   app: TestApp,

@@ -172,10 +172,10 @@ export class UserService {
         implicitPerms,
       ]);
     } else {
-      permsOfBaseNode = await this.authorizationService.getPermissions(
-        User,
-        sessionOrUserId
-      );
+      permsOfBaseNode = await this.authorizationService.getPermissions({
+        resource: User,
+        sessionOrUserId,
+      });
     }
 
     const securedProps = parseSecuredProperties(

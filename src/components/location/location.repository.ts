@@ -262,4 +262,20 @@ export class LocationRepository extends DtoRepository(Location) {
       ])
       .apply(calculateTotalAndPaginateList(Location, input));
   }
+
+  listLocationsFromNodeNoSecGroups(
+    label: string,
+    rel: string,
+    id: ID,
+    input: LocationListInput
+  ) {
+    return this.db
+      .query()
+      .match([
+        node('node', 'Location'),
+        relation('in', '', rel, { active: true }),
+        node(`${label.toLowerCase()}`, label, { id }),
+      ])
+      .apply(calculateTotalAndPaginateList(Location, input));
+  }
 }

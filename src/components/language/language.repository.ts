@@ -6,11 +6,11 @@ import { createBaseNode, DtoRepository, matchRequestingUser } from '../../core';
 import {
   calculateTotalAndPaginateList,
   collect,
-  matchPropList,
+  matchProps,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
-import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
+import { DbPropsOfDto } from '../../core/database/results';
 import { CreateLanguage, Language, LanguageListInput } from './dto';
 import { languageListFilter } from './query.helpers';
 
@@ -146,18 +146,17 @@ export class LanguageRepository extends DtoRepository(Language) {
       .query()
       .apply(matchRequestingUser(session))
       .match([node('node', 'Language', { id: langId })])
-      .apply(matchPropList)
+      .apply(matchProps())
       .match([
         node('node'),
         relation('out', '', 'ethnologue'),
         node('eth', 'EthnologueLanguage'),
       ])
-      .return('propList, node, eth.id as ethnologueLanguageId')
-      .asResult<
-        StandardReadResult<DbPropsOfDto<Language>> & {
-          ethnologueLanguageId: ID;
-        }
-      >();
+      .return('props, eth.id as ethnologueLanguageId')
+      .asResult<{
+        props: DbPropsOfDto<Language, true>;
+        ethnologueLanguageId: ID;
+      }>();
     return await query.first();
   }
 

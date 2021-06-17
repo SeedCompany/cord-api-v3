@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import countries from 'iso-3166-1/dist/iso-3166';
-import { isValidId } from '../../src/common';
+import { ID, isValidId } from '../../src/common';
 import {
   CreateLocation,
   Location,
@@ -47,4 +47,32 @@ export async function createLocation(
   expect(actual.type.value).toBe(location.type);
 
   return actual;
+}
+
+export async function addLocationToLanguage(
+  app: TestApp,
+  locationId: ID,
+  languageId: ID
+) {
+  const result = await app.graphql.mutate(
+    gql`
+      mutation addLocationToLanguage($langId: ID!, $locId: ID!) {
+        addLocationToLanguage(languageId: $langId, locationId: $locId) {
+          locations {
+            items {
+              ...location
+            }
+          }
+        }
+      }
+      ${fragments.location}
+    `,
+    {
+      langId: languageId,
+      locId: locationId,
+    }
+  );
+  const actual = result.addLocationToLanguage.locations;
+  expect(actual).toBeTruthy();
+  expect(actual.items).not.toHaveLength(0);
 }
