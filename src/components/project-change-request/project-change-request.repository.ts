@@ -12,6 +12,7 @@ import {
   matchPropsAndProjectSensAndScopedRoles,
 } from '../../core/database/query';
 import { DbPropsOfDto } from '../../core/database/results';
+import { ProjectStatus } from '../project';
 import { ScopedRole } from '../project/project-member';
 import { ProjectChangeRequest, ProjectChangeRequestListInput } from './dto';
 
@@ -44,10 +45,16 @@ export class ProjectChangeRequestRepository extends DtoRepository(
         node('project', 'Project'),
       ])
       .apply(matchPropsAndProjectSensAndScopedRoles(session))
-      .return(['props', 'scopedRoles'])
+      .match([
+        node('project'),
+        relation('out', '', 'status', { active: true }),
+        node('projectStatus', 'Property'),
+      ])
+      .return(['props', 'scopedRoles', 'projectStatus'])
       .asResult<{
         props: DbPropsOfDto<ProjectChangeRequest, true>;
         scopedRoles: ScopedRole[];
+        projectStatus: ProjectStatus;
       }>();
 
     return await query.first();

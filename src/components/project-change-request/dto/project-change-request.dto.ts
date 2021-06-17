@@ -24,4 +24,10 @@ export abstract class ProjectChangeRequest
 
   @Field()
   readonly status: SecuredProjectChangeRequestStatus;
+
+  @Field({
+    description:
+      'Whether or not modifications can be made (via other mutations `changeset` input) with this change request',
+  })
+  readonly canEdit: boolean;
 }
