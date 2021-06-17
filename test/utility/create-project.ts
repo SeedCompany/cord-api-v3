@@ -5,6 +5,7 @@ import {
   isValidId,
   SecuredListType as SecuredList,
 } from '../../src/common';
+import { SecuredBudget } from '../../src/components/budget';
 import { Location } from '../../src/components/location';
 import {
   CreateProject,
@@ -69,6 +70,30 @@ export async function readOneProjectOtherLocations(app: TestApp, id: string) {
   );
 
   const actual: SecuredList<Location> = result.project.otherLocations;
+  expect(actual).toBeTruthy();
+  return actual;
+}
+
+export async function readOneProjectBudget(app: TestApp, id: string) {
+  const result = await app.graphql.query(
+    gql`
+      query ReadProjectBudget($id: ID!) {
+        project(id: $id) {
+          budget {
+            canRead
+            canEdit
+            value {
+              ...budget
+            }
+          }
+        }
+      }
+      ${fragments.budget}
+    `,
+    { id }
+  );
+
+  const actual: { budget: SecuredBudget } = result.project;
   expect(actual).toBeTruthy();
   return actual;
 }

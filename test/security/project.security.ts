@@ -23,6 +23,7 @@ import {
   login,
   Raw,
   readOneProject,
+  readOneProjectBudget,
   readOneProjectOtherLocations,
   readOneProjectOtherLocationsItems,
   registerUserWithPower,
@@ -225,7 +226,7 @@ describe('Project Security e2e', () => {
         sensitivityRestriction: Sensitivity.Medium,
         projectType: ProjectType.Translation,
         permissions: perms,
-        readOneFunction: readOneProject,
+        readOneFunction: readOneProjectBudget,
       });
       await login(app, { email, password });
     });

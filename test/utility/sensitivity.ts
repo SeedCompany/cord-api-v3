@@ -7,7 +7,15 @@ import {
   runAsAdmin,
   TestApp,
 } from '.';
-import { ArrayItem, ID, ResourceShape, Sensitivity } from '../../src/common';
+import {
+  AbstractClassType,
+  ArrayItem,
+  ID,
+  ResourceShape,
+  Secured,
+  SecuredResource,
+  Sensitivity,
+} from '../../src/common';
 import { Role } from '../../src/components/authorization';
 import { Permission } from '../../src/components/authorization/authorization.service';
 import { ProjectType } from '../../src/components/project';
@@ -89,7 +97,7 @@ export async function expectSensitiveRelationList<
 
 export async function expectSensitiveProperty<
   TResourceStatic extends ResourceShape<any>,
-  TResource extends TResourceStatic['prototype'],
+  TResource extends SecuredResource<TResourceStatic>,
   Prop extends keyof TResource & string
 >({
   app,
@@ -110,7 +118,14 @@ export async function expectSensitiveProperty<
   resource: TResourceStatic;
   sensitivityRestriction: Sensitivity;
   permissions: Record<Prop, Permission>;
-  readOneFunction: ReadOneFunction<TResource>;
+  readOneFunction: ReadOneFunction<
+    Record<
+      Prop,
+      TResource[Prop] extends AbstractClassType<any>
+        ? Secured<TResource[Prop]['prototype']>
+        : TResource[Prop]
+    >
+  >;
   projectType: ProjectType;
 }) {
   const email = faker.internet.email();
@@ -159,16 +174,17 @@ export async function expectSensitiveProperty<
       )
     );
     const cannotReadProp = await readOneFunction(app, resourceId);
-    try {
+    if (cannotReadProp[propertyToCheck].canRead != null) {
       expect(cannotReadProp[propertyToCheck].canRead).toBeFalsy();
       expect(cannotReadProp[propertyToCheck].canEdit).toBeFalsy();
-    } catch (e) {
+    } else {
       // --- cover for child/grandchild/etc elements, if there's no canRead/canEdit allowed on the element itself,
       //     it's usually a null value.
       //     this means that for child/grandchil/etc elements, canEdit and canRead for that secured element should be
       //     attached along with it.
-      if (!cannotReadProp.canRead && !cannotReadProp.canEdit) {
-        expect(cannotReadProp.value).toBeUndefined();
+      const prop = cannotReadProp as unknown as Secured<unknown>;
+      if (!prop.canRead && !prop.canEdit) {
+        expect(prop.value).toBeUndefined();
       }
       if (canReadProp[propertyToCheck].canEdit === undefined) {
         expect(canReadProp[propertyToCheck].canCreate).toEqual(
