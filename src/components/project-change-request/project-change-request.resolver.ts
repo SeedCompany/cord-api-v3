@@ -1,16 +1,31 @@
-import { Args, Mutation, Resolver } from '@nestjs/graphql';
-import { ID, IdArg, LoggedInSession, Session } from '../../common';
+import {
+  Args,
+  Mutation,
+  Parent,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
+import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
 import {
   CreateProjectChangeRequestInput,
   CreateProjectChangeRequestOutput,
+  ProjectChangeRequest,
   UpdateProjectChangeRequestInput,
   UpdateProjectChangeRequestOutput,
 } from './dto';
 import { ProjectChangeRequestService } from './project-change-request.service';
 
-@Resolver()
+@Resolver(ProjectChangeRequest)
 export class ProjectChangeRequestResolver {
   constructor(private readonly service: ProjectChangeRequestService) {}
+
+  @ResolveField(() => Boolean)
+  async canEdit(
+    @Parent() projectChangeRequest: ProjectChangeRequest,
+    @AnonSession() session: Session
+  ): Promise<boolean> {
+    return await this.service.canEdit(projectChangeRequest, session);
+  }
 
   @Mutation(() => CreateProjectChangeRequestOutput, {
     description: 'Create a project change request',

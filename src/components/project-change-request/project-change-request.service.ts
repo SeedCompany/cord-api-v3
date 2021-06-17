@@ -18,12 +18,14 @@ import {
 } from '../../core';
 import { runListQuery } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { ProjectStatus } from '../project/dto';
 import { ProjectService } from '../project/project.service';
 import {
   CreateProjectChangeRequest,
   ProjectChangeRequest,
   ProjectChangeRequestListInput,
   ProjectChangeRequestListOutput,
+  ProjectChangeRequestStatus,
   UpdateProjectChangeRequest,
 } from './dto';
 import { ProjectChangeRequestUpdatedEvent } from './events';
@@ -186,5 +188,34 @@ export class ProjectChangeRequestService {
   ): Promise<ProjectChangeRequestListOutput> {
     const query = this.repo.list({ filter, ...input }, session);
     return await runListQuery(query, input, (id) => this.readOne(id, session));
+  }
+
+  async canEdit(
+    projectChangeRequest: ProjectChangeRequest,
+    session: Session
+  ): Promise<boolean> {
+    const result = await this.db
+      .query()
+      .match([
+        node('project', 'Project'),
+        relation('out', '', 'changeset', { active: true }),
+        node('changeset', 'Changeset', { id: projectChangeRequest.id }),
+      ])
+      .return('project.id as projectId')
+      .asResult<{ projectId: ID }>()
+      .first();
+
+    if (!result?.projectId) {
+      return false;
+    }
+    const project = await this.projectService.readOne(
+      result.projectId,
+      session
+    );
+
+    return (
+      project.status === ProjectStatus.Active &&
+      projectChangeRequest.status.value === ProjectChangeRequestStatus.Pending
+    );
   }
 }

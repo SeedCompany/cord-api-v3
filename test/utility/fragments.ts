@@ -1048,6 +1048,7 @@ export const projectChangeRequest = gql`
       canRead
     }
     createdAt
+    canEdit
   }
 `;
 

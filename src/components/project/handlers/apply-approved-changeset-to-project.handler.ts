@@ -7,15 +7,11 @@ import {
   ILogger,
   Logger,
 } from '../../../core';
-import { collect } from '../../../core/database/query';
-import { EngagementService } from '../../engagement';
-import { LanguageEngagement } from '../../engagement/dto/engagement.dto';
-import { EngagementRepository } from '../../engagement/engagement.repository';
 import { UpdateProject } from '../../project';
+import { ProjectChangeRequestStatus } from '../../project-change-request/dto';
+import { ProjectChangeRequestUpdatedEvent } from '../../project-change-request/events';
 import { ProjectRepository } from '../../project/project.repository';
 import { ProjectService } from '../../project/project.service';
-import { ProjectChangeRequestStatus } from '../dto';
-import { ProjectChangeRequestUpdatedEvent } from '../events';
 
 type SubscribedEvent = ProjectChangeRequestUpdatedEvent;
 
@@ -27,8 +23,6 @@ export class ApplyApprovedChangesetToProject
     private readonly db: DatabaseService,
     private readonly projectService: ProjectService,
     private readonly projectRepo: ProjectRepository,
-    private readonly engagementService: EngagementService,
-    private readonly engagementRepo: EngagementRepository,
     @Logger('project:change-request:approved') private readonly logger: ILogger
   ) {}
 
@@ -84,49 +78,6 @@ export class ApplyApprovedChangesetToProject
           undefined,
           false
         );
-
-        // Update project engagement pending changes
-        await this.db
-          .query()
-          .match([node('changeset', 'Changeset', { id: updated.id })])
-          .match([
-            node('project', 'Project', { id: result.projectId }),
-            relation('out', 'engagementRel', 'engagement', { active: false }),
-            node('engagement', 'Engagement'),
-            relation('in', 'changesetRel', 'changeset', { active: true }),
-            node('changeset'),
-          ])
-          .setValues({
-            'engagementRel.active': true,
-            'changesetRel.active': false,
-          })
-          .run();
-        const engagementsResult = await this.db
-          .query()
-          .match([
-            node('project', 'Project', { id: result.projectId }),
-            relation('out', '', 'engagement', { active: true }),
-            node('engagement', 'Engagement'),
-          ])
-          .return(collect('engagement.id', 'engagementIds'))
-          .asResult<{ engagementIds: ID[] }>()
-          .first();
-
-        engagementsResult?.engagementIds.map(async (id) => {
-          const object = await this.engagementService.readOne(
-            id,
-            event.session
-          );
-          const changes = await this.engagementRepo.getChangesetProps(
-            id,
-            updated.id
-          );
-          await this.db.updateProperties({
-            type: LanguageEngagement,
-            object,
-            changes,
-          });
-        });
       }
     } catch (exception) {
       throw new ServerException(
