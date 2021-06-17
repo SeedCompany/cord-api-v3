@@ -884,18 +884,6 @@ export const fieldRegion = gql`
   }
 `;
 
-export const country = gql`
-  fragment country on Country {
-    id
-    createdAt
-    name {
-      value
-      canEdit
-      canRead
-    }
-  }
-`;
-
 export const budgetRecord = gql`
   fragment budgetRecord on BudgetRecord {
     id
@@ -938,20 +926,6 @@ export const budget = gql`
     }
   }
   ${budgetRecord}
-`;
-
-export const securityGroup = gql`
-  fragment securityGroup on SecurityGroup {
-    id
-    success
-  }
-`;
-
-export const permission = gql`
-  fragment permission on Permission {
-    id
-    success
-  }
 `;
 
 export const film = gql`
@@ -1033,12 +1007,6 @@ export const state = gql`
   fragment state on State {
     id
     value
-  }
-`;
-
-export const fav = gql`
-  fragment fav on Favorite {
-    baseNodeId
   }
 `;
 
@@ -1133,18 +1101,14 @@ export const fragments = {
   fieldZone,
   fieldRegion,
   location,
-  country,
   budget,
   budgetRecord,
-  securityGroup,
-  permission,
   workflow,
   state,
   film,
   literacyMaterial,
   story,
   song,
-  fav,
   ceremony,
   partner,
   fundingAccount,
