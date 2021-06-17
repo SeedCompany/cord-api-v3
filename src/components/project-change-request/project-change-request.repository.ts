@@ -59,7 +59,7 @@ export class ProjectChangeRequestRepository extends DtoRepository(
       .match([
         // requestingUser(session),
         // ...permissionsOfNode(label),
-        node('node'),
+        node('node', 'ProjectChangeRequest'),
         ...(filter.projectId
           ? [
               relation('in', '', 'changeset', { active: true }),
@@ -69,6 +69,6 @@ export class ProjectChangeRequestRepository extends DtoRepository(
             ]
           : []),
       ])
-      .call(calculateTotalAndPaginateList(ProjectChangeRequest, input));
+      .apply(calculateTotalAndPaginateList(ProjectChangeRequest, input));
   }
 }
