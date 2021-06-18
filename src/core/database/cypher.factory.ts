@@ -140,6 +140,32 @@ export const CypherFactory: FactoryProvider<Connection> = {
       conn.transactionStorage.disable();
     };
 
+    const origCreateQuery = conn.query.bind(conn);
+    conn.query = () => {
+      const q = origCreateQuery();
+
+      let stack = new Error('').stack?.split('\n').slice(2);
+      if (stack?.[0]?.startsWith('    at DatabaseService.query')) {
+        stack = stack.slice(1);
+      }
+      if (!stack) {
+        return q;
+      }
+
+      const origBuild = q.buildQueryObject.bind(q);
+      q.buildQueryObject = function () {
+        const result = origBuild();
+        Object.defineProperty(result.params, '__stacktrace', {
+          value: stack?.join('\n'),
+          enumerable: false,
+          configurable: true,
+          writable: true,
+        });
+        return result;
+      };
+      return q;
+    };
+
     // inject logger so transactions can use it
     conn.logger = logger;
 
@@ -183,6 +209,10 @@ const wrapQueryRun = (
     result.subscribe = function (this: never, observer) {
       const onError = observer.onError?.bind(observer);
       observer.onError = (e) => {
+        if (typeof parameters?.__stacktrace === 'string' && e.stack) {
+          const stackStart = e.stack.indexOf('    at');
+          e.stack = e.stack.slice(0, stackStart) + parameters.__stacktrace;
+        }
         const patched = jestSkipFileInExceptionSource(e, __filename);
         const mapped = createBetterError(patched);
         if (isNeo4jError(mapped) && mapped.logProps) {
