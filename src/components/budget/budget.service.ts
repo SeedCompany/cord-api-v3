@@ -424,7 +424,8 @@ export class BudgetService {
 
   async listNoSecGroups(
     partialInput: Partial<BudgetListInput>,
-    session: Session
+    session: Session,
+    changeset?: ID
   ): Promise<BudgetListOutput> {
     const input = {
       ...BudgetListInput.defaultVal,
@@ -432,7 +433,9 @@ export class BudgetService {
     };
     const query = this.budgetRepo.listNoSecGroups(input);
 
-    return await runListQuery(query, input, (id) => this.readOne(id, session));
+    return await runListQuery(query, input, (id) =>
+      this.readOne(id, session, changeset)
+    );
   }
 
   async listRecords(
