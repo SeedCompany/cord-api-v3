@@ -3,7 +3,7 @@ import { LoggedInSession, Session } from '../../common';
 import { ResourceResolver } from '../../core';
 import { BaseNode } from '../../core/database/results';
 import { ChangesetRepository } from './changeset.repository';
-import { Changeset, ChangesetDiff } from './dto';
+import { Changeset, ChangesetDiff, ResourceChange } from './dto';
 
 @Resolver(Changeset)
 export class ChangesetResolver {
@@ -25,7 +25,15 @@ export class ChangesetResolver {
     const [added, removed, changed] = await Promise.all([
       Promise.all(diff.added.map(lookup)),
       Promise.all(diff.removed.map(lookup)),
-      Promise.all(diff.changed.map(lookup)),
+      Promise.all(
+        diff.changed.map(async (node): Promise<ResourceChange> => {
+          const [previous, updated] = await Promise.all([
+            this.resources.lookupByBaseNode(node, session),
+            lookup(node),
+          ]);
+          return { previous, updated };
+        })
+      ),
     ]);
     return {
       added,

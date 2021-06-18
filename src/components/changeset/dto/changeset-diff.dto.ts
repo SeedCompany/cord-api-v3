@@ -1,4 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
+import { stripIndent } from 'common-tags';
 import { ValueOf } from 'type-fest';
 import { Resource } from '../../../common';
 import { ResourceMap } from '../../authorization/model/resource-map';
@@ -21,9 +22,27 @@ export class ChangesetDiff {
   })
   readonly removed: readonly SomeResource[];
 
-  @Field(() => [Resource], {
+  @Field(() => [ResourceChange], {
     description:
-      'The list of resources that have been changed in this changeset',
+      'The list of resources (previous/updated pairs) that have been changed in this changeset',
   })
-  readonly changed: readonly SomeResource[];
+  readonly changed: readonly ResourceChange[];
+}
+
+@ObjectType({
+  description: stripIndent`
+    A resource from a changeset.
+    These two properties will always be the same concrete type.
+  `,
+})
+export class ResourceChange {
+  @Field(() => Resource, {
+    description: 'The currently active version of the resource',
+  })
+  readonly previous: SomeResource;
+
+  @Field(() => Resource, {
+    description: 'The version of the resource in this changeset',
+  })
+  readonly updated: SomeResource;
 }
