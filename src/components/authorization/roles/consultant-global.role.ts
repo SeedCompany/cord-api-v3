@@ -163,7 +163,6 @@ export const ConsultantGlobal = new DbRole({
       __className: 'DbInternshipEngagement',
       properties: [
         { propertyName: 'ceremony', permission: { read, write, }, },
-        { propertyName: 'communicationsCompleteDate', permission: { read, write, }, },
         { propertyName: 'completeDate', permission: { read, write, }, },
         { propertyName: 'countryOfOrigin', permission: { read, write, }, },
         { propertyName: 'disbursementCompleteDate', permission: { read, write, }, },
@@ -211,7 +210,6 @@ export const ConsultantGlobal = new DbRole({
       __className: 'DbLanguageEngagement',
       properties: [
         { propertyName: 'ceremony', permission: { read, write, }, },
-        { propertyName: 'communicationsCompleteDate', permission: { read, write, }, },
         { propertyName: 'completeDate', permission: { read, write, }, },
         { propertyName: 'disbursementCompleteDate', permission: { read, write, }, },
         { propertyName: 'endDate', permission: { read, write, }, },

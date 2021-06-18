@@ -682,9 +682,6 @@ export const engagement = gql`
     disbursementCompleteDate {
       value
     }
-    communicationsCompleteDate {
-      value
-    }
     startDate {
       value
     }

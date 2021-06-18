@@ -156,7 +156,6 @@ describe('Engagement e2e', () => {
     expect(actual.sentPrintingDate.value).toBeNull();
     expect(actual.completeDate.value).toBeNull();
     expect(actual.disbursementCompleteDate.value).toBeNull();
-    expect(actual.communicationsCompleteDate.value).toBeNull();
     expect(actual.startDate.value).toBe(project.mouStart.value); // bump
     expect(actual.endDate.value).toBe(project.mouEnd.value);
     expect(actual.lastSuspendedAt.value).toBeNull();
@@ -223,7 +222,6 @@ describe('Engagement e2e', () => {
     expect(actual.position.value).toBeNull();
     expect(actual.completeDate.value).toBeNull();
     expect(actual.disbursementCompleteDate.value).toBeNull();
-    expect(actual.communicationsCompleteDate.value).toBeNull();
     expect(actual.startDate.value).toBe(internshipProject.mouStart.value);
     expect(actual.endDate.value).toBe(internshipProject.mouEnd.value);
     expect(actual.lastSuspendedAt.value).toBeNull();
@@ -270,9 +268,6 @@ describe('Engagement e2e', () => {
     expect(actual.completeDate).toMatchObject(languageEngagement.completeDate);
     expect(actual.disbursementCompleteDate).toMatchObject(
       languageEngagement.disbursementCompleteDate
-    );
-    expect(actual.communicationsCompleteDate).toMatchObject(
-      languageEngagement.communicationsCompleteDate
     );
     expect(actual.startDate).toMatchObject(languageEngagement.startDate);
     expect(actual.endDate).toMatchObject(languageEngagement.endDate);
@@ -331,9 +326,6 @@ describe('Engagement e2e', () => {
     );
     expect(actual.disbursementCompleteDate).toMatchObject(
       internshipEngagement.disbursementCompleteDate
-    );
-    expect(actual.communicationsCompleteDate).toMatchObject(
-      internshipEngagement.communicationsCompleteDate
     );
     expect(actual.startDate).toMatchObject(internshipEngagement.startDate);
     expect(actual.endDate).toMatchObject(internshipEngagement.endDate);

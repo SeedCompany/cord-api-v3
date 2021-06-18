@@ -164,7 +164,6 @@ export const FinancialAnalystOnProject = new DbRole({
       __className: 'DbInternshipEngagement',
       properties: [
         { propertyName: 'ceremony', permission: { read, }, },
-        { propertyName: 'communicationsCompleteDate', permission: { read, }, },
         { propertyName: 'completeDate', permission: { read, }, },
         { propertyName: 'countryOfOrigin', permission: { read, }, },
         { propertyName: 'disbursementCompleteDate', permission: { read, write, }, },
@@ -212,7 +211,6 @@ export const FinancialAnalystOnProject = new DbRole({
       __className: 'DbLanguageEngagement',
       properties: [
         { propertyName: 'ceremony', permission: { read, }, },
-        { propertyName: 'communicationsCompleteDate', permission: { read, }, },
         { propertyName: 'completeDate', permission: { read, }, },
         { propertyName: 'disbursementCompleteDate', permission: { read, write, }, },
         { propertyName: 'endDate', permission: { read, }, },

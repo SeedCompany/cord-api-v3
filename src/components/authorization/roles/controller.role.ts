@@ -165,7 +165,6 @@ export const Controller = new DbRole({
       __className: 'DbInternshipEngagement',
       properties: [
         { propertyName: 'ceremony', permission: { read, }, },
-        { propertyName: 'communicationsCompleteDate', permission: { read, }, },
         { propertyName: 'completeDate', permission: { read, }, },
         { propertyName: 'countryOfOrigin', permission: { read, }, },
         { propertyName: 'disbursementCompleteDate', permission: { read, }, },
@@ -215,7 +214,6 @@ export const Controller = new DbRole({
       __className: 'DbLanguageEngagement',
       properties: [
         { propertyName: 'ceremony', permission: { read, }, },
-        { propertyName: 'communicationsCompleteDate', permission: { read, }, },
         { propertyName: 'completeDate', permission: { read, }, },
         { propertyName: 'disbursementCompleteDate', permission: { read, }, },
         { propertyName: 'endDate', permission: { read, }, },

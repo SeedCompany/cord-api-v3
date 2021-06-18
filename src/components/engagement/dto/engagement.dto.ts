@@ -61,9 +61,6 @@ class Engagement extends Resource {
   readonly disbursementCompleteDate: SecuredDateNullable;
 
   @Field()
-  readonly communicationsCompleteDate: SecuredDateNullable;
-
-  @Field()
   // Match the project mouStart. Could need to manually set for an extension.
   // formally stage_begin.
   readonly startDate: SecuredDateNullable;
