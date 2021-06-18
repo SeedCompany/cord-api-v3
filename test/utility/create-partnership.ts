@@ -12,6 +12,22 @@ import { createPartner } from './create-partner';
 import { createProject } from './create-project';
 import { fragments } from './fragments';
 
+export async function readOnePartnership(app: TestApp, id: string) {
+  const result = await app.graphql.query(
+    gql`
+      query ReadOnePartnership($id: ID!) {
+        partnership(id: $id) {
+          ...partnership
+        }
+      }
+      ${fragments.partnership}
+    `,
+    { id }
+  );
+  const actual = result.partnership;
+  expect(actual).toBeTruthy();
+  return actual;
+}
 export async function createPartnership(
   app: TestApp,
   { changeset, ...input }: Partial<CreatePartnership> & { changeset?: ID } = {}
