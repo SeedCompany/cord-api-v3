@@ -9,6 +9,7 @@ import {
 import {
   ConfigService,
   DatabaseService,
+  HandleIdLookup,
   IEventBus,
   ILogger,
   Logger,
@@ -65,6 +66,7 @@ export class ProjectChangeRequestService {
     return await this.readOne(id, session);
   }
 
+  @HandleIdLookup(ProjectChangeRequest)
   async readOne(id: ID, session: Session): Promise<ProjectChangeRequest> {
     const dto = await this.readOneUnsecured(id, session);
     return await this.secure(dto, session);
