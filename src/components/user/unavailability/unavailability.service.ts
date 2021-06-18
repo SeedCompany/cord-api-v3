@@ -5,7 +5,7 @@ import {
   ServerException,
   Session,
 } from '../../../common';
-import { ILogger, Logger } from '../../../core';
+import { HandleIdLookup, ILogger, Logger } from '../../../core';
 import { parseBaseNodeProperties } from '../../../core/database/results';
 import { AuthorizationService } from '../../authorization/authorization.service';
 import {
@@ -90,6 +90,7 @@ export class UnavailabilityService {
     }
   }
 
+  @HandleIdLookup(Unavailability)
   async readOne(id: ID, session: Session): Promise<Unavailability> {
     const result = await this.repo.readOne(id, session);
     if (!result) {

@@ -7,15 +7,24 @@ import {
   Session,
   UnsecuredDto,
 } from '../../common';
-import { IEventBus, ILogger, Logger, OnIndex } from '../../core';
+import {
+  HandleIdLookup,
+  IEventBus,
+  ILogger,
+  Logger,
+  OnIndex,
+} from '../../core';
 import { runListQuery } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { CreateDefinedFileVersionInput, FileService } from '../file';
 import {
   CreatePeriodicReport,
+  FinancialReport,
   IPeriodicReport,
+  NarrativeReport,
   PeriodicReport,
   PeriodicReportListInput,
+  ProgressReport,
   ReportType,
   SecuredPeriodicReportList,
 } from './dto';
@@ -83,6 +92,7 @@ export class PeriodicReportService {
     return report;
   }
 
+  @HandleIdLookup([FinancialReport, NarrativeReport, ProgressReport])
   async readOne(id: ID, session: Session): Promise<PeriodicReport> {
     this.logger.debug(`read one`, {
       id,

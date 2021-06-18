@@ -12,7 +12,7 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import { ILogger, Logger, Property } from '../../core';
+import { HandleIdLookup, ILogger, Logger, Property } from '../../core';
 import {
   parseSecuredProperties,
   runListQuery,
@@ -213,6 +213,7 @@ export class BudgetService {
     }
   }
 
+  @HandleIdLookup(Budget)
   async readOne(id: ID, session: Session): Promise<Budget> {
     this.logger.debug(`readOne budget`, {
       id,
@@ -256,6 +257,7 @@ export class BudgetService {
     };
   }
 
+  @HandleIdLookup(BudgetRecord)
   async readOneRecord(id: ID, session: Session): Promise<BudgetRecord> {
     this.logger.debug(`readOne BudgetRecord`, {
       id,

@@ -8,7 +8,7 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import { ILogger, Logger, OnIndex } from '../../core';
+import { HandleIdLookup, ILogger, Logger, OnIndex } from '../../core';
 import {
   parseBaseNodeProperties,
   parsePropList,
@@ -84,6 +84,7 @@ export class PartnerService {
     return await this.readOne(partnerId, session);
   }
 
+  @HandleIdLookup(Partner)
   async readOne(id: ID, session: Session): Promise<Partner> {
     this.logger.debug(`Read Partner by Partner Id`, {
       id: id,

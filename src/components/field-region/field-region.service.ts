@@ -7,7 +7,7 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import { ILogger, Logger, OnIndex } from '../../core';
+import { HandleIdLookup, ILogger, Logger, OnIndex } from '../../core';
 import {
   parseBaseNodeProperties,
   runListQuery,
@@ -83,6 +83,7 @@ export class FieldRegionService {
     return await this.readOne(result.id, session);
   }
 
+  @HandleIdLookup(FieldRegion)
   async readOne(id: ID, session: Session): Promise<FieldRegion> {
     this.logger.debug(`Read Field Region`, {
       id: id,

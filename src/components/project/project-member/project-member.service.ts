@@ -17,6 +17,7 @@ import {
 import {
   ConfigService,
   DatabaseService,
+  HandleIdLookup,
   IEventBus,
   ILogger,
   Logger,
@@ -127,6 +128,7 @@ export class ProjectMemberService {
     }
   }
 
+  @HandleIdLookup(ProjectMember)
   async readOne(id: ID, session: Session): Promise<ProjectMember> {
     this.logger.debug(`read one`, {
       id,

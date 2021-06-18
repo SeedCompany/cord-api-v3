@@ -10,7 +10,13 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import { ConfigService, IEventBus, ILogger, Logger } from '../../core';
+import {
+  ConfigService,
+  HandleIdLookup,
+  IEventBus,
+  ILogger,
+  Logger,
+} from '../../core';
 import { runListQuery } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { CeremonyService } from '../ceremony';
@@ -210,6 +216,7 @@ export class EngagementService {
 
   // READ ///////////////////////////////////////////////////////////
 
+  @HandleIdLookup([LanguageEngagement, InternshipEngagement])
   async readOne(
     id: ID,
     session: Session

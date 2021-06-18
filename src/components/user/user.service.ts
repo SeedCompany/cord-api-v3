@@ -14,6 +14,7 @@ import {
   UnsecuredDto,
 } from '../../common';
 import {
+  HandleIdLookup,
   ILogger,
   Logger,
   OnIndex,
@@ -143,6 +144,7 @@ export class UserService {
     return id;
   }
 
+  @HandleIdLookup(User)
   async readOne(id: ID, sessionOrUserId: Session | ID): Promise<User> {
     const user = await this.userRepo.readOne(id);
     return await this.secure(user, sessionOrUserId);

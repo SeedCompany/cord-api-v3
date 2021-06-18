@@ -9,7 +9,7 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import { ILogger, Logger, OnIndex } from '../../core';
+import { HandleIdLookup, ILogger, Logger, OnIndex } from '../../core';
 import {
   parseBaseNodeProperties,
   runListQuery,
@@ -71,6 +71,7 @@ export class LocationService {
     return await this.readOne(id, session);
   }
 
+  @HandleIdLookup(Location)
   async readOne(id: ID, session: Session): Promise<Location> {
     this.logger.debug(`Read Location`, {
       id: id,
