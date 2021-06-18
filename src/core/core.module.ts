@@ -11,6 +11,7 @@ import { EventsModule } from './events';
 import { ExceptionFilter } from './exception.filter';
 import { GraphqlLoggingPlugin } from './graphql-logging.plugin';
 import { GraphQLConfig } from './graphql.config';
+import { ResourceResolver } from './resources';
 import { ValidationPipe } from './validation.pipe';
 
 @Global()
@@ -28,6 +29,7 @@ import { ValidationPipe } from './validation.pipe';
     BaseExceptionFilter,
     { provide: APP_FILTER, useClass: ExceptionFilter },
     { provide: APP_PIPE, useClass: ValidationPipe },
+    ResourceResolver,
   ],
   controllers: [CoreController],
   exports: [
@@ -36,6 +38,7 @@ import { ValidationPipe } from './validation.pipe';
     DatabaseModule,
     EmailModule,
     EventsModule,
+    ResourceResolver,
   ],
 })
 export class CoreModule {}

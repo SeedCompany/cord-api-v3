@@ -4,3 +4,4 @@ export * from './core.module';
 export * from './database';
 export * from './database/indexer';
 export * from './events';
+export * from './resources';
