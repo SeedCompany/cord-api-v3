@@ -76,21 +76,25 @@ export class ApplyApprovedChangesetToEngagement
           .asResult<{ engagementIds: ID[] }>()
           .first();
 
-        engagementsResult?.engagementIds.map(async (id) => {
-          const object = await this.engagementService.readOne(
-            id,
-            event.session
+        if (engagementsResult?.engagementIds) {
+          await Promise.all(
+            engagementsResult.engagementIds.map(async (id) => {
+              const object = await this.engagementService.readOne(
+                id,
+                event.session
+              );
+              const changes = await this.engagementRepo.getChangesetProps(
+                id,
+                changesetId
+              );
+              await this.db.updateProperties({
+                type: LanguageEngagement || InternshipEngagement,
+                object,
+                changes,
+              });
+            })
           );
-          const changes = await this.engagementRepo.getChangesetProps(
-            id,
-            changesetId
-          );
-          await this.db.updateProperties({
-            type: LanguageEngagement || InternshipEngagement,
-            object,
-            changes,
-          });
-        });
+        }
       }
     } catch (exception) {
       throw new ServerException(

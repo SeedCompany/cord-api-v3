@@ -392,25 +392,33 @@ export class EngagementRepository extends CommonRepository {
     }
     return this.db
       .query()
-      .match([
+      .optionalMatch([
         requestingUser(session),
         ...permissionsOfNode(label),
-        ...(filter.projectId && !changeset
+        ...(filter.projectId
           ? [
               relation('in', '', 'engagement', { active: true }),
               node('project', 'Project', {
                 id: filter.projectId,
               }),
             ]
-          : filter.projectId && changeset
-          ? [
-              relation('in', '', 'engagement', { active: false }),
-              node('project', 'Project', {
-                id: filter.projectId,
-              }),
-            ]
           : []),
       ])
+      .apply((q) =>
+        changeset && filter.projectId
+          ? q.optionalMatch([
+              node('', 'Project', {
+                id: filter.projectId,
+              }),
+              relation('out', '', 'engagement', { active: false }),
+              node('cnode', label),
+              relation('in', '', 'changeset', { active: true }),
+              node('changeset', 'Changeset', { id: changeset }),
+            ])
+          : q.subQuery((sub) => sub.return(['null as cnode']))
+      )
+      .with('collect(node) + collect(cnode) as nodes')
+      .raw('unwind nodes as node')
       .apply(calculateTotalAndPaginateList(IEngagement, input));
   }
 

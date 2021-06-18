@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
-import { CalendarDate, sleep } from '../src/common';
+import { CalendarDate } from '../src/common';
 import { Powers } from '../src/components/authorization/dto/powers';
 import { EngagementStatus } from '../src/components/engagement';
 import { Language } from '../src/components/language';
@@ -131,6 +131,9 @@ describe('Engagement Changeset Aware e2e', () => {
       projectId: project.id,
     });
 
+    await createLanguageEngagement(app, {
+      projectId: project.id,
+    });
     // Create new engagement with changeset
     const changesetEngagement = await app.graphql.mutate(
       gql`
@@ -158,16 +161,16 @@ describe('Engagement Changeset Aware e2e', () => {
     );
     // list engagements without changeset
     let result = await readEngagements(app, project.id);
-    expect(result.project.engagements.items.length).toBe(0);
+    expect(result.project.engagements.items.length).toBe(1);
     // list engagements with changeset
     result = await readEngagements(app, project.id, changeset.id);
-    expect(result.project.engagements.items.length).toBe(1);
-    expect(result.project.engagements.items[0].id).toBe(
+    expect(result.project.engagements.items.length).toBe(2);
+    expect(result.project.engagements.items[1].id).toBe(
       changesetEngagement.createLanguageEngagement.engagement.id
     );
     await approveProjectChangeRequest(app, changeset.id);
     result = await readEngagements(app, project.id);
-    expect(result.project.engagements.items.length).toBe(1);
+    expect(result.project.engagements.items.length).toBe(2);
   });
 
   it('Update', async () => {
@@ -216,7 +219,6 @@ describe('Engagement Changeset Aware e2e', () => {
     );
     expect(result.engagement.completeDate.value).toBe('2100-08-22');
     await approveProjectChangeRequest(app, changeset.id);
-    await sleep(1000);
     result = await readLanguageEngagement(app, languageEngagement.id);
     expect(result.engagement.completeDate.value).toBe('2100-08-22');
   });
