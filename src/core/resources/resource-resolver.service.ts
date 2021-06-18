@@ -20,7 +20,7 @@ type SomeResource = ValueOf<ResourceMap>;
  *
  * WARNING: It's required that the function signature be:
  * ```
- * (id: ID, session: Session) => Promise<Resource>
+ * (id: ID, session: Session, changeset?: ID) => Promise<Resource>
  * ```
  *
  * {@link ResourceResolver} can be used to invoke this function.
@@ -53,8 +53,13 @@ export class ResourceResolver {
   /**
    * Lookup a resource from a Neo4j BaseNode.
    */
-  async lookupByBaseNode(node: BaseNode, session: Session) {
-    return await this.lookup(node.labels, node.properties.id, session);
+  async lookupByBaseNode(node: BaseNode, session: Session, changeset?: ID) {
+    return await this.lookup(
+      node.labels,
+      node.properties.id,
+      session,
+      changeset
+    );
   }
 
   /**
@@ -65,22 +70,26 @@ export class ResourceResolver {
   async lookup<TResource extends SomeResource>(
     type: TResource,
     id: ID,
-    session: Session
+    session: Session,
+    changeset?: ID
   ): Promise<TResource['prototype']>;
   async lookup<TResourceName extends keyof ResourceMap>(
     type: TResourceName,
     id: ID,
-    session: Session
+    session: Session,
+    changeset?: ID
   ): Promise<ResourceMap[TResourceName]['prototype']>;
   async lookup(
     possibleTypes: Many<string | SomeResource>,
     id: ID,
-    session: Session
+    session: Session,
+    changeset?: ID
   ): Promise<SomeResource>;
   async lookup(
     possibleTypes: Many<string | SomeResource>,
     id: ID,
-    session: Session
+    session: Session,
+    changeset?: ID
   ): Promise<SomeResource> {
     const type = this.resolveType(possibleTypes);
     const discovered = await this.discover.providerMethodsWithMetaAtKey<Shape>(
@@ -97,7 +106,8 @@ export class ResourceResolver {
     const result = await method.handler.call(
       method.parentClass.instance,
       id,
-      session
+      session,
+      changeset
     );
     return {
       __typename: type,
