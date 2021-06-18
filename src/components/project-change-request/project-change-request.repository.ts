@@ -99,7 +99,7 @@ export class ProjectChangeRequestRepository extends DtoRepository(
             props,
             {
               scope: scopedRoles,
-              canEdit: projectStatus = "${ProjectStatus.Active}" and props.status = "${Status.Pending}"
+              canEdit: projectStatus.value = "${ProjectStatus.Active}" and props.status = "${Status.Pending}"
             }
           ]) as dto`,
       ])
