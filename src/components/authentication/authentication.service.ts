@@ -15,7 +15,7 @@ import { RawSession } from '../../common/session';
 import { ConfigService, ILogger, Logger } from '../../core';
 import { ForgotPassword } from '../../core/email/templates';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { User, UserService } from '../user';
+import { UserService } from '../user';
 import { AuthenticationRepository } from './authentication.repository';
 import { CryptoService } from './crypto.service';
 import { LoginInput, RegisterInput, ResetPasswordInput } from './dto';
@@ -42,15 +42,6 @@ export class AuthenticationService {
 
     await this.repo.saveSessionToken(token);
     return token;
-  }
-
-  async userFromSession(session: Session): Promise<User | null> {
-    const userId = await this.repo.getUserFromSession(session);
-    if (!userId) {
-      return null;
-    }
-
-    return await this.userService.readOne(userId, session);
   }
 
   async register(input: RegisterInput, session?: Session): Promise<ID> {

@@ -1,7 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { Powers } from '../../authorization';
-import { User } from '../../user';
+import { ID, Session } from '../../../common';
 
 @ObjectType()
 export abstract class SessionOutput {
@@ -14,13 +13,8 @@ export abstract class SessionOutput {
   })
   token?: string;
 
-  @Field(() => User, {
-    nullable: true,
-    description:
-      'Only returned if there is a logged-in user tied to the current session.',
-  })
-  user: User | null;
+  // Current user ID if any
+  user?: ID;
 
-  @Field(() => [Powers], { nullable: true })
-  readonly powers: Powers[];
+  session: Session;
 }

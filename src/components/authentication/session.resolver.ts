@@ -1,23 +1,34 @@
 import { forwardRef, Inject } from '@nestjs/common';
-import { Args, Context, Query, Resolver } from '@nestjs/graphql';
+import {
+  Args,
+  Context,
+  Field,
+  Parent,
+  Query,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
 import { Request, Response } from 'express';
 import { DateTime } from 'luxon';
 import { UnauthenticatedException } from '../../common';
 import { anonymousSession } from '../../common/session';
 import { ConfigService, ILogger, Logger } from '../../core';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { Powers } from '../authorization/dto';
+import { User, UserService } from '../user';
 import { AuthenticationRepository } from './authentication.repository';
 import { AuthenticationService } from './authentication.service';
 import { SessionOutput } from './dto';
 import { SessionPipe } from './session.pipe';
 
-@Resolver()
+@Resolver(SessionOutput)
 export class SessionResolver {
   constructor(
     private readonly authentication: AuthenticationService,
     private readonly repo: AuthenticationRepository,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorization: AuthorizationService,
+    private readonly users: UserService,
     private readonly config: ConfigService,
     private readonly sessionPipe: SessionPipe,
     @Logger('session:resolver') private readonly logger: ILogger
@@ -60,9 +71,8 @@ export class SessionResolver {
     const session = anonymousSession(rawSession);
 
     const userFromSession = session.anonymous
-      ? null
-      : await this.authentication.userFromSession(session);
-    const powers = await this.authorization.readPower(session);
+      ? undefined
+      : await this.repo.getUserFromSession(session);
 
     if (browser) {
       const { name, expires, ...options } = this.config.sessionCookie;
@@ -73,9 +83,25 @@ export class SessionResolver {
           : undefined,
       });
 
-      return { user: userFromSession, powers };
+      return { user: userFromSession, session };
     }
 
-    return { token, user: userFromSession, powers };
+    return { token, user: userFromSession, session };
+  }
+
+  @ResolveField(() => User, {
+    nullable: true,
+    description:
+      'Only returned if there is a logged-in user tied to the current session.',
+  })
+  async user(@Parent() output: SessionOutput): Promise<User | null> {
+    return output.user
+      ? await this.users.readOne(output.user, output.session)
+      : null;
+  }
+
+  @Field(() => [Powers], { nullable: true })
+  async powers(@Parent() output: SessionOutput): Promise<Powers[]> {
+    return await this.authorization.readPower(output.session);
   }
 }
