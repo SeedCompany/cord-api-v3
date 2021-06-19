@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { EmailService } from '@seedcompany/nestjs-email';
+import { Request } from 'express';
 import { sign, verify } from 'jsonwebtoken';
 import { DateTime } from 'luxon';
 import {
@@ -89,6 +90,12 @@ export class AuthenticationService {
     }
 
     return userId;
+  }
+
+  async updateSession(req: Request) {
+    const newSession = await this.createSession(req.session!.token);
+    req.session = newSession; // replace session given with session pipe
+    return newSession;
   }
 
   async logout(token: string): Promise<void> {
