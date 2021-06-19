@@ -155,6 +155,7 @@ export class PostService {
       resource: parentType,
       sessionOrUserId: session,
       otherRoles: parent.scope,
+      dto: parent,
     });
     if (!perms.posts.canRead) {
       return SecuredList.Redacted;
