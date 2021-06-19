@@ -1,5 +1,4 @@
 import { Query } from 'cypher-query-builder';
-import { Except } from 'type-fest';
 import { LogLevel } from '../logger';
 import './subquery.override';
 
@@ -8,14 +7,9 @@ import './subquery.override';
    doesn't matter here as this class won't be overridden. Declaring them as
    methods keeps their color the same as the rest of the query methods. */
 
-// Work around `Dictionary` return type
-export type QueryWithResult<R> = Except<Query, 'run' | 'first'> & {
-  run: () => Promise<R[]>;
-  first: () => Promise<R | undefined>;
-};
-
 declare module 'cypher-query-builder/dist/typings/query' {
-  interface Query {
+  // eslint-disable-next-line @seedcompany/no-unused-vars -- false positive, it's required to be the same as the src type signature.
+  interface Query<Result = unknown> {
     /**
      * Apply custom query modifications while maintaining the fluent chain.
      *
@@ -23,7 +17,7 @@ declare module 'cypher-query-builder/dist/typings/query' {
      *
      * In the future this could be changed to utilize native neo4j call logic.
      */
-    call<A extends any[], R extends this | QueryWithResult<any> | void>(
+    call<A extends any[], R extends this | Query<any> | void>(
       fn: (query: this, ...args: A) => R,
       ...args: A
     ): R extends void ? this : R;
@@ -54,7 +48,7 @@ declare module 'cypher-query-builder/dist/typings/query' {
      *
      * db.query().apply(matchFoo('Movie'));
      */
-    apply<R extends this | QueryWithResult<any> | void>(
+    apply<R extends this | Query<any> | void>(
       fn: (query: this) => R
     ): R extends void ? this : R;
 
@@ -63,7 +57,7 @@ declare module 'cypher-query-builder/dist/typings/query' {
      * Only useful for TypeScript.
      * Must be called directly before run()/first().
      */
-    asResult<R>(): QueryWithResult<R>;
+    asResult<R>(): Query<R>;
 
     logIt(level?: LogLevel): this;
   }
@@ -71,7 +65,7 @@ declare module 'cypher-query-builder/dist/typings/query' {
 
 Query.prototype.call = function call<
   A extends any[],
-  R extends Query | QueryWithResult<any> | void
+  R extends Query<any> | void
 >(
   this: Query,
   fn: (q: Query, ...args: A) => R,
@@ -80,14 +74,14 @@ Query.prototype.call = function call<
   return (fn(this, ...args) || this) as Exclude<R, void>;
 };
 
-Query.prototype.apply = function apply<
-  R extends Query | QueryWithResult<any> | void
->(fn: (q: Query) => R): R extends void ? Query : R {
+Query.prototype.apply = function apply<R extends Query<any> | void>(
+  fn: (q: Query) => R
+): R extends void ? Query : R {
   return (fn(this) || this) as Exclude<R, void>;
 };
 
 Query.prototype.asResult = function asResult<R>(this: Query) {
-  return this as unknown as QueryWithResult<R>;
+  return this as unknown as Query<R>;
 };
 
 Query.prototype.logIt = function logIt(this: Query, level = LogLevel.NOTICE) {
