@@ -380,7 +380,7 @@ export class ProjectService {
           {
             userId: session.userId,
             projectId: result.id,
-            roles: [roles?.roles],
+            roles,
           },
           session
         );

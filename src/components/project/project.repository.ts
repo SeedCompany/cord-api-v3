@@ -40,7 +40,7 @@ export class ProjectRepository extends CommonRepository {
   }
 
   async getRoles(session: Session) {
-    return await this.db
+    const result = await this.db
       .query()
       .match([
         node('user', 'User', { id: session.userId }),
@@ -48,7 +48,8 @@ export class ProjectRepository extends CommonRepository {
         node('roles', 'Property'),
       ])
       .return<{ roles: Role }>('roles.value as roles')
-      .first();
+      .run();
+    return result.map((row) => row.roles);
   }
 
   async readOneUnsecured(id: ID, userId: ID) {

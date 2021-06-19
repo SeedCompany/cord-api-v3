@@ -953,7 +953,7 @@ export class ProjectRules {
       ])
       .return<{ ids: ID[] }>('collect(user.id) as ids')
       .first();
-    return users?.ids;
+    return users?.ids ?? [];
   }
 
   private async getRoleEmails(role: Role): Promise<string[]> {
@@ -969,7 +969,7 @@ export class ProjectRules {
       .return<{ emails: string[] }>('collect(email.value) as emails')
       .first();
 
-    return emails?.emails;
+    return emails?.emails ?? [];
   }
 
   /** Of the given steps which one was the most recent previous step */
