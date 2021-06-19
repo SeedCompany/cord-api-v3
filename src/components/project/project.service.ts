@@ -862,10 +862,6 @@ export class ProjectService {
     };
   }
 
-  async listProjectsWithDateRange() {
-    return await this.repo.listProjectsWithDateRange();
-  }
-
   protected async validateOtherResourceId(
     ids: Many<string>,
     label: string,

@@ -1,13 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Node, node, Relation, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import {
-  CalendarDate,
-  ID,
-  Sensitivity,
-  Session,
-  UnsecuredDto,
-} from '../../common';
+import { ID, Sensitivity, Session, UnsecuredDto } from '../../common';
 import {
   CommonRepository,
   matchRequestingUser,
@@ -345,32 +339,6 @@ export class ProjectRepository extends CommonRepository {
         directory: [{ id: 'id' }],
       })
       .first();
-  }
-
-  async listProjectsWithDateRange() {
-    return await this.db
-      .query()
-      .match(node('project', 'Project'))
-      .match([
-        node('project'),
-        relation('out', '', 'mouStart', { active: true }),
-        node('mouStart', 'Property'),
-      ])
-      .match([
-        node('project'),
-        relation('out', '', 'mouEnd', { active: true }),
-        node('mouEnd', 'Property'),
-      ])
-      .raw('WHERE mouStart.value IS NOT NULL AND mouEnd.value IS NOT NULL')
-      .return(
-        'project.id as projectId, mouStart.value as mouStart, mouEnd.value as mouEnd'
-      )
-      .asResult<{
-        projectId: ID;
-        mouStart: CalendarDate;
-        mouEnd: CalendarDate;
-      }>()
-      .run();
   }
 
   async validateOtherResourceId(id: string, label: string) {
