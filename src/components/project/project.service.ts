@@ -361,8 +361,9 @@ export class ProjectService {
         ],
       ]);
 
-      createProject.return('node.id as id').asResult<{ id: ID }>();
-      const result = await createProject.first();
+      const result = await createProject
+        .return<{ id: ID }>('node.id as id')
+        .first();
 
       if (!result) {
         throw new ServerException('failed to create a project');

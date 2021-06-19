@@ -54,7 +54,7 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
         ...property('roles', input.roles, 'newProjectMember'),
         ...property('modifiedAt', createdAt, 'newProjectMember'),
       ])
-      .return('newProjectMember.id as id');
+      .return<{ id: ID }>('newProjectMember.id as id');
     await createProjectMember.first();
 
     // connect the Project to the ProjectMember
@@ -79,7 +79,7 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
         }),
         node('user'),
       ])
-      .return('projectMember.id as id')
+      .return<{ id: ID }>('projectMember.id as id')
       .first();
   }
 

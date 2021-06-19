@@ -115,7 +115,7 @@ export class UnavailabilityService {
   ): Promise<Unavailability> {
     const unavailability = await this.readOne(input.id, session);
 
-    const result = await this.repo.getUnavailability(session, input);
+    const result = await this.repo.getUserIdByUnavailability(session, input);
     if (!result) {
       throw new NotFoundException(
         'Could not find user associated with unavailability',
@@ -125,7 +125,7 @@ export class UnavailabilityService {
 
     const changes = this.repo.getActualChanges(unavailability, input);
 
-    if (result.user.properties.id !== session.userId) {
+    if (result.id !== session.userId) {
       await this.authorizationService.verifyCanEditChanges(
         Unavailability,
         unavailability,

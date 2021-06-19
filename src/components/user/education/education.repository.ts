@@ -42,7 +42,7 @@ export class EducationRepository extends DtoRepository(Education) {
         relation('out', '', 'education', { active: true, createdAt }),
         node('node'),
       ])
-      .return('node.id as id');
+      .return<{ id: ID }>('node.id as id');
 
     return await query.first();
   }
@@ -59,7 +59,7 @@ export class EducationRepository extends DtoRepository(Education) {
     return await query.first();
   }
 
-  async getUserEducation(session: Session, id: ID) {
+  async getUserIdByEducation(session: Session, id: ID) {
     return await this.db
       .query()
       .apply(matchRequestingUser(session))
@@ -68,7 +68,7 @@ export class EducationRepository extends DtoRepository(Education) {
         relation('out', '', 'education', { active: true }),
         node('education', 'Education', { id }),
       ])
-      .return('user')
+      .return<{ id: ID }>('user.id as id')
       .first();
   }
 

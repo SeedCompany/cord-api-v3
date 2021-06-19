@@ -106,7 +106,7 @@ export class EducationService {
 
   async update(input: UpdateEducation, session: Session): Promise<Education> {
     const ed = await this.readOne(input.id, session);
-    const result = await this.repo.getUserEducation(session, input.id);
+    const result = await this.repo.getUserIdByEducation(session, input.id);
     if (!result) {
       throw new NotFoundException(
         'Could not find user associated with education',
@@ -114,7 +114,7 @@ export class EducationService {
       );
     }
     const changes = this.repo.getActualChanges(ed, input);
-    if (result.user.properties.id !== session.userId) {
+    if (result.id !== session.userId) {
       await this.authorizationService.verifyCanEditChanges(
         Education,
         ed,

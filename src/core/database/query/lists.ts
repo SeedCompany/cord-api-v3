@@ -13,7 +13,7 @@ export const calculateTotalAndPaginateList =
     { page, count, sort, order }: SortablePaginationInput,
     sorter?: (q: Query) => Query
   ) =>
-  (query: Query) => {
+  (query: Query) =>
     query
       .with([
         'collect(distinct node) as nodes',
@@ -28,10 +28,7 @@ export const calculateTotalAndPaginateList =
         }] as items`,
         'total',
       ])
-      .return(['items', 'total']);
-
-    return query.asResult<{ items: ID[]; total: number }>();
-  };
+      .return<{ items: ID[]; total: number }>(['items', 'total']);
 
 export const defaultSorter =
   <TResourceStatic extends ResourceShape<any>>(

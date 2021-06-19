@@ -43,7 +43,7 @@ export class FilmRepository extends DtoRepository(Film) {
       .apply(
         createBaseNode(await generateId(), ['Film', 'Producible'], secureProps)
       )
-      .return('node.id as id')
+      .return<{ id: ID }>('node.id as id')
       .first();
   }
 

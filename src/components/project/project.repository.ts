@@ -47,7 +47,7 @@ export class ProjectRepository extends CommonRepository {
         relation('out', '', 'roles', { active: true }),
         node('roles', 'Property'),
       ])
-      .raw('RETURN roles.value as roles')
+      .return<{ roles: Role }>('roles.value as roles')
       .first();
   }
 
@@ -335,7 +335,7 @@ export class ProjectRepository extends CommonRepository {
           node('directory', 'BaseNode:Directory'),
         ],
       ])
-      .return({
+      .return<{ id: ID }>({
         directory: [{ id: 'id' }],
       })
       .first();

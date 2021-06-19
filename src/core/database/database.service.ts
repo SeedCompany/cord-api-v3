@@ -371,7 +371,7 @@ export class DatabaseService {
     const idFilter = input.filter.id ? { id: input.filter.id } : {};
     const userIdFilter = input.filter.userId ? { id: input.filter.userId } : {};
 
-    const query = this.db.query().match([
+    const query: Query<any> = this.db.query().match([
       matchSession(session, {
         withAclRead: aclReadPropName,
       }),
@@ -447,11 +447,11 @@ export class DatabaseService {
     }
 
     // Clone the query here, before we apply limit/offsets, so that we can get an accurate aggregate of the total filtered result set
-    const countQuery = cloneDeep(query);
-    countQuery.return('count(n) as total');
+    const countQuery =
+      cloneDeep(query).return<{ total: number }>('count(n) as total');
 
     query
-      .returnDistinct([
+      .returnDistinct<any>([
         // return the ACL fields
         {
           requestingUser: [

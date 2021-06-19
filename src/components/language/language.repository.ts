@@ -116,7 +116,7 @@ export class LanguageRepository extends DtoRepository(Language) {
       .query()
       .apply(matchRequestingUser(session))
       .apply(createBaseNode(await generateId(), 'Language', secureProps))
-      .return('node.id as id');
+      .return<{ id: ID }>('node.id as id');
 
     return await createLanguage.first();
   }
@@ -206,7 +206,7 @@ export class LanguageRepository extends DtoRepository(Language) {
         relation('in', '', 'engagement', { active: true }),
         node('project', 'Project'),
       ])
-      .return({ project: [{ id: 'id', createdAt: 'createdAt' }] });
+      .return<{ id: ID }>({ project: [{ id: 'id' }] });
 
     return await queryProject.run();
   }

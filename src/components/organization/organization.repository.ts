@@ -80,7 +80,7 @@ export class OrganizationRepository extends DtoRepository(Organization) {
         this.createSG('orgSG', await generateId(), 'OrgPublicSecurityGroup')
       )
       .apply(createBaseNode(await generateId(), 'Organization', secureProps))
-      .return('node.id as id');
+      .return<{ id: ID }>('node.id as id');
 
     return await query.first();
   }

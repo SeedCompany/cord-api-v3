@@ -186,14 +186,14 @@ export class FileRepository {
         relation('in', '', 'parent', { active: true }),
         node('fv', 'FileVersion'),
       ])
-      .return('fv')
+      .return<{ id: ID }>('fv.id as id')
       .orderBy('fv.createdAt', 'DESC')
       .limit(1)
       .first();
     if (!latestVersionResult) {
       throw new NotFoundException();
     }
-    return latestVersionResult.fv.properties.id;
+    return latestVersionResult.id;
   }
 
   async getVersionDetails(id: ID, session: Session): Promise<FileVersion> {

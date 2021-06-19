@@ -33,7 +33,7 @@ export class StoryRepository extends DtoRepository(Story) {
       .apply(
         createBaseNode(await generateId(), ['Story', 'Producible'], secureProps)
       )
-      .return('node.id as id')
+      .return<{ id: ID }>('node.id as id')
       .first();
   }
 
