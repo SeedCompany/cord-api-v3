@@ -657,16 +657,17 @@ export class ProjectService {
       session
     );
 
-    const permission = await this.repo.getEngagementPermission(
-      session,
-      project.id
+    const permissions = await this.repo.permissionsForListProp(
+      'engagement',
+      project.id,
+      session
     );
 
     return {
       ...result,
-      canRead: !!permission?.canReadEngagementRead,
+      ...permissions,
       canCreate:
-        !!permission?.canReadEngagementCreate &&
+        permissions.canCreate &&
         (project.status === ProjectStatus.InDevelopment ||
           session.roles.includes('global:Administrator')),
     };
@@ -688,15 +689,15 @@ export class ProjectService {
       session
     );
 
-    const permission = await this.repo.getTeamMemberPermission(
-      session,
-      projectId
+    const permissions = await this.repo.permissionsForListProp(
+      'member',
+      projectId,
+      session
     );
 
     return {
       ...result,
-      canRead: !!permission?.canReadTeamMemberRead,
-      canCreate: !!permission?.canReadTeamMemberCreate,
+      ...permissions,
     };
   }
 
@@ -716,15 +717,15 @@ export class ProjectService {
       session
     );
 
-    const permission = await this.repo.getPartnershipPermission(
-      session,
-      projectId
+    const permissions = await this.repo.permissionsForListProp(
+      'partnership',
+      projectId,
+      session
     );
 
     return {
       ...result,
-      canRead: !!permission?.canReadPartnershipRead,
-      canCreate: !!permission?.canReadPartnershipCreate,
+      ...permissions,
     };
   }
 

@@ -270,8 +270,8 @@ export class ProjectRepository extends CommonRepository {
       );
   }
 
-  async getEngagementPermission(session: Session, projectId: ID) {
-    return await this.db
+  async permissionsForListProp(prop: string, id: ID, session: Session) {
+    const result = await this.db
       .query()
       .match([requestingUser(session)])
       .match([
@@ -280,12 +280,12 @@ export class ProjectRepository extends CommonRepository {
           relation('in', 'memberOfReadSecurityGroup', 'member'),
           node('readSecurityGroup', 'SecurityGroup'),
           relation('out', 'sgReadPerms', 'permission'),
-          node('canReadEngagement', 'Permission', {
-            property: 'engagement',
+          node('canRead', 'Permission', {
+            property: prop,
             read: true,
           }),
           relation('out', 'readPermsOfBaseNode', 'baseNode'),
-          node('project', 'Project', { id: projectId }),
+          node('project', 'Project', { id: id }),
         ],
       ])
       .match([
@@ -294,121 +294,18 @@ export class ProjectRepository extends CommonRepository {
           relation('in', 'memberOfEditSecurityGroup', 'member'),
           node('editSecurityGroup', 'SecurityGroup'),
           relation('out', 'sgEditPerms', 'permission'),
-          node('canEditEngagement', 'Permission', {
-            property: 'engagement',
+          node('canEdit', 'Permission', {
+            property: prop,
             edit: true,
           }),
           relation('out', 'editPermsOfBaseNode', 'baseNode'),
           node('project'),
         ],
       ])
-      .return({
-        canReadEngagement: [
-          {
-            read: 'canReadEngagementRead',
-          },
-        ],
-        canEditEngagement: [
-          {
-            edit: 'canReadEngagementCreate',
-          },
-        ],
-      })
+      .return(['canRead.read as canRead', 'canEdit.edit as canCreate'])
+      .asResult<{ canRead: boolean; canCreate: boolean }>()
       .first();
-  }
-
-  async getTeamMemberPermission(session: Session, projectId: ID) {
-    return await this.db
-      .query()
-      .match([requestingUser(session)])
-      .match([
-        [
-          node('requestingUser'),
-          relation('in', 'memberOfReadSecurityGroup', 'member'),
-          node('readSecurityGroup', 'SecurityGroup'),
-          relation('out', 'sgReadPerms', 'permission'),
-          node('canReadTeamMember', 'Permission', {
-            property: 'member',
-            read: true,
-          }),
-          relation('out', 'readPermsOfBaseNode', 'baseNode'),
-          node('project', 'Project', { id: projectId }),
-        ],
-      ])
-      .match([
-        [
-          node('requestingUser'),
-          relation('in', 'memberOfEditSecurityGroup', 'member'),
-          node('editSecurityGroup', 'SecurityGroup'),
-          relation('out', 'sgEditPerms', 'permission'),
-          node('canEditTeamMember', 'Permission', {
-            property: 'member',
-            edit: true,
-          }),
-          relation('out', 'editPermsOfBaseNode', 'baseNode'),
-          node('project'),
-        ],
-      ])
-      .return({
-        canReadTeamMember: [
-          {
-            read: 'canReadTeamMemberRead',
-          },
-        ],
-        canEditTeamMember: [
-          {
-            edit: 'canReadTeamMemberCreate',
-          },
-        ],
-      })
-      .first();
-  }
-
-  async getPartnershipPermission(session: Session, projectId: ID) {
-    return await this.db
-      .query()
-      .match([requestingUser(session)])
-      .match([
-        [
-          node('requestingUser'),
-          relation('in', 'memberOfReadSecurityGroup', 'member'),
-          node('readSecurityGroup', 'SecurityGroup'),
-          relation('out', 'sgReadPerms', 'permission'),
-          node('canReadPartnership', 'Permission', {
-            property: 'partnership',
-            read: true,
-          }),
-          relation('out', 'readPermsOfBaseNode', 'baseNode'),
-          node('project', 'Project', { id: projectId }),
-        ],
-      ])
-      .match([
-        [
-          node('requestingUser'),
-          relation('in', 'memberOfEditSecurityGroup', 'member'),
-          node('editSecurityGroup', 'SecurityGroup'),
-          relation('out', 'sgEditPerms', 'permission'),
-          node('canEditPartnership', 'Permission', {
-            property: 'partnership',
-            edit: true,
-          }),
-          relation('out', 'editPermsOfBaseNode', 'baseNode'),
-          node('project'),
-        ],
-      ])
-      .return({
-        canReadPartnership: [
-          {
-            read: 'canReadPartnershipRead',
-          },
-        ],
-        canEditPartnership: [
-          {
-            edit: 'canReadPartnershipCreate',
-          },
-        ],
-      })
-      .first();
+    return result ?? { canRead: false, canCreate: false };
   }
 
   async getMembershipRoles(projectId: ID | Project, session: Session) {
