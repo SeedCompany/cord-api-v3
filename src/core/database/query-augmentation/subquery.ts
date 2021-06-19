@@ -1,10 +1,5 @@
 import { ClauseCollection, Query } from 'cypher-query-builder';
 
-/* eslint-disable @typescript-eslint/method-signature-style -- this is enforced
-   to treat functions arguments as contravariant instead of bivariant. this
-   doesn't matter here as this class won't be overridden. Declaring them as
-   methods keeps their color the same as the rest of the query methods. */
-
 declare module 'cypher-query-builder/dist/typings/query' {
   interface Query {
     /**

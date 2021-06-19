@@ -16,7 +16,7 @@ import { createBetterError, isNeo4jError } from './errors';
 import { ParameterTransformer } from './parameter-transformer.service';
 import { MyTransformer } from './transformer';
 import './transaction'; // import our transaction augmentation
-import './query.overrides'; // import our query augmentation
+import './query-augmentation'; // import our query augmentation
 
 // Change transaction retry logic also check all previous exceptions when
 // looking for retryable errors.
