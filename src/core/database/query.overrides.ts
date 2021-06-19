@@ -54,8 +54,8 @@ declare module 'cypher-query-builder/dist/typings/query' {
 
     /**
      * Defines the result type of the query.
-     * Only useful for TypeScript.
-     * Must be called directly before run()/first().
+     *
+     * @deprecated Specify result type on {@link return return()} instead.
      */
     asResult<R>(): Query<R>;
 
