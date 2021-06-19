@@ -277,7 +277,7 @@ export class LanguageService {
     result.total = readProject.length;
     result.hasMore = count * page < result.total ?? true;
 
-    readProject = readProject.splice((page - 1) * count, count);
+    readProject = readProject.slice().splice((page - 1) * count, count);
 
     result.items = await Promise.all(
       readProject.map(
