@@ -1,14 +1,22 @@
 import { forwardRef, Inject } from '@nestjs/common';
-import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
+import {
+  Args,
+  Context,
+  Field,
+  Mutation,
+  Parent,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
 import { Request } from 'express';
 import { AnonSession, Session } from '../../common';
-import { loggedInSession } from '../../common/session';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { UserService } from '../user';
+import { Powers } from '../authorization/dto';
+import { User, UserService } from '../user';
 import { AuthenticationService } from './authentication.service';
-import { LoginInput, LoginOutput } from './dto';
+import { LoginInput, LoginOutput, RegisterOutput } from './dto';
 
-@Resolver()
+@Resolver(LoginOutput)
 export class LoginResolver {
   constructor(
     private readonly authentication: AuthenticationService,
@@ -25,13 +33,9 @@ export class LoginResolver {
     @AnonSession() session: Session,
     @Context('request') req: Request
   ): Promise<LoginOutput> {
-    const userId = await this.authentication.login(input, session);
-    const newSession = loggedInSession(
-      await this.authentication.updateSession(req)
-    );
-    const user = await this.users.readOne(userId, newSession);
-    const powers = await this.authorization.readPower(newSession);
-    return { user, powers };
+    const user = await this.authentication.login(input, session);
+    await this.authentication.updateSession(req);
+    return { user };
   }
 
   @Mutation(() => Boolean, {
@@ -44,5 +48,18 @@ export class LoginResolver {
     await this.authentication.logout(session.token);
     await this.authentication.updateSession(req); // ensure session data is fresh
     return true;
+  }
+
+  @ResolveField(() => User, { description: 'The logged-in user' })
+  async user(
+    @Parent() { user }: RegisterOutput,
+    @AnonSession() session: Session
+  ): Promise<User> {
+    return await this.users.readOne(user, session);
+  }
+
+  @Field(() => [Powers])
+  async powers(@AnonSession() session: Session): Promise<Powers[]> {
+    return await this.authorization.readPower(session);
   }
 }

@@ -1,9 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Transform } from 'class-transformer';
 import { toLower } from 'lodash';
-import { IsEmail } from '../../../common';
-import { Powers } from '../../authorization/dto';
-import { User } from '../../user/dto';
+import { ID, IsEmail } from '../../../common';
 
 @InputType()
 export abstract class LoginInput {
@@ -18,12 +16,5 @@ export abstract class LoginInput {
 
 @ObjectType()
 export class LoginOutput {
-  @Field({
-    description: 'The logged-in user',
-  })
-  user: User;
-
-  // TODO Global Permissions
-  @Field(() => [Powers])
-  readonly powers: Powers[];
+  user: ID;
 }
