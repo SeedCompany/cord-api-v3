@@ -15,10 +15,9 @@ import { ConfigService, ILogger, Logger } from '../../core';
 import { ForgotPassword } from '../../core/email/templates';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { User, UserService } from '../user';
-import { LoginInput, ResetPasswordInput } from './authentication.dto';
 import { AuthenticationRepository } from './authentication.repository';
 import { CryptoService } from './crypto.service';
-import { RegisterInput } from './dto';
+import { LoginInput, RegisterInput, ResetPasswordInput } from './dto';
 import { NoSessionException } from './no-session.exception';
 
 interface JwtPayload {
