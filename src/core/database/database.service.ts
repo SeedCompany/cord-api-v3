@@ -336,6 +336,9 @@ export class DatabaseService {
     }
   }
 
+  /**
+   * @deprecated Construct list query manually and use our helper methods for pagination
+   */
   async list<TObject extends Resource>({
     session,
     props,
