@@ -1,14 +1,22 @@
 import { forwardRef, Inject } from '@nestjs/common';
-import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
+import {
+  Args,
+  Context,
+  Field,
+  Mutation,
+  Parent,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
 import { Request } from 'express';
 import { AnonSession, Session } from '../../common';
-import { loggedInSession } from '../../common/session';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { UserService } from '../user';
+import { Powers } from '../authorization/dto';
+import { User, UserService } from '../user';
 import { AuthenticationService } from './authentication.service';
 import { RegisterInput, RegisterOutput } from './dto';
 
-@Resolver()
+@Resolver(RegisterOutput)
 export class RegisterResolver {
   constructor(
     private readonly authentication: AuthenticationService,
@@ -25,13 +33,26 @@ export class RegisterResolver {
     @AnonSession() session: Session,
     @Context('request') req: Request
   ): Promise<RegisterOutput> {
-    const userId = await this.authentication.register(input, session);
+    const user = await this.authentication.register(input, session);
     await this.authentication.login(input, session);
-    const newSession = loggedInSession(
-      await this.authentication.updateSession(req)
-    );
-    const user = await this.users.readOne(userId, newSession);
-    const powers = await this.authorization.readPower(newSession);
-    return { user, powers };
+    await this.authentication.updateSession(req);
+    return { user };
+  }
+
+  @ResolveField(() => User, {
+    nullable: true,
+    description:
+      'Only returned if there is a logged-in user tied to the current session.',
+  })
+  async user(
+    @Parent() { user }: RegisterOutput,
+    @AnonSession() session: Session
+  ): Promise<User | null> {
+    return await this.users.readOne(user, session);
+  }
+
+  @Field(() => [Powers])
+  async powers(@AnonSession() session: Session): Promise<Powers[]> {
+    return await this.authorization.readPower(session);
   }
 }
