@@ -1,4 +1,5 @@
 export * from './create-node';
+export * from './create-relationships';
 export * from './cypher-functions';
 export * from './lists';
 export * from './mapping';
