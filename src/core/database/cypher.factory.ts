@@ -191,14 +191,18 @@ const wrapQueryRun = (
   const origRun = runner.run.bind(runner);
   return (origStatement, parameters) => {
     const statement = stripIndent(origStatement.slice(0, -1)) + ';';
-    logger.log(
-      (parameters?.logIt as LogLevel | undefined) ?? LogLevel.DEBUG,
-      'Executing query',
-      {
+    const level = (parameters?.logIt as LogLevel | undefined) ?? LogLevel.DEBUG;
+    if (parameters?.interpolated) {
+      logger.log(
+        level,
+        `Executing query: ${parameters.interpolated as string}`
+      );
+    } else {
+      logger.log(level, 'Executing query', {
         statement,
         ...parameters,
-      }
-    );
+      });
+    }
 
     const params = parameters
       ? parameterTransformer.transform(parameters)

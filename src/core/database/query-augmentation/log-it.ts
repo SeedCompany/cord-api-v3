@@ -15,10 +15,15 @@ Query.prototype.logIt = function logIt(this: Query, level = LogLevel.NOTICE) {
   const orig = this.buildQueryObject.bind(this);
   this.buildQueryObject = function buildQueryObject() {
     const result = orig();
+    if (process.env.NODE_ENV !== 'production') {
+      const interpolated = this.interpolate();
+      Object.defineProperty(result.params, 'interpolated', {
+        value: `\n\n${interpolated}\n\n`,
+        enumerable: false,
+      });
+    }
     Object.defineProperty(result.params, 'logIt', {
       value: level,
-      configurable: true,
-      writable: true,
       enumerable: false,
     });
     return result;
