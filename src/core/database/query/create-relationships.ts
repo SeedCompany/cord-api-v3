@@ -19,10 +19,10 @@ import { ResourceMap } from '../../../components/authorization/model/resource-ma
  *   User: { createdBy: input.creatorId } // simple one liner
  * })
  * // This above yields the below cypher
- * MATCH (fundingAccount:FundingAccount { id: $fundingAccountId })
- * CREATE (node)-[:fundingAccount]->(fundingAccount)
- * MATCH (createdBy:User { id: $creatorId })
- * CREATE (node)-[:createdBy]->(createdBy)
+ * MATCH (fundingAccount:FundingAccount { id: $fundingAccountId }),
+ *       (createdBy:User { id: $creatorId })
+ * CREATE (node)-[:fundingAccount]->(fundingAccount),
+ *        (node)-[:createdBy]->(createdBy)
  */
 export const createRelationships =
   (
@@ -32,21 +32,28 @@ export const createRelationships =
     >
   ) =>
   (query: Query) => {
-    for (const [label, relationships] of Object.entries(
-      labelsToRelationships
-    )) {
-      for (const [prop, id] of Object.entries(relationships ?? {})) {
-        if (!id) {
-          continue;
-        }
-        query.match([node(prop, label, { id })]).create([
+    const flattened = Object.entries(labelsToRelationships).flatMap(
+      ([nodeLabel, relationships]) =>
+        Object.entries(relationships ?? {}).flatMap(([prop, id]) => ({
+          nodeLabel,
+          id,
+          relLabel: prop,
+          variable: prop,
+        }))
+    );
+
+    const createdAt = DateTime.local();
+    return query
+      .match(
+        flattened.map(({ variable, nodeLabel, id }) => [
+          node(variable, nodeLabel, { id }),
+        ])
+      )
+      .create(
+        flattened.map(({ relLabel, variable }) => [
           node('node'),
-          relation(direction, '', prop, {
-            active: true,
-            createdAt: DateTime.local(),
-          }),
-          node(prop),
-        ]);
-      }
-    }
+          relation(direction, '', relLabel, { active: true, createdAt }),
+          node(variable),
+        ])
+      );
   };
