@@ -1,16 +1,25 @@
 import { Injectable } from '@nestjs/common';
 import { Node, node, Relation, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { ID, Sensitivity, Session, UnsecuredDto } from '../../common';
+import {
+  ID,
+  Sensitivity,
+  ServerException,
+  Session,
+  UnsecuredDto,
+} from '../../common';
 import {
   CommonRepository,
-  matchRequestingUser,
+  ConfigService,
+  DatabaseService,
   matchSession,
 } from '../../core';
 import { DbChanges, getChanges } from '../../core/database/changes';
 import {
   calculateTotalAndPaginateList,
   collect,
+  createNode,
+  createRelationships,
   matchPropList,
   permissionsOfNode,
   requestingUser,
@@ -22,10 +31,12 @@ import {
 } from '../../core/database/results';
 import { Role } from '../authorization';
 import {
+  CreateProject,
   InternshipProject,
   IProject,
   Project,
   ProjectListInput,
+  ProjectStep,
   ProjectType,
   stepToStatus,
   TranslationProject,
@@ -35,8 +46,8 @@ import { projectListFilter } from './query.helpers';
 
 @Injectable()
 export class ProjectRepository extends CommonRepository {
-  createProject(session: Session) {
-    return this.db.query().apply(matchRequestingUser(session));
+  constructor(db: DatabaseService, private readonly config: ConfigService) {
+    super(db);
   }
 
   async getRoles(session: Session) {
@@ -137,6 +148,65 @@ export class ProjectRepository extends CommonRepository {
       ...input,
       ...(input.step ? { status: stepToStatus(input.step) } : {}),
     });
+  }
+
+  async create(input: CreateProject) {
+    const step = input.step ?? ProjectStep.EarlyConversations;
+    const now = DateTime.local();
+    const {
+      primaryLocationId,
+      fieldRegionId,
+      marketingLocationId,
+      otherLocationIds,
+      type,
+      ...initialProps
+    } = {
+      ...input,
+      sensitivity: input.sensitivity ?? Sensitivity.High,
+      mouStart: input.mouStart,
+      mouEnd: input.mouEnd,
+      initialMouEnd: undefined,
+      stepChangedAt: now,
+      estimatedSubmission: input.estimatedSubmission,
+      departmentId: null,
+      tags: input.tags,
+      financialReportReceivedAt: input.financialReportReceivedAt,
+      financialReportPeriod: input.financialReportPeriod,
+      step,
+      status: stepToStatus(step),
+      modifiedAt: now,
+      canDelete: true,
+    };
+
+    const result = await this.db
+      .query()
+      .apply(
+        await createNode(
+          type === 'Translation' ? TranslationProject : InternshipProject,
+          {
+            initialProps,
+            baseNodeProps: { type },
+          }
+        )
+      )
+      .with('node') // needed between a create & match
+      .apply(
+        createRelationships('out', {
+          FieldRegion: { fieldRegion: fieldRegionId },
+          Location: {
+            primaryLocation: primaryLocationId,
+            otherLocations: otherLocationIds,
+            marketingLocation: marketingLocationId,
+          },
+          Organization: { owningOrganization: this.config.defaultOrg.id },
+        })
+      )
+      .return<{ id: ID }>('node.id as id')
+      .first();
+    if (!result) {
+      throw new ServerException('Failed to create project');
+    }
+    return result.id;
   }
 
   async updateProperties(
