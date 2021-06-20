@@ -1,3 +1,4 @@
+import { stripIndent } from 'common-tags';
 import { Clause } from 'cypher-query-builder';
 import { isArray, isBoolean, isNumber, isObject, isString, map } from 'lodash';
 import { DateTime, Duration } from 'luxon';
@@ -8,6 +9,7 @@ import { CalendarDate } from '../../../common';
  */
 Clause.prototype.interpolate = function interpolate() {
   let query = this.build();
+  query = stripIndent(query.slice(0, -1));
   const params = this.getParams();
   for (const name in params) {
     const pattern = new RegExp(`\\$${name}(?![a-zA-Z0-9_])`, 'g');
