@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, relation } from 'cypher-query-builder';
+import { stripIndent } from 'common-tags';
+import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
@@ -9,6 +10,7 @@ import {
   ServerException,
   Session,
   UnauthorizedException,
+  UnsecuredDto,
 } from '../../common';
 import {
   ConfigService,
@@ -24,11 +26,10 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
-  matchPropList,
+  matchProps,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
-import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
 import { Role } from '../authorization';
 import {
   AssignOrganizationToUser,
@@ -174,23 +175,38 @@ export class UserRepository extends DtoRepository(User) {
     return result.id;
   }
 
-  async readOne(id: ID, sessionOrUserId: Session | ID) {
+  async readOne(id: ID) {
     const query = this.db
       .query()
       .match([node('node', 'User', { id })])
-      .apply(matchPropList)
-      .return('propList, node')
-      .asResult<StandardReadResult<DbPropsOfDto<User>>>();
+      .apply(this.hydrate())
+      .return('dto')
+      .asResult<{ dto: UnsecuredDto<User> }>();
     const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find user', 'user.id');
     }
-    const canDelete = await this.db.checkDeletePermission(id, sessionOrUserId);
+    return result.dto;
+  }
 
-    return {
-      result,
-      canDelete,
-    };
+  private hydrate() {
+    return (query: Query) =>
+      query.subQuery((sub) =>
+        sub
+          .with('node')
+          .optionalMatch([
+            node('node'),
+            relation('out', '', 'roles', { active: true }),
+            node('role', 'Property'),
+          ])
+          .apply(matchProps())
+          .return([
+            stripIndent`
+              apoc.map.merge(props, {
+                roles: collect(role.value)
+              }) as dto`,
+          ])
+      );
   }
 
   async updateEmail(
