@@ -78,10 +78,9 @@ export class ProjectChangeRequestRepository extends DtoRepository(
     return result.id;
   }
 
-  async readOne(id: ID, session: Session) {
+  async readOne(id: ID, session?: Session) {
     const query = this.db
       .query()
-      .apply(matchRequestingUser(session))
       .match([
         node('node', 'ProjectChangeRequest', { id }),
         relation('in', '', 'changeset', { active: true }),
