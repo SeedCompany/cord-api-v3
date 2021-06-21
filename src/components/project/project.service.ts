@@ -47,7 +47,6 @@ import {
 import { ProjectChangeRequestService } from '../project-change-request';
 import {
   ProjectChangeRequestListInput,
-  ProjectChangeRequestStatus,
   SecuredProjectChangeRequestList,
 } from '../project-change-request/dto';
 import {
@@ -314,23 +313,6 @@ export class ProjectService {
       ...simpleChanges
     } = changes;
 
-    // In changeset mode, Project status should be Active and change request status is pending
-    if (changeset) {
-      const changeRequest = await this.projectChangeRequests.readOne(
-        changeset,
-        session
-      );
-      if (
-        // TODO
-        // currentProject.status !== ProjectStatus.Active ||
-        changeRequest.status.value !== ProjectChangeRequestStatus.Pending
-      ) {
-        throw new InputException(
-          'Project status is not Active or change request is not pending',
-          'project.status'
-        );
-      }
-    }
     let result = await this.repo.updateProperties(
       currentProject,
       simpleChanges,
