@@ -204,7 +204,7 @@ export class ProductService {
       }
     }
 
-    const result = await query.return('node.id as id').first();
+    const result = await query.return<{ id: ID }>('node.id as id').first();
 
     if (!result) {
       throw new ServerException('failed to create default product');

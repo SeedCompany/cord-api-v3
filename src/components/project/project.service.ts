@@ -361,8 +361,9 @@ export class ProjectService {
         ],
       ]);
 
-      createProject.return('node.id as id').asResult<{ id: ID }>();
-      const result = await createProject.first();
+      const result = await createProject
+        .return<{ id: ID }>('node.id as id')
+        .first();
 
       if (!result) {
         throw new ServerException('failed to create a project');
@@ -379,7 +380,7 @@ export class ProjectService {
           {
             userId: session.userId,
             projectId: result.id,
-            roles: [roles?.roles],
+            roles,
           },
           session
         );
@@ -657,16 +658,17 @@ export class ProjectService {
       session
     );
 
-    const permission = await this.repo.getEngagementPermission(
-      session,
-      project.id
+    const permissions = await this.repo.permissionsForListProp(
+      'engagement',
+      project.id,
+      session
     );
 
     return {
       ...result,
-      canRead: !!permission?.canReadEngagementRead,
+      ...permissions,
       canCreate:
-        !!permission?.canReadEngagementCreate &&
+        permissions.canCreate &&
         (project.status === ProjectStatus.InDevelopment ||
           session.roles.includes('global:Administrator')),
     };
@@ -688,15 +690,15 @@ export class ProjectService {
       session
     );
 
-    const permission = await this.repo.getTeamMemberPermission(
-      session,
-      projectId
+    const permissions = await this.repo.permissionsForListProp(
+      'member',
+      projectId,
+      session
     );
 
     return {
       ...result,
-      canRead: !!permission?.canReadTeamMemberRead,
-      canCreate: !!permission?.canReadTeamMemberCreate,
+      ...permissions,
     };
   }
 
@@ -716,15 +718,15 @@ export class ProjectService {
       session
     );
 
-    const permission = await this.repo.getPartnershipPermission(
-      session,
-      projectId
+    const permissions = await this.repo.permissionsForListProp(
+      'partnership',
+      projectId,
+      session
     );
 
     return {
       ...result,
-      canRead: !!permission?.canReadPartnershipRead,
-      canCreate: !!permission?.canReadPartnershipCreate,
+      ...permissions,
     };
   }
 
@@ -859,10 +861,6 @@ export class ProjectService {
       canRead: true,
       value: await this.fileService.getDirectory(rootRef.id, session),
     };
-  }
-
-  async listProjectsWithDateRange() {
-    return await this.repo.listProjectsWithDateRange();
   }
 
   protected async validateOtherResourceId(

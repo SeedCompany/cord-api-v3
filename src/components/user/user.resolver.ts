@@ -191,7 +191,7 @@ export class UserResolver {
   async knownLanguages(
     @AnonSession() session: Session,
     @Parent() { id }: User
-  ): Promise<KnownLanguage[]> {
+  ): Promise<readonly KnownLanguage[]> {
     return await this.userService.listKnownLanguages(id, session);
   }
 

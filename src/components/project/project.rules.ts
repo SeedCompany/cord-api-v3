@@ -951,9 +951,9 @@ export class ProjectRules {
         relation('out', '', 'user', { active: true }),
         node('user', 'User'),
       ])
-      .raw('return collect(user.id) as ids')
+      .return<{ ids: ID[] }>('collect(user.id) as ids')
       .first();
-    return users?.ids;
+    return users?.ids ?? [];
   }
 
   private async getRoleEmails(role: Role): Promise<string[]> {
@@ -966,10 +966,10 @@ export class ProjectRules {
         relation('out', '', 'roles', { active: true }),
         node('role', 'Property', { value: role }),
       ])
-      .raw('return collect(email.value) as emails')
+      .return<{ emails: string[] }>('collect(email.value) as emails')
       .first();
 
-    return emails?.emails;
+    return emails?.emails ?? [];
   }
 
   /** Of the given steps which one was the most recent previous step */
@@ -1000,8 +1000,7 @@ export class ProjectRules {
       ])
       .with('prop')
       .orderBy('prop.createdAt', 'DESC')
-      .raw(`RETURN collect(prop.value) as steps`)
-      .asResult<{ steps: ProjectStep[] }>()
+      .return<{ steps: ProjectStep[] }>(`collect(prop.value) as steps`)
       .first();
     if (!result) {
       throw new ServerException("Failed to determine project's previous steps");

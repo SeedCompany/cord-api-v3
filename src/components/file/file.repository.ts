@@ -73,7 +73,7 @@ export class FileRepository {
     ]);
   }
 
-  async getParentsById(id: ID, session: Session): Promise<BaseNode[]> {
+  async getParentsById(id: ID, session: Session): Promise<readonly BaseNode[]> {
     const query = this.getBaseNodeQuery(session, [
       [
         node('start', 'FileNode', { id }),
@@ -154,7 +154,7 @@ export class FileRepository {
   private async getBaseNodesBy(
     session: Session,
     patterns: Pattern[][]
-  ): Promise<BaseNode[]> {
+  ): Promise<readonly BaseNode[]> {
     const query = this.getBaseNodeQuery(session, patterns);
     const results = await query.run();
     return results;
@@ -186,14 +186,14 @@ export class FileRepository {
         relation('in', '', 'parent', { active: true }),
         node('fv', 'FileVersion'),
       ])
-      .return('fv')
+      .return<{ id: ID }>('fv.id as id')
       .orderBy('fv.createdAt', 'DESC')
       .limit(1)
       .first();
     if (!latestVersionResult) {
       throw new NotFoundException();
     }
-    return latestVersionResult.fv.properties.id;
+    return latestVersionResult.id;
   }
 
   async getVersionDetails(id: ID, session: Session): Promise<FileVersion> {
@@ -481,7 +481,7 @@ const matchCreatedBy = () => [
   node('createdBy', 'User'),
 ];
 
-function first<T>(nodes: T[]): T {
+function first<T>(nodes: readonly T[]): T {
   const node = nodes[0];
   if (!node) {
     throw new NotFoundException();

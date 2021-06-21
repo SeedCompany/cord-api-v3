@@ -24,7 +24,7 @@ export class CeremonyRepository extends DtoRepository(Ceremony) {
       .query()
       .apply(matchRequestingUser(session))
       .apply(createBaseNode(await generateId(), 'Ceremony', secureProps))
-      .return('node.id as id');
+      .return<{ id: ID }>('node.id as id');
   }
 
   async readOne(id: ID, session: Session) {

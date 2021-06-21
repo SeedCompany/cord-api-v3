@@ -22,7 +22,7 @@ export class EthnologueLanguageRepository extends DtoRepository(
       .apply(
         createBaseNode(await generateId(), 'EthnologueLanguage', secureProps)
       )
-      .return('node.id as id');
+      .return<{ id: ID }>('node.id as id');
 
     return await query.first();
   }

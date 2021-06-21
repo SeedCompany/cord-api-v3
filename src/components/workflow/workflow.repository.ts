@@ -79,7 +79,12 @@ export class WorkflowRepository {
           }),
         ],
       ])
-      .return({
+      .return<{
+        id: ID;
+        stateIdentifier: string;
+        startingStateId: ID;
+        startingStateValue: string;
+      }>({
         workflow: [{ id: 'id' }, { stateIdentifier: 'stateIdentifier' }],
         state: [{ id: 'startingStateId' }, { value: 'startingStateValue' }],
       })
@@ -153,7 +158,7 @@ export class WorkflowRepository {
           }),
         ],
       ])
-      .return({
+      .return<{ id: ID; value: string }>({
         state: [{ id: 'id' }, { value: 'value' }],
       })
       .first();
@@ -256,7 +261,7 @@ export class WorkflowRepository {
           'state.value': input.stateName,
         },
       })
-      .return({
+      .return<{ id: ID; value: string }>({
         state: [{ id: 'id' }, { value: 'value' }],
       })
       .first();

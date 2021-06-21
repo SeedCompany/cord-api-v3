@@ -59,7 +59,10 @@ export class UnavailabilityRepository extends DtoRepository(Unavailability) {
     return await query.first();
   }
 
-  async getUnavailability(session: Session, input: UpdateUnavailability) {
+  async getUserIdByUnavailability(
+    session: Session,
+    input: UpdateUnavailability
+  ) {
     return await this.db
       .query()
       .apply(matchRequestingUser(session))
@@ -68,7 +71,7 @@ export class UnavailabilityRepository extends DtoRepository(Unavailability) {
         relation('out', '', 'unavailability', { active: true }),
         node('unavailability', 'Unavailability', { id: input.id }),
       ])
-      .return('user')
+      .return<{ id: ID }>('user.id as id')
       .first();
   }
 

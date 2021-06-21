@@ -459,7 +459,7 @@ export class UserService {
   async listKnownLanguages(
     userId: ID,
     session: Session
-  ): Promise<KnownLanguage[]> {
+  ): Promise<readonly KnownLanguage[]> {
     return await this.userRepo.listKnownLanguages(userId, session);
   }
 

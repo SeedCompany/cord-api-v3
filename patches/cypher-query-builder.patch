@@ -1,0 +1,203 @@
+diff --git a/dist/typings/builder.d.ts b/dist/typings/builder.d.ts
+index 1c17b5c3f0127cd5aaf03185120e7f72321e2805..b91875030036d20f47d4dda0d9e3eeb22bb9949d 100644
+--- a/dist/typings/builder.d.ts
++++ b/dist/typings/builder.d.ts
+@@ -11,6 +11,8 @@ import { AnyConditions } from './clauses/where-utils';
+ import { Clause } from './clause';
+ import { RemoveProperties } from './clauses/remove';
+ import { ReturnOptions } from './clauses/return';
++import { Query } from './query';
++
+ /**
+  * @internal
+  */
+@@ -555,10 +557,12 @@ export declare abstract class Builder<Q> extends SetBlock<Q> {
+      * ```
+      */
+     return(terms: Many<Term>, options?: ReturnOptions): Q;
++    return<R>(terms: Many<Term>, options?: ReturnOptions): Query<R>;
+     /**
+      * Shorthand for `return(terms, { distinct: true });
+      */
+     returnDistinct(terms: Many<Term>): Q;
++    returnDistinct<R>(terms: Many<Term>): Query<R>;
+     /**
+      * Adds a [skip]{@link https://neo4j.com/docs/developer-manual/current/cypher/clauses/skip}
+      * clause to the query.
+diff --git a/dist/typings/connection.d.ts b/dist/typings/connection.d.ts
+index ad53c58fc2a173403b0ad584ea95c1c26a579538..cc36d50cc8f577e2debe6043fa998e1e817f31ce 100644
+--- a/dist/typings/connection.d.ts
++++ b/dist/typings/connection.d.ts
+@@ -163,7 +163,7 @@ export declare class Connection extends Builder<Query> {
+      * @param {Query} query
+      * @returns {Promise<Dictionary<R>[]>}
+      */
+-    run<R = any>(query: Query): Promise<Dictionary<R>[]>;
++    run<R>(query: Query<R>): Promise<readonly R[]>;
+     /**
+      * Runs the provided query on this connection, regardless of which connection
+      * the query was created from. Each query is run on it's own session.
+@@ -226,5 +226,5 @@ export declare class Connection extends Builder<Query> {
+      * ```
+      * In practice this should never happen unless you're doing some strange things.
+      */
+-    stream<R = any>(query: Query): Observable<Dictionary<R>>;
++    stream<R>(query: Query<R>): Observable<R>;
+ }
+diff --git a/dist/typings/query.d.ts b/dist/typings/query.d.ts
+index b31088b60c221927a701e16f03e4a3ffcfddb19f..4e1d858d9b089f915238c955e532ddefd928a0db 100644
+--- a/dist/typings/query.d.ts
++++ b/dist/typings/query.d.ts
+@@ -4,7 +4,7 @@ import { Connection } from './connection';
+ import { Builder } from './builder';
+ import { ClauseCollection } from './clause-collection';
+ import { Clause, QueryObject } from './clause';
+-export declare class Query extends Builder<Query> {
++export declare class Query<Result = unknown> extends Builder<Query<Result>> {
+     protected connection: Connection | null;
+     protected clauses: ClauseCollection;
+     /**
+@@ -64,7 +64,7 @@ export declare class Query extends Builder<Query> {
+      *
+      * @returns {Promise<Dictionary<R>[]>}
+      */
+-    run<R = any>(): Promise<Dictionary<R>[]>;
++    run(): Promise<readonly Result[]>;
+     /**
+      * Runs this query on its connection. If this query was created by calling a
+      * chainable method of a connection, then its connection was automatically
+@@ -111,7 +111,7 @@ export declare class Query extends Builder<Query> {
+      * Throws an exception if this query does not have a connection or has no
+      * clauses.
+      */
+-    stream<R = any>(): Observable<Dictionary<R>>;
++    stream(): Observable<Result>;
+     /**
+      * Runs the current query on its connection and returns the first result.
+      * If the query was created by calling a chainable method of a connection,
+@@ -127,7 +127,7 @@ export declare class Query extends Builder<Query> {
+      * the return value which is `Dictionary<R>`. Note that this function returns
+      * `undefined` if the result set was empty.
+      */
+-    first<R = any>(): Promise<Dictionary<R> | undefined>;
++    first(): Promise<Result | undefined>;
+     /**
+      * Returns the query as a string with parameter variables.
+      *
+diff --git a/src/builder.ts b/src/builder.ts
+index 2d95675bf30069f84063cb7109d19fe8713f237d..f986e65fb50c3970787bc19f7241906872d7820f 100644
+--- a/src/builder.ts
++++ b/src/builder.ts
+@@ -16,6 +16,7 @@ import { Clause } from './clause';
+ import { RemoveProperties } from './clauses/remove';
+ import { Union } from './clauses/union';
+ import { ReturnOptions } from './clauses/return';
++import { Query } from './query';
+ 
+ /**
+  * @internal
+@@ -648,15 +649,19 @@ export abstract class Builder<Q> extends SetBlock<Q> {
+    * // RETURN DISTINCT people
+    * ```
+    */
+-  return(terms: Many<Term>, options?: ReturnOptions) {
+-    return this.continueChainClause(new Return(terms, options));
++  return(terms: Many<Term>, options?: ReturnOptions): Q;
++  return<R>(terms: Many<Term>, options?: ReturnOptions): Query<R>;
++  return<R>(terms: Many<Term>, options?: ReturnOptions) {
++    return this.continueChainClause(new Return(terms, options)) as any;
+   }
+ 
+   /**
+    * Shorthand for `return(terms, { distinct: true });
+    */
+-  returnDistinct(terms: Many<Term>) {
+-    return this.return(terms, { distinct: true });
++  returnDistinct(terms: Many<Term>): Q;
++  returnDistinct<R>(terms: Many<Term>): Query<R>;
++  returnDistinct<R>(terms: Many<Term>) {
++    return this.return(terms, { distinct: true }) as any;
+   }
+ 
+   /**
+diff --git a/src/connection.ts b/src/connection.ts
+index 70679baec25f5b4d163bb8de4c0aa23a48c38bdf..bd543324722d0a1beb6bece31da051a8c73fc96a 100644
+--- a/src/connection.ts
++++ b/src/connection.ts
+@@ -223,7 +223,7 @@ export class Connection extends Builder<Query> {
+    * @param {Query} query
+    * @returns {Promise<Dictionary<R>[]>}
+    */
+-  async run<R = any>(query: Query): Promise<Dictionary<R>[]> {
++  async run<R>(query: Query<R>): Promise<readonly R[]> {
+     if (!this.open) {
+       throw new Error('Cannot run query; connection is not open.');
+     }
+@@ -314,8 +314,8 @@ export class Connection extends Builder<Query> {
+    * ```
+    * In practice this should never happen unless you're doing some strange things.
+    */
+-  stream<R = any>(query: Query): Observable<Dictionary<R>> {
+-    return new Observable((subscriber: Observer<Dictionary<R>>): void => {
++  stream<R>(query: Query<R>): Observable<R> {
++    return new Observable((subscriber: Observer<R>): void => {
+       if (!this.open) {
+         subscriber.error(new Error('Cannot run query: connection is not open.'));
+         return;
+diff --git a/src/query.ts b/src/query.ts
+index f4c49fde649a87af7c268f343d0ca74337aa9964..c69c2409dbf50b4948a7403c4769219ebcfb38a2 100644
+--- a/src/query.ts
++++ b/src/query.ts
+@@ -5,7 +5,7 @@ import { Builder } from './builder';
+ import { ClauseCollection } from './clause-collection';
+ import { Clause, QueryObject } from './clause';
+ 
+-export class Query extends Builder<Query> {
++export class Query<Result = unknown> extends Builder<Query<Result>> {
+   protected clauses = new ClauseCollection();
+ 
+   /**
+@@ -71,12 +71,12 @@ export class Query extends Builder<Query> {
+    *
+    * @returns {Promise<Dictionary<R>[]>}
+    */
+-  async run<R = any>(): Promise<Dictionary<R>[]> {
++  async run(): Promise<readonly Result[]> {
+     if (!this.connection) {
+       throw new Error('Cannot run query; no connection object available.');
+     }
+ 
+-    return this.connection.run<R>(this);
++    return this.connection.run<Result>(this);
+   }
+ 
+   /**
+@@ -125,14 +125,14 @@ export class Query extends Builder<Query> {
+    * Throws an exception if this query does not have a connection or has no
+    * clauses.
+    */
+-  stream<R = any>(): Observable<Dictionary<R>> {
++  stream(): Observable<Result> {
+     if (!this.connection) {
+-      return new Observable((subscriber: Observer<Dictionary<R>>): void => {
++      return new Observable((subscriber: Observer<Result>): void => {
+         subscriber.error(new Error('Cannot run query; no connection object available.'));
+       });
+     }
+ 
+-    return this.connection.stream<R>(this);
++    return this.connection.stream<Result>(this);
+   }
+ 
+   /**
+@@ -150,8 +150,8 @@ export class Query extends Builder<Query> {
+    * the return value which is `Dictionary<R>`. Note that this function returns
+    * `undefined` if the result set was empty.
+    */
+-  first<R = any>(): Promise<Dictionary<R> | undefined> {
+-    return this.run<R>().then(results => results && results.length > 0 ? results[0] : undefined);
++  first(): Promise<Result | undefined> {
++    return this.run().then(results => results && results.length > 0 ? results[0] : undefined);
+   }
+ 
+   // Clause proxied methods

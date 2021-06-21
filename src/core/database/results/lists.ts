@@ -1,8 +1,8 @@
+import { Query } from 'cypher-query-builder';
 import { ID, PaginationInput } from '../../../common';
-import { QueryWithResult } from '../query.overrides';
 
 export async function runListQuery<T>(
-  query: QueryWithResult<{ items: ID[]; total: number }>,
+  query: Query<{ items: ID[]; total: number }>,
   input: PaginationInput,
   readOne: (id: ID) => Promise<T>
 ) {

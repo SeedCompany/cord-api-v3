@@ -3951,7 +3951,7 @@ __metadata:
     class-validator: ^0.13.1
     common-tags: ^1.8.0
     cookie-parser: ^1.4.5
-    cypher-query-builder: ^6.0.4
+    cypher-query-builder: "patch:cypher-query-builder@6.0.4#./patches/cypher-query-builder.patch"
     dotenv: ^8.2.0
     dotenv-expand: ^5.1.0
     eslint: ^7.27.0
@@ -4162,7 +4162,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cypher-query-builder@npm:^6.0.4":
+cypher-query-builder@6.0.4:
   version: 6.0.4
   resolution: "cypher-query-builder@npm:6.0.4"
   dependencies:
@@ -4174,6 +4174,21 @@ __metadata:
     rxjs: ^6.5.2
     tslib: ^1.10.0
   checksum: e517a0b222a0cba0554a5af2b6890390f0276cba8b0b07ab0bdecc742e26484f623cc46ebbe97a10929945f51bef1120566aa05dcb1d1b341de62919ec9e5b90
+  languageName: node
+  linkType: hard
+
+"cypher-query-builder@patch:cypher-query-builder@6.0.4#./patches/cypher-query-builder.patch::locator=cord-api-3-v3%40workspace%3A.":
+  version: 6.0.4
+  resolution: "cypher-query-builder@patch:cypher-query-builder@npm%3A6.0.4#./patches/cypher-query-builder.patch::version=6.0.4&hash=aa1732&locator=cord-api-3-v3%40workspace%3A."
+  dependencies:
+    "@types/lodash": ^4.14.136
+    "@types/node": ^12.6.1
+    lodash: ^4.17.15
+    neo4j-driver: ^4.1.2
+    node-cleanup: ^2.1.2
+    rxjs: ^6.5.2
+    tslib: ^1.10.0
+  checksum: e0cd0fa342d5e8dfd9c9b6f803d64f848163527acdf7657b6a76be6f4b11a54551224ec2ff2a0bb845faedea46fe637e0c0790aa6c9a22688d9eda37c0e61728
   languageName: node
   linkType: hard
 
