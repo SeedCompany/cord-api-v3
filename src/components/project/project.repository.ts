@@ -191,13 +191,11 @@ export class ProjectRepository extends CommonRepository {
       )
       .apply(
         createRelationships(IProject, 'out', {
-          FieldRegion: { fieldRegion: fieldRegionId },
-          Location: {
-            primaryLocation: primaryLocationId,
-            otherLocations: otherLocationIds,
-            marketingLocation: marketingLocationId,
-          },
-          Organization: { owningOrganization: this.config.defaultOrg.id },
+          fieldRegion: ['FieldRegion', fieldRegionId],
+          primaryLocation: ['Location', primaryLocationId],
+          otherLocations: ['Location', otherLocationIds],
+          marketingLocation: ['Location', marketingLocationId],
+          owningOrganization: ['Organization', this.config.defaultOrg.id],
         })
       )
       .return<{ id: ID }>('node.id as id')

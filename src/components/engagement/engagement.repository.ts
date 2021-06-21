@@ -177,8 +177,8 @@ export class EngagementRepository extends CommonRepository {
       .apply(await createNode(LanguageEngagement, { initialProps }))
       .apply(
         createRelationships(LanguageEngagement, {
-          in: { Project: { engagement: projectId } },
-          out: { Language: { language: languageId } },
+          in: { engagement: ['Project', projectId] },
+          out: { language: ['Language', languageId] },
         })
       )
       .return<{ id: ID }>('node.id as id');
@@ -218,10 +218,11 @@ export class EngagementRepository extends CommonRepository {
       .apply(await createNode(InternshipEngagement, { initialProps }))
       .apply(
         createRelationships(InternshipEngagement, {
-          in: { Project: { engagement: projectId } },
+          in: { engagement: ['Project', projectId] },
           out: {
-            User: { intern: internId, mentor: mentorId },
-            Location: { countryOfOrigin: countryOfOriginId },
+            intern: ['User', internId],
+            mentor: ['User', mentorId],
+            countryOfOrigin: ['Location', countryOfOriginId],
           },
         })
       )

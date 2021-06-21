@@ -5,8 +5,9 @@ import { DateTime } from 'luxon';
 import { ID, many, ResourceShape } from '../../../common';
 import { ResourceMap } from '../../../components/authorization/model/resource-map';
 
-type RelationshipDefinition = Partial<
-  Record<keyof ResourceMap, Record<string, Nullable<ID> | readonly ID[]>>
+type RelationshipDefinition = Record<
+  string,
+  [baseNodeLabel: keyof ResourceMap, id: Nullable<ID> | readonly ID[]]
 >;
 type AnyDirectionalDefinition = Partial<
   Record<RelationDirection, RelationshipDefinition>
@@ -18,12 +19,12 @@ type AnyDirectionalDefinition = Partial<
  * If the ID value is nil then the match & create is skipped.
  *
  * @example
- * createRelationships('out', {
- *   FundingAccount: { // base node label to match
- *     fundingAccount: // label of the relationship to create
- *      input.fundingAccountId, // id of the base node to match
- *   },
- *   User: { createdBy: input.creatorId } // simple one liner
+ * createRelationships(Location, 'out', {
+ *   fundingAccount: [          // label of the relationship to create
+ *     'FundingAccount',        // base node label to match
+ *     input.fundingAccountId,  // id of the base node to match
+ *   ],
+ *   createdBy: ['User', input.creatorId], // simple one liner
  * })
  * // This above yields the below cypher
  * MATCH (fundingAccount:FundingAccount { id: $fundingAccountId }),
@@ -33,12 +34,12 @@ type AnyDirectionalDefinition = Partial<
  *
  * @example
  * // Multiple directions can be given this way
- * createRelationships({
+ * createRelationships(Location, {
  *   in: {
- *     Organization: { owningOrganization: orgId }
+ *     owningOrganization: ['Organization', orgId],
  *   },
  *   out: {
- *     User: { createdBy: input.creatorId }
+ *     createdBy: ['User', input.creatorId],
  *   },
  * })
  */
@@ -62,18 +63,16 @@ export function createRelationships<TResourceStatic extends ResourceShape<any>>(
       : directionOrDefinition;
 
   const flattened = Object.entries(normalizedArgs).flatMap(
-    ([direction, labelsToRelationships]) =>
-      Object.entries(labelsToRelationships ?? {}).flatMap(
-        ([nodeLabel, relationships]) =>
-          Object.entries(relationships ?? {}).flatMap(([prop, ids]) =>
-            many(ids ?? []).map((id, i) => ({
-              nodeLabel,
-              id,
-              direction: direction as RelationDirection,
-              relLabel: prop,
-              variable: Array.isArray(ids) ? `${prop}${i}` : prop,
-            }))
-          )
+    ([direction, relationships]) =>
+      Object.entries(relationships ?? {}).flatMap(
+        ([relLabel, [nodeLabel, ids]]) =>
+          many(ids ?? []).map((id, i) => ({
+            nodeLabel,
+            id,
+            direction: direction as RelationDirection,
+            relLabel: relLabel,
+            variable: Array.isArray(ids) ? `${relLabel}${i}` : relLabel,
+          }))
       )
   );
   const createdAt = DateTime.local();
