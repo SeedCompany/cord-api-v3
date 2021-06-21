@@ -4,27 +4,32 @@ import { ID, isIdLike, Session } from '../../../common';
 import { matchProps, MatchPropsOptions } from './matching';
 
 export const matchPropsAndProjectSensAndScopedRoles =
-  (session: Session | ID, propsOptions?: MatchPropsOptions) => (query: Query) =>
+  (session?: Session | ID, propsOptions?: MatchPropsOptions) =>
+  (query: Query) =>
     query.subQuery((sub) =>
       sub
         .with(['node', 'project'])
         .apply(matchProps(propsOptions))
-        .optionalMatch([
-          [
-            node('project'),
-            relation('out', '', 'member'),
-            node('projectMember'),
-            relation('out', '', 'user'),
-            node('user', 'User', {
-              id: isIdLike(session) ? session : session.userId,
-            }),
-          ],
-          [
-            node('projectMember'),
-            relation('out', '', 'roles', { active: true }),
-            node('rolesProp', 'Property'),
-          ],
-        ])
+        .apply((q) =>
+          session
+            ? q.optionalMatch([
+                [
+                  node('project'),
+                  relation('out', '', 'member'),
+                  node('projectMember'),
+                  relation('out', '', 'user'),
+                  node('user', 'User', {
+                    id: isIdLike(session) ? session : session.userId,
+                  }),
+                ],
+                [
+                  node('projectMember'),
+                  relation('out', '', 'roles', { active: true }),
+                  node('rolesProp', 'Property'),
+                ],
+              ])
+            : q
+        )
         .match([
           node('project'),
           relation('out', '', 'sensitivity', { active: true }),
@@ -46,13 +51,15 @@ apoc.map.merge(${propsOptions?.outputVar ?? 'props'}, {
   sensitivity: ${determineSensitivity}
 }) as ${propsOptions?.outputVar ?? 'props'}
         `,
-            stripIndent`
-          reduce(
-            scopedRoles = [],
-            role IN apoc.coll.flatten(collect(rolesProp.value)) |
-              scopedRoles + ["project:" + role]
-          ) as scopedRoles
-        `,
+            session
+              ? stripIndent`
+                  reduce(
+                    scopedRoles = [],
+                    role IN apoc.coll.flatten(collect(rolesProp.value)) |
+                      scopedRoles + ["project:" + role]
+                  ) as scopedRoles
+                `
+              : '[] as scopedRoles',
           ].join(',\n')
         )
     );
