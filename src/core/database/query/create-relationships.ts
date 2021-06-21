@@ -75,6 +75,12 @@ export function createRelationships<TResourceStatic extends ResourceShape<any>>(
           }))
       )
   );
+
+  // We are creating inside of changeset if there's a changeset relation into the node.
+  const inChangeset = flattened.some(
+    (f) => f.direction === 'in' && f.relLabel === 'changeset' && f.id
+  );
+
   const createdAt = DateTime.local();
   return (query: Query) =>
     query.subQuery((sub) =>
@@ -88,7 +94,17 @@ export function createRelationships<TResourceStatic extends ResourceShape<any>>(
         .create(
           flattened.map(({ direction, relLabel, variable }) => [
             node('node'),
-            relation(direction, '', relLabel, { active: true, createdAt }),
+            relation(direction, '', relLabel, {
+              // When creating inside of changeset, all relationships into the
+              // node (besides changeset relation) are marked as inactive until
+              // changeset is applied
+              active: !(
+                inChangeset &&
+                direction === 'in' &&
+                relLabel !== 'changeset'
+              ),
+              createdAt,
+            }),
             node(variable),
           ])
         )
