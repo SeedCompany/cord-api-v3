@@ -6,7 +6,7 @@ import {
   ServerException,
   Session,
 } from '../../../common';
-import { ILogger, Logger } from '../../../core';
+import { HandleIdLookup, ILogger, Logger } from '../../../core';
 import {
   parseBaseNodeProperties,
   runListQuery,
@@ -79,6 +79,7 @@ export class EducationService {
     return await this.readOne(result.id, session);
   }
 
+  @HandleIdLookup(Education)
   async readOne(id: ID, session: Session): Promise<Education> {
     this.logger.debug(`Read Education`, {
       id: id,

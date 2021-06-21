@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Node, node, relation } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { Except } from 'type-fest';
 import { ID, Session } from '../../common';
@@ -81,7 +81,7 @@ export class ProductRepository extends CommonRepository {
         node('producible', 'Producible'),
       ])
       .return('producible')
-      .asResult<{ producible: Node<BaseNode> }>()
+      .asResult<{ producible: BaseNode }>()
       .first();
   }
 

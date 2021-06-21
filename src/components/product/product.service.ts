@@ -15,6 +15,7 @@ import {
 } from '../../common';
 import {
   createBaseNode,
+  HandleIdLookup,
   ILogger,
   Logger,
   matchRequestingUser,
@@ -220,6 +221,7 @@ export class ProductService {
     return await this.readOne(result.id, session);
   }
 
+  @HandleIdLookup([DirectScriptureProduct, DerivativeScriptureProduct])
   async readOne(id: ID, session: Session): Promise<AnyProduct> {
     const result = await this.repo.readOne(id, session);
 

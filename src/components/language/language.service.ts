@@ -13,7 +13,13 @@ import {
   simpleSwitch,
   UnauthorizedException,
 } from '../../common';
-import { ILogger, Logger, OnIndex, UniquenessError } from '../../core';
+import {
+  HandleIdLookup,
+  ILogger,
+  Logger,
+  OnIndex,
+  UniquenessError,
+} from '../../core';
 import { runListQuery } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
@@ -150,6 +156,7 @@ export class LanguageService {
     }
   }
 
+  @HandleIdLookup(Language)
   async readOne(langId: ID, session: Session): Promise<Language> {
     const result = await this.repo.readOne(langId, session);
     if (!result) {

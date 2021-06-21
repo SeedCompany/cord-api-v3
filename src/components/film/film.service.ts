@@ -7,7 +7,7 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import { ILogger, Logger, OnIndex } from '../../core';
+import { HandleIdLookup, ILogger, Logger, OnIndex } from '../../core';
 import {
   parseBaseNodeProperties,
   runListQuery,
@@ -87,6 +87,7 @@ export class FilmService {
     }
   }
 
+  @HandleIdLookup(Film)
   async readOne(id: ID, session: Session): Promise<Film> {
     this.logger.debug(`Read film`, {
       id,

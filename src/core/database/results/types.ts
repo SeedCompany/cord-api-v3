@@ -1,4 +1,3 @@
-import type { Node } from 'cypher-query-builder';
 import type { DateTime } from 'luxon';
 import type { UnsecuredDto } from '../../../common';
 import type { BaseNode } from './parse-base-node';
@@ -20,7 +19,10 @@ export type DbPropsOfDto<
   // Specify this as true when using new matchProps query fragment
   IncludeBaseNode extends boolean | undefined = false
 > = NativeDbProps<
-  Omit<UnsecuredDto<Dto>, IncludeBaseNode extends true ? never : keyof BaseNode>
+  Omit<
+    UnsecuredDto<Dto>,
+    IncludeBaseNode extends true ? never : keyof BaseNode['properties']
+  >
 >;
 
 export type NativeDbProps<Dto extends Record<string, any>> = {
@@ -39,6 +41,6 @@ export type NativeDbValue =
  * This is a shortcut for the standard read result based on the given DB props.
  */
 export interface StandardReadResult<DbProps> {
-  node: Node<BaseNode>;
+  node: BaseNode;
   propList: PropListDbResult<DbProps>;
 }

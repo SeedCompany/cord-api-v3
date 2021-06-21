@@ -8,7 +8,7 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import { IEventBus, ILogger, Logger } from '../../core';
+import { HandleIdLookup, IEventBus, ILogger, Logger } from '../../core';
 import { runListQuery } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { FileService } from '../file';
@@ -116,6 +116,7 @@ export class PartnershipService {
     }
   }
 
+  @HandleIdLookup(Partnership)
   async readOne(id: ID, session: Session): Promise<Partnership> {
     this.logger.debug('readOne', { id, userId: session.userId });
 

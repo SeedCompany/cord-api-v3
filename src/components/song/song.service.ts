@@ -7,7 +7,7 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import { ILogger, Logger, OnIndex } from '../../core';
+import { HandleIdLookup, ILogger, Logger, OnIndex } from '../../core';
 import {
   parseBaseNodeProperties,
   runListQuery,
@@ -104,6 +104,7 @@ export class SongService {
     }
   }
 
+  @HandleIdLookup(Song)
   async readOne(id: ID, session: Session): Promise<Song> {
     const result = await this.repo.readOne(id, session);
     if (!result) {

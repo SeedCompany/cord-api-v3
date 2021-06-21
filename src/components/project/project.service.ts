@@ -16,6 +16,7 @@ import {
 } from '../../common';
 import {
   ConfigService,
+  HandleIdLookup,
   IEventBus,
   ILogger,
   Logger,
@@ -194,6 +195,7 @@ export class ProjectService {
     }
   }
 
+  @HandleIdLookup(TranslationProject)
   async readOneTranslation(
     id: ID,
     session: Session
@@ -205,6 +207,7 @@ export class ProjectService {
     return project as TranslationProject;
   }
 
+  @HandleIdLookup(InternshipProject)
   async readOneInternship(
     id: ID,
     session: Session

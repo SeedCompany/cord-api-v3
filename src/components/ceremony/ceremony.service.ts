@@ -7,7 +7,7 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import { ILogger, Logger, Property } from '../../core';
+import { HandleIdLookup, ILogger, Logger, Property } from '../../core';
 import { runListQuery } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { CeremonyRepository } from './ceremony.repository';
@@ -90,6 +90,7 @@ export class CeremonyService {
     }
   }
 
+  @HandleIdLookup(Ceremony)
   async readOne(id: ID, session: Session): Promise<Ceremony> {
     this.logger.debug(`Query readOne Ceremony`, { id, userId: session.userId });
     if (!id) {
