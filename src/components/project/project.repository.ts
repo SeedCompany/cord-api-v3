@@ -126,7 +126,7 @@ export class ProjectRepository extends CommonRepository {
         'collect(distinct sensitivity.value) as languageSensitivityList',
       ])
       .asResult<{
-        node: Node<BaseNode & { type: ProjectType }>;
+        node: BaseNode & Node<{ type: ProjectType }>;
         propList: PropListDbResult<DbPropsOfDto<Project>>;
         pinnedRel?: Relation;
         primaryLocationId: ID;

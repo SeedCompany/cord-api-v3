@@ -1,7 +1,6 @@
 import { DiscoveryService } from '@golevelup/nestjs-discovery';
 import { Injectable, SetMetadata } from '@nestjs/common';
 import { GraphQLSchemaHost } from '@nestjs/graphql';
-import { Node } from 'cypher-query-builder';
 import { isObjectType } from 'graphql';
 import { ValueOf } from 'type-fest';
 import { ID, many, Many, ServerException, Session } from '../../common';
@@ -52,7 +51,7 @@ export class ResourceResolver {
   /**
    * Lookup a resource from a Neo4j BaseNode.
    */
-  async lookupByBaseNode(node: Node<BaseNode>, session: Session) {
+  async lookupByBaseNode(node: BaseNode, session: Session) {
     return await this.lookup(node.labels, node.properties.id, session);
   }
 
