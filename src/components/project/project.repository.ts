@@ -189,7 +189,6 @@ export class ProjectRepository extends CommonRepository {
           }
         )
       )
-      .with('node') // needed between a create & match
       .apply(
         createRelationships('out', {
           FieldRegion: { fieldRegion: fieldRegionId },

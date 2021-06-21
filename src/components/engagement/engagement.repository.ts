@@ -175,13 +175,11 @@ export class EngagementRepository extends CommonRepository {
     const query = this.db
       .query()
       .apply(await createNode(LanguageEngagement, { initialProps }))
-      .with('node') // needed between a create & match
       .apply(
         createRelationships('in', {
           Project: { engagement: projectId },
         })
       )
-      .with('node')
       .apply(
         createRelationships('out', {
           Language: { language: languageId },
@@ -222,13 +220,11 @@ export class EngagementRepository extends CommonRepository {
     const query = this.db
       .query()
       .apply(await createNode(InternshipEngagement, { initialProps }))
-      .with('node') // needed between a create & match
       .apply(
         createRelationships('in', {
           Project: { engagement: projectId },
         })
       )
-      .with('node')
       .apply(
         createRelationships('out', {
           User: { intern: internId, mentor: mentorId },

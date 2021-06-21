@@ -45,17 +45,21 @@ export const createRelationships =
     );
 
     const createdAt = DateTime.local();
-    return query
-      .match(
-        flattened.map(({ variable, nodeLabel, id }) => [
-          node(variable, nodeLabel, { id }),
-        ])
-      )
-      .create(
-        flattened.map(({ relLabel, variable }) => [
-          node('node'),
-          relation(direction, '', relLabel, { active: true, createdAt }),
-          node(variable),
-        ])
-      );
+    return query.subQuery((sub) =>
+      sub
+        .with('node')
+        .match(
+          flattened.map(({ variable, nodeLabel, id }) => [
+            node(variable, nodeLabel, { id }),
+          ])
+        )
+        .create(
+          flattened.map(({ relLabel, variable }) => [
+            node('node'),
+            relation(direction, '', relLabel, { active: true, createdAt }),
+            node(variable),
+          ])
+        )
+        .return(flattened.map((f) => f.variable))
+    );
   };

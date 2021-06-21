@@ -51,22 +51,26 @@ export const createNode = async <TResourceStatic extends ResourceShape<any>>(
   } = initialProps;
 
   return (query: Query) =>
-    query.create([
-      [
-        node('node', getDbClassLabels(resource), {
-          ...baseNodeProps,
-          createdAt,
-          id,
-        }),
-      ],
-      ...entries(restInitialProps).map(([prop, value]) => [
-        node('node'),
-        relation('out', '', prop, { active: true, createdAt }),
-        node('', getDbPropertyLabels(resource, prop), {
-          createdAt,
-          value,
-          sortValue: determineSortValue(value),
-        }),
-      ]),
-    ]);
+    query.subQuery((sub) =>
+      sub
+        .create([
+          [
+            node('node', getDbClassLabels(resource), {
+              ...baseNodeProps,
+              createdAt,
+              id,
+            }),
+          ],
+          ...entries(restInitialProps).map(([prop, value]) => [
+            node('node'),
+            relation('out', '', prop, { active: true, createdAt }),
+            node('', getDbPropertyLabels(resource, prop), {
+              createdAt,
+              value,
+              sortValue: determineSortValue(value),
+            }),
+          ]),
+        ])
+        .return('node')
+    );
 };
