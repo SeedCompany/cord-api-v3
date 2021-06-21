@@ -5,6 +5,13 @@ import { DateTime } from 'luxon';
 import { ID, many } from '../../../common';
 import { ResourceMap } from '../../../components/authorization/model/resource-map';
 
+type RelationshipDefinition = Partial<
+  Record<keyof ResourceMap, Record<string, Nullable<ID> | readonly ID[]>>
+>;
+type AnyDirectionalDefinition = Partial<
+  Record<RelationDirection, RelationshipDefinition>
+>;
+
 /**
  * Creates relationships to/from `node` to/from other base nodes.
  *
@@ -23,29 +30,52 @@ import { ResourceMap } from '../../../components/authorization/model/resource-ma
  *       (createdBy:User { id: $creatorId })
  * CREATE (node)-[:fundingAccount]->(fundingAccount),
  *        (node)-[:createdBy]->(createdBy)
+ *
+ * @example
+ * // Multiple directions can be given this way
+ * createRelationships({
+ *   in: {
+ *     Organization: { owningOrganization: orgId }
+ *   },
+ *   out: {
+ *     User: { createdBy: input.creatorId }
+ *   },
+ * })
  */
-export const createRelationships =
-  (
-    direction: RelationDirection,
-    labelsToRelationships: Partial<
-      Record<keyof ResourceMap, Record<string, Nullable<ID> | readonly ID[]>>
-    >
-  ) =>
-  (query: Query) => {
-    const flattened = Object.entries(labelsToRelationships).flatMap(
-      ([nodeLabel, relationships]) =>
-        Object.entries(relationships ?? {}).flatMap(([prop, ids]) =>
-          many(ids ?? []).map((id, i) => ({
-            nodeLabel,
-            id,
-            relLabel: prop,
-            variable: Array.isArray(ids) ? `${prop}${i}` : prop,
-          }))
-        )
-    );
+export function createRelationships(
+  direction: RelationDirection,
+  labelsToRelationships: RelationshipDefinition
+): (query: Query) => Query;
+export function createRelationships(
+  definition: AnyDirectionalDefinition
+): (query: Query) => Query;
+export function createRelationships(
+  directionOrDefinition: RelationDirection | AnyDirectionalDefinition,
+  maybeLabelsToRelationships?: RelationshipDefinition
+) {
+  const normalizedArgs =
+    typeof directionOrDefinition === 'string'
+      ? { [directionOrDefinition]: maybeLabelsToRelationships }
+      : directionOrDefinition;
 
-    const createdAt = DateTime.local();
-    return query.subQuery((sub) =>
+  const flattened = Object.entries(normalizedArgs).flatMap(
+    ([direction, labelsToRelationships]) =>
+      Object.entries(labelsToRelationships ?? {}).flatMap(
+        ([nodeLabel, relationships]) =>
+          Object.entries(relationships ?? {}).flatMap(([prop, ids]) =>
+            many(ids ?? []).map((id, i) => ({
+              nodeLabel,
+              id,
+              direction: direction as RelationDirection,
+              relLabel: prop,
+              variable: Array.isArray(ids) ? `${prop}${i}` : prop,
+            }))
+          )
+      )
+  );
+  const createdAt = DateTime.local();
+  return (query: Query) =>
+    query.subQuery((sub) =>
       sub
         .with('node')
         .match(
@@ -54,7 +84,7 @@ export const createRelationships =
           ])
         )
         .create(
-          flattened.map(({ relLabel, variable }) => [
+          flattened.map(({ direction, relLabel, variable }) => [
             node('node'),
             relation(direction, '', relLabel, { active: true, createdAt }),
             node(variable),
@@ -62,4 +92,4 @@ export const createRelationships =
         )
         .return(flattened.map((f) => f.variable))
     );
-  };
+}
