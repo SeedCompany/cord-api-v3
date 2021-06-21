@@ -2,7 +2,7 @@ import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { Maybe as Nullable } from 'graphql/jsutils/Maybe';
 import { DateTime } from 'luxon';
-import { ID, many } from '../../../common';
+import { ID, many, ResourceShape } from '../../../common';
 import { ResourceMap } from '../../../components/authorization/model/resource-map';
 
 type RelationshipDefinition = Partial<
@@ -42,14 +42,17 @@ type AnyDirectionalDefinition = Partial<
  *   },
  * })
  */
-export function createRelationships(
+export function createRelationships<TResourceStatic extends ResourceShape<any>>(
+  resource: TResourceStatic,
   direction: RelationDirection,
   labelsToRelationships: RelationshipDefinition
 ): (query: Query) => Query;
-export function createRelationships(
+export function createRelationships<TResourceStatic extends ResourceShape<any>>(
+  resource: TResourceStatic,
   definition: AnyDirectionalDefinition
 ): (query: Query) => Query;
-export function createRelationships(
+export function createRelationships<TResourceStatic extends ResourceShape<any>>(
+  resource: TResourceStatic,
   directionOrDefinition: RelationDirection | AnyDirectionalDefinition,
   maybeLabelsToRelationships?: RelationshipDefinition
 ) {

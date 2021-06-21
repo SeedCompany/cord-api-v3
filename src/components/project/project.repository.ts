@@ -190,7 +190,7 @@ export class ProjectRepository extends CommonRepository {
         )
       )
       .apply(
-        createRelationships('out', {
+        createRelationships(IProject, 'out', {
           FieldRegion: { fieldRegion: fieldRegionId },
           Location: {
             primaryLocation: primaryLocationId,
