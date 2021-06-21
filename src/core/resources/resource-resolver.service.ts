@@ -13,6 +13,8 @@ interface Shape {
   type: ReadonlyArray<keyof ResourceMap>;
 }
 
+type SomeResource = ValueOf<ResourceMap>;
+
 /**
  * Register this function as the function to use to lookup the given types.
  *
@@ -23,7 +25,7 @@ interface Shape {
  *
  * {@link ResourceResolver} can be used to invoke this function.
  */
-export const HandleIdLookup = (type: Many<ValueOf<ResourceMap>>) =>
+export const HandleIdLookup = (type: Many<SomeResource>) =>
   SetMetadata<string, Shape>(RESOLVE_BY_ID, {
     type: many(type).map((cls) => cls.name as keyof ResourceMap),
   });
@@ -60,7 +62,7 @@ export class ResourceResolver {
    *
    * It's expected that possibleTypes is or includes a _single_ concrete type.
    */
-  async lookup<TResource extends ValueOf<ResourceMap>>(
+  async lookup<TResource extends SomeResource>(
     type: TResource,
     id: ID,
     session: Session
@@ -71,15 +73,15 @@ export class ResourceResolver {
     session: Session
   ): Promise<ResourceMap[TResourceName]['prototype']>;
   async lookup(
-    possibleTypes: Many<string | ValueOf<ResourceMap>>,
+    possibleTypes: Many<string | SomeResource>,
     id: ID,
     session: Session
-  ): Promise<ValueOf<ResourceMap>>;
+  ): Promise<SomeResource>;
   async lookup(
-    possibleTypes: Many<string | ValueOf<ResourceMap>>,
+    possibleTypes: Many<string | SomeResource>,
     id: ID,
     session: Session
-  ): Promise<ValueOf<ResourceMap>> {
+  ): Promise<SomeResource> {
     const type = this.resolveType(possibleTypes);
     const discovered = await this.discover.providerMethodsWithMetaAtKey<Shape>(
       RESOLVE_BY_ID
@@ -103,9 +105,7 @@ export class ResourceResolver {
     };
   }
 
-  private resolveType(
-    types: Many<string | ValueOf<ResourceMap>>
-  ): keyof ResourceMap {
+  private resolveType(types: Many<string | SomeResource>): keyof ResourceMap {
     const names = many(types).map((t) => (typeof t === 'string' ? t : t.name));
 
     const schema = this.schemaHost.schema;
