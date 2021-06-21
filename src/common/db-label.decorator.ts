@@ -1,5 +1,6 @@
 import { uniq, without } from 'lodash';
 import { getParentTypes } from './parent-types';
+import { isResourceClass } from './resource.dto';
 import { AbstractClassType } from './types';
 
 const DbLabelSymbol = Symbol('DbLabelSymbol');
@@ -27,7 +28,9 @@ export const getDbClassLabels = (
   const labels =
     decorated?.flatMap((l) => l.split(':')) ??
     without(
-      getParentTypes(type).map((t) => t.name),
+      getParentTypes(type)
+        .filter(isResourceClass)
+        .map((t) => t.name),
       'Resource'
     );
   return uniq([...labels, 'BaseNode']);

@@ -5,6 +5,7 @@ import { ID, IdField } from './id-field';
 import { DateTimeField } from './luxon.graphql';
 import { SecuredProps, UnsecuredDto } from './secured-property';
 import { AbstractClassType } from './types';
+import { has } from './util';
 
 @InterfaceType()
 export abstract class Resource {
@@ -34,6 +35,11 @@ export type ResourceShape<T> = AbstractClassType<T> & {
   BaseNodeProps?: string[];
   Relations?: Record<string, any>;
 };
+
+export const isResourceClass = <T>(
+  cls: AbstractClassType<T>
+): cls is ResourceShape<T> =>
+  has('Props', cls) && Array.isArray(cls.Props) && cls.Props.length > 0;
 
 export type MaybeUnsecuredInstance<TResourceStatic extends ResourceShape<any>> =
   TResourceStatic['prototype'] | UnsecuredDto<TResourceStatic['prototype']>;
