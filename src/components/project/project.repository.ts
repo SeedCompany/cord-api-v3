@@ -5,8 +5,8 @@ import { DateTime } from 'luxon';
 import {
   ID,
   NotFoundException,
-  ServerException,
   Sensitivity,
+  ServerException,
   Session,
   UnsecuredDto,
 } from '../../common';
@@ -411,17 +411,24 @@ export class ProjectRepository extends CommonRepository {
       .first();
   }
 
-  async getChangesetProps(id: ID, changeset: ID) {
+  async getChangesetProps(changeset: ID) {
     const query = this.db
       .query()
-      .match([node('node', 'Project', { id })])
-      .apply(matchProps({ changeset, optional: true, excludeBaseProps: true }))
-      .return(['props'])
-      .asResult<{
-        props: Partial<DbPropsOfDto<Project>>;
-      }>();
+      .match([
+        node('node', 'Project'),
+        relation('out', '', 'changeset', { active: true }),
+        node('changeset', 'Changeset', { id: changeset }),
+      ])
+      .apply(matchProps({ changeset, optional: true }))
+      .return<{
+        props: Partial<DbPropsOfDto<Project>> & {
+          id: ID;
+          createdAt: DateTime;
+          type: ProjectType;
+        };
+      }>(['props']);
 
     const result = await query.first();
-    return result?.props ?? {};
+    return result?.props;
   }
 }

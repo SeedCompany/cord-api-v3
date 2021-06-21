@@ -1,5 +1,4 @@
-import { node, relation } from 'cypher-query-builder';
-import { ID, ServerException } from '../../../common';
+import { ServerException } from '../../../common';
 import {
   DatabaseService,
   EventsHandler,
@@ -7,10 +6,9 @@ import {
   ILogger,
   Logger,
 } from '../../../core';
-import { UpdateProject } from '../../project';
 import { ProjectChangeRequestApprovedEvent } from '../../project-change-request/events';
-import { ProjectRepository } from '../../project/project.repository';
-import { ProjectService } from '../../project/project.service';
+import { ProjectRepository } from '../project.repository';
+import { ProjectService } from '../project.service';
 
 type SubscribedEvent = ProjectChangeRequestApprovedEvent;
 
@@ -31,41 +29,22 @@ export class ApplyApprovedChangesetToProject
     const changesetId = event.changeRequest.id;
 
     try {
-      // Get related project Id
-      const result = await this.db
-        .query()
-        .match([
-          node('project', 'Project'),
-          relation('out', '', 'changeset', { active: true }),
-          node('changeset', 'Changeset', { id: changesetId }),
-        ])
-        .return('project.id as projectId')
-        .asResult<{ projectId: ID }>()
-        .first();
-
-      // Get unsecured project with changeset
-      if (result?.projectId) {
-        const project = await this.projectService.readOne(
-          result.projectId,
-          event.session
-        );
-        const changes = await this.projectRepo.getChangesetProps(
-          result.projectId,
-          changesetId
-        );
-
-        // Update project pending changes
-        const updateProject: UpdateProject = {
-          ...changes,
-          id: project.id,
-        };
-        await this.projectService.update(
-          updateProject,
-          event.session,
-          undefined,
-          false
-        );
+      const changes = await this.projectRepo.getChangesetProps(changesetId);
+      if (!changes) {
+        return; // if nothing changed, nothing to do
       }
+      const { id, createdAt, type, ...actualChanges } = changes;
+      await this.projectService.update(
+        {
+          id,
+          ...actualChanges,
+        },
+        event.session,
+        undefined,
+        false
+      );
+
+      // TODO handle relations (locations, etc.)
     } catch (exception) {
       throw new ServerException(
         'Failed to apply changeset to project',
