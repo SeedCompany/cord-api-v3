@@ -3,9 +3,7 @@ import { inArray, node, Node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
 import {
-  entries,
   generateId,
-  getDbPropertyLabels,
   ID,
   mapFromList,
   NotFoundException,
@@ -13,16 +11,19 @@ import {
   ServerException,
   Session,
 } from '../../common';
-import { CommonRepository, property } from '../../core';
+import { CommonRepository } from '../../core';
 import { DbChanges, getChanges } from '../../core/database/changes';
 import {
   calculateTotalAndPaginateList,
+  createNode,
+  createRelationships,
   matchPropsAndProjectSensAndScopedRoles,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
 import { DbPropsOfDto } from '../../core/database/results';
 import { Role, rolesForScope, ScopedRole } from '../authorization';
+import { FileId } from '../file';
 import { ProjectType } from '../project';
 import {
   CreateInternshipEngagement,
@@ -156,11 +157,9 @@ export class EngagementRepository extends CommonRepository {
   // CREATE ///////////////////////////////////////////////////////////
 
   async createLanguageEngagement(input: CreateLanguageEngagement) {
-    const id = await generateId();
-    const createdAt = DateTime.local();
-    const pnpId = await generateId();
+    const pnpId = (await generateId()) as FileId;
 
-    const { projectId, languageId, ...initial } = {
+    const { projectId, languageId, ...initialProps } = {
       ...mapFromList(CreateLanguageEngagement.Props, (k) => [k, undefined]),
       ...input,
       status: input.status || EngagementStatus.InDevelopment,
@@ -169,60 +168,39 @@ export class EngagementRepository extends CommonRepository {
       statusModifiedAt: undefined,
       lastSuspendedAt: undefined,
       lastReactivatedAt: undefined,
-      modifiedAt: createdAt,
+      modifiedAt: DateTime.local(),
       canDelete: true,
     };
 
     const query = this.db
       .query()
-      .match([node('project', 'Project', { id: projectId })])
-      .match([node('language', 'Language', { id: languageId })])
-      .create([
-        [
-          node('node', ['LanguageEngagement', 'Engagement', 'BaseNode'], {
-            createdAt,
-            id,
-          }),
-        ],
-        ...entries(initial).flatMap(([prop, val]) =>
-          property(
-            prop,
-            val,
-            'node',
-            prop,
-            getDbPropertyLabels(LanguageEngagement, prop)
-          )
-        ),
-      ])
-      .create([
-        node('project'),
-        relation('out', 'engagementRel', 'engagement', {
-          active: true,
-          createdAt,
-        }),
-        node('node'),
-      ])
-      .create([
-        node('language'),
-        relation('in', 'languageRel', 'language', { active: true, createdAt }),
-        node('node'),
-      ])
-      .return('node');
+      .apply(await createNode(LanguageEngagement, { initialProps }))
+      .apply(
+        createRelationships(LanguageEngagement, {
+          in: { engagement: ['Project', projectId] },
+          out: { language: ['Language', languageId] },
+        })
+      )
+      .return<{ id: ID }>('node.id as id');
 
     const result = await query.first();
     if (!result) {
       throw new ServerException('Could not create Language Engagement');
     }
 
-    return { id, pnpId };
+    return { id: result.id, pnpId };
   }
 
   async createInternshipEngagement(input: CreateInternshipEngagement) {
-    const id = await generateId();
-    const createdAt = DateTime.local();
-    const growthPlanId = await generateId();
+    const growthPlanId = (await generateId()) as FileId;
 
-    const { projectId, internId, mentorId, countryOfOriginId, ...initial } = {
+    const {
+      projectId,
+      internId,
+      mentorId,
+      countryOfOriginId,
+      ...initialProps
+    } = {
       ...mapFromList(CreateInternshipEngagement.Props, (k) => [k, undefined]),
       ...input,
       status: input.status || EngagementStatus.InDevelopment,
@@ -231,82 +209,30 @@ export class EngagementRepository extends CommonRepository {
       statusModifiedAt: undefined,
       lastSuspendedAt: undefined,
       lastReactivatedAt: undefined,
-      modifiedAt: createdAt,
+      modifiedAt: DateTime.local(),
       canDelete: true,
     };
 
     const query = this.db
       .query()
-      .match(node('project', 'Project', { id: projectId }))
-      .match(node('intern', 'User', { id: internId }))
-      .apply((q) => {
-        if (mentorId) {
-          q.match(node('mentor', 'User', { id: mentorId }));
-        }
-        if (countryOfOriginId) {
-          q.match([
-            node('countryOfOrigin', 'Location', {
-              id: countryOfOriginId,
-            }),
-          ]);
-        }
-      })
-      .create([
-        [
-          node('node', ['InternshipEngagement', 'Engagement', 'BaseNode'], {
-            createdAt,
-            id,
-          }),
-        ],
-        ...entries(initial).flatMap(([prop, val]) =>
-          property(
-            prop,
-            val,
-            'node',
-            prop,
-            getDbPropertyLabels(InternshipEngagement, prop)
-          )
-        ),
-      ])
-      .create([
-        node('project'),
-        relation('out', 'engagementRel', 'engagement', {
-          active: true,
-          createdAt,
-        }),
-        node('node'),
-      ])
-      .create([
-        node('intern'),
-        relation('in', 'internRel', 'intern', { active: true, createdAt }),
-        node('node'),
-      ])
-      .apply((q) => {
-        if (mentorId) {
-          q.create([
-            node('mentor'),
-            relation('in', 'mentorRel', 'mentor', { active: true, createdAt }),
-            node('node'),
-          ]);
-        }
-        if (countryOfOriginId) {
-          q.create([
-            node('countryOfOrigin'),
-            relation('in', 'countryRel', 'countryOfOrigin', {
-              active: true,
-              createdAt,
-            }),
-            node('node'),
-          ]);
-        }
-      })
-      .return('node');
+      .apply(await createNode(InternshipEngagement, { initialProps }))
+      .apply(
+        createRelationships(InternshipEngagement, {
+          in: { engagement: ['Project', projectId] },
+          out: {
+            intern: ['User', internId],
+            mentor: ['User', mentorId],
+            countryOfOrigin: ['Location', countryOfOriginId],
+          },
+        })
+      )
+      .return<{ id: ID }>('node.id as id');
     const result = await query.first();
     if (!result) {
       throw new NotFoundException();
     }
 
-    return { id, growthPlanId };
+    return { id: result.id, growthPlanId };
   }
 
   // UPDATE ///////////////////////////////////////////////////////////

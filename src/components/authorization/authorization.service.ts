@@ -11,9 +11,9 @@ import {
 } from 'lodash';
 import {
   getParentTypes,
-  has,
   ID,
   isIdLike,
+  isResourceClass,
   isSecured,
   keys,
   mapFromList,
@@ -206,9 +206,7 @@ export class AuthorizationService {
     // convert resource to a list of resource names to check
     const resources = getParentTypes(resource)
       // if parent defines Props include it in mapping
-      .filter(
-        (r) => has('Props', r) && Array.isArray(r.Props) && r.Props.length > 0
-      )
+      .filter(isResourceClass)
       .map((r) => r.name);
 
     const normalizeGrants = (role: DbRole) =>
