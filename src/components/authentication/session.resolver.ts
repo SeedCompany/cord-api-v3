@@ -2,7 +2,6 @@ import { forwardRef, Inject } from '@nestjs/common';
 import {
   Args,
   Context,
-  Field,
   Parent,
   Query,
   ResolveField,
@@ -100,7 +99,7 @@ export class SessionResolver {
       : null;
   }
 
-  @Field(() => [Powers], { nullable: true })
+  @ResolveField(() => [Powers], { nullable: true })
   async powers(@Parent() output: SessionOutput): Promise<Powers[]> {
     return await this.authorization.readPower(output.session);
   }

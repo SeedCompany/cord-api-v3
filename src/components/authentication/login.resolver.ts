@@ -2,7 +2,6 @@ import { forwardRef, Inject } from '@nestjs/common';
 import {
   Args,
   Context,
-  Field,
   Mutation,
   Parent,
   ResolveField,
@@ -58,7 +57,7 @@ export class LoginResolver {
     return await this.users.readOne(user, session);
   }
 
-  @Field(() => [Powers])
+  @ResolveField(() => [Powers])
   async powers(@AnonSession() session: Session): Promise<Powers[]> {
     return await this.authorization.readPower(session);
   }
