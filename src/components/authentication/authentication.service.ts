@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { EmailService } from '@seedcompany/nestjs-email';
+import { Request } from 'express';
 import { sign, verify } from 'jsonwebtoken';
 import { DateTime } from 'luxon';
 import {
@@ -14,11 +15,10 @@ import { RawSession } from '../../common/session';
 import { ConfigService, ILogger, Logger } from '../../core';
 import { ForgotPassword } from '../../core/email/templates';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { User, UserService } from '../user';
-import { LoginInput, ResetPasswordInput } from './authentication.dto';
+import { UserService } from '../user';
 import { AuthenticationRepository } from './authentication.repository';
 import { CryptoService } from './crypto.service';
-import { RegisterInput } from './dto';
+import { LoginInput, RegisterInput, ResetPasswordInput } from './dto';
 import { NoSessionException } from './no-session.exception';
 
 interface JwtPayload {
@@ -42,15 +42,6 @@ export class AuthenticationService {
 
     await this.repo.saveSessionToken(token);
     return token;
-  }
-
-  async userFromSession(session: Session): Promise<User | null> {
-    const userId = await this.repo.getUserFromSession(session);
-    if (!userId) {
-      return null;
-    }
-
-    return await this.userService.readOne(userId, session);
   }
 
   async register(input: RegisterInput, session?: Session): Promise<ID> {
@@ -90,6 +81,12 @@ export class AuthenticationService {
     }
 
     return userId;
+  }
+
+  async updateSession(req: Request) {
+    const newSession = await this.createSession(req.session!.token);
+    req.session = newSession; // replace session given with session pipe
+    return newSession;
   }
 
   async logout(token: string): Promise<void> {

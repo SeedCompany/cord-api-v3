@@ -3,10 +3,13 @@ import { SESSION_PIPE_TOKEN } from '../../common/session';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { UserModule } from '../user/user.module';
 import { AuthenticationRepository } from './authentication.repository';
-import { AuthenticationResolver } from './authentication.resolver';
 import { AuthenticationService } from './authentication.service';
 import { CryptoService } from './crypto.service';
+import { LoginResolver } from './login.resolver';
+import { PasswordResolver } from './password.resolver';
+import { RegisterResolver } from './register.resolver';
 import { SessionPipe } from './session.pipe';
+import { SessionResolver } from './session.resolver';
 
 const ProvideSessionPipe: Provider = {
   provide: SESSION_PIPE_TOKEN,
@@ -20,7 +23,10 @@ const ProvideSessionPipe: Provider = {
     forwardRef(() => AuthorizationModule),
   ],
   providers: [
-    AuthenticationResolver,
+    LoginResolver,
+    PasswordResolver,
+    RegisterResolver,
+    SessionResolver,
     AuthenticationService,
     AuthenticationRepository,
     CryptoService,

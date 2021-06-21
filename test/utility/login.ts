@@ -1,5 +1,5 @@
 import { gql } from 'apollo-server-core';
-import { LoginInput } from '../../src/components/authentication/authentication.dto';
+import { LoginInput } from '../../src/components/authentication/dto';
 import { ConfigService } from '../../src/core';
 import { TestApp } from './create-app';
 import { createSession } from './create-session';

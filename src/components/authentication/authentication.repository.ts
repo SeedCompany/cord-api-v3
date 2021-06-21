@@ -3,7 +3,7 @@ import { node, not, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID, ServerException, Session } from '../../common';
 import { DatabaseService, matchRequestingUser } from '../../core';
-import { LoginInput } from './authentication.dto';
+import { LoginInput } from './dto';
 
 interface EmailToken {
   email: string;
