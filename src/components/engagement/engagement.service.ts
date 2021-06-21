@@ -1,5 +1,4 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { entries } from 'lodash';
 import {
   DuplicateException,
   ID,
@@ -246,70 +245,19 @@ export class EngagementService {
     }
     const result = await this.repo.readOne(id, session, changeset);
 
-    let props = {
-      __typename: result.__typename,
-      ...result.props,
-      language: result.language,
-      ceremony: result.ceremony,
-      intern: result.intern,
-      countryOfOrigin: result.countryOfOrigin,
-      mentor: result.mentor,
-    };
+    const isLanguageEngagement = result.__typename === 'LanguageEngagement';
 
-    if (changeset) {
-      const changesetProps = await this.repo.getChangesetProps(id, changeset);
-      entries(changesetProps).forEach(([key, prop]) => {
-        if (prop !== undefined) {
-          props = {
-            ...props,
-            [key]: prop,
-          };
-        }
-      });
-    }
-
-    const isLanguageEngagement = props.__typename === 'LanguageEngagement';
-
-    const {
-      startDate: _, // both of these are composed manually below, so exclude them
-      endDate: __,
-      ...securedProperties
-    } = await this.authorizationService.secureProperties(
+    const securedProperties = await this.authorizationService.secureProperties(
       isLanguageEngagement ? LanguageEngagement : InternshipEngagement,
-      props,
+      result,
       session,
-      result.scopedRoles
+      result.scope
     );
 
-    const project = await this.projectService.readOne(result.project, session);
-
-    const canReadStartDate =
-      project.mouStart.canRead && securedProperties.startDateOverride.canRead;
-    const startDate = canReadStartDate
-      ? props.startDateOverride ?? project.mouStart.value
-      : null;
-    const canReadEndDate =
-      project.mouEnd.canRead && securedProperties.endDateOverride.canRead;
-    const endDate = canReadEndDate
-      ? props.endDateOverride ?? project.mouEnd.value
-      : null;
-
     const common = {
-      __typename: result.__typename,
-      ...result.props,
-      changeset,
-      startDate: {
-        value: startDate,
-        canRead: canReadStartDate,
-        canEdit: false,
-      },
-      endDate: {
-        value: endDate,
-        canRead: canReadEndDate,
-        canEdit: false,
-      },
+      ...result,
       canDelete:
-        props.status !== EngagementStatus.InDevelopment &&
+        result.status !== EngagementStatus.InDevelopment &&
         !session.roles.includes(`global:Administrator`)
           ? false
           : await this.repo.checkDeletePermission(id, session),

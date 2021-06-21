@@ -19,6 +19,7 @@ import {
   SecuredString,
   Sensitivity,
 } from '../../../common';
+import { ScopedRole } from '../../authorization';
 import { ChangesetAware } from '../../changeset/dto';
 import { DefinedFile } from '../../file/dto';
 import { Product, SecuredMethodologies } from '../../product/dto';
@@ -110,6 +111,10 @@ class Engagement extends ChangesetAwareResource {
 
   @DateTimeField()
   readonly modifiedAt: DateTime;
+
+  // A list of non-global roles the requesting user has available for this object.
+  // This is just a cache, to prevent extra db lookups within the same request.
+  readonly scope: ScopedRole[];
 }
 
 // class name has to match schema name for interface resolvers to work.

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { stripIndent } from 'common-tags';
 import { inArray, node, Node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
@@ -10,6 +11,7 @@ import {
   ResourceShape,
   ServerException,
   Session,
+  UnsecuredDto,
 } from '../../common';
 import { CommonRepository } from '../../core';
 import { DbChanges, getChanges } from '../../core/database/changes';
@@ -23,7 +25,7 @@ import {
   requestingUser,
 } from '../../core/database/query';
 import { DbPropsOfDto } from '../../core/database/results';
-import { Role, rolesForScope, ScopedRole } from '../authorization';
+import { Role, rolesForScope } from '../authorization';
 import { FileId } from '../file';
 import { ProjectType } from '../project';
 import {
@@ -57,51 +59,45 @@ export class EngagementRepository extends CommonRepository {
   async readOne(id: ID, session: Session, changeset?: ID) {
     const query = this.db
       .query()
-      .match(
-        [
-          node('project'),
-          relation('out', '', 'engagement', { active: true }),
-          node('node', 'Engagement', { id }),
-        ],
-        {
-          optional: !!changeset,
-        }
+      .subQuery((sub) =>
+        sub
+          .match([
+            node('project'),
+            relation('out', '', 'engagement', { active: true }),
+            node('node', 'Engagement', { id }),
+          ])
+          .return('project, node')
+          .apply((q) =>
+            changeset
+              ? q
+                  .union()
+                  .match([
+                    node('project'),
+                    relation('out', '', 'engagement', { active: false }),
+                    node('node', 'Engagement', { id }),
+                    relation('in', '', 'changeset', { active: true }),
+                    node('changeset', 'Changeset', { id: changeset }),
+                  ])
+                  .return('project, node')
+              : q
+          )
       )
+      .apply(matchPropsAndProjectSensAndScopedRoles(session))
       .apply((q) =>
         changeset
           ? q
-              .optionalMatch([
-                node('project1'),
-                relation('out', '', 'engagement', { active: false }),
-                node('node1', 'Engagement', { id }),
-                relation('in', '', 'changeset', { active: true }),
-                node('changesetNode', 'Changeset', { id: changeset }),
-              ])
-              .raw(
-                `CALL apoc.when(
-                node is null,
-                'RETURN node1 as engagement, project1 as project',
-                'RETURN node as engagement, project',
-                {node:node, node1:node1, project:project, project1:project1}
-              ) YIELD value
-              WITH value.engagement as node, value.project as project`
+              .apply(
+                matchProps({
+                  changeset,
+                  outputVar: 'changedProps',
+                  optional: true,
+                })
               )
-          : q
+              .match(node('changeset', 'Changeset', { id: changeset }))
+          : q.subQuery((sub) =>
+              sub.return(['null as changeset', '{} as changedProps'])
+            )
       )
-      .apply(matchPropsAndProjectSensAndScopedRoles(session))
-      .with([
-        'props',
-        'node',
-        'project',
-        'scopedRoles',
-        `case
-    when 'InternshipEngagement' IN labels(node)
-    then 'InternshipEngagement'
-    when 'LanguageEngagement' IN labels(node)
-    then 'LanguageEngagement'
-    end as __typename
-    `,
-      ])
       .optionalMatch([
         node('node'),
         relation('out', '', 'ceremony', { active: true }),
@@ -127,42 +123,42 @@ export class EngagementRepository extends CommonRepository {
         relation('out', '', 'mentor', { active: true }),
         node('mentor'),
       ])
-      .return([
-        'props',
-        'project.id as project',
-        '__typename',
-        'ceremony.id as ceremony',
-        'language.id as language',
-        'intern.id as intern',
-        'countryOfOrigin.id as countryOfOrigin',
-        'mentor.id as mentor',
-        'scopedRoles',
+      .optionalMatch([
+        node('project'),
+        relation('out', '', 'mouStart', { active: true }),
+        node('mouStart'),
       ])
-      .asResult<{
-        props: Omit<
-          DbPropsOfDto<LanguageEngagement & InternshipEngagement, true>,
-          | '__typename'
-          | 'ceremony'
-          | 'language'
-          | 'countryOfOrigin'
-          | 'intern'
-          | 'mentor'
-        >;
-        __typename: 'LanguageEngagement' | 'InternshipEngagement';
-        language: ID;
-        ceremony: ID;
-        project: ID;
-        intern: ID;
-        countryOfOrigin: ID;
-        mentor: ID;
-        scopedRoles: ScopedRole[];
-      }>();
+      .optionalMatch([
+        node('project'),
+        relation('out', '', 'mouEnd', { active: true }),
+        node('mouEnd'),
+      ])
+      .return<{ dto: UnsecuredDto<LanguageEngagement & InternshipEngagement> }>(
+        stripIndent`
+          apoc.map.mergeList([
+            props,
+            changedProps,
+            {
+              __typename: [l in labels(node) where l in ['LanguageEngagement', 'InternshipEngagement']][0],
+              language: language.id,
+              ceremony: ceremony.id,
+              intern: intern.id,
+              countryOfOrigin: countryOfOrigin.id,
+              mentor: mentor.id,
+              startDate: coalesce(changedProps.startDateOverride, props.startDateOverride, mouStart.value),
+              endDate: coalesce(changedProps.endDateOverride, props.endDateOverride, mouEnd.value),
+              scope: scopedRoles,
+              changeset: coalesce(changeset.id)
+            }
+          ]) as dto
+        `
+      );
     const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find Engagement');
     }
 
-    return result;
+    return result.dto;
   }
 
   async getProjectIdByEngagement(id: ID) {
