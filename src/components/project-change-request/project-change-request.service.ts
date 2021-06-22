@@ -94,6 +94,10 @@ export class ProjectChangeRequestService {
     return {
       ...dto,
       ...securedProps,
+      types: {
+        ...securedProps.types,
+        value: securedProps.types.value ?? [],
+      },
       canDelete: await this.db.checkDeletePermission(dto.id, session),
     };
   }
