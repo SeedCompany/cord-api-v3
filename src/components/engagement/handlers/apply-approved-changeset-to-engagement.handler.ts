@@ -7,13 +7,13 @@ import {
   ILogger,
   Logger,
 } from '../../../core';
-import { collect } from '../../../core/database/query';
-import { EngagementService } from '../../engagement';
+import { matchProps } from '../../../core/database/query';
 import {
-  InternshipEngagement,
-  LanguageEngagement,
-} from '../../engagement/dto/engagement.dto';
-import { EngagementRepository } from '../../engagement/engagement.repository';
+  EngagementService,
+  UpdateInternshipEngagement,
+  UpdateLanguageEngagement,
+} from '../../engagement';
+import { Engagement } from '../../engagement/dto';
 import { ProjectChangeRequestApprovedEvent } from '../../project-change-request/events';
 
 type SubscribedEvent = ProjectChangeRequestApprovedEvent;
@@ -24,8 +24,7 @@ export class ApplyApprovedChangesetToEngagement
 {
   constructor(
     private readonly db: DatabaseService,
-    private readonly engagementService: EngagementService,
-    private readonly engagementRepo: EngagementRepository,
+    private readonly service: EngagementService,
     @Logger('engagement:change-request:approved')
     private readonly logger: ILogger
   ) {}
@@ -33,69 +32,72 @@ export class ApplyApprovedChangesetToEngagement
   async handle(event: SubscribedEvent) {
     this.logger.debug('Applying changeset props');
 
-    const changesetId = event.changeRequest.id;
+    const changeset = event.changeRequest.id;
 
     try {
-      // Get related project Id
-      const result = await this.db
+      // Update project engagement pending changes
+      const engagements = await this.db
         .query()
         .match([
           node('project', 'Project'),
           relation('out', '', 'changeset', { active: true }),
-          node('changeset', 'Changeset', { id: changesetId }),
+          node('changeset', 'Changeset', { id: changeset }),
         ])
-        .return('project.id as projectId')
-        .asResult<{ projectId: ID }>()
-        .first();
-
-      if (result?.projectId) {
-        // Update project engagement pending changes
-        await this.db
-          .query()
-          .match([node('changeset', 'Changeset', { id: changesetId })])
-          .match([
-            node('project', 'Project', { id: result.projectId }),
-            relation('out', 'engagementRel', 'engagement', { active: false }),
-            node('engagement', 'Engagement'),
-            relation('in', 'changesetRel', 'changeset', { active: true }),
-            node('changeset'),
-          ])
-          .setValues({
-            'engagementRel.active': true,
-            'changesetRel.active': false,
-          })
-          .run();
-        const engagementsResult = await this.db
-          .query()
-          .match([
-            node('project', 'Project', { id: result.projectId }),
-            relation('out', '', 'engagement', { active: true }),
-            node('engagement', 'Engagement'),
-          ])
-          .return(collect('engagement.id', 'engagementIds'))
-          .asResult<{ engagementIds: ID[] }>()
-          .first();
-
-        if (engagementsResult?.engagementIds) {
-          await Promise.all(
-            engagementsResult.engagementIds.map(async (id) => {
-              const object = await this.engagementService.readOne(
-                id,
-                event.session
-              );
-              const changes = await this.engagementRepo.getChangesetProps(
-                id,
-                changesetId
-              );
-              await this.db.updateProperties({
-                type: LanguageEngagement || InternshipEngagement,
-                object,
-                changes,
-              });
+        .subQuery((sub) =>
+          sub
+            .with('project')
+            .match([
+              node('project'),
+              relation('out', 'engagementRel', 'engagement', {
+                active: true,
+              }),
+              node('node', 'Engagement'),
+            ])
+            .return('node')
+            .union()
+            .with('project, changeset')
+            .match([
+              node('project'),
+              relation('out', 'engagementRel', 'engagement', {
+                active: false,
+              }),
+              node('node', 'Engagement'),
+              relation('in', 'changesetRel', 'changeset', { active: true }),
+              node('changeset'),
+            ])
+            .setValues({
+              'engagementRel.active': true,
+              'changesetRel.active': false, // TODO Why is this done?
             })
-          );
-        }
-      }
+            .return('node')
+        )
+        .apply(
+          matchProps({
+            changeset: changeset,
+            optional: true,
+            excludeBaseProps: true,
+          })
+        )
+        .return<{
+          id: ID;
+          type: Engagement['__typename'];
+          changes: UpdateLanguageEngagement & UpdateInternshipEngagement;
+        }>([
+          'node.id as id',
+          `[l in labels(node) where l in ['LanguageEngagement', 'InternshipEngagement']][0] as type`,
+          'props as changes',
+        ])
+        .run();
+
+      await Promise.all(
+        engagements.map(async ({ id, type, changes }) => {
+          const update =
+            type === 'LanguageEngagement'
+              ? this.service.updateLanguageEngagement.bind(this.service)
+              : this.service.updateInternshipEngagement.bind(this.service);
+          await update({ ...changes, id }, event.session);
+        })
+      );
     } catch (exception) {
       throw new ServerException(
         'Failed to apply changeset to project',

@@ -24,14 +24,12 @@ import {
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
-import { DbPropsOfDto } from '../../core/database/results';
 import { Role, rolesForScope } from '../authorization';
 import { FileId } from '../file';
 import { ProjectType } from '../project';
 import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,
-  Engagement,
   EngagementListInput,
   EngagementStatus,
   IEngagement,
@@ -562,19 +560,5 @@ export class EngagementRepository extends CommonRepository {
             node('language', 'Language'),
           ])
         : query.match([node('language', 'Language', { id: languageId })]);
-  }
-
-  async getChangesetProps(id: ID, changeset: ID): Promise<Record<string, any>> {
-    const query = this.db
-      .query()
-      .match([node('node', 'Engagement', { id })])
-      .apply(matchProps({ changeset, optional: true, excludeBaseProps: true }))
-      .return(['props'])
-      .asResult<{
-        props: Partial<DbPropsOfDto<Engagement>>;
-      }>();
-
-    const result = await query.first();
-    return result?.props ?? {};
   }
 }
