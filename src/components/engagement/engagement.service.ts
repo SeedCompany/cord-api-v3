@@ -494,7 +494,6 @@ export class EngagementService {
   }
 
   async listAllByProjectId(
-    // projectId: string,
     projectId: ID,
     session: Session
   ): Promise<IEngagement[]> {

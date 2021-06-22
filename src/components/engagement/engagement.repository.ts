@@ -11,6 +11,7 @@ import {
   ResourceShape,
   ServerException,
   Session,
+  simpleSwitch,
   UnsecuredDto,
 } from '../../common';
 import { CommonRepository } from '../../core';
@@ -364,41 +365,42 @@ export class EngagementRepository extends CommonRepository {
     session: Session,
     changeset?: ID
   ) {
-    let label = 'Engagement';
-    if (filter.type === 'language') {
-      label = 'LanguageEngagement';
-    } else if (filter.type === 'internship') {
-      label = 'InternshipEngagement';
-    }
+    const label =
+      simpleSwitch(filter.type, {
+        language: 'LanguageEngagement',
+        internship: 'InternshipEngagement',
+      }) ?? 'Engagement';
+
     return this.db
       .query()
-      .optionalMatch([
-        requestingUser(session),
-        ...permissionsOfNode(label),
-        ...(filter.projectId
-          ? [
-              relation('in', '', 'engagement', { active: true }),
-              node('project', 'Project', {
-                id: filter.projectId,
-              }),
-            ]
-          : []),
-      ])
-      .apply((q) =>
-        changeset && filter.projectId
-          ? q.optionalMatch([
-              node('', 'Project', {
-                id: filter.projectId,
-              }),
-              relation('out', '', 'engagement', { active: false }),
-              node('cnode', label),
-              relation('in', '', 'changeset', { active: true }),
-              node('changeset', 'Changeset', { id: changeset }),
-            ])
-          : q.subQuery((sub) => sub.return(['null as cnode']))
+      .subQuery((sub) =>
+        sub
+          .match([
+            requestingUser(session),
+            ...permissionsOfNode(label),
+            ...(filter.projectId
+              ? [
+                  relation('in', '', 'engagement', { active: true }),
+                  node('project', 'Project', { id: filter.projectId }),
+                ]
+              : []),
+          ])
+          .return('node')
+          .apply((q) =>
+            changeset && filter.projectId
+              ? q
+                  .union()
+                  .match([
+                    node('', 'Project', { id: filter.projectId }),
+                    relation('out', '', 'engagement', { active: false }),
+                    node('node', label),
+                    relation('in', '', 'changeset', { active: true }),
+                    node('changeset', 'Changeset', { id: changeset }),
+                  ])
+                  .return('node')
+              : q
+          )
       )
-      .with('collect(node) + collect(cnode) as nodes')
-      .raw('unwind nodes as node')
       .apply(calculateTotalAndPaginateList(IEngagement, input));
   }
 

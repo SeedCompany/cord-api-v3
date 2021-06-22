@@ -1,6 +1,6 @@
 import { stripIndent } from 'common-tags';
 import { node, Query, relation } from 'cypher-query-builder';
-import { ID, Session } from '../../../common';
+import { ID, Many, Session } from '../../../common';
 import { collect } from './cypher-functions';
 import { mapping } from './mapping';
 
@@ -12,7 +12,7 @@ export const requestingUser = (session: Session) =>
 /**
  * @deprecated DB SecurityGroups are deprecated
  */
-export const permissionsOfNode = (nodeLabel?: string) => [
+export const permissionsOfNode = (nodeLabel: Many<string>) => [
   relation('in', 'memberOfSecurityGroup', 'member'),
   node('security', 'SecurityGroup'),
   relation('out', 'sgPerms', 'permission'),

@@ -14,9 +14,9 @@ export const sleep = (duration: DurationInput) =>
   );
 
 export const simpleSwitch = <T>(
-  key: string,
+  key: string | null | undefined,
   options: Record<string, T>
-): T | undefined => options[key];
+): T | undefined => (key ? options[key] : undefined);
 
 /** Converts list to map given a function that returns a [key, value] tuple. */
 export const mapFromList = <T, S = T, K extends string = string>(
