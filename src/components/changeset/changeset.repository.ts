@@ -39,7 +39,7 @@ export class ChangesetRepository extends DtoRepository(Changeset) {
   async difference(id: ID, _session: Session) {
     const result = await this.db
       .query()
-      .match([node('changeset', 'ProjectChangeRequest', { id })])
+      .match([node('changeset', 'Changeset', { id })])
       .subQuery((sub) =>
         sub
           .with('changeset')
