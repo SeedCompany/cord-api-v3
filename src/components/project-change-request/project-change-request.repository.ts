@@ -43,7 +43,7 @@ export class ProjectChangeRequestRepository extends DtoRepository(
       },
       {
         key: 'status',
-        value: input.status,
+        value: Status.Pending,
         isPublic: false,
         isOrgPublic: false,
       },

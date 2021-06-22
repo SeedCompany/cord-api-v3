@@ -4,7 +4,6 @@ import { ID, isValidId } from '../../src/common';
 import {
   CreateProjectChangeRequest,
   ProjectChangeRequest,
-  ProjectChangeRequestStatus,
   ProjectChangeRequestType,
 } from '../../src/components/project-change-request/dto';
 import { TestApp } from './create-app';
@@ -16,7 +15,6 @@ export async function createProjectChangeRequest(
 ) {
   const changeRequest: CreateProjectChangeRequest = {
     projectId: input.projectId!, // Project status should be Active
-    status: ProjectChangeRequestStatus.Pending,
     types: [ProjectChangeRequestType.Other],
     summary: faker.random.alpha(),
     ...input,
