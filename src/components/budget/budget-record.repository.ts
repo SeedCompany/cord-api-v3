@@ -1,23 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { stripIndent } from 'common-tags';
 import { node, relation } from 'cypher-query-builder';
-import { DateTime } from 'luxon';
 import {
-  generateId,
   ID,
   NotFoundException,
   ServerException,
   Session,
   UnsecuredDto,
 } from '../../common';
-import {
-  createBaseNode,
-  DtoRepository,
-  matchRequestingUser,
-  Property,
-} from '../../core';
+import { DtoRepository } from '../../core';
 import {
   calculateTotalAndPaginateList,
+  createNode,
+  createRelationships,
   matchChangesetAndChangedProps,
   matchPropsAndProjectSensAndScopedRoles,
 } from '../../core/database/query';
@@ -25,70 +20,34 @@ import { BudgetRecord, BudgetRecordListInput, CreateBudgetRecord } from './dto';
 
 @Injectable()
 export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
-  async create(session: Session, secureProps: Property[]) {
+  async create(input: CreateBudgetRecord, changeset?: ID) {
     const result = await this.db
       .query()
-      .apply(matchRequestingUser(session))
-      .apply(createBaseNode(await generateId(), 'BudgetRecord', secureProps))
-      .return('node.id as id')
-      .asResult<{ id: ID }>()
+      .apply(
+        await createNode(BudgetRecord, {
+          initialProps: {
+            fiscalYear: input.fiscalYear,
+            amount: null,
+          },
+        })
+      )
+      .apply(
+        createRelationships(BudgetRecord, {
+          in: {
+            record: ['Budget', input.budgetId],
+            changeset: ['Changeset', changeset],
+          },
+          out: {
+            organization: ['Organization', input.organizationId],
+          },
+        })
+      )
+      .return<{ id: ID }>('node.id as id')
       .first();
     if (!result) {
       throw new ServerException('Failed to create a budget record');
     }
     return result.id;
-  }
-
-  async connectToBudget(
-    recordId: ID,
-    budgetId: ID,
-    createdAt: DateTime,
-    changeset?: ID
-  ) {
-    await this.db
-      .query()
-      .match([node('budget', 'Budget', { id: budgetId })])
-      .match([node('br', 'BudgetRecord', { id: recordId })])
-      .apply((q) =>
-        changeset
-          ? q.match([node('changesetNode', 'Changeset', { id: changeset })])
-          : q
-      )
-      .create([
-        node('budget'),
-        relation('out', '', 'record', { active: !changeset, createdAt }),
-        node('br'),
-        ...(changeset
-          ? [
-              relation('in', '', 'changeset', { active: true }),
-              node('changesetNode'),
-            ]
-          : []),
-      ])
-      .return('br')
-      .run();
-  }
-
-  async connectToOrganization(
-    recordId: ID,
-    organizationId: ID,
-    createdAt: DateTime
-  ) {
-    await this.db
-      .query()
-      .match([
-        node('organization', 'Organization', {
-          id: organizationId,
-        }),
-      ])
-      .match([node('br', 'BudgetRecord', { id: recordId })])
-      .create([
-        node('br'),
-        relation('out', '', 'organization', { active: true, createdAt }),
-        node('organization'),
-      ])
-      .return('br')
-      .run();
   }
 
   async doesRecordExist(input: CreateBudgetRecord) {

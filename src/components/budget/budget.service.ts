@@ -1,5 +1,4 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { DateTime } from 'luxon';
 import {
   DuplicateException,
   generateId,
@@ -129,7 +128,7 @@ export class BudgetService {
     session: Session,
     changeset?: ID
   ): Promise<BudgetRecord> {
-    const { budgetId, organizationId, fiscalYear } = input;
+    const { organizationId, fiscalYear } = input;
 
     if (!fiscalYear || !organizationId) {
       throw new InputException(
@@ -140,47 +139,9 @@ export class BudgetService {
     await this.verifyRecordUniqueness(input);
 
     this.logger.debug('Creating BudgetRecord', input);
-    // on Init, create a budget will create a budget record for each org and each fiscal year in the project input.projectId
-    const createdAt = DateTime.local();
-
-    const secureProps: Property[] = [
-      {
-        key: 'fiscalYear',
-        value: fiscalYear,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'amount',
-        value: null,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
 
     try {
-      const recordId = await this.budgetRecordsRepo.create(
-        session,
-        secureProps
-      );
-
-      await this.budgetRecordsRepo.connectToBudget(
-        recordId,
-        budgetId,
-        createdAt,
-        changeset
-      );
-      await this.budgetRecordsRepo.connectToOrganization(
-        recordId,
-        organizationId,
-        createdAt
-      );
+      const recordId = await this.budgetRecordsRepo.create(input, changeset);
 
       await this.authorizationService.processNewBaseNode(
         BudgetRecord,
