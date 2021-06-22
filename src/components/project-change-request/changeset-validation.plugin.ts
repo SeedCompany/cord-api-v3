@@ -45,7 +45,7 @@ export class ChangesetValidationPlugin implements ApolloServerPlugin {
 
         throw new InputException(
           'Changeset status is not Pending or Project status is not Active',
-          'input.changeset'
+          'changeset'
         );
       },
     };
