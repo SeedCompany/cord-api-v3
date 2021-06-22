@@ -20,8 +20,6 @@ import {
   calculateTotalAndPaginateList,
   matchChangesetAndChangedProps,
   matchPropsAndProjectSensAndScopedRoles,
-  permissionsOfNode,
-  requestingUser,
 } from '../../core/database/query';
 import { BudgetRecord, BudgetRecordListInput, CreateBudgetRecord } from './dto';
 
@@ -152,30 +150,39 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
   }
 
   list(input: BudgetRecordListInput, session: Session, changeset?: ID) {
+    const { budgetId } = input.filter;
     return this.db
       .query()
-      .match([
-        requestingUser(session),
-        ...permissionsOfNode('BudgetRecord'),
-        ...(input.filter.budgetId
-          ? [
-              relation('in', '', 'record', {
-                active: !changeset,
-              }),
-              node('budget', 'Budget', {
-                id: input.filter.budgetId,
-              }),
-            ]
-          : []),
-      ])
-      .apply((q) =>
-        changeset
-          ? q.match([
-              node('node'),
-              relation('in', '', 'changeset', { active: true }),
-              node('changesetNode', 'Changeset', { id: changeset }),
-            ])
-          : q
+      .subQuery((sub) =>
+        sub
+          .match([
+            node('node', 'BudgetRecord'),
+            ...(budgetId
+              ? [
+                  relation('in', '', 'record', { active: true }),
+                  node('budget', 'Budget', { id: budgetId }),
+                ]
+              : []),
+          ])
+          .return('node')
+          .apply((q) =>
+            changeset
+              ? q
+                  .union()
+                  .match([
+                    ...(budgetId
+                      ? [
+                          node('budget', 'Budget', { id: budgetId }),
+                          relation('out', '', 'record', { active: false }),
+                        ]
+                      : []),
+                    node('node', 'BudgetRecord'),
+                    relation('in', '', 'changeset', { active: true }),
+                    node('changeset', 'Changeset', { id: changeset }),
+                  ])
+                  .return('node')
+              : q
+          )
       )
       .apply(calculateTotalAndPaginateList(BudgetRecord, input));
   }
