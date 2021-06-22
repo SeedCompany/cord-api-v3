@@ -31,7 +31,7 @@ import {
 import { ILogger, Logger, ServiceUnavailableError, UniquenessError } from '..';
 import { AbortError, retry, RetryOptions } from '../../common/retry';
 import { DbChanges } from './changes';
-import { deleteBaseNode } from './query';
+import { deleteBaseNode, prefixNodeLabelsWithDeleted } from './query';
 import { determineSortValue } from './query.helpers';
 import { hasMore } from './results';
 import { Transactional } from './transactional.decorator';
@@ -317,14 +317,7 @@ export class DatabaseService {
           .setValues({
             [`${changeset ? 'oldChange' : 'oldToProp'}.active`]: false,
           })
-          .raw(
-            `
-              with node, oldPropVar, reduce(deletedLabels = [], label in labels(oldPropVar) | deletedLabels + ("Deleted_" + label)) as deletedLabels
-              call apoc.create.removeLabels(oldPropVar, labels(oldPropVar)) yield node as nodeRemoved
-              with node, oldPropVar, deletedLabels
-              call apoc.create.addLabels(oldPropVar, deletedLabels) yield node as nodeAdded
-            `
-          )
+          .apply(prefixNodeLabelsWithDeleted('oldPropVar'))
           .return(['count(oldPropVar) as numPropsDeactivated'])
       )
       .create([

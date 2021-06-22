@@ -15,7 +15,6 @@ import {
 import {
   ConfigService,
   DatabaseService,
-  deleteProperties,
   DtoRepository,
   ILogger,
   Logger,
@@ -26,6 +25,7 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
+  deleteProperties,
   matchProps,
   permissionsOfNode,
   requestingUser,
