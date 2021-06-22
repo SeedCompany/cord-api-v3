@@ -317,6 +317,7 @@ export class DatabaseService {
           .setValues({
             [`${changeset ? 'oldChange' : 'oldToProp'}.active`]: false,
           })
+          .with('oldPropVar')
           .apply(prefixNodeLabelsWithDeleted('oldPropVar'))
           .return(['count(oldPropVar) as numPropsDeactivated'])
       )

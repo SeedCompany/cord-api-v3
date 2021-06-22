@@ -48,17 +48,22 @@ export const deleteProperties =
       return query;
     }
     const deletedAt = DateTime.local();
-    return query
-      .match([
-        node('node'),
-        relation('out', 'propertyRel', relationLabels, { active: true }),
-        node('property', 'Property'),
-      ])
-      .setValues({
-        'property.deletedAt': deletedAt,
-        'propertyRel.active': false,
-      })
-      .apply(prefixNodeLabelsWithDeleted('property'));
+    return query.subQuery((sub) =>
+      sub
+        .with('node')
+        .match([
+          node('node'),
+          relation('out', 'propertyRel', relationLabels, { active: true }),
+          node('property', 'Property'),
+        ])
+        .setValues({
+          'property.deletedAt': deletedAt,
+          'propertyRel.active': false,
+        })
+        .with('property')
+        .apply(prefixNodeLabelsWithDeleted('property'))
+        .return('count(property) as numPropsDeactivated')
+    );
   };
 
 export const prefixNodeLabelsWithDeleted = (node: string) => (query: Query) =>
