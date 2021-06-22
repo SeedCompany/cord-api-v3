@@ -1,18 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { stripIndent } from 'common-tags';
 import { node, relation } from 'cypher-query-builder';
-import { DateTime } from 'luxon';
 import {
-  generateId,
   ID,
   NotFoundException,
   ServerException,
   Session,
   UnsecuredDto,
 } from '../../common';
-import { createBaseNode, DtoRepository, matchRequestingUser } from '../../core';
+import { DtoRepository } from '../../core';
 import {
   calculateTotalAndPaginateList,
+  createNode,
+  createRelationships,
   matchPropsAndProjectSensAndScopedRoles,
 } from '../../core/database/query';
 import {
@@ -26,50 +26,24 @@ import {
 export class ProjectChangeRequestRepository extends DtoRepository(
   ProjectChangeRequest
 ) {
-  async create(input: CreateProjectChangeRequest, session: Session) {
-    const secureProps = [
-      {
-        key: 'types',
-        value: input.types,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'summary',
-        value: input.summary,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'status',
-        value: Status.Pending,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
-
+  async create(input: CreateProjectChangeRequest) {
     const result = await this.db
       .query()
-      .apply(matchRequestingUser(session))
       .apply(
-        createBaseNode(
-          await generateId(),
-          ['ProjectChangeRequest', 'Changeset'],
-          secureProps
-        )
+        await createNode(ProjectChangeRequest, {
+          initialProps: {
+            types: input.types,
+            summary: input.summary,
+            status: Status.Pending,
+          },
+        })
       )
-      .with('node')
-      .match(node('project', 'Project', { id: input.projectId }))
-      .create([
-        node('project'),
-        relation('out', '', 'changeset', {
-          active: true,
-          createdAt: DateTime.local(),
-        }),
-        node('node'),
-      ])
-      .return('node.id as id')
-      .asResult<{ id: ID }>()
+      .apply(
+        createRelationships(ProjectChangeRequest, 'in', {
+          changeset: ['Project', input.projectId],
+        })
+      )
+      .return<{ id: ID }>('node.id as id')
       .first();
     if (!result) {
       throw new ServerException('Failed to create project change request');

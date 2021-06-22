@@ -63,7 +63,7 @@ export class ProjectChangeRequestService {
       );
     }
 
-    const id = await this.repo.create(input, session);
+    const id = await this.repo.create(input);
 
     return await this.readOne(id, session);
   }
