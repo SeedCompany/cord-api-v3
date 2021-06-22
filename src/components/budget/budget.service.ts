@@ -226,17 +226,17 @@ export class BudgetService {
       userId: session.userId,
     });
 
-    const result = await this.budgetRepo.readOne(id, session);
+    const result = await this.budgetRepo.readOne(id, session, changeset);
 
     const perms = await this.authorizationService.getPermissions({
       resource: Budget,
       sessionOrUserId: session,
-      otherRoles: result.scopedRoles,
-      dto: result.props as ResourceShape<Budget>['prototype'],
+      otherRoles: result.scope,
+      dto: result as ResourceShape<Budget>['prototype'],
     });
 
     const securedProps = parseSecuredProperties(
-      result.props,
+      result,
       perms as PermissionsOf<Budget>,
       Budget.SecuredProps
     );
@@ -257,7 +257,7 @@ export class BudgetService {
     }
 
     return {
-      ...result.props,
+      ...result,
       ...securedProps,
       records: records?.items || [],
       canDelete: await this.budgetRepo.checkDeletePermission(id, session),
@@ -279,13 +279,13 @@ export class BudgetService {
 
     const securedProps = await this.authorizationService.secureProperties(
       BudgetRecord,
-      result.props,
+      result,
       session,
-      result.scopedRoles
+      result.scope
     );
 
     return {
-      ...result.props,
+      ...result,
       ...securedProps,
       canDelete: await this.budgetRepo.checkDeletePermission(id, session),
     };

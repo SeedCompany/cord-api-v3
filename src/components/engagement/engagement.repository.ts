@@ -19,7 +19,7 @@ import {
   calculateTotalAndPaginateList,
   createNode,
   createRelationships,
-  matchProps,
+  matchChangesetAndChangedProps,
   matchPropsAndProjectSensAndScopedRoles,
   permissionsOfNode,
   requestingUser,
@@ -81,21 +81,7 @@ export class EngagementRepository extends CommonRepository {
           )
       )
       .apply(matchPropsAndProjectSensAndScopedRoles(session))
-      .apply((q) =>
-        changeset
-          ? q
-              .apply(
-                matchProps({
-                  changeset,
-                  outputVar: 'changedProps',
-                  optional: true,
-                })
-              )
-              .match(node('changeset', 'Changeset', { id: changeset }))
-          : q.subQuery((sub) =>
-              sub.return(['null as changeset', '{} as changedProps'])
-            )
-      )
+      .apply(matchChangesetAndChangedProps(changeset))
       .optionalMatch([
         node('node'),
         relation('out', '', 'ceremony', { active: true }),

@@ -21,6 +21,7 @@ import {
   calculateTotalAndPaginateList,
   createNode,
   createRelationships,
+  matchChangesetAndChangedProps,
   matchProps,
   matchPropsAndProjectSensAndScopedRoles,
   permissionsOfNode,
@@ -67,21 +68,7 @@ export class ProjectRepository extends CommonRepository {
       .match([node('node', 'Project', { id })])
       .with(['node', 'node as project'])
       .apply(matchPropsAndProjectSensAndScopedRoles(userId))
-      .apply((q) =>
-        changeset
-          ? q
-              .apply(
-                matchProps({
-                  changeset,
-                  outputVar: 'changedProps',
-                  optional: true,
-                })
-              )
-              .match(node('changeset', 'Changeset', { id: changeset }))
-          : q.subQuery((sub) =>
-              sub.return(['null as changeset', '{} as changedProps'])
-            )
-      )
+      .apply(matchChangesetAndChangedProps(changeset))
       .optionalMatch([
         node('node'),
         relation('out', '', 'primaryLocation', { active: true }),

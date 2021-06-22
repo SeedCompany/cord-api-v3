@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { stripIndent } from 'common-tags';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
@@ -7,6 +8,7 @@ import {
   NotFoundException,
   ServerException,
   Session,
+  UnsecuredDto,
 } from '../../common';
 import {
   createBaseNode,
@@ -16,12 +18,11 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
+  matchChangesetAndChangedProps,
   matchPropsAndProjectSensAndScopedRoles,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
-import { DbPropsOfDto } from '../../core/database/results';
-import { ScopedRole } from '../authorization';
 import { BudgetRecord, BudgetRecordListInput, CreateBudgetRecord } from './dto';
 
 @Injectable()
@@ -124,24 +125,21 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
         relation('out', '', 'organization', { active: true }),
         node('organization', 'Organization'),
       ])
-      .apply((q) =>
-        changeset
-          ? q.match([
-              node('node'),
-              relation('in', '', 'changeset', { active: true }),
-              node('changesetNode', 'Changeset', { id: changeset }),
-            ])
-          : q
-      )
+      .apply(matchChangesetAndChangedProps(changeset))
       .apply(matchPropsAndProjectSensAndScopedRoles(session))
-      .return([
-        'apoc.map.merge(props, { organization: organization.id }) as props',
-        'scopedRoles',
-      ])
-      .asResult<{
-        props: DbPropsOfDto<BudgetRecord, true>;
-        scopedRoles: ScopedRole[];
-      }>();
+      .return<{ dto: UnsecuredDto<BudgetRecord> }>(
+        stripIndent`
+          apoc.map.mergeList([
+            props,
+            changedProps,
+            {
+              organization: organization.id,
+              scope: scopedRoles,
+              changeset: coalesce(changeset.id)
+            }
+          ]) as dto
+        `
+      );
     const result = await query.first();
     if (!result) {
       throw new NotFoundException(
@@ -150,7 +148,7 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
       );
     }
 
-    return result;
+    return result.dto;
   }
 
   list(input: BudgetRecordListInput, session: Session, changeset?: ID) {

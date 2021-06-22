@@ -6,3 +6,4 @@ export * from './mapping';
 export * from './matching';
 export * from './deletes';
 export * from './match-project-based-props';
+export * from './match-changeset-and-changed-props';

@@ -1,7 +1,14 @@
 import { Injectable } from '@nestjs/common';
+import { stripIndent } from 'common-tags';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { ID, NotFoundException, ServerException, Session } from '../../common';
+import {
+  ID,
+  NotFoundException,
+  ServerException,
+  Session,
+  UnsecuredDto,
+} from '../../common';
 import {
   createBaseNode,
   DtoRepository,
@@ -11,12 +18,11 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
+  matchChangesetAndChangedProps,
   matchPropsAndProjectSensAndScopedRoles,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
-import { DbPropsOfDto } from '../../core/database/results';
-import { ScopedRole } from '../authorization';
 import { Budget, BudgetListInput, BudgetStatus } from './dto';
 
 @Injectable()
@@ -60,7 +66,7 @@ export class BudgetRepository extends DtoRepository(Budget) {
       .run();
   }
 
-  async readOne(id: ID, session: Session) {
+  async readOne(id: ID, session: Session, changeset?: ID) {
     const result = await this.db
       .query()
       .match([
@@ -69,11 +75,20 @@ export class BudgetRepository extends DtoRepository(Budget) {
         node('node', 'Budget', { id }),
       ])
       .apply(matchPropsAndProjectSensAndScopedRoles(session))
-      .return(['props', 'scopedRoles'])
-      .asResult<{
-        props: DbPropsOfDto<Budget, true>;
-        scopedRoles: ScopedRole[];
-      }>()
+      .apply(matchChangesetAndChangedProps(changeset))
+      .return<{ dto: UnsecuredDto<Budget> }>(
+        stripIndent`
+          apoc.map.mergeList([
+            props,
+            changedProps,
+            {
+              scope: scopedRoles,
+              changeset: coalesce(changeset.id)
+            }
+          ]) as dto
+        `
+      )
+      .map((row) => row.dto)
       .first();
     if (!result) {
       throw new NotFoundException('Could not find budget', 'budget.id');
