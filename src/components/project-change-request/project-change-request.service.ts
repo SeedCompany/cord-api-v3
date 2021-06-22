@@ -1,6 +1,7 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import {
   ID,
+  InputException,
   ServerException,
   Session,
   UnauthorizedException,
@@ -17,6 +18,7 @@ import {
 } from '../../core';
 import { runListQuery } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { ProjectService, ProjectStatus } from '../project';
 import {
   CreateProjectChangeRequest,
   ProjectChangeRequest,
@@ -37,6 +39,8 @@ export class ProjectChangeRequestService {
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
     private readonly eventBus: IEventBus,
+    @Inject(forwardRef(() => ProjectService))
+    private readonly projects: ProjectService,
     private readonly repo: ProjectChangeRequestRepository
   ) {}
 
@@ -52,15 +56,13 @@ export class ProjectChangeRequestService {
     input: CreateProjectChangeRequest,
     session: Session
   ): Promise<ProjectChangeRequest> {
-    // TODO
-    // Project status should be active
-    // const project = await this.projectService.readOne(projectId, session);
-    // if (project.status !== ProjectStatus.Active) {
-    //   throw new InputException(
-    //     'Project status should be Active',
-    //     'project.status'
-    //   );
-    // }
+    const project = await this.projects.readOne(input.projectId, session);
+    if (project.status !== ProjectStatus.Active) {
+      throw new InputException(
+        'Only active projects can create change requests'
+      );
+    }
+
     const id = await this.repo.create(input, session);
 
     return await this.readOne(id, session);

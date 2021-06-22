@@ -516,7 +516,7 @@ export class ProjectService {
   }
 
   async listChangeRequests(
-    projectId: ID,
+    project: Project,
     input: ProjectChangeRequestListInput,
     session: Session
   ): Promise<SecuredProjectChangeRequestList> {
@@ -525,7 +525,7 @@ export class ProjectService {
         ...input,
         filter: {
           ...input.filter,
-          projectId,
+          projectId: project.id,
         },
       },
       session
@@ -533,8 +533,8 @@ export class ProjectService {
 
     return {
       ...result,
-      canRead: true, // TODO false if project is not active since that's what's enforced elsewhere
-      canCreate: true, // TODO
+      canRead: true,
+      canCreate: project.status === ProjectStatus.Active,
     };
   }
 

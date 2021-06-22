@@ -119,7 +119,7 @@ export class ProjectResolver {
     })
     input: ProjectChangeRequestListInput
   ): Promise<SecuredProjectChangeRequestList> {
-    return this.projectService.listChangeRequests(project.id, input, session);
+    return this.projectService.listChangeRequests(project, input, session);
   }
 
   @ResolveField(() => SecuredBudget, {

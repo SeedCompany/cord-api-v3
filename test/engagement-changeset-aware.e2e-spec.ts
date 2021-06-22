@@ -5,7 +5,7 @@ import { CalendarDate } from '../src/common';
 import { Powers } from '../src/components/authorization/dto/powers';
 import { EngagementStatus } from '../src/components/engagement';
 import { Language } from '../src/components/language';
-import { Role } from '../src/components/project';
+import { ProjectStep, Role } from '../src/components/project';
 import { User } from '../src/components/user/dto/user.dto';
 import {
   approveProjectChangeRequest,
@@ -86,7 +86,7 @@ const activeProject = async (app: TestApp) => {
   await runAsAdmin(app, async () => {
     for (const next of [
       ...stepsFromEarlyConversationToBeforeActive,
-      // ProjectStep.Active,
+      ProjectStep.Active,
     ]) {
       await changeProjectStep(app, project.id, next);
     }
