@@ -15,7 +15,6 @@ import {
   calculateTotalAndPaginateList,
   matchPropsAndProjectSensAndScopedRoles,
 } from '../../core/database/query';
-import { ProjectStatus } from '../project';
 import {
   CreateProjectChangeRequest,
   ProjectChangeRequest,
@@ -87,18 +86,13 @@ export class ProjectChangeRequestRepository extends DtoRepository(
         node('project', 'Project'),
       ])
       .apply(matchPropsAndProjectSensAndScopedRoles(session))
-      .match([
-        node('project'),
-        relation('out', '', 'status', { active: true }),
-        node('projectStatus', 'Property'),
-      ])
       .return([
         stripIndent`
           apoc.map.mergeList([
             props,
             {
               scope: scopedRoles,
-              canEdit: projectStatus.value = "${ProjectStatus.Active}" and props.status = "${Status.Pending}"
+              canEdit: props.status = "${Status.Pending}"
             }
           ]) as dto`,
       ])
