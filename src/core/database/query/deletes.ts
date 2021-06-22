@@ -69,6 +69,7 @@ export const deleteProperties =
 export const prefixNodeLabelsWithDeleted = (node: string) => (query: Query) =>
   query.subQuery((sub) =>
     sub
+      .with(node) // import node
       .with([
         node,
         // Mpa current labels to have deleted prefix (operation is idempotent).
