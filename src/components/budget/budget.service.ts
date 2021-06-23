@@ -11,7 +11,13 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import { HandleIdLookup, ILogger, Logger, Property } from '../../core';
+import {
+  HandleIdLookup,
+  ILogger,
+  Logger,
+  Property,
+  ResourceResolver,
+} from '../../core';
 import {
   parseSecuredProperties,
   runListQuery,
@@ -21,6 +27,7 @@ import {
   PermissionsOf,
 } from '../authorization/authorization.service';
 import { FileService } from '../file';
+import { ProjectChangeRequest } from '../project-change-request/dto';
 import { BudgetRecordRepository } from './budget-record.repository';
 import { BudgetRepository } from './budget.repository';
 import {
@@ -45,6 +52,7 @@ export class BudgetService {
     private readonly authorizationService: AuthorizationService,
     private readonly budgetRepo: BudgetRepository,
     private readonly budgetRecordsRepo: BudgetRecordRepository,
+    private readonly resources: ResourceResolver,
     @Logger('budget:service') private readonly logger: ILogger
   ) {}
 
@@ -217,9 +225,16 @@ export class BudgetService {
       );
     }
 
+    const changeRequest = changeset
+      ? await this.resources.lookup(ProjectChangeRequest, changeset, session)
+      : undefined;
+
     return {
       ...result,
       ...securedProps,
+      // Show budget status as Pending, to allow budget record changes,
+      // if we are in an editable change request.
+      status: changeRequest?.canEdit ? BudgetStatus.Pending : result.status,
       records: records?.items || [],
       canDelete: await this.budgetRepo.checkDeletePermission(id, session),
     };
