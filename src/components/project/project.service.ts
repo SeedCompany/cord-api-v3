@@ -49,7 +49,6 @@ import {
   PartnershipService,
   SecuredPartnershipList,
 } from '../partnership';
-import { ReportPeriod } from '../periodic-report';
 import {
   CreateProject,
   InternshipProject,
@@ -234,8 +233,6 @@ export class ProjectService {
     const props = parsePropList(result.propList);
     return {
       ...parseBaseNodeProperties(result.node),
-      // @ts-expect-error this could be missing from props for all projects created/updated before this property was added
-      financialReportPeriod: ReportPeriod.Monthly,
       ...props,
       // Sensitivity is calculated based on the highest language sensitivity (for Translation Projects).
       // If project has no language engagements (new Translation projects and all Internship projects),

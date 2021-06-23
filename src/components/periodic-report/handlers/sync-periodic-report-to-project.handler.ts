@@ -31,6 +31,8 @@ export class SyncPeriodicReportsToProjectDateRange
     const project = event.updated;
     const previous = event.previous;
 
+    if (!project.financialReportPeriod) return;
+
     const previousIntervalUnit =
       previous.financialReportPeriod === ReportPeriod.Monthly
         ? 'months'

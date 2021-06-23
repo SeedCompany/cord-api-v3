@@ -77,7 +77,7 @@ export abstract class CreateProject {
   readonly financialReportReceivedAt?: DateTime;
 
   @Field(() => ReportPeriod, { nullable: true })
-  readonly financialReportPeriod?: ReportPeriod = ReportPeriod.Monthly;
+  readonly financialReportPeriod?: ReportPeriod;
 }
 
 @InputType()
