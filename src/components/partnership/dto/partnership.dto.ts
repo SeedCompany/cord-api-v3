@@ -11,6 +11,7 @@ import {
   SecuredProps,
   Sensitivity,
 } from '../../../common';
+import { ScopedRole } from '../../authorization';
 import { ChangesetAware } from '../../changeset/dto';
 import { DefinedFile } from '../../file/dto';
 import { Organization } from '../../organization/dto';
@@ -44,6 +45,8 @@ export class Partnership extends IntersectionType(ChangesetAware, Resource) {
     organization: Organization,
   };
 
+  readonly project: ID;
+
   @Field()
   readonly agreementStatus: SecuredPartnershipAgreementStatus;
 
@@ -67,6 +70,7 @@ export class Partnership extends IntersectionType(ChangesetAware, Resource) {
   readonly agreement: DefinedFile;
 
   readonly partner: Secured<ID>;
+  readonly organization: ID;
 
   @Field()
   readonly types: SecuredPartnerTypes;
@@ -81,4 +85,8 @@ export class Partnership extends IntersectionType(ChangesetAware, Resource) {
     description: "Based on the project's sensitivity",
   })
   readonly sensitivity: Sensitivity;
+
+  // A list of non-global roles the requesting user has available for this object.
+  // This is just a cache, to prevent extra db lookups within the same request.
+  readonly scope: ScopedRole[];
 }

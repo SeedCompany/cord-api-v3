@@ -8,6 +8,7 @@ import {
   NotFoundException,
   ServerException,
   Session,
+  UnsecuredDto,
 } from '../../common';
 import {
   createBaseNode,
@@ -18,12 +19,11 @@ import {
 import {
   calculateTotalAndPaginateList,
   matchChangesetAndChangedProps,
+  matchProps,
   matchPropsAndProjectSensAndScopedRoles,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
-import { DbPropsOfDto } from '../../core/database/results';
-import { ScopedRole } from '../authorization';
 import {
   CreatePartnership,
   Partnership,
@@ -180,38 +180,35 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
         node('node'),
         relation('out', '', 'partner'),
         node('partner', 'Partner'),
+        relation('out', '', 'organization', { active: true }),
+        node('org', 'Organization'),
       ])
       .apply(matchPropsAndProjectSensAndScopedRoles(session))
       .apply(matchChangesetAndChangedProps(changeset))
-      .subQuery((sub) =>
-        sub.with(['props, changedProps']).return(
-          stripIndent`
-            apoc.map.mergeList([
-              props,
-              changedProps
-            ]) as mergedProps
-          `
-        )
-      )
-      .return([
-        'mergedProps as props',
-        'scopedRoles',
-        'project.id as projectId',
-        'partner.id as partnerId',
-      ])
-      .asResult<{
-        props: DbPropsOfDto<Partnership, true>;
-        projectId: ID;
-        partnerId: ID;
-        scopedRoles: ScopedRole[];
-      }>();
+      .apply(matchProps({ nodeName: 'project', outputVar: 'projectProps' }))
+      .return<{ dto: UnsecuredDto<Partnership> }>(
+        stripIndent`
+          apoc.map.mergeList([
+            props,
+            changedProps,
+            {
+              mouStart: coalesce(changedProps.mouStartOverride, props.mouStartOverride, projectProps.mouStart),
+              mouEnd: coalesce(changedProps.mouEndOverride, props.mouEndOverride, projectProps.mouEnd),
+              project: project.id,
+              partner: partner.id,
+              organization: org.id,
+              changeset: changeset.id,
+              scope: scopedRoles
+            }
+          ]) as dto`
+      );
 
     const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find partnership');
     }
 
-    return result;
+    return result.dto;
   }
 
   list(

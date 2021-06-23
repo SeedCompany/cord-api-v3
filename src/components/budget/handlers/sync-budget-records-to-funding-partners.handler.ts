@@ -160,9 +160,7 @@ export class SyncBudgetRecordsToFundingPartners
     event: SubscribedEvent,
     changeset?: ID
   ) {
-    const organizationId = await this.getOrganizationIdByPartnership(
-      partnership
-    );
+    const organizationId = partnership.organization;
 
     const previous = budget.records
       .filter((record) => recordOrganization(record) === organizationId)
@@ -240,26 +238,6 @@ export class SyncBudgetRecordsToFundingPartners
         this.budgets.deleteRecord(record.id, session, changeset)
       )
     );
-  }
-
-  private async getOrganizationIdByPartnership(partnership: Partnership) {
-    const partnerId = readSecured(partnership.partner, `partnership's partner`);
-
-    const result = await this.db
-      .query()
-      .match([
-        node('partner', 'Partner', { id: partnerId }),
-        relation('out', '', 'organization', { active: true }),
-        node('organization', 'Organization'),
-      ])
-      .return('organization.id as id')
-      .asResult<{ id: ID }>()
-      .first();
-    if (!result) {
-      throw new NotFoundException("Could not find partner's organization");
-    }
-
-    return result.id;
   }
 
   private async getProjectIdAndSensitivityFromPartnership({ id }: Partnership) {

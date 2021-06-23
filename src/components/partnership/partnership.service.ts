@@ -7,6 +7,7 @@ import {
   ServerException,
   Session,
   UnauthorizedException,
+  UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, IEventBus, ILogger, Logger } from '../../core';
 import { runListQuery } from '../../core/database/results';
@@ -124,58 +125,46 @@ export class PartnershipService {
     session: Session,
     changeset?: ID
   ): Promise<Partnership> {
+    const dto = await this.readOneUnsecured(id, session, changeset);
+    return await this.secure(dto, session);
+  }
+
+  async readOneUnsecured(
+    id: ID,
+    session: Session,
+    changeset?: ID
+  ): Promise<UnsecuredDto<Partnership>> {
     this.logger.debug('readOne', { id, userId: session.userId });
+    return await this.repo.readOne(id, session, changeset);
+  }
 
-    const result = await this.repo.readOne(id, session, changeset);
-
-    const project = await this.projectService.readOne(
-      result.projectId,
-      session,
-      changeset
-    );
-
+  async secure(
+    dto: UnsecuredDto<Partnership>,
+    session: Session
+  ): Promise<Partnership> {
     const securedProps = await this.authorizationService.secureProperties(
       Partnership,
-      result.props,
+      dto,
       session,
-      result.scopedRoles
+      dto.scope
     );
 
-    const canReadMouStart =
-      project.mouStart.canRead && securedProps.mouStartOverride.canRead;
-    const canReadMouEnd =
-      project.mouEnd.canRead && securedProps.mouEndOverride.canRead;
-
-    const mouStart = canReadMouStart
-      ? securedProps.mouStartOverride.value ?? project.mouStart.value
-      : null;
-    const mouEnd = canReadMouEnd
-      ? securedProps.mouEndOverride.value ?? project.mouEnd.value
-      : null;
-
     return {
-      ...result.props,
+      ...dto,
       ...securedProps,
       mouStart: {
-        value: mouStart,
-        canRead: canReadMouStart,
+        ...securedProps.mouStart,
         canEdit: false, // edit the project mou or edit the partnership mou override
       },
       mouEnd: {
-        value: mouEnd,
-        canRead: canReadMouEnd,
+        ...securedProps.mouEnd,
         canEdit: false, // edit the project mou or edit the partnership mou override
       },
       types: {
         ...securedProps.types,
-        value: securedProps.types.value || [],
+        value: securedProps.types.value ?? [],
       },
-      partner: {
-        ...securedProps.partner,
-        value: result.partnerId,
-      },
-      changeset,
-      canDelete: await this.repo.checkDeletePermission(id, session),
+      canDelete: await this.repo.checkDeletePermission(dto.id, session),
     };
   }
 
