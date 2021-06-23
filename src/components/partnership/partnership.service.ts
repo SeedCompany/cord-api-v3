@@ -174,6 +174,7 @@ export class PartnershipService {
         ...securedProps.partner,
         value: result.partnerId,
       },
+      changeset,
       canDelete: await this.repo.checkDeletePermission(id, session),
     };
   }

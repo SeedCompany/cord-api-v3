@@ -2,6 +2,7 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
   ID,
+  IntersectionType,
   Resource,
   Secured,
   SecuredBoolean,
@@ -10,6 +11,7 @@ import {
   SecuredProps,
   Sensitivity,
 } from '../../../common';
+import { ChangesetAware } from '../../changeset/dto';
 import { DefinedFile } from '../../file/dto';
 import { Organization } from '../../organization/dto';
 import { SecuredPartnerTypes } from '../../partner/dto/partner-type.enum';
@@ -32,9 +34,9 @@ export abstract class SecuredFinancialReportingType extends SecuredEnum(
 ) {}
 
 @ObjectType({
-  implements: [Resource],
+  implements: [Resource, ChangesetAware],
 })
-export class Partnership extends Resource {
+export class Partnership extends IntersectionType(ChangesetAware, Resource) {
   static readonly Props = keysOf<Partnership>();
   static readonly SecuredProps = keysOf<SecuredProps<Partnership>>();
   static readonly Relations = {
