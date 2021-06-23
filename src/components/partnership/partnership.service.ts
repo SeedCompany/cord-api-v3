@@ -224,11 +224,7 @@ export class PartnershipService {
       await this.repo.removePrimaryFromOtherPartnerships(input.id);
     }
 
-    await this.repo.updatePartnershipProperties(
-      object,
-      simpleChanges,
-      changeset
-    );
+    await this.repo.updateProperties(object, simpleChanges, changeset);
     await this.files.updateDefinedFile(
       object.mou,
       'partnership.mou',

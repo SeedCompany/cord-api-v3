@@ -15,7 +15,6 @@ import {
   matchRequestingUser,
   Property,
 } from '../../core';
-import { DbChanges } from '../../core/database/changes';
 import {
   calculateTotalAndPaginateList,
   matchChangesetAndChangedProps,
@@ -213,19 +212,6 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
     }
 
     return result;
-  }
-
-  async updatePartnershipProperties(
-    object: Partnership,
-    changes: DbChanges<Partnership>,
-    changeset?: ID
-  ): Promise<void> {
-    await this.db.updateProperties({
-      type: Partnership,
-      object,
-      changes,
-      changeset,
-    });
   }
 
   list(
