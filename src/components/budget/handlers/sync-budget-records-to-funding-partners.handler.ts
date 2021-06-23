@@ -1,5 +1,6 @@
 import { node, relation } from 'cypher-query-builder';
 import { difference } from 'lodash';
+import { UnreachableCaseError } from 'ts-essentials';
 import {
   DuplicateException,
   fiscalYears,
@@ -119,7 +120,16 @@ export class SyncBudgetRecordsToFundingPartners
     if (event instanceof ProjectUpdatedEvent) {
       return event.updated.changeset;
     }
-    return;
+    if (event instanceof PartnershipCreatedEvent) {
+      return event.partnership.changeset;
+    }
+    if (event instanceof PartnershipUpdatedEvent) {
+      return event.updated.changeset;
+    }
+    if (event instanceof PartnershipWillDeleteEvent) {
+      return event.partnership.changeset;
+    }
+    throw new UnreachableCaseError(event);
   }
 
   private async determinePartnerships(event: SubscribedEvent, changeset?: ID) {
