@@ -45,7 +45,8 @@ export class PartnershipService {
 
   async create(
     input: CreatePartnership,
-    session: Session
+    session: Session,
+    changeset?: ID
   ): Promise<Partnership> {
     const { projectId, partnerId } = input;
 
@@ -67,7 +68,8 @@ export class PartnershipService {
           ...input,
           primary,
         },
-        session
+        session,
+        changeset
       );
 
       await this.files.createDefinedFile(
@@ -100,7 +102,7 @@ export class PartnershipService {
         await this.repo.removePrimaryFromOtherPartnerships(id);
       }
 
-      const partnership = await this.readOne(id, session);
+      const partnership = await this.readOne(id, session, changeset);
 
       await this.eventBus.publish(
         new PartnershipCreatedEvent(partnership, session)
@@ -124,7 +126,7 @@ export class PartnershipService {
   ): Promise<Partnership> {
     this.logger.debug('readOne', { id, userId: session.userId });
 
-    const result = await this.repo.readOne(id, session);
+    const result = await this.repo.readOne(id, session, changeset);
 
     const project = await this.projectService.readOne(
       result.projectId,
@@ -176,9 +178,9 @@ export class PartnershipService {
     };
   }
 
-  async update(input: UpdatePartnership, session: Session) {
+  async update(input: UpdatePartnership, session: Session, changeset?: ID) {
     // mou start and end are now computed fields and do not get updated directly
-    const object = await this.readOne(input.id, session);
+    const object = await this.readOne(input.id, session, changeset);
 
     const partner = await this.partnerService.readOne(
       object.partner.value!,
@@ -222,7 +224,11 @@ export class PartnershipService {
       await this.repo.removePrimaryFromOtherPartnerships(input.id);
     }
 
-    await this.repo.updateProperties(object, simpleChanges);
+    await this.repo.updatePartnershipProperties(
+      object,
+      simpleChanges,
+      changeset
+    );
     await this.files.updateDefinedFile(
       object.mou,
       'partnership.mou',
@@ -236,7 +242,7 @@ export class PartnershipService {
       session
     );
 
-    const partnership = await this.readOne(input.id, session);
+    const partnership = await this.readOne(input.id, session, changeset);
     const event = new PartnershipUpdatedEvent(
       partnership,
       object,
@@ -296,7 +302,7 @@ export class PartnershipService {
       ...partialInput,
     };
 
-    const query = this.repo.list(input, session);
+    const query = this.repo.list(input, session, changeset);
 
     return await runListQuery(query, input, (id) =>
       this.readOne(id, session, changeset)

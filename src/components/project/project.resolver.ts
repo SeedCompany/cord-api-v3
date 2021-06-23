@@ -175,7 +175,7 @@ export class ProjectResolver {
   @ResolveField(() => SecuredPartnershipList)
   async partnerships(
     @AnonSession() session: Session,
-    @Parent() { id }: Project,
+    @Parent() { id, changeset }: Project,
     @Args({
       name: 'input',
       type: () => PartnershipListInput,
@@ -183,7 +183,7 @@ export class ProjectResolver {
     })
     input: PartnershipListInput
   ): Promise<SecuredPartnershipList> {
-    return this.projectService.listPartnerships(id, input, session);
+    return this.projectService.listPartnerships(id, input, session, changeset);
   }
 
   @ResolveField(() => SecuredDirectory, {

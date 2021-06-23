@@ -7,6 +7,7 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
+import { ChangesetIds } from '../changeset/dto';
 import { FileService, SecuredFile } from '../file';
 import { SecuredPartner } from '../partner/dto';
 import { PartnerService } from '../partner/partner.service';
@@ -34,9 +35,9 @@ export class PartnershipResolver {
   })
   async createPartnership(
     @LoggedInSession() session: Session,
-    @Args('input') { partnership: input }: CreatePartnershipInput
+    @Args('input') { partnership: input, changeset }: CreatePartnershipInput
   ): Promise<CreatePartnershipOutput> {
-    const partnership = await this.service.create(input, session);
+    const partnership = await this.service.create(input, session, changeset);
     return { partnership };
   }
 
@@ -45,9 +46,9 @@ export class PartnershipResolver {
   })
   async partnership(
     @AnonSession() session: Session,
-    @IdArg() id: ID
+    @Args() { id, changeset }: ChangesetIds
   ): Promise<Partnership> {
-    return await this.service.readOne(id, session);
+    return await this.service.readOne(id, session, changeset);
   }
 
   @ResolveField(() => SecuredFile, {
@@ -104,9 +105,9 @@ export class PartnershipResolver {
   })
   async updatePartnership(
     @LoggedInSession() session: Session,
-    @Args('input') { partnership: input }: UpdatePartnershipInput
+    @Args('input') { partnership: input, changeset }: UpdatePartnershipInput
   ): Promise<UpdatePartnershipOutput> {
-    const partnership = await this.service.update(input, session);
+    const partnership = await this.service.update(input, session, changeset);
     return { partnership };
   }
 

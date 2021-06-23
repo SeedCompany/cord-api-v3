@@ -490,7 +490,8 @@ export class ProjectService {
   async listPartnerships(
     projectId: ID,
     input: PartnershipListInput,
-    session: Session
+    session: Session,
+    changeset?: ID
   ): Promise<SecuredPartnershipList> {
     const result = await this.partnerships.list(
       {
@@ -500,7 +501,8 @@ export class ProjectService {
           projectId: projectId,
         },
       },
-      session
+      session,
+      changeset
     );
 
     const permissions = await this.repo.permissionsForListProp(
