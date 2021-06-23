@@ -362,6 +362,7 @@ export const Intern = new DbRole({
         { propertyName: 'type', permission: { read, }, },
         { propertyName: 'start', permission: { read, }, },
         { propertyName: 'end', permission: { read, }, },
+        { propertyName: 'receivedDate', permission: { read, }, },
         { propertyName: 'reportFile', permission: { read, }, },
       ],
       canDelete: true,
