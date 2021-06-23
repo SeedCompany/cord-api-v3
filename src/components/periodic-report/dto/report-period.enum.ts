@@ -11,4 +11,6 @@ registerEnumType(ReportPeriod, { name: 'PeriodType' });
 @ObjectType({
   description: SecuredProperty.descriptionFor('report period'),
 })
-export abstract class SecuredReportPeriod extends SecuredEnum(ReportPeriod) {}
+export abstract class SecuredReportPeriod extends SecuredEnum(ReportPeriod, {
+  nullable: true,
+}) {}
