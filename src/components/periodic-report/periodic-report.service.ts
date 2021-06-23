@@ -17,7 +17,7 @@ import {
 import { Variable } from '../../core/database/query';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { CreateDefinedFileVersionInput, FileService } from '../file';
+import { FileService } from '../file';
 import {
   CreatePeriodicReport,
   FinancialReport,
@@ -27,7 +27,9 @@ import {
   PeriodicReportListInput,
   ProgressReport,
   ReportType,
+  resolveReportType,
   SecuredPeriodicReportList,
+  UpdatePeriodicReportInput,
 } from './dto';
 import { PeriodicReportUploadedEvent } from './events';
 import { PeriodicReportRepository } from './periodic-report.repository';
@@ -72,25 +74,36 @@ export class PeriodicReportService {
     }
   }
 
-  async uploadFile(
-    reportId: ID,
-    file: CreateDefinedFileVersionInput,
-    session: Session
-  ) {
-    const report = await this.readOne(reportId, session);
-
-    await this.files.updateDefinedFile(
-      report.reportFile,
-      'file',
-      file,
-      session
-    );
-    const newVersion = await this.files.getFileVersion(file.uploadId, session);
-    await this.eventBus.publish(
-      new PeriodicReportUploadedEvent(report, newVersion, session)
+  async update(input: UpdatePeriodicReportInput, session: Session) {
+    const current = await this.readOne(input.id, session);
+    const changes = this.repo.getActualChanges(current, input);
+    await this.authorizationService.verifyCanEditChanges(
+      resolveReportType(current),
+      current,
+      changes
     );
 
-    return report;
+    const { reportFile, ...simpleChanges } = changes;
+
+    const updated = await this.repo.updateProperties(current, simpleChanges);
+
+    if (reportFile) {
+      await this.files.updateDefinedFile(
+        current.reportFile,
+        'file',
+        input.reportFile,
+        session
+      );
+      const newVersion = await this.files.getFileVersion(
+        reportFile.uploadId,
+        session
+      );
+      await this.eventBus.publish(
+        new PeriodicReportUploadedEvent(updated, newVersion, session)
+      );
+    }
+
+    return updated;
   }
 
   @HandleIdLookup([FinancialReport, NarrativeReport, ProgressReport])

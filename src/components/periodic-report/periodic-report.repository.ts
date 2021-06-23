@@ -47,6 +47,7 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
         ...property('type', input.type, 'newPeriodicReport'),
         ...property('start', input.start, 'newPeriodicReport'),
         ...property('end', input.end, 'newPeriodicReport'),
+        ...property('receivedDate', null, 'newPeriodicReport'),
         ...property('reportFile', reportFileId, 'newPeriodicReport'),
       ])
       .with('newPeriodicReport')

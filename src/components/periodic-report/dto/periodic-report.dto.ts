@@ -4,6 +4,7 @@ import { MergeExclusive } from 'type-fest';
 import {
   CalendarDate,
   Resource,
+  SecuredDateNullable,
   SecuredProperty,
   SecuredProps,
   ServerException,
@@ -45,6 +46,9 @@ class PeriodicReport extends Resource {
 
   @Field()
   readonly end: CalendarDate;
+
+  @Field()
+  readonly receivedDate: SecuredDateNullable;
 
   readonly reportFile: DefinedFile;
 }
