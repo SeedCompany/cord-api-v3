@@ -13,6 +13,6 @@ import * as handlers from './handlers';
     CeremonyRepository,
     ...Object.values(handlers),
   ],
-  exports: [CeremonyService, CeremonyRepository],
+  exports: [CeremonyService],
 })
 export class CeremonyModule {}

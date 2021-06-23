@@ -36,7 +36,7 @@ export async function readOneBudgetRecordOrganization(
   };
 }
 
-export async function readOneBudgetRecord(
+export async function readBudgetRecords(
   app: TestApp,
   id: string
 ): Promise<BudgetRecord[]> {

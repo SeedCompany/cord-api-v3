@@ -12,6 +12,6 @@ import { LiteracyMaterialService } from './literacy-material.service';
     LiteracyMaterialService,
     LiteracyMaterialRepository,
   ],
-  exports: [LiteracyMaterialService, LiteracyMaterialRepository],
+  exports: [LiteracyMaterialService],
 })
 export class LiteracyMaterialModule {}

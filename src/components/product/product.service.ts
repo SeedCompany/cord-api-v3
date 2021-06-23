@@ -14,8 +14,8 @@ import {
   UnauthorizedException,
 } from '../../common';
 import {
-  ConfigService,
   createBaseNode,
+  HandleIdLookup,
   ILogger,
   Logger,
   matchRequestingUser,
@@ -51,7 +51,6 @@ import { ProductRepository } from './product.repository';
 @Injectable()
 export class ProductService {
   constructor(
-    private readonly config: ConfigService,
     private readonly film: FilmService,
     private readonly story: StoryService,
     private readonly song: SongService,
@@ -206,7 +205,7 @@ export class ProductService {
       }
     }
 
-    const result = await query.return('node.id as id').first();
+    const result = await query.return<{ id: ID }>('node.id as id').first();
 
     if (!result) {
       throw new ServerException('failed to create default product');
@@ -222,6 +221,7 @@ export class ProductService {
     return await this.readOne(result.id, session);
   }
 
+  @HandleIdLookup([DirectScriptureProduct, DerivativeScriptureProduct])
   async readOne(id: ID, session: Session): Promise<AnyProduct> {
     const result = await this.repo.readOne(id, session);
 

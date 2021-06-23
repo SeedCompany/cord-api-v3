@@ -10,6 +10,6 @@ import { AuthorizationResolver } from './authorization.resolver';
     AuthorizationService,
     AuthorizationRepository,
   ],
-  exports: [AuthorizationService, AuthorizationRepository],
+  exports: [AuthorizationService],
 })
 export class AuthorizationModule {}

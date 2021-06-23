@@ -8,6 +8,6 @@ import { SongService } from './song.service';
 @Module({
   imports: [forwardRef(() => AuthorizationModule), ScriptureModule],
   providers: [SongResolver, SongService, SongRepository],
-  exports: [SongService, SongRepository],
+  exports: [SongService],
 })
 export class SongModule {}

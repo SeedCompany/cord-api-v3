@@ -7,7 +7,7 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import { ILogger, Logger, OnIndex } from '../../core';
+import { HandleIdLookup, ILogger, Logger, OnIndex } from '../../core';
 import {
   parseBaseNodeProperties,
   runListQuery,
@@ -94,6 +94,7 @@ export class LiteracyMaterialService {
     }
   }
 
+  @HandleIdLookup(LiteracyMaterial)
   async readOne(id: ID, session: Session): Promise<LiteracyMaterial> {
     this.logger.debug(`Read literacyMaterial`, {
       id,

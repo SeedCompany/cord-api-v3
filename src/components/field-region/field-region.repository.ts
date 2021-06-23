@@ -71,7 +71,7 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
         relation('out', '', 'zone', { active: true, createdAt }),
         node('fieldZone'),
       ])
-      .return('node.id as id');
+      .return<{ id: ID }>('node.id as id');
 
     return await query.first();
   }

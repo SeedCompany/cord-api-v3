@@ -2,21 +2,24 @@ import { Injectable } from '@nestjs/common';
 import { Node, node, Relation, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
-  CalendarDate,
   ID,
   Sensitivity,
+  ServerException,
   Session,
   UnsecuredDto,
 } from '../../common';
 import {
   CommonRepository,
-  matchRequestingUser,
+  ConfigService,
+  DatabaseService,
   matchSession,
 } from '../../core';
 import { DbChanges, getChanges } from '../../core/database/changes';
 import {
   calculateTotalAndPaginateList,
   collect,
+  createNode,
+  createRelationships,
   matchPropList,
   permissionsOfNode,
   requestingUser,
@@ -28,10 +31,12 @@ import {
 } from '../../core/database/results';
 import { Role } from '../authorization';
 import {
+  CreateProject,
   InternshipProject,
   IProject,
   Project,
   ProjectListInput,
+  ProjectStep,
   ProjectType,
   stepToStatus,
   TranslationProject,
@@ -41,20 +46,21 @@ import { projectListFilter } from './query.helpers';
 
 @Injectable()
 export class ProjectRepository extends CommonRepository {
-  createProject(session: Session) {
-    return this.db.query().apply(matchRequestingUser(session));
+  constructor(db: DatabaseService, private readonly config: ConfigService) {
+    super(db);
   }
 
   async getRoles(session: Session) {
-    return await this.db
+    const result = await this.db
       .query()
       .match([
         node('user', 'User', { id: session.userId }),
         relation('out', '', 'roles', { active: true }),
         node('roles', 'Property'),
       ])
-      .raw('RETURN roles.value as roles')
-      .first();
+      .return<{ roles: Role }>('roles.value as roles')
+      .run();
+    return result.map((row) => row.roles);
   }
 
   async readOneUnsecured(id: ID, userId: ID) {
@@ -120,7 +126,7 @@ export class ProjectRepository extends CommonRepository {
         'collect(distinct sensitivity.value) as languageSensitivityList',
       ])
       .asResult<{
-        node: Node<BaseNode & { type: ProjectType }>;
+        node: BaseNode & Node<{ type: ProjectType }>;
         propList: PropListDbResult<DbPropsOfDto<Project>>;
         pinnedRel?: Relation;
         primaryLocationId: ID;
@@ -142,6 +148,62 @@ export class ProjectRepository extends CommonRepository {
       ...input,
       ...(input.step ? { status: stepToStatus(input.step) } : {}),
     });
+  }
+
+  async create(input: CreateProject) {
+    const step = input.step ?? ProjectStep.EarlyConversations;
+    const now = DateTime.local();
+    const {
+      primaryLocationId,
+      fieldRegionId,
+      marketingLocationId,
+      otherLocationIds,
+      type,
+      ...initialProps
+    } = {
+      ...input,
+      sensitivity: input.sensitivity ?? Sensitivity.High,
+      mouStart: input.mouStart,
+      mouEnd: input.mouEnd,
+      initialMouEnd: undefined,
+      stepChangedAt: now,
+      estimatedSubmission: input.estimatedSubmission,
+      departmentId: null,
+      tags: input.tags,
+      financialReportReceivedAt: input.financialReportReceivedAt,
+      financialReportPeriod: input.financialReportPeriod,
+      step,
+      status: stepToStatus(step),
+      modifiedAt: now,
+      canDelete: true,
+    };
+
+    const result = await this.db
+      .query()
+      .apply(
+        await createNode(
+          type === 'Translation' ? TranslationProject : InternshipProject,
+          {
+            initialProps,
+            baseNodeProps: { type },
+          }
+        )
+      )
+      .apply(
+        createRelationships(IProject, 'out', {
+          fieldRegion: ['FieldRegion', fieldRegionId],
+          primaryLocation: ['Location', primaryLocationId],
+          otherLocations: ['Location', otherLocationIds],
+          marketingLocation: ['Location', marketingLocationId],
+          owningOrganization: ['Organization', this.config.defaultOrg.id],
+        })
+      )
+      .return<{ id: ID }>('node.id as id')
+      .first();
+    if (!result) {
+      throw new ServerException('Failed to create project');
+    }
+    return result.id;
   }
 
   async updateProperties(
@@ -270,8 +332,8 @@ export class ProjectRepository extends CommonRepository {
       );
   }
 
-  async getEngagementPermission(session: Session, projectId: ID) {
-    return await this.db
+  async permissionsForListProp(prop: string, id: ID, session: Session) {
+    const result = await this.db
       .query()
       .match([requestingUser(session)])
       .match([
@@ -280,12 +342,12 @@ export class ProjectRepository extends CommonRepository {
           relation('in', 'memberOfReadSecurityGroup', 'member'),
           node('readSecurityGroup', 'SecurityGroup'),
           relation('out', 'sgReadPerms', 'permission'),
-          node('canReadEngagement', 'Permission', {
-            property: 'engagement',
+          node('canRead', 'Permission', {
+            property: prop,
             read: true,
           }),
           relation('out', 'readPermsOfBaseNode', 'baseNode'),
-          node('project', 'Project', { id: projectId }),
+          node('project', 'Project', { id: id }),
         ],
       ])
       .match([
@@ -294,121 +356,18 @@ export class ProjectRepository extends CommonRepository {
           relation('in', 'memberOfEditSecurityGroup', 'member'),
           node('editSecurityGroup', 'SecurityGroup'),
           relation('out', 'sgEditPerms', 'permission'),
-          node('canEditEngagement', 'Permission', {
-            property: 'engagement',
+          node('canEdit', 'Permission', {
+            property: prop,
             edit: true,
           }),
           relation('out', 'editPermsOfBaseNode', 'baseNode'),
           node('project'),
         ],
       ])
-      .return({
-        canReadEngagement: [
-          {
-            read: 'canReadEngagementRead',
-          },
-        ],
-        canEditEngagement: [
-          {
-            edit: 'canReadEngagementCreate',
-          },
-        ],
-      })
+      .return(['canRead.read as canRead', 'canEdit.edit as canCreate'])
+      .asResult<{ canRead: boolean; canCreate: boolean }>()
       .first();
-  }
-
-  async getTeamMemberPermission(session: Session, projectId: ID) {
-    return await this.db
-      .query()
-      .match([requestingUser(session)])
-      .match([
-        [
-          node('requestingUser'),
-          relation('in', 'memberOfReadSecurityGroup', 'member'),
-          node('readSecurityGroup', 'SecurityGroup'),
-          relation('out', 'sgReadPerms', 'permission'),
-          node('canReadTeamMember', 'Permission', {
-            property: 'member',
-            read: true,
-          }),
-          relation('out', 'readPermsOfBaseNode', 'baseNode'),
-          node('project', 'Project', { id: projectId }),
-        ],
-      ])
-      .match([
-        [
-          node('requestingUser'),
-          relation('in', 'memberOfEditSecurityGroup', 'member'),
-          node('editSecurityGroup', 'SecurityGroup'),
-          relation('out', 'sgEditPerms', 'permission'),
-          node('canEditTeamMember', 'Permission', {
-            property: 'member',
-            edit: true,
-          }),
-          relation('out', 'editPermsOfBaseNode', 'baseNode'),
-          node('project'),
-        ],
-      ])
-      .return({
-        canReadTeamMember: [
-          {
-            read: 'canReadTeamMemberRead',
-          },
-        ],
-        canEditTeamMember: [
-          {
-            edit: 'canReadTeamMemberCreate',
-          },
-        ],
-      })
-      .first();
-  }
-
-  async getPartnershipPermission(session: Session, projectId: ID) {
-    return await this.db
-      .query()
-      .match([requestingUser(session)])
-      .match([
-        [
-          node('requestingUser'),
-          relation('in', 'memberOfReadSecurityGroup', 'member'),
-          node('readSecurityGroup', 'SecurityGroup'),
-          relation('out', 'sgReadPerms', 'permission'),
-          node('canReadPartnership', 'Permission', {
-            property: 'partnership',
-            read: true,
-          }),
-          relation('out', 'readPermsOfBaseNode', 'baseNode'),
-          node('project', 'Project', { id: projectId }),
-        ],
-      ])
-      .match([
-        [
-          node('requestingUser'),
-          relation('in', 'memberOfEditSecurityGroup', 'member'),
-          node('editSecurityGroup', 'SecurityGroup'),
-          relation('out', 'sgEditPerms', 'permission'),
-          node('canEditPartnership', 'Permission', {
-            property: 'partnership',
-            edit: true,
-          }),
-          relation('out', 'editPermsOfBaseNode', 'baseNode'),
-          node('project'),
-        ],
-      ])
-      .return({
-        canReadPartnership: [
-          {
-            read: 'canReadPartnershipRead',
-          },
-        ],
-        canEditPartnership: [
-          {
-            edit: 'canReadPartnershipCreate',
-          },
-        ],
-      })
-      .first();
+    return result ?? { canRead: false, canCreate: false };
   }
 
   async getMembershipRoles(projectId: ID | Project, session: Session) {
@@ -444,36 +403,10 @@ export class ProjectRepository extends CommonRepository {
           node('directory', 'BaseNode:Directory'),
         ],
       ])
-      .return({
+      .return<{ id: ID }>({
         directory: [{ id: 'id' }],
       })
       .first();
-  }
-
-  async listProjectsWithDateRange() {
-    return await this.db
-      .query()
-      .match(node('project', 'Project'))
-      .match([
-        node('project'),
-        relation('out', '', 'mouStart', { active: true }),
-        node('mouStart', 'Property'),
-      ])
-      .match([
-        node('project'),
-        relation('out', '', 'mouEnd', { active: true }),
-        node('mouEnd', 'Property'),
-      ])
-      .raw('WHERE mouStart.value IS NOT NULL AND mouEnd.value IS NOT NULL')
-      .return(
-        'project.id as projectId, mouStart.value as mouStart, mouEnd.value as mouEnd'
-      )
-      .asResult<{
-        projectId: ID;
-        mouStart: CalendarDate;
-        mouEnd: CalendarDate;
-      }>()
-      .run();
   }
 
   async validateOtherResourceId(id: string, label: string) {

@@ -8,7 +8,7 @@ import {
   relation,
 } from 'cypher-query-builder';
 import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
-import { cloneDeep, last, Many, startCase, upperFirst } from 'lodash';
+import { cloneDeep, last, Many, startCase, uniq, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { Driver, Session as Neo4jSession } from 'neo4j-driver';
 import { assert } from 'ts-essentials';
@@ -30,7 +30,6 @@ import {
 } from '../../common';
 import { ILogger, Logger, ServiceUnavailableError, UniquenessError } from '..';
 import { AbortError, retry, RetryOptions } from '../../common/retry';
-import { ConfigService } from '../config/config.service';
 import { DbChanges } from './changes';
 import { deleteBaseNode } from './query';
 import { determineSortValue } from './query.helpers';
@@ -50,7 +49,7 @@ export const property = (
       active: true,
       createdAt: DateTime.local(),
     }),
-    node(propVar, ['Property', ...many(extraPropLabel ?? [])], {
+    node(propVar, uniq(['Property', ...many(extraPropLabel ?? [])]), {
       value,
     }),
   ],
@@ -93,7 +92,6 @@ export interface ServerInfo {
 export class DatabaseService {
   constructor(
     private readonly db: Connection,
-    private readonly config: ConfigService,
     @Logger('database:service') private readonly logger: ILogger
   ) {}
 
@@ -338,6 +336,9 @@ export class DatabaseService {
     }
   }
 
+  /**
+   * @deprecated Construct list query manually and use our helper methods for pagination
+   */
   async list<TObject extends Resource>({
     session,
     props,
@@ -373,7 +374,7 @@ export class DatabaseService {
     const idFilter = input.filter.id ? { id: input.filter.id } : {};
     const userIdFilter = input.filter.userId ? { id: input.filter.userId } : {};
 
-    const query = this.db.query().match([
+    const query: Query<any> = this.db.query().match([
       matchSession(session, {
         withAclRead: aclReadPropName,
       }),
@@ -449,11 +450,11 @@ export class DatabaseService {
     }
 
     // Clone the query here, before we apply limit/offsets, so that we can get an accurate aggregate of the total filtered result set
-    const countQuery = cloneDeep(query);
-    countQuery.return('count(n) as total');
+    const countQuery =
+      cloneDeep(query).return<{ total: number }>('count(n) as total');
 
     query
-      .returnDistinct([
+      .returnDistinct<any>([
         // return the ACL fields
         {
           requestingUser: [
@@ -560,28 +561,6 @@ export class DatabaseService {
       .apply(deleteBaseNode)
       .return('*');
     await query.run();
-  }
-
-  async addLabelsToPropNodes(
-    baseNodeId: ID,
-    property: string,
-    lables: string[]
-  ): Promise<void> {
-    const addLabel = this.db
-      .query()
-      .match([node('baseNode', { active: true, id: baseNodeId })])
-      .match([
-        node('baseNode'),
-        relation('out', 'rel', property, { active: true }),
-        node('prop', 'Property', { active: true }),
-      ])
-      .set({
-        labels: {
-          prop: lables,
-        },
-      })
-      .return('baseNode');
-    await addLabel.run();
   }
 
   assertPatternsIncludeIdentifier(

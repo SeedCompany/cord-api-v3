@@ -13,6 +13,6 @@ import { LocationService } from './location.service';
     FieldRegionModule,
   ],
   providers: [LocationResolver, LocationService, LocationRepository],
-  exports: [LocationService, LocationRepository],
+  exports: [LocationService],
 })
 export class LocationModule {}

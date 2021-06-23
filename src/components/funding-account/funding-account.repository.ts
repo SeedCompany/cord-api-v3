@@ -52,7 +52,7 @@ export class FundingAccountRepository extends DtoRepository(FundingAccount) {
       .query()
       .apply(matchRequestingUser(session))
       .apply(createBaseNode(await generateId(), 'FundingAccount', secureProps))
-      .return('node.id as id');
+      .return<{ id: ID }>('node.id as id');
 
     return await query.first();
   }

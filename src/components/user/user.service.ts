@@ -3,19 +3,18 @@ import { compact, difference } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
-  generateId,
   ID,
   isIdLike,
   mapFromList,
   NotFoundException,
   SecuredList,
-  SecuredResource,
+  SecuredProps,
   ServerException,
   Session,
+  UnsecuredDto,
 } from '../../common';
 import {
-  ConfigService,
-  DatabaseService,
+  HandleIdLookup,
   ILogger,
   Logger,
   OnIndex,
@@ -23,16 +22,9 @@ import {
   Transactional,
   UniquenessError,
 } from '../../core';
-import {
-  parseBaseNodeProperties,
-  parseSecuredProperties,
-  runListQuery,
-} from '../../core/database/results';
+import { runListQuery } from '../../core/database/results';
 import { Role } from '../authorization';
-import {
-  AuthorizationService,
-  PermissionsOf,
-} from '../authorization/authorization.service';
+import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
 import { LanguageService } from '../language';
 import {
@@ -107,8 +99,6 @@ export class UserService {
     @Inject(forwardRef(() => PartnerService))
     private readonly partners: PartnerService,
     private readonly unavailabilities: UnavailabilityService,
-    private readonly db: DatabaseService,
-    private readonly config: ConfigService,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
     private readonly locationService: LocationService,
@@ -147,60 +137,52 @@ export class UserService {
   };
 
   async create(input: CreatePerson, _session?: Session): Promise<ID> {
-    const id = await generateId();
-    await this.userRepo.create(id, input);
+    const id = await this.userRepo.create(input);
     input.roles &&
       (await this.authorizationService.roleAddedToUser(id, input.roles));
     await this.authorizationService.processNewBaseNode(User, id, id);
     return id;
   }
 
+  @HandleIdLookup(User)
   async readOne(id: ID, sessionOrUserId: Session | ID): Promise<User> {
-    const { result, canDelete } = await this.userRepo.readOne(
-      id,
-      sessionOrUserId
-    );
-    if (!result) {
-      throw new NotFoundException('Could not find user', 'user.id');
-    }
+    const user = await this.userRepo.readOne(id);
+    return await this.secure(user, sessionOrUserId);
+  }
 
-    const rolesValue = result.propList
-      .filter((prop: any) => prop.property === 'roles')
-      .map((prop: any) => prop.value as Role);
-
-    let permsOfBaseNode: PermissionsOf<SecuredResource<typeof User, false>>;
-    // -- let the user explicitly see all properties only if they're reading their own ID
-    // -- TODO: express this within the authorization system. Like an Owner/Creator "meta" role that gets these x permissions.
-    const userId = isIdLike(sessionOrUserId)
+  async secure(
+    user: UnsecuredDto<User>,
+    sessionOrUserId: Session | ID
+  ): Promise<User> {
+    const requestingUserId = isIdLike(sessionOrUserId)
       ? sessionOrUserId
       : sessionOrUserId.userId;
-    if (id === userId) {
-      const implicitPerms = { canRead: true, canEdit: true };
-      permsOfBaseNode = mapFromList(User.SecuredProps, (key) => [
-        key,
-        implicitPerms,
-      ]);
-    } else {
-      permsOfBaseNode = await this.authorizationService.getPermissions(
-        User,
-        sessionOrUserId
-      );
-    }
 
-    const securedProps = parseSecuredProperties(
-      result.propList,
-      permsOfBaseNode,
-      User.SecuredProps
-    );
+    // let the user explicitly see all properties only if they're reading their own ID
+    // TODO: express this within the authorization system. Like an Owner/Creator "meta" role that gets these x permissions.
+    const securedProps =
+      user.id === requestingUserId
+        ? (mapFromList(User.SecuredProps, (key) => [
+            key,
+            { canRead: true, canEdit: true, value: user[key] },
+          ]) as SecuredProps<User>)
+        : await this.authorizationService.secureProperties(
+            User,
+            user,
+            sessionOrUserId
+          );
 
     return {
-      ...parseBaseNodeProperties(result.node),
+      ...user,
       ...securedProps,
       roles: {
         ...securedProps.roles,
-        value: rolesValue,
+        value: securedProps.roles.value ?? [],
       },
-      canDelete,
+      canDelete: await this.userRepo.checkDeletePermission(
+        user.id,
+        sessionOrUserId
+      ),
     };
   }
 
@@ -271,22 +253,13 @@ export class UserService {
     input: EducationListInput,
     session: Session
   ): Promise<SecuredEducationList> {
-    const query = this.userRepo.listEducations(userId, session);
+    const perms = await this.userRepo.permissionsForListProp(
+      'education',
+      userId,
+      session
+    );
 
-    let user;
-    try {
-      user = await query.first();
-    } catch (exception) {
-      this.logger.error(`Could not find education`, {
-        exception,
-        userId: session.userId,
-      });
-      throw new ServerException('Could not find education', exception);
-    }
-    if (!user) {
-      throw new NotFoundException('Could not find user', 'userId');
-    }
-    if (!user.canRead) {
+    if (!perms.canRead) {
       return SecuredList.Redacted;
     }
     const result = await this.educations.list(
@@ -301,8 +274,7 @@ export class UserService {
     );
     return {
       ...result,
-      canRead: user.canRead,
-      canCreate: user.canEdit ?? false,
+      ...perms,
     };
   }
 
@@ -311,21 +283,13 @@ export class UserService {
     input: OrganizationListInput,
     session: Session
   ): Promise<SecuredOrganizationList> {
-    const query = this.userRepo.listOrganizations(userId, session);
-    let user;
-    try {
-      user = await query.first();
-    } catch (exception) {
-      this.logger.error(`Could not find organizations`, {
-        exception,
-        userId: session.userId,
-      });
-      throw new ServerException('Could not find organization', exception);
-    }
-    if (!user) {
-      throw new NotFoundException('Could not find user', 'userId');
-    }
-    if (!user.canRead) {
+    const perms = await this.userRepo.permissionsForListProp(
+      'organization',
+      userId,
+      session
+    );
+
+    if (!perms.canRead) {
       return SecuredList.Redacted;
     }
     const result = await this.organizations.list(
@@ -341,8 +305,7 @@ export class UserService {
 
     return {
       ...result,
-      canRead: user.canRead,
-      canCreate: user.canEdit ?? false,
+      ...perms,
     };
   }
 
@@ -351,25 +314,13 @@ export class UserService {
     input: PartnerListInput,
     session: Session
   ): Promise<SecuredPartnerList> {
-    const query = this.userRepo.listPartners(userId, session);
-    let user;
-    try {
-      user = await query.first();
-    } catch (exception) {
-      this.logger.error(`Could not find partners`, {
-        exception,
-        userId: session.userId,
-      });
-      throw new ServerException('Could not find partner', exception);
-    }
-    if (!user) {
-      throw new NotFoundException('Could not find user', 'userId');
-    }
+    const perms = await this.userRepo.permissionsForListProp(
+      'partners',
+      userId,
+      session
+    );
 
-    if (!user.canRead) {
-      this.logger.warning('Cannot read partner list', {
-        userId,
-      });
+    if (!perms.canRead) {
       return SecuredList.Redacted;
     }
     const result = await this.partners.list(
@@ -384,8 +335,7 @@ export class UserService {
     );
     return {
       ...result,
-      canRead: user.canRead,
-      canCreate: user.canEdit,
+      ...perms,
     };
   }
 
@@ -394,21 +344,13 @@ export class UserService {
     input: UnavailabilityListInput,
     session: Session
   ): Promise<SecuredUnavailabilityList> {
-    const query = this.userRepo.listUnavailabilities(userId, session);
-    let user;
-    try {
-      user = await query.first();
-    } catch (exception) {
-      this.logger.error(`Could not find unavailability`, {
-        exception,
-        userId: session.userId,
-      });
-      throw new ServerException('Could not find unavailability', exception);
-    }
-    if (!user) {
-      throw new NotFoundException('Could not find user', 'userId');
-    }
-    if (!user.canRead) {
+    const perms = await this.userRepo.permissionsForListProp(
+      'unavailability',
+      userId,
+      session
+    );
+
+    if (!perms.canRead) {
       return SecuredList.Redacted;
     }
     const result = await this.unavailabilities.list(
@@ -424,8 +366,7 @@ export class UserService {
 
     return {
       ...result,
-      canRead: user.canRead,
-      canCreate: user.canEdit ?? false,
+      ...perms,
     };
   }
 
@@ -520,53 +461,26 @@ export class UserService {
   async listKnownLanguages(
     userId: ID,
     session: Session
-  ): Promise<KnownLanguage[]> {
-    const results = await this.userRepo.listKnownLanguages(userId, session);
-
-    const knownLanguages = await Promise.all(
-      results.map(async (item: any) => {
-        return {
-          language: item.languageId,
-          proficiency: item.languageProficiency,
-        };
-      })
-    );
-
-    return knownLanguages as KnownLanguage[];
+  ): Promise<readonly KnownLanguage[]> {
+    return await this.userRepo.listKnownLanguages(userId, session);
   }
 
   async checkEmail(email: string): Promise<boolean> {
-    const result = await this.userRepo.checkEmail(email);
-    if (result) {
-      return false;
-    }
-    return true;
+    const exists = await this.userRepo.doesEmailAddressExist(email);
+    return !exists;
   }
 
   async assignOrganizationToUser(
     request: AssignOrganizationToUser,
-    session: Session
-  ): Promise<void> {
-    //TO DO: Refactor session in the future
-
-    const queryCreate = await this.userRepo.assignOrganizationToUser(
-      request,
-      session
-    );
-    const result = await queryCreate.first();
-    if (!result) {
-      throw new ServerException('Failed to assign organzation to user');
-    }
+    _session: Session
+  ) {
+    await this.userRepo.assignOrganizationToUser(request);
   }
 
   async removeOrganizationFromUser(
     request: RemoveOrganizationFromUser,
     _session: Session
   ): Promise<void> {
-    const resultOrg = await this.userRepo.removeOrganizationFromUser(request);
-
-    if (!resultOrg) {
-      throw new ServerException('Failed to assign organzation to user');
-    }
+    await this.userRepo.removeOrganizationFromUser(request);
   }
 }

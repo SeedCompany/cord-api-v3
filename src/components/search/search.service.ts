@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { compact } from 'lodash';
 import { ID, NotFoundException, ServerException, Session } from '../../common';
-import { DatabaseService } from '../../core';
+import { ResourceResolver } from '../../core';
 import { FieldRegionService } from '../field-region';
 import { FieldZoneService } from '../field-zone';
 import { FilmService } from '../film';
@@ -58,7 +58,7 @@ export class SearchService {
   /* eslint-enable @typescript-eslint/naming-convention */
 
   constructor(
-    private readonly db: DatabaseService,
+    private readonly resources: ResourceResolver,
     private readonly users: UserService,
     private readonly orgs: OrganizationService,
     private readonly partners: PartnerService,

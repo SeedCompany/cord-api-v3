@@ -11,6 +11,6 @@ import { PostService } from './post.service';
     forwardRef(() => AuthorizationModule),
   ],
   providers: [PostResolver, PostService, PostRepository],
-  exports: [PostService, PostRepository],
+  exports: [PostService],
 })
 export class PostModule {}

@@ -115,6 +115,7 @@ const formatStackFrame = (t: StackFrame) => {
     !absolute ||
     absolute.includes('node_modules') ||
     absolute.startsWith('internal/') ||
+    absolute.startsWith('node:internal/') ||
     absolute.includes('<anonymous>')
   ) {
     return null;

@@ -1,17 +1,14 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
 import { Many } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
-  generateId,
   getHighestSensitivity,
   ID,
   InputException,
   isIdLike,
   many,
   NotFoundException,
-  Sensitivity,
   ServerException,
   Session,
   UnauthorizedException,
@@ -19,12 +16,11 @@ import {
 } from '../../common';
 import {
   ConfigService,
-  createBaseNode,
+  HandleIdLookup,
   IEventBus,
   ILogger,
   Logger,
   OnIndex,
-  Property,
   UniquenessError,
 } from '../../core';
 import {
@@ -62,9 +58,7 @@ import {
   ProjectListInput,
   ProjectListOutput,
   ProjectStatus,
-  ProjectStep,
   ProjectType,
-  stepToStatus,
   TranslationProject,
   UpdateProject,
 } from './dto';
@@ -120,13 +114,7 @@ export class ProjectService {
   }
 
   async create(
-    {
-      primaryLocationId,
-      otherLocationIds,
-      marketingLocationId,
-      fieldRegionId,
-      ...input
-    }: CreateProject,
+    input: CreateProject,
     session: Session
   ): Promise<UnsecuredDto<Project>> {
     if (input.type === ProjectType.Translation && input.sensitivity) {
@@ -137,236 +125,33 @@ export class ProjectService {
     }
     await this.authorizationService.checkPower(Powers.CreateProject, session);
 
-    const createdAt = DateTime.local();
-    const step = input.step ?? ProjectStep.EarlyConversations;
-    const createInput = {
-      sensitivity: Sensitivity.High, // Default to high on create
-      ...input,
-      step,
-      status: stepToStatus(step),
-      modifiedAt: DateTime.local(),
-    };
-    const secureProps: Property[] = [
-      {
-        key: 'name',
-        value: createInput.name,
-        isPublic: false,
-        isOrgPublic: false,
-        label: 'ProjectName',
-        isDeburrable: true,
-      },
-      {
-        key: 'sensitivity',
-        value: createInput.sensitivity,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'step',
-        value: createInput.step,
-        isPublic: false,
-        isOrgPublic: false,
-        label: 'ProjectStep',
-      },
-      {
-        key: 'status',
-        value: createInput.status,
-        isPublic: true,
-        isOrgPublic: false,
-        label: 'ProjectStatus',
-      },
-      {
-        key: 'mouStart',
-        value: createInput.mouStart,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'mouEnd',
-        value: createInput.mouEnd,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'initialMouEnd',
-        value: undefined,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'stepChangedAt',
-        value: createInput.modifiedAt,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'estimatedSubmission',
-        value: createInput.estimatedSubmission,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'modifiedAt',
-        value: createInput.modifiedAt,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'departmentId',
-        value: null,
-        isPublic: false,
-        isOrgPublic: false,
-        label: 'DepartmentId',
-      },
-      {
-        key: 'tags',
-        value: createInput.tags,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'financialReportReceivedAt',
-        value: createInput.financialReportReceivedAt,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'financialReportPeriod',
-        value: createInput.financialReportPeriod,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
+    await this.validateOtherResourceId(
+      input.fieldRegionId,
+      'FieldRegion',
+      'fieldRegionId',
+      'Field region not found'
+    );
+    await this.validateOtherResourceId(
+      input.primaryLocationId,
+      'Location',
+      'primaryLocationId',
+      'Primary location not found'
+    );
+    await this.validateOtherResourceId(
+      input.otherLocationIds,
+      'Location',
+      'otherLocationIds',
+      'One of the other locations was not found'
+    );
+    await this.validateOtherResourceId(
+      input.marketingLocationId,
+      'Location',
+      'marketingLocationId',
+      'Marketing location not found'
+    );
+
     try {
-      const createProject = this.repo.createProject(session);
-
-      if (fieldRegionId) {
-        await this.validateOtherResourceId(
-          fieldRegionId,
-          'FieldRegion',
-          'fieldRegionId',
-          'Field region not found'
-        );
-        createProject.match([
-          node('fieldRegion', 'FieldRegion', { id: fieldRegionId }),
-        ]);
-      }
-      if (primaryLocationId) {
-        await this.validateOtherResourceId(
-          primaryLocationId,
-          'Location',
-          'primaryLocationId',
-          'Primary location not found'
-        );
-        createProject.match([
-          node('primaryLocation', 'Location', { id: primaryLocationId }),
-        ]);
-      }
-      if (otherLocationIds?.length) {
-        await this.validateOtherResourceId(
-          otherLocationIds,
-          'Location',
-          'otherLocationIds',
-          'One of the other locations was not found'
-        );
-        otherLocationIds.forEach((id) => {
-          createProject.match([node(`otherLocation${id}`, 'Location', { id })]);
-        });
-      }
-      if (marketingLocationId) {
-        await this.validateOtherResourceId(
-          marketingLocationId,
-          'Location',
-          'marketingLocationId',
-          'Marketing location not found'
-        );
-        createProject.match([
-          node('marketingLocation', 'Location', { id: marketingLocationId }),
-        ]);
-      }
-      createProject.match([
-        node('organization', 'Organization', { id: this.config.defaultOrg.id }),
-      ]);
-
-      createProject.apply(
-        createBaseNode(
-          await generateId(),
-          `Project:${input.type}Project`,
-          secureProps,
-          {
-            type: createInput.type,
-          }
-        )
-      );
-
-      if (fieldRegionId) {
-        createProject.create([
-          [
-            node('node'),
-            relation('out', '', 'fieldRegion', { active: true, createdAt }),
-            node('fieldRegion'),
-          ],
-        ]);
-      }
-      if (primaryLocationId) {
-        createProject.create([
-          [
-            node('node'),
-            relation('out', '', 'primaryLocation', { active: true, createdAt }),
-            node('primaryLocation'),
-          ],
-        ]);
-      }
-      if (otherLocationIds?.length) {
-        otherLocationIds.forEach((id) => {
-          createProject.create([
-            [
-              node('node'),
-              relation('out', '', 'otherLocations', {
-                active: true,
-                createdAt,
-              }),
-              node(`otherLocation${id}`),
-            ],
-          ]);
-        });
-      }
-      if (marketingLocationId) {
-        createProject.create([
-          [
-            node('node'),
-            relation('out', '', 'marketingLocation', {
-              active: true,
-              createdAt,
-            }),
-            node('marketingLocation'),
-          ],
-        ]);
-      }
-      // TODO: default to add ConfigService.defaultOrg
-      createProject.create([
-        [
-          node('node'),
-          relation('out', '', 'owningOrganization', {
-            active: true,
-            createdAt,
-          }),
-          node('organization'),
-        ],
-      ]);
-
-      createProject.return('node.id as id').asResult<{ id: ID }>();
-      const result = await createProject.first();
-
-      if (!result) {
-        throw new ServerException('failed to create a project');
-      }
+      const id = await this.repo.create(input);
 
       // get the creating user's roles. Assign them on this project.
       // I'm going direct for performance reasons
@@ -378,8 +163,8 @@ export class ProjectService {
         await this.projectMembers.create(
           {
             userId: session.userId,
-            projectId: result.id,
-            roles: [roles?.roles],
+            projectId: id,
+            roles,
           },
           session
         );
@@ -387,11 +172,11 @@ export class ProjectService {
 
       await this.authorizationService.processNewBaseNode(
         IProject,
-        result.id,
+        id,
         session.userId
       );
 
-      const project = await this.readOneUnsecured(result.id, session);
+      const project = await this.readOneUnsecured(id, session);
 
       await this.eventBus.publish(new ProjectCreatedEvent(project, session));
 
@@ -410,6 +195,7 @@ export class ProjectService {
     }
   }
 
+  @HandleIdLookup(TranslationProject)
   async readOneTranslation(
     id: ID,
     session: Session
@@ -421,6 +207,7 @@ export class ProjectService {
     return project as TranslationProject;
   }
 
+  @HandleIdLookup(InternshipProject)
   async readOneInternship(
     id: ID,
     session: Session
@@ -476,10 +263,16 @@ export class ProjectService {
       sessionOrUserId,
       project.scope
     );
-
     return {
       ...project,
       ...securedProps,
+      primaryLocation: {
+        value: securedProps.primaryLocation.canRead
+          ? securedProps.primaryLocation.value
+          : null,
+        canRead: securedProps.primaryLocation.canRead,
+        canEdit: securedProps.primaryLocation.canEdit,
+      },
       canDelete: await this.repo.checkDeletePermission(
         project.id,
         sessionOrUserId
@@ -651,16 +444,17 @@ export class ProjectService {
       session
     );
 
-    const permission = await this.repo.getEngagementPermission(
-      session,
-      project.id
+    const permissions = await this.repo.permissionsForListProp(
+      'engagement',
+      project.id,
+      session
     );
 
     return {
       ...result,
-      canRead: !!permission?.canReadEngagementRead,
+      ...permissions,
       canCreate:
-        !!permission?.canReadEngagementCreate &&
+        permissions.canCreate &&
         (project.status === ProjectStatus.InDevelopment ||
           session.roles.includes('global:Administrator')),
     };
@@ -682,15 +476,15 @@ export class ProjectService {
       session
     );
 
-    const permission = await this.repo.getTeamMemberPermission(
-      session,
-      projectId
+    const permissions = await this.repo.permissionsForListProp(
+      'member',
+      projectId,
+      session
     );
 
     return {
       ...result,
-      canRead: !!permission?.canReadTeamMemberRead,
-      canCreate: !!permission?.canReadTeamMemberCreate,
+      ...permissions,
     };
   }
 
@@ -710,15 +504,15 @@ export class ProjectService {
       session
     );
 
-    const permission = await this.repo.getPartnershipPermission(
-      session,
-      projectId
+    const permissions = await this.repo.permissionsForListProp(
+      'partnership',
+      projectId,
+      session
     );
 
     return {
       ...result,
-      canRead: !!permission?.canReadPartnershipRead,
-      canCreate: !!permission?.canReadPartnershipCreate,
+      ...permissions,
     };
   }
 
@@ -760,13 +554,13 @@ export class ProjectService {
   }
 
   async listOtherLocations(
-    projectId: ID,
+    project: Project,
     input: LocationListInput,
     session: Session
   ): Promise<SecuredLocationList> {
-    return await this.locationService.listLocationsFromNode(
-      'Project',
-      projectId,
+    return await this.locationService.listLocationForResource(
+      IProject,
+      project,
       'otherLocations',
       input,
       session
@@ -774,34 +568,36 @@ export class ProjectService {
   }
 
   async currentBudget(
-    projectOrProjectId: Project | ID,
+    { id, sensitivity }: Pick<Project, 'id' | 'sensitivity'>,
     session: Session
   ): Promise<SecuredBudget> {
-    const projectId = isIdLike(projectOrProjectId)
-      ? projectOrProjectId
-      : projectOrProjectId.id;
-    const budgets = await this.budgetService.list(
-      {
-        filter: {
-          projectId: projectId,
+    let budgetToReturn;
+
+    const membershipRoles = await this.getMembershipRoles(id, session);
+    const permsOfProject = await this.authorizationService.getPermissions({
+      resource: IProject,
+      sessionOrUserId: session,
+      otherRoles: membershipRoles,
+      sensitivity,
+    });
+
+    if (permsOfProject.budget.canRead) {
+      const budgets = await this.budgetService.listNoSecGroups(
+        {
+          filter: {
+            projectId: id,
+          },
         },
-      },
-      session
-    );
+        session
+      );
 
-    const current = budgets.items.find(
-      (b) => b.status === BudgetStatus.Current
-    );
+      const current = budgets.items.find(
+        (b) => b.status === BudgetStatus.Current
+      );
 
-    // #574 - if no current budget, then fallback to the first pending budget
-    const budgetToReturn = current ?? budgets.items[0];
-
-    const membershipRoles = await this.getMembershipRoles(projectId, session);
-    const permsOfProject = await this.authorizationService.getPermissions(
-      IProject,
-      session,
-      membershipRoles
-    );
+      // #574 - if no current budget, then fallback to the first pending budget
+      budgetToReturn = current ?? budgets.items[0];
+    }
 
     return {
       value: budgetToReturn,
@@ -809,7 +605,7 @@ export class ProjectService {
       canEdit: session.roles.includes('global:Administrator')
         ? true
         : permsOfProject.budget.canEdit &&
-          budgetToReturn.status === BudgetStatus.Pending,
+          budgetToReturn?.status === BudgetStatus.Pending,
     };
   }
 
@@ -853,27 +649,23 @@ export class ProjectService {
     };
   }
 
-  async listProjectsWithDateRange() {
-    return await this.repo.listProjectsWithDateRange();
-  }
-
   protected async validateOtherResourceId(
-    ids: Many<string>,
+    ids: Many<string> | undefined,
     label: string,
     resourceField: string,
     errMsg: string
   ): Promise<void> {
-    let index = 0;
-    for (const id of many(ids)) {
-      const result = await this.repo.validateOtherResourceId(id, label);
-
-      if (!result) {
+    await Promise.all(
+      many(ids ?? []).map(async (id, index) => {
+        const exists = await this.repo.validateOtherResourceId(id, label);
+        if (exists) {
+          return;
+        }
         throw new NotFoundException(
           errMsg,
           `project.${resourceField}${Array.isArray(ids) ? `[${index}]` : ''}`
         );
-      }
-      index++;
-    }
+      })
+    );
   }
 }

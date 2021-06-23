@@ -54,7 +54,7 @@ export class LiteracyMaterialRepository extends DtoRepository(
           secureProps
         )
       )
-      .return('node.id as id')
+      .return<{ id: ID }>('node.id as id')
       .first();
   }
 

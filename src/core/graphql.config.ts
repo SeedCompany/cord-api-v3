@@ -16,7 +16,9 @@ import { ConfigService } from './config/config.service';
 import { VersionService } from './config/version.service';
 
 const escapedSep = sep === '/' ? '\\/' : '\\\\';
-const matchSrcPathInTrace = RegExp(` \\(.+${escapedSep}src${escapedSep}`);
+const matchSrcPathInTrace = RegExp(
+  `(at (.+ \\()?).+${escapedSep}src${escapedSep}`
+);
 
 @Injectable()
 export class GraphQLConfig implements GqlOptionsFactory {
@@ -82,12 +84,13 @@ export class GraphQLConfig implements GqlOptionsFactory {
             frame.startsWith('    at') &&
             !frame.includes('node_modules') &&
             !frame.includes('(internal/') &&
+            !frame.includes('(node:internal/') &&
             !frame.includes('(<anonymous>)')
         )
         .map((frame: string) =>
           frame
             // Convert absolute path to path relative to src dir
-            .replace(matchSrcPathInTrace, ' (')
+            .replace(matchSrcPathInTrace, (_, group1) => group1)
             // Convert windows paths to unix for consistency
             .replace(/\\\\/, '/')
             .trim()

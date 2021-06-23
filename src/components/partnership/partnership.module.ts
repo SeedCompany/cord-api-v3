@@ -17,6 +17,6 @@ import { PartnershipService } from './partnership.service';
     PartnerModule,
   ],
   providers: [PartnershipResolver, PartnershipService, PartnershipRepository],
-  exports: [PartnershipService, PartnershipRepository],
+  exports: [PartnershipService],
 })
 export class PartnershipModule {}

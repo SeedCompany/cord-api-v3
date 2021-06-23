@@ -5,6 +5,7 @@ import {
   GraphQLRequestListener,
 } from 'apollo-server-plugin-base';
 import { GraphQLError } from 'graphql';
+import { Neo4jError } from 'neo4j-driver';
 import { maskSecrets } from '../common/mask-secrets';
 import { ILogger, Logger } from './logger';
 
@@ -38,6 +39,12 @@ export class GraphqlLoggingPlugin implements ApolloServerPlugin {
   }
 
   private onError(error: GraphQLError) {
+    // Assume Neo4jErrors are already logged if they need to be.
+    // For some reason they do not go through our ExceptionFilter.
+    if (error.originalError instanceof Neo4jError) {
+      return;
+    }
+
     // Assume errors with extensions have already been logged by our ExceptionFilter
     // This means that these are native GraphQL errors
     if (error.extensions) {

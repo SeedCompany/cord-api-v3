@@ -7,6 +7,6 @@ import { EducationService } from './education.service';
 @Module({
   imports: [forwardRef(() => AuthorizationModule)],
   providers: [EducationResolver, EducationService, EducationRepository],
-  exports: [EducationService, EducationRepository],
+  exports: [EducationService],
 })
 export class EducationModule {}

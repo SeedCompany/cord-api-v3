@@ -33,7 +33,7 @@ export class SongRepository extends DtoRepository(Song) {
       .apply(
         createBaseNode(await generateId(), ['Song', 'Producible'], secureProps)
       )
-      .return('node.id as id')
+      .return<{ id: ID }>('node.id as id')
       .first();
   }
 

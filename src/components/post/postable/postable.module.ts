@@ -11,6 +11,6 @@ import { PostableResolver } from './postable.resolver';
     forwardRef(() => AuthorizationModule),
   ],
   providers: [PostableResolver, PostService, PostRepository],
-  exports: [PostService, PostRepository],
+  exports: [PostService],
 })
 export class PostableModule {}

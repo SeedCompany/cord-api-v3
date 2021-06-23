@@ -94,7 +94,7 @@ export class BudgetResolver {
   }
 
   @Mutation(() => Boolean, {
-    description: 'Delete an budget',
+    description: 'Delete a budget',
   })
   async deleteBudget(
     @LoggedInSession() session: Session,

@@ -135,6 +135,19 @@ export const createBetterError = (e: Error) => {
   if (!isNeo4jError(e)) {
     return e;
   }
+  e.message ??= ''; // I've seen message is null
+
+  const better = cast(e);
+
+  // Hide worthless code
+  if (better.code === 'N/A') {
+    Object.defineProperty(better, 'code', { enumerable: false });
+  }
+
+  return better;
+};
+
+const cast = (e: Neo4jError): Neo4jError => {
   if (e.code === ServiceUnavailableError.code) {
     return ServiceUnavailableError.fromNeo(e);
   }

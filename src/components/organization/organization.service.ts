@@ -7,7 +7,13 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import { ConfigService, ILogger, Logger, OnIndex } from '../../core';
+import {
+  ConfigService,
+  HandleIdLookup,
+  ILogger,
+  Logger,
+  OnIndex,
+} from '../../core';
 import {
   parseBaseNodeProperties,
   runListQuery,
@@ -33,7 +39,6 @@ export class OrganizationService {
   constructor(
     @Logger('org:service') private readonly logger: ILogger,
     private readonly config: ConfigService,
-    // private readonly db: DatabaseService,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
     private readonly locationService: LocationService,
@@ -94,6 +99,7 @@ export class OrganizationService {
     return await this.readOne(id, session);
   }
 
+  @HandleIdLookup(Organization)
   async readOne(orgId: ID, session: Session): Promise<Organization> {
     this.logger.debug(`Read Organization`, {
       id: orgId,

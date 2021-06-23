@@ -1,14 +1,16 @@
 import { Injectable } from '@nestjs/common';
+import { stripIndent } from 'common-tags';
 import { inArray, node, Query, relation } from 'cypher-query-builder';
-import { Dictionary } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
+  generateId,
   ID,
   NotFoundException,
   ServerException,
   Session,
   UnauthorizedException,
+  UnsecuredDto,
 } from '../../common';
 import {
   ConfigService,
@@ -24,16 +26,15 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
-  matchPropList,
+  matchProps,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
-import { QueryWithResult } from '../../core/database/query.overrides';
-import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
 import { Role } from '../authorization';
 import {
   AssignOrganizationToUser,
   CreatePerson,
+  KnownLanguage,
   LanguageProficiency,
   RemoveOrganizationFromUser,
   UpdateUser,
@@ -70,37 +71,39 @@ export class UserRepository extends DtoRepository(User) {
       'CREATE CONSTRAINT ON ()-[r:password]-() ASSERT EXISTS(r.createdAt)',
     ];
   }
-  roleProperties = (roles?: Role[]) => {
-    return (roles || []).flatMap((role) =>
+
+  private readonly roleProperties = (roles?: Role[]) =>
+    (roles || []).flatMap((role) =>
       property('roles', role, 'user', `role${role}`)
     );
-  };
-  async create(id: string, input: CreatePerson): Promise<Dictionary<any>> {
+
+  async create(input: CreatePerson) {
+    const id = await generateId();
     const createdAt = DateTime.local();
-    const query = this.db.query();
-    query.create([
-      [
-        node('user', ['User', 'BaseNode'], {
-          id,
-          createdAt,
-        }),
-      ],
-      ...property('email', input.email, 'user', 'email', 'EmailAddress'),
-      ...property('realFirstName', input.realFirstName, 'user'),
-      ...property('realLastName', input.realLastName, 'user'),
-      ...property('displayFirstName', input.displayFirstName, 'user'),
-      ...property('displayLastName', input.displayLastName, 'user'),
-      ...property('phone', input.phone, 'user'),
-      ...property('timezone', input.timezone, 'user'),
-      ...property('about', input.about, 'user'),
-      ...property('status', input.status, 'user'),
-      ...this.roleProperties(input.roles),
-      ...property('title', input.title, 'user'),
-      ...property('canDelete', true, 'user'),
-    ]);
-    query.return({
-      user: [{ id: 'id' }],
-    });
+    const query = this.db
+      .query()
+      .create([
+        [
+          node('user', ['User', 'BaseNode'], {
+            id,
+            createdAt,
+          }),
+        ],
+        ...property('email', input.email, 'user', 'email', 'EmailAddress'),
+        ...property('realFirstName', input.realFirstName, 'user'),
+        ...property('realLastName', input.realLastName, 'user'),
+        ...property('displayFirstName', input.displayFirstName, 'user'),
+        ...property('displayLastName', input.displayLastName, 'user'),
+        ...property('phone', input.phone, 'user'),
+        ...property('timezone', input.timezone, 'user'),
+        ...property('about', input.about, 'user'),
+        ...property('status', input.status, 'user'),
+        ...this.roleProperties(input.roles),
+        ...property('title', input.title, 'user'),
+        ...property('canDelete', true, 'user'),
+      ])
+      .return('user.id as id')
+      .asResult<{ id: ID }>();
     let result;
     try {
       result = await query.first();
@@ -169,25 +172,41 @@ export class UserRepository extends DtoRepository(User) {
         //
       }
     }
-    return result;
+    return result.id;
   }
-  async readOne(id: ID, sessionOrUserId: Session | ID): Promise<any> {
+
+  async readOne(id: ID) {
     const query = this.db
       .query()
       .match([node('node', 'User', { id })])
-      .apply(matchPropList)
-      .return('propList, node')
-      .asResult<StandardReadResult<DbPropsOfDto<User>>>();
+      .apply(this.hydrate())
+      .return('dto')
+      .asResult<{ dto: UnsecuredDto<User> }>();
     const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find user', 'user.id');
     }
-    const canDelete = await this.db.checkDeletePermission(id, sessionOrUserId);
+    return result.dto;
+  }
 
-    return {
-      result,
-      canDelete,
-    };
+  private hydrate() {
+    return (query: Query) =>
+      query.subQuery((sub) =>
+        sub
+          .with('node')
+          .optionalMatch([
+            node('node'),
+            relation('out', '', 'roles', { active: true }),
+            node('role', 'Property'),
+          ])
+          .apply(matchProps())
+          .return([
+            stripIndent`
+              apoc.map.merge(props, {
+                roles: collect(role.value)
+              }) as dto`,
+          ])
+      );
   }
 
   async updateEmail(
@@ -276,21 +295,15 @@ export class UserRepository extends DtoRepository(User) {
     }
   }
 
-  list(
-    input: UserListInput,
-    session: Session
-  ): QueryWithResult<{
-    items: ID[];
-    total: number;
-  }> {
+  list(input: UserListInput, session: Session) {
     return this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode('User')])
       .apply(calculateTotalAndPaginateList(User, input));
   }
 
-  listEducations(userId: ID, session: Session): Query {
-    return this.db
+  async permissionsForListProp(prop: string, userId: ID, session: Session) {
+    const result = await this.db
       .query()
       .match(matchSession(session)) // Michel Query Refactor Will Fix This
       .match([node('user', 'User', { id: userId })])
@@ -300,7 +313,7 @@ export class UserRepository extends DtoRepository(User) {
         node('readSecurityGroup', 'SecurityGroup'),
         relation('out', 'sgReadPerms', 'permission'),
         node('canRead', 'Permission', {
-          property: 'education',
+          property: prop,
           read: true,
         }),
         relation('out', 'readPermsOfBaseNode', 'baseNode'),
@@ -312,7 +325,7 @@ export class UserRepository extends DtoRepository(User) {
         node('editSecurityGroup', 'SecurityGroup'),
         relation('out', 'sgEditPerms', 'permission'),
         node('canEdit', 'Permission', {
-          property: 'education',
+          property: prop,
           edit: true,
         }),
         relation('out', 'editPermsOfBaseNode', 'baseNode'),
@@ -321,111 +334,18 @@ export class UserRepository extends DtoRepository(User) {
       .return({
         canRead: [{ read: 'canRead' }],
         canEdit: [{ edit: 'canEdit' }],
-      });
+      })
+      .asResult<{ canRead?: boolean; canEdit?: boolean }>()
+      .first();
+    if (!result) {
+      throw new NotFoundException('Could not find user', 'userId');
+    }
+    return {
+      canRead: result.canRead ?? false,
+      canCreate: result.canEdit ?? false,
+    };
   }
 
-  listOrganizations(userId: ID, session: Session): Query {
-    return this.db
-      .query()
-      .match(matchSession(session))
-      .match([node('user', 'User', { id: userId })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', 'memberOfReadSecurityGroup', 'member'),
-        node('readSecurityGroup', 'SecurityGroup'),
-        relation('out', 'sgReadPerms', 'permission'),
-        node('canRead', 'Permission', {
-          property: 'organization',
-          read: true,
-        }),
-        relation('out', 'readPermsOfBaseNode', 'baseNode'),
-        node('user'),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', 'memberOfEditSecurityGroup', 'member'),
-        node('editSecurityGroup', 'SecurityGroup'),
-        relation('out', 'sgEditPerms', 'permission'),
-        node('canEdit', 'Permission', {
-          property: 'organization',
-          edit: true,
-        }),
-        relation('out', 'editPermsOfBaseNode', 'baseNode'),
-        node('user'),
-      ])
-      .return({
-        canRead: [{ read: 'canRead' }],
-        canEdit: [{ edit: 'canEdit' }],
-      });
-  }
-  listPartners(userId: ID, session: Session): Query {
-    return this.db
-      .query()
-      .match(matchSession(session)) // Michel Query Refactor Will Fix This
-      .match([node('user', 'User', { id: userId })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', 'memberOfReadSecurityGroup', 'member'),
-        node('readSecurityGroup', 'SecurityGroup'),
-        relation('out', 'sgReadPerms', 'permission'),
-        node('canRead', 'Permission', {
-          property: 'partners',
-          read: true,
-        }),
-        relation('out', 'readPermsOfBaseNode', 'baseNode'),
-        node('user'),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', 'memberOfEditSecurityGroup', 'member'),
-        node('editSecurityGroup', 'SecurityGroup'),
-        relation('out', 'sgEditPerms', 'permission'),
-        node('canEdit', 'Permission', {
-          property: 'partners',
-          edit: true,
-        }),
-        relation('out', 'editPermsOfBaseNode', 'baseNode'),
-        node('user'),
-      ])
-      .return({
-        canRead: [{ read: 'canRead' }],
-        canEdit: [{ edit: 'canEdit' }],
-      });
-  }
-  listUnavailabilities(userId: ID, session: Session): Query {
-    return this.db
-      .query()
-      .match(matchSession(session))
-      .match([node('user', 'User', { id: userId })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', 'memberOfReadSecurityGroup', 'member'),
-        node('readSecurityGroup', 'SecurityGroup'),
-        relation('out', 'sgReadPerms', 'permission'),
-        node('canRead', 'Permission', {
-          property: 'unavailability',
-          read: true,
-        }),
-        relation('out', 'readPermsOfBaseNode', 'baseNode'),
-        node('user'),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', 'memberOfEditSecurityGroup', 'member'),
-        node('editSecurityGroup', 'SecurityGroup'),
-        relation('out', 'sgEditPerms', 'permission'),
-        node('canEdit', 'Permission', {
-          property: 'unavailability',
-          edit: true,
-        }),
-        relation('out', 'editPermsOfBaseNode', 'baseNode'),
-        node('user'),
-      ])
-      .return({
-        canRead: [{ read: 'canRead' }],
-        canEdit: [{ edit: 'canEdit' }],
-      });
-  }
   async createKnownLanguage(
     userId: ID,
     languageId: ID,
@@ -446,6 +366,7 @@ export class UserRepository extends DtoRepository(User) {
       ])
       .run();
   }
+
   async deleteKnownLanguage(
     userId: ID,
     languageId: ID,
@@ -471,15 +392,7 @@ export class UserRepository extends DtoRepository(User) {
       .run();
   }
 
-  async listKnownLanguages(
-    userId: ID,
-    session: Session
-  ): Promise<
-    Array<{
-      languageProficiency: LanguageProficiency;
-      languageId: ID;
-    }>
-  > {
+  async listKnownLanguages(userId: ID, session: Session) {
     const results = await this.db
       .query()
       .match([
@@ -490,126 +403,94 @@ export class UserRepository extends DtoRepository(User) {
       ])
       .with('collect(distinct user) as users, node, knownLanguageRel')
       .raw(`unwind users as user`)
-      .return([
-        'knownLanguageRel.value as languageProficiency',
-        'node.id as languageId',
-      ])
-      .asResult<{
-        languageProficiency: LanguageProficiency;
-        languageId: ID;
-      }>()
+      .return(['knownLanguageRel.value as proficiency', 'node.id as language'])
+      .asResult<KnownLanguage>()
       .run();
     return results;
   }
-  async checkEmail(email: string): Promise<Dictionary<any> | undefined> {
+
+  async doesEmailAddressExist(email: string) {
     const result = await this.db
       .query()
-      .raw(
-        `
-      MATCH
-      (email:EmailAddress {
-        value: $email
-      })
-      RETURN
-      email.value as email
-      `,
-        {
-          email: email,
-        }
-      )
+      .matchNode('email', 'EmailAddress', { value: email })
+      .return('email.value')
       .first();
-    return result;
+    return !!result;
   }
 
-  async assignOrganizationToUser(
-    request: AssignOrganizationToUser,
-    session: Session
-  ): Promise<Query> {
-    const querySession = this.db.query();
-    if (session.userId) {
-      querySession.match([
-        matchSession(session, { withAclEdit: 'canCreateOrg' }),
-      ]);
-    }
-
-    const primary =
-      request.primary !== null && request.primary !== undefined
-        ? request.primary
-        : false;
-
-    //2
+  async assignOrganizationToUser({
+    userId,
+    orgId,
+    primary,
+  }: AssignOrganizationToUser) {
     await this.db
       .query()
       .match([
-        node('user', 'User', {
-          id: request.userId,
-        }),
-        relation('out', 'oldRel', 'organization', {
-          active: true,
-        }),
-        node('primaryOrg', 'Organization', {
-          id: request.orgId,
-        }),
+        [node('user', 'User', { id: userId })],
+        [node('org', 'Organization', { id: orgId })],
       ])
-      .setValues({ 'oldRel.active': false })
+      .subQuery((sub) =>
+        sub
+          .with('user, org')
+          .match([
+            node('user'),
+            relation('out', 'oldRel', 'organization', { active: true }),
+            node('org'),
+          ])
+          .setValues({ 'oldRel.active': false })
+          .return('oldRel')
+          .union()
+          .return('null as oldRel')
+      )
+      .apply((q) => {
+        if (primary) {
+          q.subQuery((sub) =>
+            sub
+              .with('user, org')
+              .match([
+                node('user'),
+                relation('out', 'oldRel', 'primaryOrganization', {
+                  active: true,
+                }),
+                node('org'),
+              ])
+              .setValues({ 'oldRel.active': false })
+              .return('oldRel as oldPrimaryRel')
+              .union()
+              .return('null as oldPrimaryRel')
+          );
+        }
+      })
       .return('oldRel')
-      .first();
+      .run();
 
-    if (primary) {
-      await this.db
-        .query()
-        .match([
-          node('user', 'User', {
-            id: request.userId,
-          }),
-          relation('out', 'oldRel', 'primaryOrganization', {
-            active: true,
-          }),
-          node('primaryOrg', 'Organization', {
-            id: request.orgId,
-          }),
-        ])
-        .setValues({ 'oldRel.active': false })
-        .return('oldRel')
-        .first();
+    const userToOrg = (label: string) => [
+      node('user'),
+      relation('out', '', label, {
+        active: true,
+        createdAt: DateTime.local(),
+      }),
+      node('org'),
+    ];
+    const result = await this.db
+      .query()
+      .match([
+        [node('org', 'Organization', { id: orgId })],
+        [node('user', 'User', { id: userId })],
+      ])
+      .create([
+        userToOrg('organization'),
+        ...(primary ? [userToOrg('primaryOrganization')] : []),
+      ])
+      .return('org.id')
+      .first();
+    if (!result) {
+      throw new ServerException('Failed to assign organization to user');
     }
-    //3
-    let queryCreate;
-    if (primary) {
-      queryCreate = this.db.query().raw(
-        `
-        MATCH (primaryOrg:Organization {id: $orgId}),
-        (user:User {id: $userId})
-        CREATE (primaryOrg)<-[:primaryOrganization {active: true, createdAt: datetime()}]-(user),
-        (primaryOrg)<-[:organization {active: true, createdAt: datetime()}]-(user)
-        RETURN  user.id as id
-      `,
-        {
-          userId: request.userId,
-          orgId: request.orgId,
-        }
-      );
-    } else {
-      queryCreate = this.db.query().raw(
-        `
-        MATCH (org:Organization {id: $orgId}),
-        (user:User {id: $userId})
-        CREATE (org)<-[:organization {active: true, createdAt: datetime()}]-(user)
-        RETURN  user.id as id
-      `,
-        {
-          userId: request.userId,
-          orgId: request.orgId,
-        }
-      );
-    }
-    return queryCreate;
   }
 
-  async removeOrganizationFromUser(
-    request: RemoveOrganizationFromUser
-  ): Promise<Dictionary<any> | undefined> {
-    const removeOrg = this.db
+  async removeOrganizationFromUser(request: RemoveOrganizationFromUser) {
+    const result = await this.db
       .query()
       .match([
         node('user', 'User', {
@@ -628,15 +509,12 @@ export class UserRepository extends DtoRepository(User) {
         node('org'),
       ])
       .setValues({ 'oldRel.active': false })
-      .return({ oldRel: [{ id: 'oldId' }], primary: [{ id: 'primaryId' }] });
-    let resultOrg;
-    try {
-      resultOrg = await removeOrg.first();
-    } catch (e) {
-      throw new NotFoundException('user and org are not connected');
-    }
+      .return({ oldRel: [{ id: 'oldId' }], primary: [{ id: 'primaryId' }] })
+      .asResult<{ primaryId: ID; oldId: ID }>()
+      .first();
 
-    if (resultOrg?.primaryId) {
+    // TODO Refactor this into one query and make these two relationships independent or combine into one.
+    if (result?.primaryId) {
       const removePrimary = this.db
         .query()
         .match([
@@ -652,12 +530,7 @@ export class UserRepository extends DtoRepository(User) {
         ])
         .setValues({ 'oldRel.active': false })
         .return('oldRel');
-      try {
-        await removePrimary.first();
-      } catch {
-        this.logger.debug('not primary');
-      }
+      await removePrimary.first();
     }
-    return resultOrg;
   }
 }

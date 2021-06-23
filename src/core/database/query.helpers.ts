@@ -2,9 +2,14 @@ import { node, Query, relation } from 'cypher-query-builder';
 import { deburr } from 'lodash';
 import { DateTime } from 'luxon';
 import { ID, ResourceShape, Session } from '../../common';
+// eslint-disable-next-line @seedcompany/no-unused-vars -- used in jsdoc
+import { createNode } from './query';
 
 // CREATE clauses //////////////////////////////////////////////////////
 
+/**
+ * @deprecated Use {@link createNode} instead
+ */
 export interface Property {
   key: string;
   value: any;
@@ -14,17 +19,12 @@ export interface Property {
   isDeburrable?: boolean;
 }
 
-export interface AllNodeProperties {
-  createdAt: DateTime;
-  value: any;
-  sortValue: string;
-}
-
 export const determineSortValue = (value: unknown) =>
   typeof value === 'string' ? deburr(value) : value;
 
-// assumes 'requestingUser', and 'publicSG' cypher identifiers have been matched
-// add baseNodeProps and editableProps
+/**
+ * @deprecated Use {@link createNode} instead
+ */
 export const createBaseNode =
   (
     id: ID,

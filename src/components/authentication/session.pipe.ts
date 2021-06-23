@@ -1,6 +1,11 @@
 import { Injectable, PipeTransform } from '@nestjs/common';
 import { Request } from 'express';
-import type * as core from 'express-serve-static-core';
+import type {
+  Request as EsscRequest,
+  Params,
+  ParamsDictionary,
+  Query,
+} from 'express-serve-static-core';
 import { UnauthenticatedException } from '../../common';
 import { RawSession } from '../../common/session';
 import { ConfigService } from '../../core';
@@ -8,11 +13,11 @@ import { AuthenticationService } from './authentication.service';
 
 declare module 'express' {
   interface Request<
-    P extends core.Params = core.ParamsDictionary,
+    P extends Params = ParamsDictionary,
     ResBody = any,
     ReqBody = any,
-    ReqQuery = core.Query
-  > extends core.Request<P, ResBody, ReqBody, ReqQuery> {
+    ReqQuery = Query
+  > extends EsscRequest<P, ResBody, ReqBody, ReqQuery> {
     session?: RawSession;
   }
 }

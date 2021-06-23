@@ -7,7 +7,7 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import { ConfigService, ILogger, Logger, OnIndex } from '../../core';
+import { HandleIdLookup, ILogger, Logger, OnIndex } from '../../core';
 import {
   parseBaseNodeProperties,
   runListQuery,
@@ -26,8 +26,6 @@ import { FieldZoneRepository } from './field-zone.repository';
 export class FieldZoneService {
   constructor(
     @Logger('field-zone:service') private readonly logger: ILogger,
-    private readonly config: ConfigService,
-    // private readonly db: DatabaseService,
     private readonly authorizationService: AuthorizationService,
     private readonly repo: FieldZoneRepository
   ) {}
@@ -78,6 +76,7 @@ export class FieldZoneService {
     return await this.readOne(result.id, session);
   }
 
+  @HandleIdLookup(FieldZone)
   async readOne(id: ID, session: Session): Promise<FieldZone> {
     this.logger.debug(`Read Field Zone`, {
       id: id,

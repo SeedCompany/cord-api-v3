@@ -1,3 +1,4 @@
+import { Sensitivity } from '../../../common';
 import { DbBudget } from '../../budget/model';
 import { DbBudgetRecord } from '../../budget/model/budget-record.model.db';
 import { DbCeremony } from '../../ceremony/model';
@@ -330,8 +331,8 @@ export const ProjectManagerGlobal = new DbRole({
         { propertyName: 'stepChangedAt', permission: { read, write, }, },
         { propertyName: 'rootDirectory', permission: { read, write, }, },
         { propertyName: 'member', permission: { read, write, }, },
-        { propertyName: 'otherLocations', permission: { read, write, }, },
-        { propertyName: 'primaryLocation', permission: { read, write, }, },
+        { propertyName: 'otherLocations', permission: { read, write, sensitivityAccess: Sensitivity.Medium }, },
+        { propertyName: 'primaryLocation', permission: { read, write, sensitivityAccess: Sensitivity.Medium }, },
         { propertyName: 'marketingLocation', permission: { read, write, }, },
         { propertyName: 'partnership', permission: { read, write, }, },
         { propertyName: 'budget', permission: { read, write, }, },

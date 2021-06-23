@@ -32,6 +32,7 @@ FROM node as dev
 
 # Install dependencies (in separate docker layer from app code)
 COPY .yarn .yarn
+COPY patches patches
 COPY package.json yarn.lock .yarnrc.yml ./
 RUN yarn install --immutable
 

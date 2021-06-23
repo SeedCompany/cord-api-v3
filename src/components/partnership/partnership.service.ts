@@ -1,9 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
-import { DateTime } from 'luxon';
 import {
   DuplicateException,
-  generateId,
   ID,
   InputException,
   NotFoundException,
@@ -11,7 +8,7 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import { ConfigService, IEventBus, ILogger, Logger } from '../../core';
+import { HandleIdLookup, IEventBus, ILogger, Logger } from '../../core';
 import { runListQuery } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { FileService } from '../file';
@@ -21,7 +18,6 @@ import {
   CreatePartnership,
   FinancialReportingType,
   Partnership,
-  PartnershipAgreementStatus,
   PartnershipListInput,
   PartnershipListOutput,
   UpdatePartnership,
@@ -37,8 +33,6 @@ import { PartnershipRepository } from './partnership.repository';
 export class PartnershipService {
   constructor(
     private readonly files: FileService,
-    // private readonly db: DatabaseService,
-    private readonly config: ConfigService,
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService,
     private readonly partnerService: PartnerService,
@@ -50,14 +44,14 @@ export class PartnershipService {
   ) {}
 
   async create(
-    { partnerId, projectId, ...input }: CreatePartnership,
+    input: CreatePartnership,
     session: Session
   ): Promise<Partnership> {
-    const createdAt = DateTime.local();
+    const { projectId, partnerId } = input;
 
     await this.verifyRelationshipEligibility(projectId, partnerId);
 
-    const isFirstPartnership = await this.isFirstPartnership(projectId);
+    const isFirstPartnership = await this.repo.isFirstPartnership(projectId);
     const primary = isFirstPartnership ? true : input.primary;
 
     const partner = await this.partnerService.readOne(partnerId, session);
@@ -67,96 +61,20 @@ export class PartnershipService {
       partner
     );
 
-    const partnershipId = await generateId();
-    const mouId = await generateId();
-    const agreementId = await generateId();
-
-    const secureProps = [
-      {
-        key: 'agreementStatus',
-        value: input.agreementStatus || PartnershipAgreementStatus.NotAttached,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'agreement',
-        value: agreementId,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'mou',
-        value: mouId,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'mouStatus',
-        value: input.mouStatus || PartnershipAgreementStatus.NotAttached,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'mouStartOverride',
-        value: input.mouStartOverride,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'mouEndOverride',
-        value: input.mouEndOverride,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'types',
-        value: input.types,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'financialReportingType',
-        value: input.financialReportingType,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'primary',
-        value: primary,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
-    let result;
     try {
-      const createPartnership = this.repo.create(
-        partnershipId,
-        session,
-        secureProps
+      const { id, mouId, agreementId } = await this.repo.create(
+        {
+          ...input,
+          primary,
+        },
+        session
       );
-      try {
-        result = await createPartnership.first();
-      } catch (e) {
-        this.logger.error('e :>> ', e);
-      }
-
-      if (!result) {
-        throw new ServerException('failed to create partnership');
-      }
-
-      await this.repo.connect(projectId, partnerId, createdAt, result);
 
       await this.files.createDefinedFile(
         mouId,
         `MOU`,
         session,
-        partnershipId,
+        id,
         'mou',
         input.mou,
         'partnership.mou'
@@ -166,7 +84,7 @@ export class PartnershipService {
         agreementId,
         `Partner Agreement`,
         session,
-        partnershipId,
+        id,
         'agreement',
         input.agreement,
         'partnership.agreement'
@@ -174,15 +92,15 @@ export class PartnershipService {
 
       await this.authorizationService.processNewBaseNode(
         Partnership,
-        result.id,
+        id,
         session.userId
       );
 
       if (primary) {
-        await this.removeOtherPartnershipPrimary(result.id);
+        await this.repo.removePrimaryFromOtherPartnerships(id);
       }
 
-      const partnership = await this.readOne(result.id, session);
+      const partnership = await this.readOne(id, session);
 
       await this.eventBus.publish(
         new PartnershipCreatedEvent(partnership, session)
@@ -198,16 +116,11 @@ export class PartnershipService {
     }
   }
 
+  @HandleIdLookup(Partnership)
   async readOne(id: ID, session: Session): Promise<Partnership> {
     this.logger.debug('readOne', { id, userId: session.userId });
 
     const result = await this.repo.readOne(id, session);
-    if (!result) {
-      throw new NotFoundException(
-        'could not find Partnership',
-        'partnership.id'
-      );
-    }
 
     const project = await this.projectService.readOne(
       result.projectId,
@@ -239,12 +152,12 @@ export class PartnershipService {
       mouStart: {
         value: mouStart,
         canRead: canReadMouStart,
-        canEdit: false, // edit the project mou or edit the partnerhsip mou override
+        canEdit: false, // edit the project mou or edit the partnership mou override
       },
       mouEnd: {
         value: mouEnd,
         canRead: canReadMouEnd,
-        canEdit: false, // edit the project mou or edit the partnerhsip mou override
+        canEdit: false, // edit the project mou or edit the partnership mou override
       },
       types: {
         ...securedProps.types,
@@ -301,7 +214,7 @@ export class PartnershipService {
     const { mou, agreement, ...simpleChanges } = changes;
 
     if (changes.primary) {
-      await this.removeOtherPartnershipPrimary(input.id);
+      await this.repo.removePrimaryFromOtherPartnerships(input.id);
     }
 
     await this.repo.updateProperties(object, simpleChanges);
@@ -347,11 +260,8 @@ export class PartnershipService {
 
     // only primary one partnership could be removed
     if (object.primary.value) {
-      const result = await this.otherPartnershipQuery(object.id)
-        .return('otherPartnership')
-        .first();
-
-      if (result) {
+      const isOthers = await this.repo.isAnyOtherPartnerships(object.id);
+      if (isOthers) {
         throw new InputException(
           'Primary partnerships cannot be removed. Make another partnership primary first.',
           'partnership.id'
@@ -372,19 +282,17 @@ export class PartnershipService {
   }
 
   async list(
-    input: Partial<PartnershipListInput>,
+    partialInput: Partial<PartnershipListInput>,
     session: Session
   ): Promise<PartnershipListOutput> {
-    const { filter, ...listInput } = {
+    const input = {
       ...PartnershipListInput.defaultVal,
-      ...input,
+      ...partialInput,
     };
 
-    const query = this.repo.list(filter, listInput, session);
+    const query = this.repo.list(input, session);
 
-    return await runListQuery(query, listInput, (id) =>
-      this.readOne(id, session)
-    );
+    return await runListQuery(query, input, (id) => this.readOne(id, session));
   }
 
   protected verifyFinancialReportingType(
@@ -420,7 +328,7 @@ export class PartnershipService {
       partnerId
     );
 
-    if (!result?.project) {
+    if (!result.project) {
       throw new NotFoundException(
         'Could not find project',
         'partnership.projectId'
@@ -440,49 +348,5 @@ export class PartnershipService {
         'Partnership for this project and partner already exists'
       );
     }
-  }
-
-  protected async isFirstPartnership(projectId: ID): Promise<boolean> {
-    const result = await this.repo.isFirstPartnership(projectId);
-    return result?.partnership ? false : true;
-  }
-
-  protected otherPartnershipQuery(partnershipId: ID): Query {
-    return this.repo.otherPartnershipQuery(partnershipId);
-  }
-
-  /**
-   *
-   * match current primary partnership, its project, and all other partnerships
-   * set current to primary false
-   */
-  protected async removeOtherPartnershipPrimary(
-    partnershipId: ID
-  ): Promise<void> {
-    const createdAt = DateTime.local();
-
-    await this.otherPartnershipQuery(partnershipId)
-      .match([
-        node('otherPartnership'),
-        relation('out', 'oldRel', 'primary', { active: true }),
-        node('', 'Property'),
-      ])
-      .setValues({
-        'oldRel.active': false,
-      })
-      .with('otherPartnership')
-      .create([
-        node('otherPartnership'),
-        relation('out', '', 'primary', {
-          active: true,
-          createdAt,
-        }),
-        node('newProperty', 'Property', {
-          createdAt,
-          value: false,
-          sortValue: false,
-        }),
-      ])
-      .run();
   }
 }

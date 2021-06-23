@@ -1,3 +1,4 @@
+import { Sensitivity } from '../../../common';
 import { DbBudget } from '../../budget/model';
 import { DbBudgetRecord } from '../../budget/model/budget-record.model.db';
 import { DbCeremony } from '../../ceremony/model';
@@ -205,7 +206,7 @@ export const Controller = new DbRole({
         { propertyName: 'name', permission: { read, }, },
         { propertyName: 'sensitivity', permission: { read, }, },
         { propertyName: 'hasExternalFirstScripture', permission: { read, }, },
-        { propertyName: 'locations', permission: { read, }, },
+        { propertyName: 'locations', permission: { read, sensitivityAccess: Sensitivity.Medium  }, },
         { propertyName: 'tags', permission: { read, }, },
       ],
       canDelete: false,

@@ -19,6 +19,6 @@ import { ProductService } from './product.service';
     ScriptureModule,
   ],
   providers: [ProductResolver, ProductService, ProductRepository],
-  exports: [ProductService, ProductRepository],
+  exports: [ProductService],
 })
 export class ProductModule {}

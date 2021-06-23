@@ -1,8 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { Dictionary } from 'lodash';
 import { DateTime } from 'luxon';
-import { generateId, ID, Session } from '../../common';
+import {
+  generateId,
+  ID,
+  NotFoundException,
+  ServerException,
+  Session,
+} from '../../common';
 import { createBaseNode, DtoRepository, matchRequestingUser } from '../../core';
 import {
   calculateTotalAndPaginateList,
@@ -15,15 +20,16 @@ import { CreateLocation, Location, LocationListInput } from './dto';
 
 @Injectable()
 export class LocationRepository extends DtoRepository(Location) {
-  async checkName(name: string) {
-    return await this.db
+  async doesNameExist(name: string) {
+    const result = await this.db
       .query()
       .match([node('name', 'LocationName', { value: name })])
       .return('name')
       .first();
+    return !!result;
   }
 
-  async create(session: Session, input: CreateLocation) {
+  async create(input: CreateLocation, session: Session) {
     const secureProps = [
       {
         key: 'name',
@@ -54,62 +60,53 @@ export class LocationRepository extends DtoRepository(Location) {
       },
     ];
 
-    // create location
     const query = this.db
       .query()
       .apply(matchRequestingUser(session))
       .apply(createBaseNode(await generateId(), 'Location', secureProps))
-      .return('node.id as id');
+      .apply((q) => {
+        if (input.fundingAccountId) {
+          q.with('node')
+            .matchNode('fundingAccount', 'FundingAccount', {
+              id: input.fundingAccountId,
+            })
+            .create([
+              node('node'),
+              relation('out', '', 'fundingAccount', {
+                active: true,
+                createdAt: DateTime.local(),
+              }),
+              node('fundingAccount'),
+            ]);
+        }
+        if (input.defaultFieldRegionId) {
+          q.with('node')
+            .matchNode('defaultFieldRegion', 'FieldRegion', {
+              id: input.defaultFieldRegionId,
+            })
+            .create([
+              node('node'),
+              relation('out', '', 'defaultFieldRegion', {
+                active: true,
+                createdAt: DateTime.local(),
+              }),
+              node('defaultFieldRegion'),
+            ]);
+        }
+      })
+      .return('node.id as id')
+      .asResult<{ id: ID }>();
 
-    return await query.first();
-  }
-
-  async createProperties(
-    type: 'fundingAccount' | 'defaultFieldRegion',
-    result: Dictionary<any> | undefined,
-    input: CreateLocation,
-    createdAt: DateTime
-  ) {
-    if (type === 'fundingAccount') {
-      await this.db
-        .query()
-        .matchNode('location', 'Location', {
-          id: result?.id,
-        })
-        .matchNode('fundingAccount', 'FundingAccount', {
-          id: input.fundingAccountId,
-        })
-        .create([
-          node('location'),
-          relation('out', '', 'fundingAccount', {
-            active: true,
-            createdAt,
-          }),
-          node('fundingAccount'),
-        ])
-        .run();
-    } else {
-      await this.db
-        .query()
-        .matchNode('location', 'Location', {
-          id: result?.id,
-        })
-        .matchNode('defaultFieldRegion', 'FieldRegion', {
-          id: input.defaultFieldRegionId,
-        })
-        .create([
-          node('location'),
-          relation('out', '', 'defaultFieldRegion', {
-            active: true,
-            createdAt,
-          }),
-          node('defaultFieldRegion'),
-        ])
-        .run();
+    const result = await query.first();
+    if (!result) {
+      throw new ServerException('Failed to create location');
     }
+
+    return result.id;
   }
-  readOne(id: ID, session: Session) {
-    return this.db
+
+  async readOne(id: ID, session: Session) {
+    const result = await this.db
       .query()
       .apply(matchRequestingUser(session))
       .match([node('node', 'Location', { id: id })])
@@ -132,85 +129,80 @@ export class LocationRepository extends DtoRepository(Location) {
           fundingAccountId: ID;
           defaultFieldRegionId: ID;
         }
-      >();
-
-    // return await query.first();
+      >()
+      .first();
+    if (!result) {
+      throw new NotFoundException('Could not find location');
+    }
+    return result;
   }
 
-  async updateLocationProperties(
-    type: 'fundingAccount' | 'defaultFieldRegion',
-    session: Session,
-    propertyId: ID,
-    locationId: ID
-  ) {
-    if (type === 'fundingAccount') {
-      const createdAt = DateTime.local();
-      await this.db
-        .query()
-        .apply(matchRequestingUser(session))
-        .matchNode('location', 'Location', { id: locationId })
-        .matchNode('newFundingAccount', 'FundingAccount', {
-          id: propertyId,
-        })
-        .optionalMatch([
-          node('location'),
-          relation('out', 'oldFundingAccountRel', 'fundingAccount', {
-            active: true,
-          }),
-          node('fundingAccount', 'FundingAccount'),
-        ])
-        .create([
-          node('location'),
-          relation('out', '', 'fundingAccount', {
-            active: true,
-            createdAt,
-          }),
-          node('newFundingAccount'),
-        ])
-        .set({
-          values: {
-            'oldFundingAccountRel.active': false,
-          },
-        })
-        .run();
-    } else {
-      const createdAt = DateTime.local();
-      await this.db
-        .query()
-        .apply(matchRequestingUser(session))
-        .matchNode('location', 'Location', { id: locationId })
-        .matchNode('newDefaultFieldRegion', 'FieldRegion', {
-          id: propertyId,
-        })
-        .optionalMatch([
-          node('location'),
-          relation('out', 'oldDefaultFieldRegionRel', 'defaultFieldRegion', {
-            active: true,
-          }),
-          node('defaultFieldRegion', 'FieldRegion'),
-        ])
-        .create([
-          node('location'),
-          relation('out', '', 'defaultFieldRegion', {
-            active: true,
-            createdAt,
-          }),
-          node('newDefaultFieldRegion'),
-        ])
-        .set({
-          values: {
-            'oldDefaultFieldRegionRel.active': false,
-          },
-        })
-        .run();
-    }
+  async updateFundingAccount(id: ID, fundingAccount: ID, session: Session) {
+    await this.db
+      .query()
+      .apply(matchRequestingUser(session))
+      .matchNode('location', 'Location', { id })
+      .matchNode('newFundingAccount', 'FundingAccount', {
+        id: fundingAccount,
+      })
+      .optionalMatch([
+        node('location'),
+        relation('out', 'oldFundingAccountRel', 'fundingAccount', {
+          active: true,
+        }),
+        node('fundingAccount', 'FundingAccount'),
+      ])
+      .create([
+        node('location'),
+        relation('out', '', 'fundingAccount', {
+          active: true,
+          createdAt: DateTime.local(),
+        }),
+        node('newFundingAccount'),
+      ])
+      .set({
+        values: {
+          'oldFundingAccountRel.active': false,
+        },
+      })
+      .run();
+  }
+
+  async updateDefaultFieldRegion(id: ID, fieldRegion: ID, session: Session) {
+    await this.db
+      .query()
+      .apply(matchRequestingUser(session))
+      .matchNode('location', 'Location', { id })
+      .matchNode('newDefaultFieldRegion', 'FieldRegion', {
+        id: fieldRegion,
+      })
+      .optionalMatch([
+        node('location'),
+        relation('out', 'oldDefaultFieldRegionRel', 'defaultFieldRegion', {
+          active: true,
+        }),
+        node('defaultFieldRegion', 'FieldRegion'),
+      ])
+      .create([
+        node('location'),
+        relation('out', '', 'defaultFieldRegion', {
+          active: true,
+          createdAt: DateTime.local(),
+        }),
+        node('newDefaultFieldRegion'),
+      ])
+      .set({
+        values: {
+          'oldDefaultFieldRegionRel.active': false,
+        },
+      })
+      .run();
   }
 
   list({ filter, ...input }: LocationListInput, session: Session) {
-    const label = 'Location';
     return this.db
       .query()
-      .match([requestingUser(session), ...permissionsOfNode(label)])
+      .match([requestingUser(session), ...permissionsOfNode('Location')])
       .apply(calculateTotalAndPaginateList(Location, input));
   }
 
@@ -265,6 +257,22 @@ export class LocationRepository extends DtoRepository(Location) {
       .match([
         requestingUser(session),
         ...permissionsOfNode('Location'),
+        relation('in', '', rel, { active: true }),
+        node(`${label.toLowerCase()}`, label, { id }),
+      ])
+      .apply(calculateTotalAndPaginateList(Location, input));
+  }
+
+  listLocationsFromNodeNoSecGroups(
+    label: string,
+    rel: string,
+    id: ID,
+    input: LocationListInput
+  ) {
+    return this.db
+      .query()
+      .match([
+        node('node', 'Location'),
         relation('in', '', rel, { active: true }),
         node(`${label.toLowerCase()}`, label, { id }),
       ])

@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
-import { Dictionary } from 'lodash';
+import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { generateId, ID, Order, ServerException, Session } from '../../common';
+import { ID, NotFoundException, ServerException, Session } from '../../common';
 import {
   createBaseNode,
   DtoRepository,
@@ -16,50 +15,40 @@ import {
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
-import { QueryWithResult } from '../../core/database/query.overrides';
 import { DbPropsOfDto } from '../../core/database/results';
 import { ScopedRole } from '../authorization';
-import { Budget, BudgetFilters, BudgetStatus } from './dto';
+import { Budget, BudgetListInput, BudgetStatus } from './dto';
 
 @Injectable()
 export class BudgetRepository extends DtoRepository(Budget) {
-  readProject(projectId: ID, session: Session): Query {
-    const readProject = this.db
+  async doesProjectExist(projectId: ID, session: Session) {
+    const result = await this.db
       .query()
       .match(matchSession(session, { withAclRead: 'canReadProjects' }))
-      .match([node('project', 'Project', { id: projectId })]);
-    readProject.return({
-      project: [{ id: 'id', createdAt: 'createdAt' }],
-      requestingUser: [
-        {
-          canReadProjects: 'canReadProjects',
-          canCreateProject: 'canCreateProject',
-        },
-      ],
-    });
-    return readProject;
+      .match([node('project', 'Project', { id: projectId })])
+      .return('project.id')
+      .first();
+    return !!result;
   }
 
-  async createBudget(
-    projectId: ID,
-    budgetId: ID,
-    secureProps: Property[],
-    session: Session
-  ): Promise<Dictionary<any> | undefined> {
-    const createBudget = this.db
+  async create(budgetId: ID, secureProps: Property[], session: Session) {
+    const result = await this.db
       .query()
       .apply(matchRequestingUser(session))
       .apply(createBaseNode(budgetId, 'Budget', secureProps))
-      .return('node.id as id');
-    const result = await createBudget.first();
+      .return('node.id as id')
+      .asResult<{ id: ID }>()
+      .first();
     if (!result) {
-      throw new ServerException('failed to create a budget');
+      throw new ServerException('Failed to create budget');
     }
-    // connect budget to project
+  }
+
+  async connectToProject(budgetId: ID, projectId: ID) {
     await this.db
       .query()
       .matchNode('project', 'Project', { id: projectId })
-      .matchNode('budget', 'Budget', { id: result.id })
+      .matchNode('budget', 'Budget', { id: budgetId })
       .create([
         node('project'),
         relation('out', '', 'budget', {
@@ -69,23 +58,10 @@ export class BudgetRepository extends DtoRepository(Budget) {
         node('budget'),
       ])
       .run();
-    return result;
   }
 
-  async createBudgetRecord(
-    session: Session,
-    secureProps: Property[]
-  ): Promise<Query> {
-    const createBudgetRecord = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .apply(createBaseNode(await generateId(), 'BudgetRecord', secureProps))
-      .return('node.id as id');
-    return createBudgetRecord;
-  }
-
-  readOne(id: ID, session: Session) {
-    const query = this.db
+  async readOne(id: ID, session: Session) {
+    const result = await this.db
       .query()
       .match([
         node('project', 'Project'),
@@ -97,21 +73,20 @@ export class BudgetRepository extends DtoRepository(Budget) {
       .asResult<{
         props: DbPropsOfDto<Budget, true>;
         scopedRoles: ScopedRole[];
-      }>();
+      }>()
+      .first();
+    if (!result) {
+      throw new NotFoundException('Could not find budget', 'budget.id');
+    }
 
-    return query;
+    return result;
   }
 
-  async verifyCanEdit(id: ID): Promise<
-    | {
-        status: BudgetStatus;
-      }
-    | undefined
-  > {
-    return await this.db
+  async getStatusByRecord(recordId: ID) {
+    const result = await this.db
       .query()
       .match([
-        node('budgetRecord', 'BudgetRecord', { id }),
+        node('budgetRecord', 'BudgetRecord', { id: recordId }),
         relation('in', '', 'record', { active: true }),
         node('budget', 'Budget'),
         relation('out', '', 'status', { active: true }),
@@ -120,28 +95,18 @@ export class BudgetRepository extends DtoRepository(Budget) {
       .return('status.value as status')
       .asResult<{ status: BudgetStatus }>()
       .first();
+    if (!result) {
+      throw new NotFoundException('Budget could not be found');
+    }
+    return result.status;
   }
 
-  list(
-    filter: BudgetFilters,
-    listInput: {
-      sort: keyof Budget;
-      order: Order;
-      count: number;
-      page: number;
-    },
-    session: Session
-  ): QueryWithResult<{
-    items: ID[];
-    total: number;
-  }> {
-    const label = 'Budget';
-
+  list({ filter, ...input }: BudgetListInput, session: Session) {
     const query = this.db
       .query()
       .match([
         requestingUser(session),
-        ...permissionsOfNode(label),
+        ...permissionsOfNode('Budget'),
         ...(filter.projectId
           ? [
               relation('in', '', 'budget', { active: true }),
@@ -151,7 +116,24 @@ export class BudgetRepository extends DtoRepository(Budget) {
             ]
           : []),
       ])
-      .apply(calculateTotalAndPaginateList(Budget, listInput));
+      .apply(calculateTotalAndPaginateList(Budget, input));
+    return query;
+  }
+  listNoSecGroups({ filter, ...input }: BudgetListInput) {
+    const query = this.db
+      .query()
+      .match([
+        ...(filter.projectId
+          ? [
+              node('node', 'Budget'),
+              relation('in', '', 'budget', { active: true }),
+              node('project', 'Project', {
+                id: filter.projectId,
+              }),
+            ]
+          : [node('node', 'Budget')]),
+      ])
+      .apply(calculateTotalAndPaginateList(Budget, input));
     return query;
   }
 }

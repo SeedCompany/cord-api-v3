@@ -1,22 +1,30 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { DateTime, Interval } from 'luxon';
+import { Interval } from 'luxon';
 import {
-  generateId,
   ID,
   NotFoundException,
   ServerException,
   Session,
   UnsecuredDto,
 } from '../../common';
-import { IEventBus, ILogger, Logger, OnIndex } from '../../core';
+import {
+  HandleIdLookup,
+  IEventBus,
+  ILogger,
+  Logger,
+  OnIndex,
+} from '../../core';
 import { runListQuery } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { CreateDefinedFileVersionInput, FileService } from '../file';
 import {
   CreatePeriodicReport,
+  FinancialReport,
   IPeriodicReport,
+  NarrativeReport,
   PeriodicReport,
   PeriodicReportListInput,
+  ProgressReport,
   ReportType,
   SecuredPeriodicReportList,
 } from './dto';
@@ -46,25 +54,8 @@ export class PeriodicReportService {
     input: CreatePeriodicReport,
     session: Session
   ): Promise<PeriodicReport> {
-    const id = await generateId();
-    const createdAt = DateTime.local();
-
-    const reportFileId = await generateId();
-
     try {
-      const result = await this.repo.create(
-        input,
-
-        createdAt,
-        id,
-        reportFileId
-      );
-
-      if (!result) {
-        throw new ServerException('Failed to create a periodic report');
-      }
-
-      await this.repo.createProperties(input, result);
+      const { id, reportFileId } = await this.repo.create(input);
 
       await this.files.createDefinedFile(
         reportFileId,
@@ -101,6 +92,7 @@ export class PeriodicReportService {
     return report;
   }
 
+  @HandleIdLookup([FinancialReport, NarrativeReport, ProgressReport])
   async readOne(id: ID, session: Session): Promise<PeriodicReport> {
     this.logger.debug(`read one`, {
       id,

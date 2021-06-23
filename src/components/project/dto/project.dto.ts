@@ -62,7 +62,7 @@ class Project extends PinnablePostableResource {
     member: [ProjectMember], // why singular
     otherLocations: [Location],
     partnership: Partnership, // why singular
-    budget: [Budget], // budgets or currentBudget?
+    budget: Budget, // currentBudget
     engagement: [Engagement], // why singular
     // edge case because it's writable for internships but not secured
     sensitivity: Sensitivity,

@@ -151,11 +151,12 @@ export class PostService {
     input: PostListInput,
     session: Session
   ): Promise<SecuredPostList> {
-    const perms = await this.authorizationService.getPermissions(
-      parentType,
-      session,
-      parent.scope
-    );
+    const perms = await this.authorizationService.getPermissions({
+      resource: parentType,
+      sessionOrUserId: session,
+      otherRoles: parent.scope,
+      dto: parent,
+    });
     if (!perms.posts.canRead) {
       return SecuredList.Redacted;
     }

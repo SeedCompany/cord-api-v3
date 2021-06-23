@@ -7,7 +7,7 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import { ConfigService, ILogger, Logger, OnIndex } from '../../core';
+import { HandleIdLookup, ILogger, Logger, OnIndex } from '../../core';
 import {
   parseBaseNodeProperties,
   runListQuery,
@@ -26,7 +26,6 @@ import { FundingAccountRepository } from './funding-account.repository';
 export class FundingAccountService {
   constructor(
     @Logger('funding-account:service') private readonly logger: ILogger,
-    private readonly config: ConfigService,
     private readonly authorizationService: AuthorizationService,
     private readonly repo: FundingAccountRepository
   ) {}
@@ -89,6 +88,7 @@ export class FundingAccountService {
     }
   }
 
+  @HandleIdLookup(FundingAccount)
   async readOne(id: ID, session: Session): Promise<FundingAccount> {
     this.logger.info('readOne', { id, userId: session.userId });
 

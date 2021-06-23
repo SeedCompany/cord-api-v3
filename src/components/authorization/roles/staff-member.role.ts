@@ -1,3 +1,4 @@
+import { Sensitivity } from '../../../common';
 import { DbBudget } from '../../budget/model';
 import { DbBudgetRecord } from '../../budget/model/budget-record.model.db';
 import { DbCeremony } from '../../ceremony/model';
@@ -195,7 +196,7 @@ export const StaffMember = new DbRole({
         { propertyName: 'name', permission: { read, }, },
         { propertyName: 'sensitivity', permission: { read, }, },
         { propertyName: 'hasExternalFirstScripture', permission: { read, }, },
-        { propertyName: 'locations', permission: { read, }, },
+        { propertyName: 'locations', permission: { read, sensitivityAccess: Sensitivity.Low }, },
         { propertyName: 'tags', permission: { read, }, },
       ],
       canDelete: false,
@@ -324,8 +325,8 @@ export const StaffMember = new DbRole({
         { propertyName: 'stepChangedAt', permission: { read, }, },
         { propertyName: 'rootDirectory', permission: { read, }, },
         { propertyName: 'member', permission: { read, }, },
-        { propertyName: 'otherLocations', permission: { read, }, },
-        { propertyName: 'primaryLocation', permission: { read, }, },
+        { propertyName: 'otherLocations', permission: { read, sensitivityAccess: Sensitivity.Low }, },
+        { propertyName: 'primaryLocation', permission: { read, sensitivityAccess: Sensitivity.Low }, },
         { propertyName: 'marketingLocation', permission: { read, }, },
         { propertyName: 'partnership', permission: { read, }, },
         { propertyName: 'budget', permission: { read, }, },

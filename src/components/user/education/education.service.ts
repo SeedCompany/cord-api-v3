@@ -6,7 +6,7 @@ import {
   ServerException,
   Session,
 } from '../../../common';
-import { ConfigService, DatabaseService, ILogger, Logger } from '../../../core';
+import { HandleIdLookup, ILogger, Logger } from '../../../core';
 import {
   parseBaseNodeProperties,
   runListQuery,
@@ -25,8 +25,6 @@ import { EducationRepository } from './education.repository';
 export class EducationService {
   constructor(
     @Logger('education:service') private readonly logger: ILogger,
-    private readonly config: ConfigService,
-    private readonly db: DatabaseService,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
     private readonly repo: EducationRepository
@@ -81,6 +79,7 @@ export class EducationService {
     return await this.readOne(result.id, session);
   }
 
+  @HandleIdLookup(Education)
   async readOne(id: ID, session: Session): Promise<Education> {
     this.logger.debug(`Read Education`, {
       id: id,
@@ -108,7 +107,7 @@ export class EducationService {
 
   async update(input: UpdateEducation, session: Session): Promise<Education> {
     const ed = await this.readOne(input.id, session);
-    const result = await this.repo.getUserEducation(session, input.id);
+    const result = await this.repo.getUserIdByEducation(session, input.id);
     if (!result) {
       throw new NotFoundException(
         'Could not find user associated with education',
@@ -116,7 +115,7 @@ export class EducationService {
       );
     }
     const changes = this.repo.getActualChanges(ed, input);
-    if (result.user.properties.id !== session.userId) {
+    if (result.id !== session.userId) {
       await this.authorizationService.verifyCanEditChanges(
         Education,
         ed,

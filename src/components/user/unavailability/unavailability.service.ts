@@ -5,7 +5,7 @@ import {
   ServerException,
   Session,
 } from '../../../common';
-import { ConfigService, ILogger, Logger } from '../../../core';
+import { HandleIdLookup, ILogger, Logger } from '../../../core';
 import { parseBaseNodeProperties } from '../../../core/database/results';
 import { AuthorizationService } from '../../authorization/authorization.service';
 import {
@@ -21,7 +21,6 @@ import { UnavailabilityRepository } from './unavailability.repository';
 export class UnavailabilityService {
   constructor(
     @Logger('unavailability:service') private readonly logger: ILogger,
-    private readonly config: ConfigService,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
     private readonly repo: UnavailabilityRepository
@@ -91,6 +90,7 @@ export class UnavailabilityService {
     }
   }
 
+  @HandleIdLookup(Unavailability)
   async readOne(id: ID, session: Session): Promise<Unavailability> {
     const result = await this.repo.readOne(id, session);
     if (!result) {
@@ -116,7 +116,7 @@ export class UnavailabilityService {
   ): Promise<Unavailability> {
     const unavailability = await this.readOne(input.id, session);
 
-    const result = await this.repo.getUnavailability(session, input);
+    const result = await this.repo.getUserIdByUnavailability(session, input);
     if (!result) {
       throw new NotFoundException(
         'Could not find user associated with unavailability',
@@ -126,7 +126,7 @@ export class UnavailabilityService {
 
     const changes = this.repo.getActualChanges(unavailability, input);
 
-    if (result.user.properties.id !== session.userId) {
+    if (result.id !== session.userId) {
       await this.authorizationService.verifyCanEditChanges(
         Unavailability,
         unavailability,

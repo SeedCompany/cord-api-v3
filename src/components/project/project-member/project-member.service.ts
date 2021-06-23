@@ -17,6 +17,7 @@ import {
 import {
   ConfigService,
   DatabaseService,
+  HandleIdLookup,
   IEventBus,
   ILogger,
   Logger,
@@ -108,11 +109,14 @@ export class ProjectMemberService {
         session,
         createdAt
       );
+      if (!memberQuery) {
+        throw new ServerException('Failed to create project member');
+      }
 
       // creating user must be an admin, use role change event
       await this.authorizationService.processNewBaseNode(
         ProjectMember,
-        memberQuery?.id,
+        memberQuery.id,
         session.userId
       );
 
@@ -124,6 +128,7 @@ export class ProjectMemberService {
     }
   }
 
+  @HandleIdLookup(ProjectMember)
   async readOne(id: ID, session: Session): Promise<ProjectMember> {
     this.logger.debug(`read one`, {
       id,

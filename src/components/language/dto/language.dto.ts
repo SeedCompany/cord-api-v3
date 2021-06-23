@@ -53,6 +53,11 @@ export class EthnologueLanguage {
 
   @Field()
   readonly canDelete: boolean;
+
+  @Field(() => Sensitivity, {
+    description: "Based on the language's sensitivity",
+  })
+  readonly sensitivity: Sensitivity;
 }
 
 @ObjectType({

@@ -52,19 +52,8 @@ describe('Authentication e2e', () => {
 
     const tokenRes = await db
       .query()
-      .raw(
-        `
-        MATCH
-        (e:EmailToken {
-          value: $email
-        })
-        RETURN
-        e.token as token
-      `,
-        {
-          email: email.toLowerCase(),
-        }
-      )
+      .matchNode('e', 'EmailToken', { value: email.toLowerCase() })
+      .return<{ token: string }>('e.token as token')
       .first();
 
     const token = tokenRes ? tokenRes.token : '';

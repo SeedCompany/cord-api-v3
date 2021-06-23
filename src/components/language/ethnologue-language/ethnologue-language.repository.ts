@@ -7,14 +7,9 @@ import {
   matchRequestingUser,
   Property,
 } from '../../../core';
-import { matchPropList } from '../../../core/database/query';
-import {
-  DbPropsOfDto,
-  StandardReadResult,
-} from '../../../core/database/results';
+import { matchProps } from '../../../core/database/query';
+import { DbPropsOfDto } from '../../../core/database/results';
 import { EthnologueLanguage } from '../dto';
-
-type EthLangDbProps = DbPropsOfDto<EthnologueLanguage> & { id: ID };
 
 @Injectable()
 export class EthnologueLanguageRepository extends DtoRepository(
@@ -27,7 +22,7 @@ export class EthnologueLanguageRepository extends DtoRepository(
       .apply(
         createBaseNode(await generateId(), 'EthnologueLanguage', secureProps)
       )
-      .return('node.id as id');
+      .return<{ id: ID }>('node.id as id');
 
     return await query.first();
   }
@@ -37,9 +32,9 @@ export class EthnologueLanguageRepository extends DtoRepository(
       .query()
       .apply(matchRequestingUser(session))
       .match([node('node', 'EthnologueLanguage', { id: id })])
-      .apply(matchPropList)
-      .return('propList, node')
-      .asResult<StandardReadResult<EthLangDbProps>>();
+      .apply(matchProps())
+      .return('props')
+      .asResult<{ props: DbPropsOfDto<EthnologueLanguage> }>();
 
     return await query.first();
   }

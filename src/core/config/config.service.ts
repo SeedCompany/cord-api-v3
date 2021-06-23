@@ -149,7 +149,7 @@ export class ConfigService implements EmailOptionsFactory {
 
   @Lazy() get defaultOrg() {
     return {
-      id: '5c4278da9503d5cd78e82f02',
+      id: '5c4278da9503d5cd78e82f02' as ID,
       name: 'Seed Company',
     };
   }
