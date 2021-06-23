@@ -39,14 +39,12 @@ export class RegisterResolver {
   }
 
   @ResolveField(() => User, {
-    nullable: true,
-    description:
-      'Only returned if there is a logged-in user tied to the current session.',
+    description: 'The newly created, logged-in user',
   })
   async user(
     @Parent() { user }: RegisterOutput,
     @AnonSession() session: Session
-  ): Promise<User | null> {
+  ): Promise<User> {
     return await this.users.readOne(user, session);
   }
 
