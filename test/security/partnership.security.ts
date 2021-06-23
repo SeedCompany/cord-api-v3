@@ -2,20 +2,18 @@ import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { CalendarDate, Sensitivity } from '../../src/common';
 import { Powers } from '../../src/components/authorization/dto/powers';
-import { Budget } from '../../src/components/budget';
-import { Location } from '../../src/components/location';
 import { Partner, PartnerType } from '../../src/components/partner';
-import { Partnership } from '../../src/components/partnership';
 import {
-  IProject,
+  FinancialReportingType,
+  Partnership,
+} from '../../src/components/partnership';
+import {
   Project,
   ProjectType,
   Role,
   ScopedRole,
 } from '../../src/components/project';
 import {
-  createBudget,
-  createLocation,
   createOrganization,
   createPartner,
   createPartnership,
@@ -25,19 +23,12 @@ import {
   login,
   Raw,
   readOnePartnership,
-  readOneProject,
-  readOneProjectBudget,
-  readOneProjectOtherLocations,
-  readOneProjectOtherLocationsItems,
   registerUserWithPower,
   TestApp,
 } from '../utility';
 import { resetDatabase } from '../utility/reset-database';
 import { testRole } from '../utility/roles';
-import {
-  expectSensitiveProperty,
-  expectSensitiveRelationList,
-} from '../utility/sensitivity';
+import { expectSensitiveProperty } from '../utility/sensitivity';
 import { getPermissions } from './permissions';
 
 describe('Project Security e2e', () => {
@@ -74,11 +65,11 @@ describe('Project Security e2e', () => {
     testPartner = await createPartner(app, {
       organizationId: org.id,
     });
-    const testPartnership = await createPartnership(app, {
+    testPartnership = await createPartnership(app, {
       partnerId: testPartner.id,
       projectId: testProject.id,
       types: [PartnerType.Funding, PartnerType.Managing],
-      financialReportingType: undefined,
+      financialReportingType: FinancialReportingType.Funded,
       mouStartOverride: CalendarDate.fromISO('2000-01-01'),
       mouEndOverride: CalendarDate.fromISO('2004-01-01'),
     });
@@ -109,21 +100,18 @@ describe('Project Security e2e', () => {
       ${Role.RegionalCommunicationsCoordinator}
     `('Global $role', ({ role }) => {
       test.each`
-        property                    | readFunction          | staticResource
-        ${'agreement'}              | ${readOnePartnership} | ${Partnership}
-        ${'agreementStatus'}        | ${readOnePartnership} | ${Partnership}
-        ${'financialReportingType'} | ${readOnePartnership} | ${Partnership}
-        ${'mouStart'}               | ${readOnePartnership} | ${Partnership}
-        ${'mouEnd'}                 | ${readOnePartnership} | ${Partnership}
-        ${'mouStartOverride'}       | ${readOnePartnership} | ${Partnership}
-        ${'mouEndOverride'}         | ${readOnePartnership} | ${Partnership}
-        ${'mou'}                    | ${readOnePartnership} | ${Partnership}
-        ${'types'}                  | ${readOnePartnership} | ${Partnership}
-        ${'partner'}                | ${readOnePartnership} | ${Partnership}
-        ${'primary'}                | ${readOnePartnership} | ${Partnership}
+        property              | readFunction          | staticResource | skipEditCheck
+        ${'agreementStatus'}  | ${readOnePartnership} | ${Partnership} | ${false}
+        ${'mouStart'}         | ${readOnePartnership} | ${Partnership} | ${true}
+        ${'mouEnd'}           | ${readOnePartnership} | ${Partnership} | ${true}
+        ${'mouStartOverride'} | ${readOnePartnership} | ${Partnership} | ${false}
+        ${'mouEndOverride'}   | ${readOnePartnership} | ${Partnership} | ${false}
+        ${'types'}            | ${readOnePartnership} | ${Partnership} | ${false}
+        ${'partner'}          | ${readOnePartnership} | ${Partnership} | ${false}
+        ${'primary'}          | ${readOnePartnership} | ${Partnership} | ${false}
       `(
         ' reading $staticResource.name $property',
-        async ({ property, readFunction, staticResource }) => {
+        async ({ property, readFunction, staticResource, skipEditCheck }) => {
           await testRole({
             app: app,
             resource: testPartnership,
@@ -131,153 +119,73 @@ describe('Project Security e2e', () => {
             role: role,
             readOneFunction: readFunction,
             propToTest: property,
+            skipEditCheck: skipEditCheck,
           });
         }
       );
+      it('should not be able to edit mouStart and mouEnd', async () => {
+        // still logged in under role, testRole doesn't reset the login
+        const p = await readOnePartnership(app, testPartnership.id);
+        expect(p.mouStart.canEdit).toBe(false);
+        expect(p.mouEnd.canEdit).toBe(false);
+      });
     });
   });
-//   describe('Restricted by Sensitivity', () => {
-//     describe.each`
-//       role                      | sensitivityToTest
-//       ${Role.StaffMember}       | ${Sensitivity.Low}
-//       ${Role.Marketing}         | ${Sensitivity.Low}
-//       ${Role.Fundraising}       | ${Sensitivity.Medium}
-//       ${Role.ConsultantManager} | ${Sensitivity.Medium}
-//       ${Role.FinancialAnalyst}  | ${Sensitivity.Medium}
-//       ${Role.ProjectManager}    | ${Sensitivity.Medium}
-//     `(
-//       'Role: $role - Sensitivity: $sensitivityToTest',
-//       ({ role, sensitivityToTest }) => {
-//         test.each`
-//           property             | resource    | readFunction      | type
-//           ${'primaryLocation'} | ${IProject} | ${readOneProject} | ${ProjectType.Translation}
-//           ${'primaryLocation'} | ${IProject} | ${readOneProject} | ${ProjectType.Internship}
-//         `(
-//           ' reading $type $resource.name $property',
-//           async ({ property, resource, readFunction, type }) => {
-//             await login(app, { email: email, password: password });
-//             const proj = await createProject(app, {
-//               primaryLocationId: primaryLocation.id,
-//               type,
-//             });
-//             await expectSensitiveProperty({
-//               app,
-//               role,
-//               propertyToCheck: property,
-//               projectId: proj.id,
-//               resourceId: proj.id,
-//               resource: resource,
-//               sensitivityRestriction: sensitivityToTest,
-//               projectType: type,
-//               permissions: await getPermissions({
-//                 resource: resource,
-//                 userRole: `global:${role as Role}` as ScopedRole,
-//                 sensitivity: sensitivityToTest,
-//               }),
-//               readOneFunction: readFunction,
-//             });
-//             await login(app, { email, password });
-//           }
-//         );
-//       }
-//     );
-//     it('reading currentBudget', async () => {
-//       await login(app, { email, password });
-//       const proj = await createProject(app);
-//       await createBudget(app, { projectId: proj.id });
-//       const org = await createOrganization(app);
-//       const partner = await createPartner(app, {
-//         organizationId: org.id,
-//       });
-//       await createPartnership(app, {
-//         partnerId: partner.id,
-//         projectId: proj.id,
-//         types: [PartnerType.Funding, PartnerType.Managing],
-//         financialReportingType: undefined,
-//         mouStartOverride: CalendarDate.fromISO('2000-01-01'),
-//         mouEndOverride: CalendarDate.fromISO('2004-01-01'),
-//       });
-//       await registerUserWithPower(app, [], { roles: [Role.ConsultantManager] });
-//       const perms = await getPermissions({
-//         resource: IProject,
-//         userRole: `global:${Role.ConsultantManager as Role}` as ScopedRole,
-//         sensitivity: Sensitivity.Medium,
-//       });
-
-//       await expectSensitiveProperty({
-//         app,
-//         role: Role.ConsultantManager,
-//         propertyToCheck: 'budget',
-//         projectId: proj.id,
-//         resourceId: proj.id,
-//         resource: IProject,
-//         sensitivityRestriction: Sensitivity.Medium,
-//         projectType: ProjectType.Translation,
-//         permissions: perms,
-//         readOneFunction: readOneProjectBudget,
-//       });
-//       await login(app, { email, password });
-//     });
-//     describe.each`
-//       role                      | sensitivityToTest
-//       ${Role.StaffMember}       | ${Sensitivity.Low}
-//       ${Role.Marketing}         | ${Sensitivity.Low}
-//       ${Role.Fundraising}       | ${Sensitivity.Medium}
-//       ${Role.ConsultantManager} | ${Sensitivity.Medium}
-//       ${Role.FinancialAnalyst}  | ${Sensitivity.Medium}
-//       ${Role.ProjectManager}    | ${Sensitivity.Medium}
-//     `(
-//       'Role: $role - Sensitivity: $sensitivityToTest',
-//       ({ role, sensitivityToTest }) => {
-//         it('reading otherLocations Internship project', async () => {
-//           await login(app, { email, password });
-//           const proj = await createProject(app, {
-//             otherLocationIds: [testLocation.id],
-//             type: ProjectType.Internship,
-//           });
-//           await expectSensitiveRelationList({
-//             app,
-//             role,
-//             sensitivityRestriction: sensitivityToTest,
-//             projectId: proj.id,
-//             projectType: proj.type,
-//             readFunction: readOneProjectOtherLocationsItems,
-//             resourceId: proj.id,
-//             resource: IProject,
-//             propertyToCheck: 'otherLocations',
-//             perms: await getPermissions({
-//               resource: IProject,
-//               userRole: `global:${role as Role}` as ScopedRole,
-//               sensitivity: sensitivityToTest,
-//             }),
-//           });
-//           await login(app, { email, password });
-//         });
-//         it('reading otherLocations Translation project', async () => {
-//           await login(app, { email, password });
-//           const proj = await createProject(app, {
-//             otherLocationIds: [testLocation.id],
-//             type: ProjectType.Translation,
-//           });
-//           await expectSensitiveRelationList({
-//             app,
-//             role,
-//             sensitivityRestriction: sensitivityToTest,
-//             projectId: proj.id,
-//             projectType: proj.type,
-//             readFunction: readOneProjectOtherLocationsItems,
-//             resourceId: proj.id,
-//             resource: IProject,
-//             propertyToCheck: 'otherLocations',
-//             perms: await getPermissions({
-//               resource: IProject,
-//               userRole: `global:${role as Role}` as ScopedRole,
-//               sensitivity: sensitivityToTest,
-//             }),
-//           });
-//           await login(app, { email, password });
-//         });
-//       }
-//     );
-//   });
+  describe('Restricted by Sensitivity', () => {
+    describe.each`
+      role                      | sensitivityToTest
+      ${Role.StaffMember}       | ${Sensitivity.Low}
+      ${Role.Marketing}         | ${Sensitivity.Low}
+      ${Role.Fundraising}       | ${Sensitivity.Medium}
+      ${Role.ConsultantManager} | ${Sensitivity.Low}
+      ${Role.FinancialAnalyst}  | ${Sensitivity.Medium}
+      ${Role.ProjectManager}    | ${Sensitivity.Medium}
+    `(
+      'Role: $role - Sensitivity: $sensitivityToTest',
+      ({ role, sensitivityToTest }) => {
+        test.each`
+          property     | resource       | readFunction          | type
+          ${'partner'} | ${Partnership} | ${readOnePartnership} | ${ProjectType.Translation}
+          ${'partner'} | ${Partnership} | ${readOnePartnership} | ${ProjectType.Internship}
+        `(
+          ' reading $type $resource.name $property',
+          async ({ property, resource, readFunction, type }) => {
+            await login(app, { email: email, password: password });
+            const proj = await createProject(app, {
+              type,
+            });
+            const o = await createOrganization(app);
+            const partner = await createPartner(app, {
+              organizationId: o.id,
+            });
+            const partship = await createPartnership(app, {
+              partnerId: partner.id,
+              projectId: proj.id,
+              types: [PartnerType.Funding, PartnerType.Managing],
+              financialReportingType: FinancialReportingType.Funded,
+              mouStartOverride: CalendarDate.fromISO('2000-01-01'),
+              mouEndOverride: CalendarDate.fromISO('2004-01-01'),
+            });
+            await expectSensitiveProperty({
+              app,
+              role,
+              propertyToCheck: property,
+              projectId: proj.id,
+              resourceId: partship.id,
+              resource: resource,
+              sensitivityRestriction: sensitivityToTest,
+              projectType: type,
+              permissions: await getPermissions({
+                resource: resource,
+                userRole: `global:${role as Role}` as ScopedRole,
+                sensitivity: sensitivityToTest,
+              }),
+              readOneFunction: readFunction,
+            });
+            await login(app, { email, password });
+          }
+        );
+      }
+    );
+  });
 });

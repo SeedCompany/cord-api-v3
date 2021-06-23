@@ -122,6 +122,7 @@ describe('Project Security e2e', () => {
             role: role,
             readOneFunction: readFunction,
             propToTest: property,
+            skipEditCheck: false,
           });
         }
       );
