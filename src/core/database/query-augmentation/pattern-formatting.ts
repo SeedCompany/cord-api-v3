@@ -1,5 +1,12 @@
-import { Create, Match, Merge, With } from 'cypher-query-builder';
+import {
+  ClauseCollection,
+  Create,
+  Match,
+  Merge,
+  With,
+} from 'cypher-query-builder';
 import type { TermListClause as TSTermListClause } from 'cypher-query-builder/dist/typings/clauses/term-list-clause';
+import { compact } from 'lodash';
 import { Class } from 'type-fest';
 
 // Add line breaks for each pattern when there's multiple per statement
@@ -29,4 +36,13 @@ TermListClause.prototype.stringifyProperty = function stringifyProperty(
     return prop;
   }
   return origStringifyProperty(prop, alias, node);
+};
+
+// Remove extra line breaks from empty clauses
+ClauseCollection.prototype.build = function build(this: ClauseCollection) {
+  const clauses = compact(this.clauses.map((c) => c.build()));
+  if (clauses.length === 0) {
+    return '';
+  }
+  return `${clauses.join('\n')};`;
 };
