@@ -22,6 +22,7 @@ import {
 } from '../../../common';
 import { ScopedRole } from '../../authorization/dto';
 import { Budget } from '../../budget/dto';
+import { ChangesetAware } from '../../changeset/dto';
 import { IEngagement as Engagement } from '../../engagement/dto';
 import { Directory } from '../../file/dto';
 import { SecuredTags } from '../../language/dto/language.dto';
@@ -31,6 +32,7 @@ import { SecuredReportPeriod } from '../../periodic-report/dto';
 import { Pinnable } from '../../pin/dto';
 import { Post } from '../../post/dto';
 import { Postable } from '../../post/postable/dto/postable.dto';
+import { ProjectChangeRequest } from '../../project-change-request/dto';
 import { ProjectMember } from '../project-member/dto';
 import { ProjectStatus } from './status.enum';
 import { SecuredProjectStep } from './step.enum';
@@ -38,8 +40,12 @@ import { ProjectType } from './type.enum';
 
 type AnyProject = MergeExclusive<TranslationProject, InternshipProject>;
 
-const PinnablePostableResource: Type<Resource & Postable & Pinnable> =
-  IntersectionType(Resource, IntersectionType(Postable, Pinnable));
+const PinnablePostableChangesetAwareResource: Type<
+  Resource & Postable & ChangesetAware & Pinnable
+> = IntersectionType(
+  Resource,
+  IntersectionType(Postable, IntersectionType(ChangesetAware, Pinnable))
+);
 
 @InterfaceType({
   resolveType: (val: Project) => {
@@ -52,9 +58,9 @@ const PinnablePostableResource: Type<Resource & Postable & Pinnable> =
 
     throw new Error('Could not resolve project type');
   },
-  implements: [Resource, Pinnable],
+  implements: [Resource, Pinnable, ChangesetAware],
 })
-class Project extends PinnablePostableResource {
+class Project extends PinnablePostableChangesetAwareResource {
   static readonly Props: string[] = keysOf<Project>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Project>>();
   static readonly Relations = {
@@ -67,6 +73,7 @@ class Project extends PinnablePostableResource {
     // edge case because it's writable for internships but not secured
     sensitivity: Sensitivity,
     posts: [Post], // from Postable interface
+    changeRequests: [ProjectChangeRequest],
   };
 
   @Field(() => ProjectType)
@@ -141,7 +148,7 @@ class Project extends PinnablePostableResource {
 export { Project as IProject, AnyProject as Project };
 
 @ObjectType({
-  implements: [Project, Resource, Pinnable, Postable],
+  implements: [Project, Postable],
 })
 export class TranslationProject extends Project {
   static readonly Props = keysOf<TranslationProject>();
@@ -151,7 +158,7 @@ export class TranslationProject extends Project {
 }
 
 @ObjectType({
-  implements: [Project, Resource, Pinnable, Postable],
+  implements: [Project, Postable],
 })
 export class InternshipProject extends Project {
   static readonly Props = keysOf<InternshipProject>();

@@ -799,13 +799,14 @@ export class ProjectRules {
   async getAvailableTransitions(
     projectId: ID,
     session: Session,
-    currentUserRoles?: Role[]
+    currentUserRoles?: Role[],
+    changeset?: ID
   ): Promise<ProjectStepTransition[]> {
     if (session.anonymous) {
       return [];
     }
 
-    const currentStep = await this.getCurrentStep(projectId);
+    const currentStep = await this.getCurrentStep(projectId, changeset);
 
     // get roles that can approve the current step
     const { approvers, transitions } = await this.getStepRule(
@@ -830,7 +831,8 @@ export class ProjectRules {
   async verifyStepChange(
     projectId: ID,
     session: Session,
-    nextStep: ProjectStep
+    nextStep: ProjectStep,
+    changeset?: ID
   ) {
     if (this.configService.migration) {
       return;
@@ -846,7 +848,8 @@ export class ProjectRules {
     const transitions = await this.getAvailableTransitions(
       projectId,
       session,
-      currentUserRoles
+      currentUserRoles,
+      changeset
     );
 
     const validNextStep = transitions.some(
@@ -860,23 +863,42 @@ export class ProjectRules {
     }
   }
 
-  private async getCurrentStep(id: ID) {
-    const currentStep = await this.db
-      .query()
-      .match([
-        node('project', 'Project', { id }),
-        relation('out', '', 'step', { active: true }),
-        node('step', 'Property'),
-      ])
-      .raw('return step.value as step')
-      .asResult<{ step: ProjectStep }>()
-      .first();
+  private async getCurrentStep(id: ID, changeset?: ID) {
+    let currentStep;
+    if (changeset) {
+      const result = await this.db
+        .query()
+        .match([
+          node('project', 'Project', { id }),
+          relation('out', '', 'step', { active: false }),
+          node('step', 'Property'),
+          relation('in', '', 'changeset', { active: true }),
+          node('', 'Changeset', { id: changeset }),
+        ])
+        .raw('return step.value as step')
+        .asResult<{ step: ProjectStep }>()
+        .first();
+      currentStep = result?.step;
+    }
+    if (!currentStep) {
+      const result = await this.db
+        .query()
+        .match([
+          node('project', 'Project', { id }),
+          relation('out', '', 'step', { active: true }),
+          node('step', 'Property'),
+        ])
+        .raw('return step.value as step')
+        .asResult<{ step: ProjectStep }>()
+        .first();
+      currentStep = result?.step;
+    }
 
-    if (!currentStep?.step) {
+    if (!currentStep) {
       throw new ServerException('current step not found');
     }
 
-    return currentStep.step;
+    return currentStep;
   }
 
   private async getUserRoles(id: ID) {

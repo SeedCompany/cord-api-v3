@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { stripIndent } from 'common-tags';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
@@ -7,6 +8,7 @@ import {
   NotFoundException,
   ServerException,
   Session,
+  UnsecuredDto,
 } from '../../common';
 import {
   createBaseNode,
@@ -16,12 +18,12 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
+  matchChangesetAndChangedProps,
+  matchProps,
   matchPropsAndProjectSensAndScopedRoles,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
-import { DbPropsOfDto } from '../../core/database/results';
-import { ScopedRole } from '../authorization';
 import {
   CreatePartnership,
   Partnership,
@@ -31,7 +33,7 @@ import {
 
 @Injectable()
 export class PartnershipRepository extends DtoRepository(Partnership) {
-  async create(input: CreatePartnership, session: Session) {
+  async create(input: CreatePartnership, session: Session, changeset?: ID) {
     const partnershipId = await generateId();
     const mouId = await generateId();
     const agreementId = await generateId();
@@ -114,7 +116,7 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
       .create([
         node('project'),
         relation('out', '', 'partnership', {
-          active: true,
+          active: !changeset,
           createdAt: DateTime.local(),
         }),
         node('node'),
@@ -124,6 +126,21 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
         }),
         node('partner'),
       ])
+      .apply((q) =>
+        changeset
+          ? q
+              .with('node')
+              .match([node('changesetNode', 'Changeset', { id: changeset })])
+              .create([
+                node('changesetNode'),
+                relation('out', '', 'changeset', {
+                  active: true,
+                  createdAt: DateTime.local(),
+                }),
+                node('node'),
+              ])
+          : q
+      )
       .return('node.id as id')
       .asResult<{ id: ID }>()
       .first();
@@ -133,53 +150,110 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
     return { id: partnershipId, mouId, agreementId };
   }
 
-  async readOne(id: ID, session: Session) {
+  async readOne(id: ID, session: Session, changeset?: ID) {
     const query = this.db
       .query()
+      .subQuery((sub) =>
+        sub
+          .match([
+            node('project'),
+            relation('out', '', 'partnership', { active: true }),
+            node('node', 'Partnership', { id }),
+          ])
+          .return('project, node')
+          .apply((q) =>
+            changeset
+              ? q
+                  .union()
+                  .match([
+                    node('project'),
+                    relation('out', '', 'partnership', { active: false }),
+                    node('node', 'Partnership', { id }),
+                    relation('in', '', 'changeset', { active: true }),
+                    node('changeset', 'Changeset', { id: changeset }),
+                  ])
+                  .return('project, node')
+              : q
+          )
+      )
       .match([
-        node('project', 'Project'),
-        relation('out', '', 'partnership', { active: true }),
-        node('node', 'Partnership', { id }),
+        node('node'),
         relation('out', '', 'partner'),
         node('partner', 'Partner'),
+        relation('out', '', 'organization', { active: true }),
+        node('org', 'Organization'),
       ])
       .apply(matchPropsAndProjectSensAndScopedRoles(session))
-      .return([
-        'props',
-        'scopedRoles',
-        'project.id as projectId',
-        'partner.id as partnerId',
-      ])
-      .asResult<{
-        props: DbPropsOfDto<Partnership, true>;
-        projectId: ID;
-        partnerId: ID;
-        scopedRoles: ScopedRole[];
-      }>();
+      .apply(matchChangesetAndChangedProps(changeset))
+      .apply(matchProps({ nodeName: 'project', outputVar: 'projectProps' }))
+      .apply(
+        matchProps({
+          nodeName: 'project',
+          changeset,
+          optional: true,
+          outputVar: 'projectChangedProps',
+        })
+      )
+      .return<{ dto: UnsecuredDto<Partnership> }>(
+        stripIndent`
+          apoc.map.mergeList([
+            props,
+            changedProps,
+            {
+              mouStart: coalesce(changedProps.mouStartOverride, props.mouStartOverride, projectChangedProps.mouStart, projectProps.mouStart),
+              mouEnd: coalesce(changedProps.mouEndOverride, props.mouEndOverride, projectChangedProps.mouEnd, projectProps.mouEnd),
+              project: project.id,
+              partner: partner.id,
+              organization: org.id,
+              changeset: changeset.id,
+              scope: scopedRoles
+            }
+          ]) as dto`
+      );
 
     const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find partnership');
     }
 
-    return result;
+    return result.dto;
   }
 
-  list({ filter, ...input }: PartnershipListInput, session: Session) {
+  list(
+    { filter, ...input }: PartnershipListInput,
+    session: Session,
+    changeset?: ID
+  ) {
     return this.db
       .query()
-      .match([
-        requestingUser(session),
-        ...permissionsOfNode('Partnership'),
-        ...(filter.projectId
-          ? [
-              relation('in', '', 'partnership', { active: true }),
-              node('project', 'Project', {
-                id: filter.projectId,
-              }),
-            ]
-          : []),
-      ])
+      .subQuery((sub) =>
+        sub
+          .match([
+            requestingUser(session),
+            ...permissionsOfNode('Partnership'),
+            ...(filter.projectId
+              ? [
+                  relation('in', '', 'partnership', { active: true }),
+                  node('project', 'Project', { id: filter.projectId }),
+                ]
+              : []),
+          ])
+          .return('node')
+          .apply((q) =>
+            changeset && filter.projectId
+              ? q
+                  .union()
+                  .match([
+                    node('', 'Project', { id: filter.projectId }),
+                    relation('out', '', 'partnership', { active: false }),
+                    node('node', 'Partnership'),
+                    relation('in', '', 'changeset', { active: true }),
+                    node('changeset', 'Changeset', { id: changeset }),
+                  ])
+                  .return('node')
+              : q
+          )
+      )
       .apply(calculateTotalAndPaginateList(Partnership, input));
   }
 

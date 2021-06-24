@@ -3,7 +3,6 @@ import { Many } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
-  getHighestSensitivity,
   ID,
   InputException,
   isIdLike,
@@ -23,11 +22,7 @@ import {
   OnIndex,
   UniquenessError,
 } from '../../core';
-import {
-  parseBaseNodeProperties,
-  parsePropList,
-  runListQuery,
-} from '../../core/database/results';
+import { runListQuery } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { rolesForScope, ScopedRole } from '../authorization/dto';
 import { Powers } from '../authorization/dto/powers';
@@ -49,6 +44,11 @@ import {
   PartnershipService,
   SecuredPartnershipList,
 } from '../partnership';
+import { ProjectChangeRequestService } from '../project-change-request';
+import {
+  ProjectChangeRequestListInput,
+  SecuredProjectChangeRequestList,
+} from '../project-change-request/dto';
 import {
   CreateProject,
   InternshipProject,
@@ -93,6 +93,7 @@ export class ProjectService {
     private readonly authorizationService: AuthorizationService,
     private readonly projectRules: ProjectRules,
     private readonly repo: ProjectRepository,
+    private readonly projectChangeRequests: ProjectChangeRequestService,
     @Logger('project:service') private readonly logger: ILogger
   ) {}
 
@@ -220,34 +221,13 @@ export class ProjectService {
 
   async readOneUnsecured(
     id: ID,
-    sessionOrUserId: Session | ID
+    sessionOrUserId: Session | ID,
+    changeset?: ID
   ): Promise<UnsecuredDto<Project>> {
     const userId = isIdLike(sessionOrUserId)
       ? sessionOrUserId
       : sessionOrUserId.userId;
-    const result = await this.repo.readOneUnsecured(id, userId);
-    if (!result) {
-      throw new NotFoundException('Could not find project');
-    }
-
-    const props = parsePropList(result.propList);
-    return {
-      ...parseBaseNodeProperties(result.node),
-      ...props,
-      // Sensitivity is calculated based on the highest language sensitivity (for Translation Projects).
-      // If project has no language engagements (new Translation projects and all Internship projects),
-      // then falls back to the sensitivity prop which defaulted to High on create for all projects.
-      sensitivity:
-        getHighestSensitivity(result.languageSensitivityList) ??
-        props.sensitivity,
-      type: result.node.properties.type,
-      primaryLocation: result.primaryLocationId,
-      marketingLocation: result.marketingLocationId,
-      fieldRegion: result.fieldRegionId,
-      owningOrganization: result.owningOrganizationId,
-      pinned: !!result.pinnedRel,
-      scope: result.memberRoles.flat().map(rolesForScope('project')),
-    };
+    return await this.repo.readOneUnsecured(id, userId, changeset);
   }
 
   async secure(
@@ -277,16 +257,30 @@ export class ProjectService {
     };
   }
 
-  async readOne(id: ID, sessionOrUserId: Session | ID): Promise<Project> {
-    const unsecured = await this.readOneUnsecured(id, sessionOrUserId);
+  async readOne(
+    id: ID,
+    sessionOrUserId: Session | ID,
+    changeset?: ID
+  ): Promise<Project> {
+    const unsecured = await this.readOneUnsecured(
+      id,
+      sessionOrUserId,
+      changeset
+    );
     return await this.secure(unsecured, sessionOrUserId);
   }
 
   async update(
     input: UpdateProject,
-    session: Session
+    session: Session,
+    changeset?: ID,
+    stepValidation = true
   ): Promise<UnsecuredDto<Project>> {
-    const currentProject = await this.readOneUnsecured(input.id, session);
+    const currentProject = await this.readOneUnsecured(
+      input.id,
+      session,
+      changeset
+    );
     if (input.sensitivity && currentProject.type === ProjectType.Translation)
       throw new InputException(
         'Cannot update sensitivity on Translation Project',
@@ -303,8 +297,13 @@ export class ProjectService {
       'project'
     );
 
-    if (changes.step) {
-      await this.projectRules.verifyStepChange(input.id, session, changes.step);
+    if (changes.step && stepValidation) {
+      await this.projectRules.verifyStepChange(
+        input.id,
+        session,
+        changes.step,
+        changeset
+      );
     }
 
     const {
@@ -316,7 +315,8 @@ export class ProjectService {
 
     let result = await this.repo.updateProperties(
       currentProject,
-      simpleChanges
+      simpleChanges,
+      changeset
     );
 
     if (primaryLocationId) {
@@ -422,7 +422,8 @@ export class ProjectService {
   async listEngagements(
     project: Project,
     input: EngagementListInput,
-    session: Session
+    session: Session,
+    changeset?: ID
   ): Promise<SecuredEngagementList> {
     this.logger.debug('list engagements ', {
       projectId: project.id,
@@ -438,7 +439,8 @@ export class ProjectService {
           projectId: project.id,
         },
       },
-      session
+      session,
+      changeset
     );
 
     const permissions = await this.repo.permissionsForListProp(
@@ -488,7 +490,8 @@ export class ProjectService {
   async listPartnerships(
     projectId: ID,
     input: PartnershipListInput,
-    session: Session
+    session: Session,
+    changeset?: ID
   ): Promise<SecuredPartnershipList> {
     const result = await this.partnerships.list(
       {
@@ -498,7 +501,8 @@ export class ProjectService {
           projectId: projectId,
         },
       },
-      session
+      session,
+      changeset
     );
 
     const permissions = await this.repo.permissionsForListProp(
@@ -510,6 +514,29 @@ export class ProjectService {
     return {
       ...result,
       ...permissions,
+    };
+  }
+
+  async listChangeRequests(
+    project: Project,
+    input: ProjectChangeRequestListInput,
+    session: Session
+  ): Promise<SecuredProjectChangeRequestList> {
+    const result = await this.projectChangeRequests.list(
+      {
+        ...input,
+        filter: {
+          ...input.filter,
+          projectId: project.id,
+        },
+      },
+      session
+    );
+
+    return {
+      ...result,
+      canRead: true,
+      canCreate: project.status === ProjectStatus.Active,
     };
   }
 
@@ -566,7 +593,8 @@ export class ProjectService {
 
   async currentBudget(
     { id, sensitivity }: Pick<Project, 'id' | 'sensitivity'>,
-    session: Session
+    session: Session,
+    changeset?: ID
   ): Promise<SecuredBudget> {
     let budgetToReturn;
 
@@ -585,7 +613,8 @@ export class ProjectService {
             projectId: id,
           },
         },
-        session
+        session,
+        changeset
       );
 
       const current = budgets.items.find(

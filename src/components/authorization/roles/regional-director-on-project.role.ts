@@ -17,6 +17,7 @@ import { DbPartnership } from '../../partnership/model';
 import { DbPeriodicReport } from '../../periodic-report/model';
 import { DbPost } from '../../post/model';
 import { DbProduct } from '../../product/model';
+import { DbProjectChangeRequest } from '../../project-change-request/model';
 /* eslint-disable @typescript-eslint/naming-convention */
 import { DbProject } from '../../project/model';
 import { DbProjectMember } from '../../project/project-member/model';
@@ -428,6 +429,15 @@ export const RegionalDirectorOnProject = new DbRole({
         { propertyName: 'scriptureReferences', permission: { read, write, }, },
       ],
       canDelete: false,
+    }),
+    new DbBaseNodeGrant<DbProjectChangeRequest>({
+      __className: 'DbProjectChangeRequest',
+      properties: [
+        { propertyName: 'types',                       permission: { read, write, }, },
+        { propertyName: 'summary',                     permission: { read, write, }, },
+        { propertyName: 'status',                      permission: { read, write, }, },
+      ],
+      canDelete: true,
     }),
   ],
 });

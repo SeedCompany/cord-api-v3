@@ -8,6 +8,7 @@ import { LocationModule } from '../location/location.module';
 import { OrganizationModule } from '../organization/organization.module';
 import { PartnerModule } from '../partner/partner.module';
 import { PartnershipModule } from '../partnership/partnership.module';
+import { ProjectChangeRequestModule } from '../project-change-request/project-change-request.module';
 import { UserModule } from '../user/user.module';
 import * as handlers from './handlers';
 import { ProjectMemberModule } from './project-member/project-member.module';
@@ -23,6 +24,7 @@ import { ProjectService } from './project.service';
     ProjectMemberModule,
     forwardRef(() => BudgetModule),
     forwardRef(() => PartnershipModule),
+    forwardRef(() => ProjectChangeRequestModule),
     forwardRef(() => UserModule),
     forwardRef(() => LocationModule),
     FileModule,
@@ -39,6 +41,11 @@ import { ProjectService } from './project.service';
     ProjectRepository,
     ...Object.values(handlers),
   ],
-  exports: [ProjectService, ProjectMemberModule, ProjectRules],
+  exports: [
+    ProjectService,
+    ProjectMemberModule,
+    ProjectRules,
+    ProjectRepository,
+  ],
 })
 export class ProjectModule {}

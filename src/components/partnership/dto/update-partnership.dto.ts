@@ -49,6 +49,12 @@ export abstract class UpdatePartnership {
 
 @InputType()
 export abstract class UpdatePartnershipInput {
+  @IdField({
+    description: 'The change object to associate these engagement changes with',
+    nullable: true,
+  })
+  readonly changeset?: ID;
+
   @Field()
   @Type(() => UpdatePartnership)
   @ValidateNested()

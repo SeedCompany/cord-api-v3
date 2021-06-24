@@ -1,7 +1,7 @@
 import { node, Query, relation } from 'cypher-query-builder';
 import { deburr } from 'lodash';
 import { DateTime } from 'luxon';
-import { ID, ResourceShape, Session } from '../../common';
+import { ID, Session } from '../../common';
 // eslint-disable-next-line @seedcompany/no-unused-vars -- used in jsdoc
 import { createNode } from './query';
 
@@ -101,45 +101,3 @@ export const matchRequestingUser =
         id: userId,
       }),
     ]);
-
-/**
- * This will set all relationships given to active false
- * and add deleted prefix to its labels.
- */
-export const deleteProperties =
-  <Resource extends ResourceShape<any>>(
-    _resource: Resource,
-    ...relationLabels: ReadonlyArray<keyof Resource['prototype']>
-  ) =>
-  (query: Query) => {
-    if (relationLabels.length === 0) {
-      return query;
-    }
-    const deletedAt = DateTime.local();
-    return query
-      .match([
-        node('node'),
-        relation('out', 'propertyRel', relationLabels, { active: true }),
-        node('property', 'Property'),
-      ])
-      .setValues({
-        'property.deletedAt': deletedAt,
-        'propertyRel.active': false,
-      })
-      .raw(
-        `
-    with property,
-    reduce(
-      deletedLabels = [], label in labels(property) |
-        case
-          when label starts with "Deleted_" then deletedLabels + label
-          else deletedLabels + ("Deleted_" + label)
-        end
-    ) as deletedLabels
-    call apoc.create.removeLabels(property, labels(property)) yield node as nodeRemoved
-    with property, deletedLabels
-    call apoc.create.addLabels(property, deletedLabels) yield node as nodeAdded
-    with *
-  `
-      );
-  };

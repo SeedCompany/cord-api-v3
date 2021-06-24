@@ -1,28 +1,35 @@
 import { oneLine, stripIndent } from 'common-tags';
 import { node, Query, relation } from 'cypher-query-builder';
-import { Session } from '../../../common';
-import { matchProps } from './matching';
+import { ID, isIdLike, Session } from '../../../common';
+import { matchProps, MatchPropsOptions } from './matching';
 
 export const matchPropsAndProjectSensAndScopedRoles =
-  (session: Session) => (query: Query) =>
+  (session?: Session | ID, propsOptions?: MatchPropsOptions) =>
+  (query: Query) =>
     query.subQuery((sub) =>
       sub
         .with(['node', 'project'])
-        .apply(matchProps())
-        .optionalMatch([
-          [
-            node('project'),
-            relation('out', '', 'member'),
-            node('projectMember'),
-            relation('out', '', 'user'),
-            node('user', 'User', { id: session.userId }),
-          ],
-          [
-            node('projectMember'),
-            relation('out', '', 'roles', { active: true }),
-            node('rolesProp', 'Property'),
-          ],
-        ])
+        .apply(matchProps(propsOptions))
+        .apply((q) =>
+          session
+            ? q.optionalMatch([
+                [
+                  node('project'),
+                  relation('out', '', 'member'),
+                  node('projectMember'),
+                  relation('out', '', 'user'),
+                  node('user', 'User', {
+                    id: isIdLike(session) ? session : session.userId,
+                  }),
+                ],
+                [
+                  node('projectMember'),
+                  relation('out', '', 'roles', { active: true }),
+                  node('rolesProp', 'Property'),
+                ],
+              ])
+            : q
+        )
         .match([
           node('project'),
           relation('out', '', 'sensitivity', { active: true }),
@@ -40,17 +47,19 @@ export const matchPropsAndProjectSensAndScopedRoles =
         .return(
           [
             stripIndent`
-apoc.map.merge(props, {
+apoc.map.merge(${propsOptions?.outputVar ?? 'props'}, {
   sensitivity: ${determineSensitivity}
-}) as props
+}) as ${propsOptions?.outputVar ?? 'props'}
         `,
-            stripIndent`
-          reduce(
-            scopedRoles = [],
-            role IN apoc.coll.flatten(collect(rolesProp.value)) |
-              scopedRoles + ["project:" + role]
-          ) as scopedRoles
-        `,
+            session
+              ? stripIndent`
+                  reduce(
+                    scopedRoles = [],
+                    role IN apoc.coll.flatten(collect(rolesProp.value)) |
+                      scopedRoles + ["project:" + role]
+                  ) as scopedRoles
+                `
+              : '[] as scopedRoles',
           ].join(',\n')
         )
     );
@@ -63,7 +72,7 @@ const rankSens = (variable: string) => oneLine`
   end
 `;
 
-export const determineSensitivity = `
+const determineSensitivity = `
   case langSens
     when null then projSens.value
     else reduce(

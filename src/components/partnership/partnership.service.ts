@@ -7,6 +7,7 @@ import {
   ServerException,
   Session,
   UnauthorizedException,
+  UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, IEventBus, ILogger, Logger } from '../../core';
 import { runListQuery } from '../../core/database/results';
@@ -45,7 +46,8 @@ export class PartnershipService {
 
   async create(
     input: CreatePartnership,
-    session: Session
+    session: Session,
+    changeset?: ID
   ): Promise<Partnership> {
     const { projectId, partnerId } = input;
 
@@ -67,7 +69,8 @@ export class PartnershipService {
           ...input,
           primary,
         },
-        session
+        session,
+        changeset
       );
 
       await this.files.createDefinedFile(
@@ -100,7 +103,7 @@ export class PartnershipService {
         await this.repo.removePrimaryFromOtherPartnerships(id);
       }
 
-      const partnership = await this.readOne(id, session);
+      const partnership = await this.readOne(id, session, changeset);
 
       await this.eventBus.publish(
         new PartnershipCreatedEvent(partnership, session)
@@ -117,63 +120,57 @@ export class PartnershipService {
   }
 
   @HandleIdLookup(Partnership)
-  async readOne(id: ID, session: Session): Promise<Partnership> {
+  async readOne(
+    id: ID,
+    session: Session,
+    changeset?: ID
+  ): Promise<Partnership> {
+    const dto = await this.readOneUnsecured(id, session, changeset);
+    return await this.secure(dto, session);
+  }
+
+  async readOneUnsecured(
+    id: ID,
+    session: Session,
+    changeset?: ID
+  ): Promise<UnsecuredDto<Partnership>> {
     this.logger.debug('readOne', { id, userId: session.userId });
+    return await this.repo.readOne(id, session, changeset);
+  }
 
-    const result = await this.repo.readOne(id, session);
-
-    const project = await this.projectService.readOne(
-      result.projectId,
-      session
-    );
-
+  async secure(
+    dto: UnsecuredDto<Partnership>,
+    session: Session
+  ): Promise<Partnership> {
     const securedProps = await this.authorizationService.secureProperties(
       Partnership,
-      result.props,
+      dto,
       session,
-      result.scopedRoles
+      dto.scope
     );
 
-    const canReadMouStart =
-      project.mouStart.canRead && securedProps.mouStartOverride.canRead;
-    const canReadMouEnd =
-      project.mouEnd.canRead && securedProps.mouEndOverride.canRead;
-
-    const mouStart = canReadMouStart
-      ? securedProps.mouStartOverride.value ?? project.mouStart.value
-      : null;
-    const mouEnd = canReadMouEnd
-      ? securedProps.mouEndOverride.value ?? project.mouEnd.value
-      : null;
-
     return {
-      ...result.props,
+      ...dto,
       ...securedProps,
       mouStart: {
-        value: mouStart,
-        canRead: canReadMouStart,
+        ...securedProps.mouStart,
         canEdit: false, // edit the project mou or edit the partnership mou override
       },
       mouEnd: {
-        value: mouEnd,
-        canRead: canReadMouEnd,
+        ...securedProps.mouEnd,
         canEdit: false, // edit the project mou or edit the partnership mou override
       },
       types: {
         ...securedProps.types,
-        value: securedProps.types.value || [],
+        value: securedProps.types.value ?? [],
       },
-      partner: {
-        ...securedProps.partner,
-        value: result.partnerId,
-      },
-      canDelete: await this.repo.checkDeletePermission(id, session),
+      canDelete: await this.repo.checkDeletePermission(dto.id, session),
     };
   }
 
-  async update(input: UpdatePartnership, session: Session) {
+  async update(input: UpdatePartnership, session: Session, changeset?: ID) {
     // mou start and end are now computed fields and do not get updated directly
-    const object = await this.readOne(input.id, session);
+    const object = await this.readOne(input.id, session, changeset);
 
     const partner = await this.partnerService.readOne(
       object.partner.value!,
@@ -217,7 +214,7 @@ export class PartnershipService {
       await this.repo.removePrimaryFromOtherPartnerships(input.id);
     }
 
-    await this.repo.updateProperties(object, simpleChanges);
+    await this.repo.updateProperties(object, simpleChanges, changeset);
     await this.files.updateDefinedFile(
       object.mou,
       'partnership.mou',
@@ -231,7 +228,7 @@ export class PartnershipService {
       session
     );
 
-    const partnership = await this.readOne(input.id, session);
+    const partnership = await this.readOne(input.id, session, changeset);
     const event = new PartnershipUpdatedEvent(
       partnership,
       object,
@@ -283,16 +280,19 @@ export class PartnershipService {
 
   async list(
     partialInput: Partial<PartnershipListInput>,
-    session: Session
+    session: Session,
+    changeset?: ID
   ): Promise<PartnershipListOutput> {
     const input = {
       ...PartnershipListInput.defaultVal,
       ...partialInput,
     };
 
-    const query = this.repo.list(input, session);
+    const query = this.repo.list(input, session, changeset);
 
-    return await runListQuery(query, input, (id) => this.readOne(id, session));
+    return await runListQuery(query, input, (id) =>
+      this.readOne(id, session, changeset)
+    );
   }
 
   protected verifyFinancialReportingType(

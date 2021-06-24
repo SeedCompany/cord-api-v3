@@ -1029,6 +1029,29 @@ export const location = gql`
   ${fieldRegion}
 `;
 
+export const projectChangeRequest = gql`
+  fragment projectChangeRequest on ProjectChangeRequest {
+    id
+    status {
+      value
+      canEdit
+      canRead
+    }
+    summary {
+      value
+      canEdit
+      canRead
+    }
+    types {
+      value
+      canEdit
+      canRead
+    }
+    createdAt
+    canEdit
+  }
+`;
+
 export const fragments = {
   org,
   user,
@@ -1055,4 +1078,5 @@ export const fragments = {
   ceremony,
   partner,
   fundingAccount,
+  projectChangeRequest,
 };

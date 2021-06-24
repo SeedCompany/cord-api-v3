@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { stripIndent } from 'common-tags';
 import { inArray, node, Node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
@@ -10,6 +11,8 @@ import {
   ResourceShape,
   ServerException,
   Session,
+  simpleSwitch,
+  UnsecuredDto,
 } from '../../common';
 import { CommonRepository } from '../../core';
 import { DbChanges, getChanges } from '../../core/database/changes';
@@ -17,12 +20,12 @@ import {
   calculateTotalAndPaginateList,
   createNode,
   createRelationships,
+  matchChangesetAndChangedProps,
   matchPropsAndProjectSensAndScopedRoles,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
-import { DbPropsOfDto } from '../../core/database/results';
-import { Role, rolesForScope, ScopedRole } from '../authorization';
+import { Role, rolesForScope } from '../authorization';
 import { FileId } from '../file';
 import { ProjectType } from '../project';
 import {
@@ -52,28 +55,34 @@ export class EngagementRepository extends CommonRepository {
     return !!result;
   }
 
-  async readOne(id: ID, session: Session) {
+  async readOne(id: ID, session: Session, changeset?: ID) {
     const query = this.db
       .query()
-      .match([
-        node('project'),
-        relation('out', '', 'engagement', { active: true }),
-        node('node', 'Engagement', { id }),
-      ])
+      .subQuery((sub) =>
+        sub
+          .match([
+            node('project'),
+            relation('out', '', 'engagement', { active: true }),
+            node('node', 'Engagement', { id }),
+          ])
+          .return('project, node')
+          .apply((q) =>
+            changeset
+              ? q
+                  .union()
+                  .match([
+                    node('project'),
+                    relation('out', '', 'engagement', { active: false }),
+                    node('node', 'Engagement', { id }),
+                    relation('in', '', 'changeset', { active: true }),
+                    node('changeset', 'Changeset', { id: changeset }),
+                  ])
+                  .return('project, node')
+              : q
+          )
+      )
       .apply(matchPropsAndProjectSensAndScopedRoles(session))
-      .with([
-        'props',
-        'node',
-        'project',
-        'scopedRoles',
-        `case
-    when 'InternshipEngagement' IN labels(node)
-    then 'InternshipEngagement'
-    when 'LanguageEngagement' IN labels(node)
-    then 'LanguageEngagement'
-    end as __typename
-    `,
-      ])
+      .apply(matchChangesetAndChangedProps(changeset))
       .optionalMatch([
         node('node'),
         relation('out', '', 'ceremony', { active: true }),
@@ -99,42 +108,42 @@ export class EngagementRepository extends CommonRepository {
         relation('out', '', 'mentor', { active: true }),
         node('mentor'),
       ])
-      .return([
-        'props',
-        'project.id as project',
-        '__typename',
-        'ceremony.id as ceremony',
-        'language.id as language',
-        'intern.id as intern',
-        'countryOfOrigin.id as countryOfOrigin',
-        'mentor.id as mentor',
-        'scopedRoles',
+      .optionalMatch([
+        node('project'),
+        relation('out', '', 'mouStart', { active: true }),
+        node('mouStart'),
       ])
-      .asResult<{
-        props: Omit<
-          DbPropsOfDto<LanguageEngagement & InternshipEngagement, true>,
-          | '__typename'
-          | 'ceremony'
-          | 'language'
-          | 'countryOfOrigin'
-          | 'intern'
-          | 'mentor'
-        >;
-        __typename: 'LanguageEngagement' | 'InternshipEngagement';
-        language: ID;
-        ceremony: ID;
-        project: ID;
-        intern: ID;
-        countryOfOrigin: ID;
-        mentor: ID;
-        scopedRoles: ScopedRole[];
-      }>();
+      .optionalMatch([
+        node('project'),
+        relation('out', '', 'mouEnd', { active: true }),
+        node('mouEnd'),
+      ])
+      .return<{ dto: UnsecuredDto<LanguageEngagement & InternshipEngagement> }>(
+        stripIndent`
+          apoc.map.mergeList([
+            props,
+            changedProps,
+            {
+              __typename: [l in labels(node) where l in ['LanguageEngagement', 'InternshipEngagement']][0],
+              language: language.id,
+              ceremony: ceremony.id,
+              intern: intern.id,
+              countryOfOrigin: countryOfOrigin.id,
+              mentor: mentor.id,
+              startDate: coalesce(changedProps.startDateOverride, props.startDateOverride, mouStart.value),
+              endDate: coalesce(changedProps.endDateOverride, props.endDateOverride, mouEnd.value),
+              scope: scopedRoles,
+              changeset: coalesce(changeset.id)
+            }
+          ]) as dto
+        `
+      );
     const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find Engagement');
     }
 
-    return result;
+    return result.dto;
   }
 
   async getProjectIdByEngagement(id: ID) {
@@ -156,7 +165,10 @@ export class EngagementRepository extends CommonRepository {
 
   // CREATE ///////////////////////////////////////////////////////////
 
-  async createLanguageEngagement(input: CreateLanguageEngagement) {
+  async createLanguageEngagement(
+    input: CreateLanguageEngagement,
+    changeset?: ID
+  ) {
     const pnpId = (await generateId()) as FileId;
 
     const { projectId, languageId, ...initialProps } = {
@@ -177,7 +189,10 @@ export class EngagementRepository extends CommonRepository {
       .apply(await createNode(LanguageEngagement, { initialProps }))
       .apply(
         createRelationships(LanguageEngagement, {
-          in: { engagement: ['Project', projectId] },
+          in: {
+            engagement: ['Project', projectId],
+            changeset: ['Changeset', changeset],
+          },
           out: { language: ['Language', languageId] },
         })
       )
@@ -191,7 +206,10 @@ export class EngagementRepository extends CommonRepository {
     return { id: result.id, pnpId };
   }
 
-  async createInternshipEngagement(input: CreateInternshipEngagement) {
+  async createInternshipEngagement(
+    input: CreateInternshipEngagement,
+    changeset?: ID
+  ) {
     const growthPlanId = (await generateId()) as FileId;
 
     const {
@@ -218,7 +236,10 @@ export class EngagementRepository extends CommonRepository {
       .apply(await createNode(InternshipEngagement, { initialProps }))
       .apply(
         createRelationships(InternshipEngagement, {
-          in: { engagement: ['Project', projectId] },
+          in: {
+            engagement: ['Project', projectId],
+            changeset: ['Changeset', changeset],
+          },
           out: {
             intern: ['User', internId],
             mentor: ['User', mentorId],
@@ -241,12 +262,14 @@ export class EngagementRepository extends CommonRepository {
 
   async updateLanguageProperties(
     object: LanguageEngagement,
-    changes: DbChanges<LanguageEngagement>
+    changes: DbChanges<LanguageEngagement>,
+    changeset?: ID
   ): Promise<void> {
     await this.db.updateProperties({
       type: LanguageEngagement,
       object,
       changes,
+      changeset,
     });
   }
 
@@ -324,38 +347,60 @@ export class EngagementRepository extends CommonRepository {
 
   async updateInternshipProperties(
     object: InternshipEngagement,
-    changes: DbChanges<InternshipEngagement>
+    changes: DbChanges<InternshipEngagement>,
+    changeset?: ID
   ): Promise<void> {
     await this.db.updateProperties({
       type: InternshipEngagement,
       object,
       changes,
+      changeset,
     });
   }
 
   // LIST ///////////////////////////////////////////////////////////
 
-  list({ filter, ...input }: EngagementListInput, session: Session) {
-    let label = 'Engagement';
-    if (filter.type === 'language') {
-      label = 'LanguageEngagement';
-    } else if (filter.type === 'internship') {
-      label = 'InternshipEngagement';
-    }
+  list(
+    { filter, ...input }: EngagementListInput,
+    session: Session,
+    changeset?: ID
+  ) {
+    const label =
+      simpleSwitch(filter.type, {
+        language: 'LanguageEngagement',
+        internship: 'InternshipEngagement',
+      }) ?? 'Engagement';
+
     return this.db
       .query()
-      .match([
-        requestingUser(session),
-        ...permissionsOfNode(label),
-        ...(filter.projectId
-          ? [
-              relation('in', '', 'engagement', { active: true }),
-              node('project', 'Project', {
-                id: filter.projectId,
-              }),
-            ]
-          : []),
-      ])
+      .subQuery((sub) =>
+        sub
+          .match([
+            requestingUser(session),
+            ...permissionsOfNode(label),
+            ...(filter.projectId
+              ? [
+                  relation('in', '', 'engagement', { active: true }),
+                  node('project', 'Project', { id: filter.projectId }),
+                ]
+              : []),
+          ])
+          .return('node')
+          .apply((q) =>
+            changeset && filter.projectId
+              ? q
+                  .union()
+                  .match([
+                    node('', 'Project', { id: filter.projectId }),
+                    relation('out', '', 'engagement', { active: false }),
+                    node('node', label),
+                    relation('in', '', 'changeset', { active: true }),
+                    node('changeset', 'Changeset', { id: changeset }),
+                  ])
+                  .return('node')
+              : q
+          )
+      )
       .apply(calculateTotalAndPaginateList(IEngagement, input));
   }
 
@@ -423,7 +468,8 @@ export class EngagementRepository extends CommonRepository {
     projectId: ID,
     otherId: ID,
     isTranslation: boolean,
-    property: 'language' | 'intern'
+    property: 'language' | 'intern',
+    changeset?: ID
   ) {
     return await this.db
       .query()
@@ -435,11 +481,20 @@ export class EngagementRepository extends CommonRepository {
       )
       .optionalMatch([
         node('project'),
-        relation('out', '', 'engagement', { active: true }),
+        relation('out', '', 'engagement', { active: !changeset }),
         node('engagement'),
         relation('out', '', property, { active: true }),
         node('other'),
       ])
+      .optionalMatch(
+        changeset
+          ? [
+              node('engagement'),
+              relation('in', '', 'changeset', { active: true }),
+              node('changesetNode', 'Changeset', { id: changeset }),
+            ]
+          : [node('engagement')]
+      )
       .return(['project', 'other', 'engagement'])
       .asResult<{
         project?: Node<{ type: ProjectType }>;

@@ -7,6 +7,7 @@ import { AuthenticationModule } from './components/authentication/authentication
 import { AuthorizationModule } from './components/authorization/authorization.module';
 import { BudgetModule } from './components/budget/budget.module';
 import { CeremonyModule } from './components/ceremony/ceremony.module';
+import { ChangesetModule } from './components/changeset/changeset.module';
 import { EngagementModule } from './components/engagement/engagement.module';
 import { FieldRegionModule } from './components/field-region/field-region.module';
 import { FieldZoneModule } from './components/field-zone/field-zone.module';
@@ -25,6 +26,7 @@ import { PostModule } from './components/post/post.module';
 import { PostableModule } from './components/post/postable/postable.module';
 import { ProductModule } from './components/product/product.module';
 import { ProgressSummaryModule } from './components/progress-summary/progress-summary.module';
+import { ProjectChangeRequestModule } from './components/project-change-request/project-change-request.module';
 import { ProjectModule } from './components/project/project.module';
 import { ScriptureModule } from './components/scripture/scripture.module';
 import { SearchModule } from './components/search/search.module';
@@ -75,6 +77,8 @@ assert(
     PostableModule,
     PeriodicReportModule,
     ProgressSummaryModule,
+    ChangesetModule,
+    ProjectChangeRequestModule,
   ],
   controllers: [],
   providers: [DateTimeScalar, DateScalar],

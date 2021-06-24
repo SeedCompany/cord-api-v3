@@ -17,11 +17,16 @@ export const DtoRepository = <TResourceStatic extends ResourceShape<any>>(
       TObject extends Partial<MaybeUnsecuredInstance<TResourceStatic>> & {
         id: ID;
       }
-    >(object: TObject, changes: DbChanges<TResourceStatic['prototype']>) {
+    >(
+      object: TObject,
+      changes: DbChanges<TResourceStatic['prototype']>,
+      changeset?: ID
+    ) {
       return await this.db.updateProperties({
         type: resource,
         object,
         changes,
+        changeset,
       });
     }
   }

@@ -1,5 +1,4 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { DateTime } from 'luxon';
 import {
   DuplicateException,
   generateId,
@@ -12,7 +11,13 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import { HandleIdLookup, ILogger, Logger, Property } from '../../core';
+import {
+  HandleIdLookup,
+  ILogger,
+  Logger,
+  Property,
+  ResourceResolver,
+} from '../../core';
 import {
   parseSecuredProperties,
   runListQuery,
@@ -22,6 +27,7 @@ import {
   PermissionsOf,
 } from '../authorization/authorization.service';
 import { FileService } from '../file';
+import { ProjectChangeRequest } from '../project-change-request/dto';
 import { BudgetRecordRepository } from './budget-record.repository';
 import { BudgetRepository } from './budget.repository';
 import {
@@ -46,6 +52,7 @@ export class BudgetService {
     private readonly authorizationService: AuthorizationService,
     private readonly budgetRepo: BudgetRepository,
     private readonly budgetRecordsRepo: BudgetRecordRepository,
+    private readonly resources: ResourceResolver,
     @Logger('budget:service') private readonly logger: ILogger
   ) {}
 
@@ -126,9 +133,10 @@ export class BudgetService {
 
   async createRecord(
     input: CreateBudgetRecord,
-    session: Session
+    session: Session,
+    changeset?: ID
   ): Promise<BudgetRecord> {
-    const { budgetId, organizationId, fiscalYear } = input;
+    const { organizationId, fiscalYear } = input;
 
     if (!fiscalYear || !organizationId) {
       throw new InputException(
@@ -139,46 +147,9 @@ export class BudgetService {
     await this.verifyRecordUniqueness(input);
 
     this.logger.debug('Creating BudgetRecord', input);
-    // on Init, create a budget will create a budget record for each org and each fiscal year in the project input.projectId
-    const createdAt = DateTime.local();
-
-    const secureProps: Property[] = [
-      {
-        key: 'fiscalYear',
-        value: fiscalYear,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'amount',
-        value: null,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
 
     try {
-      const recordId = await this.budgetRecordsRepo.create(
-        session,
-        secureProps
-      );
-
-      await this.budgetRecordsRepo.connectToBudget(
-        recordId,
-        budgetId,
-        createdAt
-      );
-      await this.budgetRecordsRepo.connectToOrganization(
-        recordId,
-        organizationId,
-        createdAt
-      );
+      const recordId = await this.budgetRecordsRepo.create(input, changeset);
 
       await this.authorizationService.processNewBaseNode(
         BudgetRecord,
@@ -191,7 +162,11 @@ export class BudgetService {
         userId: session.userId,
       });
 
-      const budgetRecord = await this.readOneRecord(recordId, session);
+      const budgetRecord = await this.readOneRecord(
+        recordId,
+        session,
+        changeset
+      );
 
       return budgetRecord;
     } catch (exception) {
@@ -214,23 +189,23 @@ export class BudgetService {
   }
 
   @HandleIdLookup(Budget)
-  async readOne(id: ID, session: Session): Promise<Budget> {
+  async readOne(id: ID, session: Session, changeset?: ID): Promise<Budget> {
     this.logger.debug(`readOne budget`, {
       id,
       userId: session.userId,
     });
 
-    const result = await this.budgetRepo.readOne(id, session);
+    const result = await this.budgetRepo.readOne(id, session, changeset);
 
     const perms = await this.authorizationService.getPermissions({
       resource: Budget,
       sessionOrUserId: session,
-      otherRoles: result.scopedRoles,
-      dto: result.props as ResourceShape<Budget>['prototype'],
+      otherRoles: result.scope,
+      dto: result as ResourceShape<Budget>['prototype'],
     });
 
     const securedProps = parseSecuredProperties(
-      result.props,
+      result,
       perms as PermissionsOf<Budget>,
       Budget.SecuredProps
     );
@@ -245,36 +220,48 @@ export class BudgetService {
           count: 25,
           filter: { budgetId: id },
         },
-        session
+        session,
+        changeset
       );
     }
 
+    const changeRequest = changeset
+      ? await this.resources.lookup(ProjectChangeRequest, changeset, session)
+      : undefined;
+
     return {
-      ...result.props,
+      ...result,
       ...securedProps,
+      // Show budget status as Pending, to allow budget record changes,
+      // if we are in an editable change request.
+      status: changeRequest?.canEdit ? BudgetStatus.Pending : result.status,
       records: records?.items || [],
       canDelete: await this.budgetRepo.checkDeletePermission(id, session),
     };
   }
 
   @HandleIdLookup(BudgetRecord)
-  async readOneRecord(id: ID, session: Session): Promise<BudgetRecord> {
+  async readOneRecord(
+    id: ID,
+    session: Session,
+    changeset?: ID
+  ): Promise<BudgetRecord> {
     this.logger.debug(`readOne BudgetRecord`, {
       id,
       userId: session.userId,
     });
 
-    const result = await this.budgetRecordsRepo.readOne(id, session);
+    const result = await this.budgetRecordsRepo.readOne(id, session, changeset);
 
     const securedProps = await this.authorizationService.secureProperties(
       BudgetRecord,
-      result.props,
+      result,
       session,
-      result.scopedRoles
+      result.scope
     );
 
     return {
-      ...result.props,
+      ...result,
       ...securedProps,
       canDelete: await this.budgetRepo.checkDeletePermission(id, session),
     };
@@ -368,8 +355,8 @@ export class BudgetService {
     }
   }
 
-  async deleteRecord(id: ID, session: Session): Promise<void> {
-    const br = await this.readOneRecord(id, session);
+  async deleteRecord(id: ID, session: Session, changeset?: ID): Promise<void> {
+    const br = await this.readOneRecord(id, session, changeset);
 
     if (!br) {
       throw new NotFoundException('Could not find Budget Record');
@@ -397,7 +384,8 @@ export class BudgetService {
 
   async list(
     partialInput: Partial<BudgetListInput>,
-    session: Session
+    session: Session,
+    changeset?: ID
   ): Promise<BudgetListOutput> {
     const input = {
       ...BudgetListInput.defaultVal,
@@ -405,12 +393,15 @@ export class BudgetService {
     };
     const query = this.budgetRepo.list(input, session);
 
-    return await runListQuery(query, input, (id) => this.readOne(id, session));
+    return await runListQuery(query, input, (id) =>
+      this.readOne(id, session, changeset)
+    );
   }
 
   async listNoSecGroups(
     partialInput: Partial<BudgetListInput>,
-    session: Session
+    session: Session,
+    changeset?: ID
   ): Promise<BudgetListOutput> {
     const input = {
       ...BudgetListInput.defaultVal,
@@ -418,17 +409,20 @@ export class BudgetService {
     };
     const query = this.budgetRepo.listNoSecGroups(input);
 
-    return await runListQuery(query, input, (id) => this.readOne(id, session));
+    return await runListQuery(query, input, (id) =>
+      this.readOne(id, session, changeset)
+    );
   }
 
   async listRecords(
     input: BudgetRecordListInput,
-    session: Session
+    session: Session,
+    changeset?: ID
   ): Promise<BudgetRecordListOutput> {
-    const query = this.budgetRecordsRepo.list(input, session);
+    const query = this.budgetRecordsRepo.list(input, session, changeset);
 
     return await runListQuery(query, input, (id) =>
-      this.readOneRecord(id, session)
+      this.readOneRecord(id, session, changeset)
     );
   }
 }

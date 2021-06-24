@@ -10,7 +10,7 @@ import {
 } from '../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import { Role } from '../authorization';
-import { ProjectStep } from '../project';
+import { ProjectService, ProjectStep } from '../project';
 import {
   EngagementStatus,
   EngagementStatusTransition,
@@ -33,6 +33,7 @@ export class EngagementRules {
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
+    private readonly projectService: ProjectService,
     // eslint-disable-next-line @seedcompany/no-unused-vars
     @Logger('engagement:rules') private readonly logger: ILogger
   ) {}
@@ -353,13 +354,14 @@ export class EngagementRules {
   async getAvailableTransitions(
     engagementId: ID,
     session: Session,
-    currentUserRoles?: Role[]
+    currentUserRoles?: Role[],
+    changeset?: ID
   ): Promise<EngagementStatusTransition[]> {
     if (session.anonymous) {
       return [];
     }
 
-    const currentStatus = await this.getCurrentStatus(engagementId);
+    const currentStatus = await this.getCurrentStatus(engagementId, changeset);
     // get roles that can approve the current status
     const { approvers, transitions } = await this.getStatusRule(
       currentStatus,
@@ -381,7 +383,10 @@ export class EngagementRules {
       return transitions;
     }
 
-    const currentStep = await this.getCurrentProjectStep(engagementId);
+    const currentStep = await this.getCurrentProjectStep(
+      engagementId,
+      changeset
+    );
     const availableTransitionsAccordingToProject = transitions.filter(
       (transition) =>
         !transition.projectStepRequirements?.length ||
@@ -398,7 +403,8 @@ export class EngagementRules {
   async verifyStatusChange(
     engagementId: ID,
     session: Session,
-    nextStatus: EngagementStatus
+    nextStatus: EngagementStatus,
+    changeset?: ID
   ) {
     if (this.config.migration) {
       return;
@@ -414,7 +420,8 @@ export class EngagementRules {
     const transitions = await this.getAvailableTransitions(
       engagementId,
       session,
-      currentUserRoles
+      currentUserRoles,
+      changeset
     );
 
     const validNextStatus = transitions.some(
@@ -428,44 +435,97 @@ export class EngagementRules {
     }
   }
 
-  private async getCurrentStatus(id: ID) {
-    const currentStatus = await this.db
-      .query()
-      .match([
-        node('engagement', 'Engagement', { id }),
-        relation('out', '', 'status', { active: true }),
-        node('status', 'Property'),
-      ])
-      .raw('return status.value as status')
-      .asResult<{ status: EngagementStatus }>()
-      .first();
+  private async getCurrentStatus(id: ID, changeset?: ID) {
+    let currentStatus;
 
-    if (!currentStatus?.status) {
+    if (changeset) {
+      const result = await this.db
+        .query()
+        .match([
+          node('engagement', 'Engagement', { id }),
+          relation('out', '', 'status', { active: false }),
+          node('status', 'Property'),
+          relation('in', '', 'changeset', { active: true }),
+          node('', 'Changeset', { id: changeset }),
+        ])
+        .raw('return status.value as status')
+        .asResult<{ status: EngagementStatus }>()
+        .first();
+      currentStatus = result?.status;
+    }
+    if (!currentStatus) {
+      const result = await this.db
+        .query()
+        .match([
+          node('engagement', 'Engagement', { id }),
+          relation('out', '', 'status', { active: true }),
+          node('status', 'Property'),
+        ])
+        .raw('return status.value as status')
+        .asResult<{ status: EngagementStatus }>()
+        .first();
+      currentStatus = result?.status;
+    }
+
+    if (!currentStatus) {
       throw new ServerException('current status not found');
     }
 
-    return currentStatus.status;
+    return currentStatus;
   }
 
-  private async getCurrentProjectStep(engagementId: ID) {
+  private async getCurrentProjectStep(engagementId: ID, changeset?: ID) {
     const result = await this.db
       .query()
       .match([
         node('engagement', 'Engagement', { id: engagementId }),
-        relation('in', '', 'engagement', { active: true }),
+        relation('in', '', 'engagement'), // Removed active true due to changeset aware
         node('project', 'Project'),
-        relation('out', '', 'step', { active: true }),
-        node('step', 'Property'),
       ])
-      .raw('return step.value as step')
-      .asResult<{ step: ProjectStep }>()
+      .raw('return project.id as projectId')
+      .asResult<{ projectId: ID }>()
       .first();
 
-    if (!result?.step) {
+    if (!result?.projectId) {
+      throw new ServerException(`Could not find project`);
+    }
+    const projectId = result.projectId;
+
+    let currentStep;
+    if (changeset) {
+      const result = await this.db
+        .query()
+        .match([
+          node('project', 'Project', { id: projectId }),
+          relation('out', '', 'step', { active: false }),
+          node('step', 'Property'),
+          relation('in', '', 'changeset', { active: true }),
+          node('', 'Changeset', { id: changeset }),
+        ])
+        .raw('return step.value as step')
+        .asResult<{ step: ProjectStep }>()
+        .first();
+      currentStep = result?.step;
+    }
+    if (!currentStep) {
+      const result = await this.db
+        .query()
+        .match([
+          node('project', 'Project', { id: projectId }),
+          relation('out', '', 'step', { active: true }),
+          node('step', 'Property'),
+        ])
+        .raw('return step.value as step')
+        .asResult<{ step: ProjectStep }>()
+        .first();
+      currentStep = result?.step;
+    }
+
+    if (!currentStep) {
       throw new ServerException(`Could not find project's step`);
     }
 
-    return result.step;
+    return currentStep;
   }
 
   private async getUserRoles(id: ID) {

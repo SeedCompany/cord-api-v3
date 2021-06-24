@@ -36,3 +36,4 @@ export * from './grant-power';
 export * from './register';
 export * from './update-project';
 export * from './create-pin';
+export * from './project-change-request';
