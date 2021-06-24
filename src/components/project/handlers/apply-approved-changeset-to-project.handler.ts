@@ -33,11 +33,13 @@ export class ApplyApprovedChangesetToProject
       if (!changes) {
         return; // if nothing changed, nothing to do
       }
-      const { id, createdAt, type, ...actualChanges } = changes;
+      const { id, createdAt, type, financialReportPeriod, ...actualChanges } =
+        changes;
       await this.projectService.update(
         {
           id,
           ...actualChanges,
+          ...(financialReportPeriod ? { financialReportPeriod } : {}),
         },
         event.session,
         undefined,
