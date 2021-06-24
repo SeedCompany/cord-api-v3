@@ -1,15 +1,13 @@
-import { node, relation } from 'cypher-query-builder';
 import { difference } from 'lodash';
 import { UnreachableCaseError } from 'ts-essentials';
 import {
   DuplicateException,
   fiscalYears,
   ID,
-  NotFoundException,
   Secured,
-  Sensitivity,
   Session,
   UnauthorizedException,
+  UnsecuredDto,
 } from '../../../common';
 import {
   DatabaseService,
@@ -18,7 +16,6 @@ import {
   ILogger,
   Logger,
 } from '../../../core';
-import { determineSensitivity } from '../../../core/database/query';
 import { PartnerType } from '../../partner';
 import { PartnershipService } from '../../partnership';
 import { Partnership } from '../../partnership/dto';
@@ -27,10 +24,14 @@ import {
   PartnershipUpdatedEvent,
   PartnershipWillDeleteEvent,
 } from '../../partnership/events';
-import { ProjectService } from '../../project';
 import { ProjectUpdatedEvent } from '../../project/events';
+import { BudgetRepository } from '../budget.repository';
 import { BudgetService } from '../budget.service';
 import { Budget, BudgetRecord, BudgetStatus } from '../dto';
+
+type PartialBudget = UnsecuredDto<Pick<Budget, 'id' | 'status'>> & {
+  records: ReadonlyArray<UnsecuredDto<BudgetRecord>>;
+};
 
 type SubscribedEvent =
   | ProjectUpdatedEvent
@@ -50,8 +51,8 @@ export class SyncBudgetRecordsToFundingPartners
   constructor(
     private readonly db: DatabaseService,
     private readonly budgets: BudgetService,
+    private readonly budgetRepo: BudgetRepository,
     private readonly partnershipService: PartnershipService,
-    private readonly projects: ProjectService,
     @Logger('budget:sync-partnerships') private readonly logger: ILogger
   ) {}
 
@@ -77,20 +78,16 @@ export class SyncBudgetRecordsToFundingPartners
       return;
     }
 
-    const projectIdAndSensitivity = await this.determineProjectId(event);
+    const projectId = await this.determineProjectId(event);
     const changeset = await this.determineChangeset(event);
 
     // Fetch budget & only continue if it is pending
-    const projectsCurrentBudget = await this.projects.currentBudget(
-      {
-        id: projectIdAndSensitivity.id,
-        sensitivity: projectIdAndSensitivity.sensitivity,
-      },
+    const budget = await this.budgetRepo.listRecordsForSync(
+      projectId,
       event.session,
       changeset
     );
-    const budget = readSecured(projectsCurrentBudget, 'budget');
-    if (budget?.status !== BudgetStatus.Pending) {
+    if (budget.status !== BudgetStatus.Pending) {
       this.logger.debug('Budget is not pending, skipping sync', budget);
       return;
     }
@@ -104,16 +101,12 @@ export class SyncBudgetRecordsToFundingPartners
 
   private async determineProjectId(event: SubscribedEvent) {
     if (event instanceof ProjectUpdatedEvent) {
-      return { id: event.updated.id, sensitivity: event.updated.sensitivity };
+      return event.updated.id;
     }
     if (event instanceof PartnershipUpdatedEvent) {
-      return await this.getProjectIdAndSensitivityFromPartnership(
-        event.updated
-      );
+      return event.updated.project;
     }
-    return await this.getProjectIdAndSensitivityFromPartnership(
-      event.partnership
-    );
+    return event.partnership.project;
   }
 
   private async determineChangeset(event: SubscribedEvent) {
@@ -155,7 +148,7 @@ export class SyncBudgetRecordsToFundingPartners
   }
 
   private async syncRecords(
-    budget: Budget,
+    budget: PartialBudget,
     partnership: Partnership,
     event: SubscribedEvent,
     changeset?: ID
@@ -163,8 +156,8 @@ export class SyncBudgetRecordsToFundingPartners
     const organizationId = partnership.organization;
 
     const previous = budget.records
-      .filter((record) => recordOrganization(record) === organizationId)
-      .map(recordFiscalYear);
+      .filter((record) => record.organization === organizationId)
+      .map((record) => record.fiscalYear);
     const updated =
       event instanceof PartnershipWillDeleteEvent
         ? []
@@ -190,7 +183,7 @@ export class SyncBudgetRecordsToFundingPartners
   }
 
   private async addRecords(
-    budget: Budget,
+    budget: PartialBudget,
     organizationId: ID,
     additions: readonly FiscalYear[],
     session: Session,
@@ -221,7 +214,7 @@ export class SyncBudgetRecordsToFundingPartners
   }
 
   private async removeRecords(
-    budget: Budget,
+    budget: PartialBudget,
     organizationId: ID,
     removals: readonly FiscalYear[],
     session: Session,
@@ -229,8 +222,8 @@ export class SyncBudgetRecordsToFundingPartners
   ) {
     const recordsToDelete = budget.records.filter(
       (record) =>
-        recordOrganization(record) === organizationId &&
-        removals.includes(recordFiscalYear(record))
+        record.organization === organizationId &&
+        removals.includes(record.fiscalYear)
     );
 
     await Promise.all(
@@ -238,45 +231,6 @@ export class SyncBudgetRecordsToFundingPartners
         this.budgets.deleteRecord(record.id, session, changeset)
       )
     );
-  }
-
-  private async getProjectIdAndSensitivityFromPartnership({ id }: Partnership) {
-    const result = await this.db
-      .query()
-      .match([
-        node('', 'Partnership', { id }),
-        relation('either', '', 'partnership', { active: true }),
-        node('project', 'Project'),
-      ])
-      .subQuery((sub) =>
-        sub
-          .with('project')
-          .match([
-            node('project'),
-            relation('out', '', 'sensitivity', { active: true }),
-            node('projSens', 'Property'),
-          ])
-          .optionalMatch([
-            node('project'),
-            relation('out', '', 'engagement', { active: true }),
-            node('', 'LanguageEngagement'),
-            relation('out', '', 'language', { active: true }),
-            node('', 'Language'),
-            relation('out', '', 'sensitivity', { active: true }),
-            node('langSens', 'Property'),
-          ])
-          .return([
-            `${determineSensitivity} as sensitivity`,
-            'project.id as id',
-          ])
-      )
-      .return('id, sensitivity')
-      .asResult<{ id: ID; sensitivity: Sensitivity }>()
-      .first();
-    if (!result) {
-      throw new NotFoundException("Unable to find partnership's project");
-    }
-    return { id: result.id, sensitivity: result.sensitivity };
   }
 }
 
@@ -301,12 +255,6 @@ const partnershipFiscalYears = (
   const end = readSecured(partnership.mouEnd, `partnership's mouEnd date`);
   return start && end ? fiscalYears(start, end) : [];
 };
-
-const recordOrganization = (record: BudgetRecord) =>
-  readSecured(record.organization, `budget record's organization`);
-
-const recordFiscalYear = (record: BudgetRecord) =>
-  readSecured(record.fiscalYear, `budget record's fiscal year`);
 
 const readSecured = <T extends Secured<any>>(
   field: T,

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { stripIndent } from 'common-tags';
-import { node, relation } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
 import {
   ID,
   NotFoundException,
@@ -79,24 +79,9 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
         node('', 'Budget'),
         relation('out', '', 'record', { active: !changeset }),
         node('node', 'BudgetRecord', { id }),
-        relation('out', '', 'organization', { active: true }),
-        node('organization', 'Organization'),
       ])
-      .apply(matchChangesetAndChangedProps(changeset))
-      .apply(matchPropsAndProjectSensAndScopedRoles(session))
-      .return<{ dto: UnsecuredDto<BudgetRecord> }>(
-        stripIndent`
-          apoc.map.mergeList([
-            props,
-            changedProps,
-            {
-              organization: organization.id,
-              scope: scopedRoles,
-              changeset: coalesce(changeset.id)
-            }
-          ]) as dto
-        `
-      );
+      .apply(this.hydrate({ session, changeset }))
+      .return<{ dto: UnsecuredDto<BudgetRecord> }>('dto');
     const result = await query.first();
     if (!result) {
       throw new NotFoundException(
@@ -112,37 +97,90 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
     const { budgetId } = input.filter;
     return this.db
       .query()
-      .subQuery((sub) =>
+      .matchNode('budget', 'Budget', { id: budgetId })
+      .apply(this.recordsOfBudget({ changeset }))
+      .apply(calculateTotalAndPaginateList(BudgetRecord, input));
+  }
+
+  hydrate({
+    recordVar = 'node',
+    projectVar = 'project',
+    outputVar = 'dto',
+    session,
+    changeset,
+  }: {
+    recordVar?: string;
+    projectVar?: string;
+    outputVar?: string;
+    session: Session;
+    changeset?: ID;
+  }) {
+    return (query: Query) =>
+      query.subQuery((sub) =>
         sub
+          .with([recordVar, projectVar]) // import
+          // rename to constant, only apply if making a change otherwise cypher breaks
+          .apply((q) =>
+            recordVar !== 'node' || projectVar !== 'project'
+              ? q.with({ [recordVar]: 'node', [projectVar]: 'project' })
+              : q
+          )
           .match([
-            node('node', 'BudgetRecord'),
-            ...(budgetId
-              ? [
-                  relation('in', '', 'record', { active: true }),
-                  node('budget', 'Budget', { id: budgetId }),
-                ]
-              : []),
+            node('node'),
+            relation('out', '', 'organization', { active: true }),
+            node('organization', 'Organization'),
           ])
-          .return('node')
+          .apply(matchChangesetAndChangedProps(changeset))
+          .apply(matchPropsAndProjectSensAndScopedRoles(session))
+          .return<{ dto: UnsecuredDto<BudgetRecord> }>(
+            stripIndent`
+              apoc.map.mergeList([
+                props,
+                changedProps,
+                {
+                  organization: organization.id,
+                  scope: scopedRoles,
+                  changeset: coalesce(changeset.id)
+                }
+              ]) as ${outputVar}
+        `
+          )
+      );
+  }
+
+  recordsOfBudget({
+    budgetVar = 'budget',
+    changeset,
+    outputVar = 'node',
+  }: {
+    budgetVar?: string;
+    changeset?: ID;
+    outputVar?: string;
+  }) {
+    return (query: Query) =>
+      query.subQuery((sub) =>
+        sub
+          .with(budgetVar)
+          .match([
+            node(budgetVar),
+            relation('out', '', 'record', { active: true }),
+            node('node', 'BudgetRecord'),
+          ])
+          .return({ node: outputVar })
           .apply((q) =>
             changeset
               ? q
                   .union()
                   .match([
-                    ...(budgetId
-                      ? [
-                          node('budget', 'Budget', { id: budgetId }),
-                          relation('out', '', 'record', { active: false }),
-                        ]
-                      : []),
+                    node(budgetVar),
+                    relation('out', '', 'record', { active: false }),
                     node('node', 'BudgetRecord'),
                     relation('in', '', 'changeset', { active: true }),
                     node('changeset', 'Changeset', { id: changeset }),
                   ])
-                  .return('node')
+                  .return({ node: outputVar })
               : q
           )
-      )
-      .apply(calculateTotalAndPaginateList(BudgetRecord, input));
+      );
   }
 }

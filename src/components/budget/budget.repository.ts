@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { stripIndent } from 'common-tags';
-import { node, relation } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   ID,
@@ -11,6 +11,7 @@ import {
 } from '../../common';
 import {
   createBaseNode,
+  DatabaseService,
   DtoRepository,
   matchRequestingUser,
   matchSession,
@@ -23,10 +24,23 @@ import {
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
-import { Budget, BudgetListInput, BudgetStatus } from './dto';
+import { BudgetRecordRepository } from './budget-record.repository';
+import {
+  Budget,
+  BudgetListInput,
+  BudgetRecord,
+  BudgetStatus as Status,
+} from './dto';
 
 @Injectable()
 export class BudgetRepository extends DtoRepository(Budget) {
+  constructor(
+    db: DatabaseService,
+    private readonly records: BudgetRecordRepository
+  ) {
+    super(db);
+  }
+
   async doesProjectExist(projectId: ID, session: Session) {
     const result = await this.db
       .query()
@@ -108,7 +122,7 @@ export class BudgetRepository extends DtoRepository(Budget) {
         node('status', 'Property'),
       ])
       .return('status.value as status')
-      .asResult<{ status: BudgetStatus }>()
+      .asResult<{ status: Status }>()
       .first();
     if (!result) {
       throw new NotFoundException('Budget could not be found');
@@ -134,6 +148,7 @@ export class BudgetRepository extends DtoRepository(Budget) {
       .apply(calculateTotalAndPaginateList(Budget, input));
     return query;
   }
+
   listNoSecGroups({ filter, ...input }: BudgetListInput) {
     const query = this.db
       .query()
@@ -150,5 +165,68 @@ export class BudgetRepository extends DtoRepository(Budget) {
       ])
       .apply(calculateTotalAndPaginateList(Budget, input));
     return query;
+  }
+
+  currentBudgetForProject(projectId: ID, changeset?: ID) {
+    return (query: Query) =>
+      query.subQuery((sub) =>
+        sub
+          .match([
+            node('project', 'Project', { id: projectId }),
+            relation('out', '', 'budget', { active: true }),
+            node('budget', 'Budget'),
+            relation('out', '', 'status', { active: true }),
+            node('status', 'Property'),
+          ])
+          // Pending changeset
+          .apply((q) =>
+            changeset
+              ? q.optionalMatch([
+                  node('changeset', 'Changeset', { id: changeset }),
+                  relation('out', '', 'status', { active: true }),
+                  node('changesetStatus', 'Property', { value: 'Pending' }),
+                ])
+              : q.subQuery((sub2) => sub2.return('null as changesetStatus'))
+          )
+          .with([
+            'project, budget',
+            // Budget's are pending in a pending changeset
+            'coalesce(changesetStatus.value, status.value) as status',
+            // rank them current, then pending, then w/e.
+            // Pick the first one.
+            stripIndent`
+              case coalesce(changesetStatus.value, status.value)
+                when "${Status.Current}" then 0
+                when "${Status.Pending}" then 1
+                else 100
+              end as statusRank`,
+          ])
+          .orderBy('statusRank')
+          .limit(1)
+          .return('project, budget, status')
+      );
+  }
+
+  async listRecordsForSync(projectId: ID, session: Session, changeset?: ID) {
+    const result = await this.db
+      .query()
+      .apply(this.currentBudgetForProject(projectId, changeset))
+      .subQuery((sub) =>
+        sub
+          .with('project, budget')
+          .apply(this.records.recordsOfBudget({ changeset }))
+          .apply(this.records.hydrate({ session, changeset }))
+          .return('collect(dto) as records')
+      )
+      .return<
+        UnsecuredDto<Pick<Budget, 'id' | 'status'>> & {
+          records: ReadonlyArray<UnsecuredDto<BudgetRecord>>;
+        }
+      >(['budget.id as id', 'status', 'records'])
+      .first();
+    if (!result) {
+      throw new NotFoundException("Could not find project's budget");
+    }
+    return result;
   }
 }

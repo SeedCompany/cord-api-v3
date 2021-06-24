@@ -38,7 +38,7 @@ export abstract class SecuredBudgetList extends SecuredList(Budget) {}
 
 @InputType()
 export abstract class BudgetRecordFilters {
-  readonly budgetId?: ID;
+  readonly budgetId: ID;
 }
 
 @InputType()
@@ -51,7 +51,7 @@ export class BudgetRecordListInput extends SortablePaginationInput<
 
   @Type(() => BudgetRecordFilters)
   @ValidateNested()
-  readonly filter: BudgetRecordFilters = defaultFilters;
+  readonly filter: BudgetRecordFilters;
 }
 
 @ObjectType()
