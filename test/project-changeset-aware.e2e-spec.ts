@@ -4,21 +4,17 @@ import * as faker from 'faker';
 import { CalendarDate } from '../src/common';
 import { Powers } from '../src/components/authorization/dto/powers';
 import { PartnerType } from '../src/components/partner';
-import { CreatePartnership } from '../src/components/partnership';
 import { ProjectStep, Role } from '../src/components/project';
-import { User } from '../src/components/user/dto/user.dto';
 import {
   approveProjectChangeRequest,
   createFundingAccount,
   createLocation,
-  createOrganization,
-  createPartner,
+  createPartnership,
   createProject,
   createProjectChangeRequest,
   createRegion,
   createSession,
   createTestApp,
-  login,
   registerUserWithPower,
   runAsAdmin,
   TestApp,
@@ -84,21 +80,20 @@ const activeProject = async (app: TestApp) => {
 
 describe('Project Changeset Aware e2e', () => {
   let app: TestApp;
-  let director: User;
   let db: Connection;
-  const password = faker.internet.password();
 
   beforeAll(async () => {
     app = await createTestApp();
     db = app.get(Connection);
     await createSession(app);
 
-    director = await registerUserWithPower(app, [Powers.DeleteProject], {
-      roles: [Role.ProjectManager],
-      password: password,
-    });
-
-    await login(app, { email: director.email.value, password });
+    await registerUserWithPower(
+      app,
+      [Powers.CreateOrganization, Powers.DeleteProject],
+      {
+        roles: [Role.ProjectManager],
+      }
+    );
   });
 
   afterAll(async () => {
@@ -210,32 +205,15 @@ describe('Project Changeset Aware e2e', () => {
       projectId: project.id,
     });
 
-    await registerUserWithPower(app, [Powers.CreateOrganization]);
-    const org = await createOrganization(app);
-    const partnership: CreatePartnership = {
+    // Create Partnership with Funding type, which will add budget records
+    await createPartnership(app, {
       projectId: project.id,
-      partnerId: (await createPartner(app, { organizationId: org.id })).id,
+      changeset: changeset.id,
       types: [PartnerType.Funding],
-    };
-
-    // Create Partnership with Funding type
-    await app.graphql.mutate(
-      gql`
-        mutation createPartnership($input: CreatePartnershipInput!) {
-          createPartnership(input: $input) {
-            partnership {
-              ...partnership
-            }
-          }
-        }
-        ${fragments.partnership}
-      `,
-      {
-        input: {
-          partnership,
-        },
-      }
-    );
+      financialReportingType: undefined,
+      mouStartOverride: undefined,
+      mouEndOverride: undefined,
+    });
 
     // Update Project with mou dates
     await app.graphql.mutate(
