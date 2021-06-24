@@ -75,9 +75,10 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
       .query()
       .match([
         node('project', 'Project'),
-        relation('out', '', 'budget', { active: true }),
+        // omitting active checks on these two relations which could be either depending on changeset
+        relation('out', '', 'budget'),
         node('', 'Budget'),
-        relation('out', '', 'record', { active: !changeset }),
+        relation('out', '', 'record'),
         node('node', 'BudgetRecord', { id }),
       ])
       .apply(this.hydrate({ session, changeset }))
