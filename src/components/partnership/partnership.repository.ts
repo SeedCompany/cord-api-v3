@@ -186,14 +186,22 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
       .apply(matchPropsAndProjectSensAndScopedRoles(session))
       .apply(matchChangesetAndChangedProps(changeset))
       .apply(matchProps({ nodeName: 'project', outputVar: 'projectProps' }))
+      .apply(
+        matchProps({
+          nodeName: 'project',
+          changeset,
+          optional: true,
+          outputVar: 'projectChangedProps',
+        })
+      )
       .return<{ dto: UnsecuredDto<Partnership> }>(
         stripIndent`
           apoc.map.mergeList([
             props,
             changedProps,
             {
-              mouStart: coalesce(changedProps.mouStartOverride, props.mouStartOverride, projectProps.mouStart),
-              mouEnd: coalesce(changedProps.mouEndOverride, props.mouEndOverride, projectProps.mouEnd),
+              mouStart: coalesce(changedProps.mouStartOverride, props.mouStartOverride, projectChangedProps.mouStart, projectProps.mouStart),
+              mouEnd: coalesce(changedProps.mouEndOverride, props.mouEndOverride, projectChangedProps.mouEnd, projectProps.mouEnd),
               project: project.id,
               partner: partner.id,
               organization: org.id,
