@@ -198,9 +198,10 @@ export class ProjectService {
   @HandleIdLookup(TranslationProject)
   async readOneTranslation(
     id: ID,
-    session: Session
+    session: Session,
+    changeset?: ID
   ): Promise<TranslationProject> {
-    const project = await this.readOne(id, session);
+    const project = await this.readOne(id, session, changeset);
     if (project.type !== ProjectType.Translation) {
       throw new Error('Project is not a translation project');
     }
@@ -210,9 +211,10 @@ export class ProjectService {
   @HandleIdLookup(InternshipProject)
   async readOneInternship(
     id: ID,
-    session: Session
+    session: Session,
+    changeset?: ID
   ): Promise<InternshipProject> {
-    const project = await this.readOne(id, session);
+    const project = await this.readOne(id, session, changeset);
     if (project.type !== ProjectType.Internship) {
       throw new Error('Project is not an internship project');
     }
