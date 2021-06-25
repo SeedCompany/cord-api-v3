@@ -12,6 +12,7 @@ import { ConfigService } from '..';
 import { getPreviousList } from '../../common';
 import { jestSkipFileInExceptionSource } from '../jest-skip-source-file';
 import { ILogger, LoggerToken, LogLevel } from '../logger';
+import { AFTER_MESSAGE } from '../logger/formatters';
 import { createBetterError, isNeo4jError } from './errors';
 import { ParameterTransformer } from './parameter-transformer.service';
 import { MyTransformer } from './transformer';
@@ -192,17 +193,13 @@ const wrapQueryRun = (
   return (origStatement, parameters) => {
     const statement = stripIndent(origStatement.slice(0, -1)) + ';';
     const level = (parameters?.logIt as LogLevel | undefined) ?? LogLevel.DEBUG;
-    if (parameters?.interpolated) {
-      logger.log(
-        level,
-        `Executing query: ${parameters.interpolated as string}`
-      );
-    } else {
-      logger.log(level, 'Executing query', {
-        statement,
-        ...parameters,
-      });
-    }
+    logger.log(
+      level,
+      'Executing query',
+      parameters?.interpolated
+        ? { [AFTER_MESSAGE]: parameters.interpolated }
+        : { statement, ...parameters }
+    );
 
     const params = parameters
       ? parameterTransformer.transform(parameters)

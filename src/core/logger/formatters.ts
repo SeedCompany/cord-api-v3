@@ -12,8 +12,11 @@ import { Exception } from '../../common/exceptions';
 import { maskSecrets as maskSecretsOfObj } from '../../common/mask-secrets';
 import { getNameFromEntry } from './logger.interface';
 
+export const AFTER_MESSAGE = Symbol('AFTER_MESSAGE');
+
 type TransformableInfo = ScuffedTransformableInfo & {
   [MESSAGE]?: string;
+  [AFTER_MESSAGE]?: string;
 };
 
 type Color = (str: string) => string;
@@ -177,6 +180,10 @@ export const printForCli = () =>
     msg += info.message;
     msg += ` ${yellow(info.ms)}`;
     msg += printObj(info.metadata);
+    if (info[AFTER_MESSAGE]) {
+      msg += `\n${info[AFTER_MESSAGE]!}\n`;
+    }
+
     return msg;
   });
 
