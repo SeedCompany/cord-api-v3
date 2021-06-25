@@ -36,4 +36,7 @@ export class StepProgress {
 
   @Field(() => Float)
   readonly percentDone: number;
+
+  @Field(() => String)
+  description: string;
 }

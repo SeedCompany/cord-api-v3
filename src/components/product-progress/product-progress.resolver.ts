@@ -40,7 +40,7 @@ export class ProductProgressResolver {
     @Args('input') input: ProductProgressInput,
     @LoggedInSession() session: Session
   ): Promise<ProductProgress> {
-    await this.service.update(input, session);
+    await this.service.update(input);
     return await this.service.readOne(input.reportId, input.productId, session);
   }
 }

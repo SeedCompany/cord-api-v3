@@ -39,4 +39,7 @@ export abstract class StepProgressInput {
       'The new percent complete for the step or null to remove the current value.',
   })
   percentDone: number | null;
+
+  @Field(() => String, { nullable: true })
+  description: string | null;
 }

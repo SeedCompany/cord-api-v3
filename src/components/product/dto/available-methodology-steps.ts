@@ -15,9 +15,10 @@ const steps = (approach: Approach | Methodology[], steps: Step[]): StepMap =>
     {},
     ...(Array.isArray(approach)
       ? approach
-      : ApproachToMethodologies[approach].map((m) => ({
-          [m]: steps,
-        })))
+      : ApproachToMethodologies[approach]
+    ).map((m) => ({
+      [m]: steps,
+    }))
   );
 
 export const MethodologyAvailableSteps: StepMap = {
