@@ -32,6 +32,15 @@ Query.prototype.logIt = function logIt(this: Query, level = LogLevel.NOTICE) {
         enumerable: false,
       });
     }
+    const trace = (this as any).__stacktrace as string[] | undefined;
+    const frame = trace?.[0] ? /at (.+) \(/.exec(trace[0]) : undefined;
+    if (frame?.[1]) {
+      Object.defineProperty(result.params, '__origin', {
+        value: frame[1],
+        enumerable: false,
+      });
+    }
+
     Object.defineProperty(result.params, 'logIt', {
       value: level,
       enumerable: false,

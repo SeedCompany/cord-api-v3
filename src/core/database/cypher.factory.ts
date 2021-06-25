@@ -153,6 +153,8 @@ export const CypherFactory: FactoryProvider<Connection> = {
         return q;
       }
 
+      (q as any).__stacktrace = stack;
+
       const origBuild = q.buildQueryObject.bind(q);
       q.buildQueryObject = function () {
         const result = origBuild();
@@ -195,7 +197,7 @@ const wrapQueryRun = (
     const level = (parameters?.logIt as LogLevel | undefined) ?? LogLevel.DEBUG;
     logger.log(
       level,
-      'Executing query',
+      `Executing ${(parameters?.__origin as string | undefined) ?? 'query'}`,
       parameters?.interpolated
         ? { [AFTER_MESSAGE]: parameters.interpolated }
         : { statement, ...parameters }
