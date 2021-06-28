@@ -293,11 +293,6 @@ export class DatabaseService {
     const update = this.db
       .query()
       .match(node('node', label, { id }))
-      .apply((q) =>
-        changeset
-          ? q.match(node('changeNode', 'Changeset', { id: changeset }))
-          : q
-      )
       // Deactivate existing prop(s) & adjust labels as needed
       // This is an optional step
       .subQuery((sub) =>
@@ -321,25 +316,46 @@ export class DatabaseService {
           .apply(prefixNodeLabelsWithDeleted('oldPropVar'))
           .return(['count(oldPropVar) as numPropsDeactivated'])
       )
-      .create([
-        node('node'),
-        relation('out', 'toProp', key, {
-          active: !changeset,
-          createdAt,
-        }),
-        node('newPropNode', propLabels, {
-          createdAt,
-          value,
-          sortValue: determineSortValue(value),
-        }),
-        ...(changeset
-          ? [
-              relation('in', '', 'changeset', { active: true }),
-              node('changeNode'),
-            ]
-          : []),
-      ])
-      .return('newPropNode');
+      .subQuery((sub) =>
+        sub
+          .with('node')
+          .apply((q) =>
+            changeset
+              ? q
+                  .match(node('changeset', 'Changeset', { id: changeset }))
+                  // Don't create new "change value" if the value is the same as
+                  // the value outside of the changeset.
+                  .raw(
+                    `WHERE NOT (node)-[:${key} { active: true }]->(:Property { value: $value })`,
+                    {
+                      value,
+                    }
+                  )
+              : q
+          )
+          .create([
+            node('node'),
+            relation('out', 'toProp', key, {
+              active: !changeset,
+              createdAt,
+            }),
+            node('newPropNode', propLabels, {
+              createdAt,
+              value,
+              sortValue: determineSortValue(value),
+            }),
+            ...(changeset
+              ? [
+                  relation('in', '', 'changeset', { active: true }),
+                  node('changeset'),
+                ]
+              : []),
+          ])
+          .return('count(newPropNode) as numPropsCreated')
+      )
+      .return<{ numPropsCreated: number; numPropsDeactivated: number }>(
+        'numPropsCreated, numPropsDeactivated'
+      );
 
     let result;
     try {
@@ -356,7 +372,10 @@ export class DatabaseService {
       throw new ServerException(`Failed to update property ${label}.${key}`, e);
     }
 
-    if (!result) {
+    if (
+      !result ||
+      (result.numPropsCreated === 0 && result.numPropsDeactivated === 0)
+    ) {
       throw new ServerException(`Could not find ${label}.${key} to update`);
     }
   }
