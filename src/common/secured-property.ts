@@ -8,9 +8,7 @@ import {
 import { stripIndent } from 'common-tags';
 import { GraphQLBoolean, GraphQLScalarType, GraphQLString } from 'graphql';
 import { isObject } from 'lodash';
-import { DateTime } from 'luxon';
 import { Class, ConditionalKeys, ConditionalPick } from 'type-fest';
-import { CalendarDate, DateField, DateTimeField } from '.';
 import { ISecured } from './secured.interface';
 import { AbstractClassType } from './types';
 
@@ -236,55 +234,3 @@ export abstract class SecuredFloatNullable extends SecuredProperty<
 export abstract class SecuredBoolean extends SecuredProperty<boolean>(
   GraphQLBoolean
 ) {}
-
-@ObjectType({ implements: [ISecured] })
-export abstract class SecuredDateTime implements ISecured, Secured<DateTime> {
-  @DateTimeField({ nullable: true })
-  readonly value?: DateTime;
-
-  @Field()
-  readonly canRead: boolean;
-
-  @Field()
-  readonly canEdit: boolean;
-}
-
-@ObjectType({ implements: [ISecured] })
-export abstract class SecuredDateTimeNullable
-  implements ISecured, Secured<DateTime | null>
-{
-  @DateTimeField({ nullable: true })
-  readonly value?: DateTime | null;
-
-  @Field()
-  readonly canRead: boolean;
-
-  @Field()
-  readonly canEdit: boolean;
-}
-
-@ObjectType({ implements: [ISecured] })
-export abstract class SecuredDate implements ISecured, Secured<CalendarDate> {
-  @DateField({ nullable: true })
-  readonly value?: CalendarDate;
-
-  @Field()
-  readonly canRead: boolean;
-
-  @Field()
-  readonly canEdit: boolean;
-}
-
-@ObjectType({ implements: [ISecured] })
-export abstract class SecuredDateNullable
-  implements ISecured, Secured<CalendarDate | null>
-{
-  @DateField({ nullable: true })
-  readonly value?: CalendarDate | null;
-
-  @Field()
-  readonly canRead: boolean;
-
-  @Field()
-  readonly canEdit: boolean;
-}
