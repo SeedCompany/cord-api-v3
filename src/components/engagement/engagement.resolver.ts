@@ -6,7 +6,14 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
+import {
+  AnonSession,
+  ID,
+  IdArg,
+  LoggedInSession,
+  SecuredDateRange,
+  Session,
+} from '../../common';
 import { CeremonyService, SecuredCeremony } from '../ceremony';
 import { ChangesetIds } from '../changeset/dto';
 import {
@@ -70,6 +77,11 @@ export class EngagementResolver {
       value,
       ...rest,
     };
+  }
+
+  @ResolveField()
+  dateRange(@Parent() engagement: Engagement): SecuredDateRange {
+    return SecuredDateRange.fromPair(engagement.startDate, engagement.endDate);
   }
 
   @Mutation(() => CreateLanguageEngagementOutput, {

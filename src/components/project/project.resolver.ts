@@ -14,6 +14,7 @@ import {
   IdArg,
   IdField,
   LoggedInSession,
+  SecuredDateRange,
   Session,
 } from '../../common';
 import { SecuredBudget } from '../budget';
@@ -256,6 +257,11 @@ export class ProjectResolver {
       ? await this.organizationService.readOne(id, session)
       : undefined;
     return { value, ...rest };
+  }
+
+  @ResolveField()
+  mouRange(@Parent() project: Project): SecuredDateRange {
+    return SecuredDateRange.fromPair(project.mouStart, project.mouEnd);
   }
 
   @Mutation(() => CreateProjectOutput, {
