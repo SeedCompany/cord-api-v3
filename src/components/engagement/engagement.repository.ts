@@ -24,6 +24,7 @@ import {
   matchPropsAndProjectSensAndScopedRoles,
   permissionsOfNode,
   requestingUser,
+  whereNotDeletedInChangeset,
 } from '../../core/database/query';
 import { Role, rolesForScope } from '../authorization';
 import { FileId } from '../file';
@@ -385,6 +386,7 @@ export class EngagementRepository extends CommonRepository {
                 ]
               : []),
           ])
+          .apply(whereNotDeletedInChangeset(changeset))
           .return('node')
           .apply((q) =>
             changeset && filter.projectId

@@ -17,6 +17,10 @@ export class DetachEngagementRootDirectoryHandler
       return;
     }
 
+    if (engagement.changeset) {
+      return;
+    }
+
     await this.ceremonies.delete(ceremonyId, session);
   }
 }

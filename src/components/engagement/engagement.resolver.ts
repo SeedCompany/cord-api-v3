@@ -160,10 +160,10 @@ export class EngagementResolver {
     description: 'Delete an engagement',
   })
   async deleteEngagement(
-    @IdArg() id: ID,
+    @Args() { id, changeset }: ChangesetIds,
     @LoggedInSession() session: Session
   ): Promise<boolean> {
-    await this.service.delete(id, session);
+    await this.service.delete(id, session, changeset);
     return true;
   }
 }
