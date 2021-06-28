@@ -4,6 +4,7 @@ import { DateField, DateTimeField } from './luxon.graphql';
 import { Secured } from './secured-property';
 import { ISecured } from './secured.interface';
 import { CalendarDate } from './temporal';
+import { Range } from './types';
 
 @ObjectType({ implements: [ISecured] })
 export abstract class SecuredDateTime implements ISecured, Secured<DateTime> {
@@ -49,6 +50,44 @@ export abstract class SecuredDateNullable
 {
   @DateField({ nullable: true })
   readonly value?: CalendarDate | null;
+
+  @Field()
+  readonly canRead: boolean;
+
+  @Field()
+  readonly canEdit: boolean;
+}
+
+@ObjectType()
+export abstract class DateRange implements Range<CalendarDate | null> {
+  @DateField({ nullable: true })
+  readonly start: CalendarDate | null;
+
+  @DateField({ nullable: true })
+  readonly end: CalendarDate | null;
+}
+
+@ObjectType({ implements: [ISecured] })
+export abstract class SecuredDateRange
+  implements ISecured, Secured<Range<CalendarDate | null>>
+{
+  static fromPair(
+    start: Secured<CalendarDate | null>,
+    end: Secured<CalendarDate | null>
+  ): SecuredDateRange {
+    const canRead = start.canRead && end.canRead;
+    return {
+      canRead,
+      canEdit: start.canEdit && end.canEdit,
+      value: {
+        start: canRead ? start.value ?? null : null,
+        end: canRead ? end.value ?? null : null,
+      },
+    };
+  }
+
+  @Field()
+  readonly value: DateRange;
 
   @Field()
   readonly canRead: boolean;
