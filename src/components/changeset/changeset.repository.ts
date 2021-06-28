@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { hasLabel, node, not, relation } from 'cypher-query-builder';
 import { ID, NotFoundException, Session } from '../../common';
 import { DtoRepository } from '../../core';
 import { BaseNode } from '../../core/database/results';
@@ -18,9 +18,13 @@ export class ChangesetRepository extends DtoRepository(Changeset) {
             node('changeset'),
             relation('out', '', [], { active: true }),
             node('', 'Property'),
-            relation('in', '', []),
+            relation('in', 'prop'),
             node('node', 'BaseNode'),
           ])
+          // Ignore modifiedAt properties when determining if a node has changed.
+          // These are not directly modified by user, and could be left over
+          // if a user made a change and then reverted it.
+          .where(not({ prop: hasLabel('modifiedAt') }))
           .return('collect(distinct node) as changed')
       )
       .subQuery((sub) =>
