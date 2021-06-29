@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   ID,
   NotFoundException,
+  Sensitivity,
   ServerException,
   Session,
   UnsecuredDto,
@@ -13,13 +14,14 @@ import {
   ACTIVE,
   createNode,
   createRelationships,
+  determineSensitivity,
+  matchPropList,
   matchProps,
   merge,
   paginate,
-  permissionsOfNode,
-  requestingUser,
   sorting,
 } from '../../core/database/query';
+import { ScopedRole } from '../authorization';
 import { CreatePartner, Partner, PartnerListInput } from './dto';
 
 @Injectable()
@@ -138,8 +140,7 @@ export class PartnerRepository extends DtoRepository(Partner) {
     const result = await this.db
       .query()
       .match([
-        requestingUser(session),
-        ...permissionsOfNode('Partner'),
+        node('node', 'Partner'),
         ...(filter.userId && session.userId
           ? [
               relation('out', '', 'organization', ACTIVE),
@@ -166,5 +167,96 @@ export class PartnerRepository extends DtoRepository(Partner) {
       .apply(paginate(input))
       .first();
     return result!; // result from paginate() will always have 1 row.
+  }
+
+  listPartnersOfAllUserProjects(
+    session: Session,
+    { filter }: PartnerListInput
+  ) {
+    return this.db
+      .query()
+      .match([
+        [
+          node('project'),
+          relation('out', '', 'member'),
+          node('projectmember', 'ProjectMember'),
+          relation('out'),
+          node('user', 'User', { id: session.userId }),
+        ],
+        [
+          node('projectmember'),
+          relation('out', '', 'roles', { active: true }),
+          node('rolesProp', 'Property'),
+        ],
+      ])
+      .match([
+        [
+          node('project'),
+          relation('out', '', 'sensitivity', { active: true }),
+          node('projSens', 'Property'),
+        ],
+        [
+          node('project'),
+          relation('out'),
+          node('', 'Partnership'),
+          relation('out'),
+          node('node', 'Partner'),
+          ...(filter.userId && session.userId
+            ? [
+                relation('out', '', 'organization', { active: true }),
+                node('', 'Organization'),
+                relation('in', '', 'organization', { active: true }),
+                node('user', 'User', { id: filter.userId }),
+              ]
+            : []),
+        ],
+      ])
+      .optionalMatch([
+        node('project'),
+        relation('out', '', 'engagement', { active: true }),
+        node('', 'LanguageEngagement'),
+        relation('out', '', 'language', { active: true }),
+        node('', 'Language'),
+        relation('out', '', 'sensitivity', { active: true }),
+        node('langSens', 'Property'),
+      ])
+      .with([
+        'project.id as projectId',
+        'node.id as partnerId',
+        `${determineSensitivity} as sensitivity`,
+        `reduce(
+          scopedRoles = [],
+          role IN apoc.coll.flatten(collect(rolesProp.value)) | scopedRoles + ["project:" + role]) as scopedRoles`,
+      ])
+      .with([
+        'projectId as pID, collect({id: partnerId, sensitivity: sensitivity, roles: scopedRoles}) as resources',
+      ])
+      .return<{
+        pId: ID;
+        resources: [
+          {
+            id: ID;
+            sensitivity: Sensitivity;
+            roles: ScopedRole[];
+          }
+        ];
+      }>('*');
+  }
+
+  async sortAndPaginatePartnerIds(
+    idList: ID[],
+    { filter, ...input }: PartnerListInput
+  ) {
+    return this.db
+      .query()
+      .match(node('node', 'Partner'))
+      .where({ 'node.id': inArray(idList) })
+      .apply(
+        calculateTotalAndPaginateList(
+          Partner,
+          input,
+          this.orgNameSorter(input.sort, input.order)
+        )
+      );
   }
 }

@@ -11,7 +11,7 @@ import {
   UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger, OnIndex } from '../../core';
-import { mapListResults } from '../../core/database/results';
+import { mapListResults, runListQuery } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { FinancialReportingType } from '../partnership/dto/financial-reporting-type';
 import {
@@ -184,8 +184,43 @@ export class PartnerService {
     input: PartnerListInput,
     session: Session
   ): Promise<PartnerListOutput> {
-    const results = await this.repo.list(input, session);
-    return await mapListResults(results, (id) => this.readOne(id, session));
+    if (await this.authorizationService.canList(Partner, session)) {
+      const results = await this.repo.list(input, session);
+      return await mapListResults(results, (id) => this.readOne(id, session));
+    } else {
+      const listPartnerIds = [] as ID[];
+      const result = await this.repo
+        .listPartnersOfAllUserProjects(session, input)
+        .run();
+
+      // I have to put an await, because the next block will execute before this one is finished....
+      // eslint-disable-next-line @typescript-eslint/await-thenable, @typescript-eslint/no-misused-promises
+      await void result.forEach(async (project) => {
+        // eslint-disable-next-line @typescript-eslint/await-thenable, @typescript-eslint/no-misused-promises, @typescript-eslint/no-confusing-void-expression
+        await project.resources.forEach(async (resource) => {
+          if (
+            await this.authorizationService.canList(
+              Partner,
+              session,
+              resource.roles
+            )
+          ) {
+            listPartnerIds.push(resource.id);
+          }
+        });
+      });
+      let query;
+      if (listPartnerIds.length > 1) {
+        query = await this.repo.sortAndPaginatePartnerIds(listPartnerIds, input);
+      } else {
+        // I don't really care about paginating a list containing one item, and I don't want to perform more db
+        // opertions just for one item, either. sorry.
+        query = { items: listPartnerIds, total: listPartnerIds.length };
+      }
+      return await runListQuery(query, input, (id) =>
+        this.readOne(id, session)
+      );
+    }
   }
 
   protected verifyFinancialReportingType(

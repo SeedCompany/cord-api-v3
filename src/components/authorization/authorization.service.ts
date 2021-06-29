@@ -46,7 +46,6 @@ export const permissionDefaults = {
   canRead: false,
   canEdit: false,
 };
-
 export type Permission = typeof permissionDefaults;
 
 export type PermissionsOf<T> = Record<keyof T, Permission>;
@@ -169,6 +168,44 @@ export class AuthorizationService {
       `You do not have permission to update ${resource.name}.${path}`,
       fullPath
     );
+  }
+
+  async canList<Resource extends ResourceShape<any>>(
+    resource: Resource,
+    sessionOrUserId: Session | ID,
+    otherRoles = [] as ScopedRole[]
+  ): Promise<boolean> {
+    const userGlobalRoles = isIdLike(sessionOrUserId)
+      ? await this.getUserGlobalRoles(sessionOrUserId)
+      : sessionOrUserId.roles;
+    const roles = [...userGlobalRoles, ...otherRoles];
+
+    // convert resource to a list of resource names to check
+    const resources = getParentTypes(resource)
+      // if parent defines Props include it in mapping
+      .filter(isResourceClass)
+      .map((r) => r.name);
+
+    const normalizeGrants = (role: DbRole) =>
+      !Array.isArray(role.grants)
+        ? role.grants
+        : mapValues(
+            // convert list of canList permissions keyed by resource name
+            keyBy(role.grants, (resourceGrant) =>
+              resourceGrant.__className.substring(2)
+            ),
+            (resourceGrant) => resourceGrant.canList
+          );
+    const dbRoles = getDbRoles(roles);
+    const grants = dbRoles.flatMap((role) =>
+      Object.entries(normalizeGrants(role)).flatMap(([name, grant]) => {
+        if (resources.includes(name)) {
+          return grant;
+        }
+        return [];
+      })
+    );
+    return grants.some((grant) => grant === true);
   }
 
   /**
