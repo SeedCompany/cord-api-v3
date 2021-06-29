@@ -84,6 +84,14 @@ export class EngagementResolver {
     return SecuredDateRange.fromPair(engagement.startDate, engagement.endDate);
   }
 
+  @ResolveField()
+  dateRangeOverride(@Parent() engagement: Engagement): SecuredDateRange {
+    return SecuredDateRange.fromPair(
+      engagement.startDateOverride,
+      engagement.endDateOverride
+    );
+  }
+
   @Mutation(() => CreateLanguageEngagementOutput, {
     description: 'Create a language engagement',
   })

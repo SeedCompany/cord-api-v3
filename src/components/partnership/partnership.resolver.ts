@@ -97,6 +97,14 @@ export class PartnershipResolver {
     return SecuredDateRange.fromPair(partnership.mouStart, partnership.mouEnd);
   }
 
+  @ResolveField()
+  mouRangeOverride(@Parent() partnership: Partnership): SecuredDateRange {
+    return SecuredDateRange.fromPair(
+      partnership.mouStartOverride,
+      partnership.mouEndOverride
+    );
+  }
+
   @Query(() => PartnershipListOutput, {
     description: 'Look up partnerships',
   })
