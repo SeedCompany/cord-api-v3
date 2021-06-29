@@ -6,6 +6,7 @@ export class DbBaseNodeGrant<AnyBaseNode> {
   // eslint-disable-next-line @typescript-eslint/naming-convention
   __className: string;
   properties: Array<PropertyGrant<Partial<AnyBaseNode>>>;
+  canList: boolean;
 
   constructor({
     ...rest
@@ -13,6 +14,7 @@ export class DbBaseNodeGrant<AnyBaseNode> {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     __className: string;
     canDelete: boolean;
+    canList?: boolean;
     properties: Array<PropertyGrant<Partial<AnyBaseNode>>>;
   }) {
     Object.assign(this, rest);

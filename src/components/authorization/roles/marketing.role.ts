@@ -261,6 +261,7 @@ export const Marketing = new DbRole({
     }),
     new DbBaseNodeGrant<DbPartner>({
       __className: 'DbPartner',
+      canList: true,
       properties: [
         { propertyName: 'organization', permission: { read, }, },
         { propertyName: 'pointOfContact', permission: { read, }, },
@@ -276,6 +277,7 @@ export const Marketing = new DbRole({
     }),
     new DbBaseNodeGrant<DbPartnership>({
       __className: 'DbPartnership',
+      canList: true,
       properties: [
         { propertyName: 'agreement', permission: { read, }, },
         { propertyName: 'agreementStatus', permission: { read, }, },
