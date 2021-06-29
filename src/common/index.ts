@@ -17,6 +17,7 @@ export * from './parent-types';
 export * from './resource.dto';
 export * from './secured-list';
 export * from './secured-property';
+export * from './secured-date';
 export * from './sensitivity.enum';
 export * from './util';
 export { Session, LoggedInSession, AnonSession } from './session';

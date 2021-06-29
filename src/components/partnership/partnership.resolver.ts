@@ -6,7 +6,14 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
+import {
+  AnonSession,
+  ID,
+  IdArg,
+  LoggedInSession,
+  SecuredDateRange,
+  Session,
+} from '../../common';
 import { ChangesetIds } from '../changeset/dto';
 import { FileService, SecuredFile } from '../file';
 import { SecuredPartner } from '../partner/dto';
@@ -83,6 +90,11 @@ export class PartnershipResolver {
       value,
       ...rest,
     };
+  }
+
+  @ResolveField()
+  mouRange(@Parent() partnership: Partnership): SecuredDateRange {
+    return SecuredDateRange.fromPair(partnership.mouStart, partnership.mouEnd);
   }
 
   @Query(() => PartnershipListOutput, {
