@@ -239,7 +239,7 @@ export class PartnershipService {
     return event.updated;
   }
 
-  async delete(id: ID, session: Session): Promise<void> {
+  async delete(id: ID, session: Session, changeset?: ID): Promise<void> {
     const object = await this.readOne(id, session);
 
     if (!object) {
@@ -271,7 +271,7 @@ export class PartnershipService {
     );
 
     try {
-      await this.repo.deleteNode(object);
+      await this.repo.deleteNode(object, changeset);
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);

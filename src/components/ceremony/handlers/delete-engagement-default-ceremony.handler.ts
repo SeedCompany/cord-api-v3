@@ -17,6 +17,7 @@ export class DetachEngagementRootDirectoryHandler
       return;
     }
 
+    // TODO Ceremony should be changeset aware
     if (engagement.changeset) {
       return;
     }

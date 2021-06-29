@@ -258,5 +258,9 @@ describe('Engagement Changeset Aware e2e', () => {
     // List engagements with changeset
     result = await readEngagements(app, project.id, changeset.id);
     expect(result.project.engagements.items.length).toBe(1);
+    await approveProjectChangeRequest(app, changeset.id);
+    // List engagements without changeset
+    result = await readEngagements(app, project.id);
+    expect(result.project.engagements.items.length).toBe(1);
   });
 });

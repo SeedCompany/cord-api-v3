@@ -85,11 +85,39 @@ export class ApplyApprovedChangesetToPartnership
           await update({ ...changes, id }, event.session);
         })
       );
+
+      // Remove deleting partnerships
+      await this.removeDeletingPartnerships(changeset);
     } catch (exception) {
       throw new ServerException(
         'Failed to apply changeset to partnership',
         exception
       );
     }
+  }
+
+  async removeDeletingPartnerships(changeset: ID) {
+    const partnerships = await this.db
+      .query()
+      .match([
+        node('project', 'Project'),
+        relation('out', '', 'changeset', { active: true }),
+        node('changeset', 'Changeset', { id: changeset }),
+      ])
+      .match([
+        node('project'),
+        relation('out', '', 'partnership', { active: true }),
+        node('node', 'Partnership'),
+        relation('in', '', 'changeset', { active: true, deleting: true }),
+        node('changeset'),
+      ])
+      .return<{ id: ID }>(['node.id as id'])
+      .run();
+
+    await Promise.all(
+      partnerships.map(async ({ id }) => {
+        await this.db.deleteNode(id);
+      })
+    );
   }
 }

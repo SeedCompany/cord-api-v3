@@ -211,4 +211,45 @@ describe('Partnership Changeset Aware e2e', () => {
       PartnershipAgreementStatus.Signed
     );
   });
+
+  it('Delete', async () => {
+    const project = await activeProject(app);
+    const changeset = await createProjectChangeRequest(app, {
+      projectId: project.id,
+    });
+
+    await createPartnership(app, {
+      projectId: project.id,
+    });
+
+    const partnership = await createPartnership(app, {
+      projectId: project.id,
+    });
+
+    // Delete partnereship in changeset
+    let result = await app.graphql.mutate(
+      gql`
+        mutation deletePartnership($id: ID!, $changeset: ID) {
+          deletePartnership(id: $id, changeset: $changeset)
+        }
+      `,
+      {
+        id: partnership.id,
+        changeset: changeset.id,
+      }
+    );
+    const actual: boolean | undefined = result.deletePartnership;
+    expect(actual).toBeTruthy();
+
+    // List partnerships without changeset
+    result = await readPartnerships(app, project.id);
+    expect(result.project.partnerships.items.length).toBe(2);
+    // List partnerships with changeset
+    result = await readPartnerships(app, project.id, changeset.id);
+    expect(result.project.partnerships.items.length).toBe(1);
+    await approveProjectChangeRequest(app, changeset.id);
+    // List partnerships without changeset
+    result = await readPartnerships(app, project.id);
+    expect(result.project.partnerships.items.length).toBe(1);
+  });
 });

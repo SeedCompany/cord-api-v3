@@ -70,6 +70,7 @@ export const defaultSorter =
 export const whereNotDeletedInChangeset = (changeset?: ID) => (query: Query) =>
   changeset
     ? query.raw(
-        `WHERE NOT (node)<-[:changeset { active: true, deleting: true }]-(:Changeset { id: '${changeset}' })`
+        'WHERE NOT (node)<-[:changeset { active: true, deleting: true }]-(:Changeset { id: $changesetId })',
+        { changesetId: changeset }
       )
     : query;

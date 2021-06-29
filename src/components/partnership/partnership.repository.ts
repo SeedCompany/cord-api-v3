@@ -23,6 +23,7 @@ import {
   matchPropsAndProjectSensAndScopedRoles,
   permissionsOfNode,
   requestingUser,
+  whereNotDeletedInChangeset,
 } from '../../core/database/query';
 import {
   CreatePartnership,
@@ -238,6 +239,7 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
                 ]
               : []),
           ])
+          .apply(whereNotDeletedInChangeset(changeset))
           .return('node')
           .apply((q) =>
             changeset && filter.projectId

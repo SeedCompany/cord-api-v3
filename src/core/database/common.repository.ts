@@ -30,7 +30,7 @@ export class CommonRepository {
           relation('out', 'rel', 'changeset'),
           node('node'),
         ])
-        .onCreate.setValues({ 'rel.active': true, 'rel.deleting': true })
+        .setValues({ 'rel.active': true, 'rel.deleting': true })
         .run();
     } catch (e) {
       throw new ServerException('Failed to remove node in changeset', e);
