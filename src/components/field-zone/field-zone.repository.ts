@@ -80,13 +80,6 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
     );
     await pgClient.end();
 
-    const pgClient = await this.pg.connectedClient;
-    await pgClient.query(
-      'INSERT INTO sc_field_zone (director_sys_person_id, name) VALUES($1, $2)',
-      [directorId, name]
-    );
-    await pgClient.end();
-
     // const result = await query.first();
 
     return await query.first();
@@ -115,7 +108,7 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
 
   async updateDirector(directorId: ID, id: ID) {
     const createdAt = DateTime.local();
-    const query = this.db
+    this.db
       .query()
       .match(node('fieldZone', 'FieldZone', { id }))
       .with('fieldZone')
