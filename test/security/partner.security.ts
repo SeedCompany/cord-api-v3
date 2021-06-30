@@ -1,41 +1,24 @@
 import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
-import { CalendarDate, Sensitivity } from '../../src/common';
+import { CalendarDate } from '../../src/common';
 import { Powers } from '../../src/components/authorization/dto/powers';
-import { Location } from '../../src/components/location';
 import { PartnerType } from '../../src/components/partner';
+import { Project, Role } from '../../src/components/project';
 import {
-  IProject,
-  Project,
-  ProjectType,
-  Role,
-  ScopedRole,
-} from '../../src/components/project';
-import {
-  createBudget,
-  createLocation,
   createOrganization,
   createPartner,
   createPartnership,
   createProject,
+  createProjectMember,
   createSession,
   createTestApp,
+  listPartners,
   login,
   Raw,
-  readOneProject,
-  readOneProjectBudget,
-  readOneProjectOtherLocations,
-  readOneProjectOtherLocationsItems,
   registerUserWithPower,
   TestApp,
 } from '../utility';
 import { resetDatabase } from '../utility/reset-database';
-import { testRole } from '../utility/roles';
-import {
-  expectSensitiveProperty,
-  expectSensitiveRelationList,
-} from '../utility/sensitivity';
-import { getPermissions } from './permissions';
 
 describe('Project Security e2e', () => {
   let app: TestApp;
@@ -43,8 +26,6 @@ describe('Project Security e2e', () => {
   let email: string;
   let password: string;
   let testProject: Raw<Project>;
-  let testLocation: Location;
-  let primaryLocation: Location;
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -87,68 +68,64 @@ describe('Project Security e2e', () => {
 
   describe('Restricted by role', () => {
     describe.each`
-      role
-      ${Role.Administrator}
-      ${Role.Consultant}
-      ${Role.ConsultantManager}
-      ${Role.Controller}
-      ${Role.FieldOperationsDirector}
-      ${Role.FinancialAnalyst}
-      ${Role.Fundraising}
-      ${Role.Intern}
-      ${Role.LeadFinancialAnalyst}
-      ${Role.Leadership}
-      ${Role.Liaison}
-      ${Role.Marketing}
-      ${Role.Mentor}
-      ${Role.ProjectManager}
-      ${Role.RegionalCommunicationsCoordinator}
-    `('Global $role', ({ role }) => {
-      test.each`
-        property                       | readFunction      | staticResource
-        ${'estimatedSubmission'}       | ${readOneProject} | ${IProject}
-        ${'step'}                      | ${readOneProject} | ${IProject}
-        ${'name'}                      | ${readOneProject} | ${IProject}
-        ${'mouStart'}                  | ${readOneProject} | ${IProject}
-        ${'mouEnd'}                    | ${readOneProject} | ${IProject}
-        ${'initialMouEnd'}             | ${readOneProject} | ${IProject}
-        ${'stepChangedAt'}             | ${readOneProject} | ${IProject}
-        ${'tags'}                      | ${readOneProject} | ${IProject}
-        ${'financialReportReceivedAt'} | ${readOneProject} | ${IProject}
-        ${'primaryLocation'}           | ${readOneProject} | ${IProject}
-        ${'budget'}                    | ${readOneProject} | ${IProject}
-      `(
-        ' reading $staticResource.name $property',
-        async ({ property, readFunction, staticResource }) => {
-          await testRole({
-            app: app,
-            resource: testProject,
-            staticResource: staticResource,
-            role: role,
-            readOneFunction: readFunction,
-            propToTest: property,
-          });
-        }
-      );
-
-      it('reading otherLocations', async () => {
-        await login(app, { email, password });
+      role                                      | globalCanList | projectCanList
+      ${Role.Administrator}                     | ${true}       | ${true}
+      ${Role.Consultant}                        | ${false}      | ${false}
+      ${Role.ConsultantManager}                 | ${true}       | ${true}
+      ${Role.Controller}                        | ${true}       | ${true}
+      ${Role.FieldOperationsDirector}           | ${true}       | ${true}
+      ${Role.FinancialAnalyst}                  | ${true}       | ${true}
+      ${Role.Fundraising}                       | ${true}       | ${true}
+      ${Role.Intern}                            | ${true}       | ${true}
+      ${Role.LeadFinancialAnalyst}              | ${true}       | ${true}
+      ${Role.Leadership}                        | ${true}       | ${true}
+      ${Role.Liaison}                           | ${false}      | ${false}
+      ${Role.Marketing}                         | ${true}       | ${true}
+      ${Role.Mentor}                            | ${true}       | ${true}
+      ${Role.ProjectManager}                    | ${true}       | ${true}
+      ${Role.RegionalCommunicationsCoordinator} | ${false}      | ${false}
+      ${Role.RegionalDirector}                  | ${true}       | ${true}
+      ${Role.StaffMember}                       | ${true}       | ${true}
+      ${Role.Translator}                        | ${false}      | ${false}
+    `('$role', ({ role, globalCanList, projectCanList }) => {
+      it('Global canList', async () => {
         await registerUserWithPower(app, [], { roles: role });
-        const perms = await getPermissions({
-          resource: IProject,
-          userRole: `global:${role as Role}` as ScopedRole,
-          sensitivity: testProject.sensitivity,
-        });
-
-        const read = await readOneProjectOtherLocations(app, testProject.id);
-
-        expect(read.canRead).toEqual(perms.otherLocations.canRead);
-        expect(read.canCreate).toEqual(perms.otherLocations.canEdit);
-
-        if (!perms.otherLocations.canRead) {
-          expect(read.items).toHaveLength(0);
+        const read = await listPartners(app);
+        if (!globalCanList) {
+          expect(read).toHaveLength(0);
         } else {
-          expect(read.items).not.toHaveLength(0);
+          expect(read).not.toHaveLength(0);
+        }
+      });
+
+      it('Project canList', async () => {
+        const userEmail = faker.internet.email();
+        const userPassword = faker.internet.password();
+        const user = await registerUserWithPower(app, [], {
+          email: userEmail,
+          password: userPassword,
+          roles: role,
+        });
+        await login(app, { email, password });
+        const org1 = await createOrganization(app);
+        await createPartner(app, {
+          organizationId: org1.id,
+        });
+        const org2 = await createOrganization(app);
+        await createPartner(app, {
+          organizationId: org2.id,
+        });
+        await createProjectMember(app, {
+          projectId: testProject.id,
+          roles: role,
+          userId: user.id,
+        });
+        await login(app, { email: userEmail, password: userPassword });
+        const read = await listPartners(app);
+        if (!projectCanList) {
+          expect(read).toHaveLength(0);
+        } else {
+          expect(read).not.toHaveLength(0);
         }
       });
     });
