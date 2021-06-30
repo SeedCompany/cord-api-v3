@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { LazyGetter as Lazy } from 'lazy-get-decorator';
-import { Pool, Client } from 'pg';
+import { Client, Pool } from 'pg';
 
 @Injectable()
 export class PostgresService {
@@ -15,4 +15,3 @@ export class PostgresService {
     });
   }
 }
-
