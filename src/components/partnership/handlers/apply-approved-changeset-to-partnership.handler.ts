@@ -7,7 +7,7 @@ import {
   ILogger,
   Logger,
 } from '../../../core';
-import { matchProps } from '../../../core/database/query';
+import { deleteBaseNode, matchProps } from '../../../core/database/query';
 import { ProjectChangeRequestApprovedEvent } from '../../project-change-request/events';
 import { UpdatePartnership } from '../dto';
 import { PartnershipService } from '../partnership.service';
@@ -97,7 +97,7 @@ export class ApplyApprovedChangesetToPartnership
   }
 
   async removeDeletingPartnerships(changeset: ID) {
-    const partnerships = await this.db
+    await this.db
       .query()
       .match([
         node('project', 'Project'),
@@ -111,13 +111,8 @@ export class ApplyApprovedChangesetToPartnership
         relation('in', '', 'changeset', { active: true, deleting: true }),
         node('changeset'),
       ])
-      .return<{ id: ID }>(['node.id as id'])
+      .apply(deleteBaseNode('node'))
+      .return<{ count: number }>('count(node) as count')
       .run();
-
-    await Promise.all(
-      partnerships.map(async ({ id }) => {
-        await this.db.deleteNode(id);
-      })
-    );
   }
 }

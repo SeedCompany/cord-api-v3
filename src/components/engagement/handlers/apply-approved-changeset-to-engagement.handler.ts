@@ -7,7 +7,7 @@ import {
   ILogger,
   Logger,
 } from '../../../core';
-import { matchProps } from '../../../core/database/query';
+import { deleteBaseNode, matchProps } from '../../../core/database/query';
 import {
   EngagementService,
   UpdateInternshipEngagement,
@@ -110,7 +110,7 @@ export class ApplyApprovedChangesetToEngagement
   }
 
   async removeDeletingEngagements(changeset: ID) {
-    const engagements = await this.db
+    await this.db
       .query()
       .match([
         node('project', 'Project'),
@@ -124,13 +124,8 @@ export class ApplyApprovedChangesetToEngagement
         relation('in', '', 'changeset', { active: true, deleting: true }),
         node('changeset'),
       ])
-      .return<{ id: ID }>(['node.id as id'])
+      .apply(deleteBaseNode('node'))
+      .return<{ count: number }>('count(node) as count')
       .run();
-
-    await Promise.all(
-      engagements.map(async ({ id }) => {
-        await this.db.deleteNode(id);
-      })
-    );
   }
 }
