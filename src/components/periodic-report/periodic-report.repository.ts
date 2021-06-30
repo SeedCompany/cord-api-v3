@@ -213,10 +213,8 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
           startDates: intervals.map((interval) => interval.start),
         }
       )
-      .with('report as baseNode')
-      .apply(deleteBaseNode)
-      .return('count(node) as count')
-      .asResult<{ count: number }>()
+      .apply(deleteBaseNode('report'))
+      .return<{ count: number }>('count(node) as count')
       .first();
   }
 }

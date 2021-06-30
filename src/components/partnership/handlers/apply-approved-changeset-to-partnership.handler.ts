@@ -7,7 +7,7 @@ import {
   ILogger,
   Logger,
 } from '../../../core';
-import { matchProps } from '../../../core/database/query';
+import { deleteBaseNode, matchProps } from '../../../core/database/query';
 import { ProjectChangeRequestApprovedEvent } from '../../project-change-request/events';
 import { UpdatePartnership } from '../dto';
 import { PartnershipService } from '../partnership.service';
@@ -85,11 +85,34 @@ export class ApplyApprovedChangesetToPartnership
           await update({ ...changes, id }, event.session);
         })
       );
+
+      // Remove deleting partnerships
+      await this.removeDeletingPartnerships(changeset);
     } catch (exception) {
       throw new ServerException(
         'Failed to apply changeset to partnership',
         exception
       );
     }
+  }
+
+  async removeDeletingPartnerships(changeset: ID) {
+    await this.db
+      .query()
+      .match([
+        node('project', 'Project'),
+        relation('out', '', 'changeset', { active: true }),
+        node('changeset', 'Changeset', { id: changeset }),
+      ])
+      .match([
+        node('project'),
+        relation('out', '', 'partnership', { active: true }),
+        node('node', 'Partnership'),
+        relation('in', '', 'changeset', { active: true, deleting: true }),
+        node('changeset'),
+      ])
+      .apply(deleteBaseNode('node'))
+      .return<{ count: number }>('count(node) as count')
+      .run();
   }
 }

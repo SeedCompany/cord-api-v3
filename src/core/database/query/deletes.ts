@@ -3,10 +3,10 @@ import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ResourceShape } from '../../../common';
 
-export const deleteBaseNode = (query: Query) =>
+export const deleteBaseNode = (nodeVar: string) => (query: Query) =>
   query
     .match([
-      node('baseNode'),
+      node(nodeVar),
       /**
          in this case we want to set Deleted_ labels for all properties
          including active = false
@@ -18,19 +18,19 @@ export const deleteBaseNode = (query: Query) =>
     ])
     // Mark any parent base node relationships (pointing to the base node) as active = false.
     .optionalMatch([
-      node('baseNode'),
+      node(nodeVar),
       relation('in', 'baseNodeRel'),
       node('', 'BaseNode'),
     ])
     .setValues({
-      'baseNode.deletedAt': DateTime.local(),
+      [`${nodeVar}.deletedAt`]: DateTime.local(),
       'baseNodeRel.active': false,
     })
     /**
        if we set anything on property nodes or property relationships in the query above (as was done previously)
        we need to distinct propertyNode to avoid collecting and labeling each propertyNode more than once
        */
-    .with('[baseNode] + collect(propertyNode) as nodeList')
+    .with(`[${nodeVar}] + collect(propertyNode) as nodeList`)
     .raw('unwind nodeList as node')
     .apply(prefixNodeLabelsWithDeleted('node'));
 

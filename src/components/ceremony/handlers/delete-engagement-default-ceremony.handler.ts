@@ -17,6 +17,11 @@ export class DetachEngagementRootDirectoryHandler
       return;
     }
 
+    // TODO Ceremony should be changeset aware
+    if (engagement.changeset) {
+      return;
+    }
+
     await this.ceremonies.delete(ceremonyId, session);
   }
 }

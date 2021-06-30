@@ -222,4 +222,45 @@ describe('Engagement Changeset Aware e2e', () => {
     result = await readLanguageEngagement(app, languageEngagement.id);
     expect(result.engagement.completeDate.value).toBe('2100-08-22');
   });
+
+  it('Delete', async () => {
+    const project = await activeProject(app);
+    const changeset = await createProjectChangeRequest(app, {
+      projectId: project.id,
+    });
+
+    await createLanguageEngagement(app, {
+      projectId: project.id,
+    });
+
+    const le = await createLanguageEngagement(app, {
+      projectId: project.id,
+    });
+
+    // Delete engagement in changeset
+    let result = await app.graphql.mutate(
+      gql`
+        mutation deleteEngagement($id: ID!, $changeset: ID) {
+          deleteEngagement(id: $id, changeset: $changeset)
+        }
+      `,
+      {
+        id: le.id,
+        changeset: changeset.id,
+      }
+    );
+    const actual: boolean | undefined = result.deleteEngagement;
+    expect(actual).toBeTruthy();
+
+    // List engagements without changeset
+    result = await readEngagements(app, project.id);
+    expect(result.project.engagements.items.length).toBe(2);
+    // List engagements with changeset
+    result = await readEngagements(app, project.id, changeset.id);
+    expect(result.project.engagements.items.length).toBe(1);
+    await approveProjectChangeRequest(app, changeset.id);
+    // List engagements without changeset
+    result = await readEngagements(app, project.id);
+    expect(result.project.engagements.items.length).toBe(1);
+  });
 });

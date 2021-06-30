@@ -602,7 +602,7 @@ export class DatabaseService {
     const query = this.db
       .query()
       .matchNode('baseNode', { id })
-      .apply(deleteBaseNode)
+      .apply(deleteBaseNode('baseNode'))
       .return('*');
     await query.run();
   }

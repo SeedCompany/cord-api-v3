@@ -451,7 +451,7 @@ export class EngagementService {
 
   // DELETE /////////////////////////////////////////////////////////
 
-  async delete(id: ID, session: Session): Promise<void> {
+  async delete(id: ID, session: Session, changeset?: ID): Promise<void> {
     const object = await this.readOne(id, session);
 
     if (!object) {
@@ -469,7 +469,7 @@ export class EngagementService {
     await this.eventBus.publish(new EngagementWillDeleteEvent(object, session));
 
     try {
-      await this.repo.deleteNode(object);
+      await this.repo.deleteNode(object, changeset);
     } catch (e) {
       this.logger.warning('Failed to delete Engagement', {
         exception: e,

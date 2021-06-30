@@ -66,3 +66,11 @@ export const defaultSorter =
           .orderBy(sortValSecuredProp, order)
       : q.with('*').orderBy(sortValBaseNodeProp, order);
   };
+
+export const whereNotDeletedInChangeset = (changeset?: ID) => (query: Query) =>
+  changeset
+    ? query.raw(
+        'WHERE NOT (node)<-[:changeset { active: true, deleting: true }]-(:Changeset { id: $changesetId })',
+        { changesetId: changeset }
+      )
+    : query;

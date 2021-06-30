@@ -7,7 +7,7 @@ import {
   ILogger,
   Logger,
 } from '../../../core';
-import { matchProps } from '../../../core/database/query';
+import { deleteBaseNode, matchProps } from '../../../core/database/query';
 import {
   EngagementService,
   UpdateInternshipEngagement,
@@ -98,11 +98,34 @@ export class ApplyApprovedChangesetToEngagement
           await update({ ...changes, id }, event.session);
         })
       );
+
+      // Remove deleting engagements
+      await this.removeDeletingEngagements(changeset);
     } catch (exception) {
       throw new ServerException(
         'Failed to apply changeset to project',
         exception
       );
     }
+  }
+
+  async removeDeletingEngagements(changeset: ID) {
+    await this.db
+      .query()
+      .match([
+        node('project', 'Project'),
+        relation('out', '', 'changeset', { active: true }),
+        node('changeset', 'Changeset', { id: changeset }),
+      ])
+      .match([
+        node('project'),
+        relation('out', '', 'engagement', { active: true }),
+        node('node', 'Engagement'),
+        relation('in', '', 'changeset', { active: true, deleting: true }),
+        node('changeset'),
+      ])
+      .apply(deleteBaseNode('node'))
+      .return<{ count: number }>('count(node) as count')
+      .run();
   }
 }
