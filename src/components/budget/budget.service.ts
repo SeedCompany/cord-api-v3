@@ -288,13 +288,14 @@ export class BudgetService {
 
   async updateRecord(
     { id, ...input }: UpdateBudgetRecord,
-    session: Session
+    session: Session,
+    changeset?: ID
   ): Promise<BudgetRecord> {
     this.logger.debug('Update budget record', { id, userId: session.userId });
 
     await this.verifyCanEdit(id, session);
 
-    const br = await this.readOneRecord(id, session);
+    const br = await this.readOneRecord(id, session, changeset);
     const changes = this.budgetRecordsRepo.getActualChanges(br, input);
     await this.authorizationService.verifyCanEditChanges(
       BudgetRecord,
@@ -303,7 +304,11 @@ export class BudgetService {
     );
 
     try {
-      const result = await this.budgetRecordsRepo.updateProperties(br, changes);
+      const result = await this.budgetRecordsRepo.updateProperties(
+        br,
+        changes,
+        changeset
+      );
       return result;
     } catch (e) {
       this.logger.error('Could not update budget Record ', {

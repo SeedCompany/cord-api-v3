@@ -50,6 +50,12 @@ export abstract class UpdateBudgetRecordInput {
   @Type(() => UpdateBudgetRecord)
   @ValidateNested()
   readonly budgetRecord: UpdateBudgetRecord;
+
+  @IdField({
+    description: 'The change object to associate these engagement changes with',
+    nullable: true,
+  })
+  readonly changeset?: ID;
 }
 
 @ObjectType()

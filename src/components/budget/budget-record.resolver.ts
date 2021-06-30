@@ -42,9 +42,13 @@ export class BudgetRecordResolver {
   })
   async updateBudgetRecord(
     @LoggedInSession() session: Session,
-    @Args('input') { budgetRecord: input }: UpdateBudgetRecordInput
+    @Args('input') { budgetRecord: input, changeset }: UpdateBudgetRecordInput
   ): Promise<UpdateBudgetRecordOutput> {
-    const budgetRecord = await this.service.updateRecord(input, session);
+    const budgetRecord = await this.service.updateRecord(
+      input,
+      session,
+      changeset
+    );
     return { budgetRecord };
   }
 }
