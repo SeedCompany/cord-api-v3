@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { LazyGetter as Lazy } from 'lazy-get-decorator';
 import { Client, Pool } from 'pg';
 
+
 @Injectable()
 export class PostgresService {
   // pools/clients will use environment variables
@@ -11,9 +12,8 @@ export class PostgresService {
 
   @Lazy() get connectedClient(): Promise<Client> {
     return this.client.connect().then(() => {
-      console.log(this.client)
+      console.log(`client connected: ${this.client}`);
       return this.client;
     });
   }
 }
- 

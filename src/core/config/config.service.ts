@@ -15,6 +15,7 @@ import { FrontendUrlWrapper } from '../email/templates/frontend-url';
 import { LogLevel } from '../logger';
 import { EnvironmentService } from './environment.service';
 
+
 /**
  * Application configuration.
  * This is used to provide a higher level mapping from the raw environment.
@@ -98,6 +99,16 @@ export class ConfigService implements EmailOptionsFactory {
     };
   }
 //
+  @Lazy() get postgres(){
+    let pgHost = this.env.string('PGHOST').optional('localhost');
+    let pgUser = this.env.string('PGUSER').optional('postgres');
+    let pgPassword = this.env.string('PGPASSWORD').optional('password');
+    let pgDatabase = this.env.string('PGDATABASE').optional('postgres');
+    let pgPort = this.env.string('PGPORT').optional('5432');
+    return {
+        pgHost, pgUser, pgPassword, pgDatabase, pgPort
+    }
+  }
 
   dbIndexesCreate = this.env.boolean('DB_CREATE_INDEXES').optional(true);
 
