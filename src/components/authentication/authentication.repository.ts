@@ -3,6 +3,7 @@ import { node, not, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID, ServerException, Session } from '../../common';
 import { DatabaseService, matchRequestingUser } from '../../core';
+import { PostgresService } from '../../core/postgres/postgres.service';
 import { LoginInput } from './dto';
 
 interface EmailToken {
@@ -13,7 +14,10 @@ interface EmailToken {
 
 @Injectable()
 export class AuthenticationRepository {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(private readonly db: DatabaseService, private readonly pg: PostgresService) {
+    // it's not awaited but the code will still run
+    console.log(`Calling PG in AuthRepo to Initialise DB: ${this.pg.connectedClient}`)
+  }
 
   async saveSessionToken(token: string) {
     const result = await this.db
