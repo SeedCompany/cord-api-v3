@@ -102,13 +102,13 @@ export class ConfigService implements EmailOptionsFactory {
   }
 //
   @Lazy() get postgres(){
-    let pgHost = this.env.string('PGHOST').optional('localhost');
-    let pgUser = this.env.string('PGUSER').optional('postgres');
-    let pgPassword = this.env.string('PGPASSWORD').optional('password');
-    let pgDatabase = this.env.string('PGDATABASE').optional('postgres');
-    let pgPort = this.env.string('PGPORT').optional('5432');
+    let host = this.env.string('PGHOST').optional('localhost');
+    let user = this.env.string('PGUSER').optional('postgres');
+    let password = this.env.string('PGPASSWORD').optional('password');
+    let database = this.env.string('PGDATABASE').optional('postgres');
+    let port = this.env.number('PGPORT').optional(5432);
     return {
-        pgHost, pgUser, pgPassword, pgDatabase, pgPort
+        host, user, password, database, port
     }
   }
 

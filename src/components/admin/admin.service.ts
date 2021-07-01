@@ -7,6 +7,7 @@ import { CryptoService } from '../authentication/crypto.service';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers, Role } from '../authorization/dto';
 import { AdminRepository } from './admin.repository';
+import { PostgresService } from '../../core/postgres/postgres.service';
 
 @Injectable()
 export class AdminService implements OnApplicationBootstrap {
