@@ -35,6 +35,7 @@ import {
 import { SecuredTimeZone, TimeZoneService } from '../timezone';
 import {
   AssignOrganizationToUserInput,
+  AssignOrganizationToUserOutput,
   CheckEmailArgs,
   CreatePersonInput,
   CreatePersonOutput,
@@ -295,15 +296,15 @@ export class UserResolver {
     return await this.userService.readOne(userId, session);
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => AssignOrganizationToUserOutput, {
     description: 'Assign organization OR primaryOrganization to user',
   })
   async assignOrganizationToUser(
     @LoggedInSession() session: Session,
     @Args('input') input: AssignOrganizationToUserInput
-  ): Promise<boolean> {
+  ): Promise<AssignOrganizationToUserOutput> {
     await this.userService.assignOrganizationToUser(input.request, session);
-    return true;
+    return { success: true };
   }
 
   @Mutation(() => RemoveOrganizationFromUserOutput, {

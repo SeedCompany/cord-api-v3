@@ -41,7 +41,9 @@ describe('Authentication e2e', () => {
     const checkRes = await app.graphql.mutate(
       gql`
         mutation forgotPassword($email: String!) {
-          forgotPassword(email: $email)
+          forgotPassword(email: $email) {
+            __typename
+          }
         }
       `,
       {
@@ -60,7 +62,9 @@ describe('Authentication e2e', () => {
     const resetRes = await app.graphql.mutate(
       gql`
         mutation resetPassword($input: ResetPasswordInput!) {
-          resetPassword(input: $input)
+          resetPassword(input: $input) {
+            __typename
+          }
         }
       `,
       {
@@ -126,7 +130,9 @@ describe('Authentication e2e', () => {
     const result = await app.graphql.mutate(
       gql`
         mutation changePassword($oldPassword: String!, $newPassword: String!) {
-          changePassword(oldPassword: $oldPassword, newPassword: $newPassword)
+          changePassword(oldPassword: $oldPassword, newPassword: $newPassword) {
+            __typename
+          }
         }
       `,
       {

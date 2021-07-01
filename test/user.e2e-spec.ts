@@ -207,7 +207,9 @@ describe('User e2e', () => {
         mutation assignOrganizationToUser($orgId: ID!, $userId: ID!) {
           assignOrganizationToUser(
             input: { request: { orgId: $orgId, userId: $userId } }
-          )
+          ) {
+            __typename
+          }
         }
       `,
       {
@@ -231,7 +233,9 @@ describe('User e2e', () => {
         mutation assignOrganizationToUser($orgId: ID!, $userId: ID!) {
           assignOrganizationToUser(
             input: { request: { orgId: $orgId, userId: $userId } }
-          )
+          ) {
+            __typename
+          }
         }
       `,
       {
@@ -276,7 +280,9 @@ describe('User e2e', () => {
             input: {
               request: { orgId: $orgId, userId: $userId, primary: $primary }
             }
-          )
+          ) {
+            __typename
+          }
         }
       `,
       {
@@ -307,7 +313,9 @@ describe('User e2e', () => {
             input: {
               request: { orgId: $orgId, userId: $userId, primary: $primary }
             }
-          )
+          ) {
+            __typename
+          }
         }
       `,
       {
@@ -356,7 +364,9 @@ describe('User e2e', () => {
             input: {
               request: { orgId: $orgId, userId: $userId, primary: $primary }
             }
-          )
+          ) {
+            __typename
+          }
         }
       `,
       {
@@ -502,7 +512,9 @@ describe('User e2e', () => {
             input: {
               request: { orgId: $orgId, userId: $userId, primary: $primary }
             }
-          )
+          ) {
+            __typename
+          }
         }
       `,
       {

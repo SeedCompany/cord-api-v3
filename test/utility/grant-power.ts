@@ -10,7 +10,9 @@ export async function grantPower(app: TestApp, userId: ID, ...powers: Power[]) {
       await app.graphql.mutate(
         gql`
           mutation grantPower($userId: ID!, $power: Power!) {
-            grantPower(userId: $userId, power: $power)
+            grantPower(userId: $userId, power: $power) {
+              __typename
+            }
           }
         `,
         {
