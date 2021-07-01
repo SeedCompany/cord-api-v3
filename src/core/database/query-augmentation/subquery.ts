@@ -1,4 +1,5 @@
 import { ClauseCollection, Query } from 'cypher-query-builder';
+import { Many } from '../../../common';
 
 declare module 'cypher-query-builder/dist/typings/query' {
   interface Query {
@@ -13,18 +14,34 @@ declare module 'cypher-query-builder/dist/typings/query' {
      *   .return('x * 10 as y')
      * )
      * .return(['x', 'y'])
+     *
+     * @example
+     * .unwind([0, 1, 2], 'x')
+     * .subQuery('x', (sub) => sub
+     *   .return('x * 10 as y')
+     * )
+     * .return(['x', 'y'])
      */
     subQuery(sub: (query: this) => void): this;
+    subQuery(importVars: Many<string>, sub: (query: this) => void): this;
   }
 }
 
-Query.prototype.subQuery = function subQuery(sub: (query: Query) => void) {
+Query.prototype.subQuery = function subQuery(
+  subOrImport: Many<string> | ((query: Query) => void),
+  maybeSub?: (query: Query) => void
+) {
   const subQ = new Query();
   const subClause = new SubQueryClause();
   // @ts-expect-error yeah it's private, but it'll be ok.
-  // SubQueryClause is also a ClauseCollection so it's all good.
+  // SubQueryClause is also a ClauseCollection, so it's all good.
   subQ.clauses = subClause;
-  sub(subQ);
+  if (typeof subOrImport === 'function') {
+    subOrImport(subQ);
+  } else {
+    subQ.with(subOrImport);
+    maybeSub!(subQ);
+  }
 
   this.addClause(subClause);
 
