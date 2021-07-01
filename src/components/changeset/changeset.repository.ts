@@ -27,20 +27,10 @@ export class ChangesetRepository extends DtoRepository(Changeset) {
           .where(not({ prop: hasLabel('modifiedAt') }))
           .return('collect(distinct node) as changed')
       )
-      .subQuery((sub) =>
-        sub
-          .with('changeset')
-          .match([
-            node('changeset'),
-            relation('out', '', 'changeset', { active: true }),
-            node('node', 'BaseNode'),
-          ])
-          .return('collect(distinct node) as added')
-      )
       .return<Record<keyof ChangesetDiff, readonly BaseNode[]>>([
         'changed',
-        'added',
-        '[] as removed',
+        '[(changeset)-[changeType:changeset { active: true }]->(node:BaseNode) WHERE changeType.deleting IS NULL | node] as added',
+        '[(changeset)-[changeType:changeset { active: true }]->(node:BaseNode) WHERE changeType.deleting         | node] as removed',
       ])
       .first();
     if (!result) {
