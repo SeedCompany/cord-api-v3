@@ -3,6 +3,7 @@ import { ID, IdArg, LoggedInSession, Session } from '../../common';
 import {
   CreateProjectChangeRequestInput,
   CreateProjectChangeRequestOutput,
+  DeleteProjectChangeRequestOutput,
   ProjectChangeRequest,
   UpdateProjectChangeRequestInput,
   UpdateProjectChangeRequestOutput,
@@ -37,14 +38,14 @@ export class ProjectChangeRequestResolver {
     return { projectChangeRequest };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => DeleteProjectChangeRequestOutput, {
     description: 'Delete a project change request',
   })
   async deleteProjectChangeRequest(
     @LoggedInSession() session: Session,
     @IdArg() id: ID
-  ): Promise<boolean> {
+  ): Promise<DeleteProjectChangeRequestOutput> {
     await this.service.delete(id, session);
-    return true;
+    return { success: true };
   }
 }

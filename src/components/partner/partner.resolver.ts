@@ -26,6 +26,7 @@ import { SecuredUser, UserLoader } from '../user';
 import {
   CreatePartnerInput,
   CreatePartnerOutput,
+  DeletePartnerOutput,
   Partner,
   PartnerListInput,
   PartnerListOutput,
@@ -130,14 +131,14 @@ export class PartnerResolver {
     return { partner };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => DeletePartnerOutput, {
     description: 'Delete a partner',
   })
   async deletePartner(
     @LoggedInSession() session: Session,
     @IdArg() id: ID
-  ): Promise<boolean> {
+  ): Promise<DeletePartnerOutput> {
     await this.partnerService.delete(id, session);
-    return true;
+    return { success: true };
   }
 }

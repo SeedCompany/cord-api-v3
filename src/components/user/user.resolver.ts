@@ -38,7 +38,9 @@ import {
   CheckEmailArgs,
   CreatePersonInput,
   CreatePersonOutput,
+  DeleteUserOutput,
   RemoveOrganizationFromUserInput,
+  RemoveOrganizationFromUserOutput,
   UpdateUserInput,
   UpdateUserOutput,
   User,
@@ -260,12 +262,15 @@ export class UserResolver {
     return { user };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => DeleteUserOutput, {
     description: 'Delete a user',
   })
-  async deleteUser(@LoggedInSession() session: Session, @IdArg() id: ID) {
+  async deleteUser(
+    @LoggedInSession() session: Session,
+    @IdArg() id: ID
+  ): Promise<DeleteUserOutput> {
     await this.userService.delete(id, session);
-    return true;
+    return { success: true };
   }
 
   @Mutation(() => User, {
@@ -301,15 +306,15 @@ export class UserResolver {
     return true;
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => RemoveOrganizationFromUserOutput, {
     description: 'Remove organization OR primaryOrganization from user',
   })
   async removeOrganizationFromUser(
     @LoggedInSession() session: Session,
     @Args('input') input: RemoveOrganizationFromUserInput
-  ): Promise<boolean> {
+  ): Promise<RemoveOrganizationFromUserOutput> {
     await this.userService.removeOrganizationFromUser(input.request, session);
-    return true;
+    return { success: true };
   }
 
   @Mutation(() => User, {

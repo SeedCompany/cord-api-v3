@@ -92,7 +92,9 @@ describe('Budget e2e', () => {
     const result = await app.graphql.mutate(
       gql`
         mutation deleteBudget($id: ID!) {
-          deleteBudget(id: $id)
+          deleteBudget(id: $id) {
+            __typename
+          }
         }
       `,
       {

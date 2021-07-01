@@ -19,6 +19,7 @@ import { SecuredUser, UserLoader } from '../user';
 import {
   CreatePostInput,
   CreatePostOutput,
+  DeletePostOutput,
   Post,
   UpdatePostInput,
   UpdatePostOutput,
@@ -68,14 +69,14 @@ export class PostResolver {
     return { post };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => DeletePostOutput, {
     description: 'Delete a post',
   })
   async deletePost(
     @LoggedInSession() session: Session,
     @IdArg() id: ID
-  ): Promise<boolean> {
+  ): Promise<DeletePostOutput> {
     await this.service.delete(id, session);
-    return true;
+    return { success: true };
   }
 }

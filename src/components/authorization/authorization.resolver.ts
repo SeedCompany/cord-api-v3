@@ -15,6 +15,7 @@ import {
 } from '../../common';
 import { Powers } from '../authorization/dto/powers';
 import { AuthorizationService } from './authorization.service';
+import { DeletePowerOutput } from './dto';
 
 @ArgsType()
 class ModifyPowerArgs {
@@ -43,12 +44,12 @@ export class AuthorizationResolver {
     return true;
   }
 
-  @Mutation(() => Boolean)
+  @Mutation(() => DeletePowerOutput)
   async deletePower(
     @LoggedInSession() session: Session,
     @Args() { userId, power }: ModifyPowerArgs
-  ): Promise<boolean> {
+  ): Promise<DeletePowerOutput> {
     await this.authorizationService.deletePower(userId, power, session);
-    return true;
+    return { success: true };
   }
 }

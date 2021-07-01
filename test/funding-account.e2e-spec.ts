@@ -101,7 +101,9 @@ describe('FundingAccount e2e', () => {
     const result = await app.graphql.mutate(
       gql`
         mutation deleteFundingAccount($id: ID!) {
-          deleteFundingAccount(id: $id)
+          deleteFundingAccount(id: $id) {
+            __typename
+          }
         }
       `,
       {

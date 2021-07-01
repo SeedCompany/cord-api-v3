@@ -1,7 +1,7 @@
-import { Field, InputType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { ID, IdField } from '../../../common';
+import { ID, IdField, MutationPlaceholderOutput } from '../../../common';
 
 @InputType()
 export class RemoveOrganizationFromUser {
@@ -19,3 +19,6 @@ export abstract class RemoveOrganizationFromUserInput {
   @ValidateNested()
   readonly request: RemoveOrganizationFromUser;
 }
+
+@ObjectType()
+export abstract class RemoveOrganizationFromUserOutput extends MutationPlaceholderOutput {}

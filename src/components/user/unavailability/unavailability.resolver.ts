@@ -11,6 +11,7 @@ import { UnavailabilityLoader, UnavailabilityService } from '../unavailability';
 import {
   CreateUnavailabilityInput,
   CreateUnavailabilityOutput,
+  DeleteUnavailabilityOutput,
   Unavailability,
   UnavailabilityListInput,
   UnavailabilityListOutput,
@@ -74,14 +75,14 @@ export class UnavailabilityResolver {
     return { unavailability };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => DeleteUnavailabilityOutput, {
     description: 'Delete an unavailability',
   })
   async deleteUnavailability(
     @LoggedInSession() session: Session,
     @IdArg() id: ID
-  ): Promise<boolean> {
+  ): Promise<DeleteUnavailabilityOutput> {
     await this.service.delete(id, session);
-    return true;
+    return { success: true };
   }
 }

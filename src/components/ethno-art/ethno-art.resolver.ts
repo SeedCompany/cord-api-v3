@@ -1,7 +1,11 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
 import { Loader, LoaderOf } from '../../core';
-import { EthnoArtLoader, EthnoArtService } from '../ethno-art';
+import {
+  DeleteEthnoArtOutput,
+  EthnoArtLoader,
+  EthnoArtService,
+} from '../ethno-art';
 import {
   CreateEthnoArtInput,
   CreateEthnoArtOutput,
@@ -66,14 +70,14 @@ export class EthnoArtResolver {
     return { ethnoArt };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => DeleteEthnoArtOutput, {
     description: 'Delete an ethno art',
   })
   async deleteEthnoArt(
     @LoggedInSession() session: Session,
     @IdArg() id: ID
-  ): Promise<boolean> {
+  ): Promise<DeleteEthnoArtOutput> {
     await this.ethnoArtService.delete(id, session);
-    return true;
+    return { success: true };
   }
 }

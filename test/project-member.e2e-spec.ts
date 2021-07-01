@@ -147,7 +147,9 @@ describe('ProjectMember e2e', () => {
     const result = await app.graphql.mutate(
       gql`
         mutation deleteProjectMember($id: ID!) {
-          deleteProjectMember(id: $id)
+          deleteProjectMember(id: $id) {
+            __typename
+          }
         }
       `,
       {
@@ -187,7 +189,9 @@ describe('ProjectMember e2e', () => {
     await app.graphql.mutate(
       gql`
         mutation deleteProjectMember($id: ID!) {
-          deleteProjectMember(id: $id)
+          deleteProjectMember(id: $id) {
+            __typename
+          }
         }
       `,
       {

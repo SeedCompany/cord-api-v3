@@ -105,7 +105,9 @@ describe('Partner e2e', () => {
     const result = await app.graphql.mutate(
       gql`
         mutation deletePartner($id: ID!) {
-          deletePartner(id: $id)
+          deletePartner(id: $id) {
+            __typename
+          }
         }
       `,
       {

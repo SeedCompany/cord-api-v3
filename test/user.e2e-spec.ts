@@ -156,7 +156,9 @@ describe('User e2e', () => {
     const result = await app.graphql.query(
       gql`
         mutation deleteUser($id: ID!) {
-          deleteUser(id: $id)
+          deleteUser(id: $id) {
+            __typename
+          }
         }
       `,
       {
@@ -244,7 +246,9 @@ describe('User e2e', () => {
         mutation removeOrganizationFromUser($orgId: ID!, $userId: ID!) {
           removeOrganizationFromUser(
             input: { request: { orgId: $orgId, userId: $userId } }
-          )
+          ) {
+            __typename
+          }
         }
       `,
       {
@@ -319,7 +323,9 @@ describe('User e2e', () => {
         mutation removeOrganizationFromUser($orgId: ID!, $userId: ID!) {
           removeOrganizationFromUser(
             input: { request: { orgId: $orgId, userId: $userId } }
-          )
+          ) {
+            __typename
+          }
         }
       `,
       {

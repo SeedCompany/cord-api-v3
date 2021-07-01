@@ -624,7 +624,9 @@ describe('Product e2e', () => {
     const result = await app.graphql.mutate(
       gql`
         mutation deleteProduct($id: ID!) {
-          deleteProduct(id: $id)
+          deleteProduct(id: $id) {
+            __typename
+          }
         }
       `,
       {

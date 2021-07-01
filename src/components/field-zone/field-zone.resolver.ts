@@ -19,6 +19,7 @@ import { SecuredUser, UserLoader } from '../user';
 import {
   CreateFieldZoneInput,
   CreateFieldZoneOutput,
+  DeleteFieldZoneOutput,
   FieldZone,
   FieldZoneListInput,
   FieldZoneListOutput,
@@ -90,14 +91,14 @@ export class FieldZoneResolver {
     return { fieldZone };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => DeleteFieldZoneOutput, {
     description: 'Delete a field zone',
   })
   async deleteFieldZone(
     @LoggedInSession() session: Session,
     @IdArg() id: ID
-  ): Promise<boolean> {
+  ): Promise<DeleteFieldZoneOutput> {
     await this.fieldZoneService.delete(id, session);
-    return true;
+    return { success: true };
   }
 }

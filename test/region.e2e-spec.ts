@@ -236,7 +236,9 @@ describe('Region e2e', () => {
     const result = await app.graphql.mutate(
       gql`
         mutation deleteFieldRegion($id: ID!) {
-          deleteFieldRegion(id: $id)
+          deleteFieldRegion(id: $id) {
+            __typename
+          }
         }
       `,
       {

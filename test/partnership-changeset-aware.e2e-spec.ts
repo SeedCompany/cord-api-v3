@@ -221,7 +221,9 @@ describe('Partnership Changeset Aware e2e', () => {
     let result = await app.graphql.mutate(
       gql`
         mutation deletePartnership($id: ID!, $changeset: ID) {
-          deletePartnership(id: $id, changeset: $changeset)
+          deletePartnership(id: $id, changeset: $changeset) {
+            __typename
+          }
         }
       `,
       {

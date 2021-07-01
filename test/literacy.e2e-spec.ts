@@ -110,7 +110,9 @@ describe('LiteracyMaterial e2e', () => {
     const result = await app.graphql.mutate(
       gql`
         mutation deleteLiteracyMaterial($id: ID!) {
-          deleteLiteracyMaterial(id: $id)
+          deleteLiteracyMaterial(id: $id) {
+            __typename
+          }
         }
       `,
       {

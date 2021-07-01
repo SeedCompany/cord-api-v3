@@ -449,7 +449,9 @@ describe('Engagement e2e', () => {
     const result = await app.graphql.mutate(
       gql`
         mutation deleteEngagement($id: ID!) {
-          deleteEngagement(id: $id)
+          deleteEngagement(id: $id) {
+            __typename
+          }
         }
       `,
       {
@@ -726,7 +728,9 @@ describe('Engagement e2e', () => {
     await app.graphql.mutate(
       gql`
         mutation deleteEngagement($id: ID!) {
-          deleteEngagement(id: $id)
+          deleteEngagement(id: $id) {
+            __typename
+          }
         }
       `,
       {
@@ -1279,7 +1283,9 @@ describe('Engagement e2e', () => {
       app.graphql.mutate(
         gql`
           mutation deleteEngagement($id: ID!) {
-            deleteEngagement(id: $id)
+            deleteEngagement(id: $id) {
+              __typename
+            }
           }
         `,
         {

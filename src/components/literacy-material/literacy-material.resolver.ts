@@ -5,6 +5,7 @@ import { EthnoArtLoader, EthnoArtService } from '../ethno-art';
 import {
   CreateLiteracyMaterialInput,
   CreateLiteracyMaterialOutput,
+  DeleteLiteracyMaterialOutput,
   LiteracyMaterial,
   LiteracyMaterialListInput,
   LiteracyMaterialListOutput,
@@ -70,15 +71,15 @@ export class LiteracyMaterialResolver {
     return { literacyMaterial };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => DeleteLiteracyMaterialOutput, {
     description: 'Delete a literacy material',
     deprecationReason: 'Use `deleteEthnoArt` instead',
   })
   async deleteLiteracyMaterial(
     @LoggedInSession() session: Session,
     @IdArg() id: ID
-  ): Promise<boolean> {
+  ): Promise<DeleteLiteracyMaterialOutput> {
     await this.ethnoArts.delete(id, session);
-    return true;
+    return { success: true };
   }
 }

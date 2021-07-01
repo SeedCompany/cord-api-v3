@@ -153,7 +153,9 @@ describe('Field Zone e2e', () => {
     const result = await app.graphql.mutate(
       gql`
         mutation deleteFieldZone($id: ID!) {
-          deleteFieldZone(id: $id)
+          deleteFieldZone(id: $id) {
+            __typename
+          }
         }
       `,
       {
