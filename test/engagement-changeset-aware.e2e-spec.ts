@@ -61,6 +61,25 @@ const readLanguageEngagement = (app: TestApp, id: string, changeset?: string) =>
       query engagement($id: ID!, $changeset: ID) {
         engagement(id: $id, changeset: $changeset) {
           ...languageEngagement
+          changeset {
+            id
+            difference {
+              added {
+                id
+              }
+              removed {
+                id
+              }
+              changed {
+                previous {
+                  id
+                }
+                updated {
+                  id
+                }
+              }
+            }
+          }
         }
       }
       ${fragments.languageEngagement}
@@ -220,6 +239,74 @@ describe('Engagement Changeset Aware e2e', () => {
     expect(result.engagement.completeDate.value).toBe('2100-08-22');
     await approveProjectChangeRequest(app, changeset.id);
     result = await readLanguageEngagement(app, languageEngagement.id);
+    expect(result.engagement.completeDate.value).toBe('2100-08-22');
+  });
+
+  it('Update - created in changeset', async () => {
+    const project = await activeProject(app);
+    const changeset = await createProjectChangeRequest(app, {
+      projectId: project.id,
+    });
+
+    // Create new engagement with changeset
+    const changesetEngagement = await app.graphql.mutate(
+      gql`
+        mutation createLanguageEngagement(
+          $input: CreateLanguageEngagementInput!
+        ) {
+          createLanguageEngagement(input: $input) {
+            engagement {
+              ...languageEngagement
+            }
+          }
+        }
+        ${fragments.languageEngagement}
+      `,
+      {
+        input: {
+          engagement: {
+            languageId: language.id,
+            projectId: project.id,
+            completeDate: CalendarDate.fromISO('2021-09-22'),
+          },
+          changeset: changeset.id,
+        },
+      }
+    );
+
+    const engagementId =
+      changesetEngagement.createLanguageEngagement.engagement.id;
+
+    await app.graphql.mutate(
+      gql`
+        mutation updateLanguageEngagement(
+          $input: UpdateLanguageEngagementInput!
+        ) {
+          updateLanguageEngagement(input: $input) {
+            engagement {
+              ...languageEngagement
+            }
+          }
+        }
+        ${fragments.languageEngagement}
+      `,
+      {
+        input: {
+          engagement: {
+            id: engagementId,
+            completeDate: CalendarDate.fromISO('2100-08-22'),
+          },
+          changeset: changeset.id,
+        },
+      }
+    );
+
+    // read engagement with changeset
+    let result = await readLanguageEngagement(app, engagementId, changeset.id);
+    expect(result.engagement.completeDate.value).toBe('2100-08-22');
+    // approve changeset
+    await approveProjectChangeRequest(app, changeset.id);
+    result = await readLanguageEngagement(app, engagementId);
     expect(result.engagement.completeDate.value).toBe('2100-08-22');
   });
 

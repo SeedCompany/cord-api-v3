@@ -289,6 +289,23 @@ export class DatabaseService {
         // They'll get them when they are applied for real.
         ['Property'];
 
+    // check if the node is created in changeset, update property normally
+    if (changeset) {
+      const result = await this.db
+        .query()
+        .match([
+          node('changeset', 'Changeset', { id: changeset }),
+          relation('out', '', 'changeset', { active: true }),
+          node('node', label, { id }),
+        ])
+        .return('node.id')
+        .first();
+
+      if (result) {
+        changeset = undefined;
+      }
+    }
+
     const createdAt = DateTime.local();
     const update = this.db
       .query()
