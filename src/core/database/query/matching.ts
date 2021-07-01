@@ -81,9 +81,8 @@ export const matchProps =
     excludeBaseProps = false,
   }: MatchPropsOptions = {}) =>
   (query: Query) =>
-    query.subQuery((sub) =>
+    query.subQuery(nodeName, (sub) =>
       sub
-        .with(nodeName)
         .match(
           [
             node(nodeName),

@@ -312,9 +312,8 @@ export class DatabaseService {
       .match(node('node', label, { id }))
       // Deactivate existing prop(s) & adjust labels as needed
       // This is an optional step
-      .subQuery((sub) =>
+      .subQuery('node', (sub) =>
         sub
-          .with('node')
           .match([
             node('node'),
             relation('out', 'oldToProp', key, { active: !changeset }),
@@ -333,9 +332,8 @@ export class DatabaseService {
           .apply(prefixNodeLabelsWithDeleted('oldPropVar'))
           .return(['count(oldPropVar) as numPropsDeactivated'])
       )
-      .subQuery((sub) =>
+      .subQuery('node', (sub) =>
         sub
-          .with('node')
           .apply((q) =>
             changeset
               ? q

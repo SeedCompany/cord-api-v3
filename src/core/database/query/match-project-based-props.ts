@@ -6,9 +6,8 @@ import { matchProps, MatchPropsOptions } from './matching';
 export const matchPropsAndProjectSensAndScopedRoles =
   (session?: Session | ID, propsOptions?: MatchPropsOptions) =>
   (query: Query) =>
-    query.subQuery((sub) =>
+    query.subQuery(['node', 'project'], (sub) =>
       sub
-        .with(['node', 'project'])
         .apply(matchProps(propsOptions))
         .apply((q) =>
           session
