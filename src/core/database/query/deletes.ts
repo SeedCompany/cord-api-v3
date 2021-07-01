@@ -48,9 +48,8 @@ export const deleteProperties =
       return query;
     }
     const deletedAt = DateTime.local();
-    return query.subQuery((sub) =>
+    return query.subQuery('node', (sub) =>
       sub
-        .with('node')
         .match([
           node('node'),
           relation('out', 'propertyRel', relationLabels, { active: true }),
@@ -67,9 +66,8 @@ export const deleteProperties =
   };
 
 export const prefixNodeLabelsWithDeleted = (node: string) => (query: Query) =>
-  query.subQuery((sub) =>
+  query.subQuery(node, (sub) =>
     sub
-      .with(node) // import node
       .with([
         node,
         // Mpa current labels to have deleted prefix (operation is idempotent).
