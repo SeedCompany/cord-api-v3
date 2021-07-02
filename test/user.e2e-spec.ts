@@ -202,7 +202,7 @@ describe('User e2e', () => {
       Powers.CreateOrganization,
     ]);
     const org = await createOrganization(app);
-    const result = await app.graphql.mutate(
+    await app.graphql.mutate(
       gql`
         mutation assignOrganizationToUser($orgId: ID!, $userId: ID!) {
           assignOrganizationToUser(
@@ -217,8 +217,6 @@ describe('User e2e', () => {
         userId: newUser.id,
       }
     );
-
-    expect(result.assignOrganizationToUser).toBe(true);
   });
 
   it('remove organization from user', async () => {
@@ -245,7 +243,7 @@ describe('User e2e', () => {
     );
 
     // remove organization from user
-    const result = await app.graphql.mutate(
+    await app.graphql.mutate(
       gql`
         mutation removeOrganizationFromUser($orgId: ID!, $userId: ID!) {
           removeOrganizationFromUser(
@@ -260,8 +258,6 @@ describe('User e2e', () => {
         userId: newUser.id,
       }
     );
-
-    expect(result.removeOrganizationFromUser).toBe(true);
   });
 
   it('assign primary organization to user', async () => {
@@ -269,7 +265,7 @@ describe('User e2e', () => {
       Powers.CreateOrganization,
     ]);
     const org = await createOrganization(app);
-    const result = await app.graphql.mutate(
+    await app.graphql.mutate(
       gql`
         mutation assignOrganizationToUser(
           $orgId: ID!
@@ -291,8 +287,6 @@ describe('User e2e', () => {
         primary: true,
       }
     );
-
-    expect(result.assignOrganizationToUser).toBe(true);
   });
 
   it('remove primary organization from user', async () => {
@@ -326,7 +320,7 @@ describe('User e2e', () => {
     );
 
     // remove primary organization from user
-    const result = await app.graphql.mutate(
+    await app.graphql.mutate(
       gql`
         mutation removeOrganizationFromUser($orgId: ID!, $userId: ID!) {
           removeOrganizationFromUser(
@@ -342,8 +336,6 @@ describe('User e2e', () => {
       }
     );
 
-    expect(result.removeOrganizationFromUser).toBe(true);
-
     // TODO after #430 is resolved, list orgs and make sure org is removed as primary
   });
 
@@ -353,7 +345,7 @@ describe('User e2e', () => {
     ]);
 
     const org = await createOrganization(app);
-    const result = await app.graphql.mutate(
+    await app.graphql.mutate(
       gql`
         mutation assignOrganizationToUser(
           $orgId: ID!
@@ -375,7 +367,6 @@ describe('User e2e', () => {
         primary: true,
       }
     );
-    expect(result.assignOrganizationToUser).toBe(true);
 
     const result1 = await app.graphql.query(
       gql`
@@ -501,7 +492,7 @@ describe('User e2e', () => {
     ]);
     const org = await createOrganization(app);
 
-    const result = await app.graphql.mutate(
+    await app.graphql.mutate(
       gql`
         mutation assignOrganizationToUser(
           $orgId: ID!
@@ -523,7 +514,6 @@ describe('User e2e', () => {
         primary: true,
       }
     );
-    expect(result.assignOrganizationToUser).toBe(true);
 
     const { user } = await app.graphql.query(
       gql`

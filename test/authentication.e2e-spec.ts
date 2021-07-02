@@ -38,7 +38,7 @@ describe('Authentication e2e', () => {
     const email = fakeUser.email;
     // create user first
     await registerUser(app, fakeUser);
-    const checkRes = await app.graphql.mutate(
+    await app.graphql.mutate(
       gql`
         mutation forgotPassword($email: String!) {
           forgotPassword(email: $email) {
@@ -59,7 +59,7 @@ describe('Authentication e2e', () => {
 
     const token = tokenRes ? tokenRes.token : '';
     const newPassword = faker.internet.password();
-    const resetRes = await app.graphql.mutate(
+    await app.graphql.mutate(
       gql`
         mutation resetPassword($input: ResetPasswordInput!) {
           resetPassword(input: $input) {
@@ -80,8 +80,6 @@ describe('Authentication e2e', () => {
       password: newPassword,
     });
 
-    expect(checkRes.forgotPassword).toBe(true);
-    expect(resetRes.resetPassword).toBe(true);
     expect(sendEmail).toHaveBeenCalledTimes(1);
     expect(newLogin.user.id).toBeDefined();
   });
@@ -127,7 +125,7 @@ describe('Authentication e2e', () => {
     const user = await registerUser(app, fakeUser);
 
     const newPassword = faker.internet.password();
-    const result = await app.graphql.mutate(
+    await app.graphql.mutate(
       gql`
         mutation changePassword($oldPassword: String!, $newPassword: String!) {
           changePassword(oldPassword: $oldPassword, newPassword: $newPassword) {
@@ -140,8 +138,6 @@ describe('Authentication e2e', () => {
         newPassword: newPassword,
       }
     );
-
-    expect(result.changePassword).toBeTruthy();
 
     const updatedUser = await login(app, {
       email: fakeUser.email,
