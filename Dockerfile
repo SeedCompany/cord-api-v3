@@ -1,5 +1,11 @@
 # Base node stage that sets up common config for dev & prod
 FROM node:12-alpine as node
+
+LABEL org.opencontainers.image.title="CORD API"
+LABEL org.opencontainers.image.vendor="Seed Company"
+LABEL org.opencontainers.image.source=https://github.com/SeedCompany/cord-api-v3
+LABEL org.opencontainers.image.licenses="MIT"
+
 WORKDIR /opt/cord-api
 
 RUN apk add --no-cache jq
