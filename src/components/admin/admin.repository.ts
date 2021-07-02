@@ -3,10 +3,14 @@ import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID } from '../../common';
 import { DatabaseService, SyntaxError } from '../../core';
+import { PostgresService } from '../../core/postgres/postgres.service';
 
 @Injectable()
 export class AdminRepository {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(
+    private readonly db: DatabaseService,
+    private readonly pg: PostgresService
+  ) {}
 
   finishing(callback: () => Promise<void>) {
     return this.db.runOnceUntilCompleteAfterConnecting(callback);
