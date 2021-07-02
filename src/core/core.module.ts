@@ -11,6 +11,7 @@ import { EventsModule } from './events';
 import { ExceptionFilter } from './exception.filter';
 import { GraphqlLoggingPlugin } from './graphql-logging.plugin';
 import { GraphQLConfig } from './graphql.config';
+import { PostgresModule } from './postgres/postgres.module';
 import { ResourceResolver } from './resources';
 import { ValidationPipe } from './validation.pipe';
 
@@ -22,6 +23,7 @@ import { ValidationPipe } from './validation.pipe';
     EmailModule.forRootAsync({ useExisting: ConfigService }),
     GraphQLModule.forRootAsync({ useClass: GraphQLConfig }),
     EventsModule,
+    PostgresModule,
   ],
   providers: [
     AwsS3Factory,
