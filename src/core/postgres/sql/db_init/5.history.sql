@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION common_history_fn()
+CREATE OR REPLACE FUNCTION public.gt_data_iud_history_i()
 RETURNS TRIGGER
 LANGUAGE PLPGSQL
 AS $$
@@ -52,14 +52,14 @@ begin
   	|| ' AFTER INSERT
   	ON ' || base_schema_table_name || 
   	' FOR EACH ROW
-  	EXECUTE PROCEDURE common_history_fn()'); 
+  	EXECUTE PROCEDURE public.gt_data_iud_history_i()'); 
 	--   UPDATE TRIGGER
 	execute format('DROP TRIGGER IF EXISTS ' || update_trigger_name || ' ON ' || base_schema_table_name);
 	execute format('CREATE TRIGGER ' || update_trigger_name
   	|| ' AFTER UPDATE
   	ON ' || base_schema_table_name || 
   	' FOR EACH ROW
-  	EXECUTE PROCEDURE common_history_fn()'); 
+  	EXECUTE PROCEDURE public.gt_data_iud_history_i()'); 
 
 	END loop;
 	raise info 'DONE';

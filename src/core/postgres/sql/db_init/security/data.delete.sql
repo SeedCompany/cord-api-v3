@@ -1,6 +1,6 @@
 -- inserts the new id into the security table for each member 
 -- trigger function for each data table
-create or replace function public.delete_data_from_security()
+create or replace function public.gt_data_d_security_d()
 returns trigger
 language plpgsql
 as $$
@@ -47,7 +47,7 @@ begin
         || ' AFTER DELETE
         ON ' || base_schema_table_name || 
         ' FOR EACH ROW
-        EXECUTE PROCEDURE public.delete_data_from_security()'); 
+        EXECUTE PROCEDURE public.gt_data_d_security_d()'); 
         
       end if;
 

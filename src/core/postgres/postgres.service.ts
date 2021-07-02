@@ -17,10 +17,12 @@ export class PostgresService {
   async executeSQLFiles(dirPath:string):Promise<number>{
     fs.readdirSync(dirPath).forEach(async (name)=>{
       const fileOrDirPath = path.join(dirPath,name);
+
       if(fs.lstatSync(fileOrDirPath).isDirectory()){
         console.log('dir: ',fileOrDirPath);
-        this.executeSQLFiles(fileOrDirPath);
+        await this.executeSQLFiles(fileOrDirPath);
       }
+      
       else{
         // load script into db
         console.log('file: ',fileOrDirPath);
@@ -41,13 +43,12 @@ export class PostgresService {
     await this.client.connect();
     const dbInitPath = path.join(__dirname,'..','..', '..', 'src/core/postgres/sql/db_init')
     const fileExecutionStatus = await this.executeSQLFiles(dbInitPath);
+    console.log('here', fileExecutionStatus);
+    return 0;
     }
     catch(e){
       console.log('db_init error: ', e.message)
       return 1;
-    }
-    finally{
-      return 0;  
     }
   }
 

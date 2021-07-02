@@ -1,5 +1,5 @@
 -- trigger function on insert for public.people
-create or replace function public.insert_person_to_security()
+create or replace function public.t_people_i_security_inserts_person()
 returns trigger
 language plpgsql
 as $$
@@ -44,10 +44,10 @@ create trigger insert_people_public_security_trigger
 after insert 
 on public.people_data
 for each row 
-execute procedure public.insert_person_to_security('public');
+execute procedure public.t_people_i_security_inserts_person('public');
 
 create trigger insert_people_sc_security_trigger 
 after insert 
 on public.people_data
 for each row 
-execute procedure public.insert_person_to_security('sc');
+execute procedure public.t_people_i_security_inserts_person('sc');
