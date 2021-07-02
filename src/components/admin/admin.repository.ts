@@ -12,6 +12,10 @@ export class AdminRepository {
     private readonly pg: PostgresService
   ) {}
 
+  async loadData() {
+    return true;
+  }
+
   finishing(callback: () => Promise<void>) {
     return this.db.runOnceUntilCompleteAfterConnecting(callback);
   }
