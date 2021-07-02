@@ -1,5 +1,5 @@
 -- trigger function on insert for public.people
-create or replace function public.delete_person_from_security()
+create or replace function public.t_people_d_security_deletes_person()
 returns trigger
 language plpgsql
 as $$
@@ -33,10 +33,10 @@ create trigger delete_people_public_security_trigger
 after delete 
 on public.people_data
 for each row 
-execute procedure public.delete_person_from_security('public');
+execute procedure public.t_people_d_security_deletes_person('public');
 
 create trigger delete_people_sc_security_trigger 
 after delete 
 on public.people_data
 for each row 
-execute procedure public.delete_person_from_security('sc');
+execute procedure public.t_people_d_security_deletes_person('sc');

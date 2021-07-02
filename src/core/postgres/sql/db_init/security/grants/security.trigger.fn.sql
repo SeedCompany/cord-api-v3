@@ -1,4 +1,4 @@
-create or replace function public.get_access_level_for_new_security_row()
+create or replace function public.gt_security_i_granters_get_access_level()
 returns trigger
 language plpgsql 
 as $$
@@ -75,7 +75,7 @@ begin
         || ' AFTER INSERT
         ON ' || base_schema_table_name || 
         ' FOR EACH ROW
-        EXECUTE PROCEDURE public.get_access_level_for_new_security_row()'); 
+        EXECUTE PROCEDURE public.gt_security_i_granters_get_access_level()'); 
 
 
 	END loop;

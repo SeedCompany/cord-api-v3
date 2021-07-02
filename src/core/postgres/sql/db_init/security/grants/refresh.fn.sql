@@ -2,7 +2,7 @@
 -- global_role_memberships_data, global_role_grants_data (on insert update or delete),
 -- The great thing about this approach is we can use the same trigger function for insert,update,delete for all the tables 
 
-create or replace function public.refresh_security_tables()
+create or replace function public.gt_granters_iud_security_update_grant_columns()
 returns trigger
 language plpgsql
 as $$
@@ -93,13 +93,13 @@ begin
 	execute format('DROP TRIGGER IF EXISTS '|| delete_trigger_name || ' ON ' ||p_table_name);
 
 	execute format('CREATE TRIGGER ' || insert_trigger_name
-	|| ' AFTER INSERT ON ' || p_table_name || ' FOR EACH ROW EXECUTE PROCEDURE public.refresh_security_tables('|| p_schema_name || ')'); 
+	|| ' AFTER INSERT ON ' || p_table_name || ' FOR EACH ROW EXECUTE PROCEDURE public.gt_granters_iud_security_update_grant_columns('|| p_schema_name || ')'); 
 
 	execute format('CREATE TRIGGER ' || update_trigger_name
-	|| ' AFTER update ON ' || p_table_name || ' FOR EACH ROW EXECUTE PROCEDURE public.refresh_security_tables('|| p_schema_name || ')'); 
+	|| ' AFTER update ON ' || p_table_name || ' FOR EACH ROW EXECUTE PROCEDURE public.gt_granters_iud_security_update_grant_columns('|| p_schema_name || ')'); 
 
 	execute format('CREATE TRIGGER ' || delete_trigger_name
-	|| ' AFTER delete ON ' || p_table_name || ' FOR EACH ROW EXECUTE PROCEDURE public.refresh_security_tables('|| p_schema_name || ')'); 
+	|| ' AFTER delete ON ' || p_table_name || ' FOR EACH ROW EXECUTE PROCEDURE public.gt_granters_iud_security_update_grant_columns('|| p_schema_name || ')'); 
 
 
 end; $$;

@@ -2,7 +2,7 @@
 
 -- inserts the new id into the security table for each member 
 -- trigger function for each data table
-create or replace function public.data_sensitivity()
+create or replace function public.gt_data_u_security_update_is_cleared_columns()
 returns trigger
 language plpgsql
 as $$
@@ -62,7 +62,7 @@ begin
             || ' AFTER UPDATE
             ON ' || base_schema_table_name || 
             ' FOR EACH ROW
-            EXECUTE PROCEDURE public.data_sensitivity()'); 
+            EXECUTE PROCEDURE public.gt_data_u_security_update_is_cleared_columns()'); 
 
         end if;
 

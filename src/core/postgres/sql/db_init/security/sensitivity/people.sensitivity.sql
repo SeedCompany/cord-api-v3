@@ -1,5 +1,5 @@
 -- go to every security table and update the __is_cleared column for every id 
-create or replace function public.people_sensitivitiy()
+create or replace function public.gt_people_u_security_update_is_cleared_columns()
 returns trigger
 language plpgsql
 as $$
@@ -51,10 +51,10 @@ create trigger update_people_public_sensitivity_trigger
 after update 
 on public.people_data
 for each row 
-execute procedure public.people_sensitivitiy('public');
+execute procedure public.gt_people_u_security_update_is_cleared_columns('public');
 
 create trigger update_people_sc_sensitivity_trigger 
 after update 
 on public.people_data
 for each row 
-execute procedure public.people_sensitivitiy('sc');
+execute procedure public.gt_people_u_security_update_is_cleared_columns('sc');
