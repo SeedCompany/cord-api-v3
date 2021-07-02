@@ -15,8 +15,7 @@ interface EmailToken {
 @Injectable()
 export class AuthenticationRepository {
   constructor(private readonly db: DatabaseService, private readonly pg: PostgresService) {
-    // it's not awaited but the code will still run
-    console.log(`Calling PG in AuthRepo to Initialise DB: ${this.pg.connectedClient}`)
+    this.pg.db_init();
   }
 
   async saveSessionToken(token: string) {
