@@ -73,12 +73,12 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
       ])
       .return<{ id: ID }>('node.id as id');
 
-    const pgClient = await this.pg.connectedClient;
-    await pgClient.query(
-      'INSERT INTO sc_field_zone (director_sys_person_id, name) VALUES($1, $2)',
-      [directorId, name]
-    );
-    await pgClient.end();
+    // const pgClient = await this.pg.connectedClient;
+    // await pgClient.query(
+    //   'INSERT INTO sc_field_zone (director_sys_person_id, name) VALUES($1, $2)',
+    //   [directorId, name]
+    // );
+    // await pgClient.end();
 
     // const result = await query.first();
 

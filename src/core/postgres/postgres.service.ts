@@ -52,10 +52,10 @@ export class PostgresService {
     }
   }
 
-  @Lazy() get connectedClient(): Promise<Client> {
-    return this.client.connect().then(() => {
-      console.log(this.client);
-      return this.client;
-    });
-  }
+  // @Lazy() get connectedClient(): Promise<Client> {
+  //   return this.client.connect().then(() => {
+  //     console.log(this.client);
+  //     return this.client;
+  //   });
+  // }
 }
