@@ -14,6 +14,28 @@ export class AdminRepository {
 
   async loadData() {
     // this.pg.db_init();
+    // loop over the database and insert 100 rows into a few tables present in public schema
+    // const tables = await this.pg.client.query("select table_name from information_schema.tables where table_schema = 'public' and table_name like '%_data' order by table_name;");
+    // console.log(tables.rows);
+    await this.pg.client.query(
+      `insert into public.people_data("id", "public_first_name") values(0, 'default person')`
+    );
+    await this.pg.client.query(
+      `insert into public.organizations_data("id", "name") values(0, 'default org')`
+    );
+    for (let i = 1; i <=100; i++) {
+      const orgName = `orgName${i}`;
+      const personName = `person${i}`;
+      await this.pg.client.query(
+        `insert into public.people_data("id", "public_first_name") values($1, $2)`, [i,personName]
+      );
+      await this.pg.client.query(
+        `insert into public.organizations_data("id", "name") values($1, $2)`, [i,orgName]
+      );
+    }
+    const persons = await this.pg.client.query('select id,public_first_name from public.people_data');
+    console.log(persons.rows);
+    console.log(true);
     return true;
   }
 
