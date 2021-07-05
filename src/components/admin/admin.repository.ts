@@ -13,6 +13,7 @@ export class AdminRepository {
   ) {}
 
   async loadData() {
+    // this.pg.db_init();
     return true;
   }
 

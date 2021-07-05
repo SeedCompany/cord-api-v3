@@ -1,4 +1,4 @@
-import { Module, OnApplicationShutdown } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { ConfigModule } from '../config/config.module';
 import { PostgresService } from './postgres.service';
 
