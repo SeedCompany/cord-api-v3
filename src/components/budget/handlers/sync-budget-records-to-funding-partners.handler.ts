@@ -27,7 +27,7 @@ import {
 import { ProjectUpdatedEvent } from '../../project/events';
 import { BudgetRepository } from '../budget.repository';
 import { BudgetService } from '../budget.service';
-import { Budget, BudgetRecord, BudgetStatus } from '../dto';
+import { Budget, BudgetRecord } from '../dto';
 
 type PartialBudget = UnsecuredDto<Pick<Budget, 'id' | 'status'>> & {
   records: ReadonlyArray<UnsecuredDto<BudgetRecord>>;
@@ -87,10 +87,11 @@ export class SyncBudgetRecordsToFundingPartners
       event.session,
       changeset
     );
-    if (budget.status !== BudgetStatus.Pending) {
-      this.logger.debug('Budget is not pending, skipping sync', budget);
-      return;
-    }
+    // Disable budget status check due to apply changeset
+    // if (budget.status !== BudgetStatus.Pending) {
+    //   this.logger.debug('Budget is not pending, skipping sync', budget);
+    //   return;
+    // }
 
     const partnerships = await this.determinePartnerships(event, changeset);
 

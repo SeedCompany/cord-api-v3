@@ -265,33 +265,80 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
     return result!; // result from paginate() will always have 1 row.
   }
 
-  async verifyRelationshipEligibility(projectId: ID, partnerId: ID) {
+  async verifyRelationshipEligibility(
+    projectId: ID,
+    partnerId: ID,
+    changeset?: ID
+  ) {
     return (
       (await this.db
         .query()
-        .optionalMatch(node('partner', 'Partner', { id: partnerId }))
-        .optionalMatch(node('project', 'Project', { id: projectId }))
-        .optionalMatch([
-          node('project'),
-          relation('out', '', 'partnership', { active: true }),
-          node('partnership'),
-          relation('out', '', 'partner', { active: true }),
-          node('partner'),
-        ])
+        .subQuery((sub) =>
+          sub
+            .optionalMatch(node('partner', 'Partner', { id: partnerId }))
+            .optionalMatch(node('project', 'Project', { id: projectId }))
+            .optionalMatch([
+              node('project'),
+              relation('out', '', 'partnership', { active: true }),
+              node('partnership'),
+              relation('out', '', 'partner', { active: true }),
+              node('partner'),
+            ])
+            .return(['partner', 'project', 'partnership'])
+            .apply((q) =>
+              changeset
+                ? q
+                    .union()
+                    .match([node('changeset', 'Changeset', { id: changeset })])
+                    .optionalMatch([
+                      node('project'),
+                      relation('out', '', 'partnership', { active: false }),
+                      node('partnership'),
+                      relation('in', '', 'changeset', { active: true }),
+                      node('changeset'),
+                    ])
+                    .optionalMatch([
+                      node('partnership'),
+                      relation('out', '', 'partner', { active: true }),
+                      node('partner'),
+                    ])
+                    .return(['partner', 'project', 'partnership'])
+                : q
+            )
+        )
         .return(['partner', 'project', 'partnership'])
         .asResult<{ partner?: Node; project?: Node; partnership?: Node }>()
         .first()) ?? {}
     );
   }
 
-  async isFirstPartnership(projectId: ID) {
+  async isFirstPartnership(projectId: ID, changeset?: ID) {
     const result = await this.db
       .query()
-      .match([
-        node('project', 'Project', { id: projectId }),
-        relation('out', '', 'partnership', { active: true }),
-        node('partnership'),
-      ])
+      .subQuery((sub) =>
+        sub
+          .match([
+            node('project', 'Project', { id: projectId }),
+            relation('out', '', 'partnership', { active: true }),
+            node('partnership'),
+          ])
+          .return(['partnership'])
+          .apply((q) =>
+            changeset
+              ? q
+                  .union()
+                  .match([node('changeset', 'Changeset', { id: changeset })])
+                  .match([
+                    node('project', 'Project', { id: projectId }),
+                    relation('out', '', 'partnership', { active: false }),
+                    node('partnership'),
+                    relation('in', '', 'changeset', { active: true }),
+                    node('changeset'),
+                  ])
+                  .return(['partnership'])
+              : q
+          )
+      )
       .return(['partnership'])
       .asResult<{ partnership?: Node }>()
       .first();

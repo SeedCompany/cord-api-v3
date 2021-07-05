@@ -51,9 +51,12 @@ export class PartnershipService {
   ): Promise<Partnership> {
     const { projectId, partnerId } = input;
 
-    await this.verifyRelationshipEligibility(projectId, partnerId);
+    await this.verifyRelationshipEligibility(projectId, partnerId, changeset);
 
-    const isFirstPartnership = await this.repo.isFirstPartnership(projectId);
+    const isFirstPartnership = await this.repo.isFirstPartnership(
+      projectId,
+      changeset
+    );
     const primary = isFirstPartnership ? true : input.primary;
 
     const partner = await this.partnerService.readOne(partnerId, session);
@@ -320,11 +323,13 @@ export class PartnershipService {
 
   protected async verifyRelationshipEligibility(
     projectId: ID,
-    partnerId: ID
+    partnerId: ID,
+    changeset?: ID
   ): Promise<void> {
     const result = await this.repo.verifyRelationshipEligibility(
       projectId,
-      partnerId
+      partnerId,
+      changeset
     );
 
     if (!result.project) {
