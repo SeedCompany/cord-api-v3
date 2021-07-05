@@ -41,6 +41,7 @@ import { ValidationPipe } from './validation.pipe';
     EmailModule,
     EventsModule,
     ResourceResolver,
+    PostgresModule
   ],
 })
 export class CoreModule {}
