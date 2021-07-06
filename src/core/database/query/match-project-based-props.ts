@@ -14,27 +14,33 @@ import {
 import { ACTIVE, matchProps, MatchPropsOptions } from './matching';
 
 export const matchPropsAndProjectSensAndScopedRoles =
-  (session?: Session | ID, propsOptions?: MatchPropsOptions) =>
+  (
+    session?: Session | ID,
+    propsOptions?: MatchPropsOptions,
+    skipMatchProps = false
+  ) =>
   <R>(query: Query<R>) =>
     query.comment`
       matchPropsAndProjectSensAndScopedRoles()
     `.subQuery(['node', 'project'], (sub) =>
       sub
-        .apply(
+        .apply((q) => (skipMatchProps ? q : q.apply(
           matchProps(
             propsOptions?.view?.deleted
               ? propsOptions
               : { ...propsOptions, view: { active: true } }
           )
-        )
+        )))
         .apply((q) =>
           !session ? q : q.apply(matchProjectScopedRoles({ session }))
         )
         .apply(matchProjectSens())
         .return([
-          merge(propsOptions?.outputVar ?? 'props', {
-            sensitivity: 'sensitivity',
-          }).as(propsOptions?.outputVar ?? 'props'),
+          skipMatchProps
+            ? 'sensitivity'
+            : merge(propsOptions?.outputVar ?? 'props', {
+                sensitivity: 'sensitivity',
+              }).as(propsOptions?.outputVar ?? 'props'),
           session ? `scopedRoles` : '[] as scopedRoles',
         ])
     );

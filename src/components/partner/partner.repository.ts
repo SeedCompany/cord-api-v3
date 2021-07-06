@@ -14,11 +14,11 @@ import {
   ACTIVE,
   createNode,
   createRelationships,
-  determineSensitivity,
-  matchPropList,
   matchProps,
+  matchPropsAndProjectSensAndScopedRoles,
   merge,
   paginate,
+  rankSens,
   sorting,
 } from '../../core/database/query';
 import { ScopedRole } from '../authorization';
@@ -169,32 +169,15 @@ export class PartnerRepository extends DtoRepository(Partner) {
     return result!; // result from paginate() will always have 1 row.
   }
 
-  listPartnersOfAllUserProjects(
+  async listPartnersOfAllUserProjects(
     session: Session,
-    { filter }: PartnerListInput
+    { filter }: PartnerListInput,
+    scopeSensitivityMap: Partial<Record<ScopedRole, Sensitivity | undefined>>
   ) {
+    console.log(await this.db.query().raw(`WITH 'Medium' as Medium, RETURN ${rankSens('Medium')}`).run())
     return this.db
       .query()
       .match([
-        [
-          node('project'),
-          relation('out', '', 'member'),
-          node('projectmember', 'ProjectMember'),
-          relation('out'),
-          node('user', 'User', { id: session.userId }),
-        ],
-        [
-          node('projectmember'),
-          relation('out', '', 'roles', { active: true }),
-          node('rolesProp', 'Property'),
-        ],
-      ])
-      .match([
-        [
-          node('project'),
-          relation('out', '', 'sensitivity', { active: true }),
-          node('projSens', 'Property'),
-        ],
         [
           node('project'),
           relation('out'),
@@ -211,36 +194,12 @@ export class PartnerRepository extends DtoRepository(Partner) {
             : []),
         ],
       ])
-      .optionalMatch([
-        node('project'),
-        relation('out', '', 'engagement', { active: true }),
-        node('', 'LanguageEngagement'),
-        relation('out', '', 'language', { active: true }),
-        node('', 'Language'),
-        relation('out', '', 'sensitivity', { active: true }),
-        node('langSens', 'Property'),
-      ])
-      .with([
-        'project.id as projectId',
-        'node.id as partnerId',
-        `${determineSensitivity} as sensitivity`,
-        `reduce(
-          scopedRoles = [],
-          role IN apoc.coll.flatten(collect(rolesProp.value)) | scopedRoles + ["project:" + role]) as scopedRoles`,
-      ])
-      .with([
-        'projectId as pID, collect({id: partnerId, sensitivity: sensitivity, roles: scopedRoles}) as resources',
-      ])
-      .return<{
-        pId: ID;
-        resources: [
-          {
-            id: ID;
-            sensitivity: Sensitivity;
-            roles: ScopedRole[];
-          }
-        ];
-      }>('*');
+      .apply(matchPropsAndProjectSensAndScopedRoles(session, undefined, true))
+      .with([`'${JSON.stringify(scopeSensitivityMap)}' as sensMap`, 'scopedRoles','sensitivity'])
+      .raw(
+        `MATCH (node) WHERE any(x in scopedRoles where x IN keys(apoc.convert.fromJsonMap(sensMap)) and  ${rankSens('sensitivity')} < ${rankSens("apoc.map.get(apoc.convert.fromJsonMap(sensMap), x)")} )`
+      )
+      .return('*');
   }
 
   async sortAndPaginatePartnerIds(

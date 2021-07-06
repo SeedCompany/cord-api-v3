@@ -5,13 +5,15 @@ import {
   InputException,
   NotFoundException,
   ObjectView,
+  SecuredList,
+  Sensitivity,
   ServerException,
   Session,
   UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger, OnIndex } from '../../core';
-import { mapListResults, runListQuery } from '../../core/database/results';
+import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { FinancialReportingType } from '../partnership/dto/financial-reporting-type';
 import {
@@ -189,37 +191,46 @@ export class PartnerService {
       return await mapListResults(results, (id) => this.readOne(id, session));
     } else {
       const listPartnerIds = [] as ID[];
-      const result = await this.repo
-        .listPartnersOfAllUserProjects(session, input)
+      const result = await (await this.repo
+        .listPartnersOfAllUserProjects(
+          session,
+          input,
+          { 'project:Consultant': Sensitivity.High }
+        ))
         .run();
+        console.log(result);
 
       // I have to put an await, because the next block will execute before this one is finished....
       // eslint-disable-next-line @typescript-eslint/await-thenable, @typescript-eslint/no-misused-promises
-      await void result.forEach(async (project) => {
-        // eslint-disable-next-line @typescript-eslint/await-thenable, @typescript-eslint/no-misused-promises, @typescript-eslint/no-confusing-void-expression
-        await project.resources.forEach(async (resource) => {
-          if (
-            await this.authorizationService.canList(
-              Partner,
-              session,
-              resource.roles
-            )
-          ) {
-            listPartnerIds.push(resource.id);
-          }
-        });
-      });
-      let query;
-      if (listPartnerIds.length > 1) {
-        query = await this.repo.sortAndPaginatePartnerIds(listPartnerIds, input);
-      } else {
-        // I don't really care about paginating a list containing one item, and I don't want to perform more db
-        // opertions just for one item, either. sorry.
-        query = { items: listPartnerIds, total: listPartnerIds.length };
-      }
-      return await runListQuery(query, input, (id) =>
-        this.readOne(id, session)
-      );
+      // await void result.forEach(async (project) => {
+      //   // eslint-disable-next-line @typescript-eslint/await-thenable, @typescript-eslint/no-misused-promises, @typescript-eslint/no-confusing-void-expression
+      //   await project.resources.forEach(async (resource) => {
+      //     if (
+      //       await this.authorizationService.canList(
+      //         Partner,
+      //         session,
+      //         resource.roles
+      //       )
+      //     ) {
+      //       listPartnerIds.push(resource.id);
+      //     }
+      //   });
+      // });
+      // let query;
+      // if (listPartnerIds.length > 1) {
+      //   query = await this.repo.sortAndPaginatePartnerIds(listPartnerIds, {
+      //     filter,
+      //     ...input,
+      //   });
+      // } else {
+      //   // I don't really care about paginating a list containing one item, and I don't want to perform more db
+      //   // opertions just for one item, either. sorry.
+      //   query = { items: listPartnerIds, total: listPartnerIds.length };
+      // }
+      // return await runListQuery(query, input, (id) =>
+      //   this.readOne(id, session)
+      // );
+      return SecuredList.Redacted;
     }
   }
 
