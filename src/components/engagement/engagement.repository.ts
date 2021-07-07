@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { stripIndent } from 'common-tags';
 import { inArray, node, Node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
@@ -120,7 +119,7 @@ export class EngagementRepository extends CommonRepository {
         node('mouEnd'),
       ])
       .return<{ dto: UnsecuredDto<LanguageEngagement & InternshipEngagement> }>(
-        stripIndent`
+        `
           apoc.map.mergeList([
             props,
             changedProps,

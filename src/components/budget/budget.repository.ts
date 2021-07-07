@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { stripIndent } from 'common-tags';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
@@ -91,7 +90,7 @@ export class BudgetRepository extends DtoRepository(Budget) {
       .apply(matchPropsAndProjectSensAndScopedRoles(session))
       .apply(matchChangesetAndChangedProps(changeset))
       .return<{ dto: UnsecuredDto<Budget> }>(
-        stripIndent`
+        `
           apoc.map.mergeList([
             props,
             changedProps,
@@ -194,12 +193,13 @@ export class BudgetRepository extends DtoRepository(Budget) {
             'coalesce(changesetStatus.value, status.value) as status',
             // rank them current, then pending, then w/e.
             // Pick the first one.
-            stripIndent`
+            `
               case coalesce(changesetStatus.value, status.value)
                 when "${Status.Current}" then 0
                 when "${Status.Pending}" then 1
                 else 100
-              end as statusRank`,
+              end as statusRank
+            `,
           ])
           .orderBy('statusRank')
           .limit(1)

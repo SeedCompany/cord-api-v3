@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { stripIndent } from 'common-tags';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
@@ -90,8 +89,8 @@ export class ProjectRepository extends CommonRepository {
         node('organization', 'Organization'),
       ])
       .raw('', { requestingUserId: userId })
-      .return([
-        stripIndent`
+      .return<{ project: UnsecuredDto<Project> }>(
+        `
           apoc.map.mergeList([
             props,
             changedProps,
@@ -105,11 +104,9 @@ export class ProjectRepository extends CommonRepository {
               scope: scopedRoles,
               changeset: coalesce(changeset.id)
             }
-          ]) as project`,
-      ])
-      .asResult<{
-        project: UnsecuredDto<Project>;
-      }>();
+          ]) as project
+        `
+      );
 
     const result = await query.first();
     if (!result) {

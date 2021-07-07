@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { stripIndent } from 'common-tags';
 import { node, Query, relation } from 'cypher-query-builder';
 import {
   ID,
@@ -134,7 +133,7 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
           .apply(matchChangesetAndChangedProps(changeset))
           .apply(matchPropsAndProjectSensAndScopedRoles(session))
           .return<{ dto: UnsecuredDto<BudgetRecord> }>(
-            stripIndent`
+            `
               apoc.map.mergeList([
                 props,
                 changedProps,
@@ -144,7 +143,7 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
                   changeset: coalesce(changeset.id)
                 }
               ]) as ${outputVar}
-        `
+            `
           )
       );
   }

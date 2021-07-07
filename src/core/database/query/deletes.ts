@@ -1,4 +1,3 @@
-import { stripIndent } from 'common-tags';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ResourceShape } from '../../../common';
@@ -71,7 +70,7 @@ export const prefixNodeLabelsWithDeleted = (node: string) => (query: Query) =>
       .with([
         node,
         // Mpa current labels to have deleted prefix (operation is idempotent).
-        stripIndent`
+        `
           reduce(
             deletedLabels = [], label in labels(${node}) |
               case

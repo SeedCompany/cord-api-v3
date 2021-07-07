@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { stripIndent } from 'common-tags';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
@@ -196,7 +195,7 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
         })
       )
       .return<{ dto: UnsecuredDto<Partnership> }>(
-        stripIndent`
+        `
           apoc.map.mergeList([
             props,
             changedProps,
@@ -209,7 +208,8 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
               changeset: changeset.id,
               scope: scopedRoles
             }
-          ]) as dto`
+          ]) as dto
+        `
       );
 
     const result = await query.first();

@@ -1,4 +1,3 @@
-import { stripIndent } from 'common-tags';
 import { node, Query, relation } from 'cypher-query-builder';
 import { ID, Many, Session } from '../../../common';
 import { collect } from './cypher-functions';
@@ -100,11 +99,12 @@ export const matchProps =
           }
         )
         .return([
-          stripIndent`
-          apoc.map.mergeList(
-            ${excludeBaseProps ? '' : `[${nodeName}] + `}collect(
-              apoc.map.fromValues([type(r), prop.value])
-            )
-          ) as ${outputVar}`,
+          `
+            apoc.map.mergeList(
+              ${excludeBaseProps ? '' : `[${nodeName}] + `}collect(
+                apoc.map.fromValues([type(r), prop.value])
+              )
+            ) as ${outputVar}
+          `,
         ])
     );

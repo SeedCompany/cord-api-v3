@@ -1,4 +1,4 @@
-import { oneLine, stripIndent } from 'common-tags';
+import { oneLine } from 'common-tags';
 import { node, Query, relation } from 'cypher-query-builder';
 import { ID, isIdLike, Session } from '../../../common';
 import { matchProps, MatchPropsOptions } from './matching';
@@ -45,13 +45,13 @@ export const matchPropsAndProjectSensAndScopedRoles =
         ])
         .return(
           [
-            stripIndent`
-apoc.map.merge(${propsOptions?.outputVar ?? 'props'}, {
-  sensitivity: ${determineSensitivity}
-}) as ${propsOptions?.outputVar ?? 'props'}
-        `,
+            `
+              apoc.map.merge(${propsOptions?.outputVar ?? 'props'}, {
+                sensitivity: ${determineSensitivity}
+              }) as ${propsOptions?.outputVar ?? 'props'}
+            `,
             session
-              ? stripIndent`
+              ? `
                   reduce(
                     scopedRoles = [],
                     role IN apoc.coll.flatten(collect(rolesProp.value)) |
