@@ -1,22 +1,17 @@
-import {
-  ClauseCollection,
-  Create,
-  Match,
-  Merge,
-  With,
-} from 'cypher-query-builder';
+import { Clause, ClauseCollection, Create, With } from 'cypher-query-builder';
+import type { PatternClause as TSPatternClause } from 'cypher-query-builder/dist/typings/clauses/pattern-clause';
 import type { TermListClause as TSTermListClause } from 'cypher-query-builder/dist/typings/clauses/term-list-clause';
-import { compact } from 'lodash';
+import { compact, map, reduce } from 'lodash';
 import { Class } from 'type-fest';
 
 // Add line breaks for each pattern when there's multiple per statement
-for (const Cls of [Match, Create, Merge]) {
-  const origBuild = Cls.prototype.build;
-  Cls.prototype.build = function build() {
-    const str = origBuild.call(this);
-    return str.split(', ').join(',\n    ');
-  };
-}
+const PatternClause = Object.getPrototypeOf(Create) as Class<TSPatternClause>;
+PatternClause.prototype.build = function build() {
+  const patternStrings = map(this.patterns, (pattern) =>
+    reduce(pattern, (str: string, clause: Clause) => str + clause.build(), '')
+  );
+  return patternStrings.join(',\n    ');
+};
 
 // This class is not exported so grab it a hacky way
 const TermListClause = Object.getPrototypeOf(With) as Class<TSTermListClause>;
