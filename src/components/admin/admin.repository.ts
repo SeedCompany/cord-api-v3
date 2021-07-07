@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
+import { table } from 'node:console';
 import { ID } from '../../common';
 import { DatabaseService, SyntaxError } from '../../core';
 import { PostgresService } from '../../core/postgres/postgres.service';
@@ -13,29 +14,71 @@ export class AdminRepository {
   ) {}
 
   async loadData() {
-    // this.pg.db_init();
-    // loop over the database and insert 100 rows into a few tables present in public schema
-    // const tables = await this.pg.client.query("select table_name from information_schema.tables where table_schema = 'public' and table_name like '%_data' order by table_name;");
-    // console.log(tables.rows);
-    await this.pg.client.query(
-      `insert into public.people_data("id", "public_first_name") values(0, 'default person')`
-    );
-    await this.pg.client.query(
-      `insert into public.organizations_data("id", "name") values(0, 'default org')`
-    );
-    for (let i = 1; i <=100; i++) {
-      const orgName = `orgName${i}`;
+    // inserting a lot of data
+    for (let i = 0; i < 1; i++) {
+      const orgName = `org${i}`;
       const personName = `person${i}`;
+      const locationName = `location${i}`;
+      const userData = { email: `email${i}`, password: 'abc', org: 'org0' };
+      const roleData = { name: `role${i}`, org: 'org0' };
       await this.pg.client.query(
-        `insert into public.people_data("id", "public_first_name") values($1, $2)`, [i,personName]
+        `insert into public.people_data("id", "public_first_name") values($1, $2)`,
+        [i, personName]
       );
       await this.pg.client.query(
-        `insert into public.organizations_data("id", "name") values($1, $2)`, [i,orgName]
+        `insert into public.organizations_data("id", "name") values($1, $2)`,
+        [i, orgName]
+      );
+      await this.pg.client.query(
+        `insert into public.locations_data("name", "sensitivity", "type") values($1, 'Low', 'Country')`,
+        [locationName]
+      );
+      await this.pg.client.query(
+        `select * from public.sys_register($1,$2,$3)`,
+        [userData.email, userData.password, userData.org]
+      );
+      await this.pg.client.query(
+        `select * from public.sys_create_role($1, $2)`,
+        [roleData.name, roleData.org]
       );
     }
-    const persons = await this.pg.client.query('select id,public_first_name from public.people_data');
-    console.log(persons.rows);
-    console.log(true);
+    // adding grants and memberships
+    // 1. get the table name and column names
+    // 2. add grants to half of them (odd/even)
+    // 3. grant memberships to half the members (odd/even)
+
+    const tables = await this.pg.client.query(
+      `select table_name from information_schema.tables where table_schema = 'public' and table_name like '%_data' order by table_name`
+    );
+    console.log(tables.rows);
+    tables.rows.forEach(async (tableRow) => {
+      const columns = await this.pg.client.query(
+        `select column_name from information_schema.columns where table_schema='public' and table_name = $1`,
+        [tableRow.table_name]
+      );
+      const schemaTableName = `public.${tableRow.table_name}`;
+      console.log(schemaTableName);
+      columns.rows.forEach(async (columnRow, index) => {
+        const accessLevel = index % 2 === 0 ? 'Read' : 'Write';
+        console.log(schemaTableName, columnRow.column_name, accessLevel);
+        await this.pg.client.query(
+          `select * from public.sys_add_role_grant($1, $2, $3, $4, $5 )`,
+          ['role0', 'org0', schemaTableName, columnRow.column_name, accessLevel]
+        );
+      });
+    });
+
+      // add role member
+    const users = await this.pg.client.query(
+        `select email from public.users_data`
+      );
+    console.log(users.rows);
+    users.rows.forEach(async (user) => {
+      // await this.pg.client.query(
+      //   `select * from public.sys_add_role_member('role0', 'org0', $1)`,
+      //   [user.email]
+      // );
+    });
     return true;
   }
 
