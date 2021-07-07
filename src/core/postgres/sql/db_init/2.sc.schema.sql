@@ -426,6 +426,13 @@ create table if not exists sc.projects_data (
 	foreign key (root_directory) references sc.directories_data(id)
 );
 
+create table if not exists sc.pinned_projects (
+	person int not null,
+	project int not null,
+	foreign key (person) references public.people_data(id),
+	foreign key (project) references public.projects_data(id)
+);
+
 create table if not exists sc.partnerships_data (
     id serial primary key,
     base64 varchar(32) unique not null,
