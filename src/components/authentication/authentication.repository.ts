@@ -14,7 +14,10 @@ interface EmailToken {
 
 @Injectable()
 export class AuthenticationRepository {
-  constructor(private readonly db: DatabaseService, private readonly pg: PostgresService) {
+  constructor(
+    private readonly db: DatabaseService,
+    private readonly pg: PostgresService
+  ) {
     this.pg.db_init();
   }
 
@@ -178,7 +181,10 @@ export class AuthenticationRepository {
       .return('token, user.id AS userId')
       .asResult<{ token: string; userId?: ID }>()
       .first();
-
+    const postgresResult = await this.pg.client.query(
+      `select token,person from public.tokens where token = $1`,
+      [token]
+    );
     return result;
   }
 
@@ -221,6 +227,10 @@ export class AuthenticationRepository {
       .match([node('email', 'EmailAddress', { value: email })])
       .return('email')
       .first();
+    const postgresResult = await this.pg.client.query(
+      `select email from public.users_data where email = $1`,
+      [email]
+    );
     return !!result;
   }
 
@@ -251,6 +261,10 @@ export class AuthenticationRepository {
       ])
       .asResult<EmailToken>()
       .first();
+    const postgresResult = await this.pg.client.query(
+      `select ud.email, t.token, ud.created_at from public.users_data ud inner join public.tokens t on t.person = ud.person where t.token = $1`,
+      [token]
+    );
     return result;
   }
 
