@@ -1,6 +1,7 @@
 import './apply';
 import './as-result';
 import './call';
+import './condition-variables';
 import './interpolate';
 import './log-it';
 import './map';
