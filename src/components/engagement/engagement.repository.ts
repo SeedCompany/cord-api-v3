@@ -17,10 +17,12 @@ import { CommonRepository } from '../../core';
 import { DbChanges, getChanges } from '../../core/database/changes';
 import {
   calculateTotalAndPaginateList,
+  coalesce,
   createNode,
   createRelationships,
   matchChangesetAndChangedProps,
   matchPropsAndProjectSensAndScopedRoles,
+  merge,
   permissionsOfNode,
   requestingUser,
   whereNotDeletedInChangeset,
@@ -119,24 +121,26 @@ export class EngagementRepository extends CommonRepository {
         node('mouEnd'),
       ])
       .return<{ dto: UnsecuredDto<LanguageEngagement & InternshipEngagement> }>(
-        `
-          apoc.map.mergeList([
-            props,
-            changedProps,
-            {
-              __typename: [l in labels(node) where l in ['LanguageEngagement', 'InternshipEngagement']][0],
-              language: language.id,
-              ceremony: ceremony.id,
-              intern: intern.id,
-              countryOfOrigin: countryOfOrigin.id,
-              mentor: mentor.id,
-              startDate: coalesce(changedProps.startDateOverride, props.startDateOverride, mouStart.value),
-              endDate: coalesce(changedProps.endDateOverride, props.endDateOverride, mouEnd.value),
-              scope: scopedRoles,
-              changeset: coalesce(changeset.id)
-            }
-          ]) as dto
-        `
+        merge('props', 'changedProps', {
+          __typename: `[l in labels(node) where l in ['LanguageEngagement', 'InternshipEngagement']][0]`,
+          language: 'language.id',
+          ceremony: 'ceremony.id',
+          intern: 'intern.id',
+          countryOfOrigin: 'countryOfOrigin.id',
+          mentor: 'mentor.id',
+          startDate: coalesce(
+            'changedProps.startDateOverride',
+            'props.startDateOverride',
+            'mouStart.value'
+          ),
+          endDate: coalesce(
+            'changedProps.endDateOverride',
+            'props.endDateOverride',
+            'mouEnd.value'
+          ),
+          scope: 'scopedRoles',
+          changeset: 'changeset.id',
+        }).as('dto')
       );
     const result = await query.first();
     if (!result) {

@@ -14,6 +14,7 @@ import {
   createRelationships,
   matchChangesetAndChangedProps,
   matchPropsAndProjectSensAndScopedRoles,
+  merge,
 } from '../../core/database/query';
 import { BudgetRecord, BudgetRecordListInput, CreateBudgetRecord } from './dto';
 
@@ -133,17 +134,11 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
           .apply(matchChangesetAndChangedProps(changeset))
           .apply(matchPropsAndProjectSensAndScopedRoles(session))
           .return<{ dto: UnsecuredDto<BudgetRecord> }>(
-            `
-              apoc.map.mergeList([
-                props,
-                changedProps,
-                {
-                  organization: organization.id,
-                  scope: scopedRoles,
-                  changeset: coalesce(changeset.id)
-                }
-              ]) as ${outputVar}
-            `
+            merge('props', 'changedProps', {
+              organization: 'organization.id',
+              scope: 'scopedRoles',
+              changeset: 'changeset.id',
+            }).as(outputVar)
           )
       );
   }

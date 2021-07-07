@@ -13,6 +13,7 @@ import {
   createNode,
   createRelationships,
   matchPropsAndProjectSensAndScopedRoles,
+  merge,
 } from '../../core/database/query';
 import {
   CreateProjectChangeRequest,
@@ -60,15 +61,10 @@ export class ProjectChangeRequestRepository extends DtoRepository(
       ])
       .apply(matchPropsAndProjectSensAndScopedRoles(session))
       .return<{ dto: UnsecuredDto<ProjectChangeRequest> }>(
-        `
-          apoc.map.mergeList([
-            props,
-            {
-              scope: scopedRoles,
-              canEdit: props.status = "${Status.Pending}"
-            }
-          ]) as dto
-        `
+        merge('props', {
+          scope: 'scopedRoles',
+          canEdit: `props.status = "${Status.Pending}"`,
+        }).as('dto')
       );
     const result = await query.first();
     if (!result) {

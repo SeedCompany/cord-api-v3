@@ -23,6 +23,7 @@ import {
   matchChangesetAndChangedProps,
   matchProps,
   matchPropsAndProjectSensAndScopedRoles,
+  merge,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -90,22 +91,16 @@ export class ProjectRepository extends CommonRepository {
       ])
       .raw('', { requestingUserId: userId })
       .return<{ project: UnsecuredDto<Project> }>(
-        `
-          apoc.map.mergeList([
-            props,
-            changedProps,
-            {
-              type: node.type,
-              pinned: exists((:User { id: $requestingUserId })-[:pinned]->(node)),
-              primaryLocation: primaryLocation.id,
-              marketingLocation: marketingLocation.id,
-              fieldRegion: fieldRegion.id,
-              owningOrganization: organization.id,
-              scope: scopedRoles,
-              changeset: coalesce(changeset.id)
-            }
-          ]) as project
-        `
+        merge('props', 'changedProps', {
+          type: 'node.type',
+          pinned: 'exists((:User { id: $requestingUserId })-[:pinned]->(node))',
+          primaryLocation: 'primaryLocation.id',
+          marketingLocation: 'marketingLocation.id',
+          fieldRegion: 'fieldRegion.id',
+          owningOrganization: 'organization.id',
+          scope: 'scopedRoles',
+          changeset: 'changeset.id',
+        }).as('project')
       );
 
     const result = await query.first();

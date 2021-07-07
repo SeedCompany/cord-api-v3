@@ -1,7 +1,6 @@
 import { node, Query, relation } from 'cypher-query-builder';
 import { ID, Many, Session } from '../../../common';
-import { collect } from './cypher-functions';
-import { mapping } from './mapping';
+import { apoc, collect, listConcat, merge } from './cypher-functions';
 
 export const requestingUser = (session: Session) =>
   node('requestingUser', 'User', {
@@ -41,12 +40,10 @@ export const matchPropList = (
         : []),
     ])
     .with([
-      collect(
-        mapping({
-          value: 'props.value',
-          property: 'type(r)',
-        })
-      ).as('propList'),
+      collect({
+        value: 'props.value',
+        property: 'type(r)',
+      }).as('propList'),
       nodeName,
     ]);
 
@@ -97,13 +94,12 @@ export const matchProps =
             optional,
           }
         )
-        .return([
-          `
-            apoc.map.mergeList(
-              ${excludeBaseProps ? '' : `[${nodeName}] + `}collect(
-                apoc.map.fromValues([type(r), prop.value])
-              )
-            ) as ${outputVar}
-          `,
-        ])
+        .return(
+          merge(
+            listConcat(
+              `[${excludeBaseProps ? '' : nodeName}]`,
+              collect(apoc.map.fromValues(['type(r)', 'prop.value']))
+            )
+          ).as(outputVar)
+        )
     );

@@ -24,8 +24,10 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
+  collect,
   deleteProperties,
   matchProps,
+  merge,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -200,11 +202,9 @@ export class UserRepository extends DtoRepository(User) {
           ])
           .apply(matchProps())
           .return(
-            `
-              apoc.map.merge(props, {
-                roles: collect(role.value)
-              }) as dto
-            `
+            merge('props', {
+              roles: collect('role.value'),
+            }).as('dto')
           )
       );
   }

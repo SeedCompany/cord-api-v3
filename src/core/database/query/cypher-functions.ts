@@ -55,3 +55,17 @@ export const merge = (...expressions: ExpressionInput[]) => {
   }
   return fn('apoc.map.mergeList')(expressions);
 };
+
+export const apoc = {
+  map: {
+    fromValues: fn1('apoc.map.fromValues'),
+  },
+};
+
+export const listConcat = (...items: ExpressionInput[]) =>
+  exp(
+    items
+      .filter((item) => item !== undefined)
+      .map(exp)
+      .join(' + ')
+  );

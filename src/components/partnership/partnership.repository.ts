@@ -17,9 +17,11 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
+  coalesce,
   matchChangesetAndChangedProps,
   matchProps,
   matchPropsAndProjectSensAndScopedRoles,
+  merge,
   permissionsOfNode,
   requestingUser,
   whereNotDeletedInChangeset,
@@ -195,21 +197,25 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
         })
       )
       .return<{ dto: UnsecuredDto<Partnership> }>(
-        `
-          apoc.map.mergeList([
-            props,
-            changedProps,
-            {
-              mouStart: coalesce(changedProps.mouStartOverride, props.mouStartOverride, projectChangedProps.mouStart, projectProps.mouStart),
-              mouEnd: coalesce(changedProps.mouEndOverride, props.mouEndOverride, projectChangedProps.mouEnd, projectProps.mouEnd),
-              project: project.id,
-              partner: partner.id,
-              organization: org.id,
-              changeset: changeset.id,
-              scope: scopedRoles
-            }
-          ]) as dto
-        `
+        merge('props', 'changedProps', {
+          mouStart: coalesce(
+            'changedProps.mouStartOverride',
+            'props.mouStartOverride',
+            'projectChangedProps.mouStart',
+            'projectProps.mouStart'
+          ),
+          mouEnd: coalesce(
+            'changedProps.mouEndOverride',
+            'props.mouEndOverride',
+            'projectChangedProps.mouEnd',
+            'projectProps.mouEnd'
+          ),
+          project: 'project.id',
+          partner: 'partner.id',
+          organization: 'org.id',
+          changeset: 'changeset.id',
+          scope: 'scopedRoles',
+        }).as('dto')
       );
 
     const result = await query.first();

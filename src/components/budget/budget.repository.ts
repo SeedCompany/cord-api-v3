@@ -20,6 +20,7 @@ import {
   calculateTotalAndPaginateList,
   matchChangesetAndChangedProps,
   matchPropsAndProjectSensAndScopedRoles,
+  merge,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -90,16 +91,10 @@ export class BudgetRepository extends DtoRepository(Budget) {
       .apply(matchPropsAndProjectSensAndScopedRoles(session))
       .apply(matchChangesetAndChangedProps(changeset))
       .return<{ dto: UnsecuredDto<Budget> }>(
-        `
-          apoc.map.mergeList([
-            props,
-            changedProps,
-            {
-              scope: scopedRoles,
-              changeset: coalesce(changeset.id)
-            }
-          ]) as dto
-        `
+        merge('props', 'changedProps', {
+          scope: 'scopedRoles',
+          changeset: 'changeset.id',
+        }).as('dto')
       )
       .map((row) => row.dto)
       .first();
