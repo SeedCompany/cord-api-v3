@@ -1,6 +1,7 @@
 export * from './create-node';
 export * from './create-property';
 export * from './create-relationships';
+export * from './cypher-expression';
 export * from './cypher-functions';
 export * from './deactivate-property';
 export * from './lists';

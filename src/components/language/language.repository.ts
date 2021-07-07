@@ -219,7 +219,7 @@ export class LanguageRepository extends DtoRepository(Language) {
         relation('in', '', 'language', { active: true }),
         node('engagement', 'LanguageEngagement'),
       ])
-      .return(collect('engagement.id', 'engagementIds'))
+      .return(collect('engagement.id').as('engagementIds'))
       .asResult<{ engagementIds: ID[] }>()
       .first();
   }

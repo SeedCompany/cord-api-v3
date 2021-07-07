@@ -45,9 +45,8 @@ export const matchPropList = (
         mapping({
           value: 'props.value',
           property: 'type(r)',
-        }),
-        'propList'
-      ),
+        })
+      ).as('propList'),
       nodeName,
     ]);
 

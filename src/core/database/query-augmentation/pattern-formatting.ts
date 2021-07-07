@@ -13,6 +13,7 @@ import type {
 } from 'cypher-query-builder/dist/typings/clauses/term-list-clause';
 import { compact, map, reduce } from 'lodash';
 import { Class } from 'type-fest';
+import { isExp } from '../query';
 
 // Add line breaks for each pattern when there's multiple per statement
 const PatternClause = Object.getPrototypeOf(Create) as Class<TSPatternClause>;
@@ -43,10 +44,16 @@ TermListClause.prototype.stringifyProperty = function stringifyProperty(
   return origStringifyProperty(prop, alias, node);
 };
 
-// Strip indents from `with` & `return` clauses
+// Strip indents from `with` & `return` clauses.
+// Convert CypherExpression proxies to strings, so they are rendered correctly.
 const origStringifyTerm = TermListClause.prototype.stringifyTerm;
 TermListClause.prototype.stringifyTerm = function stringifyTerm(term: Term) {
-  const stripped = typeof term === 'string' ? stripIndent(term) : term;
+  const stripped =
+    typeof term === 'string'
+      ? stripIndent(term)
+      : isExp(term)
+      ? term.toString()
+      : term;
   return origStringifyTerm.call(this, stripped);
 };
 

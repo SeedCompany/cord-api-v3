@@ -120,10 +120,9 @@ export class FileRepository {
             type: typeFromLabel('node'),
             name: 'name.value',
             createdById: 'createdBy.id',
-          }),
-          'nodes'
-        ),
-        count('node', { as: 'total', distinct: true }),
+          })
+        ).as('nodes'),
+        count('DISTINCT node').as('total'),
       ])
       .raw('unwind nodes as node')
       .return(['node', 'total'])
