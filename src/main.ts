@@ -26,9 +26,7 @@ async function bootstrap() {
   await app.listen(config.port, () => {
     app
       .get(Logger)
-      .log(
-        `Listening at http://localhost:${config.port}/${config.globalPrefix}`
-      );
+      .log(`Listening at ${config.hostUrl}/${config.globalPrefix}`);
   });
 }
 bootstrap().catch((err) => {
