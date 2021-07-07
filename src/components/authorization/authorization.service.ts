@@ -169,7 +169,6 @@ export class AuthorizationService {
       fullPath
     );
   }
-
   async canList<Resource extends ResourceShape<any>>(
     resource: Resource,
     sessionOrUserId: Session | ID,

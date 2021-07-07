@@ -171,10 +171,10 @@ export class PartnerRepository extends DtoRepository(Partner) {
 
   async listPartnersOfAllUserProjects(
     session: Session,
-    { filter }: PartnerListInput,
+    { filter, ...input }: PartnerListInput,
     scopeSensitivityMap: Partial<Record<ScopedRole, Sensitivity | undefined>>
   ) {
-    console.log(await this.db.query().raw(`WITH 'Medium' as Medium, RETURN ${rankSens('Medium')}`).run())
+    //console.log(await this.db.query().raw(`WITH 'Medium' as Medium, RETURN ${rankSens('Medium')}`).run())
     return this.db
       .query()
       .match([
@@ -195,11 +195,28 @@ export class PartnerRepository extends DtoRepository(Partner) {
         ],
       ])
       .apply(matchPropsAndProjectSensAndScopedRoles(session, undefined, true))
-      .with([`'${JSON.stringify(scopeSensitivityMap)}' as sensMap`, 'scopedRoles','sensitivity'])
-      .raw(
-        `MATCH (node) WHERE any(x in scopedRoles where x IN keys(apoc.convert.fromJsonMap(sensMap)) and  ${rankSens('sensitivity')} < ${rankSens("apoc.map.get(apoc.convert.fromJsonMap(sensMap), x)")} )`
+      .subQuery((sub) =>
+        sub
+          .with('sensitivity')
+          .return([
+            `apoc.convert.fromJsonMap('${JSON.stringify(
+              scopeSensitivityMap
+            )}') as sensMap`,
+            `(${rankSens('sensitivity')}) as sens`,
+          ])
       )
-      .return('*');
+      .raw(
+        `MATCH (node) WHERE any(x in scopedRoles where x IN keys(sensMap) and sens <= ${rankSens(
+          'apoc.map.get(sensMap, x)'
+        )})`
+      )
+      .apply(
+        calculateTotalAndPaginateList(
+          Partner,
+          input,
+          this.orgNameSorter(input.sort, input.order)
+        )
+      );
   }
 
   async sortAndPaginatePartnerIds(

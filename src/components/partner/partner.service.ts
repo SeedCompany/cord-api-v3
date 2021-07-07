@@ -5,7 +5,6 @@ import {
   InputException,
   NotFoundException,
   ObjectView,
-  SecuredList,
   Sensitivity,
   ServerException,
   Session,
@@ -190,47 +189,16 @@ export class PartnerService {
       const results = await this.repo.list(input, session);
       return await mapListResults(results, (id) => this.readOne(id, session));
     } else {
-      const listPartnerIds = [] as ID[];
-      const result = await (await this.repo
-        .listPartnersOfAllUserProjects(
-          session,
-          input,
-          { 'project:Consultant': Sensitivity.High }
-        ))
-        .run();
-        console.log(result);
-
-      // I have to put an await, because the next block will execute before this one is finished....
-      // eslint-disable-next-line @typescript-eslint/await-thenable, @typescript-eslint/no-misused-promises
-      // await void result.forEach(async (project) => {
-      //   // eslint-disable-next-line @typescript-eslint/await-thenable, @typescript-eslint/no-misused-promises, @typescript-eslint/no-confusing-void-expression
-      //   await project.resources.forEach(async (resource) => {
-      //     if (
-      //       await this.authorizationService.canList(
-      //         Partner,
-      //         session,
-      //         resource.roles
-      //       )
-      //     ) {
-      //       listPartnerIds.push(resource.id);
-      //     }
-      //   });
-      // });
-      // let query;
-      // if (listPartnerIds.length > 1) {
-      //   query = await this.repo.sortAndPaginatePartnerIds(listPartnerIds, {
-      //     filter,
-      //     ...input,
-      //   });
-      // } else {
-      //   // I don't really care about paginating a list containing one item, and I don't want to perform more db
-      //   // opertions just for one item, either. sorry.
-      //   query = { items: listPartnerIds, total: listPartnerIds.length };
-      // }
-      // return await runListQuery(query, input, (id) =>
-      //   this.readOne(id, session)
-      // );
-      return SecuredList.Redacted;
+      const query = await this.repo.listPartnersOfAllUserProjects(
+        session,
+        input,
+        {
+          'project:Consultant': Sensitivity.Medium,
+        }
+      );
+      return await runListQuery(query, input, (id) =>
+        this.readOne(id, session)
+      );
     }
   }
 
