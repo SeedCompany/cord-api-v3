@@ -67,7 +67,9 @@ export const createProperty =
       // Try to pull the root variable referenced from expression https://regex101.com/r/atshF5
       (variable ? /(?:.+\()?([^.]+)\.?.*/.exec(variable)?.[1] : null) ?? '',
     ];
-    return query.subQuery(imports, (sub) =>
+    return query.comment`
+      createProperty(${nodeName}.${key})
+    `.subQuery(imports, (sub) =>
       sub
         .apply((q) =>
           changeset

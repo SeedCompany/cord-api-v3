@@ -83,7 +83,9 @@ export function createRelationships<TResourceStatic extends ResourceShape<any>>(
 
   const createdAt = DateTime.local();
   return (query: Query) =>
-    query.subQuery('node', (sub) =>
+    query.comment`
+      createRelationships(${resource.name})
+    `.subQuery('node', (sub) =>
       sub
         .match(
           flattened.map(({ variable, nodeLabel, id }) => [
