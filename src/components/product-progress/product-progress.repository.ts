@@ -1,189 +1,236 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { generateId, ID, NotFoundException, UnsecuredDto } from '../../common';
-import { DatabaseService, property } from '../../core';
-import { matchProps } from '../../core/database/query';
-import { ProductProgressInput, StepProgress } from './dto';
+import {
+  generateId,
+  getDbClassLabels,
+  ID,
+  NotFoundException,
+  UnsecuredDto,
+} from '../../common';
+import { DatabaseService } from '../../core';
+import {
+  collect,
+  matchProps,
+  merge,
+  updateProperty,
+  variable,
+} from '../../core/database/query';
+import { ProductProgress, ProductProgressInput, StepProgress } from './dto';
 
 @Injectable()
 export class ProductProgressRepository {
   constructor(private readonly db: DatabaseService) {}
 
-  async removeOldProgress(productId: ID, reportId: ID) {
-    await this.db
-      .query()
-      .match([
-        node('product', 'Product', { id: productId }),
-        relation('out', 'productProgressRel', 'productProgress', {
-          active: true,
-        }),
-        node('node', 'ProductProgress'),
-        relation('in', 'reportProgressRel', 'reportProgress', { active: true }),
-        node('report', 'PeriodicReport', { id: reportId }),
-      ])
-      .setValues({
-        'productProgressRel.active': false,
-        'reportProgressRel.active': false,
-      })
-      .return('node.id as id')
-      .asResult<{ id: ID }>()
-      .run();
-  }
-
-  async create(input: ProductProgressInput) {
-    const id = await generateId();
-    const createdAt = DateTime.local();
-    const query = this.db
-      .query()
-      .match([node('product', 'Product', { id: input.productId })])
-      .match([node('report', 'PeriodicReport', { id: input.reportId })])
-      .create([
-        [
-          node('node', ['ProductProgress', 'BaseNode'], {
-            id,
-            createdAt,
-          }),
-        ],
-      ])
-      .create([
-        node('product'),
-        relation('out', '', 'productProgress', { active: true, createdAt }),
-        node('node'),
-        relation('in', '', 'reportProgress', { active: true, createdAt }),
-        node('report'),
-      ])
-      .return('node.id as id')
-      .asResult<{ id: ID }>();
-    const result = await query.first();
-
-    if (!result?.id) {
-      return;
-    }
-    await Promise.all(
-      input.steps.map(async (step) => {
-        const id = await generateId();
-        const createdAt = DateTime.local();
-        const query = this.db
-          .query()
-          .match([
-            node('productProgress', 'ProductProgress', { id: result.id }),
-          ])
-          .create([
-            [
-              node('node', ['StepProgress', 'BaseNode'], {
-                id,
-                createdAt,
-              }),
-            ],
-            ...property('step', step.step, 'node'),
-            ...property('percentDone', step.percentDone, 'node'),
-            ...property('description', step.description, 'node'),
-          ])
-          .create([
-            node('productProgress'),
-            relation('out', '', 'step', { active: true, createdAt }),
-            node('node'),
-          ])
-          .return('node.id as id')
-          .asResult<{ id: ID }>();
-
-        await query.first();
-      })
-    );
-  }
-
-  async readSteps(productId: ID, reportId: ID) {
+  async readOne(productId: ID, reportId: ID) {
     const result = await this.db
       .query()
       .match([
-        node('product', 'Product', { id: productId }),
-        relation('out', '', 'productProgress', { active: true }),
-        node('node', 'ProductProgress'),
-        relation('in', '', 'reportProgress', { active: true }),
-        node('report', 'PeriodicReport', { id: reportId }),
+        [node('product', 'Product', { id: productId })],
+        [node('report', 'PeriodicReport', { id: reportId })],
       ])
-      .match([
-        node('node'),
-        relation('out', '', 'step', { active: true }),
-        node('stepProgress', 'StepProgress'),
-      ])
-      .with('collect(stepProgress.id) as ids')
-      .return('ids')
-      .asResult<{ ids: [ID] }>()
+      .apply(this.hydrateAll())
       .first();
-
-    if (!result?.ids) {
-      return [];
+    if (!result) {
+      throw new NotFoundException(
+        'Could not find progress for product and report period'
+      );
     }
-
-    const steps = await Promise.all(
-      result?.ids.map(async (id) => await this.readOneStepProgress(id))
-    );
-    return steps;
+    return result;
   }
 
   async readAllProgressReportsByProduct(productId: ID) {
     const result = await this.db
       .query()
       .match([
-        node('product', 'Product', { id: productId }),
-        relation('out', '', 'productProgress', { active: true }),
-        node('node', 'ProductProgress'),
-        relation('in', '', 'reportProgress', { active: true }),
-        node('report', 'PeriodicReport'),
+        [
+          node('eng', 'Engagement'),
+          relation('out', '', 'product', { active: true }),
+          node('product', 'Product', { id: productId }),
+        ],
+        [
+          node('eng'),
+          relation('out', '', 'report', { active: true }),
+          node('report', 'ProgressReport'),
+        ],
       ])
-      .with('collect(report.id) as reportIds')
-      .return('reportIds')
-      .asResult<{ reportIds: ID[] }>()
-      .first();
-
-    if (!result?.reportIds) {
-      return [];
-    }
-    return result.reportIds;
+      .apply(this.hydrateAll())
+      .run();
+    return result;
   }
 
   async readAllProgressReportsByReport(reportId: ID) {
     const result = await this.db
       .query()
       .match([
-        node('product', 'Product'),
-        relation('out', '', 'productProgress', { active: true }),
-        node('node', 'ProductProgress'),
-        relation('in', '', 'reportProgress', { active: true }),
-        node('report', 'PeriodicReport', { id: reportId }),
+        [
+          node('eng', 'Engagement'),
+          relation('out', '', 'report', { active: true }),
+          node('report', 'ProgressReport', { id: reportId }),
+        ],
+        [
+          node('eng'),
+          relation('out', '', 'product', { active: true }),
+          node('product', 'Product'),
+        ],
       ])
-      .with('collect(product.id) as productIds')
-      .return('productIds')
-      .asResult<{ productIds: ID[] }>()
-      .first();
-
-    if (!result?.productIds) {
-      return [];
-    }
-    return result.productIds;
+      .apply(this.hydrateAll())
+      .run();
+    return result;
   }
 
-  async readOneStepProgress(id: ID) {
-    const result = await this.db
-      .query()
-      .match([node('node', 'StepProgress', { id })])
-      .apply(this.hydrate())
-      .return('dto')
-      .asResult<{ dto: UnsecuredDto<StepProgress> }>()
-      .first();
+  private hydrateAll() {
+    return <R>(query: Query<R>) =>
+      query
+        .comment('hydrateAll()')
+        .optionalMatch([
+          node('report'),
+          relation('out', '', 'progress', { active: true }),
+          node('progress', 'ProductProgress'),
+          relation('in', '', 'progress', { active: true }),
+          node('product'),
+        ])
+        .apply(this.hydrateOne())
+        .return('dto')
+        .map('dto');
+  }
 
-    if (!result?.dto) {
-      throw new NotFoundException();
+  private hydrateOne() {
+    return <R>(query: Query<R>) =>
+      query.comment`hydrateOne()`.subQuery(
+        ['product', 'report', 'progress'],
+        (sub1) =>
+          sub1
+            .subQuery(['product', 'report', 'progress'], (sub2) =>
+              sub2
+                .match([
+                  node('progress'),
+                  relation('out', '', 'step', { active: true }),
+                  node('stepNode', 'StepProgress'),
+                ])
+                .apply(matchProps({ nodeName: 'stepNode', outputVar: 'step' }))
+                .raw('WITH * WHERE step.percentDone IS NOT NULL')
+                .return(merge('step', { canDelete: false }).as('step'))
+            )
+            .return<{
+              dto: UnsecuredDto<ProductProgress> & { canDelete: boolean };
+            }>(
+              merge('progress', {
+                productId: 'product.id',
+                reportId: 'report.id',
+                steps: collect('step'),
+                canDelete: false,
+              }).as('dto')
+            )
+      );
+  }
+
+  async update(input: ProductProgressInput): Promise<ProductProgress> {
+    const createdAt = DateTime.local();
+    // Create temp IDs in case the Progress/Step nodes need to be created.
+    const tempProgressId = await generateId();
+    const stepsInput = await Promise.all(
+      input.steps.map(async (stepIn) => ({
+        ...stepIn,
+        tempId: await generateId(),
+      }))
+    );
+
+    const query = this.db
+      .query()
+      .match([node('product', 'Product', { id: input.productId })])
+      .match([node('report', 'PeriodicReport', { id: input.reportId })])
+
+      .comment('Create ProductProgress if needed')
+      .subQuery(['product', 'report'], (sub) =>
+        sub
+          .merge([
+            node('product'),
+            relation('out', 'productProgressRel', 'progress', { active: true }),
+            node('progress', 'ProductProgress'),
+            relation('in', 'reportProgressRel', 'progress', { active: true }),
+            node('report'),
+          ])
+          .onCreate.set(
+            {
+              labels: {
+                progress: getDbClassLabels(ProductProgress),
+              },
+              values: {
+                progress: { id: tempProgressId, createdAt },
+                productProgressRel: { createdAt },
+                reportProgressRel: { createdAt },
+              },
+            },
+            { merge: true }
+          )
+          .return('progress')
+      )
+
+      .comment('For each step input given')
+      .subQuery('progress', (sub) =>
+        sub
+          .unwind(stepsInput, 'stepInput')
+
+          .comment('Match or Create StepProgress')
+          .subQuery(['progress', 'stepInput'], (sub2) =>
+            sub2
+              .merge([
+                node('progress'),
+                relation('out', 'progressStepRel', 'step', { active: true }),
+                node('stepNode', 'StepProgress', {
+                  step: variable('stepInput.step'),
+                }),
+              ])
+              .onCreate.set(
+                {
+                  labels: {
+                    stepNode: getDbClassLabels(StepProgress),
+                  },
+                  values: {
+                    stepNode: { createdAt },
+                    progressStepRel: { createdAt },
+                  },
+                },
+                { merge: true }
+              )
+              .onCreate.setVariables({
+                stepNode: { id: 'stepInput.tempId' },
+              })
+              .return('stepNode')
+          ).raw`
+            // Update percents that have changed
+            WITH *
+            WHERE NOT (stepNode)-[:percentDone { active: true }]->(:Property { value: stepInput.percentDone })
+          `
+          .apply(
+            updateProperty({
+              nodeName: 'stepNode',
+              resource: StepProgress,
+              key: 'percentDone',
+              variable: 'stepInput.percentDone',
+            })
+          )
+          .return([
+            'sum(numPropsCreated) as numProgressPercentCreated',
+            'sum(numPropsDeactivated) as numProgressPercentDeactivated',
+          ])
+      )
+
+      .comment('Now read back progress node')
+      .apply(this.hydrateOne())
+      .return([
+        'dto',
+        'numProgressPercentCreated',
+        'numProgressPercentDeactivated',
+      ]);
+
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException(
+        'Could not find product or report to add progress to'
+      );
     }
     return result.dto;
-  }
-
-  private hydrate() {
-    return (query: Query) =>
-      query.subQuery((sub) =>
-        sub.with('node').apply(matchProps()).return('props as dto')
-      );
   }
 }

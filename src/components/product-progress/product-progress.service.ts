@@ -9,28 +9,16 @@ export class ProductProgressService {
 
   async readAllByReport(
     reportId: ID,
-    session: Session
+    _session: Session
   ): Promise<readonly ProductProgress[]> {
-    const productIds = await this.repo.readAllProgressReportsByReport(reportId);
-    return await Promise.all(
-      productIds.map(
-        async (productId) => await this.readOne(reportId, productId, session)
-      )
-    );
+    return await this.repo.readAllProgressReportsByReport(reportId);
   }
 
   async readAllByProduct(
     productId: ID,
-    session: Session
+    _session: Session
   ): Promise<readonly ProductProgress[]> {
-    const reportIds = await this.repo.readAllProgressReportsByProduct(
-      productId
-    );
-    return await Promise.all(
-      reportIds.map(
-        async (reportId) => await this.readOne(reportId, productId, session)
-      )
-    );
+    return await this.repo.readAllProgressReportsByProduct(productId);
   }
 
   async readOne(
@@ -38,17 +26,10 @@ export class ProductProgressService {
     productId: ID,
     _session: Session
   ): Promise<ProductProgress> {
-    const steps = await this.repo.readSteps(productId, reportId);
-
-    return {
-      productId,
-      reportId,
-      steps,
-    };
+    return await this.repo.readOne(productId, reportId);
   }
 
   async update(input: ProductProgressInput) {
-    await this.repo.removeOldProgress(input.productId, input.reportId);
-    await this.repo.create(input);
+    return await this.repo.update(input);
   }
 }

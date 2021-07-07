@@ -36,10 +36,7 @@ export abstract class StepProgressInput {
   @Field(() => Float, {
     nullable: true,
     description:
-      'The new percent complete for the step or null to remove the current value.',
+      'The new percent (0-100) complete for the step or null to remove the current value.',
   })
   percentDone: number | null;
-
-  @Field(() => String, { nullable: true })
-  description: string | null;
 }
