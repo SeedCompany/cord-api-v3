@@ -5,7 +5,6 @@ export * from './cypher-expression';
 export * from './cypher-functions';
 export * from './deactivate-property';
 export * from './lists';
-export * from './mapping';
 export * from './matching';
 export * from './deletes';
 export * from './match-project-based-props';
