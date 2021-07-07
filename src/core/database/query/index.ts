@@ -10,4 +10,4 @@ export * from './deletes';
 export * from './match-project-based-props';
 export * from './match-changeset-and-changed-props';
 export * from './update-property';
-export { variable } from '../query-augmentation/condition-variables';
+export * from '../query-augmentation/condition-variables';

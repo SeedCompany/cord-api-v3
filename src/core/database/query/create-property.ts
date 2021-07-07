@@ -1,5 +1,6 @@
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
+import { Variable } from '.';
 import {
   getDbPropertyLabels,
   ID,
@@ -19,7 +20,7 @@ export interface CreatePropertyOptions<
 > {
   resource: TResourceStatic;
   key: Key;
-  value: UnwrapSecured<TObject[Key]>;
+  value: UnwrapSecured<TObject[Key]> | Variable;
   changeset?: ID;
   nodeName?: string;
   numCreatedVar?: string;

@@ -22,7 +22,7 @@ const Parameter = new ParameterBag().addParam('')
   .constructor as Class<TSParameter>;
 const Pattern = Object.getPrototypeOf(NodePattern) as Class<TSPattern>;
 
-class Variable extends Parameter {
+export class Variable extends Parameter {
   constructor(variable: string) {
     super(variable, variable);
   }
