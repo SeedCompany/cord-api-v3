@@ -1,6 +1,16 @@
-import { Clause, ClauseCollection, Create, With } from 'cypher-query-builder';
+import { stripIndent } from 'common-tags';
+import {
+  Clause,
+  ClauseCollection,
+  Create,
+  Raw,
+  With,
+} from 'cypher-query-builder';
 import type { PatternClause as TSPatternClause } from 'cypher-query-builder/dist/typings/clauses/pattern-clause';
-import type { TermListClause as TSTermListClause } from 'cypher-query-builder/dist/typings/clauses/term-list-clause';
+import type {
+  Term,
+  TermListClause as TSTermListClause,
+} from 'cypher-query-builder/dist/typings/clauses/term-list-clause';
 import { compact, map, reduce } from 'lodash';
 import { Class } from 'type-fest';
 
@@ -17,7 +27,7 @@ PatternClause.prototype.build = function build() {
 const TermListClause = Object.getPrototypeOf(With) as Class<TSTermListClause>;
 
 // Change With & Return clauses to not alias as same variable since cypher as
-// problems with it some times.
+// problems with it sometimes.
 // e.g. .with({ node: 'node' })
 // WITH node as node
 // Neo4jError: key not found: SymbolUse(node@821)
@@ -31,6 +41,18 @@ TermListClause.prototype.stringifyProperty = function stringifyProperty(
     return prop;
   }
   return origStringifyProperty(prop, alias, node);
+};
+
+// Strip indents from `with` & `return` clauses
+const origStringifyTerm = TermListClause.prototype.stringifyTerm;
+TermListClause.prototype.stringifyTerm = function stringifyTerm(term: Term) {
+  const stripped = typeof term === 'string' ? stripIndent(term) : term;
+  return origStringifyTerm.call(this, stripped);
+};
+
+// Strip indents from `raw` clauses
+Raw.prototype.build = function build() {
+  return stripIndent(this.clause);
 };
 
 // Remove extra line breaks from empty clauses
