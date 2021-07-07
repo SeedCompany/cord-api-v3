@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { stripIndent } from 'common-tags';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime, Interval } from 'luxon';
 import {
@@ -205,10 +204,10 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
       ])
       .with('report, start')
       .raw(
-        stripIndent`
-        WHERE NOT (report)-[:reportFileNode]->(:File)<-[:parent { active: true }]-(:FileVersion)
-          AND start.value IN $startDates
-    `,
+        `
+          WHERE NOT (report)-[:reportFileNode]->(:File)<-[:parent { active: true }]-(:FileVersion)
+            AND start.value IN $startDates
+        `,
         {
           startDates: intervals.map((interval) => interval.start),
         }

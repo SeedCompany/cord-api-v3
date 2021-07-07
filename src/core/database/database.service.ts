@@ -14,7 +14,6 @@ import { Driver, Session as Neo4jSession } from 'neo4j-driver';
 import { assert } from 'ts-essentials';
 import {
   entries,
-  getDbPropertyLabels,
   ID,
   InputException,
   isIdLike,
@@ -31,8 +30,7 @@ import {
 import { ILogger, Logger, ServiceUnavailableError, UniquenessError } from '..';
 import { AbortError, retry, RetryOptions } from '../../common/retry';
 import { DbChanges } from './changes';
-import { deleteBaseNode, prefixNodeLabelsWithDeleted } from './query';
-import { determineSortValue } from './query.helpers';
+import { deleteBaseNode, updateProperty, Variable } from './query';
 import { hasMore } from './results';
 import { Transactional } from './transactional.decorator';
 
@@ -278,16 +276,10 @@ export class DatabaseService {
     type: TResourceStatic;
     object: TObject;
     key: Key;
-    value?: UnwrapSecured<TObject[Key]>;
+    value: UnwrapSecured<TObject[Key]> | Variable;
     changeset?: ID;
   }): Promise<void> {
     const label = type.name;
-
-    const propLabels = !changeset
-      ? getDbPropertyLabels(type, key)
-      : // Do not give properties unique labels if inside a changeset.
-        // They'll get them when they are applied for real.
-        ['Property'];
 
     // check if the node is created in changeset, update property normally
     if (changeset) {
@@ -306,67 +298,16 @@ export class DatabaseService {
       }
     }
 
-    const createdAt = DateTime.local();
     const update = this.db
       .query()
       .match(node('node', label, { id }))
-      // Deactivate existing prop(s) & adjust labels as needed
-      // This is an optional step
-      .subQuery('node', (sub) =>
-        sub
-          .match([
-            node('node'),
-            relation('out', 'oldToProp', key, { active: !changeset }),
-            node('oldPropVar', 'Property'),
-            ...(changeset
-              ? [
-                  relation('in', 'oldChange', 'changeset', { active: true }),
-                  node('changeNode', 'Changeset', { id: changeset }),
-                ]
-              : []),
-          ])
-          .setValues({
-            [`${changeset ? 'oldChange' : 'oldToProp'}.active`]: false,
-          })
-          .with('oldPropVar')
-          .apply(prefixNodeLabelsWithDeleted('oldPropVar'))
-          .return(['count(oldPropVar) as numPropsDeactivated'])
-      )
-      .subQuery('node', (sub) =>
-        sub
-          .apply((q) =>
-            changeset
-              ? q
-                  .match(node('changeset', 'Changeset', { id: changeset }))
-                  // Don't create new "change value" if the value is the same as
-                  // the value outside of the changeset.
-                  .raw(
-                    `WHERE NOT (node)-[:${key} { active: true }]->(:Property { value: $value })`,
-                    {
-                      value,
-                    }
-                  )
-              : q
-          )
-          .create([
-            node('node'),
-            relation('out', 'toProp', key, {
-              active: !changeset,
-              createdAt,
-            }),
-            node('newPropNode', propLabels, {
-              createdAt,
-              value,
-              sortValue: determineSortValue(value),
-            }),
-            ...(changeset
-              ? [
-                  relation('in', '', 'changeset', { active: true }),
-                  node('changeset'),
-                ]
-              : []),
-          ])
-          .return('count(newPropNode) as numPropsCreated')
+      .apply(
+        updateProperty<TResourceStatic, TObject, Key>({
+          resource: type,
+          key,
+          value,
+          changeset,
+        })
       )
       .return<{ numPropsCreated: number; numPropsDeactivated: number }>(
         'numPropsCreated, numPropsDeactivated'

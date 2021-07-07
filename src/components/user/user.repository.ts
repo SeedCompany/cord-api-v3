@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { stripIndent } from 'common-tags';
 import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
@@ -25,8 +24,10 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
+  collect,
   deleteProperties,
   matchProps,
+  merge,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -200,12 +201,11 @@ export class UserRepository extends DtoRepository(User) {
             node('role', 'Property'),
           ])
           .apply(matchProps())
-          .return([
-            stripIndent`
-              apoc.map.merge(props, {
-                roles: collect(role.value)
-              }) as dto`,
-          ])
+          .return(
+            merge('props', {
+              roles: collect('role.value'),
+            }).as('dto')
+          )
       );
   }
 

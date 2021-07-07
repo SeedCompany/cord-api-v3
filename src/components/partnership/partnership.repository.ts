@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { stripIndent } from 'common-tags';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
@@ -18,9 +17,11 @@ import {
 } from '../../core';
 import {
   calculateTotalAndPaginateList,
+  coalesce,
   matchChangesetAndChangedProps,
   matchProps,
   matchPropsAndProjectSensAndScopedRoles,
+  merge,
   permissionsOfNode,
   requestingUser,
   whereNotDeletedInChangeset,
@@ -196,20 +197,25 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
         })
       )
       .return<{ dto: UnsecuredDto<Partnership> }>(
-        stripIndent`
-          apoc.map.mergeList([
-            props,
-            changedProps,
-            {
-              mouStart: coalesce(changedProps.mouStartOverride, props.mouStartOverride, projectChangedProps.mouStart, projectProps.mouStart),
-              mouEnd: coalesce(changedProps.mouEndOverride, props.mouEndOverride, projectChangedProps.mouEnd, projectProps.mouEnd),
-              project: project.id,
-              partner: partner.id,
-              organization: org.id,
-              changeset: changeset.id,
-              scope: scopedRoles
-            }
-          ]) as dto`
+        merge('props', 'changedProps', {
+          mouStart: coalesce(
+            'changedProps.mouStartOverride',
+            'props.mouStartOverride',
+            'projectChangedProps.mouStart',
+            'projectProps.mouStart'
+          ),
+          mouEnd: coalesce(
+            'changedProps.mouEndOverride',
+            'props.mouEndOverride',
+            'projectChangedProps.mouEnd',
+            'projectProps.mouEnd'
+          ),
+          project: 'project.id',
+          partner: 'partner.id',
+          organization: 'org.id',
+          changeset: 'changeset.id',
+          scope: 'scopedRoles',
+        }).as('dto')
       );
 
     const result = await query.first();

@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { stripIndent } from 'common-tags';
 import { node, relation } from 'cypher-query-builder';
 import {
   ID,
@@ -14,6 +13,7 @@ import {
   createNode,
   createRelationships,
   matchPropsAndProjectSensAndScopedRoles,
+  merge,
 } from '../../core/database/query';
 import {
   CreateProjectChangeRequest,
@@ -60,19 +60,12 @@ export class ProjectChangeRequestRepository extends DtoRepository(
         node('project', 'Project'),
       ])
       .apply(matchPropsAndProjectSensAndScopedRoles(session))
-      .return([
-        stripIndent`
-          apoc.map.mergeList([
-            props,
-            {
-              scope: scopedRoles,
-              canEdit: props.status = "${Status.Pending}"
-            }
-          ]) as dto`,
-      ])
-      .asResult<{
-        dto: UnsecuredDto<ProjectChangeRequest>;
-      }>();
+      .return<{ dto: UnsecuredDto<ProjectChangeRequest> }>(
+        merge('props', {
+          scope: 'scopedRoles',
+          canEdit: `props.status = "${Status.Pending}"`,
+        }).as('dto')
+      );
     const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find project change request');

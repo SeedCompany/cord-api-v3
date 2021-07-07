@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { stripIndent } from 'common-tags';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID, NotFoundException, Session, UnsecuredDto } from '../../common';
@@ -99,7 +98,7 @@ export class PostRepository extends DtoRepository(Post) {
         // is a member of the parent object
         .raw(
           // Parentheses for readability only, neo4j doesn't require them
-          stripIndent`
+          `
             WHERE (
               NOT props.shareability = '${PostShareability.ProjectTeam}'
             ) OR (
@@ -107,7 +106,7 @@ export class PostRepository extends DtoRepository(Post) {
               AND
               (node)<-[:post]-(:BaseNode)-[:member]-(:BaseNode)-[:user]->(:User { id: $requestingUserId })
             )
-      `,
+          `,
           { requestingUserId: session.userId }
         )
         .apply(calculateTotalAndPaginateList(Post, input))

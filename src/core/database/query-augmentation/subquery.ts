@@ -2,7 +2,7 @@ import { ClauseCollection, Query } from 'cypher-query-builder';
 import { Many } from '../../../common';
 
 declare module 'cypher-query-builder/dist/typings/query' {
-  interface Query {
+  interface Query<Result = unknown> {
     /**
      * Creates a sub-query clause (`CALL { ... }`) and calls the given function
      * to define it.
@@ -22,8 +22,13 @@ declare module 'cypher-query-builder/dist/typings/query' {
      * )
      * .return(['x', 'y'])
      */
-    subQuery(sub: (query: this) => void): this;
-    subQuery(importVars: Many<string>, sub: (query: this) => void): this;
+    subQuery<SubResult>(
+      sub: (query: this) => Query<SubResult>
+    ): Query<Result & SubResult>;
+    subQuery<SubResult>(
+      importVars: Many<string>,
+      sub: (query: this) => Query<SubResult>
+    ): Query<Result & SubResult>;
   }
 }
 

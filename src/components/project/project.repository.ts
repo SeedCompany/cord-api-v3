@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { stripIndent } from 'common-tags';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
@@ -24,6 +23,7 @@ import {
   matchChangesetAndChangedProps,
   matchProps,
   matchPropsAndProjectSensAndScopedRoles,
+  merge,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -90,26 +90,18 @@ export class ProjectRepository extends CommonRepository {
         node('organization', 'Organization'),
       ])
       .raw('', { requestingUserId: userId })
-      .return([
-        stripIndent`
-          apoc.map.mergeList([
-            props,
-            changedProps,
-            {
-              type: node.type,
-              pinned: exists((:User { id: $requestingUserId })-[:pinned]->(node)),
-              primaryLocation: primaryLocation.id,
-              marketingLocation: marketingLocation.id,
-              fieldRegion: fieldRegion.id,
-              owningOrganization: organization.id,
-              scope: scopedRoles,
-              changeset: coalesce(changeset.id)
-            }
-          ]) as project`,
-      ])
-      .asResult<{
-        project: UnsecuredDto<Project>;
-      }>();
+      .return<{ project: UnsecuredDto<Project> }>(
+        merge('props', 'changedProps', {
+          type: 'node.type',
+          pinned: 'exists((:User { id: $requestingUserId })-[:pinned]->(node))',
+          primaryLocation: 'primaryLocation.id',
+          marketingLocation: 'marketingLocation.id',
+          fieldRegion: 'fieldRegion.id',
+          owningOrganization: 'organization.id',
+          scope: 'scopedRoles',
+          changeset: 'changeset.id',
+        }).as('project')
+      );
 
     const result = await query.first();
     if (!result) {

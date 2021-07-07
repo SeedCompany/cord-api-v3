@@ -22,12 +22,7 @@ import {
   matchSession,
   Property,
 } from '../../core';
-import {
-  collect,
-  count,
-  mapping,
-  matchPropList,
-} from '../../core/database/query';
+import { collect, count, matchPropList } from '../../core/database/query';
 import {
   DbPropsOfDto,
   hasMore,
@@ -115,15 +110,14 @@ export class FileRepository {
         return isEmpty(conditions) ? q : q.where(conditions);
       })
       .with([
-        collect(
-          mapping('node', ['id', 'createdAt'], {
-            type: typeFromLabel('node'),
-            name: 'name.value',
-            createdById: 'createdBy.id',
-          }),
-          'nodes'
-        ),
-        count('node', { as: 'total', distinct: true }),
+        collect({
+          id: 'node.id',
+          createdAt: 'node.createdAt',
+          type: typeFromLabel('node'),
+          name: 'name.value',
+          createdById: 'createdBy.id',
+        }).as('nodes'),
+        count('DISTINCT node').as('total'),
       ])
       .raw('unwind nodes as node')
       .return(['node', 'total'])
