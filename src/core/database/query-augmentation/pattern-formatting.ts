@@ -54,6 +54,10 @@ TermListClause.prototype.stringifyTerm = function stringifyTerm(term: Term) {
       : isExp(term)
       ? term.toString()
       : term;
+  // Remove empty strings, so they don't cause problems with double commas
+  if (!stripped) {
+    return [];
+  }
   return origStringifyTerm.call(this, stripped);
 };
 
