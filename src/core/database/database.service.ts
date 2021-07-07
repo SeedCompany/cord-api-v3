@@ -30,7 +30,7 @@ import {
 import { ILogger, Logger, ServiceUnavailableError, UniquenessError } from '..';
 import { AbortError, retry, RetryOptions } from '../../common/retry';
 import { DbChanges } from './changes';
-import { deleteBaseNode, updateProperty, Variable } from './query';
+import { deleteBaseNode, updateProperty } from './query';
 import { hasMore } from './results';
 import { Transactional } from './transactional.decorator';
 
@@ -276,7 +276,7 @@ export class DatabaseService {
     type: TResourceStatic;
     object: TObject;
     key: Key;
-    value: UnwrapSecured<TObject[Key]> | Variable;
+    value: UnwrapSecured<TObject[Key]>;
     changeset?: ID;
   }): Promise<void> {
     const label = type.name;
