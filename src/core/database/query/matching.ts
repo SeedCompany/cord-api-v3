@@ -27,7 +27,7 @@ export const matchPropList = (
   changeset?: ID,
   nodeName = 'node'
 ) =>
-  query
+  query.comment`matchPropList(${nodeName}`
     .match([
       node(nodeName),
       relation('out', 'r', { active: !changeset }),
@@ -76,7 +76,7 @@ export const matchProps =
     excludeBaseProps = false,
   }: MatchPropsOptions = {}) =>
   (query: Query) =>
-    query.subQuery(nodeName, (sub) =>
+    query.comment`matchProps(${nodeName})`.subQuery(nodeName, (sub) =>
       sub
         .match(
           [

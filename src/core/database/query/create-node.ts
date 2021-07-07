@@ -51,7 +51,7 @@ export const createNode = async <TResourceStatic extends ResourceShape<any>>(
   } = initialProps;
 
   return (query: Query) =>
-    query.subQuery((sub) =>
+    query.comment`createNode(${resource.name})`.subQuery((sub) =>
       sub
         .create([
           [

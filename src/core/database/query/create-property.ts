@@ -1,6 +1,7 @@
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { Variable } from '.';
+import { MergeExclusive } from 'type-fest';
+import { variable as varRef } from '.';
 import {
   getDbPropertyLabels,
   ID,
@@ -11,20 +12,28 @@ import {
 import { DbChanges } from '../changes';
 import { determineSortValue } from '../query.helpers';
 
-export interface CreatePropertyOptions<
+export type CreatePropertyOptions<
   TResourceStatic extends ResourceShape<any>,
   TObject extends Partial<MaybeUnsecuredInstance<TResourceStatic>> & {
     id: ID;
   },
   Key extends keyof DbChanges<TObject> & string
-> {
+> = {
   resource: TResourceStatic;
   key: Key;
-  value: UnwrapSecured<TObject[Key]> | Variable;
   changeset?: ID;
   nodeName?: string;
   numCreatedVar?: string;
-}
+} & MergeExclusive<
+  {
+    /** The new value which will be a bound parameter */
+    value: UnwrapSecured<TObject[Key]>;
+  },
+  {
+    /** The variable to use as the new value */
+    variable: string;
+  }
+>;
 
 /**
  * Creates a new property from the node var with given key/value.
@@ -40,6 +49,7 @@ export const createProperty =
     resource,
     key,
     value,
+    variable,
     changeset,
     nodeName = 'node',
     numCreatedVar = 'numPropsCreated',
@@ -52,7 +62,14 @@ export const createProperty =
         // They'll get them when they are applied for real.
         ['Property'];
 
-    return query.subQuery(nodeName, (sub) =>
+    const imports = [
+      nodeName,
+      // Try to pull the root variable referenced from expression https://regex101.com/r/atshF5
+      (variable ? /(?:.+\()?([^.]+)\.?.*/.exec(variable)?.[1] : null) ?? '',
+    ];
+    return query.comment`
+      createProperty(${nodeName}.${key})
+    `.subQuery(imports, (sub) =>
       sub
         .apply((q) =>
           changeset
@@ -61,10 +78,10 @@ export const createProperty =
                 // Don't create new "change value" if the value is the same as
                 // the value outside the changeset.
                 .raw(
-                  `WHERE NOT (${nodeName})-[:${key} { active: true }]->(:Property { value: $value })`,
-                  {
-                    value,
-                  }
+                  `WHERE NOT (${nodeName})-[:${key} { active: true }]->(:Property { value: ${
+                    variable ? variable : '$value'
+                  } })`,
+                  variable ? {} : { value }
                 )
             : q
         )
@@ -76,8 +93,9 @@ export const createProperty =
           }),
           node('newPropNode', propLabels, {
             createdAt,
-            value,
-            sortValue: determineSortValue(value),
+            ...(variable
+              ? { value: varRef(variable), sortValue: varRef(variable) }
+              : { value, sortValue: determineSortValue(value) }),
           }),
           ...(changeset
             ? [

@@ -3,7 +3,7 @@ import { DateTime } from 'luxon';
 import { ResourceShape } from '../../../common';
 
 export const deleteBaseNode = (nodeVar: string) => (query: Query) =>
-  query
+  query.comment`deleteBaseNode(${nodeVar})`
     .match([
       node(nodeVar),
       /**
@@ -39,7 +39,7 @@ export const deleteBaseNode = (nodeVar: string) => (query: Query) =>
  */
 export const deleteProperties =
   <Resource extends ResourceShape<any>>(
-    _resource: Resource,
+    resource: Resource,
     ...relationLabels: ReadonlyArray<keyof Resource['prototype']>
   ) =>
   (query: Query) => {
@@ -47,7 +47,9 @@ export const deleteProperties =
       return query;
     }
     const deletedAt = DateTime.local();
-    return query.subQuery('node', (sub) =>
+    return query.comment`
+      deleteProperties(${[resource.name, ...relationLabels].join(', ')})
+    `.subQuery('node', (sub) =>
       sub
         .match([
           node('node'),
@@ -65,7 +67,9 @@ export const deleteProperties =
   };
 
 export const prefixNodeLabelsWithDeleted = (node: string) => (query: Query) =>
-  query.subQuery(node, (sub) =>
+  query.comment`
+    prefixNodeLabelsWithDeleted(${node})
+  `.subQuery(node, (sub) =>
     sub
       .with([
         node,

@@ -34,7 +34,9 @@ export const deactivateProperty =
     numDeactivatedVar = 'numPropsDeactivated',
   }: DeactivatePropertyOptions<TResourceStatic, TObject, Key>) =>
   <R>(query: Query<R>) =>
-    query.subQuery(nodeName, (sub) =>
+    query.comment`
+      deactivateProperty(${nodeName}.${key})
+    `.subQuery(nodeName, (sub) =>
       sub
         .match([
           node(nodeName),
