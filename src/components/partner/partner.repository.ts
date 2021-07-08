@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, Query, relation } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   ID,
@@ -209,23 +209,6 @@ export class PartnerRepository extends DtoRepository(Partner) {
           'apoc.map.get(sensMap, x)'
         )})`
       )
-      .apply(
-        calculateTotalAndPaginateList(
-          Partner,
-          input,
-          this.orgNameSorter(input.sort, input.order)
-        )
-      );
-  }
-
-  async sortAndPaginatePartnerIds(
-    idList: ID[],
-    { filter, ...input }: PartnerListInput
-  ) {
-    return this.db
-      .query()
-      .match(node('node', 'Partner'))
-      .where({ 'node.id': inArray(idList) })
       .apply(
         calculateTotalAndPaginateList(
           Partner,
