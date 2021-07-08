@@ -3,6 +3,8 @@ import {
   Clause,
   ClauseCollection,
   Create,
+  Match,
+  Merge,
   Raw,
   With,
 } from 'cypher-query-builder';
@@ -16,12 +18,13 @@ import { Class } from 'type-fest';
 import { isExp } from '../query';
 
 // Add line breaks for each pattern when there's multiple per statement
+// And ignore empty patterns
 const PatternClause = Object.getPrototypeOf(Create) as Class<TSPatternClause>;
 PatternClause.prototype.build = function build() {
   const patternStrings = map(this.patterns, (pattern) =>
     reduce(pattern, (str: string, clause: Clause) => str + clause.build(), '')
   );
-  return patternStrings.join(',\n    ');
+  return compact(patternStrings).join(',\n    ');
 };
 
 // This class is not exported so grab it a hacky way
@@ -65,6 +68,17 @@ TermListClause.prototype.stringifyTerm = function stringifyTerm(term: Term) {
 Raw.prototype.build = function build() {
   return stripIndent(this.clause);
 };
+
+// If the pattern clause has no patterns render empty string instead of broken cypher
+for (const Cls of [Match, Create, Merge]) {
+  const origBuild = Cls.prototype.build;
+  Cls.prototype.build = function build(this: TSPatternClause) {
+    if (PatternClause.prototype.build.call(this) === '') {
+      return '';
+    }
+    return origBuild.call(this);
+  };
+}
 
 // Remove extra line breaks from empty clauses
 ClauseCollection.prototype.build = function build(this: ClauseCollection) {
