@@ -5,7 +5,6 @@ import {
   InputException,
   NotFoundException,
   ObjectView,
-  Sensitivity,
   ServerException,
   Session,
   UnauthorizedException,
@@ -192,9 +191,7 @@ export class PartnerService {
       const query = await this.repo.listPartnersOfAllUserProjects(
         session,
         input,
-        {
-          'project:Consultant': Sensitivity.Medium,
-        }
+        await this.authorizationService.getListRoleSensitivityMapping(Partner)
       );
       return await runListQuery(query, input, (id) =>
         this.readOne(id, session)

@@ -174,7 +174,6 @@ export class PartnerRepository extends DtoRepository(Partner) {
     { filter, ...input }: PartnerListInput,
     scopeSensitivityMap: Partial<Record<ScopedRole, Sensitivity | undefined>>
   ) {
-    //console.log(await this.db.query().raw(`WITH 'Medium' as Medium, RETURN ${rankSens('Medium')}`).run())
     return this.db
       .query()
       .match([

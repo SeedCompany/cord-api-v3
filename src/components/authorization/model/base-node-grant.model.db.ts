@@ -1,3 +1,4 @@
+import { Sensitivity } from '../../../common';
 import { PropertyGrant } from './property-grant.model.db';
 
 // a grant is an array of properties of a single type of base node
@@ -7,6 +8,7 @@ export class DbBaseNodeGrant<AnyBaseNode> {
   __className: string;
   properties: Array<PropertyGrant<Partial<AnyBaseNode>>>;
   canList: boolean;
+  sensitivityAccess: Sensitivity;
 
   constructor({
     ...rest
@@ -15,6 +17,7 @@ export class DbBaseNodeGrant<AnyBaseNode> {
     __className: string;
     canDelete: boolean;
     canList?: boolean;
+    sensitivityAccess?: Sensitivity;
     properties: Array<PropertyGrant<Partial<AnyBaseNode>>>;
   }) {
     Object.assign(this, rest);

@@ -6,6 +6,7 @@ import {
   keyBy,
   last,
   mapValues,
+  pickBy,
   startCase,
   union,
   without,
@@ -42,6 +43,12 @@ import * as AllRoles from './roles';
 const getDbRoles = (roles: ScopedRole[]): DbRole[] =>
   Object.values(AllRoles).filter((role) => roles.includes(role.name));
 
+const getProjectScopedDbRoles = Object.values(AllRoles).filter((role) =>
+  role.name.startsWith('project')
+);
+type RoleSensitivityMapping = {
+  [K in ScopedRole]: Sensitivity | undefined;
+};
 export const permissionDefaults = {
   canRead: false,
   canEdit: false,
@@ -169,6 +176,27 @@ export class AuthorizationService {
       fullPath
     );
   }
+
+  async getListRoleSensitivityMapping<Resource extends ResourceShape<any>>(
+    resource: Resource
+  ): Promise<Partial<RoleSensitivityMapping>> {
+    const roles = getProjectScopedDbRoles;
+    // convert resource to a list of resource names to check
+    const resources = getParentTypes(resource)
+      // if parent defines Props include it in mapping
+      .filter(isResourceClass)
+      .map((r) => r.name);
+
+    const roleGrantsFiltered = mapValues(
+      keyBy(roles, (r) => r.name),
+      (role) =>
+        role.grants.find((g) => resources.includes(g.__className.substring(2)))
+    );
+    const map = mapValues(roleGrantsFiltered, (grant) =>
+      grant?.canList ? grant.sensitivityAccess : null
+    ) as RoleSensitivityMapping;
+    return pickBy(map, (sens) => sens !== null);
+  }
   async canList<Resource extends ResourceShape<any>>(
     resource: Resource,
     sessionOrUserId: Session | ID,
@@ -204,7 +232,7 @@ export class AuthorizationService {
         return [];
       })
     );
-    return grants.some((grant) => grant === true);
+    return grants.some((grant) => grant);
   }
 
   /**
