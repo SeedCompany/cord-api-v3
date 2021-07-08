@@ -6,17 +6,28 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
+import { stripIndent } from 'common-tags';
+import {
+  AnonSession,
+  entries,
+  ID,
+  IdArg,
+  LoggedInSession,
+  Session,
+} from '../../common';
 import {
   AnyProduct,
+  AvailableMethodologySteps,
   CreateProductInput,
   CreateProductOutput,
+  MethodologyAvailableSteps,
   MethodologyToApproach,
   ProducibleType,
   Product,
   ProductApproach,
   ProductListInput,
   ProductListOutput,
+  ProductMethodology,
   ProductType,
   UpdateProductInput,
   UpdateProductOutput,
@@ -78,6 +89,39 @@ export class ProductResolver {
     }
     // TODO determine from product.scriptureReferences
     return ProductType.IndividualBooks;
+  }
+
+  @Query(() => [AvailableMethodologySteps], {
+    description: stripIndent`
+      Returns a list of available steps for each methodology.
+      This is returned as a list because GraphQL cannot describe an object with
+      dynamic keys. It's probably best to convert this to a map on retrieval.
+    `,
+  })
+  methodologyAvailableSteps(): AvailableMethodologySteps[] {
+    return entries(MethodologyAvailableSteps).map(
+      ([methodology, steps]): AvailableMethodologySteps => ({
+        methodology,
+        steps,
+      })
+    );
+  }
+
+  @Query(() => [String], {
+    description: stripIndent`
+      Suggestions for describing a product's completion.
+      Use in conjunction with \`Product.describeCompletion\`.
+    `,
+  })
+  suggestProductCompletionDescriptions(
+    @Args('methodology', {
+      nullable: true,
+      description:
+        'Optionally limit suggestions to only ones for this methodology',
+    })
+    _methodology?: ProductMethodology
+  ): string[] {
+    return [];
   }
 
   @Mutation(() => CreateProductOutput, {

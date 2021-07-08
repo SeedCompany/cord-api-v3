@@ -13,6 +13,7 @@ import {
   calculateTotalAndPaginateList,
   deleteBaseNode,
   matchProps,
+  Variable,
 } from '../../core/database/query';
 import {
   CreatePeriodicReport,
@@ -104,20 +105,26 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
       );
   }
 
+  matchCurrentDue(parentId: ID | Variable, reportType: ReportType) {
+    return (query: Query) =>
+      query.comment`matchCurrentDue()`
+        .match([
+          node('baseNode', 'BaseNode', { id: parentId }),
+          relation('out', '', 'report', { active: true }),
+          node('node', `${reportType}Report`),
+          relation('out', '', 'end', { active: true }),
+          node('end', 'Property'),
+        ])
+        .raw(`WHERE end.value < date()`)
+        .with('node, end')
+        .orderBy('end.value', 'desc')
+        .limit(1);
+  }
+
   async getCurrentDue(parentId: ID, reportType: ReportType) {
     const res = await this.db
       .query()
-      .match([
-        node('baseNode', 'BaseNode', { id: parentId }),
-        relation('out', '', 'report', { active: true }),
-        node('node', `${reportType}Report`),
-        relation('out', '', 'end', { active: true }),
-        node('end', 'Property'),
-      ])
-      .raw(`WHERE end.value < date()`)
-      .with('node, end')
-      .orderBy('end.value', 'desc')
-      .limit(1)
+      .apply(this.matchCurrentDue(parentId, reportType))
       .apply(this.hydrate())
       .return('dto')
       .asResult<{ dto: UnsecuredDto<PeriodicReport> }>()

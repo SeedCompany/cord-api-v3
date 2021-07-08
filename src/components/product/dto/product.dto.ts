@@ -2,9 +2,16 @@ import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
-import { DbLabel, ID, SecuredProps, Sensitivity } from '../../../common';
+import {
+  DbLabel,
+  ID,
+  SecuredProps,
+  SecuredStringNullable,
+  Sensitivity,
+} from '../../../common';
 import { SetChangeType } from '../../../core/database/changes';
 import { SecuredScriptureRangesOverride } from '../../scripture';
+import { SecuredMethodologySteps } from './methodology-step.enum';
 import { Producible, SecuredProducible } from './producible.dto';
 import { SecuredProductMediums } from './product-medium';
 import { SecuredMethodology } from './product-methodology';
@@ -35,6 +42,21 @@ export class Product extends Producible {
     description: "Based on the project's sensitivity",
   })
   readonly sensitivity: Sensitivity;
+
+  @Field({
+    description: stripIndent`
+      What steps will be worked for this product?
+      Only certain steps are available according to the chosen methodology.
+    `,
+  })
+  readonly steps: SecuredMethodologySteps;
+
+  @Field({
+    description: stripIndent`
+      What does "complete" mean for this product?
+    `,
+  })
+  readonly describeCompletion: SecuredStringNullable;
 }
 
 @ObjectType({

@@ -5,6 +5,7 @@ import { stripIndent } from 'common-tags';
 import { uniq } from 'lodash';
 import { ID, IdField } from '../../../common';
 import { ScriptureRangeInput } from '../../scripture';
+import { MethodologyStep } from './methodology-step.enum';
 import { ProductMedium } from './product-medium';
 import { ProductMethodology } from './product-methodology';
 import { ProductPurpose } from './product-purpose';
@@ -63,6 +64,12 @@ export abstract class CreateProduct {
 
   @Field(() => ProductMethodology, { nullable: true })
   readonly methodology?: ProductMethodology;
+
+  @Field(() => [MethodologyStep], { nullable: true })
+  readonly steps?: MethodologyStep[] = [];
+
+  @Field({ nullable: true })
+  readonly describeCompletion?: string;
 }
 
 @InputType()

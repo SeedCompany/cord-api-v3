@@ -1,6 +1,7 @@
 import { ObjectType, registerEnumType } from '@nestjs/graphql';
+import { invertBy } from 'lodash';
 import { SecuredEnum, SecuredEnumList } from '../../../common';
-import { ProductApproach } from './product-approach';
+import { ProductApproach as Approach } from './product-approach';
 
 /**
  * How is this translation being done
@@ -29,32 +30,33 @@ export enum ProductMethodology {
   OtherVisual = 'OtherVisual',
 }
 
-export const MethodologyToApproach: Record<
-  ProductMethodology,
-  ProductApproach
-> = {
+export const MethodologyToApproach: Record<ProductMethodology, Approach> = {
   // Written
-  [ProductMethodology.Paratext]: ProductApproach.Written,
-  [ProductMethodology.OtherWritten]: ProductApproach.Written,
+  [ProductMethodology.Paratext]: Approach.Written,
+  [ProductMethodology.OtherWritten]: Approach.Written,
 
   // Oral Translation
-  [ProductMethodology.Render]: ProductApproach.OralTranslation,
-  [ProductMethodology.Audacity]: ProductApproach.OralTranslation,
-  [ProductMethodology.AdobeAudition]: ProductApproach.OralTranslation,
-  [ProductMethodology.OtherOralTranslation]: ProductApproach.OralTranslation,
+  [ProductMethodology.Render]: Approach.OralTranslation,
+  [ProductMethodology.Audacity]: Approach.OralTranslation,
+  [ProductMethodology.AdobeAudition]: Approach.OralTranslation,
+  [ProductMethodology.OtherOralTranslation]: Approach.OralTranslation,
 
   // Oral Stories
-  [ProductMethodology.StoryTogether]: ProductApproach.OralStories,
-  [ProductMethodology.SeedCompanyMethod]: ProductApproach.OralStories,
-  [ProductMethodology.OneStory]: ProductApproach.OralStories,
-  [ProductMethodology.Craft2Tell]: ProductApproach.OralStories,
-  [ProductMethodology.OtherOralStories]: ProductApproach.OralStories,
+  [ProductMethodology.StoryTogether]: Approach.OralStories,
+  [ProductMethodology.SeedCompanyMethod]: Approach.OralStories,
+  [ProductMethodology.OneStory]: Approach.OralStories,
+  [ProductMethodology.Craft2Tell]: Approach.OralStories,
+  [ProductMethodology.OtherOralStories]: Approach.OralStories,
 
   // Visual
-  [ProductMethodology.Film]: ProductApproach.Visual,
-  [ProductMethodology.SignLanguage]: ProductApproach.Visual,
-  [ProductMethodology.OtherVisual]: ProductApproach.Visual,
+  [ProductMethodology.Film]: Approach.Visual,
+  [ProductMethodology.SignLanguage]: Approach.Visual,
+  [ProductMethodology.OtherVisual]: Approach.Visual,
 };
+
+export const ApproachToMethodologies = invertBy(
+  MethodologyToApproach
+) as Record<Approach, ProductMethodology[]>;
 
 registerEnumType(ProductMethodology, {
   name: 'ProductMethodology',
