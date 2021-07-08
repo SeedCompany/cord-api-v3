@@ -11,11 +11,10 @@ declare
     rec2 record;
     materialized_view_name text;
     materialized_view_string text;
-    security_schema_table_name text;
     security_table_column text;
 begin
     materialized_view_name := replace(TG_TABLE_SCHEMA || '.' || TG_TABLE_NAME, '_security', '_materialized_view');
-    execute format('refresh materialized view concurrently ' || materialized_view_name); 
+    execute format('refresh materialized view ' || materialized_view_name); 
 	return new;
 end; $$;
 
