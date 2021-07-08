@@ -20,16 +20,12 @@ export class ProductConnectionResolver {
 
   @ResolveField(() => ProductProgress, {
     description: 'The progress of this product from a specific report',
-    nullable: true,
   })
   async progressReport(
+    @IdArg({ name: 'reportId' }) reportId: ID,
     @Parent() product: Product,
-    @AnonSession() session: Session,
-    @IdArg({ name: 'reportId', nullable: true }) reportId?: ID
-  ): Promise<ProductProgress | undefined> {
-    if (!reportId) {
-      return;
-    }
+    @AnonSession() session: Session
+  ): Promise<ProductProgress> {
     return await this.service.readOne(reportId, product.id, session);
   }
 }
