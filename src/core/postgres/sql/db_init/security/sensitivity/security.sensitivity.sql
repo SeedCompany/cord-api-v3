@@ -1,4 +1,4 @@
-create or replace function public.security_sensitivity_trigger()
+create or replace function public.gt_security_i_data_and_people_get_is_cleared()
 returns trigger
 language plpgsql
 as $$
@@ -63,7 +63,7 @@ begin
         || ' AFTER INSERT
         ON ' || security_schema_table_name || 
         ' FOR EACH ROW
-        EXECUTE PROCEDURE public.security_sensitivity_trigger()'); 
+        EXECUTE PROCEDURE public.gt_security_i_data_and_people_get_is_cleared()'); 
 
 
 	END loop;

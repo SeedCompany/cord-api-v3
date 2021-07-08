@@ -21,7 +21,7 @@ begin
 	where table_schema = p_schema_name and table_name like '%_data'
 	order by table_name) loop 
 		raise info 'table_name: %', rec1.table_name;
-        materialized_view_name := p_schema_name || '_' || rec1.table_name || '_materialized_view';
+        materialized_view_name := replace(p_schema_name || '.' || rec1.table_name, '_data', '_materialized_view');
         materialized_view_string := 'create materialized view if not exists ' || materialized_view_name || ' as select __person_id, __id'; 
 
         base_schema_table_name := p_schema_name || '.' || rec1.table_name;
