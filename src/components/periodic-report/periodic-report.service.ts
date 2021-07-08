@@ -14,6 +14,7 @@ import {
   Logger,
   OnIndex,
 } from '../../core';
+import { Variable } from '../../core/database/query';
 import { runListQuery } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { CreateDefinedFileVersionInput, FileService } from '../file';
@@ -151,6 +152,10 @@ export class PeriodicReportService {
   ): Promise<PeriodicReport | undefined> {
     const report = await this.repo.getCurrentDue(parentId, reportType);
     return report ? await this.secure(report, session) : undefined;
+  }
+
+  matchCurrentDue(parentId: ID | Variable, reportType: ReportType) {
+    return this.repo.matchCurrentDue(parentId, reportType);
   }
 
   async getNextReportDue(

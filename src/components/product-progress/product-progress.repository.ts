@@ -16,11 +16,15 @@ import {
   updateProperty,
   variable,
 } from '../../core/database/query';
+import { PeriodicReportService, ReportType } from '../periodic-report';
 import { ProductProgress, ProductProgressInput, StepProgress } from './dto';
 
 @Injectable()
 export class ProductProgressRepository {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(
+    private readonly db: DatabaseService,
+    private readonly reports: PeriodicReportService
+  ) {}
 
   async readOne(productId: ID, reportId: ID) {
     const result = await this.db
@@ -36,6 +40,30 @@ export class ProductProgressRepository {
         'Could not find progress for product and report period'
       );
     }
+    return result;
+  }
+
+  async readOneForCurrentReport(productId: ID) {
+    const result = await this.db
+      .query()
+      .match(node('product', 'Product', { id: productId }))
+      .subQuery('product', (sub) =>
+        sub
+          .match([
+            node('product'),
+            relation('in', '', 'product'),
+            node('baseNode', 'Engagement'),
+          ])
+          .apply(
+            this.reports.matchCurrentDue(
+              variable('baseNode.id'),
+              ReportType.Progress
+            )
+          )
+          .return('node as report')
+      )
+      .apply(this.hydrateAll())
+      .first();
     return result;
   }
 

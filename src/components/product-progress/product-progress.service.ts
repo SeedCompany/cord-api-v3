@@ -29,6 +29,13 @@ export class ProductProgressService {
     return await this.repo.readOne(productId, reportId);
   }
 
+  async readOneForCurrentReport(
+    productId: ID,
+    _session: Session
+  ): Promise<ProductProgress | undefined> {
+    return await this.repo.readOneForCurrentReport(productId);
+  }
+
   async update(input: ProductProgressInput) {
     return await this.repo.update(input);
   }

@@ -28,4 +28,15 @@ export class ProductConnectionResolver {
   ): Promise<ProductProgress> {
     return await this.service.readOne(reportId, product.id, session);
   }
+
+  @ResolveField(() => ProductProgress, {
+    nullable: true,
+    description: 'The progress of this product for the report currently due',
+  })
+  async progressOfCurrentReportDue(
+    @Parent() product: Product,
+    @AnonSession() session: Session
+  ): Promise<ProductProgress | undefined> {
+    return await this.service.readOneForCurrentReport(product.id, session);
+  }
 }
