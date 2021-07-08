@@ -2,10 +2,8 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { difference } from 'lodash';
-import { DateTime } from 'luxon';
 import { Except } from 'type-fest';
 import {
-  generateId,
   ID,
   InputException,
   NotFoundException,
@@ -13,14 +11,7 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import {
-  createBaseNode,
-  HandleIdLookup,
-  ILogger,
-  Logger,
-  matchRequestingUser,
-  Property,
-} from '../../core';
+import { HandleIdLookup, ILogger, Logger } from '../../core';
 import { runListQuery } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Film, FilmService } from '../film';
@@ -28,7 +19,6 @@ import {
   LiteracyMaterial,
   LiteracyMaterialService,
 } from '../literacy-material';
-import { ScriptureRange } from '../scripture/dto';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import { Song, SongService } from '../song';
 import { Story, StoryService } from '../story';
@@ -62,74 +52,19 @@ export class ProductService {
     @Logger('product:service') private readonly logger: ILogger
   ) {}
 
-  async create(
-    { engagementId, ...input }: CreateProduct,
-    session: Session
-  ): Promise<AnyProduct> {
-    const createdAt = DateTime.local();
-    const secureProps: Property[] = [
-      {
-        key: 'mediums',
-        value: input.mediums,
-        isPublic: false,
-        isOrgPublic: false,
-        label: 'ProductMedium',
-      },
-      {
-        key: 'purposes',
-        value: input.purposes,
-        isPublic: false,
-        isOrgPublic: false,
-        label: 'ProductPurpose',
-      },
-      {
-        key: 'methodology',
-        value: input.methodology,
-        isPublic: false,
-        isOrgPublic: false,
-        label: 'ProductMethodology',
-      },
-      {
-        key: 'steps',
-        value: input.steps,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'isOverriding',
-        value: false,
-        isPublic: false,
-        isOrgPublic: false,
-        label: '',
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'describeCompletion',
-        value: null,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
-
-    const query = this.repo.query();
-
-    if (engagementId) {
-      const engagement = await this.repo.findNode('engagement', engagementId);
-      if (!engagement) {
-        this.logger.warning(`Could not find engagement`, {
-          id: engagementId,
-        });
-        throw new NotFoundException(
-          'Could not find engagement',
-          'product.engagementId'
-        );
-      }
-      query.match([node('engagement', 'Engagement', { id: engagementId })]);
+  async create(input: CreateProduct, session: Session): Promise<AnyProduct> {
+    const engagement = await this.repo.findNode(
+      'engagement',
+      input.engagementId
+    );
+    if (!engagement) {
+      this.logger.warning(`Could not find engagement`, {
+        id: input.engagementId,
+      });
+      throw new NotFoundException(
+        'Could not find engagement',
+        'product.engagementId'
+      );
     }
 
     if (input.produces) {
@@ -143,94 +78,18 @@ export class ProductService {
           'product.produces'
         );
       }
-      query.match([node('producible', 'Producible', { id: input.produces })]);
-      if (input.scriptureReferencesOverride) {
-        secureProps[3].value = true;
-      }
     }
 
-    query
-      .apply(matchRequestingUser(session))
-      .apply(
-        createBaseNode(
-          await generateId(),
-          [
-            'Product',
-            input.produces
-              ? 'DerivativeScriptureProduct'
-              : 'DirectScriptureProduct',
-          ],
-          secureProps
-        )
-      );
-
-    if (engagementId) {
-      query.create([
-        [
-          node('engagement'),
-          relation('out', '', 'product', { active: true, createdAt }),
-          node('node'),
-        ],
-      ]);
-    }
-
-    if (input.produces) {
-      query.create([
-        [
-          node('producible'),
-          relation('in', '', 'produces', {
-            active: true,
-            createdAt,
-          }),
-          node('node'),
-        ],
-      ]);
-    }
-
-    if (!input.produces && input.scriptureReferences) {
-      for (const sr of input.scriptureReferences) {
-        query.create([
-          node('node'),
-          relation('out', '', 'scriptureReferences', { active: true }),
-          node('', ['ScriptureRange', 'BaseNode'], {
-            ...ScriptureRange.fromReferences(sr),
-
-            createdAt: DateTime.local(),
-          }),
-        ]);
-      }
-    }
-
-    if (input.produces && input.scriptureReferencesOverride) {
-      for (const sr of input.scriptureReferencesOverride) {
-        query.create([
-          node('node'),
-          relation('out', '', 'scriptureReferencesOverride', {
-            active: true,
-          }),
-          node('', ['ScriptureRange', 'BaseNode'], {
-            ...ScriptureRange.fromReferences(sr),
-
-            createdAt: DateTime.local(),
-          }),
-        ]);
-      }
-    }
-
-    const result = await query.return<{ id: ID }>('node.id as id').first();
-
-    if (!result) {
-      throw new ServerException('failed to create default product');
-    }
+    const id = await this.repo.create(input);
 
     await this.authorizationService.processNewBaseNode(
       Product,
-      result.id,
+      id,
       session.userId
     );
 
-    this.logger.debug(`product created`, { id: result.id });
-    return await this.readOne(result.id, session);
+    this.logger.debug(`product created`, { id });
+    return await this.readOne(id, session);
   }
 
   @HandleIdLookup([DirectScriptureProduct, DerivativeScriptureProduct])

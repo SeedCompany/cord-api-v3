@@ -1,7 +1,8 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { random, times } from 'lodash';
-import { Range, SecuredPropertyList } from '../../../common';
+import { keys as keysOf } from 'ts-transformer-keys';
+import { Range, SecuredPropertyList, SecuredProps } from '../../../common';
 import { Verse } from '../books';
 import { IsValidOrder } from './scripture-range.validator';
 import {
@@ -46,6 +47,9 @@ export abstract class ScriptureRangeInput {
   description,
 })
 export abstract class ScriptureRange implements Range<ScriptureReference> {
+  static readonly Props = keysOf<ScriptureRange>();
+  static readonly SecuredProps = keysOf<SecuredProps<ScriptureRange>>();
+
   @Field({
     description: 'The starting point',
   })

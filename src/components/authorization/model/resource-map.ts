@@ -26,6 +26,7 @@ import {
 import {
   DerivativeScriptureProduct,
   DirectScriptureProduct,
+  Producible,
   Product,
 } from '../../product/dto';
 import { ProjectChangeRequest } from '../../project-change-request/dto';
@@ -61,6 +62,7 @@ export const ResourceMap = {
   Organization,
   Partner,
   Partnership,
+  Producible,
   Product,
   DirectScriptureProduct,
   DerivativeScriptureProduct,
