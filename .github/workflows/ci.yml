@@ -74,7 +74,7 @@ jobs:
           yarn dlx -q graphql-schema-diff \
             --use-colors --fail-on-breaking-changes --sort-schema \
             ../base/schema.graphql ./schema.graphql
-        working-directory: base
+        working-directory: head
 
   test:
     runs-on: ubuntu-latest
