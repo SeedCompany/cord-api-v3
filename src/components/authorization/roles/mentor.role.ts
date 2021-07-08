@@ -353,10 +353,10 @@ export const Mentor = new DbRole({
     new DbBaseNodeGrant<DbPeriodicReport>({
       __className: 'DbPeriodicReport',
       properties: [
-        { propertyName: 'type', permission: { read, write, }, },
-        { propertyName: 'start', permission: { read, write, }, },
-        { propertyName: 'end', permission: { read, write, }, },
-        { propertyName: 'reportFile', permission: { read, write, }, },
+        { propertyName: 'type', permission: { read, }, },
+        { propertyName: 'start', permission: { read, }, },
+        { propertyName: 'end', permission: { read, }, },
+        { propertyName: 'reportFile', permission: { read, }, },
       ],
       canDelete: true,
     }),
