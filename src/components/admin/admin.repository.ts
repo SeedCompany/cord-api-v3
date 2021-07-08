@@ -14,17 +14,33 @@ export class AdminRepository {
   ) {}
 
   async loadData() {
+    // default inserts
+    await this.pg.client.query(
+      `insert into public.people_data("id", "public_first_name") values($1, $2)`,
+      [0, 'defaultPerson']
+    );
+    await this.pg.client.query(
+      `insert into public.organizations_data("id", "name") values($1, $2)`,
+      [0, 'defaultOrg']
+    );
+    await this.pg.client.query(
+      `insert into public.users_data("id", "person", "email","owning_org", "password") values(0,0,'defaultEmail', 0, 'abc')`
+    );
+    await this.pg.client.query(
+      `insert into public.global_roles_data("id","name", "org") values(0,'defaultRole',0)`
+    );
+
     // inserting a lot of data
-    for (let i = 0; i < 1; i++) {
+    for (let i = 1; i < 2; i++) {
       const orgName = `org${i}`;
       const personName = `person${i}`;
       const locationName = `location${i}`;
-      const userData = { email: `email${i}`, password: 'abc', org: 'org0' };
-      const roleData = { name: `role${i}`, org: 'org0' };
-      await this.pg.client.query(
-        `insert into public.people_data("id", "public_first_name") values($1, $2)`,
-        [i, personName]
-      );
+      const userData = {
+        email: `email${i}`,
+        password: 'abc',
+        org: 'defaultOrg',
+      };
+      const roleData = { name: `role${i}`, org: 'defaultOrg' };
       await this.pg.client.query(
         `insert into public.organizations_data("id", "name") values($1, $2)`,
         [i, orgName]
@@ -42,6 +58,7 @@ export class AdminRepository {
         [roleData.name, roleData.org]
       );
     }
+
     // adding grants and memberships
     // 1. get the table name and column names
     // 2. add grants to half of them (odd/even)
@@ -63,21 +80,32 @@ export class AdminRepository {
         console.log(schemaTableName, columnRow.column_name, accessLevel);
         await this.pg.client.query(
           `select * from public.sys_add_role_grant($1, $2, $3, $4, $5 )`,
-          ['role0', 'org0', schemaTableName, columnRow.column_name, accessLevel]
+          [
+            'defaultRole',
+            'defaultOrg',
+            schemaTableName,
+            columnRow.column_name,
+            accessLevel,
+          ]
         );
       });
     });
 
-      // add role member
+    // add role member
     const users = await this.pg.client.query(
-        `select email from public.users_data`
-      );
+      `select person from public.users_data`
+    );
     console.log(users.rows);
-    users.rows.forEach(async (user) => {
+
+    users.rows.forEach(async (row, index) => {
       // await this.pg.client.query(
-      //   `select * from public.sys_add_role_member('role0', 'org0', $1)`,
-      //   [user.email]
+      //   `select * from public.sys_add_role_member('role1', 'default', $1)`,
+      //   [row.email]
       // );
+      await this.pg.client.query(
+        `insert into public.global_role_memberships_data("person", "global_role") values($1, 0)`,
+        [row.person]
+      );
     });
     return true;
   }

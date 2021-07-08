@@ -41,9 +41,9 @@ begin
 
         if final_access_level is not null then 
             security_column_name := '_' || rec1.column_name;
-            execute format('update '||security_schema_table_name||' set '||security_column_name|| ' = ' 
+            execute format('update '||TG_TABLE_SCHEMA||'.%I set '||security_column_name|| ' = ' 
                 || quote_literal(final_access_level) || ' where __id = '|| new.__id  
-                || 'and  __person_id = ' ||  new.__person_id );
+                || ' and  __person_id = ' ||  new.__person_id, TG_TABLE_NAME);
         end if;
 
 

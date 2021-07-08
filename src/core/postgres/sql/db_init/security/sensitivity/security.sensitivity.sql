@@ -30,7 +30,7 @@ begin
         if (data_table_row_sensitivity = 'Medium' and person_sensitivity_clearance = 'Low') or 
         (data_table_row_sensitivity = 'High' and (person_sensitivity_clearance = 'Medium' or person_sensitivity_clearance = 'Low')) then 
 
-            execute format('update ' || security_schema_table_name || ' set __is_cleared = false where __person_id = '|| new.__person_id || ' and '|| ' __id = '|| new.__id);
+            execute format('update ' || TG_TABLE_SCHEMA || '.%I set __is_cleared = false where __person_id = '|| new.__person_id || ' and '|| ' __id = '|| new.__id, TG_TABLE_NAME);
     
 
         end if;    

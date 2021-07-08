@@ -57,13 +57,13 @@ begin
                     end if;
 
                     raise info 'refresh fn global_access_level: % | project_access_level: % | final_access_level: %', global_access_level, project_access_level, final_access_level;
-                    
+                
 
                     if final_access_level is not null then 
                         security_column_name := '_' || rec2.column_name;
-                        execute format('update '||security_schema_table_name||' set '||security_column_name|| ' = ' 
+                        execute format('update ' || TG_ARGV[0] || '.%I set '||quote_ident(security_column_name)|| ' = ' 
                             || quote_literal(final_access_level) || ' where __id = '|| rec3.__id  
-                            || 'and  __person_id = ' ||  rec3.__person_id );
+                            || ' and  __person_id = ' ||  rec3.__person_id, rec1.table_name );
                     end if;
                 end loop;
         end loop;

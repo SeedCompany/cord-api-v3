@@ -8,12 +8,11 @@ language plpgsql
 as $$
 declare 
 base_schema_table_name text;
-security_schema_table_name text;
+security_table_name text;
 rec1 record;  
 begin                                           
-        base_schema_table_name := TG_TABLE_SCHEMA || '.' || TG_TABLE_NAME;
-		security_schema_table_name := replace(base_schema_table_name, '_data', '_security');
-		raise info 'security table: %', security_schema_table_name;
+		security_table_name := replace(TG_TABLE_NAME, '_data', '_security');
+		raise info 'security table: %', security_table_name;
 		
         
         for rec1 in execute format('select id, sensitivity_clearance from public.people_data') loop
@@ -23,7 +22,7 @@ begin
             if (new.sensitivity = 'Medium' and rec1.sensitivity_clearance = 'Low') or 
             (new.sensitivity = 'High' and (rec1.sensitivity_clearance = 'Medium' or rec1.sensitivity_clearance = 'Low')) then 
 
-                execute format('update ' || security_schema_table_name || ' set __is_cleared = false where __person_id = '|| rec1.id || ' and '|| ' __id = '|| old.id);
+                execute format('update ' || TG_TABLE_SCHEMA || '.%I set __is_cleared = false where __person_id = '|| rec1.id || ' and '|| ' __id = '|| old.id, security_table_name);
                 -- get id reference from the data table
         
             end if;    
