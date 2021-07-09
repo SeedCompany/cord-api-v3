@@ -74,7 +74,7 @@ export const calculateTotalAndPaginateList =
       ])
       .raw(`unwind nodes as node`)
       // .with(['node', 'total']) TODO needed?
-      .apply(sorter ?? defaultSorter(resource, sort, order))
+      .apply(sorter ?? defaultSorter(resource, { sort, order }))
       .with([
         `collect(distinct node.id)[${(page - 1) * count}..${
           page * count
@@ -86,8 +86,7 @@ export const calculateTotalAndPaginateList =
 export const defaultSorter =
   <TResourceStatic extends ResourceShape<any>>(
     resource: TResourceStatic,
-    sortInput: string,
-    order: Order
+    { sort: sortInput, order }: { sort: string; order: Order }
   ) =>
   (q: Query) => {
     // The properties that are stored as strings
