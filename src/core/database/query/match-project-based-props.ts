@@ -32,24 +32,11 @@ export const matchPropsAndProjectSensAndScopedRoles =
               ])
             : q
         )
-        .match([
-          node('project'),
-          relation('out', '', 'sensitivity', { active: true }),
-          node('projSens', 'Property'),
-        ])
-        .optionalMatch([
-          node('project'),
-          relation('out', '', 'engagement', { active: true }),
-          node('', 'LanguageEngagement'),
-          relation('out', '', 'language', { active: true }),
-          node('', 'Language'),
-          relation('out', '', 'sensitivity', { active: true }),
-          node('langSens', 'Property'),
-        ])
+        .apply(matchProjectSens())
         .return(
           [
             merge(propsOptions?.outputVar ?? 'props', {
-              sensitivity: determineSensitivity,
+              sensitivity: 'sensitivity',
             }).as(propsOptions?.outputVar ?? 'props'),
             session
               ? `
@@ -63,6 +50,28 @@ export const matchPropsAndProjectSensAndScopedRoles =
           ].join(',\n')
         )
     );
+
+export const matchProjectSens = () => (query: Query) =>
+  query.comment`
+      matchProjectSens()
+    `.subQuery(['node', 'project'], (sub) =>
+    sub
+      .match([
+        node('project'),
+        relation('out', '', 'sensitivity', { active: true }),
+        node('projSens', 'Property'),
+      ])
+      .optionalMatch([
+        node('project'),
+        relation('out', '', 'engagement', { active: true }),
+        node('', 'LanguageEngagement'),
+        relation('out', '', 'language', { active: true }),
+        node('', 'Language'),
+        relation('out', '', 'sensitivity', { active: true }),
+        node('langSens', 'Property'),
+      ])
+      .return(`${determineSensitivity} as sensitivity`)
+  );
 
 export const rankSens = (variable: string) => oneLine`
   case ${variable}
