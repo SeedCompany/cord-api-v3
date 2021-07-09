@@ -290,7 +290,7 @@ export const ProjectManagerGlobal = new DbRole({
         { propertyName: 'mouStatus', permission: { read, }, },
         { propertyName: 'types', permission: { read, write, }, },
         { propertyName: 'organization', permission: { read, write, }, },
-        { propertyName: 'partner', permission: { read, write, }, },
+        { propertyName: 'partner', permission: { read, write, sensitivityAccess: Sensitivity.Medium }, },
         { propertyName: 'primary', permission: { read, write, }, },
       ],
       canDelete: false,

@@ -14,6 +14,7 @@ export async function testRole<
   role,
   readOneFunction,
   propToTest,
+  skipEditCheck = false,
 }: {
   app: TestApp;
   resource: ResourceObj;
@@ -21,6 +22,7 @@ export async function testRole<
   role: Role;
   readOneFunction: ReadOneFunction<ResourceObj>;
   propToTest: keyof ResourceObj;
+  skipEditCheck: boolean;
 }): Promise<void> {
   await registerUserWithPower(app, [], {
     roles: [role],
@@ -34,14 +36,17 @@ export async function testRole<
   expect(readResource[propToTest].canRead).toEqual(
     permissions[propToTest].canRead
   );
-  try {
+  // try {
+  if (!skipEditCheck) {
     expect(readResource[propToTest].canEdit).toEqual(
       permissions[propToTest].canEdit
     );
-  } catch (e) {
-    // covers for lists of items that has canCreate instead of canEdit
-    expect(readResource[propToTest].canEdit).toEqual(
-      permissions[propToTest].canCreate
-    );
   }
+
+  // } catch (e) {
+  //   // covers for lists of items that has canCreate instead of canEdit
+  //   expect(readResource[propToTest].canEdit).toEqual(
+  //     permissions[propToTest].canCreate
+  //   );
+  // }
 }

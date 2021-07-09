@@ -284,7 +284,7 @@ export const Fundraising = new DbRole({
         { propertyName: 'mouStatus', permission: { read, }, },
         { propertyName: 'types', permission: { read, }, },
         { propertyName: 'organization', permission: { read, }, },
-        { propertyName: 'partner', permission: { read, }, },
+        { propertyName: 'partner', permission: { read, sensitivityAccess: Sensitivity.Medium }, },
         { propertyName: 'primary', permission: { read, }, },
       ],
       canDelete: false,

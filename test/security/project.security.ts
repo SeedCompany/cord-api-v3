@@ -100,18 +100,18 @@ describe('Project Security e2e', () => {
       ${Role.RegionalCommunicationsCoordinator}
     `('Global $role', ({ role }) => {
       test.each`
-        property                       | readFunction      | staticResource
-        ${'estimatedSubmission'}       | ${readOneProject} | ${IProject}
-        ${'step'}                      | ${readOneProject} | ${IProject}
-        ${'name'}                      | ${readOneProject} | ${IProject}
-        ${'mouStart'}                  | ${readOneProject} | ${IProject}
-        ${'mouEnd'}                    | ${readOneProject} | ${IProject}
-        ${'initialMouEnd'}             | ${readOneProject} | ${IProject}
-        ${'stepChangedAt'}             | ${readOneProject} | ${IProject}
-        ${'tags'}                      | ${readOneProject} | ${IProject}
-        ${'financialReportReceivedAt'} | ${readOneProject} | ${IProject}
-        ${'primaryLocation'}           | ${readOneProject} | ${IProject}
-        ${'budget'}                    | ${readOneProject} | ${IProject}
+        property                       | readFunction            | staticResource
+        ${'estimatedSubmission'}       | ${readOneProject}       | ${IProject}
+        ${'step'}                      | ${readOneProject}       | ${IProject}
+        ${'name'}                      | ${readOneProject}       | ${IProject}
+        ${'mouStart'}                  | ${readOneProject}       | ${IProject}
+        ${'mouEnd'}                    | ${readOneProject}       | ${IProject}
+        ${'initialMouEnd'}             | ${readOneProject}       | ${IProject}
+        ${'stepChangedAt'}             | ${readOneProject}       | ${IProject}
+        ${'tags'}                      | ${readOneProject}       | ${IProject}
+        ${'financialReportReceivedAt'} | ${readOneProject}       | ${IProject}
+        ${'primaryLocation'}           | ${readOneProject}       | ${IProject}
+        ${'budget'}                    | ${readOneProjectBudget} | ${IProject}
       `(
         ' reading $staticResource.name $property',
         async ({ property, readFunction, staticResource }) => {
@@ -122,6 +122,7 @@ describe('Project Security e2e', () => {
             role: role,
             readOneFunction: readFunction,
             propToTest: property,
+            skipEditCheck: false,
           });
         }
       );
