@@ -17,15 +17,17 @@ import {
 } from '../../core';
 import { DbChanges, getChanges } from '../../core/database/changes';
 import {
-  calculateTotalAndPaginateList,
   createNode,
   createRelationships,
   matchChangesetAndChangedProps,
+  matchProjectSens,
   matchProps,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
+  paginate,
   permissionsOfNode,
   requestingUser,
+  sorting,
 } from '../../core/database/query';
 import { DbPropsOfDto } from '../../core/database/results';
 import { Role } from '../authorization';
@@ -247,62 +249,27 @@ export class ProjectRepository extends CommonRepository {
     await query.run();
   }
 
-  list(
-    label: string,
-    sortBy: string,
-    { filter, ...input }: ProjectListInput,
-    session: Session
-  ) {
-    // Subquery to get the sensitivity value for a Translation Project.
-    // Get the highest sensitivity of the connected Language Engagement's Language
-    // If an Engagement doesn't exist, then default to 3 (high)
-    const sensitivitySubquery = `call {
-        with node
-        optional match (node)-[:engagement { active: true }]->(:LanguageEngagement)-[:language { active: true }]->
-        (:Language)-[:sensitivity { active: true }]->(sensitivityProp:Property)
-        WITH *, case sensitivityProp.value
-          when null then 3
-          when 'High' then 3
-          when 'Medium' then 2
-          when 'Low' then 1
-          end as langSensitivityVal
-        ORDER BY langSensitivityVal desc
-        limit 1
-        return langSensitivityVal
-        }`;
-
-    // In the first case, if the node is a translation project, use the langSensitivityVal from above.
-    // Else use the sensitivity prop value
-    const sensitivityCase = `case
-        when 'TranslationProject' in labels(node) then langSensitivityVal
-        when prop.value = 'High' then 3
-        when prop.value = 'Medium' then 2
-        when prop.value = 'Low' then 1
-        end as sensitivityValue`;
-
-    return this.db
+  async list({ filter, ...input }: ProjectListInput, session: Session) {
+    const result = await this.db
       .query()
-      .match([requestingUser(session), ...permissionsOfNode(label)])
+      .match([
+        requestingUser(session),
+        ...permissionsOfNode(`${filter.type ?? ''}Project`),
+      ])
       .with('distinct(node) as node, requestingUser')
       .apply(projectListFilter(filter))
       .apply(
-        calculateTotalAndPaginateList(IProject, input, (q) =>
-          ['id', 'createdAt'].includes(input.sort)
-            ? q.with('*').orderBy(`node.${input.sort}`, input.order)
-            : q
-                .raw(input.sort === 'sensitivity' ? sensitivitySubquery : '')
-                .match([
-                  node('node'),
-                  relation('out', '', input.sort, { active: true }),
-                  node('prop', 'Property'),
-                ])
-                .with([
-                  '*',
-                  ...(input.sort === 'sensitivity' ? [sensitivityCase] : []),
-                ])
-                .orderBy(sortBy, input.order)
-        )
-      );
+        sorting(IProject, input, {
+          sensitivity: (query) =>
+            query
+              .with('node, node as project')
+              .apply(matchProjectSens())
+              .return<{ sortValue: string }>('sensitivity as sortValue'),
+        })
+      )
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 
   async permissionsForListProp(prop: string, id: ID, session: Session) {

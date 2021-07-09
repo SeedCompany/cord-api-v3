@@ -22,7 +22,7 @@ import {
   OnIndex,
   UniquenessError,
 } from '../../core';
-import { runListQuery } from '../../core/database/results';
+import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { rolesForScope, ScopedRole } from '../authorization/dto';
 import { Powers } from '../authorization/dto/powers';
@@ -405,20 +405,11 @@ export class ProjectService {
   }
 
   async list(
-    { filter, ...input }: ProjectListInput,
+    input: ProjectListInput,
     session: Session
   ): Promise<ProjectListOutput> {
-    const label = `${filter.type ?? ''}Project`;
-    const projectSortMap: Partial<Record<typeof input.sort, string>> = {
-      name: 'toLower(prop.sortValue)',
-      sensitivity: 'sensitivityValue',
-    };
-
-    const sortBy = projectSortMap[input.sort] ?? 'prop.value';
-
-    const query = this.repo.list(label, sortBy, { filter, ...input }, session);
-
-    return await runListQuery(query, input, (id) => this.readOne(id, session));
+    const results = await this.repo.list(input, session);
+    return await mapListResults(results, (id) => this.readOne(id, session));
   }
 
   async listEngagements(
