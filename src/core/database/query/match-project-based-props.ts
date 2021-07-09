@@ -64,7 +64,7 @@ export const matchPropsAndProjectSensAndScopedRoles =
         )
     );
 
-const rankSens = (variable: string) => oneLine`
+export const rankSens = (variable: string) => oneLine`
   case ${variable}
     when 'High' then 2
     when 'Medium' then 1
