@@ -9,7 +9,7 @@ import * as path from 'path';
 export class PostgresService {
   constructor(private readonly config: ConfigService) {}
 
-  pool = new Pool();
+  pool = new Pool({ ...this.config.postgres, max: 20 });
   client = new Client(this.config.postgres);
 
   async executeSQLFiles(dirPath: string): Promise<number> {
@@ -36,6 +36,7 @@ export class PostgresService {
   async db_init(): Promise<number> {
     try {
       await this.client.connect();
+      await this.pool.connect();
       const dbInitPath = path.join(
         __dirname,
         '..',
