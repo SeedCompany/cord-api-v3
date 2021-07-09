@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
-import { compact, intersection, times } from 'lodash';
+import { intersection, times } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   CalendarDate,
@@ -491,8 +491,8 @@ describe('Project e2e', () => {
       sensitivity: Sensitivity.Medium,
     });
 
-    //Create two translation projects, one without langauge engagements and one with 1 med and 1 low sensitivity eng
-    //translation projec without engagements
+    // Create two translation projects, one without language engagements and
+    // one with 1 med and 1 low sensitivity eng translation project without engagements
     await createProject(app);
 
     //with engagements, low and med sensitivity, project should eval to med
@@ -536,18 +536,9 @@ describe('Project e2e', () => {
           },
         }
       );
-    const getSortedSensitivities = (projects: any) => {
-      let sensitivity = '';
-
-      const sensitivities = projects.items.map((item: any) => {
-        if (item.sensitivity !== sensitivity) {
-          return (sensitivity = item.sensitivity);
-        }
-        return undefined;
-      });
-
-      return compact(sensitivities);
-    };
+    const getSortedSensitivities = (
+      projects: PaginatedListType<Raw<Project>>
+    ) => projects.items.map((project) => project.sensitivity);
 
     const { projects: ascendingProjects } = await getSensitivitySortedProjects(
       'ASC'
