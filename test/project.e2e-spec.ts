@@ -1,14 +1,17 @@
 import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
-import { compact, orderBy, times } from 'lodash';
+import { compact, intersection, times } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   CalendarDate,
   DuplicateException,
   generateId,
   ID,
+  isIdLike,
   NotFoundException,
+  Order,
+  PaginatedListType,
   Sensitivity,
 } from '../src/common';
 import { Powers } from '../src/components/authorization/dto/powers';
@@ -21,6 +24,7 @@ import { CreatePartnership } from '../src/components/partnership';
 import {
   CreateProject,
   Project,
+  ProjectListInput,
   ProjectStep,
   ProjectType,
   Role,
@@ -47,6 +51,7 @@ import {
   getUserFromSession,
   login,
   loginAsAdmin,
+  Raw,
   registerUser,
   registerUserWithPower,
   runAsAdmin,
@@ -57,6 +62,41 @@ import {
   changeProjectStep,
   stepsFromEarlyConversationToBeforeActive,
 } from './utility/transition-project';
+
+const deleteProject =
+  (app: TestApp) => async (id: ID | string | { id: ID | string }) =>
+    await app.graphql.mutate(
+      gql`
+        mutation DeleteProject($id: ID!) {
+          deleteProject(id: $id)
+        }
+      `,
+      {
+        id: isIdLike(id) || typeof id === 'string' ? id : id.id,
+      }
+    );
+
+const listProjects = async (
+  app: TestApp,
+  input?: Partial<ProjectListInput>
+) => {
+  const { projects } = await app.graphql.query(
+    gql`
+      query ProjectList($input: ProjectListInput) {
+        projects(input: $input) {
+          items {
+            ...project
+          }
+          hasMore
+          total
+        }
+      }
+      ${fragments.project}
+    `,
+    { input }
+  );
+  return projects as PaginatedListType<Raw<Project>>;
+};
 
 describe('Project e2e', () => {
   let app: TestApp;
@@ -307,19 +347,9 @@ describe('Project e2e', () => {
   it('delete project', async () => {
     const project = await createProject(app);
     expect(project.id).toBeTruthy();
-    const result = await app.graphql.mutate(
-      gql`
-        mutation deleteProject($id: ID!) {
-          deleteProject(id: $id)
-        }
-      `,
-      {
-        id: project.id,
-      }
-    );
 
-    const actual: boolean | undefined = result.deleteProject;
-    expect(actual).toBeTruthy();
+    await deleteProject(app)(project.id);
+
     await expectNotFound(
       app.graphql.query(
         gql`
@@ -337,148 +367,65 @@ describe('Project e2e', () => {
     );
   });
 
-  it('List of projects sorted by name to be alphabetical, ignoring case sensitivity. Order: ASCENDING', async () => {
+  it('List of projects sorted by name to be alphabetical', async () => {
     await registerUserWithPower(
       app,
       [Powers.CreateProject, Powers.DeleteProject],
       { displayFirstName: 'Tammy' }
     );
-    //Create three projects with mixed cases.
-    await createProject(app, {
-      name: 'a project 2' + faker.datatype.uuid(),
-      type: ProjectType.Translation,
-    });
-    await createProject(app, {
-      name: 'Another project 2' + faker.datatype.uuid(),
-      type: ProjectType.Translation,
-    });
-    await createProject(app, {
-      name: 'Big project 2' + faker.datatype.uuid(),
-      type: ProjectType.Translation,
-    });
-    await createProject(app, {
-      name: 'big project also 2' + faker.datatype.uuid(),
-      type: ProjectType.Translation,
-    });
-    const sortBy = 'name';
-    const ascOrder = 'ASC';
-    const { projects } = await app.graphql.query(
-      gql`
-        query projects($input: ProjectListInput!) {
-          projects(input: $input) {
-            hasMore
-            total
-            items {
-              id
-              name {
-                value
-              }
-            }
-          }
-        }
-      `,
-      {
-        input: {
-          sort: sortBy,
-          order: ascOrder,
-          filter: {
-            mine: true,
-          },
-        },
-      }
-    );
-    const items = projects.items;
-    const sorted = orderBy(items, (proj) => proj.name.value.toLowerCase(), [
-      'asc',
-    ]);
-    expect(sorted).toEqual(items);
-    //delete all projects that Tammy has access to
-    await Promise.all(
-      projects.items.map(async (item: { id: any }) => {
-        return await app.graphql.mutate(
-          gql`
-            mutation deleteProject($id: ID!) {
-              deleteProject(id: $id)
-            }
-          `,
-          {
-            id: item.id,
-          }
-        );
-      })
-    );
-  });
 
-  it('List of projects sorted by name to be alphabetical, ignoring case sensitivity. Order: DESCENDING', async () => {
-    await registerUserWithPower(
-      app,
-      [Powers.CreateProject, Powers.DeleteProject],
-      { displayFirstName: 'Tammy' }
+    const unsorted = [
+      'A ignore spaces',
+      'ABC',
+      '[a!-ignore-punctuation]',
+      'Ñot a project',
+      'another project 2',
+      'zap zap',
+      'never a project',
+    ];
+    const sorted = [
+      'ABC',
+      '[a!-ignore-punctuation]', // ignores punctuation & case sensitivity
+      'A ignore spaces', // ignores spaces
+      'another project 2',
+      'never a project',
+      'Ñot a project', // ignores special characters
+      'zap zap',
+    ];
+
+    const created = await Promise.all(
+      unsorted.map((name) =>
+        createProject(app, {
+          name,
+          type: ProjectType.Translation,
+        })
+      )
     );
-    //Create three projects, each beginning with lower or upper-cases.
-    await createProject(app, {
-      name: 'a project 2' + faker.datatype.uuid(),
-      type: ProjectType.Translation,
-    });
-    await createProject(app, {
-      name: 'Another project 2' + faker.datatype.uuid(),
-      type: ProjectType.Translation,
-    });
-    await createProject(app, {
-      name: 'Big project 2' + faker.datatype.uuid(),
-      type: ProjectType.Translation,
-    });
-    await createProject(app, {
-      name: 'big project also 2' + faker.datatype.uuid(),
-      type: ProjectType.Translation,
-    });
-    const sortBy = 'name';
-    const ascOrder = 'DESC';
-    const { projects } = await app.graphql.query(
-      gql`
-        query projects($input: ProjectListInput!) {
-          projects(input: $input) {
-            hasMore
-            total
-            items {
-              id
-              name {
-                value
-              }
-            }
-          }
-        }
-      `,
-      {
-        input: {
-          sort: sortBy,
-          order: ascOrder,
-          filter: {
-            mine: true,
-          },
-        },
-      }
-    );
-    const items = projects.items;
-    const sorted = orderBy(items, (proj) => proj.name.value.toLowerCase(), [
-      'desc',
-    ]);
-    expect(sorted).toEqual(items);
-    //delete all projects
-    await Promise.all(
-      projects.items.map(async (item: { id: any }) => {
-        return await app.graphql.mutate(
-          gql`
-            mutation deleteProject($id: ID!) {
-              deleteProject(id: $id)
-            }
-          `,
-          {
-            id: item.id,
-          }
-        );
-      })
-    );
+
+    // only be concerned with projects listed here,
+    // ignore other ones that have slipped in from other tests
+    const filterNames = (list: PaginatedListType<Raw<Project>>) =>
+      intersection(
+        list.items.map((p) => p.name.value),
+        unsorted
+      );
+
+    try {
+      const ascProjects = await listProjects(app, {
+        sort: 'name',
+        order: Order.ASC,
+      });
+      expect(filterNames(ascProjects)).toEqual(sorted);
+
+      const descProjects = await listProjects(app, {
+        sort: 'name',
+        order: Order.DESC,
+      });
+      expect(filterNames(descProjects)).toEqual(sorted.slice().reverse());
+    } finally {
+      //delete all projects that Tammy has access to
+      await Promise.all(created.map(deleteProject(app)));
+    }
   });
 
   it('List view of projects', async () => {
@@ -514,20 +461,7 @@ describe('Project e2e', () => {
     expect(projects.items.length).toBeGreaterThanOrEqual(numProjects);
 
     //delete all projects
-    await Promise.all(
-      projects.items.map(async (item: { id: any }) => {
-        return await app.graphql.mutate(
-          gql`
-            mutation deleteProject($id: ID!) {
-              deleteProject(id: $id)
-            }
-          `,
-          {
-            id: item.id,
-          }
-        );
-      })
-    );
+    await Promise.all(projects.items.map(deleteProject(app)));
   });
 
   it('List of projects sorted by Sensitivity', async () => {
@@ -671,20 +605,7 @@ describe('Project e2e', () => {
 
     expect(projects.items.length).toBeGreaterThanOrEqual(numProjects);
     //delete all projects
-    await Promise.all(
-      projects.items.map(async (item: { id: any }) => {
-        return await app.graphql.mutate(
-          gql`
-            mutation deleteProject($id: ID!) {
-              deleteProject(id: $id)
-            }
-          `,
-          {
-            id: item.id,
-          }
-        );
-      })
-    );
+    await Promise.all(projects.items.map(deleteProject(app)));
   });
 
   it('List view of pinned/unpinned projects', async () => {
@@ -839,16 +760,7 @@ describe('Project e2e', () => {
     );
 
     //clean up
-    await app.graphql.mutate(
-      gql`
-        mutation deleteProject($id: ID!) {
-          deleteProject(id: $id)
-        }
-      `,
-      {
-        id: project.id,
-      }
-    );
+    await deleteProject(app)(project);
   });
 
   it('List view of project members by projectId', async () => {
