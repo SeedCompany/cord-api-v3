@@ -1,5 +1,7 @@
 import { node, Query, relation } from 'cypher-query-builder';
+import { identity } from 'rxjs';
 import {
+  getDbSortTransformer,
   ID,
   Order,
   PaginatedListType,
@@ -86,37 +88,24 @@ export const calculateTotalAndPaginateList =
 export const defaultSorter =
   <TResourceStatic extends ResourceShape<any>>(
     resource: TResourceStatic,
-    { sort: sortInput, order }: { sort: string; order: Order }
+    { sort, order }: { sort: string; order: Order }
   ) =>
   (q: Query) => {
-    // The properties that are stored as strings
-    const stringProperties = ['name', 'displayFirstName', 'displayLastName'];
-    const sortInputIsString = stringProperties.includes(sortInput);
+    const sortTransformer = getDbSortTransformer(resource, sort) ?? identity;
 
-    // If the sortInput, e.g. name, is a string type, check to see if a custom sortVal is given.
-    // If not, coerce the default prop.value to lower case in the orderBy clause
-    const sortValSecuredProp = sortInputIsString
-      ? 'toLower(prop.value)'
-      : 'prop.value';
+    const baseNodeProps = resource.BaseNodeProps ?? Resource.Props;
+    const isBaseNodeProp = baseNodeProps.includes(sort);
 
-    const sortValBaseNodeProp = sortInputIsString
-      ? `toLower(node.${sortInput})`
-      : `node.${sortInput}`;
-
-    const sortingOnBaseNodeProp = (
-      resource.BaseNodeProps ?? Resource.Props
-    ).includes(sortInput);
-
-    return !sortingOnBaseNodeProp
+    return !isBaseNodeProp
       ? q
           .match([
             node('node'),
-            relation('out', '', sortInput, { active: true }),
+            relation('out', '', sort, { active: true }),
             node('prop', 'Property'),
           ])
           .with('*')
-          .orderBy(sortValSecuredProp, order)
-      : q.with('*').orderBy(sortValBaseNodeProp, order);
+          .orderBy(sortTransformer(`prop.value`), order)
+      : q.with('*').orderBy(sortTransformer(`node.${sort}`), order);
   };
 
 export const whereNotDeletedInChangeset = (changeset?: ID) => (query: Query) =>

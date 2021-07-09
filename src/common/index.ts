@@ -3,6 +3,7 @@ export * from './temporal';
 export * from './context.type';
 export * from './date-filter.input';
 export * from './db-label.decorator';
+export * from './db-sort.decorator';
 export * from './exceptions';
 export * from './firstLettersOfWords';
 export * from './fiscal-year';
