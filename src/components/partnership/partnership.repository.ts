@@ -273,10 +273,11 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
     return (
       (await this.db
         .query()
+        .optionalMatch(node('partner', 'Partner', { id: partnerId }))
+        .optionalMatch(node('project', 'Project', { id: projectId }))
         .subQuery((sub) =>
           sub
-            .optionalMatch(node('partner', 'Partner', { id: partnerId }))
-            .optionalMatch(node('project', 'Project', { id: projectId }))
+            .with('project, partner')
             .optionalMatch([
               node('project'),
               relation('out', '', 'partnership', { active: true }),
@@ -284,7 +285,7 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
               relation('out', '', 'partner', { active: true }),
               node('partner'),
             ])
-            .return(['partner', 'project', 'partnership'])
+            .return(['partnership'])
             .apply((q) =>
               changeset
                 ? q
@@ -302,7 +303,7 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
                       relation('out', '', 'partner', { active: true }),
                       node('partner'),
                     ])
-                    .return(['partner', 'project', 'partnership'])
+                    .return(['partnership'])
                 : q
             )
         )

@@ -87,11 +87,6 @@ export class SyncBudgetRecordsToFundingPartners
       event.session,
       changeset
     );
-    // Disable budget status check due to apply changeset
-    // if (budget.status !== BudgetStatus.Pending) {
-    //   this.logger.debug('Budget is not pending, skipping sync', budget);
-    //   return;
-    // }
 
     const partnerships = await this.determinePartnerships(event, changeset);
 
