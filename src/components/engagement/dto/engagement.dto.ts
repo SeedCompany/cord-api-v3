@@ -18,6 +18,7 @@ import {
   SecuredProps,
   SecuredString,
   Sensitivity,
+  SensitivityField,
 } from '../../../common';
 import { ScopedRole } from '../../authorization';
 import { ChangesetAware } from '../../changeset/dto';
@@ -83,7 +84,7 @@ class Engagement extends ChangesetAwareResource {
   @Field()
   readonly endDateOverride: SecuredDateNullable;
 
-  @Field(() => Sensitivity, {
+  @SensitivityField({
     description: "Based on the project's sensitivity",
   })
   readonly sensitivity: Sensitivity;

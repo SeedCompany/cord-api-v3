@@ -8,6 +8,7 @@ import {
   SecuredProps,
   SecuredStringNullable,
   Sensitivity,
+  SensitivityField,
 } from '../../../common';
 import { SetChangeType } from '../../../core/database/changes';
 import { SecuredScriptureRangesOverride } from '../../scripture';
@@ -38,7 +39,7 @@ export class Product extends Producible {
   @DbLabel('ProductMethodology')
   readonly methodology: SecuredMethodology;
 
-  @Field(() => Sensitivity, {
+  @SensitivityField({
     description: "Based on the project's sensitivity",
   })
   readonly sensitivity: Sensitivity;

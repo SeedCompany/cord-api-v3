@@ -14,6 +14,7 @@ import {
   SecuredProps,
   SecuredString,
   Sensitivity,
+  SensitivityField,
 } from '../../../common';
 import { SetChangeType } from '../../../core/database/changes';
 import { Location } from '../../location/dto';
@@ -55,7 +56,7 @@ export class EthnologueLanguage {
   @Field()
   readonly canDelete: boolean;
 
-  @Field(() => Sensitivity, {
+  @SensitivityField({
     description: "Based on the language's sensitivity",
   })
   readonly sensitivity: Sensitivity;
@@ -132,7 +133,7 @@ export class Language extends Resource {
   readonly sponsorEstimatedEndDate: SecuredDate;
 
   // Calculated. Not settable.
-  @Field(() => Sensitivity, {
+  @SensitivityField({
     description: stripIndent`
       The language's sensitivity.
       It's based on its most sensitive location.

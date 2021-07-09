@@ -19,6 +19,7 @@ import {
   SecuredString,
   SecuredStringNullable,
   Sensitivity,
+  SensitivityField,
   UnsecuredDto,
 } from '../../../common';
 import { ScopedRole } from '../../authorization/dto';
@@ -80,7 +81,7 @@ class Project extends PinnablePostableChangesetAwareResource {
   @Field(() => ProjectType)
   readonly type: ProjectType;
 
-  @Field(() => Sensitivity)
+  @SensitivityField()
   readonly sensitivity: Sensitivity;
 
   @NameField()
