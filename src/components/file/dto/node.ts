@@ -6,6 +6,7 @@ import { ConditionalExcept, MergeExclusive, Opaque } from 'type-fest';
 import {
   DateTimeField,
   ID,
+  NameField,
   Resource,
   Secured,
   SecuredProperty,
@@ -41,7 +42,7 @@ abstract class FileNode extends Resource {
   @Field(() => FileNodeType)
   readonly type: FileNodeType;
 
-  @Field({
+  @NameField({
     description: stripIndent`
       The name of the node.
       This is user defined but does not necessarily need to be url safe.

@@ -4,9 +4,9 @@ import { MinLength } from 'class-validator';
 import { DbSort } from './db-sort.decorator';
 import { Transform } from './transform.decorator';
 
-export const NameField = (options?: FieldOptions) =>
+export const NameField = (options: FieldOptions = {}) =>
   applyDecorators(
-    Field(() => String, options),
+    Field(options),
     Transform(({ value }) => value?.trim()),
     DbSort((value) => `toLower(${value})`),
     MinLength(1)

@@ -4,6 +4,7 @@ import { GraphQLString } from 'graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
   ID,
+  NameField,
   Resource,
   SecuredBoolean,
   SecuredDate,
@@ -45,7 +46,7 @@ export class EthnologueLanguage {
   })
   readonly provisionalCode: SecuredString;
 
-  @Field()
+  @NameField()
   readonly name: SecuredString;
 
   @Field()
@@ -71,12 +72,12 @@ export class Language extends Resource {
     locations: [Location],
   };
 
-  @Field({
+  @NameField({
     description: `The real language name`,
   })
   readonly name: SecuredString;
 
-  @Field({
+  @NameField({
     description: stripIndent`
       The public name which will be used/shown when real name
       is unauthorized to be viewed/read.

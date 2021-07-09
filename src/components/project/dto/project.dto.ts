@@ -9,6 +9,7 @@ import {
   DbLabel,
   ID,
   IntersectionType,
+  NameField,
   parentIdMiddleware,
   Resource,
   Secured,
@@ -82,7 +83,7 @@ class Project extends PinnablePostableChangesetAwareResource {
   @Field(() => Sensitivity)
   readonly sensitivity: Sensitivity;
 
-  @Field()
+  @NameField()
   @DbLabel('ProjectName')
   readonly name: SecuredString;
 
