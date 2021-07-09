@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
+import { fromPairs } from 'lodash';
 import { DateTime } from 'luxon';
 import { table } from 'node:console';
 import { ID } from '../../common';
@@ -15,18 +16,20 @@ export class AdminRepository {
 
   async loadData() {
     // default inserts
-    await this.pg.client.query(
+    // await this.pg.client.end();
+    const pool = this.pg.pool;
+    await pool.query(
       `insert into public.people_data("id", "public_first_name") values($1, $2)`,
       [0, 'defaultPerson']
     );
-    await this.pg.client.query(
+    await pool.query(
       `insert into public.organizations_data("id", "name") values($1, $2)`,
       [0, 'defaultOrg']
     );
-    await this.pg.client.query(
+    await pool.query(
       `insert into public.users_data("id", "person", "email","owning_org", "password") values(0,0,'defaultEmail', 0, 'abc')`
     );
-    await this.pg.client.query(
+    await pool.query(
       `insert into public.global_roles_data("id","name", "org") values(0,'defaultRole',0)`
     );
 
@@ -41,22 +44,23 @@ export class AdminRepository {
         org: 'defaultOrg',
       };
       const roleData = { name: `role${i}`, org: 'defaultOrg' };
-      await this.pg.client.query(
+      await pool.query(
         `insert into public.organizations_data("id", "name") values($1, $2)`,
         [i, orgName]
       );
-      await this.pg.client.query(
+      await pool.query(
         `insert into public.locations_data("name", "sensitivity", "type") values($1, 'Low', 'Country')`,
         [locationName]
       );
-      await this.pg.client.query(
-        `select * from public.sys_register($1,$2,$3)`,
-        [userData.email, userData.password, userData.org]
-      );
-      await this.pg.client.query(
-        `select * from public.sys_create_role($1, $2)`,
-        [roleData.name, roleData.org]
-      );
+      await pool.query(`select * from public.sys_register($1,$2,$3)`, [
+        userData.email,
+        userData.password,
+        userData.org,
+      ]);
+      await pool.query(`select * from public.sys_create_role($1, $2)`, [
+        roleData.name,
+        roleData.org,
+      ]);
     }
 
     // adding grants and memberships
@@ -64,12 +68,12 @@ export class AdminRepository {
     // 2. add grants to half of them (odd/even)
     // 3. grant memberships to half the members (odd/even)
 
-    const tables = await this.pg.client.query(
+    const tables = await pool.query(
       `select table_name from information_schema.tables where table_schema = 'public' and table_name like '%_data' order by table_name`
     );
     console.log(tables.rows);
     tables.rows.forEach(async (tableRow) => {
-      const columns = await this.pg.client.query(
+      const columns = await pool.query(
         `select column_name from information_schema.columns where table_schema='public' and table_name = $1`,
         [tableRow.table_name]
       );
@@ -78,7 +82,7 @@ export class AdminRepository {
       columns.rows.forEach(async (columnRow, index) => {
         const accessLevel = index % 2 === 0 ? 'Read' : 'Write';
         console.log(schemaTableName, columnRow.column_name, accessLevel);
-        await this.pg.client.query(
+        await pool.query(
           `select * from public.sys_add_role_grant($1, $2, $3, $4, $5 )`,
           [
             'defaultRole',
@@ -92,21 +96,38 @@ export class AdminRepository {
     });
 
     // add role member
-    const users = await this.pg.client.query(
-      `select person from public.users_data`
-    );
+    const users = await pool.query(`select person from public.users_data`);
     console.log(users.rows);
 
     users.rows.forEach(async (row, index) => {
-      // await this.pg.client.query(
-      //   `select * from public.sys_add_role_member('role1', 'default', $1)`,
-      //   [row.email]
-      // );
-      await this.pg.client.query(
+      await pool.query(
         `insert into public.global_role_memberships_data("person", "global_role") values($1, 0)`,
         [row.person]
       );
     });
+    // add project members and roles
+    for (let i = 1; i < 2; i++) {
+      const projName = `proj${i}`;
+      const projectRole = `projRole${i}`;
+      await pool.query(
+        `insert into public.projects_data("name") values ($1) on conflict do nothing;`,
+        [projName]
+      );
+      await pool.query(
+        `insert into public.project_roles_data("name", "org") values ($1, 0) on conflict do nothing`,
+        [projectRole]
+      );
+      await pool.query(
+        `insert into public.project_memberships_data("person", "project") values (0,$1) on conflict do nothing;`,
+        [i]
+      );
+      await pool.query(
+        `insert into public.project_member_roles_data("person", "project", "project_role") values (1, $1, 1) on conflict do nothing;`,
+        [i]
+      );
+    }
+    await pool.query(`insert into public.project_role_column_grants_data("access_level","column_name", "project_role", "table_name")
+    values('Write', 'name', 1, 'public.locations_data' );`);
     return true;
   }
 
