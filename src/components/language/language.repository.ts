@@ -4,9 +4,9 @@ import { DateTime } from 'luxon';
 import { generateId, ID, Session } from '../../common';
 import { createBaseNode, DtoRepository, matchRequestingUser } from '../../core';
 import {
-  calculateTotalAndPaginateList,
   collect,
   matchProps,
+  paginate,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -160,7 +160,7 @@ export class LanguageRepository extends DtoRepository(Language) {
     return await query.first();
   }
 
-  list({ filter, ...input }: LanguageListInput, session: Session) {
+  async list(input: LanguageListInput, session: Session) {
     const languageSortMap: Partial<Record<typeof input.sort, string>> = {
       name: 'toLower(prop.value)',
       sensitivity: 'sensitivityValue',
@@ -172,27 +172,28 @@ export class LanguageRepository extends DtoRepository(Language) {
         when 'Medium' then 2
         when 'Low' then 1
       end as sensitivityValue`;
-    return this.db
+    const result = await this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode('Language')])
-      .apply(languageListFilter(filter))
-      .apply(
-        calculateTotalAndPaginateList(Language, input, (q) =>
-          ['id', 'createdAt'].includes(input.sort)
-            ? q.with('*').orderBy(`node.${input.sort}`, input.order)
-            : q
-                .match([
-                  node('node'),
-                  relation('out', '', input.sort, { active: true }),
-                  node('prop', 'Property'),
-                ])
-                .with([
-                  '*',
-                  ...(input.sort === 'sensitivity' ? [sensitivityCase] : []),
-                ])
-                .orderBy(sortBy, input.order)
-        )
-      );
+      .apply(languageListFilter(input.filter))
+      .apply((q) =>
+        ['id', 'createdAt'].includes(input.sort)
+          ? q.with('*').orderBy(`node.${input.sort}`, input.order)
+          : q
+              .match([
+                node('node'),
+                relation('out', '', input.sort, { active: true }),
+                node('prop', 'Property'),
+              ])
+              .with([
+                '*',
+                ...(input.sort === 'sensitivity' ? [sensitivityCase] : []),
+              ])
+              .orderBy(sortBy, input.order)
+      )
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 
   async listProjects(language: Language) {
