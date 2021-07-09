@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { LazyGetter as Lazy } from 'lazy-get-decorator';
-import { Client, Pool } from 'pg';
+import { Client, Pool, PoolClient } from 'pg';
 import { ConfigService } from '..';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -10,21 +10,21 @@ export class PostgresService {
   constructor(private readonly config: ConfigService) {}
 
   pool = new Pool({ ...this.config.postgres, max: 20 });
-  client = new Client(this.config.postgres);
+  // client = new Client(this.config.postgres);
 
-  async executeSQLFiles(dirPath: string): Promise<number> {
+  async executeSQLFiles(client: PoolClient, dirPath: string): Promise<number> {
     fs.readdirSync(dirPath).forEach(async (name) => {
       const fileOrDirPath = path.join(dirPath, name);
 
       if (fs.lstatSync(fileOrDirPath).isDirectory()) {
         console.log('dir: ', fileOrDirPath);
-        await this.executeSQLFiles(fileOrDirPath);
+        await this.executeSQLFiles(client, fileOrDirPath);
       } else {
         // load script into db
         console.log('file: ', fileOrDirPath);
         const sql = fs.readFileSync(fileOrDirPath).toString();
         try {
-          const res = await this.client.query(sql);
+          const res = await client.query(sql);
         } catch (e) {
           console.log('error:', e.message);
         }
@@ -34,9 +34,10 @@ export class PostgresService {
   }
 
   async db_init(): Promise<number> {
+    let client;
     try {
-      await this.client.connect();
-      await this.pool.connect();
+      // await this.client.connect();
+      client = await this.pool.connect();
       const dbInitPath = path.join(
         __dirname,
         '..',
@@ -44,12 +45,18 @@ export class PostgresService {
         '..',
         'src/core/postgres/sql/db_init'
       );
-      const fileExecutionStatus = await this.executeSQLFiles(dbInitPath);
+      const fileExecutionStatus = await this.executeSQLFiles(
+        client,
+        dbInitPath
+      );
       console.log('here', fileExecutionStatus);
       return 0;
     } catch (e) {
       console.log('db_init error: ', e.message);
       return 1;
+    } finally {
+      client?.release();
+      // await this.pool.end();
     }
   }
 
