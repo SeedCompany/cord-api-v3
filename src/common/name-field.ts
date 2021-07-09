@@ -8,6 +8,6 @@ export const NameField = (options: FieldOptions = {}) =>
   applyDecorators(
     Field(options),
     Transform(({ value }) => value?.trim()),
-    DbSort((value) => `toLower(${value})`),
+    DbSort((value) => `apoc.text.clean(${value})`),
     MinLength(1)
   );
