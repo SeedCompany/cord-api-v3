@@ -76,7 +76,7 @@ export const calculateTotalAndPaginateList =
       ])
       .raw(`unwind nodes as node`)
       // .with(['node', 'total']) TODO needed?
-      .apply(sorter ?? defaultSorter(resource, { sort, order }))
+      .apply(sorter ?? sorting(resource, { sort, order }))
       .with([
         `collect(distinct node.id)[${(page - 1) * count}..${
           page * count
@@ -85,28 +85,48 @@ export const calculateTotalAndPaginateList =
       ])
       .return<{ items: ID[]; total: number }>(['items', 'total']);
 
-export const defaultSorter =
+/**
+ * Applies sorting to `node` given the input.
+ *
+ * Optionally custom property matches can be passed in that override the
+ * default property matching queries.
+ * These are given a query and are expected to have a return statement returning a `sortValue`
+ */
+export const sorting =
   <TResourceStatic extends ResourceShape<any>>(
     resource: TResourceStatic,
-    { sort, order }: { sort: string; order: Order }
+    { sort, order }: { sort: string; order: Order },
+    customPropMatchers: {
+      [K in string]?: (query: Query) => Query<{ sortValue: unknown }>;
+    } = {}
   ) =>
-  (q: Query) => {
+  (query: Query) => {
     const sortTransformer = getDbSortTransformer(resource, sort) ?? identity;
 
     const baseNodeProps = resource.BaseNodeProps ?? Resource.Props;
     const isBaseNodeProp = baseNodeProps.includes(sort);
 
-    return !isBaseNodeProp
-      ? q
-          .match([
-            node('node'),
-            relation('out', '', sort, { active: true }),
-            node('prop', 'Property'),
-          ])
-          .with('*')
-          .orderBy(sortTransformer(`prop.value`), order)
-      : q.with('*').orderBy(sortTransformer(`node.${sort}`), order);
+    const matcher =
+      customPropMatchers[sort] ??
+      (isBaseNodeProp ? matchBasePropSort : matchPropSort)(sort);
+
+    return query.comment`sorting(${sort})`
+      .subQuery('node', matcher)
+      .with('*')
+      .orderBy(sortTransformer('sortValue'), order);
   };
+
+const matchPropSort = (prop: string) => (query: Query) =>
+  query
+    .match([
+      node('node'),
+      relation('out', '', prop, { active: true }),
+      node('prop', 'Property'),
+    ])
+    .return('prop.value as sortValue');
+
+const matchBasePropSort = (prop: string) => (query: Query) =>
+  query.return(`node.${prop} as sortValue`);
 
 export const whereNotDeletedInChangeset = (changeset?: ID) => (query: Query) =>
   changeset

@@ -24,13 +24,13 @@ import {
 } from '../../core';
 import {
   collect,
-  defaultSorter,
   deleteProperties,
   matchProps,
   merge,
   paginate,
   permissionsOfNode,
   requestingUser,
+  sorting,
 } from '../../core/database/query';
 import { Role } from '../authorization';
 import {
@@ -300,7 +300,7 @@ export class UserRepository extends DtoRepository(User) {
     const result = await this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode('User')])
-      .apply(defaultSorter(User, input))
+      .apply(sorting(User, input))
       .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
