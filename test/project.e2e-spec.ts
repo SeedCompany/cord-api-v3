@@ -549,6 +549,8 @@ describe('Project e2e', () => {
     expect(getSortedSensitivities(ascendingProjects)).toEqual([
       Sensitivity.Low,
       Sensitivity.Medium,
+      Sensitivity.Medium,
+      Sensitivity.High,
       Sensitivity.High,
     ]);
 
@@ -558,6 +560,8 @@ describe('Project e2e', () => {
 
     expect(getSortedSensitivities(descendingProjects)).toEqual([
       Sensitivity.High,
+      Sensitivity.High,
+      Sensitivity.Medium,
       Sensitivity.Medium,
       Sensitivity.Low,
     ]);
