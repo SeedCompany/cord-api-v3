@@ -3,15 +3,17 @@ import { node, relation } from 'cypher-query-builder';
 import { fromPairs } from 'lodash';
 import { DateTime } from 'luxon';
 import { table } from 'node:console';
+import { Pool } from 'pg';
 import { ID } from '../../common';
-import { DatabaseService, SyntaxError } from '../../core';
+import { ConfigService, DatabaseService, SyntaxError } from '../../core';
 import { PostgresService } from '../../core/postgres/postgres.service';
 
 @Injectable()
 export class AdminRepository {
   constructor(
     private readonly db: DatabaseService,
-    private readonly pg: PostgresService
+    private readonly pg: PostgresService,
+    private readonly config: ConfigService
   ) {}
 
   async loadData() {
@@ -19,6 +21,7 @@ export class AdminRepository {
     // await this.pg.client.end();
     const pool = this.pg.pool;
     const client = await pool.connect();
+    let pool2 = new Pool(this.config.postgres);
     try {
       await client.query(
         `insert into public.people_data("id", "public_first_name") values($1, $2)`,
@@ -107,35 +110,44 @@ export class AdminRepository {
           [row.person]
         );
       });
+      console.log('creating new pool');
+      // await client.release();
+      // await pool.end();
+      // const pool2 = new Pool(this.config.postgres);
+      const client2 = await pool2.connect();
       // add project members and roles
       for (let i = 1; i < 2; i++) {
         const projName = `proj${i}`;
         const projectRole = `projRole${i}`;
-        await client.query(
+        await client2.query(
           `insert into public.projects_data("name") values ($1) on conflict do nothing;`,
           [projName]
         );
-        await client.query(
+        await client2.query(
           `insert into public.project_roles_data("name", "org") values ($1, 0) on conflict do nothing`,
           [projectRole]
         );
-        await client.query(
+        await client2.query(
           `insert into public.project_memberships_data("person", "project") values (0,$1) on conflict do nothing;`,
           [i]
         );
-        await client.query(
+        await client2.query(
           `insert into public.project_member_roles_data("person", "project", "project_role") values (1, $1, 1) on conflict do nothing;`,
           [i]
         );
       }
-      await client.query(`insert into public.project_role_column_grants_data("access_level","column_name", "project_role", "table_name")
-    values('Write', 'name', 1, 'public.locations_data' );`);
+      await client2.query(`insert into public.project_role_column_grants_data("access_level","column_name", "project_role", "table_name")
+      values('Write', 'name', 1, 'public.locations_data' );`);
+      console.log('done');
     } catch (e) {
       console.log(e.message);
-    } finally {
-      client.release();
-      // await pool.end();
     }
+    // finally {
+    //   await client.release();
+    //   await pool.end();
+    //   await pool2.end();
+    // }
+    
     return true;
   }
 

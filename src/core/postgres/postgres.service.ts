@@ -9,7 +9,12 @@ import * as path from 'path';
 export class PostgresService {
   constructor(private readonly config: ConfigService) {}
 
-  pool = new Pool({ ...this.config.postgres, max: 20 });
+  pool = new Pool({
+    ...this.config.postgres,
+    max: 2000,
+    idleTimeoutMillis: 0,
+    connectionTimeoutMillis: 0,
+  });
   // client = new Client(this.config.postgres);
 
   async executeSQLFiles(client: PoolClient, dirPath: string): Promise<number> {
@@ -55,7 +60,7 @@ export class PostgresService {
       console.log('db_init error: ', e.message);
       return 1;
     } finally {
-      client?.release();
+      await client?.release();
       // await this.pool.end();
     }
   }
