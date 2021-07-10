@@ -271,8 +271,7 @@ export class ProjectRepository extends CommonRepository {
         sorting(IProject, input, {
           sensitivity: (query) =>
             query
-              .with('node, node as project')
-              .apply(matchProjectSens())
+              .apply(matchProjectSens('node'))
               .return<{ sortValue: string }>('sensitivity as sortValue'),
         })
       )

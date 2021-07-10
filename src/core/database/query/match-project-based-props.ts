@@ -1,7 +1,8 @@
 import { oneLine } from 'common-tags';
 import { node, Query, relation } from 'cypher-query-builder';
 import { ID, isIdLike, Session } from '../../../common';
-import { merge } from './cypher-functions';
+import { ProjectType } from '../../../components/project/dto/type.enum';
+import { coalesce, merge } from './cypher-functions';
 import { matchProps, MatchPropsOptions } from './matching';
 
 export const matchPropsAndProjectSensAndScopedRoles =
@@ -32,7 +33,7 @@ export const matchPropsAndProjectSensAndScopedRoles =
               ])
             : q
         )
-        .apply(matchProjectSens())
+        .apply(matchProjectSens('project'))
         .return(
           [
             merge(propsOptions?.outputVar ?? 'props', {
@@ -51,18 +52,26 @@ export const matchPropsAndProjectSensAndScopedRoles =
         )
     );
 
-export const matchProjectSens = () => (query: Query) =>
+export const matchProjectSens = (projectVar: string) => (query: Query) =>
   query.comment`
       matchProjectSens()
-    `.subQuery(['node', 'project'], (sub) =>
+    `.subQuery((sub) =>
     sub
+      .with(projectVar) // import
+      .with(projectVar) // needed for where clause
+      .raw(`WHERE ${projectVar}.type = "${ProjectType.Internship}"`)
       .match([
-        node('project'),
+        node(projectVar),
         relation('out', '', 'sensitivity', { active: true }),
         node('projSens', 'Property'),
       ])
+      .return('projSens.value as sensitivity')
+      .union()
+      .with(projectVar) // import
+      .with(projectVar) // needed for where clause
+      .raw(`WHERE ${projectVar}.type = "${ProjectType.Translation}"`)
       .optionalMatch([
-        node('project'),
+        node(projectVar),
         relation('out', '', 'engagement', { active: true }),
         node('', 'LanguageEngagement'),
         relation('out', '', 'language', { active: true }),
@@ -70,7 +79,11 @@ export const matchProjectSens = () => (query: Query) =>
         relation('out', '', 'sensitivity', { active: true }),
         node('langSens', 'Property'),
       ])
-      .return(`${determineSensitivity} as sensitivity`)
+      .with('*')
+      .orderBy(rankSens('langSens.value'), 'DESC')
+      // Prevent single row with project from expanding to more here via multiple engagement matches
+      .raw('LIMIT 1')
+      .return(coalesce('langSens.value', '"High"').as('sensitivity'))
   );
 
 export const rankSens = (variable: string) => oneLine`
@@ -80,18 +93,3 @@ export const rankSens = (variable: string) => oneLine`
     when 'Low' then 0
   end
 `;
-
-const determineSensitivity = `
-  case langSens
-    when null then projSens.value
-    else reduce(
-      highestSens = "Low",
-      sens in collect(langSens.value) |
-        case when ${rankSens('sens')} >
-                  ${rankSens('highestSens')}
-          then sens
-          else highestSens
-        end
-    )
-  end
-`.trim();
