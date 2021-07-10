@@ -2,6 +2,16 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "command": "yarn start:dev",
+      "name": "Run npm start",
+      "request": "launch",
+      "type": "node-terminal",
+      "skipFiles": [
+        "${workspaceFolder}/node_modules/**/*.js",
+        "<node_internals>/**/*.js"
+      ]
+    },
+    {
       "type": "node",
       "request": "attach",
       "name": "Node: Nodemon",
