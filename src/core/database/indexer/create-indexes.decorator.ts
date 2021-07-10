@@ -1,6 +1,6 @@
 import { SetMetadata } from '@nestjs/common';
 import { ILogger } from '../../logger';
-import { DatabaseService } from '../database.service';
+import { DatabaseService, ServerInfo } from '../database.service';
 import { DB_INDEX_KEY } from './indexer.constants';
 
 /**
@@ -14,6 +14,7 @@ export const OnIndex = () => SetMetadata(DB_INDEX_KEY, true);
 export interface OnIndexParams {
   db: DatabaseService;
   logger: ILogger;
+  serverInfo: ServerInfo;
 }
 
 export type Indexer = (

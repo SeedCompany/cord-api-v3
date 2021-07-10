@@ -66,6 +66,7 @@ export class IndexerModule implements OnModuleInit {
       const maybeStatements = await handler.call(parentClass.instance, {
         db: this.db,
         logger: this.logger,
+        serverInfo,
       });
       const statements = many<string>(maybeStatements ?? []).map((statement) =>
         isV4
