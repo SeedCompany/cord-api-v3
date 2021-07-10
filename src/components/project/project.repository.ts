@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   ID,
@@ -68,49 +68,58 @@ export class ProjectRepository extends CommonRepository {
     const query = this.db
       .query()
       .match([node('node', 'Project', { id })])
-      .with(['node', 'node as project'])
-      .apply(matchPropsAndProjectSensAndScopedRoles(userId))
-      .apply(matchChangesetAndChangedProps(changeset))
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'primaryLocation', { active: true }),
-        node('primaryLocation', 'Location'),
-      ])
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'marketingLocation', { active: true }),
-        node('marketingLocation', 'Location'),
-      ])
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'fieldRegion', { active: true }),
-        node('fieldRegion', 'FieldRegion'),
-      ])
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'owningOrganization', { active: true }),
-        node('organization', 'Organization'),
-      ])
-      .raw('', { requestingUserId: userId })
-      .return<{ project: UnsecuredDto<Project> }>(
-        merge('props', 'changedProps', {
-          type: 'node.type',
-          pinned: 'exists((:User { id: $requestingUserId })-[:pinned]->(node))',
-          primaryLocation: 'primaryLocation.id',
-          marketingLocation: 'marketingLocation.id',
-          fieldRegion: 'fieldRegion.id',
-          owningOrganization: 'organization.id',
-          scope: 'scopedRoles',
-          changeset: 'changeset.id',
-        }).as('project')
-      );
-
+      .apply(this.hydrate(userId, changeset))
+      .return('dto');
     const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find project');
     }
 
-    return result.project;
+    return result.dto;
+  }
+
+  private hydrate(userId: ID, changeset?: ID) {
+    return (query: Query) =>
+      query.subQuery('node', (sub) =>
+        sub
+          .with(['node', 'node as project'])
+          .apply(matchPropsAndProjectSensAndScopedRoles(userId))
+          .apply(matchChangesetAndChangedProps(changeset))
+          .optionalMatch([
+            node('node'),
+            relation('out', '', 'primaryLocation', { active: true }),
+            node('primaryLocation', 'Location'),
+          ])
+          .optionalMatch([
+            node('node'),
+            relation('out', '', 'marketingLocation', { active: true }),
+            node('marketingLocation', 'Location'),
+          ])
+          .optionalMatch([
+            node('node'),
+            relation('out', '', 'fieldRegion', { active: true }),
+            node('fieldRegion', 'FieldRegion'),
+          ])
+          .optionalMatch([
+            node('node'),
+            relation('out', '', 'owningOrganization', { active: true }),
+            node('organization', 'Organization'),
+          ])
+          .raw('', { requestingUserId: userId })
+          .return<{ dto: UnsecuredDto<Project> }>(
+            merge('props', 'changedProps', {
+              type: 'node.type',
+              pinned:
+                'exists((:User { id: $requestingUserId })-[:pinned]->(node))',
+              primaryLocation: 'primaryLocation.id',
+              marketingLocation: 'marketingLocation.id',
+              fieldRegion: 'fieldRegion.id',
+              owningOrganization: 'organization.id',
+              scope: 'scopedRoles',
+              changeset: 'changeset.id',
+            }).as('dto')
+          )
+      );
   }
 
   getActualChanges(
@@ -267,7 +276,7 @@ export class ProjectRepository extends CommonRepository {
               .return<{ sortValue: string }>('sensitivity as sortValue'),
         })
       )
-      .apply(paginate(input))
+      .apply(paginate(input, this.hydrate(session.userId)))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }
