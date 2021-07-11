@@ -43,7 +43,7 @@ export class AdminRepository {
     );
 
     // inserting a lot of data
-    for (let i = 1; i < 2; i++) {
+    for (let i = 1; i < 10; i++) {
       const orgName = `org${i}`;
       const personName = `person${i}`;
       const locationName = `location${i}`;
@@ -102,23 +102,22 @@ export class AdminRepository {
         );
       });
     });
-    
-    client.release();
-    console.log('using client of new pool from here');
-    
+
     // add role member
-    const users = await client2.query(`select person from public.users_data`);
+    const users = await client.query(`select person from public.users_data`);
     console.log(users.rows);
 
     users.rows.forEach(async (row, index) => {
-      await client2.query(
+      await client.query(
         `insert into public.global_role_memberships_data("person", "global_role") values($1, 0)`,
         [row.person]
       );
     });
 
+    client.release();
+    console.log('using client of new pool from here');
     //projects
-    for (let i = 1; i < 2; i++) {
+    for (let i = 1; i < 10; i++) {
       const projName = `proj${i}`;
       const projectRole = `projRole${i}`;
       await client2.query(
