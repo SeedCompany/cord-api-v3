@@ -18,136 +18,132 @@ export class AdminRepository {
 
   async loadData() {
     // default inserts
-    // await this.pg.client.end();
     const pool = this.pg.pool;
+    let pool2 = new Pool({ ...this.config.postgres, idleTimeoutMillis: 0 });
+    console.log(pool.idleCount, pool.totalCount);
+    console.log(pool2.idleCount, pool.totalCount);
     const client = await pool.connect();
-    let pool2 = new Pool(this.config.postgres);
-    try {
-      await client.query(
-        `insert into public.people_data("id", "public_first_name") values($1, $2)`,
-        [0, 'defaultPerson']
-      );
+    let client2 = await pool2.connect();
+    console.log(pool.idleCount, pool.totalCount);
+    console.log(pool2.idleCount, pool.totalCount);
+
+    await client.query(
+      `insert into public.people_data("id", "public_first_name") values($1, $2)`,
+      [0, 'defaultPerson']
+    );
+    await client.query(
+      `insert into public.organizations_data("id", "name") values($1, $2)`,
+      [0, 'defaultOrg']
+    );
+    await client.query(
+      `insert into public.users_data("id", "person", "email","owning_org", "password") values(0,0,'defaultEmail', 0, 'abc')`
+    );
+    await client.query(
+      `insert into public.global_roles_data("id","name", "org") values(0,'defaultRole',0)`
+    );
+
+    // inserting a lot of data
+    for (let i = 1; i < 2; i++) {
+      const orgName = `org${i}`;
+      const personName = `person${i}`;
+      const locationName = `location${i}`;
+      const userData = {
+        email: `email${i}`,
+        password: 'abc',
+        org: 'defaultOrg',
+      };
+      const roleData = { name: `role${i}`, org: 'defaultOrg' };
       await client.query(
         `insert into public.organizations_data("id", "name") values($1, $2)`,
-        [0, 'defaultOrg']
+        [i, orgName]
       );
       await client.query(
-        `insert into public.users_data("id", "person", "email","owning_org", "password") values(0,0,'defaultEmail', 0, 'abc')`
+        `insert into public.locations_data("name", "sensitivity", "type") values($1, 'Low', 'Country')`,
+        [locationName]
       );
-      await client.query(
-        `insert into public.global_roles_data("id","name", "org") values(0,'defaultRole',0)`
-      );
-
-      // inserting a lot of data
-      for (let i = 1; i < 2; i++) {
-        const orgName = `org${i}`;
-        const personName = `person${i}`;
-        const locationName = `location${i}`;
-        const userData = {
-          email: `email${i}`,
-          password: 'abc',
-          org: 'defaultOrg',
-        };
-        const roleData = { name: `role${i}`, org: 'defaultOrg' };
-        await client.query(
-          `insert into public.organizations_data("id", "name") values($1, $2)`,
-          [i, orgName]
-        );
-        await client.query(
-          `insert into public.locations_data("name", "sensitivity", "type") values($1, 'Low', 'Country')`,
-          [locationName]
-        );
-        await client.query(`select * from public.sys_register($1,$2,$3)`, [
-          userData.email,
-          userData.password,
-          userData.org,
-        ]);
-        await client.query(`select * from public.sys_create_role($1, $2)`, [
-          roleData.name,
-          roleData.org,
-        ]);
-      }
-
-      // adding grants and memberships
-      // 1. get the table name and column names
-      // 2. add grants to half of them (odd/even)
-      // 3. grant memberships to half the members (odd/even)
-
-      const tables = await client.query(
-        `select table_name from information_schema.tables where table_schema = 'public' and table_name like '%_data' order by table_name`
-      );
-      console.log(tables.rows);
-      tables.rows.forEach(async (tableRow) => {
-        const columns = await client.query(
-          `select column_name from information_schema.columns where table_schema='public' and table_name = $1`,
-          [tableRow.table_name]
-        );
-        const schemaTableName = `public.${tableRow.table_name}`;
-        console.log(schemaTableName);
-        columns.rows.forEach(async (columnRow, index) => {
-          const accessLevel = index % 2 === 0 ? 'Read' : 'Write';
-          console.log(schemaTableName, columnRow.column_name, accessLevel);
-          await client.query(
-            `select * from public.sys_add_role_grant($1, $2, $3, $4, $5 )`,
-            [
-              'defaultRole',
-              'defaultOrg',
-              schemaTableName,
-              columnRow.column_name,
-              accessLevel,
-            ]
-          );
-        });
-      });
-
-      // add role member
-      const users = await client.query(`select person from public.users_data`);
-      console.log(users.rows);
-
-      users.rows.forEach(async (row, index) => {
-        await client.query(
-          `insert into public.global_role_memberships_data("person", "global_role") values($1, 0)`,
-          [row.person]
-        );
-      });
-      console.log('creating new pool');
-      // await client.release();
-      // await pool.end();
-      // const pool2 = new Pool(this.config.postgres);
-      const client2 = await pool2.connect();
-      // add project members and roles
-      for (let i = 1; i < 2; i++) {
-        const projName = `proj${i}`;
-        const projectRole = `projRole${i}`;
-        await client2.query(
-          `insert into public.projects_data("name") values ($1) on conflict do nothing;`,
-          [projName]
-        );
-        await client2.query(
-          `insert into public.project_roles_data("name", "org") values ($1, 0) on conflict do nothing`,
-          [projectRole]
-        );
-        await client2.query(
-          `insert into public.project_memberships_data("person", "project") values (0,$1) on conflict do nothing;`,
-          [i]
-        );
-        await client2.query(
-          `insert into public.project_member_roles_data("person", "project", "project_role") values (1, $1, 1) on conflict do nothing;`,
-          [i]
-        );
-      }
-      await client2.query(`insert into public.project_role_column_grants_data("access_level","column_name", "project_role", "table_name")
-      values('Write', 'name', 1, 'public.locations_data' );`);
-      console.log('done');
-    } catch (e) {
-      console.log(e.message);
+      await client.query(`select * from public.sys_register($1,$2,$3)`, [
+        userData.email,
+        userData.password,
+        userData.org,
+      ]);
+      await client.query(`select * from public.sys_create_role($1, $2)`, [
+        roleData.name,
+        roleData.org,
+      ]);
     }
-    // finally {
-    //   await client.release();
-    //   await pool.end();
-    //   await pool2.end();
-    // }
+
+    // adding grants and memberships
+    // 1. get the table name and column names
+    // 2. add grants to half of them (odd/even)
+    // 3. grant memberships to half the members (odd/even)
+    const tables = await client.query(
+      `select table_name from information_schema.tables where table_schema = 'public' and table_name like '%_data' order by table_name`
+    );
+    console.log(tables.rows);
+    tables.rows.forEach(async (tableRow) => {
+      const columns = await client.query(
+        `select column_name from information_schema.columns where table_schema='public' and table_name = $1`,
+        [tableRow.table_name]
+      );
+      const schemaTableName = `public.${tableRow.table_name}`;
+      console.log(schemaTableName);
+      columns.rows.forEach(async (columnRow, index) => {
+        const accessLevel = index % 2 === 0 ? 'Read' : 'Write';
+        console.log(schemaTableName, columnRow.column_name, accessLevel);
+        await client.query(
+          `select * from public.sys_add_role_grant($1, $2, $3, $4, $5 )`,
+          [
+            'defaultRole',
+            'defaultOrg',
+            schemaTableName,
+            columnRow.column_name,
+            accessLevel,
+          ]
+        );
+      });
+    });
     
+    client.release();
+    console.log('using client of new pool from here');
+    
+    // add role member
+    const users = await client2.query(`select person from public.users_data`);
+    console.log(users.rows);
+
+    users.rows.forEach(async (row, index) => {
+      await client2.query(
+        `insert into public.global_role_memberships_data("person", "global_role") values($1, 0)`,
+        [row.person]
+      );
+    });
+
+    //projects
+    for (let i = 1; i < 2; i++) {
+      const projName = `proj${i}`;
+      const projectRole = `projRole${i}`;
+      await client2.query(
+        `insert into public.projects_data("name") values ($1) on conflict do nothing;`,
+        [projName]
+      );
+      await client2.query(
+        `insert into public.project_roles_data("name", "org") values ($1, 0) on conflict do nothing`,
+        [projectRole]
+      );
+      await client2.query(
+        `insert into public.project_memberships_data("person", "project") values (0,$1) on conflict do nothing;`,
+        [i]
+      );
+      await client2.query(
+        `insert into public.project_member_roles_data("person", "project", "project_role") values (1, $1, 1) on conflict do nothing;`,
+        [i]
+      );
+    }
+    await client2.query(`insert into public.project_role_column_grants_data("access_level","column_name", "project_role", "table_name")
+      values('Write', 'name', 1, 'public.locations_data' );`);
+    client2.release();
+    console.log('all queries run');
+    // await pool.end();
+    // await pool2.end();
     return true;
   }
 

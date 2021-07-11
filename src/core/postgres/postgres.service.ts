@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { LazyGetter as Lazy } from 'lazy-get-decorator';
-import { Client, Pool, PoolClient } from 'pg';
+import { Pool, PoolClient } from 'pg';
 import { ConfigService } from '..';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -11,9 +11,7 @@ export class PostgresService {
 
   pool = new Pool({
     ...this.config.postgres,
-    max: 2000,
     idleTimeoutMillis: 0,
-    connectionTimeoutMillis: 0,
   });
   // client = new Client(this.config.postgres);
 
@@ -28,21 +26,16 @@ export class PostgresService {
         // load script into db
         console.log('file: ', fileOrDirPath);
         const sql = fs.readFileSync(fileOrDirPath).toString();
-        try {
-          const res = await client.query(sql);
-        } catch (e) {
-          console.log('error:', e.message);
-        }
+        await client.query(sql);
       }
     });
     return 0;
   }
 
   async db_init(): Promise<number> {
-    let client;
+    const client = await this.pool.connect();
     try {
       // await this.client.connect();
-      client = await this.pool.connect();
       const dbInitPath = path.join(
         __dirname,
         '..',
@@ -55,14 +48,13 @@ export class PostgresService {
         dbInitPath
       );
       console.log('here', fileExecutionStatus);
-      return 0;
-    } catch (e) {
-      console.log('db_init error: ', e.message);
-      return 1;
     } finally {
-      await client?.release();
+      // console.log(this.pool.totalCount, this.pool.idleCount);
+      client.release();
+      // console.log(this.pool.totalCount, this.pool.idleCount);
       // await this.pool.end();
     }
+    return 0;
   }
 
   // @Lazy() get connectedClient(): Promise<Client> {
