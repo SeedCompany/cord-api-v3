@@ -16,6 +16,7 @@ import { DbPartner } from '../../partner/model';
 import { DbPartnership } from '../../partnership/model';
 import { DbPeriodicReport } from '../../periodic-report/model';
 import { DbPost } from '../../post/model';
+import { StepProgress } from '../../product-progress/dto';
 import { DbProduct } from '../../product/model';
 import { DbProjectChangeRequest } from '../../project-change-request/model';
 /* eslint-disable @typescript-eslint/naming-convention */
@@ -423,6 +424,15 @@ export const ConsultantOnProject = new DbRole({
         { propertyName: 'status',                      permission: { read, write, }, },
       ],
       canDelete: true,
+    }),
+    new DbBaseNodeGrant<StepProgress>({
+      __className: 'DbStepProgress',
+      properties: [
+        {
+          propertyName: 'percentDone', permission: { read },
+        }
+      ],
+      canDelete: false,
     }),
   ],
 });
