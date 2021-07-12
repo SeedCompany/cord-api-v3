@@ -3,7 +3,6 @@ import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
-  generateId,
   ID,
   NotFoundException,
   ServerException,
@@ -24,6 +23,7 @@ import {
 } from '../../core';
 import {
   collect,
+  createNode,
   deleteProperties,
   matchProps,
   merge,
@@ -76,36 +76,33 @@ export class UserRepository extends DtoRepository(User) {
 
   private readonly roleProperties = (roles?: Role[]) =>
     (roles || []).flatMap((role) =>
-      property('roles', role, 'user', `role${role}`)
+      property('roles', role, 'node', `role${role}`)
     );
 
   async create(input: CreatePerson) {
-    const id = await generateId();
-    const createdAt = DateTime.local();
+    const initialProps = {
+      email: input.email,
+      realFirstName: input.realFirstName,
+      realLastName: input.realLastName,
+      displayFirstName: input.displayFirstName,
+      displayLastName: input.displayLastName,
+      phone: input.phone,
+      timezone: input.timezone,
+      about: input.about,
+      status: input.status,
+      title: input.title,
+      canDelete: true,
+    };
+
     const query = this.db
       .query()
-      .create([
-        [
-          node('user', ['User', 'BaseNode'], {
-            id,
-            createdAt,
-          }),
-        ],
-        ...property('email', input.email, 'user', 'email', 'EmailAddress'),
-        ...property('realFirstName', input.realFirstName, 'user'),
-        ...property('realLastName', input.realLastName, 'user'),
-        ...property('displayFirstName', input.displayFirstName, 'user'),
-        ...property('displayLastName', input.displayLastName, 'user'),
-        ...property('phone', input.phone, 'user'),
-        ...property('timezone', input.timezone, 'user'),
-        ...property('about', input.about, 'user'),
-        ...property('status', input.status, 'user'),
-        ...this.roleProperties(input.roles),
-        ...property('title', input.title, 'user'),
-        ...property('canDelete', true, 'user'),
-      ])
-      .return('user.id as id')
-      .asResult<{ id: ID }>();
+      .apply(await createNode(User, { initialProps }))
+      .apply((q) =>
+        input.roles && input.roles.length > 0
+          ? q.create([...this.roleProperties(input.roles)])
+          : q
+      )
+      .return<{ id: ID }>('node.id as id');
     let result;
     try {
       result = await query.first();
@@ -122,6 +119,7 @@ export class UserRepository extends DtoRepository(User) {
     if (!result) {
       throw new ServerException('Failed to create user');
     }
+    const id = result.id;
     // attach user to publicSG
     const attachUserToPublicSg = await this.db
       .query()
@@ -268,7 +266,7 @@ export class UserRepository extends DtoRepository(User) {
       await this.db
         .query()
         .match([
-          node('user', ['User', 'BaseNode'], {
+          node('node', ['User', 'BaseNode'], {
             id: input.id,
           }),
         ])

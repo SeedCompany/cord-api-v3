@@ -1,6 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
+  DbLabel,
   NameField,
   Resource,
   SecuredEnum,
@@ -36,6 +37,7 @@ export class User extends Resource {
   };
 
   @Field()
+  @DbLabel('EmailAddress')
   email: SecuredString;
 
   @NameField()
