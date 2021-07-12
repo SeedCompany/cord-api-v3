@@ -28,7 +28,6 @@ export class AdminRepository {
       totalCount: pool.totalCount,
     });
     const client = await pool.connect();
-    const client2 = await pool.connect();
     this.logger.info('pool info', {
       idleCount: pool.idleCount,
       totalCount: pool.totalCount,
@@ -97,9 +96,10 @@ export class AdminRepository {
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       const schemaTableName = `public.${tableRow.table_name}`;
       this.logger.info(schemaTableName);
-
-      for (const [columnRow, index] of columns.rows) {
+      let index = 0;
+      for (const columnRow of columns.rows) {
         const accessLevel = index % 2 === 0 ? 'Read' : 'Write';
+        index++;
         this.logger.info('column info', {
           schemaTableName,
           columnName: columnRow.column_name,
@@ -120,44 +120,45 @@ export class AdminRepository {
 
     // add role member
     const users = await client.query(`select person from public.users_data`);
-    this.logger.info('user.rows', { userRows: users.rows });
+    this.logger.info(
+      'user.rows. the next queries will take some time to complete',
+      { userRows: users.rows }
+    );
 
-    for (const [row] of users.rows) {
+    for (const row of users.rows) {
       await client.query(
         `insert into public.global_role_memberships_data("person", "global_role") values($1, 0)`,
         [row.person]
       );
     }
-
-    client.release();
-    this.logger.info('using second client');
+    this.logger.info('projects');
     //projects
     for (let i = 1; i < 2; i++) {
       const projName = `proj${i}`;
       const projectRole = `projRole${i}`;
-      await client2.query(
+      await client.query(
         `insert into public.projects_data("name") values ($1) on conflict do nothing;`,
         [projName]
       );
-      await client2.query(
+      await client.query(
         `insert into public.project_roles_data("name", "org") values ($1, 0) on conflict do nothing`,
         [projectRole]
       );
-      await client2.query(
+      await client.query(
         `insert into public.project_memberships_data("person", "project") values (0,$1) on conflict do nothing;`,
         [i]
       );
-      await client2.query(
+      await client.query(
         `insert into public.project_member_roles_data("person", "project", "project_role") values (1, $1, 1) on conflict do nothing;`,
         [i]
       );
     }
-    await client2.query(`insert into public.project_role_column_grants_data("access_level","column_name", "project_role", "table_name")
+    await client.query(`insert into public.project_role_column_grants_data("access_level","column_name", "project_role", "table_name")
       values('Write', 'name', 1, 'public.locations_data' );`);
-    client2.release();
+    client.release();
     this.logger.info('all queries run');
     // await pool.end();
-    // await pool2.end();
+    // this.logger.info('pool ended');
     return true;
   }
 
