@@ -4,7 +4,6 @@ import { DateTime } from 'luxon';
 import {
   ID,
   NotFoundException,
-  Sensitivity,
   ServerException,
   Session,
   UnsecuredDto,
@@ -21,7 +20,7 @@ import {
   rankSens,
   sorting,
 } from '../../core/database/query';
-import { ScopedRole } from '../authorization';
+import { RoleSensitivityMapping } from '../authorization/authorization.service';
 import { CreatePartner, Partner, PartnerListInput } from './dto';
 
 @Injectable()
@@ -172,7 +171,7 @@ export class PartnerRepository extends DtoRepository(Partner) {
   async listPartnersOfAllUserProjects(
     session: Session,
     { filter, ...input }: PartnerListInput,
-    scopeSensitivityMap: Partial<Record<ScopedRole, Sensitivity | undefined>>
+    scopeSensitivityMap: Partial<RoleSensitivityMapping>
   ) {
     return this.db
       .query()
@@ -195,19 +194,15 @@ export class PartnerRepository extends DtoRepository(Partner) {
       ])
       .apply(matchPropsAndProjectSensAndScopedRoles(session, undefined, true))
       .subQuery((sub) =>
-        sub
-          .with('sensitivity')
-          .return([
-            `apoc.convert.fromJsonMap('${JSON.stringify(
-              scopeSensitivityMap
-            )}') as sensMap`,
-            `(${rankSens('sensitivity')}) as sens`,
-          ])
+        sub.with('sensitivity').return([`(${rankSens('sensitivity')}) as sens`])
       )
       .raw(
-        `MATCH (node) WHERE any(x in scopedRoles where x IN keys(sensMap) and sens <= ${rankSens(
-          'apoc.map.get(sensMap, x)'
-        )})`
+        `MATCH (node) WHERE any(x in scopedRoles where x IN keys($sensMap) and sens <= ${rankSens(
+          'apoc.map.get($sensMap, x)'
+        )})`,
+        {
+          sensMap: scopeSensitivityMap,
+        }
       )
       .apply(
         calculateTotalAndPaginateList(
