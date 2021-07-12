@@ -46,8 +46,8 @@ const getDbRoles = (roles: ScopedRole[]): DbRole[] =>
 const getProjectScopedDbRoles = Object.values(AllRoles).filter((role) =>
   role.name.startsWith('project')
 );
-type RoleSensitivityMapping = {
-  [K in ScopedRole]: Sensitivity | undefined;
+export type RoleSensitivityMapping = {
+  [K in ScopedRole]: Sensitivity;
 };
 export const permissionDefaults = {
   canRead: false,
@@ -193,7 +193,11 @@ export class AuthorizationService {
         role.grants.find((g) => resources.includes(g.__className.substring(2)))
     );
     const map = mapValues(roleGrantsFiltered, (grant) =>
-      grant?.canList ? grant.sensitivityAccess : null
+      grant?.canList
+        ? grant.sensitivityAccess === undefined
+          ? (grant.sensitivityAccess = Sensitivity.High) // default to 'High' if the role doesn't define Sensitivitity for listing
+          : grant?.sensitivityAccess
+        : null
     ) as RoleSensitivityMapping;
     return pickBy(map, (sens) => sens !== null);
   }
