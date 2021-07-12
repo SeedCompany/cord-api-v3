@@ -120,18 +120,16 @@ export class AdminRepository {
 
     // add role member
     const users = await client.query(`select person from public.users_data`);
-    this.logger.info(
-      'user.rows. the next queries will take some time to complete',
-      { userRows: users.rows }
-    );
+    this.logger.info('adding role memberships', { userRows: users.rows });
 
     for (const row of users.rows) {
       await client.query(
         `insert into public.global_role_memberships_data("person", "global_role") values($1, 0)`,
         [row.person]
       );
+      this.logger.info('global_role_memberships_data', { person: row.person });
     }
-    this.logger.info('projects');
+    this.logger.info('project queries');
     //projects
     for (let i = 1; i < 2; i++) {
       const projName = `proj${i}`;
@@ -140,21 +138,37 @@ export class AdminRepository {
         `insert into public.projects_data("name") values ($1) on conflict do nothing;`,
         [projName]
       );
+      this.logger.info('projects_data', {
+        projectName: projName,
+      });
       await client.query(
         `insert into public.project_roles_data("name", "org") values ($1, 0) on conflict do nothing`,
         [projectRole]
       );
+      this.logger.info('project_roles_data', {
+        projectRole,
+      });
       await client.query(
         `insert into public.project_memberships_data("person", "project") values (0,$1) on conflict do nothing;`,
         [i]
       );
+      this.logger.info('project_memberships_data', {
+        person: 0,
+        project: i,
+      });
       await client.query(
         `insert into public.project_member_roles_data("person", "project", "project_role") values (1, $1, 1) on conflict do nothing;`,
         [i]
       );
+      this.logger.info('project_member_roles_data', {
+        person: 1,
+        project: i,
+        projectRole: i,
+      });
     }
     await client.query(`insert into public.project_role_column_grants_data("access_level","column_name", "project_role", "table_name")
       values('Write', 'name', 1, 'public.locations_data' );`);
+    this.logger.info('project_role_column_grants_data');
     client.release();
     this.logger.info('all queries run');
     // await pool.end();
