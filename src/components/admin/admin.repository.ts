@@ -19,13 +19,10 @@ export class AdminRepository {
   async loadData() {
     // default inserts
     const pool = this.pg.pool;
-    let pool2 = new Pool({ ...this.config.postgres, idleTimeoutMillis: 0 });
     console.log(pool.idleCount, pool.totalCount);
-    console.log(pool2.idleCount, pool.totalCount);
     const client = await pool.connect();
-    let client2 = await pool2.connect();
+    let client2 = await pool.connect();
     console.log(pool.idleCount, pool.totalCount);
-    console.log(pool2.idleCount, pool.totalCount);
 
     await client.query(
       `insert into public.people_data("id", "public_first_name") values($1, $2)`,
@@ -43,7 +40,7 @@ export class AdminRepository {
     );
 
     // inserting a lot of data
-    for (let i = 1; i < 10; i++) {
+    for (let i = 1; i < 2; i++) {
       const orgName = `org${i}`;
       const personName = `person${i}`;
       const locationName = `location${i}`;
@@ -115,9 +112,9 @@ export class AdminRepository {
     });
 
     client.release();
-    console.log('using client of new pool from here');
+    console.log('using second client');
     //projects
-    for (let i = 1; i < 10; i++) {
+    for (let i = 1; i < 2; i++) {
       const projName = `proj${i}`;
       const projectRole = `projRole${i}`;
       await client2.query(
