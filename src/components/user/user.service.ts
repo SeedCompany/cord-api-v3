@@ -22,7 +22,7 @@ import {
   Transactional,
   UniquenessError,
 } from '../../core';
-import { runListQuery } from '../../core/database/results';
+import { mapListResults } from '../../core/database/results';
 import { Role } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
@@ -244,8 +244,8 @@ export class UserService {
   }
 
   async list(input: UserListInput, session: Session): Promise<UserListOutput> {
-    const query = this.userRepo.list(input, session);
-    return await runListQuery(query, input, (id) => this.readOne(id, session));
+    const users = await this.userRepo.list(input, session);
+    return await mapListResults(users, (user) => this.secure(user, session));
   }
 
   async listEducations(

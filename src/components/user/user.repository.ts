@@ -23,11 +23,12 @@ import {
   UniquenessError,
 } from '../../core';
 import {
-  calculateTotalAndPaginateList,
   collect,
+  defaultSorter,
   deleteProperties,
   matchProps,
   merge,
+  paginate,
   permissionsOfNode,
   requestingUser,
 } from '../../core/database/query';
@@ -201,7 +202,7 @@ export class UserRepository extends DtoRepository(User) {
             node('role', 'Property'),
           ])
           .apply(matchProps())
-          .return(
+          .return<{ dto: UnsecuredDto<User> }>(
             merge('props', {
               roles: collect('role.value'),
             }).as('dto')
@@ -295,11 +296,14 @@ export class UserRepository extends DtoRepository(User) {
     }
   }
 
-  list(input: UserListInput, session: Session) {
-    return this.db
+  async list(input: UserListInput, session: Session) {
+    const result = await this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode('User')])
-      .apply(calculateTotalAndPaginateList(User, input));
+      .apply(defaultSorter(User, input))
+      .apply(paginate(input, this.hydrate()))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 
   async permissionsForListProp(prop: string, userId: ID, session: Session) {
