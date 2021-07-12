@@ -10,9 +10,9 @@ import {
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger, OnIndex } from '../../core';
 import {
+  mapListResults,
   parseBaseNodeProperties,
   parsePropList,
-  runListQuery,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { FinancialReportingType } from '../partnership/dto/financial-reporting-type';
@@ -186,12 +186,11 @@ export class PartnerService {
   }
 
   async list(
-    { filter, ...input }: PartnerListInput,
+    input: PartnerListInput,
     session: Session
   ): Promise<PartnerListOutput> {
-    const query = this.repo.list({ filter, ...input }, session);
-
-    return await runListQuery(query, input, (id) => this.readOne(id, session));
+    const results = await this.repo.list(input, session);
+    return await mapListResults(results, (id) => this.readOne(id, session));
   }
 
   protected verifyFinancialReportingType(

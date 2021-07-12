@@ -10,7 +10,6 @@ import {
   UnwrapSecured,
 } from '../../../common';
 import { DbChanges } from '../changes';
-import { determineSortValue } from '../query.helpers';
 
 export type CreatePropertyOptions<
   TResourceStatic extends ResourceShape<any>,
@@ -93,9 +92,7 @@ export const createProperty =
           }),
           node('newPropNode', propLabels, {
             createdAt,
-            ...(variable
-              ? { value: varRef(variable), sortValue: varRef(variable) }
-              : { value, sortValue: determineSortValue(value) }),
+            value: variable ? varRef(variable) : value,
           }),
           ...(changeset
             ? [

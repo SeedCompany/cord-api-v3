@@ -1,5 +1,7 @@
 import { node, Query, relation } from 'cypher-query-builder';
+import { identity } from 'rxjs';
 import {
+  getDbSortTransformer,
   ID,
   Order,
   PaginatedListType,
@@ -74,7 +76,7 @@ export const calculateTotalAndPaginateList =
       ])
       .raw(`unwind nodes as node`)
       // .with(['node', 'total']) TODO needed?
-      .apply(sorter ?? defaultSorter(resource, { sort, order }))
+      .apply(sorter ?? sorting(resource, { sort, order }))
       .with([
         `collect(distinct node.id)[${(page - 1) * count}..${
           page * count
@@ -83,41 +85,48 @@ export const calculateTotalAndPaginateList =
       ])
       .return<{ items: ID[]; total: number }>(['items', 'total']);
 
-export const defaultSorter =
+/**
+ * Applies sorting to `node` given the input.
+ *
+ * Optionally custom property matches can be passed in that override the
+ * default property matching queries.
+ * These are given a query and are expected to have a return statement returning a `sortValue`
+ */
+export const sorting =
   <TResourceStatic extends ResourceShape<any>>(
     resource: TResourceStatic,
-    { sort: sortInput, order }: { sort: string; order: Order }
+    { sort, order }: { sort: string; order: Order },
+    customPropMatchers: {
+      [K in string]?: (query: Query) => Query<{ sortValue: unknown }>;
+    } = {}
   ) =>
-  (q: Query) => {
-    // The properties that are stored as strings
-    const stringProperties = ['name', 'displayFirstName', 'displayLastName'];
-    const sortInputIsString = stringProperties.includes(sortInput);
+  (query: Query) => {
+    const sortTransformer = getDbSortTransformer(resource, sort) ?? identity;
 
-    // If the sortInput, e.g. name, is a string type, check to see if a custom sortVal is given.
-    // If not, coerce the default prop.value to lower case in the orderBy clause
-    const sortValSecuredProp = sortInputIsString
-      ? 'toLower(prop.value)'
-      : 'prop.value';
+    const baseNodeProps = resource.BaseNodeProps ?? Resource.Props;
+    const isBaseNodeProp = baseNodeProps.includes(sort);
 
-    const sortValBaseNodeProp = sortInputIsString
-      ? `toLower(node.${sortInput})`
-      : `node.${sortInput}`;
+    const matcher =
+      customPropMatchers[sort] ??
+      (isBaseNodeProp ? matchBasePropSort : matchPropSort)(sort);
 
-    const sortingOnBaseNodeProp = (
-      resource.BaseNodeProps ?? Resource.Props
-    ).includes(sortInput);
-
-    return !sortingOnBaseNodeProp
-      ? q
-          .match([
-            node('node'),
-            relation('out', '', sortInput, { active: true }),
-            node('prop', 'Property'),
-          ])
-          .with('*')
-          .orderBy(sortValSecuredProp, order)
-      : q.with('*').orderBy(sortValBaseNodeProp, order);
+    return query.comment`sorting(${sort})`
+      .subQuery('node', matcher)
+      .with('*')
+      .orderBy(sortTransformer('sortValue'), order);
   };
+
+const matchPropSort = (prop: string) => (query: Query) =>
+  query
+    .match([
+      node('node'),
+      relation('out', '', prop, { active: true }),
+      node('prop', 'Property'),
+    ])
+    .return('prop.value as sortValue');
+
+const matchBasePropSort = (prop: string) => (query: Query) =>
+  query.return(`node.${prop} as sortValue`);
 
 export const whereNotDeletedInChangeset = (changeset?: ID) => (query: Query) =>
   changeset

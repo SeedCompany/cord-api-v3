@@ -12,6 +12,7 @@ import {
   IsId,
   NameField,
   Sensitivity,
+  SensitivityField,
 } from '../../../common';
 import { ReportPeriod } from '../../periodic-report/dto';
 import { IProject, Project } from './project.dto';
@@ -63,7 +64,7 @@ export abstract class CreateProject {
   @Field(() => ProjectStep, { nullable: true })
   readonly step?: ProjectStep;
 
-  @Field(() => Sensitivity, {
+  @SensitivityField({
     description: 'Defaults to High, only available on internship projects',
     nullable: true,
   })

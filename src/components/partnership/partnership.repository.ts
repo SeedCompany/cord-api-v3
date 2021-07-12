@@ -329,7 +329,6 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
         node('newProperty', 'Property', {
           createdAt: DateTime.local(),
           value: false,
-          sortValue: false,
         }),
       ])
       .run();

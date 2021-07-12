@@ -10,7 +10,6 @@ import {
   ResourceShape,
   UnsecuredDto,
 } from '../../../common';
-import { determineSortValue } from '../query.helpers';
 
 interface CreateNodeOptions<TResourceStatic extends ResourceShape<any>> {
   initialProps?: Partial<UnsecuredDto<TResourceStatic['prototype']>>;
@@ -67,7 +66,6 @@ export const createNode = async <TResourceStatic extends ResourceShape<any>>(
             node('', getDbPropertyLabels(resource, prop), {
               createdAt,
               value,
-              sortValue: determineSortValue(value),
             }),
           ]),
         ])

@@ -1,6 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
+  NameField,
   Resource,
   SecuredInt,
   SecuredProperty,
@@ -15,7 +16,7 @@ export class FundingAccount extends Resource {
   static readonly Props = keysOf<FundingAccount>();
   static readonly SecuredProps = keysOf<SecuredProps<FundingAccount>>();
 
-  @Field()
+  @NameField()
   readonly name: SecuredString;
 
   @Field()

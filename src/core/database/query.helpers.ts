@@ -1,5 +1,4 @@
 import { node, Query, relation } from 'cypher-query-builder';
-import { deburr } from 'lodash';
 import { DateTime } from 'luxon';
 import { ID, Session } from '../../common';
 // eslint-disable-next-line @seedcompany/no-unused-vars -- used in jsdoc
@@ -18,9 +17,6 @@ export interface Property {
   label?: string;
   isDeburrable?: boolean;
 }
-
-export const determineSortValue = (value: unknown) =>
-  typeof value === 'string' ? deburr(value) : value;
 
 /**
  * @deprecated Use {@link createNode} instead
@@ -61,7 +57,6 @@ export const createBaseNode =
       const nodeProps = {
         createdAt,
         value: prop.value,
-        sortValue: determineSortValue(prop.value),
       };
 
       query.create([

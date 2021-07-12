@@ -1,6 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
+  NameField,
   Resource,
   SecuredEnum,
   SecuredProperty,
@@ -37,16 +38,16 @@ export class User extends Resource {
   @Field()
   email: SecuredString;
 
-  @Field()
+  @NameField()
   realFirstName: SecuredString;
 
-  @Field()
+  @NameField()
   realLastName: SecuredString;
 
-  @Field()
+  @NameField()
   displayFirstName: SecuredString;
 
-  @Field()
+  @NameField()
   displayLastName: SecuredString;
 
   @Field()

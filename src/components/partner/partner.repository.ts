@@ -1,72 +1,26 @@
 import { Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   generateId,
   ID,
   NotFoundException,
-  Order,
   ServerException,
   Session,
 } from '../../common';
 import { createBaseNode, DtoRepository, matchRequestingUser } from '../../core';
 import {
-  calculateTotalAndPaginateList,
   matchPropList,
+  paginate,
   permissionsOfNode,
   requestingUser,
+  sorting,
 } from '../../core/database/query';
 import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
 import { CreatePartner, Partner, PartnerListInput } from './dto';
 
 @Injectable()
 export class PartnerRepository extends DtoRepository(Partner) {
-  private readonly orgNameSorter =
-    (sortInput: string, order: Order) => (q: Query) => {
-      // If the user inputs orgName as the sort value, then match the organization node for the sortValue match
-      const orgProperties = ['name'];
-
-      //The properties that are stored as strings
-      const stringProperties = ['name'];
-      const sortInputIsString = stringProperties.includes(sortInput);
-
-      //if the sortInput, e.g. name, is a string type, check to see if a custom sortVal is given.  If not, coerse the default prop.value to lower case in the orderBy clause
-      const sortValSecuredProp = sortInputIsString
-        ? 'toLower(prop.value)'
-        : 'prop.value';
-      const sortValBaseNodeProp = sortInputIsString
-        ? `toLower(node.${sortInput})`
-        : `node.${sortInput}`;
-
-      if (orgProperties.includes(sortInput)) {
-        return q
-          .match([
-            node('node'),
-            relation('out', '', 'organization', { active: true }),
-            node('organization', 'Organization'),
-          ])
-          .with('*')
-          .match([
-            node('organization'),
-            relation('out', '', sortInput, { active: true }),
-            node('prop', 'Property'),
-          ])
-          .with('*')
-          .orderBy(sortValSecuredProp, order);
-      }
-      return (Partner.SecuredProps as string[]).includes(sortInput)
-        ? q
-            .with('*')
-            .match([
-              node(node),
-              relation('out', '', sortInput, { active: true }),
-              node('prop', 'Property'),
-            ])
-            .with('*')
-            .orderBy(sortValSecuredProp, order)
-        : q.with('*').orderBy(sortValBaseNodeProp, order);
-    };
-
   async partnerIdByOrg(organizationId: ID) {
     const result = await this.db
       .query()
@@ -246,13 +200,12 @@ export class PartnerRepository extends DtoRepository(Partner) {
       .run();
   }
 
-  list({ filter, ...input }: PartnerListInput, session: Session) {
-    const label = 'Partner';
-    return this.db
+  async list({ filter, ...input }: PartnerListInput, session: Session) {
+    const result = await this.db
       .query()
       .match([
         requestingUser(session),
-        ...permissionsOfNode(label),
+        ...permissionsOfNode('Partner'),
         ...(filter.userId && session.userId
           ? [
               relation('out', '', 'organization', { active: true }),
@@ -263,11 +216,21 @@ export class PartnerRepository extends DtoRepository(Partner) {
           : []),
       ])
       .apply(
-        calculateTotalAndPaginateList(
-          Partner,
-          input,
-          this.orgNameSorter(input.sort, input.order)
-        )
-      );
+        sorting(Partner, input, {
+          name: (query) =>
+            query
+              .match([
+                node('node'),
+                relation('out', '', 'organization', { active: true }),
+                node('organization', 'Organization'),
+                relation('out', '', 'name', { active: true }),
+                node('prop', 'Property'),
+              ])
+              .return<{ sortValue: string }>('prop.value as sortValue'),
+        })
+      )
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 }

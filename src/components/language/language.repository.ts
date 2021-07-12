@@ -9,6 +9,7 @@ import {
   paginate,
   permissionsOfNode,
   requestingUser,
+  sorting,
 } from '../../core/database/query';
 import { DbPropsOfDto } from '../../core/database/results';
 import { CreateLanguage, Language, LanguageListInput } from './dto';
@@ -161,36 +162,11 @@ export class LanguageRepository extends DtoRepository(Language) {
   }
 
   async list(input: LanguageListInput, session: Session) {
-    const languageSortMap: Partial<Record<typeof input.sort, string>> = {
-      name: 'toLower(prop.value)',
-      sensitivity: 'sensitivityValue',
-    };
-    const sortBy = languageSortMap[input.sort] ?? 'prop.value';
-
-    const sensitivityCase = `case prop.value
-        when 'High' then 3
-        when 'Medium' then 2
-        when 'Low' then 1
-      end as sensitivityValue`;
     const result = await this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode('Language')])
       .apply(languageListFilter(input.filter))
-      .apply((q) =>
-        ['id', 'createdAt'].includes(input.sort)
-          ? q.with('*').orderBy(`node.${input.sort}`, input.order)
-          : q
-              .match([
-                node('node'),
-                relation('out', '', input.sort, { active: true }),
-                node('prop', 'Property'),
-              ])
-              .with([
-                '*',
-                ...(input.sort === 'sensitivity' ? [sensitivityCase] : []),
-              ])
-              .orderBy(sortBy, input.order)
-      )
+      .apply(sorting(Language, input))
       .apply(paginate(input))
       .first();
     return result!; // result from paginate() will always have 1 row.

@@ -4,6 +4,7 @@ import { GraphQLString } from 'graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
   ID,
+  NameField,
   Resource,
   SecuredBoolean,
   SecuredDate,
@@ -13,6 +14,7 @@ import {
   SecuredProps,
   SecuredString,
   Sensitivity,
+  SensitivityField,
 } from '../../../common';
 import { SetChangeType } from '../../../core/database/changes';
 import { Location } from '../../location/dto';
@@ -45,7 +47,7 @@ export class EthnologueLanguage {
   })
   readonly provisionalCode: SecuredString;
 
-  @Field()
+  @NameField()
   readonly name: SecuredString;
 
   @Field()
@@ -54,7 +56,7 @@ export class EthnologueLanguage {
   @Field()
   readonly canDelete: boolean;
 
-  @Field(() => Sensitivity, {
+  @SensitivityField({
     description: "Based on the language's sensitivity",
   })
   readonly sensitivity: Sensitivity;
@@ -71,12 +73,12 @@ export class Language extends Resource {
     locations: [Location],
   };
 
-  @Field({
+  @NameField({
     description: `The real language name`,
   })
   readonly name: SecuredString;
 
-  @Field({
+  @NameField({
     description: stripIndent`
       The public name which will be used/shown when real name
       is unauthorized to be viewed/read.
@@ -131,7 +133,7 @@ export class Language extends Resource {
   readonly sponsorEstimatedEndDate: SecuredDate;
 
   // Calculated. Not settable.
-  @Field(() => Sensitivity, {
+  @SensitivityField({
     description: stripIndent`
       The language's sensitivity.
       It's based on its most sensitive location.

@@ -1,7 +1,8 @@
 import { oneLine } from 'common-tags';
 import { node, Query, relation } from 'cypher-query-builder';
 import { ID, isIdLike, Session } from '../../../common';
-import { merge } from './cypher-functions';
+import { ProjectType } from '../../../components/project/dto/type.enum';
+import { coalesce, merge } from './cypher-functions';
 import { matchProps, MatchPropsOptions } from './matching';
 
 export const matchPropsAndProjectSensAndScopedRoles =
@@ -32,24 +33,11 @@ export const matchPropsAndProjectSensAndScopedRoles =
               ])
             : q
         )
-        .match([
-          node('project'),
-          relation('out', '', 'sensitivity', { active: true }),
-          node('projSens', 'Property'),
-        ])
-        .optionalMatch([
-          node('project'),
-          relation('out', '', 'engagement', { active: true }),
-          node('', 'LanguageEngagement'),
-          relation('out', '', 'language', { active: true }),
-          node('', 'Language'),
-          relation('out', '', 'sensitivity', { active: true }),
-          node('langSens', 'Property'),
-        ])
+        .apply(matchProjectSens('project'))
         .return(
           [
             merge(propsOptions?.outputVar ?? 'props', {
-              sensitivity: determineSensitivity,
+              sensitivity: 'sensitivity',
             }).as(propsOptions?.outputVar ?? 'props'),
             session
               ? `
@@ -64,25 +52,44 @@ export const matchPropsAndProjectSensAndScopedRoles =
         )
     );
 
-const rankSens = (variable: string) => oneLine`
+export const matchProjectSens = (projectVar: string) => (query: Query) =>
+  query.comment`
+      matchProjectSens()
+    `.subQuery((sub) =>
+    sub
+      .with(projectVar) // import
+      .with(projectVar) // needed for where clause
+      .raw(`WHERE ${projectVar}.type = "${ProjectType.Internship}"`)
+      .match([
+        node(projectVar),
+        relation('out', '', 'sensitivity', { active: true }),
+        node('projSens', 'Property'),
+      ])
+      .return('projSens.value as sensitivity')
+      .union()
+      .with(projectVar) // import
+      .with(projectVar) // needed for where clause
+      .raw(`WHERE ${projectVar}.type = "${ProjectType.Translation}"`)
+      .optionalMatch([
+        node(projectVar),
+        relation('out', '', 'engagement', { active: true }),
+        node('', 'LanguageEngagement'),
+        relation('out', '', 'language', { active: true }),
+        node('', 'Language'),
+        relation('out', '', 'sensitivity', { active: true }),
+        node('langSens', 'Property'),
+      ])
+      .with('*')
+      .orderBy(rankSens('langSens.value'), 'DESC')
+      // Prevent single row with project from expanding to more here via multiple engagement matches
+      .raw('LIMIT 1')
+      .return(coalesce('langSens.value', '"High"').as('sensitivity'))
+  );
+
+export const rankSens = (variable: string) => oneLine`
   case ${variable}
     when 'High' then 2
     when 'Medium' then 1
     when 'Low' then 0
   end
 `;
-
-const determineSensitivity = `
-  case langSens
-    when null then projSens.value
-    else reduce(
-      highestSens = "Low",
-      sens in collect(langSens.value) |
-        case when ${rankSens('sens')} >
-                  ${rankSens('highestSens')}
-          then sens
-          else highestSens
-        end
-    )
-  end
-`.trim();
