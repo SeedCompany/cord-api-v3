@@ -3,7 +3,8 @@ import { Many, ServerException } from '../../../common';
 export type ExpressionInput =
   | Many<string | boolean | number | null | undefined>
   | readonly ExpressionInput[]
-  | { [prop: string]: ExpressionInput };
+  | { [prop: string]: ExpressionInput }
+  | CypherExpression;
 
 export type CypherExpression = string & {
   /**
@@ -13,6 +14,9 @@ export type CypherExpression = string & {
 };
 
 export const exp = (exp: ExpressionInput): CypherExpression => {
+  if (isExp(exp)) {
+    return exp;
+  }
   const expression = buildExp(exp);
   return new Proxy<any>(
     {},
