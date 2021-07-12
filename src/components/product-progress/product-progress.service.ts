@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ID, Session } from '../../common';
+import { ID, Session, UnauthorizedException } from '../../common';
 import { AuthorizationService } from '../authorization/authorization.service';
 import {
   ProductProgress,
@@ -50,6 +50,19 @@ export class ProductProgressService {
   }
 
   async update(input: ProductProgressInput, session: Session) {
+    const scope = await this.repo.getScope(input, session);
+    const perms = await this.auth.getPermissions({
+      resource: StepProgress,
+      sensitivity: scope.sensitivity,
+      otherRoles: scope.scopedRoles,
+      sessionOrUserId: session,
+    });
+    if (!perms.percentDone.canEdit) {
+      throw new UnauthorizedException(
+        `You do not have permission to update this product's progress`
+      );
+    }
+
     const progress = await this.repo.update(input);
     return await this.secure(progress, session);
   }

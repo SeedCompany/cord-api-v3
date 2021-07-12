@@ -6,10 +6,13 @@ import {
   getDbClassLabels,
   ID,
   NotFoundException,
+  Session,
 } from '../../common';
 import { DatabaseService } from '../../core';
 import {
   collect,
+  matchProjectScopedRoles,
+  matchProjectSens,
   matchProps,
   merge,
   updateProperty,
@@ -261,5 +264,25 @@ export class ProductProgressRepository {
       );
     }
     return result.dto;
+  }
+
+  async getScope(input: ProductProgressInput, session: Session) {
+    const query = this.db
+      .query()
+      .match([
+        node('product', 'Product', { id: input.productId }),
+        relation('in', '', 'product'),
+        node('engagement', 'Engagement'),
+        relation('in', '', 'engagement'),
+        node('project', 'Project'),
+      ])
+      .apply(matchProjectScopedRoles({ session }))
+      .apply(matchProjectSens())
+      .return(['sensitivity', 'scopedRoles']);
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException('Could not find product');
+    }
+    return result;
   }
 }
