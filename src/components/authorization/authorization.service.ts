@@ -47,7 +47,7 @@ const getProjectScopedDbRoles = Object.values(AllRoles).filter((role) =>
   role.name.startsWith('project')
 );
 export type RoleSensitivityMapping = {
-  [K in ScopedRole]: Sensitivity;
+  [K in ScopedRole]?: Sensitivity;
 };
 export const permissionDefaults = {
   canRead: false,
@@ -179,7 +179,7 @@ export class AuthorizationService {
 
   async getListRoleSensitivityMapping<Resource extends ResourceShape<any>>(
     resource: Resource
-  ): Promise<Partial<RoleSensitivityMapping>> {
+  ): Promise<RoleSensitivityMapping> {
     const roles = getProjectScopedDbRoles;
     // convert resource to a list of resource names to check
     const resources = getParentTypes(resource)
@@ -201,6 +201,7 @@ export class AuthorizationService {
     ) as RoleSensitivityMapping;
     return pickBy(map, (sens) => sens !== null);
   }
+
   async canList<Resource extends ResourceShape<any>>(
     resource: Resource,
     sessionOrUserId: Session | ID,

@@ -184,19 +184,11 @@ export class PartnerService {
     input: PartnerListInput,
     session: Session
   ): Promise<PartnerListOutput> {
-    if (await this.authorizationService.canList(Partner, session)) {
-      const results = await this.repo.list(input, session);
-      return await mapListResults(results, (id) => this.readOne(id, session));
-    } else {
-      const query = await this.repo.listPartnersOfAllUserProjects(
-        session,
-        input,
-        await this.authorizationService.getListRoleSensitivityMapping(Partner)
-      );
-      return await runListQuery(query, input, (id) =>
-        this.readOne(id, session)
-      );
-    }
+    const limited = (await this.authorizationService.canList(Partner, session))
+      ? undefined
+      : await this.authorizationService.getListRoleSensitivityMapping(Partner);
+    const results = await this.repo.list(input, session, limited);
+    return await mapListResults(results, (id) => this.readOne(id, session));
   }
 
   protected verifyFinancialReportingType(

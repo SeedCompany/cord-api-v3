@@ -135,10 +135,22 @@ export class PartnerRepository extends DtoRepository(Partner) {
       .run();
   }
 
-  async list({ filter, ...input }: PartnerListInput, session: Session) {
+  async list(
+    { filter, ...input }: PartnerListInput,
+    session: Session,
+    limitedScope?: RoleSensitivityMapping
+  ) {
     const result = await this.db
       .query()
       .match([
+        ...(limitedScope
+          ? [
+              node('project'),
+              relation('out'),
+              node('', 'Partnership'),
+              relation('out'),
+            ]
+          : []),
         node('node', 'Partner'),
         ...(filter.userId && session.userId
           ? [
@@ -149,6 +161,26 @@ export class PartnerRepository extends DtoRepository(Partner) {
             ]
           : []),
       ])
+      .apply((q) =>
+        limitedScope
+          ? q
+              .apply(
+                matchPropsAndProjectSensAndScopedRoles(session, undefined, true)
+              )
+              .subQuery('sensitivity', (sub) =>
+                sub.return(`${rankSens('sensitivity')} as sens`)
+              )
+              .matchNode('node')
+              .raw(
+                `WHERE any(role in scopedRoles WHERE role IN keys($sensMap) and sens <= ${rankSens(
+                  'apoc.map.get($sensMap, role)'
+                )})`,
+                {
+                  sensMap: limitedScope,
+                }
+              )
+          : q
+      )
       .apply(
         sorting(Partner, input, {
           name: (query) =>
@@ -166,50 +198,5 @@ export class PartnerRepository extends DtoRepository(Partner) {
       .apply(paginate(input))
       .first();
     return result!; // result from paginate() will always have 1 row.
-  }
-
-  async listPartnersOfAllUserProjects(
-    session: Session,
-    { filter, ...input }: PartnerListInput,
-    scopeSensitivityMap: Partial<RoleSensitivityMapping>
-  ) {
-    return this.db
-      .query()
-      .match([
-        [
-          node('project'),
-          relation('out'),
-          node('', 'Partnership'),
-          relation('out'),
-          node('node', 'Partner'),
-          ...(filter.userId && session.userId
-            ? [
-                relation('out', '', 'organization', { active: true }),
-                node('', 'Organization'),
-                relation('in', '', 'organization', { active: true }),
-                node('user', 'User', { id: filter.userId }),
-              ]
-            : []),
-        ],
-      ])
-      .apply(matchPropsAndProjectSensAndScopedRoles(session, undefined, true))
-      .subQuery((sub) =>
-        sub.with('sensitivity').return([`(${rankSens('sensitivity')}) as sens`])
-      )
-      .raw(
-        `MATCH (node) WHERE any(x in scopedRoles where x IN keys($sensMap) and sens <= ${rankSens(
-          'apoc.map.get($sensMap, x)'
-        )})`,
-        {
-          sensMap: scopeSensitivityMap,
-        }
-      )
-      .apply(
-        calculateTotalAndPaginateList(
-          Partner,
-          input,
-          this.orgNameSorter(input.sort, input.order)
-        )
-      );
   }
 }
