@@ -1,7 +1,14 @@
-import { Field, Float, ObjectType } from '@nestjs/graphql';
+import { Field, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { ID, Resource, SecuredProps } from '../../../common';
+import { Merge } from 'type-fest';
+import {
+  ID,
+  Resource,
+  SecuredFloatNullable,
+  SecuredProps,
+  UnsecuredDto,
+} from '../../../common';
 import { MethodologyStep } from '../../product';
 
 @ObjectType({
@@ -25,6 +32,13 @@ export class ProductProgress extends Resource {
   readonly steps: readonly StepProgress[];
 }
 
+export type UnsecuredProductProgress = Merge<
+  UnsecuredDto<ProductProgress>,
+  {
+    steps: ReadonlyArray<UnsecuredDto<StepProgress>>;
+  }
+>;
+
 @ObjectType({
   description: `The progress of a product's step for a given report`,
   implements: [Resource],
@@ -36,8 +50,8 @@ export class StepProgress extends Resource {
   @Field(() => MethodologyStep)
   readonly step: MethodologyStep;
 
-  @Field(() => Float, {
+  @Field({
     description: 'The percent (0-100) complete for the step',
   })
-  readonly percentDone: number;
+  readonly percentDone: SecuredFloatNullable;
 }

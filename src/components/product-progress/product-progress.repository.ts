@@ -6,7 +6,6 @@ import {
   getDbClassLabels,
   ID,
   NotFoundException,
-  UnsecuredDto,
 } from '../../common';
 import { DatabaseService } from '../../core';
 import {
@@ -17,7 +16,12 @@ import {
   variable,
 } from '../../core/database/query';
 import { PeriodicReportService, ReportType } from '../periodic-report';
-import { ProductProgress, ProductProgressInput, StepProgress } from './dto';
+import {
+  ProductProgress,
+  ProductProgressInput,
+  StepProgress,
+  UnsecuredProductProgress,
+} from './dto';
 
 @Injectable()
 export class ProductProgressRepository {
@@ -138,22 +142,19 @@ export class ProductProgressRepository {
                 ])
                 .apply(matchProps({ nodeName: 'stepNode', outputVar: 'step' }))
                 .raw('WITH * WHERE step.percentDone IS NOT NULL')
-                .return(merge('step', { canDelete: false }).as('step'))
+                .return('step')
             )
-            .return<{
-              dto: UnsecuredDto<ProductProgress> & { canDelete: boolean };
-            }>(
+            .return<{ dto: UnsecuredProductProgress }>(
               merge('progress', {
                 productId: 'product.id',
                 reportId: 'report.id',
                 steps: collect('step'),
-                canDelete: false,
               }).as('dto')
             )
       );
   }
 
-  async update(input: ProductProgressInput): Promise<ProductProgress> {
+  async update(input: ProductProgressInput) {
     const createdAt = DateTime.local();
     // Create temp IDs in case the Progress/Step nodes need to be created.
     const tempProgressId = await generateId();

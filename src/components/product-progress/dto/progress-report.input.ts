@@ -25,18 +25,18 @@ export abstract class ProductProgressInput {
       done it is.
     `,
   })
-  readonly steps: StepProgressInput[];
+  readonly steps: readonly StepProgressInput[];
 }
 
 @InputType()
 export abstract class StepProgressInput {
   @Field(() => MethodologyStep)
-  step: MethodologyStep;
+  readonly step: MethodologyStep;
 
   @Field(() => Float, {
     nullable: true,
     description:
       'The new percent (0-100) complete for the step or null to remove the current value.',
   })
-  percentDone: number | null;
+  readonly percentDone: number | null;
 }

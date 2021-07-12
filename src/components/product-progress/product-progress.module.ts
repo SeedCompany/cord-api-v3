@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { AuthorizationModule } from '../authorization/authorization.module';
 import { PeriodicReportModule } from '../periodic-report/periodic-report.module';
 import { ProductModule } from '../product/product.module';
 import { ProductConnectionResolver } from './product-connection.resolver';
@@ -8,7 +9,7 @@ import { ProductProgressService } from './product-progress.service';
 import { ProgressReportConnectionResolver } from './progress-report-connection.resolver';
 
 @Module({
-  imports: [ProductModule, PeriodicReportModule],
+  imports: [ProductModule, PeriodicReportModule, AuthorizationModule],
   providers: [
     ProgressReportConnectionResolver,
     ProductProgressResolver,
