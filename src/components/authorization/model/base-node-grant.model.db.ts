@@ -10,9 +10,7 @@ export class DbBaseNodeGrant<AnyBaseNode> {
   canList: boolean;
   sensitivityAccess: Sensitivity;
 
-  constructor({
-    ...rest
-  }: {
+  constructor(props: {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     __className: string;
     canDelete: boolean;
@@ -20,6 +18,6 @@ export class DbBaseNodeGrant<AnyBaseNode> {
     sensitivityAccess?: Sensitivity;
     properties: Array<PropertyGrant<Partial<AnyBaseNode>>>;
   }) {
-    Object.assign(this, rest);
+    Object.assign(this, { sensitivityAccess: Sensitivity.High }, props);
   }
 }

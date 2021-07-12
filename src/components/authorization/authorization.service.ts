@@ -43,12 +43,15 @@ import * as AllRoles from './roles';
 const getDbRoles = (roles: ScopedRole[]): DbRole[] =>
   Object.values(AllRoles).filter((role) => roles.includes(role.name));
 
-const getProjectScopedDbRoles = Object.values(AllRoles).filter((role) =>
-  role.name.startsWith('project')
+const ProjectScopedDbRoles: Record<ScopedRole, DbRole> = mapFromList(
+  Object.values(AllRoles),
+  (role) => (role.name.startsWith('project') ? [role.name, role] : null)
 );
+
 export type RoleSensitivityMapping = {
   [K in ScopedRole]?: Sensitivity;
 };
+
 export const permissionDefaults = {
   canRead: false,
   canEdit: false,
@@ -180,25 +183,18 @@ export class AuthorizationService {
   async getListRoleSensitivityMapping<Resource extends ResourceShape<any>>(
     resource: Resource
   ): Promise<RoleSensitivityMapping> {
-    const roles = getProjectScopedDbRoles;
     // convert resource to a list of resource names to check
     const resources = getParentTypes(resource)
       // if parent defines Props include it in mapping
       .filter(isResourceClass)
       .map((r) => r.name);
 
-    const roleGrantsFiltered = mapValues(
-      keyBy(roles, (r) => r.name),
-      (role) =>
-        role.grants.find((g) => resources.includes(g.__className.substring(2)))
+    const roleGrantsFiltered = mapValues(ProjectScopedDbRoles, (role) =>
+      role.grants.find((g) => resources.includes(g.__className.substring(2)))
     );
     const map = mapValues(roleGrantsFiltered, (grant) =>
-      grant?.canList
-        ? grant.sensitivityAccess === undefined
-          ? (grant.sensitivityAccess = Sensitivity.High) // default to 'High' if the role doesn't define Sensitivitity for listing
-          : grant?.sensitivityAccess
-        : null
-    ) as RoleSensitivityMapping;
+      grant?.canList ? grant?.sensitivityAccess : null
+    );
     return pickBy(map, (sens) => sens !== null);
   }
 
