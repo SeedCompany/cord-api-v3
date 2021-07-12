@@ -8,6 +8,7 @@ import { UpdateUser, User, UserStatus } from '../src/components/user';
 import {
   createEducation,
   createOrganization,
+  createPerson,
   createSession,
   createTestApp,
   createUnavailability,
@@ -546,5 +547,14 @@ describe('User e2e', () => {
 
     await login(app, { email: email.toLowerCase(), password });
     await login(app, { email, password });
+  });
+
+  it('create person - optional email', async () => {
+    await registerUser(app);
+
+    const person = await createPerson(app, {
+      email: undefined,
+    });
+    expect(person.email.value).toBeNull();
   });
 });

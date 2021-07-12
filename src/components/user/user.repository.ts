@@ -81,7 +81,7 @@ export class UserRepository extends DtoRepository(User) {
 
   async create(input: CreatePerson) {
     const initialProps = {
-      email: input.email,
+      ...(input.email ? { email: input.email } : {}), // omit email prop/relation if it's undefined
       realFirstName: input.realFirstName,
       realLastName: input.realLastName,
       displayFirstName: input.displayFirstName,
