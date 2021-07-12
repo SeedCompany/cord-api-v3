@@ -1,11 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { fromPairs } from 'lodash';
 import { DateTime } from 'luxon';
-import { table } from 'node:console';
-import { Pool } from 'pg';
 import { ID } from '../../common';
-import { ConfigService, DatabaseService, SyntaxError } from '../../core';
+import {
+  ConfigService,
+  DatabaseService,
+  ILogger,
+  Logger,
+  SyntaxError,
+} from '../../core';
 import { PostgresService } from '../../core/postgres/postgres.service';
 
 @Injectable()
@@ -13,16 +16,23 @@ export class AdminRepository {
   constructor(
     private readonly db: DatabaseService,
     private readonly pg: PostgresService,
-    private readonly config: ConfigService
+    private readonly config: ConfigService,
+    @Logger('admin:repository') private readonly logger: ILogger
   ) {}
 
   async loadData() {
     // default inserts
     const pool = this.pg.pool;
-    console.log(pool.idleCount, pool.totalCount);
+    this.logger.info('pool info', {
+      idleCount: pool.idleCount,
+      totalCount: pool.totalCount,
+    });
     const client = await pool.connect();
-    let client2 = await pool.connect();
-    console.log(pool.idleCount, pool.totalCount);
+    const client2 = await pool.connect();
+    this.logger.info('pool info', {
+      idleCount: pool.idleCount,
+      totalCount: pool.totalCount,
+    });
 
     await client.query(
       `insert into public.people_data("id", "public_first_name") values($1, $2)`,
@@ -42,7 +52,7 @@ export class AdminRepository {
     // inserting a lot of data
     for (let i = 1; i < 2; i++) {
       const orgName = `org${i}`;
-      const personName = `person${i}`;
+      // const personName = `person${i}`;
       const locationName = `location${i}`;
       const userData = {
         email: `email${i}`,
@@ -76,17 +86,25 @@ export class AdminRepository {
     const tables = await client.query(
       `select table_name from information_schema.tables where table_schema = 'public' and table_name like '%_data' order by table_name`
     );
-    console.log(tables.rows);
-    tables.rows.forEach(async (tableRow) => {
+
+    this.logger.info('rows', { rows: tables.rows });
+
+    for (const tableRow of tables.rows) {
       const columns = await client.query(
         `select column_name from information_schema.columns where table_schema='public' and table_name = $1`,
         [tableRow.table_name]
       );
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       const schemaTableName = `public.${tableRow.table_name}`;
-      console.log(schemaTableName);
-      columns.rows.forEach(async (columnRow, index) => {
+      this.logger.info(schemaTableName);
+
+      for (const [columnRow, index] of columns.rows) {
         const accessLevel = index % 2 === 0 ? 'Read' : 'Write';
-        console.log(schemaTableName, columnRow.column_name, accessLevel);
+        this.logger.info('column info', {
+          schemaTableName,
+          columnName: columnRow.column_name,
+          accessLevel,
+        });
         await client.query(
           `select * from public.sys_add_role_grant($1, $2, $3, $4, $5 )`,
           [
@@ -97,22 +115,22 @@ export class AdminRepository {
             accessLevel,
           ]
         );
-      });
-    });
+      }
+    }
 
     // add role member
     const users = await client.query(`select person from public.users_data`);
-    console.log(users.rows);
+    this.logger.info('user.rows', { userRows: users.rows });
 
-    users.rows.forEach(async (row, index) => {
+    for (const [row] of users.rows) {
       await client.query(
         `insert into public.global_role_memberships_data("person", "global_role") values($1, 0)`,
         [row.person]
       );
-    });
+    }
 
     client.release();
-    console.log('using second client');
+    this.logger.info('using second client');
     //projects
     for (let i = 1; i < 2; i++) {
       const projName = `proj${i}`;
@@ -137,7 +155,7 @@ export class AdminRepository {
     await client2.query(`insert into public.project_role_column_grants_data("access_level","column_name", "project_role", "table_name")
       values('Write', 'name', 1, 'public.locations_data' );`);
     client2.release();
-    console.log('all queries run');
+    this.logger.info('all queries run');
     // await pool.end();
     // await pool2.end();
     return true;

@@ -1,3 +1,4 @@
+/* eslint-disable @seedcompany/no-unused-vars */
 import { Connection } from 'cypher-query-builder';
 
 export async function resetDatabase(db: Connection) {

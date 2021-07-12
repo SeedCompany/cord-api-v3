@@ -22,7 +22,7 @@ const ProvideSessionPipe: Provider = {
   imports: [
     forwardRef(() => UserModule),
     forwardRef(() => AuthorizationModule),
-    PostgresModule
+    PostgresModule,
   ],
   providers: [
     LoginResolver,

@@ -15,7 +15,6 @@ import { FrontendUrlWrapper } from '../email/templates/frontend-url';
 import { LogLevel } from '../logger';
 import { EnvironmentService } from './environment.service';
 
-
 /**
  * Application configuration.
  * This is used to provide a higher level mapping from the raw environment.
@@ -77,7 +76,7 @@ export class ConfigService implements EmailOptionsFactory {
     .string('FRONTEND_URL')
     .optional('http://localhost:3001');
 
-// use this for postgres service
+  // use this for postgres service
   @Lazy() get neo4j() {
     const driverConfig: Neo4JDriverConfig = {
       maxTransactionRetryTime: 30_000,
@@ -100,16 +99,20 @@ export class ConfigService implements EmailOptionsFactory {
       driverConfig,
     };
   }
-//
-  @Lazy() get postgres(){
-    let host = this.env.string('PGHOST').optional('localhost');
-    let user = this.env.string('PGUSER').optional('postgres');
-    let password = this.env.string('PGPASSWORD').optional('password');
-    let database = this.env.string('PGDATABASE').optional('postgres');
-    let port = this.env.number('PGPORT').optional(5432);
+  //
+  @Lazy() get postgres() {
+    const host = this.env.string('PGHOST').optional('localhost');
+    const user = this.env.string('PGUSER').optional('postgres');
+    const password = this.env.string('PGPASSWORD').optional('password');
+    const database = this.env.string('PGDATABASE').optional('postgres');
+    const port = this.env.number('PGPORT').optional(5432);
     return {
-        host, user, password, database, port
-    }
+      host,
+      user,
+      password,
+      database,
+      port,
+    };
   }
 
   dbIndexesCreate = this.env.boolean('DB_CREATE_INDEXES').optional(true);

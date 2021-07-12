@@ -18,7 +18,7 @@ export class AuthenticationRepository {
     private readonly db: DatabaseService,
     private readonly pg: PostgresService
   ) {
-    this.pg.db_init();
+    void this.pg.init();
   }
 
   async saveSessionToken(token: string) {
