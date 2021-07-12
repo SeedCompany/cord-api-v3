@@ -24,11 +24,11 @@ declare module 'cypher-query-builder/dist/typings/query' {
      * .return(['x', 'y'])
      */
     subQuery<SubResult>(
-      sub: (query: this) => Query<SubResult>
+      sub: (query: Query<Result>) => Query<SubResult>
     ): Query<Result & SubResult>;
     subQuery<SubResult>(
       importVars: Many<string>,
-      sub: (query: this) => Query<SubResult>
+      sub: (query: Query<Result>) => Query<SubResult>
     ): Query<Result & SubResult>;
   }
 }
