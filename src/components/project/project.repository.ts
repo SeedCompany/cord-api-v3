@@ -68,8 +68,7 @@ export class ProjectRepository extends CommonRepository {
     const query = this.db
       .query()
       .match([node('node', 'Project', { id })])
-      .apply(this.hydrate(userId, changeset))
-      .return('dto');
+      .apply(this.hydrate(userId, changeset));
     const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find project');
@@ -80,46 +79,44 @@ export class ProjectRepository extends CommonRepository {
 
   private hydrate(userId: ID, changeset?: ID) {
     return (query: Query) =>
-      query.subQuery('node', (sub) =>
-        sub
-          .with(['node', 'node as project'])
-          .apply(matchPropsAndProjectSensAndScopedRoles(userId))
-          .apply(matchChangesetAndChangedProps(changeset))
-          .optionalMatch([
-            node('node'),
-            relation('out', '', 'primaryLocation', { active: true }),
-            node('primaryLocation', 'Location'),
-          ])
-          .optionalMatch([
-            node('node'),
-            relation('out', '', 'marketingLocation', { active: true }),
-            node('marketingLocation', 'Location'),
-          ])
-          .optionalMatch([
-            node('node'),
-            relation('out', '', 'fieldRegion', { active: true }),
-            node('fieldRegion', 'FieldRegion'),
-          ])
-          .optionalMatch([
-            node('node'),
-            relation('out', '', 'owningOrganization', { active: true }),
-            node('organization', 'Organization'),
-          ])
-          .raw('', { requestingUserId: userId })
-          .return<{ dto: UnsecuredDto<Project> }>(
-            merge('props', 'changedProps', {
-              type: 'node.type',
-              pinned:
-                'exists((:User { id: $requestingUserId })-[:pinned]->(node))',
-              primaryLocation: 'primaryLocation.id',
-              marketingLocation: 'marketingLocation.id',
-              fieldRegion: 'fieldRegion.id',
-              owningOrganization: 'organization.id',
-              scope: 'scopedRoles',
-              changeset: 'changeset.id',
-            }).as('dto')
-          )
-      );
+      query
+        .with(['node', 'node as project'])
+        .apply(matchPropsAndProjectSensAndScopedRoles(userId))
+        .apply(matchChangesetAndChangedProps(changeset))
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'primaryLocation', { active: true }),
+          node('primaryLocation', 'Location'),
+        ])
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'marketingLocation', { active: true }),
+          node('marketingLocation', 'Location'),
+        ])
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'fieldRegion', { active: true }),
+          node('fieldRegion', 'FieldRegion'),
+        ])
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'owningOrganization', { active: true }),
+          node('organization', 'Organization'),
+        ])
+        .raw('', { requestingUserId: userId })
+        .return<{ dto: UnsecuredDto<Project> }>(
+          merge('props', 'changedProps', {
+            type: 'node.type',
+            pinned:
+              'exists((:User { id: $requestingUserId })-[:pinned]->(node))',
+            primaryLocation: 'primaryLocation.id',
+            marketingLocation: 'marketingLocation.id',
+            fieldRegion: 'fieldRegion.id',
+            owningOrganization: 'organization.id',
+            scope: 'scopedRoles',
+            changeset: 'changeset.id',
+          }).as('dto')
+        );
   }
 
   getActualChanges(

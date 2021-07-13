@@ -44,8 +44,18 @@ export const paginate =
       .subQuery('page', (sub) =>
         sub
           .raw('UNWIND page as node')
+          // Capture the order of the node in the list, as we are assuming
+          // that's the order we want to maintain from previous sorting().
+          .with(['node', 'apoc.coll.indexOf(page, node) as order'])
           .comment('Hydrating node')
-          .apply(hydrate ?? ((q) => q.with('node.id as dto')))
+          // Hydrate node is sub-query so that hydrate can do whatever it wants
+          // as long as it returns `dto`
+          .subQuery('node', hydrate ?? ((q) => q.return('node.id as dto')))
+          // Re-order rows by the previously determined sorting order.
+          // Neo4j doesn't guarantee sort order passed a certain point, and
+          // hydration queries can cause neo4j to change it.
+          .with('*')
+          .orderBy('order')
           // Using collect in sub query ensures that unwinding an empty list
           // and then collecting in the return will maintain the one row outside
           // this sub query so that total and other pagination info is returned.
