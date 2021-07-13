@@ -1,5 +1,6 @@
 import { oneLine } from 'common-tags';
 import { node, Query, relation } from 'cypher-query-builder';
+import { Variable } from '.';
 import { ID, isIdLike, Sensitivity, Session } from '../../../common';
 import { ScopedRole } from '../../../components/authorization';
 import { ProjectType } from '../../../components/project/dto/type.enum';
@@ -15,15 +16,16 @@ import { ACTIVE, matchProps, MatchPropsOptions } from './matching';
 
 export const matchPropsAndProjectSensAndScopedRoles =
   (
-    session?: Session | ID,
+    session?: Session | ID | Variable,
     propsOptions?: MatchPropsOptions,
     skipMatchProps = false
   ) =>
   <R>(query: Query<R>) =>
     query.comment`
       matchPropsAndProjectSensAndScopedRoles()
-    `.subQuery(['node', 'project'], (sub) =>
+    `.subQuery([...(skipMatchProps ? [] : ['node']), 'project'], (sub) =>
       sub
+        .apply(matchProjectSens('project'))
         .apply((q) => (skipMatchProps ? q : q.apply(
           matchProps(
             propsOptions?.view?.deleted
@@ -34,7 +36,6 @@ export const matchPropsAndProjectSensAndScopedRoles =
         .apply((q) =>
           !session ? q : q.apply(matchProjectScopedRoles({ session }))
         )
-        .apply(matchProjectSens())
         .return([
           skipMatchProps
             ? 'sensitivity'
@@ -51,7 +52,7 @@ export const matchProjectScopedRoles =
     projectVar = 'project',
     outputVar = 'scopedRoles' as Output,
   }: {
-    session: Session | ID;
+    session: Session | ID | Variable;
     projectVar?: string;
     outputVar?: Output;
   }) =>
@@ -64,9 +65,11 @@ export const matchProjectScopedRoles =
             relation('out', '', 'member'),
             node('projectMember'),
             relation('out', '', 'user'),
-            node('user', 'User', {
-              id: isIdLike(session) ? session : session.userId,
-            }),
+            session instanceof Variable
+              ? node(session.name)
+              : node('user', 'User', {
+                  id: isIdLike(session) ? session : session.userId,
+                }),
           ],
           [
             node('projectMember'),

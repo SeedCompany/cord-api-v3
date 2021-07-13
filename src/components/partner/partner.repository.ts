@@ -18,7 +18,9 @@ import {
   merge,
   paginate,
   rankSens,
+  requestingUser,
   sorting,
+  variable,
 } from '../../core/database/query';
 import { RoleSensitivityMapping } from '../authorization/authorization.service';
 import { CreatePartner, Partner, PartnerListInput } from './dto';
@@ -145,10 +147,10 @@ export class PartnerRepository extends DtoRepository(Partner) {
       .match([
         ...(limitedScope
           ? [
-              node('project'),
-              relation('out'),
+              node('project', 'Project'),
+              relation('out', '', 'partnership'),
               node('', 'Partnership'),
-              relation('out'),
+              relation('out', '', 'partner'),
             ]
           : []),
         node('node', 'Partner'),
@@ -161,15 +163,24 @@ export class PartnerRepository extends DtoRepository(Partner) {
             ]
           : []),
       ])
+      // match requesting user once (instead of once per row)
+      .match(requestingUser(session))
       .apply((q) =>
         limitedScope
           ? q
+              // group by project so this next bit doesn't run multiple times for a single project
+              .with(['project', 'collect(node) as partners', 'requestingUser'])
               .apply(
-                matchPropsAndProjectSensAndScopedRoles(session, undefined, true)
+                matchPropsAndProjectSensAndScopedRoles(
+                  variable('requestingUser'),
+                  undefined,
+                  true
+                )
               )
               .subQuery('sensitivity', (sub) =>
                 sub.return(`${rankSens('sensitivity')} as sens`)
               )
+              .raw('UNWIND partners as node')
               .matchNode('node')
               .raw(
                 `WHERE any(role in scopedRoles WHERE role IN keys($sensMap) and sens <= ${rankSens(
