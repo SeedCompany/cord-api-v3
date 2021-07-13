@@ -6,8 +6,8 @@
 -- ENUMS ----
 create schema if not exists public;
 
-CREATE EXTENSION hstore;
 set schema 'public';
+CREATE EXTENSION hstore;
 
 DO $$ BEGIN
     create type public.access_level as enum (
