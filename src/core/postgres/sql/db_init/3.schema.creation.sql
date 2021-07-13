@@ -49,7 +49,7 @@ begin
          for rec2 in (select column_name,case 
         			  when (data_type = 'USER-DEFINED') then 'public.' || udt_name
                       when (data_type = 'ARRAY')
-                      then substr(udt_name, 2, length(udt_name)-1) || '[]' 
+                      then  substr(udt_name, 2, length(udt_name)-1) || '[]' 
         			else data_type 
     				end as data_type from information_schema.columns
         			where table_schema = p_schema_name and table_name = rec1.table_name) loop

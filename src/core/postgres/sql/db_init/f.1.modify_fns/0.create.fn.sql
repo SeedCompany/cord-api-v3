@@ -9,11 +9,14 @@ declare
 rec1 record;
 rec2 record;
 rec3 record; 
-rec4 record;
+datatype text;
 permissionExists boolean;
 column_access_level public.access_level;
+column_data_type text;
+column_udt_name text;
 security_table_name text;
-sqlString text;
+sqlStringKeys text;
+sqlStringValues text; 
 begin
     permissionExists := false; 
 -- check if person has "create" permission on table
@@ -33,24 +36,31 @@ begin
     security_table_name := replace(pTableName, '_data', '_security');
     for rec2 in (select skeys(pRecord)) loop 
         select public.get_global_access_level(pPersonId, pTableName, rec2.skeys) into column_access_level;
-        if column_access_level != 'Write' then 
+        raise info 'create.fn column_access_level: %', column_access_level;
+        if column_access_level is null or column_access_level != 'Write' then 
             raise notice 'don''t have write access to column: % ', rec2.skeys;
             return 2;
         end if;
     end loop;
 -- insert row! 
-    sqlString := 'insert into '|| pTableName || '(';
-    for rec3 in (select skeys(pRecord)) loop 
-        sqlString := sqlString || rec3.skeys || ',';
+    sqlStringKeys := 'insert into '|| pTableName || '(';
+    sqlStringValues := ') values (';
+    for rec3 in (select skeys(pRecord), svals(pRecord)) loop 
+        sqlStringKeys := sqlStringKeys || rec3.skeys || ',';
+    
+        select data_type, udt_name into column_data_type, column_udt_name from information_schema.columns where table_schema = split_part(pTableName, '.',1) and table_name = split_part(pTableName, '.', 2) and column_name = rec3.skeys; 
+
+        if column_data_type = 'ARRAY'then 
+            sqlStringValues := sqlStringValues || 'ARRAY' || rec3.svals ||'::' ||  'public.' || substr(column_udt_name, 2, length(column_udt_name)-1) || '[],';
+        else 
+        sqlStringValues := sqlStringValues || quote_literal(rec3.svals) || ',';
+        end if;
+
     end loop;
     -- removing the final comma
-    sqlString := substr(sqlString,1,length(sqlString) - 1);
-    sqlString := sqlString || ') values (';
-    for rec4 in (select svals(pRecord)) loop 
-        sqlString := sqlString || quote_literal(rec4.svals) || ',';
-    end loop;
-    sqlString := substr(sqlString,1,length(sqlString) - 1);
-    sqlString := sqlString || ');';
-    execute format(sqlString);
+    sqlStringKeys := substr(sqlStringKeys,1,length(sqlStringKeys) - 1);
+    sqlStringValues := substr(sqlStringValues,1,length(sqlStringValues) - 1);
+    sqlStringValues := sqlStringValues || ')';
+    execute format(sqlStringKeys || sqlStringValues);
     return 0;
 end; $$;

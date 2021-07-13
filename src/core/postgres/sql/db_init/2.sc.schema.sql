@@ -89,7 +89,7 @@ create table if not exists sc.organizations_data (
 	address varchar(255),
 	base64 varchar(32) unique not null,
 	created_at timestamp not null default CURRENT_TIMESTAMP,
-	created_by int not null,
+	created_by int not null default 0,
 	internal varchar(32) unique not null,
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
     modified_by int not null default 0,
