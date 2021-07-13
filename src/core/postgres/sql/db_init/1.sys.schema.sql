@@ -1,7 +1,12 @@
+
+
+
 -- system schema. org specific schema should go in an org-specific file.
 
 -- ENUMS ----
 create schema if not exists public;
+
+CREATE EXTENSION hstore;
 set schema 'public';
 
 DO $$ BEGIN
