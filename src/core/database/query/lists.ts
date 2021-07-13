@@ -48,8 +48,9 @@ export const paginate =
           // that's the order we want to maintain from previous sorting().
           .with(['node', 'apoc.coll.indexOf(page, node) as order'])
           .comment('Hydrating node')
-          .apply(hydrate ?? ((q) => q.with('node.id as dto')))
-          .comment('Hydration done, continuing with pagination')
+          // Hydrate node is sub-query so that hydrate can do whatever it wants
+          // as long as it returns `dto`
+          .subQuery('node', hydrate ?? ((q) => q.return('node.id as dto')))
           // Re-order rows by the previously determined sorting order.
           // Neo4j doesn't guarantee sort order passed a certain point, and
           // hydration queries can cause neo4j to change it.

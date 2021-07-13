@@ -181,9 +181,7 @@ export class UserRepository extends DtoRepository(User) {
     const query = this.db
       .query()
       .match([node('node', 'User', { id })])
-      .apply(this.hydrate())
-      .return('dto')
-      .asResult<{ dto: UnsecuredDto<User> }>();
+      .apply(this.hydrate());
     const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find user', 'user.id');
@@ -193,21 +191,18 @@ export class UserRepository extends DtoRepository(User) {
 
   private hydrate() {
     return (query: Query) =>
-      query.subQuery((sub) =>
-        sub
-          .with('node')
-          .optionalMatch([
-            node('node'),
-            relation('out', '', 'roles', { active: true }),
-            node('role', 'Property'),
-          ])
-          .apply(matchProps())
-          .return<{ dto: UnsecuredDto<User> }>(
-            merge('props', {
-              roles: collect('role.value'),
-            }).as('dto')
-          )
-      );
+      query
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'roles', { active: true }),
+          node('role', 'Property'),
+        ])
+        .apply(matchProps())
+        .return<{ dto: UnsecuredDto<User> }>(
+          merge('props', {
+            roles: collect('role.value'),
+          }).as('dto')
+        );
   }
 
   async updateEmail(
