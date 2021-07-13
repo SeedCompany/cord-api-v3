@@ -14,7 +14,6 @@ export class PostgresService {
 
   pool = new Pool({
     ...this.config.postgres,
-    idleTimeoutMillis: 0,
   });
 
   async executeSQLFiles(client: PoolClient, dirPath: string): Promise<number> {
@@ -47,6 +46,7 @@ export class PostgresService {
         '..',
         'src/core/postgres/sql/db_init'
       );
+      this.logger.info('path', { dbInitPath });
       const fileExecutionStatus = await this.executeSQLFiles(
         client,
         dbInitPath
