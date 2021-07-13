@@ -23,8 +23,13 @@ export const matchPropsAndProjectSensAndScopedRoles =
   <R>(query: Query<R>) =>
     query.comment`
       matchPropsAndProjectSensAndScopedRoles()
-    `.subQuery([...(skipMatchProps ? [] : ['node']), 'project'], (sub) =>
+    `.subQuery((sub) =>
       sub
+        .with([
+          ...(skipMatchProps ? [] : ['node']),
+          'project',
+          ...(session instanceof Variable ? [session.name] : []),
+        ])
         .apply(matchProjectSens('project'))
         .apply((q) => (skipMatchProps ? q : q.apply(
           matchProps(
