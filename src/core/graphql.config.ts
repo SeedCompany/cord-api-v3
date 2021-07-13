@@ -48,6 +48,7 @@ export class GraphQLConfig implements GqlOptionsFactory {
       introspection: true, // needed for playground
       formatError: this.formatError,
       debug: this.debug,
+      sortSchema: true,
     };
   }
 
