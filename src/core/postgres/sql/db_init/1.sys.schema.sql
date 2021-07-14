@@ -116,7 +116,7 @@ DO $$ BEGIN
 		'sc.locations_data',
 		'sc.organizations_data',
 		'sc.organization_locations_data',
-		'sc.partners_data_data',
+		'sc.partners_data',
 		'sc.language_goal_definitions_data',
 		'sc.languages_data',
 		'sc.language_locations_data',
