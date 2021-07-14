@@ -1,4 +1,4 @@
-create or replace function public.create(pPersonId int, pId int, pTableName text)
+create or replace function public.delete(pPersonId int, pId int, pTableName text)
 returns int 
 language plpgsql
 as $$ 
