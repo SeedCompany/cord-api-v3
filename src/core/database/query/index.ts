@@ -10,4 +10,6 @@ export * from './deletes';
 export * from './match-project-based-props';
 export * from './match-changeset-and-changed-props';
 export * from './update-property';
+export * from './add-previous-label';
+export * from './active-changed-prop';
 export * from '../query-augmentation/condition-variables';
