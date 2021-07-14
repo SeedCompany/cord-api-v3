@@ -52,16 +52,25 @@ export class ApplyApprovedChangesetToProject
           node('changeset'),
         ])
         // Apply previous label to active prop
-        .apply(addPreviousLabel(variable('relationToProp'), changesetId))
+        .apply(
+          addPreviousLabel(variable('type(relationToProp)'), changesetId, [
+            'relationToProp',
+          ])
+        )
         // Deactivate active prop
         .apply(
           deactivateProperty({
-            key: variable('relationToProp'),
+            key: variable('type(relationToProp)'),
             resource: IProject,
+            importVars: ['relationToProp'],
           })
         )
         // Set changed prop to active
-        .apply(activeChangedProp(variable('relationToProp'), changesetId))
+        .apply(
+          activeChangedProp(variable('type(relationToProp)'), changesetId, [
+            'relationToProp',
+          ])
+        )
         .return('node')
         .run();
       // TODO handle relations (locations, etc.)
