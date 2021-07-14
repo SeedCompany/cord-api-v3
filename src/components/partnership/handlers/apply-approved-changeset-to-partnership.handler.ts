@@ -7,9 +7,10 @@ import {
   ILogger,
   Logger,
 } from '../../../core';
-import { deleteBaseNode, matchProps } from '../../../core/database/query';
+import { deleteBaseNode } from '../../../core/database/query';
+import { changesetApplyChanges } from '../../changeset/changeset-apply-changes.helpers';
 import { ProjectChangeRequestApprovedEvent } from '../../project-change-request/events';
-import { UpdatePartnership } from '../dto';
+import { Partnership } from '../dto';
 import { PartnershipService } from '../partnership.service';
 
 type SubscribedEvent = ProjectChangeRequestApprovedEvent;
@@ -66,23 +67,29 @@ export class ApplyApprovedChangesetToPartnership
             })
             .return('node')
         )
-        .apply(
-          matchProps({
-            changeset: changeset,
-            optional: true,
-            excludeBaseProps: true,
-          })
-        )
-        .return<{
-          id: ID;
-          changes: UpdatePartnership;
-        }>(['node.id as id', 'props as changes'])
+        .return<{ id: ID }>(['node.id as id'])
         .run();
 
       await Promise.all(
-        partnerships.map(async ({ id, changes }) => {
-          const update = this.service.update.bind(this.service);
-          await update({ ...changes, id }, event.session);
+        partnerships.map(async ({ id }) => {
+          // Skip looping for partnerships created in changeset
+          await this.db
+            .query()
+            .match([
+              node('changeset', 'Changeset', { id: changeset }),
+              relation('in', '', 'changeset', { active: true }),
+              node('project', 'Project'),
+              relation('out', '', 'partnership', { active: true }),
+              node('node', 'Partnership', { id }),
+            ])
+            .apply(
+              changesetApplyChanges({
+                type: Partnership,
+                changeset,
+              })
+            )
+            .return('node')
+            .run();
         })
       );
 
