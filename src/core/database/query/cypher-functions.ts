@@ -60,6 +60,9 @@ export const apoc = {
   map: {
     fromValues: fn1('apoc.map.fromValues'),
   },
+  coll: {
+    flatten: fn1('apoc.coll.flatten'),
+  },
 };
 
 export const listConcat = (...items: ExpressionInput[]) =>
@@ -68,4 +71,19 @@ export const listConcat = (...items: ExpressionInput[]) =>
       .filter((item) => item !== undefined)
       .map(exp)
       .join(' + ')
+  );
+
+/**
+ * @see https://neo4j.com/docs/cypher-manual/current/functions/list/#functions-reduce
+ */
+export const reduce = (
+  accumulator: string,
+  initial: ExpressionInput,
+  list: ExpressionInput,
+  variable: string,
+  iteratee: ExpressionInput
+) =>
+  fn('reduce')(
+    `${exp(accumulator)} = ${exp(initial)}`,
+    `${variable} IN ${exp(list)} | ${exp(iteratee)}`
   );

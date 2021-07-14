@@ -38,8 +38,8 @@ export class ProductProgressResolver {
   @Mutation(() => ProductProgress)
   async updateProductProgress(
     @Args('input') input: ProductProgressInput,
-    @LoggedInSession() _session: Session
+    @LoggedInSession() session: Session
   ): Promise<ProductProgress> {
-    return await this.service.update(input);
+    return await this.service.update(input, session);
   }
 }

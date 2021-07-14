@@ -6,18 +6,25 @@ import {
   getDbClassLabels,
   ID,
   NotFoundException,
-  UnsecuredDto,
+  Session,
 } from '../../common';
 import { DatabaseService } from '../../core';
 import {
   collect,
+  matchProjectScopedRoles,
+  matchProjectSens,
   matchProps,
   merge,
   updateProperty,
   variable,
 } from '../../core/database/query';
 import { PeriodicReportService, ReportType } from '../periodic-report';
-import { ProductProgress, ProductProgressInput, StepProgress } from './dto';
+import {
+  ProductProgress,
+  ProductProgressInput,
+  StepProgress,
+  UnsecuredProductProgress,
+} from './dto';
 
 @Injectable()
 export class ProductProgressRepository {
@@ -138,22 +145,19 @@ export class ProductProgressRepository {
                 ])
                 .apply(matchProps({ nodeName: 'stepNode', outputVar: 'step' }))
                 .raw('WITH * WHERE step.percentDone IS NOT NULL')
-                .return(merge('step', { canDelete: false }).as('step'))
+                .return('step')
             )
-            .return<{
-              dto: UnsecuredDto<ProductProgress> & { canDelete: boolean };
-            }>(
+            .return<{ dto: UnsecuredProductProgress }>(
               merge('progress', {
                 productId: 'product.id',
                 reportId: 'report.id',
                 steps: collect('step'),
-                canDelete: false,
               }).as('dto')
             )
       );
   }
 
-  async update(input: ProductProgressInput): Promise<ProductProgress> {
+  async update(input: ProductProgressInput) {
     const createdAt = DateTime.local();
     // Create temp IDs in case the Progress/Step nodes need to be created.
     const tempProgressId = await generateId();
@@ -260,5 +264,25 @@ export class ProductProgressRepository {
       );
     }
     return result.dto;
+  }
+
+  async getScope(input: ProductProgressInput, session: Session) {
+    const query = this.db
+      .query()
+      .match([
+        node('product', 'Product', { id: input.productId }),
+        relation('in', '', 'product'),
+        node('engagement', 'Engagement'),
+        relation('in', '', 'engagement'),
+        node('project', 'Project'),
+      ])
+      .apply(matchProjectScopedRoles({ session }))
+      .apply(matchProjectSens())
+      .return(['sensitivity', 'scopedRoles']);
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException('Could not find product');
+    }
+    return result;
   }
 }
