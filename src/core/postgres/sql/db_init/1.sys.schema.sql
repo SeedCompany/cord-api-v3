@@ -163,7 +163,7 @@ create table if not exists public.global_role_column_grants_data (
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
     modified_by int not null default 0,
 	table_name table_name not null,
-	unique (global_role, table_name, column_name, access_level),
+	unique (global_role, table_name, column_name),
     -- foreign keys added after people table created
 	foreign key (global_role) references public.global_roles_data(id)
 );
