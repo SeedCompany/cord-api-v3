@@ -37,30 +37,32 @@ export const deactivateProperty =
   <R>(query: Query<R>) =>
     query.comment`
       deactivateProperty(${nodeName}.${key})
-    `.subQuery(nodeName, (sub) =>
-      sub
-        .match([
-          node(nodeName),
-          relation('out', 'oldToProp', key instanceof Variable ? [] : key, {
-            active: !changeset,
-          }),
-          node('oldPropVar', 'Property'),
-          ...(changeset
-            ? [
-                relation('in', 'oldChange', 'changeset', { active: true }),
-                node('changeNode', 'Changeset', { id: changeset }),
-              ]
-            : []),
-        ])
-        .apply((q) =>
-          key instanceof Variable
-            ? q.raw(`WHERE type(oldToProp) = ${key.name}`)
-            : q
-        )
-        .setValues({
-          [`${changeset ? 'oldChange' : 'oldToProp'}.active`]: false,
-        })
-        .with('oldPropVar')
-        .apply(prefixNodeLabelsWithDeleted('oldPropVar'))
-        .return(`count(oldPropVar) as ${numDeactivatedVar}`)
+    `.subQuery(
+      key instanceof Variable ? [nodeName, key.name] : [nodeName],
+      (sub) =>
+        sub
+          .match([
+            node(nodeName),
+            relation('out', 'oldToProp', key instanceof Variable ? [] : key, {
+              active: !changeset,
+            }),
+            node('oldPropVar', 'Property'),
+            ...(changeset
+              ? [
+                  relation('in', 'oldChange', 'changeset', { active: true }),
+                  node('changeNode', 'Changeset', { id: changeset }),
+                ]
+              : []),
+          ])
+          .apply((q) =>
+            key instanceof Variable
+              ? q.raw(`WHERE type(oldToProp) = type(${key.name})`)
+              : q
+          )
+          .setValues({
+            [`${changeset ? 'oldChange' : 'oldToProp'}.active`]: false,
+          })
+          .with('oldPropVar')
+          .apply(prefixNodeLabelsWithDeleted('oldPropVar'))
+          .return(`count(oldPropVar) as ${numDeactivatedVar}`)
     );
