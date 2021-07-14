@@ -46,7 +46,7 @@ export const matchProjectScopedRoles =
   <R>(query: Query<R>) =>
     query.comment`matchProjectScopedRoles()`.subQuery(projectVar, (sub) =>
       sub
-        .optionalMatch([
+        .match([
           [
             node(projectVar),
             relation('out', '', 'member'),
