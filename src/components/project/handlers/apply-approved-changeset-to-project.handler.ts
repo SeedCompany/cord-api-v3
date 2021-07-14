@@ -7,12 +7,7 @@ import {
   ILogger,
   Logger,
 } from '../../../core';
-import {
-  activeChangedProp,
-  addPreviousLabel,
-  deactivateProperty,
-  variable,
-} from '../../../core/database/query';
+import { changesetApplyChanges } from '../../changeset/changeset-apply-changes.helpers';
 import { ProjectChangeRequestApprovedEvent } from '../../project-change-request/events';
 import { IProject } from '../dto';
 import { ProjectRepository } from '../project.repository';
@@ -44,32 +39,11 @@ export class ApplyApprovedChangesetToProject
           relation('out', '', 'changeset', { active: true }),
           node('changeset', 'Changeset', { id: changesetId }),
         ])
-        .match([
-          node('node'),
-          relation('out', 'relationToProp', { active: false }),
-          node('changedProp', 'Property'),
-          relation('in', '', 'changeset', { active: true }),
-          node('changeset'),
-        ])
-        // Apply previous label to active prop
         .apply(
-          addPreviousLabel(variable('type(relationToProp)'), changesetId, [
-            'relationToProp',
-          ])
-        )
-        // Deactivate active prop
-        .apply(
-          deactivateProperty({
-            key: variable('type(relationToProp)'),
-            resource: IProject,
-            importVars: ['relationToProp'],
+          changesetApplyChanges({
+            type: IProject,
+            changeset: changesetId,
           })
-        )
-        // Set changed prop to active
-        .apply(
-          activeChangedProp(variable('type(relationToProp)'), changesetId, [
-            'relationToProp',
-          ])
         )
         .return('node')
         .run();
