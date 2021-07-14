@@ -9,7 +9,6 @@ declare
 rec1 record;
 rec2 record;
 rec3 record; 
-datatype text;
 permissionExists boolean;
 column_access_level public.access_level;
 column_data_type text;
