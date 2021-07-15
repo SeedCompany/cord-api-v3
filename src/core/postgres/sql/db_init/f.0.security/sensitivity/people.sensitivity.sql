@@ -25,16 +25,20 @@ begin
         base_schema_table_name := TG_ARGV[0] || '.' || rec1.table_name;
         security_schema_table_name := replace(base_schema_table_name, '_data', '_security');
 
-        execute format('select sensitivity from ' || base_schema_table_name || ' where id = ' || p_id) into data_table_row_sensitivity;
+        for rec2 in  execute format('select id from '|| base_schema_table_name) loop
 
-        raise info 'data_table_row_sensitivity: % | person_sensitivity_clearance: %', data_table_row_sensitivity, new.sensitivity_clearance;
-        
-        if (data_table_row_sensitivity = 'Medium' and new.sensitivity_clearance = 'Low') or 
-        (data_table_row_sensitivity = 'High' and (new.sensitivity_clearance = 'Medium' or new.sensitivity_clearance = 'Low')) then 
+            execute format('select sensitivity from ' || base_schema_table_name || ' where id = ' || rec2.id) into data_table_row_sensitivity;
 
-            execute format('update ' || security_schema_table_name || ' set __is_cleared = false where __person_id = '|| old.__person_id || ' and '|| ' __id = '|| new.__id);
-    
-        end if;    
+            raise info 'data_table_row_sensitivity: % | person_sensitivity_clearance: %', data_table_row_sensitivity, new.sensitivity_clearance;
+            
+            if (data_table_row_sensitivity = 'Medium' and new.sensitivity_clearance = 'Low') or 
+            (data_table_row_sensitivity = 'High' and (new.sensitivity_clearance = 'Medium' or new.sensitivity_clearance = 'Low')) then 
+
+                execute format('update ' || security_schema_table_name || ' set __is_cleared = false where __person_id = '|| new.id || ' and '|| ' __id = '|| rec2.id);
+            else 
+                execute format('update ' || security_schema_table_name || ' set __is_cleared = true where __person_id = '|| new.id || ' and '|| ' __id = '|| rec2.id);
+            end if;  
+        end loop;
     end if;    
 
 
