@@ -129,6 +129,9 @@ DO $$ BEGIN
 		'sc.file_versions_data',
 		'sc.projects_data',
 		'sc.partnerships_data',
+		'sc.change_to_plans_data',
+		'sc.periodic_reports_data',
+		'sc.posts_data',
 		'sc.budgets_data',
 		'sc.budget_records_data',
 		'sc.project_locations_data',
@@ -143,6 +146,7 @@ DO $$ BEGIN
 	EXCEPTION
 	WHEN duplicate_object THEN null;
 END; $$;
+
 
 DO $$ BEGIN
     create type public.table_permission as enum (
@@ -162,7 +166,7 @@ create table if not exists public.global_role_column_grants_data (
 	global_role int not null,
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
     modified_by int not null default 0,
-	table_name table_name not null,
+	table_name public.table_name not null,
 	unique (global_role, table_name, column_name),
     -- foreign keys added after people table created
 	foreign key (global_role) references public.global_roles_data(id)

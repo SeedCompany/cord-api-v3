@@ -82,6 +82,7 @@ export class AdminRepository {
     // 1. get the table name and column names
     // 2. add grants to half of them (odd/even)
     // 3. grant memberships to half the members (odd/even)
+    //PUBLIC
     const tables = await client.query(
       `select table_name from information_schema.tables where table_schema = 'public' and table_name like '%_data' order by table_name`
     );
@@ -95,6 +96,41 @@ export class AdminRepository {
       );
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       const schemaTableName = `public.${tableRow.table_name}`;
+      this.logger.info(schemaTableName);
+      let index = 0;
+      for (const columnRow of columns.rows) {
+        const accessLevel = index % 2 === 0 ? 'Read' : 'Write';
+        index++;
+        this.logger.info('column info', {
+          schemaTableName,
+          columnName: columnRow.column_name,
+          accessLevel,
+        });
+        await client.query(
+          `select * from public.sys_add_role_grant($1, $2, $3, $4, $5 )`,
+          [
+            'defaultRole',
+            'defaultOrg',
+            schemaTableName,
+            columnRow.column_name,
+            accessLevel,
+          ]
+        );
+      }
+    }
+    const scTables = await client.query(
+      `select table_name from information_schema.tables where table_schema = 'sc' and table_name like '%_data' order by table_name`
+    );
+
+    this.logger.info('rows', { rows: scTables.rows });
+
+    for (const tableRow of scTables.rows) {
+      const columns = await client.query(
+        `select column_name from information_schema.columns where table_schema='sc' and table_name = $1`,
+        [tableRow.table_name]
+      );
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+      const schemaTableName = `sc.${tableRow.table_name}`;
       this.logger.info(schemaTableName);
       let index = 0;
       for (const columnRow of columns.rows) {
