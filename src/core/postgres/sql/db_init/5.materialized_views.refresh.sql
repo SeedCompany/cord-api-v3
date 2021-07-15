@@ -14,8 +14,8 @@ declare
     security_table_column text;
 begin
     materialized_view_name := replace(TG_TABLE_SCHEMA || '.' || TG_TABLE_NAME, '_security', '_materialized_view');
-    -- execute format('refresh materialized view ' || materialized_view_name); 
-    execute format('refresh materialized view concurrently ' || materialized_view_name); 
+    execute format('refresh materialized view ' || materialized_view_name); 
+    -- execute format('refresh materialized view concurrently ' || materialized_view_name); 
 	return new;
 end; $$;
 
