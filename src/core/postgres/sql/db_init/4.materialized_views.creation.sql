@@ -42,6 +42,8 @@ begin
         materialized_view_string := materialized_view_string || ' from '|| security_schema_table_name || ' join ' || base_schema_table_name || ' on ' || security_schema_table_name || '.__id = ' || base_schema_table_name || '.id;';
 
         execute format(materialized_view_string);
+        -- https://stackoverflow.com/questions/41803781/refresh-materialized-views-with-concurrency/41804361
+        execute format('CREATE UNIQUE INDEX ON ' || materialized_view_name || '(__id,__person_id)');
 
 	end loop;
 	raise info 'DONE';
