@@ -98,7 +98,7 @@ export class ProjectMemberService {
 
     await this.verifyRelationshipEligibility(projectId, userId);
 
-    await this.assertValidRoles(input.roles, () =>
+    await this.assertValidRoles(input.roles, session, () =>
       this.userService.readOne(userId, session)
     );
 
@@ -177,7 +177,7 @@ export class ProjectMemberService {
   ): Promise<ProjectMember> {
     const object = await this.readOne(input.id, session);
 
-    await this.assertValidRoles(input.roles, () => {
+    await this.assertValidRoles(input.roles, session, () => {
       const user = object.user.value;
       if (!user) {
         throw new UnauthorizedException(
@@ -199,6 +199,7 @@ export class ProjectMemberService {
 
   private async assertValidRoles(
     roles: Role[] | undefined,
+    session: Session,
     forUser: () => MaybeAsync<User>
   ) {
     if (!roles || roles.length === 0 || this.config.migration) {
@@ -207,7 +208,10 @@ export class ProjectMemberService {
     const user = await forUser();
     const availableRoles = user.roles.value ?? [];
     const forbiddenRoles = difference(roles, availableRoles);
-    if (forbiddenRoles.length) {
+    if (
+      forbiddenRoles.length &&
+      !session.roles.includes('global:Administrator')
+    ) {
       const forbiddenRolesStr = forbiddenRoles.join(', ');
       throw new InputException(
         `Role(s) ${forbiddenRolesStr} cannot be assigned to this project member`,
