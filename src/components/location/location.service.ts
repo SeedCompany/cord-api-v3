@@ -11,8 +11,8 @@ import {
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger, OnIndex } from '../../core';
 import {
+  mapListResults,
   parseBaseNodeProperties,
-  runListQuery,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import {
@@ -157,9 +157,8 @@ export class LocationService {
     { filter, ...input }: LocationListInput,
     session: Session
   ): Promise<LocationListOutput> {
-    const query = this.repo.list({ filter, ...input }, session);
-
-    return await runListQuery(query, input, (id) => this.readOne(id, session));
+    const results = await this.repo.list({ filter, ...input }, session);
+    return await mapListResults(results, (id) => this.readOne(id, session));
   }
 
   async addLocationToNode(label: string, id: ID, rel: string, locationId: ID) {
@@ -198,7 +197,7 @@ export class LocationService {
       dto,
     });
 
-    const query = this.repo.listLocationsFromNodeNoSecGroups(
+    const results = await this.repo.listLocationsFromNodeNoSecGroups(
       label.name,
       rel as string,
       dto.id,
@@ -207,7 +206,7 @@ export class LocationService {
 
     return {
       ...(perms[rel].canRead
-        ? await runListQuery(query, input, (id) => this.readOne(id, session))
+        ? await mapListResults(results, (id) => this.readOne(id, session))
         : SecuredList.Redacted),
       canRead: perms[rel].canRead,
       canCreate: perms[rel].canEdit,
@@ -221,7 +220,7 @@ export class LocationService {
     input: LocationListInput,
     session: Session
   ): Promise<SecuredLocationList> {
-    const query = this.repo.listLocationsFromNode(
+    const results = await this.repo.listLocationsFromNode(
       label,
       id,
       rel,
@@ -230,7 +229,7 @@ export class LocationService {
     );
 
     return {
-      ...(await runListQuery(query, input, (id) => this.readOne(id, session))),
+      ...(await mapListResults(results, (id) => this.readOne(id, session))),
       canRead: true, // TODO
       canCreate: true, // TODO
     };

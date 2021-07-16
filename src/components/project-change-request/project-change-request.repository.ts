@@ -9,11 +9,12 @@ import {
 } from '../../common';
 import { DtoRepository } from '../../core';
 import {
-  calculateTotalAndPaginateList,
   createNode,
   createRelationships,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
+  paginate,
+  sorting,
 } from '../../core/database/query';
 import {
   CreateProjectChangeRequest,
@@ -74,8 +75,11 @@ export class ProjectChangeRequestRepository extends DtoRepository(
     return result.dto;
   }
 
-  list({ filter, ...input }: ProjectChangeRequestListInput, _session: Session) {
-    return this.db
+  async list(
+    { filter, ...input }: ProjectChangeRequestListInput,
+    _session: Session
+  ) {
+    const result = await this.db
       .query()
       .match([
         // requestingUser(session),
@@ -90,6 +94,9 @@ export class ProjectChangeRequestRepository extends DtoRepository(
             ]
           : []),
       ])
-      .apply(calculateTotalAndPaginateList(ProjectChangeRequest, input));
+      .apply(sorting(ProjectChangeRequest, input))
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 }

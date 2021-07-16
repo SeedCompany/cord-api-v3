@@ -17,7 +17,7 @@ import {
   ILogger,
   Logger,
 } from '../../core';
-import { runListQuery } from '../../core/database/results';
+import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { CeremonyService } from '../ceremony';
 import { FileService } from '../file';
@@ -485,12 +485,10 @@ export class EngagementService {
     session: Session,
     changeset?: ID
   ): Promise<EngagementListOutput> {
-    const query = this.repo.list(input, session, changeset);
-
-    const engagements = await runListQuery(query, input, (id) =>
+    const results = await this.repo.list(input, session, changeset);
+    return await mapListResults(results, (id) =>
       this.readOne(id, session, changeset)
     );
-    return engagements;
   }
 
   async listAllByProjectId(

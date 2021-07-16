@@ -17,12 +17,13 @@ import {
   Property,
 } from '../../core';
 import {
-  calculateTotalAndPaginateList,
   matchChangesetAndChangedProps,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
+  paginate,
   permissionsOfNode,
   requestingUser,
+  sorting,
 } from '../../core/database/query';
 import { BudgetRecordRepository } from './budget-record.repository';
 import {
@@ -124,8 +125,8 @@ export class BudgetRepository extends DtoRepository(Budget) {
     return result.status;
   }
 
-  list({ filter, ...input }: BudgetListInput, session: Session) {
-    const query = this.db
+  async list({ filter, ...input }: BudgetListInput, session: Session) {
+    const result = await this.db
       .query()
       .match([
         requestingUser(session),
@@ -139,12 +140,14 @@ export class BudgetRepository extends DtoRepository(Budget) {
             ]
           : []),
       ])
-      .apply(calculateTotalAndPaginateList(Budget, input));
-    return query;
+      .apply(sorting(Budget, input))
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 
-  listNoSecGroups({ filter, ...input }: BudgetListInput) {
-    const query = this.db
+  async listNoSecGroups({ filter, ...input }: BudgetListInput) {
+    const result = await this.db
       .query()
       .match([
         ...(filter.projectId
@@ -157,8 +160,10 @@ export class BudgetRepository extends DtoRepository(Budget) {
             ]
           : [node('node', 'Budget')]),
       ])
-      .apply(calculateTotalAndPaginateList(Budget, input));
-    return query;
+      .apply(sorting(Budget, input))
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 
   currentBudgetForProject(projectId: ID, changeset?: ID) {

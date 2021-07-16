@@ -10,7 +10,7 @@ import {
   UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, IEventBus, ILogger, Logger } from '../../core';
-import { runListQuery } from '../../core/database/results';
+import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { FileService } from '../file';
 import { Partner, PartnerService, PartnerType } from '../partner';
@@ -288,9 +288,8 @@ export class PartnershipService {
       ...partialInput,
     };
 
-    const query = this.repo.list(input, session, changeset);
-
-    return await runListQuery(query, input, (id) =>
+    const results = await this.repo.list(input, session, changeset);
+    return await mapListResults(results, (id) =>
       this.readOne(id, session, changeset)
     );
   }

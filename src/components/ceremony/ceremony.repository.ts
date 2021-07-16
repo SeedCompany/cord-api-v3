@@ -8,10 +8,11 @@ import {
   Property,
 } from '../../core';
 import {
-  calculateTotalAndPaginateList,
   matchPropsAndProjectSensAndScopedRoles,
+  paginate,
   permissionsOfNode,
   requestingUser,
+  sorting,
 } from '../../core/database/query';
 import { DbPropsOfDto } from '../../core/database/results';
 import { ScopedRole } from '../authorization';
@@ -47,9 +48,9 @@ export class CeremonyRepository extends DtoRepository(Ceremony) {
     return await readCeremony.first();
   }
 
-  list({ filter, ...input }: CeremonyListInput, session: Session) {
+  async list({ filter, ...input }: CeremonyListInput, session: Session) {
     const label = 'Ceremony';
-    return this.db
+    const result = await this.db
       .query()
       .match([
         requestingUser(session),
@@ -61,6 +62,9 @@ export class CeremonyRepository extends DtoRepository(Ceremony) {
             ]
           : []),
       ])
-      .apply(calculateTotalAndPaginateList(Ceremony, input));
+      .apply(sorting(Ceremony, input))
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 }

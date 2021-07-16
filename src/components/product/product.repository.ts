@@ -6,12 +6,13 @@ import { getDbClassLabels, ID, ServerException, Session } from '../../common';
 import { CommonRepository } from '../../core';
 import { DbChanges, getChanges } from '../../core/database/changes';
 import {
-  calculateTotalAndPaginateList,
   createNode,
   createRelationships,
   matchPropsAndProjectSensAndScopedRoles,
+  paginate,
   permissionsOfNode,
   requestingUser,
+  sorting,
 } from '../../core/database/query';
 import { BaseNode, DbPropsOfDto } from '../../core/database/results';
 import { ScopedRole } from '../authorization';
@@ -225,10 +226,9 @@ export class ProductRepository extends CommonRepository {
     });
   }
 
-  list({ filter, ...input }: ProductListInput, session: Session) {
+  async list({ filter, ...input }: ProductListInput, session: Session) {
     const label = 'Product';
-
-    return this.db
+    const result = await this.db
       .query()
       .match([
         requestingUser(session),
@@ -242,6 +242,9 @@ export class ProductRepository extends CommonRepository {
             ]
           : []),
       ])
-      .apply(calculateTotalAndPaginateList(Product, input));
+      .apply(sorting(Product, input))
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 }

@@ -3,10 +3,11 @@ import { node } from 'cypher-query-builder';
 import { generateId, ID, Session } from '../../common';
 import { createBaseNode, DtoRepository, matchRequestingUser } from '../../core';
 import {
-  calculateTotalAndPaginateList,
   matchPropList,
+  paginate,
   permissionsOfNode,
   requestingUser,
+  sorting,
 } from '../../core/database/query';
 import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
 import { Film, FilmListInput } from './dto';
@@ -59,10 +60,13 @@ export class FilmRepository extends DtoRepository(Film) {
     return await readFilm.first();
   }
 
-  list({ filter, ...input }: FilmListInput, session: Session) {
-    return this.db
+  async list({ filter, ...input }: FilmListInput, session: Session) {
+    const result = await this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode('Film')])
-      .apply(calculateTotalAndPaginateList(Film, input));
+      .apply(sorting(Film, input))
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 }

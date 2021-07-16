@@ -16,15 +16,16 @@ import {
 import { CommonRepository } from '../../core';
 import { DbChanges, getChanges } from '../../core/database/changes';
 import {
-  calculateTotalAndPaginateList,
   coalesce,
   createNode,
   createRelationships,
   matchChangesetAndChangedProps,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
+  paginate,
   permissionsOfNode,
   requestingUser,
+  sorting,
   whereNotDeletedInChangeset,
 } from '../../core/database/query';
 import { Role, rolesForScope } from '../authorization';
@@ -364,7 +365,7 @@ export class EngagementRepository extends CommonRepository {
 
   // LIST ///////////////////////////////////////////////////////////
 
-  list(
+  async list(
     { filter, ...input }: EngagementListInput,
     session: Session,
     changeset?: ID
@@ -375,7 +376,7 @@ export class EngagementRepository extends CommonRepository {
         internship: 'InternshipEngagement',
       }) ?? 'Engagement';
 
-    return this.db
+    const result = await this.db
       .query()
       .subQuery((sub) =>
         sub
@@ -406,7 +407,10 @@ export class EngagementRepository extends CommonRepository {
               : q
           )
       )
-      .apply(calculateTotalAndPaginateList(IEngagement, input));
+      .apply(sorting(IEngagement, input))
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 
   async listAllByProjectId(projectId: ID) {

@@ -16,14 +16,15 @@ import {
   Property,
 } from '../../core';
 import {
-  calculateTotalAndPaginateList,
   coalesce,
   matchChangesetAndChangedProps,
   matchProps,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
+  paginate,
   permissionsOfNode,
   requestingUser,
+  sorting,
   whereNotDeletedInChangeset,
 } from '../../core/database/query';
 import {
@@ -226,12 +227,12 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
     return result.dto;
   }
 
-  list(
+  async list(
     { filter, ...input }: PartnershipListInput,
     session: Session,
     changeset?: ID
   ) {
-    return this.db
+    const result = await this.db
       .query()
       .subQuery((sub) =>
         sub
@@ -262,7 +263,10 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
               : q
           )
       )
-      .apply(calculateTotalAndPaginateList(Partnership, input));
+      .apply(sorting(Partnership, input))
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 
   async verifyRelationshipEligibility(projectId: ID, partnerId: ID) {

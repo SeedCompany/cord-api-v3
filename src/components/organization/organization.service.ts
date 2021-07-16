@@ -15,8 +15,8 @@ import {
   OnIndex,
 } from '../../core';
 import {
+  mapListResults,
   parseBaseNodeProperties,
-  runListQuery,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
@@ -173,9 +173,8 @@ export class OrganizationService {
     { filter, ...input }: OrganizationListInput,
     session: Session
   ): Promise<OrganizationListOutput> {
-    const query = this.repo.list({ filter, ...input }, session);
-
-    return await runListQuery(query, input, (id) => this.readOne(id, session));
+    const results = await this.repo.list({ filter, ...input }, session);
+    return await mapListResults(results, (id) => this.readOne(id, session));
   }
 
   async addLocation(
