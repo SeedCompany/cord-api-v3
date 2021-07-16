@@ -10,10 +10,11 @@ import {
 } from '../../common';
 import { createBaseNode, DtoRepository, matchRequestingUser } from '../../core';
 import {
-  calculateTotalAndPaginateList,
   matchPropList,
+  paginate,
   permissionsOfNode,
   requestingUser,
+  sorting,
 } from '../../core/database/query';
 import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
 import { CreateLocation, Location, LocationListInput } from './dto';
@@ -199,11 +200,14 @@ export class LocationRepository extends DtoRepository(Location) {
       .run();
   }
 
-  list({ filter, ...input }: LocationListInput, session: Session) {
-    return this.db
+  async list({ filter, ...input }: LocationListInput, session: Session) {
+    const result = await this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode('Location')])
-      .apply(calculateTotalAndPaginateList(Location, input));
+      .apply(sorting(Location, input))
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 
   async addLocationToNode(label: string, id: ID, rel: string, locationId: ID) {
@@ -245,14 +249,14 @@ export class LocationRepository extends DtoRepository(Location) {
       .run();
   }
 
-  listLocationsFromNode(
+  async listLocationsFromNode(
     label: string,
     id: ID,
     rel: string,
     input: LocationListInput,
     session: Session
   ) {
-    return this.db
+    const result = await this.db
       .query()
       .match([
         requestingUser(session),
@@ -260,22 +264,28 @@ export class LocationRepository extends DtoRepository(Location) {
         relation('in', '', rel, { active: true }),
         node(`${label.toLowerCase()}`, label, { id }),
       ])
-      .apply(calculateTotalAndPaginateList(Location, input));
+      .apply(sorting(Location, input))
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 
-  listLocationsFromNodeNoSecGroups(
+  async listLocationsFromNodeNoSecGroups(
     label: string,
     rel: string,
     id: ID,
     input: LocationListInput
   ) {
-    return this.db
+    const result = await this.db
       .query()
       .match([
         node('node', 'Location'),
         relation('in', '', rel, { active: true }),
         node(`${label.toLowerCase()}`, label, { id }),
       ])
-      .apply(calculateTotalAndPaginateList(Location, input));
+      .apply(sorting(Location, input))
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 }

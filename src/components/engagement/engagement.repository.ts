@@ -16,15 +16,16 @@ import {
 import { CommonRepository } from '../../core';
 import { DbChanges, getChanges } from '../../core/database/changes';
 import {
-  calculateTotalAndPaginateList,
   coalesce,
   createNode,
   createRelationships,
   matchChangesetAndChangedProps,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
+  paginate,
   permissionsOfNode,
   requestingUser,
+  sorting,
   whereNotDeletedInChangeset,
 } from '../../core/database/query';
 import { Role, rolesForScope } from '../authorization';
@@ -364,39 +365,35 @@ export class EngagementRepository extends CommonRepository {
 
   // LIST ///////////////////////////////////////////////////////////
 
-  list(
-    { filter, ...input }: EngagementListInput,
-    session: Session,
-    changeset?: ID
-  ) {
+  async list(input: EngagementListInput, session: Session, changeset?: ID) {
     const label =
-      simpleSwitch(filter.type, {
+      simpleSwitch(input.filter.type, {
         language: 'LanguageEngagement',
         internship: 'InternshipEngagement',
       }) ?? 'Engagement';
 
-    return this.db
+    const result = await this.db
       .query()
       .subQuery((sub) =>
         sub
           .match([
             requestingUser(session),
             ...permissionsOfNode(label),
-            ...(filter.projectId
+            ...(input.filter.projectId
               ? [
                   relation('in', '', 'engagement', { active: true }),
-                  node('project', 'Project', { id: filter.projectId }),
+                  node('project', 'Project', { id: input.filter.projectId }),
                 ]
               : []),
           ])
           .apply(whereNotDeletedInChangeset(changeset))
           .return('node')
           .apply((q) =>
-            changeset && filter.projectId
+            changeset && input.filter.projectId
               ? q
                   .union()
                   .match([
-                    node('', 'Project', { id: filter.projectId }),
+                    node('', 'Project', { id: input.filter.projectId }),
                     relation('out', '', 'engagement', { active: false }),
                     node('node', label),
                     relation('in', '', 'changeset', { active: true }),
@@ -406,7 +403,10 @@ export class EngagementRepository extends CommonRepository {
               : q
           )
       )
-      .apply(calculateTotalAndPaginateList(IEngagement, input));
+      .apply(sorting(IEngagement, input))
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 
   async listAllByProjectId(projectId: ID) {

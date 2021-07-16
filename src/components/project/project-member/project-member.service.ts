@@ -23,7 +23,7 @@ import {
   Logger,
   OnIndex,
 } from '../../../core';
-import { runListQuery } from '../../../core/database/results';
+import { mapListResults } from '../../../core/database/results';
 import { AuthorizationService } from '../../authorization/authorization.service';
 import { User, UserService } from '../../user';
 import {
@@ -238,12 +238,11 @@ export class ProjectMemberService {
   }
 
   async list(
-    { filter, ...input }: ProjectMemberListInput,
+    input: ProjectMemberListInput,
     session: Session
   ): Promise<ProjectMemberListOutput> {
-    const query = this.repo.list({ filter, ...input }, session);
-
-    return await runListQuery(query, input, (id) => this.readOne(id, session));
+    const results = await this.repo.list(input, session);
+    return await mapListResults(results, (id) => this.readOne(id, session));
   }
 
   protected filterByProject(

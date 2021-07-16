@@ -8,8 +8,8 @@ import {
 } from '../../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../../core';
 import {
+  mapListResults,
   parseBaseNodeProperties,
-  runListQuery,
 } from '../../../core/database/results';
 import { AuthorizationService } from '../../authorization/authorization.service';
 import {
@@ -132,11 +132,10 @@ export class EducationService {
   }
 
   async list(
-    { filter, ...input }: EducationListInput,
+    input: EducationListInput,
     session: Session
   ): Promise<EducationListOutput> {
-    const query = this.repo.list({ filter, ...input }, session);
-
-    return await runListQuery(query, input, (id) => this.readOne(id, session));
+    const results = await this.repo.list(input, session);
+    return await mapListResults(results, (id) => this.readOne(id, session));
   }
 }

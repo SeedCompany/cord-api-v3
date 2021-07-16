@@ -8,10 +8,7 @@ import {
   matchRequestingUser,
   Property,
 } from '../../core';
-import {
-  calculateTotalAndPaginateList,
-  matchProps,
-} from '../../core/database/query';
+import { matchProps, paginate, sorting } from '../../core/database/query';
 import { Post } from './dto';
 import { PostListInput } from './dto/list-posts.dto';
 import { PostShareability } from './dto/shareability.dto';
@@ -77,28 +74,27 @@ export class PostRepository extends DtoRepository(Post) {
     return result.props;
   }
 
-  securedList({ filter, ...input }: PostListInput, session: Session) {
-    return (
-      this.db
-        .query()
-        .match([
-          node('node', 'Post'),
-          ...(filter.parentId
-            ? [
-                relation('in', '', 'post', { active: true }),
-                node('', 'BaseNode', {
-                  id: filter.parentId,
-                }),
-              ]
-            : []),
-        ])
-        .apply(matchProps())
-        .with('node, props') // needed directly before where clause
-        // Only match posts whose shareability is ProjectTeam if the current user
-        // is a member of the parent object
-        .raw(
-          // Parentheses for readability only, neo4j doesn't require them
-          `
+  async securedList({ filter, ...input }: PostListInput, session: Session) {
+    const result = await this.db
+      .query()
+      .match([
+        node('node', 'Post'),
+        ...(filter.parentId
+          ? [
+              relation('in', '', 'post', { active: true }),
+              node('', 'BaseNode', {
+                id: filter.parentId,
+              }),
+            ]
+          : []),
+      ])
+      .apply(matchProps())
+      .with('node, props') // needed directly before where clause
+      // Only match posts whose shareability is ProjectTeam if the current user
+      // is a member of the parent object
+      .raw(
+        // Parentheses for readability only, neo4j doesn't require them
+        `
             WHERE (
               NOT props.shareability = '${PostShareability.ProjectTeam}'
             ) OR (
@@ -107,9 +103,11 @@ export class PostRepository extends DtoRepository(Post) {
               (node)<-[:post]-(:BaseNode)-[:member]-(:BaseNode)-[:user]->(:User { id: $requestingUserId })
             )
           `,
-          { requestingUserId: session.userId }
-        )
-        .apply(calculateTotalAndPaginateList(Post, input))
-    );
+        { requestingUserId: session.userId }
+      )
+      .apply(sorting(Post, input))
+      .apply(paginate(input))
+      .first();
+    return result!;
   }
 }

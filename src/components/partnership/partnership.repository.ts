@@ -16,14 +16,15 @@ import {
   Property,
 } from '../../core';
 import {
-  calculateTotalAndPaginateList,
   coalesce,
   matchChangesetAndChangedProps,
   matchProps,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
+  paginate,
   permissionsOfNode,
   requestingUser,
+  sorting,
   whereNotDeletedInChangeset,
 } from '../../core/database/query';
 import {
@@ -226,33 +227,29 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
     return result.dto;
   }
 
-  list(
-    { filter, ...input }: PartnershipListInput,
-    session: Session,
-    changeset?: ID
-  ) {
-    return this.db
+  async list(input: PartnershipListInput, session: Session, changeset?: ID) {
+    const result = await this.db
       .query()
       .subQuery((sub) =>
         sub
           .match([
             requestingUser(session),
             ...permissionsOfNode('Partnership'),
-            ...(filter.projectId
+            ...(input.filter.projectId
               ? [
                   relation('in', '', 'partnership', { active: true }),
-                  node('project', 'Project', { id: filter.projectId }),
+                  node('project', 'Project', { id: input.filter.projectId }),
                 ]
               : []),
           ])
           .apply(whereNotDeletedInChangeset(changeset))
           .return('node')
           .apply((q) =>
-            changeset && filter.projectId
+            changeset && input.filter.projectId
               ? q
                   .union()
                   .match([
-                    node('', 'Project', { id: filter.projectId }),
+                    node('', 'Project', { id: input.filter.projectId }),
                     relation('out', '', 'partnership', { active: false }),
                     node('node', 'Partnership'),
                     relation('in', '', 'changeset', { active: true }),
@@ -262,7 +259,10 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
               : q
           )
       )
-      .apply(calculateTotalAndPaginateList(Partnership, input));
+      .apply(sorting(Partnership, input))
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 
   async verifyRelationshipEligibility(projectId: ID, partnerId: ID) {

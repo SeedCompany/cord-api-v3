@@ -15,7 +15,7 @@ import {
   OnIndex,
 } from '../../core';
 import { Variable } from '../../core/database/query';
-import { runListQuery } from '../../core/database/results';
+import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { CreateDefinedFileVersionInput, FileService } from '../file';
 import {
@@ -130,16 +130,15 @@ export class PeriodicReportService {
   async listProjectReports(
     projectId: string,
     reportType: ReportType,
-    { filter, ...input }: PeriodicReportListInput,
+    input: PeriodicReportListInput,
     session: Session
   ): Promise<SecuredPeriodicReportList> {
-    const query = this.repo.listProjectReports(projectId, reportType, {
-      filter,
+    const results = await this.repo.listProjectReports(projectId, reportType, {
       ...input,
     });
 
     return {
-      ...(await runListQuery(query, input, (id) => this.readOne(id, session))),
+      ...(await mapListResults(results, (id) => this.readOne(id, session))),
       canRead: true,
       canCreate: true,
     };
@@ -178,16 +177,15 @@ export class PeriodicReportService {
 
   async listEngagementReports(
     engagementId: string,
-    { filter, ...input }: PeriodicReportListInput,
+    input: PeriodicReportListInput,
     session: Session
   ): Promise<SecuredPeriodicReportList> {
-    const query = this.repo.listEngagementReports(engagementId, {
-      filter,
+    const results = await this.repo.listEngagementReports(engagementId, {
       ...input,
     });
 
     return {
-      ...(await runListQuery(query, input, (id) => this.readOne(id, session))),
+      ...(await mapListResults(results, (id) => this.readOne(id, session))),
       canRead: true,
       canCreate: true,
     };

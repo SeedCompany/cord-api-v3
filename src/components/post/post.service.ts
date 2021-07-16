@@ -12,7 +12,7 @@ import {
   Session,
 } from '../../common';
 import { ILogger, Logger } from '../../core';
-import { runListQuery } from '../../core/database/results';
+import { mapListResults } from '../../core/database/results';
 import { ScopedRole } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { UserService } from '../user';
@@ -161,10 +161,10 @@ export class PostService {
       return SecuredList.Redacted;
     }
 
-    const query = this.repo.securedList(input, session);
+    const results = await this.repo.securedList(input, session);
 
     return {
-      ...(await runListQuery(query, input, (id) => this.readOne(id, session))),
+      ...(await mapListResults(results, (id) => this.readOne(id, session))),
       canRead: true, // false handled above
       canCreate: perms.posts.canEdit,
     };

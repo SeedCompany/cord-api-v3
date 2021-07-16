@@ -9,10 +9,11 @@ import {
   Property,
 } from '../../../core';
 import {
-  calculateTotalAndPaginateList,
   matchPropList,
+  paginate,
   permissionsOfNode,
   requestingUser,
+  sorting,
 } from '../../../core/database/query';
 import {
   DbPropsOfDto,
@@ -72,10 +73,10 @@ export class EducationRepository extends DtoRepository(Education) {
       .first();
   }
 
-  list({ filter, ...input }: EducationListInput, session: Session) {
+  async list({ filter, ...input }: EducationListInput, session: Session) {
     const label = 'Education';
 
-    return this.db
+    const result = await this.db
       .query()
       .match([
         requestingUser(session),
@@ -89,6 +90,9 @@ export class EducationRepository extends DtoRepository(Education) {
             ]
           : []),
       ])
-      .apply(calculateTotalAndPaginateList(Education, input));
+      .apply(sorting(Education, input))
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 }

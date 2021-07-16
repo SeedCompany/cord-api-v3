@@ -9,10 +9,11 @@ import {
   Property,
 } from '../../core';
 import {
-  calculateTotalAndPaginateList,
   matchPropList,
+  paginate,
   permissionsOfNode,
   requestingUser,
+  sorting,
 } from '../../core/database/query';
 import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
 import { CreateOrganization, Organization, OrganizationListInput } from './dto';
@@ -96,8 +97,8 @@ export class OrganizationRepository extends DtoRepository(Organization) {
     return await query.first();
   }
 
-  list({ filter, ...input }: OrganizationListInput, session: Session) {
-    return this.db
+  async list({ filter, ...input }: OrganizationListInput, session: Session) {
+    const result = await this.db
       .query()
       .match([
         requestingUser(session),
@@ -109,6 +110,9 @@ export class OrganizationRepository extends DtoRepository(Organization) {
             ]
           : []),
       ])
-      .apply(calculateTotalAndPaginateList(Organization, input));
+      .apply(sorting(Organization, input))
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 }

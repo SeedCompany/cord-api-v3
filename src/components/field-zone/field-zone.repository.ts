@@ -4,10 +4,11 @@ import { DateTime } from 'luxon';
 import { generateId, ID, Session } from '../../common';
 import { createBaseNode, DtoRepository, matchRequestingUser } from '../../core';
 import {
-  calculateTotalAndPaginateList,
   matchPropList,
+  paginate,
   permissionsOfNode,
   requestingUser,
+  sorting,
 } from '../../core/database/query';
 import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
 import { FieldZone, FieldZoneListInput } from './dto';
@@ -117,12 +118,14 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
     await query.run();
   }
 
-  list({ filter, ...input }: FieldZoneListInput, session: Session) {
+  async list({ filter, ...input }: FieldZoneListInput, session: Session) {
     const label = 'FieldZone';
-    return this.db
+    const result = await this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode(label)])
-      .apply(calculateTotalAndPaginateList(FieldZone, input));
-    // return query;
+      .apply(sorting(FieldZone, input))
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 }

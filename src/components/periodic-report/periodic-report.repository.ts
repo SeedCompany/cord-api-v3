@@ -10,9 +10,10 @@ import {
 } from '../../common';
 import { DtoRepository, property } from '../../core';
 import {
-  calculateTotalAndPaginateList,
   deleteBaseNode,
   matchProps,
+  paginate,
+  sorting,
   Variable,
 } from '../../core/database/query';
 import {
@@ -85,12 +86,12 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
     return result.dto;
   }
 
-  listProjectReports(
+  async listProjectReports(
     projectId: string,
     reportType: ReportType,
-    { filter, ...input }: PeriodicReportListInput
+    input: PeriodicReportListInput
   ) {
-    return this.db
+    const result = await this.db
       .query()
       .match([
         node('project', 'Project', { id: projectId }),
@@ -98,11 +99,14 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
         node('node', ['PeriodicReport', `${reportType}Report`]),
       ])
       .apply(
-        calculateTotalAndPaginateList(
+        sorting(
           reportType === 'Financial' ? FinancialReport : NarrativeReport,
           input
         )
-      );
+      )
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 
   matchCurrentDue(parentId: ID | Variable, reportType: ReportType) {
@@ -174,18 +178,21 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
     return res?.dto;
   }
 
-  listEngagementReports(
+  async listEngagementReports(
     engagementId: string,
-    { filter, ...input }: PeriodicReportListInput
+    input: PeriodicReportListInput
   ) {
-    return this.db
+    const result = await this.db
       .query()
       .match([
         node('engagement', 'Engagement', { id: engagementId }),
         relation('out', '', 'report', { active: true }),
         node('node', 'ProgressReport'),
       ])
-      .apply(calculateTotalAndPaginateList(ProgressReport, input));
+      .apply(sorting(ProgressReport, input))
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 
   /**

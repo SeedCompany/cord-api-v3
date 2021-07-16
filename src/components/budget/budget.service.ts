@@ -19,8 +19,8 @@ import {
   ResourceResolver,
 } from '../../core';
 import {
+  mapListResults,
   parseSecuredProperties,
-  runListQuery,
 } from '../../core/database/results';
 import {
   AuthorizationService,
@@ -396,9 +396,8 @@ export class BudgetService {
       ...BudgetListInput.defaultVal,
       ...partialInput,
     };
-    const query = this.budgetRepo.list(input, session);
-
-    return await runListQuery(query, input, (id) =>
+    const results = await this.budgetRepo.list(input, session);
+    return await mapListResults(results, (id) =>
       this.readOne(id, session, changeset)
     );
   }
@@ -412,9 +411,8 @@ export class BudgetService {
       ...BudgetListInput.defaultVal,
       ...partialInput,
     };
-    const query = this.budgetRepo.listNoSecGroups(input);
-
-    return await runListQuery(query, input, (id) =>
+    const results = await this.budgetRepo.listNoSecGroups(input);
+    return await mapListResults(results, (id) =>
       this.readOne(id, session, changeset)
     );
   }
@@ -424,9 +422,13 @@ export class BudgetService {
     session: Session,
     changeset?: ID
   ): Promise<BudgetRecordListOutput> {
-    const query = this.budgetRecordsRepo.list(input, session, changeset);
+    const results = await this.budgetRecordsRepo.list(
+      input,
+      session,
+      changeset
+    );
 
-    return await runListQuery(query, input, (id) =>
+    return await mapListResults(results, (id) =>
       this.readOneRecord(id, session, changeset)
     );
   }

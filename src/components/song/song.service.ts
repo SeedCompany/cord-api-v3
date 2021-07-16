@@ -9,8 +9,8 @@ import {
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger, OnIndex } from '../../core';
 import {
+  mapListResults,
   parseBaseNodeProperties,
-  runListQuery,
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
@@ -167,11 +167,8 @@ export class SongService {
     this.logger.debug(`deleted song with id`, { id });
   }
 
-  async list(
-    { filter, ...input }: SongListInput,
-    session: Session
-  ): Promise<SongListOutput> {
-    const query = this.repo.list({ filter, ...input }, session);
-    return await runListQuery(query, input, (id) => this.readOne(id, session));
+  async list(input: SongListInput, session: Session): Promise<SongListOutput> {
+    const results = await this.repo.list(input, session);
+    return await mapListResults(results, (id) => this.readOne(id, session));
   }
 }

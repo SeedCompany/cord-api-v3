@@ -8,7 +8,7 @@ import {
   UnauthorizedException,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger, Property } from '../../core';
-import { runListQuery } from '../../core/database/results';
+import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { CeremonyRepository } from './ceremony.repository';
 import {
@@ -156,11 +156,10 @@ export class CeremonyService {
   }
 
   async list(
-    { filter, ...input }: CeremonyListInput,
+    input: CeremonyListInput,
     session: Session
   ): Promise<CeremonyListOutput> {
-    const query = this.ceremonyRepo.list({ filter, ...input }, session);
-
-    return await runListQuery(query, input, (id) => this.readOne(id, session));
+    const results = await this.ceremonyRepo.list(input, session);
+    return await mapListResults(results, (id) => this.readOne(id, session));
   }
 }

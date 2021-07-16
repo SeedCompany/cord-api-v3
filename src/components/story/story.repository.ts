@@ -8,10 +8,11 @@ import {
   Property,
 } from '../../core';
 import {
-  calculateTotalAndPaginateList,
   matchPropList,
+  paginate,
   permissionsOfNode,
   requestingUser,
+  sorting,
 } from '../../core/database/query';
 import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
 import { Story, StoryListInput } from './dto';
@@ -49,10 +50,13 @@ export class StoryRepository extends DtoRepository(Story) {
     return await query.first();
   }
 
-  list({ filter, ...input }: StoryListInput, session: Session) {
-    return this.db
+  async list({ filter, ...input }: StoryListInput, session: Session) {
+    const result = await this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode('Story')])
-      .apply(calculateTotalAndPaginateList(Story, input));
+      .apply(sorting(Story, input))
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 }

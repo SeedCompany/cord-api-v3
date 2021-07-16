@@ -12,7 +12,7 @@ import {
   UnauthorizedException,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../core';
-import { runListQuery } from '../../core/database/results';
+import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Film, FilmService } from '../film';
 import {
@@ -331,12 +331,11 @@ export class ProductService {
   }
 
   async list(
-    { filter, ...input }: ProductListInput,
+    input: ProductListInput,
     session: Session
   ): Promise<ProductListOutput> {
-    const query = this.repo.list({ filter, ...input }, session);
-
-    return await runListQuery(query, input, (id) => this.readOne(id, session));
+    const results = await this.repo.list(input, session);
+    return await mapListResults(results, (id) => this.readOne(id, session));
   }
 
   // used to search a specific engagement's relationship to the target base node
