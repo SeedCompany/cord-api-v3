@@ -1,16 +1,22 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { generateId, ID, Session } from '../../common';
+import {
+  generateId,
+  ID,
+  NotFoundException,
+  Session,
+  UnsecuredDto,
+} from '../../common';
 import { createBaseNode, DtoRepository, matchRequestingUser } from '../../core';
 import {
-  matchPropList,
+  matchProps,
+  merge,
   paginate,
   permissionsOfNode,
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
 import { FieldZone, FieldZoneListInput } from './dto';
 
 @Injectable()
@@ -74,20 +80,29 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
       .query()
       .apply(matchRequestingUser(session))
       .match([node('node', 'FieldZone', { id: id })])
-      .apply(matchPropList)
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'director', { active: true }),
-        node('director', 'User'),
-      ])
-      .return('propList, node, director.id as directorId')
-      .asResult<
-        StandardReadResult<DbPropsOfDto<FieldZone>> & {
-          directorId: ID;
-        }
-      >();
+      .apply(this.hydrate());
 
-    return await query.first();
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException('Could not find field zone', 'fieldZone.id');
+    }
+    return result.dto;
+  }
+
+  private hydrate() {
+    return (query: Query) =>
+      query
+        .apply(matchProps())
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'director', { active: true }),
+          node('director', 'User'),
+        ])
+        .return<{ dto: UnsecuredDto<FieldZone> }>(
+          merge('props', {
+            director: 'director.id',
+          }).as('dto')
+        );
   }
 
   async updateDirector(directorId: ID, id: ID) {

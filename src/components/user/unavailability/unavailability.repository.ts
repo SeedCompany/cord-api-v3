@@ -1,17 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
-import { generateId, ID, Session } from '../../../common';
+import { node, Query, relation } from 'cypher-query-builder';
+import {
+  generateId,
+  ID,
+  NotFoundException,
+  Session,
+  UnsecuredDto,
+} from '../../../common';
 import {
   createBaseNode,
   DtoRepository,
   matchRequestingUser,
   Property,
 } from '../../../core';
-import { matchPropList } from '../../../core/database/query';
-import {
-  DbPropsOfDto,
-  StandardReadResult,
-} from '../../../core/database/results';
+import { matchProps } from '../../../core/database/query';
 import {
   Unavailability,
   UnavailabilityListInput,
@@ -52,11 +54,21 @@ export class UnavailabilityRepository extends DtoRepository(Unavailability) {
       .query()
       .apply(matchRequestingUser(session))
       .match([node('node', 'Unavailability', { id })])
-      .apply(matchPropList)
-      .return('propList, node')
-      .asResult<StandardReadResult<DbPropsOfDto<Unavailability>>>();
+      .apply(this.hydrate());
 
-    return await query.first();
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException('Could not find user', 'user.id');
+    }
+
+    return result.dto;
+  }
+
+  private hydrate() {
+    return (query: Query) =>
+      query
+        .apply(matchProps())
+        .return<{ dto: UnsecuredDto<Unavailability> }>('props as dto');
   }
 
   async getUserIdByUnavailability(

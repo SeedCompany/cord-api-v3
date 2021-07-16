@@ -1,7 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { generateId, ID, Session } from '../../common';
+import {
+  generateId,
+  ID,
+  NotFoundException,
+  Session,
+  UnsecuredDto,
+} from '../../common';
 import {
   createBaseNode,
   DtoRepository,
@@ -9,13 +15,12 @@ import {
   Property,
 } from '../../core';
 import {
-  matchPropList,
+  matchProps,
   paginate,
   permissionsOfNode,
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
 import { CreateOrganization, Organization, OrganizationListInput } from './dto';
 
 @Injectable()
@@ -91,10 +96,23 @@ export class OrganizationRepository extends DtoRepository(Organization) {
       .query()
       .apply(matchRequestingUser(session))
       .match([node('node', 'Organization', { id: orgId })])
-      .apply(matchPropList)
-      .return('propList, node')
-      .asResult<StandardReadResult<DbPropsOfDto<Organization>>>();
-    return await query.first();
+      .apply(this.hydrate());
+
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException(
+        'Could not find organization',
+        'organization.id'
+      );
+    }
+    return result.dto;
+  }
+
+  hydrate() {
+    return (query: Query) =>
+      query
+        .apply(matchProps())
+        .return<{ dto: UnsecuredDto<Organization> }>('props as dto');
   }
 
   async list({ filter, ...input }: OrganizationListInput, session: Session) {

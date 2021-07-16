@@ -1,15 +1,20 @@
 import { Injectable } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
-import { generateId, ID, Session } from '../../common';
+import { node, Query } from 'cypher-query-builder';
+import {
+  generateId,
+  ID,
+  NotFoundException,
+  Session,
+  UnsecuredDto,
+} from '../../common';
 import { createBaseNode, DtoRepository, matchRequestingUser } from '../../core';
 import {
-  matchPropList,
+  matchProps,
   paginate,
   permissionsOfNode,
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
 import {
   CreateFundingAccount,
   FundingAccount,
@@ -59,15 +64,24 @@ export class FundingAccountRepository extends DtoRepository(FundingAccount) {
   }
 
   async readOne(id: ID, session: Session) {
-    const readFundingAccount = this.db
+    const query = this.db
       .query()
       .apply(matchRequestingUser(session))
       .match([node('node', 'FundingAccount', { id })])
-      .apply(matchPropList)
-      .return('propList, node')
-      .asResult<StandardReadResult<DbPropsOfDto<FundingAccount>>>();
+      .apply(this.hydrate());
 
-    return await readFundingAccount.first();
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException('Could not found funding account');
+    }
+    return result.dto;
+  }
+
+  private hydrate() {
+    return (query: Query) =>
+      query
+        .apply(matchProps())
+        .return<{ dto: UnsecuredDto<FundingAccount> }>('props as dto');
   }
 
   async list(input: FundingAccountListInput, session: Session) {

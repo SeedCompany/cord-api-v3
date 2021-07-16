@@ -4,7 +4,6 @@ import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern'
 import { AnyConditions } from 'cypher-query-builder/dist/typings/clauses/where-utils';
 import { isEmpty } from 'lodash';
 import { DateTime } from 'luxon';
-import { Except } from 'type-fest';
 import {
   generateId,
   ID,
@@ -12,6 +11,7 @@ import {
   ServerException,
   Session,
   UnauthorizedException,
+  UnsecuredDto,
 } from '../../common';
 import {
   createBaseNode,
@@ -22,21 +22,9 @@ import {
   matchSession,
   Property,
 } from '../../core';
-import { collect, count, matchPropList } from '../../core/database/query';
-import {
-  DbPropsOfDto,
-  hasMore,
-  parseBaseNodeProperties,
-  parsePropList,
-  StandardReadResult,
-} from '../../core/database/results';
-import {
-  BaseNode,
-  FileListInput,
-  FileNodeType,
-  FileVersion,
-  IFileNode,
-} from './dto';
+import { collect, count, matchProps, merge } from '../../core/database/query';
+import { hasMore } from '../../core/database/results';
+import { BaseNode, FileListInput, FileVersion, IFileNode } from './dto';
 
 @Injectable()
 export class FileRepository {
@@ -194,30 +182,25 @@ export class FileRepository {
     const query = this.db
       .query()
       .match(node('node', 'FileVersion', { id }))
-      .apply(matchPropList)
+      .apply(matchProps())
       .match([
         node('node'),
         relation('out', '', 'createdBy', { active: true }),
         node('createdBy'),
       ])
-      .return(['node', 'propList', { createdBy: [{ id: 'createdById' }] }])
-      .asResult<
-        StandardReadResult<
-          DbPropsOfDto<Except<FileVersion, 'type' | 'createdById'>>
-        > & {
-          createdById: ID;
-        }
-      >();
+      .return<{ dto: UnsecuredDto<FileVersion> }>(
+        merge('props', {
+          type: typeFromLabel('node'),
+          createdById: 'createdBy.id',
+        }).as('dto')
+      );
+
     const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find file version');
     }
-
     return {
-      ...parseBaseNodeProperties(result.node),
-      type: FileNodeType.FileVersion,
-      ...parsePropList(result.propList),
-      createdById: result.createdById,
+      ...result.dto,
       canDelete: await this.db.checkDeletePermission(id, session),
     };
   }

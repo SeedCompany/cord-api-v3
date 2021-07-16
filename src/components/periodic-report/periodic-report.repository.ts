@@ -74,9 +74,7 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
     const query = this.db
       .query()
       .match([node('node', 'PeriodicReport', { id })])
-      .apply(this.hydrate())
-      .return('dto')
-      .asResult<{ dto: UnsecuredDto<PeriodicReport> }>();
+      .apply(this.hydrate());
 
     const result = await query.first();
     if (!result) {
@@ -130,8 +128,6 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
       .query()
       .apply(this.matchCurrentDue(parentId, reportType))
       .apply(this.hydrate())
-      .return('dto')
-      .asResult<{ dto: UnsecuredDto<PeriodicReport> }>()
       .first();
     return res?.dto;
   }
@@ -151,8 +147,6 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
       .orderBy('end.value', 'asc')
       .limit(1)
       .apply(this.hydrate())
-      .return('dto')
-      .asResult<{ dto: UnsecuredDto<PeriodicReport> }>()
       .first();
     return res?.dto;
   }
@@ -172,8 +166,6 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
       .orderBy('sn.value', 'desc')
       .limit(1)
       .apply(this.hydrate())
-      .return('dto')
-      .asResult<{ dto: UnsecuredDto<PeriodicReport> }>()
       .first();
     return res?.dto;
   }
@@ -200,7 +192,10 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
    * output `dto as UnsecuredDto<PeriodicReport>`
    */
   private hydrate() {
-    return (q: Query) => q.apply(matchProps()).with('props as dto');
+    return (query: Query) =>
+      query
+        .apply(matchProps())
+        .return<{ dto: UnsecuredDto<PeriodicReport> }>('props as dto');
   }
 
   async delete(baseNodeId: ID, type: ReportType, intervals: Interval[]) {

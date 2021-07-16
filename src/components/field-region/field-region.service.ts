@@ -6,12 +6,10 @@ import {
   ServerException,
   Session,
   UnauthorizedException,
+  UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger, OnIndex } from '../../core';
-import {
-  mapListResults,
-  parseBaseNodeProperties,
-} from '../../core/database/results';
+import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import {
   CreateFieldRegion,
@@ -91,33 +89,23 @@ export class FieldRegionService {
     });
 
     const result = await this.repo.readOne(id, session);
+    return await this.secure(result, session);
+  }
 
-    if (!result) {
-      throw new NotFoundException(
-        'Could not find field region',
-        'fieldRegion.id'
-      );
-    }
-
-    const secured = await this.authorizationService.secureProperties(
+  private async secure(
+    dto: UnsecuredDto<FieldRegion>,
+    session: Session
+  ): Promise<FieldRegion> {
+    const securedProps = await this.authorizationService.secureProperties(
       FieldRegion,
-      result.propList,
+      dto,
       session
     );
 
     return {
-      ...parseBaseNodeProperties(result.node),
-      ...secured,
-      director: {
-        ...secured.director,
-        value: result.directorId,
-      },
-      fieldZone: {
-        ...secured.fieldZone,
-        value: result.fieldZoneId,
-      },
-
-      canDelete: await this.repo.checkDeletePermission(id, session),
+      ...dto,
+      ...securedProps,
+      canDelete: await this.repo.checkDeletePermission(dto.id, session),
     };
   }
 

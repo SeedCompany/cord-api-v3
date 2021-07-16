@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   generateId,
@@ -7,16 +7,17 @@ import {
   NotFoundException,
   ServerException,
   Session,
+  UnsecuredDto,
 } from '../../common';
 import { createBaseNode, DtoRepository, matchRequestingUser } from '../../core';
 import {
-  matchPropList,
+  matchProps,
+  merge,
   paginate,
   permissionsOfNode,
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
 import { CreateLocation, Location, LocationListInput } from './dto';
 
 @Injectable()
@@ -107,35 +108,39 @@ export class LocationRepository extends DtoRepository(Location) {
   }
 
   async readOne(id: ID, session: Session) {
-    const result = await this.db
+    const query = this.db
       .query()
       .apply(matchRequestingUser(session))
       .match([node('node', 'Location', { id: id })])
-      .apply(matchPropList)
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'fundingAccount', { active: true }),
-        node('fundingAccount', 'FundingAccount'),
-      ])
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'defaultFieldRegion', { active: true }),
-        node('defaultFieldRegion', 'FieldRegion'),
-      ])
-      .return(
-        'propList, node, fundingAccount.id as fundingAccountId, defaultFieldRegion.id as defaultFieldRegionId'
-      )
-      .asResult<
-        StandardReadResult<DbPropsOfDto<Location>> & {
-          fundingAccountId: ID;
-          defaultFieldRegionId: ID;
-        }
-      >()
-      .first();
+      .apply(this.hydrate());
+
+    const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find location');
     }
-    return result;
+    return result.dto;
+  }
+
+  private hydrate() {
+    return (query: Query) =>
+      query
+        .apply(matchProps())
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'fundingAccount', { active: true }),
+          node('fundingAccount', 'FundingAccount'),
+        ])
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'defaultFieldRegion', { active: true }),
+          node('defaultFieldRegion', 'FieldRegion'),
+        ])
+        .return<{ dto: UnsecuredDto<Location> }>(
+          merge('props', {
+            fundingAccount: 'fundingAccount.id',
+            defaultFieldRegion: 'defaultFieldRegion.id',
+          }).as('dto')
+        );
   }
 
   async updateFundingAccount(id: ID, fundingAccount: ID, session: Session) {

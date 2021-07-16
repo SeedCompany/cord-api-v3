@@ -65,13 +65,13 @@ export class PostRepository extends DtoRepository(Post) {
       .match([node('node', 'Post', { id: postId })])
       .apply(matchProps())
       .return('props')
-      .asResult<{ props: UnsecuredDto<Post> }>();
+      .asResult<{ dto: UnsecuredDto<Post> }>();
 
     const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find post', 'post.id');
     }
-    return result.props;
+    return result.dto;
   }
 
   async securedList({ filter, ...input }: PostListInput, session: Session) {

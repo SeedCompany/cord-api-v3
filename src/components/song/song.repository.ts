@@ -1,6 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
-import { generateId, ID, Session } from '../../common';
+import { node, Query } from 'cypher-query-builder';
+import {
+  generateId,
+  ID,
+  NotFoundException,
+  Session,
+  UnsecuredDto,
+} from '../../common';
 import {
   createBaseNode,
   DtoRepository,
@@ -8,13 +14,12 @@ import {
   Property,
 } from '../../core';
 import {
-  matchPropList,
+  matchProps,
   paginate,
   permissionsOfNode,
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
 import { CreateSong, Song, SongListInput } from './dto';
 
 @Injectable()
@@ -43,11 +48,19 @@ export class SongRepository extends DtoRepository(Song) {
       .query()
       .apply(matchRequestingUser(session))
       .match([node('node', 'Song', { id })])
-      .apply(matchPropList)
-      .return('propList, node')
-      .asResult<StandardReadResult<DbPropsOfDto<Song>>>();
+      .apply(this.hydrate());
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException('Could not find song', 'song.id');
+    }
+    return result.dto;
+  }
 
-    return await query.first();
+  private hydrate() {
+    return (query: Query) =>
+      query
+        .apply(matchProps())
+        .return<{ dto: UnsecuredDto<Song> }>('props as dto');
   }
 
   async list({ filter, ...input }: SongListInput, session: Session) {
