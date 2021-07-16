@@ -227,11 +227,7 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
     return result.dto;
   }
 
-  async list(
-    { filter, ...input }: PartnershipListInput,
-    session: Session,
-    changeset?: ID
-  ) {
+  async list(input: PartnershipListInput, session: Session, changeset?: ID) {
     const result = await this.db
       .query()
       .subQuery((sub) =>
@@ -239,21 +235,21 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
           .match([
             requestingUser(session),
             ...permissionsOfNode('Partnership'),
-            ...(filter.projectId
+            ...(input.filter.projectId
               ? [
                   relation('in', '', 'partnership', { active: true }),
-                  node('project', 'Project', { id: filter.projectId }),
+                  node('project', 'Project', { id: input.filter.projectId }),
                 ]
               : []),
           ])
           .apply(whereNotDeletedInChangeset(changeset))
           .return('node')
           .apply((q) =>
-            changeset && filter.projectId
+            changeset && input.filter.projectId
               ? q
                   .union()
                   .match([
-                    node('', 'Project', { id: filter.projectId }),
+                    node('', 'Project', { id: input.filter.projectId }),
                     relation('out', '', 'partnership', { active: false }),
                     node('node', 'Partnership'),
                     relation('in', '', 'changeset', { active: true }),

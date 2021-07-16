@@ -158,11 +158,8 @@ export class FilmService {
     this.logger.debug(`deleted film with id`, { id });
   }
 
-  async list(
-    { filter, ...input }: FilmListInput,
-    session: Session
-  ): Promise<FilmListOutput> {
-    const results = await this.repo.list({ filter, ...input }, session);
+  async list(input: FilmListInput, session: Session): Promise<FilmListOutput> {
+    const results = await this.repo.list(input, session);
     return await mapListResults(results, (id) => this.readOne(id, session));
   }
 }

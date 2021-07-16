@@ -238,10 +238,10 @@ export class ProjectMemberService {
   }
 
   async list(
-    { filter, ...input }: ProjectMemberListInput,
+    input: ProjectMemberListInput,
     session: Session
   ): Promise<ProjectMemberListOutput> {
-    const results = await this.repo.list({ filter, ...input }, session);
+    const results = await this.repo.list(input, session);
     return await mapListResults(results, (id) => this.readOne(id, session));
   }
 

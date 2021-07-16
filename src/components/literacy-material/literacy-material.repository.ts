@@ -71,10 +71,7 @@ export class LiteracyMaterialRepository extends DtoRepository(
     return await readLiteracyMaterial.first();
   }
 
-  async list(
-    { filter, ...input }: LiteracyMaterialListInput,
-    session: Session
-  ) {
+  async list(input: LiteracyMaterialListInput, session: Session) {
     const result = await this.db
       .query()
       .match([

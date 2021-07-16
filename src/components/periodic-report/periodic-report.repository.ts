@@ -89,7 +89,7 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
   async listProjectReports(
     projectId: string,
     reportType: ReportType,
-    { filter, ...input }: PeriodicReportListInput
+    input: PeriodicReportListInput
   ) {
     const result = await this.db
       .query()
@@ -180,7 +180,7 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
 
   async listEngagementReports(
     engagementId: string,
-    { filter, ...input }: PeriodicReportListInput
+    input: PeriodicReportListInput
   ) {
     const result = await this.db
       .query()

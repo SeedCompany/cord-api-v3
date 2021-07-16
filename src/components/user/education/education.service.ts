@@ -132,10 +132,10 @@ export class EducationService {
   }
 
   async list(
-    { filter, ...input }: EducationListInput,
+    input: EducationListInput,
     session: Session
   ): Promise<EducationListOutput> {
-    const results = await this.repo.list({ filter, ...input }, session);
+    const results = await this.repo.list(input, session);
     return await mapListResults(results, (id) => this.readOne(id, session));
   }
 }

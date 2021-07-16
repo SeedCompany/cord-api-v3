@@ -162,10 +162,10 @@ export class FieldRegionService {
   }
 
   async list(
-    { filter, ...input }: FieldRegionListInput,
+    input: FieldRegionListInput,
     session: Session
   ): Promise<FieldRegionListOutput> {
-    const results = await this.repo.list({ filter, ...input }, session);
+    const results = await this.repo.list(input, session);
     return await mapListResults(results, (id) => this.readOne(id, session));
   }
 }

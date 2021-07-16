@@ -331,10 +331,10 @@ export class ProductService {
   }
 
   async list(
-    { filter, ...input }: ProductListInput,
+    input: ProductListInput,
     session: Session
   ): Promise<ProductListOutput> {
-    const results = await this.repo.list({ filter, ...input }, session);
+    const results = await this.repo.list(input, session);
     return await mapListResults(results, (id) => this.readOne(id, session));
   }
 

@@ -149,10 +149,10 @@ export class ProjectChangeRequestService {
   }
 
   async list(
-    { filter, ...input }: ProjectChangeRequestListInput,
+    input: ProjectChangeRequestListInput,
     session: Session
   ): Promise<ProjectChangeRequestListOutput> {
-    const results = await this.repo.list({ filter, ...input }, session);
+    const results = await this.repo.list(input, session);
     return await mapListResults(results, (id) => this.readOne(id, session));
   }
 }

@@ -156,10 +156,10 @@ export class CeremonyService {
   }
 
   async list(
-    { filter, ...input }: CeremonyListInput,
+    input: CeremonyListInput,
     session: Session
   ): Promise<CeremonyListOutput> {
-    const results = await this.ceremonyRepo.list({ filter, ...input }, session);
+    const results = await this.ceremonyRepo.list(input, session);
     return await mapListResults(results, (id) => this.readOne(id, session));
   }
 }

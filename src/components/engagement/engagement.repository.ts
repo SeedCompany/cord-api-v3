@@ -365,13 +365,9 @@ export class EngagementRepository extends CommonRepository {
 
   // LIST ///////////////////////////////////////////////////////////
 
-  async list(
-    { filter, ...input }: EngagementListInput,
-    session: Session,
-    changeset?: ID
-  ) {
+  async list(input: EngagementListInput, session: Session, changeset?: ID) {
     const label =
-      simpleSwitch(filter.type, {
+      simpleSwitch(input.filter.type, {
         language: 'LanguageEngagement',
         internship: 'InternshipEngagement',
       }) ?? 'Engagement';
@@ -383,21 +379,21 @@ export class EngagementRepository extends CommonRepository {
           .match([
             requestingUser(session),
             ...permissionsOfNode(label),
-            ...(filter.projectId
+            ...(input.filter.projectId
               ? [
                   relation('in', '', 'engagement', { active: true }),
-                  node('project', 'Project', { id: filter.projectId }),
+                  node('project', 'Project', { id: input.filter.projectId }),
                 ]
               : []),
           ])
           .apply(whereNotDeletedInChangeset(changeset))
           .return('node')
           .apply((q) =>
-            changeset && filter.projectId
+            changeset && input.filter.projectId
               ? q
                   .union()
                   .match([
-                    node('', 'Project', { id: filter.projectId }),
+                    node('', 'Project', { id: input.filter.projectId }),
                     relation('out', '', 'engagement', { active: false }),
                     node('node', label),
                     relation('in', '', 'changeset', { active: true }),

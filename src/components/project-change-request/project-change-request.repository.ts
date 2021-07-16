@@ -75,21 +75,18 @@ export class ProjectChangeRequestRepository extends DtoRepository(
     return result.dto;
   }
 
-  async list(
-    { filter, ...input }: ProjectChangeRequestListInput,
-    _session: Session
-  ) {
+  async list(input: ProjectChangeRequestListInput, _session: Session) {
     const result = await this.db
       .query()
       .match([
         // requestingUser(session),
         // ...permissionsOfNode(label),
         node('node', 'ProjectChangeRequest'),
-        ...(filter.projectId
+        ...(input.filter.projectId
           ? [
               relation('in', '', 'changeset', { active: true }),
               node('project', 'Project', {
-                id: filter.projectId,
+                id: input.filter.projectId,
               }),
             ]
           : []),

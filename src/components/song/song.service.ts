@@ -167,11 +167,8 @@ export class SongService {
     this.logger.debug(`deleted song with id`, { id });
   }
 
-  async list(
-    { filter, ...input }: SongListInput,
-    session: Session
-  ): Promise<SongListOutput> {
-    const results = await this.repo.list({ filter, ...input }, session);
+  async list(input: SongListInput, session: Session): Promise<SongListOutput> {
+    const results = await this.repo.list(input, session);
     return await mapListResults(results, (id) => this.readOne(id, session));
   }
 }

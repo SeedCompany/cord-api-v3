@@ -173,10 +173,10 @@ export class StoryService {
   }
 
   async list(
-    { filter, ...input }: StoryListInput,
+    input: StoryListInput,
     session: Session
   ): Promise<StoryListOutput> {
-    const results = await this.repo.list({ filter, ...input }, session);
+    const results = await this.repo.list(input, session);
     return await mapListResults(results, (id) => this.readOne(id, session));
   }
 }

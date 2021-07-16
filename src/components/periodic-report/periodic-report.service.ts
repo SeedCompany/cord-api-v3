@@ -130,11 +130,10 @@ export class PeriodicReportService {
   async listProjectReports(
     projectId: string,
     reportType: ReportType,
-    { filter, ...input }: PeriodicReportListInput,
+    input: PeriodicReportListInput,
     session: Session
   ): Promise<SecuredPeriodicReportList> {
     const results = await this.repo.listProjectReports(projectId, reportType, {
-      filter,
       ...input,
     });
 
@@ -178,11 +177,10 @@ export class PeriodicReportService {
 
   async listEngagementReports(
     engagementId: string,
-    { filter, ...input }: PeriodicReportListInput,
+    input: PeriodicReportListInput,
     session: Session
   ): Promise<SecuredPeriodicReportList> {
     const results = await this.repo.listEngagementReports(engagementId, {
-      filter,
       ...input,
     });
 

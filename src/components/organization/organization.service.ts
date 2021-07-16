@@ -170,10 +170,11 @@ export class OrganizationService {
   }
 
   async list(
-    { filter, ...input }: OrganizationListInput,
+    input: OrganizationListInput,
     session: Session
   ): Promise<OrganizationListOutput> {
-    const results = await this.repo.list({ filter, ...input }, session);
+    const results = await this.repo.list(input, session);
+
     return await mapListResults(results, (id) => this.readOne(id, session));
   }
 
