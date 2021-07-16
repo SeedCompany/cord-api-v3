@@ -67,4 +67,3 @@ end; $$;
 
 select create_history_triggers_fn('public');
 select create_history_triggers_fn('sc');
-select create_history_triggers_fn('sil');
