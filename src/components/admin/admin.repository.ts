@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
+import * as path from 'path';
 import { ID } from '../../common';
 import {
   ConfigService,
@@ -21,7 +22,6 @@ export class AdminRepository {
   ) {}
 
   async loadData() {
-    // default inserts
     const pool = this.pg.pool;
     this.logger.info('pool info', {
       idleCount: pool.idleCount,
@@ -32,7 +32,22 @@ export class AdminRepository {
       idleCount: pool.idleCount,
       totalCount: pool.totalCount,
     });
+    // // copying over tab data
+    // const tabDataPath = path.join(
+    //   __dirname,
+    //   '..',
+    //   '..',
+    //   '..',
+    //   'src/core/postgres/sql/tab_data'
+    // );
+    // console.log(tabDataPath);
+    // const countryCodesPath = `${tabDataPath}/CountryCodes.tab`;
+    // await client.query(
+    //   `copy sil.country_codes
+    //   from /home/questionreality/cord-api-v3/src/core/postgres/sql/tab_data/CountryCodes.tab delimiter '	';`
+    // );
 
+    // default inserts
     await client.query(
       `insert into public.people_data("id", "public_first_name") values($1, $2)`,
       [0, 'defaultPerson']

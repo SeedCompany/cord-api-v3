@@ -278,7 +278,7 @@ CREATE TABLE if not exists sil.language_index (
    name  varchar(75) not null
 );
 
-create table if not exists sil.table_of_languages_data (
+create table if not exists sil.table_of_languages (
     id serial primary key,
     sil_ethnologue_legacy varchar(32),
 	iso_639 char(3),
