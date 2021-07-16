@@ -8,7 +8,6 @@ import {
   PaginationInput,
   Resource,
   ResourceShape,
-  SortablePaginationInput,
 } from '../../../common';
 import { collect } from './cypher-functions';
 
@@ -68,32 +67,6 @@ export const paginate =
         'size(page) > 0 and page[-1] <> list[-1] as hasMore',
       ]);
   };
-
-/**
- * @deprecated Use {@link paginate} instead.
- */
-export const calculateTotalAndPaginateList =
-  <TResourceStatic extends ResourceShape<any>>(
-    resource: TResourceStatic,
-    { page, count, sort, order }: SortablePaginationInput,
-    sorter?: (q: Query) => Query
-  ) =>
-  (query: Query) =>
-    query
-      .with([
-        'collect(distinct node) as nodes',
-        'count(distinct node) as total',
-      ])
-      .raw(`unwind nodes as node`)
-      // .with(['node', 'total']) TODO needed?
-      .apply(sorter ?? sorting(resource, { sort, order }))
-      .with([
-        `collect(distinct node.id)[${(page - 1) * count}..${
-          page * count
-        }] as items`,
-        'total',
-      ])
-      .return<{ items: ID[]; total: number }>(['items', 'total']);
 
 /**
  * Applies sorting to `node` given the input.
