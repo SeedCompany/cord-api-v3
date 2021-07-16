@@ -145,13 +145,13 @@ export class ProductProgressRepository {
                 ])
                 .apply(matchProps({ nodeName: 'stepNode', outputVar: 'step' }))
                 .raw('WITH * WHERE step.percentDone IS NOT NULL')
-                .return('step')
+                .return(collect('step').as('steps'))
             )
             .return<{ dto: UnsecuredProductProgress }>(
               merge('progress', {
                 productId: 'product.id',
                 reportId: 'report.id',
-                steps: collect('step'),
+                steps: 'steps',
               }).as('dto')
             )
       );
