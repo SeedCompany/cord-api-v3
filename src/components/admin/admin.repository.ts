@@ -22,7 +22,6 @@ export class AdminRepository {
   ) {}
 
   async loadData() {
-    await this.pg.fastInserts();
     const pool = this.pg.pool;
     this.logger.info('pool info', {
       idleCount: pool.idleCount,
@@ -184,8 +183,8 @@ export class AdminRepository {
     this.logger.info('project queries');
     //projects
     for (let i = 1; i < 2; i++) {
-      const projName = `proj${i}`;
       const projectRole = `projRole${i}`;
+      const projName = `proj${i}`;
       await client.query(
         `insert into public.projects_data("name") values ($1) on conflict do nothing;`,
         [projName]
@@ -226,6 +225,63 @@ export class AdminRepository {
     // await pool.end();
     // this.logger.info('pool ended');
     return true;
+  }
+  async fastInserts() {
+    await this.pg.fastInserts();
+    const client = await this.pg.pool.connect();
+    await client.query(
+      `insert into public.people_data("id", "public_first_name") values($1, $2)`,
+      [0, 'defaultPerson']
+    );
+    await client.query(
+      `insert into public.organizations_data("id", "name") values($1, $2)`,
+      [0, 'defaultOrg']
+    );
+    await client.query(
+      `insert into public.users_data("id", "person", "email","owning_org", "password") values(0,0,'defaultEmail', 0, 'abc')`
+    );
+    await client.query(
+      `insert into public.global_roles_data("id","name", "org") values(0,'defaultRole',0)`
+    );
+    await client.query(
+      `insert into public.projects_data("id","name") values ($1,$2) on conflict do nothing;`,
+      [0, 'proj0']
+    );
+
+    // inserting a lot of data
+    for (let i = 1; i < 10; i++) {
+      const orgName = `org${i}`;
+      // const personName = `person${i}`;
+      const locationName = `location${i}`;
+      const userData = {
+        email: `email${i}`,
+        password: 'abc',
+        org: 'defaultOrg',
+      };
+      const roleData = { name: `role${i}`, org: 'defaultOrg' };
+      await client.query(
+        `insert into public.organizations_data("id", "name") values($1, $2)`,
+        [i, orgName]
+      );
+      await client.query(
+        `insert into public.locations_data("name", "sensitivity", "type") values($1, 'Low', 'Country')`,
+        [locationName]
+      );
+      await client.query(`select * from public.sys_register($1,$2,$3)`, [
+        userData.email,
+        userData.password,
+        userData.org,
+      ]);
+      await client.query(`select * from public.sys_create_role($1, $2)`, [
+        roleData.name,
+        roleData.org,
+      ]);
+      const projName = `proj${i}`;
+      await client.query(
+        `insert into public.projects_data("name") values ($1) on conflict do nothing;`,
+        [projName]
+      );
+    }
   }
 
   finishing(callback: () => Promise<void>) {
