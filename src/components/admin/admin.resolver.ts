@@ -12,4 +12,11 @@ export class AdminResolver {
     await this.service.loadData();
     return true;
   }
+  @Mutation(() => Boolean, {
+    description: 'Run the fast inserts script',
+  })
+  async fastInserts() {
+    await this.service.fastInserts();
+    return true;
+  }
 }
