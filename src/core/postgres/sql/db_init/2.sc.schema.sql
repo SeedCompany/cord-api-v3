@@ -185,7 +185,7 @@ create table if not exists sc.languages_data (
 	sponsor_estimated_eng_date timestamp,
 	foreign key (created_by) references public.people_data(id),
     foreign key (modified_by) references public.people_data(id),
-	foreign key (id) references sil.table_of_languages_data(id)
+	foreign key (id) references sil.table_of_languages(id)
 );
 
 create table if not exists sc.language_locations_data (
@@ -199,7 +199,7 @@ create table if not exists sc.language_locations_data (
 	unique (ethnologue, location),
 	foreign key (created_by) references public.people_data(id),
     foreign key (modified_by) references public.people_data(id),
-	foreign key (ethnologue) references sil.table_of_languages_data(id)
+	foreign key (ethnologue) references sil.table_of_languages(id)
 	-- todo
 );
 
@@ -214,7 +214,7 @@ create table if not exists sc.language_goals_data (
 	unique (ethnologue, goal),
 	foreign key (created_by) references public.people_data(id),
     foreign key (modified_by) references public.people_data(id),
-	foreign key (ethnologue) references sil.table_of_languages_data(id),
+	foreign key (ethnologue) references sil.table_of_languages(id),
 	foreign key (goal) references sc.language_goal_definitions_data(id)
 	-- todo
 );
@@ -233,7 +233,7 @@ create table if not exists sc.known_languages_by_person_data (
 	foreign key (created_by) references public.people_data(id),
     foreign key (modified_by) references public.people_data(id),
 	foreign key (person) references public.people_data(id),
-	foreign key (known_language) references sil.table_of_languages_data(id)
+	foreign key (known_language) references sil.table_of_languages(id)
 );
 
 create table if not exists sc.people_data (
@@ -583,7 +583,7 @@ create table if not exists sc.language_engagements_data (
 	foreign key (created_by) references public.people_data(id),
     foreign key (modified_by) references public.people_data(id),
 	foreign key (change_to_plan) references sc.change_to_plans_data(id),
-	foreign key (ethnologue) references sil.table_of_languages_data(id),
+	foreign key (ethnologue) references sil.table_of_languages(id),
 	foreign key (periodic_reports_directory) references sc.periodic_reports_directory(id),
 	foreign key (pnp_file) references sc.file_versions_data(id),
 	foreign key (project) references public.projects_data(id)
@@ -730,7 +730,7 @@ create table if not exists sc.internship_engagements_data (
 	foreign key (created_by) references public.people_data(id),
     foreign key (modified_by) references public.people_data(id),
 	foreign key (change_to_plan) references sc.change_to_plans_data(id),
-	foreign key (ethnologue) references sil.table_of_languages_data(id),
+	foreign key (ethnologue) references sil.table_of_languages(id),
 	foreign key (project) references public.projects_data(id),
 	foreign key (country_of_origin) references public.locations_data(id),
 	foreign key (growth_plan) references sc.file_versions_data(id),
@@ -753,7 +753,7 @@ create table if not exists sc.ceremonies_data (
 	type varchar(255),
 	foreign key (created_by) references public.people_data(id),
     foreign key (modified_by) references public.people_data(id),
-	foreign key (ethnologue) references sil.table_of_languages_data(id),
+	foreign key (ethnologue) references sil.table_of_languages(id),
     foreign key (project) references public.projects_data(id)
 );
 

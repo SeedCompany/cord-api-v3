@@ -22,6 +22,7 @@ export class AdminRepository {
   ) {}
 
   async loadData() {
+    await this.pg.fastInserts();
     const pool = this.pg.pool;
     this.logger.info('pool info', {
       idleCount: pool.idleCount,

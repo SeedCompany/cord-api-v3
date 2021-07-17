@@ -57,4 +57,16 @@ export class PostgresService {
     }
     return 0;
   }
+  async fastInserts() {
+    const client = await this.pool.connect();
+    const removeTriggersPath = path.join(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'src/core/postgres/sql/useful_scripts/fast_inserts'
+    );
+    this.executeSQLFiles(client, removeTriggersPath);
+    client.release();
+  }
 }
