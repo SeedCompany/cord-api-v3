@@ -1,4 +1,5 @@
 import { node, Query, relation } from 'cypher-query-builder';
+import { MergeExclusive } from 'type-fest';
 import { Variable } from '.';
 import {
   ID,
@@ -10,20 +11,26 @@ import {
 import { DbChanges } from '../changes';
 import { prefixNodeLabelsWithDeleted } from './deletes';
 
-export interface DeactivatePropertyOptions<
+export type DeactivatePropertyOptions<
   TResourceStatic extends ResourceShape<any>,
   TObject extends Partial<MaybeUnsecuredInstance<TResourceStatic>> & {
     id: ID;
   },
   Key extends keyof DbChanges<TObject> & string
-> {
-  resource: TResourceStatic;
-  key: Key | Variable;
+> = MergeExclusive<
+  {
+    resource: TResourceStatic;
+    key: Key;
+  },
+  {
+    key: Variable;
+  }
+> & {
   changeset?: ID;
   nodeName?: string;
   numDeactivatedVar?: string;
   importVars?: Many<string>;
-}
+};
 
 /**
  * Deactivates all existing properties of node and given key
