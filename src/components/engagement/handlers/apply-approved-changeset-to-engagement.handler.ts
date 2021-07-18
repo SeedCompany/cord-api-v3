@@ -8,9 +8,8 @@ import {
   Logger,
 } from '../../../core';
 import { deleteBaseNode } from '../../../core/database/query';
-import { changesetApplyChanges } from '../../changeset/changeset-apply-changes.helpers';
+import { commitChangesetProps } from '../../changeset/commit-changeset-props.query';
 import { EngagementService } from '../../engagement';
-import { IEngagement } from '../../engagement/dto';
 import { ProjectChangeRequestApprovedEvent } from '../../project-change-request/events';
 
 type SubscribedEvent = ProjectChangeRequestApprovedEvent;
@@ -82,12 +81,7 @@ export class ApplyApprovedChangesetToEngagement
               relation('out', '', 'engagement', { active: true }),
               node('node', 'Engagement', { id }),
             ])
-            .apply(
-              changesetApplyChanges({
-                type: IEngagement,
-                changeset,
-              })
-            )
+            .apply(commitChangesetProps())
             .return('node')
             .run();
         })

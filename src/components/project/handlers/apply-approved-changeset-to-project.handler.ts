@@ -7,9 +7,8 @@ import {
   ILogger,
   Logger,
 } from '../../../core';
-import { changesetApplyChanges } from '../../changeset/changeset-apply-changes.helpers';
+import { commitChangesetProps } from '../../changeset/commit-changeset-props.query';
 import { ProjectChangeRequestApprovedEvent } from '../../project-change-request/events';
-import { IProject } from '../dto';
 import { ProjectRepository } from '../project.repository';
 import { ProjectService } from '../project.service';
 
@@ -39,12 +38,7 @@ export class ApplyApprovedChangesetToProject
           relation('out', '', 'changeset', { active: true }),
           node('changeset', 'Changeset', { id: changesetId }),
         ])
-        .apply(
-          changesetApplyChanges({
-            type: IProject,
-            changeset: changesetId,
-          })
-        )
+        .apply(commitChangesetProps())
         .return('node')
         .run();
       // TODO handle relations (locations, etc.)
