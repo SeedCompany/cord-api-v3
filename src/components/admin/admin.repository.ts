@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import * as path from 'path';
 import { ID } from '../../common';
 import {
   ConfigService,
@@ -247,22 +246,37 @@ export class AdminRepository {
       `insert into public.projects_data("id","name") values ($1,$2) on conflict do nothing;`,
       [0, 'proj0']
     );
+    await client.query(`insert into sc.organizations_data(id,base64, internal) values(0,'defaultOrg', 'internal_defaultOrg');
+    `);
+    await client.query(
+      `insert into sc.change_to_plans_data(id, created_by) values(0,0);`
+    );
+    await client.query(`insert into sc.projects_data(project,base64,active,department) 
+    values(0,'defaultOrg', true,  'dept0');`);
 
     // inserting a lot of data
     for (let i = 1; i < 10; i++) {
       const orgName = `org${i}`;
+      const internalOrgName = `internalOrg${i}`;
       // const personName = `person${i}`;
       const locationName = `location${i}`;
+      const deptName = `dept${i}`;
       const userData = {
         email: `email${i}`,
         password: 'abc',
         org: 'defaultOrg',
       };
       const roleData = { name: `role${i}`, org: 'defaultOrg' };
+
       await client.query(
         `insert into public.organizations_data("id", "name") values($1, $2)`,
         [i, orgName]
       );
+      await client.query(
+        `insert into sc.organizations_data("id", "base64", "internal") values($1, $2, $3)`,
+        [i, orgName, internalOrgName]
+      );
+      this.logger.info('orgs', { i });
       await client.query(
         `insert into public.locations_data("name", "sensitivity", "type") values($1, 'Low', 'Country')`,
         [locationName]
@@ -272,6 +286,7 @@ export class AdminRepository {
         userData.password,
         userData.org,
       ]);
+      this.logger.info('users', { i });
       await client.query(`select * from public.sys_create_role($1, $2)`, [
         roleData.name,
         roleData.org,
@@ -281,6 +296,12 @@ export class AdminRepository {
         `insert into public.projects_data("name") values ($1) on conflict do nothing;`,
         [projName]
       );
+      await client.query(
+        `insert into sc.projects_data(project,base64,active,department) 
+      values($1,$2, true, $3);`,
+        [i, orgName, deptName]
+      );
+      this.logger.info('projects', { i });
     }
   }
 
