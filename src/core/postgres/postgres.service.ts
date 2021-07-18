@@ -66,7 +66,7 @@ export class PostgresService {
       '..',
       'src/core/postgres/sql/useful_scripts/fast_inserts'
     );
-    this.executeSQLFiles(client, removeTriggersPath);
+    await this.executeSQLFiles(client, removeTriggersPath);
     client.release();
   }
 }
