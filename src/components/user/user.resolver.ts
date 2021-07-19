@@ -7,6 +7,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
+import { stripIndent } from 'common-tags';
 import {
   AnonSession,
   firstLettersOfWords,
@@ -16,6 +17,7 @@ import {
   LoggedInSession,
   Session,
 } from '../../common';
+import { ConfigService } from '../../core';
 import { LocationListInput, SecuredLocationList } from '../location';
 import {
   OrganizationListInput,
@@ -59,6 +61,7 @@ class ModifyLocationArgs {
 export class UserResolver {
   constructor(
     private readonly userService: UserService,
+    private readonly config: ConfigService,
     private readonly timeZoneService: TimeZoneService
   ) {}
 
@@ -93,6 +96,16 @@ export class UserResolver {
       ...user.timezone,
       value: tz ? zones[tz] : undefined,
     };
+  }
+
+  @ResolveField(() => Boolean, {
+    description: stripIndent`
+      Whether this user represents something done by the "system"
+      (either via migration, automation, etc.) or a "real" user
+    `,
+  })
+  isSystem(@Parent() user: User): boolean {
+    return user.id === this.config.rootAdmin.id;
   }
 
   @Query(() => UserListOutput, {
