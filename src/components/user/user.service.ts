@@ -136,7 +136,12 @@ export class UserService {
     );
   };
 
-  async create(input: CreatePerson, _session?: Session): Promise<ID> {
+  async create(input: CreatePerson, session?: Session): Promise<ID> {
+    if (input.roles && input.roles.length > 0 && session) {
+      // Note: session is only omitted for creating RootUser
+      await this.authorizationService.checkPower(Powers.GrantRole, session);
+    }
+
     const id = await this.userRepo.create(input);
     input.roles &&
       (await this.authorizationService.roleAddedToUser(id, input.roles));
