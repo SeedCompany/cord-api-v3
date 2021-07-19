@@ -31,17 +31,12 @@ export class ChangesetRepository extends DtoRepository(Changeset) {
       .subQuery((sub) =>
         sub
           .with('changeset')
-          .optionalMatch([
+          .match([
             node('changeset'),
-            relation('out', '', [], { active: true, deleting: true }),
-            node('deletingNode', 'BaseNode'),
-          ])
-          .optionalMatch([
-            node('changeset', 'Changeset', { id }),
             relation('out', '', [], { deleting: true }),
-            node('deletedNode', 'Deleted_BaseNode'),
+            node('node'),
           ])
-          .return('collect(deletingNode) + collect(deletedNode) as removed')
+          .return('collect(distinct node) as removed')
       )
       .return<Record<keyof ChangesetDiff, readonly BaseNode[]>>([
         'changed',

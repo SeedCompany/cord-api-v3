@@ -372,12 +372,23 @@ describe('Engagement Changeset Aware e2e', () => {
     // List engagements with changeset
     result = await readEngagements(app, project.id, changeset.id);
     expect(result.project.engagements.items.length).toBe(1);
+
+    // Confirm engagement id is added to removed list
+    let projectChangeset = await readProjectChangeset(
+      app,
+      project.id,
+      changeset.id
+    );
+    expect(projectChangeset.project.changeset.difference.removed[0].id).toBe(
+      le.id
+    );
+
     await approveProjectChangeRequest(app, changeset.id);
     // List engagements without changeset
     result = await readEngagements(app, project.id);
     expect(result.project.engagements.items.length).toBe(1);
 
-    const projectChangeset = await readProjectChangeset(
+    projectChangeset = await readProjectChangeset(
       app,
       project.id,
       changeset.id
