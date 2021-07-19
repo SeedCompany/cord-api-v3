@@ -290,6 +290,7 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
               changeset
                 ? q
                     .union()
+                    .with('project, partner')
                     .match([node('changeset', 'Changeset', { id: changeset })])
                     .optionalMatch([
                       node('project'),
