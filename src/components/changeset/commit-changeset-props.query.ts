@@ -51,6 +51,7 @@ export const commitChangesetProps =
 
         .comment('Deactivate currently active prop')
         .setValues({ 'previouslyActiveRel.active': false })
+        .with('previouslyActiveProp')
         .apply(prefixNodeLabelsWithDeleted('previouslyActiveProp'))
 
         .return('1')
