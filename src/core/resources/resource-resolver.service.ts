@@ -118,7 +118,10 @@ export class ResourceResolver {
   }
 
   private resolveType(types: Many<string | SomeResource>): keyof ResourceMap {
-    const names = many(types).map((t) => (typeof t === 'string' ? t : t.name));
+    // Remove `Deleted_` prefix
+    const names = many(types).map((t) =>
+      (typeof t === 'string' ? t : t.name).replace(/^Deleted_/, '')
+    );
 
     const schema = this.schemaHost.schema;
     const resolved = names.filter((name) => isObjectType(schema.getType(name)));
