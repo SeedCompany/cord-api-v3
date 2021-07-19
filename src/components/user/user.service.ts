@@ -177,6 +177,12 @@ export class UserService {
       ...securedProps,
       roles: {
         ...securedProps.roles,
+        canEdit: isIdLike(sessionOrUserId)
+          ? false
+          : await this.authorizationService.hasPower(
+              sessionOrUserId,
+              Powers.GrantRole
+            ),
         value: securedProps.roles.value ?? [],
       },
       canDelete: await this.userRepo.checkDeletePermission(
