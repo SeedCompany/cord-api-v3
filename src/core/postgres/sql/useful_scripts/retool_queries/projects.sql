@@ -44,10 +44,15 @@ sc.budgets_materialized_view bmv where bmv.project = 0) and brmv.__person_id = 1
 -- NARRATIVE REPORTS
 -- TEAM MEMBERS
 -- PARTNERSHIPS
+select count(id) from sc.partnerships_materialized_view where project = 0 and __person_id = 1;
+
+select orgmv.name from sc.partnerships_materialized_view pmv inner join 
+(select somv.base64,pomv.name, somv.id, pomv.id  from sc.organizations_materialized_view somv
+inner join public.organizations_materialized_view pomv using (id) where somv.__person_id = 0 and pomv.__person_id = 0) as orgmv on pmv.partner = orgmv.base64 where pmv.project = 0 and pmv.__person_id = 0;
 -- CHANGE REQS
 -- LANGUAGE ENGAGEMENTS
 -- POSTS
 select type,shareability,pmv.created_at, pmv.created_by, ppmv.public_first_name || ' ' || ppmv.public_last_name as full_name from 
 sc.posts_materialized_view pmv inner join  public.people_materialized_view ppmv on pmv.created_by = 
-ppmv.id where directory = (select posts_directory from sc.projects_materialized_view where __person_id = 0 and __id = 1) and pmv.__person_id = 0;
+ppmv.id where directory = (select posts_directory from sc.projects_materialized_view where __person_id = 0 and project = 0) and pmv.__person_id = 0;
 

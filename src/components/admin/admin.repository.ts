@@ -251,8 +251,8 @@ export class AdminRepository {
     await client.query(
       `insert into sc.change_to_plans_data(id, created_by) values(0,0);`
     );
-    await client.query(`insert into sc.projects_data(project,base64,active,department) 
-    values(0,'defaultOrg', true,  'dept0');`);
+    await client.query(`insert into sc.projects_data(id,project,base64,active,department) 
+    values(0,0,'proj0', true,  'dept0');`);
 
     // inserting a lot of data
     for (let i = 1; i < 10; i++) {
