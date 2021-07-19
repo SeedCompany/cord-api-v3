@@ -14,12 +14,13 @@ create table if not exists sc.posts_directory ( -- does not need to be secure
 create table if not exists sc.posts_data (
     id serial primary key,
     directory int not null,
-    type public.post_shareability not null,
+    type public.post_type not null,
     shareability public.post_shareability not null,
     body text not null,
     created_at timestamp not null default CURRENT_TIMESTAMP,
     created_by int not null default 0,
     foreign key (created_by) references public.people_data(id)
+    -- foreign key (directory) references public.posts_directory(id)
 );
 
 -- ACCOUNTING TABLES --------------------------------------------------------
