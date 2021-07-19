@@ -1,21 +1,36 @@
 import { node, Query, relation } from 'cypher-query-builder';
-import { ID, MaybeUnsecuredInstance, ResourceShape } from '../../../common';
+import { MergeExclusive } from 'type-fest';
+import { Variable } from '.';
+import {
+  ID,
+  many,
+  Many,
+  MaybeUnsecuredInstance,
+  ResourceShape,
+} from '../../../common';
 import { DbChanges } from '../changes';
 import { prefixNodeLabelsWithDeleted } from './deletes';
 
-export interface DeactivatePropertyOptions<
+export type DeactivatePropertyOptions<
   TResourceStatic extends ResourceShape<any>,
   TObject extends Partial<MaybeUnsecuredInstance<TResourceStatic>> & {
     id: ID;
   },
   Key extends keyof DbChanges<TObject> & string
-> {
-  resource: TResourceStatic;
-  key: Key;
+> = MergeExclusive<
+  {
+    resource: TResourceStatic;
+    key: Key;
+  },
+  {
+    key: Variable;
+  }
+> & {
   changeset?: ID;
   nodeName?: string;
   numDeactivatedVar?: string;
-}
+  importVars?: Many<string>;
+};
 
 /**
  * Deactivates all existing properties of node and given key
@@ -32,15 +47,18 @@ export const deactivateProperty =
     changeset,
     nodeName = 'node',
     numDeactivatedVar = 'numPropsDeactivated',
+    importVars = [],
   }: DeactivatePropertyOptions<TResourceStatic, TObject, Key>) =>
   <R>(query: Query<R>) =>
     query.comment`
       deactivateProperty(${nodeName}.${key})
-    `.subQuery(nodeName, (sub) =>
+    `.subQuery([nodeName, ...many(importVars)], (sub) =>
       sub
         .match([
           node(nodeName),
-          relation('out', 'oldToProp', key, { active: !changeset }),
+          relation('out', 'oldToProp', key instanceof Variable ? [] : key, {
+            active: !changeset,
+          }),
           node('oldPropVar', 'Property'),
           ...(changeset
             ? [
@@ -49,6 +67,11 @@ export const deactivateProperty =
               ]
             : []),
         ])
+        .apply((q) =>
+          key instanceof Variable
+            ? q.raw(`WHERE type(oldToProp) = ${key.name}`)
+            : q
+        )
         .setValues({
           [`${changeset ? 'oldChange' : 'oldToProp'}.active`]: false,
         })
