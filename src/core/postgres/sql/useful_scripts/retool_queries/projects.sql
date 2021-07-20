@@ -13,9 +13,15 @@ insert into sc.posts_directory(id) values(0);
 update sc.projects_data set posts_directory = 0; 
 refresh materialized view sc.projects_materialized_view;
 insert into sc.posts_data(id,directory,type,shareability,body) values(0,0,'Note','Internal', 'Note0');
--- FINANCIAL REPORTS
--- NARRATIVE REPORTS
+-- REPORTS
+insert into sc.periodic_reports_directory(id) values(0);
+insert into sc.periodic_reports_data(id, directory, start_at,end_at,type,reportFile) values 
+(0,0,'2020-01-01', '2020-12-12','Narrative',0);
+insert into sc.files_data(id,directory,name) values (1,0, 'file1');
+insert into sc.periodic_reports_data(id, directory, start_at, end_at, type,reportFile) values 
+(1,0,'2020-01-01', '2020-12-12', 'Financial', 1);
 -- TEAM MEMBERS
+insert into project_memberships_data(project,person) values (0,0);
 -- PARTNERSHIPS
 -- CHANGE REQS
 -- FILES    
@@ -41,11 +47,14 @@ sc.budgets_materialized_view bmv where bmv.project = 0) and brmv.__person_id = 1
 
 -- FILES
 select name,created_by, created_at from sc.directories_materialized_view dmv where dmv.parent = (select root_directory from sc.projects_materialized_view pmv where pmv.__person_id = 1 and pmv.__id = 1) and dmv.__person_id = 1;
-
 select name, created_at from sc.files_materialized_view fmv where fmv.directory = 0 and fmv.__person_id = 1;
--- FINANCIAL REPORTS
--- NARRATIVE REPORTS
--- TEAM MEMBERS
+
+-- REPORTS
+select start_at || ' - ' || end_at as period, created_at, created_by from sc.periodic_reports_materialized_view where directory = 0 and __person_id = 1 and type = 'Narrative';     
+select start_at || ' - ' || end_at as period, created_at, created_by from sc.periodic_reports_materialized_view where directory = 0 and __person_id = 1 and type = 'Financial';     
+
+-- TEAM MEMBERS - NEED TO GET FULLNAME AND ROLE 
+select person from public.project_memberships_materialized_view where project = 0 and __person_id = 0; 
 
 -- PARTNERSHIPS
 select count(id) from sc.partnerships_materialized_view where project = 0 and __person_id = 1;

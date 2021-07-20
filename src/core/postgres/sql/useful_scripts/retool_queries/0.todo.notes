@@ -2,13 +2,15 @@
     [√] Parent Table
     [√] Budget
     [√] Files
-    [ ] Financial Reports
-    [ ] Narrative Reports
-    [ ] Team Members - public.project_memberships
+    [√] Financial Reports
+    [√] Narrative Reports
+    [√] Team Members - public.project_memberships
     [√] Partnerships
     [ ] Change Reqs 
     [ ] Language Engagements 
     [√] Posts 
+    -----------
+    [ ] Need to make directory queries recursive
 
 [ ] Languages
     [√] Parent Table 
