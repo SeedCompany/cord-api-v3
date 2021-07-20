@@ -136,7 +136,12 @@ export class UserService {
     );
   };
 
-  async create(input: CreatePerson, _session?: Session): Promise<ID> {
+  async create(input: CreatePerson, session?: Session): Promise<ID> {
+    if (input.roles && input.roles.length > 0 && session) {
+      // Note: session is only omitted for creating RootUser
+      await this.authorizationService.checkPower(Powers.GrantRole, session);
+    }
+
     const id = await this.userRepo.create(input);
     input.roles &&
       (await this.authorizationService.roleAddedToUser(id, input.roles));
@@ -177,6 +182,12 @@ export class UserService {
       ...securedProps,
       roles: {
         ...securedProps.roles,
+        canEdit: isIdLike(sessionOrUserId)
+          ? false
+          : await this.authorizationService.hasPower(
+              sessionOrUserId,
+              Powers.GrantRole
+            ),
         value: securedProps.roles.value ?? [],
       },
       canDelete: await this.userRepo.checkDeletePermission(

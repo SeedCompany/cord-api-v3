@@ -8,7 +8,7 @@ import { User, UserStatus } from '../../src/components/user';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
 import { grantPower } from './grant-power';
-import { login } from './login';
+import { runAsAdmin } from './login';
 
 export const generateRegisterInput = async (): Promise<RegisterInput> => ({
   ...(await generateRequireFieldsRegisterInput()),
@@ -64,7 +64,7 @@ export async function registerUser(
   app: TestApp,
   input: Partial<RegisterInput> = {}
 ) {
-  const user: RegisterInput = {
+  const { roles, ...user }: RegisterInput = {
     ...(await generateRegisterInput()),
     ...input,
   };
@@ -84,12 +84,31 @@ export async function registerUser(
       input: user,
     }
   );
-
   const actual: User = result.register.user;
   expect(actual).toBeTruthy();
 
   expect(isValidId(actual.id)).toBe(true);
   expect(actual.email.value).toBe(user.email.toLowerCase());
+
+  // Add roles to user as admin as we are assuming this is a fixture setup
+  // instead of actually trying to create a user the intended way.
+  if (roles && roles.length > 0) {
+    await runAsAdmin(app, async () => {
+      await app.graphql.mutate(
+        gql`
+          mutation AddRolesToUser($userId: ID!, $roles: [Role!]!) {
+            updateUser(input: { user: { id: $userId, roles: $roles } }) {
+              __typename
+            }
+          }
+        `,
+        {
+          userId: actual.id,
+          roles,
+        }
+      );
+    });
+  }
 
   return actual;
 }
@@ -99,13 +118,7 @@ export async function registerUserWithPower(
   powers: Powers[],
   input: Partial<RegisterInput> = {}
 ): Promise<User> {
-  const password: string = input.password || faker.internet.password();
-  const user = await registerUser(app, { ...input, password });
-
-  for (const power of powers) {
-    await grantPower(app, user.id, power);
-  }
-  await login(app, { email: user.email.value, password });
-
+  const user = await registerUser(app, input);
+  await grantPower(app, user.id, ...powers);
   return user;
 }
