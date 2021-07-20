@@ -269,13 +269,15 @@ create table if not exists sc.person_unavailabilities_data (
 
 create table if not exists sc.directories_data (
     id serial primary key,
+	parent int not null,
     name varchar(255),
 	created_at timestamp not null default CURRENT_TIMESTAMP,
     created_by int not null default 0,
     modified_at timestamp not null default CURRENT_TIMESTAMP,
     modified_by int not null default 0,
     foreign key (created_by) references public.people_data(id),
-    foreign key (modified_by) references public.people_data(id)
+    foreign key (modified_by) references public.people_data(id),
+	foreign key (parent) references sc.directories_data(id)
 	-- todo
 );
 

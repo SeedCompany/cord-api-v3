@@ -1,0 +1,28 @@
+[ ] Projects
+    [√] Parent Table
+    [√] Budget
+    [√] Files
+    [ ] Financial Reports
+    [ ] Narrative Reports
+    [ ] Team Members - public.project_memberships
+    [√] Partnerships
+    [ ] Change Reqs 
+    [ ] Language Engagements 
+    [√] Posts 
+
+[ ] Languages
+    [√] Parent Table 
+    [ ] Ethnologue
+    [ ] Scripture
+    [ ] Locations
+    [ ] Projects 
+
+[ ] People 
+    [√] Parent Table 
+    [ ] Users
+
+[ ] Partners
+    [√] Parent Table
+    [ ] Partner Types 
+    [ ] Address 
+    [ ] Point of Contact 

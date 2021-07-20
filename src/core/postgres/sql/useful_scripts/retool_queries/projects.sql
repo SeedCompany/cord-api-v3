@@ -2,7 +2,7 @@
 update public.projects_data set primary_location  = 1;
 refresh materialized view public.projects_materialized_view;
 -- BUDGETS
-insert into sc.directories_data(id, name) values(0,'dir0');
+insert into sc.directories_data(id, name, parent) values(0,'dir0', 0);
 insert into sc.files_data(id,directory,name ) values(0,0,'file0');
 insert into sc.file_versions_data(id,category,name,mime_type, file,file_url) values(0,'budgets','file_ver0', 'A', 0, 'home/file0');
 insert into sc.budgets_data(base64,project, universal_template) values('lalala', 0 ,0);
@@ -40,13 +40,17 @@ select partnership, fiscal_year,amount  from sc.budget_records_materialized_view
 sc.budgets_materialized_view bmv where bmv.project = 0) and brmv.__person_id = 1;
 
 -- FILES
+select name,created_by, created_at from sc.directories_materialized_view dmv where dmv.parent = (select root_directory from sc.projects_materialized_view pmv where pmv.__person_id = 1 and pmv.__id = 1) and dmv.__person_id = 1;
+
+select name, created_at from sc.files_materialized_view fmv where fmv.directory = 0 and fmv.__person_id = 1;
 -- FINANCIAL REPORTS
 -- NARRATIVE REPORTS
 -- TEAM MEMBERS
+
 -- PARTNERSHIPS
 select count(id) from sc.partnerships_materialized_view where project = 0 and __person_id = 1;
 
-select orgmv.name from sc.partnerships_materialized_view pmv inner join 
+select orgmv.name,pmv.agreement from sc.partnerships_materialized_view pmv inner join 
 (select somv.base64,pomv.name, somv.id, pomv.id  from sc.organizations_materialized_view somv
 inner join public.organizations_materialized_view pomv using (id) where somv.__person_id = 0 and pomv.__person_id = 0) as orgmv on pmv.partner = orgmv.base64 where pmv.project = 0 and pmv.__person_id = 0;
 -- CHANGE REQS
