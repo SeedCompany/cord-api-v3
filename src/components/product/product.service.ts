@@ -1,7 +1,4 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
-import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
-import { difference } from 'lodash';
 import { Except } from 'type-fest';
 import {
   ID,
@@ -11,24 +8,17 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import { HandleIdLookup, ILogger, Logger } from '../../core';
+import { HandleIdLookup, ILogger, Logger, ResourceResolver } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { Film, FilmService } from '../film';
-import {
-  LiteracyMaterial,
-  LiteracyMaterialService,
-} from '../literacy-material';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
-import { Song, SongService } from '../song';
-import { Story, StoryService } from '../story';
 import {
   AnyProduct,
   CreateProduct,
   DerivativeScriptureProduct,
   DirectScriptureProduct,
   MethodologyToApproach,
-  ProducibleType,
+  ProducibleResult,
   Product,
   ProductApproach,
   ProductListInput,
@@ -41,14 +31,11 @@ import { ProductRepository } from './product.repository';
 @Injectable()
 export class ProductService {
   constructor(
-    private readonly film: FilmService,
-    private readonly story: StoryService,
-    private readonly song: SongService,
-    private readonly literacyMaterial: LiteracyMaterialService,
     private readonly scriptureRefService: ScriptureReferenceService,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
     private readonly repo: ProductRepository,
+    private readonly resources: ResourceResolver,
     @Logger('product:service') private readonly logger: ILogger
   ) {}
 
@@ -94,96 +81,75 @@ export class ProductService {
 
   @HandleIdLookup([DirectScriptureProduct, DerivativeScriptureProduct])
   async readOne(id: ID, session: Session): Promise<AnyProduct> {
-    const result = await this.repo.readOne(id, session);
+    const { isOverriding, ...props } = await this.repo.readOne(id, session);
 
-    if (!result) {
-      this.logger.warning(`Could not find product`, { id });
-      throw new NotFoundException('Could not find product', 'product.id');
-    }
-
-    const { isOverriding, ...props } = result.props;
-    const { produces, scriptureReferencesOverride, ...rest } =
+    const { produces, scriptureReferencesOverride, ...securedProps } =
       await this.authorizationService.secureProperties(
         DerivativeScriptureProduct,
+        // @ts-expect-error yeah this input type needs work. It's fine to omit props here, they will be defaulted if secured.
         props,
         session,
-        result.scopedRoles
+        props.scope
       );
 
-    const connectedProducible = await this.repo.connectedProducible(id);
+    const producible = produces.value
+      ? ((await this.resources.lookupByBaseNode(
+          props.produces!,
+          session
+        )) as unknown as ProducibleResult)
+      : undefined;
 
     const scriptureReferencesValue = await this.scriptureRefService.list(
       id,
       session,
-      { isOverriding: connectedProducible ? true : false }
+      { isOverriding: !!producible }
     );
 
-    if (!connectedProducible) {
+    const { produces: _, ...simple } = props;
+
+    const common = {
+      ...simple,
+      ...securedProps,
+      scriptureReferences: {
+        ...securedProps.scriptureReferences,
+        value: scriptureReferencesValue,
+      },
+      mediums: {
+        ...securedProps.mediums,
+        value: securedProps.mediums.value ?? [],
+      },
+      purposes: {
+        ...securedProps.purposes,
+        value: securedProps.purposes.value ?? [],
+      },
+      canDelete: await this.repo.checkDeletePermission(id, session),
+    };
+    if (!producible) {
       return {
-        id: props.id,
-        createdAt: props.createdAt,
-        ...rest,
-        sensitivity: props.sensitivity,
+        ...common,
         scriptureReferences: {
-          ...rest.scriptureReferences,
+          ...securedProps.scriptureReferences,
           value: scriptureReferencesValue,
         },
-        mediums: {
-          ...rest.mediums,
-          value: rest.mediums.value ?? [],
-        },
-        purposes: {
-          ...rest.purposes,
-          value: rest.purposes.value ?? [],
-        },
-        canDelete: await this.repo.checkDeletePermission(id, session),
       };
     }
 
-    const typeName = (
-      difference(connectedProducible.producible.labels, [
-        'Producible',
-        'BaseNode',
-      ]) as ProducibleType[]
-    )[0];
-
-    const producible = await this.getProducibleByType(
-      connectedProducible.producible.properties.id,
-      typeName,
-      session
-    );
-
     return {
-      id: props.id,
-      createdAt: props.createdAt,
-      ...rest,
-      sensitivity: props.sensitivity,
-      scriptureReferences: {
-        ...rest.scriptureReferences,
-        value: !isOverriding
-          ? producible?.scriptureReferences.value
-          : scriptureReferencesValue,
-      },
-      mediums: {
-        ...rest.mediums,
-        value: rest.mediums.value ?? [],
-      },
-      purposes: {
-        ...rest.purposes,
-        value: rest.purposes.value ?? [],
-      },
+      ...common,
       produces: {
         ...produces,
-        value: {
-          ...producible,
-          __typename: typeName,
-        },
+        value: producible,
+      },
+      scriptureReferences: {
+        ...securedProps.scriptureReferences,
+        value: !isOverriding
+          ? producible.scriptureReferences.value
+          : scriptureReferencesValue,
       },
       scriptureReferencesOverride: {
         ...scriptureReferencesOverride,
         value: !isOverriding ? null : scriptureReferencesValue,
       },
-      canDelete: await this.repo.checkDeletePermission(id, session),
     };
   }
 
@@ -338,43 +304,11 @@ export class ProductService {
     return await mapListResults(results, (id) => this.readOne(id, session));
   }
 
-  // used to search a specific engagement's relationship to the target base node
-  // for example, searching all products a engagement is a part of
-  protected filterByEngagement(
-    query: Query,
-    engagementId: ID,
-    relationshipType: string,
-    relationshipDirection: RelationDirection,
-    label: string
-  ) {
-    query.match([
-      node('engagement', 'Engagement', { id: engagementId }),
-      relation(relationshipDirection, '', relationshipType, { active: true }),
-      node('node', label),
-    ]);
-  }
-
   protected getMethodologiesByApproach(
     approach: ProductApproach
   ): ProductMethodology[] {
     return Object.keys(MethodologyToApproach).filter(
       (key) => MethodologyToApproach[key as ProductMethodology] === approach
     ) as ProductMethodology[];
-  }
-
-  protected async getProducibleByType(
-    id: ID,
-    type: string,
-    session: Session
-  ): Promise<Film | Story | Song | LiteracyMaterial> {
-    if (type === 'Film') {
-      return await this.film.readOne(id, session);
-    } else if (type === 'Story') {
-      return await this.story.readOne(id, session);
-    } else if (type === 'Song') {
-      return await this.song.readOne(id, session);
-    } else {
-      return await this.literacyMaterial.readOne(id, session);
-    }
   }
 }

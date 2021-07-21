@@ -11,6 +11,7 @@ import {
   SensitivityField,
 } from '../../../common';
 import { SetChangeType } from '../../../core/database/changes';
+import { ScopedRole } from '../../authorization';
 import { SecuredScriptureRangesOverride } from '../../scripture';
 import { SecuredMethodologySteps } from './methodology-step.enum';
 import { Producible, SecuredProducible } from './producible.dto';
@@ -58,6 +59,10 @@ export class Product extends Producible {
     `,
   })
   readonly describeCompletion: SecuredStringNullable;
+
+  // A list of non-global roles the requesting user has available for this object.
+  // This is just a cache, to prevent extra db lookups within the same request.
+  readonly scope?: ScopedRole[];
 }
 
 @ObjectType({
