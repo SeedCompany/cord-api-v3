@@ -19,34 +19,6 @@ export const permissionsOfNode = (nodeLabel: Many<string>) => [
   node('node', nodeLabel),
 ];
 
-/**
- * @deprecated use matchProps instead. It returns props as an object instead of the weird list.
- */
-export const matchPropList = (
-  query: Query,
-  changeset?: ID,
-  nodeName = 'node'
-) =>
-  query.comment`matchPropList(${nodeName}`
-    .match([
-      node(nodeName),
-      relation('out', 'r', { active: !changeset }),
-      node('props', 'Property'),
-      ...(changeset
-        ? [
-            relation('in', '', 'changeset', { active: true }),
-            node('changesetNode', 'Changeset', { id: changeset }),
-          ]
-        : []),
-    ])
-    .with([
-      collect({
-        value: 'props.value',
-        property: 'type(r)',
-      }).as('propList'),
-      nodeName,
-    ]);
-
 export interface MatchPropsOptions {
   // The node var to pull properties from
   nodeName?: string;

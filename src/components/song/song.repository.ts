@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
-import { generateId, ID, Session } from '../../common';
+import { generateId, ID, NotFoundException, Session } from '../../common';
 import {
   createBaseNode,
   DtoRepository,
@@ -8,13 +8,11 @@ import {
   Property,
 } from '../../core';
 import {
-  matchPropList,
   paginate,
   permissionsOfNode,
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
 import { CreateSong, Song, SongListInput } from './dto';
 
 @Injectable()
@@ -43,11 +41,12 @@ export class SongRepository extends DtoRepository(Song) {
       .query()
       .apply(matchRequestingUser(session))
       .match([node('node', 'Song', { id })])
-      .apply(matchPropList)
-      .return('propList, node')
-      .asResult<StandardReadResult<DbPropsOfDto<Song>>>();
-
-    return await query.first();
+      .apply(this.hydrate());
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException('Could not find song', 'song.id');
+    }
+    return result.dto;
   }
 
   async list({ filter, ...input }: SongListInput, session: Session) {

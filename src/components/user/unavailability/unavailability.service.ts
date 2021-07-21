@@ -4,9 +4,9 @@ import {
   NotFoundException,
   ServerException,
   Session,
+  UnsecuredDto,
 } from '../../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../../core';
-import { parseBaseNodeProperties } from '../../../core/database/results';
 import { AuthorizationService } from '../../authorization/authorization.service';
 import {
   CreateUnavailability,
@@ -93,20 +93,23 @@ export class UnavailabilityService {
   @HandleIdLookup(Unavailability)
   async readOne(id: ID, session: Session): Promise<Unavailability> {
     const result = await this.repo.readOne(id, session);
-    if (!result) {
-      throw new NotFoundException('Could not find user', 'user.id');
-    }
+    return await this.secure(result, session);
+  }
 
+  private async secure(
+    dto: UnsecuredDto<Unavailability>,
+    session: Session
+  ): Promise<Unavailability> {
     const securedProps = await this.authorizationService.secureProperties(
       Unavailability,
-      result.propList,
+      dto,
       session
     );
 
     return {
-      ...parseBaseNodeProperties(result.node),
+      ...dto,
       ...securedProps,
-      canDelete: await this.repo.checkDeletePermission(id, session), // TODO
+      canDelete: await this.repo.checkDeletePermission(dto.id, session), // TODO
     };
   }
 

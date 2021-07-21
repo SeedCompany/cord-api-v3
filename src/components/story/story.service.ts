@@ -6,12 +6,10 @@ import {
   ServerException,
   Session,
   UnauthorizedException,
+  UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger, OnIndex } from '../../core';
-import {
-  mapListResults,
-  parseBaseNodeProperties,
-} from '../../core/database/results';
+import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
@@ -111,30 +109,31 @@ export class StoryService {
     });
 
     const result = await this.repo.readOne(id, session);
+    return await this.secure(result, session);
+  }
 
-    if (!result) {
-      throw new NotFoundException('Could not find story', 'story.id');
-    }
-
-    const scriptureReferences = await this.scriptureRefService.list(
-      id,
-      session
-    );
-
+  private async secure(
+    dto: UnsecuredDto<Story>,
+    session: Session
+  ): Promise<Story> {
     const securedProps = await this.authorizationService.secureProperties(
       Story,
-      result.propList,
+      dto,
       session
     );
 
+    const scriptureReferences = await this.scriptureRefService.list(
+      dto.id,
+      session
+    );
     return {
-      ...parseBaseNodeProperties(result.node),
+      ...dto,
       ...securedProps,
       scriptureReferences: {
         ...securedProps.scriptureReferences,
         value: scriptureReferences,
       },
-      canDelete: await this.repo.checkDeletePermission(id, session),
+      canDelete: await this.repo.checkDeletePermission(dto.id, session),
     };
   }
 

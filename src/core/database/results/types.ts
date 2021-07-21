@@ -1,7 +1,6 @@
 import type { DateTime } from 'luxon';
 import type { UnsecuredDto } from '../../../common';
 import type { BaseNode } from './parse-base-node';
-import type { PropListDbResult } from './parse-props';
 
 /**
  * This converts a DTO to a representation of the properties in the DB.
@@ -36,11 +35,3 @@ export type NativeDbValue =
   | DateTime
   | null
   | string[];
-
-/**
- * This is a shortcut for the standard read result based on the given DB props.
- */
-export interface StandardReadResult<DbProps> {
-  node: BaseNode;
-  propList: PropListDbResult<DbProps>;
-}

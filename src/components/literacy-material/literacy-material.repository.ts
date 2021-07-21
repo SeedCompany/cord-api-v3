@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
-import { generateId, ID, Session } from '../../common';
+import { generateId, ID, NotFoundException, Session } from '../../common';
 import {
   createBaseNode,
   DtoRepository,
@@ -8,13 +8,11 @@ import {
   Property,
 } from '../../core';
 import {
-  matchPropList,
   paginate,
   permissionsOfNode,
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
 import { LiteracyMaterial, LiteracyMaterialListInput } from './dto';
 
 @Injectable()
@@ -60,15 +58,20 @@ export class LiteracyMaterialRepository extends DtoRepository(
   }
 
   async readOne(id: ID, session: Session) {
-    const readLiteracyMaterial = this.db
+    const query = this.db
       .query()
       .apply(matchRequestingUser(session))
       .match([node('node', 'LiteracyMaterial', { id })])
-      .apply(matchPropList)
-      .return('node, propList')
-      .asResult<StandardReadResult<DbPropsOfDto<LiteracyMaterial>>>();
+      .apply(this.hydrate());
 
-    return await readLiteracyMaterial.first();
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException(
+        'Could not find literacy material',
+        'literacyMaterial.id'
+      );
+    }
+    return result.dto;
   }
 
   async list(input: LiteracyMaterialListInput, session: Session) {

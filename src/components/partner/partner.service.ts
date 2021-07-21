@@ -7,13 +7,10 @@ import {
   ServerException,
   Session,
   UnauthorizedException,
+  UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger, OnIndex } from '../../core';
-import {
-  mapListResults,
-  parseBaseNodeProperties,
-  parsePropList,
-} from '../../core/database/results';
+import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { FinancialReportingType } from '../partnership/dto/financial-reporting-type';
 import {
@@ -92,35 +89,28 @@ export class PartnerService {
     });
 
     const result = await this.repo.readOne(id, session);
+    return await this.secure(result, session);
+  }
 
-    const props = parsePropList(result.propList);
-    const secured = await this.authorizationService.secureProperties(
+  private async secure(dto: UnsecuredDto<Partner>, session: Session) {
+    const securedProps = await this.authorizationService.secureProperties(
       Partner,
-      props,
+      dto,
       session
     );
 
     return {
-      ...parseBaseNodeProperties(result.node),
-      ...secured,
-      modifiedAt: props.modifiedAt,
-      organization: {
-        ...secured.organization,
-        value: result.organizationId,
-      },
-      pointOfContact: {
-        ...secured.pointOfContact,
-        value: result.pointOfContactId,
-      },
+      ...dto,
+      ...securedProps,
       types: {
-        ...secured.types,
-        value: secured.types.value || [],
+        ...securedProps.types,
+        value: securedProps.types.value || [],
       },
       financialReportingTypes: {
-        ...secured.financialReportingTypes,
-        value: secured.financialReportingTypes.value || [],
+        ...securedProps.financialReportingTypes,
+        value: securedProps.financialReportingTypes.value || [],
       },
-      canDelete: await this.repo.checkDeletePermission(id, session),
+      canDelete: await this.repo.checkDeletePermission(dto.id, session),
     };
   }
 

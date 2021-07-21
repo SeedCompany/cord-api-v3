@@ -8,12 +8,10 @@ import {
   ServerException,
   Session,
   UnauthorizedException,
+  UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger, OnIndex } from '../../core';
-import {
-  mapListResults,
-  parseBaseNodeProperties,
-} from '../../core/database/results';
+import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import {
   CreateLocation,
@@ -79,25 +77,23 @@ export class LocationService {
     });
 
     const result = await this.repo.readOne(id, session);
+    return await this.secure(result, session);
+  }
 
-    const secured = await this.authorizationService.secureProperties(
+  private async secure(
+    dto: UnsecuredDto<Location>,
+    session: Session
+  ): Promise<Location> {
+    const securedProps = await this.authorizationService.secureProperties(
       Location,
-      result.propList,
+      dto,
       session
     );
 
     return {
-      ...parseBaseNodeProperties(result.node),
-      ...secured,
-      defaultFieldRegion: {
-        ...secured.defaultFieldRegion,
-        value: result.defaultFieldRegionId,
-      },
-      fundingAccount: {
-        ...secured.fundingAccount,
-        value: result.fundingAccountId,
-      },
-      canDelete: await this.repo.checkDeletePermission(id, session),
+      ...dto,
+      ...securedProps,
+      canDelete: await this.repo.checkDeletePermission(dto.id, session),
     };
   }
 

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   generateId,
@@ -7,16 +7,17 @@ import {
   NotFoundException,
   ServerException,
   Session,
+  UnsecuredDto,
 } from '../../common';
 import { createBaseNode, DtoRepository, matchRequestingUser } from '../../core';
 import {
-  matchPropList,
+  matchProps,
+  merge,
   paginate,
   permissionsOfNode,
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
 import { CreatePartner, Partner, PartnerListInput } from './dto';
 
 @Injectable()
@@ -138,35 +139,36 @@ export class PartnerRepository extends DtoRepository(Partner) {
       .query()
       .apply(matchRequestingUser(session))
       .match([node('node', 'Partner', { id: id })])
-      .apply(matchPropList)
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'organization', { active: true }),
-        node('organization', 'Organization'),
-      ])
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'pointOfContact', { active: true }),
-        node('pointOfContact', 'User'),
-      ])
-      .return([
-        'propList, node',
-        'organization.id as organizationId',
-        'pointOfContact.id as pointOfContactId',
-      ])
-      .asResult<
-        StandardReadResult<DbPropsOfDto<Partner>> & {
-          organizationId: ID;
-          pointOfContactId: ID;
-        }
-      >();
+      .apply(this.hydrate());
 
     const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find partner');
     }
 
-    return result;
+    return result.dto;
+  }
+
+  protected hydrate() {
+    return (query: Query) =>
+      query
+        .apply(matchProps())
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'organization', { active: true }),
+          node('organization', 'Organization'),
+        ])
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'pointOfContact', { active: true }),
+          node('pointOfContact', 'User'),
+        ])
+        .return<{ dto: UnsecuredDto<Partner> }>(
+          merge('props', {
+            organization: 'organization.id',
+            pointOfContact: 'pointOfContact.id',
+          }).as('dto')
+        );
   }
 
   async updatePointOfContact(id: ID, user: ID, session: Session) {

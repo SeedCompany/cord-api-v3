@@ -31,7 +31,6 @@ import { ChangesOf, isRelation } from '../../core/database/changes';
 import {
   DbPropsOfDto,
   parseSecuredProperties,
-  PropListDbResult,
 } from '../../core/database/results';
 import { AuthorizationRepository } from './authorization.repository';
 import { InternalRole, Role, rolesForScope, ScopedRole } from './dto';
@@ -105,9 +104,7 @@ export class AuthorizationService {
 
   async secureProperties<Resource extends ResourceShape<any>>(
     resource: Resource,
-    props:
-      | PropListDbResult<DbPropsOfDto<Resource['prototype']>>
-      | DbPropsOfDto<Resource['prototype']>,
+    props: DbPropsOfDto<Resource['prototype']>,
     sessionOrUserId: Session | ID,
     otherRoles: ScopedRole[] = []
   ): Promise<SecuredResource<Resource, false>> {

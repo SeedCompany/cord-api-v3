@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { generateId, ID, Session } from '../../../common';
+import { generateId, ID, NotFoundException, Session } from '../../../common';
 import {
   createBaseNode,
   DtoRepository,
@@ -9,16 +9,11 @@ import {
   Property,
 } from '../../../core';
 import {
-  matchPropList,
   paginate,
   permissionsOfNode,
   requestingUser,
   sorting,
 } from '../../../core/database/query';
-import {
-  DbPropsOfDto,
-  StandardReadResult,
-} from '../../../core/database/results';
 import { Education, EducationListInput } from './dto';
 
 @Injectable()
@@ -53,11 +48,13 @@ export class EducationRepository extends DtoRepository(Education) {
       .query()
       .apply(matchRequestingUser(session))
       .match([node('node', 'Education', { id })])
-      .apply(matchPropList)
-      .return('propList, node')
-      .asResult<StandardReadResult<DbPropsOfDto<Education>>>();
+      .apply(this.hydrate());
 
-    return await query.first();
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException('Could not find education');
+    }
+    return result.dto;
   }
 
   async getUserIdByEducation(session: Session, id: ID) {
