@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { generateId, ID, Session } from '../../common';
-import { createBaseNode, DtoRepository, matchRequestingUser } from '../../core';
+import { ID, Session } from '../../common';
+import { DtoRepository, matchRequestingUser } from '../../core';
 import {
   collect,
+  createNode,
   matchProps,
   paginate,
   permissionsOfNode,
@@ -18,105 +19,28 @@ import { languageListFilter } from './query.helpers';
 @Injectable()
 export class LanguageRepository extends DtoRepository(Language) {
   async create(input: CreateLanguage, session: Session) {
-    const secureProps = [
-      {
-        key: 'name',
-        value: input.name,
-        isPublic: true,
-        isOrgPublic: false,
-        label: 'LanguageName',
-      },
-      {
-        key: 'displayName',
-        value: input.displayName,
-        isPublic: false,
-        isOrgPublic: false,
-        label: 'LanguageDisplayName',
-      },
-      {
-        key: 'sensitivity',
-        value: input.sensitivity,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'isDialect',
-        value: input.isDialect,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'populationOverride',
-        value: input.populationOverride,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'registryOfDialectsCode',
-        value: input.registryOfDialectsCode,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'leastOfThese',
-        value: input.leastOfThese,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'leastOfTheseReason',
-        value: input.leastOfTheseReason,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'displayNamePronunciation',
-        value: input.displayNamePronunciation,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'isSignLanguage',
-        value: input.isSignLanguage,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'signLanguageCode',
-        value: input.signLanguageCode,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'sponsorEstimatedEndDate',
-        value: input.sponsorEstimatedEndDate,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'hasExternalFirstScripture',
-        value: input.hasExternalFirstScripture,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'tags',
-        value: input.tags,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
+    const initialProps = {
+      name: input.name,
+      displayName: input.displayName,
+      sensitivity: input.sensitivity,
+      isDialect: input.isDialect,
+      populationOverride: input.populationOverride,
+      registryOfDialectsCode: input.registryOfDialectsCode,
+      leastOfThese: input.leastOfThese,
+      leastOfTheseReason: input.leastOfTheseReason,
+      displayNamePronunciation: input.displayNamePronunciation,
+      isSignLanguage: input.isSignLanguage,
+      signLanguageCode: input.signLanguageCode,
+      sponsorEstimatedEndDate: input.sponsorEstimatedEndDate,
+      hasExternalFirstScripture: input.hasExternalFirstScripture,
+      tags: input.tags,
+      canDelete: true,
+    };
 
     const createLanguage = this.db
       .query()
       .apply(matchRequestingUser(session))
-      .apply(createBaseNode(await generateId(), 'Language', secureProps))
+      .apply(await createNode(Language, { initialProps }))
       .return<{ id: ID }>('node.id as id');
 
     return await createLanguage.first();

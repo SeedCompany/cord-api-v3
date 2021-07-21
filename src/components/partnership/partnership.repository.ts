@@ -9,14 +9,10 @@ import {
   Session,
   UnsecuredDto,
 } from '../../common';
-import {
-  createBaseNode,
-  DtoRepository,
-  matchRequestingUser,
-  Property,
-} from '../../core';
+import { DtoRepository, matchRequestingUser } from '../../core';
 import {
   coalesce,
+  createNode,
   matchChangesetAndChangedProps,
   matchProps,
   matchPropsAndProjectSensAndScopedRoles,
@@ -38,75 +34,27 @@ import {
 export class PartnershipRepository extends DtoRepository(Partnership) {
   async create(input: CreatePartnership, session: Session, changeset?: ID) {
     const partnershipId = await generateId();
-    const mouId = await generateId();
-    const agreementId = await generateId();
+    const mouId: ID = await generateId();
+    const agreementId: ID = await generateId();
 
-    const props: Property[] = [
-      {
-        key: 'agreementStatus',
-        value: input.agreementStatus || PartnershipAgreementStatus.NotAttached,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'agreement',
-        value: agreementId,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'mou',
-        value: mouId,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'mouStatus',
-        value: input.mouStatus || PartnershipAgreementStatus.NotAttached,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'mouStartOverride',
-        value: input.mouStartOverride,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'mouEndOverride',
-        value: input.mouEndOverride,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'types',
-        value: input.types,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'financialReportingType',
-        value: input.financialReportingType,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'primary',
-        value: input.primary,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
+    const initialProps = {
+      agreementStatus:
+        input.agreementStatus || PartnershipAgreementStatus.NotAttached,
+      // agreement: agreementId,
+      //mou: mouId,
+      mouStatus: input.mouStatus || PartnershipAgreementStatus.NotAttached,
+      mouStartOverride: input.mouStartOverride,
+      mouEndOverride: input.mouEndOverride,
+      types: input.types,
+      financialReportingType: input.financialReportingType,
+      primary: input.primary,
+      canDelete: true,
+    };
+
     const result = await this.db
       .query()
       .apply(matchRequestingUser(session))
-      .apply(createBaseNode(partnershipId, 'Partnership', props))
+      .apply(await createNode(Partnership, { initialProps }))
       .with('node')
       .match([
         [
@@ -144,8 +92,7 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
               ])
           : q
       )
-      .return('node.id as id')
-      .asResult<{ id: ID }>()
+      .return<{ id: ID }>('node.id as id')
       .first();
     if (!result) {
       throw new ServerException('Failed to create partnership');

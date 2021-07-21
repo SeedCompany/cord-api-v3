@@ -7,7 +7,7 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import { HandleIdLookup, ILogger, Logger, Property } from '../../core';
+import { HandleIdLookup, ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { CeremonyRepository } from './ceremony.repository';
@@ -29,41 +29,8 @@ export class CeremonyService {
   ) {}
 
   async create(input: CreateCeremony, session: Session): Promise<ID> {
-    const secureProps: Property[] = [
-      {
-        key: 'type',
-        value: input.type,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'planned',
-        value: input.planned,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'estimatedDate',
-        value: input.estimatedDate,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'actualDate',
-        value: input.actualDate,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
-
     try {
-      const query = await this.ceremonyRepo.create(session, secureProps);
+      const query = await this.ceremonyRepo.create(session, input);
 
       const result = await query.first();
 

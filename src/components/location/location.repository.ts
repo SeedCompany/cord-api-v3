@@ -2,15 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
-  generateId,
   ID,
   NotFoundException,
   ServerException,
   Session,
   UnsecuredDto,
 } from '../../common';
-import { createBaseNode, DtoRepository, matchRequestingUser } from '../../core';
+import { DtoRepository, matchRequestingUser } from '../../core';
 import {
+  createNode,
   matchProps,
   merge,
   paginate,
@@ -32,40 +32,17 @@ export class LocationRepository extends DtoRepository(Location) {
   }
 
   async create(input: CreateLocation, session: Session) {
-    const secureProps = [
-      {
-        key: 'name',
-        value: input.name,
-        isPublic: false,
-        isOrgPublic: false,
-        label: 'LocationName',
-      },
-      {
-        key: 'isoAlpha3',
-        value: input.isoAlpha3,
-        isPublic: false,
-        isOrgPublic: false,
-        label: 'IsoAlpha3',
-      },
-      {
-        key: 'type',
-        value: input.type,
-        isPublic: false,
-        isOrgPublic: false,
-        label: 'LocationType',
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
+    const initialProps = {
+      name: input.name,
+      isoAlpha3: input.isoAlpha3,
+      type: input.type,
+      canDelete: true,
+    };
 
     const query = this.db
       .query()
       .apply(matchRequestingUser(session))
-      .apply(createBaseNode(await generateId(), 'Location', secureProps))
+      .apply(await createNode(Location, { initialProps }))
       .apply((q) => {
         if (input.fundingAccountId) {
           q.with('node')
@@ -96,8 +73,7 @@ export class LocationRepository extends DtoRepository(Location) {
             ]);
         }
       })
-      .return('node.id as id')
-      .asResult<{ id: ID }>();
+      .return<{ id: ID }>('node.id as id');
 
     const result = await query.first();
     if (!result) {
