@@ -121,7 +121,7 @@ export class LocationRepository extends DtoRepository(Location) {
     return result.dto;
   }
 
-  private hydrate() {
+  protected hydrate() {
     return (query: Query) =>
       query
         .apply(matchProps())

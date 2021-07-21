@@ -1,15 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { node, Query } from 'cypher-query-builder';
-import {
-  generateId,
-  ID,
-  NotFoundException,
-  Session,
-  UnsecuredDto,
-} from '../../common';
+import { node } from 'cypher-query-builder';
+import { generateId, ID, NotFoundException, Session } from '../../common';
 import { createBaseNode, DtoRepository, matchRequestingUser } from '../../core';
 import {
-  matchProps,
   paginate,
   permissionsOfNode,
   requestingUser,
@@ -65,13 +58,6 @@ export class FilmRepository extends DtoRepository(Film) {
       throw new NotFoundException('Could not find film', 'film.id');
     }
     return result.dto;
-  }
-
-  private hydrate() {
-    return (query: Query) =>
-      query
-        .apply(matchProps())
-        .return<{ dto: UnsecuredDto<Film> }>('props as dto');
   }
 
   async list({ filter, ...input }: FilmListInput, session: Session) {

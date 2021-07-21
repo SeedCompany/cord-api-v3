@@ -1,19 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
-import {
-  generateId,
-  ID,
-  NotFoundException,
-  Session,
-  UnsecuredDto,
-} from '../../../common';
+import { node, relation } from 'cypher-query-builder';
+import { generateId, ID, NotFoundException, Session } from '../../../common';
 import {
   createBaseNode,
   DtoRepository,
   matchRequestingUser,
   Property,
 } from '../../../core';
-import { matchProps } from '../../../core/database/query';
 import {
   Unavailability,
   UnavailabilityListInput,
@@ -62,13 +55,6 @@ export class UnavailabilityRepository extends DtoRepository(Unavailability) {
     }
 
     return result.dto;
-  }
-
-  private hydrate() {
-    return (query: Query) =>
-      query
-        .apply(matchProps())
-        .return<{ dto: UnsecuredDto<Unavailability> }>('props as dto');
   }
 
   async getUserIdByUnavailability(

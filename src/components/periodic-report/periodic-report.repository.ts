@@ -6,12 +6,10 @@ import {
   ID,
   NotFoundException,
   ServerException,
-  UnsecuredDto,
 } from '../../common';
 import { DtoRepository, property } from '../../core';
 import {
   deleteBaseNode,
-  matchProps,
   paginate,
   sorting,
   Variable,
@@ -21,7 +19,6 @@ import {
   FinancialReport,
   IPeriodicReport,
   NarrativeReport,
-  PeriodicReport,
   PeriodicReportListInput,
   ProgressReport,
   ReportType,
@@ -185,17 +182,6 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
       .apply(paginate(input))
       .first();
     return result!; // result from paginate() will always have 1 row.
-  }
-
-  /**
-   * Given a `(node:PeriodicReport)`
-   * output `dto as UnsecuredDto<PeriodicReport>`
-   */
-  private hydrate() {
-    return (query: Query) =>
-      query
-        .apply(matchProps())
-        .return<{ dto: UnsecuredDto<PeriodicReport> }>('props as dto');
   }
 
   async delete(baseNodeId: ID, type: ReportType, intervals: Interval[]) {

@@ -100,7 +100,7 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
     return result.dto;
   }
 
-  private hydrate() {
+  protected hydrate() {
     return (query: Query) =>
       query
         .apply(matchProps())

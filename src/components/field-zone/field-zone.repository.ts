@@ -89,7 +89,7 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
     return result.dto;
   }
 
-  private hydrate() {
+  protected hydrate() {
     return (query: Query) =>
       query
         .apply(matchProps())

@@ -1,13 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import {
-  generateId,
-  ID,
-  NotFoundException,
-  Session,
-  UnsecuredDto,
-} from '../../common';
+import { generateId, ID, NotFoundException, Session } from '../../common';
 import {
   createBaseNode,
   DtoRepository,
@@ -15,7 +9,6 @@ import {
   Property,
 } from '../../core';
 import {
-  matchProps,
   paginate,
   permissionsOfNode,
   requestingUser,
@@ -106,13 +99,6 @@ export class OrganizationRepository extends DtoRepository(Organization) {
       );
     }
     return result.dto;
-  }
-
-  hydrate() {
-    return (query: Query) =>
-      query
-        .apply(matchProps())
-        .return<{ dto: UnsecuredDto<Organization> }>('props as dto');
   }
 
   async list({ filter, ...input }: OrganizationListInput, session: Session) {

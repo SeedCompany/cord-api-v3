@@ -149,7 +149,7 @@ export class PartnerRepository extends DtoRepository(Partner) {
     return result.dto;
   }
 
-  private hydrate() {
+  protected hydrate() {
     return (query: Query) =>
       query
         .apply(matchProps())
