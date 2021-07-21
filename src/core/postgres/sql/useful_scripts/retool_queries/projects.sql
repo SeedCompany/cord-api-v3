@@ -25,7 +25,8 @@ insert into project_memberships_data(project,person) values (0,0);
 -- PARTNERSHIPS
 -- CHANGE REQS
 -- FILES    
--- LANGUAGE ENGAGEMENTS
+-- LANGUAGE ENGAGEMENTS 
+-- insert into sil_table_of_languages, 
 
 
 
@@ -63,7 +64,10 @@ select orgmv.name,pmv.agreement from sc.partnerships_materialized_view pmv inner
 (select somv.base64,pomv.name, somv.id, pomv.id  from sc.organizations_materialized_view somv
 inner join public.organizations_materialized_view pomv using (id) where somv.__person_id = 0 and pomv.__person_id = 0) as orgmv on pmv.partner = orgmv.base64 where pmv.project = 0 and pmv.__person_id = 0;
 -- CHANGE REQS
--- LANGUAGE ENGAGEMENTS
+select * from sc.change_to_plans_materialized_view cpmv where cpmv.id in (select change_to_plan from sc.projects_materialized_view pmv where pmv.id = 0 and pmv.__person_id = 0) and cpmv.__person_id = 0;
+-- LANGUAGE ENGAGEMENTS - ethnologue code,status, products 
+
+
 -- POSTS
 select type,shareability,pmv.created_at, pmv.created_by, ppmv.public_first_name || ' ' || ppmv.public_last_name as full_name from 
 sc.posts_materialized_view pmv inner join  public.people_materialized_view ppmv on pmv.created_by = 
