@@ -63,9 +63,7 @@ export class PostRepository extends DtoRepository(Post) {
     const query = this.db
       .query()
       .match([node('node', 'Post', { id: postId })])
-      .apply(matchProps())
-      .return('props')
-      .asResult<{ dto: UnsecuredDto<Post> }>();
+      .apply(this.hydrate());
 
     const result = await query.first();
     if (!result) {
