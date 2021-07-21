@@ -124,6 +124,7 @@ export class EngagementRepository extends CommonRepository {
       .return<{ dto: UnsecuredDto<LanguageEngagement & InternshipEngagement> }>(
         merge('props', 'changedProps', {
           __typename: `[l in labels(node) where l in ['LanguageEngagement', 'InternshipEngagement']][0]`,
+          project: 'project.id',
           language: 'language.id',
           ceremony: 'ceremony.id',
           intern: 'intern.id',
@@ -149,23 +150,6 @@ export class EngagementRepository extends CommonRepository {
     }
 
     return result.dto;
-  }
-
-  async getProjectIdByEngagement(id: ID) {
-    const result = await this.db
-      .query()
-      .match([
-        node('engagement', 'Engagement', { id }),
-        relation('in', '', 'engagement'),
-        node('project', 'Project'),
-      ])
-      .return('project.id as projectId')
-      .asResult<{ projectId: ID }>()
-      .first();
-    if (!result) {
-      throw new NotFoundException('Could not find project');
-    }
-    return result.projectId;
   }
 
   // CREATE ///////////////////////////////////////////////////////////
