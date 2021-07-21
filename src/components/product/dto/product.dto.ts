@@ -28,6 +28,8 @@ export class Product extends Producible {
   static readonly Props: string[] = keysOf<Product>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Product>>();
 
+  readonly engagement: ID;
+
   @Field()
   @DbLabel('ProductMedium')
   readonly mediums: SecuredProductMediums;

@@ -61,7 +61,7 @@ export class ProductRepository extends CommonRepository {
       .match([
         node('project', 'Project'),
         relation('out', '', 'engagement', { active: true }),
-        node('', 'Engagement'),
+        node('engagement', 'Engagement'),
         relation('out', '', 'product', { active: true }),
         node('node', 'Product', { id }),
       ])
@@ -95,6 +95,7 @@ export class ProductRepository extends CommonRepository {
           >;
         }>(
           merge('props', {
+            engagement: 'engagement.id',
             scope: 'scopedRoles',
             produces: 'produces',
           }).as('dto')
