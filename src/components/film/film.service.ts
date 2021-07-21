@@ -56,7 +56,7 @@ export class FilmService {
     }
 
     try {
-      const result = await this.repo.createFilm(input.name, session);
+      const result = await this.repo.createFilm(input, session);
 
       if (!result) {
         throw new ServerException('failed to create a film');

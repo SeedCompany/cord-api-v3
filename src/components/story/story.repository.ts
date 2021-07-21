@@ -1,19 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
-import { generateId, ID, NotFoundException, Session } from '../../common';
+import { ID, NotFoundException, Session } from '../../common';
+import { DtoRepository, matchRequestingUser } from '../../core';
 import {
-  createBaseNode,
-  DtoRepository,
-  matchRequestingUser,
-  Property,
-} from '../../core';
-import {
+  createNode,
   paginate,
   permissionsOfNode,
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { Story, StoryListInput } from './dto';
+import { CreateStory, Story, StoryListInput } from './dto';
 
 @Injectable()
 export class StoryRepository extends DtoRepository(Story) {
@@ -25,12 +21,16 @@ export class StoryRepository extends DtoRepository(Story) {
       .first();
   }
 
-  async create(session: Session, secureProps: Property[]) {
+  async create(session: Session, input: CreateStory) {
     return await this.db
       .query()
       .apply(matchRequestingUser(session))
       .apply(
-        createBaseNode(await generateId(), ['Story', 'Producible'], secureProps)
+        await createNode(Story, {
+          initialProps: {
+            name: input.name,
+          },
+        })
       )
       .return<{ id: ID }>('node.id as id')
       .first();

@@ -56,23 +56,8 @@ export class StoryService {
       );
     }
 
-    const secureProps = [
-      {
-        key: 'name',
-        value: input.name,
-        isPublic: true,
-        isOrgPublic: true,
-        label: 'StoryName',
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
     try {
-      const result = await this.repo.create(session, secureProps);
+      const result = await this.repo.create(session, input);
 
       if (!result) {
         throw new ServerException('failed to create a story');
