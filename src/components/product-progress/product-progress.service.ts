@@ -95,7 +95,6 @@ export class ProductProgressService {
     return {
       ...progress,
       steps,
-      canDelete: false, // Created automatically when needed, so no deletes
     };
   }
 }

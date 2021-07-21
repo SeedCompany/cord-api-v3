@@ -1,21 +1,28 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { Except } from 'type-fest';
-import { getDbClassLabels, ID, ServerException, Session } from '../../common';
+import { Except, Merge } from 'type-fest';
+import {
+  getDbClassLabels,
+  ID,
+  NotFoundException,
+  ServerException,
+  Session,
+  UnsecuredDto,
+} from '../../common';
 import { CommonRepository } from '../../core';
 import { DbChanges, getChanges } from '../../core/database/changes';
 import {
   createNode,
   createRelationships,
   matchPropsAndProjectSensAndScopedRoles,
+  merge,
   paginate,
   permissionsOfNode,
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { BaseNode, DbPropsOfDto } from '../../core/database/results';
-import { ScopedRole } from '../authorization';
+import { BaseNode } from '../../core/database/results';
 import { ScriptureRange, ScriptureRangeInput } from '../scripture';
 import {
   CreateProduct,
@@ -54,36 +61,45 @@ export class ProductRepository extends CommonRepository {
       .match([
         node('project', 'Project'),
         relation('out', '', 'engagement', { active: true }),
-        node('', 'Engagement'),
+        node('engagement', 'Engagement'),
         relation('out', '', 'product', { active: true }),
         node('node', 'Product', { id }),
       ])
-      .apply(matchPropsAndProjectSensAndScopedRoles(session))
-      .return(['props', 'scopedRoles'])
-      .asResult<{
-        props: DbPropsOfDto<
-          DirectScriptureProduct &
-            DerivativeScriptureProduct & {
-              isOverriding: boolean;
-            },
-          true
-        >;
-        scopedRoles: ScopedRole[];
-      }>();
-    return await query.first();
+      .apply(this.hydrate(session));
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException('Could not find product');
+    }
+    return result.dto;
   }
 
-  async connectedProducible(id: ID) {
-    return await this.db
-      .query()
-      .match([
-        node('product', 'Product', { id }),
-        relation('out', 'produces', { active: true }),
-        node('producible', 'Producible'),
-      ])
-      .return('producible')
-      .asResult<{ producible: BaseNode }>()
-      .first();
+  protected hydrate(session: Session) {
+    return (query: Query) =>
+      query
+        .apply(matchPropsAndProjectSensAndScopedRoles(session))
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'produces', { active: true }),
+          node('produces', 'Producible'),
+        ])
+        .return<{
+          dto: Merge<
+            Omit<
+              UnsecuredDto<DirectScriptureProduct & DerivativeScriptureProduct>,
+              'scriptureReferences' | 'scriptureReferencesOverride'
+            >,
+            {
+              isOverriding: boolean;
+              produces: BaseNode | null;
+            }
+          >;
+        }>(
+          merge('props', {
+            engagement: 'engagement.id',
+            scope: 'scopedRoles',
+            produces: 'produces',
+          }).as('dto')
+        );
   }
 
   getActualDirectChanges = getChanges(DirectScriptureProduct);
