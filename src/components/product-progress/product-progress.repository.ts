@@ -148,6 +148,7 @@ export class ProductProgressRepository {
                 .return(collect('step').as('steps'))
             )
             .return<{ dto: UnsecuredProductProgress }>(
+              // FYI `progress` is nullable, so this could include its props or not.
               merge('progress', {
                 productId: 'product.id',
                 reportId: 'report.id',

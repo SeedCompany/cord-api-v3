@@ -1,5 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
+import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { Merge } from 'type-fest';
 import {
@@ -13,11 +14,16 @@ import { MethodologyStep } from '../../product';
 
 @ObjectType({
   description: 'The progress of a product for a given report',
-  implements: [Resource],
 })
-export class ProductProgress extends Resource {
+export class ProductProgress {
   static readonly Props = keysOf<ProductProgress>();
   static readonly SecuredProps = keysOf<SecuredProps<ProductProgress>>();
+
+  // Both of these only exist if progress has been reported for the product/report pair.
+  // This object is really just a container/grouping of StepProgress nodes.
+  // I have these here to show that they can exist in the DB, but they are private to the API.
+  readonly id?: ID;
+  readonly createdAt?: DateTime;
 
   readonly productId: ID;
 
