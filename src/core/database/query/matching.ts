@@ -39,15 +39,15 @@ export interface MatchPropsOptions {
  * This is executed in a sub-query so other variables in scope are passed-through
  * transparently.
  */
-export const matchProps =
-  ({
+export const matchProps = (options: MatchPropsOptions = {}) => {
+  const {
     nodeName = 'node',
     outputVar = 'props',
     optional = false,
     changeset,
     excludeBaseProps = false,
-  }: MatchPropsOptions = {}) =>
-  (query: Query) =>
+  } = options;
+  return (query: Query) =>
     query.comment`matchProps(${nodeName})`.subQuery(nodeName, (sub) =>
       sub
         .match(
@@ -75,3 +75,4 @@ export const matchProps =
           ).as(outputVar)
         )
     );
+};
