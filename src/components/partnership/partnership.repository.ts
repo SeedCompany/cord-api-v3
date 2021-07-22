@@ -40,8 +40,8 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
     const initialProps = {
       agreementStatus:
         input.agreementStatus || PartnershipAgreementStatus.NotAttached,
-      //agreement: input.agreement,
-      // mou: input!.mou,
+      agreement: agreementId,
+      mou: mouId,
       mouStatus: input.mouStatus || PartnershipAgreementStatus.NotAttached,
       mouStartOverride: input.mouStartOverride,
       mouEndOverride: input.mouEndOverride,

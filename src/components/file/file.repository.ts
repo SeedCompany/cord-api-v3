@@ -13,13 +13,11 @@ import {
   UnsecuredDto,
 } from '../../common';
 import {
-  createBaseNode,
   DatabaseService,
   ILogger,
   Logger,
   matchRequestingUser,
   matchSession,
-  Property,
 } from '../../core';
 import {
   collect,
@@ -248,25 +246,15 @@ export class FileRepository {
   }
 
   async createFile(fileId: ID, name: string, session: Session, parentId?: ID) {
-    const props: Property[] = [
-      {
-        key: 'name',
-        value: name,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
+    const initialProps = {
+      name,
+      canDelete: true,
+    };
 
     const createFile = this.db
       .query()
       .apply(matchRequestingUser(session))
-      .apply(createBaseNode(fileId, ['File', 'FileNode'], props))
+      .apply(await createNode(File, { initialProps }))
       .return<{ id: ID }>('node.id as id');
 
     const result = await createFile.first();
