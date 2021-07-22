@@ -1,6 +1,5 @@
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { SetRequired } from 'type-fest';
 import { Resource, SecuredProperty, SecuredProps } from '../../../common';
 import { SecuredScriptureRanges } from '../../scripture/dto';
 
@@ -25,7 +24,7 @@ export abstract class Producible extends Resource {
 // via declaration merging
 export enum ProducibleType {}
 
-export type ProducibleResult = SetRequired<Partial<Producible>, 'id'> & {
+export type ProducibleResult = Producible & {
   __typename: ProducibleType;
 };
 

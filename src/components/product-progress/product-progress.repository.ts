@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { stripIndent } from 'common-tags';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
@@ -144,14 +145,32 @@ export class ProductProgressRepository {
                   node('stepNode', 'StepProgress'),
                 ])
                 .apply(matchProps({ nodeName: 'stepNode', outputVar: 'step' }))
-                .raw('WITH * WHERE step.percentDone IS NOT NULL')
                 .return(collect('step').as('steps'))
             )
+            .match([
+              node('product'),
+              relation('out', '', 'steps', { active: true }),
+              node('declaredSteps', 'Property'),
+            ])
+            .with([
+              '*',
+              // Convert StepProgress list to a map keyed by step
+              'apoc.map.fromPairs([sp in steps | [sp.step, sp]]) as progressStepMap',
+            ])
             .return<{ dto: UnsecuredProductProgress }>(
+              // FYI `progress` is nullable, so this could include its props or not.
               merge('progress', {
                 productId: 'product.id',
                 reportId: 'report.id',
-                steps: 'steps',
+                // Convert the products step strings into actual StepProgress
+                // or fallback to a placeholder. This ensures that the list is
+                // in the correct order and indicates which steps still need
+                // progress reported.
+                steps: stripIndent`
+                  [step in declaredSteps.value |
+                    apoc.map.get(progressStepMap, step, { step: step, percentDone: null })
+                  ]
+                `,
               }).as('dto')
             )
       );

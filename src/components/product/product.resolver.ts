@@ -7,14 +7,17 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
+import { startCase } from 'lodash';
 import {
   AnonSession,
   entries,
   ID,
   IdArg,
   LoggedInSession,
+  SecuredString,
   Session,
 } from '../../common';
+import { labelOfScriptureRanges } from '../scripture/labels';
 import {
   AnyProduct,
   AvailableMethodologySteps,
@@ -68,6 +71,49 @@ export class ProductResolver {
     return product.methodology.value
       ? MethodologyToApproach[product.methodology.value]
       : null;
+  }
+
+  @ResolveField(() => String, {
+    nullable: true,
+    description: stripIndent`
+      A label for the product.
+
+      If this is a \`DerivativeScriptureProduct\` then the label could be the
+      name or label of the thing being produced.
+      If this is a \`DirectScriptureProduct\` then the label could be some of
+      the scripture references.
+      If you don't have permission to read the necessary properties then this
+      could return null.
+    `,
+  })
+  label(@Parent() product: AnyProduct): string | null {
+    if (!product.produces) {
+      if (!product.scriptureReferences.canRead) {
+        return null;
+      }
+      return labelOfScriptureRanges(product.scriptureReferences.value);
+    }
+    if (!product.produces.value) {
+      return null;
+    }
+    const produces = product.produces.value;
+    // All of our producibles have a name field, so instead of enumerating
+    // through them just fake the type and grab it directly.
+    return (produces as unknown as { name: SecuredString }).name.value ?? null;
+  }
+
+  @ResolveField(() => String, {
+    nullable: true,
+    description: stripIndent`
+      A "category" label for the product.
+
+      This could be "Scripture" or a label for the type of the object being _produced_.
+    `,
+  })
+  category(@Parent() product: AnyProduct): string | null {
+    return !product.produces
+      ? 'Scripture'
+      : startCase(product.produces.value?.__typename) || null;
   }
 
   @ResolveField(() => ProductType, {

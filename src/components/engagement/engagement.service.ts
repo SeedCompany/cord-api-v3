@@ -463,8 +463,7 @@ export class EngagementService {
         'You do not have the permission to delete this Engagement'
       );
 
-    const projectId = await this.repo.getProjectIdByEngagement(id);
-    await this.verifyProjectStatus(projectId, session);
+    await this.verifyProjectStatus(object.project, session);
 
     await this.eventBus.publish(new EngagementWillDeleteEvent(object, session));
 

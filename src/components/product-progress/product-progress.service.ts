@@ -88,14 +88,12 @@ export class ProductProgressService {
         return {
           ...step,
           ...secured,
-          canDelete: false, // Created automatically when needed, so no deletes
         };
       })
     );
     return {
       ...progress,
       steps,
-      canDelete: false, // Created automatically when needed, so no deletes
     };
   }
 }

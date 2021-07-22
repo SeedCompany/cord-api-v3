@@ -52,6 +52,8 @@ class Engagement extends ChangesetAwareResource {
 
   readonly __typename: 'LanguageEngagement' | 'InternshipEngagement';
 
+  readonly project: ID;
+
   @Field(() => SecuredEngagementStatus, {
     middleware: [parentIdMiddleware],
   })
