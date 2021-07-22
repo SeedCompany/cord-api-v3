@@ -1,4 +1,6 @@
 import { Field, Float, InputType } from '@nestjs/graphql';
+import { Type } from 'class-transformer';
+import { Max, Min, ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
 import { ID, IdField } from '../../../common';
 import { MethodologyStep } from '../../product';
@@ -25,6 +27,8 @@ export abstract class ProductProgressInput {
       done it is.
     `,
   })
+  @Type(() => StepProgressInput)
+  @ValidateNested()
   readonly steps: readonly StepProgressInput[];
 }
 
@@ -38,5 +42,7 @@ export abstract class StepProgressInput {
     description:
       'The new percent (0-100) complete for the step or null to remove the current value.',
   })
+  @Min(0)
+  @Max(100)
   readonly percentDone: number | null;
 }
