@@ -57,8 +57,7 @@ export class BudgetRepository extends DtoRepository(Budget) {
       .query()
       .apply(matchRequestingUser(session))
       .apply(createBaseNode(budgetId, 'Budget', secureProps))
-      .return('node.id as id')
-      .asResult<{ id: ID }>()
+      .return<{ id: ID }>('node.id as id')
       .first();
     if (!result) {
       throw new ServerException('Failed to create budget');

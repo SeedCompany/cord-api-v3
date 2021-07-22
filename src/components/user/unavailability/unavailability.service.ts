@@ -48,12 +48,6 @@ export class UnavailabilityService {
         userId,
       });
 
-      // connect the Unavailability to the User.
-
-      await this.repo.connectUnavailability(
-        createUnavailabilityResult.id,
-        userId
-      );
       await this.authorizationService.processNewBaseNode(
         Unavailability,
         createUnavailabilityResult.id,

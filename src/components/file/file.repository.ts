@@ -289,39 +289,18 @@ export class FileRepository {
     input: Pick<FileVersion, 'id' | 'name' | 'mimeType' | 'size'>,
     session: Session
   ) {
-    const props: Property[] = [
-      {
-        key: 'name',
-        value: input.name,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'mimeType',
-        value: input.mimeType,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'size',
-        value: input.size,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
+    const initialProps = {
+      name: input.name,
+      mimeType: input.mimeType,
+      size: input.size,
+      canDelete: true,
+    };
 
     const createFile = this.db
       .query()
       .apply(matchRequestingUser(session))
-      .apply(createBaseNode(input.id, ['FileVersion', 'FileNode'], props))
-      .return('node.id as id')
-      .asResult<{ id: ID }>();
+      .apply(await createNode(FileVersion, { initialProps }))
+      .return<{ id: ID }>('node.id as id');
 
     const result = await createFile.first();
 

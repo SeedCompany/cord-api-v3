@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { ID, NotFoundException, Session } from '../../../common';
 import { DtoRepository, matchRequestingUser } from '../../../core';
-import { createNode } from '../../../core/database/query';
+import { createNode, createRelationships } from '../../../core/database/query';
 import {
   CreateUnavailability,
   Unavailability,
@@ -17,31 +17,23 @@ export class UnavailabilityRepository extends DtoRepository(Unavailability) {
       description: input.description,
       start: input.start,
       end: input.end,
+      canDelete: true,
     };
 
-    const createUnavailability = this.db
+    const query = this.db
       .query()
       .apply(matchRequestingUser(session))
       .apply(await createNode(Unavailability, { initialProps }))
+      .apply(
+        createRelationships(Unavailability, {
+          in: {
+            unavailability: ['User', input.userId],
+          },
+        })
+      )
       .return<{ id: ID }>('node.id as id');
 
-    return await createUnavailability.first();
-  }
-
-  async connectUnavailability(id: ID, userId: ID) {
-    const query = `
-    MATCH (user: User {id: $userId}),
-    (unavailability:Unavailability {id: $id})
-    CREATE (user)-[:unavailability {active: true, createdAt: datetime()}]->(unavailability)
-    RETURN  unavailability.id as id
-    `;
-    await this.db
-      .query()
-      .raw(query, {
-        userId,
-        id,
-      })
-      .run();
+    return await query.first();
   }
 
   async readOne(id: ID, session: Session) {

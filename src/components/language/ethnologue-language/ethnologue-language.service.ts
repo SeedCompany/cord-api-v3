@@ -24,10 +24,7 @@ export class EthnologueLanguageService {
     private readonly repo: EthnologueLanguageRepository
   ) {}
 
-  async create(
-    input: CreateEthnologueLanguage,
-    session: Session
-  ): Promise<string> {
+  async create(input: CreateEthnologueLanguage, session: Session): Promise<ID> {
     await this.authorizationService.checkPower(Powers.CreateLanguage, session);
 
     const result = await this.repo.create(input, session);

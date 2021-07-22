@@ -34,14 +34,14 @@ import {
 export class PartnershipRepository extends DtoRepository(Partnership) {
   async create(input: CreatePartnership, session: Session, changeset?: ID) {
     const partnershipId = await generateId();
-    const mouId: ID = await generateId();
-    const agreementId: ID = await generateId();
+    const mouId = await generateId();
+    const agreementId = await generateId();
 
     const initialProps = {
       agreementStatus:
         input.agreementStatus || PartnershipAgreementStatus.NotAttached,
-      // agreement: agreementId,
-      //mou: mouId,
+      //agreement: input.agreement,
+      // mou: input!.mou,
       mouStatus: input.mouStatus || PartnershipAgreementStatus.NotAttached,
       mouStartOverride: input.mouStartOverride,
       mouEndOverride: input.mouEndOverride,
@@ -50,6 +50,11 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
       primary: input.primary,
       canDelete: true,
     };
+
+    // const baseNodeProps = {
+    //   agreement: agreementId,
+    //   mou: input.mou,
+    // };
 
     const result = await this.db
       .query()

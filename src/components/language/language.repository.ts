@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { DateTime } from 'luxon';
 import { ID, Session } from '../../common';
 import { DtoRepository, matchRequestingUser } from '../../core';
 import {
   collect,
   createNode,
+  createRelationships,
   matchProps,
   paginate,
   permissionsOfNode,
@@ -18,7 +18,7 @@ import { languageListFilter } from './query.helpers';
 
 @Injectable()
 export class LanguageRepository extends DtoRepository(Language) {
-  async create(input: CreateLanguage, session: Session) {
+  async create(input: CreateLanguage, session: Session, ethnologueId: ID) {
     const initialProps = {
       name: input.name,
       displayName: input.displayName,
@@ -37,33 +37,20 @@ export class LanguageRepository extends DtoRepository(Language) {
       canDelete: true,
     };
 
-    const createLanguage = this.db
+    const query = this.db
       .query()
       .apply(matchRequestingUser(session))
       .apply(await createNode(Language, { initialProps }))
+      .apply(
+        createRelationships(Language, {
+          out: {
+            ethnologue: ['EthnologueLanguage', ethnologueId],
+          },
+        })
+      )
       .return<{ id: ID }>('node.id as id');
 
-    return await createLanguage.first();
-  }
-
-  async connect(resultLangId: ID, ethnologueId: string, createdAt: DateTime) {
-    await this.db
-      .query()
-      .matchNode('language', 'Language', {
-        id: resultLangId,
-      })
-      .matchNode('ethnologueLanguage', 'EthnologueLanguage', {
-        id: ethnologueId,
-      })
-      .create([
-        node('language'),
-        relation('out', '', 'ethnologue', {
-          active: true,
-          createdAt,
-        }),
-        node('ethnologueLanguage'),
-      ])
-      .run();
+    return await query.first();
   }
 
   async readOne(langId: ID, session: Session) {

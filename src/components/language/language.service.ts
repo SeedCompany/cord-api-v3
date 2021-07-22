@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { compact } from 'lodash';
-import { DateTime } from 'luxon';
 import {
   CalendarDate,
   DuplicateException,
@@ -104,8 +103,6 @@ export class LanguageService {
   }
 
   async create(input: CreateLanguage, session: Session): Promise<Language> {
-    const createdAt = DateTime.local();
-
     await this.authorizationService.checkPower(Powers.CreateLanguage, session);
 
     await this.authorizationService.checkPower(
@@ -119,14 +116,15 @@ export class LanguageService {
         session
       );
 
-      const resultLanguage = await this.repo.create(input, session);
+      const resultLanguage = await this.repo.create(
+        input,
+        session,
+        ethnologueId
+      );
 
       if (!resultLanguage) {
         throw new ServerException('failed to create language');
       }
-      // connect ethnologueLanguage to language
-
-      await this.repo.connect(resultLanguage.id, ethnologueId, createdAt);
 
       await this.authorizationService.processNewBaseNode(
         Language,

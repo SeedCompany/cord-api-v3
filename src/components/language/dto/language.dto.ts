@@ -3,6 +3,7 @@ import { stripIndent } from 'common-tags';
 import { GraphQLString } from 'graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
+  DbLabel,
   ID,
   NameField,
   Resource,
@@ -76,6 +77,7 @@ export class Language extends Resource {
   @NameField({
     description: `The real language name`,
   })
+  @DbLabel('LanguageName')
   readonly name: SecuredString;
 
   @NameField({
@@ -85,6 +87,7 @@ export class Language extends Resource {
       This should always be viewable.
     `,
   })
+  @DbLabel('LanguageDisplayName')
   readonly displayName: SecuredString;
 
   @Field({
