@@ -34,11 +34,6 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
     const query = this.db
       .query()
       .apply(matchRequestingUser(session))
-      .match([
-        node('director', 'User', {
-          id: directorId,
-        }),
-      ])
       .apply(await createNode(FieldZone, { initialProps }))
       .apply(
         createRelationships(FieldZone, {
