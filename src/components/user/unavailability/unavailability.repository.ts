@@ -1,13 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { generateId, ID, NotFoundException, Session } from '../../../common';
+import { ID, NotFoundException, Session } from '../../../common';
+import { DtoRepository, matchRequestingUser } from '../../../core';
+import { createNode } from '../../../core/database/query';
 import {
-  createBaseNode,
-  DtoRepository,
-  matchRequestingUser,
-  Property,
-} from '../../../core';
-import {
+  CreateUnavailability,
   Unavailability,
   UnavailabilityListInput,
   UpdateUnavailability,
@@ -15,13 +12,18 @@ import {
 
 @Injectable()
 export class UnavailabilityRepository extends DtoRepository(Unavailability) {
-  async create(session: Session, secureProps: Property[]) {
+  async create(session: Session, input: CreateUnavailability) {
+    const initialProps = {
+      description: input.description,
+      start: input.start,
+      end: input.end,
+    };
+
     const createUnavailability = this.db
       .query()
       .apply(matchRequestingUser(session))
-      .apply(createBaseNode(await generateId(), 'Unavailability', secureProps))
-      .return('node.id as id')
-      .asResult<{ id: ID }>();
+      .apply(await createNode(Unavailability, { initialProps }))
+      .return<{ id: ID }>('node.id as id');
 
     return await createUnavailability.first();
   }

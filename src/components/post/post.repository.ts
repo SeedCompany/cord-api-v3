@@ -2,14 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID, NotFoundException, Session, UnsecuredDto } from '../../common';
+import { DtoRepository, matchRequestingUser } from '../../core';
 import {
-  createBaseNode,
-  DtoRepository,
-  matchRequestingUser,
-  Property,
-} from '../../core';
-import { matchProps, paginate, sorting } from '../../core/database/query';
-import { Post } from './dto';
+  createNode,
+  matchProps,
+  paginate,
+  sorting,
+} from '../../core/database/query';
+import { CreatePost, Post } from './dto';
 import { PostListInput } from './dto/list-posts.dto';
 import { PostShareability } from './dto/shareability.dto';
 
@@ -18,14 +18,26 @@ export class PostRepository extends DtoRepository(Post) {
   async create(
     parentId: string,
     postId: ID,
-    secureProps: Property[],
+    input: CreatePost,
     session: Session
   ) {
+    const initialProps = {
+      creator: session.userId,
+      type: input.type,
+      shareability: input.shareability,
+      body: input.body,
+      modifiedAt: DateTime.local(),
+    };
+
+    const baseNodeProps = {
+      postId,
+    };
+
     const createPost = this.db
       .query()
       .apply(matchRequestingUser(session))
-      .apply(createBaseNode(postId, ['Post'], secureProps))
-      .return('node.id as id');
+      .apply(await createNode(Post, { initialProps, baseNodeProps }))
+      .return<{ id: ID }>('node.id as id');
 
     await createPost.first();
 

@@ -1,5 +1,4 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { DateTime } from 'luxon';
 import {
   generateId,
   ID,
@@ -36,41 +35,7 @@ export class PostService {
     { parentId, ...input }: CreatePost,
     session: Session
   ): Promise<Post> {
-    const createdAt = DateTime.local();
     const postId = await generateId();
-
-    const secureProps = [
-      {
-        key: 'creator',
-        value: session.userId,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'type',
-        value: input.type,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'shareability',
-        value: input.shareability,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'body',
-        value: input.body,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'modifiedAt',
-        value: createdAt,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
 
     if (!parentId) {
       throw new ServerException(
@@ -79,7 +44,7 @@ export class PostService {
     }
 
     try {
-      await this.repo.create(parentId, postId, secureProps, session);
+      await this.repo.create(parentId, postId, input, session);
 
       // FIXME: This is being refactored - leaving it commented out per Michael's instructions for now
       // await this.authorizationService.processNewBaseNode(

@@ -30,32 +30,11 @@ export class UnavailabilityService {
     { userId, ...input }: CreateUnavailability,
     session: Session
   ): Promise<Unavailability> {
-    const secureProps = [
-      {
-        key: 'description',
-        value: input.description,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'start',
-        value: input.start,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'end',
-        value: input.end,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
-
     try {
-      const createUnavailabilityResult = await this.repo.create(
-        session,
-        secureProps
-      );
+      const createUnavailabilityResult = await this.repo.create(session, {
+        userId,
+        ...input,
+      });
 
       if (!createUnavailabilityResult) {
         this.logger.error(`Could not create unavailability`, {
