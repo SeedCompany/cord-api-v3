@@ -51,11 +51,6 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
       canDelete: true,
     };
 
-    // const baseNodeProps = {
-    //   agreement: agreementId,
-    //   mou: input.mou,
-    // };
-
     const result = await this.db
       .query()
       .apply(matchRequestingUser(session))

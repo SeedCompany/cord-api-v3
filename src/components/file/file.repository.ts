@@ -245,7 +245,7 @@ export class FileRepository {
     return result.id;
   }
 
-  async createFile(fileId: ID, name: string, session: Session, parentId?: ID) {
+  async createFile(name: string, session: Session, parentId?: ID) {
     const initialProps = {
       name,
       canDelete: true,

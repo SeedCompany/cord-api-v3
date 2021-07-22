@@ -58,7 +58,6 @@ export class BudgetRepository extends DtoRepository(Budget) {
     universalTemplateFile: ID
   ) {
     const initialProps = {
-      //universalTemplateFile: input.universalTemplateFile,
       universalTemplateFile,
       status: Status.Pending,
       canDelete: true,
