@@ -1,38 +1,35 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { generateId, ID, NotFoundException, Session } from '../../../common';
+import { ID, NotFoundException, Session } from '../../../common';
+import { DtoRepository, matchRequestingUser } from '../../../core';
 import {
-  createBaseNode,
-  DtoRepository,
-  matchRequestingUser,
-  Property,
-} from '../../../core';
-import {
+  createNode,
   paginate,
   permissionsOfNode,
   requestingUser,
   sorting,
 } from '../../../core/database/query';
-import { Education, EducationListInput } from './dto';
+import { CreateEducation, Education, EducationListInput } from './dto';
 
 @Injectable()
 export class EducationRepository extends DtoRepository(Education) {
-  async create(
-    userId: ID,
-    secureProps: Property[],
-    createdAt: DateTime,
-    session: Session
-  ) {
+  async create(input: CreateEducation, createdAt: DateTime, session: Session) {
+    const initialProps = {
+      degree: input.degree,
+      institution: input.institution,
+      major: input.major,
+    };
+
     const query = this.db
       .query()
       .apply(matchRequestingUser(session))
       .match([
         node('user', 'User', {
-          id: userId,
+          id: input.userId,
         }),
       ])
-      .apply(createBaseNode(await generateId(), 'Education', secureProps))
+      .apply(await createNode(Education, { initialProps }))
       .create([
         node('user'),
         relation('out', '', 'education', { active: true, createdAt }),

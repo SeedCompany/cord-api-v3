@@ -34,31 +34,9 @@ export class EducationService {
   ): Promise<Education> {
     const createdAt = DateTime.local();
 
-    const secureProps = [
-      {
-        key: 'degree',
-        value: input.degree,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'institution',
-        value: input.institution,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'major',
-        value: input.major,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
-
     // create education
     const result = await this.repo.create(
-      userId,
-      secureProps,
+      { userId, ...input },
       createdAt,
       session
     );
