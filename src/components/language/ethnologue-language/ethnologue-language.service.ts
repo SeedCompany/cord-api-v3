@@ -6,7 +6,7 @@ import {
   ServerException,
   Session,
 } from '../../../common';
-import { ILogger, Logger, Property } from '../../../core';
+import { ILogger, Logger } from '../../../core';
 import { AuthorizationService } from '../../authorization/authorization.service';
 import { Powers } from '../../authorization/dto/powers';
 import {
@@ -29,34 +29,8 @@ export class EthnologueLanguageService {
     session: Session
   ): Promise<string> {
     await this.authorizationService.checkPower(Powers.CreateLanguage, session);
-    const secureProps: Property[] = [
-      {
-        key: 'code',
-        value: input.code,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'provisionalCode',
-        value: input.provisionalCode,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'name',
-        value: input.name,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'population',
-        value: input.population,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
 
-    const result = await this.repo.create(secureProps, session);
+    const result = await this.repo.create(input, session);
     if (!result) {
       throw new ServerException('Failed to create ethnologue language');
     }

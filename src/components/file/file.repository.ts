@@ -5,7 +5,6 @@ import { AnyConditions } from 'cypher-query-builder/dist/typings/clauses/where-u
 import { isEmpty } from 'lodash';
 import { DateTime } from 'luxon';
 import {
-  generateId,
   ID,
   NotFoundException,
   ServerException,
@@ -22,9 +21,21 @@ import {
   matchSession,
   Property,
 } from '../../core';
-import { collect, count, matchProps, merge } from '../../core/database/query';
+import {
+  collect,
+  count,
+  createNode,
+  matchProps,
+  merge,
+} from '../../core/database/query';
 import { hasMore } from '../../core/database/results';
-import { BaseNode, FileListInput, FileVersion, IFileNode } from './dto';
+import {
+  BaseNode,
+  Directory,
+  FileListInput,
+  FileVersion,
+  IFileNode,
+} from './dto';
 
 @Injectable()
 export class FileRepository {
@@ -210,29 +221,16 @@ export class FileRepository {
     name: string,
     session: Session
   ): Promise<ID> {
-    const props: Property[] = [
-      {
-        key: 'name',
-        value: name,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
+    const initialProps = {
+      name,
+      canDelete: true,
+    };
 
     const createFile = this.db
       .query()
       .apply(matchRequestingUser(session))
-      .apply(
-        createBaseNode(await generateId(), ['Directory', 'FileNode'], props)
-      )
-      .return('node.id as id')
-      .asResult<{ id: ID }>();
+      .apply(await createNode(Directory, { initialProps }))
+      .return<{ id: ID }>('node.id as id');
 
     const result = await createFile.first();
 
@@ -269,8 +267,7 @@ export class FileRepository {
       .query()
       .apply(matchRequestingUser(session))
       .apply(createBaseNode(fileId, ['File', 'FileNode'], props))
-      .return('node.id as id')
-      .asResult<{ id: ID }>();
+      .return<{ id: ID }>('node.id as id');
 
     const result = await createFile.first();
 
