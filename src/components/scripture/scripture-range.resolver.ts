@@ -1,7 +1,7 @@
 import { Int, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { Verse } from './books';
-import { mapRange, ScriptureRange } from './dto';
+import { ScriptureRange } from './dto';
+import { labelOfScriptureRange } from './labels';
 
 @Resolver(ScriptureRange)
 export class ScriptureRangeResolver {
@@ -22,43 +22,7 @@ export class ScriptureRangeResolver {
     `,
   })
   label(@Parent() range: ScriptureRange): string {
-    const { start, end } = mapRange(range, Verse.fromRef);
-    if (start.book.equals(end.book)) {
-      if (start.isFirst && end.isLast) {
-        if (start.chapter.isFirst && end.chapter.isLast) {
-          // Matthew
-          return start.book.label;
-        } else if (start.chapter.equals(end.chapter)) {
-          // Matthew 1
-          return start.label;
-        } else {
-          // Matthew 1-4
-          return `${start.label}-${end.chapter.chapter}`;
-        }
-      } else if (start.chapter.equals(end.chapter)) {
-        if (start.equals(end)) {
-          // Matthew 1:1
-          return start.label;
-        } else {
-          // Matthew 1:1-20
-          return `${start.label}-${end.verse}`;
-        }
-      } else {
-        // Matthew 1:1-4:21
-        return `${start.label}-${end.chapter.chapter}:${end.verse}`;
-      }
-    } else if (start.isFirst && end.isLast) {
-      if (start.chapter.isFirst && end.chapter.isLast) {
-        // Matthew-John
-        return `${start.book.label}-${end.book.label}`;
-      } else {
-        // Matthew 1-John 2
-        return `${start.chapter.label}-${end.chapter.label}`;
-      }
-    } else {
-      // Matthew 1:1-John 2:4
-      return `${start.label}-${end.label}`;
-    }
+    return labelOfScriptureRange(range);
   }
 
   @ResolveField(() => Int, {
