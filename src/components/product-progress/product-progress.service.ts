@@ -88,7 +88,6 @@ export class ProductProgressService {
         return {
           ...step,
           ...secured,
-          canDelete: false, // Created automatically when needed, so no deletes
         };
       })
     );

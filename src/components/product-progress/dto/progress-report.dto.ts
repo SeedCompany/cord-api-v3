@@ -5,7 +5,6 @@ import { keys as keysOf } from 'ts-transformer-keys';
 import { Merge } from 'type-fest';
 import {
   ID,
-  Resource,
   SecuredFloatNullable,
   SecuredProps,
   UnsecuredDto,
@@ -32,7 +31,7 @@ export class ProductProgress {
   @Field(() => [StepProgress], {
     description: stripIndent`
       The progress of each step in this report.
-      If a step doesn't have a reported value (or it was set to null) it will be omitted from this list.
+      This list is ordered based order of product's steps, which is based on \`MethodologyAvailableSteps\`.
     `,
   })
   readonly steps: readonly StepProgress[];
@@ -47,17 +46,25 @@ export type UnsecuredProductProgress = Merge<
 
 @ObjectType({
   description: `The progress of a product's step for a given report`,
-  implements: [Resource],
 })
-export class StepProgress extends Resource {
+export class StepProgress {
   static readonly Props = keysOf<StepProgress>();
   static readonly SecuredProps = keysOf<SecuredProps<StepProgress>>();
+
+  // Both of these only exist if progress has been reported (or explicitly set to null).
+  // I have these here to show that they can exist in the DB, but they are private to the API.
+  readonly id?: ID;
+  readonly createdAt?: DateTime;
 
   @Field(() => MethodologyStep)
   readonly step: MethodologyStep;
 
   @Field({
-    description: 'The percent (0-100) complete for the step',
+    description: stripIndent`
+      The percent (0-100) complete for the step.
+      If no progress has been reported yet this will be null,
+      or this could be explicitly set to null.
+    `,
   })
   readonly percentDone: SecuredFloatNullable;
 }
