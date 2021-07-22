@@ -5,6 +5,7 @@ import { ID, NotFoundException, Session, UnsecuredDto } from '../../common';
 import { DtoRepository, matchRequestingUser } from '../../core';
 import {
   createNode,
+  createRelationships,
   matchProps,
   merge,
   paginate,
@@ -25,13 +26,11 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
   }
 
   async create(session: Session, name: string, directorId: ID) {
-    const createdAt = DateTime.local();
     const initialProps = {
       name,
       canDelete: true,
     };
 
-    // create field zone
     const query = this.db
       .query()
       .apply(matchRequestingUser(session))
@@ -41,14 +40,14 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
         }),
       ])
       .apply(await createNode(FieldZone, { initialProps }))
-      .create([
-        node('node'),
-        relation('out', '', 'director', { active: true, createdAt }),
-        node('director'),
-      ])
+      .apply(
+        createRelationships(FieldZone, {
+          out: {
+            director: ['User', directorId],
+          },
+        })
+      )
       .return<{ id: ID }>('node.id as id');
-
-    // const result = await query.first();
 
     return await query.first();
   }

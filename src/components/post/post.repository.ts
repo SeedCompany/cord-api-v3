@@ -15,12 +15,7 @@ import { PostShareability } from './dto/shareability.dto';
 
 @Injectable()
 export class PostRepository extends DtoRepository(Post) {
-  async create(
-    parentId: string,
-    postId: ID,
-    input: CreatePost,
-    session: Session
-  ) {
+  async create(parentId: string, input: CreatePost, session: Session) {
     const initialProps = {
       creator: session.userId,
       type: input.type,
@@ -29,23 +24,19 @@ export class PostRepository extends DtoRepository(Post) {
       modifiedAt: DateTime.local(),
     };
 
-    const baseNodeProps = {
-      postId,
-    };
-
-    const createPost = this.db
+    const query = this.db
       .query()
       .apply(matchRequestingUser(session))
-      .apply(await createNode(Post, { initialProps, baseNodeProps }))
+      .apply(await createNode(Post, { initialProps }))
       .return<{ id: ID }>('node.id as id');
 
-    await createPost.first();
+    const result = await query.first();
 
-    await this.db
+    return await this.db
       .query()
       .match([
         [node('baseNode', 'BaseNode', { id: parentId })],
-        [node('post', 'Post', { id: postId })],
+        [node('post', 'Post', { id: result!.id })],
       ])
       .create([
         node('baseNode'),
@@ -55,7 +46,7 @@ export class PostRepository extends DtoRepository(Post) {
         }),
         node('post'),
       ])
-      .return('post.id as id')
+      .return<{ id: ID }>('post.id as id')
       .first();
   }
 
@@ -76,8 +67,7 @@ export class PostRepository extends DtoRepository(Post) {
       .query()
       .match([node('node', 'Post', { id: postId })])
       .apply(matchProps())
-      .return('props')
-      .asResult<{ dto: UnsecuredDto<Post> }>();
+      .return<{ dto: UnsecuredDto<Post> }>('props as dto');
 
     const result = await query.first();
     if (!result) {

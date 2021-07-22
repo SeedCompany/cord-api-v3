@@ -1,6 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import {
-  generateId,
   ID,
   InputException,
   NotFoundException,
@@ -35,8 +34,6 @@ export class PostService {
     { parentId, ...input }: CreatePost,
     session: Session
   ): Promise<Post> {
-    const postId = await generateId();
-
     if (!parentId) {
       throw new ServerException(
         'A post must be associated with a parent node.'
@@ -44,7 +41,10 @@ export class PostService {
     }
 
     try {
-      await this.repo.create(parentId, postId, input, session);
+      const result = await this.repo.create(parentId, input, session);
+      if (!result) {
+        throw new ServerException('failed to create post');
+      }
 
       // FIXME: This is being refactored - leaving it commented out per Michael's instructions for now
       // await this.authorizationService.processNewBaseNode(
@@ -53,7 +53,7 @@ export class PostService {
       //   session.userId
       // );
 
-      return await this.readOne(postId, session);
+      return await this.readOne(result.id, session);
     } catch (exception) {
       this.logger.warning('Failed to create post', {
         exception,

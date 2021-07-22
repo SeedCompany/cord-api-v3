@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
-import { DateTime } from 'luxon';
 import { ID, NotFoundException, Session, UnsecuredDto } from '../../common';
 import { DtoRepository, matchRequestingUser } from '../../core';
 import {
   createNode,
+  createRelationships,
   matchProps,
   merge,
   paginate,
@@ -30,8 +30,6 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
     directorId: ID,
     fieldZoneId: ID
   ) {
-    const createdAt = DateTime.local();
-
     const initialProps = {
       name,
       canDelete: true,
@@ -52,16 +50,14 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
         }),
       ])
       .apply(await createNode(FieldRegion, { initialProps }))
-      .create([
-        node('node'),
-        relation('out', '', 'director', { active: true, createdAt }),
-        node('director'),
-      ])
-      .create([
-        node('node'),
-        relation('out', '', 'zone', { active: true, createdAt }),
-        node('fieldZone'),
-      ])
+      .apply(
+        createRelationships(FieldRegion, {
+          out: {
+            director: ['User', directorId],
+            zone: ['FieldZone', fieldZoneId],
+          },
+        })
+      )
       .return<{ id: ID }>('node.id as id');
 
     return await query.first();
