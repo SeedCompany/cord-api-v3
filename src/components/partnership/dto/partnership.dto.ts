@@ -14,7 +14,7 @@ import {
 } from '../../../common';
 import { ScopedRole } from '../../authorization';
 import { ChangesetAware } from '../../changeset/dto';
-import { DefinedFile } from '../../file/dto';
+import { FileId } from '../../file/dto';
 import { Organization } from '../../organization/dto';
 import { SecuredPartnerTypes } from '../../partner/dto/partner-type.enum';
 import { FinancialReportingType } from './financial-reporting-type';
@@ -51,7 +51,7 @@ export class Partnership extends IntersectionType(ChangesetAware, Resource) {
   @Field()
   readonly agreementStatus: SecuredPartnershipAgreementStatus;
 
-  readonly mou: DefinedFile;
+  readonly mou: FileId;
 
   @Field()
   readonly mouStatus: SecuredPartnershipAgreementStatus;
@@ -68,7 +68,7 @@ export class Partnership extends IntersectionType(ChangesetAware, Resource) {
   @Field()
   readonly mouEndOverride: SecuredDateNullable;
 
-  readonly agreement: DefinedFile;
+  readonly agreement: FileId;
 
   readonly partner: Secured<ID>;
   readonly organization: ID;

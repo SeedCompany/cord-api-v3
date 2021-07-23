@@ -68,7 +68,6 @@ export class PostRepository extends DtoRepository(Post) {
       .match([node('node', 'Post', { id: postId })])
       .apply(this.hydrate());
 
-
     const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find post', 'post.id');

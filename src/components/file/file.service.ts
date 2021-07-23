@@ -405,7 +405,7 @@ export class FileService {
       Powers.CreateFileVersion,
       session
     );
-    await this.repo.createFile(name, session);
+    await this.repo.createFile(fileId, name, session);
 
     await this.repo.attachBaseNode(fileId, baseNodeId, propertyName + 'Node');
 
