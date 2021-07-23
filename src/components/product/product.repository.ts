@@ -28,6 +28,7 @@ import {
   CreateProduct,
   DerivativeScriptureProduct,
   DirectScriptureProduct,
+  ProductMethodology as Methodology,
   Product,
   ProductListInput,
   UpdateProduct,
@@ -262,5 +263,38 @@ export class ProductRepository extends CommonRepository {
       .apply(paginate(input))
       .first();
     return result!; // result from paginate() will always have 1 row.
+  }
+
+  async mergeCompletionDescription(
+    description: string,
+    methodology: Methodology
+  ) {
+    await this.db
+      .query()
+      .merge(
+        node('node', 'ProductCompletionDescription', {
+          value: description,
+          methodology,
+        })
+      )
+      .run();
+  }
+
+  async suggestCompletionDescriptions(
+    query?: string,
+    methodology?: Methodology
+  ) {
+    return await this.db
+      .query()
+      .match(
+        node('node', 'ProductCompletionDescription', {
+          methodology,
+        })
+      )
+      // TODO match query term
+      .return<{ desc: string }>('node.value as desc')
+      .map('desc')
+      .limit(25)
+      .run();
   }
 }

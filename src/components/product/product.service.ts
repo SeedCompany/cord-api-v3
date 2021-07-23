@@ -204,6 +204,13 @@ export class ProductService {
 
     await this.scriptureRefService.update(input.id, scriptureReferences);
 
+    if (changes.describeCompletion || changes.methodology) {
+      await this.repo.mergeCompletionDescription(
+        changes.describeCompletion ?? currentProduct.describeCompletion.value!,
+        changes.methodology ?? currentProduct.methodology.value!
+      );
+    }
+
     const productUpdatedScriptureReferences = await this.readOne(
       input.id,
       session
@@ -254,6 +261,13 @@ export class ProductService {
         );
       }
       await this.repo.updateProducible(input, produces);
+    }
+
+    if (changes.describeCompletion || changes.methodology) {
+      await this.repo.mergeCompletionDescription(
+        changes.describeCompletion ?? currentProduct.describeCompletion.value!,
+        changes.methodology ?? currentProduct.methodology.value!
+      );
     }
 
     // update the scripture references (override)
@@ -310,5 +324,12 @@ export class ProductService {
     return Object.keys(MethodologyToApproach).filter(
       (key) => MethodologyToApproach[key as ProductMethodology] === approach
     ) as ProductMethodology[];
+  }
+
+  async suggestCompletionDescriptions(
+    query?: string,
+    methodology?: ProductMethodology
+  ) {
+    return await this.repo.suggestCompletionDescriptions(query, methodology);
   }
 }

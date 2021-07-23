@@ -159,15 +159,24 @@ export class ProductResolver {
       Use in conjunction with \`Product.describeCompletion\`.
     `,
   })
-  suggestProductCompletionDescriptions(
+  async suggestProductCompletionDescriptions(
+    @Args('query', {
+      nullable: true,
+      description: 'A partial description to search for',
+    })
+    query?: string,
     @Args('methodology', {
+      type: () => ProductMethodology,
       nullable: true,
       description:
         'Optionally limit suggestions to only ones for this methodology',
     })
-    _methodology?: ProductMethodology
-  ): string[] {
-    return [];
+    methodology?: ProductMethodology
+  ): Promise<readonly string[]> {
+    return await this.productService.suggestCompletionDescriptions(
+      query,
+      methodology
+    );
   }
 
   @Mutation(() => CreateProductOutput, {
