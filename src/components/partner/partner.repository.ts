@@ -11,6 +11,7 @@ import {
 import { DtoRepository, matchRequestingUser } from '../../core';
 import {
   createNode,
+  createRelationships,
   matchProps,
   merge,
   paginate,
@@ -56,36 +57,15 @@ export class PartnerRepository extends DtoRepository(Partner) {
     const result = await this.db
       .query()
       .apply(matchRequestingUser(session))
-      .match([
-        node('organization', 'Organization', {
-          id: input.organizationId,
-        }),
-      ])
       .apply(await createNode(Partner, { initialProps }))
-      .create([
-        node('node'),
-        relation('out', '', 'organization', {
-          active: true,
-          createdAt,
-        }),
-        node('organization'),
-      ])
-      .apply((q) => {
-        if (input.pointOfContactId) {
-          q.with('node')
-            .matchNode('pointOfContact', 'User', {
-              id: input.pointOfContactId,
-            })
-            .create([
-              node('node'),
-              relation('out', '', 'pointOfContact', {
-                active: true,
-                createdAt,
-              }),
-              node('pointOfContact'),
-            ]);
-        }
-      })
+      .apply(
+        createRelationships(Partner, {
+          out: {
+            organization: ['Organization', input.organizationId],
+            pointOfContact: ['User', input.pointOfContactId],
+          },
+        })
+      )
       .return<{ id: ID }>('node.id as id')
       .first();
     if (!result) {

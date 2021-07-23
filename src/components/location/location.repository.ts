@@ -11,6 +11,7 @@ import {
 import { DtoRepository, matchRequestingUser } from '../../core';
 import {
   createNode,
+  createRelationships,
   matchProps,
   merge,
   paginate,
@@ -43,36 +44,14 @@ export class LocationRepository extends DtoRepository(Location) {
       .query()
       .apply(matchRequestingUser(session))
       .apply(await createNode(Location, { initialProps }))
-      .apply((q) => {
-        if (input.fundingAccountId) {
-          q.with('node')
-            .matchNode('fundingAccount', 'FundingAccount', {
-              id: input.fundingAccountId,
-            })
-            .create([
-              node('node'),
-              relation('out', '', 'fundingAccount', {
-                active: true,
-                createdAt: DateTime.local(),
-              }),
-              node('fundingAccount'),
-            ]);
-        }
-        if (input.defaultFieldRegionId) {
-          q.with('node')
-            .matchNode('defaultFieldRegion', 'FieldRegion', {
-              id: input.defaultFieldRegionId,
-            })
-            .create([
-              node('node'),
-              relation('out', '', 'defaultFieldRegion', {
-                active: true,
-                createdAt: DateTime.local(),
-              }),
-              node('defaultFieldRegion'),
-            ]);
-        }
-      })
+      .apply(
+        createRelationships(Location, {
+          out: {
+            fundingAccount: ['FundingAccount', input.fundingAccountId],
+            defaultFieldRegion: ['FieldRegion', input.defaultFieldRegionId],
+          },
+        })
+      )
       .return<{ id: ID }>('node.id as id');
 
     const result = await query.first();

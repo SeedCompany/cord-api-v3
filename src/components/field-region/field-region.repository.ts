@@ -12,7 +12,7 @@ import {
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { FieldRegion, FieldRegionListInput } from './dto';
+import { CreateFieldRegion, FieldRegion, FieldRegionListInput } from './dto';
 
 @Injectable()
 export class FieldRegionRepository extends DtoRepository(FieldRegion) {
@@ -24,14 +24,9 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
       .first();
   }
 
-  async create(
-    session: Session,
-    name: string,
-    directorId: ID,
-    fieldZoneId: ID
-  ) {
+  async create(session: Session, input: CreateFieldRegion) {
     const initialProps = {
-      name,
+      name: input.name,
       canDelete: true,
     };
 
@@ -39,22 +34,12 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
     const query = this.db
       .query()
       .apply(matchRequestingUser(session))
-      .match([
-        node('director', 'User', {
-          id: directorId,
-        }),
-      ])
-      .match([
-        node('fieldZone', 'FieldZone', {
-          id: fieldZoneId,
-        }),
-      ])
       .apply(await createNode(FieldRegion, { initialProps }))
       .apply(
         createRelationships(FieldRegion, {
           out: {
-            director: ['User', directorId],
-            zone: ['FieldZone', fieldZoneId],
+            director: ['User', input.directorId],
+            zone: ['FieldZone', input.fieldZoneId],
           },
         })
       )

@@ -48,7 +48,7 @@ export class FieldRegionService {
   }
 
   async create(
-    { fieldZoneId, directorId, ...input }: CreateFieldRegion,
+    input: CreateFieldRegion,
     session: Session
   ): Promise<FieldRegion> {
     const checkName = await this.repo.checkName(input.name);
@@ -60,12 +60,7 @@ export class FieldRegionService {
       );
     }
 
-    const result = await this.repo.create(
-      session,
-      input.name,
-      directorId,
-      fieldZoneId
-    );
+    const result = await this.repo.create(session, input);
 
     if (!result) {
       throw new ServerException('failed to create field region');

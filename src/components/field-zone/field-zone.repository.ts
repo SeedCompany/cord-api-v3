@@ -13,7 +13,7 @@ import {
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { FieldZone, FieldZoneListInput } from './dto';
+import { CreateFieldZone, FieldZone, FieldZoneListInput } from './dto';
 
 @Injectable()
 export class FieldZoneRepository extends DtoRepository(FieldZone) {
@@ -25,9 +25,9 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
       .first();
   }
 
-  async create(session: Session, name: string, directorId: ID) {
+  async create(session: Session, input: CreateFieldZone) {
     const initialProps = {
-      name,
+      name: input.name,
       canDelete: true,
     };
 
@@ -36,10 +36,8 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
       .apply(matchRequestingUser(session))
       .apply(await createNode(FieldZone, { initialProps }))
       .apply(
-        createRelationships(FieldZone, {
-          out: {
-            director: ['User', directorId],
-          },
+        createRelationships(FieldZone, 'out', {
+          director: ['User', input.directorId],
         })
       )
       .return<{ id: ID }>('node.id as id');
