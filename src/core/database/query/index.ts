@@ -3,6 +3,7 @@ export * from './create-property';
 export * from './create-relationships';
 export * from './cypher-expression';
 export * from './cypher-functions';
+export * from './full-text';
 export * from './deactivate-property';
 export * from './lists';
 export * from './matching';

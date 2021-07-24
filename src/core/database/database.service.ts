@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { oneLine } from 'common-tags';
 import {
   Connection,
   equals,
@@ -30,7 +31,7 @@ import {
 import { ILogger, Logger, ServiceUnavailableError, UniquenessError } from '..';
 import { AbortError, retry, RetryOptions } from '../../common/retry';
 import { DbChanges } from './changes';
-import { deleteBaseNode, updateProperty } from './query';
+import { deleteBaseNode, exp, updateProperty } from './query';
 import { hasMore } from './results';
 import { Transactional } from './transactional.decorator';
 
@@ -209,6 +210,37 @@ export class DatabaseService {
       throw new ServerException('Unable to determine server info');
     }
     return info;
+  }
+
+  async createFullTextIndex(
+    name: string,
+    labels: string[],
+    properties: string[],
+    config: { analyzer?: string; eventuallyConsistent?: boolean }
+  ) {
+    const exists = await this.query(
+      `call db.indexes() yield name where name = '${name}' return name limit 1`
+    ).first();
+    if (exists) {
+      return;
+    }
+    const quote = (q: string) => `'${q}'`;
+    await this.query(
+      oneLine`
+        CALL db.index.fulltext.createNodeIndex(
+          ${quote(name)},
+          ${exp(labels.map(quote))},
+          ${exp(properties.map(quote))},
+          ${exp({
+            analyzer: config.analyzer ? quote(config.analyzer) : undefined,
+            // eslint-disable-next-line @typescript-eslint/naming-convention
+            eventually_consistent: config.eventuallyConsistent
+              ? exp(config.eventuallyConsistent)
+              : undefined,
+          })}
+        )
+      `
+    ).run();
   }
 
   async updateProperties<
