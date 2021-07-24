@@ -302,8 +302,10 @@ export class ProductRepository extends CommonRepository {
       .apply((q) =>
         methodology ? q.with('node').where({ node: { methodology } }) : q
       )
-      .return<{ desc: string }>('node.value as desc')
-      .apply((q) => (query ? q : q.orderBy('node.lastUsedAt', 'DESC')))
+      .apply((q) =>
+        query ? q : q.with('node').orderBy('node.lastUsedAt', 'DESC')
+      )
+      .returnDistinct<{ desc: string }>('node.value as desc')
       .map('desc')
       .limit(25)
       .run();
