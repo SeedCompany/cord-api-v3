@@ -278,6 +278,13 @@ export class ProductRepository extends CommonRepository {
           methodology,
         })
       )
+      .onCreate.setVariables({
+        'node.lastUsedAt': 'datetime()',
+        'node.createdAt': 'datetime()',
+      })
+      .onMatch.setVariables({
+        'node.lastUsedAt': 'datetime()',
+      })
       .run();
   }
 
@@ -296,6 +303,7 @@ export class ProductRepository extends CommonRepository {
         methodology ? q.with('node').where({ node: { methodology } }) : q
       )
       .return<{ desc: string }>('node.value as desc')
+      .apply((q) => (query ? q : q.orderBy('node.lastUsedAt', 'DESC')))
       .map('desc')
       .limit(25)
       .run();
