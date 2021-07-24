@@ -10,11 +10,12 @@ import {
   Session,
   UnsecuredDto,
 } from '../../common';
-import { CommonRepository } from '../../core';
+import { CommonRepository, OnIndex } from '../../core';
 import { DbChanges, getChanges } from '../../core/database/changes';
 import {
   createNode,
   createRelationships,
+  fullTextQuery,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
   paginate,
@@ -286,15 +287,29 @@ export class ProductRepository extends CommonRepository {
   ) {
     return await this.db
       .query()
-      .match(
-        node('node', 'ProductCompletionDescription', {
-          methodology,
-        })
+      .apply((q) =>
+        query
+          ? q.apply(fullTextQuery('ProductCompletionDescription', query))
+          : q.matchNode('node', 'ProductCompletionDescription')
       )
-      // TODO match query term
+      .apply((q) =>
+        methodology ? q.with('node').where({ node: { methodology } }) : q
+      )
       .return<{ desc: string }>('node.value as desc')
       .map('desc')
       .limit(25)
       .run();
+  }
+
+  @OnIndex('schema')
+  private async createCompletionDescriptionIndex() {
+    await this.db.createFullTextIndex(
+      'ProductCompletionDescription',
+      ['ProductCompletionDescription'],
+      ['value'],
+      {
+        analyzer: 'standard-folding',
+      }
+    );
   }
 }
