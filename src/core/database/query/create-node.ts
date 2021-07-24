@@ -7,14 +7,20 @@ import {
   generateId,
   getDbClassLabels,
   getDbPropertyLabels,
+  ID,
   ResourceShape,
   UnsecuredDto,
 } from '../../../common';
+import { FileId } from '../../../components/file';
 
 interface CreateNodeOptions<TResourceStatic extends ResourceShape<any>> {
-  initialProps?: Partial<UnsecuredDto<TResourceStatic['prototype']>>;
+  initialProps?: InitialPropsOf<UnsecuredDto<TResourceStatic['prototype']>>;
   baseNodeProps?: Record<string, any>;
 }
+
+type InitialPropsOf<T> = {
+  [K in keyof T]?: T[K] extends FileId ? ID : T[K];
+};
 
 /**
  * This aids in composing create statements for a new base node and its initial properties.
