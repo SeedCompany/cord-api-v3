@@ -9,10 +9,15 @@ import {
   Session,
   UnsecuredDto,
 } from '../../common';
-import { DtoRepository, matchRequestingUser } from '../../core';
+import {
+  createBaseNode,
+  DtoRepository,
+  matchRequestingUser,
+  Property,
+} from '../../core';
 import {
   coalesce,
-  createNode,
+  //createNode,
   matchChangesetAndChangedProps,
   matchProps,
   matchPropsAndProjectSensAndScopedRoles,
@@ -32,29 +37,145 @@ import {
 
 @Injectable()
 export class PartnershipRepository extends DtoRepository(Partnership) {
+  // async create(input: CreatePartnership, session: Session, changeset?: ID) {
+  //   const partnershipId = await generateId();
+  //   const mouId = await generateId();
+  //   const agreementId = await generateId();
+
+  //   const initialProps = {
+  //     agreementStatus:
+  //       input.agreementStatus || PartnershipAgreementStatus.NotAttached,
+  //     agreement: agreementId,
+  //     mou: mouId,
+  //     mouStatus: input.mouStatus || PartnershipAgreementStatus.NotAttached,
+  //     mouStartOverride: input.mouStartOverride,
+  //     mouEndOverride: input.mouEndOverride,
+  //     types: input.types,
+  //     financialReportingType: input.financialReportingType,
+  //     primary: input.primary,
+  //     canDelete: true,
+  //   };
+
+  //   const result = await this.db
+  //     .query()
+  //     .apply(matchRequestingUser(session))
+  //     .apply(await createNode(Partnership, { initialProps }))
+  //     .with('node')
+  //     .match([
+  //       [
+  //         node('partner', 'Partner', {
+  //           id: input.partnerId,
+  //         }),
+  //       ],
+  //       [node('project', 'Project', { id: input.projectId })],
+  //     ])
+  //     .create([
+  //       node('project'),
+  //       relation('out', '', 'partnership', {
+  //         active: !changeset,
+  //         createdAt: DateTime.local(),
+  //       }),
+  //       node('node'),
+  //       relation('out', '', 'partner', {
+  //         active: true,
+  //         createdAt: DateTime.local(),
+  //       }),
+  //       node('partner'),
+  //     ])
+  //     .apply((q) =>
+  //       changeset
+  //         ? q
+  //             .with('node')
+  //             .match([node('changesetNode', 'Changeset', { id: changeset })])
+  //             .create([
+  //               node('changesetNode'),
+  //               relation('out', '', 'changeset', {
+  //                 active: true,
+  //                 createdAt: DateTime.local(),
+  //               }),
+  //               node('node'),
+  //             ])
+  //         : q
+  //     )
+  //     .return<{ id: ID }>('node.id as id')
+  //     .first();
+  //   if (!result) {
+  //     throw new ServerException('Failed to create partnership');
+  //   }
+  //   return { id: partnershipId, mouId, agreementId };
+  // }
+
   async create(input: CreatePartnership, session: Session, changeset?: ID) {
     const partnershipId = await generateId();
     const mouId = await generateId();
     const agreementId = await generateId();
 
-    const initialProps = {
-      agreementStatus:
-        input.agreementStatus || PartnershipAgreementStatus.NotAttached,
-      agreement: agreementId,
-      mou: mouId,
-      mouStatus: input.mouStatus || PartnershipAgreementStatus.NotAttached,
-      mouStartOverride: input.mouStartOverride,
-      mouEndOverride: input.mouEndOverride,
-      types: input.types,
-      financialReportingType: input.financialReportingType,
-      primary: input.primary,
-      canDelete: true,
-    };
-
+    const props: Property[] = [
+      {
+        key: 'agreementStatus',
+        value: input.agreementStatus || PartnershipAgreementStatus.NotAttached,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'agreement',
+        value: agreementId,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'mou',
+        value: mouId,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'mouStatus',
+        value: input.mouStatus || PartnershipAgreementStatus.NotAttached,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'mouStartOverride',
+        value: input.mouStartOverride,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'mouEndOverride',
+        value: input.mouEndOverride,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'types',
+        value: input.types,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'financialReportingType',
+        value: input.financialReportingType,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'canDelete',
+        value: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'primary',
+        value: input.primary,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+    ];
     const result = await this.db
       .query()
       .apply(matchRequestingUser(session))
-      .apply(await createNode(Partnership, { initialProps }))
+      .apply(createBaseNode(partnershipId, 'Partnership', props))
       .with('node')
       .match([
         [
@@ -92,7 +213,8 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
               ])
           : q
       )
-      .return<{ id: ID }>('node.id as id')
+      .return('node.id as id')
+      .asResult<{ id: ID }>()
       .first();
     if (!result) {
       throw new ServerException('Failed to create partnership');

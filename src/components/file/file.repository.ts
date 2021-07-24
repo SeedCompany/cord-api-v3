@@ -13,13 +13,11 @@ import {
   UnsecuredDto,
 } from '../../common';
 import {
-  createBaseNode,
   DatabaseService,
   ILogger,
   Logger,
   matchRequestingUser,
   matchSession,
-  Property,
 } from '../../core';
 import {
   collect,
@@ -32,6 +30,7 @@ import { hasMore } from '../../core/database/results';
 import {
   BaseNode,
   Directory,
+  File,
   FileListInput,
   FileVersion,
   IFileNode,
@@ -247,55 +246,17 @@ export class FileRepository {
     return result.id;
   }
 
-  // async createFile(name: string, session: Session, parentId?: ID) {
-  //   const initialProps = {
-  //     //name,
-  //     //canDelete: true,
-  //   };
-
-  //   const createFile = this.db
-  //     .query()
-  //     .apply(matchRequestingUser(session))
-  //     .apply(await createNode(File, { initialProps }))
-  //     .return<{ id: ID }>('node.id as id');
-
-  //   const result = await createFile.first();
-
-  //   if (!result) {
-  //     throw new ServerException('Failed to create file');
-  //   }
-
-  //   await this.attachCreator(result.id, session);
-
-  //   if (parentId) {
-  //     await this.attachParent(result.id, parentId);
-  //   }
-
-  //   return result.id;
-  // }
-
-  async createFile(fileId: ID, name: string, session: Session, parentId?: ID) {
-    const props: Property[] = [
-      {
-        key: 'name',
-        value: name,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
+  async createFile(name: string, session: Session, parentId?: ID) {
+    const initialProps = {
+      name,
+      canDelete: true,
+    };
 
     const createFile = this.db
       .query()
       .apply(matchRequestingUser(session))
-      .apply(createBaseNode(fileId, ['File', 'FileNode'], props))
-      .return('node.id as id')
-      .asResult<{ id: ID }>();
+      .apply(await createNode(File, { initialProps }))
+      .return<{ id: ID }>('node.id as id');
 
     const result = await createFile.first();
 

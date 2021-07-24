@@ -375,15 +375,14 @@ export class FileService {
     }
 
     await this.authorizationService.checkPower(Powers.CreateFile, session);
-    const fileId = await generateId();
-    await this.repo.createFile(fileId, name, session, parentId);
+    const fileId = await this.repo.createFile(name, session, parentId);
 
     this.logger.debug(
       'File matching given name not found, creating a new one',
       {
         parentId,
         fileName: name,
-        fileId: fileId,
+        fileId,
       }
     );
     return fileId;
@@ -405,7 +404,7 @@ export class FileService {
       Powers.CreateFileVersion,
       session
     );
-    await this.repo.createFile(fileId, name, session);
+    await this.repo.createFile(name, session);
 
     await this.repo.attachBaseNode(fileId, baseNodeId, propertyName + 'Node');
 

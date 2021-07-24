@@ -11,7 +11,7 @@ import {
 } from '../../../common';
 import { ScopedRole } from '../../authorization';
 import { ChangesetAware } from '../../changeset/dto';
-import { FileId } from '../../file/dto';
+import { DefinedFile } from '../../file/dto';
 import { BudgetRecord } from './budget-record.dto';
 import { BudgetStatus } from './budget-status.enum';
 
@@ -32,7 +32,7 @@ export class Budget extends IntersectionType(ChangesetAware, Resource) {
   @Field(() => [BudgetRecord])
   readonly records: readonly BudgetRecord[];
 
-  readonly universalTemplateFile: FileId;
+  readonly universalTemplateFile: DefinedFile;
 
   @SensitivityField({
     description: "Based on the project's sensitivity",

@@ -11,7 +11,13 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import { HandleIdLookup, ILogger, Logger, ResourceResolver } from '../../core';
+import {
+  HandleIdLookup,
+  ILogger,
+  Logger,
+  Property,
+  ResourceResolver,
+} from '../../core';
 import {
   mapListResults,
   parseSecuredProperties,
@@ -50,6 +56,63 @@ export class BudgetService {
     @Logger('budget:service') private readonly logger: ILogger
   ) {}
 
+  // async create(
+  //   { projectId, ...input }: CreateBudget,
+  //   session: Session
+  // ): Promise<Budget> {
+  //   this.logger.debug('Creating budget', { projectId });
+
+  //   const projectExists = await this.budgetRepo.doesProjectExist(
+  //     projectId,
+  //     session
+  //   );
+  //   if (!projectExists) {
+  //     throw new NotFoundException('project does not exist', 'budget.projectId');
+  //   }
+
+  //   const universalTemplateFileId = await generateId();
+
+  //   try {
+  //     const result = await this.budgetRepo.create(
+  //       { ...input, projectId },
+  //       session,
+  //       universalTemplateFileId
+  //     );
+  //     if (!result) {
+  //       throw new ServerException('Could not create budget');
+  //     }
+
+  //     this.logger.debug(`Created Budget`, {
+  //       id: result.id,
+  //       userId: session.userId,
+  //     });
+
+  //     await this.files.createDefinedFile(
+  //       universalTemplateFileId,
+  //       `Universal Budget Template`,
+  //       session,
+  //       result.id,
+  //       'universalTemplateFile',
+  //       input.universalTemplateFile,
+  //       'budget.universalTemplateFile'
+  //     );
+
+  //     await this.authorizationService.processNewBaseNode(
+  //       Budget,
+  //       result.id,
+  //       session.userId
+  //     );
+
+  //     return await this.readOne(result.id, session);
+  //   } catch (exception) {
+  //     this.logger.error(`Could not create budget`, {
+  //       userId: session.userId,
+  //       exception,
+  //     });
+  //     throw new ServerException('Could not create budget', exception);
+  //   }
+  // }
+
   async create(
     { projectId, ...input }: CreateBudget,
     session: Session
@@ -64,20 +127,38 @@ export class BudgetService {
       throw new NotFoundException('project does not exist', 'budget.projectId');
     }
 
+    const budgetId = await generateId();
+
     const universalTemplateFileId = await generateId();
 
+    const secureProps: Property[] = [
+      {
+        key: 'status',
+        value: BudgetStatus.Pending,
+        isPublic: false,
+        isOrgPublic: false,
+        label: 'BudgetStatus',
+      },
+      {
+        key: 'universalTemplateFile',
+        value: universalTemplateFileId,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+      {
+        key: 'canDelete',
+        value: true,
+        isPublic: false,
+        isOrgPublic: false,
+      },
+    ];
+
     try {
-      const result = await this.budgetRepo.create(
-        { ...input, projectId },
-        session,
-        universalTemplateFileId
-      );
-      if (!result) {
-        throw new ServerException('Could not create budget');
-      }
+      await this.budgetRepo.create(budgetId, secureProps, session);
+      await this.budgetRepo.connectToProject(budgetId, projectId);
 
       this.logger.debug(`Created Budget`, {
-        id: result.id,
+        id: budgetId,
         userId: session.userId,
       });
 
@@ -85,7 +166,7 @@ export class BudgetService {
         universalTemplateFileId,
         `Universal Budget Template`,
         session,
-        result.id,
+        budgetId,
         'universalTemplateFile',
         input.universalTemplateFile,
         'budget.universalTemplateFile'
@@ -93,11 +174,11 @@ export class BudgetService {
 
       await this.authorizationService.processNewBaseNode(
         Budget,
-        result.id,
+        budgetId,
         session.userId
       );
 
-      return await this.readOne(result.id, session);
+      return await this.readOne(budgetId, session);
     } catch (exception) {
       this.logger.error(`Could not create budget`, {
         userId: session.userId,

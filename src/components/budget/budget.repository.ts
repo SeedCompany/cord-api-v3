@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
+import { DateTime } from 'luxon';
 import {
   ID,
   NotFoundException,
@@ -8,14 +9,16 @@ import {
   UnsecuredDto,
 } from '../../common';
 import {
+  createBaseNode,
   DatabaseService,
   DtoRepository,
   matchRequestingUser,
   matchSession,
+  Property,
 } from '../../core';
 import {
-  createNode,
-  createRelationships,
+  //createNode,
+  //createRelationships,
   matchChangesetAndChangedProps,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
@@ -29,7 +32,7 @@ import {
   Budget,
   BudgetListInput,
   BudgetRecord,
-  CreateBudget,
+  //CreateBudget,
   BudgetStatus as Status,
 } from './dto';
 
@@ -52,36 +55,65 @@ export class BudgetRepository extends DtoRepository(Budget) {
     return !!result;
   }
 
-  async create(
-    input: CreateBudget,
-    session: Session,
-    universalTemplateFile: ID
-  ) {
-    const initialProps = {
-      universalTemplateFile,
-      status: Status.Pending,
-      canDelete: true,
-    };
+  // async create(
+  //   input: CreateBudget,
+  //   session: Session,
+  //   universalTemplateFile: ID
+  // ) {
+  //   const initialProps = {
+  //     universalTemplateFile,
+  //     status: Status.Pending,
+  //     canDelete: true,
+  //   };
 
-    const query = this.db
+  //   const query = this.db
+  //     .query()
+  //     .apply(matchRequestingUser(session))
+  //     .apply(await createNode(Budget, { initialProps }))
+  //     .apply(
+  //       createRelationships(Budget, {
+  //         out: {
+  //           project: ['Project', input.projectId],
+  //         },
+  //       })
+  //     )
+  //     .return<{ id: ID }>('node.id as id');
+
+  //   const result = await query.first();
+
+  //   if (!result) {
+  //     throw new ServerException('Failed to create budget');
+  //   }
+  //   return result;
+  // }
+
+  async create(budgetId: ID, secureProps: Property[], session: Session) {
+    const result = await this.db
       .query()
       .apply(matchRequestingUser(session))
-      .apply(await createNode(Budget, { initialProps }))
-      .apply(
-        createRelationships(Budget, {
-          out: {
-            project: ['Project', input.projectId],
-          },
-        })
-      )
-      .return<{ id: ID }>('node.id as id');
-
-    const result = await query.first();
-
+      .apply(createBaseNode(budgetId, 'Budget', secureProps))
+      .return('node.id as id')
+      .asResult<{ id: ID }>()
+      .first();
     if (!result) {
       throw new ServerException('Failed to create budget');
     }
-    return result;
+  }
+
+  async connectToProject(budgetId: ID, projectId: ID) {
+    await this.db
+      .query()
+      .matchNode('project', 'Project', { id: projectId })
+      .matchNode('budget', 'Budget', { id: budgetId })
+      .create([
+        node('project'),
+        relation('out', '', 'budget', {
+          active: true,
+          createdAt: DateTime.local(),
+        }),
+        node('budget'),
+      ])
+      .run();
   }
 
   async readOne(id: ID, session: Session, changeset?: ID) {

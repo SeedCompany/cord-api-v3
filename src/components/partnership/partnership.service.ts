@@ -44,6 +44,81 @@ export class PartnershipService {
     @Logger('partnership:service') private readonly logger: ILogger
   ) {}
 
+  // async create(
+  //   input: CreatePartnership,
+  //   session: Session,
+  //   changeset?: ID
+  // ): Promise<Partnership> {
+  //   const { projectId, partnerId } = input;
+
+  //   await this.verifyRelationshipEligibility(projectId, partnerId);
+
+  //   const isFirstPartnership = await this.repo.isFirstPartnership(projectId);
+  //   const primary = isFirstPartnership ? true : input.primary;
+
+  //   const partner = await this.partnerService.readOne(partnerId, session);
+  //   this.verifyFinancialReportingType(
+  //     input.financialReportingType,
+  //     input.types ?? [],
+  //     partner
+  //   );
+
+  //   try {
+  //     const { id, mouId, agreementId } = await this.repo.create(
+  //       {
+  //         ...input,
+  //         primary,
+  //       },
+  //       session,
+  //       changeset
+  //     );
+
+  //     await this.files.createDefinedFile(
+  //       mouId,
+  //       `MOU`,
+  //       session,
+  //       id,
+  //       'mou',
+  //       input.mou,
+  //       'partnership.mou'
+  //     );
+
+  //     await this.files.createDefinedFile(
+  //       agreementId,
+  //       `Partner Agreement`,
+  //       session,
+  //       id,
+  //       'agreement',
+  //       input.agreement,
+  //       'partnership.agreement'
+  //     );
+
+  //     await this.authorizationService.processNewBaseNode(
+  //       Partnership,
+  //       id,
+  //       session.userId
+  //     );
+
+  //     if (primary) {
+  //       await this.repo.removePrimaryFromOtherPartnerships(id);
+  //     }
+
+  //     const partnership = await this.readOne(id, session, changeset);
+
+  //     await this.eventBus.publish(
+  //       new PartnershipCreatedEvent(partnership, session)
+  //     );
+
+  //     return partnership;
+  //   } catch (exception) {
+  //     this.logger.warning('Failed to create partnership', {
+  //       exception,
+  //     });
+
+  //     throw new ServerException('Failed to create partnership', exception);
+  //   }
+  // }
+
   async create(
     input: CreatePartnership,
     session: Session,
