@@ -251,9 +251,11 @@ export class AdminRepository {
     await client.query(
       `insert into sc.change_to_plans_data(id, created_by, status, summary,type) values(0,0, 'a', 'what can i change?', 'a' );`
     );
-    await client.query(`insert into sc.projects_data(id,project,base64,active,department) 
-    values(0,0,'proj0', true,  'dept0');`);
-    
+    await client.query(
+      `insert into sc.directories_data(id, name, parent) values(0,'dir0', 0);`
+    );
+    await client.query(`insert into sc.projects_data(id,project,base64,active,department, root_directory) 
+    values(0,0,'proj0', true,  'dept0', 0);`);
 
     // inserting a lot of data
     for (let i = 1; i < 10; i++) {
@@ -298,8 +300,8 @@ export class AdminRepository {
         [projName]
       );
       await client.query(
-        `insert into sc.projects_data(project,base64,active,department) 
-      values($1,$2, true, $3);`,
+        `insert into sc.projects_data(project,base64,active,department, root_directory) 
+      values($1,$2, true, $3, 0);`,
         [i, orgName, deptName]
       );
       this.logger.info('projects', { i });
