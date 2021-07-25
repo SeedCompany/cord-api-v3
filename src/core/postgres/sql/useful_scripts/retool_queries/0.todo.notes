@@ -28,3 +28,10 @@
     [ ] Partner Types 
     [ ] Address 
     [ ] Point of Contact 
+
+
+// REFACTORING
+[ ] USE CTES instead of subqueries and joins
+
+//TODO
+[ ] add more data to the projects (for retool)

@@ -2,7 +2,7 @@
 update public.projects_data set primary_location  = 1;
 refresh materialized view public.projects_materialized_view;
 -- BUDGETS
-insert into sc.directories_data(id, name, parent) values(0,'dir0', 0);
+-- insert into sc.directories_data(id, name, parent) values(0,'dir0', 0);
 insert into sc.files_data(id,directory,name ) values(0,0,'file0');
 insert into sc.file_versions_data(id,category,name,mime_type, file,file_url) values(0,'budgets','file_ver0', 'A', 0, 'home/file0');
 insert into sc.budgets_data(base64,project, universal_template) values('lalala', 0 ,0);
@@ -26,7 +26,7 @@ insert into project_memberships_data(project,person) values (0,0);
 -- CHANGE REQS
 -- FILES    
 -- LANGUAGE ENGAGEMENTS 
--- insert into sil_table_of_languages, 
+-- insert into sil_table_of_languages,
 
 
 
@@ -41,7 +41,7 @@ public.locations_materialized_view) as lmv on lmv.id = pmv.primary_location
 where pmv.__person_id = 1 and smv.__person_id = 1 and lmv.__person_id = 1;
 
 -- BUDGET
-select sum(amount) from records_materialized_view brmv where brmv.budget in (select id from 
+select sum(amount) from sc.budget_records_materialized_view brmv where brmv.budget in (select id from 
 sc.budgets_materialized_view bmv where bmv.project = 0) and brmv.__person_id = 1;
 select partnership, fiscal_year,amount  from sc.budget_records_materialized_view brmv where brmv.budget in (select id from 
 sc.budgets_materialized_view bmv where bmv.project = 0) and brmv.__person_id = 1;
@@ -66,7 +66,7 @@ inner join public.organizations_materialized_view pomv using (id) where somv.__p
 -- CHANGE REQS
 select * from sc.change_to_plans_materialized_view cpmv where cpmv.id in (select change_to_plan from sc.projects_materialized_view pmv where pmv.id = 0 and pmv.__person_id = 0) and cpmv.__person_id = 0;
 -- LANGUAGE ENGAGEMENTS - ethnologue code,status, products 
-
+select * from sc.language_engagements_materialized_view where project = 0 and __person_id = 1;
 
 -- POSTS
 select type,shareability,pmv.created_at, pmv.created_by, ppmv.public_first_name || ' ' || ppmv.public_last_name as full_name from 
