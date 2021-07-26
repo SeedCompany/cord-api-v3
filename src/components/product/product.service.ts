@@ -256,7 +256,7 @@ export class ProductService {
       ...changes,
       // This needs to be manually checked for changes as the existing value
       // is the object not the ID.
-      ...(currentProduct.produces !== input.produces
+      ...(currentProduct.produces.id !== input.produces
         ? { produces: input.produces }
         : {}),
     };
