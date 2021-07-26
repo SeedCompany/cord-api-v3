@@ -1,14 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
-import { DateTime } from 'luxon';
-import { generateId, ID, NotFoundException, Session } from '../../common';
+import { node, relation } from 'cypher-query-builder';
+import { ID, NotFoundException, Session } from '../../common';
+import { DtoRepository, matchRequestingUser } from '../../core';
 import {
-  createBaseNode,
-  DtoRepository,
-  matchRequestingUser,
-  Property,
-} from '../../core';
-import {
+  createNode,
   paginate,
   permissionsOfNode,
   requestingUser,
@@ -21,40 +16,22 @@ export class OrganizationRepository extends DtoRepository(Organization) {
   async checkOrg(name: string) {
     return await this.db
       .query()
-      .raw(`MATCH(org:OrgName {value: $name}) return org`, {
-        name: name,
-      })
+      .match([node('org', 'OrgName', { value: name })])
+      .return('org')
       .first();
   }
 
   async create(input: CreateOrganization, session: Session) {
-    const secureProps: Property[] = [
-      {
-        key: 'name',
-        value: input.name,
-        isPublic: true,
-        isOrgPublic: false,
-        label: 'OrgName',
-      },
-      {
-        key: 'address',
-        value: input.address,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
-    // const baseMetaProps = [];
+    const initialProps = {
+      name: input.name,
+      address: input.address,
+      canDelete: true,
+    };
 
     const query = this.db
       .query()
       .apply(matchRequestingUser(session))
-      .apply(createBaseNode(await generateId(), 'Organization', secureProps))
+      .apply(await createNode(Organization, { initialProps }))
       .return<{ id: ID }>('node.id as id');
 
     return await query.first();

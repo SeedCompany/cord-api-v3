@@ -1,6 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
+  DbLabel,
   ID,
   NameField,
   Resource,
@@ -26,12 +27,15 @@ export class Location extends Resource {
   static readonly SecuredProps = keysOf<SecuredProps<Location>>();
 
   @NameField()
+  @DbLabel('LocationName')
   readonly name: SecuredString;
 
   @Field()
+  @DbLabel('LocationType')
   readonly type: SecuredLocationType;
 
   @Field()
+  @DbLabel('IsoAlpha3')
   readonly isoAlpha3: SecuredStringNullable;
 
   readonly fundingAccount: Secured<ID>;
