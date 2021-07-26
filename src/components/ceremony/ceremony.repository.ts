@@ -1,13 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { generateId, ID, Session } from '../../common';
+import { ID, Session } from '../../common';
+import { DtoRepository, matchRequestingUser } from '../../core';
 import {
-  createBaseNode,
-  DtoRepository,
-  matchRequestingUser,
-  Property,
-} from '../../core';
-import {
+  createNode,
   matchPropsAndProjectSensAndScopedRoles,
   paginate,
   permissionsOfNode,
@@ -16,16 +12,24 @@ import {
 } from '../../core/database/query';
 import { DbPropsOfDto } from '../../core/database/results';
 import { ScopedRole } from '../authorization';
-import { Ceremony, CeremonyListInput } from './dto';
+import { Ceremony, CeremonyListInput, CreateCeremony } from './dto';
 
 @Injectable()
 export class CeremonyRepository extends DtoRepository(Ceremony) {
-  async create(session: Session, secureProps: Property[]) {
-    return this.db
+  async create(input: CreateCeremony, session: Session) {
+    const initialProps = {
+      type: input.type,
+      planned: input.planned,
+      estimatedDate: input.estimatedDate,
+      actualDate: input.actualDate,
+      canDelete: true,
+    };
+    return await this.db
       .query()
       .apply(matchRequestingUser(session))
-      .apply(createBaseNode(await generateId(), 'Ceremony', secureProps))
-      .return<{ id: ID }>('node.id as id');
+      .apply(await createNode(Ceremony, { initialProps }))
+      .return<{ id: ID }>('node.id as id')
+      .first();
   }
 
   async readOne(id: ID, session: Session) {
