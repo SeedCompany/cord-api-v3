@@ -14,20 +14,18 @@
 
 [ ] Languages
     [√] Parent Table 
-    [ ] Ethnologue
-    [ ] Scripture
     [ ] Locations
     [ ] Projects 
 
 [ ] People 
     [√] Parent Table 
-    [ ] Users
+    [√] Users
 
 [ ] Partners
     [√] Parent Table
-    [ ] Partner Types 
-    [ ] Address 
-    [ ] Point of Contact 
+    [√] Partner Types 
+    [√] Address 
+    [√] Point of Contact 
 
 
 // REFACTORING

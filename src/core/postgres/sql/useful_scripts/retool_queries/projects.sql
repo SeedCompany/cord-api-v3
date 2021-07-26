@@ -1,36 +1,3 @@
--- MODIFICATIONS: 
-update public.projects_data set primary_location  = 1;
-refresh materialized view public.projects_materialized_view;
--- BUDGETS
--- insert into sc.directories_data(id, name, parent) values(0,'dir0', 0);
-insert into sc.files_data(id,directory,name ) values(0,0,'file0');
-insert into sc.file_versions_data(id,category,name,mime_type, file,file_url) values(0,'budgets','file_ver0', 'A', 0, 'home/file0');
-insert into sc.budgets_data(base64,project, universal_template) values('lalala', 0 ,0);
-insert into sc.partnerships_data(id,base64,project,partner,agreement) values(0,'defaultPartnership',0,'defaultOrg',0);
-insert into sc.budget_records_data(base64,budget,active,fiscal_year,partnership,amount ) values('defaultBudgetRecord',1,true, 2021,'defaultPartnership', 2500);
--- POSTS
-insert into sc.posts_directory(id) values(0);
-update sc.projects_data set posts_directory = 0; 
-refresh materialized view sc.projects_materialized_view;
-insert into sc.posts_data(id,directory,type,shareability,body) values(0,0,'Note','Internal', 'Note0');
--- REPORTS
-insert into sc.periodic_reports_directory(id) values(0);
-insert into sc.periodic_reports_data(id, directory, start_at,end_at,type,reportFile) values 
-(0,0,'2020-01-01', '2020-12-12','Narrative',0);
-insert into sc.files_data(id,directory,name) values (1,0, 'file1');
-insert into sc.periodic_reports_data(id, directory, start_at, end_at, type,reportFile) values 
-(1,0,'2020-01-01', '2020-12-12', 'Financial', 1);
--- TEAM MEMBERS
-insert into project_memberships_data(project,person) values (0,0);
--- PARTNERSHIPS
--- CHANGE REQS
--- FILES    
--- LANGUAGE ENGAGEMENTS 
--- insert into sil_table_of_languages,
-
-
-
--- RETOOL QUERIES
 -- PINNED PROJECTS
 -- PROJECT PARENT TABLE - REFACTOR TO USE CTEs
 select pmv.name,pmv.id,smv.department,pmv.sensitivity,smv.active, smv.change_to_plan,lmv.name, 
@@ -63,10 +30,14 @@ select count(id) from sc.partnerships_materialized_view where project = 0 and __
 select orgmv.name,pmv.agreement from sc.partnerships_materialized_view pmv inner join 
 (select somv.base64,pomv.name, somv.id, pomv.id  from sc.organizations_materialized_view somv
 inner join public.organizations_materialized_view pomv using (id) where somv.__person_id = 0 and pomv.__person_id = 0) as orgmv on pmv.partner = orgmv.base64 where pmv.project = 0 and pmv.__person_id = 0;
+
 -- CHANGE REQS
 select * from sc.change_to_plans_materialized_view cpmv where cpmv.id in (select change_to_plan from sc.projects_materialized_view pmv where pmv.id = 0 and pmv.__person_id = 0) and cpmv.__person_id = 0;
+
 -- LANGUAGE ENGAGEMENTS - ethnologue code,status, products 
 select * from sc.language_engagements_materialized_view where project = 0 and __person_id = 1;
+
+
 
 -- POSTS
 select type,shareability,pmv.created_at, pmv.created_by, ppmv.public_first_name || ' ' || ppmv.public_last_name as full_name from 
