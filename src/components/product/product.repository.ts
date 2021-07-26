@@ -31,6 +31,7 @@ import {
   DirectScriptureProduct,
   ProductMethodology as Methodology,
   Product,
+  ProductCompletionDescriptionSuggestionsInput,
   ProductListInput,
   UpdateProduct,
 } from './dto';
@@ -288,11 +289,12 @@ export class ProductRepository extends CommonRepository {
       .run();
   }
 
-  async suggestCompletionDescriptions(
-    query?: string,
-    methodology?: Methodology
-  ) {
-    return await this.db
+  async suggestCompletionDescriptions({
+    query,
+    methodology,
+    ...input
+  }: ProductCompletionDescriptionSuggestionsInput) {
+    const result = await this.db
       .query()
       .apply((q) =>
         query
@@ -305,10 +307,10 @@ export class ProductRepository extends CommonRepository {
       .apply((q) =>
         query ? q : q.with('node').orderBy('node.lastUsedAt', 'DESC')
       )
-      .returnDistinct<{ desc: string }>('node.value as desc')
-      .map('desc')
-      .limit(25)
-      .run();
+      .with('node.value as node')
+      .apply(paginate(input, (q) => q.return<{ dto: string }>('node as dto')))
+      .first();
+    return result!;
   }
 
   @OnIndex('schema')

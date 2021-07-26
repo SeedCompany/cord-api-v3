@@ -21,6 +21,7 @@ import {
   ProducibleResult,
   Product,
   ProductApproach,
+  ProductCompletionDescriptionSuggestionsInput,
   ProductListInput,
   ProductListOutput,
   ProductMethodology,
@@ -327,9 +328,8 @@ export class ProductService {
   }
 
   async suggestCompletionDescriptions(
-    query?: string,
-    methodology?: ProductMethodology
+    input: ProductCompletionDescriptionSuggestionsInput
   ) {
-    return await this.repo.suggestCompletionDescriptions(query, methodology);
+    return await this.repo.suggestCompletionDescriptions(input);
   }
 }
