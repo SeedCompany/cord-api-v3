@@ -177,10 +177,10 @@ export class ProductService {
   }
 
   async update(input: UpdateProduct, session: Session): Promise<AnyProduct> {
-    const currentProduct = await this.readOne(input.id, session);
-    const isDirectScriptureProduct = !currentProduct.produces;
+    const currentProduct = await this.readOneUnsecured(input.id, session);
 
-    if (isDirectScriptureProduct) {
+    // If isDirectScriptureProduct
+    if (!currentProduct.produces) {
       if (input.produces) {
         throw new InputException(
           'Cannot update produces on a Direct Scripture Product',
@@ -204,22 +204,18 @@ export class ProductService {
         'product.scriptureReferences'
       );
     }
-    return await this.updateDerivative(
-      currentProduct as DerivativeScriptureProduct,
-      input,
-      session
-    );
+    return await this.updateDerivative(currentProduct, input, session);
   }
 
   private async updateDirect(
-    currentProduct: DirectScriptureProduct,
+    currentProduct: UnsecuredDto<DirectScriptureProduct>,
     input: Except<UpdateProduct, 'produces' | 'scriptureReferencesOverride'>,
     session: Session
   ) {
     const changes = this.repo.getActualDirectChanges(currentProduct, input);
     await this.authorizationService.verifyCanEditChanges(
       Product,
-      currentProduct,
+      await this.secure(currentProduct, session),
       changes,
       'product'
     );
@@ -229,8 +225,8 @@ export class ProductService {
 
     if (changes.describeCompletion || changes.methodology) {
       await this.repo.mergeCompletionDescription(
-        changes.describeCompletion ?? currentProduct.describeCompletion.value!,
-        changes.methodology ?? currentProduct.methodology.value!
+        changes.describeCompletion ?? currentProduct.describeCompletion!,
+        changes.methodology ?? currentProduct.methodology
       );
     }
 
@@ -246,24 +242,28 @@ export class ProductService {
   }
 
   private async updateDerivative(
-    currentProduct: DerivativeScriptureProduct,
+    currentProduct: UnsecuredDto<DerivativeScriptureProduct>,
     input: Except<UpdateProduct, 'scriptureReferences'>,
     session: Session
   ) {
-    let changes = this.repo.getActualDerivativeChanges(currentProduct, input);
+    let changes = this.repo.getActualDerivativeChanges(
+      // getChanges doesn't care if current is secured or not.
+      // Applying this type so that the SetChangeType<> overrides still apply
+      currentProduct as unknown as DerivativeScriptureProduct,
+      input
+    );
     changes = {
       ...changes,
       // This needs to be manually checked for changes as the existing value
       // is the object not the ID.
-      produces:
-        currentProduct.produces.value !== input.produces
-          ? input.produces
-          : undefined,
+      ...(currentProduct.produces !== input.produces
+        ? { produces: input.produces }
+        : {}),
     };
 
     await this.authorizationService.verifyCanEditChanges(
       Product,
-      currentProduct,
+      await this.secure(currentProduct, session),
       changes,
       'product'
     );
@@ -288,8 +288,8 @@ export class ProductService {
 
     if (changes.describeCompletion || changes.methodology) {
       await this.repo.mergeCompletionDescription(
-        changes.describeCompletion ?? currentProduct.describeCompletion.value!,
-        changes.methodology ?? currentProduct.methodology.value!
+        changes.describeCompletion ?? currentProduct.describeCompletion!,
+        changes.methodology ?? currentProduct.methodology
       );
     }
 
