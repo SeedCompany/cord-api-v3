@@ -1,15 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
+import { ID, NotFoundException, Session, UnsecuredDto } from '../../common';
+import { DtoRepository, matchRequestingUser } from '../../core';
 import {
-  generateId,
-  ID,
-  NotFoundException,
-  Session,
-  UnsecuredDto,
-} from '../../common';
-import { createBaseNode, DtoRepository, matchRequestingUser } from '../../core';
-import {
+  createNode,
+  createRelationships,
   matchProps,
   merge,
   paginate,
@@ -17,7 +13,7 @@ import {
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { FieldZone, FieldZoneListInput } from './dto';
+import { CreateFieldZone, FieldZone, FieldZoneListInput } from './dto';
 
 @Injectable()
 export class FieldZoneRepository extends DtoRepository(FieldZone) {
@@ -29,48 +25,23 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
       .first();
   }
 
-  async create(
-    session: Session,
-    name: string,
-    directorId: ID
-    // fieldZoneId: ID
-  ) {
-    const createdAt = DateTime.local();
-
-    const secureProps = [
-      {
-        key: 'name',
-        value: name,
-        isPublic: false,
-        isOrgPublic: false,
-        label: 'FieldZoneName',
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
+  async create(input: CreateFieldZone, session: Session) {
+    const initialProps = {
+      name: input.name,
+      canDelete: true,
+    };
 
     // create field zone
     const query = this.db
       .query()
       .apply(matchRequestingUser(session))
-      .match([
-        node('director', 'User', {
-          id: directorId,
-        }),
-      ])
-      .apply(createBaseNode(await generateId(), 'FieldZone', secureProps))
-      .create([
-        node('node'),
-        relation('out', '', 'director', { active: true, createdAt }),
-        node('director'),
-      ])
+      .apply(await createNode(FieldZone, { initialProps }))
+      .apply(
+        createRelationships(FieldZone, 'out', {
+          director: ['User', input.directorId],
+        })
+      )
       .return<{ id: ID }>('node.id as id');
-
-    // const result = await query.first();
 
     return await query.first();
   }
