@@ -7,6 +7,7 @@ import {
   ServerException,
   Session,
   UnauthorizedException,
+  UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger, ResourceResolver } from '../../core';
 import { mapListResults } from '../../core/database/results';
@@ -82,20 +83,22 @@ export class ProductService {
 
   @HandleIdLookup([DirectScriptureProduct, DerivativeScriptureProduct])
   async readOne(id: ID, session: Session): Promise<AnyProduct> {
-    const { isOverriding, ...props } = await this.repo.readOne(id, session);
+    const dto = await this.readOneUnsecured(id, session);
+    return await this.secure(dto, session);
+  }
 
-    const { produces, scriptureReferencesOverride, ...securedProps } =
-      await this.authorizationService.secureProperties(
-        DerivativeScriptureProduct,
-        // @ts-expect-error yeah this input type needs work. It's fine to omit props here, they will be defaulted if secured.
-        props,
-        session,
-        props.scope
-      );
+  async readOneUnsecured(
+    id: ID,
+    session: Session
+  ): Promise<UnsecuredDto<AnyProduct>> {
+    const { isOverriding, produces, ...props } = await this.repo.readOne(
+      id,
+      session
+    );
 
-    const producible = produces.value
+    const producible = produces
       ? ((await this.resources.lookupByBaseNode(
-          props.produces!,
+          produces,
           session
         )) as unknown as ProducibleResult)
       : undefined;
@@ -106,15 +109,61 @@ export class ProductService {
       { isOverriding: !!producible }
     );
 
-    const { produces: _, ...simple } = props;
+    if (!producible) {
+      return {
+        ...props,
+        scriptureReferences: scriptureReferencesValue,
+      };
+    }
+    return {
+      ...props,
+      produces: producible,
+      scriptureReferences: !isOverriding
+        ? producible.scriptureReferences.value
+        : scriptureReferencesValue,
+      scriptureReferencesOverride: !isOverriding
+        ? null
+        : scriptureReferencesValue,
+    };
+  }
 
-    const common = {
-      ...simple,
+  async secure(
+    dto: UnsecuredDto<AnyProduct>,
+    session: Session
+  ): Promise<AnyProduct> {
+    const canDelete = await this.repo.checkDeletePermission(dto.id, session);
+
+    if (dto.produces) {
+      const securedProps = await this.authorizationService.secureProperties(
+        DerivativeScriptureProduct,
+        dto,
+        session,
+        dto.scope
+      );
+      return {
+        ...dto,
+        ...securedProps,
+        mediums: {
+          ...securedProps.mediums,
+          value: securedProps.mediums.value ?? [],
+        },
+        purposes: {
+          ...securedProps.purposes,
+          value: securedProps.purposes.value ?? [],
+        },
+        canDelete,
+      };
+    }
+
+    const securedProps = await this.authorizationService.secureProperties(
+      DirectScriptureProduct,
+      dto,
+      session,
+      dto.scope
+    );
+    return {
+      ...dto,
       ...securedProps,
-      scriptureReferences: {
-        ...securedProps.scriptureReferences,
-        value: scriptureReferencesValue,
-      },
       mediums: {
         ...securedProps.mediums,
         value: securedProps.mediums.value ?? [],
@@ -123,34 +172,7 @@ export class ProductService {
         ...securedProps.purposes,
         value: securedProps.purposes.value ?? [],
       },
-      canDelete: await this.repo.checkDeletePermission(id, session),
-    };
-    if (!producible) {
-      return {
-        ...common,
-        scriptureReferences: {
-          ...securedProps.scriptureReferences,
-          value: scriptureReferencesValue,
-        },
-      };
-    }
-
-    return {
-      ...common,
-      produces: {
-        ...produces,
-        value: producible,
-      },
-      scriptureReferences: {
-        ...securedProps.scriptureReferences,
-        value: !isOverriding
-          ? producible.scriptureReferences.value
-          : scriptureReferencesValue,
-      },
-      scriptureReferencesOverride: {
-        ...scriptureReferencesOverride,
-        value: !isOverriding ? null : scriptureReferencesValue,
-      },
+      canDelete,
     };
   }
 
