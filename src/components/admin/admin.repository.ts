@@ -237,7 +237,7 @@ export class AdminRepository {
       [0, 'defaultOrg']
     );
     await client.query(
-      `insert into public.users_data("id", "person", "email","owning_org", "password") values(0,0,'defaultEmail', 0, 'abc')`
+      `insert into public.users_data("id", "person", "email","owning_org", "password") values(0,0,'default@tsco.org', 0, 'abc')`
     );
     await client.query(
       `insert into public.global_roles_data("id","name", "org") values(0,'defaultRole',0)`
@@ -265,7 +265,7 @@ export class AdminRepository {
       const locationName = `location${i}`;
       const deptName = `dept${i}`;
       const userData = {
-        email: `email${i}`,
+        email: `email${i}@tsco.org`,
         password: 'abc',
         org: 'defaultOrg',
       };

@@ -1,6 +1,3 @@
-
-
-
 -- system schema. org specific schema should go in an org-specific file.
 
 -- ENUMS ----

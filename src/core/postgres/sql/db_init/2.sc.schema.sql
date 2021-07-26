@@ -198,6 +198,7 @@ create table if not exists sc.language_locations_data (
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
     modified_by int not null default 0,
 	unique (ethnologue, location),
+	foreign key (location) references public.locations_data(id),
 	foreign key (created_by) references public.people_data(id),
     foreign key (modified_by) references public.people_data(id),
 	foreign key (ethnologue) references sil.table_of_languages(id)
