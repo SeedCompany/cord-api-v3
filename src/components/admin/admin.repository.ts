@@ -232,6 +232,10 @@ export class AdminRepository {
       `insert into public.people_data("id", "public_first_name") values($1, $2)`,
       [0, 'defaultPerson']
     );
+    this.logger.info('person inserted');
+    await client.query(
+      `insert into public.locations_data("id","name", "sensitivity", "type") values(0, 'defaultLocation', 'Low', 'Country')`
+    );
     await client.query(
       `insert into public.organizations_data("id", "name") values($1, $2)`,
       [0, 'defaultOrg']
@@ -243,9 +247,11 @@ export class AdminRepository {
       `insert into public.global_roles_data("id","name", "org") values(0,'defaultRole',0)`
     );
     await client.query(
-      `insert into public.projects_data("id","name") values ($1,$2) on conflict do nothing;`,
-      [0, 'proj0']
+      `insert into public.projects_data("id","name",primary_location) values ($1,$2, $3) on conflict do nothing;`,
+      [0, 'proj0', 0]
     );
+    this.logger.info('sc inserts started');
+    //SC
     await client.query(`insert into sc.organizations_data(id,base64, internal) values(0,'defaultOrg', 'internal_defaultOrg');
     `);
     await client.query(
@@ -254,12 +260,65 @@ export class AdminRepository {
     await client.query(
       `insert into sc.directories_data(id, name, parent) values(0,'dir0', 0);`
     );
-    await client.query(`insert into sc.projects_data(id,project,base64,active,department, root_directory) 
-    values(0,0,'proj0', true,  'dept0', 0);`);
+    await client.query(
+      `insert into sc.posts_directory(id) values(0);
+      `
+    );
+    await client.query(`insert into sc.projects_data(id,project,base64,active,department, root_directory, posts_directory) 
+    values(0,0,'proj0', true,  'dept0', 0,0);`);
+    await client.query(
+      `insert into sc.files_data(id,directory,name) values(0,0,'defaultFile')`
+    );
+    await client.query(
+      `insert into sc.file_versions_data(id,category,name,mime_type, file,file_url) values(0,'budgets','file_ver0', 'A', 0, 'home/file0');`
+    );
+    await client.query(
+      `insert into sc.budgets_data(base64,project, universal_template) values('lalala', 0 ,0);`
+    );
+    await client.query(
+      `insert into sc.partners_data(id, active,point_of_contact,organization, pmc_entity_code)values(0,true,0,'defaultOrg', 'default_code');
+      `
+    );
+    await client.query(
+      `insert into sc.partnerships_data(id,base64,project,partner,agreement) values(0,'defaultPartnership',0,'defaultOrg',0);
+      `
+    );
+    await client.query(
+      `insert into sc.budget_records_data(base64,budget,active,fiscal_year,partnership,amount ) values('defaultBudgetRecord',1,true, 2021,'defaultPartnership', 2500);`
+    );
 
+    await client.query(`insert into sc.posts_data(id,directory,type,shareability,body) values(0,0,'Note','Internal', 'Note0');
+    `);
+
+    await client.query(`insert into sc.periodic_reports_directory(id) values(0);
+    `);
+
+    await client.query(`insert into sc.periodic_reports_data(id, directory, start_at,end_at,type,reportFile) values 
+    (0,0,'2020-01-01', '2020-12-12','Narrative',0);`);
+
+    await client.query(`insert into project_memberships_data(project,person) values (0,0);
+    `);
+
+    await client.query(
+      `insert into sil.table_of_languages(id, iso_639, language_name) values (0, 'txn', 'texan');`
+    );
+
+    await client.query(
+      `insert into sc.languages_data(id,display_name,name,sensitivity) values(0, 'texan', 'texan','Medium');`
+    );
+
+    await client.query(`insert into public.scripture_references(id, book_start, book_end, chapter_start, chapter_end, verse_start, verse_end) values(0, 'Genesis', 'Genesis', 1, 10, 1, 10);
+    `);
+
+    await client.query(`insert into sc.language_locations_data(ethnologue,location) values(0,0);
+    `);
+
+    await client.query(`insert into sc.language_engagements_data(id,base64,change_to_plan,ethnologue,periodic_reports_directory, pnp_file,project) values(0, 'lang123',0,0,0,0,0);
+    `);
     // inserting a lot of data
     for (let i = 1; i < 10; i++) {
       const orgName = `org${i}`;
+      const fileName = `file${i}`;
       const internalOrgName = `internalOrg${i}`;
       // const personName = `person${i}`;
       const locationName = `location${i}`;
@@ -296,16 +355,22 @@ export class AdminRepository {
       ]);
       const projName = `proj${i}`;
       await client.query(
-        `insert into public.projects_data("name") values ($1) on conflict do nothing;`,
+        `insert into public.projects_data("name", primary_location) values ($1, 0) on conflict do nothing;`,
         [projName]
       );
       await client.query(
-        `insert into sc.projects_data(project,base64,active,department, root_directory) 
-      values($1,$2, true, $3, 0);`,
+        `insert into sc.projects_data(project,base64,active,department, root_directory, posts_directory) 
+      values($1,$2, true, $3, 0, 0);`,
         [i, orgName, deptName]
       );
       this.logger.info('projects', { i });
+      await client.query(
+        `insert into sc.files_data(id,directory,name) values ($1,0, $2);`,
+        [i, fileName]
+      );
+      this.logger.info('files', { i });
     }
+    client.release();
   }
 
   finishing(callback: () => Promise<void>) {
