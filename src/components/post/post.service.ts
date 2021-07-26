@@ -1,7 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { DateTime } from 'luxon';
 import {
-  generateId,
   ID,
   InputException,
   NotFoundException,
@@ -32,54 +30,18 @@ export class PostService {
     @Logger('post:service') private readonly logger: ILogger
   ) {}
 
-  async create(
-    { parentId, ...input }: CreatePost,
-    session: Session
-  ): Promise<Post> {
-    const createdAt = DateTime.local();
-    const postId = await generateId();
-
-    const secureProps = [
-      {
-        key: 'creator',
-        value: session.userId,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'type',
-        value: input.type,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'shareability',
-        value: input.shareability,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'body',
-        value: input.body,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'modifiedAt',
-        value: createdAt,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
-
-    if (!parentId) {
+  async create(input: CreatePost, session: Session): Promise<Post> {
+    if (!input.parentId) {
       throw new ServerException(
         'A post must be associated with a parent node.'
       );
     }
 
     try {
-      await this.repo.create(parentId, postId, secureProps, session);
+      const result = await this.repo.create(input, session);
+      if (!result) {
+        throw new ServerException('Failed to create post');
+      }
 
       // FIXME: This is being refactored - leaving it commented out per Michael's instructions for now
       // await this.authorizationService.processNewBaseNode(
@@ -88,13 +50,13 @@ export class PostService {
       //   session.userId
       // );
 
-      return await this.readOne(postId, session);
+      return await this.readOne(result.id, session);
     } catch (exception) {
       this.logger.warning('Failed to create post', {
         exception,
       });
 
-      if (!(await this.repo.checkParentIdValidity(parentId))) {
+      if (!(await this.repo.checkParentIdValidity(input.parentId))) {
         throw new InputException('parentId is invalid', 'post.parentId');
       }
 
