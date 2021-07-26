@@ -66,6 +66,7 @@ export abstract class CreateProduct {
   readonly methodology?: ProductMethodology;
 
   @Field(() => [MethodologyStep], { nullable: true })
+  @Transform(({ value }) => uniq(value))
   readonly steps?: MethodologyStep[] = [];
 
   @Field({ nullable: true })
