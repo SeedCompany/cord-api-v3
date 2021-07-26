@@ -60,7 +60,7 @@ export class LiteracyMaterialService {
     }
 
     try {
-      const result = await this.repo.create(session, input.name);
+      const result = await this.repo.create(input, session);
 
       if (!result) {
         throw new ServerException('failed to create a literacy material');

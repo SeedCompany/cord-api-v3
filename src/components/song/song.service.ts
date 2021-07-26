@@ -56,24 +56,8 @@ export class SongService {
       );
     }
 
-    const secureProps = [
-      {
-        key: 'name',
-        value: input.name,
-        isPublic: true,
-        isOrgPublic: true,
-        label: 'SongName',
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
-
     try {
-      const result = await this.repo.create(session, secureProps);
+      const result = await this.repo.create(input, session);
 
       if (!result) {
         throw new ServerException('failed to create a song');
