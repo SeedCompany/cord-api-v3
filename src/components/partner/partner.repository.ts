@@ -2,15 +2,16 @@ import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
-  generateId,
   ID,
   NotFoundException,
   ServerException,
   Session,
   UnsecuredDto,
 } from '../../common';
-import { createBaseNode, DtoRepository, matchRequestingUser } from '../../core';
+import { DtoRepository, matchRequestingUser } from '../../core';
 import {
+  createNode,
+  createRelationships,
   matchProps,
   merge,
   paginate,
@@ -30,103 +31,33 @@ export class PartnerRepository extends DtoRepository(Partner) {
         relation('in', '', 'organization', { active: true }),
         node('partner', 'Partner'),
       ])
-      .return({
-        partner: [{ id: 'partnerId' }],
-      })
-      .asResult<{
-        partnerId: ID;
-      }>()
+      .return<{ id: ID }>('partner.id as id')
       .first();
-    return result?.partnerId;
+    return result?.id;
   }
 
   async create(input: CreatePartner, session: Session) {
-    const createdAt = DateTime.local();
-    const secureProps = [
-      {
-        key: 'types',
-        value: input.types,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'financialReportingTypes',
-        value: input.financialReportingTypes,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'pmcEntityCode',
-        value: input.pmcEntityCode,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'globalInnovationsClient',
-        value: input.globalInnovationsClient,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'active',
-        value: input.active,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'address',
-        value: input.address,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'modifiedAt',
-        value: createdAt,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
+    const initialProps = {
+      types: input.types,
+      financialReportingTypes: input.financialReportingTypes,
+      pmcEntityCode: input.pmcEntityCode,
+      globalInnovationsClient: input.globalInnovationsClient,
+      active: input.active,
+      address: input.address,
+      modifiedAt: DateTime.local(),
+      canDelete: true,
+    };
     const result = await this.db
       .query()
       .apply(matchRequestingUser(session))
-      .match([
-        node('organization', 'Organization', {
-          id: input.organizationId,
-        }),
-      ])
-      .apply(createBaseNode(await generateId(), 'Partner', secureProps))
-      .create([
-        node('node'),
-        relation('out', '', 'organization', {
-          active: true,
-          createdAt,
-        }),
-        node('organization'),
-      ])
-      .apply((q) => {
-        if (input.pointOfContactId) {
-          q.with('node')
-            .matchNode('pointOfContact', 'User', {
-              id: input.pointOfContactId,
-            })
-            .create([
-              node('node'),
-              relation('out', '', 'pointOfContact', {
-                active: true,
-                createdAt,
-              }),
-              node('pointOfContact'),
-            ]);
-        }
-      })
-      .return('node.id as id')
-      .asResult<{ id: ID }>()
+      .apply(await createNode(Partner, { initialProps }))
+      .apply(
+        createRelationships(Partner, 'out', {
+          organization: ['Organization', input.organizationId],
+          pointOfContact: ['User', input.pointOfContactId],
+        })
+      )
+      .return<{ id: ID }>('node.id as id')
       .first();
     if (!result) {
       throw new ServerException('Failed to create partner');

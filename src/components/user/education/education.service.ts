@@ -1,5 +1,4 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { DateTime } from 'luxon';
 import {
   ID,
   NotFoundException,
@@ -28,40 +27,9 @@ export class EducationService {
     private readonly repo: EducationRepository
   ) {}
 
-  async create(
-    { userId, ...input }: CreateEducation,
-    session: Session
-  ): Promise<Education> {
-    const createdAt = DateTime.local();
-
-    const secureProps = [
-      {
-        key: 'degree',
-        value: input.degree,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'institution',
-        value: input.institution,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'major',
-        value: input.major,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
-
+  async create(input: CreateEducation, session: Session): Promise<Education> {
     // create education
-    const result = await this.repo.create(
-      userId,
-      secureProps,
-      createdAt,
-      session
-    );
+    const result = await this.repo.create(input, session);
 
     if (!result) {
       throw new ServerException('failed to create education');
@@ -70,7 +38,7 @@ export class EducationService {
     await this.authorizationService.processNewBaseNode(
       Education,
       result.id,
-      userId
+      input.userId
     );
 
     this.logger.debug(`education created`, { id: result.id });
