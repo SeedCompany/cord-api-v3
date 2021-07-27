@@ -223,12 +223,7 @@ export class ProductService {
 
     await this.scriptureRefService.update(input.id, scriptureReferences);
 
-    if (changes.describeCompletion || changes.methodology) {
-      await this.repo.mergeCompletionDescription(
-        changes.describeCompletion ?? currentProduct.describeCompletion!,
-        changes.methodology ?? currentProduct.methodology
-      );
-    }
+    await this.mergeCompletionDescription(changes, currentProduct);
 
     const productUpdatedScriptureReferences = await this.readOne(
       input.id,
@@ -286,12 +281,7 @@ export class ProductService {
       await this.repo.updateProducible(input, produces);
     }
 
-    if (changes.describeCompletion || changes.methodology) {
-      await this.repo.mergeCompletionDescription(
-        changes.describeCompletion ?? currentProduct.describeCompletion!,
-        changes.methodology ?? currentProduct.methodology
-      );
-    }
+    await this.mergeCompletionDescription(changes, currentProduct);
 
     // update the scripture references (override)
     await this.scriptureRefService.update(
@@ -309,6 +299,32 @@ export class ProductService {
       productUpdatedScriptureReferences,
       simpleChanges
     );
+  }
+
+  private async mergeCompletionDescription(
+    changes: Partial<Pick<UpdateProduct, 'describeCompletion' | 'methodology'>>,
+    currentProduct: UnsecuredDto<Product>
+  ) {
+    if (
+      changes.describeCompletion === undefined &&
+      changes.methodology === undefined
+    ) {
+      // no changes, do nothing
+      return;
+    }
+    const describeCompletion =
+      changes.describeCompletion !== undefined
+        ? changes.describeCompletion
+        : currentProduct.describeCompletion;
+    const methodology =
+      changes.methodology !== undefined
+        ? changes.methodology
+        : currentProduct.methodology;
+    if (!describeCompletion || !methodology) {
+      // If either are still missing or have been set to null skip persisting.
+      return;
+    }
+    await this.repo.mergeCompletionDescription(describeCompletion, methodology);
   }
 
   async delete(id: ID, session: Session): Promise<void> {
