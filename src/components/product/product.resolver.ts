@@ -28,9 +28,10 @@ import {
   ProducibleType,
   Product,
   ProductApproach,
+  ProductCompletionDescriptionSuggestionsInput,
+  ProductCompletionDescriptionSuggestionsOutput,
   ProductListInput,
   ProductListOutput,
-  ProductMethodology,
   ProductType,
   UpdateProductInput,
   UpdateProductOutput,
@@ -153,21 +154,16 @@ export class ProductResolver {
     );
   }
 
-  @Query(() => [String], {
+  @Query(() => ProductCompletionDescriptionSuggestionsOutput, {
     description: stripIndent`
       Suggestions for describing a product's completion.
       Use in conjunction with \`Product.describeCompletion\`.
     `,
   })
-  suggestProductCompletionDescriptions(
-    @Args('methodology', {
-      nullable: true,
-      description:
-        'Optionally limit suggestions to only ones for this methodology',
-    })
-    _methodology?: ProductMethodology
-  ): string[] {
-    return [];
+  async suggestProductCompletionDescriptions(
+    @Args('input') input: ProductCompletionDescriptionSuggestionsInput
+  ): Promise<ProductCompletionDescriptionSuggestionsOutput> {
+    return await this.productService.suggestCompletionDescriptions(input);
   }
 
   @Mutation(() => CreateProductOutput, {

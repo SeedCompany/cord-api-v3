@@ -10,11 +10,12 @@ import {
   Session,
   UnsecuredDto,
 } from '../../common';
-import { CommonRepository } from '../../core';
+import { CommonRepository, OnIndex } from '../../core';
 import { DbChanges, getChanges } from '../../core/database/changes';
 import {
   createNode,
   createRelationships,
+  fullTextQuery,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
   paginate,
@@ -28,7 +29,9 @@ import {
   CreateProduct,
   DerivativeScriptureProduct,
   DirectScriptureProduct,
+  ProductMethodology as Methodology,
   Product,
+  ProductCompletionDescriptionSuggestionsInput,
   ProductListInput,
   UpdateProduct,
 } from './dto';
@@ -262,5 +265,63 @@ export class ProductRepository extends CommonRepository {
       .apply(paginate(input))
       .first();
     return result!; // result from paginate() will always have 1 row.
+  }
+
+  async mergeCompletionDescription(
+    description: string,
+    methodology: Methodology
+  ) {
+    await this.db
+      .query()
+      .merge(
+        node('node', 'ProductCompletionDescription', {
+          value: description,
+          methodology,
+        })
+      )
+      .onCreate.setVariables({
+        'node.lastUsedAt': 'datetime()',
+        'node.createdAt': 'datetime()',
+      })
+      .onMatch.setVariables({
+        'node.lastUsedAt': 'datetime()',
+      })
+      .run();
+  }
+
+  async suggestCompletionDescriptions({
+    query,
+    methodology,
+    ...input
+  }: ProductCompletionDescriptionSuggestionsInput) {
+    const result = await this.db
+      .query()
+      .apply((q) =>
+        query
+          ? q.apply(fullTextQuery('ProductCompletionDescription', query))
+          : q.matchNode('node', 'ProductCompletionDescription')
+      )
+      .apply((q) =>
+        methodology ? q.with('node').where({ node: { methodology } }) : q
+      )
+      .apply((q) =>
+        query ? q : q.with('node').orderBy('node.lastUsedAt', 'DESC')
+      )
+      .with('node.value as node')
+      .apply(paginate(input, (q) => q.return<{ dto: string }>('node as dto')))
+      .first();
+    return result!;
+  }
+
+  @OnIndex('schema')
+  private async createCompletionDescriptionIndex() {
+    await this.db.createFullTextIndex(
+      'ProductCompletionDescription',
+      ['ProductCompletionDescription'],
+      ['value'],
+      {
+        analyzer: 'standard-folding',
+      }
+    );
   }
 }

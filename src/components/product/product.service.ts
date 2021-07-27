@@ -7,6 +7,7 @@ import {
   ServerException,
   Session,
   UnauthorizedException,
+  UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger, ResourceResolver } from '../../core';
 import { mapListResults } from '../../core/database/results';
@@ -21,6 +22,7 @@ import {
   ProducibleResult,
   Product,
   ProductApproach,
+  ProductCompletionDescriptionSuggestionsInput,
   ProductListInput,
   ProductListOutput,
   ProductMethodology,
@@ -81,20 +83,22 @@ export class ProductService {
 
   @HandleIdLookup([DirectScriptureProduct, DerivativeScriptureProduct])
   async readOne(id: ID, session: Session): Promise<AnyProduct> {
-    const { isOverriding, ...props } = await this.repo.readOne(id, session);
+    const dto = await this.readOneUnsecured(id, session);
+    return await this.secure(dto, session);
+  }
 
-    const { produces, scriptureReferencesOverride, ...securedProps } =
-      await this.authorizationService.secureProperties(
-        DerivativeScriptureProduct,
-        // @ts-expect-error yeah this input type needs work. It's fine to omit props here, they will be defaulted if secured.
-        props,
-        session,
-        props.scope
-      );
+  async readOneUnsecured(
+    id: ID,
+    session: Session
+  ): Promise<UnsecuredDto<AnyProduct>> {
+    const { isOverriding, produces, ...props } = await this.repo.readOne(
+      id,
+      session
+    );
 
-    const producible = produces.value
+    const producible = produces
       ? ((await this.resources.lookupByBaseNode(
-          props.produces!,
+          produces,
           session
         )) as unknown as ProducibleResult)
       : undefined;
@@ -105,15 +109,61 @@ export class ProductService {
       { isOverriding: !!producible }
     );
 
-    const { produces: _, ...simple } = props;
+    if (!producible) {
+      return {
+        ...props,
+        scriptureReferences: scriptureReferencesValue,
+      };
+    }
+    return {
+      ...props,
+      produces: producible,
+      scriptureReferences: !isOverriding
+        ? producible.scriptureReferences.value
+        : scriptureReferencesValue,
+      scriptureReferencesOverride: !isOverriding
+        ? null
+        : scriptureReferencesValue,
+    };
+  }
 
-    const common = {
-      ...simple,
+  async secure(
+    dto: UnsecuredDto<AnyProduct>,
+    session: Session
+  ): Promise<AnyProduct> {
+    const canDelete = await this.repo.checkDeletePermission(dto.id, session);
+
+    if (dto.produces) {
+      const securedProps = await this.authorizationService.secureProperties(
+        DerivativeScriptureProduct,
+        dto,
+        session,
+        dto.scope
+      );
+      return {
+        ...dto,
+        ...securedProps,
+        mediums: {
+          ...securedProps.mediums,
+          value: securedProps.mediums.value ?? [],
+        },
+        purposes: {
+          ...securedProps.purposes,
+          value: securedProps.purposes.value ?? [],
+        },
+        canDelete,
+      };
+    }
+
+    const securedProps = await this.authorizationService.secureProperties(
+      DirectScriptureProduct,
+      dto,
+      session,
+      dto.scope
+    );
+    return {
+      ...dto,
       ...securedProps,
-      scriptureReferences: {
-        ...securedProps.scriptureReferences,
-        value: scriptureReferencesValue,
-      },
       mediums: {
         ...securedProps.mediums,
         value: securedProps.mediums.value ?? [],
@@ -122,42 +172,15 @@ export class ProductService {
         ...securedProps.purposes,
         value: securedProps.purposes.value ?? [],
       },
-      canDelete: await this.repo.checkDeletePermission(id, session),
-    };
-    if (!producible) {
-      return {
-        ...common,
-        scriptureReferences: {
-          ...securedProps.scriptureReferences,
-          value: scriptureReferencesValue,
-        },
-      };
-    }
-
-    return {
-      ...common,
-      produces: {
-        ...produces,
-        value: producible,
-      },
-      scriptureReferences: {
-        ...securedProps.scriptureReferences,
-        value: !isOverriding
-          ? producible.scriptureReferences.value
-          : scriptureReferencesValue,
-      },
-      scriptureReferencesOverride: {
-        ...scriptureReferencesOverride,
-        value: !isOverriding ? null : scriptureReferencesValue,
-      },
+      canDelete,
     };
   }
 
   async update(input: UpdateProduct, session: Session): Promise<AnyProduct> {
-    const currentProduct = await this.readOne(input.id, session);
-    const isDirectScriptureProduct = !currentProduct.produces;
+    const currentProduct = await this.readOneUnsecured(input.id, session);
 
-    if (isDirectScriptureProduct) {
+    // If isDirectScriptureProduct
+    if (!currentProduct.produces) {
       if (input.produces) {
         throw new InputException(
           'Cannot update produces on a Direct Scripture Product',
@@ -181,28 +204,26 @@ export class ProductService {
         'product.scriptureReferences'
       );
     }
-    return await this.updateDerivative(
-      currentProduct as DerivativeScriptureProduct,
-      input,
-      session
-    );
+    return await this.updateDerivative(currentProduct, input, session);
   }
 
   private async updateDirect(
-    currentProduct: DirectScriptureProduct,
+    currentProduct: UnsecuredDto<DirectScriptureProduct>,
     input: Except<UpdateProduct, 'produces' | 'scriptureReferencesOverride'>,
     session: Session
   ) {
     const changes = this.repo.getActualDirectChanges(currentProduct, input);
     await this.authorizationService.verifyCanEditChanges(
       Product,
-      currentProduct,
+      await this.secure(currentProduct, session),
       changes,
       'product'
     );
     const { scriptureReferences, ...simpleChanges } = changes;
 
     await this.scriptureRefService.update(input.id, scriptureReferences);
+
+    await this.mergeCompletionDescription(changes, currentProduct);
 
     const productUpdatedScriptureReferences = await this.readOne(
       input.id,
@@ -216,24 +237,28 @@ export class ProductService {
   }
 
   private async updateDerivative(
-    currentProduct: DerivativeScriptureProduct,
+    currentProduct: UnsecuredDto<DerivativeScriptureProduct>,
     input: Except<UpdateProduct, 'scriptureReferences'>,
     session: Session
   ) {
-    let changes = this.repo.getActualDerivativeChanges(currentProduct, input);
+    let changes = this.repo.getActualDerivativeChanges(
+      // getChanges doesn't care if current is secured or not.
+      // Applying this type so that the SetChangeType<> overrides still apply
+      currentProduct as unknown as DerivativeScriptureProduct,
+      input
+    );
     changes = {
       ...changes,
       // This needs to be manually checked for changes as the existing value
       // is the object not the ID.
-      produces:
-        currentProduct.produces.value !== input.produces
-          ? input.produces
-          : undefined,
+      ...(currentProduct.produces.id !== input.produces
+        ? { produces: input.produces }
+        : {}),
     };
 
     await this.authorizationService.verifyCanEditChanges(
       Product,
-      currentProduct,
+      await this.secure(currentProduct, session),
       changes,
       'product'
     );
@@ -256,6 +281,8 @@ export class ProductService {
       await this.repo.updateProducible(input, produces);
     }
 
+    await this.mergeCompletionDescription(changes, currentProduct);
+
     // update the scripture references (override)
     await this.scriptureRefService.update(
       input.id,
@@ -272,6 +299,32 @@ export class ProductService {
       productUpdatedScriptureReferences,
       simpleChanges
     );
+  }
+
+  private async mergeCompletionDescription(
+    changes: Partial<Pick<UpdateProduct, 'describeCompletion' | 'methodology'>>,
+    currentProduct: UnsecuredDto<Product>
+  ) {
+    if (
+      changes.describeCompletion === undefined &&
+      changes.methodology === undefined
+    ) {
+      // no changes, do nothing
+      return;
+    }
+    const describeCompletion =
+      changes.describeCompletion !== undefined
+        ? changes.describeCompletion
+        : currentProduct.describeCompletion;
+    const methodology =
+      changes.methodology !== undefined
+        ? changes.methodology
+        : currentProduct.methodology;
+    if (!describeCompletion || !methodology) {
+      // If either are still missing or have been set to null skip persisting.
+      return;
+    }
+    await this.repo.mergeCompletionDescription(describeCompletion, methodology);
   }
 
   async delete(id: ID, session: Session): Promise<void> {
@@ -310,5 +363,11 @@ export class ProductService {
     return Object.keys(MethodologyToApproach).filter(
       (key) => MethodologyToApproach[key as ProductMethodology] === approach
     ) as ProductMethodology[];
+  }
+
+  async suggestCompletionDescriptions(
+    input: ProductCompletionDescriptionSuggestionsInput
+  ) {
+    return await this.repo.suggestCompletionDescriptions(input);
   }
 }

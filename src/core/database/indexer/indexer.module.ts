@@ -4,8 +4,9 @@ import {
   DiscoveryService,
 } from '@golevelup/nestjs-discovery';
 import { Module, OnModuleInit } from '@nestjs/common';
+import { groupBy } from 'lodash';
 import { Neo4jError } from 'neo4j-driver';
-import { ConfigService } from '../..';
+import { ConfigService, IndexMode } from '../..';
 import { many } from '../../../common';
 import { ILogger, Logger } from '../../logger';
 import { DatabaseService, ServerInfo } from '../database.service';
@@ -28,14 +29,16 @@ export class IndexerModule implements OnModuleInit {
       return;
     }
 
-    const discovered = await this.discover.providerMethodsWithMetaAtKey(
-      DB_INDEX_KEY
-    );
+    const discovered =
+      await this.discover.providerMethodsWithMetaAtKey<IndexMode>(DB_INDEX_KEY);
     this.logger.debug('Discovered indexers', { count: discovered.length });
+    const groupedByMode = groupBy(discovered, (d) => d.meta);
 
     const finishing = this.db.runOnceUntilCompleteAfterConnecting(async () => {
       const serverInfo = await this.db.getServerInfo();
-      await this.doIndexing(discovered, serverInfo);
+      for (const discoveredOfMode of Object.values(groupedByMode)) {
+        await this.doIndexing(discoveredOfMode, serverInfo);
+      }
     });
     // Wait for indexing to finish when running tests, else just let it run in
     // background and allow webserver to start.
@@ -66,6 +69,7 @@ export class IndexerModule implements OnModuleInit {
       const maybeStatements = await handler.call(parentClass.instance, {
         db: this.db,
         logger: this.logger,
+        serverInfo,
       });
       const statements = many<string>(maybeStatements ?? []).map((statement) =>
         isV4
