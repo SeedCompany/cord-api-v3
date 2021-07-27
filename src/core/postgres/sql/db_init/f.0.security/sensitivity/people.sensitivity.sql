@@ -47,18 +47,18 @@ begin
 	return new;
 end; $$;
 
-drop trigger if exists update_people_public_sensitivity_trigger on public.people_data;
-drop trigger if exists update_people_sc_sensitivity_trigger on public.people_data;
+-- drop trigger if exists update_people_public_sensitivity_trigger on public.people_data;
+-- drop trigger if exists update_people_sc_sensitivity_trigger on public.people_data;
 
 
-create trigger update_people_public_sensitivity_trigger 
-after update 
-on public.people_data
-for each row 
-execute procedure public.gt_people_u_security_update_is_cleared_columns('public');
+-- create trigger update_people_public_sensitivity_trigger 
+-- after update 
+-- on public.people_data
+-- for each row 
+-- execute procedure public.gt_people_u_security_update_is_cleared_columns('public');
 
-create trigger update_people_sc_sensitivity_trigger 
-after update 
-on public.people_data
-for each row 
-execute procedure public.gt_people_u_security_update_is_cleared_columns('sc');
+-- create trigger update_people_sc_sensitivity_trigger 
+-- after update 
+-- on public.people_data
+-- for each row 
+-- execute procedure public.gt_people_u_security_update_is_cleared_columns('sc');

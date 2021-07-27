@@ -33,41 +33,41 @@ begin
 		return new;
 end; $$;
 
-CREATE OR REPLACE FUNCTION public.create_data_sensitivity_triggers(p_schema_name text)
-RETURNS VOID
-LANGUAGE PLPGSQL
-AS $$
-declare 
-	 rec1 record;
-	 update_trigger_name text;
-   base_schema_table_name text; 
-begin
+-- CREATE OR REPLACE FUNCTION public.create_data_sensitivity_triggers(p_schema_name text)
+-- RETURNS VOID
+-- LANGUAGE PLPGSQL
+-- AS $$
+-- declare 
+-- 	 rec1 record;
+-- 	 update_trigger_name text;
+--    base_schema_table_name text; 
+-- begin
    
 
-	for rec1 in (SELECT table_name FROM information_schema.tables
-				WHERE table_schema = p_schema_name and table_name like '%_data'
-				ORDER BY table_name) loop 
+-- 	for rec1 in (SELECT table_name FROM information_schema.tables
+-- 				WHERE table_schema = p_schema_name and table_name like '%_data'
+-- 				ORDER BY table_name) loop 
             
-        perform column_name 
-        FROM information_schema.columns 
-        WHERE table_schema = p_schema_name and table_name = rec1.table_name and column_name='sensitivity';
+--         perform column_name 
+--         FROM information_schema.columns 
+--         WHERE table_schema = p_schema_name and table_name = rec1.table_name and column_name='sensitivity';
 
-        base_schema_table_name := p_schema_name || '.' || rec1.table_name;
-        update_trigger_name := quote_ident(rec1.table_name||'_sensitivity_update_trigger');
-        if found then 
-            -- UPDATE TRIGGER
-            execute format('DROP TRIGGER IF EXISTS '|| update_trigger_name || ' ON ' ||base_schema_table_name);
-            execute format('CREATE TRIGGER ' || update_trigger_name
-            || ' AFTER UPDATE
-            ON ' || base_schema_table_name || 
-            ' FOR EACH ROW
-            EXECUTE PROCEDURE public.gt_data_u_security_update_is_cleared_columns()'); 
+--         base_schema_table_name := p_schema_name || '.' || rec1.table_name;
+--         update_trigger_name := quote_ident(rec1.table_name||'_sensitivity_update_trigger');
+--         if found then 
+--             -- UPDATE TRIGGER
+--             execute format('DROP TRIGGER IF EXISTS '|| update_trigger_name || ' ON ' ||base_schema_table_name);
+--             execute format('CREATE TRIGGER ' || update_trigger_name
+--             || ' AFTER UPDATE
+--             ON ' || base_schema_table_name || 
+--             ' FOR EACH ROW
+--             EXECUTE PROCEDURE public.gt_data_u_security_update_is_cleared_columns()'); 
 
-        end if;
+--         end if;
 
-	END loop;
-	raise info 'DONE';
-end; $$;
+-- 	END loop;
+-- 	raise info 'DONE';
+-- end; $$;
 
-select public.create_data_triggers('public');
-select public.create_data_triggers('sc');
+-- select public.create_data_triggers('public');
+-- select public.create_data_triggers('sc');

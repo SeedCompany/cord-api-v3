@@ -25,18 +25,18 @@ begin
 	return new;
 end; $$;
 
-drop trigger if exists delete_people_public_security_trigger on public.people_data;
-drop trigger if exists delete_people_sc_security_trigger on public.people_data;
+-- drop trigger if exists delete_people_public_security_trigger on public.people_data;
+-- drop trigger if exists delete_people_sc_security_trigger on public.people_data;
 
 
-create trigger delete_people_public_security_trigger 
-after delete 
-on public.people_data
-for each row 
-execute procedure public.t_people_d_security_deletes_person('public');
+-- create trigger delete_people_public_security_trigger 
+-- after delete 
+-- on public.people_data
+-- for each row 
+-- execute procedure public.t_people_d_security_deletes_person('public');
 
-create trigger delete_people_sc_security_trigger 
-after delete 
-on public.people_data
-for each row 
-execute procedure public.t_people_d_security_deletes_person('sc');
+-- create trigger delete_people_sc_security_trigger 
+-- after delete 
+-- on public.people_data
+-- for each row 
+-- execute procedure public.t_people_d_security_deletes_person('sc');
