@@ -84,6 +84,16 @@ export class SyncPeriodicReportsToProjectDateRange
         )
       )
     );
+
+    if (project.mouEnd) {
+      await this.periodicReports.createOrUpdateFinalReportWithDateRange(
+        project.id,
+        ReportType.Financial,
+        project.mouEnd,
+        project.mouEnd,
+        event.session
+      );
+    }
   }
 
   private async syncNarrative(event: SubscribedEvent) {
@@ -107,6 +117,16 @@ export class SyncPeriodicReportsToProjectDateRange
         )
       )
     );
+
+    if (event.updated.mouEnd) {
+      await this.periodicReports.createOrUpdateFinalReportWithDateRange(
+        event.updated.id,
+        ReportType.Narrative,
+        event.updated.mouEnd,
+        event.updated.mouEnd,
+        event.session
+      );
+    }
   }
 
   private diffBy(event: SubscribedEvent, unit: DurationUnit) {

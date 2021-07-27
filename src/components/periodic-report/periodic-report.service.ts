@@ -1,6 +1,7 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Interval } from 'luxon';
 import {
+  CalendarDate,
   ID,
   NotFoundException,
   ServerException,
@@ -8,6 +9,7 @@ import {
   UnsecuredDto,
 } from '../../common';
 import {
+  DatabaseService,
   HandleIdLookup,
   IEventBus,
   ILogger,
@@ -38,6 +40,7 @@ import { PeriodicReportRepository } from './periodic-report.repository';
 export class PeriodicReportService {
   constructor(
     private readonly files: FileService,
+    private readonly db: DatabaseService,
     @Logger('periodic:report:service') private readonly logger: ILogger,
     private readonly eventBus: IEventBus,
     @Inject(forwardRef(() => AuthorizationService))
@@ -184,7 +187,7 @@ export class PeriodicReportService {
     type: ReportType,
     session: Session
   ): Promise<PeriodicReport | undefined> {
-    const report = await this.repo.getLatestReportSubmitted(parentId, type);
+    const report = await this.repo.getFinalReport(parentId, type);
     return report ? await this.secure(report, session) : undefined;
   }
 
@@ -211,5 +214,45 @@ export class PeriodicReportService {
     const result = await this.repo.delete(baseNodeId, type, intervals);
 
     this.logger.debug('Deleted reports', { baseNodeId, type, ...result });
+  }
+
+  async getFinalReport(
+    parentId: ID,
+    type: ReportType,
+    session: Session
+  ): Promise<PeriodicReport | undefined> {
+    const report = await this.repo.getFinalReport(parentId, type);
+    return report ? await this.secure(report, session) : undefined;
+  }
+
+  async createOrUpdateFinalReportWithDateRange(
+    parentId: ID,
+    type: ReportType,
+    start: CalendarDate,
+    end: CalendarDate,
+    session: Session
+  ): Promise<void> {
+    const report = await this.repo.getFinalReport(parentId, type);
+
+    if (report) {
+      await this.db.updateProperties({
+        type: IPeriodicReport,
+        object: report,
+        changes: {
+          start,
+          end,
+        },
+      });
+    } else {
+      await this.create(
+        {
+          start,
+          end,
+          type,
+          projectOrEngagementId: parentId,
+        },
+        session
+      );
+    }
   }
 }
