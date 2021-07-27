@@ -36,18 +36,18 @@ begin
 	return new;
 end; $$;
 
-drop trigger if exists insert_people_public_security_trigger on public.people_data;
-drop trigger if exists insert_people_sc_security_trigger on public.people_data;
+-- drop trigger if exists insert_people_public_security_trigger on public.people_data;
+-- drop trigger if exists insert_people_sc_security_trigger on public.people_data;
 
 
-create trigger insert_people_public_security_trigger 
-after insert 
-on public.people_data
-for each row 
-execute procedure public.t_people_i_security_inserts_person('public');
+-- create trigger insert_people_public_security_trigger 
+-- after insert 
+-- on public.people_data
+-- for each row 
+-- execute procedure public.t_people_i_security_inserts_person('public');
 
-create trigger insert_people_sc_security_trigger 
-after insert 
-on public.people_data
-for each row 
-execute procedure public.t_people_i_security_inserts_person('sc');
+-- create trigger insert_people_sc_security_trigger 
+-- after insert 
+-- on public.people_data
+-- for each row 
+-- execute procedure public.t_people_i_security_inserts_person('sc');

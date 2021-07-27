@@ -38,37 +38,37 @@ begin
     return new;   
 end; $$;
 
-CREATE OR REPLACE FUNCTION public.create_security_sensitivity_triggers(p_schema_name text)
-RETURNS VOID
-LANGUAGE PLPGSQL
-AS $$
-declare 
-	 rec1 record;
-	 insert_trigger_name text;
-   security_schema_table_name text; 
-begin
+-- CREATE OR REPLACE FUNCTION public.create_security_sensitivity_triggers(p_schema_name text)
+-- RETURNS VOID
+-- LANGUAGE PLPGSQL
+-- AS $$
+-- declare 
+-- 	 rec1 record;
+-- 	 insert_trigger_name text;
+--    security_schema_table_name text; 
+-- begin
 
 
-	for rec1 in (SELECT table_name FROM information_schema.tables
-				WHERE table_schema = p_schema_name and table_name like '%_security'
-				ORDER BY table_name) loop 
+-- 	for rec1 in (SELECT table_name FROM information_schema.tables
+-- 				WHERE table_schema = p_schema_name and table_name like '%_security'
+-- 				ORDER BY table_name) loop 
 
-      security_schema_table_name := p_schema_name || '.' || rec1.table_name;
-      insert_trigger_name := quote_ident(rec1.table_name||'_sensitivity_trigger');
-
-
-        -- INSERT TRIGGER
-        execute format('DROP TRIGGER IF EXISTS '|| insert_trigger_name || ' ON ' ||security_schema_table_name);
-        execute format('CREATE TRIGGER ' || insert_trigger_name
-        || ' AFTER INSERT
-        ON ' || security_schema_table_name || 
-        ' FOR EACH ROW
-        EXECUTE PROCEDURE public.gt_security_i_data_and_people_get_is_cleared()'); 
+--       security_schema_table_name := p_schema_name || '.' || rec1.table_name;
+--       insert_trigger_name := quote_ident(rec1.table_name||'_sensitivity_trigger');
 
 
-	END loop;
-	raise info 'DONE';
-end; $$;
+--         -- INSERT TRIGGER
+--         execute format('DROP TRIGGER IF EXISTS '|| insert_trigger_name || ' ON ' ||security_schema_table_name);
+--         execute format('CREATE TRIGGER ' || insert_trigger_name
+--         || ' AFTER INSERT
+--         ON ' || security_schema_table_name || 
+--         ' FOR EACH ROW
+--         EXECUTE PROCEDURE public.gt_security_i_data_and_people_get_is_cleared()'); 
 
-select public.create_security_sensitivity_triggers('public');
-select public.create_security_sensitivity_triggers('sc');
+
+-- 	END loop;
+-- 	raise info 'DONE';
+-- end; $$;
+
+-- select public.create_security_sensitivity_triggers('public');
+-- select public.create_security_sensitivity_triggers('sc');
