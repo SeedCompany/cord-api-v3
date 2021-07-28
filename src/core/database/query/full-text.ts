@@ -18,7 +18,7 @@ export const fullTextQuery =
         index,
         // fallback to "" when no query is given, so that no results are
         // returned instead of the procedure failing
-        query: query || '""',
+        query: query.trim() || '""',
       }
     );
 
