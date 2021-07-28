@@ -1,42 +1,42 @@
-create or replace function public.gt_security_i_data_and_people_get_is_cleared()
-returns integer
-language plpgsql
-as $$
-declare 
-    rec1 record;
-    security_schema_table_name text;
-    base_schema_table_name text;
-    base_table_name text; 
-    data_table_row_sensitivity public.sensitivity;
-    person_sensitivity_clearance public.sensitivity;
-begin
+-- create or replace function public.gt_security_i_data_and_people_get_is_cleared()
+-- returns integer
+-- language plpgsql
+-- as $$
+-- declare 
+--     rec1 record;
+--     security_schema_table_name text;
+--     base_schema_table_name text;
+--     base_table_name text; 
+--     data_table_row_sensitivity public.sensitivity;
+--     person_sensitivity_clearance public.sensitivity;
+-- begin
 
-    base_table_name := replace(TG_TABLE_NAME,'_security', '_data');
+--     base_table_name := replace(TG_TABLE_NAME,'_security', '_data');
 
-    -- only proceed ahead if the data table has a column for sensitivity
-    perform column_name 
-    FROM information_schema.columns 
-    WHERE table_schema = TG_TABLE_SCHEMA and table_name = base_table_name and column_name='sensitivity';
+--     -- only proceed ahead if the data table has a column for sensitivity
+--     perform column_name 
+--     FROM information_schema.columns 
+--     WHERE table_schema = TG_TABLE_SCHEMA and table_name = base_table_name and column_name='sensitivity';
 
-    if found then 
-        base_schema_table_name := TG_TABLE_SCHEMA || '.' || base_table_name;
-        security_schema_table_name := TG_TABLE_SCHEMA || '.' || TG_TABLE_NAME;
+--     if found then 
+--         base_schema_table_name := TG_TABLE_SCHEMA || '.' || base_table_name;
+--         security_schema_table_name := TG_TABLE_SCHEMA || '.' || TG_TABLE_NAME;
 
-        select sensitivity_clearance into person_sensitivity_clearance from public.people_data where id = new.__person_id;
-        execute format('select sensitivity from ' || base_schema_table_name || ' where id = ' || new.__id) into data_table_row_sensitivity;
+--         select sensitivity_clearance into person_sensitivity_clearance from public.people_data where id = new.__person_id;
+--         execute format('select sensitivity from ' || base_schema_table_name || ' where id = ' || new.__id) into data_table_row_sensitivity;
 
-        raise info 'data_table_row_sensitivity: % | person_sensitivity_clearance: %', data_table_row_sensitivity, person_sensitivity_clearance;
+--         raise info 'data_table_row_sensitivity: % | person_sensitivity_clearance: %', data_table_row_sensitivity, person_sensitivity_clearance;
         
-        if (data_table_row_sensitivity = 'Medium' and person_sensitivity_clearance = 'Low') or 
-        (data_table_row_sensitivity = 'High' and (person_sensitivity_clearance = 'Medium' or person_sensitivity_clearance = 'Low')) then 
+--         if (data_table_row_sensitivity = 'Medium' and person_sensitivity_clearance = 'Low') or 
+--         (data_table_row_sensitivity = 'High' and (person_sensitivity_clearance = 'Medium' or person_sensitivity_clearance = 'Low')) then 
 
-            execute format('update ' || TG_TABLE_SCHEMA || '.%I set __is_cleared = false where __person_id = '|| new.__person_id || ' and '|| ' __id = '|| new.__id, TG_TABLE_NAME);
+--             execute format('update ' || TG_TABLE_SCHEMA || '.%I set __is_cleared = false where __person_id = '|| new.__person_id || ' and '|| ' __id = '|| new.__id, TG_TABLE_NAME);
     
 
-        end if;    
-    end if; 
-    return 0;   
-end; $$;
+--         end if;    
+--     end if; 
+--     return 0;   
+-- end; $$;
 
 -- CREATE OR REPLACE FUNCTION public.create_security_sensitivity_triggers(p_schema_name text)
 -- RETURNS VOID
