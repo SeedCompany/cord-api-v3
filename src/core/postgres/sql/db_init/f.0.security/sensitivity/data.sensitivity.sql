@@ -3,7 +3,7 @@
 -- inserts the new id into the security table for each member 
 -- trigger function for each data table
 create or replace function public.gt_data_u_security_update_is_cleared_columns()
-returns trigger
+returns integer
 language plpgsql
 as $$
 declare 
@@ -30,7 +30,7 @@ begin
              
          
         end loop; 
-		return new;
+		return 0;
 end; $$;
 
 -- CREATE OR REPLACE FUNCTION public.create_data_sensitivity_triggers(p_schema_name text)

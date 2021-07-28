@@ -3,7 +3,7 @@
 -- The great thing about this approach is we can use the same trigger function for insert,update,delete for all the tables 
 
 create or replace function public.gt_granters_iud_security_update_grant_columns()
-returns trigger
+returns integer
 language plpgsql
 as $$
 declare 
@@ -19,7 +19,7 @@ base_table_name text;
 security_schema_table_name text; 
 security_column_name text; 
 final_access_level public.access_level;
-begin
+begin 
     
 
     for rec1 in (select table_name from information_schema.tables where table_schema = TG_ARGV[0] and table_name like '%_security' order by table_name) loop 
@@ -69,7 +69,7 @@ begin
         end loop;
     end loop;
     
-	return new;
+	return 0;
 end; $$;
 
 -- CREATE OR REPLACE FUNCTION public.create_refresh_triggers(p_schema_name text, p_table_name text)

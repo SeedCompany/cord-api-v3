@@ -1,6 +1,10 @@
 create or replace function public.create(pPersonId int, pTableName text, 
 -- get record
-pRecord hstore
+pRecord hstore,
+pToggleSecurity int, 
+pToggleMV int, 
+pToggleHistory int,
+pToggleGranters int
 )
 returns int 
 language plpgsql
@@ -52,14 +56,20 @@ begin
         if column_data_type = 'ARRAY'then 
             sqlStringValues := sqlStringValues || 'ARRAY' || rec3.svals ||'::' ||  'public.' || substr(column_udt_name, 2, length(column_udt_name)-1) || '[],';
         else 
-        sqlStringValues := sqlStringValues || quote_literal(rec3.svals) || ',';
+            sqlStringValues := sqlStringValues || quote_literal(rec3.svals) || ',';
         end if;
 
     end loop;
-    -- removing the final comma
+-- removing the final comma
     sqlStringKeys := substr(sqlStringKeys,1,length(sqlStringKeys) - 1);
-    sqlStringValues := substr(sqlStringValues,1,length(sqlStringValues) - 1);
-    sqlStringValues := sqlStringValues || ')';
+    sqlStringValues := substr(sqlStringValues,1,length(sqlStringValues) - 1) || ')';
     execute format(sqlStringKeys || sqlStringValues);
+
+    -- might need an entirely different fn for public.people_data
+    select public.security_fn(); 
+    select public.mv_fn();
+    select public.history_fn();
+    select public.granters_fn();
+
     return 0;
 end; $$;

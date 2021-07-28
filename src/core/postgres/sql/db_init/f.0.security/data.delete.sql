@@ -1,7 +1,7 @@
 -- inserts the new id into the security table for each member 
 -- trigger function for each data table
 create or replace function public.gt_data_d_security_d()
-returns trigger
+returns integer
 language plpgsql
 as $$
 declare 
@@ -18,7 +18,7 @@ begin
         execute format('delete from '|| security_schema_table_name || ' where __id = '|| old.id); 
             --  is_cleared instead of __is_cleared
       
-		return old;
+		return 0;
 end; $$;
 
 -- CREATE OR REPLACE FUNCTION public.create_data_triggers(p_schema_name text)

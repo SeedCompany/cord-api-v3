@@ -1,5 +1,5 @@
 create or replace function public.gt_security_i_data_and_people_get_is_cleared()
-returns trigger
+returns integer
 language plpgsql
 as $$
 declare 
@@ -35,7 +35,7 @@ begin
 
         end if;    
     end if; 
-    return new;   
+    return 0;   
 end; $$;
 
 -- CREATE OR REPLACE FUNCTION public.create_security_sensitivity_triggers(p_schema_name text)
