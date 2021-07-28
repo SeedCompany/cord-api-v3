@@ -2,36 +2,36 @@
 
 -- inserts the new id into the security table for each member 
 -- trigger function for each data table
-create or replace function public.gt_data_u_security_update_is_cleared_columns()
-returns integer
-language plpgsql
-as $$
-declare 
-base_schema_table_name text;
-security_table_name text;
-rec1 record;  
-begin                                           
-		security_table_name := replace(TG_TABLE_NAME, '_data', '_security');
-		raise info 'security table: %', security_table_name;
+-- create or replace function public.gt_data_u_security_update_is_cleared_columns()
+-- returns integer
+-- language plpgsql
+-- as $$
+-- declare 
+-- base_schema_table_name text;
+-- security_table_name text;
+-- rec1 record;  
+-- begin                                           
+-- 		security_table_name := replace(TG_TABLE_NAME, '_data', '_security');
+-- 		raise info 'security table: %', security_table_name;
 		
         
-        for rec1 in execute format('select id, sensitivity_clearance from public.people_data') loop
+--         for rec1 in execute format('select id, sensitivity_clearance from public.people_data') loop
             
-            raise info 'new.sensitivity: % | person_sensitivity_clearance: %', new.sensitivity, rec1.sensitivity_clearance;
+--             raise info 'new.sensitivity: % | person_sensitivity_clearance: %', new.sensitivity, rec1.sensitivity_clearance;
             
-            if (new.sensitivity = 'Medium' and rec1.sensitivity_clearance = 'Low') or 
-            (new.sensitivity = 'High' and (rec1.sensitivity_clearance = 'Medium' or rec1.sensitivity_clearance = 'Low')) then 
+--             if (new.sensitivity = 'Medium' and rec1.sensitivity_clearance = 'Low') or 
+--             (new.sensitivity = 'High' and (rec1.sensitivity_clearance = 'Medium' or rec1.sensitivity_clearance = 'Low')) then 
 
-                execute format('update ' || TG_TABLE_SCHEMA || '.%I set __is_cleared = false where __person_id = '|| rec1.id || ' and '|| ' __id = '|| old.id, security_table_name);
-                -- get id reference from the data table
+--                 execute format('update ' || TG_TABLE_SCHEMA || '.%I set __is_cleared = false where __person_id = '|| rec1.id || ' and '|| ' __id = '|| old.id, security_table_name);
+--                 -- get id reference from the data table
         
-            end if;    
+--             end if;    
 
              
          
-        end loop; 
-		return 0;
-end; $$;
+--         end loop; 
+-- 		return 0;
+-- end; $$;
 
 -- CREATE OR REPLACE FUNCTION public.create_data_sensitivity_triggers(p_schema_name text)
 -- RETURNS VOID

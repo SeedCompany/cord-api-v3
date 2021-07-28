@@ -1,30 +1,30 @@
 -- inserts the new id into the security table for each member 
 -- trigger function for each data table
-create or replace function public.gt_data_i_security_i()
-returns integer
-language plpgsql
-as $$
-declare 
-base_schema_table_name text;
-security_schema_table_name text;
-row_sensitivity_clearance boolean;
-rec1 record;  
-begin                                           
-      base_schema_table_name := TG_TABLE_SCHEMA || '.' || TG_TABLE_NAME;
-		security_schema_table_name := replace(base_schema_table_name, '_data', '_security');
-		raise info 'data.insert.fn | security table: %', security_schema_table_name;
+-- create or replace function public.gt_data_i_security_i()
+-- returns integer
+-- language plpgsql
+-- as $$
+-- declare 
+-- base_schema_table_name text;
+-- security_schema_table_name text;
+-- row_sensitivity_clearance boolean;
+-- rec1 record;  
+-- begin                                           
+--       base_schema_table_name := TG_TABLE_SCHEMA || '.' || TG_TABLE_NAME;
+-- 		security_schema_table_name := replace(base_schema_table_name, '_data', '_security');
+-- 		raise info 'data.insert.fn | security table: %', security_schema_table_name;
 
         
-         for rec1 in execute format('select id, sensitivity_clearance from public.people_data') loop
+--          for rec1 in execute format('select id, sensitivity_clearance from public.people_data') loop
             
-            -- select public.get_sensitivity_clearance(new.id, rec1.id, rec1.sensitivity_clearance, TG_TABLE_SCHEMA, TG_TABLE_NAME) into row_sensitivity_clearance;
+--             -- select public.get_sensitivity_clearance(new.id, rec1.id, rec1.sensitivity_clearance, TG_TABLE_SCHEMA, TG_TABLE_NAME) into row_sensitivity_clearance;
 
-            execute format('insert into '|| security_schema_table_name || '(__id, __person_id, __is_cleared) values (' || new.id || ',' || quote_literal(rec1.id) ||', true)'); 
+--             execute format('insert into '|| security_schema_table_name || '(__id, __person_id, __is_cleared) values (' || new.id || ',' || quote_literal(rec1.id) ||', true)'); 
              
-            --  is_cleared instead of __is_cleared
-         end loop; 
-      return 0;
-end; $$;
+--             --  is_cleared instead of __is_cleared
+--          end loop; 
+--       return 0;
+-- end; $$;
 
 -- CREATE OR REPLACE FUNCTION public.create_data_triggers(p_schema_name text)
 -- RETURNS VOID

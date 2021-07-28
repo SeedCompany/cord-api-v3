@@ -18,8 +18,9 @@ column_access_level public.access_level;
 column_data_type text;
 column_udt_name text;
 security_table_name text;
-sqlStringKeys text;
-sqlStringValues text; 
+sql_string_keys text;
+sql_string_values text; 
+record_id int;
 begin
     permissionExists := false; 
 -- check if person has "create" permission on table
@@ -46,30 +47,30 @@ begin
         end if;
     end loop;
 -- insert row! 
-    sqlStringKeys := 'insert into '|| pTableName || '(';
-    sqlStringValues := ') values (';
+    sql_string_keys := 'insert into '|| pTableName || '(';
+    sql_string_values := ') values (';
     for rec3 in (select skeys(pRecord), svals(pRecord)) loop 
-        sqlStringKeys := sqlStringKeys || rec3.skeys || ',';
+        sql_string_keys := sql_string_keys || rec3.skeys || ',';
     
         select data_type, udt_name into column_data_type, column_udt_name from information_schema.columns where table_schema = split_part(pTableName, '.',1) and table_name = split_part(pTableName, '.', 2) and column_name = rec3.skeys; 
 
         if column_data_type = 'ARRAY'then 
-            sqlStringValues := sqlStringValues || 'ARRAY' || rec3.svals ||'::' ||  'public.' || substr(column_udt_name, 2, length(column_udt_name)-1) || '[],';
+            sql_string_values := sql_string_values || 'ARRAY' || rec3.svals ||'::' ||  'public.' || substr(column_udt_name, 2, length(column_udt_name)-1) || '[],';
         else 
-            sqlStringValues := sqlStringValues || quote_literal(rec3.svals) || ',';
+            sql_string_values := sql_string_values || quote_literal(rec3.svals) || ',';
         end if;
 
     end loop;
 -- removing the final comma
-    sqlStringKeys := substr(sqlStringKeys,1,length(sqlStringKeys) - 1);
-    sqlStringValues := substr(sqlStringValues,1,length(sqlStringValues) - 1) || ')';
-    execute format(sqlStringKeys || sqlStringValues);
+    sql_string_keys := substr(sql_string_keys,1,length(sql_string_keys) - 1);
+    sql_string_values := substr(sql_string_values,1,length(sql_string_values) - 1) || ') returning id';
+    execute format(sql_string_keys || sql_string_values) into record_id;
 
     -- might need an entirely different fn for public.people_data
-    select public.security_fn(); 
-    select public.mv_fn();
-    select public.history_fn();
-    select public.granters_fn();
+    select public.security_fn(pTableName, record_id, pToggleSecurity); 
+    -- select public.mv_fn();
+    -- select public.history_fn();
+    -- select public.granters_fn();
 
     return 0;
 end; $$;
