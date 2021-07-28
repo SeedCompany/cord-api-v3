@@ -9,6 +9,7 @@ import {
   Sensitivity,
   SensitivityField,
 } from '../../../common';
+import { ScopedRole } from '../../authorization';
 import { CeremonyType } from './type.enum';
 
 @ObjectType({
@@ -34,6 +35,10 @@ export class Ceremony extends Resource {
     description: "Based on the project's sensitivity",
   })
   readonly sensitivity: Sensitivity;
+
+  // A list of non-global roles the requesting user has available for this object.
+  // This is just a cache, to prevent extra db lookups within the same request.
+  readonly scope?: ScopedRole[];
 }
 
 @ObjectType({

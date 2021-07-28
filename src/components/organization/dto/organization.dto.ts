@@ -8,6 +8,7 @@ import {
   SecuredProps,
   SecuredString,
 } from '../../../common';
+import { ScopedRole } from '../../authorization';
 import { Location } from '../../location/dto';
 
 @ObjectType({
@@ -26,6 +27,10 @@ export class Organization extends Resource {
 
   @Field()
   readonly address: SecuredString;
+
+  // A list of non-global roles the requesting user has available for this object.
+  // This is just a cache, to prevent extra db lookups within the same request.
+  readonly scope: ScopedRole[];
 }
 
 @ObjectType({

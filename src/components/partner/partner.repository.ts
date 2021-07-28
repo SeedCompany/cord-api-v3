@@ -13,7 +13,6 @@ import {
   ACTIVE,
   createNode,
   createRelationships,
-  matchProps,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
   paginate,
@@ -74,7 +73,7 @@ export class PartnerRepository extends DtoRepository(Partner) {
       .query()
       .apply(matchRequestingUser(session))
       .match([node('node', 'Partner', { id: id })])
-      .apply(this.hydrate());
+      .apply(this.hydrate(session));
 
     const result = await query.first();
     if (!result) {
@@ -84,10 +83,17 @@ export class PartnerRepository extends DtoRepository(Partner) {
     return result.dto;
   }
 
-  protected hydrate() {
+  protected hydrate(session: Session) {
     return (query: Query) =>
       query
-        .apply(matchProps())
+        .optionalMatch([
+          node('project', 'Project'),
+          relation('out', '', 'partnership'),
+          node('', 'Partnership'),
+          relation('out', '', 'partner'),
+          node('node'),
+        ])
+        .apply(matchPropsAndProjectSensAndScopedRoles(session))
         .optionalMatch([
           node('node'),
           relation('out', '', 'organization', ACTIVE),
@@ -102,6 +108,7 @@ export class PartnerRepository extends DtoRepository(Partner) {
           merge('props', {
             organization: 'organization.id',
             pointOfContact: 'pointOfContact.id',
+            scope: 'scopedRoles',
           }).as('dto')
         );
   }

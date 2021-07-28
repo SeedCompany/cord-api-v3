@@ -12,6 +12,7 @@ import {
   SecuredProps,
   SecuredString,
 } from '../../../common';
+import { ScopedRole } from '../../authorization';
 import { FinancialReportingType } from '../../partnership/dto/financial-reporting-type';
 import { SecuredPartnerTypes } from './partner-type.enum';
 
@@ -53,6 +54,10 @@ export class Partner extends Resource {
 
   @DateTimeField()
   readonly modifiedAt: DateTime;
+
+  // A list of non-global roles the requesting user has available for this object.
+  // This is just a cache, to prevent extra db lookups within the same request.
+  readonly scope: ScopedRole[];
 }
 
 @ObjectType({

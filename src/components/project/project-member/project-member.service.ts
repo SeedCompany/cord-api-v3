@@ -157,13 +157,13 @@ export class ProjectMemberService {
 
     const securedProps = await this.authorizationService.secureProperties(
       ProjectMember,
-      result.props,
+      result.dto,
       session,
-      result.scopedRoles
+      result.dto.scope
     );
 
     return {
-      ...result.props,
+      ...result.dto,
       ...securedProps,
       user: {
         ...securedProps.user,

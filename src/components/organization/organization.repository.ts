@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
-import { ID, NotFoundException, Session } from '../../common';
+import { node, Query, relation } from 'cypher-query-builder';
+import { ID, NotFoundException, Session, UnsecuredDto } from '../../common';
 import { DtoRepository, matchRequestingUser } from '../../core';
 import {
   ACTIVE,
   createNode,
+  matchPropsAndProjectSensAndScopedRoles,
+  merge,
   paginate,
   permissionsOfNode,
   requestingUser,
@@ -43,7 +45,7 @@ export class OrganizationRepository extends DtoRepository(Organization) {
       .query()
       .apply(matchRequestingUser(session))
       .match([node('node', 'Organization', { id: orgId })])
-      .apply(this.hydrate());
+      .apply(this.hydrate(session));
 
     const result = await query.first();
     if (!result) {
@@ -53,6 +55,26 @@ export class OrganizationRepository extends DtoRepository(Organization) {
       );
     }
     return result.dto;
+  }
+
+  protected hydrate(session: Session) {
+    return (query: Query) =>
+      query
+        .optionalMatch([
+          node('project', 'Project'),
+          relation('out', '', 'partnership'),
+          node('', 'Partnership'),
+          relation('out', '', 'partner'),
+          node('', 'Partner'),
+          relation('out', 'organization'),
+          node('node'),
+        ])
+        .apply(matchPropsAndProjectSensAndScopedRoles(session))
+        .return<{ dto: UnsecuredDto<Organization> }>(
+          merge('props', {
+            scope: 'scopedRoles',
+          }).as('dto')
+        );
   }
 
   async list({ filter, ...input }: OrganizationListInput, session: Session) {

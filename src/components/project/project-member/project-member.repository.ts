@@ -2,17 +2,17 @@ import { Injectable } from '@nestjs/common';
 import { Node, node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { CreateProjectMember, ProjectMember, ProjectMemberListInput } from '.';
-import { ID, Session } from '../../../common';
+import { ID, Session, UnsecuredDto } from '../../../common';
 import { DtoRepository, property } from '../../../core';
 import {
   ACTIVE,
   matchPropsAndProjectSensAndScopedRoles,
+  merge,
   paginate,
   permissionsOfNode,
   requestingUser,
   sorting,
 } from '../../../core/database/query';
-import { DbPropsOfDto } from '../../../core/database/results';
 import { ScopedRole } from '../../authorization';
 
 @Injectable()
@@ -92,12 +92,15 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
         node('user', 'User'),
       ])
       .apply(matchPropsAndProjectSensAndScopedRoles(session))
-      .return(['props', 'user.id as userId', 'scopedRoles'])
-      .asResult<{
-        props: DbPropsOfDto<ProjectMember, true>;
+      .return<{
+        dto: UnsecuredDto<ProjectMember>;
         userId: ID;
-        scopedRoles: ScopedRole[];
-      }>();
+      }>([
+        merge('props', {
+          scope: 'scopedRoles',
+        }).as('dto'),
+        'user.id as userId',
+      ]);
     return await query.first();
   }
 
