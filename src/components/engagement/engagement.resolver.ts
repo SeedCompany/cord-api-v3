@@ -44,7 +44,10 @@ export class EngagementResolver {
     @Args() { id, changeset }: ChangesetIds,
     @AnonSession() session: Session
   ): Promise<Engagement> {
-    const engagement = await this.service.readOne(id, session, changeset);
+    const engagement = await this.service.readOne(id, session, {
+      type: 'changeset',
+      value: changeset,
+    });
     return engagement;
   }
 

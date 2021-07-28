@@ -7,6 +7,7 @@ import {
   ID,
   mapFromList,
   NotFoundException,
+  ObjectView,
   ResourceShape,
   ServerException,
   Session,
@@ -60,15 +61,24 @@ export class EngagementRepository extends CommonRepository {
     return !!result;
   }
 
-  async readOne(id: ID, session: Session, changeset?: ID) {
+  async readOne(id: ID, session: Session, view?: ObjectView) {
+    const label =
+      view?.type === 'deleted' ? 'Deleted_Engagement' : 'Engagement';
+    const changeset = view?.type === 'changeset' ? view.value : undefined;
+
     const query = this.db
       .query()
       .subQuery((sub) =>
         sub
           .match([
             node('project'),
-            relation('out', '', 'engagement', ACTIVE),
-            node('node', 'Engagement', { id }),
+            relation(
+              'out',
+              '',
+              'engagement',
+              view?.type !== 'deleted' ? ACTIVE : INACTIVE
+            ),
+            node('node', label, { id }),
           ])
           .return('project, node')
           .apply((q) =>
@@ -78,7 +88,7 @@ export class EngagementRepository extends CommonRepository {
                   .match([
                     node('project'),
                     relation('out', '', 'engagement', INACTIVE),
-                    node('node', 'Engagement', { id }),
+                    node('node', label, { id }),
                     relation('in', '', 'changeset', ACTIVE),
                     node('changeset', 'Changeset', { id: changeset }),
                   ])
@@ -86,7 +96,11 @@ export class EngagementRepository extends CommonRepository {
               : q
           )
       )
-      .apply(matchPropsAndProjectSensAndScopedRoles(session))
+      .apply(
+        matchPropsAndProjectSensAndScopedRoles(session, {
+          deleted: view?.type === 'deleted',
+        })
+      )
       .apply(matchChangesetAndChangedProps(changeset))
       .optionalMatch([
         node('node'),
@@ -125,7 +139,13 @@ export class EngagementRepository extends CommonRepository {
       ])
       .return<{ dto: UnsecuredDto<LanguageEngagement & InternshipEngagement> }>(
         merge('props', 'changedProps', {
-          __typename: `[l in labels(node) where l in ['LanguageEngagement', 'InternshipEngagement']][0]`,
+          __typename: `
+            replace(
+              [l in labels(node)
+                where l in ['LanguageEngagement', 'InternshipEngagement', 'Deleted_LanguageEngagement', 'Deleted_InternshipEngagement']][0],
+              'Deleted_',
+              ''
+            )`,
           project: 'project.id',
           language: 'language.id',
           ceremony: 'ceremony.id',

@@ -41,6 +41,8 @@ export interface MatchPropsOptions {
   changeset?: ID;
   // Don't merge in the actual BaseNode's properties into the resulting output object
   excludeBaseProps?: boolean;
+  // Read deleted properties
+  deleted?: boolean;
 }
 
 /**
@@ -57,6 +59,7 @@ export const matchProps = (options: MatchPropsOptions = {}) => {
     optional = false,
     changeset,
     excludeBaseProps = false,
+    deleted = false,
   } = options;
   return (query: Query) =>
     query.comment`matchProps(${nodeName})`.subQuery(nodeName, (sub) =>
@@ -65,7 +68,7 @@ export const matchProps = (options: MatchPropsOptions = {}) => {
           [
             node(nodeName),
             relation('out', 'r', { active: !changeset }),
-            node('prop', 'Property'),
+            node('prop', deleted ? 'Deleted_Property' : 'Property'),
             ...(changeset
               ? [
                   relation('in', '', 'changeset', ACTIVE),
