@@ -15,6 +15,7 @@ import { DbChanges, getChanges } from '../../core/database/changes';
 import {
   createNode,
   createRelationships,
+  escapeLuceneSyntax,
   fullTextQuery,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
@@ -290,10 +291,11 @@ export class ProductRepository extends CommonRepository {
   }
 
   async suggestCompletionDescriptions({
-    query,
+    query: queryInput,
     methodology,
     ...input
   }: ProductCompletionDescriptionSuggestionsInput) {
+    const query = queryInput ? escapeLuceneSyntax(queryInput) : undefined;
     const result = await this.db
       .query()
       .apply((q) =>
