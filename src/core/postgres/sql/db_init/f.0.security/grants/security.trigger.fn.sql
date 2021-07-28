@@ -1,5 +1,6 @@
+-- will take in __id, __person_id, pTableSchema, pTableName
 create or replace function public.gt_security_i_granters_get_access_level()
-returns trigger
+returns integer
 language plpgsql 
 as $$
 declare
@@ -41,14 +42,14 @@ begin
 
         if final_access_level is not null then 
             security_column_name := '_' || rec1.column_name;
-            execute format('update '||TG_TABLE_SCHEMA||'.%I set '||security_column_name|| ' = ' 
+            execute format('update %I.%I set '||security_column_name|| ' = ' 
                 || quote_literal(final_access_level) || ' where __id = '|| new.__id  
-                || ' and  __person_id = ' ||  new.__person_id, TG_TABLE_NAME);
+                || ' and  __person_id = ' ||  new.__person_id, TG_TABLE_SCHEMA, TG_TABLE_NAME);
         end if;
 
 
     end loop; 
-    return new;
+    return 0;
 end;$$;
 
 -- CREATE OR REPLACE FUNCTION public.create_security_triggers(p_schema_name text)

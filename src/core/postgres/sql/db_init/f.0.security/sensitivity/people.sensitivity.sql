@@ -1,6 +1,6 @@
 -- go to every security table and update the __is_cleared column for every id 
 create or replace function public.gt_people_u_security_update_is_cleared_columns()
-returns trigger
+returns integer
 language plpgsql
 as $$
 declare 
@@ -44,7 +44,7 @@ begin
 
     end loop;
     raise info 'done';
-	return new;
+	return 0;
 end; $$;
 
 -- drop trigger if exists update_people_public_sensitivity_trigger on public.people_data;
