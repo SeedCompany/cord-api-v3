@@ -18,7 +18,7 @@ type AnyPeriodicReport = MergeExclusive<
   ProgressReport
 >;
 
-export const resolveReportType = (report: PeriodicReport) => {
+export const resolveReportType = (report: Pick<PeriodicReport, 'type'>) => {
   const type = simpleSwitch(report.type, {
     Financial: FinancialReport,
     Narrative: NarrativeReport,
