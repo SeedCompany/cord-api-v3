@@ -197,7 +197,7 @@ export class UserRepository extends DtoRepository(User) {
         ])
         .apply(matchProps())
         .return<{ dto: UnsecuredDto<User> }>(
-          merge('props', {
+          merge({ email: null }, 'props', {
             roles: collect('role.value'),
           }).as('dto')
         );
