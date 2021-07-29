@@ -24,7 +24,8 @@ import {
 import {
   collect,
   createNode,
-  deleteProperties,
+  createProperty,
+  deactivateProperty,
   matchProps,
   merge,
   paginate,
@@ -205,32 +206,20 @@ export class UserRepository extends DtoRepository(User) {
 
   async updateEmail(
     user: User,
-    email: any,
-    createdAt: DateTime
+    email: string | null | undefined
   ): Promise<void> {
-    //Remove old emails and relations
     await this.db
       .query()
-      .match([node('node', ['User', 'BaseNode'], { id: user.id })])
-      .apply(deleteProperties(User, 'email'))
+      .matchNode('node', 'User', { id: user.id })
+      .apply(deactivateProperty({ resource: User, key: 'email' }))
+      .apply((q) =>
+        email
+          ? q.apply(
+              createProperty({ resource: User, key: 'email', value: email })
+            )
+          : q
+      )
       .return('*')
-      .run();
-
-    //Update email
-    await this.db
-      .query()
-      .match([node('user', ['User', 'BaseNode'], { id: user.id })])
-      .create([
-        node('user'),
-        relation('out', '', 'email', {
-          active: true,
-          createdAt,
-        }),
-        node('email', 'EmailAddress:Property', {
-          value: email,
-          createdAt,
-        }),
-      ])
       .run();
   }
 

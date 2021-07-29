@@ -1,6 +1,7 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { compact, difference } from 'lodash';
 import {
+  DuplicateException,
   ID,
   isIdLike,
   mapFromList,
@@ -18,6 +19,7 @@ import {
   OnIndex,
   property,
   Transactional,
+  UniquenessError,
 } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { Role } from '../authorization';
@@ -205,13 +207,29 @@ export class UserService {
       await this.authorizationService.verifyCanEditChanges(User, user, changes);
     }
 
-    const { roles, ...simpleChanges } = changes;
+    const { roles, email, ...simpleChanges } = changes;
 
     if (roles) {
       await this.authorizationService.checkPower(Powers.GrantRole, session);
     }
 
     await this.userRepo.updateProperties(user, simpleChanges);
+
+    // Update email
+    if (email !== undefined) {
+      try {
+        await this.userRepo.updateEmail(user, email);
+      } catch (e) {
+        if (e instanceof UniquenessError && e.label === 'EmailAddress') {
+          throw new DuplicateException(
+            'person.email',
+            'Email address is already in use',
+            e
+          );
+        }
+        throw new ServerException('Failed to create user', e);
+      }
+    }
 
     // Update roles
     if (roles) {
