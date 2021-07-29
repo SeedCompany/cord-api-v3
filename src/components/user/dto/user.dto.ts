@@ -8,6 +8,7 @@ import {
   SecuredProperty,
   SecuredProps,
   SecuredString,
+  SecuredStringNullable,
 } from '../../../common';
 import { SecuredRoles } from '../../authorization';
 import { Location } from '../../location/dto';
@@ -38,7 +39,7 @@ export class User extends Resource {
 
   @Field()
   @DbLabel('EmailAddress')
-  email: SecuredString;
+  email: SecuredStringNullable;
 
   @NameField()
   realFirstName: SecuredString;
