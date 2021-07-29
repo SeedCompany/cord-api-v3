@@ -115,7 +115,7 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
       .apply(
         matchProps({
           nodeName: 'project',
-          changeset,
+          view: { changeset },
           optional: true,
           outputVar: 'projectChangedProps',
         })

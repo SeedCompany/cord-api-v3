@@ -1,5 +1,5 @@
 import { node, Query, relation } from 'cypher-query-builder';
-import { ID, Many, Session } from '../../../common';
+import { Many, ObjectView, Session } from '../../../common';
 import { variable } from '../query-augmentation/condition-variables';
 import { apoc, collect, listConcat, merge } from './cypher-functions';
 
@@ -37,12 +37,10 @@ export interface MatchPropsOptions {
   outputVar?: string;
   // Whether we should move forward even without any properties matched
   optional?: boolean;
-  // The optional change ID to reference
-  changeset?: ID;
   // Don't merge in the actual BaseNode's properties into the resulting output object
   excludeBaseProps?: boolean;
-  // Read deleted properties
-  deleted?: boolean;
+  // View object
+  view?: ObjectView;
 }
 
 /**
@@ -57,9 +55,8 @@ export const matchProps = (options: MatchPropsOptions = {}) => {
     nodeName = 'node',
     outputVar = 'props',
     optional = false,
-    changeset,
     excludeBaseProps = false,
-    deleted = false,
+    view = { active: true },
   } = options;
   return (query: Query) =>
     query.comment`matchProps(${nodeName})`.subQuery(nodeName, (sub) =>
@@ -67,12 +64,12 @@ export const matchProps = (options: MatchPropsOptions = {}) => {
         .match(
           [
             node(nodeName),
-            relation('out', 'r', { active: !changeset }),
-            node('prop', deleted ? 'Deleted_Property' : 'Property'),
-            ...(changeset
+            relation('out', 'r', { active: !view.changeset }),
+            node('prop', view.deleted ? 'Deleted_Property' : 'Property'),
+            ...(view.changeset
               ? [
                   relation('in', '', 'changeset', ACTIVE),
-                  node('changeset', 'Changeset', { id: changeset }),
+                  node('changeset', 'Changeset', { id: view.changeset }),
                 ]
               : []),
           ],

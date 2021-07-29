@@ -1,4 +1,6 @@
+import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
+import { RequireExactlyOne } from 'type-fest';
 import { ID } from './id-field';
 
 interface ObjectViewTypeMap {
@@ -9,8 +11,25 @@ interface ObjectViewTypeMap {
   asOf: DateTime;
 }
 
-type ObjToTypeValueUnion<T extends ObjectViewTypeMap> = {
-  [K in keyof T]-?: { type: K; value: T[K] };
-}[keyof T];
+export type ObjectView = RequireExactlyOne<ObjectViewTypeMap>;
 
-export type ObjectView = ObjToTypeValueUnion<ObjectViewTypeMap>;
+export const labelForView = (label: string, view?: ObjectView) =>
+  view?.deleted ? `Deleted_${label}` : label;
+
+const generateLabels = (labels: string[], view: ObjectView) =>
+  [...labels, ...(view.deleted ? labels.map((l) => 'Deleted_' + l) : [])]
+    .map((label) => `'${label}'`)
+    .join(',');
+
+export const typenameForView = (
+  labels: string[],
+  view: ObjectView = { active: true },
+  nodeVar = 'node'
+) => stripIndent`
+  replace(
+    [l in labels(${nodeVar})
+      where l in [${generateLabels(labels, view)}]][0],
+    'Deleted_',
+    ''
+  )
+`;

@@ -121,8 +121,7 @@ export class EngagementService {
     );
 
     const languageEngagement = (await this.readOne(id, session, {
-      type: 'changeset',
-      value: changeset,
+      changeset,
     })) as LanguageEngagement;
     if (changeset) {
       return languageEngagement;
@@ -201,8 +200,7 @@ export class EngagementService {
     );
 
     const internshipEngagement = (await this.readOne(id, session, {
-      type: 'changeset',
-      value: changeset,
+      changeset,
     })) as InternshipEngagement;
     if (changeset) {
       return internshipEngagement;
@@ -236,7 +234,6 @@ export class EngagementService {
     id: ID,
     session: Session,
     view?: ObjectView
-    // changeset?: ID
   ): Promise<LanguageEngagement | InternshipEngagement> {
     this.logger.debug('readOne', { id, userId: session.userId });
 
@@ -311,8 +308,7 @@ export class EngagementService {
     }
 
     const object = (await this.readOne(input.id, session, {
-      type: 'changeset',
-      value: changeset,
+      changeset,
     })) as LanguageEngagement;
 
     const changes = this.repo.getActualLanguageChanges(object, input);
@@ -346,8 +342,7 @@ export class EngagementService {
     }
 
     const updated = (await this.readOne(input.id, session, {
-      type: 'changeset',
-      value: changeset,
+      changeset,
     })) as LanguageEngagement;
 
     if (changeset) {
@@ -380,8 +375,7 @@ export class EngagementService {
     }
 
     const object = (await this.readOne(input.id, session, {
-      type: 'changeset',
-      value: changeset,
+      changeset,
     })) as InternshipEngagement;
 
     const changes = this.repo.getActualInternshipChanges(object, input);
@@ -484,8 +478,7 @@ export class EngagementService {
     const results = await this.repo.list(input, session, changeset);
     return await mapListResults(results, (id) =>
       this.readOne(id, session, {
-        type: 'changeset',
-        value: changeset,
+        changeset,
       })
     );
   }

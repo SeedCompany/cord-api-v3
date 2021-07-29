@@ -5,6 +5,7 @@ import { MergeExclusive } from 'type-fest';
 import {
   generateId,
   ID,
+  labelForView,
   mapFromList,
   NotFoundException,
   ObjectView,
@@ -12,6 +13,7 @@ import {
   ServerException,
   Session,
   simpleSwitch,
+  typenameForView,
   UnsecuredDto,
 } from '../../common';
 import { CommonRepository } from '../../core';
@@ -62,9 +64,7 @@ export class EngagementRepository extends CommonRepository {
   }
 
   async readOne(id: ID, session: Session, view?: ObjectView) {
-    const label =
-      view?.type === 'deleted' ? 'Deleted_Engagement' : 'Engagement';
-    const changeset = view?.type === 'changeset' ? view.value : undefined;
+    const label = labelForView('Engagement', view);
 
     const query = this.db
       .query()
@@ -76,13 +76,13 @@ export class EngagementRepository extends CommonRepository {
               'out',
               '',
               'engagement',
-              view?.type !== 'deleted' ? ACTIVE : INACTIVE
+              !view?.deleted ? ACTIVE : INACTIVE
             ),
             node('node', label, { id }),
           ])
           .return('project, node')
           .apply((q) =>
-            changeset
+            view?.changeset
               ? q
                   .union()
                   .match([
@@ -90,18 +90,19 @@ export class EngagementRepository extends CommonRepository {
                     relation('out', '', 'engagement', INACTIVE),
                     node('node', label, { id }),
                     relation('in', '', 'changeset', ACTIVE),
-                    node('changeset', 'Changeset', { id: changeset }),
+                    node('changeset', 'Changeset', { id: view.changeset }),
                   ])
                   .return('project, node')
               : q
           )
       )
       .apply(
-        matchPropsAndProjectSensAndScopedRoles(session, {
-          deleted: view?.type === 'deleted',
-        })
+        matchPropsAndProjectSensAndScopedRoles(
+          session,
+          view?.deleted ? { view } : {}
+        )
       )
-      .apply(matchChangesetAndChangedProps(changeset))
+      .apply(matchChangesetAndChangedProps(view?.changeset))
       .optionalMatch([
         node('node'),
         relation('out', '', 'ceremony', ACTIVE),
@@ -139,13 +140,10 @@ export class EngagementRepository extends CommonRepository {
       ])
       .return<{ dto: UnsecuredDto<LanguageEngagement & InternshipEngagement> }>(
         merge('props', 'changedProps', {
-          __typename: `
-            replace(
-              [l in labels(node)
-                where l in ['LanguageEngagement', 'InternshipEngagement', 'Deleted_LanguageEngagement', 'Deleted_InternshipEngagement']][0],
-              'Deleted_',
-              ''
-            )`,
+          __typename: typenameForView(
+            ['LanguageEngagement', 'InternshipEngagement'],
+            view
+          ),
           project: 'project.id',
           language: 'language.id',
           ceremony: 'ceremony.id',
