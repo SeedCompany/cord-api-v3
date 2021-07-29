@@ -11,7 +11,7 @@ declare
 begin
     
 
-     if p_table_name = 'public.locations_data' then 
+    if p_table_name = 'public.locations_data' then 
         project_column := 'primary_location'; 
     elsif p_table_name = 'public.organizations_data' then 
         project_column := 'primary_org'; 
@@ -87,7 +87,7 @@ begin
         select public.get_global_access_level( pPersonId, base_table_name , rec1.column_name) into global_access_level;
                
 
-        if base_schema_table_name = 'public.locations_data' or base_schema_table_name = 'public.organizations_data' then
+        if base_table_name = 'public.locations_data' or base_table_name = 'public.organizations_data' then
             select public.get_project_access_level(pId, pPersonId 
             , base_table_name, rec1.column_name) into project_access_level;
         end if;
@@ -101,14 +101,14 @@ begin
             final_access_level := global_access_level;
         end if;
 
-        raise info 'refresh fn global_access_level: % | project_access_level: % | final_access_level: %', global_access_level, project_access_level, final_access_level;
+        raise info 'access_level fn global_access_level: % | project_access_level: % | final_access_level: %', global_access_level, project_access_level, final_access_level;
         
 
         if final_access_level is not null then 
             security_column_name := '_' || rec1.column_name;
             execute format('update %I.%I set '||security_column_name|| ' = ' 
-                || quote_literal(final_access_level) || ' where __id = '|| new.__id  
-                || ' and  __person_id = ' ||  new.__person_id,plit_part(security_table_name, '.',1) , (security_table_name, '.', 2));
+                || quote_literal(final_access_level) || ' where __id = '|| pId  
+                || ' and  __person_id = ' ||  pPersonId,split_part(security_table_name, '.',1) , (security_table_name, '.', 2));
         end if;
     end loop; 
     return 0;
@@ -134,14 +134,14 @@ begin
     if found then 
         select sensitivity_clearance into person_sensitivity_clearance from public.people_data where id = pPersonId;
 
-        execute format('select sensitivity from %I where id = ' || new.__id, base_table_name) into data_sensitivity;
+        execute format('select sensitivity from %I.%I where id = ' || pId, split_part(base_table_name, '.',1), split_part(base_table_name, '.',2)) into data_sensitivity;
 
         raise info 'data_sensitivity: % | person_sensitivity_clearance: %', data_sensitivity, person_sensitivity_clearance;
         
         -- update __is_cleared to false if person_sensitivity_clearance is less than data_sensitivity
         if (data_sensitivity = 'Medium' and person_sensitivity_clearance = 'Low') or 
         (data_sensitivity = 'High' and (person_sensitivity_clearance = 'Medium' or person_sensitivity_clearance = 'Low')) then 
-            execute format('update  %I set __is_cleared = false where __person_id = '|| pPersonId || ' and '|| ' __id = '|| pId, pSecurityTableName);
+            execute format('update  %I.%I set __is_cleared = false where __person_id = '|| pPersonId || ' and '|| ' __id = '|| pId,split_part(pSecurityTableName, '.',1), split_part(pSecurityTableName, '.',2) );
         end if;    
     end if; 
     return 0;   
@@ -175,18 +175,84 @@ begin
         -- only insert 
         for rec1 in execute format('select id, sensitivity_clearance from public.people_data') loop
 
-            execute format('insert into  %I  (__id, __person_id, __is_cleared) values (' || pId || ',' ||rec1.id ||', true)', security_table_name);
+            execute format('insert into  %I.%I  (__id, __person_id, __is_cleared) values (' || pId || ',' ||rec1.id ||', true)', split_part(security_table_name, '.',1),split_part(security_table_name, '.',2));
 
             if pToggleSecurity = 2 then
             -- update access level only
                 select public.get_access_level(security_table_name, rec1.id, pId);
             else 
             -- update access level and sensitivity
-                select public.get_access_level(security_table_name, rec1.id, pId);
-                select public.get_is_cleared(security_table_name, rec1.id, pId);
+                perform public.get_access_level(security_table_name, rec1.id, pId);
+                perform public.get_is_cleared(security_table_name, rec1.id, pId);
             end if;
         end loop; 
         return 0;
     end if;
   
 end; $$;
+
+
+create or replace function public.people_security_fn(
+    pTableName text,
+    pId int, 
+    pToggleSecurity int
+)
+returns int 
+language plpgsql 
+as $$ 
+declare 
+security_table_name text;
+data_table_name text;
+data_security_table_name text;
+rec1 record;
+rec2 record;
+begin
+    security_table_name := replace(pTableName, 'data', 'security');
+    perform  table_name from information_schema.tables where table_schema = split_part(security_table_name, '.',1) and table_name = split_part(security_table_name, '.', 2);
+
+    if not found then 
+        raise info 'data table doesn''t have security table';
+        return 1;
+    end if;
+
+    if pToggleSecurity = 0 then 
+        -- early return
+        return 0;
+    else
+        -- only insert 
+        for rec1 in (select table_name, table_schema from information_schema.tables where (table_schema = 'public' or table_schema = 'sc') and table_name like '%_data') loop 
+
+            data_table_name := rec1.table_schema || '.' || rec1.table_name;
+            if data_table_name != 'public.people_data' then 
+                for rec2 in execute format('select id from %I.%I', rec1.table_schema,rec1.table_name) loop 
+                    raise info 'people.insert.fn rec2: %', rec2;
+                    data_security_table_name := replace(rec1.table_name, '_data', '_security');
+
+                    execute format('insert into %I.%I(__id, __person_id, __is_cleared) values (' || rec2.id || ',' || pId || ', true )',rec1.table_schema, data_security_table_name);
+                    if pToggleSecurity = 2 then
+                    -- update access level only
+                        select public.get_access_level(security_table_name, rec1.id, pId);
+                    else 
+                    -- update access level and sensitivity
+                        perform public.get_access_level(security_table_name, pId, rec2.id);
+                        perform public.get_is_cleared(security_table_name, pId, rec2.id);
+                    end if;
+                end loop;
+            else     
+                insert into public.people_security(__id, __person_id, __is_cleared) values(pId, pId, true);
+                if pToggleSecurity = 2 then
+                    -- update access level only
+                        select public.get_access_level(security_table_name, rec1.id, pId);
+                else 
+                    -- update access level and sensitivity
+                        perform public.get_access_level(security_table_name, pId, rec2.id);
+                        perform public.get_is_cleared(security_table_name, pId, rec2.id);
+                end if;
+            end if;
+        end loop; 
+        return 0;
+    end if;
+end; $$;
+
+
+

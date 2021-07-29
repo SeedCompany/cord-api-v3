@@ -24,28 +24,28 @@ record_id int;
 begin
     permissionExists := false; 
 -- check if person has "create" permission on table
-    for rec1 in (select global_role from global_role_table_permissions_data where table_permission = 'Create' and table_name = pTableName) loop
-        raise info 'rec1: %', rec1;
-        perform person from global_role_memberships_data where person = pPersonId and global_role = rec1.global_role;
-        if found then 
-            permissionExists := true;
-            exit;
-        end if;
-    end loop; 
-    if permissionExists = false then 
-        raise notice 'person does not have permission'; 
-        return 2;
-    end if;
+    -- for rec1 in (select global_role from global_role_table_permissions_data where table_permission = 'Create' and table_name = pTableName) loop
+    --     raise info 'rec1: %', rec1;
+    --     perform person from global_role_memberships_data where person = pPersonId and global_role = rec1.global_role;
+    --     if found then 
+    --         permissionExists := true;
+    --         exit;
+    --     end if;
+    -- end loop; 
+    -- if permissionExists = false then 
+    --     raise notice 'person does not have permission'; 
+    --     return 2;
+    -- end if;
 -- loop through ever key in pRecord and check if user has "write" permission from security table. if they don't for even one key then raise exception and exit function
-    security_table_name := replace(pTableName, '_data', '_security');
-    for rec2 in (select skeys(pRecord)) loop 
-        select public.get_global_access_level(pPersonId, pTableName, rec2.skeys) into column_access_level;
-        raise info 'create.fn column_access_level: %', column_access_level;
-        if column_access_level is null or column_access_level != 'Write' then 
-            raise notice 'don''t have write access to column: % ', rec2.skeys;
-            return 2;
-        end if;
-    end loop;
+    -- security_table_name := replace(pTableName, '_data', '_security');
+    -- for rec2 in (select skeys(pRecord)) loop 
+    --     select public.get_global_access_level(pPersonId, pTableName, rec2.skeys) into column_access_level;
+    --     raise info 'create.fn column_access_level: %', column_access_level;
+    --     if column_access_level is null or column_access_level != 'Write' then 
+    --         raise notice 'don''t have write access to column: % ', rec2.skeys;
+    --         return 2;
+    --     end if;
+    -- end loop;
 -- insert row! 
     sql_string_keys := 'insert into '|| pTableName || '(';
     sql_string_values := ') values (';
@@ -67,8 +67,12 @@ begin
     execute format(sql_string_keys || sql_string_values) into record_id;
 
     -- might need an entirely different fn for public.people_data
-    select public.security_fn(pTableName, record_id, pToggleSecurity); 
-    -- select public.mv_fn();
+    if pTableName = 'public.people_data' then 
+        perform public.people_security_fn(pTableName, record_id, pToggleSecurity);
+    else 
+        perform public.security_fn(pTableName, record_id, pToggleSecurity); 
+    end if;
+    -- perform public.mv_fn(pTableName, pToggleMV);
     -- select public.history_fn();
     -- select public.granters_fn();
 
