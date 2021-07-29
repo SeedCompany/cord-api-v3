@@ -258,10 +258,7 @@ describe('Project Changeset Aware e2e', () => {
     await approveProjectChangeRequest(app, changeset.id);
 
     // Query project without changeset
-    // TODO Apply record changes on changeset approved. This is being skipped
-    // right now because the budget is "current" instead of "pending" so the sync
-    // handler skips. Needs to be figured out.
-    // result = await readProject(app, project.id);
-    // expect(result.project.budget.value.records.length).toBe(2);
+    result = await readProject(app, project.id);
+    expect(result.project.budget.value.records.length).toBe(2);
   });
 });

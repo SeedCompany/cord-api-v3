@@ -351,7 +351,7 @@ export class BudgetService {
       );
 
     try {
-      await this.budgetRecordsRepo.deleteNode(br);
+      await this.budgetRecordsRepo.deleteNode(br, changeset);
     } catch (e) {
       this.logger.warning('Failed to delete Budget Record', {
         exception: e,

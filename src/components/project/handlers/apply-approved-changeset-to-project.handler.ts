@@ -31,7 +31,7 @@ export class ApplyApprovedChangesetToProject
     const changesetId = event.changeRequest.id;
 
     try {
-      await this.db
+      const query = this.db
         .query()
         .match([
           node('node', 'Project'),
@@ -39,8 +39,29 @@ export class ApplyApprovedChangesetToProject
           node('changeset', 'Changeset', { id: changesetId }),
         ])
         .apply(commitChangesetProps())
-        .return('node')
-        .run();
+        // Apply pending budget records
+        .subQuery((sub) =>
+          sub
+            .comment('Apply pending budget records')
+            .with('node, changeset')
+            .match([
+              node('node'),
+              relation('out', '', 'budget', { active: true }),
+              node('budget', 'Budget'),
+              relation('out', 'recordRel', 'record', { active: false }),
+              node('br', 'BudgetRecord'),
+              relation('in', '', 'changeset', { active: true }),
+              node('changeset', 'Changeset', { id: changesetId }),
+            ])
+            .setValues({
+              'recordRel.active': true,
+            })
+            .with('br, changeset')
+            .apply(commitChangesetProps({ nodeVar: 'br' }))
+            .return('br')
+        )
+        .return('node');
+      await query.run();
       // TODO handle relations (locations, etc.)
     } catch (exception) {
       throw new ServerException(
