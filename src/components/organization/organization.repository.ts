@@ -18,22 +18,6 @@ import { CreateOrganization, Organization, OrganizationListInput } from './dto';
 
 @Injectable()
 export class OrganizationRepository extends DtoRepository(Organization) {
-  // assumes 'root' cypher variable is declared in query
-  private readonly createSG =
-    (cypherIdentifier: string, id: ID, label?: string) => (query: Query) => {
-      const labels = ['SecurityGroup'];
-      if (label) {
-        labels.push(label);
-      }
-      const createdAt = DateTime.local();
-
-      query.create([
-        node('root'),
-        relation('in', '', 'member'),
-        node(cypherIdentifier, labels, { createdAt, id }),
-      ]);
-    };
-
   async checkOrg(name: string) {
     return await this.db
       .query()
@@ -43,7 +27,7 @@ export class OrganizationRepository extends DtoRepository(Organization) {
       .first();
   }
 
-  async create(input: CreateOrganization, session: Session, id: string) {
+  async create(input: CreateOrganization, session: Session) {
     const secureProps: Property[] = [
       {
         key: 'name',
@@ -69,15 +53,7 @@ export class OrganizationRepository extends DtoRepository(Organization) {
 
     const query = this.db
       .query()
-      .match([
-        node('publicSG', 'PublicSecurityGroup', {
-          id,
-        }),
-      ])
       .apply(matchRequestingUser(session))
-      .apply(
-        this.createSG('orgSG', await generateId(), 'OrgPublicSecurityGroup')
-      )
       .apply(createBaseNode(await generateId(), 'Organization', secureProps))
       .return<{ id: ID }>('node.id as id');
 
