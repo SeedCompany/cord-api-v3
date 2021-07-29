@@ -46,10 +46,7 @@ export class FieldZoneService {
     ];
   }
 
-  async create(
-    { directorId, ...input }: CreateFieldZone,
-    session: Session
-  ): Promise<FieldZone> {
+  async create(input: CreateFieldZone, session: Session): Promise<FieldZone> {
     const checkName = await this.repo.checkName(input.name);
 
     if (checkName) {
@@ -58,7 +55,7 @@ export class FieldZoneService {
         'FieldZone with this name already exists.'
       );
     }
-    const result = await this.repo.create(session, input.name, directorId);
+    const result = await this.repo.create(input, session);
 
     if (!result) {
       throw new ServerException('failed to create field zone');

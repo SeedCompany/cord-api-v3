@@ -11,13 +11,7 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import {
-  HandleIdLookup,
-  ILogger,
-  Logger,
-  Property,
-  ResourceResolver,
-} from '../../core';
+import { HandleIdLookup, ILogger, Logger, ResourceResolver } from '../../core';
 import {
   mapListResults,
   parseSecuredProperties,
@@ -70,35 +64,14 @@ export class BudgetService {
       throw new NotFoundException('project does not exist', 'budget.projectId');
     }
 
-    const budgetId = await generateId();
-
     const universalTemplateFileId = await generateId();
 
-    const secureProps: Property[] = [
-      {
-        key: 'status',
-        value: BudgetStatus.Pending,
-        isPublic: false,
-        isOrgPublic: false,
-        label: 'BudgetStatus',
-      },
-      {
-        key: 'universalTemplateFile',
-        value: universalTemplateFileId,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
-
     try {
-      await this.budgetRepo.create(budgetId, secureProps, session);
-      await this.budgetRepo.connectToProject(budgetId, projectId);
+      const budgetId = await this.budgetRepo.create(
+        { projectId, ...input },
+        universalTemplateFileId,
+        session
+      );
 
       this.logger.debug(`Created Budget`, {
         id: budgetId,

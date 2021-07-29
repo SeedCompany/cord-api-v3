@@ -2,48 +2,38 @@ import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID, NotFoundException, Session, UnsecuredDto } from '../../common';
+import { DtoRepository, matchRequestingUser } from '../../core';
 import {
-  createBaseNode,
-  DtoRepository,
-  matchRequestingUser,
-  Property,
-} from '../../core';
-import { matchProps, paginate, sorting } from '../../core/database/query';
-import { Post } from './dto';
+  createNode,
+  createRelationships,
+  matchProps,
+  paginate,
+  sorting,
+} from '../../core/database/query';
+import { CreatePost, Post } from './dto';
 import { PostListInput } from './dto/list-posts.dto';
 import { PostShareability } from './dto/shareability.dto';
 
 @Injectable()
 export class PostRepository extends DtoRepository(Post) {
-  async create(
-    parentId: string,
-    postId: ID,
-    secureProps: Property[],
-    session: Session
-  ) {
-    const createPost = this.db
+  async create(input: CreatePost, session: Session) {
+    const initialProps = {
+      creator: session.userId,
+      type: input.type,
+      shareability: input.shareability,
+      body: input.body,
+      modifiedAt: DateTime.local(),
+    };
+    return await this.db
       .query()
       .apply(matchRequestingUser(session))
-      .apply(createBaseNode(postId, ['Post'], secureProps))
-      .return('node.id as id');
-
-    await createPost.first();
-
-    await this.db
-      .query()
-      .match([
-        [node('baseNode', 'BaseNode', { id: parentId })],
-        [node('post', 'Post', { id: postId })],
-      ])
-      .create([
-        node('baseNode'),
-        relation('out', '', 'post', {
-          active: true,
-          createdAt: DateTime.local(),
-        }),
-        node('post'),
-      ])
-      .return('post.id as id')
+      .apply(await createNode(Post, { initialProps }))
+      .apply(
+        createRelationships(Post, 'in', {
+          post: ['BaseNode', input.parentId],
+        })
+      )
+      .return<{ id: ID }>('node.id as id')
       .first();
   }
 

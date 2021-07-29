@@ -1,15 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
-import { DateTime } from 'luxon';
+import { ID, NotFoundException, Session, UnsecuredDto } from '../../common';
+import { DtoRepository, matchRequestingUser } from '../../core';
 import {
-  generateId,
-  ID,
-  NotFoundException,
-  Session,
-  UnsecuredDto,
-} from '../../common';
-import { createBaseNode, DtoRepository, matchRequestingUser } from '../../core';
-import {
+  createNode,
+  createRelationships,
   matchProps,
   merge,
   paginate,
@@ -17,7 +12,7 @@ import {
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { FieldRegion, FieldRegionListInput } from './dto';
+import { CreateFieldRegion, FieldRegion, FieldRegionListInput } from './dto';
 
 @Injectable()
 export class FieldRegionRepository extends DtoRepository(FieldRegion) {
@@ -29,55 +24,24 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
       .first();
   }
 
-  async create(
-    session: Session,
-    name: string,
-    directorId: ID,
-    fieldZoneId: ID
-  ) {
-    const createdAt = DateTime.local();
-
-    const secureProps = [
-      {
-        key: 'name',
-        value: name,
-        isPublic: false,
-        isOrgPublic: false,
-        label: 'FieldRegionName',
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
+  async create(input: CreateFieldRegion, session: Session) {
+    const initialProps = {
+      name: input.name,
+      canDelete: true,
+    };
 
     // create field region
     const query = this.db
       .query()
       .apply(matchRequestingUser(session))
-      .match([
-        node('director', 'User', {
-          id: directorId,
-        }),
-      ])
-      .match([
-        node('fieldZone', 'FieldZone', {
-          id: fieldZoneId,
-        }),
-      ])
-      .apply(createBaseNode(await generateId(), 'FieldRegion', secureProps))
-      .create([
-        node('node'),
-        relation('out', '', 'director', { active: true, createdAt }),
-        node('director'),
-      ])
-      .create([
-        node('node'),
-        relation('out', '', 'zone', { active: true, createdAt }),
-        node('fieldZone'),
-      ])
+      .apply(await createNode(FieldRegion, { initialProps }))
+      .apply(
+        createRelationships(FieldRegion, 'out', {
+          director: ['User', input.directorId],
+          zone: ['FieldZone', input.fieldZoneId],
+        })
+      )
+
       .return<{ id: ID }>('node.id as id');
 
     return await query.first();

@@ -1,19 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
-import { generateId, ID, NotFoundException, Session } from '../../common';
+import { ID, NotFoundException, Session } from '../../common';
+import { DtoRepository, matchRequestingUser } from '../../core';
 import {
-  createBaseNode,
-  DtoRepository,
-  matchRequestingUser,
-  Property,
-} from '../../core';
-import {
+  createNode,
   paginate,
   permissionsOfNode,
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { LiteracyMaterial, LiteracyMaterialListInput } from './dto';
+import {
+  CreateLiteracyMaterial,
+  LiteracyMaterial,
+  LiteracyMaterialListInput,
+} from './dto';
 
 @Injectable()
 export class LiteracyMaterialRepository extends DtoRepository(
@@ -27,32 +27,15 @@ export class LiteracyMaterialRepository extends DtoRepository(
       .first();
   }
 
-  async create(session: Session, name: string) {
-    const secureProps: Property[] = [
-      {
-        key: 'name',
-        value: name,
-        isPublic: true,
-        isOrgPublic: true,
-        label: 'LiteracyName',
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
+  async create(input: CreateLiteracyMaterial, session: Session) {
+    const initialProps = {
+      name: input.name,
+      canDelete: true,
+    };
     return await this.db
       .query()
       .apply(matchRequestingUser(session))
-      .apply(
-        createBaseNode(
-          await generateId(),
-          ['LiteracyMaterial', 'Producible'],
-          secureProps
-        )
-      )
+      .apply(await createNode(LiteracyMaterial, { initialProps }))
       .return<{ id: ID }>('node.id as id')
       .first();
   }

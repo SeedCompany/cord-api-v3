@@ -1,13 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { generateId, ID, NotFoundException, Session } from '../../../common';
 import {
-  createBaseNode,
-  DtoRepository,
-  matchRequestingUser,
-  Property,
-} from '../../../core';
+  ID,
+  NotFoundException,
+  ServerException,
+  Session,
+} from '../../../common';
+import { DtoRepository, matchRequestingUser } from '../../../core';
+import { createNode, createRelationships } from '../../../core/database/query';
 import {
+  CreateUnavailability,
   Unavailability,
   UnavailabilityListInput,
   UpdateUnavailability,
@@ -15,31 +17,27 @@ import {
 
 @Injectable()
 export class UnavailabilityRepository extends DtoRepository(Unavailability) {
-  async create(session: Session, secureProps: Property[]) {
-    const createUnavailability = this.db
+  async create(input: CreateUnavailability, session: Session) {
+    const initialProps = {
+      description: input.description,
+      start: input.start,
+      end: input.end,
+    };
+    const query = this.db
       .query()
       .apply(matchRequestingUser(session))
-      .apply(createBaseNode(await generateId(), 'Unavailability', secureProps))
-      .return('node.id as id')
-      .asResult<{ id: ID }>();
-
-    return await createUnavailability.first();
-  }
-
-  async connectUnavailability(id: ID, userId: ID) {
-    const query = `
-    MATCH (user: User {id: $userId}),
-    (unavailability:Unavailability {id: $id})
-    CREATE (user)-[:unavailability {active: true, createdAt: datetime()}]->(unavailability)
-    RETURN  unavailability.id as id
-    `;
-    await this.db
-      .query()
-      .raw(query, {
-        userId,
-        id,
-      })
-      .run();
+      .apply(await createNode(Unavailability, { initialProps }))
+      .apply(
+        createRelationships(Unavailability, 'in', {
+          unavailability: ['User', input.userId],
+        })
+      )
+      .return<{ id: ID }>('node.id as id');
+    const result = await query.first();
+    if (!result) {
+      throw new ServerException('Could not create unavailability');
+    }
+    return result.id;
   }
 
   async readOne(id: ID, session: Session) {

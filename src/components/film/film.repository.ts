@@ -1,14 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
-import { generateId, ID, NotFoundException, Session } from '../../common';
-import { createBaseNode, DtoRepository, matchRequestingUser } from '../../core';
+import { ID, NotFoundException, Session } from '../../common';
+import { DtoRepository, matchRequestingUser } from '../../core';
 import {
+  createNode,
   paginate,
   permissionsOfNode,
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { Film, FilmListInput } from './dto';
+import { CreateFilm, Film, FilmListInput } from './dto';
 
 @Injectable()
 export class FilmRepository extends DtoRepository(Film) {
@@ -20,28 +21,15 @@ export class FilmRepository extends DtoRepository(Film) {
       .first();
   }
 
-  async createFilm(name: string, session: Session) {
-    const secureProps = [
-      {
-        key: 'name',
-        value: name,
-        isPublic: true,
-        isOrgPublic: true,
-        label: 'FilmName',
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
+  async createFilm(input: CreateFilm, session: Session) {
+    const initialProps = {
+      name: input.name,
+      canDelete: true,
+    };
     return await this.db
       .query()
       .apply(matchRequestingUser(session))
-      .apply(
-        createBaseNode(await generateId(), ['Film', 'Producible'], secureProps)
-      )
+      .apply(await createNode(Film, { initialProps }))
       .return<{ id: ID }>('node.id as id')
       .first();
   }

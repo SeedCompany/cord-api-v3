@@ -76,9 +76,7 @@ export class OrganizationService {
       );
     }
 
-    const publicSecurityId = this.config.publicSecurityGroup.id;
-
-    const result = await this.repo.create(input, session, publicSecurityId);
+    const result = await this.repo.create(input, session);
 
     if (!result) {
       throw new ServerException('failed to create default org');
