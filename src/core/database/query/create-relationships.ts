@@ -79,6 +79,11 @@ export function createRelationships<TResourceStatic extends ResourceShape<any>>(
       )
   );
 
+  if (flattened.length === 0) {
+    // Do nothing in query if there are no IDs to connect
+    return (query: Query) => query;
+  }
+
   // We are creating inside of changeset if there's a changeset relation into the node.
   const inChangeset = flattened.some(
     (f) => f.direction === 'in' && f.relLabel === 'changeset' && f.id
