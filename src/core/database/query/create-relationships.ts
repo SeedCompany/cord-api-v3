@@ -7,7 +7,10 @@ import { ResourceMap } from '../../../components/authorization/model/resource-ma
 
 type RelationshipDefinition = Record<
   string,
-  [baseNodeLabel: keyof ResourceMap, id: Nullable<ID> | readonly ID[]]
+  [
+    baseNodeLabel: keyof ResourceMap | 'BaseNode',
+    id: Nullable<ID> | readonly ID[]
+  ]
 >;
 type AnyDirectionalDefinition = Partial<
   Record<RelationDirection, RelationshipDefinition>
