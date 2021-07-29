@@ -13,9 +13,9 @@ export const sleep = (duration: DurationInput) =>
     setTimeout(resolve, Duration.from(duration).toMillis())
   );
 
-export const simpleSwitch = <T>(
-  key: string | null | undefined,
-  options: Record<string, T>
+export const simpleSwitch = <T, K extends string = string>(
+  key: K | null | undefined,
+  options: Record<K, T>
 ): T | undefined => (key ? options[key] : undefined);
 
 /** Converts list to map given a function that returns a [key, value] tuple. */

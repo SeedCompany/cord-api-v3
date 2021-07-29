@@ -7,6 +7,7 @@ import {
   SecuredProperty,
   SecuredProps,
   ServerException,
+  simpleSwitch,
 } from '../../../common';
 import { DefinedFile } from '../../file';
 import { ReportType } from './report-type.enum';
@@ -16,20 +17,20 @@ type AnyPeriodicReport = MergeExclusive<
   ProgressReport
 >;
 
-@InterfaceType({
-  resolveType: (val: PeriodicReport) => {
-    if (val.type === ReportType.Financial) {
-      return FinancialReport;
-    }
-    if (val.type === ReportType.Narrative) {
-      return NarrativeReport;
-    }
-    if (val.type === ReportType.Progress) {
-      return ProgressReport;
-    }
-
+export const resolveReportType = (report: PeriodicReport) => {
+  const type = simpleSwitch(report.type, {
+    Financial: FinancialReport,
+    Narrative: NarrativeReport,
+    Progress: ProgressReport,
+  });
+  if (!type) {
     throw new ServerException('Could not resolve periodic report type');
-  },
+  }
+  return type;
+};
+
+@InterfaceType({
+  resolveType: resolveReportType,
   implements: [Resource],
 })
 class PeriodicReport extends Resource {
