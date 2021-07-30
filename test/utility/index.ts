@@ -20,7 +20,6 @@ export * from './logout';
 export * from './expect-not-found';
 export * as fragments from './fragments';
 export * from './raw.type';
-export * from './add-favorite';
 export * from './create-region';
 export * from './create-location';
 export * from './create-engagement';
