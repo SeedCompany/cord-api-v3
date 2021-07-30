@@ -1,5 +1,5 @@
 [√] refresh materialized view whenever an update takes place (for example - __is_cleared, access_level) 
-[ ] refresh fn for generic create
+[√] refresh fn for generic create
 [ ] fix materialized view logic
 [ ] history fn for generic create
 [ ] testing the above two fns 

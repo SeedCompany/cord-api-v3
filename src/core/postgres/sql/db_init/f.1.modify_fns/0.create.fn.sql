@@ -73,7 +73,7 @@ begin
         perform public.security_fn(pTableName, record_id, pToggleSecurity, pToggleMV); 
     end if;
     perform public.mv_fn(pTableName, pToggleMV);
-    -- select public.history_fn();
+    perform public.history_fn(pTableName, pToggleHistory, pRecord);
     if pTableName = 'public.projects_data' or 
     pTableName = 'public.project_member_roles_data' or
     pTableName = 'public.project_role_column_grants_data' or 
