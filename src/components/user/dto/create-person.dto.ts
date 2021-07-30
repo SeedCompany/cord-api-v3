@@ -9,10 +9,10 @@ import { User } from './user.dto';
 
 @InputType()
 export abstract class CreatePerson {
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @IsEmail()
   @Transform(({ value }) => toLower(value))
-  readonly email?: string;
+  readonly email?: string | null;
 
   @NameField()
   readonly realFirstName: string;

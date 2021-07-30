@@ -1,6 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { compact, difference } from 'lodash';
-import { DateTime } from 'luxon';
 import {
   DuplicateException,
   ID,
@@ -217,10 +216,9 @@ export class UserService {
     await this.userRepo.updateProperties(user, simpleChanges);
 
     // Update email
-    if (email) {
+    if (email !== undefined) {
       try {
-        const createdAt = DateTime.local();
-        await this.userRepo.updateEmail(user, email, createdAt);
+        await this.userRepo.updateEmail(user, email);
       } catch (e) {
         if (e instanceof UniquenessError && e.label === 'EmailAddress') {
           throw new DuplicateException(

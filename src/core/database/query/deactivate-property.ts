@@ -1,4 +1,5 @@
 import { node, Query, relation } from 'cypher-query-builder';
+import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
 import { Variable } from '.';
 import {
@@ -74,6 +75,7 @@ export const deactivateProperty =
         )
         .setValues({
           [`${changeset ? 'oldChange' : 'oldToProp'}.active`]: false,
+          'oldPropVar.deletedAt': DateTime.local(),
         })
         .with('oldPropVar')
         .apply(prefixNodeLabelsWithDeleted('oldPropVar'))
