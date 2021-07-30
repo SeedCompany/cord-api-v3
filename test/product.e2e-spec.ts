@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
 import { times } from 'lodash';
-import { Powers } from '../src/components/authorization/dto/powers';
+import { Powers, Role } from '../src/components/authorization';
 import { Film } from '../src/components/film';
 import {
   AnyProduct,
@@ -10,7 +10,6 @@ import {
   ProductMethodology,
   ProductPurpose,
 } from '../src/components/product';
-import { Role } from '../src/components/project';
 import { ScriptureRange } from '../src/components/scripture/dto';
 import { Story } from '../src/components/story';
 import {

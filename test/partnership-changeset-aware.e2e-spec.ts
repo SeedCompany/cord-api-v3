@@ -1,9 +1,9 @@
 import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
-import { Powers } from '../src/components/authorization/dto/powers';
+import { Powers, Role } from '../src/components/authorization';
 import { PartnershipAgreementStatus } from '../src/components/partnership';
-import { ProjectStep, Role } from '../src/components/project';
+import { ProjectStep } from '../src/components/project';
 import { User } from '../src/components/user/dto/user.dto';
 import {
   approveProjectChangeRequest,

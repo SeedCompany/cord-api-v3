@@ -4,7 +4,7 @@ import * as faker from 'faker';
 import { some } from 'lodash';
 import { DateTime, Interval } from 'luxon';
 import { generateId, ID, InputException } from '../src/common';
-import { Powers } from '../src/components/authorization/dto/powers';
+import { Powers, Role } from '../src/components/authorization';
 import {
   CreateInternshipEngagement,
   EngagementStatus,
@@ -21,7 +21,6 @@ import {
   ProjectStep,
   ProjectStepTransition,
   ProjectType,
-  Role,
 } from '../src/components/project';
 import { User } from '../src/components/user';
 import {

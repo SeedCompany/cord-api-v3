@@ -6,14 +6,13 @@ import {
   SecuredResource,
   Sensitivity,
 } from '../../src/common';
+import { Powers, Role, ScopedRole } from '../../src/components/authorization';
 import { PermissionsOf } from '../../src/components/authorization/authorization.service';
-import { Powers } from '../../src/components/authorization/dto/powers';
 import {
   EthnologueLanguage,
   Language,
 } from '../../src/components/language/dto';
 import { Location, SecuredLocationList } from '../../src/components/location';
-import { Role, ScopedRole } from '../../src/components/project';
 import {
   addLocationToLanguage,
   createLanguage,

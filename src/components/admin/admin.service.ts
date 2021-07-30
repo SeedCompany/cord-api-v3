@@ -5,8 +5,7 @@ import { ConfigService, ILogger, Logger, Transactional } from '../../core';
 import { AuthenticationService } from '../authentication';
 import { CryptoService } from '../authentication/crypto.service';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { Powers } from '../authorization/dto/powers';
-import { Role } from '../project';
+import { Powers, Role } from '../authorization/dto';
 import { AdminRepository } from './admin.repository';
 
 @Injectable()

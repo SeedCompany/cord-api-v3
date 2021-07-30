@@ -1,16 +1,10 @@
 import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { CalendarDate, Sensitivity } from '../../src/common';
-import { Powers } from '../../src/components/authorization/dto/powers';
+import { Powers, Role, ScopedRole } from '../../src/components/authorization';
 import { Location } from '../../src/components/location';
 import { PartnerType } from '../../src/components/partner';
-import {
-  IProject,
-  Project,
-  ProjectType,
-  Role,
-  ScopedRole,
-} from '../../src/components/project';
+import { IProject, Project, ProjectType } from '../../src/components/project';
 import {
   createBudget,
   createLocation,
