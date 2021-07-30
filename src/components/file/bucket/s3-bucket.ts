@@ -1,5 +1,13 @@
-import { S3 } from 'aws-sdk';
-import { GetObjectOutput, HeadObjectOutput } from 'aws-sdk/clients/s3';
+import {
+  GetObjectCommand,
+  GetObjectOutput,
+  HeadObjectOutput,
+  PutObjectCommand,
+  S3,
+} from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { SdkError } from '@aws-sdk/types';
+import { NotFoundException } from '../../../common';
 import { BucketOptions, FileBucket } from './file-bucket';
 
 export interface S3BucketOptions extends BucketOptions {
@@ -19,11 +27,20 @@ export class S3Bucket extends FileBucket {
     this.bucket = options.bucket;
   }
 
-  protected getSignedUrl(operation: string, key: string) {
-    return this.s3.getSignedUrlPromise(operation, {
+  protected async getSignedUrl(
+    operation: 'putObject' | 'getObject',
+    key: string
+  ) {
+    const input = {
       Bucket: this.bucket,
       Key: key,
-      Expires: this.signedUrlExpires.as('seconds'),
+    };
+    const command =
+      operation === 'putObject'
+        ? new PutObjectCommand(input)
+        : new GetObjectCommand(input);
+    return await getSignedUrl(this.s3, command, {
+      expiresIn: this.signedUrlExpires.as('seconds'),
     });
   }
 
@@ -33,7 +50,7 @@ export class S3Bucket extends FileBucket {
         Bucket: this.bucket,
         Key: key,
       })
-      .promise();
+      .catch(handleNotFound);
   }
 
   async headObject(key: string): Promise<HeadObjectOutput> {
@@ -42,7 +59,7 @@ export class S3Bucket extends FileBucket {
         Bucket: this.bucket,
         Key: key,
       })
-      .promise();
+      .catch(handleNotFound);
   }
 
   async copyObject(oldKey: string, newKey: string) {
@@ -52,7 +69,7 @@ export class S3Bucket extends FileBucket {
         CopySource: `${this.bucket}/${oldKey}`,
         Key: newKey,
       })
-      .promise();
+      .catch(handleNotFound);
   }
 
   async deleteObject(key: string) {
@@ -61,6 +78,13 @@ export class S3Bucket extends FileBucket {
         Bucket: this.bucket,
         Key: key,
       })
-      .promise();
+      .catch(handleNotFound);
   }
 }
+
+const handleNotFound = (e: SdkError) => {
+  if (e.name === 'NoSuchKey') {
+    throw new NotFoundException('Could not find file contents', e);
+  }
+  throw e;
+};

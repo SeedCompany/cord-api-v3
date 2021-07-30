@@ -29,6 +29,8 @@
     "type-check": "tsc -p tsconfig.check.json"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.24.0",
+    "@aws-sdk/s3-request-presigner": "^3.24.0",
     "@golevelup/nestjs-discovery": "^2.3.1",
     "@nestjs/common": "^7.6.15",
     "@nestjs/core": "^7.6.15",
@@ -40,7 +42,6 @@
     "apollo-server-core": "^2.22.2",
     "apollo-server-express": "^2.22.2",
     "argon2": "^0.27.2",
-    "aws-sdk": "^2.879.0",
     "class-transformer": "^0.4.0",
     "class-validator": "^0.13.1",
     "cli-highlight": "^2.1.11",

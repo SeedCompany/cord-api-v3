@@ -23,7 +23,7 @@ export abstract class FileBucket {
     return this.getSignedUrl('getObject', key);
   }
   protected abstract getSignedUrl(
-    operation: string,
+    operation: 'putObject' | 'getObject',
     key: string
   ): Promise<string>;
   abstract getObject(key: string): Promise<GetObjectOutput>;
