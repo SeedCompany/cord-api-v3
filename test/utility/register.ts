@@ -7,7 +7,7 @@ import { User, UserStatus } from '../../src/components/user';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
 import { grantPower } from './grant-power';
-import { runAsAdmin } from './login';
+import { login, runAsAdmin, runInIsolatedSession } from './login';
 
 export const generateRegisterInput = async (): Promise<RegisterInput> => ({
   ...(await generateRequireFieldsRegisterInput()),
@@ -59,10 +59,23 @@ export async function registerUserWithStrictInput(
 
   return actual;
 }
+
+export type TestUser = User & {
+  /**
+   * Login as the user with the current session
+   */
+  login: () => Promise<void>;
+
+  /**
+   * Execute this code as this user in an isolated session
+   */
+  runAs: <R>(execution: () => Promise<R>) => Promise<R>;
+};
+
 export async function registerUser(
   app: TestApp,
   input: Partial<RegisterInput> = {}
-) {
+): Promise<TestUser> {
   const { roles, ...user }: RegisterInput = {
     ...(await generateRegisterInput()),
     ...input,
@@ -109,14 +122,25 @@ export async function registerUser(
     });
   }
 
-  return actual;
+  const loginMe = async () => {
+    await login(app, { email: user.email, password: user.password });
+  };
+  return {
+    ...actual,
+    login: loginMe,
+    runAs: <R>(execution: () => Promise<R>) =>
+      runInIsolatedSession(app, async () => {
+        await loginMe();
+        return await execution();
+      }),
+  };
 }
 
 export async function registerUserWithPower(
   app: TestApp,
   powers: Powers[],
   input: Partial<RegisterInput> = {}
-): Promise<User> {
+): Promise<TestUser> {
   const user = await registerUser(app, input);
   await grantPower(app, user.id, ...powers);
   return user;
