@@ -42,7 +42,6 @@ describe('User e2e', () => {
     const fakeUser = await generateRegisterInput();
 
     const user = await registerUser(app, fakeUser);
-    await login(app, { email: fakeUser.email, password: fakeUser.password });
 
     const result = await app.graphql.query(
       gql`

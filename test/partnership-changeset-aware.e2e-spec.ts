@@ -1,10 +1,8 @@
 import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
-import * as faker from 'faker';
 import { Powers, Role } from '../src/components/authorization';
 import { PartnershipAgreementStatus } from '../src/components/partnership';
 import { ProjectStep } from '../src/components/project';
-import { User } from '../src/components/user/dto/user.dto';
 import {
   approveProjectChangeRequest,
   createFundingAccount,
@@ -16,7 +14,6 @@ import {
   createRegion,
   createSession,
   createTestApp,
-  login,
   registerUserWithPower,
   runAsAdmin,
   TestApp,
@@ -92,25 +89,19 @@ const activeProject = async (app: TestApp) => {
 
 describe('Partnership Changeset Aware e2e', () => {
   let app: TestApp;
-  let director: User;
   let db: Connection;
-  const password = faker.internet.password();
 
   beforeAll(async () => {
     app = await createTestApp();
     db = app.get(Connection);
     await createSession(app);
-
-    director = await registerUserWithPower(
+    await registerUserWithPower(
       app,
       [Powers.CreateLanguage, Powers.CreateEthnologueLanguage],
       {
         roles: [Role.ProjectManager, Role.Administrator],
-        password: password,
       }
     );
-
-    await login(app, { email: director.email.value, password });
   });
 
   afterAll(async () => {

@@ -38,6 +38,7 @@ import {
   createOrganization,
   createPartner,
   createPartnership,
+  createPerson,
   createPin,
   createProject,
   createProjectMember,
@@ -48,7 +49,6 @@ import {
   expectNotFound,
   fragments,
   getUserFromSession,
-  login,
   loginAsAdmin,
   Raw,
   registerUser,
@@ -121,7 +121,6 @@ describe('Project e2e', () => {
       directorId: director.id,
       fieldZoneId: fieldZone.id,
     });
-    await login(app, { email: director.email.value, password: password });
     location = await createLocation(app);
     intern = await getUserFromSession(app);
     mentor = await getUserFromSession(app);
@@ -762,15 +761,11 @@ describe('Project e2e', () => {
     const numProjectMembers = 2;
     const project = await createProject(app);
     const projectId = project.id;
-    const password = faker.internet.password();
-    const password2 = faker.internet.password();
-    const userForList = await registerUser(app, { password });
+    const userForList = await registerUser(app);
     const userId = userForList.id;
-    const userForList2 = await registerUser(app, { password: password2 });
+    const userForList2 = await createPerson(app);
     const userId2 = userForList2.id;
     const memberIds: ID[] = [userId, userId2];
-
-    await login(app, { email: userForList.email.value, password });
 
     await Promise.all(
       times(numProjectMembers, async (index) => {
