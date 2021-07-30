@@ -68,7 +68,7 @@ begin
 
     -- might need an entirely different fn for public.people_data
     if pTableName = 'public.people_data' then 
-        perform public.people_security_fn(pTableName, record_id, pToggleSecurity, pToggleMV);
+        perform public.people_security_fn(record_id, pToggleSecurity, pToggleMV);
     else 
         perform public.security_fn(pTableName, record_id, pToggleSecurity, pToggleMV); 
     end if;
