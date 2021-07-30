@@ -59,7 +59,7 @@ export class BudgetRepository extends DtoRepository(Budget) {
   ) {
     const initialProps = {
       status: Status.Pending,
-      universalTemplateFileId,
+      universalTemplateFile: universalTemplateFileId,
       canDelete: true,
     };
 
@@ -117,8 +117,7 @@ export class BudgetRepository extends DtoRepository(Budget) {
         relation('out', '', 'status', { active: true }),
         node('status', 'Property'),
       ])
-      .return('status.value as status')
-      .asResult<{ status: Status }>()
+      .return<{ status: Status }>('status.value as status')
       .first();
     if (!result) {
       throw new NotFoundException('Budget could not be found');
