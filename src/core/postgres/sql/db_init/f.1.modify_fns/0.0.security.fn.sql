@@ -146,6 +146,7 @@ begin
         -- update __is_cleared to false if person_sensitivity_clearance is less than data_sensitivity
         if (data_sensitivity = 'Medium' and person_sensitivity_clearance = 'Low') or 
         (data_sensitivity = 'High' and (person_sensitivity_clearance = 'Medium' or person_sensitivity_clearance = 'Low')) then 
+
             execute format('update  %I.%I set __is_cleared = false where __person_id = '|| pPersonId || ' and '|| ' __id = '|| pId,split_part(pSecurityTableName, '.',1), split_part(pSecurityTableName, '.',2) );
             if pToggleMV = 1 then
                 execute format('refresh materialized view %I.%I', split_part(pSecurityTableName, '.', 1), replace(split_part(pSecurityTableName, '.', 2), '_security', '_materialized_view'));
@@ -188,9 +189,9 @@ begin
 
             execute format('insert into  %I.%I  (__id, __person_id, __is_cleared) values (' || pId || ',' ||rec1.id ||', true)', split_part(security_table_name, '.',1),split_part(security_table_name, '.',2));
 
-            if pToggleSecurity = 2 then
+            if pToggleSecurity = 1 then
             -- update access level only
-                select public.get_access_level(security_table_name, rec1.id, pId, pToggleMV);
+                perform public.get_access_level(security_table_name, rec1.id, pId, pToggleMV);
             else 
             -- update access level and sensitivity
                 perform public.get_access_level(security_table_name, rec1.id, pId, pToggleMV);
@@ -204,7 +205,6 @@ end; $$;
 
 
 create or replace function public.people_security_fn(
-    pTableName text,
     pId int, 
     pToggleSecurity int,
     pToggleMV int
@@ -219,13 +219,7 @@ data_security_table_name text;
 rec1 record;
 rec2 record;
 begin
-    security_table_name := replace(pTableName, 'data', 'security');
-    perform  table_name from information_schema.tables where table_schema = split_part(security_table_name, '.',1) and table_name = split_part(security_table_name, '.', 2);
-
-    if not found then 
-        raise info 'data table doesn''t have security table';
-        return 1;
-    end if;
+    
 
     if pToggleSecurity = 0 then 
         -- early return
@@ -238,27 +232,27 @@ begin
             if data_table_name != 'public.people_data' then 
                 for rec2 in execute format('select id from %I.%I', rec1.table_schema,rec1.table_name) loop 
                     raise info 'people.insert.fn rec2: %', rec2;
-                    data_security_table_name := replace(rec1.table_name, '_data', '_security');
+                    data_security_table_name := replace(data_table_name, '_data', '_security');
 
-                    execute format('insert into %I.%I(__id, __person_id, __is_cleared) values (' || rec2.id || ',' || pId || ', true )',rec1.table_schema, data_security_table_name);
-                    if pToggleSecurity = 2 then
+                    execute format('insert into %I.%I(__id, __person_id, __is_cleared) values (' || rec2.id || ',' || pId || ', true )',split_part(data_security_table_name, '.', 1), split_part(data_security_table_name, '.', 2));
+                    if pToggleSecurity = 1 then
                     -- update access level only
-                        select public.get_access_level(security_table_name, rec1.id, pId, pToggleMV);
+                        perform public.get_access_level(data_security_table_name, rec2.id, pId, pToggleMV);
                     else 
                     -- update access level and sensitivity
-                        perform public.get_access_level(security_table_name, pId, rec2.id, pToggleMV);
-                        perform public.get_is_cleared(security_table_name, pId, rec2.id, pToggleMV);
+                        perform public.get_access_level(data_security_table_name, pId, rec2.id, pToggleMV);
+                        perform public.get_is_cleared(data_security_table_name, pId, rec2.id, pToggleMV);
                     end if;
                 end loop;
             else     
                 insert into public.people_security(__id, __person_id, __is_cleared) values(pId, pId, true);
-                if pToggleSecurity = 2 then
+                if pToggleSecurity = 1 then
                     -- update access level only
-                        select public.get_access_level(security_table_name, rec1.id, pId, pToggleMV);
+                        perform public.get_access_level(data_security_table_name, rec1.id, pId, pToggleMV);
                 else 
                     -- update access level and sensitivity
-                        perform public.get_access_level(security_table_name, pId, rec2.id, pToggleMV);
-                        perform public.get_is_cleared(security_table_name, pId, rec2.id, pToggleMV);
+                        perform public.get_access_level(data_security_table_name, pId, rec2.id, pToggleMV);
+                        perform public.get_is_cleared(data_security_table_name, pId, rec2.id, pToggleMV);
                 end if;
             end if;
         end loop; 
