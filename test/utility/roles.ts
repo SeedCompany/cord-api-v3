@@ -1,4 +1,4 @@
-import { registerUserWithPower, TestApp } from '.';
+import { TestApp } from '.';
 import { ResourceShape } from '../../src/common';
 import { Role, ScopedRole } from '../../src/components/authorization';
 import { getPermissions } from '../security/permissions';
@@ -24,9 +24,6 @@ export async function testRole<
   propToTest: keyof ResourceObj;
   skipEditCheck: boolean;
 }): Promise<void> {
-  await registerUserWithPower(app, [], {
-    roles: [role],
-  });
   const permissions = (await getPermissions({
     resource: staticResource,
     userRole: `global:${role}` as ScopedRole,
