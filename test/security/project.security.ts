@@ -1,16 +1,9 @@
 import { Connection } from 'cypher-query-builder';
-import * as faker from 'faker';
 import { CalendarDate, Sensitivity } from '../../src/common';
-import { Powers } from '../../src/components/authorization/dto/powers';
+import { Powers, Role, ScopedRole } from '../../src/components/authorization';
 import { Location } from '../../src/components/location';
 import { PartnerType } from '../../src/components/partner';
-import {
-  IProject,
-  Project,
-  ProjectType,
-  Role,
-  ScopedRole,
-} from '../../src/components/project';
+import { IProject, Project, ProjectType } from '../../src/components/project';
 import {
   createBudget,
   createLocation,
@@ -20,13 +13,14 @@ import {
   createProject,
   createSession,
   createTestApp,
-  login,
   Raw,
   readOneProject,
   readOneProjectBudget,
   readOneProjectOtherLocations,
   readOneProjectOtherLocationsItems,
+  registerUser,
   registerUserWithPower,
+  runInIsolatedSession,
   TestApp,
 } from '../utility';
 import { resetDatabase } from '../utility/reset-database';
@@ -40,8 +34,6 @@ import { getPermissions } from './permissions';
 describe('Project Security e2e', () => {
   let app: TestApp;
   let db: Connection;
-  let email: string;
-  let password: string;
   let testProject: Raw<Project>;
   let testLocation: Location;
   let primaryLocation: Location;
@@ -49,24 +41,18 @@ describe('Project Security e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     db = app.get(Connection);
-    email = faker.internet.email();
-    password = faker.internet.password();
     await createSession(app);
-    await registerUserWithPower(
-      app,
-      [
-        Powers.CreateProject,
-        Powers.CreateLocation,
-        Powers.CreateLanguage,
-        Powers.CreateLanguageEngagement,
-        Powers.CreateEthnologueLanguage,
-        Powers.CreateBudget,
-        Powers.CreateOrganization,
-        Powers.CreatePartner,
-        Powers.CreatePartnership,
-      ],
-      { email: email, password: password }
-    );
+    await registerUserWithPower(app, [
+      Powers.CreateProject,
+      Powers.CreateLocation,
+      Powers.CreateLanguage,
+      Powers.CreateLanguageEngagement,
+      Powers.CreateEthnologueLanguage,
+      Powers.CreateBudget,
+      Powers.CreateOrganization,
+      Powers.CreatePartner,
+      Powers.CreatePartnership,
+    ]);
     testLocation = await createLocation(app);
     primaryLocation = await createLocation(app);
     testProject = await createProject(app, {
@@ -128,15 +114,16 @@ describe('Project Security e2e', () => {
       );
 
       it('reading otherLocations', async () => {
-        await login(app, { email, password });
-        await registerUserWithPower(app, [], { roles: role });
         const perms = await getPermissions({
           resource: IProject,
           userRole: `global:${role as Role}` as ScopedRole,
           sensitivity: testProject.sensitivity,
         });
 
-        const read = await readOneProjectOtherLocations(app, testProject.id);
+        const read = await runInIsolatedSession(app, async () => {
+          await registerUser(app, { roles: role });
+          return await readOneProjectOtherLocations(app, testProject.id);
+        });
 
         expect(read.canRead).toEqual(perms.otherLocations.canRead);
         expect(read.canCreate).toEqual(perms.otherLocations.canEdit);
@@ -168,7 +155,6 @@ describe('Project Security e2e', () => {
         `(
           ' reading $type $resource.name $property',
           async ({ property, resource, readFunction, type }) => {
-            await login(app, { email: email, password: password });
             const proj = await createProject(app, {
               primaryLocationId: primaryLocation.id,
               type,
@@ -189,13 +175,11 @@ describe('Project Security e2e', () => {
               }),
               readOneFunction: readFunction,
             });
-            await login(app, { email, password });
           }
         );
       }
     );
     it('reading currentBudget', async () => {
-      await login(app, { email, password });
       const proj = await createProject(app);
       await createBudget(app, { projectId: proj.id });
       const org = await createOrganization(app);
@@ -210,7 +194,6 @@ describe('Project Security e2e', () => {
         mouStartOverride: CalendarDate.fromISO('2000-01-01'),
         mouEndOverride: CalendarDate.fromISO('2004-01-01'),
       });
-      await registerUserWithPower(app, [], { roles: [Role.ConsultantManager] });
       const perms = await getPermissions({
         resource: IProject,
         userRole: `global:${Role.ConsultantManager as Role}` as ScopedRole,
@@ -229,7 +212,6 @@ describe('Project Security e2e', () => {
         permissions: perms,
         readOneFunction: readOneProjectBudget,
       });
-      await login(app, { email, password });
     });
     describe.each`
       role                      | sensitivityToTest
@@ -243,7 +225,6 @@ describe('Project Security e2e', () => {
       'Role: $role - Sensitivity: $sensitivityToTest',
       ({ role, sensitivityToTest }) => {
         it('reading otherLocations Internship project', async () => {
-          await login(app, { email, password });
           const proj = await createProject(app, {
             otherLocationIds: [testLocation.id],
             type: ProjectType.Internship,
@@ -264,10 +245,8 @@ describe('Project Security e2e', () => {
               sensitivity: sensitivityToTest,
             }),
           });
-          await login(app, { email, password });
         });
         it('reading otherLocations Translation project', async () => {
-          await login(app, { email, password });
           const proj = await createProject(app, {
             otherLocationIds: [testLocation.id],
             type: ProjectType.Translation,
@@ -288,7 +267,6 @@ describe('Project Security e2e', () => {
               sensitivity: sensitivityToTest,
             }),
           });
-          await login(app, { email, password });
         });
       }
     );

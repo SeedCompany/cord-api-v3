@@ -1,12 +1,10 @@
 import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
-import * as faker from 'faker';
 import { CalendarDate } from '../src/common';
-import { Powers } from '../src/components/authorization/dto/powers';
+import { Powers, Role } from '../src/components/authorization';
 import { EngagementStatus } from '../src/components/engagement';
 import { Language } from '../src/components/language';
-import { ProjectStep, Role } from '../src/components/project';
-import { User } from '../src/components/user/dto/user.dto';
+import { ProjectStep } from '../src/components/project';
 import {
   approveProjectChangeRequest,
   createFundingAccount,
@@ -18,7 +16,6 @@ import {
   createRegion,
   createSession,
   createTestApp,
-  login,
   registerUserWithPower,
   runAsAdmin,
   TestApp,
@@ -116,9 +113,7 @@ const activeProject = async (app: TestApp) => {
 
 describe('Engagement Changeset Aware e2e', () => {
   let app: TestApp;
-  let director: User;
   let db: Connection;
-  const password = faker.internet.password();
   let language: Language;
 
   beforeAll(async () => {
@@ -126,16 +121,14 @@ describe('Engagement Changeset Aware e2e', () => {
     db = app.get(Connection);
     await createSession(app);
 
-    director = await registerUserWithPower(
+    await registerUserWithPower(
       app,
       [Powers.CreateLanguage, Powers.CreateEthnologueLanguage],
       {
         roles: [Role.ProjectManager, Role.Administrator],
-        password: password,
       }
     );
 
-    await login(app, { email: director.email.value, password });
     language = await createLanguage(app);
   });
 

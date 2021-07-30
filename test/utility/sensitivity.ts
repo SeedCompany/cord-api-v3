@@ -1,10 +1,10 @@
 import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
 import {
   createLanguage,
   createLanguageEngagement,
   fragments,
   runAsAdmin,
+  runInIsolatedSession,
   TestApp,
 } from '.';
 import {
@@ -60,13 +60,9 @@ export async function expectSensitiveRelationList<
   propertyToCheck: Prop;
   perms: Record<Prop, Permission>;
 }) {
-  const email = faker.internet.email();
-  const password = faker.internet.password();
-  await registerUser(app, {
-    roles: [role],
-    email: email,
-    password: password,
-  });
+  const user = await runInIsolatedSession(app, () =>
+    registerUser(app, { roles: [role] })
+  );
 
   await runAsAdmin(app, () =>
     doSensitivityLessThanEqualTo(
@@ -76,7 +72,7 @@ export async function expectSensitiveRelationList<
       projectType
     )
   );
-  const canReadProp = await readFunction(app, resourceId);
+  const canReadProp = await user.runAs(() => readFunction(app, resourceId));
 
   if (perms[propertyToCheck]) {
     expect(canReadProp).not.toHaveLength(0);
@@ -90,7 +86,9 @@ export async function expectSensitiveRelationList<
         projectType
       )
     );
-    const cannotReadProp = await readFunction(app, resourceId);
+    const cannotReadProp = await user.runAs(() =>
+      readFunction(app, resourceId)
+    );
     expect(cannotReadProp).toHaveLength(0);
   }
 }
@@ -128,13 +126,9 @@ export async function expectSensitiveProperty<
   >;
   projectType: ProjectType;
 }) {
-  const email = faker.internet.email();
-  const password = faker.internet.password();
-  await registerUser(app, {
-    roles: [role],
-    email: email,
-    password: password,
-  });
+  const user = await runInIsolatedSession(app, () =>
+    registerUser(app, { roles: [role] })
+  );
 
   await runAsAdmin(app, () =>
     doSensitivityLessThanEqualTo(
@@ -145,7 +139,7 @@ export async function expectSensitiveProperty<
     )
   );
 
-  const canReadProp = await readOneFunction(app, resourceId);
+  const canReadProp = await user.runAs(() => readOneFunction(app, resourceId));
 
   if (permissions[propertyToCheck]) {
     expect(canReadProp[propertyToCheck].canRead).toEqual(
@@ -173,7 +167,11 @@ export async function expectSensitiveProperty<
         projectType
       )
     );
-    const cannotReadProp = await readOneFunction(app, resourceId);
+
+    const cannotReadProp = await user.runAs(() =>
+      readOneFunction(app, resourceId)
+    );
+
     if (cannotReadProp[propertyToCheck].canRead != null) {
       expect(cannotReadProp[propertyToCheck].canRead).toBeFalsy();
       expect(cannotReadProp[propertyToCheck].canEdit).toBeFalsy();
@@ -194,6 +192,7 @@ export async function expectSensitiveProperty<
     }
   }
 }
+
 async function doSensitivityHigherThan(
   sensitivity: Sensitivity,
   projectId: ID,
@@ -247,6 +246,7 @@ async function doSensitivityHigherThan(
     }
   }
 }
+
 async function doSensitivityLessThanEqualTo(
   sensitivity: Sensitivity,
   projectId: ID,

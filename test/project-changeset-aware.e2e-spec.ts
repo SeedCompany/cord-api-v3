@@ -2,9 +2,9 @@ import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { CalendarDate } from '../src/common';
-import { Powers } from '../src/components/authorization/dto/powers';
+import { Powers, Role } from '../src/components/authorization';
 import { PartnerType } from '../src/components/partner';
-import { ProjectStep, Role } from '../src/components/project';
+import { ProjectStep } from '../src/components/project';
 import {
   approveProjectChangeRequest,
   createFundingAccount,

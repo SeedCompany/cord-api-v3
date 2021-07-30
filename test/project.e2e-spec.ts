@@ -14,7 +14,7 @@ import {
   PaginatedListType,
   Sensitivity,
 } from '../src/common';
-import { Powers } from '../src/components/authorization/dto/powers';
+import { Powers, Role } from '../src/components/authorization';
 import { BudgetStatus } from '../src/components/budget/dto';
 import { FieldRegion } from '../src/components/field-region';
 import { FieldZone } from '../src/components/field-zone';
@@ -27,7 +27,6 @@ import {
   ProjectListInput,
   ProjectStep,
   ProjectType,
-  Role,
 } from '../src/components/project';
 import { User } from '../src/components/user/dto/user.dto';
 import {
@@ -39,6 +38,7 @@ import {
   createOrganization,
   createPartner,
   createPartnership,
+  createPerson,
   createPin,
   createProject,
   createProjectMember,
@@ -49,10 +49,7 @@ import {
   expectNotFound,
   fragments,
   getUserFromSession,
-  login,
-  loginAsAdmin,
   Raw,
-  registerUser,
   registerUserWithPower,
   runAsAdmin,
   TestApp,
@@ -112,17 +109,27 @@ describe('Project e2e', () => {
     app = await createTestApp();
     db = app.get(Connection);
     await createSession(app);
-    const password = 'password';
-    director = await registerUserWithPower(app, [Powers.DeleteProject], {
-      roles: [Role.ProjectManager],
-      password: password,
-    });
+    director = await registerUserWithPower(
+      app,
+      [
+        Powers.CreateProject,
+        Powers.DeleteProject,
+        Powers.CreateLanguage,
+        Powers.CreateOrganization,
+        Powers.CreatePartnership,
+        Powers.CreateLanguageEngagement,
+        Powers.CreateEthnologueLanguage,
+        Powers.GrantRole,
+      ],
+      {
+        roles: [Role.ProjectManager],
+      }
+    );
     fieldZone = await createZone(app, { directorId: director.id });
     fieldRegion = await createRegion(app, {
       directorId: director.id,
       fieldZoneId: fieldZone.id,
     });
-    await login(app, { email: director.email.value, password: password });
     location = await createLocation(app);
     intern = await getUserFromSession(app);
     mentor = await getUserFromSession(app);
@@ -177,8 +184,6 @@ describe('Project e2e', () => {
   });
 
   it('create project with required fields', async () => {
-    await loginAsAdmin(app);
-
     const project: CreateProject = {
       name: faker.datatype.uuid(),
       type: ProjectType.Translation,
@@ -368,12 +373,6 @@ describe('Project e2e', () => {
   });
 
   it('List of projects sorted by name to be alphabetical', async () => {
-    await registerUserWithPower(
-      app,
-      [Powers.CreateProject, Powers.DeleteProject],
-      { displayFirstName: 'Tammy' }
-    );
-
     const unsorted = [
       'A ignore spaces',
       'ABC',
@@ -465,13 +464,6 @@ describe('Project e2e', () => {
   });
 
   it('List of projects sorted by Sensitivity', async () => {
-    await registerUserWithPower(app, [
-      Powers.CreateLanguage,
-      Powers.CreateProject,
-      Powers.CreateLanguageEngagement,
-      Powers.CreateEthnologueLanguage,
-    ]);
-
     //Create three intern projects of different sensitivities
     await createProject(app, {
       name: 'High Sensitivity Proj ' + (await generateId()),
@@ -570,10 +562,6 @@ describe('Project e2e', () => {
   it('List view of my projects', async () => {
     const numProjects = 2;
     const type = ProjectType.Translation;
-    await registerUserWithPower(app, [
-      Powers.CreateProject,
-      Powers.DeleteProject,
-    ]);
     await Promise.all(
       times(numProjects).map(
         async () =>
@@ -606,7 +594,6 @@ describe('Project e2e', () => {
   it('List view of pinned/unpinned projects', async () => {
     const numProjects = 2;
     const type = ProjectType.Translation;
-    await registerUserWithPower(app, [Powers.CreateProject]);
     await Promise.all(
       times(numProjects).map(
         async () =>
@@ -662,9 +649,7 @@ describe('Project e2e', () => {
   });
 
   it('Project engagement and sensitivity connected to language engagements', async () => {
-    await loginAsAdmin(app);
-
-    // create 1 engagementsin a project
+    // create 1 engagements in a project
     const numEngagements = 1;
     const project = await createProject(app);
     const language = await createLanguage(app, {
@@ -707,8 +692,6 @@ describe('Project e2e', () => {
     //create 1 engagements in a project
     const numEngagements = 1;
     const type = ProjectType.Internship;
-
-    await loginAsAdmin(app);
 
     const project = await createProject(app, { type });
 
@@ -763,15 +746,11 @@ describe('Project e2e', () => {
     const numProjectMembers = 2;
     const project = await createProject(app);
     const projectId = project.id;
-    const password = faker.internet.password();
-    const password2 = faker.internet.password();
-    const userForList = await registerUser(app, { password });
+    const userForList = await createPerson(app, { roles: [Role.Consultant] });
     const userId = userForList.id;
-    const userForList2 = await registerUser(app, { password: password2 });
+    const userForList2 = await createPerson(app, { roles: [Role.Consultant] });
     const userId2 = userForList2.id;
     const memberIds: ID[] = [userId, userId2];
-
-    await login(app, { email: userForList.email.value, password });
 
     await Promise.all(
       times(numProjectMembers, async (index) => {
@@ -811,7 +790,6 @@ describe('Project e2e', () => {
   });
 
   it('List view of partnerships by projectId', async () => {
-    await registerUserWithPower(app, [Powers.CreateOrganization]);
     //create 2 partnerships in a project
     const numPartnerships = 2;
     const type = ProjectType.Translation;
@@ -970,7 +948,6 @@ describe('Project e2e', () => {
    * Update Project's mou dates and check if the budget records are created.
    */
   it('should create budget records after updating project with mou dates', async () => {
-    await registerUserWithPower(app, [Powers.CreateOrganization]);
     const org = await createOrganization(app);
     const proj = await createProject(app, {
       name: faker.datatype.uuid() + ' project',
@@ -1043,11 +1020,6 @@ describe('Project e2e', () => {
    * After creating a partnership, should be able to query project and get organization
    */
   it('after creating a partnership, should be able to query project and get organization', async () => {
-    await registerUserWithPower(
-      app,
-      [Powers.CreateOrganization, Powers.CreatePartnership],
-      { roles: [Role.ProjectManager] }
-    );
     const org = await createOrganization(app);
     const project = await createProject(app, {
       name: faker.datatype.uuid() + ' project',

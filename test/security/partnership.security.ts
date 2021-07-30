@@ -1,18 +1,12 @@
 import { Connection } from 'cypher-query-builder';
-import * as faker from 'faker';
 import { CalendarDate, Sensitivity } from '../../src/common';
-import { Powers } from '../../src/components/authorization/dto/powers';
+import { Powers, Role, ScopedRole } from '../../src/components/authorization';
 import { Partner, PartnerType } from '../../src/components/partner';
 import {
   FinancialReportingType,
   Partnership,
 } from '../../src/components/partnership';
-import {
-  Project,
-  ProjectType,
-  Role,
-  ScopedRole,
-} from '../../src/components/project';
+import { Project, ProjectType } from '../../src/components/project';
 import {
   createOrganization,
   createPartner,
@@ -20,7 +14,6 @@ import {
   createProject,
   createSession,
   createTestApp,
-  login,
   Raw,
   readOnePartnership,
   registerUserWithPower,
@@ -34,32 +27,24 @@ import { getPermissions } from './permissions';
 describe('Project Security e2e', () => {
   let app: TestApp;
   let db: Connection;
-  let email: string;
-  let password: string;
   let testProject: Raw<Project>;
   let testPartner: Partner;
   let testPartnership: Partnership;
   beforeAll(async () => {
     app = await createTestApp();
     db = app.get(Connection);
-    email = faker.internet.email();
-    password = faker.internet.password();
     await createSession(app);
-    await registerUserWithPower(
-      app,
-      [
-        Powers.CreateProject,
-        Powers.CreateLocation,
-        Powers.CreateLanguage,
-        Powers.CreateLanguageEngagement,
-        Powers.CreateEthnologueLanguage,
-        Powers.CreateBudget,
-        Powers.CreateOrganization,
-        Powers.CreatePartner,
-        Powers.CreatePartnership,
-      ],
-      { email: email, password: password }
-    );
+    await registerUserWithPower(app, [
+      Powers.CreateProject,
+      Powers.CreateLocation,
+      Powers.CreateLanguage,
+      Powers.CreateLanguageEngagement,
+      Powers.CreateEthnologueLanguage,
+      Powers.CreateBudget,
+      Powers.CreateOrganization,
+      Powers.CreatePartner,
+      Powers.CreatePartnership,
+    ]);
     testProject = await createProject(app);
     const org = await createOrganization(app);
     testPartner = await createPartner(app, {
@@ -150,7 +135,6 @@ describe('Project Security e2e', () => {
         `(
           ' reading $type $resource.name $property',
           async ({ property, resource, readFunction, type }) => {
-            await login(app, { email: email, password: password });
             const proj = await createProject(app, {
               type,
             });
@@ -182,7 +166,6 @@ describe('Project Security e2e', () => {
               }),
               readOneFunction: readFunction,
             });
-            await login(app, { email, password });
           }
         );
       }

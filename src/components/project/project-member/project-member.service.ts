@@ -24,6 +24,7 @@ import {
   OnIndex,
 } from '../../../core';
 import { mapListResults } from '../../../core/database/results';
+import { Role } from '../../authorization';
 import { AuthorizationService } from '../../authorization/authorization.service';
 import { User, UserService } from '../../user';
 import {
@@ -31,7 +32,6 @@ import {
   ProjectMember,
   ProjectMemberListInput,
   ProjectMemberListOutput,
-  Role,
   UpdateProjectMember,
 } from './dto';
 import { ProjectMemberRepository } from './project-member.repository';

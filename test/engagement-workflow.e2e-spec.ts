@@ -1,24 +1,8 @@
-/* eslint-disable @seedcompany/no-unused-vars */
-import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
-import * as faker from 'faker';
-import { CalendarDate, Sensitivity, sleep } from '../src/common';
-import { Powers } from '../src/components/authorization/dto/powers';
+import { Powers, Role } from '../src/components/authorization';
 import { EngagementStatus } from '../src/components/engagement';
-import { FieldRegion } from '../src/components/field-region';
-import { FieldZone } from '../src/components/field-zone';
-import { Location } from '../src/components/location';
-import { PartnerType } from '../src/components/partner';
+import { ProjectStep, ProjectType } from '../src/components/project';
 import {
-  Project,
-  ProjectStatus,
-  ProjectStep,
-  ProjectType,
-  Role,
-} from '../src/components/project';
-import { User } from '../src/components/user/dto/user.dto';
-import {
-  createBudget,
   createFundingAccount,
   createInternshipEngagement,
   createLanguageEngagement,
@@ -28,8 +12,6 @@ import {
   createSession,
   createTestApp,
   getCurrentEngagementStatus,
-  login,
-  registerUser,
   registerUserWithPower,
   runAsAdmin,
   TestApp,
@@ -47,26 +29,14 @@ import {
 
 describe('Project-Workflow e2e', () => {
   let app: TestApp;
-  let password: string;
-  let director: User;
   let db: Connection;
-  let projectManager: User;
-  let consultantManager: User;
-  let financialAnalyst: User;
-  let financialAnalystController: User;
 
   beforeAll(async () => {
     app = await createTestApp();
     db = app.get(Connection);
     await createSession(app);
-    password = faker.internet.password();
 
-    // Register several testers with different roles
-    director = await registerUser(app, {
-      roles: [Role.RegionalDirector, Role.FieldOperationsDirector],
-      password: password,
-    });
-    projectManager = await registerUserWithPower(
+    await registerUserWithPower(
       app,
       [
         Powers.CreateLanguage,
@@ -75,22 +45,8 @@ describe('Project-Workflow e2e', () => {
       ],
       {
         roles: [Role.ProjectManager],
-        password: password,
       }
     );
-    consultantManager = await registerUser(app, {
-      roles: [Role.Consultant, Role.ConsultantManager],
-      password: password,
-    });
-    financialAnalyst = await registerUser(app, {
-      roles: [Role.FinancialAnalyst],
-      password: password,
-    });
-    financialAnalystController = await registerUser(app, {
-      roles: [Role.FinancialAnalyst, Role.Controller],
-      password: password,
-    });
-    await login(app, { email: projectManager.email.value, password });
   });
   afterAll(async () => {
     await resetDatabase(db);

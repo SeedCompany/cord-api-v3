@@ -27,13 +27,21 @@ export const loginAsAdmin = async (app: TestApp) => {
 export const runAsAdmin = async (
   app: TestApp,
   adminExecution: () => Promise<void> | void
-) => {
+) =>
+  await runInIsolatedSession(app, async () => {
+    await loginAsAdmin(app);
+    await adminExecution();
+  });
+
+export const runInIsolatedSession = async <R>(
+  app: TestApp,
+  execution: () => Promise<R> | R
+): Promise<R> => {
   const currentSession = app.graphql.authToken;
   app.graphql.authToken = ''; // reset to no session
   try {
-    await createSession(app); // create admin session
-    await loginAsAdmin(app);
-    await adminExecution();
+    await createSession(app); // create isolated session
+    return await execution();
   } finally {
     // revert to previously defined session
     app.graphql.authToken = currentSession;
