@@ -35,7 +35,6 @@ import { SongModule } from './components/song/song.module';
 import { StoryModule } from './components/story/story.module';
 import { TimeZoneModule } from './components/timezone';
 import { UserModule } from './components/user/user.module';
-import { WorkflowModule } from './components/workflow/workflow.module';
 import { CoreModule, LoggerModule } from './core';
 
 assert(
@@ -67,7 +66,6 @@ assert(
     UserModule,
     PartnershipModule,
     SearchModule,
-    WorkflowModule,
     TimeZoneModule,
     PartnerModule,
     FundingAccountModule,
