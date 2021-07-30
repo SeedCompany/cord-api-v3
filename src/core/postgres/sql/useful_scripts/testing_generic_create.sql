@@ -1,10 +1,30 @@
-select public.create(0, 'sc.partners_data', '"created_by"=>"0","organization"=>"lalala", "types"=>"[''A'', ''B'']", "point_of_contact"=>"0"');
-select * from sc.partners_data;
-select * from public.global_role_column_grants_data where table_name = 'public.locations_data';
-select * from public.global_role_table_permissions_data;
-insert into public.global_role_table_permissions_data(global_role, table_name, table_permission) values(0, 'sc.partners_data', 'Create');
-select * from public.global_role_column_grants_data;
-insert into public.global_role_column_grants_data(access_level, column_name, table_name, global_role) values('Write', 'created_by', 'sc.partners_data', 0);
-select * from public.locations_data;
-insert into sc.organizations_data(id,base64, created_by, internal) values(0,'lalala', 0, 'internal_lalala');
-insert into sc.partners_data(created_by,organization,types, point_of_contact) values(0,lalala::text, ARRAY['A']::public.partner_types[] ,0);
+select public.create(0,'public.people_data','
+"id" => "1",
+"public_first_name"=>"rhuan"
+',1,1,0,0); 
+
+select public.create(0,'public.organizations_data','
+"id" => "1",
+"name"=>"org1"
+',1,1,0,0); 
+
+select public.create(0,'public.global_roles_data','
+"id" => "0",
+"name"=>"default",
+"org"=>"0"
+',1,1,0,0); 
+
+select public.create(0,'public.global_role_column_grants_data','
+"id" => "0",
+"column_name"=>"name",
+"table_name"=>"public.organizations_data",
+"access_level"=>"Write",
+"global_role"=>"0"
+',1,1,0,0); 
+
+select public.create(0,'public.global_role_memberships_data','
+"id" => "1",
+"global_role"=>"0",
+"person"=>"1"
+',1,1,0,0);
+

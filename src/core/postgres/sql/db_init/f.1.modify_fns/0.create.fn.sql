@@ -68,13 +68,19 @@ begin
 
     -- might need an entirely different fn for public.people_data
     if pTableName = 'public.people_data' then 
-        perform public.people_security_fn(pTableName, record_id, pToggleSecurity);
+        perform public.people_security_fn(pTableName, record_id, pToggleSecurity, pToggleMV);
     else 
-        perform public.security_fn(pTableName, record_id, pToggleSecurity); 
+        perform public.security_fn(pTableName, record_id, pToggleSecurity, pToggleMV); 
     end if;
-    -- perform public.mv_fn(pTableName, pToggleMV);
+    perform public.mv_fn(pTableName, pToggleMV);
     -- select public.history_fn();
-    -- select public.granters_fn();
-
+    if pTableName = 'public.projects_data' or 
+    pTableName = 'public.project_member_roles_data' or
+    pTableName = 'public.project_role_column_grants_data' or 
+    pTableName = 'public.global_role_column_grants_data' or 
+    pTableName = 'public.global_role_memberships_data' then 
+        perform public.granters_fn(pToggleGranters);
+    end if;
     return 0;
 end; $$;
+

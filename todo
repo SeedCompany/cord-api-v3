@@ -1,0 +1,9 @@
+[√] refresh materialized view whenever an update takes place (for example - __is_cleared, access_level) 
+[ ] refresh fn for generic create
+[ ] fix materialized view logic
+[ ] history fn for generic create
+[ ] testing the above two fns 
+[ ] replace quote_literal with %L 
+[ ] going through postgres docs and finding enhancements to current code 
+[ ] naming convention for variables and fns
+[ ] update is_cleared when sensitivity is updated 
