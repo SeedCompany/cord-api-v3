@@ -58,32 +58,43 @@ export const matchProps = (options: MatchPropsOptions = {}) => {
     excludeBaseProps = false,
     view = { active: true },
   } = options;
-  return (query: Query) =>
-    query.comment`matchProps(${nodeName})`.subQuery(nodeName, (sub) =>
-      sub
-        .match(
-          [
-            node(nodeName),
-            relation('out', 'r', { active: !view.changeset }),
-            node('prop', labelForView('Property', view)),
-            ...(view.changeset
-              ? [
-                  relation('in', '', 'changeset', ACTIVE),
-                  node('changeset', 'Changeset', { id: view.changeset }),
-                ]
-              : []),
-          ],
-          {
-            optional,
-          }
-        )
-        .return(
-          merge(
-            listConcat(
-              `[${excludeBaseProps ? '' : nodeName}]`,
-              collect(apoc.map.fromValues(['type(r)', 'prop.value']))
-            )
-          ).as(outputVar)
-        )
+  return (query: Query) => {
+    const lookupProps = (query: Query) =>
+      query.match([
+        node(nodeName),
+        relation('out', 'r', { active: !view.changeset }),
+        node('prop', labelForView('Property', view)),
+        ...(view.changeset
+          ? [
+              relation('in', '', 'changeset', ACTIVE),
+              node('changeset', 'Changeset', { id: view.changeset }),
+            ]
+          : []),
+      ]);
+    const collectProps = collect(
+      apoc.map.fromValues(['type(r)', 'prop.value'])
     );
+
+    return query.comment`matchProps(${nodeName})`.subQuery(nodeName, (sub) =>
+      // If optional match in another sub-query where the return clause's
+      // outer most function is collect() so that a single row with props
+      // as an empty list is returned when no properties are matched.
+      // OPTIONAL MATCH should work instead of this, but it bugs out
+      // with complex queries.
+      // Error is "Tried overwriting already taken variable name" with v4.2.8
+      (optional
+        ? sub.subQuery(nodeName, (sub2) =>
+            sub2.apply(lookupProps).return(collectProps.as('props'))
+          )
+        : sub.apply(lookupProps)
+      ).return(
+        merge(
+          listConcat(
+            `[${excludeBaseProps ? '' : nodeName}]`,
+            optional ? 'props' : collectProps
+          )
+        ).as(outputVar)
+      )
+    );
+  };
 };
