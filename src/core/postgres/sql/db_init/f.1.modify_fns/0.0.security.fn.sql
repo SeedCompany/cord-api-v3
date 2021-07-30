@@ -68,7 +68,7 @@ begin
 end; $$;
 
 
-create or replace function public.get_access_level(pSecurityTableName text, pPersonId int, pId int)
+create or replace function public.get_access_level(pSecurityTableName text, pPersonId int, pId int, pToggleMV int)
 returns integer
 language plpgsql 
 as $$
@@ -108,14 +108,19 @@ begin
             security_column_name := '_' || rec1.column_name;
             execute format('update %I.%I set '||security_column_name|| ' = ' 
                 || quote_literal(final_access_level) || ' where __id = '|| pId  
-                || ' and  __person_id = ' ||  pPersonId,split_part(security_table_name, '.',1) , (security_table_name, '.', 2));
+                || ' and  __person_id = ' ||  pPersonId,split_part(pSecurityTableName, '.',1) , split_part(pSecurityTableName, '.', 2));
+            if pToggleMV = 1 then
+                execute format('refresh materialized view %I.%I', split_part(pSecurityTableName, '.', 1), replace(split_part(pSecurityTableName, '.', 2), '_security', '_materialized_view'));
+            elsif pToggleMV = 2 then 
+                execute format('refresh materialized view %I.%I concurrently', split_part(pSecurityTableName, '.', 1), replace(split_part(pSecurityTableName, '.', 2), '_security', '_materialized_view'));
+            end if;
         end if;
     end loop; 
     return 0;
 end;$$;
 
 
-create or replace function public.get_is_cleared(pSecurityTableName text, pPersonId int, pId int)
+create or replace function public.get_is_cleared(pSecurityTableName text, pPersonId int, pId int, pToggleMV int)
 returns integer
 language plpgsql
 as $$
@@ -142,6 +147,11 @@ begin
         if (data_sensitivity = 'Medium' and person_sensitivity_clearance = 'Low') or 
         (data_sensitivity = 'High' and (person_sensitivity_clearance = 'Medium' or person_sensitivity_clearance = 'Low')) then 
             execute format('update  %I.%I set __is_cleared = false where __person_id = '|| pPersonId || ' and '|| ' __id = '|| pId,split_part(pSecurityTableName, '.',1), split_part(pSecurityTableName, '.',2) );
+            if pToggleMV = 1 then
+                execute format('refresh materialized view %I.%I', split_part(pSecurityTableName, '.', 1), replace(split_part(pSecurityTableName, '.', 2), '_security', '_materialized_view'));
+            elsif pToggleMV = 2 then 
+                execute format('refresh materialized view %I.%I concurrently', split_part(pSecurityTableName, '.', 1), replace(split_part(pSecurityTableName, '.', 2), '_security', '_materialized_view'));
+            end if;
         end if;    
     end if; 
     return 0;   
@@ -151,7 +161,8 @@ end; $$;
 create or replace function public.security_fn(
     pTableName text,
     pId int, 
-    pToggleSecurity int
+    pToggleSecurity int,
+    pToggleMV int
 )
 returns int 
 language plpgsql 
@@ -179,11 +190,11 @@ begin
 
             if pToggleSecurity = 2 then
             -- update access level only
-                select public.get_access_level(security_table_name, rec1.id, pId);
+                select public.get_access_level(security_table_name, rec1.id, pId, pToggleMV);
             else 
             -- update access level and sensitivity
-                perform public.get_access_level(security_table_name, rec1.id, pId);
-                perform public.get_is_cleared(security_table_name, rec1.id, pId);
+                perform public.get_access_level(security_table_name, rec1.id, pId, pToggleMV);
+                perform public.get_is_cleared(security_table_name, rec1.id, pId, pToggleMV);
             end if;
         end loop; 
         return 0;
@@ -195,7 +206,8 @@ end; $$;
 create or replace function public.people_security_fn(
     pTableName text,
     pId int, 
-    pToggleSecurity int
+    pToggleSecurity int,
+    pToggleMV int
 )
 returns int 
 language plpgsql 
@@ -231,22 +243,22 @@ begin
                     execute format('insert into %I.%I(__id, __person_id, __is_cleared) values (' || rec2.id || ',' || pId || ', true )',rec1.table_schema, data_security_table_name);
                     if pToggleSecurity = 2 then
                     -- update access level only
-                        select public.get_access_level(security_table_name, rec1.id, pId);
+                        select public.get_access_level(security_table_name, rec1.id, pId, pToggleMV);
                     else 
                     -- update access level and sensitivity
-                        perform public.get_access_level(security_table_name, pId, rec2.id);
-                        perform public.get_is_cleared(security_table_name, pId, rec2.id);
+                        perform public.get_access_level(security_table_name, pId, rec2.id, pToggleMV);
+                        perform public.get_is_cleared(security_table_name, pId, rec2.id, pToggleMV);
                     end if;
                 end loop;
             else     
                 insert into public.people_security(__id, __person_id, __is_cleared) values(pId, pId, true);
                 if pToggleSecurity = 2 then
                     -- update access level only
-                        select public.get_access_level(security_table_name, rec1.id, pId);
+                        select public.get_access_level(security_table_name, rec1.id, pId, pToggleMV);
                 else 
                     -- update access level and sensitivity
-                        perform public.get_access_level(security_table_name, pId, rec2.id);
-                        perform public.get_is_cleared(security_table_name, pId, rec2.id);
+                        perform public.get_access_level(security_table_name, pId, rec2.id, pToggleMV);
+                        perform public.get_is_cleared(security_table_name, pId, rec2.id, pToggleMV);
                 end if;
             end if;
         end loop; 
