@@ -1,5 +1,5 @@
+import { S3 } from '@aws-sdk/client-s3';
 import { FactoryProvider } from '@nestjs/common';
-import { S3 } from 'aws-sdk';
 import { ConfigService } from '../../core';
 import { FilesystemBucket, MemoryBucket, S3Bucket } from './bucket';
 
