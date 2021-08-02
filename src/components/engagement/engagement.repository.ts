@@ -96,12 +96,7 @@ export class EngagementRepository extends CommonRepository {
               : q
           )
       )
-      .apply(
-        matchPropsAndProjectSensAndScopedRoles(
-          session,
-          view?.deleted ? { view } : {}
-        )
-      )
+      .apply(matchPropsAndProjectSensAndScopedRoles(session, { view }))
       .apply(matchChangesetAndChangedProps(view?.changeset))
       .optionalMatch([
         node('node'),
