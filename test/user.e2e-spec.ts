@@ -1,10 +1,12 @@
 import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
+import { PoolClient } from 'pg';
 import { firstLettersOfWords, isValidId } from '../src/common';
 import { Powers } from '../src/components/authorization/dto/powers';
 import { SecuredTimeZone } from '../src/components/timezone';
 import { UpdateUser, User, UserStatus } from '../src/components/user';
+import { PostgresService } from '../src/core';
 import {
   createEducation,
   createOrganization,
