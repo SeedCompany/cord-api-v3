@@ -17,7 +17,7 @@ begin
         project_column := 'primary_org'; 
     end if;
 
-    for rec1 in execute format('select id from public.projects_data where '|| project_column || ' = ' || p_id) loop 
+    for rec1 in execute format('select id from public.projects_data where %I = ' || p_id, project_column) loop 
     raise info 'rec1: %', rec1; 
 
         for rec2 in (select project_role from public.project_member_roles_data where person = p_person_id and project = rec1.id) loop 

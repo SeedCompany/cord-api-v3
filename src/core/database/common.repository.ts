@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { ID, isIdLike, ServerException, Session } from '../../common';
+import { ID, Session } from '../../common';
+import { PostgresService } from '../postgres';
 import { DatabaseService } from './database.service';
 
 /**
