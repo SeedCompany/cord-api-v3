@@ -103,12 +103,10 @@ export class AdminService implements OnApplicationBootstrap {
       id = await this.authentication.register({
         email,
         password,
-        displayFirstName: 'root',
-        displayLastName: 'root',
-        realFirstName: 'root',
-        realLastName: 'root',
-        phone: 'root',
-        about: 'root',
+        displayFirstName: 'Root',
+        displayLastName: 'Admin',
+        realFirstName: 'Root',
+        realLastName: 'Admin',
         roles: [Role.Administrator], // do not give root all the roles
       });
 
