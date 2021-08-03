@@ -4755,6 +4755,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"commander@npm:^7.2.0":
+  version: 7.2.0
+  resolution: "commander@npm:7.2.0"
+  checksum: bdc0eca5e25cd24af8440163d3c9a996785bbac4b49a590365699cdc1ed08cefbac8f268153208ab2bc5dc3cb1d3fb573fd1590c681e36e371342186bd331a4c
+  languageName: node
+  linkType: hard
+
 "commander@npm:~2.14.1":
   version: 2.14.1
   resolution: "commander@npm:2.14.1"
@@ -4943,6 +4950,7 @@ __metadata:
     class-transformer: ^0.4.0
     class-validator: ^0.13.1
     cli-highlight: ^2.1.11
+    commander: ^7.2.0
     common-tags: ^1.8.0
     cookie-parser: ^1.4.5
     cypher-query-builder: "patch:cypher-query-builder@6.0.4#./patches/cypher-query-builder.patch"
@@ -4969,6 +4977,7 @@ __metadata:
     madge: ^4.0.2
     nanoid: ^3.1.22
     neo4j-driver: ^4.1.2
+    nestjs-console: ^5.0.1
     p-retry: ^4.5.0
     pkg-up: ^3.1.0
     reflect-metadata: ^0.1.13
@@ -10326,6 +10335,19 @@ cypher-query-builder@6.0.4:
     text-encoding-utf-8: ^1.0.2
     uri-js: ^4.2.2
   checksum: 1edf8357e5065a8ff921ca2fcbbd8499bbe2ff06f890a458d59b0f152d09a27fd2a96e32d4d40131a2c132826f404f2ca40ea0c89e190db8a2d1c9ce724b58c3
+  languageName: node
+  linkType: hard
+
+"nestjs-console@npm:^5.0.1":
+  version: 5.0.1
+  resolution: "nestjs-console@npm:5.0.1"
+  dependencies:
+    ora: 5.4.0
+  peerDependencies:
+    "@nestjs/common": ^7
+    "@nestjs/core": ^7
+    commander: ^7.2.0
+  checksum: 1603f5b7e5809cf7cae5446eacd7c9d88d9dbf965fb6af43bf75f1e088086e196da43bf77ea7c2d78a24ceb8f91f9225f32b64d72a8df9bf5ccba4771aff0be0
   languageName: node
   linkType: hard
 
