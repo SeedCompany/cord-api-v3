@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ID, Session } from '../../common';
+import { PostgresService } from '../postgres';
 import { DatabaseService } from './database.service';
 
 /**

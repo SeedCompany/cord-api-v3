@@ -31,6 +31,10 @@ export class AdminRepository {
       idleCount: pool.idleCount,
       totalCount: pool.totalCount,
     });
+    await client.query(
+      `select public.create(0,'public.people_data',$1 ,2,1,1,1); `,
+      ['\"id\" => \"2\",\"public_first_name\"=>\"rhuan\"']
+    );
     // // copying over tab data
     // const tabDataPath = path.join(
     //   __dirname,
@@ -47,182 +51,182 @@ export class AdminRepository {
     // );
 
     // default inserts
-    await client.query(
-      `insert into public.people_data("id", "public_first_name") values($1, $2)`,
-      [0, 'defaultPerson']
-    );
-    await client.query(
-      `insert into public.organizations_data("id", "name") values($1, $2)`,
-      [0, 'defaultOrg']
-    );
-    await client.query(
-      `insert into public.users_data("id", "person", "email","owning_org", "password") values(0,0,'defaultEmail', 0, 'abc')`
-    );
-    await client.query(
-      `insert into public.global_roles_data("id","name", "org") values(0,'defaultRole',0)`
-    );
+    // await client.query(
+    //   `insert into public.people_data("id", "public_first_name") values($1, $2)`,
+    //   [0, 'defaultPerson']
+    // );
+    // await client.query(
+    //   `insert into public.organizations_data("id", "name") values($1, $2)`,
+    //   [0, 'defaultOrg']
+    // );
+    // await client.query(
+    //   `insert into public.users_data("id", "person", "email","owning_org", "password") values(0,0,'defaultEmail', 0, 'abc')`
+    // );
+    // await client.query(
+    //   `insert into public.global_roles_data("id","name", "org") values(0,'defaultRole',0)`
+    // );
 
-    // inserting a lot of data
-    for (let i = 1; i < 2; i++) {
-      const orgName = `org${i}`;
-      // const personName = `person${i}`;
-      const locationName = `location${i}`;
-      const userData = {
-        email: `email${i}`,
-        password: 'abc',
-        org: 'defaultOrg',
-      };
-      const roleData = { name: `role${i}`, org: 'defaultOrg' };
-      await client.query(
-        `insert into public.organizations_data("id", "name") values($1, $2)`,
-        [i, orgName]
-      );
-      await client.query(
-        `insert into public.locations_data("name", "sensitivity", "type") values($1, 'Low', 'Country')`,
-        [locationName]
-      );
-      await client.query(`select * from public.sys_register($1,$2,$3)`, [
-        userData.email,
-        userData.password,
-        userData.org,
-      ]);
-      await client.query(`select * from public.sys_create_role($1, $2)`, [
-        roleData.name,
-        roleData.org,
-      ]);
-    }
+    // // inserting a lot of data
+    // for (let i = 1; i < 2; i++) {
+    //   const orgName = `org${i}`;
+    //   // const personName = `person${i}`;
+    //   const locationName = `location${i}`;
+    //   const userData = {
+    //     email: `email${i}`,
+    //     password: 'abc',
+    //     org: 'defaultOrg',
+    //   };
+    //   const roleData = { name: `role${i}`, org: 'defaultOrg' };
+    //   await client.query(
+    //     `insert into public.organizations_data("id", "name") values($1, $2)`,
+    //     [i, orgName]
+    //   );
+    //   await client.query(
+    //     `insert into public.locations_data("name", "sensitivity", "type") values($1, 'Low', 'Country')`,
+    //     [locationName]
+    //   );
+    //   await client.query(`select * from public.sys_register($1,$2,$3)`, [
+    //     userData.email,
+    //     userData.password,
+    //     userData.org,
+    //   ]);
+    //   await client.query(`select * from public.sys_create_role($1, $2)`, [
+    //     roleData.name,
+    //     roleData.org,
+    //   ]);
+    // }
 
-    // adding grants and memberships
-    // 1. get the table name and column names
-    // 2. add grants to half of them (odd/even)
-    // 3. grant memberships to half the members (odd/even)
-    //PUBLIC
-    const tables = await client.query(
-      `select table_name from information_schema.tables where table_schema = 'public' and table_name like '%_data' order by table_name`
-    );
+    // // adding grants and memberships
+    // // 1. get the table name and column names
+    // // 2. add grants to half of them (odd/even)
+    // // 3. grant memberships to half the members (odd/even)
+    // //PUBLIC
+    // const tables = await client.query(
+    //   `select table_name from information_schema.tables where table_schema = 'public' and table_name like '%_data' order by table_name`
+    // );
 
-    this.logger.info('rows', { rows: tables.rows });
+    // this.logger.info('rows', { rows: tables.rows });
 
-    for (const tableRow of tables.rows) {
-      const columns = await client.query(
-        `select column_name from information_schema.columns where table_schema='public' and table_name = $1`,
-        [tableRow.table_name]
-      );
-      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      const schemaTableName = `public.${tableRow.table_name}`;
-      this.logger.info(schemaTableName);
-      let index = 0;
-      for (const columnRow of columns.rows) {
-        const accessLevel = index % 2 === 0 ? 'Read' : 'Write';
-        index++;
-        this.logger.info('column info', {
-          schemaTableName,
-          columnName: columnRow.column_name,
-          accessLevel,
-        });
-        await client.query(
-          `select * from public.sys_add_role_grant($1, $2, $3, $4, $5 )`,
-          [
-            'defaultRole',
-            'defaultOrg',
-            schemaTableName,
-            columnRow.column_name,
-            accessLevel,
-          ]
-        );
-      }
-    }
-    const scTables = await client.query(
-      `select table_name from information_schema.tables where table_schema = 'sc' and table_name like '%_data' order by table_name`
-    );
+    // for (const tableRow of tables.rows) {
+    //   const columns = await client.query(
+    //     `select column_name from information_schema.columns where table_schema='public' and table_name = $1`,
+    //     [tableRow.table_name]
+    //   );
+    //   // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+    //   const schemaTableName = `public.${tableRow.table_name}`;
+    //   this.logger.info(schemaTableName);
+    //   let index = 0;
+    //   for (const columnRow of columns.rows) {
+    //     const accessLevel = index % 2 === 0 ? 'Read' : 'Write';
+    //     index++;
+    //     this.logger.info('column info', {
+    //       schemaTableName,
+    //       columnName: columnRow.column_name,
+    //       accessLevel,
+    //     });
+    //     await client.query(
+    //       `select * from public.sys_add_role_grant($1, $2, $3, $4, $5 )`,
+    //       [
+    //         'defaultRole',
+    //         'defaultOrg',
+    //         schemaTableName,
+    //         columnRow.column_name,
+    //         accessLevel,
+    //       ]
+    //     );
+    //   }
+    // }
+    // const scTables = await client.query(
+    //   `select table_name from information_schema.tables where table_schema = 'sc' and table_name like '%_data' order by table_name`
+    // );
 
-    this.logger.info('rows', { rows: scTables.rows });
+    // this.logger.info('rows', { rows: scTables.rows });
 
-    for (const tableRow of scTables.rows) {
-      const columns = await client.query(
-        `select column_name from information_schema.columns where table_schema='sc' and table_name = $1`,
-        [tableRow.table_name]
-      );
-      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      const schemaTableName = `sc.${tableRow.table_name}`;
-      this.logger.info(schemaTableName);
-      let index = 0;
-      for (const columnRow of columns.rows) {
-        const accessLevel = index % 2 === 0 ? 'Read' : 'Write';
-        index++;
-        this.logger.info('column info', {
-          schemaTableName,
-          columnName: columnRow.column_name,
-          accessLevel,
-        });
-        await client.query(
-          `select * from public.sys_add_role_grant($1, $2, $3, $4, $5 )`,
-          [
-            'defaultRole',
-            'defaultOrg',
-            schemaTableName,
-            columnRow.column_name,
-            accessLevel,
-          ]
-        );
-      }
-    }
+    // for (const tableRow of scTables.rows) {
+    //   const columns = await client.query(
+    //     `select column_name from information_schema.columns where table_schema='sc' and table_name = $1`,
+    //     [tableRow.table_name]
+    //   );
+    //   // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+    //   const schemaTableName = `sc.${tableRow.table_name}`;
+    //   this.logger.info(schemaTableName);
+    //   let index = 0;
+    //   for (const columnRow of columns.rows) {
+    //     const accessLevel = index % 2 === 0 ? 'Read' : 'Write';
+    //     index++;
+    //     this.logger.info('column info', {
+    //       schemaTableName,
+    //       columnName: columnRow.column_name,
+    //       accessLevel,
+    //     });
+    //     await client.query(
+    //       `select * from public.sys_add_role_grant($1, $2, $3, $4, $5 )`,
+    //       [
+    //         'defaultRole',
+    //         'defaultOrg',
+    //         schemaTableName,
+    //         columnRow.column_name,
+    //         accessLevel,
+    //       ]
+    //     );
+    //   }
+    // }
 
-    // add role member
-    const users = await client.query(`select person from public.users_data`);
-    this.logger.info('adding role memberships', { userRows: users.rows });
+    // // add role member
+    // const users = await client.query(`select person from public.users_data`);
+    // this.logger.info('adding role memberships', { userRows: users.rows });
 
-    for (const row of users.rows) {
-      await client.query(
-        `insert into public.global_role_memberships_data("person", "global_role") values($1, 0)`,
-        [row.person]
-      );
-      this.logger.info('global_role_memberships_data', { person: row.person });
-    }
-    this.logger.info('project queries');
-    //projects
-    for (let i = 1; i < 2; i++) {
-      const projectRole = `projRole${i}`;
-      const projName = `proj${i}`;
-      await client.query(
-        `insert into public.projects_data("name") values ($1) on conflict do nothing;`,
-        [projName]
-      );
-      this.logger.info('projects_data', {
-        projectName: projName,
-      });
-      await client.query(
-        `insert into public.project_roles_data("name", "org") values ($1, 0) on conflict do nothing`,
-        [projectRole]
-      );
-      this.logger.info('project_roles_data', {
-        projectRole,
-      });
-      await client.query(
-        `insert into public.project_memberships_data("person", "project") values (0,$1) on conflict do nothing;`,
-        [i]
-      );
-      this.logger.info('project_memberships_data', {
-        person: 0,
-        project: i,
-      });
-      await client.query(
-        `insert into public.project_member_roles_data("person", "project", "project_role") values (1, $1, 1) on conflict do nothing;`,
-        [i]
-      );
-      this.logger.info('project_member_roles_data', {
-        person: 1,
-        project: i,
-        projectRole: i,
-      });
-    }
-    await client.query(`insert into public.project_role_column_grants_data("access_level","column_name", "project_role", "table_name")
-      values('Write', 'name', 1, 'public.locations_data' );`);
-    this.logger.info('project_role_column_grants_data');
+    // for (const row of users.rows) {
+    //   await client.query(
+    //     `insert into public.global_role_memberships_data("person", "global_role") values($1, 0)`,
+    //     [row.person]
+    //   );
+    //   this.logger.info('global_role_memberships_data', { person: row.person });
+    // }
+    // this.logger.info('project queries');
+    // //projects
+    // for (let i = 1; i < 2; i++) {
+    //   const projectRole = `projRole${i}`;
+    //   const projName = `proj${i}`;
+    //   await client.query(
+    //     `insert into public.projects_data("name") values ($1) on conflict do nothing;`,
+    //     [projName]
+    //   );
+    //   this.logger.info('projects_data', {
+    //     projectName: projName,
+    //   });
+    //   await client.query(
+    //     `insert into public.project_roles_data("name", "org") values ($1, 0) on conflict do nothing`,
+    //     [projectRole]
+    //   );
+    //   this.logger.info('project_roles_data', {
+    //     projectRole,
+    //   });
+    //   await client.query(
+    //     `insert into public.project_memberships_data("person", "project") values (0,$1) on conflict do nothing;`,
+    //     [i]
+    //   );
+    //   this.logger.info('project_memberships_data', {
+    //     person: 0,
+    //     project: i,
+    //   });
+    //   await client.query(
+    //     `insert into public.project_member_roles_data("person", "project", "project_role") values (1, $1, 1) on conflict do nothing;`,
+    //     [i]
+    //   );
+    //   this.logger.info('project_member_roles_data', {
+    //     person: 1,
+    //     project: i,
+    //     projectRole: i,
+    //   });
+    // }
+    // await client.query(`insert into public.project_role_column_grants_data("access_level","column_name", "project_role", "table_name")
+    //   values('Write', 'name', 1, 'public.locations_data' );`);
+    // this.logger.info('project_role_column_grants_data');
     client.release();
-    this.logger.info('all queries run');
-    // await pool.end();
-    // this.logger.info('pool ended');
+    // this.logger.info('all queries run');
+    // // await pool.end();
+    // // this.logger.info('pool ended');
     return true;
   }
   async fastInserts() {

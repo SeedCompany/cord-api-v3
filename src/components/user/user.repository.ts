@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Id } from 'aws-sdk/clients/kinesisanalytics';
 import { stripIndent } from 'common-tags';
 import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
@@ -20,6 +21,7 @@ import {
   Logger,
   matchSession,
   OnIndex,
+  PostgresService,
   property,
   UniquenessError,
 } from '../../core';
@@ -46,7 +48,7 @@ import {
 export class UserRepository extends DtoRepository(User) {
   constructor(
     db: DatabaseService,
-    private readonly config: ConfigService,
+    private readonly pg: PostgresService,
     @Logger('user:repository') private readonly logger: ILogger
   ) {
     super(db);
@@ -78,103 +80,119 @@ export class UserRepository extends DtoRepository(User) {
     );
 
   async create(input: CreatePerson) {
-    const id = await generateId();
-    const createdAt = DateTime.local();
-    const query = this.db
-      .query()
-      .create([
-        [
-          node('user', ['User', 'BaseNode'], {
-            id,
-            createdAt,
-          }),
-        ],
-        ...property('email', input.email, 'user', 'email', 'EmailAddress'),
-        ...property('realFirstName', input.realFirstName, 'user'),
-        ...property('realLastName', input.realLastName, 'user'),
-        ...property('displayFirstName', input.displayFirstName, 'user'),
-        ...property('displayLastName', input.displayLastName, 'user'),
-        ...property('phone', input.phone, 'user'),
-        ...property('timezone', input.timezone, 'user'),
-        ...property('about', input.about, 'user'),
-        ...property('status', input.status, 'user'),
-        ...this.roleProperties(input.roles),
-        ...property('title', input.title, 'user'),
-        ...property('canDelete', true, 'user'),
-      ])
-      .return('user.id as id')
-      .asResult<{ id: ID }>();
-    let result;
-    try {
-      result = await query.first();
-    } catch (e) {
-      if (e instanceof UniquenessError && e.label === 'EmailAddress') {
-        throw new DuplicateException(
-          'person.email',
-          'Email address is already in use',
-          e
-        );
-      }
-      throw new ServerException('Failed to create user', e);
-    }
-    if (!result) {
-      throw new ServerException('Failed to create user');
-    }
-    // attach user to publicSG
-    const attachUserToPublicSg = await this.db
-      .query()
-      .match(node('user', 'User', { id }))
-      .match(node('publicSg', 'PublicSecurityGroup'))
-      .create([node('publicSg'), relation('out', '', 'member'), node('user')])
-      .create([
-        node('publicSg'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property: 'displayFirstName',
-          read: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('user'),
-      ])
-      .create([
-        node('publicSg'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property: 'displayLastName',
-          read: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('user'),
-      ])
-      .return('user')
-      .first();
-    if (!attachUserToPublicSg) {
-      this.logger.error('failed to attach user to public securityGroup');
-    }
-    if (this.config.defaultOrg.id) {
-      const attachToOrgPublicSg = await this.db
-        .query()
-        .match(node('user', 'User', { id }))
-        .match([
-          node('orgPublicSg', 'OrgPublicSecurityGroup'),
-          relation('out', '', 'organization'),
-          node('defaultOrg', 'Organization', {
-            id: this.config.defaultOrg.id,
-          }),
-        ])
-        .create([
-          node('user'),
-          relation('in', '', 'member'),
-          node('orgPublicSg'),
-        ])
-        .run();
-      if (attachToOrgPublicSg) {
-        //
-      }
-    }
-    return result.id;
-  }
+    // const id = await generateId();
+    // const createdAt = DateTime.local();
+    // const query = this.db
+    //   .query()
+    //   .create([
+    //     [
+    //       node('user', ['User', 'BaseNode'], {
+    //         id,
+    //         createdAt,
+    //       }),
+    //     ],
+    //     ...property('email', input.email, 'user', 'email', 'EmailAddress'),
+    //     ...property('realFirstName', input.realFirstName, 'user'),
+    //     ...property('realLastName', input.realLastName, 'user'),
+    //     ...property('displayFirstName', input.displayFirstName, 'user'),
+    //     ...property('displayLastName', input.displayLastName, 'user'),
+    //     ...property('phone', input.phone, 'user'),
+    //     ...property('timezone', input.timezone, 'user'),
+    //     ...property('about', input.about, 'user'),
+    //     ...property('status', input.status, 'user'),
+    //     ...this.roleProperties(input.roles),
+    //     ...property('title', input.title, 'user'),
+    //     ...property('canDelete', true, 'user'),
+    //   ])
+    //   .return('user.id as id')
+    //   .asResult<{ id: ID }>();
+    // let result;
+    // try {
+    //   result = await query.first();
+    // } catch (e) {
+    //   if (e instanceof UniquenessError && e.label === 'EmailAddress') {
+    //     throw new DuplicateException(
+    //       'person.email',
+    //       'Email address is already in use',
+    //       e
+    //     );
+    //   }
+    //   throw new ServerException('Failed to create user', e);
+    // }
 
+    // if (!result) {
+    //   throw new ServerException('Failed to create user');
+    // }
+    // // attach user to publicSG
+    // const attachUserToPublicSg = await this.db
+    //   .query()
+    //   .match(node('user', 'User', { id }))
+    //   .match(node('publicSg', 'PublicSecurityGroup'))
+    //   .create([node('publicSg'), relation('out', '', 'member'), node('user')])
+    //   .create([
+    //     node('publicSg'),
+    //     relation('out', '', 'permission'),
+    //     node('', 'Permission', {
+    //       property: 'displayFirstName',
+    //       read: true,
+    //     }),
+    //     relation('out', '', 'baseNode'),
+    //     node('user'),
+    //   ])
+    //   .create([
+    //     node('publicSg'),
+    //     relation('out', '', 'permission'),
+    //     node('', 'Permission', {
+    //       property: 'displayLastName',
+    //       read: true,
+    //     }),
+    //     relation('out', '', 'baseNode'),
+    //     node('user'),
+    //   ])
+    //   .return('user')
+    //   .first();
+    // if (!attachUserToPublicSg) {
+    //   this.logger.error('failed to attach user to public securityGroup');
+    // }
+    // if (this.config.defaultOrg.id) {
+    //   const attachToOrgPublicSg = await this.db
+    //     .query()
+    //     .match(node('user', 'User', { id }))
+    //     .match([
+    //       node('orgPublicSg', 'OrgPublicSecurityGroup'),
+    //       relation('out', '', 'organization'),
+    //       node('defaultOrg', 'Organization', {
+    //         id: this.config.defaultOrg.id,
+    //       }),
+    //     ])
+    //     .create([
+    //       node('user'),
+    //       relation('in', '', 'member'),
+    //       node('orgPublicSg'),
+    //     ])
+    //     .run();
+    //   if (attachToOrgPublicSg) {
+    //     //
+    //   }
+    // }
+    // return result.id;
+    const client = await this.pg.pool.connect();
+    // await client.query(
+    //   `select public.create(0,'public.people_data','
+    // "id" => "$1",
+    // "public_first_name"=>"$2"
+    // ',2,1,1,1); `,
+    //   [2, 'rhuan']
+    // );
+    // await client.query(
+    //   `select public.create(0,'public.people_data'::text,$1 ,2,1,1,1); `,
+    //   ['"id" => "0","public_first_name"=>"aditya"']
+    // );
+    await client.query(`select * from public.people_data`);
+
+    client.release();
+    return 'amonuserid' as ID;
+  }
   async readOne(id: ID) {
     const query = this.db
       .query()

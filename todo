@@ -3,10 +3,13 @@
 [√] history fn for generic create
 [√] testing the above two fns 
 [√] fix materialized view logic
+[ ] examples in the user.repo - comment out other tests and just run the relevant one and get it passing; need to comment out neo4j code as well 
+[ ] update function
+[ ] delete function  
 [ ] add comments + cleanup 
 [ ] replace quote_literal with %L 
 [ ] going through postgres docs and finding enhancements to current code 
 [ ] naming convention for variables and fns
-[ ] update is_cleared when sensitivity is updated 
 [ ] avoiding loops - if we still get an error, we need to refactor to avoid loops 
-[ ] refactor refresh fn 
+[ ] refactor refresh fn
+[ ] graphql tutorial
