@@ -52,7 +52,7 @@ export class SyncProgressReportToEngagementDateRange
       for (const engagement of projectEngagements) {
         await this.deleteReports(engagement.id, diff.removals);
         await this.createReports(engagement.id, diff.additions, event.session);
-        await this.createOrUpdateFinalReport(engagement, event.session);
+        await this.mergeFinalReport(engagement, event.session);
       }
     } else {
       const engagement =
@@ -61,7 +61,7 @@ export class SyncProgressReportToEngagementDateRange
           : event.engagement;
       await this.deleteReports(engagement.id, diff.removals);
       await this.createReports(engagement.id, diff.additions, event.session);
-      await this.createOrUpdateFinalReport(engagement, event.session);
+      await this.mergeFinalReport(engagement, event.session);
     }
   }
 
@@ -127,16 +127,12 @@ export class SyncProgressReportToEngagementDateRange
     );
   }
 
-  private async createOrUpdateFinalReport(
-    engagement: IEngagement,
-    session: Session
-  ) {
+  private async mergeFinalReport(engagement: IEngagement, session: Session) {
     const dateRange = engagementRange(engagement);
     if (dateRange) {
-      await this.periodicReports.createOrUpdateFinalReportWithDateRange(
+      await this.periodicReports.mergeFinalReport(
         engagement.id,
         ReportType.Progress,
-        dateRange.end.endOf('quarter'),
         dateRange.end.endOf('quarter'),
         session
       );

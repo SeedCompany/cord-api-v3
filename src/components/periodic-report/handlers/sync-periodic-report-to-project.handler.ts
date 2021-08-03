@@ -86,10 +86,9 @@ export class SyncPeriodicReportsToProjectDateRange
     );
 
     if (project.mouEnd) {
-      await this.periodicReports.createOrUpdateFinalReportWithDateRange(
+      await this.periodicReports.mergeFinalReport(
         project.id,
         ReportType.Financial,
-        project.mouEnd.endOf(projectIntervalUnit),
         project.mouEnd.endOf(projectIntervalUnit),
         event.session
       );
@@ -119,10 +118,9 @@ export class SyncPeriodicReportsToProjectDateRange
     );
 
     if (event.updated.mouEnd) {
-      await this.periodicReports.createOrUpdateFinalReportWithDateRange(
+      await this.periodicReports.mergeFinalReport(
         event.updated.id,
         ReportType.Narrative,
-        event.updated.mouEnd.endOf('quarter'),
         event.updated.mouEnd.endOf('quarter'),
         event.session
       );
