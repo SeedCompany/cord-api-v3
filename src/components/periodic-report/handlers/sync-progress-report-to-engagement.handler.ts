@@ -136,8 +136,8 @@ export class SyncProgressReportToEngagementDateRange
       await this.periodicReports.createOrUpdateFinalReportWithDateRange(
         engagement.id,
         ReportType.Progress,
-        dateRange.end,
-        dateRange.end,
+        dateRange.end.endOf('quarter'),
+        dateRange.end.endOf('quarter'),
         session
       );
     }

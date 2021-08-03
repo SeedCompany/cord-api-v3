@@ -89,8 +89,8 @@ export class SyncPeriodicReportsToProjectDateRange
       await this.periodicReports.createOrUpdateFinalReportWithDateRange(
         project.id,
         ReportType.Financial,
-        project.mouEnd,
-        project.mouEnd,
+        project.mouEnd.endOf(projectIntervalUnit),
+        project.mouEnd.endOf(projectIntervalUnit),
         event.session
       );
     }
@@ -122,8 +122,8 @@ export class SyncPeriodicReportsToProjectDateRange
       await this.periodicReports.createOrUpdateFinalReportWithDateRange(
         event.updated.id,
         ReportType.Narrative,
-        event.updated.mouEnd,
-        event.updated.mouEnd,
+        event.updated.mouEnd.endOf('quarter'),
+        event.updated.mouEnd.endOf('quarter'),
         event.session
       );
     }
