@@ -16,7 +16,7 @@ export class ProjectStepResolver {
     @AnonSession() session: Session,
     @IdArg({ nullable: true }) id?: ID
   ): Promise<ProjectStepTransition[]> {
-    if (!step.canRead || !step.value) {
+    if (!step.canRead || !step.canEdit || !step.value) {
       return [];
     }
     return await this.projectRules.getAvailableTransitions(
