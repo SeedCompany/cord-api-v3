@@ -156,6 +156,30 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
     return res?.dto;
   }
 
+  async getFinalReport(parentId: ID, type: ReportType) {
+    const res = await this.db
+      .query()
+      .match([
+        node('', 'BaseNode', { id: parentId }),
+        relation('out', '', 'report', { active: true }),
+        node('node', `${type}Report`),
+      ])
+      .match([
+        node('node'),
+        relation('out', '', 'start', { active: true }),
+        node('start', 'Property'),
+      ])
+      .match([
+        node('node'),
+        relation('out', '', 'end', { active: true }),
+        node('end', 'Property'),
+      ])
+      .raw(`where start.value = end.value`)
+      .apply(this.hydrate())
+      .first();
+    return res?.dto;
+  }
+
   async listEngagementReports(
     engagementId: string,
     input: PeriodicReportListInput

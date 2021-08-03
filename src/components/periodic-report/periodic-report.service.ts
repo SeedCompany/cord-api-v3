@@ -1,6 +1,7 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Interval } from 'luxon';
 import {
+  CalendarDate,
   ID,
   NotFoundException,
   ServerException,
@@ -211,5 +212,40 @@ export class PeriodicReportService {
     const result = await this.repo.delete(baseNodeId, type, intervals);
 
     this.logger.debug('Deleted reports', { baseNodeId, type, ...result });
+  }
+
+  async getFinalReport(
+    parentId: ID,
+    type: ReportType,
+    session: Session
+  ): Promise<PeriodicReport | undefined> {
+    const report = await this.repo.getFinalReport(parentId, type);
+    return report ? await this.secure(report, session) : undefined;
+  }
+
+  async mergeFinalReport(
+    parentId: ID,
+    type: ReportType,
+    at: CalendarDate,
+    session: Session
+  ): Promise<void> {
+    const report = await this.repo.getFinalReport(parentId, type);
+
+    if (report) {
+      await this.repo.updateProperties(report, {
+        start: at,
+        end: at,
+      });
+    } else {
+      await this.create(
+        {
+          start: at,
+          end: at,
+          type,
+          projectOrEngagementId: parentId,
+        },
+        session
+      );
+    }
   }
 }
