@@ -6,6 +6,7 @@ import {
   isIdLike,
   mapFromList,
   NotFoundException,
+  ObjectView,
   SecuredList,
   SecuredProps,
   ServerException,
@@ -149,7 +150,11 @@ export class UserService {
   }
 
   @HandleIdLookup(User)
-  async readOne(id: ID, sessionOrUserId: Session | ID): Promise<User> {
+  async readOne(
+    id: ID,
+    sessionOrUserId: Session | ID,
+    _view?: ObjectView
+  ): Promise<User> {
     const user = await this.userRepo.readOne(id);
     return await this.secure(user, sessionOrUserId);
   }

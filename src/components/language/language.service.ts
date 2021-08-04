@@ -6,6 +6,7 @@ import {
   ID,
   InputException,
   NotFoundException,
+  ObjectView,
   SecuredDate,
   ServerException,
   Session,
@@ -156,7 +157,11 @@ export class LanguageService {
   }
 
   @HandleIdLookup(Language)
-  async readOne(langId: ID, session: Session): Promise<Language> {
+  async readOne(
+    langId: ID,
+    session: Session,
+    _view?: ObjectView
+  ): Promise<Language> {
     const result = await this.repo.readOne(langId, session);
     if (!result) {
       throw new NotFoundException('Could not find language', 'language.id');

@@ -1,5 +1,5 @@
 import { node, Query, relation } from 'cypher-query-builder';
-import { Many, ObjectView, Session } from '../../../common';
+import { labelForView, Many, ObjectView, Session } from '../../../common';
 import { variable } from '../query-augmentation/condition-variables';
 import { apoc, collect, listConcat, merge } from './cypher-functions';
 
@@ -65,7 +65,7 @@ export const matchProps = (options: MatchPropsOptions = {}) => {
           [
             node(nodeName),
             relation('out', 'r', { active: !view.changeset }),
-            node('prop', view.deleted ? 'Deleted_Property' : 'Property'),
+            node('prop', labelForView('Property', view)),
             ...(view.changeset
               ? [
                   relation('in', '', 'changeset', ACTIVE),

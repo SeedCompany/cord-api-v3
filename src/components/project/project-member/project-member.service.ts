@@ -10,6 +10,7 @@ import {
   InputException,
   MaybeAsync,
   NotFoundException,
+  ObjectView,
   ServerException,
   Session,
   UnauthorizedException,
@@ -130,7 +131,11 @@ export class ProjectMemberService {
   }
 
   @HandleIdLookup(ProjectMember)
-  async readOne(id: ID, session: Session): Promise<ProjectMember> {
+  async readOne(
+    id: ID,
+    session: Session,
+    _view?: ObjectView
+  ): Promise<ProjectMember> {
     this.logger.debug(`read one`, {
       id,
       userId: session.userId,

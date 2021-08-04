@@ -4,7 +4,9 @@ import { DateTime } from 'luxon';
 import {
   generateId,
   ID,
+  labelForView,
   NotFoundException,
+  ObjectView,
   ServerException,
   Session,
   UnsecuredDto,
@@ -76,7 +78,9 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
     return { id: result.id, mouId, agreementId };
   }
 
-  async readOne(id: ID, session: Session, changeset?: ID) {
+  async readOne(id: ID, session: Session, view?: ObjectView) {
+    const label = labelForView('Partnership', view);
+
     const query = this.db
       .query()
       .subQuery((sub) =>
@@ -84,19 +88,19 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
           .match([
             node('project'),
             relation('out', '', 'partnership', ACTIVE),
-            node('node', 'Partnership', { id }),
+            node('node', label, { id }),
           ])
           .return('project, node')
           .apply((q) =>
-            changeset
+            view?.changeset
               ? q
                   .union()
                   .match([
                     node('project'),
-                    relation('out', '', 'partnership', INACTIVE),
-                    node('node', 'Partnership', { id }),
+                    relation('out', '', 'partnership', ACTIVE),
+                    node('node', label, { id }),
                     relation('in', '', 'changeset', ACTIVE),
-                    node('changeset', 'Changeset', { id: changeset }),
+                    node('changeset', 'Changeset', { id: view.changeset }),
                   ])
                   .return('project, node')
               : q
@@ -109,13 +113,13 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
         relation('out', '', 'organization', ACTIVE),
         node('org', 'Organization'),
       ])
-      .apply(matchPropsAndProjectSensAndScopedRoles(session))
-      .apply(matchChangesetAndChangedProps(changeset))
+      .apply(matchPropsAndProjectSensAndScopedRoles(session, { view }))
+      .apply(matchChangesetAndChangedProps(view?.changeset))
       .apply(matchProps({ nodeName: 'project', outputVar: 'projectProps' }))
       .apply(
         matchProps({
           nodeName: 'project',
-          view: { changeset },
+          view,
           optional: true,
           outputVar: 'projectChangedProps',
         })

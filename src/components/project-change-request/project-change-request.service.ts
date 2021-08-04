@@ -2,6 +2,7 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import {
   ID,
   InputException,
+  ObjectView,
   ServerException,
   Session,
   UnauthorizedException,
@@ -69,7 +70,11 @@ export class ProjectChangeRequestService {
   }
 
   @HandleIdLookup(ProjectChangeRequest)
-  async readOne(id: ID, session: Session): Promise<ProjectChangeRequest> {
+  async readOne(
+    id: ID,
+    session: Session,
+    _view?: ObjectView
+  ): Promise<ProjectChangeRequest> {
     const dto = await this.readOneUnsecured(id, session);
     return await this.secure(dto, session);
   }

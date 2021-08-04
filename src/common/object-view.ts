@@ -6,8 +6,8 @@ import { ID } from './id-field';
 interface ObjectViewTypeMap {
   active: true;
   deleted: true;
-  changeset: ID | undefined;
-  beforeChangeset: ID | undefined;
+  changeset: ID;
+  beforeChangeset: ID;
   asOf: DateTime;
 }
 

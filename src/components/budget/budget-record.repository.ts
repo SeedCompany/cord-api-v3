@@ -1,8 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
+import { uniq } from 'lodash';
 import {
   ID,
+  labelForView,
   NotFoundException,
+  ObjectView,
   ServerException,
   Session,
   UnsecuredDto,
@@ -73,18 +76,19 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
     return !!result;
   }
 
-  async readOne(id: ID, session: Session, changeset?: ID) {
+  async readOne(id: ID, session: Session, view?: ObjectView) {
     const query = this.db
       .query()
       .match([
         node('project', 'Project'),
         // omitting active checks on these two relations which could be either depending on changeset
         relation('out', '', 'budget'),
-        node('', 'Budget'),
+        // read deleted record in active or deleted budget
+        node('', uniq(['Budget', labelForView('Budget', view)])),
         relation('out', '', 'record'),
-        node('node', 'BudgetRecord', { id }),
+        node('node', labelForView('BudgetRecord', view), { id }),
       ])
-      .apply(this.hydrate({ session, changeset }))
+      .apply(this.hydrate({ session, view }))
       .return<{ dto: UnsecuredDto<BudgetRecord> }>('dto');
     const result = await query.first();
     if (!result) {
@@ -97,12 +101,16 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
     return result.dto;
   }
 
-  async list(input: BudgetRecordListInput, session: Session, changeset?: ID) {
+  async list(
+    input: BudgetRecordListInput,
+    session: Session,
+    view?: ObjectView
+  ) {
     const { budgetId } = input.filter;
     const result = await this.db
       .query()
-      .matchNode('budget', 'Budget', { id: budgetId })
-      .apply(this.recordsOfBudget({ changeset }))
+      .matchNode('budget', labelForView('Budget', view), { id: budgetId })
+      .apply(this.recordsOfBudget({ view }))
       .apply(sorting(BudgetRecord, input))
       .apply(paginate(input))
       .first();
@@ -114,13 +122,13 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
     projectVar = 'project',
     outputVar = 'dto',
     session,
-    changeset,
+    view,
   }: {
     recordVar?: string;
     projectVar?: string;
     outputVar?: string;
     session: Session;
-    changeset?: ID;
+    view?: ObjectView;
   }) {
     return (query: Query) =>
       query.subQuery((sub) =>
@@ -137,8 +145,8 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
             relation('out', '', 'organization', ACTIVE),
             node('organization', 'Organization'),
           ])
-          .apply(matchChangesetAndChangedProps(changeset))
-          .apply(matchPropsAndProjectSensAndScopedRoles(session))
+          .apply(matchChangesetAndChangedProps(view?.changeset))
+          .apply(matchPropsAndProjectSensAndScopedRoles(session, { view }))
           .return<{ dto: UnsecuredDto<BudgetRecord> }>(
             merge('props', 'changedProps', {
               organization: 'organization.id',
@@ -151,11 +159,11 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
 
   recordsOfBudget({
     budgetVar = 'budget',
-    changeset,
+    view,
     outputVar = 'node',
   }: {
     budgetVar?: string;
-    changeset?: ID;
+    view?: ObjectView;
     outputVar?: string;
   }) {
     return (query: Query) =>
@@ -165,11 +173,11 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
           .match([
             node(budgetVar),
             relation('out', '', 'record', ACTIVE),
-            node('node', 'BudgetRecord'),
+            node('node', labelForView('BudgetRecord', view)),
           ])
           .return({ node: outputVar })
           .apply((q) =>
-            changeset
+            view?.changeset
               ? q
                   .union()
                   .match([
@@ -177,7 +185,7 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
                     relation('out', '', 'record', INACTIVE),
                     node('node', 'BudgetRecord'),
                     relation('in', '', 'changeset', ACTIVE),
-                    node('changeset', 'Changeset', { id: changeset }),
+                    node('changeset', 'Changeset', { id: view.changeset }),
                   ])
                   .return({ node: outputVar })
               : q

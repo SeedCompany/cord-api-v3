@@ -5,6 +5,7 @@ import {
   ID,
   InputException,
   NotFoundException,
+  ObjectView,
   ServerException,
   Session,
   simpleSwitch,
@@ -100,7 +101,11 @@ export class ProductService {
   }
 
   @HandleIdLookup([DirectScriptureProduct, DerivativeScriptureProduct])
-  async readOne(id: ID, session: Session): Promise<AnyProduct> {
+  async readOne(
+    id: ID,
+    session: Session,
+    _view?: ObjectView
+  ): Promise<AnyProduct> {
     const dto = await this.readOneUnsecured(id, session);
     return await this.secure(dto, session);
   }

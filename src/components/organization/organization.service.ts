@@ -3,6 +3,7 @@ import {
   DuplicateException,
   ID,
   NotFoundException,
+  ObjectView,
   ServerException,
   Session,
   UnauthorizedException,
@@ -96,7 +97,11 @@ export class OrganizationService {
   }
 
   @HandleIdLookup(Organization)
-  async readOne(orgId: ID, session: Session): Promise<Organization> {
+  async readOne(
+    orgId: ID,
+    session: Session,
+    _view?: ObjectView
+  ): Promise<Organization> {
     this.logger.debug(`Read Organization`, {
       id: orgId,
       userId: session.userId,

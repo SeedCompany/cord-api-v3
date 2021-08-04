@@ -120,9 +120,11 @@ export class EngagementService {
       session.userId
     );
 
-    const languageEngagement = (await this.readOne(id, session, {
-      changeset,
-    })) as LanguageEngagement;
+    const languageEngagement = (await this.readOne(
+      id,
+      session,
+      changeset ? { changeset } : { active: true }
+    )) as LanguageEngagement;
     if (changeset) {
       return languageEngagement;
     }
@@ -199,9 +201,11 @@ export class EngagementService {
       session.userId
     );
 
-    const internshipEngagement = (await this.readOne(id, session, {
-      changeset,
-    })) as InternshipEngagement;
+    const internshipEngagement = (await this.readOne(
+      id,
+      session,
+      changeset ? { changeset } : { active: true }
+    )) as InternshipEngagement;
     if (changeset) {
       return internshipEngagement;
     }
@@ -294,6 +298,7 @@ export class EngagementService {
     session: Session,
     changeset?: ID
   ): Promise<LanguageEngagement> {
+    const view: ObjectView = changeset ? { changeset } : { active: true };
     if (input.firstScripture) {
       await this.verifyFirstScripture({ engagementId: input.id });
     }
@@ -307,9 +312,11 @@ export class EngagementService {
       );
     }
 
-    const object = (await this.readOne(input.id, session, {
-      changeset,
-    })) as LanguageEngagement;
+    const object = (await this.readOne(
+      input.id,
+      session,
+      view
+    )) as LanguageEngagement;
 
     const changes = this.repo.getActualLanguageChanges(object, input);
     await this.authorizationService.verifyCanEditChanges(
@@ -341,9 +348,11 @@ export class EngagementService {
       );
     }
 
-    const updated = (await this.readOne(input.id, session, {
-      changeset,
-    })) as LanguageEngagement;
+    const updated = (await this.readOne(
+      input.id,
+      session,
+      view
+    )) as LanguageEngagement;
 
     if (changeset) {
       return updated;
@@ -365,6 +374,7 @@ export class EngagementService {
     session: Session,
     changeset?: ID
   ): Promise<InternshipEngagement> {
+    const view: ObjectView = changeset ? { changeset } : { active: true };
     if (input.status) {
       await this.engagementRules.verifyStatusChange(
         input.id,
@@ -374,9 +384,11 @@ export class EngagementService {
       );
     }
 
-    const object = (await this.readOne(input.id, session, {
-      changeset,
-    })) as InternshipEngagement;
+    const object = (await this.readOne(
+      input.id,
+      session,
+      view
+    )) as InternshipEngagement;
 
     const changes = this.repo.getActualInternshipChanges(object, input);
     await this.authorizationService.verifyCanEditChanges(
@@ -473,13 +485,11 @@ export class EngagementService {
   async list(
     input: EngagementListInput,
     session: Session,
-    changeset?: ID
+    view?: ObjectView
   ): Promise<EngagementListOutput> {
-    const results = await this.repo.list(input, session, changeset);
+    const results = await this.repo.list(input, session, view?.changeset);
     return await mapListResults(results, (id) =>
-      this.readOne(id, session, {
-        changeset,
-      })
+      this.readOne(id, session, view)
     );
   }
 

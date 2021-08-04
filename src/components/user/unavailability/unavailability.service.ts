@@ -2,6 +2,7 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import {
   ID,
   NotFoundException,
+  ObjectView,
   ServerException,
   Session,
   UnsecuredDto,
@@ -55,7 +56,11 @@ export class UnavailabilityService {
   }
 
   @HandleIdLookup(Unavailability)
-  async readOne(id: ID, session: Session): Promise<Unavailability> {
+  async readOne(
+    id: ID,
+    session: Session,
+    _view?: ObjectView
+  ): Promise<Unavailability> {
     const result = await this.repo.readOne(id, session);
     return await this.secure(result, session);
   }

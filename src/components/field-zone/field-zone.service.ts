@@ -3,6 +3,7 @@ import {
   DuplicateException,
   ID,
   NotFoundException,
+  ObjectView,
   ServerException,
   Session,
   UnauthorizedException,
@@ -72,7 +73,11 @@ export class FieldZoneService {
   }
 
   @HandleIdLookup(FieldZone)
-  async readOne(id: ID, session: Session): Promise<FieldZone> {
+  async readOne(
+    id: ID,
+    session: Session,
+    _view?: ObjectView
+  ): Promise<FieldZone> {
     this.logger.debug(`Read Field Zone`, {
       id: id,
       userId: session.userId,

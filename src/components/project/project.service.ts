@@ -8,6 +8,7 @@ import {
   isIdLike,
   many,
   NotFoundException,
+  ObjectView,
   ServerException,
   Session,
   UnauthorizedException,
@@ -199,9 +200,9 @@ export class ProjectService {
   async readOneTranslation(
     id: ID,
     session: Session,
-    changeset?: ID
+    view?: ObjectView
   ): Promise<TranslationProject> {
-    const project = await this.readOne(id, session, changeset);
+    const project = await this.readOne(id, session, view?.changeset);
     if (project.type !== ProjectType.Translation) {
       throw new Error('Project is not a translation project');
     }
@@ -212,9 +213,9 @@ export class ProjectService {
   async readOneInternship(
     id: ID,
     session: Session,
-    changeset?: ID
+    view?: ObjectView
   ): Promise<InternshipProject> {
-    const project = await this.readOne(id, session, changeset);
+    const project = await this.readOne(id, session, view?.changeset);
     if (project.type !== ProjectType.Internship) {
       throw new Error('Project is not an internship project');
     }
@@ -416,7 +417,7 @@ export class ProjectService {
     project: Project,
     input: EngagementListInput,
     session: Session,
-    changeset?: ID
+    view?: ObjectView
   ): Promise<SecuredEngagementList> {
     this.logger.debug('list engagements ', {
       projectId: project.id,
@@ -433,7 +434,7 @@ export class ProjectService {
         },
       },
       session,
-      changeset
+      view
     );
 
     const permissions = await this.repo.permissionsForListProp(

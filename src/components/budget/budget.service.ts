@@ -5,6 +5,7 @@ import {
   ID,
   InputException,
   NotFoundException,
+  ObjectView,
   Order,
   ResourceShape,
   ServerException,
@@ -138,7 +139,7 @@ export class BudgetService {
       const budgetRecord = await this.readOneRecord(
         recordId,
         session,
-        changeset
+        changeset ? { changeset } : { active: true }
       );
 
       return budgetRecord;
@@ -162,13 +163,13 @@ export class BudgetService {
   }
 
   @HandleIdLookup(Budget)
-  async readOne(id: ID, session: Session, changeset?: ID): Promise<Budget> {
+  async readOne(id: ID, session: Session, view?: ObjectView): Promise<Budget> {
     this.logger.debug(`readOne budget`, {
       id,
       userId: session.userId,
     });
 
-    const result = await this.budgetRepo.readOne(id, session, changeset);
+    const result = await this.budgetRepo.readOne(id, session, view);
 
     const perms = await this.authorizationService.getPermissions({
       resource: Budget,
@@ -194,12 +195,16 @@ export class BudgetService {
           filter: { budgetId: id },
         },
         session,
-        changeset
+        view
       );
     }
 
-    const changeRequest = changeset
-      ? await this.resources.lookup(ProjectChangeRequest, changeset, session)
+    const changeRequest = view?.changeset
+      ? await this.resources.lookup(
+          ProjectChangeRequest,
+          view.changeset,
+          session
+        )
       : undefined;
 
     return {
@@ -217,14 +222,14 @@ export class BudgetService {
   async readOneRecord(
     id: ID,
     session: Session,
-    changeset?: ID
+    view?: ObjectView
   ): Promise<BudgetRecord> {
     this.logger.debug(`readOne BudgetRecord`, {
       id,
       userId: session.userId,
     });
 
-    const result = await this.budgetRecordsRepo.readOne(id, session, changeset);
+    const result = await this.budgetRecordsRepo.readOne(id, session, view);
 
     const securedProps = await this.authorizationService.secureProperties(
       BudgetRecord,
@@ -268,7 +273,11 @@ export class BudgetService {
 
     await this.verifyCanEdit(id, session);
 
-    const br = await this.readOneRecord(id, session, changeset);
+    const br = await this.readOneRecord(
+      id,
+      session,
+      changeset ? { changeset } : { active: true }
+    );
     const changes = this.budgetRecordsRepo.getActualChanges(br, input);
     await this.authorizationService.verifyCanEditChanges(
       BudgetRecord,
@@ -334,7 +343,11 @@ export class BudgetService {
   }
 
   async deleteRecord(id: ID, session: Session, changeset?: ID): Promise<void> {
-    const br = await this.readOneRecord(id, session, changeset);
+    const br = await this.readOneRecord(
+      id,
+      session,
+      changeset ? { changeset } : { active: true }
+    );
 
     if (!br) {
       throw new NotFoundException('Could not find Budget Record');
@@ -371,7 +384,7 @@ export class BudgetService {
     };
     const results = await this.budgetRepo.list(input, session);
     return await mapListResults(results, (id) =>
-      this.readOne(id, session, changeset)
+      this.readOne(id, session, changeset ? { changeset } : { active: true })
     );
   }
 
@@ -386,23 +399,19 @@ export class BudgetService {
     };
     const results = await this.budgetRepo.listNoSecGroups(input);
     return await mapListResults(results, (id) =>
-      this.readOne(id, session, changeset)
+      this.readOne(id, session, changeset ? { changeset } : { active: true })
     );
   }
 
   async listRecords(
     input: BudgetRecordListInput,
     session: Session,
-    changeset?: ID
+    view?: ObjectView
   ): Promise<BudgetRecordListOutput> {
-    const results = await this.budgetRecordsRepo.list(
-      input,
-      session,
-      changeset
-    );
+    const results = await this.budgetRecordsRepo.list(input, session, view);
 
     return await mapListResults(results, (id) =>
-      this.readOneRecord(id, session, changeset)
+      this.readOneRecord(id, session, view)
     );
   }
 }
