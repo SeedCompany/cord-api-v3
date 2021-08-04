@@ -42,11 +42,7 @@ export class PartnershipResolver {
     @LoggedInSession() session: Session,
     @Args('input') { partnership: input, changeset }: CreatePartnershipInput
   ): Promise<CreatePartnershipOutput> {
-    const partnership = await this.service.create(
-      input,
-      session,
-      changeset ? { changeset } : { active: true }
-    );
+    const partnership = await this.service.create(input, session, changeset);
     return { partnership };
   }
 

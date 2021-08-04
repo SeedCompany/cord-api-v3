@@ -48,7 +48,7 @@ export class PartnershipService {
   async create(
     input: CreatePartnership,
     session: Session,
-    view?: ObjectView
+    changeset?: ID
   ): Promise<Partnership> {
     const { projectId, partnerId } = input;
 
@@ -74,7 +74,7 @@ export class PartnershipService {
           primary,
         },
         session,
-        view?.changeset
+        changeset
       );
 
       await this.files.createDefinedFile(
@@ -107,7 +107,11 @@ export class PartnershipService {
         await this.repo.removePrimaryFromOtherPartnerships(id);
       }
 
-      const partnership = await this.readOne(id, session, view);
+      const partnership = await this.readOne(
+        id,
+        session,
+        changeset ? { changeset } : { active: true }
+      );
 
       await this.eventBus.publish(
         new PartnershipCreatedEvent(partnership, session)
