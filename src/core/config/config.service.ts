@@ -100,6 +100,9 @@ export class ConfigService implements EmailOptionsFactory {
   }
 
   dbIndexesCreate = this.env.boolean('DB_CREATE_INDEXES').optional(true);
+  dbAutoMigrate = this.env
+    .boolean('DB_AUTO_MIGRATE')
+    .optional(process.env.NODE_ENV !== 'production' && !this.jest);
 
   @Lazy() get files() {
     const bucket = this.env.string('FILES_S3_BUCKET').optional();
