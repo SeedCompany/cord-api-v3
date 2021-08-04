@@ -4,6 +4,7 @@ import { EngagementModule } from '../engagement/engagement.module';
 import { FileModule } from '../file/file.module';
 import { ProjectModule } from '../project/project.module';
 import * as handlers from './handlers';
+import * as migrations from './migrations';
 import { PeriodicReportEngagementConnectionResolver } from './periodic-report-engagement-connection.resolver';
 import { PeriodicReportProjectConnectionResolver } from './periodic-report-project-connection.resolver';
 import { PeriodicReportRepository } from './periodic-report.repository';
@@ -24,6 +25,7 @@ import { PeriodicReportService } from './periodic-report.service';
     PeriodicReportEngagementConnectionResolver,
     PeriodicReportRepository,
     ...Object.values(handlers),
+    ...Object.values(migrations),
   ],
   exports: [PeriodicReportService],
 })
