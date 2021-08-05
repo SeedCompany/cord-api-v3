@@ -69,4 +69,13 @@ export class PostgresService {
     await this.executeSQLFiles(client, removeTriggersPath);
     client.release();
   }
+  convertObjectToHstore(obj: object): string {
+    let string = '';
+    for (const [key, value] of Object.entries(obj)) {
+      string += `"${key}"=>"${value}",`;
+    }
+    string = string.slice(0, string.length - 1);
+    console.log(string);
+    return string;
+  }
 }

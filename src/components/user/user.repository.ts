@@ -178,21 +178,44 @@ export class UserRepository extends DtoRepository(User) {
       }
     }
     const client = await this.pg.pool.connect();
-    await client.query(`select * from public.people_data`);
+    // await client.query(`select * from public.people_data`);
+    const personHstore = this.pg.convertObjectToHstore({
+      id: 0,
+      public_first_name: input.displayFirstName,
+      public_last_name: input.displayLastName,
+      private_first_name: input.realFirstName,
+      private_last_name: input.realLastName,
+      time_zone: input.timezone,
+    });
+    const orgHstore = this.pg.convertObjectToHstore({
+      id: 0,
+      name: 'defaultOrg',
+    });
+    const userHstore = this.pg.convertObjectToHstore({
+      id: 0,
+      person: 0,
+      email: input.email,
+      password: 'password',
+      owning_org: 0,
+    });
+    console.log(personHstore);
     await client.query(
       `select public.create(0,'public.people_data'::text,$1 ,2,1,1,1); `,
-      ['"id" => "0","public_first_name"=>"aditya"']
+      [personHstore]
     );
+    await client.query(
+      `select public.create(0,'public.organizations_data', $1, 2,1,1,1)`,
+      [orgHstore]
+    );
+    await client.query(
+      `select public.create(0,'public.users_data'::text,$1 ,2,1,1,1); `,
+      [userHstore]
+    );
+
     client.release();
     return result.id;
-    // await client.query(
-    //   `select public.create(0,'public.people_data','
-    // "id" => "$1",
-    // "public_first_name"=>"$2"
-    // ',2,1,1,1); `,
-    //   [2, 'rhuan']
-    // );
   }
+
   async readOne(id: ID) {
     const query = this.db
       .query()
@@ -204,6 +227,13 @@ export class UserRepository extends DtoRepository(User) {
     if (!result) {
       throw new NotFoundException('Could not find user', 'user.id');
     }
+    const client = await this.pg.pool.connect();
+    const data = await client.query(
+      'select * from public.people_data where id = $1',
+      [0]
+    );
+    console.log(data.rows[0]);
+    client.release();
     return result.dto;
   }
 
@@ -355,6 +385,13 @@ export class UserRepository extends DtoRepository(User) {
       })
       .asResult<{ canRead?: boolean; canEdit?: boolean }>()
       .first();
+    const client = await this.pg.pool.connect();
+    const pgResult = await client.query(
+      `delete from public.people_data where id = $1`,
+      [0]
+    );
+    console.log(pgResult);
+    client.release();
     if (!result) {
       throw new NotFoundException('Could not find user', 'userId');
     }
