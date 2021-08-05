@@ -36,10 +36,10 @@ describe('User e2e', () => {
     await createSession(app);
   });
 
-  afterAll(async () => {
-    await resetDatabase(db);
-    await app.close();
-  });
+  // afterAll(async () => {
+  //   await resetDatabase(db);
+  //   await app.close();
+  // });
 
   it('read one user by id', async () => {
     const fakeUser = await generateRegisterInput();
@@ -213,25 +213,25 @@ describe('User e2e', () => {
   //   return true;
   // });
 
-  // it('delete user', async () => {
-  //   // create user first
-  //   const user = await registerUser(app);
-  //   const result = await app.graphql.query(
-  //     gql`
-  //       mutation deleteUser($id: ID!) {
-  //         deleteUser(id: $id)
-  //       }
-  //     `,
-  //     {
-  //       id: user.id,
-  //     }
-  //   );
+  it('delete user', async () => {
+    // create user first
+    const user = await registerUser(app);
+    const result = await app.graphql.query(
+      gql`
+        mutation deleteUser($id: ID!) {
+          deleteUser(id: $id)
+        }
+      `,
+      {
+        id: user.id,
+      }
+    );
 
-  //   const actual: User | undefined = result.deleteUser;
-  //   expect(actual).toBeTruthy();
+    const actual: User | undefined = result.deleteUser;
+    expect(actual).toBeTruthy();
 
-  //   return true;
-  // });
+    return true;
+  });
 
   // // LIST USERS
   // it('list view of users', async () => {
