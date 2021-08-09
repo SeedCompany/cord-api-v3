@@ -148,6 +148,7 @@ export class UserRepository extends DtoRepository(User) {
       }
       throw new ServerException('Failed to create user', e);
     }
+
     if (!result) {
       throw new ServerException('Failed to create user');
     }
@@ -204,6 +205,42 @@ export class UserRepository extends DtoRepository(User) {
         //
       }
     }
+    const client = await this.pg.pool.connect();
+    // await client.query(`select * from public.people_data`);
+    const personHstore = this.pg.convertObjectToHstore({
+      id: 0,
+      public_first_name: input.displayFirstName,
+      public_last_name: input.displayLastName,
+      private_first_name: input.realFirstName,
+      private_last_name: input.realLastName,
+      time_zone: input.timezone,
+    });
+    const orgHstore = this.pg.convertObjectToHstore({
+      id: 0,
+      name: 'defaultOrg',
+    });
+    const userHstore = this.pg.convertObjectToHstore({
+      id: 0,
+      person: 0,
+      email: input.email,
+      password: 'password',
+      owning_org: 0,
+    });
+    console.log(personHstore);
+    await client.query(
+      `select public.create(0,'public.people_data'::text,$1 ,2,1,1,1); `,
+      [personHstore]
+    );
+    await client.query(
+      `select public.create(0,'public.organizations_data', $1, 2,1,1,1)`,
+      [orgHstore]
+    );
+    await client.query(
+      `select public.create(0,'public.users_data'::text,$1 ,2,1,1,1); `,
+      [userHstore]
+    );
+
+    client.release();
     return result.id;
   }
     // const id = await generateId();

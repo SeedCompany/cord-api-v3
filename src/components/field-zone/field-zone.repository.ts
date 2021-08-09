@@ -11,6 +11,12 @@ import {
   matchRequestingUser,
 } from '../../core';
 import {
+  createBaseNode,
+  DatabaseService,
+  DtoRepository,
+  matchRequestingUser,
+} from '../../core';
+import {
   createNode,
   createRelationships,
   matchProps,
