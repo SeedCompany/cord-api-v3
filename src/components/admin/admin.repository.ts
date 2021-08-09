@@ -230,7 +230,7 @@ export class AdminRepository {
     return true;
   }
   async fastInserts() {
-    await this.pg.fastInserts();
+    // await this.pg.fastInserts();
     const client = await this.pg.pool.connect();
     await client.query(
       `insert into public.people_data("id", "public_first_name") values($1, $2)`,
