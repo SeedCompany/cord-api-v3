@@ -33,7 +33,7 @@ import {
   SecuredPeriodicReportList,
   UpdatePeriodicReportInput,
 } from './dto';
-import { PeriodicReportUploadedEvent } from './events';
+import { PnpProgressUploadedEvent } from './events';
 import { PeriodicReportRepository } from './periodic-report.repository';
 
 @Injectable()
@@ -60,15 +60,17 @@ export class PeriodicReportService {
     session: Session
   ): Promise<PeriodicReport> {
     try {
-      const { id, reportFileId } = await this.repo.create(input);
+      const { id, pnpId } = await this.repo.create(input, session);
 
-      await this.files.createDefinedFile(
-        reportFileId,
-        input.end.toISODate(),
-        session,
-        id,
-        'reportFile'
-      );
+      if (input.type === ReportType.Progress) {
+        await this.files.createDefinedFile(
+          pnpId,
+          input.end.toISODate(),
+          session,
+          id,
+          'pnp'
+        );
+      }
 
       return await this.readOne(id, session);
     } catch (exception) {
@@ -78,30 +80,46 @@ export class PeriodicReportService {
 
   async update(input: UpdatePeriodicReportInput, session: Session) {
     const current = await this.readOne(input.id, session);
-    const changes = this.repo.getActualChanges(current, input);
+
+    if (current.type === ReportType.Progress) {
+      return await this.updateProgressReport(current, input, session);
+    } else {
+      const { pnp, ...rest } = input;
+      const changes = this.repo.getActualChanges(current, rest);
+      await this.authorizationService.verifyCanEditChanges(
+        resolveReportType(current),
+        current,
+        changes
+      );
+      const updated = await this.repo.updateProperties(current, changes);
+      return updated;
+    }
+  }
+
+  async updateProgressReport(
+    report: ProgressReport,
+    input: UpdatePeriodicReportInput,
+    session: Session
+  ) {
+    const changes = this.repo.getActualChanges(report, input);
     await this.authorizationService.verifyCanEditChanges(
-      resolveReportType(current),
-      current,
+      resolveReportType(report),
+      report,
       changes
     );
+    const { pnp, ...simpleChanges } = changes;
+    const updated = await this.repo.updateProperties(report, simpleChanges);
 
-    const { reportFile, ...simpleChanges } = changes;
-
-    const updated = await this.repo.updateProperties(current, simpleChanges);
-
-    if (reportFile) {
+    if (pnp) {
       await this.files.updateDefinedFile(
-        current.reportFile,
+        report.pnp,
         'file',
-        input.reportFile,
+        input.pnp,
         session
       );
-      const newVersion = await this.files.getFileVersion(
-        reportFile.uploadId,
-        session
-      );
+      const newVersion = await this.files.getFileVersion(pnp.uploadId, session);
       await this.eventBus.publish(
-        new PeriodicReportUploadedEvent(updated, newVersion, session)
+        new PnpProgressUploadedEvent(updated, newVersion, session)
       );
     }
 

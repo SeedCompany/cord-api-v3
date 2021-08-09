@@ -9,6 +9,7 @@ import {
 } from '../../engagement/dto';
 import { FieldRegion } from '../../field-region/dto';
 import { FieldZone } from '../../field-zone/dto';
+import { Directory } from '../../file/dto';
 import { Film } from '../../film/dto';
 import { FundingAccount } from '../../funding-account/dto';
 import { EthnologueLanguage, Language } from '../../language/dto';
@@ -79,6 +80,7 @@ export const ResourceMap = {
   Story,
   Unavailability,
   User,
+  Directory,
 } as const;
 export type ResourceMap = typeof ResourceMap;
 

@@ -38,8 +38,9 @@ export const resolveReportType = (report: Pick<PeriodicReport, 'type'>) => {
   implements: [Resource],
 })
 class PeriodicReport extends Resource {
-  static readonly Props = keysOf<PeriodicReport>();
-  static readonly SecuredProps = keysOf<SecuredProps<PeriodicReport>>();
+  static readonly Props: string[] = keysOf<PeriodicReport>();
+  static readonly SecuredProps: string[] =
+    keysOf<SecuredProps<PeriodicReport>>();
 
   @Field(() => ReportType)
   readonly type: ReportType;
@@ -53,8 +54,6 @@ class PeriodicReport extends Resource {
   @Field()
   readonly receivedDate: SecuredDateNullable;
 
-  readonly reportFile: DefinedFile;
-
   @SensitivityField({
     description: "Based on the project's sensitivity",
   })
@@ -63,6 +62,8 @@ class PeriodicReport extends Resource {
   // A list of non-global roles the requesting user has available for this object.
   // This is just a cache, to prevent extra db lookups within the same request.
   readonly scope: ScopedRole[];
+
+  readonly directory: DefinedFile;
 }
 
 export {
@@ -98,6 +99,8 @@ export class ProgressReport extends PeriodicReport {
   static readonly SecuredProps = keysOf<SecuredProps<ProgressReport>>();
 
   readonly type: ReportType.Progress;
+
+  readonly pnp: DefinedFile;
 }
 
 @ObjectType({

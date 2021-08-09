@@ -1,18 +1,18 @@
 import { EventsHandler } from '../../../core';
 import { ReportType } from '../../periodic-report/dto';
-import { PeriodicReportUploadedEvent } from '../../periodic-report/events';
+import { PnpProgressUploadedEvent } from '../../periodic-report/events';
 import { SummaryPeriod } from '../dto';
 import { ProgressExtractor } from '../progress-extractor.service';
 import { ProgressSummaryRepository } from '../progress-summary.repository';
 
-@EventsHandler(PeriodicReportUploadedEvent)
+@EventsHandler(PnpProgressUploadedEvent)
 export class ExtractPnpFileOnUploadHandler {
   constructor(
     private readonly repo: ProgressSummaryRepository,
     private readonly extractor: ProgressExtractor
   ) {}
 
-  async handle(event: PeriodicReportUploadedEvent) {
+  async handle(event: PnpProgressUploadedEvent) {
     if (event.report.type !== ReportType.Progress) {
       return;
     }

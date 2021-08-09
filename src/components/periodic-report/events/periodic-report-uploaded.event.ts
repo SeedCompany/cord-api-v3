@@ -1,13 +1,13 @@
 import { Session } from '../../../common';
 import { FileVersion } from '../../file';
-import { PeriodicReport } from '../dto';
+import { ProgressReport } from '../dto';
 
 /**
  * Dispatched when a new file is uploaded for a periodic report
  */
-export class PeriodicReportUploadedEvent {
+export class PnpProgressUploadedEvent {
   constructor(
-    readonly report: PeriodicReport,
+    readonly report: ProgressReport,
     readonly file: FileVersion,
     readonly session: Session
   ) {}

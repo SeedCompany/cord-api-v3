@@ -9,20 +9,24 @@ import {
   Session,
   UnsecuredDto,
 } from '../../common';
-import { DtoRepository } from '../../core';
+import { DatabaseService, DtoRepository } from '../../core';
 import {
   ACTIVE,
   createNode,
   createRelationships,
   deleteBaseNode,
   matchPropsAndProjectSensAndScopedRoles,
+  matchProps,
+  merge,
   paginate,
   sorting,
   Variable,
 } from '../../core/database/query';
+import { FileService } from '../file';
 import {
   CreatePeriodicReport,
   IPeriodicReport,
+  NarrativeReport,
   PeriodicReport,
   PeriodicReportListInput,
   ReportType,
@@ -31,23 +35,36 @@ import {
 
 @Injectable()
 export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
-  async create(input: CreatePeriodicReport) {
-    const reportFileId = await generateId();
+  constructor(db: DatabaseService, private readonly files: FileService) {
+    super(db);
+  }
 
+  async create(input: CreatePeriodicReport, session: Session) {
+    const directory = await this.files.createDirectory(
+      undefined,
+      'Report Directory',
+      session
+    );
+    const pnpId = await generateId();
     const Report = resolveReportType(input);
     const initialProps = {
       type: input.type,
       start: input.start,
       end: input.end,
       receivedDate: null,
-      reportFile: reportFileId,
+      ...(input.type === ReportType.Progress ? { pnp: pnpId } : {}),
     };
     const query = this.db
       .query()
       .apply(await createNode(Report, { initialProps }))
       .apply(
-        createRelationships(Report, 'in', {
-          report: ['BaseNode', input.projectOrEngagementId],
+        createRelationships(Report, {
+          in: {
+            report: ['BaseNode', input.projectOrEngagementId],
+          },
+          out: {
+            directory: ['Directory', directory.id],
+          },
         })
       )
       .return<{ id: ID }>('node.id as id');
@@ -55,7 +72,7 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
     if (!result) {
       throw new ServerException('Failed to create a periodic report');
     }
-    return { id: result.id, reportFileId };
+    return { id: result.id, pnpId };
   }
 
   async readOne(id: ID, session: Session) {
@@ -233,6 +250,14 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
             .return('project')
         )
         .apply(matchPropsAndProjectSensAndScopedRoles(session))
-        .return<{ dto: UnsecuredDto<PeriodicReport> }>('props as dto');
-  }
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'directory', { active: true }),
+          node('directory', 'Directory'),
+        ])
+        .return<{ dto: UnsecuredDto<PeriodicReport> }>(
+          merge('props', {
+            directory: 'directory.id',
+          }).as('dto')
+        );
 }
