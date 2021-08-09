@@ -85,7 +85,7 @@ DO $$ BEGIN
     create type public.table_name as enum (
 		'public.education_by_person_data',
 		'public.education_entries_data',
-		'public.global_role_column_grants_data',
+		'public.global_role_column_grants',
 		'public.global_role_memberships_data',
 		'public.global_role_table_permissions_data',
 		'public.global_roles_data',
@@ -154,7 +154,7 @@ DO $$ BEGIN
 	WHEN duplicate_object THEN null;
 END; $$;
 
-create table if not exists public.global_role_column_grants_data (
+create table if not exists public.global_role_column_grants(
 	id serial primary key,
 	access_level access_level not null,
 	column_name varchar(32) not null,
@@ -324,11 +324,11 @@ ALTER TABLE public.global_roles_data ADD CONSTRAINT public_global_roles_modified
 END IF; END; $$;
 
 DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'public_global_role_grants_created_by_fk') THEN
-ALTER TABLE public.global_role_column_grants_data ADD CONSTRAINT public_global_role_grants_created_by_fk foreign key (created_by) references public.people_data(id);
+ALTER TABLE public.global_role_column_grants ADD CONSTRAINT public_global_role_grants_created_by_fk foreign key (created_by) references public.people_data(id);
 END IF; END; $$;
 
 DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'public_global_role_grants_modified_by_fk') THEN
-ALTER TABLE public.global_role_column_grants_data ADD CONSTRAINT public_global_role_grants_modified_by_fk foreign key (modified_by) references people_data(id);
+ALTER TABLE public.global_role_column_grants ADD CONSTRAINT public_global_role_grants_modified_by_fk foreign key (modified_by) references people_data(id);
 END IF; END; $$;
 
 DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'public_global_role_table_permissions_created_by_fk') THEN
