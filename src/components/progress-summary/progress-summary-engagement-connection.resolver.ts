@@ -38,7 +38,7 @@ export class ProgressSummaryEngagementConnectionResolver {
     return {
       progressPlanned: summary.planned,
       progressActual: summary.actual,
-      variance: summary.variance,
+      variance: summary.actual - summary.planned,
       year: fiscalYear(report.start),
       quarter: fiscalQuarter(report.start),
     };

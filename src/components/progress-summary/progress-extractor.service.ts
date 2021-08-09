@@ -35,19 +35,19 @@ export class ProgressExtractor {
       for (const row of rows) {
         // new standard 11/09/2020
         if (pnp.Sheets.Harvest && /\d/.test(row?.AC)) {
-          return this.parseRawData(row.AC, row?.AD, row?.AE);
+          return this.parseRawData(row.AC, row?.AD);
         }
         // other 2020 version
         else if (!pnp.Sheets.Harvest && row?.AL === 'Summary Info ====>') {
-          return this.parseRawData(row?.AN, row?.AO, row?.AP);
+          return this.parseRawData(row?.AN, row?.AO);
         }
         // row.CK is current year. if current year is greater than 2019 grab data
         else if (!pnp.Sheets.Harvest && parseInt(row?.CK) >= 2019) {
-          return this.parseRawData(row?.CT, row?.CU, row?.CV);
+          return this.parseRawData(row?.CT, row?.CU);
           // 09 version
           // BX is current year
         } else if (!pnp.Sheets.Harvest && parseInt(row?.BX) >= 2019) {
-          return this.parseRawData(row?.BZ, row?.CA, row?.CB);
+          return this.parseRawData(row?.BZ, row?.CA);
         }
       }
     } catch (e) {
@@ -71,16 +71,11 @@ export class ProgressExtractor {
     return read(buffer, { type: 'buffer' });
   }
 
-  private parseRawData(
-    progressPlanned: string,
-    progressActual: string,
-    variance: string
-  ) {
-    if (!progressPlanned || !progressActual || !variance) return null;
+  private parseRawData(progressPlanned: string, progressActual: string) {
+    if (!progressPlanned || !progressActual) return null;
     return {
       planned: parsePercent(progressPlanned),
       actual: parsePercent(progressActual),
-      variance: parsePercent(variance),
     };
   }
 }

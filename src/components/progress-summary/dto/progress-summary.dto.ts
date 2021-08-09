@@ -18,7 +18,4 @@ export abstract class ProgressSummary {
 
   @Field(() => Float)
   actual: number;
-
-  @Field(() => Float)
-  variance: number;
 }
