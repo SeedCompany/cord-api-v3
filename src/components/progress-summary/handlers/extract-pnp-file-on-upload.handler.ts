@@ -1,6 +1,7 @@
 import { EventsHandler } from '../../../core';
 import { ReportType } from '../../periodic-report/dto';
 import { PeriodicReportUploadedEvent } from '../../periodic-report/events';
+import { SummaryPeriod } from '../dto';
 import { ProgressExtractor } from '../progress-extractor.service';
 import { ProgressSummaryRepository } from '../progress-summary.repository';
 
@@ -21,6 +22,6 @@ export class ExtractPnpFileOnUploadHandler {
       return; // error already logged
     }
 
-    await this.repo.save(event.report, summary);
+    await this.repo.save(event.report, SummaryPeriod.Cumulative, summary);
   }
 }

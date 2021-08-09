@@ -19,3 +19,9 @@ export abstract class ProgressSummary {
   @Field(() => Float)
   actual: number;
 }
+
+export enum SummaryPeriod {
+  ReportPeriod = 'ReportPeriod',
+  FiscalYearSoFar = 'FiscalYearSoFar',
+  Cumulative = 'Cumulative',
+}
