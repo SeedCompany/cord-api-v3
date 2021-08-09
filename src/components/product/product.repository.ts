@@ -1,32 +1,44 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { Except } from 'type-fest';
-import { ID, Session } from '../../common';
-import { CommonRepository } from '../../core';
+import { Except, Merge } from 'type-fest';
+import {
+  getDbClassLabels,
+  ID,
+  NotFoundException,
+  ServerException,
+  Session,
+  UnsecuredDto,
+} from '../../common';
+import { CommonRepository, OnIndex } from '../../core';
 import { DbChanges, getChanges } from '../../core/database/changes';
 import {
-  calculateTotalAndPaginateList,
+  createNode,
+  createRelationships,
+  escapeLuceneSyntax,
+  fullTextQuery,
   matchPropsAndProjectSensAndScopedRoles,
+  merge,
+  paginate,
   permissionsOfNode,
   requestingUser,
+  sorting,
 } from '../../core/database/query';
-import { BaseNode, DbPropsOfDto } from '../../core/database/results';
-import { ScopedRole } from '../authorization';
+import { BaseNode } from '../../core/database/results';
+import { ScriptureRange, ScriptureRangeInput } from '../scripture';
 import {
+  CreateProduct,
   DerivativeScriptureProduct,
   DirectScriptureProduct,
+  ProductMethodology as Methodology,
   Product,
+  ProductCompletionDescriptionSuggestionsInput,
   ProductListInput,
   UpdateProduct,
 } from './dto';
 
 @Injectable()
 export class ProductRepository extends CommonRepository {
-  query() {
-    return this.db.query();
-  }
-
   async findNode(type: 'engagement' | 'producible', id: ID) {
     if (type === 'engagement') {
       return await this.db
@@ -53,36 +65,45 @@ export class ProductRepository extends CommonRepository {
       .match([
         node('project', 'Project'),
         relation('out', '', 'engagement', { active: true }),
-        node('', 'Engagement'),
+        node('engagement', 'Engagement'),
         relation('out', '', 'product', { active: true }),
         node('node', 'Product', { id }),
       ])
-      .apply(matchPropsAndProjectSensAndScopedRoles(session))
-      .return(['props', 'scopedRoles'])
-      .asResult<{
-        props: DbPropsOfDto<
-          DirectScriptureProduct &
-            DerivativeScriptureProduct & {
-              isOverriding: boolean;
-            },
-          true
-        >;
-        scopedRoles: ScopedRole[];
-      }>();
-    return await query.first();
+      .apply(this.hydrate(session));
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException('Could not find product');
+    }
+    return result.dto;
   }
 
-  async connectedProducible(id: ID) {
-    return await this.db
-      .query()
-      .match([
-        node('product', 'Product', { id }),
-        relation('out', 'produces', { active: true }),
-        node('producible', 'Producible'),
-      ])
-      .return('producible')
-      .asResult<{ producible: BaseNode }>()
-      .first();
+  protected hydrate(session: Session) {
+    return (query: Query) =>
+      query
+        .apply(matchPropsAndProjectSensAndScopedRoles(session))
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'produces', { active: true }),
+          node('produces', 'Producible'),
+        ])
+        .return<{
+          dto: Merge<
+            Omit<
+              UnsecuredDto<DirectScriptureProduct & DerivativeScriptureProduct>,
+              'scriptureReferences' | 'scriptureReferencesOverride'
+            >,
+            {
+              isOverriding: boolean;
+              produces: BaseNode | null;
+            }
+          >;
+        }>(
+          merge('props', {
+            engagement: 'engagement.id',
+            scope: 'scopedRoles',
+            produces: 'produces',
+          }).as('dto')
+        );
   }
 
   getActualDirectChanges = getChanges(DirectScriptureProduct);
@@ -110,6 +131,68 @@ export class ProductRepository extends CommonRepository {
       ])
       .return('producible')
       .first();
+  }
+
+  async create(input: CreateProduct) {
+    const Product = input.produces
+      ? DerivativeScriptureProduct
+      : DirectScriptureProduct;
+    const initialProps = {
+      mediums: input.mediums,
+      purposes: input.purposes,
+      methodology: input.methodology,
+      steps: input.steps,
+      describeCompletion: input.describeCompletion,
+      isOverriding: !!input.scriptureReferencesOverride,
+      canDelete: true,
+    };
+
+    const query = this.db
+      .query()
+      .apply(
+        await createNode(Product, {
+          initialProps,
+        })
+      )
+      .apply(
+        createRelationships(Product, {
+          in: {
+            product: ['LanguageEngagement', input.engagementId],
+          },
+          out: {
+            produces: ['Producible', input.produces],
+          },
+        })
+      )
+      // Connect scripture ranges
+      .apply((q) => {
+        const createdAt = DateTime.local();
+        const connectScriptureRange =
+          (label: string) => (range: ScriptureRangeInput) =>
+            [
+              node('node'),
+              relation('out', '', label, { active: true }),
+              node('', getDbClassLabels(ScriptureRange), {
+                ...ScriptureRange.fromReferences(range),
+                createdAt,
+              }),
+            ];
+        return q.create([
+          ...(!input.produces ? input.scriptureReferences ?? [] : []).map(
+            connectScriptureRange('scriptureReferences')
+          ),
+          ...(input.produces
+            ? input.scriptureReferencesOverride ?? []
+            : []
+          ).map(connectScriptureRange('scriptureReferencesOverride')),
+        ]);
+      })
+      .return<{ id: ID }>('node.id as id');
+    const result = await query.first();
+    if (!result) {
+      throw new ServerException('Failed to create product');
+    }
+    return result.id;
   }
 
   async updateProducible(
@@ -163,10 +246,9 @@ export class ProductRepository extends CommonRepository {
     });
   }
 
-  list({ filter, ...input }: ProductListInput, session: Session) {
+  async list({ filter, ...input }: ProductListInput, session: Session) {
     const label = 'Product';
-
-    return this.db
+    const result = await this.db
       .query()
       .match([
         requestingUser(session),
@@ -180,6 +262,68 @@ export class ProductRepository extends CommonRepository {
             ]
           : []),
       ])
-      .apply(calculateTotalAndPaginateList(Product, input));
+      .apply(sorting(Product, input))
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
+  }
+
+  async mergeCompletionDescription(
+    description: string,
+    methodology: Methodology
+  ) {
+    await this.db
+      .query()
+      .merge(
+        node('node', 'ProductCompletionDescription', {
+          value: description,
+          methodology,
+        })
+      )
+      .onCreate.setVariables({
+        'node.lastUsedAt': 'datetime()',
+        'node.createdAt': 'datetime()',
+      })
+      .onMatch.setVariables({
+        'node.lastUsedAt': 'datetime()',
+      })
+      .run();
+  }
+
+  async suggestCompletionDescriptions({
+    query: queryInput,
+    methodology,
+    ...input
+  }: ProductCompletionDescriptionSuggestionsInput) {
+    const query = queryInput ? escapeLuceneSyntax(queryInput) : undefined;
+    const result = await this.db
+      .query()
+      .apply((q) =>
+        query
+          ? q.apply(fullTextQuery('ProductCompletionDescription', query))
+          : q.matchNode('node', 'ProductCompletionDescription')
+      )
+      .apply((q) =>
+        methodology ? q.with('node').where({ node: { methodology } }) : q
+      )
+      .apply((q) =>
+        query ? q : q.with('node').orderBy('node.lastUsedAt', 'DESC')
+      )
+      .with('node.value as node')
+      .apply(paginate(input, (q) => q.return<{ dto: string }>('node as dto')))
+      .first();
+    return result!;
+  }
+
+  @OnIndex('schema')
+  private async createCompletionDescriptionIndex() {
+    await this.db.createFullTextIndex(
+      'ProductCompletionDescription',
+      ['ProductCompletionDescription'],
+      ['value'],
+      {
+        analyzer: 'standard-folding',
+      }
+    );
   }
 }

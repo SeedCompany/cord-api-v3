@@ -7,9 +7,9 @@ import {
   ILogger,
   Logger,
 } from '../../../core';
-import { matchProps } from '../../../core/database/query';
+import { deleteBaseNode } from '../../../core/database/query';
+import { commitChangesetProps } from '../../changeset/commit-changeset-props.query';
 import { ProjectChangeRequestApprovedEvent } from '../../project-change-request/events';
-import { UpdatePartnership } from '../dto';
 import { PartnershipService } from '../partnership.service';
 
 type SubscribedEvent = ProjectChangeRequestApprovedEvent;
@@ -66,30 +66,54 @@ export class ApplyApprovedChangesetToPartnership
             })
             .return('node')
         )
-        .apply(
-          matchProps({
-            changeset: changeset,
-            optional: true,
-            excludeBaseProps: true,
-          })
-        )
-        .return<{
-          id: ID;
-          changes: UpdatePartnership;
-        }>(['node.id as id', 'props as changes'])
+        .return<{ id: ID }>(['node.id as id'])
         .run();
 
       await Promise.all(
-        partnerships.map(async ({ id, changes }) => {
-          const update = this.service.update.bind(this.service);
-          await update({ ...changes, id }, event.session);
+        partnerships.map(async ({ id }) => {
+          // Skip looping for partnerships created in changeset
+          await this.db
+            .query()
+            .match([
+              node('changeset', 'Changeset', { id: changeset }),
+              relation('in', '', 'changeset', { active: true }),
+              node('project', 'Project'),
+              relation('out', '', 'partnership', { active: true }),
+              node('node', 'Partnership', { id }),
+            ])
+            .apply(commitChangesetProps())
+            .return('node')
+            .run();
         })
       );
+
+      // Remove deleting partnerships
+      await this.removeDeletingPartnerships(changeset);
     } catch (exception) {
       throw new ServerException(
         'Failed to apply changeset to partnership',
         exception
       );
     }
+  }
+
+  async removeDeletingPartnerships(changeset: ID) {
+    await this.db
+      .query()
+      .match([
+        node('project', 'Project'),
+        relation('out', '', 'changeset', { active: true }),
+        node('changeset', 'Changeset', { id: changeset }),
+      ])
+      .match([
+        node('project'),
+        relation('out', '', 'partnership', { active: true }),
+        node('node', 'Partnership'),
+        relation('in', '', 'changeset', { active: true, deleting: true }),
+        node('changeset'),
+      ])
+      .apply(deleteBaseNode('node'))
+      .return<{ count: number }>('count(node) as count')
+      .run();
   }
 }

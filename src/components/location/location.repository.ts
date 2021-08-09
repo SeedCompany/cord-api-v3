@@ -1,21 +1,24 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
-  generateId,
   ID,
   NotFoundException,
   ServerException,
   Session,
+  UnsecuredDto,
 } from '../../common';
-import { createBaseNode, DtoRepository, matchRequestingUser } from '../../core';
+import { DtoRepository, matchRequestingUser } from '../../core';
 import {
-  calculateTotalAndPaginateList,
-  matchPropList,
+  createNode,
+  createRelationships,
+  matchProps,
+  merge,
+  paginate,
   permissionsOfNode,
   requestingUser,
+  sorting,
 } from '../../core/database/query';
-import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
 import { CreateLocation, Location, LocationListInput } from './dto';
 
 @Injectable()
@@ -30,72 +33,24 @@ export class LocationRepository extends DtoRepository(Location) {
   }
 
   async create(input: CreateLocation, session: Session) {
-    const secureProps = [
-      {
-        key: 'name',
-        value: input.name,
-        isPublic: false,
-        isOrgPublic: false,
-        label: 'LocationName',
-      },
-      {
-        key: 'isoAlpha3',
-        value: input.isoAlpha3,
-        isPublic: false,
-        isOrgPublic: false,
-        label: 'IsoAlpha3',
-      },
-      {
-        key: 'type',
-        value: input.type,
-        isPublic: false,
-        isOrgPublic: false,
-        label: 'LocationType',
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
+    const initialProps = {
+      name: input.name,
+      isoAlpha3: input.isoAlpha3,
+      type: input.type,
+      canDelete: true,
+    };
 
     const query = this.db
       .query()
       .apply(matchRequestingUser(session))
-      .apply(createBaseNode(await generateId(), 'Location', secureProps))
-      .apply((q) => {
-        if (input.fundingAccountId) {
-          q.with('node')
-            .matchNode('fundingAccount', 'FundingAccount', {
-              id: input.fundingAccountId,
-            })
-            .create([
-              node('node'),
-              relation('out', '', 'fundingAccount', {
-                active: true,
-                createdAt: DateTime.local(),
-              }),
-              node('fundingAccount'),
-            ]);
-        }
-        if (input.defaultFieldRegionId) {
-          q.with('node')
-            .matchNode('defaultFieldRegion', 'FieldRegion', {
-              id: input.defaultFieldRegionId,
-            })
-            .create([
-              node('node'),
-              relation('out', '', 'defaultFieldRegion', {
-                active: true,
-                createdAt: DateTime.local(),
-              }),
-              node('defaultFieldRegion'),
-            ]);
-        }
-      })
-      .return('node.id as id')
-      .asResult<{ id: ID }>();
+      .apply(await createNode(Location, { initialProps }))
+      .apply(
+        createRelationships(Location, 'out', {
+          fundingAccount: ['FundingAccount', input.fundingAccountId],
+          defaultFieldRegion: ['FieldRegion', input.defaultFieldRegionId],
+        })
+      )
+      .return<{ id: ID }>('node.id as id');
 
     const result = await query.first();
     if (!result) {
@@ -106,35 +61,39 @@ export class LocationRepository extends DtoRepository(Location) {
   }
 
   async readOne(id: ID, session: Session) {
-    const result = await this.db
+    const query = this.db
       .query()
       .apply(matchRequestingUser(session))
       .match([node('node', 'Location', { id: id })])
-      .apply(matchPropList)
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'fundingAccount', { active: true }),
-        node('fundingAccount', 'FundingAccount'),
-      ])
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'defaultFieldRegion', { active: true }),
-        node('defaultFieldRegion', 'FieldRegion'),
-      ])
-      .return(
-        'propList, node, fundingAccount.id as fundingAccountId, defaultFieldRegion.id as defaultFieldRegionId'
-      )
-      .asResult<
-        StandardReadResult<DbPropsOfDto<Location>> & {
-          fundingAccountId: ID;
-          defaultFieldRegionId: ID;
-        }
-      >()
-      .first();
+      .apply(this.hydrate());
+
+    const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find location');
     }
-    return result;
+    return result.dto;
+  }
+
+  protected hydrate() {
+    return (query: Query) =>
+      query
+        .apply(matchProps())
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'fundingAccount', { active: true }),
+          node('fundingAccount', 'FundingAccount'),
+        ])
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'defaultFieldRegion', { active: true }),
+          node('defaultFieldRegion', 'FieldRegion'),
+        ])
+        .return<{ dto: UnsecuredDto<Location> }>(
+          merge('props', {
+            fundingAccount: 'fundingAccount.id',
+            defaultFieldRegion: 'defaultFieldRegion.id',
+          }).as('dto')
+        );
   }
 
   async updateFundingAccount(id: ID, fundingAccount: ID, session: Session) {
@@ -199,11 +158,14 @@ export class LocationRepository extends DtoRepository(Location) {
       .run();
   }
 
-  list({ filter, ...input }: LocationListInput, session: Session) {
-    return this.db
+  async list({ filter, ...input }: LocationListInput, session: Session) {
+    const result = await this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode('Location')])
-      .apply(calculateTotalAndPaginateList(Location, input));
+      .apply(sorting(Location, input))
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 
   async addLocationToNode(label: string, id: ID, rel: string, locationId: ID) {
@@ -245,14 +207,14 @@ export class LocationRepository extends DtoRepository(Location) {
       .run();
   }
 
-  listLocationsFromNode(
+  async listLocationsFromNode(
     label: string,
     id: ID,
     rel: string,
     input: LocationListInput,
     session: Session
   ) {
-    return this.db
+    const result = await this.db
       .query()
       .match([
         requestingUser(session),
@@ -260,22 +222,28 @@ export class LocationRepository extends DtoRepository(Location) {
         relation('in', '', rel, { active: true }),
         node(`${label.toLowerCase()}`, label, { id }),
       ])
-      .apply(calculateTotalAndPaginateList(Location, input));
+      .apply(sorting(Location, input))
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 
-  listLocationsFromNodeNoSecGroups(
+  async listLocationsFromNodeNoSecGroups(
     label: string,
     rel: string,
     id: ID,
     input: LocationListInput
   ) {
-    return this.db
+    const result = await this.db
       .query()
       .match([
         node('node', 'Location'),
         relation('in', '', rel, { active: true }),
         node(`${label.toLowerCase()}`, label, { id }),
       ])
-      .apply(calculateTotalAndPaginateList(Location, input));
+      .apply(sorting(Location, input))
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 }

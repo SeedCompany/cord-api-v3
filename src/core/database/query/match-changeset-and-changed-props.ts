@@ -3,8 +3,9 @@ import { ID } from '../../../common';
 import { matchProps } from './matching';
 
 export const matchChangesetAndChangedProps =
-  (changeset?: ID) => (query: Query) =>
-    changeset
+  (changeset?: ID) => (query: Query) => {
+    query.comment`matchChangesetAndChangedProps()`;
+    return changeset
       ? query
           .apply(
             matchProps({
@@ -17,3 +18,4 @@ export const matchChangesetAndChangedProps =
       : query.subQuery((sub) =>
           sub.return(['null as changeset', '{} as changedProps'])
         );
+  };

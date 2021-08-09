@@ -2,13 +2,12 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { generateId, isValidId } from '../../src/common';
 import { RegisterInput } from '../../src/components/authentication';
-import { Powers } from '../../src/components/authorization/dto/powers';
-import { Role } from '../../src/components/project';
+import { Powers, Role } from '../../src/components/authorization';
 import { User, UserStatus } from '../../src/components/user';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
 import { grantPower } from './grant-power';
-import { login } from './login';
+import { login, runAsAdmin, runInIsolatedSession } from './login';
 
 export const generateRegisterInput = async (): Promise<RegisterInput> => ({
   ...(await generateRequireFieldsRegisterInput()),
@@ -60,11 +59,24 @@ export async function registerUserWithStrictInput(
 
   return actual;
 }
+
+export type TestUser = User & {
+  /**
+   * Login as the user with the current session
+   */
+  login: () => Promise<void>;
+
+  /**
+   * Execute this code as this user in an isolated session
+   */
+  runAs: <R>(execution: () => Promise<R>) => Promise<R>;
+};
+
 export async function registerUser(
   app: TestApp,
   input: Partial<RegisterInput> = {}
-) {
-  const user: RegisterInput = {
+): Promise<TestUser> {
+  const { roles, ...user }: RegisterInput = {
     ...(await generateRegisterInput()),
     ...input,
   };
@@ -84,28 +96,52 @@ export async function registerUser(
       input: user,
     }
   );
-
   const actual: User = result.register.user;
   expect(actual).toBeTruthy();
 
   expect(isValidId(actual.id)).toBe(true);
   expect(actual.email.value).toBe(user.email.toLowerCase());
 
-  return actual;
+  // Add roles to user as admin as we are assuming this is a fixture setup
+  // instead of actually trying to create a user the intended way.
+  if (roles && roles.length > 0) {
+    await runAsAdmin(app, async () => {
+      await app.graphql.mutate(
+        gql`
+          mutation AddRolesToUser($userId: ID!, $roles: [Role!]!) {
+            updateUser(input: { user: { id: $userId, roles: $roles } }) {
+              __typename
+            }
+          }
+        `,
+        {
+          userId: actual.id,
+          roles,
+        }
+      );
+    });
+  }
+
+  const loginMe = async () => {
+    await login(app, { email: user.email, password: user.password });
+  };
+  return {
+    ...actual,
+    login: loginMe,
+    runAs: <R>(execution: () => Promise<R>) =>
+      runInIsolatedSession(app, async () => {
+        await loginMe();
+        return await execution();
+      }),
+  };
 }
 
 export async function registerUserWithPower(
   app: TestApp,
   powers: Powers[],
   input: Partial<RegisterInput> = {}
-): Promise<User> {
-  const password: string = input.password || faker.internet.password();
-  const user = await registerUser(app, { ...input, password });
-
-  for (const power of powers) {
-    await grantPower(app, user.id, power);
-  }
-  await login(app, { email: user.email.value, password });
-
+): Promise<TestUser> {
+  const user = await registerUser(app, input);
+  await grantPower(app, user.id, ...powers);
   return user;
 }

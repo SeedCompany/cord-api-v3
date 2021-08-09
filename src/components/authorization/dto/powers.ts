@@ -3,6 +3,7 @@
 import { registerEnumType } from '@nestjs/graphql';
 
 export enum Powers {
+  BetaFeatures = 'BetaFeatures',
   CreateBudget = 'CreateBudget',
   CreateBudgetRecord = 'CreateBudgetRecord',
   CreateCeremony = 'CreateCeremony',

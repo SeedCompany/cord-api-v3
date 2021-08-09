@@ -5,7 +5,6 @@ export class DbEngagement extends DbBaseNode {
   // eslint-disable-next-line @typescript-eslint/naming-convention
   __className = DbBaseNodeLabel.Engagement;
   ceremony: any = null;
-  communicationsCompleteDate: any = null;
   completeDate: any = null;
   disbursementCompleteDate: any = null;
   endDate: any = null;

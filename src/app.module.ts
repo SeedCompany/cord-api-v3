@@ -24,6 +24,7 @@ import { PeriodicReportModule } from './components/periodic-report/periodic-repo
 import { PinModule } from './components/pin/pin.module';
 import { PostModule } from './components/post/post.module';
 import { PostableModule } from './components/post/postable/postable.module';
+import { ProductProgressModule } from './components/product-progress/product-progress.module';
 import { ProductModule } from './components/product/product.module';
 import { ProgressSummaryModule } from './components/progress-summary/progress-summary.module';
 import { ProjectChangeRequestModule } from './components/project-change-request/project-change-request.module';
@@ -34,7 +35,6 @@ import { SongModule } from './components/song/song.module';
 import { StoryModule } from './components/story/story.module';
 import { TimeZoneModule } from './components/timezone';
 import { UserModule } from './components/user/user.module';
-import { WorkflowModule } from './components/workflow/workflow.module';
 import { CoreModule, LoggerModule } from './core';
 
 assert(
@@ -66,7 +66,6 @@ assert(
     UserModule,
     PartnershipModule,
     SearchModule,
-    WorkflowModule,
     TimeZoneModule,
     PartnerModule,
     FundingAccountModule,
@@ -79,6 +78,7 @@ assert(
     ProgressSummaryModule,
     ChangesetModule,
     ProjectChangeRequestModule,
+    ProductProgressModule,
   ],
   controllers: [],
   providers: [DateTimeScalar, DateScalar],

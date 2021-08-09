@@ -22,9 +22,6 @@ export abstract class UpdateEngagement {
   readonly disbursementCompleteDate?: CalendarDate;
 
   @DateField({ nullable: true })
-  readonly communicationsCompleteDate?: CalendarDate;
-
-  @DateField({ nullable: true })
   readonly startDateOverride?: CalendarDate;
 
   @DateField({ nullable: true })

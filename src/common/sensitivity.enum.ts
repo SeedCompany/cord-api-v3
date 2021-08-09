@@ -1,4 +1,7 @@
-import { registerEnumType } from '@nestjs/graphql';
+import { applyDecorators } from '@nestjs/common';
+import { Field, FieldOptions, registerEnumType } from '@nestjs/graphql';
+import { rankSens } from '../core/database/query';
+import { DbSort } from './db-sort.decorator';
 
 export enum Sensitivity {
   Low = 'Low',
@@ -9,3 +12,9 @@ export enum Sensitivity {
 registerEnumType(Sensitivity, {
   name: 'Sensitivity',
 });
+
+export const SensitivityField = (options: FieldOptions = {}) =>
+  applyDecorators(
+    Field(() => Sensitivity, options),
+    DbSort(rankSens)
+  );

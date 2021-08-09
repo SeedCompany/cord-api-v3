@@ -16,7 +16,7 @@ import {
   Logger,
   OnIndex,
 } from '../../core';
-import { runListQuery } from '../../core/database/results';
+import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { ProjectService, ProjectStatus } from '../project';
 import {
@@ -149,10 +149,10 @@ export class ProjectChangeRequestService {
   }
 
   async list(
-    { filter, ...input }: ProjectChangeRequestListInput,
+    input: ProjectChangeRequestListInput,
     session: Session
   ): Promise<ProjectChangeRequestListOutput> {
-    const query = this.repo.list({ filter, ...input }, session);
-    return await runListQuery(query, input, (id) => this.readOne(id, session));
+    const results = await this.repo.list(input, session);
+    return await mapListResults(results, (id) => this.readOne(id, session));
   }
 }

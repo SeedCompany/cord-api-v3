@@ -90,6 +90,17 @@ export const CypherFactory: FactoryProvider<Connection> = {
                   accessMode: matched?.[2],
                   routingTable,
                 });
+              } else if (
+                level === LogLevel.ERROR &&
+                message.includes(
+                  'experienced a fatal error {"code":"ServiceUnavailable","name":"Neo4jError"}'
+                )
+              ) {
+                // Change connection failure messages to debug.
+                // Connection failures are thrown so they will get logged
+                // in exception handling (if they are not handled, i.e. retries/transactions).
+                // Otherwise, these are misleading as they aren't actual problems.
+                driverLogger.log(LogLevel.DEBUG, message);
               } else {
                 driverLogger.log(level, message);
               }

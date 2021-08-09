@@ -2,9 +2,18 @@ import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
-import { DbLabel, ID, SecuredProps, Sensitivity } from '../../../common';
+import {
+  DbLabel,
+  ID,
+  SecuredProps,
+  SecuredStringNullable,
+  Sensitivity,
+  SensitivityField,
+} from '../../../common';
 import { SetChangeType } from '../../../core/database/changes';
+import { ScopedRole } from '../../authorization';
 import { SecuredScriptureRangesOverride } from '../../scripture';
+import { SecuredMethodologySteps } from './methodology-step.enum';
 import { Producible, SecuredProducible } from './producible.dto';
 import { SecuredProductMediums } from './product-medium';
 import { SecuredMethodology } from './product-methodology';
@@ -19,6 +28,8 @@ export class Product extends Producible {
   static readonly Props: string[] = keysOf<Product>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Product>>();
 
+  readonly engagement: ID;
+
   @Field()
   @DbLabel('ProductMedium')
   readonly mediums: SecuredProductMediums;
@@ -31,10 +42,29 @@ export class Product extends Producible {
   @DbLabel('ProductMethodology')
   readonly methodology: SecuredMethodology;
 
-  @Field(() => Sensitivity, {
+  @SensitivityField({
     description: "Based on the project's sensitivity",
   })
   readonly sensitivity: Sensitivity;
+
+  @Field({
+    description: stripIndent`
+      What steps will be worked for this product?
+      Only certain steps are available according to the chosen methodology.
+    `,
+  })
+  readonly steps: SecuredMethodologySteps;
+
+  @Field({
+    description: stripIndent`
+      What does "complete" mean for this product?
+    `,
+  })
+  readonly describeCompletion: SecuredStringNullable;
+
+  // A list of non-global roles the requesting user has available for this object.
+  // This is just a cache, to prevent extra db lookups within the same request.
+  readonly scope?: ScopedRole[];
 }
 
 @ObjectType({

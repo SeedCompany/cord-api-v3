@@ -8,8 +8,6 @@ import {
 } from '@nestjs/graphql';
 import {
   AnonSession,
-  ID,
-  IdArg,
   LoggedInSession,
   SecuredDateRange,
   Session,
@@ -136,9 +134,9 @@ export class PartnershipResolver {
   })
   async deletePartnership(
     @LoggedInSession() session: Session,
-    @IdArg() id: ID
+    @Args() { id, changeset }: ChangesetIds
   ): Promise<boolean> {
-    await this.service.delete(id, session);
+    await this.service.delete(id, session, changeset);
     return true;
   }
 }

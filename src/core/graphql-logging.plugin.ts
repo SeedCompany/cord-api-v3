@@ -4,6 +4,7 @@ import {
   ApolloServerPlugin,
   GraphQLRequestListener,
 } from 'apollo-server-plugin-base';
+import { TracingFormat } from 'apollo-tracing';
 import { GraphQLError } from 'graphql';
 import { Neo4jError } from 'neo4j-driver';
 import { maskSecrets } from '../common/mask-secrets';
@@ -11,11 +12,14 @@ import { ILogger, Logger } from './logger';
 
 /**
  * Logging for GraphQL errors that are not handled anywhere else
- * Note: Lot's of assumptions here.
+ * Note: Lots of assumptions here.
  */
 @Plugin()
 export class GraphqlLoggingPlugin implements ApolloServerPlugin {
-  constructor(@Logger('graphql') private readonly logger: ILogger) {}
+  constructor(
+    @Logger('graphql') private readonly logger: ILogger,
+    @Logger('graphql:performance') private readonly perfLogger: ILogger
+  ) {}
 
   requestDidStart(
     _context: GraphQLRequestContext
@@ -33,6 +37,35 @@ export class GraphqlLoggingPlugin implements ApolloServerPlugin {
       didEncounterErrors: ({ errors }) => {
         for (const error of errors) {
           this.onError(error);
+        }
+      },
+      willSendResponse: ({ operationName, request, response }) => {
+        if (response.errors || operationName === 'IntrospectionQuery') {
+          return;
+        }
+
+        // because { tracing: true } in config
+        const tracing: TracingFormat | undefined = response.extensions?.tracing;
+        if (!tracing) {
+          return;
+        }
+
+        this.perfLogger.info(`Operation performance`, {
+          operation: operationName,
+          duration: nanoToMs(tracing.duration),
+          ...maskSecrets(request.variables ?? {}),
+        });
+        for (const resolver of tracing.execution.resolvers) {
+          const ms = nanoToMs(resolver.duration);
+          // Assume >10ms we have logic for the field
+          if (ms < 10) {
+            continue;
+          }
+          this.perfLogger.info(`Resolver performance`, {
+            resolver: [resolver.parentType, resolver.fieldName].join('.'),
+            path: resolver.path.join('.'),
+            duration: ms,
+          });
         }
       },
     };
@@ -70,3 +103,5 @@ export class GraphqlLoggingPlugin implements ApolloServerPlugin {
     });
   }
 }
+
+const nanoToMs = (value: number) => ~~(value / 1e6);

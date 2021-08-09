@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { stripIndent } from 'common-tags';
 import { inArray, node, Node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
@@ -17,13 +16,17 @@ import {
 import { CommonRepository } from '../../core';
 import { DbChanges, getChanges } from '../../core/database/changes';
 import {
-  calculateTotalAndPaginateList,
+  coalesce,
   createNode,
   createRelationships,
   matchChangesetAndChangedProps,
   matchPropsAndProjectSensAndScopedRoles,
+  merge,
+  paginate,
   permissionsOfNode,
   requestingUser,
+  sorting,
+  whereNotDeletedInChangeset,
 } from '../../core/database/query';
 import { Role, rolesForScope } from '../authorization';
 import { FileId } from '../file';
@@ -119,24 +122,27 @@ export class EngagementRepository extends CommonRepository {
         node('mouEnd'),
       ])
       .return<{ dto: UnsecuredDto<LanguageEngagement & InternshipEngagement> }>(
-        stripIndent`
-          apoc.map.mergeList([
-            props,
-            changedProps,
-            {
-              __typename: [l in labels(node) where l in ['LanguageEngagement', 'InternshipEngagement']][0],
-              language: language.id,
-              ceremony: ceremony.id,
-              intern: intern.id,
-              countryOfOrigin: countryOfOrigin.id,
-              mentor: mentor.id,
-              startDate: coalesce(changedProps.startDateOverride, props.startDateOverride, mouStart.value),
-              endDate: coalesce(changedProps.endDateOverride, props.endDateOverride, mouEnd.value),
-              scope: scopedRoles,
-              changeset: coalesce(changeset.id)
-            }
-          ]) as dto
-        `
+        merge('props', 'changedProps', {
+          __typename: `[l in labels(node) where l in ['LanguageEngagement', 'InternshipEngagement']][0]`,
+          project: 'project.id',
+          language: 'language.id',
+          ceremony: 'ceremony.id',
+          intern: 'intern.id',
+          countryOfOrigin: 'countryOfOrigin.id',
+          mentor: 'mentor.id',
+          startDate: coalesce(
+            'changedProps.startDateOverride',
+            'props.startDateOverride',
+            'mouStart.value'
+          ),
+          endDate: coalesce(
+            'changedProps.endDateOverride',
+            'props.endDateOverride',
+            'mouEnd.value'
+          ),
+          scope: 'scopedRoles',
+          changeset: 'changeset.id',
+        }).as('dto')
       );
     const result = await query.first();
     if (!result) {
@@ -144,23 +150,6 @@ export class EngagementRepository extends CommonRepository {
     }
 
     return result.dto;
-  }
-
-  async getProjectIdByEngagement(id: ID) {
-    const result = await this.db
-      .query()
-      .match([
-        node('engagement', 'Engagement', { id }),
-        relation('in', '', 'engagement'),
-        node('project', 'Project'),
-      ])
-      .return('project.id as projectId')
-      .asResult<{ projectId: ID }>()
-      .first();
-    if (!result) {
-      throw new NotFoundException('Could not find project');
-    }
-    return result.projectId;
   }
 
   // CREATE ///////////////////////////////////////////////////////////
@@ -360,38 +349,35 @@ export class EngagementRepository extends CommonRepository {
 
   // LIST ///////////////////////////////////////////////////////////
 
-  list(
-    { filter, ...input }: EngagementListInput,
-    session: Session,
-    changeset?: ID
-  ) {
+  async list(input: EngagementListInput, session: Session, changeset?: ID) {
     const label =
-      simpleSwitch(filter.type, {
+      simpleSwitch(input.filter.type, {
         language: 'LanguageEngagement',
         internship: 'InternshipEngagement',
       }) ?? 'Engagement';
 
-    return this.db
+    const result = await this.db
       .query()
       .subQuery((sub) =>
         sub
           .match([
             requestingUser(session),
             ...permissionsOfNode(label),
-            ...(filter.projectId
+            ...(input.filter.projectId
               ? [
                   relation('in', '', 'engagement', { active: true }),
-                  node('project', 'Project', { id: filter.projectId }),
+                  node('project', 'Project', { id: input.filter.projectId }),
                 ]
               : []),
           ])
+          .apply(whereNotDeletedInChangeset(changeset))
           .return('node')
           .apply((q) =>
-            changeset && filter.projectId
+            changeset && input.filter.projectId
               ? q
                   .union()
                   .match([
-                    node('', 'Project', { id: filter.projectId }),
+                    node('', 'Project', { id: input.filter.projectId }),
                     relation('out', '', 'engagement', { active: false }),
                     node('node', label),
                     relation('in', '', 'changeset', { active: true }),
@@ -401,7 +387,10 @@ export class EngagementRepository extends CommonRepository {
               : q
           )
       )
-      .apply(calculateTotalAndPaginateList(IEngagement, input));
+      .apply(sorting(IEngagement, input))
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 
   async listAllByProjectId(projectId: ID) {

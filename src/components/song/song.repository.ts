@@ -1,19 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
-import { generateId, ID, Session } from '../../common';
+import { ID, NotFoundException, Session } from '../../common';
+import { DtoRepository, matchRequestingUser } from '../../core';
 import {
-  createBaseNode,
-  DtoRepository,
-  matchRequestingUser,
-  Property,
-} from '../../core';
-import {
-  calculateTotalAndPaginateList,
-  matchPropList,
+  createNode,
+  paginate,
   permissionsOfNode,
   requestingUser,
+  sorting,
 } from '../../core/database/query';
-import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
 import { CreateSong, Song, SongListInput } from './dto';
 
 @Injectable()
@@ -26,13 +21,15 @@ export class SongRepository extends DtoRepository(Song) {
       .first();
   }
 
-  async create(session: Session, secureProps: Property[]) {
+  async create(input: CreateSong, session: Session) {
+    const initialProps = {
+      name: input.name,
+      canDelete: true,
+    };
     return await this.db
       .query()
       .apply(matchRequestingUser(session))
-      .apply(
-        createBaseNode(await generateId(), ['Song', 'Producible'], secureProps)
-      )
+      .apply(await createNode(Song, { initialProps }))
       .return<{ id: ID }>('node.id as id')
       .first();
   }
@@ -42,17 +39,21 @@ export class SongRepository extends DtoRepository(Song) {
       .query()
       .apply(matchRequestingUser(session))
       .match([node('node', 'Song', { id })])
-      .apply(matchPropList)
-      .return('propList, node')
-      .asResult<StandardReadResult<DbPropsOfDto<Song>>>();
-
-    return await query.first();
+      .apply(this.hydrate());
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException('Could not find song', 'song.id');
+    }
+    return result.dto;
   }
 
-  list({ filter, ...input }: SongListInput, session: Session) {
-    return this.db
+  async list({ filter, ...input }: SongListInput, session: Session) {
+    const result = await this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode('Song')])
-      .apply(calculateTotalAndPaginateList(Song, input));
+      .apply(sorting(Song, input))
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 }

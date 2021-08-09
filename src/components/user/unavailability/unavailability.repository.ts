@@ -1,18 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { generateId, ID, Session } from '../../../common';
 import {
-  createBaseNode,
-  DtoRepository,
-  matchRequestingUser,
-  Property,
-} from '../../../core';
-import { matchPropList } from '../../../core/database/query';
+  ID,
+  NotFoundException,
+  ServerException,
+  Session,
+} from '../../../common';
+import { DtoRepository, matchRequestingUser } from '../../../core';
+import { createNode, createRelationships } from '../../../core/database/query';
 import {
-  DbPropsOfDto,
-  StandardReadResult,
-} from '../../../core/database/results';
-import {
+  CreateUnavailability,
   Unavailability,
   UnavailabilityListInput,
   UpdateUnavailability,
@@ -20,31 +17,27 @@ import {
 
 @Injectable()
 export class UnavailabilityRepository extends DtoRepository(Unavailability) {
-  async create(session: Session, secureProps: Property[]) {
-    const createUnavailability = this.db
+  async create(input: CreateUnavailability, session: Session) {
+    const initialProps = {
+      description: input.description,
+      start: input.start,
+      end: input.end,
+    };
+    const query = this.db
       .query()
       .apply(matchRequestingUser(session))
-      .apply(createBaseNode(await generateId(), 'Unavailability', secureProps))
-      .return('node.id as id')
-      .asResult<{ id: ID }>();
-
-    return await createUnavailability.first();
-  }
-
-  async connectUnavailability(id: ID, userId: ID) {
-    const query = `
-    MATCH (user: User {id: $userId}),
-    (unavailability:Unavailability {id: $id})
-    CREATE (user)-[:unavailability {active: true, createdAt: datetime()}]->(unavailability)
-    RETURN  unavailability.id as id
-    `;
-    await this.db
-      .query()
-      .raw(query, {
-        userId,
-        id,
-      })
-      .run();
+      .apply(await createNode(Unavailability, { initialProps }))
+      .apply(
+        createRelationships(Unavailability, 'in', {
+          unavailability: ['User', input.userId],
+        })
+      )
+      .return<{ id: ID }>('node.id as id');
+    const result = await query.first();
+    if (!result) {
+      throw new ServerException('Could not create unavailability');
+    }
+    return result.id;
   }
 
   async readOne(id: ID, session: Session) {
@@ -52,11 +45,14 @@ export class UnavailabilityRepository extends DtoRepository(Unavailability) {
       .query()
       .apply(matchRequestingUser(session))
       .match([node('node', 'Unavailability', { id })])
-      .apply(matchPropList)
-      .return('propList, node')
-      .asResult<StandardReadResult<DbPropsOfDto<Unavailability>>>();
+      .apply(this.hydrate());
 
-    return await query.first();
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException('Could not find user', 'user.id');
+    }
+
+    return result.dto;
   }
 
   async getUserIdByUnavailability(

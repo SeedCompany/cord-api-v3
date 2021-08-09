@@ -7,13 +7,9 @@ import {
   ILogger,
   Logger,
 } from '../../../core';
-import { matchProps } from '../../../core/database/query';
-import {
-  EngagementService,
-  UpdateInternshipEngagement,
-  UpdateLanguageEngagement,
-} from '../../engagement';
-import { Engagement } from '../../engagement/dto';
+import { deleteBaseNode } from '../../../core/database/query';
+import { commitChangesetProps } from '../../changeset/commit-changeset-props.query';
+import { EngagementService } from '../../engagement';
 import { ProjectChangeRequestApprovedEvent } from '../../project-change-request/events';
 
 type SubscribedEvent = ProjectChangeRequestApprovedEvent;
@@ -67,42 +63,57 @@ export class ApplyApprovedChangesetToEngagement
             ])
             .setValues({
               'engagementRel.active': true,
-              'changesetRel.active': false, // TODO Why is this done?
             })
             .return('node')
         )
-        .apply(
-          matchProps({
-            changeset: changeset,
-            optional: true,
-            excludeBaseProps: true,
-          })
-        )
-        .return<{
-          id: ID;
-          type: Engagement['__typename'];
-          changes: UpdateLanguageEngagement & UpdateInternshipEngagement;
-        }>([
-          'node.id as id',
-          `[l in labels(node) where l in ['LanguageEngagement', 'InternshipEngagement']][0] as type`,
-          'props as changes',
-        ])
+        .return<{ id: ID }>(['node.id as id'])
         .run();
 
       await Promise.all(
-        engagements.map(async ({ id, type, changes }) => {
-          const update =
-            type === 'LanguageEngagement'
-              ? this.service.updateLanguageEngagement.bind(this.service)
-              : this.service.updateInternshipEngagement.bind(this.service);
-          await update({ ...changes, id }, event.session);
+        engagements.map(async ({ id }) => {
+          // Skip looping for engagements created in changeset
+          await this.db
+            .query()
+            .match([
+              node('changeset', 'Changeset', { id: changeset }),
+              relation('in', '', 'changeset', { active: true }),
+              node('project', 'Project'),
+              relation('out', '', 'engagement', { active: true }),
+              node('node', 'Engagement', { id }),
+            ])
+            .apply(commitChangesetProps())
+            .return('node')
+            .run();
         })
       );
+
+      // Remove deleting engagements
+      await this.removeDeletingEngagements(changeset);
     } catch (exception) {
       throw new ServerException(
         'Failed to apply changeset to project',
         exception
       );
     }
+  }
+
+  async removeDeletingEngagements(changeset: ID) {
+    await this.db
+      .query()
+      .match([
+        node('project', 'Project'),
+        relation('out', '', 'changeset', { active: true }),
+        node('changeset', 'Changeset', { id: changeset }),
+      ])
+      .match([
+        node('project'),
+        relation('out', '', 'engagement', { active: true }),
+        node('node', 'Engagement'),
+        relation('in', '', 'changeset', { active: true, deleting: true }),
+        node('changeset'),
+      ])
+      .apply(deleteBaseNode('node'))
+      .return<{ count: number }>('count(node) as count')
+      .run();
   }
 }

@@ -7,15 +7,20 @@ import {
   generateId,
   getDbClassLabels,
   getDbPropertyLabels,
+  ID,
   ResourceShape,
   UnsecuredDto,
 } from '../../../common';
-import { determineSortValue } from '../query.helpers';
+import { FileId } from '../../../components/file';
 
 interface CreateNodeOptions<TResourceStatic extends ResourceShape<any>> {
-  initialProps?: Partial<UnsecuredDto<TResourceStatic['prototype']>>;
+  initialProps?: InitialPropsOf<UnsecuredDto<TResourceStatic['prototype']>>;
   baseNodeProps?: Record<string, any>;
 }
+
+type InitialPropsOf<T> = {
+  [K in keyof T]?: T[K] extends FileId ? ID : T[K];
+};
 
 /**
  * This aids in composing create statements for a new base node and its initial properties.
@@ -51,7 +56,7 @@ export const createNode = async <TResourceStatic extends ResourceShape<any>>(
   } = initialProps;
 
   return (query: Query) =>
-    query.subQuery((sub) =>
+    query.comment`createNode(${resource.name})`.subQuery((sub) =>
       sub
         .create([
           [
@@ -67,7 +72,6 @@ export const createNode = async <TResourceStatic extends ResourceShape<any>>(
             node('', getDbPropertyLabels(resource, prop), {
               createdAt,
               value,
-              sortValue: determineSortValue(value),
             }),
           ]),
         ])

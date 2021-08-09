@@ -9,6 +9,7 @@ import {
   SecuredInt,
   SecuredProps,
   Sensitivity,
+  SensitivityField,
 } from '../../../common';
 import { ScopedRole } from '../../authorization';
 import { ChangesetAware } from '../../changeset/dto';
@@ -28,7 +29,7 @@ export class BudgetRecord extends IntersectionType(ChangesetAware, Resource) {
   @Field()
   readonly amount: SecuredFloatNullable;
 
-  @Field(() => Sensitivity, {
+  @SensitivityField({
     description: "Based on the project's sensitivity",
   })
   readonly sensitivity: Sensitivity;

@@ -1,7 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { stripIndent } from 'common-tags';
 import { node, Query, relation } from 'cypher-query-builder';
-import { DateTime } from 'luxon';
 import {
   ID,
   NotFoundException,
@@ -10,25 +8,28 @@ import {
   UnsecuredDto,
 } from '../../common';
 import {
-  createBaseNode,
   DatabaseService,
   DtoRepository,
   matchRequestingUser,
   matchSession,
-  Property,
 } from '../../core';
 import {
-  calculateTotalAndPaginateList,
+  createNode,
+  createRelationships,
   matchChangesetAndChangedProps,
   matchPropsAndProjectSensAndScopedRoles,
+  merge,
+  paginate,
   permissionsOfNode,
   requestingUser,
+  sorting,
 } from '../../core/database/query';
 import { BudgetRecordRepository } from './budget-record.repository';
 import {
   Budget,
   BudgetListInput,
   BudgetRecord,
+  CreateBudget,
   BudgetStatus as Status,
 } from './dto';
 
@@ -51,33 +52,34 @@ export class BudgetRepository extends DtoRepository(Budget) {
     return !!result;
   }
 
-  async create(budgetId: ID, secureProps: Property[], session: Session) {
+  async create(
+    input: CreateBudget,
+    universalTemplateFileId: ID,
+    session: Session
+  ) {
+    const initialProps = {
+      status: Status.Pending,
+      universalTemplateFile: universalTemplateFileId,
+      canDelete: true,
+    };
+
     const result = await this.db
       .query()
       .apply(matchRequestingUser(session))
-      .apply(createBaseNode(budgetId, 'Budget', secureProps))
-      .return('node.id as id')
-      .asResult<{ id: ID }>()
+      .apply(await createNode(Budget, { initialProps }))
+      .apply(
+        createRelationships(Budget, 'in', {
+          budget: ['Project', input.projectId],
+        })
+      )
+      .return<{ id: ID }>('node.id as id')
       .first();
+
     if (!result) {
       throw new ServerException('Failed to create budget');
     }
-  }
 
-  async connectToProject(budgetId: ID, projectId: ID) {
-    await this.db
-      .query()
-      .matchNode('project', 'Project', { id: projectId })
-      .matchNode('budget', 'Budget', { id: budgetId })
-      .create([
-        node('project'),
-        relation('out', '', 'budget', {
-          active: true,
-          createdAt: DateTime.local(),
-        }),
-        node('budget'),
-      ])
-      .run();
+    return result.id;
   }
 
   async readOne(id: ID, session: Session, changeset?: ID) {
@@ -91,16 +93,10 @@ export class BudgetRepository extends DtoRepository(Budget) {
       .apply(matchPropsAndProjectSensAndScopedRoles(session))
       .apply(matchChangesetAndChangedProps(changeset))
       .return<{ dto: UnsecuredDto<Budget> }>(
-        stripIndent`
-          apoc.map.mergeList([
-            props,
-            changedProps,
-            {
-              scope: scopedRoles,
-              changeset: coalesce(changeset.id)
-            }
-          ]) as dto
-        `
+        merge('props', 'changedProps', {
+          scope: 'scopedRoles',
+          changeset: 'changeset.id',
+        }).as('dto')
       )
       .map((row) => row.dto)
       .first();
@@ -121,8 +117,7 @@ export class BudgetRepository extends DtoRepository(Budget) {
         relation('out', '', 'status', { active: true }),
         node('status', 'Property'),
       ])
-      .return('status.value as status')
-      .asResult<{ status: Status }>()
+      .return<{ status: Status }>('status.value as status')
       .first();
     if (!result) {
       throw new NotFoundException('Budget could not be found');
@@ -130,8 +125,8 @@ export class BudgetRepository extends DtoRepository(Budget) {
     return result.status;
   }
 
-  list({ filter, ...input }: BudgetListInput, session: Session) {
-    const query = this.db
+  async list({ filter, ...input }: BudgetListInput, session: Session) {
+    const result = await this.db
       .query()
       .match([
         requestingUser(session),
@@ -145,12 +140,14 @@ export class BudgetRepository extends DtoRepository(Budget) {
             ]
           : []),
       ])
-      .apply(calculateTotalAndPaginateList(Budget, input));
-    return query;
+      .apply(sorting(Budget, input))
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 
-  listNoSecGroups({ filter, ...input }: BudgetListInput) {
-    const query = this.db
+  async listNoSecGroups({ filter, ...input }: BudgetListInput) {
+    const result = await this.db
       .query()
       .match([
         ...(filter.projectId
@@ -163,8 +160,10 @@ export class BudgetRepository extends DtoRepository(Budget) {
             ]
           : [node('node', 'Budget')]),
       ])
-      .apply(calculateTotalAndPaginateList(Budget, input));
-    return query;
+      .apply(sorting(Budget, input))
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 
   currentBudgetForProject(projectId: ID, changeset?: ID) {
@@ -194,12 +193,13 @@ export class BudgetRepository extends DtoRepository(Budget) {
             'coalesce(changesetStatus.value, status.value) as status',
             // rank them current, then pending, then w/e.
             // Pick the first one.
-            stripIndent`
+            `
               case coalesce(changesetStatus.value, status.value)
                 when "${Status.Current}" then 0
                 when "${Status.Pending}" then 1
                 else 100
-              end as statusRank`,
+              end as statusRank
+            `,
           ])
           .orderBy('statusRank')
           .limit(1)

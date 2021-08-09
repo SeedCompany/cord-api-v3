@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { oneLine } from 'common-tags';
 import {
   Connection,
   equals,
@@ -10,11 +11,9 @@ import {
 import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
 import { cloneDeep, last, Many, startCase, uniq, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
-import { Driver, Session as Neo4jSession } from 'neo4j-driver';
 import { assert } from 'ts-essentials';
 import {
   entries,
-  getDbPropertyLabels,
   ID,
   InputException,
   isIdLike,
@@ -31,8 +30,7 @@ import {
 import { ILogger, Logger, ServiceUnavailableError, UniquenessError } from '..';
 import { AbortError, retry, RetryOptions } from '../../common/retry';
 import { DbChanges } from './changes';
-import { deleteBaseNode, prefixNodeLabelsWithDeleted } from './query';
-import { determineSortValue } from './query.helpers';
+import { deleteBaseNode, exp, updateProperty } from './query';
 import { hasMore } from './results';
 import { Transactional } from './transactional.decorator';
 
@@ -127,58 +125,6 @@ export class DatabaseService {
   }
 
   /**
-   * USE THIS AT YOUR OWN RISK, and expect to have a harder time.
-   * Save yourself the trouble and just use this instead:
-   * ```
-   * query('...').run/first();
-   * ```
-   *
-   * Retrieve a raw session from the driver.
-   *
-   * Note that when you use this method you need:
-   * - To pass in the database name from the config service.
-   * - To explicitly close the session in a finally clause
-   * - Manually convert query parameters to db compatible values
-   *   - Such as Luxon DateTime to Neo4j's ZonedDateTime
-   * - Manually convert the output from
-   *   - Neo4j's Number class to JS numbers
-   *   - Neo4j's ZonedDateTime class to Luxon DateTime
-   *   - etc.
-   *   - Also understand the result output. Instead of
-   *   ```
-   *   const result = await query('... return foo.id as id').first();
-   *   const id = result?.id;
-   *   ```
-   *   You'll need to do
-   *   ```
-   *   const result = await session.run('...');
-   *   const id = result.records.[0]?.get('id');
-   *   ```
-   * - Expect that @Transactional decorators will not work and the current
-   *   transaction will be ignored.
-   * - Error handling relying on error classes will not work.
-   *   i.e. instead of
-   *   ```
-   *   if (e instanceof UniquenessError && e.label === 'EmailAddress') {}
-   *   ```
-   *   you'll need to do
-   *   ```
-   *   if (
-   *     e instanceof Neo4jError &&
-   *     e.code === 'Neo.ClientError.Schema.ConstraintValidationFailed' &&
-   *     e.message.includes('already exists with label') &&
-   *     regexThatImNotGoingToWriteOutHere.exec(e.message)?[0] === 'EmailAddress'
-   *   ) {}
-   *   ```
-   *   This is just one example. Expect more things to break with the app.
-   *
-   */
-  session(...args: Parameters<Driver['session']>): Neo4jSession {
-    // @ts-expect-error it exists it's just private
-    return this.db.driver.session(...args);
-  }
-
-  /**
    * Start a query. It can be executed with run() or first();
    *
    * @example
@@ -211,6 +157,37 @@ export class DatabaseService {
       throw new ServerException('Unable to determine server info');
     }
     return info;
+  }
+
+  async createFullTextIndex(
+    name: string,
+    labels: string[],
+    properties: string[],
+    config: { analyzer?: string; eventuallyConsistent?: boolean }
+  ) {
+    const exists = await this.query(
+      `call db.indexes() yield name where name = '${name}' return name limit 1`
+    ).first();
+    if (exists) {
+      return;
+    }
+    const quote = (q: string) => `'${q}'`;
+    await this.query(
+      oneLine`
+        CALL db.index.fulltext.createNodeIndex(
+          ${quote(name)},
+          ${exp(labels.map(quote))},
+          ${exp(properties.map(quote))},
+          ${exp({
+            analyzer: config.analyzer ? quote(config.analyzer) : undefined,
+            // eslint-disable-next-line @typescript-eslint/naming-convention
+            eventually_consistent: config.eventuallyConsistent
+              ? exp(config.eventuallyConsistent)
+              : undefined,
+          })}
+        )
+      `
+    ).run();
   }
 
   async updateProperties<
@@ -278,80 +255,38 @@ export class DatabaseService {
     type: TResourceStatic;
     object: TObject;
     key: Key;
-    value?: UnwrapSecured<TObject[Key]>;
+    value: UnwrapSecured<TObject[Key]>;
     changeset?: ID;
   }): Promise<void> {
     const label = type.name;
 
-    const propLabels = !changeset
-      ? getDbPropertyLabels(type, key)
-      : // Do not give properties unique labels if inside a changeset.
-        // They'll get them when they are applied for real.
-        ['Property'];
+    // check if the node is created in changeset, update property normally
+    if (changeset) {
+      const result = await this.db
+        .query()
+        .match([
+          node('changeset', 'Changeset', { id: changeset }),
+          relation('out', '', 'changeset', { active: true }),
+          node('node', label, { id }),
+        ])
+        .return('node.id')
+        .first();
 
-    const createdAt = DateTime.local();
+      if (result) {
+        changeset = undefined;
+      }
+    }
+
     const update = this.db
       .query()
       .match(node('node', label, { id }))
-      // Deactivate existing prop(s) & adjust labels as needed
-      // This is an optional step
-      .subQuery((sub) =>
-        sub
-          .with('node')
-          .match([
-            node('node'),
-            relation('out', 'oldToProp', key, { active: !changeset }),
-            node('oldPropVar', 'Property'),
-            ...(changeset
-              ? [
-                  relation('in', 'oldChange', 'changeset', { active: true }),
-                  node('changeNode', 'Changeset', { id: changeset }),
-                ]
-              : []),
-          ])
-          .setValues({
-            [`${changeset ? 'oldChange' : 'oldToProp'}.active`]: false,
-          })
-          .with('oldPropVar')
-          .apply(prefixNodeLabelsWithDeleted('oldPropVar'))
-          .return(['count(oldPropVar) as numPropsDeactivated'])
-      )
-      .subQuery((sub) =>
-        sub
-          .with('node')
-          .apply((q) =>
-            changeset
-              ? q
-                  .match(node('changeset', 'Changeset', { id: changeset }))
-                  // Don't create new "change value" if the value is the same as
-                  // the value outside of the changeset.
-                  .raw(
-                    `WHERE NOT (node)-[:${key} { active: true }]->(:Property { value: $value })`,
-                    {
-                      value,
-                    }
-                  )
-              : q
-          )
-          .create([
-            node('node'),
-            relation('out', 'toProp', key, {
-              active: !changeset,
-              createdAt,
-            }),
-            node('newPropNode', propLabels, {
-              createdAt,
-              value,
-              sortValue: determineSortValue(value),
-            }),
-            ...(changeset
-              ? [
-                  relation('in', '', 'changeset', { active: true }),
-                  node('changeset'),
-                ]
-              : []),
-          ])
-          .return('count(newPropNode) as numPropsCreated')
+      .apply(
+        updateProperty<TResourceStatic, TObject, Key>({
+          resource: type,
+          key,
+          value,
+          changeset,
+        })
       )
       .return<{ numPropsCreated: number; numPropsDeactivated: number }>(
         'numPropsCreated, numPropsDeactivated'
@@ -602,7 +537,7 @@ export class DatabaseService {
     const query = this.db
       .query()
       .matchNode('baseNode', { id })
-      .apply(deleteBaseNode)
+      .apply(deleteBaseNode('baseNode'))
       .return('*');
     await query.run();
   }

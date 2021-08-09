@@ -18,6 +18,7 @@ import {
   SecuredProps,
   SecuredString,
   Sensitivity,
+  SensitivityField,
 } from '../../../common';
 import { ScopedRole } from '../../authorization';
 import { ChangesetAware } from '../../changeset/dto';
@@ -51,6 +52,8 @@ class Engagement extends ChangesetAwareResource {
 
   readonly __typename: 'LanguageEngagement' | 'InternshipEngagement';
 
+  readonly project: ID;
+
   @Field(() => SecuredEngagementStatus, {
     middleware: [parentIdMiddleware],
   })
@@ -68,9 +71,6 @@ class Engagement extends ChangesetAwareResource {
   readonly disbursementCompleteDate: SecuredDateNullable;
 
   @Field()
-  readonly communicationsCompleteDate: SecuredDateNullable;
-
-  @Field()
   // Match the project mouStart. Could need to manually set for an extension.
   // formally stage_begin.
   readonly startDate: SecuredDateNullable;
@@ -86,7 +86,7 @@ class Engagement extends ChangesetAwareResource {
   @Field()
   readonly endDateOverride: SecuredDateNullable;
 
-  @Field(() => Sensitivity, {
+  @SensitivityField({
     description: "Based on the project's sensitivity",
   })
   readonly sensitivity: Sensitivity;

@@ -4,41 +4,34 @@ import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern'
 import { AnyConditions } from 'cypher-query-builder/dist/typings/clauses/where-utils';
 import { isEmpty } from 'lodash';
 import { DateTime } from 'luxon';
-import { Except } from 'type-fest';
 import {
-  generateId,
   ID,
   NotFoundException,
   ServerException,
   Session,
   UnauthorizedException,
+  UnsecuredDto,
 } from '../../common';
 import {
-  createBaseNode,
   DatabaseService,
   ILogger,
   Logger,
   matchRequestingUser,
   matchSession,
-  Property,
 } from '../../core';
 import {
   collect,
   count,
-  mapping,
-  matchPropList,
+  createNode,
+  matchProps,
+  merge,
 } from '../../core/database/query';
-import {
-  DbPropsOfDto,
-  hasMore,
-  parseBaseNodeProperties,
-  parsePropList,
-  StandardReadResult,
-} from '../../core/database/results';
+import { hasMore } from '../../core/database/results';
 import {
   BaseNode,
+  Directory,
+  File,
   FileListInput,
-  FileNodeType,
   FileVersion,
   IFileNode,
 } from './dto';
@@ -115,15 +108,14 @@ export class FileRepository {
         return isEmpty(conditions) ? q : q.where(conditions);
       })
       .with([
-        collect(
-          mapping('node', ['id', 'createdAt'], {
-            type: typeFromLabel('node'),
-            name: 'name.value',
-            createdById: 'createdBy.id',
-          }),
-          'nodes'
-        ),
-        count('node', { as: 'total', distinct: true }),
+        collect({
+          id: 'node.id',
+          createdAt: 'node.createdAt',
+          type: typeFromLabel('node'),
+          name: 'name.value',
+          createdById: 'createdBy.id',
+        }).as('nodes'),
+        count('DISTINCT node').as('total'),
       ])
       .raw('unwind nodes as node')
       .return(['node', 'total'])
@@ -200,30 +192,25 @@ export class FileRepository {
     const query = this.db
       .query()
       .match(node('node', 'FileVersion', { id }))
-      .apply(matchPropList)
+      .apply(matchProps())
       .match([
         node('node'),
         relation('out', '', 'createdBy', { active: true }),
         node('createdBy'),
       ])
-      .return(['node', 'propList', { createdBy: [{ id: 'createdById' }] }])
-      .asResult<
-        StandardReadResult<
-          DbPropsOfDto<Except<FileVersion, 'type' | 'createdById'>>
-        > & {
-          createdById: ID;
-        }
-      >();
+      .return<{ dto: UnsecuredDto<FileVersion> }>(
+        merge('props', {
+          type: typeFromLabel('node'),
+          createdById: 'createdBy.id',
+        }).as('dto')
+      );
+
     const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find file version');
     }
-
     return {
-      ...parseBaseNodeProperties(result.node),
-      type: FileNodeType.FileVersion,
-      ...parsePropList(result.propList),
-      createdById: result.createdById,
+      ...result.dto,
       canDelete: await this.db.checkDeletePermission(id, session),
     };
   }
@@ -233,29 +220,16 @@ export class FileRepository {
     name: string,
     session: Session
   ): Promise<ID> {
-    const props: Property[] = [
-      {
-        key: 'name',
-        value: name,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
+    const initialProps = {
+      name,
+      canDelete: true,
+    };
 
     const createFile = this.db
       .query()
       .apply(matchRequestingUser(session))
-      .apply(
-        createBaseNode(await generateId(), ['Directory', 'FileNode'], props)
-      )
-      .return('node.id as id')
-      .asResult<{ id: ID }>();
+      .apply(await createNode(Directory, { initialProps }))
+      .return<{ id: ID }>('node.id as id');
 
     const result = await createFile.first();
 
@@ -273,27 +247,18 @@ export class FileRepository {
   }
 
   async createFile(fileId: ID, name: string, session: Session, parentId?: ID) {
-    const props: Property[] = [
-      {
-        key: 'name',
-        value: name,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
+    const initialProps = {
+      name,
+      canDelete: true,
+    };
 
     const createFile = this.db
       .query()
       .apply(matchRequestingUser(session))
-      .apply(createBaseNode(fileId, ['File', 'FileNode'], props))
-      .return('node.id as id')
-      .asResult<{ id: ID }>();
+      .apply(
+        await createNode(File, { initialProps, baseNodeProps: { id: fileId } })
+      )
+      .return<{ id: ID }>('node.id as id');
 
     const result = await createFile.first();
 
@@ -315,39 +280,23 @@ export class FileRepository {
     input: Pick<FileVersion, 'id' | 'name' | 'mimeType' | 'size'>,
     session: Session
   ) {
-    const props: Property[] = [
-      {
-        key: 'name',
-        value: input.name,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'mimeType',
-        value: input.mimeType,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'size',
-        value: input.size,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
+    const initialProps = {
+      name: input.name,
+      mimeType: input.mimeType,
+      size: input.size,
+      canDelete: true,
+    };
 
     const createFile = this.db
       .query()
       .apply(matchRequestingUser(session))
-      .apply(createBaseNode(input.id, ['FileVersion', 'FileNode'], props))
-      .return('node.id as id')
-      .asResult<{ id: ID }>();
+      .apply(
+        await createNode(FileVersion, {
+          initialProps,
+          baseNodeProps: { id: input.id },
+        })
+      )
+      .return<{ id: ID }>('node.id as id');
 
     const result = await createFile.first();
 

@@ -10,7 +10,7 @@ import {
   UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, IEventBus, ILogger, Logger } from '../../core';
-import { runListQuery } from '../../core/database/results';
+import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { FileService } from '../file';
 import { Partner, PartnerService, PartnerType } from '../partner';
@@ -51,9 +51,12 @@ export class PartnershipService {
   ): Promise<Partnership> {
     const { projectId, partnerId } = input;
 
-    await this.verifyRelationshipEligibility(projectId, partnerId);
+    await this.verifyRelationshipEligibility(projectId, partnerId, changeset);
 
-    const isFirstPartnership = await this.repo.isFirstPartnership(projectId);
+    const isFirstPartnership = await this.repo.isFirstPartnership(
+      projectId,
+      changeset
+    );
     const primary = isFirstPartnership ? true : input.primary;
 
     const partner = await this.partnerService.readOne(partnerId, session);
@@ -239,7 +242,7 @@ export class PartnershipService {
     return event.updated;
   }
 
-  async delete(id: ID, session: Session): Promise<void> {
+  async delete(id: ID, session: Session, changeset?: ID): Promise<void> {
     const object = await this.readOne(id, session);
 
     if (!object) {
@@ -271,7 +274,7 @@ export class PartnershipService {
     );
 
     try {
-      await this.repo.deleteNode(object);
+      await this.repo.deleteNode(object, changeset);
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);
@@ -288,9 +291,8 @@ export class PartnershipService {
       ...partialInput,
     };
 
-    const query = this.repo.list(input, session, changeset);
-
-    return await runListQuery(query, input, (id) =>
+    const results = await this.repo.list(input, session, changeset);
+    return await mapListResults(results, (id) =>
       this.readOne(id, session, changeset)
     );
   }
@@ -321,11 +323,13 @@ export class PartnershipService {
 
   protected async verifyRelationshipEligibility(
     projectId: ID,
-    partnerId: ID
+    partnerId: ID,
+    changeset?: ID
   ): Promise<void> {
     const result = await this.repo.verifyRelationshipEligibility(
       projectId,
-      partnerId
+      partnerId,
+      changeset
     );
 
     if (!result.project) {

@@ -1,21 +1,13 @@
-/* eslint-disable @seedcompany/no-unused-vars */
 import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
-import * as faker from 'faker';
-import { CalendarDate, Sensitivity } from '../src/common';
-import { Powers } from '../src/components/authorization/dto/powers';
-import { FieldRegion } from '../src/components/field-region';
-import { FieldZone } from '../src/components/field-zone';
-import { Location } from '../src/components/location';
+import { CalendarDate } from '../src/common';
+import { Powers, Role } from '../src/components/authorization';
 import { PartnerType } from '../src/components/partner';
 import {
-  Project,
   ProjectStatus,
   ProjectStep,
   ProjectType,
-  Role,
 } from '../src/components/project';
-import { User } from '../src/components/user/dto/user.dto';
 import {
   createBudget,
   createFundingAccount,
@@ -30,11 +22,11 @@ import {
   createSession,
   createTestApp,
   fragments,
-  login,
   registerUser,
   registerUserWithPower,
   runAsAdmin,
   TestApp,
+  TestUser,
   updateProject,
 } from './utility';
 import { createProduct } from './utility/create-product';
@@ -46,27 +38,22 @@ import {
 
 describe('Project-Workflow e2e', () => {
   let app: TestApp;
-  let password: string;
-  let director: User;
-  let fieldZone: FieldZone;
-  let fieldRegion: FieldRegion;
-  let location: Location;
   let db: Connection;
-  let projectManager: User;
-  let consultantManager: User;
-  let financialAnalyst: User;
-  let financialAnalystController: User;
+  let director: TestUser;
+  let projectManager: TestUser;
+  let consultantManager: TestUser;
+  let financialAnalyst: TestUser;
+  let controller: TestUser;
+  let financialAnalystController: TestUser;
 
   beforeAll(async () => {
     app = await createTestApp();
     db = app.get(Connection);
     await createSession(app);
-    password = faker.internet.password();
 
     // Register several testers with different roles
     director = await registerUser(app, {
       roles: [Role.RegionalDirector, Role.FieldOperationsDirector],
-      password: password,
     });
     projectManager = await registerUserWithPower(
       app,
@@ -77,22 +64,20 @@ describe('Project-Workflow e2e', () => {
       ],
       {
         roles: [Role.ProjectManager],
-        password: password,
       }
     );
     consultantManager = await registerUser(app, {
       roles: [Role.Consultant, Role.ConsultantManager],
-      password: password,
     });
     financialAnalyst = await registerUser(app, {
       roles: [Role.FinancialAnalyst],
-      password: password,
     });
     financialAnalystController = await registerUser(app, {
       roles: [Role.FinancialAnalyst, Role.Controller],
-      password: password,
     });
-    await login(app, { email: projectManager.email.value, password });
+    controller = financialAnalystController;
+
+    await projectManager.login();
   });
   afterAll(async () => {
     await resetDatabase(db);
@@ -139,13 +124,10 @@ describe('Project-Workflow e2e', () => {
 
   describe('Workflow', () => {
     beforeEach(async () => {
-      await login(app, { email: projectManager.email.value, password });
+      await projectManager.login();
     });
 
-    it('should test create project workflow', async () => {
-      /**
-       * Step1. Create Project
-       *  */
+    it('Step 1. Create Project', async () => {
       // Create a new person
       const person = await createPerson(app);
       expect(person.id).toBeDefined();
@@ -192,7 +174,7 @@ describe('Project-Workflow e2e', () => {
       expect(result.project.fieldRegion.value.id).toBe(fieldRegion.id);
 
       // Enter MOU dates
-      await login(app, { email: director.email.value, password });
+      await director.login();
       result = await updateProject(app, {
         id: project.id,
         mouStart: CalendarDate.fromISO('1991-01-01'),
@@ -242,7 +224,7 @@ describe('Project-Workflow e2e', () => {
       expect(projectMember.user.value?.id).toBe(person.id);
 
       // Add partners
-      await login(app, { email: projectManager.email.value, password });
+      await projectManager.login();
       const partner = await createPartner(app, {
         types: [PartnerType.Funding, PartnerType.Impact, PartnerType.Technical],
         financialReportingTypes: [],
@@ -266,11 +248,8 @@ describe('Project-Workflow e2e', () => {
       });
     });
 
-    it('should test did not develop project workflow', async () => {
-      /**
-       * Step2. Did not develop workflow
-       *  */
-      await login(app, { email: projectManager.email.value, password });
+    it('Step 2. Did Not Develop', async () => {
+      await projectManager.login();
       const project = await createProject(app);
       await changeProjectStep(
         app,
@@ -278,8 +257,7 @@ describe('Project-Workflow e2e', () => {
         ProjectStep.PendingConceptApproval
       );
 
-      // Login as Director
-      await login(app, { email: director.email.value, password });
+      await director.login();
       await changeProjectStep(
         app,
         project.id,
@@ -291,24 +269,21 @@ describe('Project-Workflow e2e', () => {
         ProjectStep.PendingConsultantEndorsement
       );
 
-      // Login as Consultant Manager
-      await login(app, { email: consultantManager.email.value, password });
+      await consultantManager.login();
       await changeProjectStep(
         app,
         project.id,
         ProjectStep.PrepForFinancialEndorsement
       );
 
-      // Login as Director
-      await login(app, { email: director.email.value, password });
+      await director.login();
       await changeProjectStep(
         app,
         project.id,
         ProjectStep.PendingFinancialEndorsement
       );
 
-      // Login as Financial Analyst Controller
-      await login(app, { email: financialAnalyst.email.value, password });
+      await financialAnalyst.login();
       await createProjectMember(app, {
         userId: financialAnalyst.id,
         projectId: project.id,
@@ -316,8 +291,7 @@ describe('Project-Workflow e2e', () => {
       });
       await changeProjectStep(app, project.id, ProjectStep.FinalizingProposal);
 
-      // Login as Director
-      await login(app, { email: director.email.value, password });
+      await director.login();
       await changeProjectStep(app, project.id, ProjectStep.DidNotDevelop);
       const result = await app.graphql.query(
         gql`
@@ -336,10 +310,7 @@ describe('Project-Workflow e2e', () => {
       expect(result.project.status).toBe(ProjectStatus.DidNotDevelop);
     });
 
-    it('should test project workflow', async () => {
-      /**
-       * Step2. Approval Workflow
-       *  */
+    it('Step 2. Approval', async () => {
       const fundingAccount = await createFundingAccount(app);
       const location = await createLocation(app, {
         fundingAccountId: fundingAccount.id,
@@ -354,8 +325,7 @@ describe('Project-Workflow e2e', () => {
         ProjectStep.PendingConceptApproval
       );
 
-      // Login as Director
-      await login(app, { email: director.email.value, password });
+      await director.login();
       await changeProjectStep(
         app,
         project.id,
@@ -367,57 +337,44 @@ describe('Project-Workflow e2e', () => {
         ProjectStep.PendingConsultantEndorsement
       );
 
-      // Login as Consultant Manager
-      await login(app, { email: consultantManager.email.value, password });
+      await consultantManager.login();
       await changeProjectStep(
         app,
         project.id,
         ProjectStep.PrepForFinancialEndorsement
       );
 
-      // Login as Director
-      await login(app, { email: director.email.value, password });
+      await director.login();
       await changeProjectStep(
         app,
         project.id,
         ProjectStep.PendingFinancialEndorsement
       );
 
-      // Login as Financial Analyst Controller
-      await login(app, {
-        email: financialAnalystController.email.value,
-        password,
-      });
+      await financialAnalystController.login();
       await changeProjectStep(app, project.id, ProjectStep.FinalizingProposal);
 
-      // Login as Project Manager
-      await login(app, { email: projectManager.email.value, password });
+      await projectManager.login();
       await changeProjectStep(
         app,
         project.id,
         ProjectStep.PendingRegionalDirectorApproval
       );
 
-      // Login as Director
-      await login(app, { email: director.email.value, password });
+      await director.login();
       await changeProjectStep(
         app,
         project.id,
         ProjectStep.PendingFinanceConfirmation
       );
 
-      // Login as Controller
-      await login(app, {
-        email: financialAnalystController.email.value,
-        password,
-      });
+      await controller.login();
       await changeProjectStep(app, project.id, ProjectStep.Active);
 
       /**
        * Step3. Change to Plan Workflow
        *  */
-      // Login as Project Manager
-      await login(app, { email: projectManager.email.value, password });
+      await projectManager.login();
       await changeProjectStep(
         app,
         project.id,
@@ -429,33 +386,24 @@ describe('Project-Workflow e2e', () => {
         ProjectStep.PendingChangeToPlanApproval
       );
 
-      // Login as Director
-      await login(app, { email: director.email.value, password });
+      await director.login();
       await changeProjectStep(
         app,
         project.id,
         ProjectStep.PendingChangeToPlanConfirmation
       );
 
-      // Login as Controller
-      await login(app, {
-        email: financialAnalystController.email.value,
-        password,
-      });
+      await controller.login();
       await changeProjectStep(app, project.id, ProjectStep.ActiveChangedPlan);
-      // Login as Director
-      await login(app, { email: director.email.value, password });
+
+      await director.login();
       await changeProjectStep(
         app,
         project.id,
         ProjectStep.FinalizingCompletion
       );
 
-      // Login as Financial Analyst Controller
-      await login(app, {
-        email: financialAnalystController.email.value,
-        password,
-      });
+      await financialAnalystController.login();
       await changeProjectStep(app, project.id, ProjectStep.Completed);
 
       const result = await app.graphql.query(
@@ -475,7 +423,7 @@ describe('Project-Workflow e2e', () => {
       expect(result.project.status).toBe(ProjectStatus.Completed);
     });
 
-    it('should test project suspension workflow', async () => {
+    it('Suspension', async () => {
       const fundingAccount = await createFundingAccount(app);
       const location = await createLocation(app, {
         fundingAccountId: fundingAccount.id,
@@ -490,15 +438,10 @@ describe('Project-Workflow e2e', () => {
         }
       });
 
-      // Login as Controller
-      await login(app, {
-        email: financialAnalystController.email.value,
-        password,
-      });
+      await controller.login();
       await changeProjectStep(app, project.id, ProjectStep.Active);
 
-      // Login as Director
-      await login(app, { email: director.email.value, password });
+      await director.login();
       const stepsFromActiveToPendingReactivationApproval = [
         ProjectStep.DiscussingChangeToPlan,
         ProjectStep.DiscussingSuspension,
@@ -514,7 +457,7 @@ describe('Project-Workflow e2e', () => {
       await changeProjectStep(app, project.id, ProjectStep.ActiveChangedPlan);
     });
 
-    it('should test project termination workflow', async () => {
+    it('Termination', async () => {
       const fundingAccount = await createFundingAccount(app);
       const location = await createLocation(app, {
         fundingAccountId: fundingAccount.id,
@@ -529,15 +472,10 @@ describe('Project-Workflow e2e', () => {
         }
       });
 
-      // Login as Controller
-      await login(app, {
-        email: financialAnalystController.email.value,
-        password,
-      });
+      await controller.login();
       await changeProjectStep(app, project.id, ProjectStep.Active);
 
-      // Login as Director
-      await login(app, { email: director.email.value, password });
+      await director.login();
       const stepsFromActiveToPendingTerminationApproval = [
         ProjectStep.DiscussingChangeToPlan,
         ProjectStep.DiscussingSuspension,

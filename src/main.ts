@@ -6,6 +6,12 @@ import { bootstrapLogger, ConfigService } from './core';
 import 'source-map-support/register';
 
 async function bootstrap() {
+  if (process.argv.includes('--gen-schema')) {
+    const app = await NestFactory.create(AppModule, { logger: false });
+    await app.init();
+    process.exit(0);
+  }
+
   const app = await NestFactory.create(AppModule, {
     logger: bootstrapLogger,
   });
@@ -20,9 +26,7 @@ async function bootstrap() {
   await app.listen(config.port, () => {
     app
       .get(Logger)
-      .log(
-        `Listening at http://localhost:${config.port}/${config.globalPrefix}`
-      );
+      .log(`Listening at ${config.hostUrl}/${config.globalPrefix}`);
   });
 }
 bootstrap().catch((err) => {

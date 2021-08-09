@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { stripIndent } from 'common-tags';
 import { node, relation } from 'cypher-query-builder';
 import {
   ID,
@@ -10,10 +9,12 @@ import {
 } from '../../common';
 import { DtoRepository } from '../../core';
 import {
-  calculateTotalAndPaginateList,
   createNode,
   createRelationships,
   matchPropsAndProjectSensAndScopedRoles,
+  merge,
+  paginate,
+  sorting,
 } from '../../core/database/query';
 import {
   CreateProjectChangeRequest,
@@ -60,19 +61,12 @@ export class ProjectChangeRequestRepository extends DtoRepository(
         node('project', 'Project'),
       ])
       .apply(matchPropsAndProjectSensAndScopedRoles(session))
-      .return([
-        stripIndent`
-          apoc.map.mergeList([
-            props,
-            {
-              scope: scopedRoles,
-              canEdit: props.status = "${Status.Pending}"
-            }
-          ]) as dto`,
-      ])
-      .asResult<{
-        dto: UnsecuredDto<ProjectChangeRequest>;
-      }>();
+      .return<{ dto: UnsecuredDto<ProjectChangeRequest> }>(
+        merge('props', {
+          scope: 'scopedRoles',
+          canEdit: `props.status = "${Status.Pending}"`,
+        }).as('dto')
+      );
     const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find project change request');
@@ -81,22 +75,25 @@ export class ProjectChangeRequestRepository extends DtoRepository(
     return result.dto;
   }
 
-  list({ filter, ...input }: ProjectChangeRequestListInput, _session: Session) {
-    return this.db
+  async list(input: ProjectChangeRequestListInput, _session: Session) {
+    const result = await this.db
       .query()
       .match([
         // requestingUser(session),
         // ...permissionsOfNode(label),
         node('node', 'ProjectChangeRequest'),
-        ...(filter.projectId
+        ...(input.filter.projectId
           ? [
               relation('in', '', 'changeset', { active: true }),
               node('project', 'Project', {
-                id: filter.projectId,
+                id: input.filter.projectId,
               }),
             ]
           : []),
       ])
-      .apply(calculateTotalAndPaginateList(ProjectChangeRequest, input));
+      .apply(sorting(ProjectChangeRequest, input))
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 }

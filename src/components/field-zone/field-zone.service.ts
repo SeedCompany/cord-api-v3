@@ -6,12 +6,10 @@ import {
   ServerException,
   Session,
   UnauthorizedException,
+  UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger, OnIndex } from '../../core';
-import {
-  parseBaseNodeProperties,
-  runListQuery,
-} from '../../core/database/results';
+import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import {
   CreateFieldZone,
@@ -48,10 +46,7 @@ export class FieldZoneService {
     ];
   }
 
-  async create(
-    { directorId, ...input }: CreateFieldZone,
-    session: Session
-  ): Promise<FieldZone> {
+  async create(input: CreateFieldZone, session: Session): Promise<FieldZone> {
     const checkName = await this.repo.checkName(input.name);
 
     if (checkName) {
@@ -60,7 +55,7 @@ export class FieldZoneService {
         'FieldZone with this name already exists.'
       );
     }
-    const result = await this.repo.create(session, input.name, directorId);
+    const result = await this.repo.create(input, session);
 
     if (!result) {
       throw new ServerException('failed to create field zone');
@@ -84,25 +79,23 @@ export class FieldZoneService {
     });
 
     const result = await this.repo.readOne(id, session);
+    return await this.secure(result, session);
+  }
 
-    if (!result) {
-      throw new NotFoundException('Could not find field zone', 'fieldZone.id');
-    }
-
-    const secured = await this.authorizationService.secureProperties(
+  private async secure(
+    dto: UnsecuredDto<FieldZone>,
+    session: Session
+  ): Promise<FieldZone> {
+    const securedProps = await this.authorizationService.secureProperties(
       FieldZone,
-      result.propList,
+      dto,
       session
     );
 
     return {
-      ...parseBaseNodeProperties(result.node),
-      ...secured,
-      director: {
-        ...secured.director,
-        value: result.directorId,
-      },
-      canDelete: await this.repo.checkDeletePermission(id, session),
+      ...dto,
+      ...securedProps,
+      canDelete: await this.repo.checkDeletePermission(dto.id, session),
     };
   }
 
@@ -151,11 +144,10 @@ export class FieldZoneService {
   }
 
   async list(
-    { filter, ...input }: FieldZoneListInput,
+    input: FieldZoneListInput,
     session: Session
   ): Promise<FieldZoneListOutput> {
-    const query = this.repo.list({ filter, ...input }, session);
-
-    return await runListQuery(query, input, (id) => this.readOne(id, session));
+    const results = await this.repo.list(input, session);
+    return await mapListResults(results, (id) => this.readOne(id, session));
   }
 }

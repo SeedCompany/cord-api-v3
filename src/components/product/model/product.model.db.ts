@@ -7,8 +7,10 @@ export class DbProduct extends DbBaseNode {
   mediums: any = null;
   methodology: any = null;
   purposes: any = null;
+  steps: any = null;
   scriptureReferences: any = null;
   produces: any = null;
   scriptureReferencesOverride: any = null;
   isOverriding: any = null;
+  describeCompletion: any = null;
 }

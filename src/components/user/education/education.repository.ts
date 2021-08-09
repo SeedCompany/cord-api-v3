@@ -1,47 +1,35 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { DateTime } from 'luxon';
-import { generateId, ID, Session } from '../../../common';
+import { ID, NotFoundException, Session } from '../../../common';
+import { DtoRepository, matchRequestingUser } from '../../../core';
 import {
-  createBaseNode,
-  DtoRepository,
-  matchRequestingUser,
-  Property,
-} from '../../../core';
-import {
-  calculateTotalAndPaginateList,
-  matchPropList,
+  createNode,
+  createRelationships,
+  paginate,
   permissionsOfNode,
   requestingUser,
+  sorting,
 } from '../../../core/database/query';
-import {
-  DbPropsOfDto,
-  StandardReadResult,
-} from '../../../core/database/results';
-import { Education, EducationListInput } from './dto';
+import { CreateEducation, Education, EducationListInput } from './dto';
 
 @Injectable()
 export class EducationRepository extends DtoRepository(Education) {
-  async create(
-    userId: ID,
-    secureProps: Property[],
-    createdAt: DateTime,
-    session: Session
-  ) {
+  async create(input: CreateEducation, session: Session) {
+    const initialProps = {
+      degree: input.degree,
+      institution: input.institution,
+      major: input.major,
+    };
+
     const query = this.db
       .query()
       .apply(matchRequestingUser(session))
-      .match([
-        node('user', 'User', {
-          id: userId,
-        }),
-      ])
-      .apply(createBaseNode(await generateId(), 'Education', secureProps))
-      .create([
-        node('user'),
-        relation('out', '', 'education', { active: true, createdAt }),
-        node('node'),
-      ])
+      .apply(await createNode(Education, { initialProps }))
+      .apply(
+        createRelationships(Education, 'in', {
+          education: ['User', input.userId],
+        })
+      )
       .return<{ id: ID }>('node.id as id');
 
     return await query.first();
@@ -52,11 +40,13 @@ export class EducationRepository extends DtoRepository(Education) {
       .query()
       .apply(matchRequestingUser(session))
       .match([node('node', 'Education', { id })])
-      .apply(matchPropList)
-      .return('propList, node')
-      .asResult<StandardReadResult<DbPropsOfDto<Education>>>();
+      .apply(this.hydrate());
 
-    return await query.first();
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException('Could not find education');
+    }
+    return result.dto;
   }
 
   async getUserIdByEducation(session: Session, id: ID) {
@@ -72,10 +62,10 @@ export class EducationRepository extends DtoRepository(Education) {
       .first();
   }
 
-  list({ filter, ...input }: EducationListInput, session: Session) {
+  async list({ filter, ...input }: EducationListInput, session: Session) {
     const label = 'Education';
 
-    return this.db
+    const result = await this.db
       .query()
       .match([
         requestingUser(session),
@@ -89,6 +79,9 @@ export class EducationRepository extends DtoRepository(Education) {
             ]
           : []),
       ])
-      .apply(calculateTotalAndPaginateList(Education, input));
+      .apply(sorting(Education, input))
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 }

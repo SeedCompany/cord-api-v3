@@ -2,9 +2,9 @@ import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { CalendarDate } from '../src/common';
-import { Powers } from '../src/components/authorization/dto/powers';
+import { Powers, Role } from '../src/components/authorization';
 import { PartnerType } from '../src/components/partner';
-import { ProjectStep, Role } from '../src/components/project';
+import { ProjectStep } from '../src/components/project';
 import {
   approveProjectChangeRequest,
   createFundingAccount,
@@ -258,10 +258,7 @@ describe('Project Changeset Aware e2e', () => {
     await approveProjectChangeRequest(app, changeset.id);
 
     // Query project without changeset
-    // TODO Apply record changes on changeset approved. This is being skipped
-    // right now because the budget is "current" instead of "pending" so the sync
-    // handler skips. Needs to be figured out.
-    // result = await readProject(app, project.id);
-    // expect(result.project.budget.value.records.length).toBe(2);
+    result = await readProject(app, project.id);
+    expect(result.project.budget.value.records.length).toBe(2);
   });
 });

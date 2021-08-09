@@ -1,10 +1,8 @@
 import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
-import * as faker from 'faker';
-import { Powers } from '../src/components/authorization/dto/powers';
+import { Powers, Role } from '../src/components/authorization';
 import { PartnershipAgreementStatus } from '../src/components/partnership';
-import { ProjectStep, Role } from '../src/components/project';
-import { User } from '../src/components/user/dto/user.dto';
+import { ProjectStep } from '../src/components/project';
 import {
   approveProjectChangeRequest,
   createFundingAccount,
@@ -16,7 +14,6 @@ import {
   createRegion,
   createSession,
   createTestApp,
-  login,
   registerUserWithPower,
   runAsAdmin,
   TestApp,
@@ -92,25 +89,19 @@ const activeProject = async (app: TestApp) => {
 
 describe('Partnership Changeset Aware e2e', () => {
   let app: TestApp;
-  let director: User;
   let db: Connection;
-  const password = faker.internet.password();
 
   beforeAll(async () => {
     app = await createTestApp();
     db = app.get(Connection);
     await createSession(app);
-
-    director = await registerUserWithPower(
+    await registerUserWithPower(
       app,
       [Powers.CreateLanguage, Powers.CreateEthnologueLanguage],
       {
         roles: [Role.ProjectManager, Role.Administrator],
-        password: password,
       }
     );
-
-    await login(app, { email: director.email.value, password });
   });
 
   afterAll(async () => {
@@ -210,5 +201,46 @@ describe('Partnership Changeset Aware e2e', () => {
     expect(result.partnership.mouStatus.value).toBe(
       PartnershipAgreementStatus.Signed
     );
+  });
+
+  it('Delete', async () => {
+    const project = await activeProject(app);
+    const changeset = await createProjectChangeRequest(app, {
+      projectId: project.id,
+    });
+
+    await createPartnership(app, {
+      projectId: project.id,
+    });
+
+    const partnership = await createPartnership(app, {
+      projectId: project.id,
+    });
+
+    // Delete partnereship in changeset
+    let result = await app.graphql.mutate(
+      gql`
+        mutation deletePartnership($id: ID!, $changeset: ID) {
+          deletePartnership(id: $id, changeset: $changeset)
+        }
+      `,
+      {
+        id: partnership.id,
+        changeset: changeset.id,
+      }
+    );
+    const actual: boolean | undefined = result.deletePartnership;
+    expect(actual).toBeTruthy();
+
+    // List partnerships without changeset
+    result = await readPartnerships(app, project.id);
+    expect(result.project.partnerships.items.length).toBe(2);
+    // List partnerships with changeset
+    result = await readPartnerships(app, project.id, changeset.id);
+    expect(result.project.partnerships.items.length).toBe(1);
+    await approveProjectChangeRequest(app, changeset.id);
+    // List partnerships without changeset
+    result = await readPartnerships(app, project.id);
+    expect(result.project.partnerships.items.length).toBe(1);
   });
 });

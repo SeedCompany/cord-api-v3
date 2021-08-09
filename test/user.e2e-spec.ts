@@ -10,6 +10,7 @@ import { PostgresService } from '../src/core';
 import {
   createEducation,
   createOrganization,
+  createPerson,
   createSession,
   createTestApp,
   createUnavailability,
@@ -40,6 +41,43 @@ describe('User e2e', () => {
   //   await app.close();
   // });
 
+  it('read one user by id', async () => {
+    const fakeUser = await generateRegisterInput();
+
+    const user = await registerUser(app, fakeUser);
+
+    const result = await app.graphql.query(
+      gql`
+        query user($id: ID!) {
+          user(id: $id) {
+            ...user
+          }
+        }
+        ${fragments.user}
+      `,
+      {
+        id: user.id,
+      }
+    );
+
+    const actual: User = result.user;
+    expect(actual).toBeTruthy();
+
+    expect(isValidId(actual.id)).toBe(true);
+    expect(actual.email.value).toBe(fakeUser.email.toLowerCase());
+    expect(actual.realFirstName.value).toBe(fakeUser.realFirstName);
+    expect(actual.realLastName.value).toBe(fakeUser.realLastName);
+    expect(actual.displayFirstName.value).toBe(fakeUser.displayFirstName);
+    expect(actual.displayLastName.value).toBe(fakeUser.displayLastName);
+    expect(actual.phone.value).toBe(fakeUser.phone);
+    expect((actual.timezone as SecuredTimeZone).value?.name).toBe(
+      fakeUser.timezone
+    );
+    expect(actual.about.value).toBe(fakeUser.about);
+    expect(actual.status.value).toBe(fakeUser.status);
+
+    return true;
+  });
   // it('read one user by id', async () => {
   //   const fakeUser = await generateRegisterInput();
 
@@ -100,6 +138,24 @@ describe('User e2e', () => {
     // );
   });
 
+  it('should test Email is not case sensitive', async () => {
+    const email = faker.internet.email().toUpperCase();
+    const password = faker.internet.password(10);
+    const user = await registerUser(app, { email, password });
+    expect(user.email.value).toBe(email.toLowerCase());
+
+    await login(app, { email: email.toLowerCase(), password });
+    await login(app, { email, password });
+  });
+
+  it('create person - optional email', async () => {
+    await registerUser(app);
+
+    const person = await createPerson(app, {
+      email: undefined,
+    });
+    expect(person.email.value).toBeNull();
+  });
   // it('update user', async () => {
   //   // create user first
   //   const user = await registerUser(app);

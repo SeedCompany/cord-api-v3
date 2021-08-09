@@ -16,6 +16,7 @@ import { DbPartner } from '../../partner/model';
 import { DbPartnership } from '../../partnership/model';
 import { DbPeriodicReport } from '../../periodic-report/model';
 import { DbPost } from '../../post/model';
+import { StepProgress } from '../../product-progress/dto';
 import { DbProduct } from '../../product/model';
 import { DbProjectChangeRequest } from '../../project-change-request/model';
 /* eslint-disable @typescript-eslint/naming-convention */
@@ -179,7 +180,6 @@ export const FieldOperationsDirector = new DbRole({
       __className: 'DbInternshipEngagement',
       properties: [
         { propertyName: 'ceremony', permission: { read, write, }, },
-        { propertyName: 'communicationsCompleteDate', permission: { read, write, }, },
         { propertyName: 'completeDate', permission: { read, write, }, },
         { propertyName: 'countryOfOrigin', permission: { read, write, }, },
         { propertyName: 'disbursementCompleteDate', permission: { read, write, }, },
@@ -227,7 +227,6 @@ export const FieldOperationsDirector = new DbRole({
       __className: 'DbLanguageEngagement',
       properties: [
         { propertyName: 'ceremony', permission: { read, write, }, },
-        { propertyName: 'communicationsCompleteDate', permission: { read, write, }, },
         { propertyName: 'completeDate', permission: { read, write, }, },
         { propertyName: 'disbursementCompleteDate', permission: { read, write, }, },
         { propertyName: 'endDate', permission: { read, write, }, },
@@ -326,10 +325,12 @@ export const FieldOperationsDirector = new DbRole({
         { propertyName: 'mediums', permission: { read, write, }, },
         { propertyName: 'methodology', permission: { read, write, }, },
         { propertyName: 'purposes', permission: { read, write, }, },
+        { propertyName: 'steps', permission: { read, write, }, },
         { propertyName: 'scriptureReferences', permission: { read, write, }, },
         { propertyName: 'produces', permission: { read, write, }, },
         { propertyName: 'scriptureReferencesOverride', permission: { read, write, }, },
         { propertyName: 'isOverriding', permission: { read, write, }, },
+        { propertyName: 'describeCompletion', permission: { read, write, }, },
       ],
       canDelete: false,
     }),
@@ -379,6 +380,7 @@ export const FieldOperationsDirector = new DbRole({
         { propertyName: 'type', permission: { read, write, }, },
         { propertyName: 'start', permission: { read, write, }, },
         { propertyName: 'end', permission: { read, write, }, },
+        { propertyName: 'receivedDate', permission: { read, write, }, },
         { propertyName: 'reportFile', permission: { read, write, }, },
       ],
       canDelete: true,
@@ -438,6 +440,15 @@ export const FieldOperationsDirector = new DbRole({
         { propertyName: 'status',                      permission: { read, write, }, },
       ],
       canDelete: true,
+    }),
+    new DbBaseNodeGrant<StepProgress>({
+      __className: 'DbStepProgress',
+      properties: [
+        {
+          propertyName: 'percentDone', permission: { read, write },
+        }
+      ],
+      canDelete: false,
     }),
   ],
 });

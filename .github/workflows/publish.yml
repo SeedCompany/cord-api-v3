@@ -1,0 +1,64 @@
+name: Publish
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - labeled
+  push:
+    branches:
+      - master
+      - develop
+
+env:
+  IMAGE_NAME: cord/api
+
+jobs:
+  docker:
+    if: ${{ github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'build-it') }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build Image
+        run: |
+          BRANCH="${GITHUB_REF}"
+          # Strip /merge suffix from PRs
+          [[ "${BRANCH}" == "refs/pull/"* ]] && BRANCH=$(echo $BRANCH | sed -e 's,/merge,,')
+          # Strip git ref prefix
+          BRANCH=$(echo $BRANCH | sed -e 's,refs/heads/,,' -e 's,refs/tags/,,' -e 's,refs/,,')
+
+          docker build . --file Dockerfile --tag $IMAGE_NAME \
+            --build-arg "GIT_HASH=$(echo "${GITHUB_SHA}" | cut -c 1-7)" \
+            --build-arg "GIT_BRANCH=${BRANCH}" \
+            --label "org.opencontainers.image.created=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
+            --label "org.opencontainers.image.revision=$(echo "${GITHUB_SHA}" | cut -c 1-7)"
+
+      - name: Log into GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login https://ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Push image to GitHub Container Registry
+        run: |
+          IMAGE_ID=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME
+          # Change all uppercase to lowercase
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+          echo IMAGE_ID=$IMAGE_ID
+
+          VERSION="${GITHUB_REF}"
+          # Strip /merge suffix from PRs
+          [[ "${VERSION}" == "refs/pull/"* ]] && VERSION=$(echo $VERSION | sed -e 's,/merge,,')
+          # Strip git ref prefix from version
+          VERSION=$(echo "${VERSION}" | sed -e 's,.*/\(.*\),\1,')
+          # Add prefix for PRs as it's stripped above
+          [[ "${GITHUB_REF}" == "refs/pull/"* ]] && VERSION=pr-$VERSION
+          # Strip "v" prefix from tag name
+          [[ "${GITHUB_REF}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+          # Use Docker `latest` tag convention
+          [ "$VERSION" == "master" ] && VERSION=latest
+          [ "$VERSION" == "develop" ] && VERSION=dev
+          echo VERSION=$VERSION
+
+          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
+          docker push $IMAGE_ID:$VERSION

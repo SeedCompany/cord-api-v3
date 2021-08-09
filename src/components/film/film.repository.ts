@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
-import { generateId, ID, Session } from '../../common';
-import { createBaseNode, DtoRepository, matchRequestingUser } from '../../core';
+import { ID, NotFoundException, Session } from '../../common';
+import { DtoRepository, matchRequestingUser } from '../../core';
 import {
-  calculateTotalAndPaginateList,
-  matchPropList,
+  createNode,
+  paginate,
   permissionsOfNode,
   requestingUser,
+  sorting,
 } from '../../core/database/query';
-import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
-import { Film, FilmListInput } from './dto';
+import { CreateFilm, Film, FilmListInput } from './dto';
 
 @Injectable()
 export class FilmRepository extends DtoRepository(Film) {
@@ -21,48 +21,40 @@ export class FilmRepository extends DtoRepository(Film) {
       .first();
   }
 
-  async createFilm(name: string, session: Session) {
-    const secureProps = [
-      {
-        key: 'name',
-        value: name,
-        isPublic: true,
-        isOrgPublic: true,
-        label: 'FilmName',
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
+  async createFilm(input: CreateFilm, session: Session) {
+    const initialProps = {
+      name: input.name,
+      canDelete: true,
+    };
     return await this.db
       .query()
       .apply(matchRequestingUser(session))
-      .apply(
-        createBaseNode(await generateId(), ['Film', 'Producible'], secureProps)
-      )
+      .apply(await createNode(Film, { initialProps }))
       .return<{ id: ID }>('node.id as id')
       .first();
   }
 
   async readOne(id: ID, session: Session) {
-    const readFilm = this.db
+    const query = this.db
       .query()
       .apply(matchRequestingUser(session))
       .match([node('node', 'Film', { id })])
-      .apply(matchPropList)
-      .return('node, propList')
-      .asResult<StandardReadResult<DbPropsOfDto<Film>>>();
+      .apply(this.hydrate());
 
-    return await readFilm.first();
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException('Could not find film', 'film.id');
+    }
+    return result.dto;
   }
 
-  list({ filter, ...input }: FilmListInput, session: Session) {
-    return this.db
+  async list({ filter, ...input }: FilmListInput, session: Session) {
+    const result = await this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode('Film')])
-      .apply(calculateTotalAndPaginateList(Film, input));
+      .apply(sorting(Film, input))
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 }

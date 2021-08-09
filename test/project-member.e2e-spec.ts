@@ -1,11 +1,10 @@
 import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
-import * as faker from 'faker';
 import { times } from 'lodash';
 import { DateTime, Interval } from 'luxon';
 import { isValidId, NotFoundException } from '../src/common';
-import { ProjectMember, Role } from '../src/components/project';
-import { User } from '../src/components/user';
+import { Powers, Role } from '../src/components/authorization';
+import { Project, ProjectMember } from '../src/components/project';
 import {
   createPerson,
   createProject,
@@ -13,31 +12,29 @@ import {
   createSession,
   createTestApp,
   fragments,
-  login,
   Raw,
-  registerUser,
+  registerUserWithPower,
   TestApp,
 } from './utility';
 import { resetDatabase } from './utility/reset-database';
 
 describe('ProjectMember e2e', () => {
   let app: TestApp;
-  let user: User;
-  const password: string = faker.internet.password();
   let db: Connection;
+  let project: Raw<Project>;
 
   beforeAll(async () => {
     app = await createTestApp();
     db = app.get(Connection);
     await createSession(app);
-    user = await registerUser(app, {
-      password,
+    await registerUserWithPower(app, [Powers.GrantRole], {
       roles: [
         Role.ProjectManager,
         Role.Consultant,
         Role.FieldOperationsDirector,
       ],
     });
+    project = await createProject(app);
   });
   afterAll(async () => {
     await resetDatabase(db);
@@ -45,9 +42,7 @@ describe('ProjectMember e2e', () => {
   });
 
   it('create projectMember', async () => {
-    await login(app, { email: user.email.value, password });
-    const project = await createProject(app);
-    const member = await registerUser(app, { password });
+    const member = await createPerson(app);
     const projectMember = await createProjectMember(app, {
       userId: member.id,
       projectId: project.id,
@@ -64,9 +59,7 @@ describe('ProjectMember e2e', () => {
   });
 
   it('should throw error with invalid user roles when create', async () => {
-    await login(app, { email: user.email.value, password });
-    const project = await createProject(app);
-    const member = await registerUser(app, { password });
+    const member = await createPerson(app);
     await expect(
       createProjectMember(app, {
         userId: member.id,
@@ -79,9 +72,7 @@ describe('ProjectMember e2e', () => {
   });
 
   it('read one projectMember by id', async () => {
-    await login(app, { email: user.email.value, password });
-    const project = await createProject(app);
-    const member = await registerUser(app, { password });
+    const member = await createPerson(app);
     const projectMember = await createProjectMember(app, {
       userId: member.id,
       projectId: project.id,
@@ -108,17 +99,15 @@ describe('ProjectMember e2e', () => {
 
   it.skip('list view of ProjectMember', async () => {
     const numProjectMembers = 2;
-    const userForList = await registerUser(app, { password });
+    const userForList = await createPerson(app);
     const userId = userForList.id;
     const projectIds = await Promise.all(
       times(numProjectMembers).map(async () => {
-        await registerUser(app);
+        await createPerson(app);
         const project = await createProject(app);
         return project.id;
       })
     );
-
-    await login(app, { email: userForList.email.value, password });
 
     await Promise.all(
       times(numProjectMembers, async (index) => {
@@ -149,9 +138,7 @@ describe('ProjectMember e2e', () => {
   });
 
   it.skip('delete projectMember', async () => {
-    await login(app, { email: user.email.value, password });
-    const project = await createProject(app);
-    const member = await registerUser(app, { password });
+    const member = await createPerson(app);
     const projectMember = await createProjectMember(app, {
       userId: member.id,
       projectId: project.id,
@@ -191,9 +178,7 @@ describe('ProjectMember e2e', () => {
   });
 
   it('Can create the same projectMember after deletion', async () => {
-    await login(app, { email: user.email.value, password });
-    const project = await createProject(app);
-    const member = await registerUser(app, { password });
+    const member = await createPerson(app);
     const projectMember = await createProjectMember(app, {
       userId: member.id,
       projectId: project.id,
@@ -219,8 +204,6 @@ describe('ProjectMember e2e', () => {
   });
 
   it('update projectMember', async () => {
-    await login(app, { email: user.email.value, password });
-    const project = await createProject(app);
     const member = await createPerson(app, {
       roles: [Role.ProjectManager, Role.Consultant],
     });
@@ -262,9 +245,7 @@ describe('ProjectMember e2e', () => {
   });
 
   it('should throw error with invalid roles when update', async () => {
-    await login(app, { email: user.email.value, password });
-    const project = await createProject(app);
-    const member = await registerUser(app, { password });
+    const member = await createPerson(app);
     const projectMember = await createProjectMember(app, {
       userId: member.id,
       projectId: project.id,

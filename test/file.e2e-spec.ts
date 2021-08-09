@@ -23,9 +23,9 @@ import {
   generateFakeFile,
   getFileNode,
   getFileNodeChildren,
-  login,
   registerUser,
   requestFileUpload,
+  runInIsolatedSession,
   TestApp,
   uploadFileContents,
 } from './utility';
@@ -104,7 +104,6 @@ describe('File e2e', () => {
   let bucket: LocalBucket;
   let root: Directory;
   let me: User;
-  const myPassword = faker.internet.password();
   let db: Connection;
 
   beforeAll(async () => {
@@ -113,7 +112,6 @@ describe('File e2e', () => {
     bucket = app.get(FilesBucketToken);
     await createSession(app);
     me = await registerUser(app, {
-      password: myPassword,
       roles: [Role.ProjectManager],
     });
   });
@@ -126,11 +124,6 @@ describe('File e2e', () => {
   beforeEach(async () => {
     await bucket.clear();
     root = await createRootDirectory(app);
-    // reset logged in user
-    await login(app, {
-      email: me.email.value,
-      password: myPassword,
-    });
   });
 
   afterEach(resetNow);
@@ -185,19 +178,17 @@ describe('File e2e', () => {
     const initial = await uploadFile(app, root.id);
     shiftNow({ days: 2 });
 
-    // change user
-    const current = await login(app, {
-      email: me.email.value,
-      password: myPassword,
+    await runInIsolatedSession(app, async () => {
+      // change user
+      const current = await registerUser(app);
+
+      const fakeFile = generateFakeFile();
+      const updated = await uploadFile(app, initial.id, fakeFile);
+      await assertFileChanges(updated, initial, fakeFile);
+      expect(updated.modifiedBy.id).toEqual(current.id);
+      // TODO Files have their own names, should these be updated to match the new version's name?
+      // expect(updatedFile.name).not.toEqual(initialFile.name);
     });
-
-    const fakeFile = generateFakeFile();
-    const updated = await uploadFile(app, initial.id, fakeFile);
-    await assertFileChanges(updated, initial, fakeFile);
-
-    expect(updated.modifiedBy.id).toEqual(current.login.user.id);
-    // TODO Files have their own names, should these be updated to match the new version's name?
-    // expect(updatedFile.name).not.toEqual(initialFile.name);
   });
 
   it.skip('update file using directory with same file name', async () => {

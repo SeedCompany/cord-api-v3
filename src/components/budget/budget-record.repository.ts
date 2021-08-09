@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { stripIndent } from 'common-tags';
 import { node, Query, relation } from 'cypher-query-builder';
 import {
   ID,
@@ -10,11 +9,13 @@ import {
 } from '../../common';
 import { DtoRepository } from '../../core';
 import {
-  calculateTotalAndPaginateList,
   createNode,
   createRelationships,
   matchChangesetAndChangedProps,
   matchPropsAndProjectSensAndScopedRoles,
+  merge,
+  paginate,
+  sorting,
 } from '../../core/database/query';
 import { BudgetRecord, BudgetRecordListInput, CreateBudgetRecord } from './dto';
 
@@ -94,13 +95,16 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
     return result.dto;
   }
 
-  list(input: BudgetRecordListInput, session: Session, changeset?: ID) {
+  async list(input: BudgetRecordListInput, session: Session, changeset?: ID) {
     const { budgetId } = input.filter;
-    return this.db
+    const result = await this.db
       .query()
       .matchNode('budget', 'Budget', { id: budgetId })
       .apply(this.recordsOfBudget({ changeset }))
-      .apply(calculateTotalAndPaginateList(BudgetRecord, input));
+      .apply(sorting(BudgetRecord, input))
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 
   hydrate({
@@ -134,17 +138,11 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
           .apply(matchChangesetAndChangedProps(changeset))
           .apply(matchPropsAndProjectSensAndScopedRoles(session))
           .return<{ dto: UnsecuredDto<BudgetRecord> }>(
-            stripIndent`
-              apoc.map.mergeList([
-                props,
-                changedProps,
-                {
-                  organization: organization.id,
-                  scope: scopedRoles,
-                  changeset: coalesce(changeset.id)
-                }
-              ]) as ${outputVar}
-        `
+            merge('props', 'changedProps', {
+              organization: 'organization.id',
+              scope: 'scopedRoles',
+              changeset: 'changeset.id',
+            }).as(outputVar)
           )
       );
   }

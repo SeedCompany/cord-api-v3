@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Connection } from 'cypher-query-builder';
 import {
   compact,
+  difference,
   keyBy,
   last,
   mapValues,
@@ -30,7 +31,6 @@ import { ChangesOf, isRelation } from '../../core/database/changes';
 import {
   DbPropsOfDto,
   parseSecuredProperties,
-  PropListDbResult,
 } from '../../core/database/results';
 import { AuthorizationRepository } from './authorization.repository';
 import { InternalRole, Role, rolesForScope, ScopedRole } from './dto';
@@ -39,7 +39,7 @@ import { MissingPowerException } from './missing-power.exception';
 import { Action, DbRole, PermissionsForResource } from './model';
 import * as AllRoles from './roles';
 
-const getDbRoles = (roles: ScopedRole[]) =>
+const getDbRoles = (roles: ScopedRole[]): DbRole[] =>
   Object.values(AllRoles).filter((role) => roles.includes(role.name));
 
 export const permissionDefaults = {
@@ -104,9 +104,7 @@ export class AuthorizationService {
 
   async secureProperties<Resource extends ResourceShape<any>>(
     resource: Resource,
-    props:
-      | PropListDbResult<DbPropsOfDto<Resource['prototype']>>
-      | DbPropsOfDto<Resource['prototype']>,
+    props: DbPropsOfDto<Resource['prototype']>,
     sessionOrUserId: Session | ID,
     otherRoles: ScopedRole[] = []
   ): Promise<SecuredResource<Resource, false>> {
@@ -316,6 +314,15 @@ export class AuthorizationService {
     for (const power of powers) {
       await this.grantPower(power, id);
     }
+  }
+
+  /**
+   * Confirms the requesting user has all the powers given.
+   * This uses our app roles instead of powers in DB, which is the way forward.
+   */
+  async hasPower(session: Session, ...powers: Powers[]) {
+    const granted = getDbRoles(session.roles).flatMap((role) => role.powers);
+    return difference(powers, granted).length === 0;
   }
 
   async checkPower(power: Powers, session: Session): Promise<void> {

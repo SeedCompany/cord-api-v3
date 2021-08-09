@@ -86,7 +86,7 @@ describe('Authentication e2e', () => {
   it('login user', async () => {
     const fakeUser = await generateRegisterInput();
     const user = await registerUser(app, fakeUser);
-    const _logout = await logout(app);
+    await logout(app);
 
     await login(app, { email: fakeUser.email, password: fakeUser.password });
     const result = await app.graphql.query(
@@ -124,7 +124,6 @@ describe('Authentication e2e', () => {
     const fakeUser = await generateRegisterInput();
 
     const user = await registerUser(app, fakeUser);
-    await login(app, { email: fakeUser.email, password: fakeUser.password });
 
     const newPassword = faker.internet.password();
     const result = await app.graphql.mutate(

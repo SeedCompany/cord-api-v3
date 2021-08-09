@@ -4,7 +4,7 @@ import * as faker from 'faker';
 import { some } from 'lodash';
 import { DateTime, Interval } from 'luxon';
 import { generateId, ID, InputException } from '../src/common';
-import { Powers } from '../src/components/authorization/dto/powers';
+import { Powers, Role } from '../src/components/authorization';
 import {
   CreateInternshipEngagement,
   EngagementStatus,
@@ -21,7 +21,6 @@ import {
   ProjectStep,
   ProjectStepTransition,
   ProjectType,
-  Role,
 } from '../src/components/project';
 import { User } from '../src/components/user';
 import {
@@ -38,13 +37,13 @@ import {
   expectNotFound,
   fragments,
   getUserFromSession,
-  login,
   Raw,
   registerUser,
   registerUserWithPower,
   requestFileUpload,
   runAsAdmin,
   TestApp,
+  TestUser,
   uploadFileContents,
 } from './utility';
 import { createProduct } from './utility/create-product';
@@ -66,11 +65,10 @@ describe('Engagement e2e', () => {
   let internshipProject: Raw<Project>;
   let language: Language;
   let location: Location;
-  let user: User;
+  let user: TestUser;
   let intern: Partial<User>;
   let mentor: Partial<User>;
   let db: Connection;
-  const password = faker.internet.password();
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -82,7 +80,6 @@ describe('Engagement e2e', () => {
       app,
       [Powers.CreateLanguage, Powers.CreateEthnologueLanguage],
       {
-        password,
         roles: [
           Role.ProjectManager,
           Role.FieldOperationsDirector,
@@ -156,7 +153,6 @@ describe('Engagement e2e', () => {
     expect(actual.sentPrintingDate.value).toBeNull();
     expect(actual.completeDate.value).toBeNull();
     expect(actual.disbursementCompleteDate.value).toBeNull();
-    expect(actual.communicationsCompleteDate.value).toBeNull();
     expect(actual.startDate.value).toBe(project.mouStart.value); // bump
     expect(actual.endDate.value).toBe(project.mouEnd.value);
     expect(actual.lastSuspendedAt.value).toBeNull();
@@ -223,7 +219,6 @@ describe('Engagement e2e', () => {
     expect(actual.position.value).toBeNull();
     expect(actual.completeDate.value).toBeNull();
     expect(actual.disbursementCompleteDate.value).toBeNull();
-    expect(actual.communicationsCompleteDate.value).toBeNull();
     expect(actual.startDate.value).toBe(internshipProject.mouStart.value);
     expect(actual.endDate.value).toBe(internshipProject.mouEnd.value);
     expect(actual.lastSuspendedAt.value).toBeNull();
@@ -270,9 +265,6 @@ describe('Engagement e2e', () => {
     expect(actual.completeDate).toMatchObject(languageEngagement.completeDate);
     expect(actual.disbursementCompleteDate).toMatchObject(
       languageEngagement.disbursementCompleteDate
-    );
-    expect(actual.communicationsCompleteDate).toMatchObject(
-      languageEngagement.communicationsCompleteDate
     );
     expect(actual.startDate).toMatchObject(languageEngagement.startDate);
     expect(actual.endDate).toMatchObject(languageEngagement.endDate);
@@ -331,9 +323,6 @@ describe('Engagement e2e', () => {
     );
     expect(actual.disbursementCompleteDate).toMatchObject(
       internshipEngagement.disbursementCompleteDate
-    );
-    expect(actual.communicationsCompleteDate).toMatchObject(
-      internshipEngagement.communicationsCompleteDate
     );
     expect(actual.startDate).toMatchObject(internshipEngagement.startDate);
     expect(actual.endDate).toMatchObject(internshipEngagement.endDate);
@@ -627,7 +616,7 @@ describe('Engagement e2e', () => {
     expect(result.ceremony.planned.value).toBeTruthy();
     expect(result.ceremony.estimatedDate.value).toBe(date);
 
-    await login(app, { email: user.email.value, password });
+    await user.login();
   });
 
   it('updates ceremony for internship engagement', async () => {
@@ -703,7 +692,7 @@ describe('Engagement e2e', () => {
     expect(result.ceremony.planned.value).toBeTruthy();
     expect(result.ceremony.estimatedDate.value).toBe(date);
 
-    await login(app, { email: user.email.value, password });
+    await user.login();
   });
 
   it.skip('delete ceremony upon engagement deletion', async () => {

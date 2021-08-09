@@ -1,12 +1,11 @@
-import { stripIndent } from 'common-tags';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ResourceShape } from '../../../common';
 
-export const deleteBaseNode = (query: Query) =>
-  query
+export const deleteBaseNode = (nodeVar: string) => (query: Query) =>
+  query.comment`deleteBaseNode(${nodeVar})`
     .match([
-      node('baseNode'),
+      node(nodeVar),
       /**
          in this case we want to set Deleted_ labels for all properties
          including active = false
@@ -18,19 +17,19 @@ export const deleteBaseNode = (query: Query) =>
     ])
     // Mark any parent base node relationships (pointing to the base node) as active = false.
     .optionalMatch([
-      node('baseNode'),
+      node(nodeVar),
       relation('in', 'baseNodeRel'),
       node('', 'BaseNode'),
     ])
     .setValues({
-      'baseNode.deletedAt': DateTime.local(),
+      [`${nodeVar}.deletedAt`]: DateTime.local(),
       'baseNodeRel.active': false,
     })
     /**
        if we set anything on property nodes or property relationships in the query above (as was done previously)
        we need to distinct propertyNode to avoid collecting and labeling each propertyNode more than once
        */
-    .with('[baseNode] + collect(propertyNode) as nodeList')
+    .with(`[${nodeVar}] + collect(propertyNode) as nodeList`)
     .raw('unwind nodeList as node')
     .apply(prefixNodeLabelsWithDeleted('node'));
 
@@ -40,7 +39,7 @@ export const deleteBaseNode = (query: Query) =>
  */
 export const deleteProperties =
   <Resource extends ResourceShape<any>>(
-    _resource: Resource,
+    resource: Resource,
     ...relationLabels: ReadonlyArray<keyof Resource['prototype']>
   ) =>
   (query: Query) => {
@@ -48,9 +47,10 @@ export const deleteProperties =
       return query;
     }
     const deletedAt = DateTime.local();
-    return query.subQuery((sub) =>
+    return query.comment`
+      deleteProperties(${[resource.name, ...relationLabels].join(', ')})
+    `.subQuery('node', (sub) =>
       sub
-        .with('node')
         .match([
           node('node'),
           relation('out', 'propertyRel', relationLabels, { active: true }),
@@ -67,13 +67,14 @@ export const deleteProperties =
   };
 
 export const prefixNodeLabelsWithDeleted = (node: string) => (query: Query) =>
-  query.subQuery((sub) =>
+  query.comment`
+    prefixNodeLabelsWithDeleted(${node})
+  `.subQuery(node, (sub) =>
     sub
-      .with(node) // import node
       .with([
         node,
         // Mpa current labels to have deleted prefix (operation is idempotent).
-        stripIndent`
+        `
           reduce(
             deletedLabels = [], label in labels(${node}) |
               case

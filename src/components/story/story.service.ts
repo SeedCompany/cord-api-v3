@@ -6,12 +6,10 @@ import {
   ServerException,
   Session,
   UnauthorizedException,
+  UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger, OnIndex } from '../../core';
-import {
-  parseBaseNodeProperties,
-  runListQuery,
-} from '../../core/database/results';
+import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
@@ -58,23 +56,8 @@ export class StoryService {
       );
     }
 
-    const secureProps = [
-      {
-        key: 'name',
-        value: input.name,
-        isPublic: true,
-        isOrgPublic: true,
-        label: 'StoryName',
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
     try {
-      const result = await this.repo.create(session, secureProps);
+      const result = await this.repo.create(input, session);
 
       if (!result) {
         throw new ServerException('failed to create a story');
@@ -111,30 +94,31 @@ export class StoryService {
     });
 
     const result = await this.repo.readOne(id, session);
+    return await this.secure(result, session);
+  }
 
-    if (!result) {
-      throw new NotFoundException('Could not find story', 'story.id');
-    }
-
-    const scriptureReferences = await this.scriptureRefService.list(
-      id,
-      session
-    );
-
+  private async secure(
+    dto: UnsecuredDto<Story>,
+    session: Session
+  ): Promise<Story> {
     const securedProps = await this.authorizationService.secureProperties(
       Story,
-      result.propList,
+      dto,
       session
     );
 
+    const scriptureReferences = await this.scriptureRefService.list(
+      dto.id,
+      session
+    );
     return {
-      ...parseBaseNodeProperties(result.node),
+      ...dto,
       ...securedProps,
       scriptureReferences: {
         ...securedProps.scriptureReferences,
         value: scriptureReferences,
       },
-      canDelete: await this.repo.checkDeletePermission(id, session),
+      canDelete: await this.repo.checkDeletePermission(dto.id, session),
     };
   }
 
@@ -173,10 +157,10 @@ export class StoryService {
   }
 
   async list(
-    { filter, ...input }: StoryListInput,
+    input: StoryListInput,
     session: Session
   ): Promise<StoryListOutput> {
-    const query = this.repo.list({ filter, ...input }, session);
-    return await runListQuery(query, input, (id) => this.readOne(id, session));
+    const results = await this.repo.list(input, session);
+    return await mapListResults(results, (id) => this.readOne(id, session));
   }
 }

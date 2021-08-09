@@ -18,10 +18,10 @@ export abstract class UpdateUser {
   @IdField()
   readonly id: ID;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @IsEmail()
   @Transform(({ value }) => toLower(value))
-  readonly email?: string;
+  readonly email?: string | null;
 
   @NameField({ nullable: true })
   readonly realFirstName?: string;

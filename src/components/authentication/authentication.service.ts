@@ -84,7 +84,10 @@ export class AuthenticationService {
   }
 
   async updateSession(req: Request) {
-    const newSession = await this.createSession(req.session!.token);
+    if (!req.session) {
+      throw new NoSessionException();
+    }
+    const newSession = await this.createSession(req.session.token);
     req.session = newSession; // replace session given with session pipe
     return newSession;
   }

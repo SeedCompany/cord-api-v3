@@ -1,11 +1,12 @@
 # Base node stage that sets up common config for dev & prod
 FROM node:12-alpine as node
-WORKDIR /opt/cord-api
 
-# Add wait-for utility to make waiting for db easier (see usage in docker-compose.yml)
-# From https://github.com/eficode/wait-for/pull/9 (has fixes for env handling)
-ADD https://raw.githubusercontent.com/eficode/wait-for/96511d65c6578d4866591283fdec6e2fba7e6770/wait-for /usr/local/bin/wait-for
-RUN chmod +x /usr/local/bin/wait-for
+LABEL org.opencontainers.image.title="CORD API"
+LABEL org.opencontainers.image.vendor="Seed Company"
+LABEL org.opencontainers.image.source=https://github.com/SeedCompany/cord-api-v3
+LABEL org.opencontainers.image.licenses="MIT"
+
+WORKDIR /opt/cord-api
 
 RUN apk add --no-cache jq
 

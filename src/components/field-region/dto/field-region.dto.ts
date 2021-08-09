@@ -1,7 +1,9 @@
-import { Field, ObjectType } from '@nestjs/graphql';
+import { ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
+  DbLabel,
   ID,
+  NameField,
   Resource,
   Secured,
   SecuredProperty,
@@ -16,7 +18,8 @@ export class FieldRegion extends Resource {
   static readonly Props = keysOf<FieldRegion>();
   static readonly SecuredProps = keysOf<SecuredProps<FieldRegion>>();
 
-  @Field()
+  @NameField()
+  @DbLabel('FieldRegionName')
   readonly name: SecuredString;
 
   readonly fieldZone: Secured<ID>;

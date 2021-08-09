@@ -5,12 +5,9 @@ export class NotImplementedException extends ServerException {
     super(message ?? 'Not implemented', previous);
   }
 
-  /**
-   * Used to mark that variables will be used eventually, but are not right now.
-   * Helps make the linter happy.
-   */
+  // Easy way to mark variables as used for eslint until implemented
   // eslint-disable-next-line @seedcompany/no-unused-vars
-  with(...unused: unknown[]) {
+  with(...unused: any[]) {
     return this;
   }
 }

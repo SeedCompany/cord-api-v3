@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { compact } from 'lodash';
-import { DateTime } from 'luxon';
 import {
   CalendarDate,
   DuplicateException,
@@ -20,7 +19,7 @@ import {
   OnIndex,
   UniquenessError,
 } from '../../core';
-import { runListQuery } from '../../core/database/results';
+import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
 import { EngagementService, EngagementStatus } from '../engagement';
@@ -104,8 +103,6 @@ export class LanguageService {
   }
 
   async create(input: CreateLanguage, session: Session): Promise<Language> {
-    const createdAt = DateTime.local();
-
     await this.authorizationService.checkPower(Powers.CreateLanguage, session);
 
     await this.authorizationService.checkPower(
@@ -119,14 +116,16 @@ export class LanguageService {
         session
       );
 
-      const resultLanguage = await this.repo.create(input, session);
+      // create language and connect ethnologueLanguage to language
+      const resultLanguage = await this.repo.create(
+        input,
+        ethnologueId,
+        session
+      );
 
       if (!resultLanguage) {
         throw new ServerException('failed to create language');
       }
-      // connect ethnologueLanguage to language
-
-      await this.repo.connect(resultLanguage.id, ethnologueId, createdAt);
 
       await this.authorizationService.processNewBaseNode(
         Language,
@@ -239,12 +238,11 @@ export class LanguageService {
   }
 
   async list(
-    { filter, ...input }: LanguageListInput,
+    input: LanguageListInput,
     session: Session
   ): Promise<LanguageListOutput> {
-    const query = this.repo.list({ filter, ...input }, session);
-
-    return await runListQuery(query, input, (id) => this.readOne(id, session));
+    const results = await this.repo.list(input, session);
+    return await mapListResults(results, (id) => this.readOne(id, session));
   }
 
   async listLocations(

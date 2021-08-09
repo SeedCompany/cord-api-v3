@@ -1,8 +1,6 @@
-import { stripIndent } from 'common-tags';
 import { node, Query, relation } from 'cypher-query-builder';
 import { ID, Many, Session } from '../../../common';
-import { collect } from './cypher-functions';
-import { mapping } from './mapping';
+import { apoc, collect, listConcat, merge } from './cypher-functions';
 
 export const requestingUser = (session: Session) =>
   node('requestingUser', 'User', {
@@ -20,37 +18,6 @@ export const permissionsOfNode = (nodeLabel: Many<string>) => [
   relation('out', 'permsOfBaseNode', 'baseNode'),
   node('node', nodeLabel),
 ];
-
-/**
- * @deprecated use matchProps instead. It returns props as an object instead of the weird list.
- */
-export const matchPropList = (
-  query: Query,
-  changeset?: ID,
-  nodeName = 'node'
-) =>
-  query
-    .match([
-      node(nodeName),
-      relation('out', 'r', { active: !changeset }),
-      node('props', 'Property'),
-      ...(changeset
-        ? [
-            relation('in', '', 'changeset', { active: true }),
-            node('changesetNode', 'Changeset', { id: changeset }),
-          ]
-        : []),
-    ])
-    .with([
-      collect(
-        mapping({
-          value: 'props.value',
-          property: 'type(r)',
-        }),
-        'propList'
-      ),
-      nodeName,
-    ]);
 
 export interface MatchPropsOptions {
   // The node var to pull properties from
@@ -72,18 +39,17 @@ export interface MatchPropsOptions {
  * This is executed in a sub-query so other variables in scope are passed-through
  * transparently.
  */
-export const matchProps =
-  ({
+export const matchProps = (options: MatchPropsOptions = {}) => {
+  const {
     nodeName = 'node',
     outputVar = 'props',
     optional = false,
     changeset,
     excludeBaseProps = false,
-  }: MatchPropsOptions = {}) =>
-  (query: Query) =>
-    query.subQuery((sub) =>
+  } = options;
+  return (query: Query) =>
+    query.comment`matchProps(${nodeName})`.subQuery(nodeName, (sub) =>
       sub
-        .with(nodeName)
         .match(
           [
             node(nodeName),
@@ -100,12 +66,13 @@ export const matchProps =
             optional,
           }
         )
-        .return([
-          stripIndent`
-          apoc.map.mergeList(
-            ${excludeBaseProps ? '' : `[${nodeName}] + `}collect(
-              apoc.map.fromValues([type(r), prop.value])
+        .return(
+          merge(
+            listConcat(
+              `[${excludeBaseProps ? '' : nodeName}]`,
+              collect(apoc.map.fromValues(['type(r)', 'prop.value']))
             )
-          ) as ${outputVar}`,
-        ])
+          ).as(outputVar)
+        )
     );
+};

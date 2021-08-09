@@ -5,7 +5,6 @@ import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
-  generateId,
   ID,
   NotFoundException,
   ServerException,
@@ -26,11 +25,16 @@ import {
   UniquenessError,
 } from '../../core';
 import {
-  calculateTotalAndPaginateList,
-  deleteProperties,
+  collect,
+  createNode,
+  createProperty,
+  deactivateProperty,
   matchProps,
+  merge,
+  paginate,
   permissionsOfNode,
   requestingUser,
+  sorting,
 } from '../../core/database/query';
 import { Role } from '../authorization';
 import {
@@ -77,10 +81,33 @@ export class UserRepository extends DtoRepository(User) {
 
   private readonly roleProperties = (roles?: Role[]) =>
     (roles || []).flatMap((role) =>
-      property('roles', role, 'user', `role${role}`)
+      property('roles', role, 'node', `role${role}`)
     );
 
   async create(input: CreatePerson) {
+    const initialProps = {
+      ...(input.email ? { email: input.email } : {}), // omit email prop/relation if it's undefined
+      realFirstName: input.realFirstName,
+      realLastName: input.realLastName,
+      displayFirstName: input.displayFirstName,
+      displayLastName: input.displayLastName,
+      phone: input.phone,
+      timezone: input.timezone,
+      about: input.about,
+      status: input.status,
+      title: input.title,
+      canDelete: true,
+    };
+
+    const query = this.db
+      .query()
+      .apply(await createNode(User, { initialProps }))
+      .apply((q) =>
+        input.roles && input.roles.length > 0
+          ? q.create([...this.roleProperties(input.roles)])
+          : q
+      )
+      .return<{ id: ID }>('node.id as id');
     await this.pg.init();
     const id = await generateId();
     const createdAt = DateTime.local();
@@ -121,6 +148,140 @@ export class UserRepository extends DtoRepository(User) {
       }
       throw new ServerException('Failed to create user', e);
     }
+
+    if (!result) {
+      throw new ServerException('Failed to create user');
+    }
+    const id = result.id;
+    // attach user to publicSG
+    const attachUserToPublicSg = await this.db
+      .query()
+      .match(node('user', 'User', { id }))
+      .match(node('publicSg', 'PublicSecurityGroup'))
+      .create([node('publicSg'), relation('out', '', 'member'), node('user')])
+      .create([
+        node('publicSg'),
+        relation('out', '', 'permission'),
+        node('', 'Permission', {
+          property: 'displayFirstName',
+          read: true,
+        }),
+        relation('out', '', 'baseNode'),
+        node('user'),
+      ])
+      .create([
+        node('publicSg'),
+        relation('out', '', 'permission'),
+        node('', 'Permission', {
+          property: 'displayLastName',
+          read: true,
+        }),
+        relation('out', '', 'baseNode'),
+        node('user'),
+      ])
+      .return('user')
+      .first();
+    if (!attachUserToPublicSg) {
+      this.logger.error('failed to attach user to public securityGroup');
+    }
+    if (this.config.defaultOrg.id) {
+      const attachToOrgPublicSg = await this.db
+        .query()
+        .match(node('user', 'User', { id }))
+        .match([
+          node('orgPublicSg', 'OrgPublicSecurityGroup'),
+          relation('out', '', 'organization'),
+          node('defaultOrg', 'Organization', {
+            id: this.config.defaultOrg.id,
+          }),
+        ])
+        .create([
+          node('user'),
+          relation('in', '', 'member'),
+          node('orgPublicSg'),
+        ])
+        .run();
+      if (attachToOrgPublicSg) {
+        //
+      }
+    }
+    const client = await this.pg.pool.connect();
+    // await client.query(`select * from public.people_data`);
+    const personHstore = this.pg.convertObjectToHstore({
+      id: 0,
+      public_first_name: input.displayFirstName,
+      public_last_name: input.displayLastName,
+      private_first_name: input.realFirstName,
+      private_last_name: input.realLastName,
+      time_zone: input.timezone,
+    });
+    const orgHstore = this.pg.convertObjectToHstore({
+      id: 0,
+      name: 'defaultOrg',
+    });
+    const userHstore = this.pg.convertObjectToHstore({
+      id: 0,
+      person: 0,
+      email: input.email,
+      password: 'password',
+      owning_org: 0,
+    });
+    console.log(personHstore);
+    await client.query(
+      `select public.create(0,'public.people_data'::text,$1 ,2,1,1,1); `,
+      [personHstore]
+    );
+    await client.query(
+      `select public.create(0,'public.organizations_data', $1, 2,1,1,1)`,
+      [orgHstore]
+    );
+    await client.query(
+      `select public.create(0,'public.users_data'::text,$1 ,2,1,1,1); `,
+      [userHstore]
+    );
+
+    client.release();
+    return result.id;
+  }
+    // const id = await generateId();
+    // const createdAt = DateTime.local();
+    // const query = this.db
+    //   .query()
+    //   .create([
+    //     [
+    //       node('user', ['User', 'BaseNode'], {
+    //         id,
+    //         createdAt,
+    //       }),
+    //     ],
+    //     ...property('email', input.email, 'user', 'email', 'EmailAddress'),
+    //     ...property('realFirstName', input.realFirstName, 'user'),
+    //     ...property('realLastName', input.realLastName, 'user'),
+    //     ...property('displayFirstName', input.displayFirstName, 'user'),
+    //     ...property('displayLastName', input.displayLastName, 'user'),
+    //     ...property('phone', input.phone, 'user'),
+    //     ...property('timezone', input.timezone, 'user'),
+    //     ...property('about', input.about, 'user'),
+    //     ...property('status', input.status, 'user'),
+    //     ...this.roleProperties(input.roles),
+    //     ...property('title', input.title, 'user'),
+    //     ...property('canDelete', true, 'user'),
+    //   ])
+    //   .return('user.id as id')
+    //   .asResult<{ id: ID }>();
+    // let result;
+    // try {
+    //   result = await query.first();
+    // } catch (e) {
+    //   if (e instanceof UniquenessError && e.label === 'EmailAddress') {
+    //     throw new DuplicateException(
+    //       'person.email',
+    //       'Email address is already in use',
+    //       e
+    //     );
+    //   }
+    //   throw new ServerException('Failed to create user', e);
+    // }
 
     if (!result) {
       throw new ServerException('Failed to create user');
@@ -220,9 +381,7 @@ export class UserRepository extends DtoRepository(User) {
     const query = this.db
       .query()
       .match([node('node', 'User', { id })])
-      .apply(this.hydrate())
-      .return('dto')
-      .asResult<{ dto: UnsecuredDto<User> }>();
+      .apply(this.hydrate());
     const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find user', 'user.id');
@@ -237,54 +396,38 @@ export class UserRepository extends DtoRepository(User) {
     return result.dto;
   }
 
-  private hydrate() {
+  protected hydrate() {
     return (query: Query) =>
-      query.subQuery((sub) =>
-        sub
-          .with('node')
-          .optionalMatch([
-            node('node'),
-            relation('out', '', 'roles', { active: true }),
-            node('role', 'Property'),
-          ])
-          .apply(matchProps())
-          .return([
-            stripIndent`
-              apoc.map.merge(props, {
-                roles: collect(role.value)
-              }) as dto`,
-          ])
-      );
+      query
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'roles', { active: true }),
+          node('role', 'Property'),
+        ])
+        .apply(matchProps())
+        .return<{ dto: UnsecuredDto<User> }>(
+          merge({ email: null }, 'props', {
+            roles: collect('role.value'),
+          }).as('dto')
+        );
   }
 
   async updateEmail(
     user: User,
-    email: any,
-    createdAt: DateTime
+    email: string | null | undefined
   ): Promise<void> {
-    //Remove old emails and relations
     await this.db
       .query()
-      .match([node('node', ['User', 'BaseNode'], { id: user.id })])
-      .apply(deleteProperties(User, 'email'))
+      .matchNode('node', 'User', { id: user.id })
+      .apply(deactivateProperty({ resource: User, key: 'email' }))
+      .apply((q) =>
+        email
+          ? q.apply(
+              createProperty({ resource: User, key: 'email', value: email })
+            )
+          : q
+      )
       .return('*')
-      .run();
-
-    //Update email
-    await this.db
-      .query()
-      .match([node('user', ['User', 'BaseNode'], { id: user.id })])
-      .create([
-        node('user'),
-        relation('out', '', 'email', {
-          active: true,
-          createdAt,
-        }),
-        node('email', 'EmailAddress:Property', {
-          value: email,
-          createdAt,
-        }),
-      ])
       .run();
   }
 
@@ -320,7 +463,7 @@ export class UserRepository extends DtoRepository(User) {
       await this.db
         .query()
         .match([
-          node('user', ['User', 'BaseNode'], {
+          node('node', ['User', 'BaseNode'], {
             id: input.id,
           }),
         ])
@@ -343,11 +486,14 @@ export class UserRepository extends DtoRepository(User) {
     }
   }
 
-  list(input: UserListInput, session: Session) {
-    return this.db
+  async list(input: UserListInput, session: Session) {
+    const result = await this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode('User')])
-      .apply(calculateTotalAndPaginateList(User, input));
+      .apply(sorting(User, input))
+      .apply(paginate(input, this.hydrate()))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 
   async permissionsForListProp(prop: string, userId: ID, session: Session) {

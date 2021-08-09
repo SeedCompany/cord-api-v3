@@ -6,12 +6,10 @@ import {
   ServerException,
   Session,
   UnauthorizedException,
+  UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger, OnIndex } from '../../core';
-import {
-  parseBaseNodeProperties,
-  runListQuery,
-} from '../../core/database/results';
+import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import {
   CreateFieldRegion,
@@ -50,7 +48,7 @@ export class FieldRegionService {
   }
 
   async create(
-    { fieldZoneId, directorId, ...input }: CreateFieldRegion,
+    input: CreateFieldRegion,
     session: Session
   ): Promise<FieldRegion> {
     const checkName = await this.repo.checkName(input.name);
@@ -62,12 +60,7 @@ export class FieldRegionService {
       );
     }
 
-    const result = await this.repo.create(
-      session,
-      input.name,
-      directorId,
-      fieldZoneId
-    );
+    const result = await this.repo.create(input, session);
 
     if (!result) {
       throw new ServerException('failed to create field region');
@@ -91,33 +84,23 @@ export class FieldRegionService {
     });
 
     const result = await this.repo.readOne(id, session);
+    return await this.secure(result, session);
+  }
 
-    if (!result) {
-      throw new NotFoundException(
-        'Could not find field region',
-        'fieldRegion.id'
-      );
-    }
-
-    const secured = await this.authorizationService.secureProperties(
+  private async secure(
+    dto: UnsecuredDto<FieldRegion>,
+    session: Session
+  ): Promise<FieldRegion> {
+    const securedProps = await this.authorizationService.secureProperties(
       FieldRegion,
-      result.propList,
+      dto,
       session
     );
 
     return {
-      ...parseBaseNodeProperties(result.node),
-      ...secured,
-      director: {
-        ...secured.director,
-        value: result.directorId,
-      },
-      fieldZone: {
-        ...secured.fieldZone,
-        value: result.fieldZoneId,
-      },
-
-      canDelete: await this.repo.checkDeletePermission(id, session),
+      ...dto,
+      ...securedProps,
+      canDelete: await this.repo.checkDeletePermission(dto.id, session),
     };
   }
 
@@ -162,11 +145,10 @@ export class FieldRegionService {
   }
 
   async list(
-    { filter, ...input }: FieldRegionListInput,
+    input: FieldRegionListInput,
     session: Session
   ): Promise<FieldRegionListOutput> {
-    const query = this.repo.list({ filter, ...input }, session);
-
-    return await runListQuery(query, input, (id) => this.readOne(id, session));
+    const results = await this.repo.list(input, session);
+    return await mapListResults(results, (id) => this.readOne(id, session));
   }
 }
