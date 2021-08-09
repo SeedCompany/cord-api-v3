@@ -17,11 +17,25 @@ export class ExtractPnpFileOnUploadHandler {
       return;
     }
 
-    const summary = await this.extractor.extract(event.file);
-    if (!summary) {
-      return; // error already logged
+    const workbook = await this.extractor.readWorkbook(event.file);
+
+    const cumulative = this.extractor.extractCumulative(workbook, event.file);
+    if (cumulative) {
+      await this.repo.save(event.report, SummaryPeriod.Cumulative, cumulative);
     }
 
-    await this.repo.save(event.report, SummaryPeriod.Cumulative, summary);
+    const period = this.extractor.extractReportPeriod(workbook, event.file);
+    if (period) {
+      await this.repo.save(event.report, SummaryPeriod.ReportPeriod, period);
+    }
+
+    const fiscalYear = this.extractor.extractFiscalYear(workbook, event.file);
+    if (fiscalYear) {
+      await this.repo.save(
+        event.report,
+        SummaryPeriod.FiscalYearSoFar,
+        fiscalYear
+      );
+    }
   }
 }

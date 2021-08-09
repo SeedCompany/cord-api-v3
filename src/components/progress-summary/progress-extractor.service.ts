@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { read, utils, WorkBook } from 'xlsx';
+import { NotImplementedException } from '../../common';
 import { ILogger, Logger } from '../../core';
 import { FileService, FileVersion } from '../file';
-import { ProgressSummary } from './dto';
+import { ProgressSummary as Progress } from './dto';
 
 @Injectable()
 export class ProgressExtractor {
@@ -11,12 +12,7 @@ export class ProgressExtractor {
     @Logger('progress:extractor') private readonly logger: ILogger
   ) {}
 
-  async extract(file: FileVersion): Promise<ProgressSummary | null> {
-    const pnp = await this.downloadWorkbook(file);
-    return this.parseWorkbook(pnp, file);
-  }
-
-  private parseWorkbook(pnp: WorkBook, file: FileVersion) {
+  extractCumulative(pnp: WorkBook, file: FileVersion): Progress | null {
     // new standard 2020 version has new sheet "Harvest" which isolates relevant progress data
     const sheet = pnp.Sheets.Harvest ?? pnp.Sheets.Progress;
     if (!sheet) {
@@ -51,31 +47,46 @@ export class ProgressExtractor {
         }
       }
     } catch (e) {
-      this.logger.warning('Unable to parse summary data in pnp file', {
-        name: file.name,
-        id: file.id,
-        exception: e,
-      });
+      this.logger.warning(
+        'Unable to parse cumulative summary data in pnp file',
+        {
+          name: file.name,
+          id: file.id,
+          exception: e,
+        }
+      );
       return null;
     }
 
-    this.logger.warning('Unable to find summary data in pnp file', {
+    this.logger.warning('Unable to find cumulative summary data in pnp file', {
       name: file.name,
       id: file.id,
     });
     return null;
   }
 
-  private async downloadWorkbook(file: FileVersion) {
+  extractReportPeriod(pnp: WorkBook, file: FileVersion): Progress | null {
+    // TODO implement extraction
+    new NotImplementedException().with(pnp, file);
+    return null;
+  }
+
+  extractFiscalYear(pnp: WorkBook, file: FileVersion): Progress | null {
+    // TODO implement extraction
+    new NotImplementedException().with(pnp, file);
+    return null;
+  }
+
+  async readWorkbook(file: FileVersion) {
     const buffer = await this.files.downloadFileVersion(file.id);
     return read(buffer, { type: 'buffer' });
   }
 
-  private parseRawData(progressPlanned: string, progressActual: string) {
-    if (!progressPlanned || !progressActual) return null;
+  private parseRawData(planned: string, actual: string): Progress | null {
+    if (!planned || !actual) return null;
     return {
-      planned: parsePercent(progressPlanned),
-      actual: parsePercent(progressActual),
+      planned: parsePercent(planned),
+      actual: parsePercent(actual),
     };
   }
 }
