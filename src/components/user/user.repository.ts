@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { Id } from 'aws-sdk/clients/kinesisanalytics';
-import { stripIndent } from 'common-tags';
 import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
+  generateId,
   ID,
   NotFoundException,
   ServerException,
@@ -83,32 +82,57 @@ export class UserRepository extends DtoRepository(User) {
     (roles || []).flatMap((role) =>
       property('roles', role, 'node', `role${role}`)
     );
-
-  async create(input: CreatePerson) {
-    const initialProps = {
-      ...(input.email ? { email: input.email } : {}), // omit email prop/relation if it's undefined
-      realFirstName: input.realFirstName,
-      realLastName: input.realLastName,
-      displayFirstName: input.displayFirstName,
-      displayLastName: input.displayLastName,
-      phone: input.phone,
-      timezone: input.timezone,
-      about: input.about,
-      status: input.status,
-      title: input.title,
-      canDelete: true,
-    };
-
+  async readOne(id: ID) {
     const query = this.db
       .query()
-      .apply(await createNode(User, { initialProps }))
-      .apply((q) =>
-        input.roles && input.roles.length > 0
-          ? q.create([...this.roleProperties(input.roles)])
-          : q
-      )
-      .return<{ id: ID }>('node.id as id');
-    await this.pg.init();
+      .match([node('node', 'User', { id })])
+      .apply(this.hydrate())
+      .return('dto')
+      .asResult<{ dto: UnsecuredDto<User> }>();
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException('Could not find user', 'user.id');
+    }
+    // const client = await this.pg.pool.connect();
+    // let [pgPersonData, pgUserData] = await Promise.all([
+    //   client.query('select * from public.people_data where id = $1', [0]),
+    //   client.query(`select * from public.users_data where person = $1`, [0]),
+    // ]);
+    // let {
+    //   public_last_name: displayLastName,
+    //   public_first_name: displayFirstName,
+    //   private_first_name: realFirstName,
+    //   private_last_name: realLastName,
+    //   time_zone: timezone,
+    //   created_at: createdAt,
+    //   phone,
+    //   about,
+    //   status,
+    // } = pgPersonData.rows[0];
+
+    // let { email, password } = pgUserData.rows[0];
+    // client.release();
+    // return {
+    //   displayFirstName,
+    //   displayLastName,
+    //   realFirstName,
+    //   realLastName,
+    //   timezone,
+    //   id,
+    //   email,
+    //   password,
+    //   createdAt,
+    //   phone,
+    //   about,
+    //   status,
+    //   roles: null,
+    //   title: null,
+    // };
+    return result.dto;
+  }
+
+  async create(input: CreatePerson) {
+    // await this.pg.init();
     const id = await generateId();
     const createdAt = DateTime.local();
     const query = this.db
@@ -152,7 +176,6 @@ export class UserRepository extends DtoRepository(User) {
     if (!result) {
       throw new ServerException('Failed to create user');
     }
-    const id = result.id;
     // attach user to publicSG
     const attachUserToPublicSg = await this.db
       .query()
@@ -207,193 +230,46 @@ export class UserRepository extends DtoRepository(User) {
     }
     const client = await this.pg.pool.connect();
     // await client.query(`select * from public.people_data`);
-    const personHstore = this.pg.convertObjectToHstore({
-      id: 0,
-      public_first_name: input.displayFirstName,
-      public_last_name: input.displayLastName,
-      private_first_name: input.realFirstName,
-      private_last_name: input.realLastName,
-      time_zone: input.timezone,
-    });
-    const orgHstore = this.pg.convertObjectToHstore({
-      id: 0,
-      name: 'defaultOrg',
-    });
-    const userHstore = this.pg.convertObjectToHstore({
-      id: 0,
-      person: 0,
-      email: input.email,
-      password: 'password',
-      owning_org: 0,
-    });
-    console.log(personHstore);
+
     await client.query(
-      `select public.create(0,'public.people_data'::text,$1 ,2,1,1,1); `,
-      [personHstore]
+      `select public.create(0,'public.people_data',$1 ,2,1,1,1); `,
+      [
+        this.pg.convertObjectToHstore({
+          id: 1,
+          public_first_name: input.displayFirstName,
+          public_last_name: input.displayLastName,
+          private_first_name: input.realFirstName,
+          private_last_name: input.realLastName,
+          time_zone: input.timezone,
+          about: input.about,
+          phone: input.phone,
+        }),
+      ]
     );
+    // await client.query(
+    //   `select public.create(0,'public.organizations_data', $1, 2,1,1,1)`,
+    //   [
+    //     this.pg.convertObjectToHstore({
+    //       id: 1,
+    //       name: 'dOrg',
+    //     }),
+    //   ]
+    // );
     await client.query(
-      `select public.create(0,'public.organizations_data', $1, 2,1,1,1)`,
-      [orgHstore]
-    );
-    await client.query(
-      `select public.create(0,'public.users_data'::text,$1 ,2,1,1,1); `,
-      [userHstore]
+      `select public.create(0,'public.users_data',$1 ,2,1,1,1); `,
+      [
+        this.pg.convertObjectToHstore({
+          id: 1,
+          person: 1,
+          email: input.email,
+          password: 'password',
+          owning_org: 0,
+        }),
+      ]
     );
 
     client.release();
     return result.id;
-  }
-    // const id = await generateId();
-    // const createdAt = DateTime.local();
-    // const query = this.db
-    //   .query()
-    //   .create([
-    //     [
-    //       node('user', ['User', 'BaseNode'], {
-    //         id,
-    //         createdAt,
-    //       }),
-    //     ],
-    //     ...property('email', input.email, 'user', 'email', 'EmailAddress'),
-    //     ...property('realFirstName', input.realFirstName, 'user'),
-    //     ...property('realLastName', input.realLastName, 'user'),
-    //     ...property('displayFirstName', input.displayFirstName, 'user'),
-    //     ...property('displayLastName', input.displayLastName, 'user'),
-    //     ...property('phone', input.phone, 'user'),
-    //     ...property('timezone', input.timezone, 'user'),
-    //     ...property('about', input.about, 'user'),
-    //     ...property('status', input.status, 'user'),
-    //     ...this.roleProperties(input.roles),
-    //     ...property('title', input.title, 'user'),
-    //     ...property('canDelete', true, 'user'),
-    //   ])
-    //   .return('user.id as id')
-    //   .asResult<{ id: ID }>();
-    // let result;
-    // try {
-    //   result = await query.first();
-    // } catch (e) {
-    //   if (e instanceof UniquenessError && e.label === 'EmailAddress') {
-    //     throw new DuplicateException(
-    //       'person.email',
-    //       'Email address is already in use',
-    //       e
-    //     );
-    //   }
-    //   throw new ServerException('Failed to create user', e);
-    // }
-
-    if (!result) {
-      throw new ServerException('Failed to create user');
-    }
-    // attach user to publicSG
-    const attachUserToPublicSg = await this.db
-      .query()
-      .match(node('user', 'User', { id }))
-      .match(node('publicSg', 'PublicSecurityGroup'))
-      .create([node('publicSg'), relation('out', '', 'member'), node('user')])
-      .create([
-        node('publicSg'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property: 'displayFirstName',
-          read: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('user'),
-      ])
-      .create([
-        node('publicSg'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property: 'displayLastName',
-          read: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('user'),
-      ])
-      .return('user')
-      .first();
-    if (!attachUserToPublicSg) {
-      this.logger.error('failed to attach user to public securityGroup');
-    }
-    if (this.config.defaultOrg.id) {
-      const attachToOrgPublicSg = await this.db
-        .query()
-        .match(node('user', 'User', { id }))
-        .match([
-          node('orgPublicSg', 'OrgPublicSecurityGroup'),
-          relation('out', '', 'organization'),
-          node('defaultOrg', 'Organization', {
-            id: this.config.defaultOrg.id,
-          }),
-        ])
-        .create([
-          node('user'),
-          relation('in', '', 'member'),
-          node('orgPublicSg'),
-        ])
-        .run();
-      if (attachToOrgPublicSg) {
-        //
-      }
-    }
-    const client = await this.pg.pool.connect();
-    // await client.query(`select * from public.people_data`);
-    const personHstore = this.pg.convertObjectToHstore({
-      id: 0,
-      public_first_name: input.displayFirstName,
-      public_last_name: input.displayLastName,
-      private_first_name: input.realFirstName,
-      private_last_name: input.realLastName,
-      time_zone: input.timezone,
-    });
-    const orgHstore = this.pg.convertObjectToHstore({
-      id: 0,
-      name: 'defaultOrg',
-    });
-    const userHstore = this.pg.convertObjectToHstore({
-      id: 0,
-      person: 0,
-      email: input.email,
-      password: 'password',
-      owning_org: 0,
-    });
-    console.log(personHstore);
-    await client.query(
-      `select public.create(0,'public.people_data'::text,$1 ,2,1,1,1); `,
-      [personHstore]
-    );
-    await client.query(
-      `select public.create(0,'public.organizations_data', $1, 2,1,1,1)`,
-      [orgHstore]
-    );
-    await client.query(
-      `select public.create(0,'public.users_data'::text,$1 ,2,1,1,1); `,
-      [userHstore]
-    );
-
-    client.release();
-    return result.id;
-  }
-
-  async readOne(id: ID) {
-    const query = this.db
-      .query()
-      .match([node('node', 'User', { id })])
-      .apply(this.hydrate());
-    const result = await query.first();
-    if (!result) {
-      throw new NotFoundException('Could not find user', 'user.id');
-    }
-    const client = await this.pg.pool.connect();
-    const data = await client.query(
-      'select * from public.people_data where id = $1',
-      [0]
-    );
-    console.log(data.rows[0]);
-    client.release();
-    return result.dto;
   }
 
   protected hydrate() {

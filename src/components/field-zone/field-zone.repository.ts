@@ -2,20 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID, NotFoundException, Session, UnsecuredDto } from '../../common';
-import { DtoRepository, matchRequestingUser } from '../../core';
-import { generateId, ID, Session } from '../../common';
 import {
-  createBaseNode,
   DatabaseService,
   DtoRepository,
   matchRequestingUser,
 } from '../../core';
-import {
-  createBaseNode,
-  DatabaseService,
-  DtoRepository,
-  matchRequestingUser,
-} from '../../core';
+
 import {
   createNode,
   createRelationships,
@@ -26,9 +18,8 @@ import {
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
 import { PostgresService } from '../../core/postgres/postgres.service';
-import { FieldZone, FieldZoneListInput } from './dto';
+import { CreateFieldZone, FieldZone, FieldZoneListInput } from './dto';
 
 @Injectable()
 export class FieldZoneRepository extends DtoRepository(FieldZone) {
