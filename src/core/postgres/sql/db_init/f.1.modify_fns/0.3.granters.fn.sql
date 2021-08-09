@@ -7,6 +7,7 @@ security_schema_table text;
 rec1 record;
 rec2 record;
 rec3 record;
+rec4 record;
 global_access_level public.access_level;
 project_access_level public.access_level;
 -- change this to public.table_name after updating enum
@@ -14,6 +15,7 @@ base_table_name text;
 security_table_name text; 
 security_column_name text; 
 final_access_level public.access_level;
+materialized_view_name text;
 begin 
     
     if pToggleGranters = 0 then 
@@ -63,6 +65,10 @@ begin
                         end if;
                     end loop;
             end loop;
+            if pToggleGranters = 2 then 
+                materialized_view_name := replace(security_table_name, '_security', '_materialized_view');
+                execute format('refresh materialized view concurrently %I', materialized_view_name);
+            end if;
         end loop;
     end if;
     return 0;

@@ -1,3 +1,24 @@
+/*
+pPersonId => person using the function
+pTableName => table you are inserting the record into
+pRecord => hstore object 
+pToggleSecurity => 0,1,2 
+    0 - don't insert into security tables, 
+    1 - only update access level of columns after inserting, 
+    2 - update both access level and __is_cleared after inserting 
+pToggleMV => 0,1,2
+    0 - don't refresh materialized view, 
+    1 - refresh materialized view, 
+    2 - refresh materialized view concurrently
+pToggleHistory => 0,1
+    0 - don't insert into history tables, 
+    1 - insert into history tables
+pToggleGranters => 0,1,2
+    0 - don't refresh security tables or materialized views, 
+    1 - refresh security tables, 
+    2 - refresh security tables & materialized views
+*/
+
 create or replace function public.create(pPersonId int, pTableName text, 
 -- get record
 pRecord hstore,
