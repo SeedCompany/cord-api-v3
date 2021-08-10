@@ -57,13 +57,20 @@ export class ProductProgressService {
       otherRoles: scope.scopedRoles,
       sessionOrUserId: session,
     });
-    if (!perms.percentDone.canEdit) {
+    if (!perms.completed.canEdit) {
       throw new UnauthorizedException(
         `You do not have permission to update this product's progress`
       );
     }
 
-    const progress = await this.repo.update(input);
+    const progress = await this.repo.update({
+      ...input,
+      steps: input.steps.map((sp) => ({
+        step: sp.step,
+        // Handle BC change with field rename
+        completed: sp.completed ?? sp.percentDone ?? null,
+      })),
+    });
     return await this.secure(progress, session);
   }
 

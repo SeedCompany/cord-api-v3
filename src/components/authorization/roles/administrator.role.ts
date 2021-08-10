@@ -420,7 +420,7 @@ export const Administrator = new DbRole({
       __className: 'DbStepProgress',
       properties: [
         {
-          propertyName: 'percentDone', permission: { read, write },
+          propertyName: 'completed', permission: { read, write },
         }
       ],
       canDelete: false,

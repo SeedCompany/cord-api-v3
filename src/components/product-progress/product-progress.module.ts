@@ -7,12 +7,14 @@ import { ProductProgressRepository } from './product-progress.repository';
 import { ProductProgressResolver } from './product-progress.resolver';
 import { ProductProgressService } from './product-progress.service';
 import { ProgressReportConnectionResolver } from './progress-report-connection.resolver';
+import { StepProgressResolver } from './step-progress.resolver';
 
 @Module({
   imports: [ProductModule, PeriodicReportModule, AuthorizationModule],
   providers: [
     ProgressReportConnectionResolver,
     ProductProgressResolver,
+    StepProgressResolver,
     ProductConnectionResolver,
     ProductProgressService,
     ProductProgressRepository,

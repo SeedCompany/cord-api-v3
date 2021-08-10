@@ -430,7 +430,7 @@ export const ConsultantGlobal = new DbRole({
       __className: 'DbStepProgress',
       properties: [
         {
-          propertyName: 'percentDone', permission: { read },
+          propertyName: 'completed', permission: { read },
         }
       ],
       canDelete: false,
