@@ -70,7 +70,7 @@ describe('Project Security e2e', () => {
     describe.each`
       role                                      | globalCanList | projectCanList
       ${Role.Administrator}                     | ${true}       | ${true}
-      ${Role.Consultant}                        | ${false}      | ${false}
+      ${Role.Consultant}                        | ${false}      | ${true}
       ${Role.ConsultantManager}                 | ${true}       | ${true}
       ${Role.Controller}                        | ${true}       | ${true}
       ${Role.FieldOperationsDirector}           | ${true}       | ${true}
