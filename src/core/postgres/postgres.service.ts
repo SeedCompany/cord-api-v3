@@ -142,7 +142,7 @@ export class PostgresService {
       this.logger.info(schemaTableName);
       for (const { column_name } of columns.rows) {
         await client.query(
-          `select public.create(0, 'public.global_role_column_grants_data', $1,2,1,1,1)`,
+          `select public.create(0, 'public.global_role_column_grants', $1,2,1,1,1)`,
           [
             this.convertObjectToHstore({
               global_role: 0,
@@ -169,7 +169,7 @@ export class PostgresService {
           }),
         ]
       );
-      this.logger.info('global_role_memberships_data', { person });
+      this.logger.info('global_role_memberships', { person });
     }
 
     // PROJECTS

@@ -51,10 +51,10 @@ declare
 begin
     
 
-    for rec1 in (select global_role from public.global_role_memberships_data where person = p_person_id)loop 
+    for rec1 in (select global_role from public.global_role_memberships where person = p_person_id)loop 
     raise info 'globalfn: global_role: % | table_name: % | column_name: %', rec1.global_role, p_table_name, p_column_name;
 
-        select access_level from public.global_role_column_grants_data into temp_access_level where cast(table_name as text) = p_table_name and column_name = p_column_name and global_role = rec1.global_role;
+        select access_level from public.global_role_column_grants into temp_access_level where cast(table_name as text) = p_table_name and column_name = p_column_name and global_role = rec1.global_role;
 
         raise info 'table_name:% | column_name: % | access_level: %', p_table_name, p_column_name, temp_access_level;
 

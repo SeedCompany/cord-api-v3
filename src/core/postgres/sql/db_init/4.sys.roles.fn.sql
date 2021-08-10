@@ -61,14 +61,14 @@ begin
             AND global_roles_data.name = pRoleName;
         IF FOUND THEN
             SELECT global_role
-            FROM public.global_role_column_grants_data
+            FROM public.global_role_column_grants
             INTO vSysRoleId2
-            WHERE public.global_role_column_grants_data.global_role = vSysRoleId
-                AND public.global_role_column_grants_data.table_name = pTableName
-                AND public.global_role_column_grants_data.column_name = pColumnName
-                AND public.global_role_column_grants_data.access_level = pAccessLevel;
+            WHERE public.global_role_column_grants.global_role = vSysRoleId
+                AND public.global_role_column_grants.table_name = pTableName
+                AND public.global_role_column_grants.column_name = pColumnName
+                AND public.global_role_column_grants.access_level = pAccessLevel;
             IF NOT FOUND THEN
-                INSERT INTO public.global_role_column_grants_data("global_role", "table_name", "column_name", "access_level")
+                INSERT INTO public.global_role_column_grants("global_role", "table_name", "column_name", "access_level")
                 VALUES (vSysRoleId, pTableName, pColumnName, pAccessLevel);
                 vResponseCode := 0;
             ELSE
@@ -113,7 +113,7 @@ begin
             into vSysPersonId
             where users_data.email = pUserEmail;
             if found then
-                INSERT INTO public.global_role_memberships_data("person", "global_role")
+                INSERT INTO public.global_role_memberships("person", "global_role")
                 VALUES (vSysPersonId, vSysRoleId);
                 vResponseCode := 0;
             else

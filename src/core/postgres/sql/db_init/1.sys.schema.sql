@@ -86,7 +86,7 @@ DO $$ BEGIN
 		'public.education_by_person_data',
 		'public.education_entries_data',
 		'public.global_role_column_grants',
-		'public.global_role_memberships_data',
+		'public.global_role_memberships',
 		'public.global_role_table_permissions_data',
 		'public.global_roles_data',
 		'public.locations_data',
@@ -183,7 +183,7 @@ create table if not exists public.global_role_table_permissions_data(
     foreign key (global_role) references public.global_roles_data(id)
 );
 
-create table if not exists public.global_role_memberships_data (
+create table if not exists public.global_role_memberships (
     id serial primary key,
 	global_role int,
 	created_at timestamp not null default CURRENT_TIMESTAMP,
@@ -340,15 +340,15 @@ ALTER TABLE public.global_role_table_permissions_data ADD CONSTRAINT public_glob
 END IF; END; $$;
 
 DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'public_global_role_memberships_person_fk') THEN
-ALTER TABLE public.global_role_memberships_data ADD CONSTRAINT public_global_role_memberships_person_fk foreign key (person) references public.people_data(id);
+ALTER TABLE public.global_role_memberships ADD CONSTRAINT public_global_role_memberships_person_fk foreign key (person) references public.people_data(id);
 END IF; END; $$;
 
 DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'public_global_role_memberships_created_by_fk') THEN
-ALTER TABLE public.global_role_memberships_data ADD CONSTRAINT public_global_role_memberships_created_by_fk foreign key (created_by) references public.people_data(id);
+ALTER TABLE public.global_role_memberships ADD CONSTRAINT public_global_role_memberships_created_by_fk foreign key (created_by) references public.people_data(id);
 END IF; END; $$;
 
 DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'public_global_role_memberships_modified_by_fk') THEN
-ALTER TABLE public.global_role_memberships_data ADD CONSTRAINT public_global_role_memberships_modified_by_fk foreign key (modified_by) references people_data(id);
+ALTER TABLE public.global_role_memberships ADD CONSTRAINT public_global_role_memberships_modified_by_fk foreign key (modified_by) references people_data(id);
 END IF; END; $$;
 
 DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'public_locations_created_by_fk') THEN

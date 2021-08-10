@@ -47,7 +47,7 @@ begin
 -- check if person has "create" permission on table
     -- for rec1 in (select global_role from global_role_table_permissions_data where table_permission = 'Create' and table_name = pTableName) loop
     --     raise info 'rec1: %', rec1;
-    --     perform person from global_role_memberships_data where person = pPersonId and global_role = rec1.global_role;
+    --     perform person from global_role_memberships where person = pPersonId and global_role = rec1.global_role;
     --     if found then 
     --         permissionExists := true;
     --         exit;
@@ -98,8 +98,8 @@ begin
     if pTableName = 'public.projects_data' or 
     pTableName = 'public.project_member_roles_data' or
     pTableName = 'public.project_role_column_grants_data' or 
-    pTableName = 'public.global_role_column_grants_data' or 
-    pTableName = 'public.global_role_memberships_data' then 
+    pTableName = 'public.global_role_column_grants' or 
+    pTableName = 'public.global_role_memberships' then 
         perform public.granters_fn(pToggleGranters);
     end if;
     return 0;

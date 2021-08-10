@@ -33,7 +33,7 @@ export class AdminRepository {
     });
     await client.query(
       `select public.create(0,'public.people_data',$1 ,2,1,1,1); `,
-      ['\"id\" => \"2\",\"public_first_name\"=>\"rhuan\"']
+      ['"id" => "2","public_first_name"=>"rhuan"']
     );
     // // copying over tab data
     // const tabDataPath = path.join(
@@ -178,10 +178,10 @@ export class AdminRepository {
 
     // for (const row of users.rows) {
     //   await client.query(
-    //     `insert into public.global_role_memberships_data("person", "global_role") values($1, 0)`,
+    //     `insert into public.global_role_memberships("person", "global_role") values($1, 0)`,
     //     [row.person]
     //   );
-    //   this.logger.info('global_role_memberships_data', { person: row.person });
+    //   this.logger.info('global_role_memberships', { person: row.person });
     // }
     // this.logger.info('project queries');
     // //projects

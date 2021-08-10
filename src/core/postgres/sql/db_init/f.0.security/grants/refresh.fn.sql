@@ -1,5 +1,5 @@
 -- trigger function for projects_data,project_member_roles_data, project_role_column_grants_data, 
--- global_role_memberships_data, global_role_grants_data (on insert update or delete),
+-- global_role_memberships, global_role_grants_data (on insert update or delete),
 -- The great thing about this approach is we can use the same trigger function for insert,update,delete for all the tables 
 
 -- create or replace function public.gt_granters_iud_security_update_grant_columns()
@@ -108,8 +108,8 @@
 
 -- select public.create_refresh_triggers('public','project_member_roles_data');
 -- select public.create_refresh_triggers('public', 'project_role_column_grants_data');
--- select public.create_refresh_triggers('public', 'global_role_column_grants_data');
--- select public.create_refresh_triggers('public', 'global_role_memberships_data');
+-- select public.create_refresh_triggers('public', 'global_role_column_grants');
+-- select public.create_refresh_triggers('public', 'global_role_memberships');
 -- select public.create_refresh_triggers('public', 'projects_data');
 
  

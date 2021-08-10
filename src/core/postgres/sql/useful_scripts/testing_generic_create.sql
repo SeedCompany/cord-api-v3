@@ -17,7 +17,7 @@ select public.create(0,'public.global_roles_data','
 "org"=>"0"
 ',2,1,1,1); 
 
-select public.create(0,'public.global_role_column_grants_data','
+select public.create(0,'public.global_role_column_grants','
 "id" => "0",
 "column_name"=>"created_by",
 "table_name"=>"public.organizations_data",
@@ -25,7 +25,7 @@ select public.create(0,'public.global_role_column_grants_data','
 "global_role"=>"0"
 ',2,1,1,1); 
 
-select public.create(0,'public.global_role_memberships_data','
+select public.create(0,'public.global_role_memberships','
 "id" => "0",
 "global_role"=>"0",
 "person"=>"0"
