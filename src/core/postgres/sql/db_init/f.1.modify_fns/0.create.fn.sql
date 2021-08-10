@@ -90,12 +90,11 @@ begin
     -- might need an entirely different fn for public.people_data
     if pTableName = 'public.people_data' then 
         perform public.people_security_fn(record_id, pToggleSecurity, pToggleMV);
-    else 
+    elsif pTableName like '%_data' then
         perform public.security_fn(pTableName, record_id, pToggleSecurity, pToggleMV); 
-    end if;
-    perform public.mv_fn(pTableName, pToggleMV);
-    perform public.history_fn(pTableName, pToggleHistory, pRecord);
-    if pTableName = 'public.projects_data' or 
+        perform public.mv_fn(pTableName, pToggleMV);
+        perform public.history_fn(pTableName, pToggleHistory, pRecord);
+    elsif pTableName = 'public.projects_data' or 
     pTableName = 'public.project_member_roles_data' or
     pTableName = 'public.project_role_column_grants_data' or 
     pTableName = 'public.global_role_column_grants' or 
