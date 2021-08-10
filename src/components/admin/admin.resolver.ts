@@ -19,4 +19,18 @@ export class AdminResolver {
     await this.service.fastInserts();
     return true;
   }
+  @Mutation(() => Boolean, {
+    description: 'Create postgres schemas',
+  })
+  async pgInit() {
+    await this.service.pgInit();
+    return true;
+  }
+  @Mutation(() => Boolean, {
+    description: 'Run loadTestData script',
+  })
+  async loadTestData() {
+    await this.service.loadTestData();
+    return true;
+  }
 }

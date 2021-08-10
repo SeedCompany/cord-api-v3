@@ -161,7 +161,7 @@ export class PostgresService {
 
     for (const { person } of users.rows) {
       await client.query(
-        `select public.create(0, 'public.global_memberships_data', $1,2,1,1,1)`,
+        `select public.create(0, 'public.global_role_memberships', $1,2,1,1,1)`,
         [
           this.convertObjectToHstore({
             global_role: 0,
@@ -174,7 +174,7 @@ export class PostgresService {
 
     // PROJECTS
     await client.query(
-      `select public.create(0, 'public.global_memberships_data', $1,2,1,1,1)`,
+      `select public.create(0, 'public.projects_data', $1,2,1,1,1)`,
       [
         this.convertObjectToHstore({
           id: 0,
@@ -184,7 +184,7 @@ export class PostgresService {
     );
     // LANGUAGES
     await client.query(
-      `select public.create(0,'sil.table_of_languages, $1, 2,1,1,1`,
+      `select public.create(0,'sil.table_of_languages', $1, 2,1,1,1)`,
       [
         this.convertObjectToHstore({
           id: 0,
@@ -194,14 +194,17 @@ export class PostgresService {
       ]
     );
 
-    await client.query(`select public.create(0,'sc.languages', $1,2,1,1,1)`, [
-      this.convertObjectToHstore({
-        id: 0,
-        display_name: 'texan',
-        name: 'texan',
-        sensitivity: 'Medium',
-      }),
-    ]);
+    await client.query(
+      `select public.create(0,'sc.languages_data', $1,2,1,1,1)`,
+      [
+        this.convertObjectToHstore({
+          id: 0,
+          display_name: 'texan',
+          name: 'texan',
+          sensitivity: 'Medium',
+        }),
+      ]
+    );
 
     // LOCATIONS
     await client.query(

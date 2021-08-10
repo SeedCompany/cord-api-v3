@@ -20,6 +20,14 @@ export class AdminRepository {
     @Logger('admin:repository') private readonly logger: ILogger
   ) {}
 
+  async pgInit() {
+    await this.pg.init();
+  }
+
+  async loadTestData() {
+    await this.pg.loadTestData();
+  }
+
   async loadData() {
     const pool = this.pg.pool;
     this.logger.info('pool info', {
