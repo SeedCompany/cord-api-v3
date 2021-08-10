@@ -1,5 +1,4 @@
 import { Connection } from 'cypher-query-builder';
-import * as faker from 'faker';
 import { CalendarDate } from '../../src/common';
 import { Powers } from '../../src/components/authorization/dto/powers';
 import { PartnerType } from '../../src/components/partner';
@@ -13,39 +12,32 @@ import {
   createSession,
   createTestApp,
   listPartners,
-  login,
   Raw,
+  registerUser,
   registerUserWithPower,
+  runInIsolatedSession,
   TestApp,
 } from '../utility';
 import { resetDatabase } from '../utility/reset-database';
 
-describe('Project Security e2e', () => {
+describe('Partner Security e2e', () => {
   let app: TestApp;
   let db: Connection;
-  let email: string;
-  let password: string;
   let testProject: Raw<Project>;
 
   beforeAll(async () => {
     app = await createTestApp();
     db = app.get(Connection);
-    email = faker.internet.email();
-    password = faker.internet.password();
     await createSession(app);
-    await registerUserWithPower(
-      app,
-      [
-        Powers.CreateProject,
-        Powers.CreateLanguage,
-        Powers.CreateLanguageEngagement,
-        Powers.CreateEthnologueLanguage,
-        Powers.CreateOrganization,
-        Powers.CreatePartner,
-        Powers.CreatePartnership,
-      ],
-      { email: email, password: password }
-    );
+    await registerUserWithPower(app, [
+      Powers.CreateProject,
+      Powers.CreateLanguage,
+      Powers.CreateLanguageEngagement,
+      Powers.CreateEthnologueLanguage,
+      Powers.CreateOrganization,
+      Powers.CreatePartner,
+      Powers.CreatePartnership,
+    ]);
     testProject = await createProject(app);
     const org = await createOrganization(app);
     const partnerWithProject = await createPartner(app, {
@@ -89,8 +81,10 @@ describe('Project Security e2e', () => {
       ${Role.Translator}                        | ${false}      | ${false}
     `('$role', ({ role, globalCanList, projectCanList }) => {
       it('Global canList', async () => {
-        await registerUserWithPower(app, [], { roles: role });
-        const read = await listPartners(app);
+        const read = await runInIsolatedSession(app, async () => {
+          await registerUser(app, { roles: role });
+          return await listPartners(app);
+        });
         if (!globalCanList) {
           expect(read).toHaveLength(0);
         } else {
@@ -99,14 +93,11 @@ describe('Project Security e2e', () => {
       });
 
       it('Project canList', async () => {
-        const userEmail = faker.internet.email();
-        const userPassword = faker.internet.password();
-        const user = await registerUserWithPower(app, [], {
-          email: userEmail,
-          password: userPassword,
-          roles: role,
+        const user = await runInIsolatedSession(app, async () => {
+          return await registerUser(app, {
+            roles: [role],
+          });
         });
-        await login(app, { email, password });
         const org1 = await createOrganization(app);
         await createPartner(app, {
           organizationId: org1.id,
@@ -120,8 +111,9 @@ describe('Project Security e2e', () => {
           roles: role,
           userId: user.id,
         });
-        await login(app, { email: userEmail, password: userPassword });
-        const read = await listPartners(app);
+        const read = await user.runAs(() => {
+          return listPartners(app);
+        });
         if (!projectCanList) {
           expect(read).toHaveLength(0);
         } else {
