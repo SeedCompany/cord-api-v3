@@ -1,13 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { Node, node, relation } from 'cypher-query-builder';
+import { isNull, Node, node, relation } from 'cypher-query-builder';
 import { ID } from '../../common';
 import { DtoRepository } from '../../core';
 import { ProgressReport } from '../periodic-report/dto';
-import { ProgressSummary } from './dto';
+import { ProgressSummary, SummaryPeriod } from './dto';
 
 @Injectable()
 export class ProgressSummaryRepository extends DtoRepository(ProgressSummary) {
-  async readOne(reportId: ID): Promise<ProgressSummary | undefined> {
+  async readOne(
+    reportId: ID,
+    period: SummaryPeriod
+  ): Promise<ProgressSummary | undefined> {
     const result = await this.db
       .query()
       .match([
@@ -15,20 +18,32 @@ export class ProgressSummaryRepository extends DtoRepository(ProgressSummary) {
         relation('out', '', 'summary', { active: true }),
         node('ps', 'ProgressSummary'),
       ])
-      .return('ps as summary')
-      .asResult<{ summary: Node<ProgressSummary> }>()
+      .where({
+        ps: [
+          { period },
+          // Handle BC with previous schema that only had cumulative without period specification
+          ...(period === SummaryPeriod.Cumulative
+            ? [{ period: isNull() }]
+            : []),
+        ],
+      })
+      .return<{ summary: Node<ProgressSummary> }>('ps as summary')
       .first();
     return result?.summary.properties;
   }
 
-  async save(report: ProgressReport, data: ProgressSummary) {
+  async save(
+    report: ProgressReport,
+    period: SummaryPeriod,
+    data: ProgressSummary
+  ) {
     await this.db
       .query()
       .matchNode('pr', 'ProgressReport', { id: report.id })
       .merge([
         node('pr'),
         relation('out', '', 'summary', { active: true }),
-        node('summary', 'ProgressSummary'),
+        node('summary', 'ProgressSummary', { period }),
       ])
       .setValues({ summary: data })
       .run();
