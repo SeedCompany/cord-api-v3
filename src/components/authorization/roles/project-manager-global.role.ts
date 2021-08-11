@@ -316,6 +316,8 @@ export const ProjectManagerGlobal = new DbRole({
         { propertyName: 'scriptureReferencesOverride', permission: { read, write, }, },
         { propertyName: 'isOverriding', permission: { read, write, }, },
         { propertyName: 'describeCompletion', permission: { read, write, }, },
+        { propertyName: 'progressStepMeasurement', permission: { read, write, }, },
+        { propertyName: 'progressTarget', permission: { read, write, }, },
       ],
       canDelete: false,
     }),
