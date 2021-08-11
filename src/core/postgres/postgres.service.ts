@@ -78,9 +78,16 @@ export class PostgresService {
     console.log(string);
     return string;
   }
-  async loadTestData() {
+  async loadTestDataUsingGenericCreate() {
+    const genericFnsPath = path.join(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'src/core/postgres/sql/generic_fns_approach'
+    );
     const client = await this.pool.connect();
-
+    await this.executeSQLFiles(client, genericFnsPath);
     // PEOPLE, ORGS, USERS
 
     await client.query(
