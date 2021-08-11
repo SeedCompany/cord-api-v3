@@ -84,7 +84,7 @@ export class PostgresService {
     // PEOPLE, ORGS, USERS
 
     await client.query(
-      `select public.create(0,'public.people_data',$1 ,2,1,1,1); `,
+      `select public.create(0,'public.people_data',$1 ,2,1,1,2); `,
       [
         this.convertObjectToHstore({
           id: 0,
@@ -95,7 +95,7 @@ export class PostgresService {
     );
 
     await client.query(
-      `select public.create(0,'public.organizations_data', $1, 2,1,1,1);`,
+      `select public.create(0,'public.organizations_data', $1, 2,1,1,2);`,
       [
         this.convertObjectToHstore({
           id: 0,
@@ -105,7 +105,7 @@ export class PostgresService {
     );
 
     await client.query(
-      `select public.create(0,'public.users_data', $1, 2,1,1,1);`,
+      `select public.create(0,'public.users_data', $1, 2,1,1,2);`,
       [
         this.convertObjectToHstore({
           id: 0,
@@ -118,7 +118,7 @@ export class PostgresService {
     );
 
     await client.query(
-      `select public.create(0,'public.global_roles_data', $1, 2,1,1,1);`,
+      `select public.create(0,'public.global_roles_data', $1, 2,1,1,2);`,
       [
         this.convertObjectToHstore({
           id: 0,
@@ -142,7 +142,7 @@ export class PostgresService {
       this.logger.info(schemaTableName);
       for (const { column_name } of columns.rows) {
         await client.query(
-          `select public.create(0, 'public.global_role_column_grants', $1,2,1,1,1)`,
+          `select public.create(0, 'public.global_role_column_grants', $1,2,1,1,2)`,
           [
             this.convertObjectToHstore({
               global_role: 0,
@@ -161,7 +161,7 @@ export class PostgresService {
 
     for (const { person } of users.rows) {
       await client.query(
-        `select public.create(0, 'public.global_role_memberships', $1,2,1,1,1)`,
+        `select public.create(0, 'public.global_role_memberships', $1,2,1,1,2)`,
         [
           this.convertObjectToHstore({
             global_role: 0,
@@ -174,7 +174,7 @@ export class PostgresService {
 
     // PROJECTS
     await client.query(
-      `select public.create(0, 'public.projects_data', $1,2,1,1,1)`,
+      `select public.create(0, 'public.projects_data', $1,2,1,1,2)`,
       [
         this.convertObjectToHstore({
           id: 0,
@@ -184,7 +184,7 @@ export class PostgresService {
     );
     // LANGUAGES
     await client.query(
-      `select public.create(0,'sil.table_of_languages', $1, 2,1,1,1)`,
+      `select public.create(0,'sil.table_of_languages', $1, 2,1,1,2)`,
       [
         this.convertObjectToHstore({
           id: 0,
@@ -195,7 +195,7 @@ export class PostgresService {
     );
 
     await client.query(
-      `select public.create(0,'sc.languages_data', $1,2,1,1,1)`,
+      `select public.create(0,'sc.languages_data', $1,2,1,1,2)`,
       [
         this.convertObjectToHstore({
           id: 0,
@@ -208,7 +208,7 @@ export class PostgresService {
 
     // LOCATIONS
     await client.query(
-      `select public.create(0,'public.locations_data', $1,2,1,1,1)`,
+      `select public.create(0,'public.locations_data', $1,2,1,1,2)`,
       [
         this.convertObjectToHstore({
           id: 0,

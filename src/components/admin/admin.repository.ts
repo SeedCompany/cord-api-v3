@@ -25,7 +25,10 @@ export class AdminRepository {
   }
 
   async loadTestData() {
+    // 1.6s without refreshing mv concurrently
+    console.time();
     await this.pg.loadTestData();
+    console.timeEnd();
   }
 
   async loadData() {

@@ -12,7 +12,7 @@ security_table_name text;
 begin
     permissionExists := false; 
 -- check if person has "delete" permission on table
-    for rec1 in (select global_role from global_role_table_permissions_data where table_permission = 'Delete' and table_name = pTableName) loop
+    for rec1 in (select global_role from global_role_table_permissions where table_permission = 'Delete' and table_name = pTableName) loop
         raise info 'rec1: %', rec1;
         perform person from global_role_memberships where person = pPersonId and global_role = rec1.global_role;
         if found then 

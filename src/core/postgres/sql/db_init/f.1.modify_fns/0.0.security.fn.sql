@@ -112,7 +112,7 @@ begin
             if pToggleMV = 1 then
                 execute format('refresh materialized view %I.%I', split_part(pSecurityTableName, '.', 1), replace(split_part(pSecurityTableName, '.', 2), '_security', '_materialized_view'));
             elsif pToggleMV = 2 then 
-                execute format('refresh materialized view %I.%I concurrently', split_part(pSecurityTableName, '.', 1), replace(split_part(pSecurityTableName, '.', 2), '_security', '_materialized_view'));
+                execute format('refresh materialized view concurrently %I.%I', split_part(pSecurityTableName, '.', 1), replace(split_part(pSecurityTableName, '.', 2), '_security', '_materialized_view'));
             end if;
         end if;
     end loop; 
@@ -151,7 +151,7 @@ begin
             if pToggleMV = 1 then
                 execute format('refresh materialized view %I.%I', split_part(pSecurityTableName, '.', 1), replace(split_part(pSecurityTableName, '.', 2), '_security', '_materialized_view'));
             elsif pToggleMV = 2 then 
-                execute format('refresh materialized view %I.%I concurrently', split_part(pSecurityTableName, '.', 1), replace(split_part(pSecurityTableName, '.', 2), '_security', '_materialized_view'));
+                execute format('refresh materialized view concurrently %I.%I', split_part(pSecurityTableName, '.', 1), replace(split_part(pSecurityTableName, '.', 2), '_security', '_materialized_view'));
             end if;
         end if;    
     end if; 

@@ -16,7 +16,8 @@ pToggleHistory => 0,1
 pToggleGranters => 0,1,2
     0 - don't refresh security tables or materialized views, 
     1 - refresh security tables, 
-    2 - refresh security tables & materialized views
+    2 - refresh security tables & materialized views 
+    3 - refresh security tables & materialized views concurrently
 */
 
 create or replace function public.create(pPersonId int, pTableName text, 
@@ -45,7 +46,7 @@ record_id int;
 begin
     permissionExists := false; 
 -- check if person has "create" permission on table
-    -- for rec1 in (select global_role from global_role_table_permissions_data where table_permission = 'Create' and table_name = pTableName) loop
+    -- for rec1 in (select global_role from global_role_table_permissions where table_permission = 'Create' and table_name = pTableName) loop
     --     raise info 'rec1: %', rec1;
     --     perform person from global_role_memberships where person = pPersonId and global_role = rec1.global_role;
     --     if found then 

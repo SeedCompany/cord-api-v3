@@ -43,7 +43,7 @@ begin
 
         execute format(materialized_view_string);
         -- https://stackoverflow.com/questions/41803781/refresh-materialized-views-with-concurrency/41804361
-        -- execute format('CREATE UNIQUE INDEX ON ' || materialized_view_name || '(__id,__person_id)');
+        execute format('CREATE UNIQUE INDEX ON ' || materialized_view_name || '(__id,__person_id)');
 
 	end loop;
 	raise info 'DONE';

@@ -65,9 +65,11 @@ begin
                         end if;
                     end loop;
             end loop;
+            materialized_view_name := replace(security_table_name, '_security', '_materialized_view');
             if pToggleGranters = 2 then 
-                materialized_view_name := replace(security_table_name, '_security', '_materialized_view');
-                execute format('refresh materialized view concurrently %I', materialized_view_name);
+                execute format('refresh materialized view %I.%I', split_part(materialized_view_name, '.', 1), split_part(materialized_view_name, '.', 2));
+            elsif pToggleGranters = 3 then
+                execute format('refresh materialized view concurrently %I.%I', split_part(materialized_view_name, '.', 1), split_part(materialized_view_name, '.', 2));
             end if;
         end loop;
     end if;
