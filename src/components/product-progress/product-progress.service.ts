@@ -1,5 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { ID, Session, UnauthorizedException } from '../../common';
+import {
+  ID,
+  InputException,
+  Session,
+  UnauthorizedException,
+} from '../../common';
 import { AuthorizationService } from '../authorization/authorization.service';
 import {
   ProductProgress,
@@ -57,13 +62,30 @@ export class ProductProgressService {
       otherRoles: scope.scopedRoles,
       sessionOrUserId: session,
     });
-    if (!perms.percentDone.canEdit) {
+    if (!perms.completed.canEdit) {
       throw new UnauthorizedException(
         `You do not have permission to update this product's progress`
       );
     }
 
-    const progress = await this.repo.update(input);
+    const cleanedInput = {
+      ...input,
+      steps: input.steps.map((sp) => ({
+        step: sp.step,
+        // Handle BC change with field rename
+        completed: sp.completed ?? sp.percentDone ?? null,
+      })),
+    };
+    cleanedInput.steps.forEach((step, index) => {
+      if (step.completed && step.completed > scope.progressTarget) {
+        throw new InputException(
+          "Completed value cannot exceed product's progress target",
+          `steps.${index}.completed`
+        );
+      }
+    });
+
+    const progress = await this.repo.update(cleanedInput);
     return await this.secure(progress, session);
   }
 

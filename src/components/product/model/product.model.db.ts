@@ -13,4 +13,6 @@ export class DbProduct extends DbBaseNode {
   scriptureReferencesOverride: any = null;
   isOverriding: any = null;
   describeCompletion: any = null;
+  progressStepMeasurement: any = null;
+  progressTarget: any = null;
 }

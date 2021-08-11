@@ -6,6 +6,7 @@ import {
   NotFoundException,
   ServerException,
   Session,
+  simpleSwitch,
   UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
@@ -69,7 +70,14 @@ export class ProductService {
       }
     }
 
-    const id = await this.repo.create(input);
+    const id = await this.repo.create({
+      ...input,
+      progressTarget: simpleSwitch(input.progressStepMeasurement, {
+        Percent: 100,
+        Boolean: 1,
+        Number: input.progressTarget ?? 1,
+      }),
+    });
 
     await this.authorizationService.processNewBaseNode(
       Product,
@@ -251,9 +259,27 @@ export class ProductService {
       ...changes,
       // This needs to be manually checked for changes as the existing value
       // is the object not the ID.
-      ...(currentProduct.produces.id !== input.produces
-        ? { produces: input.produces }
-        : {}),
+      produces:
+        currentProduct.produces.id !== input.produces
+          ? input.produces
+          : undefined,
+      // Adjust progressTarget based on measurement restrictions
+      progressTarget: simpleSwitch(
+        input.progressStepMeasurement ?? currentProduct.progressStepMeasurement,
+        {
+          Number: changes.progressStepMeasurement
+            ? // If measurement is being changed to number,
+              // accept new target value or default to 1 (as done in create).
+              changes.progressTarget ?? 1
+            : // If measurement was already number,
+              // accept new target value if given or accept no change.
+              changes.progressTarget,
+          // If measurement is changing to percent or boolean, change target
+          // to its enforced value, otherwise don't allow any changes.
+          Percent: changes.progressStepMeasurement ? 100 : undefined,
+          Boolean: changes.progressStepMeasurement ? 1 : undefined,
+        }
+      ),
     };
 
     await this.authorizationService.verifyCanEditChanges(

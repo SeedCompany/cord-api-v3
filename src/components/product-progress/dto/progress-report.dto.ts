@@ -61,10 +61,13 @@ export class StepProgress {
 
   @Field({
     description: stripIndent`
-      The percent (0-100) complete for the step.
+      The currently completed value for the step.
+
+      This will be 0 <= \`completed\` <= the product's \`progressTarget\` number.
+
       If no progress has been reported yet this will be null,
       or this could be explicitly set to null.
     `,
   })
-  readonly percentDone: SecuredFloatNullable;
+  readonly completed: SecuredFloatNullable;
 }

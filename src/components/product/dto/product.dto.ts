@@ -5,6 +5,7 @@ import { MergeExclusive } from 'type-fest';
 import {
   DbLabel,
   ID,
+  SecuredFloat,
   SecuredProps,
   SecuredStringNullable,
   Sensitivity,
@@ -18,6 +19,7 @@ import { Producible, SecuredProducible } from './producible.dto';
 import { SecuredProductMediums } from './product-medium';
 import { SecuredMethodology } from './product-methodology';
 import { SecuredProductPurposes } from './product-purpose';
+import { SecuredProgressMeasurement } from './progress-measurement.enum';
 
 @InterfaceType({
   resolveType: (product: AnyProduct) =>
@@ -61,6 +63,23 @@ export class Product extends Producible {
     `,
   })
   readonly describeCompletion: SecuredStringNullable;
+
+  @Field({
+    description: 'How will progress for each step be measured?',
+  })
+  readonly progressStepMeasurement: SecuredProgressMeasurement;
+
+  @Field({
+    description: stripIndent`
+      The target number that \`StepProgress\` is working towards.
+
+      If \`Product.progressStepMeasurement\` is:
+        - \`Percent\`: this will always be _100.0_
+        - \`Boolean\`: this will always be _1.0_
+        - \`Number\`: this can be any positive number
+    `,
+  })
+  readonly progressTarget: SecuredFloat;
 
   // A list of non-global roles the requesting user has available for this object.
   // This is just a cache, to prevent extra db lookups within the same request.

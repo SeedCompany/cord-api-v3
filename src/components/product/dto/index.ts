@@ -11,3 +11,4 @@ export * from './list-product.dto';
 export * from './methodology-step.enum';
 export * from './available-methodology-steps';
 export * from './completion-description.dto';
+export * from './progress-measurement.enum';

@@ -320,6 +320,8 @@ export const Controller = new DbRole({
         { propertyName: 'scriptureReferencesOverride', permission: { read, }, },
         { propertyName: 'isOverriding', permission: { read, }, },
         { propertyName: 'describeCompletion', permission: { read, }, },
+        { propertyName: 'progressStepMeasurement', permission: { read, }, },
+        { propertyName: 'progressTarget', permission: { read, }, },
       ],
       canDelete: false,
     }),
@@ -433,7 +435,7 @@ export const Controller = new DbRole({
       __className: 'DbStepProgress',
       properties: [
         {
-          propertyName: 'percentDone', permission: { read },
+          propertyName: 'completed', permission: { read },
         }
       ],
       canDelete: false,

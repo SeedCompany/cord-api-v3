@@ -36,6 +36,7 @@ import {
   ProductListInput,
   UpdateProduct,
 } from './dto';
+import { ProgressMeasurement } from './dto/progress-measurement.enum';
 
 @Injectable()
 export class ProductRepository extends CommonRepository {
@@ -98,11 +99,19 @@ export class ProductRepository extends CommonRepository {
             }
           >;
         }>(
-          merge('props', {
-            engagement: 'engagement.id',
-            scope: 'scopedRoles',
-            produces: 'produces',
-          }).as('dto')
+          merge(
+            {
+              // BC with existing products
+              progressStepMeasurement: `"${ProgressMeasurement.Percent}"`,
+              progressTarget: 100,
+            },
+            'props',
+            {
+              engagement: 'engagement.id',
+              scope: 'scopedRoles',
+              produces: 'produces',
+            }
+          ).as('dto')
         );
   }
 
