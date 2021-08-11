@@ -48,6 +48,9 @@ export class AdminService implements OnApplicationBootstrap {
   async loadTestData() {
     await this.repo.loadTestData();
   }
+  async loadTestDataTriggers() {
+    await this.repo.loadTestDataTriggers();
+  }
 
   @Transactional()
   private async setupRootObjects(): Promise<void> {

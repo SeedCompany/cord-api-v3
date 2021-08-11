@@ -31,6 +31,12 @@ export class AdminRepository {
     console.timeEnd();
   }
 
+  async loadTestDataTriggers() {
+    console.time();
+    await this.pg.loadTestDataUsingTriggers();
+    console.timeEnd();
+  }
+
   async loadData() {
     const pool = this.pg.pool;
     this.logger.info('pool info', {

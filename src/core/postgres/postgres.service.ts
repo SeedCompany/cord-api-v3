@@ -57,18 +57,6 @@ export class PostgresService {
     }
     return 0;
   }
-  // async fastInserts() {
-  //   const client = await this.pool.connect();
-  //   const removeTriggersPath = path.join(
-  //     __dirname,
-  //     '..',
-  //     '..',
-  //     '..',
-  //     'src/core/postgres/sql/useful_scripts/fast_inserts'
-  //   );
-  //   await this.executeSQLFiles(client, removeTriggersPath);
-  //   client.release();
-  // }
   convertObjectToHstore(obj: object): string {
     let string = '';
     for (const [key, value] of Object.entries(obj)) {
@@ -78,6 +66,7 @@ export class PostgresService {
     console.log(string);
     return string;
   }
+
   async loadTestDataUsingGenericCreate() {
     const genericFnsPath = path.join(
       __dirname,
@@ -227,5 +216,83 @@ export class PostgresService {
     );
     client.release();
     this.logger.info('all queries run');
+  }
+
+  async loadTestDataUsingTriggers() {
+    const triggersPath = path.join(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'src/core/postgres/sql/trigger_approach'
+    );
+    const client = await this.pool.connect();
+    await this.executeSQLFiles(client, triggersPath);
+    await client.query(
+      `insert into public.people_data(id,about,public_first_name) values($1,$2,$3)`,
+      [0, 'Vivek', 'developer']
+    );
+    await client.query(
+      `insert into public.organizations_data(id,name) values($1,$2)`,
+      [0, 'defaultOrg']
+    );
+    await client.query(
+      `insert into public.users_data(id,person, email, owning_org, password) values($1,$2,$3,$4,$5)`,
+      [0, 0, 'vivek@tsco.org', 0, 'password']
+    );
+    await client.query(
+      `insert into public.global_roles_data(id,name,org) values($1,$2,$3)`,
+      [0, 'defaultRole', 0]
+    );
+    const tables = await client.query(
+      `select table_name from information_schema.tables where table_schema = 'public' and table_name like '%_data' order by table_name limit 5`
+    );
+
+    for (const { table_name } of tables.rows) {
+      const columns = await client.query(
+        `select column_name from information_schema.columns where table_schema='public' and table_name = $1`,
+        [table_name]
+      );
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+      const schemaTableName = `public.${table_name}`;
+      this.logger.info(schemaTableName);
+      for (const { column_name } of columns.rows) {
+        await client.query(
+          `insert into public.global_role_column_grants(global_role, table_name,column_name, access_level) values($1,$2,$3,$4)`,
+          [0, schemaTableName, column_name, 'Write']
+        );
+      }
+    }
+    const users = await client.query(`select person from public.users_data`);
+    this.logger.info('adding role memberships', { userRows: users.rows });
+
+    for (const { person } of users.rows) {
+      await client.query(
+        `insert into public.global_role_memberships(global_role, person) values($1,$2)`,
+        [0, person]
+      );
+      this.logger.info('global_role_memberships', { person });
+    }
+
+    await client.query(
+      `insert into public.projects_data(id,name) values($1,$2)`,
+      [0, 'project0']
+    );
+
+    await client.query(
+      `insert into sil.table_of_languages(id, iso_639, language_name) values(0, 'txn', 'texan')`
+    );
+
+    await client.query(
+      `insert into sc.languages_data(id,display_name, name,sensitivity) values($1,$2,$3,$4)`,
+      [0, 'texan', 'texan', 'Medium']
+    );
+
+    await client.query(
+      `insert into public.locations_data(id,name,sensitivity,type) values($1,$2,$3,$4)`,
+      [0, 'location0', 'Low', 'Country']
+    );
+
+    client.release();
   }
 }

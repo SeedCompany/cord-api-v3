@@ -33,4 +33,11 @@ export class AdminResolver {
     await this.service.loadTestData();
     return true;
   }
+  @Mutation(() => Boolean, {
+    description: 'Run loadTestDataTriggers script',
+  })
+  async loadTestDataTriggers() {
+    await this.service.loadTestDataTriggers();
+    return true;
+  }
 }
