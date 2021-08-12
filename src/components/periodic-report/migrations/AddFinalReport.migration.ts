@@ -14,7 +14,7 @@ export class AddFinalReportMigration extends BaseMigration {
   private async migrate(type: ReportType) {
     const before = await this.getBaseNodeCount(type, false);
     this.logger.info(
-      `${before ?? 0} ${
+      `${before} ${
         type !== ReportType.Progress ? 'projects' : 'engagements'
       } with ${type} reports before migration`
     );
@@ -22,17 +22,20 @@ export class AddFinalReportMigration extends BaseMigration {
       .query()
       .raw(
         `
-          match(u:User)-[:email { active: true }]->(:Property { value: "devops@tsco.org" })
+          match(u:RootUser)
           match(b:BaseNode)-[:report]->(:${type}Report)
           with u, collect(distinct b) as baseNodes
           unwind baseNodes as baseNode
           call {
             with baseNode
-            match(baseNode)-[:report]->(:${type}Report)-[:end]->(en:Property)
-            with en
-            order by en.value desc limit 1
-            return en.value as lastEnd
+            match(baseNode)-[:report]->(rn:${type}Report)-[:end]->(en:Property),
+            (rn)-[:start]->(sn:Property)
+            with en, sn
+            order by en.value desc, sn.value desc limit 1
+            return sn.value as lastStart, en.value as lastEnd
           }
+          with u, baseNode, lastStart, lastEnd
+          where not lastStart = lastEnd
           create
             (baseNode)-[:report { active: true, createdAt: datetime() }]->(pr:${type}Report:PeriodicReport:BaseNode{ finalReportMigration: true, createdAt: datetime(), id: apoc.create.uuid() }),
               (pr)-[:type { active: true, createdAt: datetime() }]->(:Property { createdAt: datetime(), value: "${type}" }),
@@ -49,7 +52,7 @@ export class AddFinalReportMigration extends BaseMigration {
       .run();
     const after = await this.getBaseNodeCount(type, true);
     this.logger.info(
-      `${after ?? 0} ${
+      `${after} ${
         type !== ReportType.Progress ? 'projects' : 'engagements'
       } with new final report after ${type} report migration`
     );
@@ -69,6 +72,6 @@ export class AddFinalReportMigration extends BaseMigration {
       ])
       .return<{ count: number }>('count(distinct b) as count')
       .first();
-    return res?.count;
+    return res?.count ?? 0;
   }
 }
