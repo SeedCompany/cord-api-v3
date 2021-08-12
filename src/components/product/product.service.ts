@@ -1,6 +1,7 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Except } from 'type-fest';
 import {
+  has,
   ID,
   InputException,
   NotFoundException,
@@ -16,10 +17,12 @@ import { AuthorizationService } from '../authorization/authorization.service';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
   AnyProduct,
+  CreateOtherProduct,
   CreateProduct,
   DerivativeScriptureProduct,
   DirectScriptureProduct,
   MethodologyToApproach,
+  OtherProduct,
   ProducibleResult,
   Product,
   ProductApproach,
@@ -27,6 +30,7 @@ import {
   ProductListInput,
   ProductListOutput,
   ProductMethodology,
+  UpdateOtherProduct,
   UpdateProduct,
 } from './dto';
 import { ProductRepository } from './product.repository';
@@ -42,7 +46,10 @@ export class ProductService {
     @Logger('product:service') private readonly logger: ILogger
   ) {}
 
-  async create(input: CreateProduct, session: Session): Promise<AnyProduct> {
+  async create(
+    input: CreateProduct | CreateOtherProduct,
+    session: Session
+  ): Promise<AnyProduct> {
     const engagement = await this.repo.findNode(
       'engagement',
       input.engagementId
@@ -57,8 +64,11 @@ export class ProductService {
       );
     }
 
-    if (input.produces) {
-      const producible = await this.repo.findNode('producible', input.produces);
+    if (has('produces', input) && input.produces) {
+      const producible = await this.repo.findNode(
+        'producible',
+        input.produces as ID
+      );
       if (!producible) {
         this.logger.warning(`Could not find producible node`, {
           id: input.produces,
@@ -70,14 +80,14 @@ export class ProductService {
       }
     }
 
-    const id = await this.repo.create({
-      ...input,
-      progressTarget: simpleSwitch(input.progressStepMeasurement, {
-        Percent: 100,
-        Boolean: 1,
-        Number: input.progressTarget ?? 1,
-      }),
+    const progressTarget = simpleSwitch(input.progressStepMeasurement, {
+      Percent: 100,
+      Boolean: 1,
+      Number: input.progressTarget ?? 1,
     });
+    const id = has('title', input)
+      ? await this.repo.createOther({ ...input, progressTarget })
+      : await this.repo.create({ ...input, progressTarget });
 
     await this.authorizationService.processNewBaseNode(
       Product,
@@ -148,7 +158,7 @@ export class ProductService {
         session,
         dto.scope
       );
-      return {
+      const derivative: DerivativeScriptureProduct = {
         ...dto,
         ...securedProps,
         mediums: {
@@ -161,6 +171,30 @@ export class ProductService {
         },
         canDelete,
       };
+      return derivative;
+    }
+
+    if (dto.title) {
+      const securedProps = await this.authorizationService.secureProperties(
+        OtherProduct,
+        dto,
+        session,
+        dto.scope
+      );
+      const other: OtherProduct = {
+        ...dto,
+        ...securedProps,
+        mediums: {
+          ...securedProps.mediums,
+          value: securedProps.mediums.value ?? [],
+        },
+        purposes: {
+          ...securedProps.purposes,
+          value: securedProps.purposes.value ?? [],
+        },
+        canDelete,
+      };
+      return other;
     }
 
     const securedProps = await this.authorizationService.secureProperties(
@@ -169,7 +203,7 @@ export class ProductService {
       session,
       dto.scope
     );
-    return {
+    const direct: DirectScriptureProduct = {
       ...dto,
       ...securedProps,
       mediums: {
@@ -182,6 +216,7 @@ export class ProductService {
       },
       canDelete,
     };
+    return direct;
   }
 
   async update(input: UpdateProduct, session: Session): Promise<AnyProduct> {
@@ -220,7 +255,16 @@ export class ProductService {
     input: Except<UpdateProduct, 'produces' | 'scriptureReferencesOverride'>,
     session: Session
   ) {
-    const changes = this.repo.getActualDirectChanges(currentProduct, input);
+    let changes = this.repo.getActualDirectChanges(currentProduct, input);
+    changes = {
+      ...changes,
+      progressTarget: this.restrictProgressTargetChange(
+        currentProduct,
+        input,
+        changes
+      ),
+    };
+
     await this.authorizationService.verifyCanEditChanges(
       Product,
       await this.secure(currentProduct, session),
@@ -263,22 +307,10 @@ export class ProductService {
         currentProduct.produces.id !== input.produces
           ? input.produces
           : undefined,
-      // Adjust progressTarget based on measurement restrictions
-      progressTarget: simpleSwitch(
-        input.progressStepMeasurement ?? currentProduct.progressStepMeasurement,
-        {
-          Number: changes.progressStepMeasurement
-            ? // If measurement is being changed to number,
-              // accept new target value or default to 1 (as done in create).
-              changes.progressTarget ?? 1
-            : // If measurement was already number,
-              // accept new target value if given or accept no change.
-              changes.progressTarget,
-          // If measurement is changing to percent or boolean, change target
-          // to its enforced value, otherwise don't allow any changes.
-          Percent: changes.progressStepMeasurement ? 100 : undefined,
-          Boolean: changes.progressStepMeasurement ? 1 : undefined,
-        }
+      progressTarget: this.restrictProgressTargetChange(
+        currentProduct,
+        input,
+        changes
       ),
     };
 
@@ -324,6 +356,64 @@ export class ProductService {
     return await this.repo.updateDerivativeProperties(
       productUpdatedScriptureReferences,
       simpleChanges
+    );
+  }
+
+  async updateOther(input: UpdateOtherProduct, session: Session) {
+    const currentProduct = await this.readOneUnsecured(input.id, session);
+    if (!currentProduct.title) {
+      throw new InputException('Product given is not an OtherProduct');
+    }
+
+    let changes = this.repo.getActualOtherChanges(currentProduct, input);
+    changes = {
+      ...changes,
+      progressTarget: this.restrictProgressTargetChange(
+        currentProduct,
+        input,
+        changes
+      ),
+    };
+
+    await this.authorizationService.verifyCanEditChanges(
+      Product,
+      await this.secure(currentProduct, session),
+      changes,
+      null
+    );
+
+    await this.mergeCompletionDescription(changes, currentProduct);
+
+    const currentSecured = (await this.secure(
+      currentProduct,
+      session
+    )) as OtherProduct;
+    return await this.repo.updateOther(currentSecured, changes);
+  }
+
+  /**
+   * Restrict progressTarget changes based on measurement restrictions
+   */
+  private restrictProgressTargetChange(
+    currentProduct: Pick<UpdateProduct, 'progressStepMeasurement'>,
+    input: Pick<UpdateProduct, 'progressTarget' | 'progressStepMeasurement'>,
+    changes: Pick<UpdateProduct, 'progressTarget' | 'progressStepMeasurement'>
+  ) {
+    return simpleSwitch(
+      input.progressStepMeasurement ?? currentProduct.progressStepMeasurement,
+      {
+        Number: changes.progressStepMeasurement
+          ? // If measurement is being changed to number,
+            // accept new target value or default to 1 (as done in create).
+            changes.progressTarget ?? 1
+          : // If measurement was already number,
+            // accept new target value if given or accept no change.
+            changes.progressTarget,
+        // If measurement is changing to percent or boolean, change target
+        // to its enforced value, otherwise don't allow any changes.
+        Percent: changes.progressStepMeasurement ? 100 : undefined,
+        Boolean: changes.progressStepMeasurement ? 1 : undefined,
+      }
     );
   }
 

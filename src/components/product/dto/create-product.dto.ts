@@ -3,7 +3,7 @@ import { Transform, Type } from 'class-transformer';
 import { IsPositive, ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
 import { uniq } from 'lodash';
-import { ID, IdField } from '../../../common';
+import { ID, IdField, NameField, OmitType } from '../../../common';
 import { ScriptureRangeInput } from '../../scripture';
 import { MethodologyStep } from './methodology-step.enum';
 import { ProductMedium } from './product-medium';
@@ -96,6 +96,19 @@ export abstract class CreateProductInput {
   @Type(() => CreateProduct)
   @ValidateNested()
   readonly product: CreateProduct;
+}
+
+@InputType()
+export abstract class CreateOtherProduct extends OmitType(CreateProduct, [
+  'produces',
+  'scriptureReferences',
+  'scriptureReferencesOverride',
+] as const) {
+  @NameField()
+  readonly title: string;
+
+  @Field(() => String, { nullable: true })
+  readonly description?: string | null;
 }
 
 @ObjectType()
