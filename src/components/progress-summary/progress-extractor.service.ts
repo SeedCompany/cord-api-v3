@@ -77,7 +77,10 @@ const extractStepProgress = (sheet: WorkSheet) => {
   const goalsProgress = [];
   // eslint-disable-next-line no-constant-condition
   while (true) {
-    if (cellAsString(sheet[`P${i}`]) === 'Other Goals and Milestones') {
+    if (
+      cellAsString(sheet[`P${i}`]) === 'Other Goals and Milestones' ||
+      !cellAsString(sheet[`P${i}`])
+    ) {
       break;
     }
 
@@ -90,18 +93,17 @@ const extractStepProgress = (sheet: WorkSheet) => {
     const consultantCheck = parseStepProgress(sheet[`Z${i}`]);
     const completed = parseStepProgress(sheet[`AB${i}`]);
 
-    if (bookName) {
-      goalsProgress.push({
-        bookName,
-        totalVerses,
-        exegesisAndFirstDraft,
-        teamCheck,
-        communityTesting,
-        backTranslation,
-        consultantCheck,
-        completed,
-      });
-    }
+    goalsProgress.push({
+      bookName,
+      totalVerses,
+      exegesisAndFirstDraft,
+      teamCheck,
+      communityTesting,
+      backTranslation,
+      consultantCheck,
+      completed,
+    });
+
     i++;
   }
 
