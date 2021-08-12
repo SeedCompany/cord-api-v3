@@ -71,5 +71,50 @@ const findFiscalYearRow = (sheet: WorkSheet, fiscalYear: number) => {
   }
 };
 
+// eslint-disable-next-line @seedcompany/no-unused-vars
+const extractStepProgress = (sheet: WorkSheet) => {
+  let i = 23;
+  const goalsProgress = [];
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    if (cellAsString(sheet[`P${i}`]) === 'Other Goals and Milestones') {
+      break;
+    }
+
+    const bookName = cellAsString(sheet[`P${i}`]);
+    const totalVerses = cellAsNumber(sheet[`Q${i}`]);
+    const exegesisAndFirstDraft = parseStepProgress(sheet[`R${i}`]);
+    const teamCheck = parseStepProgress(sheet[`T${i}`]);
+    const communityTesting = parseStepProgress(sheet[`V${i}`]);
+    const backTranslation = parseStepProgress(sheet[`X${i}`]);
+    const consultantCheck = parseStepProgress(sheet[`Z${i}`]);
+    const completed = parseStepProgress(sheet[`AB${i}`]);
+
+    if (bookName) {
+      goalsProgress.push({
+        bookName,
+        totalVerses,
+        exegesisAndFirstDraft,
+        teamCheck,
+        communityTesting,
+        backTranslation,
+        consultantCheck,
+        completed,
+      });
+    }
+    i++;
+  }
+
+  return goalsProgress;
+};
+
 const cellAsNumber = (cell: CellObject) =>
   cell && cell.t === 'n' && typeof cell.v === 'number' ? cell.v : undefined;
+
+const cellAsString = (cell: CellObject) =>
+  cell && cell.t === 's' && typeof cell.v === 'string' ? cell.v : undefined;
+
+const parseStepProgress = (cell: CellObject) =>
+  cell && cell.t === 's' && typeof cell.v === 'string' && cell.v.startsWith('Q')
+    ? 100.0
+    : cellAsNumber(cell);
