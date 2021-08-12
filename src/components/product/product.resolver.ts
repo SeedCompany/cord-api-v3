@@ -21,6 +21,7 @@ import { labelOfScriptureRanges } from '../scripture/labels';
 import {
   AnyProduct,
   AvailableMethodologySteps,
+  CreateOtherProduct,
   CreateProductInput,
   CreateProductOutput,
   MethodologyAvailableSteps,
@@ -33,6 +34,7 @@ import {
   ProductListInput,
   ProductListOutput,
   ProductType,
+  UpdateOtherProduct,
   UpdateProductInput,
   UpdateProductOutput,
 } from './dto';
@@ -88,6 +90,9 @@ export class ProductResolver {
     `,
   })
   label(@Parent() product: AnyProduct): string | null {
+    if (product.title) {
+      return product.title.value ?? null;
+    }
     if (!product.produces) {
       if (!product.scriptureReferences.canRead) {
         return null;
@@ -186,6 +191,28 @@ export class ProductResolver {
     @Args('input') { product: input }: UpdateProductInput
   ): Promise<UpdateProductOutput> {
     const product = await this.productService.update(input, session);
+    return { product };
+  }
+
+  @Mutation(() => CreateProductOutput, {
+    description: 'Create an other product entry',
+  })
+  async createOtherProduct(
+    @LoggedInSession() session: Session,
+    @Args('input') input: CreateOtherProduct
+  ): Promise<CreateProductOutput> {
+    const product = await this.productService.create(input, session);
+    return { product };
+  }
+
+  @Mutation(() => UpdateProductOutput, {
+    description: 'Update an other product entry',
+  })
+  async updateOtherProduct(
+    @LoggedInSession() session: Session,
+    @Args('input') input: UpdateOtherProduct
+  ): Promise<UpdateProductOutput> {
+    const product = await this.productService.updateOther(input, session);
     return { product };
   }
 

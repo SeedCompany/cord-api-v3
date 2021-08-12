@@ -7,6 +7,7 @@ import {
   ID,
   SecuredFloat,
   SecuredProps,
+  SecuredString,
   SecuredStringNullable,
   Sensitivity,
   SensitivityField,
@@ -128,7 +129,23 @@ export class DerivativeScriptureProduct extends Product {
   readonly scriptureReferencesOverride: SecuredScriptureRangesOverride;
 }
 
+@ObjectType({
+  implements: [Product],
+  description:
+    'A product which does not fit into the other two types of products',
+})
+export class OtherProduct extends Product {
+  static readonly Props = keysOf<OtherProduct>();
+  static readonly SecuredProps = keysOf<SecuredProps<OtherProduct>>();
+
+  @Field()
+  readonly title: SecuredString;
+
+  @Field()
+  readonly description: SecuredStringNullable;
+}
+
 export type AnyProduct = MergeExclusive<
-  DirectScriptureProduct,
-  DerivativeScriptureProduct
+  MergeExclusive<DirectScriptureProduct, DerivativeScriptureProduct>,
+  OtherProduct
 >;
