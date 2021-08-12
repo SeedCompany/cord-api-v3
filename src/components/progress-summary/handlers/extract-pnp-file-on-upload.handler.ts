@@ -19,22 +19,30 @@ export class ExtractPnpFileOnUploadHandler {
 
     const workbook = await this.extractor.readWorkbook(event.file);
 
-    const cumulative = this.extractor.extractCumulative(workbook, event.file);
-    if (cumulative) {
-      await this.repo.save(event.report, SummaryPeriod.Cumulative, cumulative);
+    const extracted = this.extractor.extract(
+      workbook,
+      event.file,
+      event.report.start
+    );
+    if (extracted?.cumulative) {
+      await this.repo.save(
+        event.report,
+        SummaryPeriod.Cumulative,
+        extracted.cumulative
+      );
     }
-
-    const period = this.extractor.extractReportPeriod(workbook, event.file);
-    if (period) {
-      await this.repo.save(event.report, SummaryPeriod.ReportPeriod, period);
+    if (extracted?.reportPeriod) {
+      await this.repo.save(
+        event.report,
+        SummaryPeriod.ReportPeriod,
+        extracted.reportPeriod
+      );
     }
-
-    const fiscalYear = this.extractor.extractFiscalYear(workbook, event.file);
-    if (fiscalYear) {
+    if (extracted?.fiscalYear) {
       await this.repo.save(
         event.report,
         SummaryPeriod.FiscalYearSoFar,
-        fiscalYear
+        extracted.fiscalYear
       );
     }
   }
