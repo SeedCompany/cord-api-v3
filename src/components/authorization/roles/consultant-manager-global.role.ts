@@ -321,6 +321,8 @@ export const ConsultantManagerGlobal = new DbRole({
         { propertyName: 'describeCompletion', permission: { read, }, },
         { propertyName: 'progressStepMeasurement', permission: { read, }, },
         { propertyName: 'progressTarget', permission: { read, }, },
+        { propertyName: 'title', permission: { read, }, },
+        { propertyName: 'description', permission: { read, }, },
       ],
       canDelete: false,
     }),

@@ -317,6 +317,8 @@ export const ProjectManagerOnProject = new DbRole({
         { propertyName: 'describeCompletion', permission: { read, write, }, },
         { propertyName: 'progressStepMeasurement', permission: { read, write, }, },
         { propertyName: 'progressTarget', permission: { read, write, }, },
+        { propertyName: 'title', permission: { read, write, }, },
+        { propertyName: 'description', permission: { read, write, }, },
       ],
       canDelete: false,
     }),
