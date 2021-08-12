@@ -72,7 +72,7 @@ const findFiscalYearRow = (sheet: WorkSheet, fiscalYear: number) => {
 };
 
 // eslint-disable-next-line @seedcompany/no-unused-vars
-const extractStepProgress = (sheet: WorkSheet) => {
+const extractStepProgress = (sheet: WorkSheet, fiscalYear: number) => {
   let i = 23;
   const goalsProgress = [];
   // eslint-disable-next-line no-constant-condition
@@ -81,17 +81,21 @@ const extractStepProgress = (sheet: WorkSheet) => {
       cellAsString(sheet[`P${i}`]) === 'Other Goals and Milestones' ||
       !cellAsString(sheet[`P${i}`])
     ) {
-      break;
+      return goalsProgress;
     }
 
     const bookName = cellAsString(sheet[`P${i}`]);
     const totalVerses = cellAsNumber(sheet[`Q${i}`]);
-    const exegesisAndFirstDraft = parseStepProgress(sheet[`R${i}`]);
-    const teamCheck = parseStepProgress(sheet[`T${i}`]);
-    const communityTesting = parseStepProgress(sheet[`V${i}`]);
-    const backTranslation = parseStepProgress(sheet[`X${i}`]);
-    const consultantCheck = parseStepProgress(sheet[`Z${i}`]);
-    const completed = parseStepProgress(sheet[`AB${i}`]);
+    const exegesisAndFirstDraft = parse(
+      sheet[`R${i}`],
+      sheet[`S${i}`],
+      fiscalYear
+    );
+    const teamCheck = parse(sheet[`T${i}`], sheet[`U${i}`], fiscalYear);
+    const communityTesting = parse(sheet[`V${i}`], sheet[`W${i}`], fiscalYear);
+    const backTranslation = parse(sheet[`X${i}`], sheet[`Y${i}`], fiscalYear);
+    const consultantCheck = parse(sheet[`Z${i}`], sheet[`AA${i}`], fiscalYear);
+    const completed = parse(sheet[`AB${i}`], sheet[`AB${i}`], fiscalYear);
 
     goalsProgress.push({
       bookName,
@@ -103,11 +107,8 @@ const extractStepProgress = (sheet: WorkSheet) => {
       consultantCheck,
       completed,
     });
-
     i++;
   }
-
-  return goalsProgress;
 };
 
 const cellAsNumber = (cell: CellObject) =>
@@ -120,3 +121,13 @@ const parseStepProgress = (cell: CellObject) =>
   cell && cell.t === 's' && typeof cell.v === 'string' && cell.v.startsWith('Q')
     ? 100.0
     : cellAsNumber(cell);
+
+const parse = (
+  year: CellObject,
+  stepProgress: CellObject,
+  fiscalYear: number
+) => {
+  return cellAsNumber(year) === fiscalYear
+    ? parseStepProgress(stepProgress)
+    : undefined;
+};
