@@ -10,25 +10,24 @@ export class EightySevenSixCommentsMigration extends BaseMigration {
     await this.db
       .query()
       .raw(
-        ` 
-          match(u:RootUser)
-          match(p:Project)
+        `
+          match (u:RootUser), (p:Project)
           with u.id as rootId, p,
           [
-            { type: 'Note', shareability: 'Internal', body: p.commentDescription }, 
-            { type: 'Prayer', shareability: 'AskToShareExternally', body: p.commentPrayerNeeds }, 
+            { type: 'Note', shareability: 'Internal', body: p.commentDescription },
+            { type: 'Prayer', shareability: 'AskToShareExternally', body: p.commentPrayerNeeds },
             { type: 'Note', shareability: 'Internal', body: p.commentProposalComments }
           ] as posts
           unwind posts as post
           with rootId, p, post
           where size(post.body) > 0
-          create 
-            (p)-[:post { active: true, createdAt: datetime() }]->(po:BaseNode:Post{ postMigration: true, createdAt: datetime(), id: apoc.create.uuid() }),
-              (po)-[:shareability { active: true, createdAt: datetime() }]->(:Property { createdAt: datetime(), value: post.shareability, sortValue: post.shareability }),
-              (po)-[:type { active: true, createdAt: datetime() }]->(:Property { createdAt: datetime(), value: post.type, sortValue: post.type }),
-              (po)-[:body { active: true, createdAt: datetime() }]->(:Property { createdAt: datetime(), value: post.body, sortValue: post.body }),
-              (po)-[:modifiedAt { active: true, createdAt: datetime() }]->(:Property { createdAt: datetime(), value: p.createdAt, sortValue: p.createdAt }),
-              (po)-[:creator { active: true, createdAt: datetime() }]->(:Property { createdAt: datetime(), value: rootId, sortValue: rootId })
+          create
+            (p)-[:post { active: true, createdAt: datetime() }]->(po:BaseNode:Post { postMigration: true, createdAt: datetime(), id: apoc.create.uuid() }),
+              (po)-[:shareability { active: true, createdAt: datetime() }]->(:Property { createdAt: datetime(), value: post.shareability }),
+              (po)-[:type { active: true, createdAt: datetime() }]->(:Property { createdAt: datetime(), value: post.type }),
+              (po)-[:body { active: true, createdAt: datetime() }]->(:Property { createdAt: datetime(), value: post.body }),
+              (po)-[:modifiedAt { active: true, createdAt: datetime() }]->(:Property { createdAt: datetime(), value: p.createdAt }),
+              (po)-[:creator { active: true, createdAt: datetime() }]->(:Property { createdAt: datetime(), value: rootId })
         `
       )
       .run();
@@ -54,14 +53,14 @@ export class EightySevenSixCommentsMigration extends BaseMigration {
       .raw(
         before
           ? `
-              match(p:Project)
+              match (p:Project)
               with [ p.commentDescription, p.commentPrayerNeeds, p.commentProposalComments ] as protoPosts
               unwind protoPosts as po
               with po
               where size(po) > 0
             `
           : `
-              match(po:Post { postMigration: true })
+              match (po:Post { postMigration: true })
             `
       )
       .return<{ count: number }>('count(po) as count')
