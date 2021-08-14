@@ -7,6 +7,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
+import { filter, map } from 'ix/asynciterable/operators';
 import {
   AnonSession,
   firstLettersOfWords,
@@ -17,6 +18,7 @@ import {
   SecuredDateRange,
   Session,
 } from '../../common';
+import { PubSub, Subscription } from '../../core';
 import { SecuredBudget } from '../budget';
 import { ChangesetIds } from '../changeset/dto';
 import { EngagementListInput, SecuredEngagementList } from '../engagement';
@@ -45,6 +47,11 @@ import {
   UpdateProjectOutput,
 } from './dto';
 import {
+  ProjectCreatedEvent,
+  ProjectDeletedEvent,
+  ProjectUpdatedEvent,
+} from './events';
+import {
   ProjectMemberListInput,
   SecuredProjectMemberList,
 } from './project-member/dto';
@@ -65,7 +72,8 @@ export class ProjectResolver {
     private readonly projectService: ProjectService,
     private readonly locationService: LocationService,
     private readonly fieldRegionService: FieldRegionService,
-    private readonly organizationService: OrganizationService
+    private readonly organizationService: OrganizationService,
+    private readonly pubSub: PubSub
   ) {}
 
   @Query(() => IProject, {
@@ -297,6 +305,40 @@ export class ProjectResolver {
   ): Promise<boolean> {
     await this.projectService.delete(id, session);
     return true;
+  }
+
+  @Subscription(() => IProject)
+  projectCreated(@AnonSession() session: Session) {
+    return this.pubSub.listen(ProjectCreatedEvent).pipe(
+      // Convert project to be secured based on the subscribed user's session (rather than the user doing the mutation)
+      map((event) => this.projectService.readOne(event.project.id, session))
+    );
+  }
+
+  @Subscription(() => IProject)
+  projectUpdated(
+    @AnonSession() session: Session,
+    @IdArg({ nullable: true }) id?: string
+  ): AsyncIterable<Project> {
+    return this.pubSub.listen(ProjectUpdatedEvent).pipe(
+      map((event) => event.updated),
+      filter((project) => !id || project.id === id),
+      // Convert project to be secured based on the subscribed user's session (rather than the user doing the mutation)
+      map((project) => this.projectService.readOne(project.id, session))
+    );
+  }
+
+  @Subscription(() => IProject)
+  projectDeleted(
+    @AnonSession() session: Session,
+    @IdArg({ nullable: true }) id?: string
+  ): AsyncIterable<Project> {
+    return this.pubSub.listen(ProjectDeletedEvent).pipe(
+      map((event) => event.project),
+      filter((project) => !id || project.id === id),
+      // Convert project to be secured based on the subscribed user's session (rather than the user doing the mutation)
+      map((project) => this.projectService.readOne(project.id, session))
+    );
   }
 
   @Mutation(() => IProject, {
