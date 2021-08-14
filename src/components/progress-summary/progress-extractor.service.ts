@@ -39,6 +39,22 @@ export class ProgressExtractor {
     };
   }
 
+  extractStepProgress(pnp: WorkBook, file: FileVersion, date: CalendarDate) {
+    const sheet = pnp.Sheets.Progress;
+    if (!sheet) {
+      this.logger.warning('Unable to find progress sheet in pnp file', {
+        name: file.name,
+        id: file.id,
+      });
+    }
+    const stepProgress = parseGoalsProgress(sheet, fiscalYear(date));
+    if (!stepProgress) {
+      this.logger.warning('Unable to find step progress in pnp file');
+    }
+
+    return stepProgress;
+  }
+
   async readWorkbook(file: FileVersion) {
     const buffer = await this.files.downloadFileVersion(file.id);
     return read(buffer, { type: 'buffer' });
@@ -71,8 +87,7 @@ const findFiscalYearRow = (sheet: WorkSheet, fiscalYear: number) => {
   }
 };
 
-// eslint-disable-next-line @seedcompany/no-unused-vars
-const extractStepProgress = (sheet: WorkSheet, fiscalYear: number) => {
+const parseGoalsProgress = (sheet: WorkSheet, fiscalYear: number) => {
   let i = 23;
   const goalsProgress = [];
   // eslint-disable-next-line no-constant-condition
