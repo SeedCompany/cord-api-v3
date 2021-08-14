@@ -2,9 +2,11 @@ import { Module, OnApplicationBootstrap } from '@nestjs/common';
 // eslint-disable-next-line no-restricted-imports
 import { CommandBus, EventBus } from '@nestjs/cqrs';
 import { ExplorerService } from '@nestjs/cqrs/dist/services/explorer.service';
+import { PubSubModule } from '../pub-sub';
 import { IEventBus, SyncEventBus } from './event-bus.service';
 
 @Module({
+  imports: [PubSubModule],
   providers: [
     ExplorerService,
     CommandBus,

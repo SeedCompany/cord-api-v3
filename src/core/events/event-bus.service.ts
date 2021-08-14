@@ -1,8 +1,10 @@
 import { Injectable, Type } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 // eslint-disable-next-line no-restricted-imports
-import { EventBus, EventHandlerType, IEvent } from '@nestjs/cqrs';
+import { CommandBus, EventBus, EventHandlerType, IEvent } from '@nestjs/cqrs';
 import { stripIndent } from 'common-tags';
 import { AnyFn, ServerException } from '../../common';
+import { PubSub } from '../pub-sub';
 import { IEventHandler } from './event-handler.decorator';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -18,11 +20,21 @@ export abstract class IEventBus<EventBase extends IEvent = IEvent> {
 export class SyncEventBus extends EventBus implements IEventBus {
   private readonly listenerMap = new Map<string, Set<AnyFn>>();
 
+  constructor(
+    private readonly pubSub: PubSub,
+    commandBus: CommandBus,
+    moduleRef: ModuleRef
+  ) {
+    super(commandBus, moduleRef);
+  }
+
   async publish<T extends IEvent>(event: T): Promise<void> {
     const name = this.getEventName(event);
     for (const handler of this.listeners(name)) {
       await handler(event);
     }
+    // After internal event handlers are ran, publish externally.
+    await this.pubSub.publish(event);
   }
 
   async publishAll<T extends IEvent>(events: T[]): Promise<void> {
