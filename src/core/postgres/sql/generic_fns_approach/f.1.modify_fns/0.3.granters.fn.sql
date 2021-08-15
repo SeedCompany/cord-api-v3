@@ -1,5 +1,4 @@
-create or replace function public.granters_fn(pToggleGranters int)
-returns integer
+create or replace procedure public.granters_fn(pToggleGranters int)
 language plpgsql
 as $$
 declare 
@@ -19,7 +18,7 @@ materialized_view_name text;
 begin 
     
     if pToggleGranters = 0 then 
-     return 0;
+     return;
     else 
         for rec1 in (select table_name,table_schema from information_schema.tables where (table_schema = 'public' or table_schema = 'sc') and table_name like '%_security' order by table_name) loop 
 
@@ -73,6 +72,6 @@ begin
             end if;
         end loop;
     end if;
-    return 0;
+    return;
 end; $$;
 

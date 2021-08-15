@@ -20,7 +20,7 @@ pToggleGranters => 0,1,2
     3 - refresh security tables & materialized views concurrently
 */
 
-create or replace function public.create(pPersonId int, pTableName text, 
+create or replace procedure public.create(pPersonId int, pTableName text, 
 -- get record
 pRecord hstore,
 pToggleSecurity int, 
@@ -28,7 +28,7 @@ pToggleMV int,
 pToggleHistory int,
 pToggleGranters int
 )
-returns int 
+-- returns int 
 language plpgsql
 as $$ 
 declare
@@ -43,7 +43,8 @@ security_table_name text;
 sql_string_keys text;
 sql_string_values text; 
 record_id int;
-begin
+begin  
+    
     permissionExists := false; 
 -- check if person has "create" permission on table
     -- for rec1 in (select global_role from global_role_table_permissions where table_permission = 'Create' and table_name = pTableName) loop
@@ -89,19 +90,32 @@ begin
     execute format(sql_string_keys || sql_string_values) into record_id;
 
     -- might need an entirely different fn for public.people_data
+    call public.history_fn(pTableName, pToggleHistory, pRecord);
+
     if pTableName = 'public.people_data' then 
-        perform public.people_security_fn(record_id, pToggleSecurity, pToggleMV);
+        call public.people_security_fn(record_id, pToggleSecurity, pToggleMV);
     elsif pTableName like '%_data' then
-        perform public.security_fn(pTableName, record_id, pToggleSecurity, pToggleMV); 
-        perform public.mv_fn(pTableName, pToggleMV);
-        perform public.history_fn(pTableName, pToggleHistory, pRecord);
-    elsif pTableName = 'public.projects_data' or 
+        call public.security_fn(pTableName, record_id, pToggleSecurity, pToggleMV); 
+    end if;
+
+    if pTableName = 'public.projects_data' or 
     pTableName = 'public.project_member_roles_data' or
     pTableName = 'public.project_role_column_grants_data' or 
     pTableName = 'public.global_role_column_grants' or 
     pTableName = 'public.global_role_memberships' then 
-        perform public.granters_fn(pToggleGranters);
+        call public.granters_fn(pToggleGranters);
     end if;
-    return 0;
+
+     
+     
+    if pTableName != 'public.projects_data' and 
+    pTableName != 'public.project_member_roles_data' and
+    pTableName != 'public.project_role_column_grants_data' and 
+    pTableName != 'public.global_role_column_grants' and 
+    pTableName != 'public.global_role_memberships' then 
+        call public.mv_fn(pTableName, pToggleMV);
+    end if;
+    
+    return;
 end; $$;
 

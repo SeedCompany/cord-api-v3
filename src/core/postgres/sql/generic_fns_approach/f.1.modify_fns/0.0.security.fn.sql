@@ -68,8 +68,7 @@ begin
 end; $$;
 
 
-create or replace function public.get_access_level(pSecurityTableName text, pPersonId int, pId int, pToggleMV int)
-returns integer
+create or replace procedure public.get_access_level(pSecurityTableName text, pPersonId int, pId int, pToggleMV int)
 language plpgsql 
 as $$
 declare
@@ -116,12 +115,11 @@ begin
             end if;
         end if;
     end loop; 
-    return 0;
+    return;
 end;$$;
 
 
-create or replace function public.get_is_cleared(pSecurityTableName text, pPersonId int, pId int, pToggleMV int)
-returns integer
+create or replace procedure public.get_is_cleared(pSecurityTableName text, pPersonId int, pId int, pToggleMV int)
 language plpgsql
 as $$
 declare 
@@ -155,17 +153,16 @@ begin
             end if;
         end if;    
     end if; 
-    return 0;   
+    return;   
 end; $$;
 
 
-create or replace function public.security_fn(
+create or replace procedure public.security_fn(
     pTableName text,
     pId int, 
     pToggleSecurity int,
     pToggleMV int
 )
-returns int 
 language plpgsql 
 as $$ 
 declare 
@@ -177,12 +174,12 @@ begin
 
     if not found then 
         raise info 'data table doesn''t have security table';
-        return 1;
+        return;
     end if;
 
     if pToggleSecurity = 0 then 
         -- early return
-        return 0;
+        return;
     else
         -- only insert 
         for rec1 in execute format('select id, sensitivity_clearance from public.people_data') loop
@@ -191,25 +188,24 @@ begin
 
             if pToggleSecurity = 1 then
             -- update access level only
-                perform public.get_access_level(security_table_name, rec1.id, pId, pToggleMV);
+                call public.get_access_level(security_table_name, rec1.id, pId, pToggleMV);
             else 
             -- update access level and sensitivity
-                perform public.get_access_level(security_table_name, rec1.id, pId, pToggleMV);
-                perform public.get_is_cleared(security_table_name, rec1.id, pId, pToggleMV);
+                call public.get_access_level(security_table_name, rec1.id, pId, pToggleMV);
+                call public.get_is_cleared(security_table_name, rec1.id, pId, pToggleMV);
             end if;
         end loop; 
-        return 0;
+        return;
     end if;
   
 end; $$;
 
 
-create or replace function public.people_security_fn(
+create or replace procedure public.people_security_fn(
     pId int, 
     pToggleSecurity int,
     pToggleMV int
 )
-returns int 
 language plpgsql 
 as $$ 
 declare 
@@ -223,13 +219,12 @@ begin
 
     if pToggleSecurity = 0 then 
         -- early return
-        return 0;
+        return;
     else
         -- only insert 
         for rec1 in (select table_name, table_schema from information_schema.tables where (table_schema = 'public' or table_schema = 'sc') and table_name like '%_data') loop 
 
             data_table_name := rec1.table_schema || '.' || rec1.table_name;
-            if data_table_name != 'public.people_data' then 
                 for rec2 in execute format('select id from %I.%I', rec1.table_schema,rec1.table_name) loop 
                     raise info 'people.insert.fn rec2: %', rec2;
                     data_security_table_name := replace(data_table_name, '_data', '_security');
@@ -237,27 +232,28 @@ begin
                     execute format('insert into %I.%I(__id, __person_id, __is_cleared) values (' || rec2.id || ',' || pId || ', true )',split_part(data_security_table_name, '.', 1), split_part(data_security_table_name, '.', 2));
                     if pToggleSecurity = 1 then
                     -- update access level only
-                        perform public.get_access_level(data_security_table_name, rec2.id, pId, pToggleMV);
+                        call public.get_access_level(data_security_table_name, pId, rec2.id, pToggleMV);
                     else 
                     -- update access level and sensitivity
-                        perform public.get_access_level(data_security_table_name, pId, rec2.id, pToggleMV);
-                        perform public.get_is_cleared(data_security_table_name, pId, rec2.id, pToggleMV);
+                        call public.get_access_level(data_security_table_name, pId, rec2.id, pToggleMV);
+                        call public.get_is_cleared(data_security_table_name, pId, rec2.id, pToggleMV);
                     end if;
-                end loop;
-            else     
-                insert into public.people_security(__id, __person_id, __is_cleared) values(pId, pId, true);
-                if pToggleSecurity = 1 then
-                    -- update access level only
-                        perform public.get_access_level(data_security_table_name, rec1.id, pId, pToggleMV);
-                else 
-                    -- update access level and sensitivity
-                        perform public.get_access_level(data_security_table_name, pId, rec2.id, pToggleMV);
-                        perform public.get_is_cleared(data_security_table_name, pId, rec2.id, pToggleMV);
-                end if;
-            end if;
+
+                    if data_table_name = 'public.people_data' and (pId != rec2.id) then 
+                        execute format('insert into %I.%I(__id, __person_id, __is_cleared) values (' || pId || ',' || rec2.id || ', true )',split_part(data_security_table_name, '.', 1), split_part(data_security_table_name, '.', 2));
+                        if pToggleSecurity = 1 then
+                        -- update access level only
+                            call public.get_access_level(data_security_table_name, rec2.id, pId, pToggleMV);
+                        else 
+                        -- update access level and sensitivity
+                            call public.get_access_level(data_security_table_name, rec2.id, pId, pToggleMV);
+                            call public.get_is_cleared(data_security_table_name,  rec2.id, pId, pToggleMV);
+                        end if;
+                    end if;
+                end loop;     
         end loop; 
-        return 0;
     end if;
+    return;
 end; $$;
 
 

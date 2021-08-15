@@ -80,7 +80,7 @@ export class PostgresService {
     // PEOPLE, ORGS, USERS
 
     await client.query(
-      `select public.create(0,'public.people_data',$1 ,2,2,1,3); `,
+      `call public.create(0,'public.people_data',$1 ,2,2,1,3); `,
       [
         this.convertObjectToHstore({
           id: 0,
@@ -91,7 +91,7 @@ export class PostgresService {
     );
 
     await client.query(
-      `select public.create(0,'public.organizations_data', $1, 2,2,1,3);`,
+      `call public.create(0,'public.organizations_data', $1, 2,2,1,3);`,
       [
         this.convertObjectToHstore({
           id: 0,
@@ -101,7 +101,7 @@ export class PostgresService {
     );
 
     await client.query(
-      `select public.create(0,'public.users_data', $1, 2,2,1,3);`,
+      `call public.create(0,'public.users_data', $1, 2,2,1,3);`,
       [
         this.convertObjectToHstore({
           id: 0,
@@ -114,7 +114,7 @@ export class PostgresService {
     );
 
     await client.query(
-      `select public.create(0,'public.global_roles_data', $1, 2,2,1,3);`,
+      `call public.create(0,'public.global_roles_data', $1, 2,2,1,3);`,
       [
         this.convertObjectToHstore({
           id: 0,
@@ -138,7 +138,7 @@ export class PostgresService {
       this.logger.info(schemaTableName);
       for (const { column_name } of columns.rows) {
         await client.query(
-          `select public.create(0, 'public.global_role_column_grants', $1,2,2,1,3)`,
+          `call public.create(0, 'public.global_role_column_grants', $1,2,2,1,3)`,
           [
             this.convertObjectToHstore({
               global_role: 0,
@@ -157,7 +157,7 @@ export class PostgresService {
 
     for (const { person } of users.rows) {
       await client.query(
-        `select public.create(0, 'public.global_role_memberships', $1,2,2,1,3)`,
+        `call public.create(0, 'public.global_role_memberships', $1,2,2,1,3)`,
         [
           this.convertObjectToHstore({
             global_role: 0,
@@ -170,7 +170,7 @@ export class PostgresService {
 
     // PROJECTS
     await client.query(
-      `select public.create(0, 'public.projects_data', $1,2,2,1,3)`,
+      `call public.create(0, 'public.projects_data', $1,2,2,1,3)`,
       [
         this.convertObjectToHstore({
           id: 0,
@@ -180,7 +180,7 @@ export class PostgresService {
     );
     // LANGUAGES
     await client.query(
-      `select public.create(0,'sil.table_of_languages', $1, 2,2,1,3)`,
+      `call public.create(0,'sil.table_of_languages', $1, 2,2,1,3)`,
       [
         this.convertObjectToHstore({
           id: 0,
@@ -191,7 +191,7 @@ export class PostgresService {
     );
 
     await client.query(
-      `select public.create(0,'sc.languages_data', $1,2,2,1,3)`,
+      `call public.create(0,'sc.languages_data', $1,2,2,1,3)`,
       [
         this.convertObjectToHstore({
           id: 0,
@@ -204,7 +204,7 @@ export class PostgresService {
 
     // LOCATIONS
     await client.query(
-      `select public.create(0,'public.locations_data', $1,2,2,1,3)`,
+      `call public.create(0,'public.locations_data', $1,2,2,1,3)`,
       [
         this.convertObjectToHstore({
           id: 0,
@@ -317,7 +317,7 @@ export class PostgresService {
     await this.executeSQLFiles(client, genericFnsPath);
     for (let i = 1; i <= 100; i++) {
       await client.query(
-        `select public.create(0,'public.people_data',$1 ,2,2,1,3); `,
+        `call public.create(0,'public.people_data',$1 ,2,2,1,3); `,
         [
           this.convertObjectToHstore({
             id: i,
@@ -329,7 +329,7 @@ export class PostgresService {
     }
     for (let i = 1; i <= 99; i++) {
       await client.query(
-        `select public.create(0,'public.global_role_memberships',$1, 0,0,0,0)`,
+        `call public.create(0,'public.global_role_memberships',$1, 0,0,0,0)`,
         [
           this.convertObjectToHstore({
             global_role: 0,
@@ -341,7 +341,7 @@ export class PostgresService {
     }
     // await client.query(
     await client.query(
-      `select public.create(0,'public.global_role_memberships',$1, 2,2,1,3)`,
+      `call public.create(0,'public.global_role_memberships',$1, 2,2,1,3)`,
       [
         this.convertObjectToHstore({
           global_role: 0,
@@ -353,7 +353,7 @@ export class PostgresService {
     for (let i = 2; i <= 100; i++) {
       console.log(i);
       await client.query(
-        `select public.create(0,'public.organizations_data', $1, 2,2,1,3);`,
+        `call public.create(0,'public.organizations_data', $1, 2,2,1,3);`,
         [
           this.convertObjectToHstore({
             id: i,
@@ -364,20 +364,11 @@ export class PostgresService {
       );
     }
     // await client.query('analyze');
-    for (let i = 2; i <= 100; i++) {
+    for (let i = 1; i <= 3000; i++) {
       console.log(i);
-      // await client.query(
-      //   `select public.create(0,'public.organizations_data', $1, 2,2,1,3);`,
-      //   [
-      //     this.convertObjectToHstore({
-      //       id: i,
-      //       name: `name${i}`,
-      //       sensitivity: 'Low',
-      //     }),
-      //   ]
-      // );
+      // refreshing mv outside the create fn is much faster for some reason
       await client.query(
-        `select public.create(0,'public.locations_data', $1,2,0,1,3)`,
+        `call public.create(0,'public.locations_data', $1,2,0,1,3)`,
         [
           this.convertObjectToHstore({
             id: i,
@@ -393,7 +384,7 @@ export class PostgresService {
     }
     // insertRecord(personid, recordobject, tablename)
     // -> createMethod
-    // -> refresh the mv 
+    // -> refresh the mv
     console.timeEnd('genericOrgs');
     await this.executeSQLFiles(client, triggersPath);
     // await client.query(

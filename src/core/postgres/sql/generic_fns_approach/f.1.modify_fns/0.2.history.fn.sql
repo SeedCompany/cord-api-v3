@@ -1,5 +1,4 @@
-CREATE OR REPLACE FUNCTION public.history_fn(pTableName text, pToggleHistory int, pRecord hstore)
-RETURNS integer
+CREATE OR REPLACE procedure public.history_fn(pTableName text, pToggleHistory int, pRecord hstore)
 LANGUAGE PLPGSQL
 AS $$
 declare 
@@ -11,7 +10,7 @@ column_udt_name text;
 rec1 record;
 begin
     if pToggleHistory = 0 then 
-        return 0;
+        return;
     else 
         history_table_name := replace(pTableName, '_data', '_history');
 
@@ -35,6 +34,6 @@ begin
         
         
         raise info 'DONE';
-        RETURN 0;
+        RETURN;
     end if;
 end; $$;
