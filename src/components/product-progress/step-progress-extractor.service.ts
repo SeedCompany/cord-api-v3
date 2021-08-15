@@ -1,14 +1,24 @@
 import { Injectable } from '@nestjs/common';
+import { node, relation } from 'cypher-query-builder';
 import { CellObject, read, WorkBook, WorkSheet } from 'xlsx';
-import { CalendarDate, fiscalYear, ID, Session } from '../../common';
-import { ILogger, Logger } from '../../core';
+import {
+  CalendarDate,
+  fiscalYear,
+  ID,
+  NotFoundException,
+  Session,
+} from '../../common';
+import { DatabaseService, ILogger, Logger } from '../../core';
 import { FileService, FileVersion } from '../file';
+import { ProductService } from '../product/product.service';
 import { ProductProgressService } from './product-progress.service';
 
 @Injectable()
 export class StepProgressExtractor {
   constructor(
     private readonly files: FileService,
+    private readonly db: DatabaseService,
+    private readonly product: ProductService,
     private readonly service: ProductProgressService,
     @Logger('step-progress:extractor') private readonly logger: ILogger
   ) {}
@@ -17,7 +27,7 @@ export class StepProgressExtractor {
     pnp: WorkBook,
     file: FileVersion,
     date: CalendarDate,
-    report: ID,
+    reportId: ID,
     session: Session
   ) {
     const sheet = pnp.Sheets.Progress;
@@ -32,7 +42,12 @@ export class StepProgressExtractor {
       this.logger.warning('Unable to find step progress in pnp file');
     }
 
-    const goals = await this.service.readAllByReport(report, session);
+    // eslint-disable-next-line @seedcompany/no-unused-vars
+    const engagementId = await this.getEngagementId(reportId);
+
+    //const goals = await this.product.list(engagementId, session);
+
+    const goals = await this.service.readAllByReport(reportId, session);
     // TODO: update goals
     const updatedGoals = goals ?? undefined;
 
@@ -42,6 +57,23 @@ export class StepProgressExtractor {
   async readWorkbook(file: FileVersion) {
     const buffer = await this.files.downloadFileVersion(file.id);
     return read(buffer, { type: 'buffer' });
+  }
+
+  async getEngagementId(reportId: ID) {
+    const result = await this.db
+      .query()
+      .match([
+        node('eng', 'Engagement'),
+        relation('out', '', 'report', { active: true }),
+        node('report', 'ProgressReport', { id: reportId }),
+      ])
+      .return<{ id: ID }>('eng.id as id')
+      .first();
+
+    if (!result) {
+      throw new NotFoundException();
+    }
+    return result.id;
   }
 }
 
