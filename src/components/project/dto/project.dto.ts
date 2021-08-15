@@ -32,6 +32,7 @@ import { Location } from '../../location/dto';
 import { Partnership } from '../../partnership/dto';
 import { SecuredReportPeriod } from '../../periodic-report/dto';
 import { Pinnable } from '../../pin/dto';
+import { Flaggable } from '../../flag-approved-inventory/dto';
 import { Post } from '../../post/dto';
 import { Postable } from '../../post/postable/dto/postable.dto';
 import { ProjectChangeRequest } from '../../project-change-request/dto';
@@ -43,11 +44,12 @@ import { ProjectType } from './type.enum';
 type AnyProject = MergeExclusive<TranslationProject, InternshipProject>;
 
 const PinnablePostableChangesetAwareResource: Type<
-  Resource & Postable & ChangesetAware & Pinnable
+  Resource & Postable & ChangesetAware & Pinnable & Flaggable
 > = IntersectionType(
   Resource,
   IntersectionType(Postable, IntersectionType(ChangesetAware, Pinnable))
 );
+
 
 @InterfaceType({
   resolveType: (val: Project) => {

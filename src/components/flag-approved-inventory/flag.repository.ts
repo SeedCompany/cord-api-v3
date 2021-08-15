@@ -7,11 +7,11 @@ import { DatabaseService } from '../../core';
 export class FlagRepository {
   constructor(private readonly db: DatabaseService) {}
 
-  async isFlagged(id: ID): Promise<boolean> {
+  async isFlagged(id: ID, approvedInventory: boolean): Promise<boolean> {
     const result = await this.db
       .query()
-      .match([node('node', 'BaseNode', { id })])
-      .return('node')
+      .match([node('project', { id, approvedInventory})])
+      .return('project')
       .first();
     return result ? true : false;
   }
@@ -19,11 +19,9 @@ export class FlagRepository {
   async add(id: ID): Promise<void> {
     await this.db
       .query()
-      .match([node('node', 'BaseNode', { id })])
-      .set({
-        values: {
-          approvedInventory: true,
-        },
+      .match([node('project', { id })])
+      .setValues({
+      'project.approvedInventory': true
       })
       .run();
   }
@@ -31,11 +29,9 @@ export class FlagRepository {
   async remove(id: ID): Promise<void> {
     await this.db
       .query()
-      .match([node('node', 'BaseNode', { id })])
-      .set({
-        values: {
-          approvedInventory: false,
-        },
+      .match([node('project', { id })])
+      .setValues({
+        'project.approvedInventory': false
       })
       .run();
   }

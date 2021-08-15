@@ -3,9 +3,9 @@ import { PaginatedList, PaginationInput } from '../../../common';
 import { Flaggable } from './flaggable.dto';
 
 @InputType()
-export class PinnedListInput extends PaginationInput {
-  static defaultVal = new PinnedListInput();
+export class FlaggedListInput extends PaginationInput {
+  static defaultVal = new FlaggedListInput();
 }
 
 @ObjectType()
-export class PinnedListOutput extends PaginatedList(Flaggable) {}
+export class FlaggedListOutput extends PaginatedList(Flaggable) {}

@@ -6,17 +6,20 @@ import { FlagRepository } from './flag.repository';
 export class FlagService {
   constructor(private readonly repo: FlagRepository) {}
 
-  async isPinned(id: ID): Promise<boolean> {
-    return await this.repo.isFlagged(id);
+  async isFlagged(id: ID, approvedInventory: boolean): Promise<boolean> {
+    return await this.repo.isFlagged(id, approvedInventory);
   }
 
-  async toggleFlagged(id: ID, flagged?: boolean): Promise<boolean> {
-    flagged ??= !(await this.repo.isFlagged(id));
+  async toggleFlagged(
+    id: ID, 
+    flagged?: boolean
+  ): Promise<boolean> {
+    flagged ??= (await this.repo.isFlagged(id, true));
     if (!flagged) {
       await this.repo.add(id);
     } else {
       await this.repo.remove(id);
     }
-    return flagged;
+    return !flagged;
   }
 }

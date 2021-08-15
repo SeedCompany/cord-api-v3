@@ -6,7 +6,7 @@ import {
   NotImplementedException,
   Session,
 } from '../../common';
-import { PinnedListInput, PinnedListOutput } from './dto';
+import { FlaggedListInput, FlaggedListOutput } from './dto';
 import { FlagService } from './flag.service';
 
 @Resolver()
@@ -17,14 +17,15 @@ export class FlagResolver {
     description:
       'Returns whether or not the requesting user has pinned the resource ID',
   })
-  async isPinned(
+  async isFlagged(
     @LoggedInSession() session: Session,
     @IdArg({
       description: 'A resource ID',
     })
-    id: ID
+    id: ID,
+    approvedInventory: boolean
   ): Promise<boolean> {
-    return await this.pins.isPinned(id);
+    return await this.pins.isFlagged(id, approvedInventory);
   }
 
   @Mutation(() => Boolean, {
@@ -37,14 +38,14 @@ export class FlagResolver {
       description: 'A resource ID',
     })
     id: ID,
-    @Args('pinned', {
+    @Args('flagged', {
       nullable: true,
       description:
         'Whether the item should be pinned or not. Omit to toggle the current state.',
     })
-    pinned?: boolean
+    flagged?: boolean
   ): Promise<boolean> {
-    return await this.pins.toggleFlagged(id, pinned);
+    return await this.pins.toggleFlagged(id, flagged);
   }
 
   // @Query(() => PinnedListOutput, {
@@ -55,11 +56,11 @@ export class FlagResolver {
     @LoggedInSession() _session: Session,
     @Args({
       name: 'input',
-      type: () => PinnedListInput,
-      defaultValue: PinnedListInput.defaultVal,
+      type: () => FlaggedListInput,
+      defaultValue: FlaggedListInput.defaultVal,
     })
-    _input: PinnedListInput
-  ): Promise<PinnedListOutput> {
+    _input: FlaggedListInput
+  ): Promise<FlaggedListOutput> {
     throw new NotImplementedException();
   }
 }
