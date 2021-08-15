@@ -13,6 +13,7 @@ import { FieldRegionModule } from './components/field-region/field-region.module
 import { FieldZoneModule } from './components/field-zone/field-zone.module';
 import { FileModule } from './components/file/file.module';
 import { FilmModule } from './components/film/film.module';
+import { FlagModule } from './components/flag-approved-inventory/flag.module';
 import { FundingAccountModule } from './components/funding-account/funding-account.module';
 import { LanguageModule } from './components/language/language.module';
 import { LiteracyMaterialModule } from './components/literacy-material/literacy-material.module';
@@ -72,6 +73,7 @@ assert(
     FieldRegionModule,
     FieldZoneModule,
     PinModule,
+    FlagModule,
     PostModule,
     PostableModule,
     PeriodicReportModule,
