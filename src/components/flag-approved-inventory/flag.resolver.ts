@@ -24,7 +24,7 @@ export class FlagResolver {
     })
     id: ID
   ): Promise<boolean> {
-    return await this.pins.isPinned(id, session);
+    return await this.pins.isPinned(id);
   }
 
   @Mutation(() => Boolean, {
@@ -44,7 +44,7 @@ export class FlagResolver {
     })
     pinned?: boolean
   ): Promise<boolean> {
-    return await this.pins.toggleFlagged(id, session, pinned);
+    return await this.pins.toggleFlagged(id, pinned);
   }
 
   // @Query(() => PinnedListOutput, {
