@@ -8,10 +8,9 @@ import { DatabaseService, matchRequestingUser } from '../../core';
 export class PinRepository {
   constructor(private readonly db: DatabaseService) {}
 
-  async isPinned(id: ID, session: Session): Promise<boolean> {
+  async isPinned(id: ID): Promise<boolean> {
     const result = await this.db
       .query()
-      .apply(matchRequestingUser(session))
       .match([
         node('requestingUser'),
         relation('out', '', 'pinned'),
@@ -22,7 +21,7 @@ export class PinRepository {
     return result ? true : false;
   }
 
-  async add(id: ID, session: Session): Promise<void> {
+  async add(id: ID): Promise<void> {
     const createdAt = DateTime.local();
     await this.db
       .query()
