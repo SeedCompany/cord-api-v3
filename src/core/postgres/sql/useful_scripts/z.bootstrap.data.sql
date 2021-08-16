@@ -47,8 +47,8 @@ insert into public.project_roles_data("name", "org") values ('Intern', 0) on con
 
 -- PROJECT ROLE GRANTS
 -- todo: these have hard coded role ids, which we have to use until we have functions to add project roles.
---insert into public.project_role_column_grants_data("access_level", "column_name", "project_role", "table_name") values ('Write', 'name', 1, 'public.projects_data') on conflict do nothing;
---insert into public.project_role_column_grants_data("access_level", "column_name", "project_role", "table_name") values ('Read', 'name', 2, 'public.projects_data') on conflict do nothing;
+--insert into public.project_role_column_grants("access_level", "column_name", "project_role", "table_name") values ('Write', 'name', 1, 'public.projects_data') on conflict do nothing;
+--insert into public.project_role_column_grants("access_level", "column_name", "project_role", "table_name") values ('Read', 'name', 2, 'public.projects_data') on conflict do nothing;
 
 -- PROJECTS
 insert into public.projects_data("name") values ('proj 1') on conflict do nothing;
@@ -57,15 +57,15 @@ insert into public.projects_data("name") values ('proj 3') on conflict do nothin
 
 -- PROJECT MEMBERSHIP
 -- todo: replace with functions
-insert into public.project_memberships_data("person", "project") values (1,1) on conflict do nothing;
---insert into public.project_memberships_data("person", "project") values (2,1) on conflict do nothing;
+insert into public.project_memberships("person", "project") values (1,1) on conflict do nothing;
+--insert into public.project_memberships("person", "project") values (2,1) on conflict do nothing;
 
 -- PROJECT ROLE MEMBERSHIPS
 -- todo: need to use functions to avoid hard coded ids
 insert into public.project_member_roles_data("person", "project", "project_role") values (1, 1, 1) on conflict do nothing;
 insert into public.project_member_roles_data("person", "project", "project_role") values (2, 1, 1) on conflict do nothing;
 
-insert into public.project_role_column_grants_data("access_level","column_name", "project_role", "table_name")
+insert into public.project_role_column_grants("access_level","column_name", "project_role", "table_name")
 values('Write', 'name', 1, 'public.locations_data' );
 select * from public.locations_security;
 --insert into public.project_member_roles_data("person", "project", "project_role") values (2, 1, 1) on conflict do nothing;

@@ -1,4 +1,4 @@
--- trigger function for projects_data,project_member_roles_data, project_role_column_grants_data, 
+-- trigger function for projects_data,project_member_roles_data, project_role_column_grants, 
 -- global_role_memberships, global_role_grants_data (on insert update or delete),
 -- The great thing about this approach is we can use the same trigger function for insert,update,delete for all the tables 
 
@@ -107,7 +107,7 @@ end; $$;
 
 
 select public.create_refresh_triggers('public','project_member_roles_data');
-select public.create_refresh_triggers('public', 'project_role_column_grants_data');
+select public.create_refresh_triggers('public', 'project_role_column_grants');
 select public.create_refresh_triggers('public', 'global_role_column_grants');
 select public.create_refresh_triggers('public', 'global_role_memberships');
 select public.create_refresh_triggers('public', 'projects_data');

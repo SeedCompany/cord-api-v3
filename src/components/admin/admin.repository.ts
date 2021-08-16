@@ -218,10 +218,10 @@ export class AdminRepository {
     //     projectRole,
     //   });
     //   await client.query(
-    //     `insert into public.project_memberships_data("person", "project") values (0,$1) on conflict do nothing;`,
+    //     `insert into public.project_memberships("person", "project") values (0,$1) on conflict do nothing;`,
     //     [i]
     //   );
-    //   this.logger.info('project_memberships_data', {
+    //   this.logger.info('project_memberships', {
     //     person: 0,
     //     project: i,
     //   });
@@ -235,9 +235,9 @@ export class AdminRepository {
     //     projectRole: i,
     //   });
     // }
-    // await client.query(`insert into public.project_role_column_grants_data("access_level","column_name", "project_role", "table_name")
+    // await client.query(`insert into public.project_role_column_grants("access_level","column_name", "project_role", "table_name")
     //   values('Write', 'name', 1, 'public.locations_data' );`);
-    // this.logger.info('project_role_column_grants_data');
+    // this.logger.info('project_role_column_grants');
     client.release();
     // this.logger.info('all queries run');
     // // await pool.end();
@@ -315,7 +315,7 @@ export class AdminRepository {
     await client.query(`insert into sc.periodic_reports_data(id, directory, start_at,end_at,type,reportFile) values 
     (0,0,'2020-01-01', '2020-12-12','Narrative',0);`);
 
-    await client.query(`insert into project_memberships_data(project,person) values (0,0);
+    await client.query(`insert into project_memberships(project,person) values (0,0);
     `);
 
     await client.query(

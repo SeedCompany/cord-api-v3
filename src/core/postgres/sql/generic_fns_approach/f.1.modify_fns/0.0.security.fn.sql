@@ -23,7 +23,7 @@ begin
         for rec2 in (select project_role from public.project_member_roles_data where person = p_person_id and project = rec1.id) loop 
         raise info 'rec2: %', rec2; 
 
-            for rec3 in (select  access_level from public.project_role_column_grants_data where table_name = cast(p_table_name as public.table_name) and column_name = p_column_name and project_role = rec2.project_role) loop 
+            for rec3 in (select  access_level from public.project_role_column_grants where table_name = cast(p_table_name as public.table_name) and column_name = p_column_name and project_role = rec2.project_role) loop 
             raise info 'rec3: %', rec3; 
             
                 if new_access_level is null or new_access_level = 'Read' and rec3.access_level is not null then 

@@ -90,15 +90,15 @@ DO $$ BEGIN
 		'public.global_role_table_permissions',
 		'public.global_roles_data',
 		'public.locations_data',
-		'public.organization_grants_data',
-		'public.organization_memberships_data',
+		'public.organization_grants',
+		'public.organization_memberships',
 		'public.organizations_data',
 		'public.people_data',
-		'public.people_to_org_relationship_type_data',
+		'public.people_to_org_relationship_type',
 		'public.people_to_org_relationships_data',
 		'public.project_member_roles_data',
-		'public.project_memberships_data',
-		'public.project_role_column_grants_data',
+		'public.project_memberships',
+		'public.project_role_column_grants',
 		'public.project_roles_data',
 		'public.projects_data',
 		'public.users_data',
@@ -438,7 +438,7 @@ DO $$ BEGIN
 	WHEN duplicate_object THEN null;
 END; $$;
 
-create table if not exists public.organization_grants_data(
+create table if not exists public.organization_grants(
     id serial primary key,
     access_level access_level not null,
     created_at timestamp not null default CURRENT_TIMESTAMP,
@@ -454,7 +454,7 @@ create table if not exists public.organization_grants_data(
     foreign key (org) references organizations_data(id)
 );
 
-create table if not exists public.organization_memberships_data(
+create table if not exists public.organization_memberships(
     id serial primary key,
     created_at timestamp not null default CURRENT_TIMESTAMP,
     created_by int not null default 0,
@@ -482,7 +482,7 @@ create table if not exists public.people_to_org_relationships_data (
 	foreign key (person) references people_data(id)
 );
 
-create table if not exists public.people_to_org_relationship_type_data (
+create table if not exists public.people_to_org_relationship_type (
     id serial primary key,
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by int not null default 0,
@@ -534,7 +534,7 @@ create table if not exists public.projects_data (
 	foreign key (primary_location) references locations_data(id)
 );
 
-create table if not exists public.project_memberships_data (
+create table if not exists public.project_memberships (
     id serial primary key,
     created_at timestamp not null default CURRENT_TIMESTAMP,
     created_by int not null default 0,
@@ -562,7 +562,7 @@ create table if not exists public.project_roles_data (
 	foreign key (org) references public.organizations_data(id)
 );
 
-create table if not exists public.project_role_column_grants_data (
+create table if not exists public.project_role_column_grants (
     id serial primary key,
 	access_level access_level not null,
 	column_name varchar(32) not null,

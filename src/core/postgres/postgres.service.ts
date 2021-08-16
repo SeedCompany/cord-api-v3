@@ -353,7 +353,7 @@ export class PostgresService {
     for (let i = 2; i <= 100; i++) {
       console.log(i);
       await client.query(
-        `call public.create(0,'public.organizations_data', $1, 2,2,1,3);`,
+        `call public.create(0,'public.organizations_data', $1, 2,0,1,3);`,
         [
           this.convertObjectToHstore({
             id: i,

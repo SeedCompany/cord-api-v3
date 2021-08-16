@@ -100,7 +100,7 @@ begin
 
     if pTableName = 'public.projects_data' or 
     pTableName = 'public.project_member_roles_data' or
-    pTableName = 'public.project_role_column_grants_data' or 
+    pTableName = 'public.project_role_column_grants' or 
     pTableName = 'public.global_role_column_grants' or 
     pTableName = 'public.global_role_memberships' then 
         call public.granters_fn(pToggleGranters);
@@ -110,7 +110,7 @@ begin
      
     if pTableName != 'public.projects_data' and 
     pTableName != 'public.project_member_roles_data' and
-    pTableName != 'public.project_role_column_grants_data' and 
+    pTableName != 'public.project_role_column_grants' and 
     pTableName != 'public.global_role_column_grants' and 
     pTableName != 'public.global_role_memberships' then 
         call public.mv_fn(pTableName, pToggleMV);

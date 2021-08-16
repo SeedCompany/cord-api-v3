@@ -20,7 +20,7 @@ insert into sc.periodic_reports_data(id, directory, start_at,end_at,type,reportF
 insert into sc.periodic_reports_data(id, directory, start_at, end_at, type,reportFile) values 
 (1,0,'2020-01-01', '2020-12-12', 'Financial', 1);
 -- projects_team_members
-insert into project_memberships_data(project,person) values (0,0);
+insert into project_memberships(project,person) values (0,0);
 
 -- languages_parent
 insert into sil.table_of_languages(id, iso_639, language_name) values (0, 'txn', 'texan');
