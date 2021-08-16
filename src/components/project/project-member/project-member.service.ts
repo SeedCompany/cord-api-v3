@@ -263,34 +263,4 @@ export class ProjectMemberService {
       node('node', label),
     ]);
   }
-
-  // when a new user is added to a project, all the project admins need to have access
-  // to some of that user's properties in order to know about that user
-  // async addProjectAdminsToUserSg(projectId: ID, userId: ID) {
-  //   // get all admins of a project, then add the role for them to see the user info
-  //   const result = await this.db
-  //     .query()
-  //     .match([
-  //       node('admins', 'User'),
-  //       relation('in', '', 'member'),
-  //       node('sg', 'SecurityGroup', { role: InternalRole.Admin }),
-  //       relation('out', '', 'permission'),
-  //       node('perms', 'Permission'),
-  //       relation('out', '', 'baseNode'),
-  //       node('project', 'Project', { id: projectId }),
-  //     ])
-  //     .raw('return collect(distinct admins.id) as ids')
-  //     .first();
-
-  //   for (const id of result?.ids) {
-  //     // creating user must be an admin, use role change event
-  //     const dbProjectMember = new DbProjectMember();
-  //     await this.authorizationService.processNewBaseNode(
-  //       InternalAdminViewOfProjectMemberRole,
-  //       dbProjectMember,
-  //       userId,
-  //       id
-  //     );
-  //   }
-  // }
 }
