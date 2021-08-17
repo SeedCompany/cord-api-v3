@@ -10,6 +10,7 @@ import {
 } from '../../common';
 import { DatabaseService, ILogger, Logger } from '../../core';
 import { FileService, FileVersion } from '../file';
+import { ProductListInput } from '../product/dto/list-product.dto';
 import { ProductService } from '../product/product.service';
 import { ProductProgressService } from './product-progress.service';
 
@@ -45,9 +46,13 @@ export class StepProgressExtractor {
     // eslint-disable-next-line @seedcompany/no-unused-vars
     const engagementId = await this.getEngagementId(reportId);
 
-    //const goals = await this.product.list(engagementId, session);
-
-    const goals = await this.service.readAllByReport(reportId, session);
+    const goals = await this.product.list(
+      {
+        ...ProductListInput.defaultVal,
+        filter: { engagementId },
+      },
+      session
+    );
     // TODO: update goals
     const updatedGoals = goals ?? undefined;
 
