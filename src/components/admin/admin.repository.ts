@@ -26,7 +26,7 @@ export class AdminRepository {
 
   async loadTestData() {
     console.time('triggers');
-    await this.pg.loadTestDataUsingTriggers();
+    await this.pg.loadTestData();
   }
 
   async loadData() {

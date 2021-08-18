@@ -93,25 +93,31 @@ export class UserRepository extends DtoRepository(User) {
     if (!result) {
       throw new NotFoundException('Could not find user', 'user.id');
     }
-    // const client = await this.pg.pool.connect();
-    // let [pgPersonData, pgUserData] = await Promise.all([
-    //   client.query('select * from public.people_data where id = $1', [0]),
-    //   client.query(`select * from public.users_data where person = $1`, [0]),
-    // ]);
-    // let {
-    //   public_last_name: displayLastName,
-    //   public_first_name: displayFirstName,
-    //   private_first_name: realFirstName,
-    //   private_last_name: realLastName,
-    //   time_zone: timezone,
-    //   created_at: createdAt,
-    //   phone,
-    //   about,
-    //   status,
-    // } = pgPersonData.rows[0];
+    const pool = await this.pg.usePool();
+    let [pgPersonData, pgUserData] = await Promise.all([
+      pool.query(
+        'select * from public.people_materialized_view where __id = $1 and __person_id = $2',
+        [0, 0]
+      ),
+      pool.query(
+        `select * from public.users_materialized_view where __id = $1 and __person_id = $2`,
+        [0, 0]
+      ),
+    ]);
+    let {
+      public_last_name: displayLastName,
+      public_first_name: displayFirstName,
+      private_first_name: realFirstName,
+      private_last_name: realLastName,
+      time_zone: timezone,
+      created_at: createdAt,
+      phone,
+      about,
+      status,
+    } = pgPersonData.rows[0];
 
-    // let { email, password } = pgUserData.rows[0];
-    // client.release();
+    let { email, password } = pgUserData.rows[0];
+
     // return {
     //   displayFirstName,
     //   displayLastName,
@@ -228,14 +234,12 @@ export class UserRepository extends DtoRepository(User) {
         //
       }
     }
-    const client = await this.pg.pool.connect();
-    // await client.query(`select * from public.people_data`);
-
-    await client.query(
+    const pool = await this.pg.usePool();
+    await pool.query(
       `call public.create(0,'public.people_data',$1 ,2,1,1,1); `,
       [
         this.pg.convertObjectToHstore({
-          id: 1,
+          id: 11,
           public_first_name: input.displayFirstName,
           public_last_name: input.displayLastName,
           private_first_name: input.realFirstName,
@@ -246,21 +250,13 @@ export class UserRepository extends DtoRepository(User) {
         }),
       ]
     );
-    // await client.query(
-    //   `call public.create(0,'public.organizations_data', $1, 2,1,1,1)`,
-    //   [
-    //     this.pg.convertObjectToHstore({
-    //       id: 1,
-    //       name: 'dOrg',
-    //     }),
-    //   ]
-    // );
-    await client.query(
+
+    await pool.query(
       `call public.create(0,'public.users_data',$1 ,2,1,1,1); `,
       [
         this.pg.convertObjectToHstore({
-          id: 1,
-          person: 1,
+          id: 11,
+          person: 11,
           email: input.email,
           password: 'password',
           owning_org: 0,
@@ -268,7 +264,6 @@ export class UserRepository extends DtoRepository(User) {
       ]
     );
 
-    client.release();
     return result.id;
   }
 
@@ -407,13 +402,13 @@ export class UserRepository extends DtoRepository(User) {
       })
       .asResult<{ canRead?: boolean; canEdit?: boolean }>()
       .first();
-    const client = await this.pg.pool.connect();
-    const pgResult = await client.query(
-      `delete from public.people_data where id = $1`,
-      [0]
-    );
-    console.log(pgResult);
-    client.release();
+    // const client = await this.pg.pool.connect();
+    // const pgResult = await client.query(
+    //   `delete from public.people_data where id = $1`,
+    //   [0]
+    // );
+    // console.log(pgResult);
+    // client.release();
     if (!result) {
       throw new NotFoundException('Could not find user', 'userId');
     }

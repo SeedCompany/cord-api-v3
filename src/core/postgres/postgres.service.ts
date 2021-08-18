@@ -20,13 +20,13 @@ export class PostgresService {
   async usePool() {
     if (!this.pgInitStatus) {
       this.init();
-      this.loadTestDataUsingTriggers();
+      this.loadTestData();
       this.pgInitStatus = true;
     }
     return this.pool;
   }
 
-  async executeSQLFiles(client: PoolClient, dirPath: string): Promise<number> {
+  async executeSQLFiles(dirPath: string): Promise<number> {
     const files = fs.readdirSync(dirPath);
 
     for (const name of files) {
@@ -34,7 +34,7 @@ export class PostgresService {
 
       if (fs.lstatSync(fileOrDirPath).isDirectory()) {
         this.logger.info('dir: ', { fileOrDirPath });
-        await this.executeSQLFiles(client, fileOrDirPath);
+        await this.executeSQLFiles(fileOrDirPath);
       } else {
         // load script into db
         this.logger.info('file: ', { fileOrDirPath });
@@ -58,10 +58,7 @@ export class PostgresService {
         'src/core/postgres/sql/db_init'
       );
       this.logger.info('path', { dbInitPath });
-      const fileExecutionStatus = await this.executeSQLFiles(
-        client,
-        dbInitPath
-      );
+      const fileExecutionStatus = await this.executeSQLFiles(dbInitPath);
       this.logger.info('here', { fileExecutionStatus });
     } finally {
       client.release();
@@ -78,8 +75,7 @@ export class PostgresService {
     return string;
   }
 
-  async loadTestDataUsingTriggers() {
-    const client = await this.pool.connect();
+  async loadTestData() {
     const genericFnsPath = path.join(
       __dirname,
       '..',
@@ -87,7 +83,7 @@ export class PostgresService {
       '..',
       'src/core/postgres/sql/generic_fns_approach'
     );
-    await this.executeSQLFiles(client, genericFnsPath);
+    await this.executeSQLFiles(genericFnsPath);
     // PEOPLE, ORGS, USERS
 
     await this.pool.query(
@@ -135,14 +131,11 @@ export class PostgresService {
       ]
     );
     // GRANTS & MEMBERSHIPS
-    const tables = await this.pool.query(
-      `select table_name from information_schema.tables where table_schema = 'public' and table_name like '%_data' order by table_name limit 5`
-    );
-
-    for (const { table_name } of tables.rows) {
+    const tables = ['locations_data', 'people_data', 'organizations_data'];
+    for (const table_name of tables) {
       const columns = await this.pool.query(
         `select column_name from information_schema.columns where table_schema='public' and table_name in ($1)`,
-        ['locations_data, people_data, organizations_data']
+        [table_name]
       );
 
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
@@ -150,7 +143,7 @@ export class PostgresService {
       this.logger.info(schemaTableName);
       for (const { column_name } of columns.rows) {
         await this.pool.query(
-          `call public.create(0, 'public.global_role_column_grants', $1,2,2,0,3)`,
+          `call public.create(0, 'public.global_role_column_grants', $1,2,0,0,3)`,
           [
             this.convertObjectToHstore({
               global_role: 0,
@@ -162,7 +155,6 @@ export class PostgresService {
         );
       }
     }
-   
 
     // PROJECTS
     await this.pool.query(
@@ -290,7 +282,5 @@ export class PostgresService {
       //   `refresh materialized view concurrently public.locations_materialized_view`
       // );
     }
-
-    client.release();
   }
 }
