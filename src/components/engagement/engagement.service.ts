@@ -252,8 +252,7 @@ export class EngagementService {
     const securedProperties = await this.authorizationService.secureProperties(
       isLanguageEngagement ? LanguageEngagement : InternshipEngagement,
       result,
-      session,
-      result.scope
+      session
     );
 
     const common = {

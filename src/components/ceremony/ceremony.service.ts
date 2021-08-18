@@ -72,8 +72,7 @@ export class CeremonyService {
     const securedProps = await this.authorizationService.secureProperties(
       Ceremony,
       dto,
-      session,
-      dto.scope
+      session
     );
 
     return {

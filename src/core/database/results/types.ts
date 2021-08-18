@@ -1,4 +1,5 @@
 import type { DateTime } from 'luxon';
+import { Resource } from '../../../common';
 import type { UnsecuredDto } from '../../../common';
 import type { BaseNode } from './parse-base-node';
 
@@ -22,7 +23,8 @@ export type DbPropsOfDto<
     UnsecuredDto<Dto>,
     IncludeBaseNode extends true ? never : keyof BaseNode['properties']
   >
->;
+> &
+  Pick<Resource, 'scope'>;
 
 export type NativeDbProps<Dto extends Record<string, any>> = {
   [Key in keyof Dto]: Dto[Key] extends NativeDbValue ? Dto[Key] : unknown;

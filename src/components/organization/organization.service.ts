@@ -118,8 +118,7 @@ export class OrganizationService {
     const securedProps = await this.authorizationService.secureProperties(
       Organization,
       dto,
-      session,
-      dto.scope
+      session
     );
 
     return {

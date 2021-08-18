@@ -160,8 +160,7 @@ export class ProductService {
       const securedProps = await this.authorizationService.secureProperties(
         DerivativeScriptureProduct,
         dto,
-        session,
-        dto.scope
+        session
       );
       const derivative: DerivativeScriptureProduct = {
         ...dto,
@@ -187,8 +186,7 @@ export class ProductService {
       const securedProps = await this.authorizationService.secureProperties(
         OtherProduct,
         dto,
-        session,
-        dto.scope
+        session
       );
       const other: OtherProduct = {
         ...dto,
@@ -213,8 +211,7 @@ export class ProductService {
     const securedProps = await this.authorizationService.secureProperties(
       DirectScriptureProduct,
       dto,
-      session,
-      dto.scope
+      session
     );
     const direct: DirectScriptureProduct = {
       ...dto,

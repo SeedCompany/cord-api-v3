@@ -101,8 +101,7 @@ export class PartnerService {
     const securedProps = await this.authorizationService.secureProperties(
       Partner,
       dto,
-      session,
-      dto.scope
+      session
     );
 
     return {

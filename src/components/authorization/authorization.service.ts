@@ -115,7 +115,7 @@ export class AuthorizationService {
     resource: Resource,
     props: DbPropsOfDto<Resource['prototype']>,
     sessionOrUserId: Session | ID,
-    otherRoles: ScopedRole[] = []
+    otherRoles?: ScopedRole[]
   ): Promise<SecuredResource<Resource, false>> {
     const permissions = await this.getPermissions({
       resource,
@@ -250,7 +250,7 @@ export class AuthorizationService {
   async getPermissions<Resource extends ResourceShape<any>>({
     resource,
     sessionOrUserId,
-    otherRoles = [],
+    otherRoles,
     dto,
     sensitivity,
   }: {
@@ -263,7 +263,7 @@ export class AuthorizationService {
     const userGlobalRoles = isIdLike(sessionOrUserId)
       ? await this.getUserGlobalRoles(sessionOrUserId)
       : sessionOrUserId.roles;
-    const roles = [...userGlobalRoles, ...otherRoles];
+    const roles = [...userGlobalRoles, ...(otherRoles ?? dto?.scope ?? [])];
     sensitivity ??= dto?.sensitivity;
 
     // convert resource to a list of resource names to check

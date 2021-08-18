@@ -8,7 +8,7 @@ import {
   Sensitivity,
   SensitivityField,
 } from '../../../../common';
-import { ScopedRole, SecuredRoles } from '../../../authorization';
+import { SecuredRoles } from '../../../authorization';
 import { SecuredUser } from '../../../user';
 
 @ObjectType({
@@ -31,8 +31,4 @@ export class ProjectMember extends Resource {
 
   @DateTimeField()
   readonly modifiedAt: DateTime;
-
-  // A list of non-global roles the requesting user has available for this object.
-  // This is just a cache, to prevent extra db lookups within the same request.
-  readonly scope: ScopedRole[];
 }

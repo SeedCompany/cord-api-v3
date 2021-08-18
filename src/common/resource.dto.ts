@@ -2,6 +2,7 @@ import { Field, InterfaceType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { assert } from 'ts-essentials';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { ScopedRole } from '../components/authorization';
 import { ID, IdField } from './id-field';
 import { DateTimeField } from './luxon.graphql';
 import { SecuredProps, UnsecuredDto } from './secured-property';
@@ -27,6 +28,10 @@ export abstract class Resource {
     description: 'Whether the requesting user can delete this resource',
   })
   readonly canDelete: boolean;
+
+  // A list of non-global roles the requesting user has available for this object.
+  // This is used by the authorization module to determine permissions.
+  readonly scope?: ScopedRole[];
 
   protected constructor() {
     // no instantiation, shape only
