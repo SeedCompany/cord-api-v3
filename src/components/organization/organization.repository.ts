@@ -6,7 +6,6 @@ import {
   ACTIVE,
   createNode,
   matchPropsAndProjectSensAndScopedRoles,
-  merge,
   paginate,
   permissionsOfNode,
   requestingUser,
@@ -70,11 +69,7 @@ export class OrganizationRepository extends DtoRepository(Organization) {
           node('node'),
         ])
         .apply(matchPropsAndProjectSensAndScopedRoles(session))
-        .return<{ dto: UnsecuredDto<Organization> }>(
-          merge('props', {
-            scope: 'scopedRoles',
-          }).as('dto')
-        );
+        .return<{ dto: UnsecuredDto<Organization> }>('props as dto');
   }
 
   async list({ filter, ...input }: OrganizationListInput, session: Session) {

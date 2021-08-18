@@ -114,7 +114,6 @@ export class ProjectRepository extends CommonRepository {
             marketingLocation: 'marketingLocation.id',
             fieldRegion: 'fieldRegion.id',
             owningOrganization: 'organization.id',
-            scope: 'scopedRoles',
             changeset: 'changeset.id',
           }).as('dto')
         );

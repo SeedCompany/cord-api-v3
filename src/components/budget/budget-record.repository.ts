@@ -149,7 +149,6 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
           .return<{ dto: UnsecuredDto<BudgetRecord> }>(
             merge('props', 'changedProps', {
               organization: 'organization.id',
-              scope: 'scopedRoles',
               changeset: 'changeset.id',
             }).as(outputVar)
           )

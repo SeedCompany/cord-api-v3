@@ -110,7 +110,6 @@ export class PartnerRepository extends DtoRepository(Partner) {
           merge('props', {
             organization: 'organization.id',
             pointOfContact: 'pointOfContact.id',
-            scope: 'scopedRoles',
           }).as('dto')
         );
   }

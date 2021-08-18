@@ -99,7 +99,6 @@ export class BudgetRepository extends DtoRepository(Budget) {
       .apply(matchChangesetAndChangedProps(view?.changeset))
       .return<{ dto: UnsecuredDto<Budget> }>(
         merge('props', 'changedProps', {
-          scope: 'scopedRoles',
           changeset: 'changeset.id',
         }).as('dto')
       )

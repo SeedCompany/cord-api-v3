@@ -6,7 +6,6 @@ import {
   ACTIVE,
   createNode,
   matchPropsAndProjectSensAndScopedRoles,
-  merge,
   paginate,
   permissionsOfNode,
   requestingUser,
@@ -43,11 +42,7 @@ export class CeremonyRepository extends DtoRepository(Ceremony) {
         node('node', 'Ceremony', { id }),
       ])
       .apply(matchPropsAndProjectSensAndScopedRoles(session))
-      .return<{ dto: UnsecuredDto<Ceremony> }>(
-        merge('props', {
-          scope: 'scopedRoles',
-        }).as('dto')
-      );
+      .return<{ dto: UnsecuredDto<Ceremony> }>('props as dto');
 
     const result = await query.first();
     if (!result) {

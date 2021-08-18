@@ -40,8 +40,8 @@ export const matchPropsAndProjectSensAndScopedRoles =
         .return([
           merge(propsOptions?.outputVar ?? 'props', {
             sensitivity: 'sensitivity',
+            scope: session ? `scopedRoles` : null,
           }).as(propsOptions?.outputVar ?? 'props'),
-          session ? `scopedRoles` : '[] as scopedRoles',
         ])
     );
 

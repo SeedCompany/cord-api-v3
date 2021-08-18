@@ -142,7 +142,6 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
           partner: 'partner.id',
           organization: 'org.id',
           changeset: 'changeset.id',
-          scope: 'scopedRoles',
         }).as('dto')
       );
 

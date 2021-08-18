@@ -7,13 +7,11 @@ import { DtoRepository, property } from '../../../core';
 import {
   ACTIVE,
   matchPropsAndProjectSensAndScopedRoles,
-  merge,
   paginate,
   permissionsOfNode,
   requestingUser,
   sorting,
 } from '../../../core/database/query';
-import { ScopedRole } from '../../authorization';
 
 @Injectable()
 export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
@@ -95,12 +93,7 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
       .return<{
         dto: UnsecuredDto<ProjectMember>;
         userId: ID;
-      }>([
-        merge('props', {
-          scope: 'scopedRoles',
-        }).as('dto'),
-        'user.id as userId',
-      ]);
+      }>(['props as dto', 'user.id as userId']);
     return await query.first();
   }
 
