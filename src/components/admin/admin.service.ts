@@ -45,11 +45,9 @@ export class AdminService implements OnApplicationBootstrap {
   async pgInit() {
     await this.repo.pgInit();
   }
+
   async loadTestData() {
     await this.repo.loadTestData();
-  }
-  async loadTestDataTriggers() {
-    await this.repo.loadTestDataTriggers();
   }
 
   @Transactional()

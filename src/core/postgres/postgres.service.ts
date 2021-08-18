@@ -12,9 +12,25 @@ export class PostgresService {
     @Logger('postgres:service') private readonly logger: ILogger
   ) {}
 
+  private pgInitStatus = false;
   pool = new Pool({
     ...this.config.postgres,
   });
+
+  async usePool() {
+    if (!this.pgInitStatus) {
+      this.init();
+      this.loadTestDataUsingTriggers();
+      this.pgInitStatus = true;
+    }
+    return this.pool;
+  }
+  // def init:
+  //   if !pgInitStatus then
+  //     pg.init
+  //     pg.dataScript -> sample data
+  //     pgInitStatus = true
+  //   return pool
 
   async executeSQLFiles(client: PoolClient, dirPath: string): Promise<number> {
     const files = fs.readdirSync(dirPath);
@@ -29,7 +45,7 @@ export class PostgresService {
         // load script into db
         this.logger.info('file: ', { fileOrDirPath });
         const sql = fs.readFileSync(fileOrDirPath).toString();
-        await client.query(sql);
+        await this.pool.query(sql);
       }
     }
 
@@ -38,6 +54,7 @@ export class PostgresService {
 
   async init(): Promise<number> {
     const client = await this.pool.connect();
+
     try {
       const dbInitPath = path.join(
         __dirname,
@@ -67,7 +84,8 @@ export class PostgresService {
     return string;
   }
 
-  async loadTestDataUsingGenericCreate() {
+  async loadTestDataUsingTriggers() {
+    const client = await this.pool.connect();
     const genericFnsPath = path.join(
       __dirname,
       '..',
@@ -75,11 +93,10 @@ export class PostgresService {
       '..',
       'src/core/postgres/sql/generic_fns_approach'
     );
-    const client = await this.pool.connect();
     await this.executeSQLFiles(client, genericFnsPath);
     // PEOPLE, ORGS, USERS
 
-    await client.query(
+    await this.pool.query(
       `call public.create(0,'public.people_data',$1 ,2,2,1,3); `,
       [
         this.convertObjectToHstore({
@@ -90,7 +107,7 @@ export class PostgresService {
       ]
     );
 
-    await client.query(
+    await this.pool.query(
       `call public.create(0,'public.organizations_data', $1, 2,2,1,3);`,
       [
         this.convertObjectToHstore({
@@ -100,7 +117,7 @@ export class PostgresService {
       ]
     );
 
-    await client.query(
+    await this.pool.query(
       `call public.create(0,'public.users_data', $1, 2,2,1,3);`,
       [
         this.convertObjectToHstore({
@@ -113,7 +130,7 @@ export class PostgresService {
       ]
     );
 
-    await client.query(
+    await this.pool.query(
       `call public.create(0,'public.global_roles_data', $1, 2,2,1,3);`,
       [
         this.convertObjectToHstore({
@@ -124,21 +141,22 @@ export class PostgresService {
       ]
     );
     // GRANTS & MEMBERSHIPS
-    const tables = await client.query(
+    const tables = await this.pool.query(
       `select table_name from information_schema.tables where table_schema = 'public' and table_name like '%_data' order by table_name limit 5`
     );
 
     for (const { table_name } of tables.rows) {
-      const columns = await client.query(
+      const columns = await this.pool.query(
         `select column_name from information_schema.columns where table_schema='public' and table_name = $1`,
         [table_name]
       );
+
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       const schemaTableName = `public.${table_name}`;
       this.logger.info(schemaTableName);
       for (const { column_name } of columns.rows) {
-        await client.query(
-          `call public.create(0, 'public.global_role_column_grants', $1,2,2,1,3)`,
+        await this.pool.query(
+          `call public.create(0, 'public.global_role_column_grants', $1,2,2,0,3)`,
           [
             this.convertObjectToHstore({
               global_role: 0,
@@ -150,26 +168,10 @@ export class PostgresService {
         );
       }
     }
-
-    // add role member
-    const users = await client.query(`select person from public.users_data`);
-    this.logger.info('adding role memberships', { userRows: users.rows });
-
-    for (const { person } of users.rows) {
-      await client.query(
-        `call public.create(0, 'public.global_role_memberships', $1,2,2,1,3)`,
-        [
-          this.convertObjectToHstore({
-            global_role: 0,
-            person,
-          }),
-        ]
-      );
-      this.logger.info('global_role_memberships', { person });
-    }
+   
 
     // PROJECTS
-    await client.query(
+    await this.pool.query(
       `call public.create(0, 'public.projects_data', $1,2,2,1,3)`,
       [
         this.convertObjectToHstore({
@@ -179,8 +181,8 @@ export class PostgresService {
       ]
     );
     // LANGUAGES
-    await client.query(
-      `call public.create(0,'sil.table_of_languages', $1, 2,2,1,3)`,
+    await this.pool.query(
+      `call public.create(0,'sil.table_of_languages', $1, 2,0,0,3)`,
       [
         this.convertObjectToHstore({
           id: 0,
@@ -190,7 +192,7 @@ export class PostgresService {
       ]
     );
 
-    await client.query(
+    await this.pool.query(
       `call public.create(0,'sc.languages_data', $1,2,2,1,3)`,
       [
         this.convertObjectToHstore({
@@ -203,7 +205,7 @@ export class PostgresService {
     );
 
     // LOCATIONS
-    await client.query(
+    await this.pool.query(
       `call public.create(0,'public.locations_data', $1,2,2,1,3)`,
       [
         this.convertObjectToHstore({
@@ -214,109 +216,14 @@ export class PostgresService {
         }),
       ]
     );
-    client.release();
-    console.timeEnd('generic');
-    this.logger.info('all queries run');
-  }
 
-  async loadTestDataUsingTriggers() {
-    const triggersPath = path.join(
-      __dirname,
-      '..',
-      '..',
-      '..',
-      'src/core/postgres/sql/trigger_approach'
-    );
-    const client = await this.pool.connect();
-    await this.executeSQLFiles(client, triggersPath);
-    await client.query(
-      `insert into public.people_data(id,about,public_first_name) values($1,$2,$3)`,
-      [0, 'Vivek', 'developer']
-    );
-    await client.query(
-      `insert into public.organizations_data(id,name) values($1,$2)`,
-      [0, 'defaultOrg']
-    );
-    await client.query(
-      `insert into public.users_data(id,person, email, owning_org, password) values($1,$2,$3,$4,$5)`,
-      [0, 0, 'vivek@tsco.org', 0, 'password']
-    );
-    await client.query(
-      `insert into public.global_roles_data(id,name,org) values($1,$2,$3)`,
-      [0, 'defaultRole', 0]
-    );
-    const tables = await client.query(
-      `select table_name from information_schema.tables where table_schema = 'public' and table_name like '%_data' order by table_name limit 5`
-    );
-
-    for (const { table_name } of tables.rows) {
-      const columns = await client.query(
-        `select column_name from information_schema.columns where table_schema='public' and table_name = $1`,
-        [table_name]
-      );
-      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      const schemaTableName = `public.${table_name}`;
-      this.logger.info(schemaTableName);
-      for (const { column_name } of columns.rows) {
-        await client.query(
-          `insert into public.global_role_column_grants(global_role, table_name,column_name, access_level) values($1,$2,$3,$4)`,
-          [0, schemaTableName, column_name, 'Write']
-        );
-      }
-    }
-    const users = await client.query(`select person from public.users_data`);
-    this.logger.info('adding role memberships', { userRows: users.rows });
-
-    for (const { person } of users.rows) {
-      await client.query(
-        `insert into public.global_role_memberships(global_role, person) values($1,$2)`,
-        [0, person]
-      );
-      this.logger.info('global_role_memberships', { person });
-    }
-
-    await client.query(
-      `insert into public.projects_data(id,name) values($1,$2)`,
-      [0, 'project0']
-    );
-
-    await client.query(
-      `insert into sil.table_of_languages(id, iso_639, language_name) values(0, 'txn', 'texan')`
-    );
-
-    await client.query(
-      `insert into sc.languages_data(id,display_name, name,sensitivity) values($1,$2,$3,$4)`,
-      [0, 'texan', 'texan', 'Medium']
-    );
-
-    await client.query(
-      `insert into public.locations_data(id,name,sensitivity,type) values($1,$2,$3,$4)`,
-      [0, 'location0', 'Low', 'Country']
-    );
-    // await client.query(
-    //   `insert into public.people_data(id,about, public_first_name) values(generate_series(1,100), 'about' || generate_series(1,100), 'name' || generate_series(1,100))`
-    // );
-    // for (let i = 1; i <= 100; i++) {
-    //   await client.query(
-    //     `insert into public.people_data(id, public_first_name) values($1,$2)`,
-    //     [i, 'Vivek']
-    //   );
-    // }
-    console.timeEnd('triggers');
     this.logger.info('people inserted');
-    await client.query(
+    await this.pool.query(
       `insert into public.organizations_data(id,name, sensitivity) values(1,'org1', 'Low')`
     );
-    const genericFnsPath = path.join(
-      __dirname,
-      '..',
-      '..',
-      '..',
-      'src/core/postgres/sql/generic_fns_approach'
-    );
-    await this.executeSQLFiles(client, genericFnsPath);
-    for (let i = 1; i <= 100; i++) {
-      await client.query(
+
+    for (let i = 1; i <= 10; i++) {
+      await this.pool.query(
         `call public.create(0,'public.people_data',$1 ,2,2,1,3); `,
         [
           this.convertObjectToHstore({
@@ -327,8 +234,12 @@ export class PostgresService {
         ]
       );
     }
-    for (let i = 1; i <= 99; i++) {
-      await client.query(
+    const data = await this.pool.query(
+      `select * from public.people_materialized_view where __person_id = 10 and __id = 10`
+    );
+    console.log(data);
+    for (let i = 0; i < 10; i++) {
+      await this.pool.query(
         `call public.create(0,'public.global_role_memberships',$1, 0,0,0,0)`,
         [
           this.convertObjectToHstore({
@@ -339,20 +250,20 @@ export class PostgresService {
       );
       this.logger.info('generic create run');
     }
-    // await client.query(
-    await client.query(
-      `call public.create(0,'public.global_role_memberships',$1, 2,2,1,3)`,
+    // await this.pool.query(
+    await this.pool.query(
+      `call public.create(0,'public.global_role_memberships',$1, 2,2,0,3)`,
       [
         this.convertObjectToHstore({
           global_role: 0,
-          person: 100,
+          person: 10,
         }),
       ]
     );
     console.time('genericOrgs');
-    for (let i = 2; i <= 100; i++) {
+    for (let i = 2; i <= 10; i++) {
       console.log(i);
-      await client.query(
+      await this.pool.query(
         `call public.create(0,'public.organizations_data', $1, 2,0,1,3);`,
         [
           this.convertObjectToHstore({
@@ -362,13 +273,16 @@ export class PostgresService {
           }),
         ]
       );
+      await this.pool.query(
+        `refresh materialized view concurrently public.organizations_materialized_view`
+      );
     }
-    // await client.query('analyze');
-    for (let i = 1; i <= 3000; i++) {
+    // await this.pool.query('analyze');
+    for (let i = 1; i <= 10; i++) {
       console.log(i);
       // refreshing mv outside the create fn is much faster for some reason
-      await client.query(
-        `call public.create(0,'public.locations_data', $1,2,0,1,3)`,
+      await this.pool.query(
+        `call public.create(0,'public.locations_data', $1,2,2,1,3)`,
         [
           this.convertObjectToHstore({
             id: i,
@@ -378,28 +292,11 @@ export class PostgresService {
           }),
         ]
       );
-      await client.query(
-        `refresh materialized view concurrently public.locations_materialized_view`
-      );
+      // await this.pool.query(
+      //   `refresh materialized view concurrently public.locations_materialized_view`
+      // );
     }
-    // insertRecord(personid, recordobject, tablename)
-    // -> createMethod
-    // -> refresh the mv
-    console.timeEnd('genericOrgs');
-    await this.executeSQLFiles(client, triggersPath);
-    // await client.query(
-    //   `insert into public.users_data(id,person, email, owning_org, password) values(generate_series(1,100), generate_series(1,100), 'user' || generate_series(1,100) || '@tsco.org', 0, 'password')`
-    // );
 
-    // console.time('triggerOrgs');
-    // for (let i = 2; i <= 100; i++) {
-    //   console.log(i);
-    //   await client.query(
-    //     `insert into public.organizations_data(id,name) values($1, $2)`,
-    //     [i, `org${i}`]
-    //   );
-    // }
-    // console.timeEnd('triggerOrgs');
     client.release();
   }
 }

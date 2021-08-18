@@ -25,12 +25,6 @@ export class AdminRepository {
   }
 
   async loadTestData() {
-    // 1.6s without refreshing mv concurrently
-    console.time('generic');
-    await this.pg.loadTestDataUsingGenericCreate();
-  }
-
-  async loadTestDataTriggers() {
     console.time('triggers');
     await this.pg.loadTestDataUsingTriggers();
   }

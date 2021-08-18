@@ -26,18 +26,12 @@ export class AdminResolver {
     await this.service.pgInit();
     return true;
   }
+
   @Mutation(() => Boolean, {
     description: 'Run loadTestData script',
   })
   async loadTestData() {
     await this.service.loadTestData();
-    return true;
-  }
-  @Mutation(() => Boolean, {
-    description: 'Run loadTestDataTriggers script',
-  })
-  async loadTestDataTriggers() {
-    await this.service.loadTestDataTriggers();
     return true;
   }
 }

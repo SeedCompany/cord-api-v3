@@ -232,7 +232,7 @@ export class UserRepository extends DtoRepository(User) {
     // await client.query(`select * from public.people_data`);
 
     await client.query(
-      `select public.create(0,'public.people_data',$1 ,2,1,1,1); `,
+      `call public.create(0,'public.people_data',$1 ,2,1,1,1); `,
       [
         this.pg.convertObjectToHstore({
           id: 1,
@@ -247,7 +247,7 @@ export class UserRepository extends DtoRepository(User) {
       ]
     );
     // await client.query(
-    //   `select public.create(0,'public.organizations_data', $1, 2,1,1,1)`,
+    //   `call public.create(0,'public.organizations_data', $1, 2,1,1,1)`,
     //   [
     //     this.pg.convertObjectToHstore({
     //       id: 1,
@@ -256,7 +256,7 @@ export class UserRepository extends DtoRepository(User) {
     //   ]
     // );
     await client.query(
-      `select public.create(0,'public.users_data',$1 ,2,1,1,1); `,
+      `call public.create(0,'public.users_data',$1 ,2,1,1,1); `,
       [
         this.pg.convertObjectToHstore({
           id: 1,

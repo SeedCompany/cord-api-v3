@@ -191,6 +191,7 @@ create table if not exists public.global_role_memberships (
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
     modified_by int not null default 0,
 	person int,
+	unique(global_role,person),
 --	foreign key (created_by) references public.people_data(id), -- fk added later
 	foreign key (global_role) references public.global_roles_data(id)
 );
