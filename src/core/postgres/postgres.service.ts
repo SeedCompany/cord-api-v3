@@ -25,12 +25,6 @@ export class PostgresService {
     }
     return this.pool;
   }
-  // def init:
-  //   if !pgInitStatus then
-  //     pg.init
-  //     pg.dataScript -> sample data
-  //     pgInitStatus = true
-  //   return pool
 
   async executeSQLFiles(client: PoolClient, dirPath: string): Promise<number> {
     const files = fs.readdirSync(dirPath);
@@ -147,8 +141,8 @@ export class PostgresService {
 
     for (const { table_name } of tables.rows) {
       const columns = await this.pool.query(
-        `select column_name from information_schema.columns where table_schema='public' and table_name = $1`,
-        [table_name]
+        `select column_name from information_schema.columns where table_schema='public' and table_name in ($1)`,
+        ['locations_data, people_data, organizations_data']
       );
 
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
