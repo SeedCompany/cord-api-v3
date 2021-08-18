@@ -13,6 +13,8 @@ import {
   ACTIVE,
   createNode,
   createRelationships,
+  matchProjectScopedRoles,
+  matchProjectSens,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
   paginate,
@@ -178,14 +180,14 @@ export class PartnerRepository extends DtoRepository(Partner) {
               // group by project so this next bit doesn't run multiple times for a single project
               .with(['project', 'collect(node) as partners', 'requestingUser'])
               .apply(
-                matchPropsAndProjectSensAndScopedRoles(
-                  variable('requestingUser'),
-                  undefined,
-                  true
-                )
+                matchProjectScopedRoles({
+                  session: variable('requestingUser'),
+                })
               )
-              .subQuery('sensitivity', (sub) =>
-                sub.return(`${rankSens('sensitivity')} as sens`)
+              .subQuery('project', (sub) =>
+                sub
+                  .apply(matchProjectSens())
+                  .return(`${rankSens('sensitivity')} as sens`)
               )
               .raw('UNWIND partners as node')
               .matchNode('node')
