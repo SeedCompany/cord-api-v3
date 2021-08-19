@@ -1,15 +1,16 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, Float, InputType, ObjectType } from '@nestjs/graphql';
 import { Transform, Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
+import { IsPositive, ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
 import { uniq } from 'lodash';
-import { ID, IdField } from '../../../common';
+import { ID, IdField, NameField, OmitType } from '../../../common';
 import { ScriptureRangeInput } from '../../scripture';
 import { MethodologyStep } from './methodology-step.enum';
 import { ProductMedium } from './product-medium';
 import { ProductMethodology } from './product-methodology';
 import { ProductPurpose } from './product-purpose';
 import { AnyProduct, Product } from './product.dto';
+import { ProgressMeasurement } from './progress-measurement.enum';
 
 @InputType()
 export abstract class CreateProduct {
@@ -71,6 +72,22 @@ export abstract class CreateProduct {
 
   @Field({ nullable: true })
   readonly describeCompletion?: string;
+
+  @Field(() => ProgressMeasurement, {
+    description: 'How will progress for each step be measured?',
+  })
+  readonly progressStepMeasurement?: ProgressMeasurement =
+    ProgressMeasurement.Percent;
+
+  @Field(() => Float, {
+    nullable: true,
+    description: stripIndent`
+      The target number that \`StepProgress\` is working towards.
+      This input is only considered if \`progressStepMeasurement\` is \`Number\`
+    `,
+  })
+  @IsPositive()
+  readonly progressTarget?: number;
 }
 
 @InputType()
@@ -79,6 +96,19 @@ export abstract class CreateProductInput {
   @Type(() => CreateProduct)
   @ValidateNested()
   readonly product: CreateProduct;
+}
+
+@InputType()
+export abstract class CreateOtherProduct extends OmitType(CreateProduct, [
+  'produces',
+  'scriptureReferences',
+  'scriptureReferencesOverride',
+] as const) {
+  @NameField()
+  readonly title: string;
+
+  @Field(() => String, { nullable: true })
+  readonly description?: string | null;
 }
 
 @ObjectType()

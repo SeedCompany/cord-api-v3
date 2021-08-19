@@ -319,6 +319,10 @@ export const ConsultantManagerGlobal = new DbRole({
         { propertyName: 'scriptureReferencesOverride', permission: { read, }, },
         { propertyName: 'isOverriding', permission: { read, }, },
         { propertyName: 'describeCompletion', permission: { read, }, },
+        { propertyName: 'progressStepMeasurement', permission: { read, }, },
+        { propertyName: 'progressTarget', permission: { read, }, },
+        { propertyName: 'title', permission: { read, }, },
+        { propertyName: 'description', permission: { read, }, },
       ],
       canDelete: false,
     }),
@@ -433,7 +437,7 @@ export const ConsultantManagerGlobal = new DbRole({
       __className: 'DbStepProgress',
       properties: [
         {
-          propertyName: 'percentDone', permission: { read },
+          propertyName: 'completed', permission: { read },
         }
       ],
       canDelete: false,

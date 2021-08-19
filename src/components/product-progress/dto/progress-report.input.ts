@@ -41,8 +41,20 @@ export abstract class StepProgressInput {
     nullable: true,
     description:
       'The new percent (0-100) complete for the step or null to remove the current value.',
+    deprecationReason: 'Use `StepProgressInput.percentDone` instead.',
   })
   @Min(0)
   @Max(100)
-  readonly percentDone: number | null;
+  readonly percentDone?: number | null;
+
+  @Field(() => Float, {
+    nullable: true,
+    description: stripIndent`
+      The new completed value for the step or null to remove the current value.
+
+      This should be 0 <= \`completed\` <= the product's \`progressTarget\` number.
+    `,
+  })
+  @Min(0)
+  readonly completed?: number | null;
 }

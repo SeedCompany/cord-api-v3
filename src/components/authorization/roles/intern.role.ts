@@ -313,6 +313,10 @@ export const Intern = new DbRole({
         { propertyName: 'scriptureReferencesOverride', permission: { read, write, }, },
         { propertyName: 'isOverriding', permission: { read, write, }, },
         { propertyName: 'describeCompletion', permission: { read, write, }, },
+        { propertyName: 'progressStepMeasurement', permission: { read, write, }, },
+        { propertyName: 'progressTarget', permission: { read, write, }, },
+        { propertyName: 'title', permission: { read, write, }, },
+        { propertyName: 'description', permission: { read, write, }, },
       ],
       canDelete: false,
     }),
@@ -427,7 +431,7 @@ export const Intern = new DbRole({
       __className: 'DbStepProgress',
       properties: [
         {
-          propertyName: 'percentDone', permission: { read },
+          propertyName: 'completed', permission: { read },
         }
       ],
       canDelete: false,

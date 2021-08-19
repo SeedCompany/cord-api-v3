@@ -168,7 +168,7 @@ export class ProductProgressRepository {
                 // progress reported.
                 steps: stripIndent`
                   [step in declaredSteps.value |
-                    apoc.map.get(progressStepMap, step, { step: step, percentDone: null })
+                    apoc.map.get(progressStepMap, step, { step: step, completed: null })
                   ]
                 `,
               }).as('dto')
@@ -250,16 +250,16 @@ export class ProductProgressRepository {
               })
               .return('stepNode')
           ).raw`
-            // Update percents that have changed
+            // Update current completed values that have changed
             WITH *
-            WHERE NOT (stepNode)-[:percentDone { active: true }]->(:Property { value: stepInput.percentDone })
+            WHERE NOT (stepNode)-[:completed { active: true }]->(:Property { value: stepInput.completed })
           `
           .apply(
             updateProperty({
               nodeName: 'stepNode',
               resource: StepProgress,
-              key: 'percentDone',
-              variable: 'stepInput.percentDone',
+              key: 'completed',
+              variable: 'stepInput.completed',
             })
           )
           .return([
@@ -297,7 +297,18 @@ export class ProductProgressRepository {
       ])
       .apply(matchProjectScopedRoles({ session }))
       .apply(matchProjectSens())
-      .return(['sensitivity', 'scopedRoles']);
+      .subQuery('product', (sub) =>
+        sub
+          .match([
+            node('product'),
+            relation('out', '', 'progressTarget', { active: true }),
+            node('progressTarget', 'Property'),
+          ])
+          .return<{ progressTarget: number }>(
+            'progressTarget.value as progressTarget'
+          )
+      )
+      .return(['sensitivity', 'scopedRoles', 'progressTarget']);
     const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find product');

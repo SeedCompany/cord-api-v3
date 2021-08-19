@@ -1,6 +1,7 @@
 import { EventsHandler } from '../../../core';
 import { ReportType } from '../../periodic-report/dto';
 import { PeriodicReportUploadedEvent } from '../../periodic-report/events';
+import { SummaryPeriod } from '../dto';
 import { ProgressExtractor } from '../progress-extractor.service';
 import { ProgressSummaryRepository } from '../progress-summary.repository';
 
@@ -16,11 +17,33 @@ export class ExtractPnpFileOnUploadHandler {
       return;
     }
 
-    const summary = await this.extractor.extract(event.file);
-    if (!summary) {
-      return; // error already logged
-    }
+    const workbook = await this.extractor.readWorkbook(event.file);
 
-    await this.repo.save(event.report, summary);
+    const extracted = this.extractor.extract(
+      workbook,
+      event.file,
+      event.report.start
+    );
+    if (extracted?.cumulative) {
+      await this.repo.save(
+        event.report,
+        SummaryPeriod.Cumulative,
+        extracted.cumulative
+      );
+    }
+    if (extracted?.reportPeriod) {
+      await this.repo.save(
+        event.report,
+        SummaryPeriod.ReportPeriod,
+        extracted.reportPeriod
+      );
+    }
+    if (extracted?.fiscalYear) {
+      await this.repo.save(
+        event.report,
+        SummaryPeriod.FiscalYearSoFar,
+        extracted.fiscalYear
+      );
+    }
   }
 }

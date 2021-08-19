@@ -3,6 +3,7 @@ import { SecuredEnumList } from '../../../common';
 
 export enum Role {
   Administrator = 'Administrator',
+  BetaTester = 'BetaTester',
   BibleTranslationLiaison = 'BibleTranslationLiaison',
   Consultant = 'Consultant',
   ConsultantManager = 'ConsultantManager',
@@ -44,6 +45,7 @@ export const rolesForScope =
 
 export type InternalRole =
   | 'AdministratorRole'
+  | 'BetaTesterRole'
   | 'BibleTranslationLiaisonRole'
   | 'ConsultantRole'
   | 'ConsultantManagerRole'

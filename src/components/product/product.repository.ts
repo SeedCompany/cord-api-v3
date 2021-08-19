@@ -27,15 +27,18 @@ import {
 import { BaseNode } from '../../core/database/results';
 import { ScriptureRange, ScriptureRangeInput } from '../scripture';
 import {
+  CreateOtherProduct,
   CreateProduct,
   DerivativeScriptureProduct,
   DirectScriptureProduct,
   ProductMethodology as Methodology,
+  OtherProduct,
   Product,
   ProductCompletionDescriptionSuggestionsInput,
   ProductListInput,
   UpdateProduct,
 } from './dto';
+import { ProgressMeasurement } from './dto/progress-measurement.enum';
 
 @Injectable()
 export class ProductRepository extends CommonRepository {
@@ -98,11 +101,19 @@ export class ProductRepository extends CommonRepository {
             }
           >;
         }>(
-          merge('props', {
-            engagement: 'engagement.id',
-            scope: 'scopedRoles',
-            produces: 'produces',
-          }).as('dto')
+          merge(
+            {
+              // BC with existing products
+              progressStepMeasurement: `"${ProgressMeasurement.Percent}"`,
+              progressTarget: 100,
+            },
+            'props',
+            {
+              engagement: 'engagement.id',
+              scope: 'scopedRoles',
+              produces: 'produces',
+            }
+          ).as('dto')
         );
   }
 
@@ -120,6 +131,7 @@ export class ProductRepository extends CommonRepository {
   }
 
   getActualDerivativeChanges = getChanges(DerivativeScriptureProduct);
+  getActualOtherChanges = getChanges(OtherProduct);
 
   async findProducible(produces: ID | undefined) {
     return await this.db
@@ -195,6 +207,38 @@ export class ProductRepository extends CommonRepository {
     return result.id;
   }
 
+  async createOther(input: CreateOtherProduct) {
+    const initialProps = {
+      mediums: input.mediums,
+      purposes: input.purposes,
+      methodology: input.methodology,
+      steps: input.steps,
+      describeCompletion: input.describeCompletion,
+      title: input.title,
+      description: input.description,
+      canDelete: true,
+    };
+
+    const query = this.db
+      .query()
+      .apply(
+        await createNode(OtherProduct, {
+          initialProps,
+        })
+      )
+      .apply(
+        createRelationships(OtherProduct, 'in', {
+          product: ['LanguageEngagement', input.engagementId],
+        })
+      )
+      .return<{ id: ID }>('node.id as id');
+    const result = await query.first();
+    if (!result) {
+      throw new ServerException('Failed to create product');
+    }
+    return result.id;
+  }
+
   async updateProducible(
     input: Except<UpdateProduct, 'scriptureReferences'>,
     produces: ID
@@ -241,6 +285,14 @@ export class ProductRepository extends CommonRepository {
   ) {
     return await this.db.updateProperties({
       type: DerivativeScriptureProduct,
+      object,
+      changes,
+    });
+  }
+
+  async updateOther(object: OtherProduct, changes: DbChanges<OtherProduct>) {
+    return await this.db.updateProperties({
+      type: OtherProduct,
       object,
       changes,
     });
