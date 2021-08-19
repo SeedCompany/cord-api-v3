@@ -32,8 +32,14 @@ registerEnumType(Role, { name: 'Role' });
 })
 export abstract class SecuredRoles extends SecuredEnumList(Role) {}
 
+export type ProjectScope = 'project';
+export type GlobalScope = 'global';
+
 // Scope for roles. Does this role apply anywhere or only with project membership?
-export type AuthScope = 'global' | 'project';
+export type AuthScope = GlobalScope | ProjectScope;
+
+export type ProjectScopedRole = `${ProjectScope}:${Role}`;
+export type GlobalScopedRole = `${GlobalScope}:${Role}`;
 
 export type ScopedRole = `${AuthScope}:${Role}`;
 
