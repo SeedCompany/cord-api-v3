@@ -1,8 +1,8 @@
 import { Connection } from 'cypher-query-builder';
 import { CalendarDate } from '../../src/common';
-import { Powers } from '../../src/components/authorization/dto/powers';
+import { Powers, Role } from '../../src/components/authorization';
 import { PartnerType } from '../../src/components/partner';
-import { Project, Role } from '../../src/components/project';
+import { Project } from '../../src/components/project';
 import {
   createOrganization,
   createPartner,
