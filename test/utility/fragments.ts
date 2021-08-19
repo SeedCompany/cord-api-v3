@@ -668,6 +668,8 @@ export const projectMember = gql`
       canEdit
     }
     user {
+      canRead
+      canEdit
       value {
         id
       }
