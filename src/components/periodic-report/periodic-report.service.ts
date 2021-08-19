@@ -120,7 +120,7 @@ export class PeriodicReportService {
       );
     }
 
-    const result = await this.repo.readOne(id);
+    const result = await this.repo.readOne(id, session);
     return await this.secure(result, session);
   }
 
@@ -131,7 +131,8 @@ export class PeriodicReportService {
     const securedProps = await this.authorizationService.secureProperties(
       IPeriodicReport,
       dto,
-      session
+      session,
+      dto.scope
     );
 
     return {
@@ -163,7 +164,7 @@ export class PeriodicReportService {
     reportType: ReportType,
     session: Session
   ): Promise<PeriodicReport | undefined> {
-    const report = await this.repo.getCurrentDue(parentId, reportType);
+    const report = await this.repo.getCurrentDue(parentId, reportType, session);
     return report ? await this.secure(report, session) : undefined;
   }
 
@@ -176,7 +177,7 @@ export class PeriodicReportService {
     reportType: ReportType,
     session: Session
   ): Promise<PeriodicReport | undefined> {
-    const report = await this.repo.getNextDue(parentId, reportType);
+    const report = await this.repo.getNextDue(parentId, reportType, session);
     return report ? await this.secure(report, session) : undefined;
   }
 
@@ -185,7 +186,11 @@ export class PeriodicReportService {
     type: ReportType,
     session: Session
   ): Promise<PeriodicReport | undefined> {
-    const report = await this.repo.getLatestReportSubmitted(parentId, type);
+    const report = await this.repo.getLatestReportSubmitted(
+      parentId,
+      type,
+      session
+    );
     return report ? await this.secure(report, session) : undefined;
   }
 
@@ -219,7 +224,7 @@ export class PeriodicReportService {
     type: ReportType,
     session: Session
   ): Promise<PeriodicReport | undefined> {
-    const report = await this.repo.getFinalReport(parentId, type);
+    const report = await this.repo.getFinalReport(parentId, type, session);
     return report ? await this.secure(report, session) : undefined;
   }
 
@@ -229,7 +234,7 @@ export class PeriodicReportService {
     at: CalendarDate,
     session: Session
   ): Promise<void> {
-    const report = await this.repo.getFinalReport(parentId, type);
+    const report = await this.repo.getFinalReport(parentId, type, session);
 
     if (report) {
       await this.repo.updateProperties(report, {
