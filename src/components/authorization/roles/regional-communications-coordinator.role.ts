@@ -48,6 +48,7 @@ export const RegionalCommunicationsCoordinator = new DbRole({
   grants: [
     new DbBaseNodeGrant<DbBudget>({
       __className: 'DbBudget',
+      canList: false,
       properties: [
         { propertyName: 'universalTemplateFile', permission: {}, },
         { propertyName: 'records', permission: {}, },
@@ -276,6 +277,7 @@ export const RegionalCommunicationsCoordinator = new DbRole({
     }),
     new DbBaseNodeGrant<DbPartnership>({
       __className: 'DbPartnership',
+      canList: true,
       properties: [
         { propertyName: 'agreement', permission: { read, }, },
         { propertyName: 'agreementStatus', permission: { read, }, },
@@ -322,6 +324,7 @@ export const RegionalCommunicationsCoordinator = new DbRole({
     }),
     new DbBaseNodeGrant<DbProject>({
       __className: 'DbProject',
+      canList: true,
       properties: [
         { propertyName: 'estimatedSubmission', permission: { read, }, },
         { propertyName: 'step', permission: { read, }, },
@@ -351,6 +354,7 @@ export const RegionalCommunicationsCoordinator = new DbRole({
     }),
     new DbBaseNodeGrant<DbProjectMember>({
       __className: 'DbProjectMember',
+      canList: true,
       properties: [
         { propertyName: 'roles', permission: { read, }, },
         { propertyName: 'user', permission: { read, }, },

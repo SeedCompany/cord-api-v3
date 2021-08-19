@@ -55,6 +55,8 @@ export const ConsultantManagerGlobal = new DbRole({
   grants: [
     new DbBaseNodeGrant<DbBudget>({
       __className: 'DbBudget',
+      canList: true,
+      sensitivityAccess: Sensitivity.Medium,
       properties: [
         { propertyName: 'universalTemplateFile', permission: { read, sensitivityAccess: Sensitivity.Medium}, },
         { propertyName: 'records', permission: { read, sensitivityAccess: Sensitivity.Medium }, },
@@ -283,6 +285,7 @@ export const ConsultantManagerGlobal = new DbRole({
     }),
     new DbBaseNodeGrant<DbPartnership>({
       __className: 'DbPartnership',
+      canList: true,
       properties: [
         { propertyName: 'agreement', permission: { read, }, },
         { propertyName: 'agreementStatus', permission: { read, }, },
@@ -329,6 +332,7 @@ export const ConsultantManagerGlobal = new DbRole({
     }),
     new DbBaseNodeGrant<DbProject>({
       __className: 'DbProject',
+      canList: true,
       properties: [
         { propertyName: 'estimatedSubmission', permission: { read, write, }, },
         { propertyName: 'step', permission: { read, write, }, },
@@ -360,6 +364,7 @@ export const ConsultantManagerGlobal = new DbRole({
     }),
     new DbBaseNodeGrant<DbProjectMember>({
       __className: 'DbProjectMember',
+      canList: true,
       properties: [
         { propertyName: 'roles', permission: { read, write, }, },
         { propertyName: 'user', permission: { read, write, }, },
