@@ -19,15 +19,16 @@ import {
   createRelationships,
   INACTIVE,
   matchChangesetAndChangedProps,
+  matchProjectSensToLimitedScopeMap,
   matchProps,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
   paginate,
-  permissionsOfNode,
   requestingUser,
   sorting,
   whereNotDeletedInChangeset,
 } from '../../core/database/query';
+import { AuthSensitivityMapping } from '../authorization/authorization.service';
 import {
   CreatePartnership,
   Partnership,
@@ -153,38 +154,49 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
     return result.dto;
   }
 
-  async list(input: PartnershipListInput, session: Session, changeset?: ID) {
+  async list(
+    input: PartnershipListInput,
+    session: Session,
+    changeset?: ID,
+    limitedScope?: AuthSensitivityMapping
+  ) {
+    const matchProjectId = input.filter.projectId
+      ? { id: input.filter.projectId }
+      : {};
+
     const result = await this.db
       .query()
-      .subQuery((sub) =>
-        sub
-          .match([
-            requestingUser(session),
-            ...permissionsOfNode('Partnership'),
-            ...(input.filter.projectId
-              ? [
-                  relation('in', '', 'partnership', ACTIVE),
-                  node('project', 'Project', { id: input.filter.projectId }),
-                ]
-              : []),
-          ])
-          .apply(whereNotDeletedInChangeset(changeset))
-          .return('node')
-          .apply((q) =>
-            changeset && input.filter.projectId
-              ? q
-                  .union()
-                  .match([
-                    node('', 'Project', { id: input.filter.projectId }),
-                    relation('out', '', 'partnership', INACTIVE),
-                    node('node', 'Partnership'),
-                    relation('in', '', 'changeset', ACTIVE),
-                    node('changeset', 'Changeset', { id: changeset }),
-                  ])
-                  .return('node')
-              : q
-          )
+      .match([
+        ...(limitedScope
+          ? [
+              node('project', 'Project', matchProjectId),
+              relation('out', '', 'partnership'),
+            ]
+          : input.filter.projectId
+          ? [
+              node('project', 'Project', { id: input.filter.projectId }),
+              relation('out', '', 'partnership', ACTIVE),
+            ]
+          : []),
+        node('node', 'Partnership'),
+      ])
+      .apply(whereNotDeletedInChangeset(changeset))
+      .apply((q) =>
+        changeset && input.filter.projectId
+          ? q
+              .union()
+              .match([
+                node('', 'Project', { id: input.filter.projectId }),
+                relation('out', '', 'partnership', INACTIVE),
+                node('node', 'Partnership'),
+                relation('in', '', 'changeset', ACTIVE),
+                node('changeset', 'Changeset', { id: changeset }),
+              ])
+              .return('node')
+          : q
       )
+      .match(requestingUser(session))
+      .apply(matchProjectSensToLimitedScopeMap(session, limitedScope))
       .apply(sorting(Partnership, input))
       .apply(paginate(input))
       .first();
