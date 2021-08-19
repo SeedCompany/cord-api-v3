@@ -11,6 +11,7 @@ import {
 import { DatabaseService, ILogger, Logger } from '../../core';
 import { FileService, FileVersion } from '../file';
 import { ProductListInput } from '../product/dto/list-product.dto';
+import { MethodologyStep } from '../product/dto/methodology-step.enum';
 import { ProductService } from '../product/product.service';
 import { ProductProgressService } from './product-progress.service';
 
@@ -37,15 +38,16 @@ export class StepProgressExtractor {
         name: file.name,
         id: file.id,
       });
+      return null;
     }
+
     const stepProgress = parseGoalsProgress(sheet, fiscalYear(date));
     if (!stepProgress) {
-      this.logger.warning('Unable to find step progress in pnp file');
+      this.logger.warning('Unable to parse step progress in pnp file');
+      return null;
     }
 
-    // eslint-disable-next-line @seedcompany/no-unused-vars
     const engagementId = await this.getEngagementId(reportId);
-
     const goals = await this.product.list(
       {
         ...ProductListInput.defaultVal,
@@ -53,10 +55,50 @@ export class StepProgressExtractor {
       },
       session
     );
-    // TODO: update goals
-    const updatedGoals = goals ?? undefined;
 
-    return updatedGoals;
+    for (const goal of goals.items) {
+      // TODO: Validate all references share the same book
+      const book = goal.scriptureReferences.value[0].start.book;
+      for (const step of stepProgress) {
+        if (book === step.bookName) {
+          await this.service.update(
+            {
+              productId: goal.id,
+              reportId,
+              steps: [
+                {
+                  step: step.backTranslation.step,
+                  completed: step.backTranslation.completed,
+                },
+                {
+                  step: step.exegesisAndFirstDraft.step,
+                  completed: step.exegesisAndFirstDraft.completed,
+                },
+                {
+                  step: step.consultantCheck.step,
+                  completed: step.consultantCheck.completed,
+                },
+                {
+                  step: step.communityTesting.step,
+                  completed: step.communityTesting.completed,
+                },
+                {
+                  step: step.teamCheck.step,
+                  completed: step.teamCheck.completed,
+                },
+                {
+                  step: step.completed.step,
+                  completed: step.completed.completed,
+                },
+              ],
+            },
+            session
+          );
+        }
+      }
+    }
+
+    return goals;
   }
 
   async readWorkbook(file: FileVersion) {
@@ -96,16 +138,30 @@ const parseGoalsProgress = (sheet: WorkSheet, fiscalYear: number) => {
 
     const bookName = cellAsString(sheet[`P${i}`]);
     const totalVerses = cellAsNumber(sheet[`Q${i}`]);
-    const exegesisAndFirstDraft = parse(
-      sheet[`R${i}`],
-      sheet[`S${i}`],
-      fiscalYear
-    );
-    const teamCheck = parse(sheet[`T${i}`], sheet[`U${i}`], fiscalYear);
-    const communityTesting = parse(sheet[`V${i}`], sheet[`W${i}`], fiscalYear);
-    const backTranslation = parse(sheet[`X${i}`], sheet[`Y${i}`], fiscalYear);
-    const consultantCheck = parse(sheet[`Z${i}`], sheet[`AA${i}`], fiscalYear);
-    const completed = parse(sheet[`AB${i}`], sheet[`AB${i}`], fiscalYear);
+    const exegesisAndFirstDraft = {
+      step: MethodologyStep.ExegesisAndFirstDraft,
+      completed: parseProgress(sheet[`R${i}`], sheet[`S${i}`], fiscalYear),
+    };
+    const teamCheck = {
+      step: MethodologyStep.TeamCheck,
+      completed: parseProgress(sheet[`T${i}`], sheet[`U${i}`], fiscalYear),
+    };
+    const communityTesting = {
+      step: MethodologyStep.CommunityTesting,
+      completed: parseProgress(sheet[`V${i}`], sheet[`W${i}`], fiscalYear),
+    };
+    const backTranslation = {
+      step: MethodologyStep.BackTranslation,
+      completed: parseProgress(sheet[`X${i}`], sheet[`Y${i}`], fiscalYear),
+    };
+    const consultantCheck = {
+      step: MethodologyStep.ConsultantCheck,
+      completed: parseProgress(sheet[`Z${i}`], sheet[`AA${i}`], fiscalYear),
+    };
+    const completed = {
+      step: MethodologyStep.Completed,
+      completed: parseProgress(sheet[`AB${i}`], sheet[`AB${i}`], fiscalYear),
+    };
 
     goalsProgress.push({
       bookName,
@@ -132,7 +188,7 @@ const parseStepProgress = (cell: CellObject) =>
     ? 100.0
     : cellAsNumber(cell);
 
-const parse = (
+const parseProgress = (
   year: CellObject,
   stepProgress: CellObject,
   fiscalYear: number
