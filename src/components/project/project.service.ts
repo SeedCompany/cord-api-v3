@@ -9,6 +9,7 @@ import {
   many,
   NotFoundException,
   ObjectView,
+  Sensitivity,
   ServerException,
   Session,
   UnauthorizedException,
@@ -408,7 +409,10 @@ export class ProjectService {
     input: ProjectListInput,
     session: Session
   ): Promise<ProjectListOutput> {
-    const results = await this.repo.list(input, session);
+    const limited = (await this.authorizationService.canList(IProject, session))
+      ? undefined
+      : await this.authorizationService.getListRoleSensitivityMapping(IProject);
+    const results = await this.repo.list(input, session, limited);
     return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 
@@ -455,7 +459,9 @@ export class ProjectService {
   async listProjectMembers(
     projectId: ID,
     input: ProjectMemberListInput,
-    session: Session
+    session: Session,
+    sensitivity?: Sensitivity,
+    scope?: ScopedRole[]
   ): Promise<SecuredProjectMemberList> {
     const result = await this.projectMembers.list(
       {
@@ -468,15 +474,17 @@ export class ProjectService {
       session
     );
 
-    const permissions = await this.repo.permissionsForListProp(
-      'member',
-      projectId,
-      session
-    );
+    const perms = await this.authorizationService.getPermissions({
+      resource: IProject,
+      sessionOrUserId: session,
+      sensitivity,
+      otherRoles: scope,
+    });
 
     return {
       ...result,
-      ...permissions,
+      canRead: perms.member.canRead,
+      canCreate: perms.member.canEdit,
     };
   }
 
@@ -484,6 +492,8 @@ export class ProjectService {
     projectId: ID,
     input: PartnershipListInput,
     session: Session,
+    sensitivity: Sensitivity,
+    scope: ScopedRole[],
     changeset?: ID
   ): Promise<SecuredPartnershipList> {
     const result = await this.partnerships.list(
@@ -498,15 +508,16 @@ export class ProjectService {
       changeset
     );
 
-    const permissions = await this.repo.permissionsForListProp(
-      'partnership',
-      projectId,
-      session
-    );
-
+    const perms = await this.authorizationService.getPermissions({
+      resource: IProject,
+      sessionOrUserId: session,
+      sensitivity,
+      otherRoles: scope,
+    });
     return {
       ...result,
-      ...permissions,
+      canRead: perms.partnership.canRead,
+      canCreate: perms.partnership.canEdit,
     };
   }
 

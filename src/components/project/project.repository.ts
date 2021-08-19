@@ -22,16 +22,17 @@ import {
   createRelationships,
   matchChangesetAndChangedProps,
   matchProjectSens,
+  matchProjectSensToLimitedScopeMap,
   matchProps,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
   paginate,
-  permissionsOfNode,
   requestingUser,
   sorting,
 } from '../../core/database/query';
 import { DbPropsOfDto } from '../../core/database/results';
 import { Role } from '../authorization';
+import { AuthSensitivityMapping } from '../authorization/authorization.service';
 import {
   CreateProject,
   InternshipProject,
@@ -255,15 +256,18 @@ export class ProjectRepository extends CommonRepository {
     await query.run();
   }
 
-  async list({ filter, ...input }: ProjectListInput, session: Session) {
+  async list(
+    { filter, ...input }: ProjectListInput,
+    session: Session,
+    limitedScope?: AuthSensitivityMapping
+  ) {
     const result = await this.db
       .query()
-      .match([
-        requestingUser(session),
-        ...permissionsOfNode(`${filter.type ?? ''}Project`),
-      ])
-      .with('distinct(node) as node, requestingUser')
+      .matchNode('node', `${filter.type ?? ''}Project`)
+      .with('distinct(node) as node, node as project')
       .apply(projectListFilter(filter))
+      .match(requestingUser(session))
+      .apply(matchProjectSensToLimitedScopeMap(session, limitedScope))
       .apply(
         sorting(IProject, input, {
           sensitivity: (query) =>
