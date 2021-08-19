@@ -120,7 +120,7 @@ export class PeriodicReportService {
       );
     }
 
-    const result = await this.repo.readOne(id);
+    const result = await this.repo.readOne(id, session);
     return await this.secure(result, session);
   }
 
@@ -131,7 +131,8 @@ export class PeriodicReportService {
     const securedProps = await this.authorizationService.secureProperties(
       IPeriodicReport,
       dto,
-      session
+      session,
+      dto.scope
     );
 
     return {
@@ -141,18 +142,21 @@ export class PeriodicReportService {
     };
   }
 
-  async listProjectReports(
-    projectId: string,
+  async list(
+    projectId: ID,
     reportType: ReportType,
     input: PeriodicReportListInput,
     session: Session
   ): Promise<SecuredPeriodicReportList> {
-    const results = await this.repo.listProjectReports(projectId, reportType, {
-      ...input,
-    });
+    const results = await this.repo.listReports(
+      projectId,
+      reportType,
+      input,
+      session
+    );
 
     return {
-      ...(await mapListResults(results, (id) => this.readOne(id, session))),
+      ...(await mapListResults(results, (dto) => this.secure(dto, session))),
       canRead: true,
       canCreate: true,
     };
@@ -163,7 +167,7 @@ export class PeriodicReportService {
     reportType: ReportType,
     session: Session
   ): Promise<PeriodicReport | undefined> {
-    const report = await this.repo.getCurrentDue(parentId, reportType);
+    const report = await this.repo.getCurrentDue(parentId, reportType, session);
     return report ? await this.secure(report, session) : undefined;
   }
 
@@ -176,7 +180,7 @@ export class PeriodicReportService {
     reportType: ReportType,
     session: Session
   ): Promise<PeriodicReport | undefined> {
-    const report = await this.repo.getNextDue(parentId, reportType);
+    const report = await this.repo.getNextDue(parentId, reportType, session);
     return report ? await this.secure(report, session) : undefined;
   }
 
@@ -185,24 +189,12 @@ export class PeriodicReportService {
     type: ReportType,
     session: Session
   ): Promise<PeriodicReport | undefined> {
-    const report = await this.repo.getLatestReportSubmitted(parentId, type);
+    const report = await this.repo.getLatestReportSubmitted(
+      parentId,
+      type,
+      session
+    );
     return report ? await this.secure(report, session) : undefined;
-  }
-
-  async listEngagementReports(
-    engagementId: string,
-    input: PeriodicReportListInput,
-    session: Session
-  ): Promise<SecuredPeriodicReportList> {
-    const results = await this.repo.listEngagementReports(engagementId, {
-      ...input,
-    });
-
-    return {
-      ...(await mapListResults(results, (id) => this.readOne(id, session))),
-      canRead: true,
-      canCreate: true,
-    };
   }
 
   async delete(baseNodeId: ID, type: ReportType, intervals: Interval[]) {
@@ -219,7 +211,7 @@ export class PeriodicReportService {
     type: ReportType,
     session: Session
   ): Promise<PeriodicReport | undefined> {
-    const report = await this.repo.getFinalReport(parentId, type);
+    const report = await this.repo.getFinalReport(parentId, type, session);
     return report ? await this.secure(report, session) : undefined;
   }
 
@@ -229,7 +221,7 @@ export class PeriodicReportService {
     at: CalendarDate,
     session: Session
   ): Promise<void> {
-    const report = await this.repo.getFinalReport(parentId, type);
+    const report = await this.repo.getFinalReport(parentId, type, session);
 
     if (report) {
       await this.repo.updateProperties(report, {

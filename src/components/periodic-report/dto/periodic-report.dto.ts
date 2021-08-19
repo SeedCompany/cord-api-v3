@@ -7,9 +7,12 @@ import {
   SecuredDateNullable,
   SecuredProperty,
   SecuredProps,
+  Sensitivity,
+  SensitivityField,
   ServerException,
   simpleSwitch,
 } from '../../../common';
+import { ScopedRole } from '../../authorization';
 import { DefinedFile } from '../../file';
 import { ReportType } from './report-type.enum';
 
@@ -51,6 +54,15 @@ class PeriodicReport extends Resource {
   readonly receivedDate: SecuredDateNullable;
 
   readonly reportFile: DefinedFile;
+
+  @SensitivityField({
+    description: "Based on the project's sensitivity",
+  })
+  readonly sensitivity: Sensitivity;
+
+  // A list of non-global roles the requesting user has available for this object.
+  // This is just a cache, to prevent extra db lookups within the same request.
+  readonly scope: ScopedRole[];
 }
 
 export {
