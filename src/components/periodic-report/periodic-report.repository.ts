@@ -22,12 +22,9 @@ import {
 } from '../../core/database/query';
 import {
   CreatePeriodicReport,
-  FinancialReport,
   IPeriodicReport,
-  NarrativeReport,
   PeriodicReport,
   PeriodicReportListInput,
-  ProgressReport,
   ReportType,
   resolveReportType,
 } from './dto';
@@ -75,24 +72,19 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
     return result.dto;
   }
 
-  async listProjectReports(
-    projectId: string,
-    reportType: ReportType,
+  async listReports(
+    parentId: ID,
+    type: ReportType,
     input: PeriodicReportListInput
   ) {
     const result = await this.db
       .query()
       .match([
-        node('project', 'Project', { id: projectId }),
+        node('parent', 'BaseNode', { id: parentId }),
         relation('out', '', 'report', { active: true }),
-        node('node', ['PeriodicReport', `${reportType}Report`]),
+        node('node', `${type}Report`),
       ])
-      .apply(
-        sorting(
-          reportType === 'Financial' ? FinancialReport : NarrativeReport,
-          input
-        )
-      )
+      .apply(sorting(resolveReportType({ type }), input))
       .apply(paginate(input))
       .first();
     return result!; // result from paginate() will always have 1 row.
@@ -187,23 +179,6 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
       .apply(this.hydrate(session))
       .first();
     return res?.dto;
-  }
-
-  async listEngagementReports(
-    engagementId: string,
-    input: PeriodicReportListInput
-  ) {
-    const result = await this.db
-      .query()
-      .match([
-        node('engagement', 'Engagement', { id: engagementId }),
-        relation('out', '', 'report', { active: true }),
-        node('node', 'ProgressReport'),
-      ])
-      .apply(sorting(ProgressReport, input))
-      .apply(paginate(input))
-      .first();
-    return result!; // result from paginate() will always have 1 row.
   }
 
   async delete(baseNodeId: ID, type: ReportType, intervals: Interval[]) {

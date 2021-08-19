@@ -142,15 +142,13 @@ export class PeriodicReportService {
     };
   }
 
-  async listProjectReports(
-    projectId: string,
+  async list(
+    projectId: ID,
     reportType: ReportType,
     input: PeriodicReportListInput,
     session: Session
   ): Promise<SecuredPeriodicReportList> {
-    const results = await this.repo.listProjectReports(projectId, reportType, {
-      ...input,
-    });
+    const results = await this.repo.listReports(projectId, reportType, input);
 
     return {
       ...(await mapListResults(results, (id) => this.readOne(id, session))),
@@ -192,22 +190,6 @@ export class PeriodicReportService {
       session
     );
     return report ? await this.secure(report, session) : undefined;
-  }
-
-  async listEngagementReports(
-    engagementId: string,
-    input: PeriodicReportListInput,
-    session: Session
-  ): Promise<SecuredPeriodicReportList> {
-    const results = await this.repo.listEngagementReports(engagementId, {
-      ...input,
-    });
-
-    return {
-      ...(await mapListResults(results, (id) => this.readOne(id, session))),
-      canRead: true,
-      canCreate: true,
-    };
   }
 
   async delete(baseNodeId: ID, type: ReportType, intervals: Interval[]) {
