@@ -148,10 +148,15 @@ export class PeriodicReportService {
     input: PeriodicReportListInput,
     session: Session
   ): Promise<SecuredPeriodicReportList> {
-    const results = await this.repo.listReports(projectId, reportType, input);
+    const results = await this.repo.listReports(
+      projectId,
+      reportType,
+      input,
+      session
+    );
 
     return {
-      ...(await mapListResults(results, (id) => this.readOne(id, session))),
+      ...(await mapListResults(results, (dto) => this.secure(dto, session))),
       canRead: true,
       canCreate: true,
     };

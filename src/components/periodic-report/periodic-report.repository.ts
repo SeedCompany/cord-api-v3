@@ -75,7 +75,8 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
   async listReports(
     parentId: ID,
     type: ReportType,
-    input: PeriodicReportListInput
+    input: PeriodicReportListInput,
+    session: Session
   ) {
     const result = await this.db
       .query()
@@ -85,7 +86,7 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
         node('node', `${type}Report`),
       ])
       .apply(sorting(resolveReportType({ type }), input))
-      .apply(paginate(input))
+      .apply(paginate(input, this.hydrate(session)))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }
