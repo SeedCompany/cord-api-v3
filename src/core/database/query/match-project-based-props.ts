@@ -2,7 +2,14 @@ import { oneLine } from 'common-tags';
 import { node, Query, relation } from 'cypher-query-builder';
 import { Variable } from '.';
 import { ID, isIdLike, Sensitivity, Session } from '../../../common';
-import { ScopedRole } from '../../../components/authorization';
+import {
+  GlobalScopedRole,
+  ScopedRole,
+} from '../../../components/authorization';
+import {
+  AuthSensitivityMapping,
+  ProjectRoleSensitivityMapping,
+} from '../../../components/authorization/authorization.service';
 import { ProjectType } from '../../../components/project/dto/type.enum';
 import {
   apoc,
@@ -140,6 +147,81 @@ export const matchProjectSens =
         .return<{ sensitivity: Sensitivity }>('"High" as sensitivity')
     );
 
+export function isMappingProjectScope(
+  authScope: AuthSensitivityMapping
+): authScope is ProjectRoleSensitivityMapping {
+  if (Object.keys(authScope).some((s) => s.startsWith('project:'))) {
+    return true;
+  } else {
+    return false;
+  }
+}
+const matchUserGloballyScopedRoles =
+  <Output extends string = 'scopedRoles'>(
+    userVar = 'requestingUser',
+    outputVar = 'scopedRoles' as Output
+  ) =>
+  <R>(query: Query<R>) =>
+    query.comment('matchUserGloballyScopedRoles()').subQuery((sub) =>
+      sub
+        .with(userVar)
+        .match([
+          node(userVar),
+          relation('out', '', 'roles', { active: true }),
+          node('role', 'Property'),
+        ])
+        .return<{ [K in Output]: GlobalScopedRole[] }>(
+          reduce(
+            'scopedRoles',
+            [],
+            apoc.coll.flatten(collect('role.value')),
+            'role',
+            listConcat('scopedRoles', [`"global:" + role`])
+          ).as(outputVar)
+        )
+    );
+
+const matchProjectSensAndGlobalRoles =
+  (userVar = 'requestingUser', projectVar = 'project') =>
+  <R>(query: Query<R>) =>
+    query
+      .apply(matchProjectSens(projectVar))
+      .apply(matchUserGloballyScopedRoles(userVar));
+
+export const matchProjectSensToLimitedScopeMap =
+  (
+    session: Session,
+    authScope?: AuthSensitivityMapping,
+    projectVar = 'project'
+  ) =>
+  <R>(query: Query<R>) =>
+    query.apply((q) =>
+      authScope
+        ? q
+            // group by project so this next bit doesn't run multiple times for a single project
+            .with([projectVar, 'collect(node) as nodeList', 'requestingUser'])
+            .apply((q) =>
+              isMappingProjectScope(authScope)
+                ? q.apply(matchPropsAndProjectSensAndScopedRoles(true, session))
+                : q.apply(
+                    matchProjectSensAndGlobalRoles('requestingUser', projectVar)
+                  )
+            )
+            .subQuery('sensitivity', (sub) =>
+              sub.return(`${rankSens('sensitivity')} as sens`)
+            )
+            .raw('UNWIND nodeList as node')
+            .matchNode('node')
+            .raw(
+              `WHERE any(role in scopedRoles WHERE role IN keys($sensMap) and sens <= ${rankSens(
+                'apoc.map.get($sensMap, role)'
+              )})`,
+              {
+                sensMap: authScope,
+              }
+            )
+        : q
+    );
 export const rankSens = (variable: string) => oneLine`
   case ${variable}
     when 'High' then 2
