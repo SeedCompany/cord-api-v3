@@ -12,11 +12,15 @@ import {
   createPartner,
   createPartnership,
   createProject,
+  createProjectMember,
   createSession,
   createTestApp,
+  listPartnerships,
   Raw,
   readOnePartnership,
+  registerUser,
   registerUserWithPower,
+  runInIsolatedSession,
   TestApp,
 } from '../utility';
 import { resetDatabase } from '../utility/reset-database';
@@ -24,7 +28,7 @@ import { testRole } from '../utility/roles';
 import { expectSensitiveProperty } from '../utility/sensitivity';
 import { getPermissions } from './permissions';
 
-describe('Project Security e2e', () => {
+describe('Partnership Security e2e', () => {
   let app: TestApp;
   let db: Connection;
   let testProject: Raw<Project>;
@@ -113,6 +117,62 @@ describe('Project Security e2e', () => {
         const p = await readOnePartnership(app, testPartnership.id);
         expect(p.mouStart.canEdit).toBe(false);
         expect(p.mouEnd.canEdit).toBe(false);
+      });
+    });
+  });
+  describe('Listing is secure', () => {
+    describe.each`
+      role                                      | globalCanList | projectCanList
+      ${Role.Administrator}                     | ${true}       | ${true}
+      ${Role.Consultant}                        | ${true}       | ${true}
+      ${Role.ConsultantManager}                 | ${true}       | ${true}
+      ${Role.Controller}                        | ${true}       | ${true}
+      ${Role.FieldOperationsDirector}           | ${true}       | ${true}
+      ${Role.FinancialAnalyst}                  | ${true}       | ${true}
+      ${Role.Fundraising}                       | ${true}       | ${true}
+      ${Role.Intern}                            | ${true}       | ${true}
+      ${Role.LeadFinancialAnalyst}              | ${true}       | ${true}
+      ${Role.Leadership}                        | ${true}       | ${true}
+      ${Role.Liaison}                           | ${true}       | ${true}
+      ${Role.Marketing}                         | ${true}       | ${true}
+      ${Role.Mentor}                            | ${true}       | ${true}
+      ${Role.ProjectManager}                    | ${true}       | ${true}
+      ${Role.RegionalCommunicationsCoordinator} | ${true}       | ${true}
+      ${Role.RegionalDirector}                  | ${true}       | ${true}
+      ${Role.StaffMember}                       | ${true}       | ${true}
+      ${Role.Translator}                        | ${false}      | ${false}
+    `('$role', ({ role, globalCanList, projectCanList }) => {
+      it('Global canList', async () => {
+        const read = await runInIsolatedSession(app, async () => {
+          await registerUser(app, { roles: role });
+          return await listPartnerships(app);
+        });
+        if (!globalCanList) {
+          expect(read).toHaveLength(0);
+        } else {
+          expect(read).not.toHaveLength(0);
+        }
+      });
+
+      it('Project canList', async () => {
+        const user = await runInIsolatedSession(app, async () => {
+          return await registerUser(app, {
+            roles: [role],
+          });
+        });
+        await createProjectMember(app, {
+          projectId: testProject.id,
+          roles: role,
+          userId: user.id,
+        });
+        const read = await user.runAs(() => {
+          return listPartnerships(app);
+        });
+        if (!projectCanList) {
+          expect(read).toHaveLength(0);
+        } else {
+          expect(read).not.toHaveLength(0);
+        }
       });
     });
   });
