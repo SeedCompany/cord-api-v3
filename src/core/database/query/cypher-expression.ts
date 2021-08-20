@@ -1,4 +1,5 @@
 import { Many, ServerException } from '../../../common';
+import { quoteKey } from '../query-augmentation/interpolate';
 
 export type ExpressionInput =
   | Many<string | boolean | number | null | undefined>
@@ -70,7 +71,7 @@ const buildExp = (exp: ExpressionInput): string => {
   }
 
   const pairs = Object.entries(exp).flatMap(([key, value]) =>
-    value !== undefined ? `${key}: ${buildExp(value)}` : []
+    value !== undefined ? `${quoteKey(key)}: ${buildExp(value)}` : []
   );
   return shouldMultiline(pairs)
     ? `{${makeMultiline(pairs)}}`
