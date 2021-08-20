@@ -9,6 +9,7 @@ import {
   Session,
   UnauthorizedException,
   UnsecuredDto,
+  viewOfChangeset,
 } from '../../common';
 import { HandleIdLookup, IEventBus, ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
@@ -110,7 +111,7 @@ export class PartnershipService {
       const partnership = await this.readOne(
         id,
         session,
-        changeset ? { changeset } : { active: true }
+        viewOfChangeset(changeset)
       );
 
       await this.eventBus.publish(
@@ -298,7 +299,7 @@ export class PartnershipService {
 
     const results = await this.repo.list(input, session, changeset);
     return await mapListResults(results, (id) =>
-      this.readOne(id, session, changeset ? { changeset } : { active: true })
+      this.readOne(id, session, viewOfChangeset(changeset))
     );
   }
 

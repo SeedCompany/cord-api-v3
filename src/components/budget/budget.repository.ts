@@ -8,6 +8,7 @@ import {
   ServerException,
   Session,
   UnsecuredDto,
+  viewOfChangeset,
 } from '../../common';
 import {
   DatabaseService,
@@ -212,7 +213,7 @@ export class BudgetRepository extends DtoRepository(Budget) {
   }
 
   async listRecordsForSync(projectId: ID, session: Session, changeset?: ID) {
-    const view: ObjectView = changeset ? { changeset } : { active: true };
+    const view: ObjectView = viewOfChangeset(changeset);
     const result = await this.db
       .query()
       .apply(this.currentBudgetForProject(projectId, changeset))

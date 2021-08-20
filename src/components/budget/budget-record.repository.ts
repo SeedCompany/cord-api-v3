@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
-import { uniq } from 'lodash';
 import {
   ID,
   labelForView,
@@ -84,7 +83,7 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
         // omitting active checks on these two relations which could be either depending on changeset
         relation('out', '', 'budget'),
         // read deleted record in active or deleted budget
-        node('', uniq(['Budget', labelForView('Budget', view)])),
+        node('', labelForView('Budget', view)),
         relation('out', '', 'record'),
         node('node', labelForView('BudgetRecord', view), { id }),
       ])

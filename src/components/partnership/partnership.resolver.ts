@@ -11,6 +11,7 @@ import {
   LoggedInSession,
   SecuredDateRange,
   Session,
+  viewOfChangeset,
 } from '../../common';
 import { ChangesetIds, IdsAndView, IdsAndViewArg } from '../changeset/dto';
 import { FileService, SecuredFile } from '../file';
@@ -128,7 +129,7 @@ export class PartnershipResolver {
     const partnership = await this.service.update(
       input,
       session,
-      changeset ? { changeset } : { active: true }
+      viewOfChangeset(changeset)
     );
     return { partnership };
   }

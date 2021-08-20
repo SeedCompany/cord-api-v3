@@ -11,6 +11,7 @@ import {
   ServerException,
   Session,
   UnauthorizedException,
+  viewOfChangeset,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger, ResourceResolver } from '../../core';
 import {
@@ -139,7 +140,7 @@ export class BudgetService {
       const budgetRecord = await this.readOneRecord(
         recordId,
         session,
-        changeset ? { changeset } : { active: true }
+        viewOfChangeset(changeset)
       );
 
       return budgetRecord;
@@ -276,7 +277,7 @@ export class BudgetService {
     const br = await this.readOneRecord(
       id,
       session,
-      changeset ? { changeset } : { active: true }
+      viewOfChangeset(changeset)
     );
     const changes = this.budgetRecordsRepo.getActualChanges(br, input);
     await this.authorizationService.verifyCanEditChanges(
@@ -346,7 +347,7 @@ export class BudgetService {
     const br = await this.readOneRecord(
       id,
       session,
-      changeset ? { changeset } : { active: true }
+      viewOfChangeset(changeset)
     );
 
     if (!br) {
@@ -384,7 +385,7 @@ export class BudgetService {
     };
     const results = await this.budgetRepo.list(input, session);
     return await mapListResults(results, (id) =>
-      this.readOne(id, session, changeset ? { changeset } : { active: true })
+      this.readOne(id, session, viewOfChangeset(changeset))
     );
   }
 
@@ -399,7 +400,7 @@ export class BudgetService {
     };
     const results = await this.budgetRepo.listNoSecGroups(input);
     return await mapListResults(results, (id) =>
-      this.readOne(id, session, changeset ? { changeset } : { active: true })
+      this.readOne(id, session, viewOfChangeset(changeset))
     );
   }
 

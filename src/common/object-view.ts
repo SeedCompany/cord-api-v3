@@ -33,3 +33,6 @@ export const typenameForView = (
     ''
   )
 `;
+
+export const viewOfChangeset = (changeset?: ID): ObjectView =>
+  changeset ? { changeset } : { active: true };

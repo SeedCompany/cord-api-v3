@@ -10,6 +10,7 @@ import {
   ServerException,
   Session,
   UnauthorizedException,
+  viewOfChangeset,
 } from '../../common';
 import {
   ConfigService,
@@ -123,7 +124,7 @@ export class EngagementService {
     const languageEngagement = (await this.readOne(
       id,
       session,
-      changeset ? { changeset } : { active: true }
+      viewOfChangeset(changeset)
     )) as LanguageEngagement;
     if (changeset) {
       return languageEngagement;
@@ -204,7 +205,7 @@ export class EngagementService {
     const internshipEngagement = (await this.readOne(
       id,
       session,
-      changeset ? { changeset } : { active: true }
+      viewOfChangeset(changeset)
     )) as InternshipEngagement;
     if (changeset) {
       return internshipEngagement;
@@ -298,7 +299,7 @@ export class EngagementService {
     session: Session,
     changeset?: ID
   ): Promise<LanguageEngagement> {
-    const view: ObjectView = changeset ? { changeset } : { active: true };
+    const view: ObjectView = viewOfChangeset(changeset);
     if (input.firstScripture) {
       await this.verifyFirstScripture({ engagementId: input.id });
     }
@@ -374,7 +375,7 @@ export class EngagementService {
     session: Session,
     changeset?: ID
   ): Promise<InternshipEngagement> {
-    const view: ObjectView = changeset ? { changeset } : { active: true };
+    const view: ObjectView = viewOfChangeset(changeset);
     if (input.status) {
       await this.engagementRules.verifyStatusChange(
         input.id,
