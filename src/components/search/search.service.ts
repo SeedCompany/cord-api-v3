@@ -30,9 +30,6 @@ type HydratorMap = {
 };
 type Hydrator<R> = (id: ID, session: Session) => Promise<R>;
 
-const labels = JSON.stringify(SearchResultTypes);
-const typeFromLabels = `[l in labels(node) where l in ${labels}][0] as type`;
-
 @Injectable()
 export class SearchService {
   // mapping of base nodes to functions that,
@@ -83,17 +80,12 @@ export class SearchService {
       ...inputTypes,
       // Add Organization label when searching for Partners we can search for
       // Partner by organization name
-      ...(inputTypes.includes('Partner') ? ['Organization'] : []),
+      ...(inputTypes.includes('Partner') ? (['Organization'] as const) : []),
     ];
 
     // Search for nodes based on input, only returning their id and "type"
     // which is based on their first valid search label.
-    const results = await this.repo.search(
-      input,
-      session,
-      typeFromLabels,
-      types
-    );
+    const results = await this.repo.search({ ...input, type: types }, session);
 
     // Individually convert each result (id & type) to its search result
     // based on this.hydrators
