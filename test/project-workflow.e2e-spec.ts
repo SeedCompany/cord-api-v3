@@ -9,7 +9,6 @@ import {
   ProjectType,
 } from '../src/components/project';
 import {
-  createBudget,
   createFundingAccount,
   createLanguageEngagement,
   createLocation,
@@ -190,28 +189,6 @@ describe('Project-Workflow e2e', () => {
       });
       expect(result.estimatedSubmission.value).toBe('2020-01-01');
 
-      // Enter Field budget
-      const budget = await createBudget(app, { projectId: project.id });
-      result = await app.graphql.query(
-        gql`
-          query project($id: ID!) {
-            project(id: $id) {
-              ...project
-              budget {
-                value {
-                  ...budget
-                }
-              }
-            }
-          }
-          ${fragments.project}
-          ${fragments.budget}
-        `,
-        {
-          id: project.id,
-        }
-      );
-      expect(result.project.budget.value.id).toBe(budget.id);
       expect(result.project.step.value).toBe(ProjectStep.EarlyConversations);
 
       // TODO: Upload mock UBT file
