@@ -25,8 +25,6 @@ export function matchUserPermissions(
 export const matchRequestingUser =
   ({ userId }: Pick<Session, 'userId'>) =>
   (query: Query) =>
-    query.match([
-      node('requestingUser', 'User', {
-        id: userId,
-      }),
-    ]);
+    query.raw('MATCH (requestingUser:User { id: $requestingUser })', {
+      requestingUser: userId,
+    });
