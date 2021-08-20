@@ -5,6 +5,7 @@ import { CreateProjectMember, ProjectMember, ProjectMemberListInput } from '.';
 import { ID, Session } from '../../../common';
 import { DtoRepository, property } from '../../../core';
 import {
+  ACTIVE,
   matchPropsAndProjectSensAndScopedRoles,
   paginate,
   permissionsOfNode,
@@ -23,9 +24,9 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
       .optionalMatch(node('project', 'Project', { id: projectId }))
       .optionalMatch([
         node('project'),
-        relation('out', '', 'member', { active: true }),
+        relation('out', '', 'member', ACTIVE),
         node('member', 'ProjectMember'),
-        relation('out', '', 'user', { active: true }),
+        relation('out', '', 'user', ACTIVE),
         node('user'),
       ])
       .return(['user', 'project', 'member'])
@@ -85,7 +86,7 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
       .query()
       .match([
         node('project', 'Project'),
-        relation('out', '', 'member', { active: true }),
+        relation('out', '', 'member', ACTIVE),
         node('node', 'ProjectMember', { id }),
         relation('out', '', 'user'),
         node('user', 'User'),

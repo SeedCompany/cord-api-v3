@@ -10,6 +10,7 @@ import {
 } from '../../common';
 import { DtoRepository, matchRequestingUser } from '../../core';
 import {
+  ACTIVE,
   createNode,
   createRelationships,
   matchProps,
@@ -28,7 +29,7 @@ export class PartnerRepository extends DtoRepository(Partner) {
       .query()
       .match([
         node('node', 'Organization', { id: organizationId }),
-        relation('in', '', 'organization', { active: true }),
+        relation('in', '', 'organization', ACTIVE),
         node('partner', 'Partner'),
       ])
       .return<{ id: ID }>('partner.id as id')
@@ -86,12 +87,12 @@ export class PartnerRepository extends DtoRepository(Partner) {
         .apply(matchProps())
         .optionalMatch([
           node('node'),
-          relation('out', '', 'organization', { active: true }),
+          relation('out', '', 'organization', ACTIVE),
           node('organization', 'Organization'),
         ])
         .optionalMatch([
           node('node'),
-          relation('out', '', 'pointOfContact', { active: true }),
+          relation('out', '', 'pointOfContact', ACTIVE),
           node('pointOfContact', 'User'),
         ])
         .return<{ dto: UnsecuredDto<Partner> }>(
@@ -141,9 +142,9 @@ export class PartnerRepository extends DtoRepository(Partner) {
         ...permissionsOfNode('Partner'),
         ...(filter.userId && session.userId
           ? [
-              relation('out', '', 'organization', { active: true }),
+              relation('out', '', 'organization', ACTIVE),
               node('', 'Organization'),
-              relation('in', '', 'organization', { active: true }),
+              relation('in', '', 'organization', ACTIVE),
               node('user', 'User', { id: filter.userId }),
             ]
           : []),
@@ -154,9 +155,9 @@ export class PartnerRepository extends DtoRepository(Partner) {
             query
               .match([
                 node('node'),
-                relation('out', '', 'organization', { active: true }),
+                relation('out', '', 'organization', ACTIVE),
                 node('organization', 'Organization'),
-                relation('out', '', 'name', { active: true }),
+                relation('out', '', 'name', ACTIVE),
                 node('prop', 'Property'),
               ])
               .return<{ sortValue: string }>('prop.value as sortValue'),

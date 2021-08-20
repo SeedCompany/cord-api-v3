@@ -22,6 +22,7 @@ import {
   UniquenessError,
 } from '../../core';
 import {
+  ACTIVE,
   collect,
   createNode,
   createProperty,
@@ -193,7 +194,7 @@ export class UserRepository extends DtoRepository(User) {
       query
         .optionalMatch([
           node('node'),
-          relation('out', '', 'roles', { active: true }),
+          relation('out', '', 'roles', ACTIVE),
           node('role', 'Property'),
         ])
         .apply(matchProps())
@@ -235,7 +236,7 @@ export class UserRepository extends DtoRepository(User) {
           node('user', ['User', 'BaseNode'], {
             id: input.id,
           }),
-          relation('out', 'oldRoleRel', 'roles', { active: true }),
+          relation('out', 'oldRoleRel', 'roles', ACTIVE),
           node('oldRoles', 'Property'),
         ])
         .where({
@@ -384,7 +385,7 @@ export class UserRepository extends DtoRepository(User) {
       .match([
         requestingUser(session),
         ...permissionsOfNode('Language'),
-        relation('in', 'knownLanguageRel', 'knownLanguage', { active: true }),
+        relation('in', 'knownLanguageRel', 'knownLanguage', ACTIVE),
         node('user', 'User', { id: userId }),
       ])
       .with('collect(distinct user) as users, node, knownLanguageRel')
@@ -420,7 +421,7 @@ export class UserRepository extends DtoRepository(User) {
           .with('user, org')
           .match([
             node('user'),
-            relation('out', 'oldRel', 'organization', { active: true }),
+            relation('out', 'oldRel', 'organization', ACTIVE),
             node('org'),
           ])
           .setValues({ 'oldRel.active': false })
@@ -491,7 +492,7 @@ export class UserRepository extends DtoRepository(User) {
       ])
       .optionalMatch([
         node('user'),
-        relation('out', 'primary', 'primaryOrganization', { active: true }),
+        relation('out', 'primary', 'primaryOrganization', ACTIVE),
         node('org'),
       ])
       .setValues({ 'oldRel.active': false })

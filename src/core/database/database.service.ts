@@ -9,7 +9,17 @@ import {
   relation,
 } from 'cypher-query-builder';
 import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
-import { cloneDeep, last, Many, startCase, uniq, upperFirst } from 'lodash';
+import {
+  cloneDeep,
+  isEmpty,
+  last,
+  Many,
+  mapKeys,
+  pickBy,
+  startCase,
+  uniq,
+  upperFirst,
+} from 'lodash';
 import { DateTime } from 'luxon';
 import { assert } from 'ts-essentials';
 import {
@@ -30,7 +40,7 @@ import {
 import { ILogger, Logger, ServiceUnavailableError, UniquenessError } from '..';
 import { AbortError, retry, RetryOptions } from '../../common/retry';
 import { DbChanges } from './changes';
-import { deleteBaseNode, exp, updateProperty } from './query';
+import { ACTIVE, deleteBaseNode, exp, updateProperty } from './query';
 import { hasMore } from './results';
 import { Transactional } from './transactional.decorator';
 
@@ -165,26 +175,46 @@ export class DatabaseService {
     properties: string[],
     config: { analyzer?: string; eventuallyConsistent?: boolean }
   ) {
+    const quote = (q: string) => `'${q}'`;
+    const parsedConfig = {
+      analyzer: config.analyzer ? quote(config.analyzer) : undefined,
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      eventually_consistent: config.eventuallyConsistent
+        ? exp(config.eventuallyConsistent)
+        : undefined,
+    };
+
+    const info = await this.getServerInfo();
+    if (info.version.startsWith('4.3')) {
+      const options = !isEmpty(pickBy(parsedConfig, (v) => v !== undefined))
+        ? {
+            indexConfig: mapKeys(parsedConfig, (_, k) => `fulltext.${k}`),
+          }
+        : undefined;
+      await this.query(
+        `
+          CREATE FULLTEXT INDEX ${name} IF NOT EXISTS
+          FOR (n:${labels.join('|')})
+          ON EACH ${exp(properties.map((p) => `n.${p}`))}
+          ${options ? `OPTIONS ${exp(options)}` : ''}
+        `
+      ).run();
+      return;
+    }
+
     const exists = await this.query(
       `call db.indexes() yield name where name = '${name}' return name limit 1`
     ).first();
     if (exists) {
       return;
     }
-    const quote = (q: string) => `'${q}'`;
     await this.query(
       oneLine`
         CALL db.index.fulltext.createNodeIndex(
           ${quote(name)},
           ${exp(labels.map(quote))},
           ${exp(properties.map(quote))},
-          ${exp({
-            analyzer: config.analyzer ? quote(config.analyzer) : undefined,
-            // eslint-disable-next-line @typescript-eslint/naming-convention
-            eventually_consistent: config.eventuallyConsistent
-              ? exp(config.eventuallyConsistent)
-              : undefined,
-          })}
+          ${exp(parsedConfig)}
         )
       `
     ).run();
@@ -266,7 +296,7 @@ export class DatabaseService {
         .query()
         .match([
           node('changeset', 'Changeset', { id: changeset }),
-          relation('out', '', 'changeset', { active: true }),
+          relation('out', '', 'changeset', ACTIVE),
           node('node', label, { id }),
         ])
         .return('node.id')
@@ -387,7 +417,7 @@ export class DatabaseService {
 
       query.optionalMatch([
         node('n', nodeName),
-        relation('out', '', propName as string, { active: true }),
+        relation('out', '', propName as string, ACTIVE),
         node(propName as string, 'Property'),
       ]);
     }

@@ -23,6 +23,7 @@ import {
   Logger,
   OnIndex,
 } from '../../../core';
+import { ACTIVE } from '../../../core/database/query';
 import { mapListResults } from '../../../core/database/results';
 import { Role } from '../../authorization';
 import { AuthorizationService } from '../../authorization/authorization.service';
@@ -254,7 +255,7 @@ export class ProjectMemberService {
   ) {
     query.match([
       node('project', 'Project', { id: projectId }),
-      relation(relationshipDirection, '', relationshipType, { active: true }),
+      relation(relationshipDirection, '', relationshipType, ACTIVE),
       node('node', label),
     ]);
   }

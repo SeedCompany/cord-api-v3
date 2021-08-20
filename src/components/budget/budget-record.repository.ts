@@ -9,8 +9,10 @@ import {
 } from '../../common';
 import { DtoRepository } from '../../core';
 import {
+  ACTIVE,
   createNode,
   createRelationships,
+  INACTIVE,
   matchChangesetAndChangedProps,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
@@ -56,14 +58,14 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
       .query()
       .match([
         node('budget', 'Budget', { id: input.budgetId }),
-        relation('out', '', 'record', { active: true }),
+        relation('out', '', 'record', ACTIVE),
         node('br', 'BudgetRecord'),
-        relation('out', '', 'organization', { active: true }),
+        relation('out', '', 'organization', ACTIVE),
         node('', 'Organization', { id: input.organizationId }),
       ])
       .match([
         node('br'),
-        relation('out', '', 'fiscalYear', { active: true }),
+        relation('out', '', 'fiscalYear', ACTIVE),
         node('', 'Property', { value: input.fiscalYear }),
       ])
       .return('br')
@@ -132,7 +134,7 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
           )
           .match([
             node('node'),
-            relation('out', '', 'organization', { active: true }),
+            relation('out', '', 'organization', ACTIVE),
             node('organization', 'Organization'),
           ])
           .apply(matchChangesetAndChangedProps(changeset))
@@ -162,7 +164,7 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
           .with(budgetVar)
           .match([
             node(budgetVar),
-            relation('out', '', 'record', { active: true }),
+            relation('out', '', 'record', ACTIVE),
             node('node', 'BudgetRecord'),
           ])
           .return({ node: outputVar })
@@ -172,9 +174,9 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
                   .union()
                   .match([
                     node(budgetVar),
-                    relation('out', '', 'record', { active: false }),
+                    relation('out', '', 'record', INACTIVE),
                     node('node', 'BudgetRecord'),
-                    relation('in', '', 'changeset', { active: true }),
+                    relation('in', '', 'changeset', ACTIVE),
                     node('changeset', 'Changeset', { id: changeset }),
                   ])
                   .return({ node: outputVar })

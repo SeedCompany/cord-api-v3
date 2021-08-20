@@ -7,7 +7,11 @@ import {
   Session,
 } from '../../../common';
 import { DtoRepository, matchRequestingUser } from '../../../core';
-import { createNode, createRelationships } from '../../../core/database/query';
+import {
+  ACTIVE,
+  createNode,
+  createRelationships,
+} from '../../../core/database/query';
 import {
   CreateUnavailability,
   Unavailability,
@@ -64,7 +68,7 @@ export class UnavailabilityRepository extends DtoRepository(Unavailability) {
       .apply(matchRequestingUser(session))
       .match([
         node('user', 'User'),
-        relation('out', '', 'unavailability', { active: true }),
+        relation('out', '', 'unavailability', ACTIVE),
         node('unavailability', 'Unavailability', { id: input.id }),
       ])
       .return<{ id: ID }>('user.id as id')

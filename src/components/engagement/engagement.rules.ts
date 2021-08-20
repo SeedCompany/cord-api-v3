@@ -9,6 +9,7 @@ import {
   UnauthorizedException,
 } from '../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
+import { ACTIVE, INACTIVE } from '../../core/database/query';
 import { Role } from '../authorization';
 import { ProjectService, ProjectStep } from '../project';
 import {
@@ -443,9 +444,9 @@ export class EngagementRules {
         .query()
         .match([
           node('engagement', 'Engagement', { id }),
-          relation('out', '', 'status', { active: false }),
+          relation('out', '', 'status', INACTIVE),
           node('status', 'Property'),
-          relation('in', '', 'changeset', { active: true }),
+          relation('in', '', 'changeset', ACTIVE),
           node('', 'Changeset', { id: changeset }),
         ])
         .raw('return status.value as status')
@@ -458,7 +459,7 @@ export class EngagementRules {
         .query()
         .match([
           node('engagement', 'Engagement', { id }),
-          relation('out', '', 'status', { active: true }),
+          relation('out', '', 'status', ACTIVE),
           node('status', 'Property'),
         ])
         .raw('return status.value as status')
@@ -497,9 +498,9 @@ export class EngagementRules {
         .query()
         .match([
           node('project', 'Project', { id: projectId }),
-          relation('out', '', 'step', { active: false }),
+          relation('out', '', 'step', INACTIVE),
           node('step', 'Property'),
-          relation('in', '', 'changeset', { active: true }),
+          relation('in', '', 'changeset', ACTIVE),
           node('', 'Changeset', { id: changeset }),
         ])
         .raw('return step.value as step')
@@ -512,7 +513,7 @@ export class EngagementRules {
         .query()
         .match([
           node('project', 'Project', { id: projectId }),
-          relation('out', '', 'step', { active: true }),
+          relation('out', '', 'step', ACTIVE),
           node('step', 'Property'),
         ])
         .raw('return step.value as step')
@@ -533,7 +534,7 @@ export class EngagementRules {
       .query()
       .match([
         node('user', 'User', { id }),
-        relation('out', '', 'roles', { active: true }),
+        relation('out', '', 'roles', ACTIVE),
         node('roles', 'Property'),
       ])
       .raw('return collect(roles.value) as roles')
@@ -566,7 +567,7 @@ export class EngagementRules {
       .query()
       .match([
         node('node', 'Engagement', { id }),
-        relation('out', '', 'status', { active: false }),
+        relation('out', '', 'status', INACTIVE),
         node('prop'),
       ])
       .with('prop')

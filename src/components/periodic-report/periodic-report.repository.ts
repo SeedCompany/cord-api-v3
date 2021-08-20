@@ -11,6 +11,7 @@ import {
 } from '../../common';
 import { DtoRepository } from '../../core';
 import {
+  ACTIVE,
   createNode,
   createRelationships,
   deleteBaseNode,
@@ -82,7 +83,7 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
       .query()
       .match([
         node('parent', 'BaseNode', { id: parentId }),
-        relation('out', '', 'report', { active: true }),
+        relation('out', '', 'report', ACTIVE),
         node('node', `${type}Report`),
       ])
       .apply(sorting(resolveReportType({ type }), input))
@@ -96,9 +97,9 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
       query.comment`matchCurrentDue()`
         .match([
           node('baseNode', 'BaseNode', { id: parentId }),
-          relation('out', '', 'report', { active: true }),
+          relation('out', '', 'report', ACTIVE),
           node('node', `${reportType}Report`),
-          relation('out', '', 'end', { active: true }),
+          relation('out', '', 'end', ACTIVE),
           node('end', 'Property'),
         ])
         .raw(`WHERE end.value < date()`)
@@ -121,9 +122,9 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
       .query()
       .match([
         node('baseNode', 'BaseNode', { id: parentId }),
-        relation('out', '', 'report', { active: true }),
+        relation('out', '', 'report', ACTIVE),
         node('node', `${reportType}Report`),
-        relation('out', '', 'end', { active: true }),
+        relation('out', '', 'end', ACTIVE),
         node('end', 'Property'),
       ])
       .raw(`WHERE end.value > date()`)
@@ -144,9 +145,9 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
       .query()
       .match([
         node('', 'BaseNode', { id: parentId }),
-        relation('out', '', 'report', { active: true }),
+        relation('out', '', 'report', ACTIVE),
         node('node', `${type}Report`),
-        relation('out', '', 'start', { active: true }),
+        relation('out', '', 'start', ACTIVE),
         node('sn', 'Property'),
       ])
       .raw(`where (node)-->(:FileNode)<--(:FileVersion)`)
@@ -163,17 +164,17 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
       .query()
       .match([
         node('', 'BaseNode', { id: parentId }),
-        relation('out', '', 'report', { active: true }),
+        relation('out', '', 'report', ACTIVE),
         node('node', `${type}Report`),
       ])
       .match([
         node('node'),
-        relation('out', '', 'start', { active: true }),
+        relation('out', '', 'start', ACTIVE),
         node('start', 'Property'),
       ])
       .match([
         node('node'),
-        relation('out', '', 'end', { active: true }),
+        relation('out', '', 'end', ACTIVE),
         node('end', 'Property'),
       ])
       .raw(`where start.value = end.value`)
@@ -187,12 +188,12 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
       .query()
       .match([
         node('node', 'BaseNode', { id: baseNodeId }),
-        relation('out', '', 'report', { active: true }),
+        relation('out', '', 'report', ACTIVE),
         node('report', `${type}Report`),
       ])
       .optionalMatch([
         node('report'),
-        relation('out', '', 'start', { active: true }),
+        relation('out', '', 'start', ACTIVE),
         node('start', 'Property'),
       ])
       .with('report, start')
@@ -217,7 +218,7 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
           sub
             .match([
               node('node'),
-              relation('in', '', 'report', { active: true }),
+              relation('in', '', 'report', ACTIVE),
               node('project', 'Project'),
             ])
             .return('project')
@@ -225,9 +226,9 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
             .with('node')
             .match([
               node('node'),
-              relation('in', '', 'report', { active: true }),
+              relation('in', '', 'report', ACTIVE),
               node('', 'Engagement'),
-              relation('in', '', 'engagement', { active: true }),
+              relation('in', '', 'engagement', ACTIVE),
               node('project', 'Project'),
             ])
             .return('project')

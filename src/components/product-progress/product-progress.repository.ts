@@ -11,6 +11,7 @@ import {
 } from '../../common';
 import { DatabaseService } from '../../core';
 import {
+  ACTIVE,
   collect,
   matchProjectScopedRoles,
   matchProjectSens,
@@ -81,12 +82,12 @@ export class ProductProgressRepository {
       .match([
         [
           node('eng', 'Engagement'),
-          relation('out', '', 'product', { active: true }),
+          relation('out', '', 'product', ACTIVE),
           node('product', 'Product', { id: productId }),
         ],
         [
           node('eng'),
-          relation('out', '', 'report', { active: true }),
+          relation('out', '', 'report', ACTIVE),
           node('report', 'ProgressReport'),
         ],
       ])
@@ -101,12 +102,12 @@ export class ProductProgressRepository {
       .match([
         [
           node('eng', 'Engagement'),
-          relation('out', '', 'report', { active: true }),
+          relation('out', '', 'report', ACTIVE),
           node('report', 'ProgressReport', { id: reportId }),
         ],
         [
           node('eng'),
-          relation('out', '', 'product', { active: true }),
+          relation('out', '', 'product', ACTIVE),
           node('product', 'Product'),
         ],
       ])
@@ -121,9 +122,9 @@ export class ProductProgressRepository {
         .comment('hydrateAll()')
         .optionalMatch([
           node('report'),
-          relation('out', '', 'progress', { active: true }),
+          relation('out', '', 'progress', ACTIVE),
           node('progress', 'ProductProgress'),
-          relation('in', '', 'progress', { active: true }),
+          relation('in', '', 'progress', ACTIVE),
           node('product'),
         ])
         .apply(this.hydrateOne())
@@ -141,7 +142,7 @@ export class ProductProgressRepository {
               sub2
                 .match([
                   node('progress'),
-                  relation('out', '', 'step', { active: true }),
+                  relation('out', '', 'step', ACTIVE),
                   node('stepNode', 'StepProgress'),
                 ])
                 .apply(matchProps({ nodeName: 'stepNode', outputVar: 'step' }))
@@ -149,7 +150,7 @@ export class ProductProgressRepository {
             )
             .match([
               node('product'),
-              relation('out', '', 'steps', { active: true }),
+              relation('out', '', 'steps', ACTIVE),
               node('declaredSteps', 'Property'),
             ])
             .with([
@@ -197,9 +198,9 @@ export class ProductProgressRepository {
         sub
           .merge([
             node('product'),
-            relation('out', 'productProgressRel', 'progress', { active: true }),
+            relation('out', 'productProgressRel', 'progress', ACTIVE),
             node('progress', 'ProductProgress'),
-            relation('in', 'reportProgressRel', 'progress', { active: true }),
+            relation('in', 'reportProgressRel', 'progress', ACTIVE),
             node('report'),
           ])
           .onCreate.set(
@@ -228,7 +229,7 @@ export class ProductProgressRepository {
             sub2
               .merge([
                 node('progress'),
-                relation('out', 'progressStepRel', 'step', { active: true }),
+                relation('out', 'progressStepRel', 'step', ACTIVE),
                 node('stepNode', 'StepProgress', {
                   step: variable('stepInput.step'),
                 }),
@@ -301,7 +302,7 @@ export class ProductProgressRepository {
         sub
           .match([
             node('product'),
-            relation('out', '', 'progressTarget', { active: true }),
+            relation('out', '', 'progressTarget', ACTIVE),
             node('progressTarget', 'Property'),
           ])
           .return<{ progressTarget: number }>(

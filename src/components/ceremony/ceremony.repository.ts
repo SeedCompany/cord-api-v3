@@ -3,6 +3,7 @@ import { node, relation } from 'cypher-query-builder';
 import { ID, Session } from '../../common';
 import { DtoRepository, matchRequestingUser } from '../../core';
 import {
+  ACTIVE,
   createNode,
   matchPropsAndProjectSensAndScopedRoles,
   paginate,
@@ -37,9 +38,9 @@ export class CeremonyRepository extends DtoRepository(Ceremony) {
       .query()
       .match([
         node('project', 'Project'),
-        relation('out', '', 'engagement', { active: true }),
+        relation('out', '', 'engagement', ACTIVE),
         node('', 'Engagement'),
-        relation('out', '', { active: true }),
+        relation('out', '', ACTIVE),
         node('node', 'Ceremony', { id }),
       ])
       .apply(matchPropsAndProjectSensAndScopedRoles(session))
@@ -61,7 +62,7 @@ export class CeremonyRepository extends DtoRepository(Ceremony) {
         ...permissionsOfNode(label),
         ...(filter.type
           ? [
-              relation('out', '', 'type', { active: true }),
+              relation('out', '', 'type', ACTIVE),
               node('name', 'Property', { value: filter.type }),
             ]
           : []),

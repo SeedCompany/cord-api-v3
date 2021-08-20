@@ -1,6 +1,7 @@
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ResourceShape } from '../../../common';
+import { ACTIVE } from './matching';
 
 export const deleteBaseNode = (nodeVar: string) => (query: Query) =>
   query.comment`deleteBaseNode(${nodeVar})`
@@ -53,7 +54,7 @@ export const deleteProperties =
       sub
         .match([
           node('node'),
-          relation('out', 'propertyRel', relationLabels, { active: true }),
+          relation('out', 'propertyRel', relationLabels, ACTIVE),
           node('property', 'Property'),
         ])
         .setValues({

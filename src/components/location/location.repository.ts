@@ -10,6 +10,7 @@ import {
 } from '../../common';
 import { DtoRepository, matchRequestingUser } from '../../core';
 import {
+  ACTIVE,
   createNode,
   createRelationships,
   matchProps,
@@ -80,12 +81,12 @@ export class LocationRepository extends DtoRepository(Location) {
         .apply(matchProps())
         .optionalMatch([
           node('node'),
-          relation('out', '', 'fundingAccount', { active: true }),
+          relation('out', '', 'fundingAccount', ACTIVE),
           node('fundingAccount', 'FundingAccount'),
         ])
         .optionalMatch([
           node('node'),
-          relation('out', '', 'defaultFieldRegion', { active: true }),
+          relation('out', '', 'defaultFieldRegion', ACTIVE),
           node('defaultFieldRegion', 'FieldRegion'),
         ])
         .return<{ dto: UnsecuredDto<Location> }>(
@@ -195,11 +196,9 @@ export class LocationRepository extends DtoRepository(Location) {
       .matchNode('node', label, { id })
       .matchNode('location', 'Location', { id: locationId })
       .match([
-        [
-          node('node'),
-          relation('out', 'rel', rel, { active: true }),
-          node('location'),
-        ],
+        node('node'),
+        relation('out', 'rel', rel, ACTIVE),
+        node('location'),
       ])
       .setValues({
         'rel.active': false,
@@ -219,7 +218,7 @@ export class LocationRepository extends DtoRepository(Location) {
       .match([
         requestingUser(session),
         ...permissionsOfNode('Location'),
-        relation('in', '', rel, { active: true }),
+        relation('in', '', rel, ACTIVE),
         node(`${label.toLowerCase()}`, label, { id }),
       ])
       .apply(sorting(Location, input))
@@ -238,7 +237,7 @@ export class LocationRepository extends DtoRepository(Location) {
       .query()
       .match([
         node('node', 'Location'),
-        relation('in', '', rel, { active: true }),
+        relation('in', '', rel, ACTIVE),
         node(`${label.toLowerCase()}`, label, { id }),
       ])
       .apply(sorting(Location, input))

@@ -1,46 +1,70 @@
 import { Injectable } from '@nestjs/common';
-import { node, regexp, relation } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
 import { ID, Session } from '../../common';
 import {
   DatabaseService,
   matchRequestingUser,
-  matchUserPermissions,
+  OnIndex,
+  OnIndexParams,
 } from '../../core';
+import {
+  ACTIVE,
+  escapeLuceneSyntax,
+  fullTextQuery,
+} from '../../core/database/query';
 import { SearchInput, SearchResultMap } from './dto';
 
 @Injectable()
 export class SearchRepository {
   constructor(private readonly db: DatabaseService) {}
 
-  async search(
-    input: SearchInput,
-    session: Session,
-    typeFromLabels: string,
-    types: string[]
-  ) {
-    // Search for nodes based on input, only returning their id and "type"
-    // which is based on their first valid search label.
+  @OnIndex('schema')
+  protected async applyIndexes({ db }: OnIndexParams) {
+    await db.createFullTextIndex('propValue', ['Property'], ['value'], {
+      analyzer: 'standard-folding',
+    });
+  }
+
+  /**
+   * Search for nodes based on input, only returning their id and "type"
+   * which is based on their first valid search label.
+   */
+  async search(input: SearchInput, session: Session) {
+    const escaped = escapeLuceneSyntax(input.query);
+    // Emphasize exact matches but allow fuzzy as well
+    const lucene = `"${escaped}"^2 ${escaped}*`;
+
     const query = this.db
       .query()
       .apply(matchRequestingUser(session))
-      .apply(matchUserPermissions)
-      .match([
-        node('node'),
-        relation('out', 'r', { active: true }),
-        node('property', 'Property'),
+      .raw('', {
+        types: input.type ?? [],
+        query: lucene,
+      })
+      .apply(fullTextQuery('propValue', '$query', ['node as property']))
+      .apply(propToBaseNode())
+      .apply(filterToRequestedAndAllowed())
+      .returnDistinct<{ id: ID; type: keyof SearchResultMap }>([
+        'node.id as id',
+        `[l in labels(node) where l in $types][0] as type`,
       ])
-      // reduce to nodes with a label of one of the specified types
-      .raw('WHERE size([l in labels(node) where l in $types | 1]) > 0', {
-        types,
-      })
-      .with(['node', 'property'])
-      .where({
-        property: { value: regexp(`.*${input.query}.*`, true) },
-      })
-      .returnDistinct(['node.id as id', typeFromLabels])
-      .limit(input.count)
-      .asResult<{ id: ID; type: keyof SearchResultMap }>();
+      .limit(input.count);
 
     return await query.run();
   }
 }
+
+const propToBaseNode = () => (query: Query) =>
+  query.match([node('node'), relation('out', 'r', ACTIVE), node('property')]);
+
+const filterToRequestedAndAllowed = () => (query: Query) =>
+  query.raw(
+    `
+      WHERE size([l in labels(node) where l in $types | 1]) > 0
+        AND exists(
+          (node)<-[:baseNode]-(:Permission { property: type(r), read: true })
+                <-[:permission]-(:SecurityGroup)
+                 -[:member]->(requestingUser)
+        )
+    `
+  );

@@ -3,6 +3,7 @@ import { node, Query, relation } from 'cypher-query-builder';
 import { ID, NotFoundException, Session, UnsecuredDto } from '../../common';
 import { DtoRepository, matchRequestingUser } from '../../core';
 import {
+  ACTIVE,
   createNode,
   createRelationships,
   matchProps,
@@ -70,12 +71,12 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
         .apply(matchProps())
         .optionalMatch([
           node('node'),
-          relation('out', '', 'director', { active: true }),
+          relation('out', '', 'director', ACTIVE),
           node('director', 'User'),
         ])
         .optionalMatch([
           node('node'),
-          relation('out', '', 'zone', { active: true }),
+          relation('out', '', 'zone', ACTIVE),
           node('fieldZone', 'FieldZone'),
         ])
         .return<{ dto: UnsecuredDto<FieldRegion> }>(

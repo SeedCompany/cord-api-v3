@@ -55,7 +55,7 @@ function stringifyValue(value: unknown): string {
   if (isObject(value)) {
     const pairs = map(
       value,
-      (el, key) => `${escapeKey(key)}: ${stringifyValue(el)}`
+      (el, key) => `${quoteKey(key)}: ${stringifyValue(el)}`
     );
     const str = pairs.join(', ');
     return `{ ${str} }`;
@@ -63,7 +63,8 @@ function stringifyValue(value: unknown): string {
   return '';
 }
 
-const escapeKey = (key: string) => (SAFE_KEY.exec(key) ? key : `\`${key}\``);
+export const quoteKey = (key: string): string =>
+  SAFE_KEY.exec(key) ? key : `\`${key}\``;
 const SAFE_KEY = /^[a-zA-Z][a-zA-Z0-9]*$/;
 
 const isNeoInteger = (value: unknown): value is Integer =>

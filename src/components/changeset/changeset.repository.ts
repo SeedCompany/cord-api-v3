@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { hasLabel, node, not, relation } from 'cypher-query-builder';
 import { ID, NotFoundException, Session } from '../../common';
 import { DtoRepository } from '../../core';
+import { ACTIVE } from '../../core/database/query';
 import { BaseNode } from '../../core/database/results';
 import { Changeset, ChangesetDiff } from './dto';
 
@@ -16,7 +17,7 @@ export class ChangesetRepository extends DtoRepository(Changeset) {
           .with('changeset')
           .match([
             node('changeset'),
-            relation('out', '', [], { active: true }),
+            relation('out', '', [], ACTIVE),
             node('', 'Property'),
             relation('in', 'prop'),
             node('node', 'BaseNode'),
