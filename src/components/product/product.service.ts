@@ -169,6 +169,10 @@ export class ProductService {
           ...securedProps.purposes,
           value: securedProps.purposes.value ?? [],
         },
+        steps: {
+          ...securedProps.steps,
+          value: securedProps.steps.value ?? [],
+        },
         canDelete,
       };
       return derivative;
@@ -192,6 +196,10 @@ export class ProductService {
           ...securedProps.purposes,
           value: securedProps.purposes.value ?? [],
         },
+        steps: {
+          ...securedProps.steps,
+          value: securedProps.steps.value ?? [],
+        },
         canDelete,
       };
       return other;
@@ -213,6 +221,10 @@ export class ProductService {
       purposes: {
         ...securedProps.purposes,
         value: securedProps.purposes.value ?? [],
+      },
+      steps: {
+        ...securedProps.steps,
+        value: securedProps.steps.value ?? [],
       },
       canDelete,
     };
