@@ -4,6 +4,7 @@ import { DateTime } from 'luxon';
 import { ID, NotFoundException, Session, UnsecuredDto } from '../../common';
 import { DtoRepository, matchRequestingUser } from '../../core';
 import {
+  ACTIVE,
   createNode,
   createRelationships,
   matchProps,
@@ -66,7 +67,7 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
         .apply(matchProps())
         .optionalMatch([
           node('node'),
-          relation('out', '', 'director', { active: true }),
+          relation('out', '', 'director', ACTIVE),
           node('director', 'User'),
         ])
         .return<{ dto: UnsecuredDto<FieldZone> }>(
@@ -86,7 +87,7 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
       .match([node('director', 'User', { id: directorId })])
       .optionalMatch([
         node('fieldZone'),
-        relation('out', 'oldRel', 'director', { active: true }),
+        relation('out', 'oldRel', 'director', ACTIVE),
         node(''),
       ])
       .setValues({ 'oldRel.active': false })

@@ -4,6 +4,7 @@ import { DateTime } from 'luxon';
 import { ID, NotFoundException, Session, UnsecuredDto } from '../../common';
 import { DtoRepository, matchRequestingUser } from '../../core';
 import {
+  ACTIVE,
   createNode,
   createRelationships,
   matchProps,
@@ -69,7 +70,7 @@ export class PostRepository extends DtoRepository(Post) {
         node('node', 'Post'),
         ...(filter.parentId
           ? [
-              relation('in', '', 'post', { active: true }),
+              relation('in', '', 'post', ACTIVE),
               node('', 'BaseNode', {
                 id: filter.parentId,
               }),

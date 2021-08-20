@@ -11,7 +11,7 @@ import {
   merge,
   reduce,
 } from './cypher-functions';
-import { matchProps, MatchPropsOptions } from './matching';
+import { ACTIVE, matchProps, MatchPropsOptions } from './matching';
 
 export const matchPropsAndProjectSensAndScopedRoles =
   (session?: Session | ID, propsOptions?: MatchPropsOptions) =>
@@ -58,7 +58,7 @@ export const matchProjectScopedRoles =
           ],
           [
             node('projectMember'),
-            relation('out', '', 'roles', { active: true }),
+            relation('out', '', 'roles', ACTIVE),
             node('rolesProp', 'Property'),
           ],
         ])
@@ -83,7 +83,7 @@ export const matchProjectSens =
         .raw(`WHERE ${projectVar}.type = "${ProjectType.Internship}"`)
         .match([
           node(projectVar),
-          relation('out', '', 'sensitivity', { active: true }),
+          relation('out', '', 'sensitivity', ACTIVE),
           node('projSens', 'Property'),
         ])
         .return('projSens.value as sensitivity')
@@ -93,11 +93,11 @@ export const matchProjectSens =
         .raw(`WHERE ${projectVar}.type = "${ProjectType.Translation}"`)
         .optionalMatch([
           node(projectVar),
-          relation('out', '', 'engagement', { active: true }),
+          relation('out', '', 'engagement', ACTIVE),
           node('', 'LanguageEngagement'),
-          relation('out', '', 'language', { active: true }),
+          relation('out', '', 'language', ACTIVE),
           node('', 'Language'),
-          relation('out', '', 'sensitivity', { active: true }),
+          relation('out', '', 'sensitivity', ACTIVE),
           node('langSens', 'Property'),
         ])
         .with('*')

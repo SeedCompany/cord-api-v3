@@ -3,6 +3,7 @@ import { node, relation } from 'cypher-query-builder';
 import { ID, NotFoundException, Session } from '../../../common';
 import { DtoRepository, matchRequestingUser } from '../../../core';
 import {
+  ACTIVE,
   createNode,
   createRelationships,
   paginate,
@@ -55,7 +56,7 @@ export class EducationRepository extends DtoRepository(Education) {
       .apply(matchRequestingUser(session))
       .match([
         node('user', 'User'),
-        relation('out', '', 'education', { active: true }),
+        relation('out', '', 'education', ACTIVE),
         node('education', 'Education', { id }),
       ])
       .return<{ id: ID }>('user.id as id')
@@ -72,7 +73,7 @@ export class EducationRepository extends DtoRepository(Education) {
         ...permissionsOfNode(label),
         ...(filter.userId
           ? [
-              relation('in', '', 'education', { active: true }),
+              relation('in', '', 'education', ACTIVE),
               node('user', 'User', {
                 id: filter.userId,
               }),

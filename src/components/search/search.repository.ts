@@ -6,6 +6,7 @@ import {
   matchRequestingUser,
   matchUserPermissions,
 } from '../../core';
+import { ACTIVE } from '../../core/database/query';
 import { SearchInput, SearchResultMap } from './dto';
 
 @Injectable()
@@ -26,7 +27,7 @@ export class SearchRepository {
       .apply(matchUserPermissions)
       .match([
         node('node'),
-        relation('out', 'r', { active: true }),
+        relation('out', 'r', ACTIVE),
         node('property', 'Property'),
       ])
       // reduce to nodes with a label of one of the specified types

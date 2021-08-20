@@ -30,7 +30,7 @@ import {
 import { ILogger, Logger, ServiceUnavailableError, UniquenessError } from '..';
 import { AbortError, retry, RetryOptions } from '../../common/retry';
 import { DbChanges } from './changes';
-import { deleteBaseNode, exp, updateProperty } from './query';
+import { ACTIVE, deleteBaseNode, exp, updateProperty } from './query';
 import { hasMore } from './results';
 import { Transactional } from './transactional.decorator';
 
@@ -266,7 +266,7 @@ export class DatabaseService {
         .query()
         .match([
           node('changeset', 'Changeset', { id: changeset }),
-          relation('out', '', 'changeset', { active: true }),
+          relation('out', '', 'changeset', ACTIVE),
           node('node', label, { id }),
         ])
         .return('node.id')
@@ -387,7 +387,7 @@ export class DatabaseService {
 
       query.optionalMatch([
         node('n', nodeName),
-        relation('out', '', propName as string, { active: true }),
+        relation('out', '', propName as string, ACTIVE),
         node(propName as string, 'Property'),
       ]);
     }

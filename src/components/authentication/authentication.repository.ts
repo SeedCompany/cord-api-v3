@@ -3,6 +3,7 @@ import { node, not, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID, ServerException, Session } from '../../common';
 import { DatabaseService, matchRequestingUser } from '../../core';
+import { ACTIVE } from '../../core/database/query';
 import { LoginInput } from './dto';
 
 interface EmailToken {
@@ -169,7 +170,7 @@ export class AuthenticationRepository {
       ])
       .optionalMatch([
         node('token'),
-        relation('in', '', 'token', { active: true }),
+        relation('in', '', 'token', ACTIVE),
         node('user', 'User'),
       ])
       .return('token, user.id AS userId')
@@ -184,7 +185,7 @@ export class AuthenticationRepository {
       .query()
       .match([
         node('requestingUser', 'User', { id: session.userId }),
-        relation('out', '', 'password', { active: true }),
+        relation('out', '', 'password', ACTIVE),
         node('password', 'Property'),
       ])
       .return('password.value as passwordHash')
@@ -202,7 +203,7 @@ export class AuthenticationRepository {
       .apply(matchRequestingUser(session))
       .match([
         node('requestingUser'),
-        relation('out', '', 'password', { active: true }),
+        relation('out', '', 'password', ACTIVE),
         node('password', 'Property'),
       ])
       .setValues({
@@ -295,7 +296,7 @@ export class AuthenticationRepository {
       .apply(matchRequestingUser(session))
       .match([
         node('requestingUser'),
-        relation('out', 'oldRel', 'token', { active: true }),
+        relation('out', 'oldRel', 'token', ACTIVE),
         node('token', 'Token'),
       ])
       .where(not([{ 'token.value': session.token }]))
@@ -308,9 +309,9 @@ export class AuthenticationRepository {
       .query()
       .match([
         node('emailAddress', 'EmailAddress', { value: email }),
-        relation('in', '', 'email', { active: true }),
+        relation('in', '', 'email', ACTIVE),
         node('user', 'User'),
-        relation('out', 'oldRel', 'token', { active: true }),
+        relation('out', 'oldRel', 'token', ACTIVE),
         node('token', 'Token'),
       ])
       .where(not([{ 'token.value': session.token }]))

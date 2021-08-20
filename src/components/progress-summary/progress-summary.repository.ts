@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { isNull, Node, node, relation } from 'cypher-query-builder';
 import { ID } from '../../common';
 import { DtoRepository } from '../../core';
+import { ACTIVE } from '../../core/database/query';
 import { ProgressReport } from '../periodic-report/dto';
 import { ProgressSummary, SummaryPeriod } from './dto';
 
@@ -15,7 +16,7 @@ export class ProgressSummaryRepository extends DtoRepository(ProgressSummary) {
       .query()
       .match([
         node('', 'ProgressReport', { id: reportId }),
-        relation('out', '', 'summary', { active: true }),
+        relation('out', '', 'summary', ACTIVE),
         node('ps', 'ProgressSummary'),
       ])
       .where({
@@ -42,7 +43,7 @@ export class ProgressSummaryRepository extends DtoRepository(ProgressSummary) {
       .matchNode('pr', 'ProgressReport', { id: report.id })
       .merge([
         node('pr'),
-        relation('out', '', 'summary', { active: true }),
+        relation('out', '', 'summary', ACTIVE),
         node('summary', 'ProgressSummary', { period }),
       ])
       .setValues({ summary: data })
