@@ -38,7 +38,7 @@ begin
             
 
         end loop;
-
+        -- join on __person_id too?
         materialized_view_string := materialized_view_string || ' from '|| security_schema_table_name || ' join ' || base_schema_table_name || ' on ' || security_schema_table_name || '.__id = ' || base_schema_table_name || '.id;';
 
         execute format(materialized_view_string);

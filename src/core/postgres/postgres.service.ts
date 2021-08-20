@@ -12,32 +12,26 @@ export class PostgresService {
     @Logger('postgres:service') private readonly logger: ILogger
   ) {}
 
-  private pgInitStatus = false;
-  pool = new Pool({
-    ...this.config.postgres,
+  static pool = new Pool({
+    host: 'localhost',
+    user: 'postgres',
+    password: 'password',
+    database: 'postgres',
+    port: 5432,
   });
 
-  async usePool() {
-    if (!this.pgInitStatus) {
-      this.init();
-      this.loadTestData();
-      this.pgInitStatus = true;
-    }
-    return this.pool;
-  }
-
-  async executeSQLFiles(dirPath: string): Promise<number> {
+  static async executeSQLFiles(dirPath: string): Promise<number> {
     const files = fs.readdirSync(dirPath);
 
     for (const name of files) {
       const fileOrDirPath = path.join(dirPath, name);
 
       if (fs.lstatSync(fileOrDirPath).isDirectory()) {
-        this.logger.info('dir: ', { fileOrDirPath });
+        // this.logger.info('dir: ', { fileOrDirPath });
         await this.executeSQLFiles(fileOrDirPath);
       } else {
         // load script into db
-        this.logger.info('file: ', { fileOrDirPath });
+        // this.logger.info('file: ', { fileOrDirPath });
         const sql = fs.readFileSync(fileOrDirPath).toString();
         await this.pool.query(sql);
       }
@@ -46,26 +40,21 @@ export class PostgresService {
     return 0;
   }
 
-  async init(): Promise<number> {
-    const client = await this.pool.connect();
+  static async init(): Promise<number> {
+    const dbInitPath = path.join(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'src/core/postgres/sql/db_init'
+    );
+    // this.logger.info('path', { dbInitPath });
+    const fileExecutionStatus = await this.executeSQLFiles(dbInitPath);
+    // this.logger.info('here', { fileExecutionStatus });
 
-    try {
-      const dbInitPath = path.join(
-        __dirname,
-        '..',
-        '..',
-        '..',
-        'src/core/postgres/sql/db_init'
-      );
-      this.logger.info('path', { dbInitPath });
-      const fileExecutionStatus = await this.executeSQLFiles(dbInitPath);
-      this.logger.info('here', { fileExecutionStatus });
-    } finally {
-      client.release();
-    }
     return 0;
   }
-  convertObjectToHstore(obj: object): string {
+  static convertObjectToHstore(obj: object): string {
     let string = '';
     for (const [key, value] of Object.entries(obj)) {
       string += `"${key}"=>"${value}",`;
@@ -75,7 +64,7 @@ export class PostgresService {
     return string;
   }
 
-  async loadTestData() {
+  static async loadTestData() {
     const genericFnsPath = path.join(
       __dirname,
       '..',
@@ -87,7 +76,7 @@ export class PostgresService {
     // PEOPLE, ORGS, USERS
 
     await this.pool.query(
-      `call public.create(0,'public.people_data',$1 ,2,2,1,3); `,
+      `call public.create(0,'public.people_data',$1 ,2,2,1,3,0); `,
       [
         this.convertObjectToHstore({
           id: 0,
@@ -98,7 +87,7 @@ export class PostgresService {
     );
 
     await this.pool.query(
-      `call public.create(0,'public.organizations_data', $1, 2,2,1,3);`,
+      `call public.create(0,'public.organizations_data', $1, 2,2,1,3,0);`,
       [
         this.convertObjectToHstore({
           id: 0,
@@ -108,7 +97,7 @@ export class PostgresService {
     );
 
     await this.pool.query(
-      `call public.create(0,'public.users_data', $1, 2,2,1,3);`,
+      `call public.create(0,'public.users_data', $1, 2,2,1,3,0);`,
       [
         this.convertObjectToHstore({
           id: 0,
@@ -121,7 +110,7 @@ export class PostgresService {
     );
 
     await this.pool.query(
-      `call public.create(0,'public.global_roles_data', $1, 2,2,1,3);`,
+      `call public.create(0,'public.global_roles_data', $1, 2,2,1,3,0);`,
       [
         this.convertObjectToHstore({
           id: 0,
@@ -140,10 +129,10 @@ export class PostgresService {
 
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       const schemaTableName = `public.${table_name}`;
-      this.logger.info(schemaTableName);
+      // this.logger.info(schemaTableName);
       for (const { column_name } of columns.rows) {
         await this.pool.query(
-          `call public.create(0, 'public.global_role_column_grants', $1,2,0,0,3)`,
+          `call public.create(0, 'public.global_role_column_grants', $1,2,0,0,3,0)`,
           [
             this.convertObjectToHstore({
               global_role: 0,
@@ -158,7 +147,7 @@ export class PostgresService {
 
     // PROJECTS
     await this.pool.query(
-      `call public.create(0, 'public.projects_data', $1,2,2,1,3)`,
+      `call public.create(0, 'public.projects_data', $1,2,2,1,3,0)`,
       [
         this.convertObjectToHstore({
           id: 0,
@@ -168,7 +157,7 @@ export class PostgresService {
     );
     // LANGUAGES
     await this.pool.query(
-      `call public.create(0,'sil.table_of_languages', $1, 2,0,0,3)`,
+      `call public.create(0,'sil.table_of_languages', $1, 2,0,0,3,0)`,
       [
         this.convertObjectToHstore({
           id: 0,
@@ -179,7 +168,7 @@ export class PostgresService {
     );
 
     await this.pool.query(
-      `call public.create(0,'sc.languages_data', $1,2,2,1,3)`,
+      `call public.create(0,'sc.languages_data', $1,2,2,1,3,0)`,
       [
         this.convertObjectToHstore({
           id: 0,
@@ -192,7 +181,7 @@ export class PostgresService {
 
     // LOCATIONS
     await this.pool.query(
-      `call public.create(0,'public.locations_data', $1,2,2,1,3)`,
+      `call public.create(0,'public.locations_data', $1,2,2,1,3,0)`,
       [
         this.convertObjectToHstore({
           id: 0,
@@ -203,30 +192,37 @@ export class PostgresService {
       ]
     );
 
-    this.logger.info('people inserted');
+    // this.logger.info('people inserted');
     await this.pool.query(
       `insert into public.organizations_data(id,name, sensitivity) values(1,'org1', 'Low')`
     );
 
     for (let i = 1; i <= 10; i++) {
-      await this.pool.query(
-        `call public.create(0,'public.people_data',$1 ,2,2,1,3); `,
+      const key = await this.pool.query(
+        `call public.create(0,'public.people_data',$1 ,2,2,1,3,0); `,
         [
           this.convertObjectToHstore({
-            id: i,
             about: 'developer',
             public_first_name: 'Vivek',
           }),
         ]
       );
-    }
-    const data = await this.pool.query(
-      `select * from public.people_materialized_view where __person_id = 10 and __id = 10`
-    );
-    console.log(data);
-    for (let i = 0; i < 10; i++) {
       await this.pool.query(
-        `call public.create(0,'public.global_role_memberships',$1, 0,0,0,0)`,
+        `call public.create(0, 'public.users_data', $1, 2,2,1,3,0);`,
+        [
+          this.convertObjectToHstore({
+            person: key.rows[0].record_id,
+            email: `email${i}@email.com`,
+            password: 'password',
+            owning_org: 0,
+          }),
+        ]
+      );
+    }
+
+    for (let i = 1; i < 10; i++) {
+      await this.pool.query(
+        `call public.create(0,'public.global_role_memberships',$1, 0,0,0,0,0)`,
         [
           this.convertObjectToHstore({
             global_role: 0,
@@ -234,11 +230,11 @@ export class PostgresService {
           }),
         ]
       );
-      this.logger.info('generic create run');
+      // this.logger.info('generic create run');
     }
     // await this.pool.query(
     await this.pool.query(
-      `call public.create(0,'public.global_role_memberships',$1, 2,2,0,3)`,
+      `call public.create(0,'public.global_role_memberships',$1, 2,2,0,3,0)`,
       [
         this.convertObjectToHstore({
           global_role: 0,
@@ -250,7 +246,7 @@ export class PostgresService {
     for (let i = 2; i <= 10; i++) {
       console.log(i);
       await this.pool.query(
-        `call public.create(0,'public.organizations_data', $1, 2,0,1,3);`,
+        `call public.create(0,'public.organizations_data', $1, 2,0,1,3,0);`,
         [
           this.convertObjectToHstore({
             id: i,
@@ -268,7 +264,7 @@ export class PostgresService {
       console.log(i);
       // refreshing mv outside the create fn is much faster for some reason
       await this.pool.query(
-        `call public.create(0,'public.locations_data', $1,2,2,1,3)`,
+        `call public.create(0,'public.locations_data', $1,2,2,1,3,0)`,
         [
           this.convertObjectToHstore({
             id: i,
@@ -283,4 +279,12 @@ export class PostgresService {
       // );
     }
   }
+  // async usePool() {
+  //   if (!this.pgInitStatus) {
+  //     this.init();
+  //     this.loadTestData();
+  //     this.pgInitStatus = true;
+  //   }
+  //   return this.pool;
+  // }
 }

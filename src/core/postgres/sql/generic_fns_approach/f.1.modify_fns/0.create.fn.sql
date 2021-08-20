@@ -26,7 +26,8 @@ pRecord hstore,
 pToggleSecurity int, 
 pToggleMV int, 
 pToggleHistory int,
-pToggleGranters int
+pToggleGranters int, 
+inout record_id int
 )
 -- returns int 
 language plpgsql
@@ -42,7 +43,6 @@ column_udt_name text;
 security_table_name text;
 sql_string_keys text;
 sql_string_values text; 
-record_id int;
 begin  
     
     permissionExists := false; 

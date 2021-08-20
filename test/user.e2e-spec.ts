@@ -34,6 +34,8 @@ describe('User e2e', () => {
     app = await createTestApp();
     db = app.get(Connection);
     await createSession(app);
+    await PostgresService.init();
+    await PostgresService.loadTestData();
   });
 
   // afterAll(async () => {
@@ -78,7 +80,6 @@ describe('User e2e', () => {
 
     return true;
   });
-
 
   it('create user with required input fields', async () => {
     const user = await generateRequireFieldsRegisterInput();

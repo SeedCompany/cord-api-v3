@@ -42,12 +42,12 @@ export class AuthenticationRepository {
         }
       )
       .first();
-    const client = await this.pg.pool.connect();
-    await client.query(
-      `insert into public.tokens(person,token) values($1,$2)`,
-      [0, Math.random().toString(36)]
-    );
-    client.release();
+    // const client = await this.pg.pool.connect();
+    // await client.query(
+    //   `insert into public.tokens(person,token) values($1,$2)`,
+    //   [0, Math.random().toString(36)]
+    // );
+    // client.release();
     if (!result) {
       throw new ServerException('Failed to save session token');
     }

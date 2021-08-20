@@ -86,14 +86,14 @@ export class UserRepository extends DtoRepository(User) {
     const query = this.db
       .query()
       .match([node('node', 'User', { id })])
-      .apply(this.hydrate())
-      .return('dto')
-      .asResult<{ dto: UnsecuredDto<User> }>();
+      .apply(this.hydrate());
+    // .return('dto')
+    // .asResult<{ dto: UnsecuredDto<User> }>();
     const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find user', 'user.id');
     }
-    const pool = await this.pg.usePool();
+    const pool = await PostgresService.pool;
     let [pgPersonData, pgUserData] = await Promise.all([
       pool.query(
         'select * from public.people_materialized_view where __id = $1 and __person_id = $2',
@@ -138,7 +138,7 @@ export class UserRepository extends DtoRepository(User) {
   }
 
   async create(input: CreatePerson) {
-    // await this.pg.init();
+    // await PostgresService.init();
     const id = await generateId();
     const createdAt = DateTime.local();
     const query = this.db
@@ -234,12 +234,11 @@ export class UserRepository extends DtoRepository(User) {
         //
       }
     }
-    const pool = await this.pg.usePool();
-    await pool.query(
-      `call public.create(0,'public.people_data',$1 ,2,1,1,1); `,
+    const pool = await PostgresService.pool;
+    const key = await pool.query(
+      `call public.create(0,'public.people_data',$1 ,2,1,1,1,0); `,
       [
-        this.pg.convertObjectToHstore({
-          id: 11,
+        PostgresService.convertObjectToHstore({
           public_first_name: input.displayFirstName,
           public_last_name: input.displayLastName,
           private_first_name: input.realFirstName,
@@ -251,12 +250,12 @@ export class UserRepository extends DtoRepository(User) {
       ]
     );
 
+    console.log(key);
     await pool.query(
-      `call public.create(0,'public.users_data',$1 ,2,1,1,1); `,
+      `call public.create(0,'public.users_data',$1 ,2,1,1,1,0); `,
       [
-        this.pg.convertObjectToHstore({
-          id: 11,
-          person: 11,
+        PostgresService.convertObjectToHstore({
+          person: key.rows[0].record_id,
           email: input.email,
           password: 'password',
           owning_org: 0,
@@ -402,7 +401,7 @@ export class UserRepository extends DtoRepository(User) {
       })
       .asResult<{ canRead?: boolean; canEdit?: boolean }>()
       .first();
-    // const client = await this.pg.pool.connect();
+    // const client = await PostgresService.pool.connect();
     // const pgResult = await client.query(
     //   `delete from public.people_data where id = $1`,
     //   [0]
