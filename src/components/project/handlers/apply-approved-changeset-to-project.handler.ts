@@ -7,6 +7,7 @@ import {
   ILogger,
   Logger,
 } from '../../../core';
+import { ACTIVE, INACTIVE } from '../../../core/database/query';
 import { commitChangesetProps } from '../../changeset/commit-changeset-props.query';
 import { ProjectChangeRequestApprovedEvent } from '../../project-change-request/events';
 import { ProjectRepository } from '../project.repository';
@@ -35,7 +36,7 @@ export class ApplyApprovedChangesetToProject
         .query()
         .match([
           node('node', 'Project'),
-          relation('out', '', 'changeset', { active: true }),
+          relation('out', '', 'changeset', ACTIVE),
           node('changeset', 'Changeset', { id: changesetId }),
         ])
         .apply(commitChangesetProps())
@@ -46,11 +47,11 @@ export class ApplyApprovedChangesetToProject
             .with('node, changeset')
             .match([
               node('node'),
-              relation('out', '', 'budget', { active: true }),
+              relation('out', '', 'budget', ACTIVE),
               node('budget', 'Budget'),
-              relation('out', 'recordRel', 'record', { active: false }),
+              relation('out', 'recordRel', 'record', INACTIVE),
               node('br', 'BudgetRecord'),
-              relation('in', '', 'changeset', { active: true }),
+              relation('in', '', 'changeset', ACTIVE),
               node('changeset', 'Changeset', { id: changesetId }),
             ])
             .setValues({

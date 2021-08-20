@@ -3,6 +3,7 @@ import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID } from '../../common';
 import { DatabaseService, SyntaxError } from '../../core';
+import { ACTIVE } from '../../core/database/query';
 
 @Injectable()
 export class AdminRepository {
@@ -93,9 +94,9 @@ export class AdminRepository {
       .query()
       .match([
         node('email', 'EmailAddress'),
-        relation('in', '', 'email', { active: true }),
+        relation('in', '', 'email', ACTIVE),
         node('root', ['RootUser']),
-        relation('out', '', 'password', { active: true }),
+        relation('out', '', 'password', ACTIVE),
         node('pw', 'Property'),
       ])
       .return(['root.id as id', 'email.value as email', 'pw.value as hash'])
@@ -108,9 +109,9 @@ export class AdminRepository {
       .query()
       .match([
         node('email', 'EmailAddress'),
-        relation('in', '', 'email', { active: true }),
+        relation('in', '', 'email', ACTIVE),
         node('root', ['RootUser']),
-        relation('out', '', 'password', { active: true }),
+        relation('out', '', 'password', ACTIVE),
         node('pw', 'Property'),
       ])
       .setValues({

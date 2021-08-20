@@ -3,6 +3,7 @@ import { node, relation } from 'cypher-query-builder';
 import { ID, NotFoundException, Session } from '../../common';
 import { DtoRepository, matchRequestingUser } from '../../core';
 import {
+  ACTIVE,
   createNode,
   paginate,
   permissionsOfNode,
@@ -62,7 +63,7 @@ export class OrganizationRepository extends DtoRepository(Organization) {
         ...permissionsOfNode('Organization'),
         ...(filter.userId && session.userId
           ? [
-              relation('in', '', 'organization', { active: true }),
+              relation('in', '', 'organization', ACTIVE),
               node('user', 'User', { id: filter.userId }),
             ]
           : []),

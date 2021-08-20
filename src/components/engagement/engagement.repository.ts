@@ -16,9 +16,11 @@ import {
 import { CommonRepository } from '../../core';
 import { DbChanges, getChanges } from '../../core/database/changes';
 import {
+  ACTIVE,
   coalesce,
   createNode,
   createRelationships,
+  INACTIVE,
   matchChangesetAndChangedProps,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
@@ -65,7 +67,7 @@ export class EngagementRepository extends CommonRepository {
         sub
           .match([
             node('project'),
-            relation('out', '', 'engagement', { active: true }),
+            relation('out', '', 'engagement', ACTIVE),
             node('node', 'Engagement', { id }),
           ])
           .return('project, node')
@@ -75,9 +77,9 @@ export class EngagementRepository extends CommonRepository {
                   .union()
                   .match([
                     node('project'),
-                    relation('out', '', 'engagement', { active: false }),
+                    relation('out', '', 'engagement', INACTIVE),
                     node('node', 'Engagement', { id }),
-                    relation('in', '', 'changeset', { active: true }),
+                    relation('in', '', 'changeset', ACTIVE),
                     node('changeset', 'Changeset', { id: changeset }),
                   ])
                   .return('project, node')
@@ -88,37 +90,37 @@ export class EngagementRepository extends CommonRepository {
       .apply(matchChangesetAndChangedProps(changeset))
       .optionalMatch([
         node('node'),
-        relation('out', '', 'ceremony', { active: true }),
+        relation('out', '', 'ceremony', ACTIVE),
         node('ceremony'),
       ])
       .optionalMatch([
         node('node'),
-        relation('out', '', 'language', { active: true }),
+        relation('out', '', 'language', ACTIVE),
         node('language'),
       ])
       .optionalMatch([
         node('node'),
-        relation('out', '', 'intern', { active: true }),
+        relation('out', '', 'intern', ACTIVE),
         node('intern'),
       ])
       .optionalMatch([
         node('node'),
-        relation('out', '', 'countryOfOrigin', { active: true }),
+        relation('out', '', 'countryOfOrigin', ACTIVE),
         node('countryOfOrigin'),
       ])
       .optionalMatch([
         node('node'),
-        relation('out', '', 'mentor', { active: true }),
+        relation('out', '', 'mentor', ACTIVE),
         node('mentor'),
       ])
       .optionalMatch([
         node('project'),
-        relation('out', '', 'mouStart', { active: true }),
+        relation('out', '', 'mouStart', ACTIVE),
         node('mouStart'),
       ])
       .optionalMatch([
         node('project'),
-        relation('out', '', 'mouEnd', { active: true }),
+        relation('out', '', 'mouEnd', ACTIVE),
         node('mouEnd'),
       ])
       .return<{ dto: UnsecuredDto<LanguageEngagement & InternshipEngagement> }>(
@@ -275,7 +277,7 @@ export class EngagementRepository extends CommonRepository {
       ])
       .optionalMatch([
         node('internshipEngagement'),
-        relation('out', 'rel', 'mentor', { active: true }),
+        relation('out', 'rel', 'mentor', ACTIVE),
         node('oldMentorUser', 'User'),
       ])
       .set({
@@ -312,7 +314,7 @@ export class EngagementRepository extends CommonRepository {
       ])
       .optionalMatch([
         node('internshipEngagement'),
-        relation('out', 'rel', 'countryOfOrigin', { active: true }),
+        relation('out', 'rel', 'countryOfOrigin', ACTIVE),
         node('oldCountry', 'Location'),
       ])
       .set({
@@ -365,7 +367,7 @@ export class EngagementRepository extends CommonRepository {
             ...permissionsOfNode(label),
             ...(input.filter.projectId
               ? [
-                  relation('in', '', 'engagement', { active: true }),
+                  relation('in', '', 'engagement', ACTIVE),
                   node('project', 'Project', { id: input.filter.projectId }),
                 ]
               : []),
@@ -378,9 +380,9 @@ export class EngagementRepository extends CommonRepository {
                   .union()
                   .match([
                     node('', 'Project', { id: input.filter.projectId }),
-                    relation('out', '', 'engagement', { active: false }),
+                    relation('out', '', 'engagement', INACTIVE),
                     node('node', label),
-                    relation('in', '', 'changeset', { active: true }),
+                    relation('in', '', 'changeset', ACTIVE),
                     node('changeset', 'Changeset', { id: changeset }),
                   ])
                   .return('node')
@@ -398,7 +400,7 @@ export class EngagementRepository extends CommonRepository {
       .query()
       .match([
         node('project', 'Project', { id: projectId }),
-        relation('out', '', 'engagement', { active: true }),
+        relation('out', '', 'engagement', ACTIVE),
         node('engagement', 'Engagement'),
       ])
       .return('engagement.id as id')
@@ -411,9 +413,9 @@ export class EngagementRepository extends CommonRepository {
       .query()
       .match([
         node('project', 'Project', { id: projectId }),
-        relation('out', '', 'engagement', { active: true }),
+        relation('out', '', 'engagement', ACTIVE),
         node('engagement'),
-        relation('out', '', 'status', { active: true }),
+        relation('out', '', 'status', ACTIVE),
         node('sn', 'Property'),
       ])
       .where({
@@ -432,16 +434,16 @@ export class EngagementRepository extends CommonRepository {
       .query()
       .match([
         node('eng', 'Engagement', { id: engagementId }),
-        relation('in', 'engagement', { active: true }),
+        relation('in', 'engagement', ACTIVE),
         node('node', 'Project'),
-        relation('out', '', 'member', { active: true }),
+        relation('out', '', 'member', ACTIVE),
         node('projectMember', 'ProjectMember'),
-        relation('out', '', 'user', { active: true }),
+        relation('out', '', 'user', ACTIVE),
         node('user', 'User', { id: session.userId }),
       ])
       .match([
         node('projectMember'),
-        relation('out', 'r', 'roles', { active: true }),
+        relation('out', 'r', 'roles', ACTIVE),
         node('roles', 'Property'),
       ])
       .return('apoc.coll.flatten(collect(roles.value)) as memberRoles')
@@ -472,14 +474,14 @@ export class EngagementRepository extends CommonRepository {
         node('project'),
         relation('out', '', 'engagement', { active: !changeset }),
         node('engagement'),
-        relation('out', '', property, { active: true }),
+        relation('out', '', property, ACTIVE),
         node('other'),
       ])
       .optionalMatch(
         changeset
           ? [
               node('engagement'),
-              relation('in', '', 'changeset', { active: true }),
+              relation('in', '', 'changeset', ACTIVE),
               node('changesetNode', 'Changeset', { id: changeset }),
             ]
           : [node('engagement')]
@@ -499,7 +501,7 @@ export class EngagementRepository extends CommonRepository {
       .apply(this.matchLanguageOrEngagement(id))
       .match([
         node('language'),
-        relation('out', '', 'hasExternalFirstScripture', { active: true }),
+        relation('out', '', 'hasExternalFirstScripture', ACTIVE),
         node('', 'Property', { value: true }),
       ])
       .return('language')
@@ -513,9 +515,9 @@ export class EngagementRepository extends CommonRepository {
       .apply(this.matchLanguageOrEngagement(id))
       .match([
         node('language'),
-        relation('in', '', 'language', { active: true }),
+        relation('in', '', 'language', ACTIVE),
         node('otherLanguageEngagements', 'LanguageEngagement'),
-        relation('out', '', 'firstScripture', { active: true }),
+        relation('out', '', 'firstScripture', ACTIVE),
         node('', 'Property', { value: true }),
       ])
       .return('otherLanguageEngagements')
@@ -533,7 +535,7 @@ export class EngagementRepository extends CommonRepository {
             node('languageEngagement', 'LanguageEngagement', {
               id: engagementId,
             }),
-            relation('out', '', 'language', { active: true }),
+            relation('out', '', 'language', ACTIVE),
             node('language', 'Language'),
           ])
         : query.match([node('language', 'Language', { id: languageId })]);

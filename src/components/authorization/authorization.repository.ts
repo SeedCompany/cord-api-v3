@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { ID, Session } from '../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
+import { ACTIVE } from '../../core/database/query';
 import { InternalRole, Role } from './dto';
 import { Powers } from './dto/powers';
 
@@ -92,7 +93,7 @@ export class AuthorizationRepository {
       .query()
       .match([
         node('user', 'User', { id }),
-        relation('out', '', 'roles', { active: true }),
+        relation('out', '', 'roles', ACTIVE),
         node('role', 'Property'),
       ])
       .raw(`RETURN collect(role.value) as roles`)

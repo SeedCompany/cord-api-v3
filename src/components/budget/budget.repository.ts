@@ -14,6 +14,7 @@ import {
   matchSession,
 } from '../../core';
 import {
+  ACTIVE,
   createNode,
   createRelationships,
   matchChangesetAndChangedProps,
@@ -87,7 +88,7 @@ export class BudgetRepository extends DtoRepository(Budget) {
       .query()
       .match([
         node('project', 'Project'),
-        relation('out', '', 'budget', { active: true }),
+        relation('out', '', 'budget', ACTIVE),
         node('node', 'Budget', { id }),
       ])
       .apply(matchPropsAndProjectSensAndScopedRoles(session))
@@ -112,9 +113,9 @@ export class BudgetRepository extends DtoRepository(Budget) {
       .query()
       .match([
         node('budgetRecord', 'BudgetRecord', { id: recordId }),
-        relation('in', '', 'record', { active: true }),
+        relation('in', '', 'record', ACTIVE),
         node('budget', 'Budget'),
-        relation('out', '', 'status', { active: true }),
+        relation('out', '', 'status', ACTIVE),
         node('status', 'Property'),
       ])
       .return<{ status: Status }>('status.value as status')
@@ -133,7 +134,7 @@ export class BudgetRepository extends DtoRepository(Budget) {
         ...permissionsOfNode('Budget'),
         ...(filter.projectId
           ? [
-              relation('in', '', 'budget', { active: true }),
+              relation('in', '', 'budget', ACTIVE),
               node('project', 'Project', {
                 id: filter.projectId,
               }),
@@ -153,7 +154,7 @@ export class BudgetRepository extends DtoRepository(Budget) {
         ...(filter.projectId
           ? [
               node('node', 'Budget'),
-              relation('in', '', 'budget', { active: true }),
+              relation('in', '', 'budget', ACTIVE),
               node('project', 'Project', {
                 id: filter.projectId,
               }),
@@ -172,9 +173,9 @@ export class BudgetRepository extends DtoRepository(Budget) {
         sub
           .match([
             node('project', 'Project', { id: projectId }),
-            relation('out', '', 'budget', { active: true }),
+            relation('out', '', 'budget', ACTIVE),
             node('budget', 'Budget'),
-            relation('out', '', 'status', { active: true }),
+            relation('out', '', 'status', ACTIVE),
             node('status', 'Property'),
           ])
           // Pending changeset
@@ -182,7 +183,7 @@ export class BudgetRepository extends DtoRepository(Budget) {
             changeset
               ? q.optionalMatch([
                   node('changeset', 'Changeset', { id: changeset }),
-                  relation('out', '', 'status', { active: true }),
+                  relation('out', '', 'status', ACTIVE),
                   node('changesetStatus', 'Property', { value: 'Pending' }),
                 ])
               : q.subQuery((sub2) => sub2.return('null as changesetStatus'))

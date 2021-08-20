@@ -1,5 +1,6 @@
 import { node, Query, relation } from 'cypher-query-builder';
 import { ID, Many, Session } from '../../../common';
+import { variable } from '../query-augmentation/condition-variables';
 import { apoc, collect, listConcat, merge } from './cypher-functions';
 
 export const requestingUser = (session: Session) =>
@@ -18,6 +19,16 @@ export const permissionsOfNode = (nodeLabel: Many<string>) => [
   relation('out', 'permsOfBaseNode', 'baseNode'),
   node('node', nodeLabel),
 ];
+
+/**
+ * Same as `{ active: true }` but it doesn't create a bound parameter
+ */
+export const ACTIVE = { active: variable('true') };
+
+/**
+ * Same as `{ active: false }` but it doesn't create a bound parameter
+ */
+export const INACTIVE = { active: variable('false') };
 
 export interface MatchPropsOptions {
   // The node var to pull properties from
@@ -57,7 +68,7 @@ export const matchProps = (options: MatchPropsOptions = {}) => {
             node('prop', 'Property'),
             ...(changeset
               ? [
-                  relation('in', '', 'changeset', { active: true }),
+                  relation('in', '', 'changeset', ACTIVE),
                   node('changeset', 'Changeset', { id: changeset }),
                 ]
               : []),

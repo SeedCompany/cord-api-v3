@@ -11,6 +11,7 @@ import {
   UnauthorizedException,
 } from '../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
+import { ACTIVE, INACTIVE } from '../../core/database/query';
 import { Role } from '../authorization';
 import { EngagementService } from '../engagement';
 import { User, UserService } from '../user';
@@ -870,9 +871,9 @@ export class ProjectRules {
         .query()
         .match([
           node('project', 'Project', { id }),
-          relation('out', '', 'step', { active: false }),
+          relation('out', '', 'step', INACTIVE),
           node('step', 'Property'),
-          relation('in', '', 'changeset', { active: true }),
+          relation('in', '', 'changeset', ACTIVE),
           node('', 'Changeset', { id: changeset }),
         ])
         .raw('return step.value as step')
@@ -885,7 +886,7 @@ export class ProjectRules {
         .query()
         .match([
           node('project', 'Project', { id }),
-          relation('out', '', 'step', { active: true }),
+          relation('out', '', 'step', ACTIVE),
           node('step', 'Property'),
         ])
         .raw('return step.value as step')
@@ -906,7 +907,7 @@ export class ProjectRules {
       .query()
       .match([
         node('user', 'User', { id }),
-        relation('out', '', 'roles', { active: true }),
+        relation('out', '', 'roles', ACTIVE),
         node('roles', 'Property'),
       ])
       .raw('return collect(roles.value) as roles')
@@ -968,9 +969,9 @@ export class ProjectRules {
       .query()
       .match([
         node('', 'Project', { id }),
-        relation('out', '', 'member', { active: true }),
+        relation('out', '', 'member', ACTIVE),
         node('', 'ProjectMember'),
-        relation('out', '', 'user', { active: true }),
+        relation('out', '', 'user', ACTIVE),
         node('user', 'User'),
       ])
       .return<{ ids: ID[] }>('collect(user.id) as ids')
@@ -983,9 +984,9 @@ export class ProjectRules {
       .query()
       .match([
         node('email', 'EmailAddress'),
-        relation('in', '', 'email', { active: true }),
+        relation('in', '', 'email', ACTIVE),
         node('user', 'User'),
-        relation('out', '', 'roles', { active: true }),
+        relation('out', '', 'roles', ACTIVE),
         node('role', 'Property', { value: role }),
       ])
       .return<{ emails: string[] }>('collect(email.value) as emails')
@@ -1017,7 +1018,7 @@ export class ProjectRules {
       .query()
       .match([
         node('node', 'Project', { id }),
-        relation('out', '', 'step', { active: false }),
+        relation('out', '', 'step', INACTIVE),
         node('prop'),
       ])
       .with('prop')

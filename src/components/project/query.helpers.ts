@@ -5,6 +5,7 @@ import {
   Query,
   relation,
 } from 'cypher-query-builder';
+import { ACTIVE } from '../../core/database/query';
 import { ProjectFilters } from './dto';
 
 export const projectListFilter = (filter: ProjectFilters) => (query: Query) => {
@@ -22,7 +23,7 @@ export const projectListFilter = (filter: ProjectFilters) => (query: Query) => {
     query
       .match([
         node('node'),
-        relation('out', '', 'engagement', { active: true }),
+        relation('out', '', 'engagement', ACTIVE),
         node('engagement', 'Engagement'),
       ])
       .with('node, count(engagement) as engagementCount')
@@ -54,6 +55,6 @@ export const projectListFilter = (filter: ProjectFilters) => (query: Query) => {
 
 export const propMatch = (property: string) => [
   node('node'),
-  relation('out', '', property, { active: true }),
+  relation('out', '', property, ACTIVE),
   node(property, 'Property'),
 ];

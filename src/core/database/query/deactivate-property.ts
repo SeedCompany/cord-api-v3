@@ -1,7 +1,7 @@
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
-import { Variable } from '.';
+import { ACTIVE, Variable } from '.';
 import {
   ID,
   many,
@@ -63,7 +63,7 @@ export const deactivateProperty =
           node('oldPropVar', 'Property'),
           ...(changeset
             ? [
-                relation('in', 'oldChange', 'changeset', { active: true }),
+                relation('in', 'oldChange', 'changeset', ACTIVE),
                 node('changeNode', 'Changeset', { id: changeset }),
               ]
             : []),
