@@ -1,7 +1,7 @@
 import { Query } from 'cypher-query-builder';
 
 declare module 'cypher-query-builder/dist/typings/query' {
-  interface Query {
+  interface Query<Result = unknown> {
     /**
      * Apply custom query modifications while maintaining the fluent chain.
      *
@@ -28,13 +28,12 @@ declare module 'cypher-query-builder/dist/typings/query' {
      *
      * db.query().apply(matchFoo('Movie'));
      */
-    apply<R extends this | Query<any> | void>(
-      fn: (query: this) => R
-    ): R extends void ? this : R;
+    apply<S>(fn: (query: Query<Result>) => Query<S>): Query<S>;
+    apply(fn: (query: this) => void): this;
   }
 }
 
-Query.prototype.apply = function apply<R extends Query<any> | void>(
+Query.prototype.apply = function apply<R>(
   fn: (q: Query) => R
 ): R extends void ? Query : R {
   return (fn(this) || this) as Exclude<R, void>;

@@ -2,6 +2,7 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
   ID,
+  IntersectionType,
   Resource,
   Secured,
   SecuredBoolean,
@@ -9,7 +10,10 @@ import {
   SecuredEnum,
   SecuredProps,
   Sensitivity,
+  SensitivityField,
 } from '../../../common';
+import { ScopedRole } from '../../authorization';
+import { ChangesetAware } from '../../changeset/dto';
 import { DefinedFile } from '../../file/dto';
 import { Organization } from '../../organization/dto';
 import { SecuredPartnerTypes } from '../../partner/dto/partner-type.enum';
@@ -32,15 +36,17 @@ export abstract class SecuredFinancialReportingType extends SecuredEnum(
 ) {}
 
 @ObjectType({
-  implements: [Resource],
+  implements: [Resource, ChangesetAware],
 })
-export class Partnership extends Resource {
+export class Partnership extends IntersectionType(ChangesetAware, Resource) {
   static readonly Props = keysOf<Partnership>();
   static readonly SecuredProps = keysOf<SecuredProps<Partnership>>();
   static readonly Relations = {
     // why is this here? We have a relation to partner, not org...
     organization: Organization,
   };
+
+  readonly project: ID;
 
   @Field()
   readonly agreementStatus: SecuredPartnershipAgreementStatus;
@@ -65,6 +71,7 @@ export class Partnership extends Resource {
   readonly agreement: DefinedFile;
 
   readonly partner: Secured<ID>;
+  readonly organization: ID;
 
   @Field()
   readonly types: SecuredPartnerTypes;
@@ -75,8 +82,12 @@ export class Partnership extends Resource {
   @Field()
   readonly primary: SecuredBoolean;
 
-  @Field(() => Sensitivity, {
+  @SensitivityField({
     description: "Based on the project's sensitivity",
   })
   readonly sensitivity: Sensitivity;
+
+  // A list of non-global roles the requesting user has available for this object.
+  // This is just a cache, to prevent extra db lookups within the same request.
+  readonly scope: ScopedRole[];
 }

@@ -17,7 +17,7 @@ import {
   ILogger,
   Logger,
 } from '../../core';
-import { runListQuery } from '../../core/database/results';
+import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { CeremonyService } from '../ceremony';
 import { FileService } from '../file';
@@ -75,13 +75,15 @@ export class EngagementService {
 
   async createLanguageEngagement(
     input: CreateLanguageEngagement,
-    session: Session
+    session: Session,
+    changeset?: ID
   ): Promise<LanguageEngagement> {
     const { languageId, projectId } = input;
     await this.verifyRelationshipEligibility(
       projectId,
       languageId,
-      ProjectType.Translation
+      ProjectType.Translation,
+      changeset
     );
 
     if (input.firstScripture) {
@@ -96,7 +98,10 @@ export class EngagementService {
       userId: session.userId,
     });
 
-    const { id, pnpId } = await this.repo.createLanguageEngagement(input);
+    const { id, pnpId } = await this.repo.createLanguageEngagement(
+      input,
+      changeset
+    );
 
     await this.files.createDefinedFile(
       pnpId,
@@ -116,8 +121,12 @@ export class EngagementService {
 
     const languageEngagement = (await this.readOne(
       id,
-      session
+      session,
+      changeset
     )) as LanguageEngagement;
+    if (changeset) {
+      return languageEngagement;
+    }
     const event = new EngagementCreatedEvent(languageEngagement, session);
     await this.eventBus.publish(event);
 
@@ -126,13 +135,15 @@ export class EngagementService {
 
   async createInternshipEngagement(
     input: CreateInternshipEngagement,
-    session: Session
+    session: Session,
+    changeset?: ID
   ): Promise<InternshipEngagement> {
     const { projectId, internId, mentorId, countryOfOriginId } = input;
     await this.verifyRelationshipEligibility(
       projectId,
       internId,
-      ProjectType.Internship
+      ProjectType.Internship,
+      changeset
     );
 
     await this.verifyProjectStatus(projectId, session);
@@ -148,7 +159,8 @@ export class EngagementService {
     let growthPlanId;
     try {
       ({ id, growthPlanId } = await this.repo.createInternshipEngagement(
-        input
+        input,
+        changeset
       ));
     } catch (e) {
       if (!(e instanceof NotFoundException)) {
@@ -190,8 +202,12 @@ export class EngagementService {
 
     const internshipEngagement = (await this.readOne(
       id,
-      session
+      session,
+      changeset
     )) as InternshipEngagement;
+    if (changeset) {
+      return internshipEngagement;
+    }
     const engagementCreatedEvent = new EngagementCreatedEvent(
       internshipEngagement,
       session
@@ -219,66 +235,29 @@ export class EngagementService {
   @HandleIdLookup([LanguageEngagement, InternshipEngagement])
   async readOne(
     id: ID,
-    session: Session
+    session: Session,
+    changeset?: ID
   ): Promise<LanguageEngagement | InternshipEngagement> {
     this.logger.debug('readOne', { id, userId: session.userId });
 
     if (!id) {
       throw new NotFoundException('no id given', 'engagement.id');
     }
-    const result = await this.repo.readOne(id, session);
+    const result = await this.repo.readOne(id, session, changeset);
 
-    const props = {
-      __typename: result.__typename,
-      ...result.props,
-      language: result.language,
-      ceremony: result.ceremony,
-      intern: result.intern,
-      countryOfOrigin: result.countryOfOrigin,
-      mentor: result.mentor,
-    };
+    const isLanguageEngagement = result.__typename === 'LanguageEngagement';
 
-    const isLanguageEngagement = props.__typename === 'LanguageEngagement';
-
-    const {
-      startDate: _, // both of these are composed manually below, so exclude them
-      endDate: __,
-      ...securedProperties
-    } = await this.authorizationService.secureProperties(
+    const securedProperties = await this.authorizationService.secureProperties(
       isLanguageEngagement ? LanguageEngagement : InternshipEngagement,
-      props,
+      result,
       session,
-      result.scopedRoles
+      result.scope
     );
 
-    const project = await this.projectService.readOne(result.project, session);
-
-    const canReadStartDate =
-      project.mouStart.canRead && securedProperties.startDateOverride.canRead;
-    const startDate = canReadStartDate
-      ? props.startDateOverride ?? project.mouStart.value
-      : null;
-    const canReadEndDate =
-      project.mouEnd.canRead && securedProperties.endDateOverride.canRead;
-    const endDate = canReadEndDate
-      ? props.endDateOverride ?? project.mouEnd.value
-      : null;
-
     const common = {
-      __typename: result.__typename,
-      ...result.props,
-      startDate: {
-        value: startDate,
-        canRead: canReadStartDate,
-        canEdit: false,
-      },
-      endDate: {
-        value: endDate,
-        canRead: canReadEndDate,
-        canEdit: false,
-      },
+      ...result,
       canDelete:
-        props.status !== EngagementStatus.InDevelopment &&
+        result.status !== EngagementStatus.InDevelopment &&
         !session.roles.includes(`global:Administrator`)
           ? false
           : await this.repo.checkDeletePermission(id, session),
@@ -315,7 +294,8 @@ export class EngagementService {
 
   async updateLanguageEngagement(
     input: UpdateLanguageEngagement,
-    session: Session
+    session: Session,
+    changeset?: ID
   ): Promise<LanguageEngagement> {
     if (input.firstScripture) {
       await this.verifyFirstScripture({ engagementId: input.id });
@@ -325,13 +305,15 @@ export class EngagementService {
       await this.engagementRules.verifyStatusChange(
         input.id,
         session,
-        input.status
+        input.status,
+        changeset
       );
     }
 
     const object = (await this.readOne(
       input.id,
-      session
+      session,
+      changeset
     )) as LanguageEngagement;
 
     const changes = this.repo.getActualLanguageChanges(object, input);
@@ -351,7 +333,11 @@ export class EngagementService {
     );
 
     try {
-      await this.repo.updateLanguageProperties(object, simpleChanges);
+      await this.repo.updateLanguageProperties(
+        object,
+        simpleChanges,
+        changeset
+      );
     } catch (exception) {
       this.logger.error('Error updating language engagement', { exception });
       throw new ServerException(
@@ -362,8 +348,14 @@ export class EngagementService {
 
     const updated = (await this.readOne(
       input.id,
-      session
+      session,
+      changeset
     )) as LanguageEngagement;
+
+    if (changeset) {
+      return updated;
+    }
+
     const engagementUpdatedEvent = new EngagementUpdatedEvent(
       updated,
       object,
@@ -377,19 +369,22 @@ export class EngagementService {
 
   async updateInternshipEngagement(
     input: UpdateInternshipEngagement,
-    session: Session
+    session: Session,
+    changeset?: ID
   ): Promise<InternshipEngagement> {
     if (input.status) {
       await this.engagementRules.verifyStatusChange(
         input.id,
         session,
-        input.status
+        input.status,
+        changeset
       );
     }
 
     const object = (await this.readOne(
       input.id,
-      session
+      session,
+      changeset
     )) as InternshipEngagement;
 
     const changes = this.repo.getActualInternshipChanges(object, input);
@@ -419,7 +414,11 @@ export class EngagementService {
         await this.repo.updateCountryOfOrigin(input.id, countryOfOriginId);
       }
 
-      await this.repo.updateInternshipProperties(object, simpleChanges);
+      await this.repo.updateInternshipProperties(
+        object,
+        simpleChanges,
+        changeset
+      );
     } catch (exception) {
       this.logger.warning('Failed to update InternshipEngagement', {
         exception,
@@ -434,6 +433,11 @@ export class EngagementService {
       input.id,
       session
     )) as InternshipEngagement;
+
+    if (changeset) {
+      return updated;
+    }
+
     const engagementUpdatedEvent = new EngagementUpdatedEvent(
       updated,
       object,
@@ -447,7 +451,7 @@ export class EngagementService {
 
   // DELETE /////////////////////////////////////////////////////////
 
-  async delete(id: ID, session: Session): Promise<void> {
+  async delete(id: ID, session: Session, changeset?: ID): Promise<void> {
     const object = await this.readOne(id, session);
 
     if (!object) {
@@ -459,13 +463,12 @@ export class EngagementService {
         'You do not have the permission to delete this Engagement'
       );
 
-    const projectId = await this.repo.getProjectIdByEngagement(id);
-    await this.verifyProjectStatus(projectId, session);
+    await this.verifyProjectStatus(object.project, session);
 
     await this.eventBus.publish(new EngagementWillDeleteEvent(object, session));
 
     try {
-      await this.repo.deleteNode(object);
+      await this.repo.deleteNode(object, changeset);
     } catch (e) {
       this.logger.warning('Failed to delete Engagement', {
         exception: e,
@@ -478,18 +481,16 @@ export class EngagementService {
 
   async list(
     input: EngagementListInput,
-    session: Session
+    session: Session,
+    changeset?: ID
   ): Promise<EngagementListOutput> {
-    const query = this.repo.list(input, session);
-
-    const engagements = await runListQuery(query, input, (id) =>
-      this.readOne(id, session)
+    const results = await this.repo.list(input, session, changeset);
+    return await mapListResults(results, (id) =>
+      this.readOne(id, session, changeset)
     );
-    return engagements;
   }
 
   async listAllByProjectId(
-    // projectId: string,
     projectId: ID,
     session: Session
   ): Promise<IEngagement[]> {
@@ -541,7 +542,8 @@ export class EngagementService {
   protected async verifyRelationshipEligibility(
     projectId: ID,
     otherId: ID,
-    type: ProjectType
+    type: ProjectType,
+    changeset?: ID
   ): Promise<void> {
     const isTranslation = type === ProjectType.Translation;
     const property = isTranslation ? 'language' : 'intern';
@@ -549,7 +551,8 @@ export class EngagementService {
       projectId,
       otherId,
       isTranslation,
-      property
+      property,
+      changeset
     );
 
     if (!result?.project) {

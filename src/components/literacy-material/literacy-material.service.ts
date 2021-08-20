@@ -6,12 +6,10 @@ import {
   ServerException,
   Session,
   UnauthorizedException,
+  UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger, OnIndex } from '../../core';
-import {
-  parseBaseNodeProperties,
-  runListQuery,
-} from '../../core/database/results';
+import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
@@ -62,7 +60,7 @@ export class LiteracyMaterialService {
     }
 
     try {
-      const result = await this.repo.create(session, input.name);
+      const result = await this.repo.create(input, session);
 
       if (!result) {
         throw new ServerException('failed to create a literacy material');
@@ -102,33 +100,32 @@ export class LiteracyMaterialService {
     });
 
     const result = await this.repo.readOne(id, session);
+    return await this.secure(result, session);
+  }
 
-    if (!result) {
-      throw new NotFoundException(
-        'Could not find literacy material',
-        'literacyMaterial.id'
-      );
-    }
-
-    const scriptureReferences = await this.scriptureRefService.list(
-      id,
+  private async secure(
+    dto: UnsecuredDto<LiteracyMaterial>,
+    session: Session
+  ): Promise<LiteracyMaterial> {
+    const securedProps = await this.authorizationService.secureProperties(
+      LiteracyMaterial,
+      dto,
       session
     );
 
-    const securedProps = await this.authorizationService.secureProperties(
-      LiteracyMaterial,
-      result.propList,
+    const scriptureReferences = await this.scriptureRefService.list(
+      dto.id,
       session
     );
 
     return {
-      ...parseBaseNodeProperties(result.node),
+      ...dto,
       ...securedProps,
       scriptureReferences: {
         ...securedProps.scriptureReferences,
         value: scriptureReferences,
       },
-      canDelete: await this.repo.checkDeletePermission(id, session),
+      canDelete: await this.repo.checkDeletePermission(dto.id, session),
     };
   }
 
@@ -178,11 +175,10 @@ export class LiteracyMaterialService {
   }
 
   async list(
-    { filter, ...input }: LiteracyMaterialListInput,
+    input: LiteracyMaterialListInput,
     session: Session
   ): Promise<LiteracyMaterialListOutput> {
-    const query = this.repo.list({ filter, ...input }, session);
-
-    return await runListQuery(query, input, (id) => this.readOne(id, session));
+    const results = await this.repo.list(input, session);
+    return await mapListResults(results, (id) => this.readOne(id, session));
   }
 }

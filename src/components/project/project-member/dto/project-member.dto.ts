@@ -6,6 +6,7 @@ import {
   Resource,
   SecuredProps,
   Sensitivity,
+  SensitivityField,
 } from '../../../../common';
 import { SecuredRoles } from '../../../authorization';
 import { SecuredUser } from '../../../user';
@@ -23,7 +24,7 @@ export class ProjectMember extends Resource {
   @Field()
   readonly roles: SecuredRoles;
 
-  @Field(() => Sensitivity, {
+  @SensitivityField({
     description: "Based on the project's sensitivity",
   })
   readonly sensitivity: Sensitivity;

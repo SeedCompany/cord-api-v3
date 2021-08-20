@@ -11,6 +11,7 @@ import {
   UnwrapSecured,
 } from '../../common';
 import { CreateDefinedFileVersionInput, FileId } from '../../components/file';
+import { Variable } from './query';
 import { NativeDbValue } from './results';
 
 /**
@@ -70,7 +71,7 @@ type DbAllowableChanges<T> = {
   [K in Exclude<
     ConditionalKeys<Required<T>, NativeDbValue | Secured<NativeDbValue>>,
     keyof Resource
-  >]?: UnwrapSecured<T[K]>;
+  >]?: UnwrapSecured<T[K]> | Variable;
 };
 
 type AndModifiedAt<T> = T extends { modifiedAt: DateTime }

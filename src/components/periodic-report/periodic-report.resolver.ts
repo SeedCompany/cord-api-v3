@@ -12,7 +12,11 @@ import {
   Session,
 } from '../../common';
 import { FileService, SecuredFile } from '../file';
-import { IPeriodicReport, UploadPeriodicReportInput } from './dto';
+import {
+  IPeriodicReport,
+  UpdatePeriodicReportInput,
+  UploadPeriodicReportInput,
+} from './dto';
 import { PeriodicReportService } from './periodic-report.service';
 
 @Resolver(IPeriodicReport)
@@ -34,14 +38,19 @@ export class PeriodicReportResolver {
   })
   async uploadPeriodicReport(
     @LoggedInSession() session: Session,
-    @Args('input') input: UploadPeriodicReportInput
+    @Args('input') { reportId: id, file: reportFile }: UploadPeriodicReportInput
   ): Promise<IPeriodicReport> {
-    const report = await this.service.uploadFile(
-      input.reportId,
-      input.file,
-      session
-    );
-    return report;
+    return await this.service.update({ id, reportFile }, session);
+  }
+
+  @Mutation(() => IPeriodicReport, {
+    description: 'Update a report',
+  })
+  async updatePeriodicReport(
+    @LoggedInSession() session: Session,
+    @Args('input') input: UpdatePeriodicReportInput
+  ): Promise<IPeriodicReport> {
+    return await this.service.update(input, session);
   }
 
   @ResolveField(() => SecuredFile)

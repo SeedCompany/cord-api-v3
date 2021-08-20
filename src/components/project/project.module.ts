@@ -8,7 +8,9 @@ import { LocationModule } from '../location/location.module';
 import { OrganizationModule } from '../organization/organization.module';
 import { PartnerModule } from '../partner/partner.module';
 import { PartnershipModule } from '../partnership/partnership.module';
+import { ProjectChangeRequestModule } from '../project-change-request/project-change-request.module';
 import { UserModule } from '../user/user.module';
+import { ProjectEngagementConnectionResolver } from './engagement-connection.resolver';
 import * as handlers from './handlers';
 import { ProjectMemberModule } from './project-member/project-member.module';
 import { ProjectStepResolver } from './project-step.resolver';
@@ -23,6 +25,7 @@ import { ProjectService } from './project.service';
     ProjectMemberModule,
     forwardRef(() => BudgetModule),
     forwardRef(() => PartnershipModule),
+    forwardRef(() => ProjectChangeRequestModule),
     forwardRef(() => UserModule),
     forwardRef(() => LocationModule),
     FileModule,
@@ -33,6 +36,7 @@ import { ProjectService } from './project.service';
   ],
   providers: [
     ProjectResolver,
+    ProjectEngagementConnectionResolver,
     ProjectService,
     ProjectStepResolver,
     ProjectRules,

@@ -7,6 +7,7 @@ import { AuthenticationModule } from './components/authentication/authentication
 import { AuthorizationModule } from './components/authorization/authorization.module';
 import { BudgetModule } from './components/budget/budget.module';
 import { CeremonyModule } from './components/ceremony/ceremony.module';
+import { ChangesetModule } from './components/changeset/changeset.module';
 import { EngagementModule } from './components/engagement/engagement.module';
 import { FieldRegionModule } from './components/field-region/field-region.module';
 import { FieldZoneModule } from './components/field-zone/field-zone.module';
@@ -23,8 +24,10 @@ import { PeriodicReportModule } from './components/periodic-report/periodic-repo
 import { PinModule } from './components/pin/pin.module';
 import { PostModule } from './components/post/post.module';
 import { PostableModule } from './components/post/postable/postable.module';
+import { ProductProgressModule } from './components/product-progress/product-progress.module';
 import { ProductModule } from './components/product/product.module';
 import { ProgressSummaryModule } from './components/progress-summary/progress-summary.module';
+import { ProjectChangeRequestModule } from './components/project-change-request/project-change-request.module';
 import { ProjectModule } from './components/project/project.module';
 import { ScriptureModule } from './components/scripture/scripture.module';
 import { SearchModule } from './components/search/search.module';
@@ -32,7 +35,6 @@ import { SongModule } from './components/song/song.module';
 import { StoryModule } from './components/story/story.module';
 import { TimeZoneModule } from './components/timezone';
 import { UserModule } from './components/user/user.module';
-import { WorkflowModule } from './components/workflow/workflow.module';
 import { CoreModule, LoggerModule } from './core';
 
 assert(
@@ -64,7 +66,6 @@ assert(
     UserModule,
     PartnershipModule,
     SearchModule,
-    WorkflowModule,
     TimeZoneModule,
     PartnerModule,
     FundingAccountModule,
@@ -75,6 +76,9 @@ assert(
     PostableModule,
     PeriodicReportModule,
     ProgressSummaryModule,
+    ChangesetModule,
+    ProjectChangeRequestModule,
+    ProductProgressModule,
   ],
   controllers: [],
   providers: [DateTimeScalar, DateScalar],

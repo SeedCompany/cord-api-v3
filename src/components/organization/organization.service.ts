@@ -6,6 +6,7 @@ import {
   ServerException,
   Session,
   UnauthorizedException,
+  UnsecuredDto,
 } from '../../common';
 import {
   ConfigService,
@@ -14,10 +15,7 @@ import {
   Logger,
   OnIndex,
 } from '../../core';
-import {
-  parseBaseNodeProperties,
-  runListQuery,
-} from '../../core/database/results';
+import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
 import {
@@ -78,9 +76,7 @@ export class OrganizationService {
       );
     }
 
-    const publicSecurityId = this.config.publicSecurityGroup.id;
-
-    const result = await this.repo.create(input, session, publicSecurityId);
+    const result = await this.repo.create(input, session);
 
     if (!result) {
       throw new ServerException('failed to create default org');
@@ -107,24 +103,23 @@ export class OrganizationService {
     });
 
     const result = await this.repo.readOne(orgId, session);
+    return await this.secure(result, session);
+  }
 
-    if (!result) {
-      throw new NotFoundException(
-        'Could not find organization',
-        'organization.id'
-      );
-    }
-
-    const secured = await this.authorizationService.secureProperties(
+  private async secure(
+    dto: UnsecuredDto<Organization>,
+    session: Session
+  ): Promise<Organization> {
+    const securedProps = await this.authorizationService.secureProperties(
       Organization,
-      result.propList,
+      dto,
       session
     );
 
     return {
-      ...parseBaseNodeProperties(result.node),
-      ...secured,
-      canDelete: await this.repo.checkDeletePermission(orgId, session),
+      ...dto,
+      ...securedProps,
+      canDelete: await this.repo.checkDeletePermission(dto.id, session),
     };
   }
 
@@ -170,12 +165,12 @@ export class OrganizationService {
   }
 
   async list(
-    { filter, ...input }: OrganizationListInput,
+    input: OrganizationListInput,
     session: Session
   ): Promise<OrganizationListOutput> {
-    const query = this.repo.list({ filter, ...input }, session);
+    const results = await this.repo.list(input, session);
 
-    return await runListQuery(query, input, (id) => this.readOne(id, session));
+    return await mapListResults(results, (id) => this.readOne(id, session));
   }
 
   async addLocation(

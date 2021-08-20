@@ -1,11 +1,14 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
+  DbLabel,
+  NameField,
   Resource,
   SecuredEnum,
   SecuredProperty,
   SecuredProps,
   SecuredString,
+  SecuredStringNullable,
 } from '../../../common';
 import { SecuredRoles } from '../../authorization';
 import { Location } from '../../location/dto';
@@ -35,18 +38,19 @@ export class User extends Resource {
   };
 
   @Field()
-  email: SecuredString;
+  @DbLabel('EmailAddress')
+  email: SecuredStringNullable;
 
-  @Field()
+  @NameField()
   realFirstName: SecuredString;
 
-  @Field()
+  @NameField()
   realLastName: SecuredString;
 
-  @Field()
+  @NameField()
   displayFirstName: SecuredString;
 
-  @Field()
+  @NameField()
   displayLastName: SecuredString;
 
   @Field()

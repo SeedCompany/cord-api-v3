@@ -4,9 +4,9 @@ import {
   NotFoundException,
   ServerException,
   Session,
+  UnsecuredDto,
 } from '../../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../../core';
-import { parseBaseNodeProperties } from '../../../core/database/results';
 import { AuthorizationService } from '../../authorization/authorization.service';
 import {
   CreateUnavailability,
@@ -27,64 +27,28 @@ export class UnavailabilityService {
   ) {}
 
   async create(
-    { userId, ...input }: CreateUnavailability,
+    input: CreateUnavailability,
     session: Session
   ): Promise<Unavailability> {
-    const secureProps = [
-      {
-        key: 'description',
-        value: input.description,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'start',
-        value: input.start,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'end',
-        value: input.end,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
-
     try {
-      const createUnavailabilityResult = await this.repo.create(
-        session,
-        secureProps
-      );
-
-      if (!createUnavailabilityResult) {
-        this.logger.error(`Could not create unavailability`, {
-          userId,
-        });
-        throw new ServerException('Could not create unavailability');
-      }
+      // create and connect the Unavailability to the User.
+      const id = await this.repo.create(input, session);
 
       this.logger.debug(`Created user unavailability`, {
-        id: createUnavailabilityResult.id,
-        userId,
+        id,
+        userId: input.userId,
       });
 
-      // connect the Unavailability to the User.
-
-      await this.repo.connectUnavailability(
-        createUnavailabilityResult.id,
-        userId
-      );
       await this.authorizationService.processNewBaseNode(
         Unavailability,
-        createUnavailabilityResult.id,
-        userId
+        id,
+        input.userId
       );
 
-      return await this.readOne(createUnavailabilityResult.id, session);
+      return await this.readOne(id, session);
     } catch {
       this.logger.error(`Could not create unavailability`, {
-        userId,
+        userId: input.userId,
       });
       throw new ServerException('Could not create unavailability');
     }
@@ -93,20 +57,23 @@ export class UnavailabilityService {
   @HandleIdLookup(Unavailability)
   async readOne(id: ID, session: Session): Promise<Unavailability> {
     const result = await this.repo.readOne(id, session);
-    if (!result) {
-      throw new NotFoundException('Could not find user', 'user.id');
-    }
+    return await this.secure(result, session);
+  }
 
+  private async secure(
+    dto: UnsecuredDto<Unavailability>,
+    session: Session
+  ): Promise<Unavailability> {
     const securedProps = await this.authorizationService.secureProperties(
       Unavailability,
-      result.propList,
+      dto,
       session
     );
 
     return {
-      ...parseBaseNodeProperties(result.node),
+      ...dto,
       ...securedProps,
-      canDelete: await this.repo.checkDeletePermission(id, session), // TODO
+      canDelete: await this.repo.checkDeletePermission(dto.id, session), // TODO
     };
   }
 

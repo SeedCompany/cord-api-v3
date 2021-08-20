@@ -6,18 +6,35 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
+import { stripIndent } from 'common-tags';
+import { startCase } from 'lodash';
+import {
+  AnonSession,
+  entries,
+  ID,
+  IdArg,
+  LoggedInSession,
+  SecuredString,
+  Session,
+} from '../../common';
+import { labelOfScriptureRanges } from '../scripture/labels';
 import {
   AnyProduct,
+  AvailableMethodologySteps,
+  CreateOtherProduct,
   CreateProductInput,
   CreateProductOutput,
+  MethodologyAvailableSteps,
   MethodologyToApproach,
   ProducibleType,
   Product,
   ProductApproach,
+  ProductCompletionDescriptionSuggestionsInput,
+  ProductCompletionDescriptionSuggestionsOutput,
   ProductListInput,
   ProductListOutput,
   ProductType,
+  UpdateOtherProduct,
   UpdateProductInput,
   UpdateProductOutput,
 } from './dto';
@@ -59,6 +76,52 @@ export class ProductResolver {
       : null;
   }
 
+  @ResolveField(() => String, {
+    nullable: true,
+    description: stripIndent`
+      A label for the product.
+
+      If this is a \`DerivativeScriptureProduct\` then the label could be the
+      name or label of the thing being produced.
+      If this is a \`DirectScriptureProduct\` then the label could be some of
+      the scripture references.
+      If you don't have permission to read the necessary properties then this
+      could return null.
+    `,
+  })
+  label(@Parent() product: AnyProduct): string | null {
+    if (product.title) {
+      return product.title.value ?? null;
+    }
+    if (!product.produces) {
+      if (!product.scriptureReferences.canRead) {
+        return null;
+      }
+      return labelOfScriptureRanges(product.scriptureReferences.value);
+    }
+    if (!product.produces.value) {
+      return null;
+    }
+    const produces = product.produces.value;
+    // All of our producibles have a name field, so instead of enumerating
+    // through them just fake the type and grab it directly.
+    return (produces as unknown as { name: SecuredString }).name.value ?? null;
+  }
+
+  @ResolveField(() => String, {
+    nullable: true,
+    description: stripIndent`
+      A "category" label for the product.
+
+      This could be "Scripture" or a label for the type of the object being _produced_.
+    `,
+  })
+  category(@Parent() product: AnyProduct): string | null {
+    return !product.produces
+      ? 'Scripture'
+      : startCase(product.produces.value?.__typename) || null;
+  }
+
   @ResolveField(() => ProductType, {
     description:
       'Provide what would be the "type" of product in the old schema.',
@@ -78,6 +141,34 @@ export class ProductResolver {
     }
     // TODO determine from product.scriptureReferences
     return ProductType.IndividualBooks;
+  }
+
+  @Query(() => [AvailableMethodologySteps], {
+    description: stripIndent`
+      Returns a list of available steps for each methodology.
+      This is returned as a list because GraphQL cannot describe an object with
+      dynamic keys. It's probably best to convert this to a map on retrieval.
+    `,
+  })
+  methodologyAvailableSteps(): AvailableMethodologySteps[] {
+    return entries(MethodologyAvailableSteps).map(
+      ([methodology, steps]): AvailableMethodologySteps => ({
+        methodology,
+        steps,
+      })
+    );
+  }
+
+  @Query(() => ProductCompletionDescriptionSuggestionsOutput, {
+    description: stripIndent`
+      Suggestions for describing a product's completion.
+      Use in conjunction with \`Product.describeCompletion\`.
+    `,
+  })
+  async suggestProductCompletionDescriptions(
+    @Args('input') input: ProductCompletionDescriptionSuggestionsInput
+  ): Promise<ProductCompletionDescriptionSuggestionsOutput> {
+    return await this.productService.suggestCompletionDescriptions(input);
   }
 
   @Mutation(() => CreateProductOutput, {
@@ -100,6 +191,28 @@ export class ProductResolver {
     @Args('input') { product: input }: UpdateProductInput
   ): Promise<UpdateProductOutput> {
     const product = await this.productService.update(input, session);
+    return { product };
+  }
+
+  @Mutation(() => CreateProductOutput, {
+    description: 'Create an other product entry',
+  })
+  async createOtherProduct(
+    @LoggedInSession() session: Session,
+    @Args('input') input: CreateOtherProduct
+  ): Promise<CreateProductOutput> {
+    const product = await this.productService.create(input, session);
+    return { product };
+  }
+
+  @Mutation(() => UpdateProductOutput, {
+    description: 'Update an other product entry',
+  })
+  async updateOtherProduct(
+    @LoggedInSession() session: Session,
+    @Args('input') input: UpdateOtherProduct
+  ): Promise<UpdateProductOutput> {
+    const product = await this.productService.updateOther(input, session);
     return { product };
   }
 

@@ -9,7 +9,6 @@ import {
   createSession,
   createTestApp,
   fragments,
-  login,
   registerUser,
   TestApp,
 } from './utility';
@@ -22,14 +21,13 @@ describe('Region e2e', () => {
   let director: User;
   let newDirector: User;
   let fieldZone: FieldZone;
-  const password: string = faker.internet.password();
   let db: Connection;
 
   beforeAll(async () => {
     app = await createTestApp();
     db = app.get(Connection);
     await createSession(app);
-    director = await registerUser(app, { password });
+    director = await registerUser(app);
     fieldZone = await createZone(app, { directorId: director.id });
   });
 
@@ -39,7 +37,6 @@ describe('Region e2e', () => {
   });
 
   it('create a field region', async () => {
-    await login(app, { email: director.email.value, password });
     const region = await createRegion(app, {
       directorId: director.id,
       fieldZoneId: fieldZone.id,

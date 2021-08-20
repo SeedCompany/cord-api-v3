@@ -1,30 +1,29 @@
 import { Connection } from 'cypher-query-builder';
-import * as faker from 'faker';
 import {
   ResourceShape,
   SecuredListType,
   SecuredResource,
   Sensitivity,
 } from '../../src/common';
+import { Powers, Role, ScopedRole } from '../../src/components/authorization';
 import { PermissionsOf } from '../../src/components/authorization/authorization.service';
-import { Powers } from '../../src/components/authorization/dto/powers';
 import {
   EthnologueLanguage,
   Language,
 } from '../../src/components/language/dto';
 import { Location, SecuredLocationList } from '../../src/components/location';
-import { Role, ScopedRole } from '../../src/components/project';
 import {
   addLocationToLanguage,
   createLanguage,
   createLocation,
   createSession,
   createTestApp,
-  login,
   readOneLanguage,
   readOneLanguageEthnologue,
   readOneLanguageLocation,
+  registerUser,
   registerUserWithPower,
+  runInIsolatedSession,
   TestApp,
 } from '../utility';
 import { resetDatabase } from '../utility/reset-database';
@@ -35,26 +34,18 @@ import { getPermissions } from './permissions';
 describe('Language Security e2e', () => {
   let app: TestApp;
   let db: Connection;
-  let email: string;
-  let password: string;
   let testLanguage: Language;
   let testLocation: Location;
 
   beforeAll(async () => {
     app = await createTestApp();
     db = app.get(Connection);
-    email = faker.internet.email();
-    password = faker.internet.password();
     await createSession(app);
-    await registerUserWithPower(
-      app,
-      [
-        Powers.CreateLanguage,
-        Powers.CreateLocation,
-        Powers.CreateEthnologueLanguage,
-      ],
-      { email: email, password: password }
-    );
+    await registerUserWithPower(app, [
+      Powers.CreateLanguage,
+      Powers.CreateLocation,
+      Powers.CreateEthnologueLanguage,
+    ]);
     testLocation = await createLocation(app);
     testLanguage = await createLanguage(app, { sensitivity: Sensitivity.Low });
     await addLocationToLanguage(app, testLocation.id, testLanguage.id);
@@ -113,24 +104,25 @@ describe('Language Security e2e', () => {
             role: role,
             readOneFunction: readFunction,
             propToTest: property,
+            skipEditCheck: false,
           });
         }
       );
 
       it('reading locations', async () => {
-        await login(app, { email, password });
-        await registerUserWithPower(app, [], { roles: role });
         const perms = await getPermissions({
           resource: Language,
           userRole: `global:${role as Role}` as ScopedRole,
           sensitivity: testLanguage.sensitivity,
         });
 
-        const read = await readOneLanguageLocation(app, testLanguage.id);
+        const read = await runInIsolatedSession(app, async () => {
+          await registerUser(app, { roles: role });
+          return await readOneLanguageLocation(app, testLanguage.id);
+        });
 
         expect(read.canRead).toEqual(perms.locations.canRead);
         expect(read.canCreate).toEqual(perms.locations.canEdit);
-
         if (!perms.locations.canRead) {
           expect(read.items).toHaveLength(0);
         } else {
@@ -139,6 +131,7 @@ describe('Language Security e2e', () => {
       });
     });
   });
+
   describe('Restricted by Sensitivity', () => {
     describe.each`
       role                      | sensitivityToTest
@@ -159,7 +152,6 @@ describe('Language Security e2e', () => {
         `(
           ' reading $resource.name $property',
           async ({ property, resource, readFunction }) => {
-            await login(app, { email: email, password: password });
             await testSensitivityLowerThanEqualTo(
               app,
               sensitivityToTest,
@@ -168,7 +160,6 @@ describe('Language Security e2e', () => {
               role,
               resource
             );
-            await login(app, { email, password });
             await testSensitivityHigherThan(
               app,
               sensitivityToTest,
@@ -177,11 +168,11 @@ describe('Language Security e2e', () => {
               role,
               readFunction
             );
-            await login(app, { email, password });
           }
         );
       }
     );
+
     describe.each`
       role                         | sensitivityToTest
       ${Role.StaffMember}          | ${Sensitivity.Low}
@@ -195,7 +186,6 @@ describe('Language Security e2e', () => {
       'Role: $role - Sensitivity: $sensitivityToTest',
       ({ role, sensitivityToTest }) => {
         it('reading locations', async () => {
-          await login(app, { email, password });
           await testSensitivityHigherThan(
             app,
             sensitivityToTest,
@@ -204,7 +194,6 @@ describe('Language Security e2e', () => {
             role,
             readOneLanguageLocation
           );
-          await login(app, { email, password });
           await testSensitivityLowerThanEqualTo(
             app,
             sensitivityToTest,
@@ -247,9 +236,13 @@ async function testSensitivityHigherThan<
     sensitivity: Sensitivity.High,
   });
 
-  await registerUserWithPower(app, [], { roles: [role] });
-  const medRead = await readFunction(app, medSenslanguage.id);
-  const highRead = await readFunction(app, highSenslanguage.id);
+  const [medRead, highRead] = await runInIsolatedSession(app, async () => {
+    await registerUser(app, { roles: [role] });
+    return [
+      await readFunction(app, medSenslanguage.id),
+      await readFunction(app, highSenslanguage.id),
+    ];
+  });
 
   async function expectPropSensitivity(read: TResource['prototype']) {
     expect(read[property].canRead).toBeFalsy();
@@ -355,10 +348,18 @@ async function testSensitivityLowerThanEqualTo<
     userRole: `global:${role}` as ScopedRole,
     sensitivity: lowSenslanguage.sensitivity,
   });
-  await registerUserWithPower(app, [], { roles: [role] });
-  const readHigh = await readFunction(app, highSenslanguage.id);
-  const readMed = await readFunction(app, medSenslanguage.id);
-  const readLow = await readFunction(app, lowSenslanguage.id);
+
+  const [readHigh, readMed, readLow] = await runInIsolatedSession(
+    app,
+    async () => {
+      await registerUser(app, { roles: [role] });
+      return [
+        await readFunction(app, highSenslanguage.id),
+        await readFunction(app, medSenslanguage.id),
+        await readFunction(app, lowSenslanguage.id),
+      ];
+    }
+  );
 
   async function expectPropSensitivity(
     read: TResource['prototype'],

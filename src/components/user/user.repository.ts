@@ -1,10 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { stripIndent } from 'common-tags';
 import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
-  generateId,
   ID,
   NotFoundException,
   ServerException,
@@ -15,7 +13,6 @@ import {
 import {
   ConfigService,
   DatabaseService,
-  deleteProperties,
   DtoRepository,
   ILogger,
   Logger,
@@ -25,10 +22,16 @@ import {
   UniquenessError,
 } from '../../core';
 import {
-  calculateTotalAndPaginateList,
+  collect,
+  createNode,
+  createProperty,
+  deactivateProperty,
   matchProps,
+  merge,
+  paginate,
   permissionsOfNode,
   requestingUser,
+  sorting,
 } from '../../core/database/query';
 import { Role } from '../authorization';
 import {
@@ -74,36 +77,33 @@ export class UserRepository extends DtoRepository(User) {
 
   private readonly roleProperties = (roles?: Role[]) =>
     (roles || []).flatMap((role) =>
-      property('roles', role, 'user', `role${role}`)
+      property('roles', role, 'node', `role${role}`)
     );
 
   async create(input: CreatePerson) {
-    const id = await generateId();
-    const createdAt = DateTime.local();
+    const initialProps = {
+      ...(input.email ? { email: input.email } : {}), // omit email prop/relation if it's undefined
+      realFirstName: input.realFirstName,
+      realLastName: input.realLastName,
+      displayFirstName: input.displayFirstName,
+      displayLastName: input.displayLastName,
+      phone: input.phone,
+      timezone: input.timezone,
+      about: input.about,
+      status: input.status,
+      title: input.title,
+      canDelete: true,
+    };
+
     const query = this.db
       .query()
-      .create([
-        [
-          node('user', ['User', 'BaseNode'], {
-            id,
-            createdAt,
-          }),
-        ],
-        ...property('email', input.email, 'user', 'email', 'EmailAddress'),
-        ...property('realFirstName', input.realFirstName, 'user'),
-        ...property('realLastName', input.realLastName, 'user'),
-        ...property('displayFirstName', input.displayFirstName, 'user'),
-        ...property('displayLastName', input.displayLastName, 'user'),
-        ...property('phone', input.phone, 'user'),
-        ...property('timezone', input.timezone, 'user'),
-        ...property('about', input.about, 'user'),
-        ...property('status', input.status, 'user'),
-        ...this.roleProperties(input.roles),
-        ...property('title', input.title, 'user'),
-        ...property('canDelete', true, 'user'),
-      ])
-      .return('user.id as id')
-      .asResult<{ id: ID }>();
+      .apply(await createNode(User, { initialProps }))
+      .apply((q) =>
+        input.roles && input.roles.length > 0
+          ? q.create([...this.roleProperties(input.roles)])
+          : q
+      )
+      .return<{ id: ID }>('node.id as id');
     let result;
     try {
       result = await query.first();
@@ -120,6 +120,7 @@ export class UserRepository extends DtoRepository(User) {
     if (!result) {
       throw new ServerException('Failed to create user');
     }
+    const id = result.id;
     // attach user to publicSG
     const attachUserToPublicSg = await this.db
       .query()
@@ -179,9 +180,7 @@ export class UserRepository extends DtoRepository(User) {
     const query = this.db
       .query()
       .match([node('node', 'User', { id })])
-      .apply(this.hydrate())
-      .return('dto')
-      .asResult<{ dto: UnsecuredDto<User> }>();
+      .apply(this.hydrate());
     const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find user', 'user.id');
@@ -189,54 +188,38 @@ export class UserRepository extends DtoRepository(User) {
     return result.dto;
   }
 
-  private hydrate() {
+  protected hydrate() {
     return (query: Query) =>
-      query.subQuery((sub) =>
-        sub
-          .with('node')
-          .optionalMatch([
-            node('node'),
-            relation('out', '', 'roles', { active: true }),
-            node('role', 'Property'),
-          ])
-          .apply(matchProps())
-          .return([
-            stripIndent`
-              apoc.map.merge(props, {
-                roles: collect(role.value)
-              }) as dto`,
-          ])
-      );
+      query
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'roles', { active: true }),
+          node('role', 'Property'),
+        ])
+        .apply(matchProps())
+        .return<{ dto: UnsecuredDto<User> }>(
+          merge({ email: null }, 'props', {
+            roles: collect('role.value'),
+          }).as('dto')
+        );
   }
 
   async updateEmail(
     user: User,
-    email: any,
-    createdAt: DateTime
+    email: string | null | undefined
   ): Promise<void> {
-    //Remove old emails and relations
     await this.db
       .query()
-      .match([node('node', ['User', 'BaseNode'], { id: user.id })])
-      .apply(deleteProperties(User, 'email'))
+      .matchNode('node', 'User', { id: user.id })
+      .apply(deactivateProperty({ resource: User, key: 'email' }))
+      .apply((q) =>
+        email
+          ? q.apply(
+              createProperty({ resource: User, key: 'email', value: email })
+            )
+          : q
+      )
       .return('*')
-      .run();
-
-    //Update email
-    await this.db
-      .query()
-      .match([node('user', ['User', 'BaseNode'], { id: user.id })])
-      .create([
-        node('user'),
-        relation('out', '', 'email', {
-          active: true,
-          createdAt,
-        }),
-        node('email', 'EmailAddress:Property', {
-          value: email,
-          createdAt,
-        }),
-      ])
       .run();
   }
 
@@ -272,7 +255,7 @@ export class UserRepository extends DtoRepository(User) {
       await this.db
         .query()
         .match([
-          node('user', ['User', 'BaseNode'], {
+          node('node', ['User', 'BaseNode'], {
             id: input.id,
           }),
         ])
@@ -295,11 +278,14 @@ export class UserRepository extends DtoRepository(User) {
     }
   }
 
-  list(input: UserListInput, session: Session) {
-    return this.db
+  async list(input: UserListInput, session: Session) {
+    const result = await this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode('User')])
-      .apply(calculateTotalAndPaginateList(User, input));
+      .apply(sorting(User, input))
+      .apply(paginate(input, this.hydrate()))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 
   async permissionsForListProp(prop: string, userId: ID, session: Session) {

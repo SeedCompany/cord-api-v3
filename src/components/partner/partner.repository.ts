@@ -2,71 +2,27 @@ import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
-  generateId,
   ID,
   NotFoundException,
-  Order,
   ServerException,
   Session,
+  UnsecuredDto,
 } from '../../common';
-import { createBaseNode, DtoRepository, matchRequestingUser } from '../../core';
+import { DtoRepository, matchRequestingUser } from '../../core';
 import {
-  calculateTotalAndPaginateList,
-  matchPropList,
+  createNode,
+  createRelationships,
+  matchProps,
+  merge,
+  paginate,
   permissionsOfNode,
   requestingUser,
+  sorting,
 } from '../../core/database/query';
-import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
 import { CreatePartner, Partner, PartnerListInput } from './dto';
 
 @Injectable()
 export class PartnerRepository extends DtoRepository(Partner) {
-  private readonly orgNameSorter =
-    (sortInput: string, order: Order) => (q: Query) => {
-      // If the user inputs orgName as the sort value, then match the organization node for the sortValue match
-      const orgProperties = ['name'];
-
-      //The properties that are stored as strings
-      const stringProperties = ['name'];
-      const sortInputIsString = stringProperties.includes(sortInput);
-
-      //if the sortInput, e.g. name, is a string type, check to see if a custom sortVal is given.  If not, coerse the default prop.value to lower case in the orderBy clause
-      const sortValSecuredProp = sortInputIsString
-        ? 'toLower(prop.value)'
-        : 'prop.value';
-      const sortValBaseNodeProp = sortInputIsString
-        ? `toLower(node.${sortInput})`
-        : `node.${sortInput}`;
-
-      if (orgProperties.includes(sortInput)) {
-        return q
-          .match([
-            node('node'),
-            relation('out', '', 'organization', { active: true }),
-            node('organization', 'Organization'),
-          ])
-          .with('*')
-          .match([
-            node('organization'),
-            relation('out', '', sortInput, { active: true }),
-            node('prop', 'Property'),
-          ])
-          .with('*')
-          .orderBy(sortValSecuredProp, order);
-      }
-      return (Partner.SecuredProps as string[]).includes(sortInput)
-        ? q
-            .with('*')
-            .match([
-              node(node),
-              relation('out', '', sortInput, { active: true }),
-              node('prop', 'Property'),
-            ])
-            .with('*')
-            .orderBy(sortValSecuredProp, order)
-        : q.with('*').orderBy(sortValBaseNodeProp, order);
-    };
-
   async partnerIdByOrg(organizationId: ID) {
     const result = await this.db
       .query()
@@ -75,103 +31,33 @@ export class PartnerRepository extends DtoRepository(Partner) {
         relation('in', '', 'organization', { active: true }),
         node('partner', 'Partner'),
       ])
-      .return({
-        partner: [{ id: 'partnerId' }],
-      })
-      .asResult<{
-        partnerId: ID;
-      }>()
+      .return<{ id: ID }>('partner.id as id')
       .first();
-    return result?.partnerId;
+    return result?.id;
   }
 
   async create(input: CreatePartner, session: Session) {
-    const createdAt = DateTime.local();
-    const secureProps = [
-      {
-        key: 'types',
-        value: input.types,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'financialReportingTypes',
-        value: input.financialReportingTypes,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'pmcEntityCode',
-        value: input.pmcEntityCode,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'globalInnovationsClient',
-        value: input.globalInnovationsClient,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'active',
-        value: input.active,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'address',
-        value: input.address,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'modifiedAt',
-        value: createdAt,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
+    const initialProps = {
+      types: input.types,
+      financialReportingTypes: input.financialReportingTypes,
+      pmcEntityCode: input.pmcEntityCode,
+      globalInnovationsClient: input.globalInnovationsClient,
+      active: input.active,
+      address: input.address,
+      modifiedAt: DateTime.local(),
+      canDelete: true,
+    };
     const result = await this.db
       .query()
       .apply(matchRequestingUser(session))
-      .match([
-        node('organization', 'Organization', {
-          id: input.organizationId,
-        }),
-      ])
-      .apply(createBaseNode(await generateId(), 'Partner', secureProps))
-      .create([
-        node('node'),
-        relation('out', '', 'organization', {
-          active: true,
-          createdAt,
-        }),
-        node('organization'),
-      ])
-      .apply((q) => {
-        if (input.pointOfContactId) {
-          q.with('node')
-            .matchNode('pointOfContact', 'User', {
-              id: input.pointOfContactId,
-            })
-            .create([
-              node('node'),
-              relation('out', '', 'pointOfContact', {
-                active: true,
-                createdAt,
-              }),
-              node('pointOfContact'),
-            ]);
-        }
-      })
-      .return('node.id as id')
-      .asResult<{ id: ID }>()
+      .apply(await createNode(Partner, { initialProps }))
+      .apply(
+        createRelationships(Partner, 'out', {
+          organization: ['Organization', input.organizationId],
+          pointOfContact: ['User', input.pointOfContactId],
+        })
+      )
+      .return<{ id: ID }>('node.id as id')
       .first();
     if (!result) {
       throw new ServerException('Failed to create partner');
@@ -184,35 +70,36 @@ export class PartnerRepository extends DtoRepository(Partner) {
       .query()
       .apply(matchRequestingUser(session))
       .match([node('node', 'Partner', { id: id })])
-      .apply(matchPropList)
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'organization', { active: true }),
-        node('organization', 'Organization'),
-      ])
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'pointOfContact', { active: true }),
-        node('pointOfContact', 'User'),
-      ])
-      .return([
-        'propList, node',
-        'organization.id as organizationId',
-        'pointOfContact.id as pointOfContactId',
-      ])
-      .asResult<
-        StandardReadResult<DbPropsOfDto<Partner>> & {
-          organizationId: ID;
-          pointOfContactId: ID;
-        }
-      >();
+      .apply(this.hydrate());
 
     const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find partner');
     }
 
-    return result;
+    return result.dto;
+  }
+
+  protected hydrate() {
+    return (query: Query) =>
+      query
+        .apply(matchProps())
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'organization', { active: true }),
+          node('organization', 'Organization'),
+        ])
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'pointOfContact', { active: true }),
+          node('pointOfContact', 'User'),
+        ])
+        .return<{ dto: UnsecuredDto<Partner> }>(
+          merge('props', {
+            organization: 'organization.id',
+            pointOfContact: 'pointOfContact.id',
+          }).as('dto')
+        );
   }
 
   async updatePointOfContact(id: ID, user: ID, session: Session) {
@@ -246,13 +133,12 @@ export class PartnerRepository extends DtoRepository(Partner) {
       .run();
   }
 
-  list({ filter, ...input }: PartnerListInput, session: Session) {
-    const label = 'Partner';
-    return this.db
+  async list({ filter, ...input }: PartnerListInput, session: Session) {
+    const result = await this.db
       .query()
       .match([
         requestingUser(session),
-        ...permissionsOfNode(label),
+        ...permissionsOfNode('Partner'),
         ...(filter.userId && session.userId
           ? [
               relation('out', '', 'organization', { active: true }),
@@ -263,11 +149,21 @@ export class PartnerRepository extends DtoRepository(Partner) {
           : []),
       ])
       .apply(
-        calculateTotalAndPaginateList(
-          Partner,
-          input,
-          this.orgNameSorter(input.sort, input.order)
-        )
-      );
+        sorting(Partner, input, {
+          name: (query) =>
+            query
+              .match([
+                node('node'),
+                relation('out', '', 'organization', { active: true }),
+                node('organization', 'Organization'),
+                relation('out', '', 'name', { active: true }),
+                node('prop', 'Property'),
+              ])
+              .return<{ sortValue: string }>('prop.value as sortValue'),
+        })
+      )
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 }

@@ -1,21 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { Node, node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import {
-  CreateProjectMember,
-  ProjectMember,
-  ProjectMemberListInput,
-  ScopedRole,
-} from '.';
+import { CreateProjectMember, ProjectMember, ProjectMemberListInput } from '.';
 import { ID, Session } from '../../../common';
 import { DtoRepository, property } from '../../../core';
 import {
-  calculateTotalAndPaginateList,
   matchPropsAndProjectSensAndScopedRoles,
+  paginate,
   permissionsOfNode,
   requestingUser,
+  sorting,
 } from '../../../core/database/query';
 import { DbPropsOfDto } from '../../../core/database/results';
+import { ScopedRole } from '../../authorization';
 
 @Injectable()
 export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
@@ -103,10 +100,10 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
     return await query.first();
   }
 
-  list({ filter, ...input }: ProjectMemberListInput, session: Session) {
+  async list({ filter, ...input }: ProjectMemberListInput, session: Session) {
     const label = 'ProjectMember';
 
-    return this.db
+    const result = await this.db
       .query()
       .match([
         requestingUser(session),
@@ -120,6 +117,9 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
             ]
           : []),
       ])
-      .apply(calculateTotalAndPaginateList(ProjectMember, input));
+      .apply(sorting(ProjectMember, input))
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 }

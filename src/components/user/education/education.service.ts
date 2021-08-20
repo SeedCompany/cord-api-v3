@@ -1,16 +1,13 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { DateTime } from 'luxon';
 import {
   ID,
   NotFoundException,
   ServerException,
   Session,
+  UnsecuredDto,
 } from '../../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../../core';
-import {
-  parseBaseNodeProperties,
-  runListQuery,
-} from '../../../core/database/results';
+import { mapListResults } from '../../../core/database/results';
 import { AuthorizationService } from '../../authorization/authorization.service';
 import {
   CreateEducation,
@@ -30,40 +27,9 @@ export class EducationService {
     private readonly repo: EducationRepository
   ) {}
 
-  async create(
-    { userId, ...input }: CreateEducation,
-    session: Session
-  ): Promise<Education> {
-    const createdAt = DateTime.local();
-
-    const secureProps = [
-      {
-        key: 'degree',
-        value: input.degree,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'institution',
-        value: input.institution,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'major',
-        value: input.major,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
-
+  async create(input: CreateEducation, session: Session): Promise<Education> {
     // create education
-    const result = await this.repo.create(
-      userId,
-      secureProps,
-      createdAt,
-      session
-    );
+    const result = await this.repo.create(input, session);
 
     if (!result) {
       throw new ServerException('failed to create education');
@@ -72,7 +38,7 @@ export class EducationService {
     await this.authorizationService.processNewBaseNode(
       Education,
       result.id,
-      userId
+      input.userId
     );
 
     this.logger.debug(`education created`, { id: result.id });
@@ -87,21 +53,23 @@ export class EducationService {
     });
 
     const result = await this.repo.readOne(id, session);
+    return await this.secure(result, session);
+  }
 
-    if (!result) {
-      throw new NotFoundException('Could not find education', 'education.id');
-    }
-
-    const secured = await this.authorizationService.secureProperties(
+  private async secure(
+    dto: UnsecuredDto<Education>,
+    session: Session
+  ): Promise<Education> {
+    const securedProps = await this.authorizationService.secureProperties(
       Education,
-      result.propList,
+      dto,
       session
     );
 
     return {
-      ...parseBaseNodeProperties(result.node),
-      ...secured,
-      canDelete: await this.repo.checkDeletePermission(id, session), // TODO
+      ...dto,
+      ...securedProps,
+      canDelete: await this.repo.checkDeletePermission(dto.id, session),
     };
   }
 
@@ -132,11 +100,10 @@ export class EducationService {
   }
 
   async list(
-    { filter, ...input }: EducationListInput,
+    input: EducationListInput,
     session: Session
   ): Promise<EducationListOutput> {
-    const query = this.repo.list({ filter, ...input }, session);
-
-    return await runListQuery(query, input, (id) => this.readOne(id, session));
+    const results = await this.repo.list(input, session);
+    return await mapListResults(results, (id) => this.readOne(id, session));
   }
 }

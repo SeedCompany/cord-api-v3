@@ -1,6 +1,7 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Interval } from 'luxon';
 import {
+  CalendarDate,
   ID,
   NotFoundException,
   ServerException,
@@ -14,9 +15,10 @@ import {
   Logger,
   OnIndex,
 } from '../../core';
-import { runListQuery } from '../../core/database/results';
+import { Variable } from '../../core/database/query';
+import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { CreateDefinedFileVersionInput, FileService } from '../file';
+import { FileService } from '../file';
 import {
   CreatePeriodicReport,
   FinancialReport,
@@ -26,7 +28,9 @@ import {
   PeriodicReportListInput,
   ProgressReport,
   ReportType,
+  resolveReportType,
   SecuredPeriodicReportList,
+  UpdatePeriodicReportInput,
 } from './dto';
 import { PeriodicReportUploadedEvent } from './events';
 import { PeriodicReportRepository } from './periodic-report.repository';
@@ -71,25 +75,36 @@ export class PeriodicReportService {
     }
   }
 
-  async uploadFile(
-    reportId: ID,
-    file: CreateDefinedFileVersionInput,
-    session: Session
-  ) {
-    const report = await this.readOne(reportId, session);
-
-    await this.files.updateDefinedFile(
-      report.reportFile,
-      'file',
-      file,
-      session
-    );
-    const newVersion = await this.files.getFileVersion(file.uploadId, session);
-    await this.eventBus.publish(
-      new PeriodicReportUploadedEvent(report, newVersion, session)
+  async update(input: UpdatePeriodicReportInput, session: Session) {
+    const current = await this.readOne(input.id, session);
+    const changes = this.repo.getActualChanges(current, input);
+    await this.authorizationService.verifyCanEditChanges(
+      resolveReportType(current),
+      current,
+      changes
     );
 
-    return report;
+    const { reportFile, ...simpleChanges } = changes;
+
+    const updated = await this.repo.updateProperties(current, simpleChanges);
+
+    if (reportFile) {
+      await this.files.updateDefinedFile(
+        current.reportFile,
+        'file',
+        input.reportFile,
+        session
+      );
+      const newVersion = await this.files.getFileVersion(
+        reportFile.uploadId,
+        session
+      );
+      await this.eventBus.publish(
+        new PeriodicReportUploadedEvent(updated, newVersion, session)
+      );
+    }
+
+    return updated;
   }
 
   @HandleIdLookup([FinancialReport, NarrativeReport, ProgressReport])
@@ -105,7 +120,7 @@ export class PeriodicReportService {
       );
     }
 
-    const result = await this.repo.readOne(id);
+    const result = await this.repo.readOne(id, session);
     return await this.secure(result, session);
   }
 
@@ -116,7 +131,8 @@ export class PeriodicReportService {
     const securedProps = await this.authorizationService.secureProperties(
       IPeriodicReport,
       dto,
-      session
+      session,
+      dto.scope
     );
 
     return {
@@ -126,19 +142,21 @@ export class PeriodicReportService {
     };
   }
 
-  async listProjectReports(
-    projectId: string,
+  async list(
+    projectId: ID,
     reportType: ReportType,
-    { filter, ...input }: PeriodicReportListInput,
+    input: PeriodicReportListInput,
     session: Session
   ): Promise<SecuredPeriodicReportList> {
-    const query = this.repo.listProjectReports(projectId, reportType, {
-      filter,
-      ...input,
-    });
+    const results = await this.repo.listReports(
+      projectId,
+      reportType,
+      input,
+      session
+    );
 
     return {
-      ...(await runListQuery(query, input, (id) => this.readOne(id, session))),
+      ...(await mapListResults(results, (dto) => this.secure(dto, session))),
       canRead: true,
       canCreate: true,
     };
@@ -149,8 +167,12 @@ export class PeriodicReportService {
     reportType: ReportType,
     session: Session
   ): Promise<PeriodicReport | undefined> {
-    const report = await this.repo.getCurrentDue(parentId, reportType);
+    const report = await this.repo.getCurrentDue(parentId, reportType, session);
     return report ? await this.secure(report, session) : undefined;
+  }
+
+  matchCurrentDue(parentId: ID | Variable, reportType: ReportType) {
+    return this.repo.matchCurrentDue(parentId, reportType);
   }
 
   async getNextReportDue(
@@ -158,7 +180,7 @@ export class PeriodicReportService {
     reportType: ReportType,
     session: Session
   ): Promise<PeriodicReport | undefined> {
-    const report = await this.repo.getNextDue(parentId, reportType);
+    const report = await this.repo.getNextDue(parentId, reportType, session);
     return report ? await this.secure(report, session) : undefined;
   }
 
@@ -167,25 +189,12 @@ export class PeriodicReportService {
     type: ReportType,
     session: Session
   ): Promise<PeriodicReport | undefined> {
-    const report = await this.repo.getLatestReportSubmitted(parentId, type);
+    const report = await this.repo.getLatestReportSubmitted(
+      parentId,
+      type,
+      session
+    );
     return report ? await this.secure(report, session) : undefined;
-  }
-
-  async listEngagementReports(
-    engagementId: string,
-    { filter, ...input }: PeriodicReportListInput,
-    session: Session
-  ): Promise<SecuredPeriodicReportList> {
-    const query = this.repo.listEngagementReports(engagementId, {
-      filter,
-      ...input,
-    });
-
-    return {
-      ...(await runListQuery(query, input, (id) => this.readOne(id, session))),
-      canRead: true,
-      canCreate: true,
-    };
   }
 
   async delete(baseNodeId: ID, type: ReportType, intervals: Interval[]) {
@@ -195,5 +204,40 @@ export class PeriodicReportService {
     const result = await this.repo.delete(baseNodeId, type, intervals);
 
     this.logger.debug('Deleted reports', { baseNodeId, type, ...result });
+  }
+
+  async getFinalReport(
+    parentId: ID,
+    type: ReportType,
+    session: Session
+  ): Promise<PeriodicReport | undefined> {
+    const report = await this.repo.getFinalReport(parentId, type, session);
+    return report ? await this.secure(report, session) : undefined;
+  }
+
+  async mergeFinalReport(
+    parentId: ID,
+    type: ReportType,
+    at: CalendarDate,
+    session: Session
+  ): Promise<void> {
+    const report = await this.repo.getFinalReport(parentId, type, session);
+
+    if (report) {
+      await this.repo.updateProperties(report, {
+        start: at,
+        end: at,
+      });
+    } else {
+      await this.create(
+        {
+          start: at,
+          end: at,
+          type,
+          projectOrEngagementId: parentId,
+        },
+        session
+      );
+    }
   }
 }

@@ -2,6 +2,7 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
   DbLabel,
+  NameField,
   Resource,
   SecuredProperty,
   SecuredProps,
@@ -19,7 +20,7 @@ export class Organization extends Resource {
     locations: [Location],
   };
 
-  @Field()
+  @NameField()
   @DbLabel('OrgName')
   readonly name: SecuredString;
 

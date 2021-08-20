@@ -42,22 +42,32 @@ export const createGraphqlClient = async (
     obj ? JSON.parse(JSON.stringify(obj)) : obj;
   return {
     query: async (q, variables) => {
-      const result = await client.query({
-        query: q,
-        variables: toPlain(variables),
-      });
-      resetRequest();
-      validateResult(result);
-      return result.data;
+      try {
+        const result = await client.query({
+          query: q,
+          variables: toPlain(variables),
+        });
+        validateResult(result);
+        return result.data;
+      } catch (e) {
+        throw adjustError(e);
+      } finally {
+        resetRequest();
+      }
     },
     mutate: async (mutation, variables) => {
-      const result = await client.mutate({
-        mutation,
-        variables: toPlain(variables),
-      });
-      resetRequest();
-      validateResult(result);
-      return result.data;
+      try {
+        const result = await client.mutate({
+          mutation,
+          variables: toPlain(variables),
+        });
+        validateResult(result);
+        return result.data;
+      } catch (e) {
+        throw adjustError(e);
+      } finally {
+        resetRequest();
+      }
     },
     get authToken() {
       return (
@@ -91,6 +101,16 @@ function validateResult(res: GraphQLResponse): asserts res is Omit<
   }
   expect(res.data).toBeTruthy();
 }
+
+const adjustError = (e: Error) => {
+  if (e.stack) {
+    const thisStack = new Error('').stack?.split('\n').slice(2);
+    if (thisStack) {
+      e.stack += '\n' + thisStack.join('\n');
+    }
+  }
+  return e;
+};
 
 const reportError = (
   e: GraphQLFormattedError & { originalError?: Error & { response?: any } }

@@ -7,7 +7,10 @@ import { ResourceMap } from '../../../components/authorization/model/resource-ma
 
 type RelationshipDefinition = Record<
   string,
-  [baseNodeLabel: keyof ResourceMap, id: Nullable<ID> | readonly ID[]]
+  [
+    baseNodeLabel: keyof ResourceMap | 'BaseNode',
+    id: Nullable<ID> | readonly ID[]
+  ]
 >;
 type AnyDirectionalDefinition = Partial<
   Record<RelationDirection, RelationshipDefinition>
@@ -75,11 +78,23 @@ export function createRelationships<TResourceStatic extends ResourceShape<any>>(
           }))
       )
   );
+
+  if (flattened.length === 0) {
+    // Do nothing in query if there are no IDs to connect
+    return (query: Query) => query;
+  }
+
+  // We are creating inside of changeset if there's a changeset relation into the node.
+  const inChangeset = flattened.some(
+    (f) => f.direction === 'in' && f.relLabel === 'changeset' && f.id
+  );
+
   const createdAt = DateTime.local();
   return (query: Query) =>
-    query.subQuery((sub) =>
+    query.comment`
+      createRelationships(${resource.name})
+    `.subQuery('node', (sub) =>
       sub
-        .with('node')
         .match(
           flattened.map(({ variable, nodeLabel, id }) => [
             node(variable, nodeLabel, { id }),
@@ -88,7 +103,17 @@ export function createRelationships<TResourceStatic extends ResourceShape<any>>(
         .create(
           flattened.map(({ direction, relLabel, variable }) => [
             node('node'),
-            relation(direction, '', relLabel, { active: true, createdAt }),
+            relation(direction, '', relLabel, {
+              // When creating inside of changeset, all relationships into the
+              // node (besides changeset relation) are marked as inactive until
+              // changeset is applied
+              active: !(
+                inChangeset &&
+                direction === 'in' &&
+                relLabel !== 'changeset'
+              ),
+              createdAt,
+            }),
             node(variable),
           ])
         )

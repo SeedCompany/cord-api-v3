@@ -24,7 +24,12 @@ export class PeriodicReportEngagementConnectionResolver {
     })
     input: PeriodicReportListInput
   ): Promise<SecuredPeriodicReportList> {
-    return this.service.listEngagementReports(engagement.id, input, session);
+    return this.service.list(
+      engagement.id,
+      ReportType.Progress,
+      input,
+      session
+    );
   }
 
   @ResolveField(() => SecuredPeriodicReport, {

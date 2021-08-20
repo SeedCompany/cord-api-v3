@@ -14,9 +14,11 @@ import {
   IdArg,
   IdField,
   LoggedInSession,
+  SecuredDateRange,
   Session,
 } from '../../common';
 import { SecuredBudget } from '../budget';
+import { ChangesetIds } from '../changeset/dto';
 import { EngagementListInput, SecuredEngagementList } from '../engagement';
 import { FieldRegionService, SecuredFieldRegion } from '../field-region';
 import { SecuredDirectory } from '../file';
@@ -28,6 +30,10 @@ import {
 } from '../location';
 import { OrganizationService, SecuredOrganization } from '../organization';
 import { PartnershipListInput, SecuredPartnershipList } from '../partnership';
+import {
+  ProjectChangeRequestListInput,
+  SecuredProjectChangeRequestList,
+} from '../project-change-request/dto';
 import {
   CreateProjectInput,
   CreateProjectOutput,
@@ -66,10 +72,14 @@ export class ProjectResolver {
     description: 'Look up a project by its ID',
   })
   async project(
-    @IdArg() id: ID,
-    @LoggedInSession() session: Session
+    @LoggedInSession() session: Session,
+    @Args() { id, changeset }: ChangesetIds
   ): Promise<Project> {
-    const project = await this.projectService.readOneUnsecured(id, session);
+    const project = await this.projectService.readOneUnsecured(
+      id,
+      session,
+      changeset
+    );
     const secured = await this.projectService.secure(project, session);
     return secured;
   }
@@ -98,6 +108,21 @@ export class ProjectResolver {
       : undefined;
   }
 
+  @ResolveField(() => SecuredProjectChangeRequestList)
+  async changeRequests(
+    @AnonSession() session: Session,
+    @Parent() project: Project,
+    @Args({
+      name: 'input',
+      type: () => ProjectChangeRequestListInput,
+      nullable: true,
+      defaultValue: ProjectChangeRequestListInput.defaultVal,
+    })
+    input: ProjectChangeRequestListInput
+  ): Promise<SecuredProjectChangeRequestList> {
+    return this.projectService.listChangeRequests(project, input, session);
+  }
+
   @ResolveField(() => SecuredBudget, {
     description: `The project's current budget`,
   })
@@ -105,7 +130,11 @@ export class ProjectResolver {
     @Parent() project: Project,
     @AnonSession() session: Session
   ): Promise<SecuredBudget> {
-    return await this.projectService.currentBudget(project, session);
+    return await this.projectService.currentBudget(
+      project,
+      session,
+      project.changeset
+    );
   }
 
   @ResolveField(() => SecuredEngagementList)
@@ -120,7 +149,12 @@ export class ProjectResolver {
     })
     input: EngagementListInput
   ): Promise<SecuredEngagementList> {
-    return this.projectService.listEngagements(project, input, session);
+    return this.projectService.listEngagements(
+      project,
+      input,
+      session,
+      project.changeset
+    );
   }
 
   @ResolveField(() => SecuredProjectMemberList, {
@@ -142,7 +176,7 @@ export class ProjectResolver {
   @ResolveField(() => SecuredPartnershipList)
   async partnerships(
     @AnonSession() session: Session,
-    @Parent() { id }: Project,
+    @Parent() { id, changeset }: Project,
     @Args({
       name: 'input',
       type: () => PartnershipListInput,
@@ -150,7 +184,7 @@ export class ProjectResolver {
     })
     input: PartnershipListInput
   ): Promise<SecuredPartnershipList> {
-    return this.projectService.listPartnerships(id, input, session);
+    return this.projectService.listPartnerships(id, input, session, changeset);
   }
 
   @ResolveField(() => SecuredDirectory, {
@@ -225,6 +259,11 @@ export class ProjectResolver {
     return { value, ...rest };
   }
 
+  @ResolveField()
+  mouRange(@Parent() project: Project): SecuredDateRange {
+    return SecuredDateRange.fromPair(project.mouStart, project.mouEnd);
+  }
+
   @Mutation(() => CreateProjectOutput, {
     description: 'Create a project',
   })
@@ -241,10 +280,10 @@ export class ProjectResolver {
     description: 'Update a project',
   })
   async updateProject(
-    @Args('input') { project: input }: UpdateProjectInput,
+    @Args('input') { project: input, changeset }: UpdateProjectInput,
     @LoggedInSession() session: Session
   ): Promise<UpdateProjectOutput> {
-    const project = await this.projectService.update(input, session);
+    const project = await this.projectService.update(input, session, changeset);
     const secured = await this.projectService.secure(project, session);
     return { project: secured };
   }

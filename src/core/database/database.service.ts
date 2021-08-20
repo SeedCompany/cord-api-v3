@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { oneLine } from 'common-tags';
 import {
   Connection,
   equals,
@@ -10,11 +11,9 @@ import {
 import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
 import { cloneDeep, last, Many, startCase, uniq, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
-import { Driver, Session as Neo4jSession } from 'neo4j-driver';
 import { assert } from 'ts-essentials';
 import {
   entries,
-  getDbPropertyLabels,
   ID,
   InputException,
   isIdLike,
@@ -31,8 +30,7 @@ import {
 import { ILogger, Logger, ServiceUnavailableError, UniquenessError } from '..';
 import { AbortError, retry, RetryOptions } from '../../common/retry';
 import { DbChanges } from './changes';
-import { deleteBaseNode } from './query';
-import { determineSortValue } from './query.helpers';
+import { deleteBaseNode, exp, updateProperty } from './query';
 import { hasMore } from './results';
 import { Transactional } from './transactional.decorator';
 
@@ -127,58 +125,6 @@ export class DatabaseService {
   }
 
   /**
-   * USE THIS AT YOUR OWN RISK, and expect to have a harder time.
-   * Save yourself the trouble and just use this instead:
-   * ```
-   * query('...').run/first();
-   * ```
-   *
-   * Retrieve a raw session from the driver.
-   *
-   * Note that when you use this method you need:
-   * - To pass in the database name from the config service.
-   * - To explicitly close the session in a finally clause
-   * - Manually convert query parameters to db compatible values
-   *   - Such as Luxon DateTime to Neo4j's ZonedDateTime
-   * - Manually convert the output from
-   *   - Neo4j's Number class to JS numbers
-   *   - Neo4j's ZonedDateTime class to Luxon DateTime
-   *   - etc.
-   *   - Also understand the result output. Instead of
-   *   ```
-   *   const result = await query('... return foo.id as id').first();
-   *   const id = result?.id;
-   *   ```
-   *   You'll need to do
-   *   ```
-   *   const result = await session.run('...');
-   *   const id = result.records.[0]?.get('id');
-   *   ```
-   * - Expect that @Transactional decorators will not work and the current
-   *   transaction will be ignored.
-   * - Error handling relying on error classes will not work.
-   *   i.e. instead of
-   *   ```
-   *   if (e instanceof UniquenessError && e.label === 'EmailAddress') {}
-   *   ```
-   *   you'll need to do
-   *   ```
-   *   if (
-   *     e instanceof Neo4jError &&
-   *     e.code === 'Neo.ClientError.Schema.ConstraintValidationFailed' &&
-   *     e.message.includes('already exists with label') &&
-   *     regexThatImNotGoingToWriteOutHere.exec(e.message)?[0] === 'EmailAddress'
-   *   ) {}
-   *   ```
-   *   This is just one example. Expect more things to break with the app.
-   *
-   */
-  session(...args: Parameters<Driver['session']>): Neo4jSession {
-    // @ts-expect-error it exists it's just private
-    return this.db.driver.session(...args);
-  }
-
-  /**
    * Start a query. It can be executed with run() or first();
    *
    * @example
@@ -213,6 +159,37 @@ export class DatabaseService {
     return info;
   }
 
+  async createFullTextIndex(
+    name: string,
+    labels: string[],
+    properties: string[],
+    config: { analyzer?: string; eventuallyConsistent?: boolean }
+  ) {
+    const exists = await this.query(
+      `call db.indexes() yield name where name = '${name}' return name limit 1`
+    ).first();
+    if (exists) {
+      return;
+    }
+    const quote = (q: string) => `'${q}'`;
+    await this.query(
+      oneLine`
+        CALL db.index.fulltext.createNodeIndex(
+          ${quote(name)},
+          ${exp(labels.map(quote))},
+          ${exp(properties.map(quote))},
+          ${exp({
+            analyzer: config.analyzer ? quote(config.analyzer) : undefined,
+            // eslint-disable-next-line @typescript-eslint/naming-convention
+            eventually_consistent: config.eventuallyConsistent
+              ? exp(config.eventuallyConsistent)
+              : undefined,
+          })}
+        )
+      `
+    ).run();
+  }
+
   async updateProperties<
     TResourceStatic extends ResourceShape<any>,
     TObject extends Partial<MaybeUnsecuredInstance<TResourceStatic>> & {
@@ -222,6 +199,7 @@ export class DatabaseService {
     type,
     object,
     changes,
+    changeset,
   }: {
     // This becomes the label of the base node
     type: TResourceStatic;
@@ -229,6 +207,8 @@ export class DatabaseService {
     object: TObject;
     // The changes
     changes: DbChanges<TResourceStatic['prototype']>;
+    // Changeset ID
+    changeset?: ID;
   }): Promise<TObject> {
     let updated = object;
     for (const [prop, change] of entries(changes)) {
@@ -240,6 +220,7 @@ export class DatabaseService {
         object,
         key: prop as any,
         value: change,
+        changeset,
       });
 
       updated = {
@@ -269,52 +250,47 @@ export class DatabaseService {
     object: { id },
     key,
     value,
+    changeset,
   }: {
     type: TResourceStatic;
     object: TObject;
     key: Key;
-    value?: UnwrapSecured<TObject[Key]>;
+    value: UnwrapSecured<TObject[Key]>;
+    changeset?: ID;
   }): Promise<void> {
     const label = type.name;
 
-    const propLabels = getDbPropertyLabels(type, key);
+    // check if the node is created in changeset, update property normally
+    if (changeset) {
+      const result = await this.db
+        .query()
+        .match([
+          node('changeset', 'Changeset', { id: changeset }),
+          relation('out', '', 'changeset', { active: true }),
+          node('node', label, { id }),
+        ])
+        .return('node.id')
+        .first();
 
-    const createdAt = DateTime.local();
-    const newPropertyNodeProps = {
-      createdAt,
-      value,
-      sortValue: determineSortValue(value),
-    };
+      if (result) {
+        changeset = undefined;
+      }
+    }
+
     const update = this.db
       .query()
       .match(node('node', label, { id }))
-      .match([
-        node('node'),
-        relation('out', 'oldToProp', key, { active: true }),
-        node('oldPropVar', 'Property'),
-      ])
-      .setValues({
-        'oldToProp.active': false,
-      })
-      .raw(
-        `
-        with node, oldPropVar, reduce(deletedLabels = [], label in labels(oldPropVar) | deletedLabels + ("Deleted_" + label)) as deletedLabels
-        call apoc.create.removeLabels(oldPropVar, labels(oldPropVar)) yield node as nodeRemoved
-        with node, oldPropVar, deletedLabels
-        call apoc.create.addLabels(oldPropVar, deletedLabels) yield node as nodeAdded
-        `
+      .apply(
+        updateProperty<TResourceStatic, TObject, Key>({
+          resource: type,
+          key,
+          value,
+          changeset,
+        })
       )
-      .with('*')
-      .limit(1)
-      .create([
-        node('node'),
-        relation('out', 'toProp', key, {
-          active: true,
-          createdAt,
-        }),
-        node('newPropNode', propLabels, newPropertyNodeProps),
-      ])
-      .return('newPropNode');
+      .return<{ numPropsCreated: number; numPropsDeactivated: number }>(
+        'numPropsCreated, numPropsDeactivated'
+      );
 
     let result;
     try {
@@ -331,7 +307,10 @@ export class DatabaseService {
       throw new ServerException(`Failed to update property ${label}.${key}`, e);
     }
 
-    if (!result) {
+    if (
+      !result ||
+      (result.numPropsCreated === 0 && result.numPropsDeactivated === 0)
+    ) {
       throw new ServerException(`Could not find ${label}.${key} to update`);
     }
   }
@@ -558,7 +537,7 @@ export class DatabaseService {
     const query = this.db
       .query()
       .matchNode('baseNode', { id })
-      .apply(deleteBaseNode)
+      .apply(deleteBaseNode('baseNode'))
       .return('*');
     await query.run();
   }

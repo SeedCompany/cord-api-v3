@@ -1,27 +1,27 @@
 import { Injectable } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
-import { generateId, ID, Session } from '../../../common';
-import {
-  createBaseNode,
-  DtoRepository,
-  matchRequestingUser,
-  Property,
-} from '../../../core';
-import { matchProps } from '../../../core/database/query';
+import { ID, Session } from '../../../common';
+import { DtoRepository, matchRequestingUser } from '../../../core';
+import { createNode, matchProps } from '../../../core/database/query';
 import { DbPropsOfDto } from '../../../core/database/results';
-import { EthnologueLanguage } from '../dto';
+import { CreateEthnologueLanguage, EthnologueLanguage } from '../dto';
 
 @Injectable()
 export class EthnologueLanguageRepository extends DtoRepository(
   EthnologueLanguage
 ) {
-  async create(secureProps: Property[], session: Session) {
+  async create(input: CreateEthnologueLanguage, session: Session) {
+    const initialProps = {
+      code: input.code,
+      provisionalCode: input.provisionalCode,
+      name: input.name,
+      population: input.population,
+    };
+
     const query = this.db
       .query()
       .apply(matchRequestingUser(session))
-      .apply(
-        createBaseNode(await generateId(), 'EthnologueLanguage', secureProps)
-      )
+      .apply(await createNode(EthnologueLanguage, { initialProps }))
       .return<{ id: ID }>('node.id as id');
 
     return await query.first();

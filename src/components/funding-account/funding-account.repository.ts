@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
-import { generateId, ID, Session } from '../../common';
-import { createBaseNode, DtoRepository, matchRequestingUser } from '../../core';
+import { ID, NotFoundException, Session } from '../../common';
+import { DtoRepository, matchRequestingUser } from '../../core';
 import {
-  calculateTotalAndPaginateList,
-  matchPropList,
+  createNode,
+  paginate,
   permissionsOfNode,
   requestingUser,
+  sorting,
 } from '../../core/database/query';
-import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
 import {
   CreateFundingAccount,
   FundingAccount,
@@ -26,55 +26,42 @@ export class FundingAccountRepository extends DtoRepository(FundingAccount) {
   }
 
   async create(input: CreateFundingAccount, session: Session) {
-    const secureProps = [
-      {
-        key: 'name',
-        value: input.name,
-        isPublic: false,
-        isOrgPublic: false,
-        label: 'FundingAccountName',
-      },
-      {
-        key: 'accountNumber',
-        value: input.accountNumber,
-        isPublic: false,
-        isOrgPublic: false,
-        label: 'FundingAccountNumber',
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
+    const initialProps = {
+      name: input.name,
+      accountNumber: input.accountNumber,
+      canDelete: true,
+    };
     const query = this.db
       .query()
       .apply(matchRequestingUser(session))
-      .apply(createBaseNode(await generateId(), 'FundingAccount', secureProps))
+      .apply(await createNode(FundingAccount, { initialProps }))
       .return<{ id: ID }>('node.id as id');
 
     return await query.first();
   }
 
   async readOne(id: ID, session: Session) {
-    const readFundingAccount = this.db
+    const query = this.db
       .query()
       .apply(matchRequestingUser(session))
       .match([node('node', 'FundingAccount', { id })])
-      .apply(matchPropList)
-      .return('propList, node')
-      .asResult<StandardReadResult<DbPropsOfDto<FundingAccount>>>();
+      .apply(this.hydrate());
 
-    return await readFundingAccount.first();
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException('Could not found funding account');
+    }
+    return result.dto;
   }
 
-  list(input: FundingAccountListInput, session: Session) {
+  async list(input: FundingAccountListInput, session: Session) {
     const label = 'FundingAccount';
-    const query = this.db
+    const result = await this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode(label)])
-      .apply(calculateTotalAndPaginateList(FundingAccount, input));
-    return query;
+      .apply(sorting(FundingAccount, input))
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 }

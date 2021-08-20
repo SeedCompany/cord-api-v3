@@ -4,10 +4,11 @@ import { ConfigModule } from '../config/config.module';
 import { CypherFactory } from './cypher.factory';
 import { DatabaseService } from './database.service';
 import { IndexerModule } from './indexer/indexer.module';
+import { MigrationModule } from './migration/migration.module';
 import { ParameterTransformer } from './parameter-transformer.service';
 
 @Module({
-  imports: [IndexerModule, ConfigModule],
+  imports: [IndexerModule, MigrationModule, ConfigModule],
   providers: [CypherFactory, DatabaseService, ParameterTransformer],
   exports: [CypherFactory, DatabaseService, IndexerModule],
 })

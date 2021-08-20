@@ -17,6 +17,7 @@ import {
   IdField,
   NameField,
   Sensitivity,
+  SensitivityField,
 } from '../../../common';
 import { Language } from './language.dto';
 
@@ -86,7 +87,7 @@ export abstract class UpdateLanguage {
   @Matches(/^[A-Z]{2}\d{2}$/)
   readonly signLanguageCode?: string;
 
-  @Field(() => Sensitivity, { nullable: true })
+  @SensitivityField({ nullable: true })
   readonly sensitivity?: Sensitivity;
 
   @DateField({ nullable: true })

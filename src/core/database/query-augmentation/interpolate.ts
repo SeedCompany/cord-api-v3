@@ -2,6 +2,7 @@ import { stripIndent } from 'common-tags';
 import { Clause } from 'cypher-query-builder';
 import { isArray, isBoolean, isNumber, isObject, isString, map } from 'lodash';
 import { DateTime, Duration } from 'luxon';
+import { Integer, types as neo } from 'neo4j-driver';
 import { CalendarDate } from '../../../common';
 
 /**
@@ -46,10 +47,24 @@ function stringifyValue(value: unknown): string {
   if (Duration.isDuration(value)) {
     return `duration('${value.toISO()}')`;
   }
+  if (isNeoInteger(value)) {
+    return neo.Integer.inSafeRange(value)
+      ? `${neo.Integer.toNumber(value)}`
+      : `'${neo.Integer.toString(value)}'`;
+  }
   if (isObject(value)) {
-    const pairs = map(value, (el, key) => `${key}: ${stringifyValue(el)}`);
+    const pairs = map(
+      value,
+      (el, key) => `${escapeKey(key)}: ${stringifyValue(el)}`
+    );
     const str = pairs.join(', ');
     return `{ ${str} }`;
   }
   return '';
 }
+
+const escapeKey = (key: string) => (SAFE_KEY.exec(key) ? key : `\`${key}\``);
+const SAFE_KEY = /^[a-zA-Z][a-zA-Z0-9]*$/;
+
+const isNeoInteger = (value: unknown): value is Integer =>
+  neo.Integer.isInteger(value as any);

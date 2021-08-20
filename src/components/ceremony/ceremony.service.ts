@@ -7,8 +7,8 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import { HandleIdLookup, ILogger, Logger, Property } from '../../core';
-import { runListQuery } from '../../core/database/results';
+import { HandleIdLookup, ILogger, Logger } from '../../core';
+import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { CeremonyRepository } from './ceremony.repository';
 import {
@@ -29,43 +29,8 @@ export class CeremonyService {
   ) {}
 
   async create(input: CreateCeremony, session: Session): Promise<ID> {
-    const secureProps: Property[] = [
-      {
-        key: 'type',
-        value: input.type,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'planned',
-        value: input.planned,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'estimatedDate',
-        value: input.estimatedDate,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'actualDate',
-        value: input.actualDate,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
-
     try {
-      const query = await this.ceremonyRepo.create(session, secureProps);
-
-      const result = await query.first();
+      const result = await this.ceremonyRepo.create(input, session);
 
       if (!result) {
         throw new ServerException('failed to create a ceremony');
@@ -156,11 +121,10 @@ export class CeremonyService {
   }
 
   async list(
-    { filter, ...input }: CeremonyListInput,
+    input: CeremonyListInput,
     session: Session
   ): Promise<CeremonyListOutput> {
-    const query = this.ceremonyRepo.list({ filter, ...input }, session);
-
-    return await runListQuery(query, input, (id) => this.readOne(id, session));
+    const results = await this.ceremonyRepo.list(input, session);
+    return await mapListResults(results, (id) => this.readOne(id, session));
   }
 }

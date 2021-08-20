@@ -23,9 +23,11 @@ import { EnvironmentService } from './environment.service';
 @Injectable()
 export class ConfigService implements EmailOptionsFactory {
   port = this.env.number('port').optional(3000);
+  // The port where the app is being hosted. i.e. a docker bound port
+  publicPort = this.env.number('public_port').optional(this.port);
   hostUrl = this.env
     .string('host_url')
-    .optional(`http://localhost:${this.port}`);
+    .optional(`http://localhost:${this.publicPort}`);
   globalPrefix = '';
 
   /** Is this a jest process? */
@@ -98,6 +100,9 @@ export class ConfigService implements EmailOptionsFactory {
   }
 
   dbIndexesCreate = this.env.boolean('DB_CREATE_INDEXES').optional(true);
+  dbAutoMigrate = this.env
+    .boolean('DB_AUTO_MIGRATE')
+    .optional(process.env.NODE_ENV !== 'production' && !this.jest);
 
   @Lazy() get files() {
     const bucket = this.env.string('FILES_S3_BUCKET').optional();

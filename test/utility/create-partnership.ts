@@ -1,5 +1,5 @@
 import { gql } from 'apollo-server-core';
-import { CalendarDate, isValidId } from '../../src/common';
+import { CalendarDate, ID, isValidId } from '../../src/common';
 import { PartnerType } from '../../src/components/partner';
 import {
   CreatePartnership,
@@ -12,9 +12,25 @@ import { createPartner } from './create-partner';
 import { createProject } from './create-project';
 import { fragments } from './fragments';
 
+export async function readOnePartnership(app: TestApp, id: string) {
+  const result = await app.graphql.query(
+    gql`
+      query ReadOnePartnership($id: ID!) {
+        partnership(id: $id) {
+          ...partnership
+        }
+      }
+      ${fragments.partnership}
+    `,
+    { id }
+  );
+  const actual = result.partnership;
+  expect(actual).toBeTruthy();
+  return actual;
+}
 export async function createPartnership(
   app: TestApp,
-  input: Partial<CreatePartnership> = {}
+  { changeset, ...input }: Partial<CreatePartnership> & { changeset?: ID } = {}
 ) {
   const partnership: CreatePartnership = {
     projectId: input.projectId || (await createProject(app)).id,
@@ -42,6 +58,7 @@ export async function createPartnership(
     {
       input: {
         partnership,
+        changeset,
       },
     }
   );

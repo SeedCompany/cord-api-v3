@@ -1,30 +1,35 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { generateId, ID, Session } from '../../common';
+import { ID, Session } from '../../common';
+import { DtoRepository, matchRequestingUser } from '../../core';
 import {
-  createBaseNode,
-  DtoRepository,
-  matchRequestingUser,
-  Property,
-} from '../../core';
-import {
-  calculateTotalAndPaginateList,
+  createNode,
   matchPropsAndProjectSensAndScopedRoles,
+  paginate,
   permissionsOfNode,
   requestingUser,
+  sorting,
 } from '../../core/database/query';
 import { DbPropsOfDto } from '../../core/database/results';
 import { ScopedRole } from '../authorization';
-import { Ceremony, CeremonyListInput } from './dto';
+import { Ceremony, CeremonyListInput, CreateCeremony } from './dto';
 
 @Injectable()
 export class CeremonyRepository extends DtoRepository(Ceremony) {
-  async create(session: Session, secureProps: Property[]) {
-    return this.db
+  async create(input: CreateCeremony, session: Session) {
+    const initialProps = {
+      type: input.type,
+      planned: input.planned,
+      estimatedDate: input.estimatedDate,
+      actualDate: input.actualDate,
+      canDelete: true,
+    };
+    return await this.db
       .query()
       .apply(matchRequestingUser(session))
-      .apply(createBaseNode(await generateId(), 'Ceremony', secureProps))
-      .return<{ id: ID }>('node.id as id');
+      .apply(await createNode(Ceremony, { initialProps }))
+      .return<{ id: ID }>('node.id as id')
+      .first();
   }
 
   async readOne(id: ID, session: Session) {
@@ -47,9 +52,9 @@ export class CeremonyRepository extends DtoRepository(Ceremony) {
     return await readCeremony.first();
   }
 
-  list({ filter, ...input }: CeremonyListInput, session: Session) {
+  async list({ filter, ...input }: CeremonyListInput, session: Session) {
     const label = 'Ceremony';
-    return this.db
+    const result = await this.db
       .query()
       .match([
         requestingUser(session),
@@ -61,6 +66,9 @@ export class CeremonyRepository extends DtoRepository(Ceremony) {
             ]
           : []),
       ])
-      .apply(calculateTotalAndPaginateList(Ceremony, input));
+      .apply(sorting(Ceremony, input))
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 }

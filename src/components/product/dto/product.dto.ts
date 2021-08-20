@@ -2,13 +2,25 @@ import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
-import { DbLabel, ID, SecuredProps, Sensitivity } from '../../../common';
+import {
+  DbLabel,
+  ID,
+  SecuredFloat,
+  SecuredProps,
+  SecuredString,
+  SecuredStringNullable,
+  Sensitivity,
+  SensitivityField,
+} from '../../../common';
 import { SetChangeType } from '../../../core/database/changes';
+import { ScopedRole } from '../../authorization';
 import { SecuredScriptureRangesOverride } from '../../scripture';
+import { SecuredMethodologySteps } from './methodology-step.enum';
 import { Producible, SecuredProducible } from './producible.dto';
 import { SecuredProductMediums } from './product-medium';
 import { SecuredMethodology } from './product-methodology';
 import { SecuredProductPurposes } from './product-purpose';
+import { SecuredProgressMeasurement } from './progress-measurement.enum';
 
 @InterfaceType({
   resolveType: (product: AnyProduct) =>
@@ -18,6 +30,8 @@ import { SecuredProductPurposes } from './product-purpose';
 export class Product extends Producible {
   static readonly Props: string[] = keysOf<Product>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Product>>();
+
+  readonly engagement: ID;
 
   @Field()
   @DbLabel('ProductMedium')
@@ -31,10 +45,46 @@ export class Product extends Producible {
   @DbLabel('ProductMethodology')
   readonly methodology: SecuredMethodology;
 
-  @Field(() => Sensitivity, {
+  @SensitivityField({
     description: "Based on the project's sensitivity",
   })
   readonly sensitivity: Sensitivity;
+
+  @Field({
+    description: stripIndent`
+      What steps will be worked for this product?
+      Only certain steps are available according to the chosen methodology.
+    `,
+  })
+  readonly steps: SecuredMethodologySteps;
+
+  @Field({
+    description: stripIndent`
+      What does "complete" mean for this product?
+    `,
+  })
+  readonly describeCompletion: SecuredStringNullable;
+
+  @Field({
+    description: 'How will progress for each step be measured?',
+  })
+  readonly progressStepMeasurement: SecuredProgressMeasurement;
+
+  @Field({
+    description: stripIndent`
+      The target number that \`StepProgress\` is working towards.
+
+      If \`Product.progressStepMeasurement\` is:
+        - \`Percent\`: this will always be _100.0_
+        - \`Boolean\`: this will always be _1.0_
+        - \`Number\`: this can be any positive number
+    `,
+  })
+  readonly progressTarget: SecuredFloat;
+
+  // A list of non-global roles the requesting user has available for this object.
+  // This is just a cache, to prevent extra db lookups within the same request.
+  readonly scope?: ScopedRole[];
 }
 
 @ObjectType({
@@ -79,7 +129,23 @@ export class DerivativeScriptureProduct extends Product {
   readonly scriptureReferencesOverride: SecuredScriptureRangesOverride;
 }
 
+@ObjectType({
+  implements: [Product],
+  description:
+    'A product which does not fit into the other two types of products',
+})
+export class OtherProduct extends Product {
+  static readonly Props = keysOf<OtherProduct>();
+  static readonly SecuredProps = keysOf<SecuredProps<OtherProduct>>();
+
+  @Field()
+  readonly title: SecuredString;
+
+  @Field()
+  readonly description: SecuredStringNullable;
+}
+
 export type AnyProduct = MergeExclusive<
-  DirectScriptureProduct,
-  DerivativeScriptureProduct
+  MergeExclusive<DirectScriptureProduct, DerivativeScriptureProduct>,
+  OtherProduct
 >;

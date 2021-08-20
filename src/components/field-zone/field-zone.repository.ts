@@ -1,16 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { generateId, ID, Session } from '../../common';
-import { createBaseNode, DtoRepository, matchRequestingUser } from '../../core';
+import { ID, NotFoundException, Session, UnsecuredDto } from '../../common';
+import { DtoRepository, matchRequestingUser } from '../../core';
 import {
-  calculateTotalAndPaginateList,
-  matchPropList,
+  createNode,
+  createRelationships,
+  matchProps,
+  merge,
+  paginate,
   permissionsOfNode,
   requestingUser,
+  sorting,
 } from '../../core/database/query';
-import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
-import { FieldZone, FieldZoneListInput } from './dto';
+import { CreateFieldZone, FieldZone, FieldZoneListInput } from './dto';
 
 @Injectable()
 export class FieldZoneRepository extends DtoRepository(FieldZone) {
@@ -22,48 +25,23 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
       .first();
   }
 
-  async create(
-    session: Session,
-    name: string,
-    directorId: ID
-    // fieldZoneId: ID
-  ) {
-    const createdAt = DateTime.local();
-
-    const secureProps = [
-      {
-        key: 'name',
-        value: name,
-        isPublic: false,
-        isOrgPublic: false,
-        label: 'FieldZoneName',
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
+  async create(input: CreateFieldZone, session: Session) {
+    const initialProps = {
+      name: input.name,
+      canDelete: true,
+    };
 
     // create field zone
     const query = this.db
       .query()
       .apply(matchRequestingUser(session))
-      .match([
-        node('director', 'User', {
-          id: directorId,
-        }),
-      ])
-      .apply(createBaseNode(await generateId(), 'FieldZone', secureProps))
-      .create([
-        node('node'),
-        relation('out', '', 'director', { active: true, createdAt }),
-        node('director'),
-      ])
+      .apply(await createNode(FieldZone, { initialProps }))
+      .apply(
+        createRelationships(FieldZone, 'out', {
+          director: ['User', input.directorId],
+        })
+      )
       .return<{ id: ID }>('node.id as id');
-
-    // const result = await query.first();
 
     return await query.first();
   }
@@ -73,20 +51,29 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
       .query()
       .apply(matchRequestingUser(session))
       .match([node('node', 'FieldZone', { id: id })])
-      .apply(matchPropList)
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'director', { active: true }),
-        node('director', 'User'),
-      ])
-      .return('propList, node, director.id as directorId')
-      .asResult<
-        StandardReadResult<DbPropsOfDto<FieldZone>> & {
-          directorId: ID;
-        }
-      >();
+      .apply(this.hydrate());
 
-    return await query.first();
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException('Could not find field zone', 'fieldZone.id');
+    }
+    return result.dto;
+  }
+
+  protected hydrate() {
+    return (query: Query) =>
+      query
+        .apply(matchProps())
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'director', { active: true }),
+          node('director', 'User'),
+        ])
+        .return<{ dto: UnsecuredDto<FieldZone> }>(
+          merge('props', {
+            director: 'director.id',
+          }).as('dto')
+        );
   }
 
   async updateDirector(directorId: ID, id: ID) {
@@ -117,12 +104,14 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
     await query.run();
   }
 
-  list({ filter, ...input }: FieldZoneListInput, session: Session) {
+  async list({ filter, ...input }: FieldZoneListInput, session: Session) {
     const label = 'FieldZone';
-    return this.db
+    const result = await this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode(label)])
-      .apply(calculateTotalAndPaginateList(FieldZone, input));
-    // return query;
+      .apply(sorting(FieldZone, input))
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 }

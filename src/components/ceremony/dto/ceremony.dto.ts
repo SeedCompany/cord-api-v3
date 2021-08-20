@@ -7,6 +7,7 @@ import {
   SecuredProperty,
   SecuredProps,
   Sensitivity,
+  SensitivityField,
 } from '../../../common';
 import { CeremonyType } from './type.enum';
 
@@ -29,7 +30,7 @@ export class Ceremony extends Resource {
   @Field()
   readonly actualDate: SecuredDate;
 
-  @Field(() => Sensitivity, {
+  @SensitivityField({
     description: "Based on the project's sensitivity",
   })
   readonly sensitivity: Sensitivity;

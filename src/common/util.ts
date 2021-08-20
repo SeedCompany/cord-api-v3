@@ -13,19 +13,23 @@ export const sleep = (duration: DurationInput) =>
     setTimeout(resolve, Duration.from(duration).toMillis())
   );
 
-export const simpleSwitch = <T>(
-  key: string,
-  options: Record<string, T>
-): T | undefined => options[key];
+export const simpleSwitch = <T, K extends string = string>(
+  key: K | null | undefined,
+  options: Record<K, T>
+): T | undefined => (key ? options[key] : undefined);
 
 /** Converts list to map given a function that returns a [key, value] tuple. */
 export const mapFromList = <T, S = T, K extends string = string>(
-  list: T[],
-  mapper: (item: T) => [K, S]
+  list: readonly T[],
+  mapper: (item: T) => readonly [K, S] | null
 ): Record<K, S> => {
   const out: Partial<Record<K, S>> = {};
   return list.reduce((acc, item) => {
-    const [key, value] = mapper(item);
+    const res = mapper(item);
+    if (!res) {
+      return acc;
+    }
+    const [key, value] = res;
     acc[key] = value;
     return acc;
   }, out as Record<K, S>);

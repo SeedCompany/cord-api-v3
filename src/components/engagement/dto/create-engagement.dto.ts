@@ -23,9 +23,6 @@ export abstract class CreateEngagement {
   readonly disbursementCompleteDate?: CalendarDate;
 
   @DateField({ nullable: true })
-  readonly communicationsCompleteDate?: CalendarDate;
-
-  @DateField({ nullable: true })
   readonly startDateOverride?: CalendarDate;
 
   @DateField({ nullable: true })
@@ -87,6 +84,12 @@ export abstract class CreateInternshipEngagement extends CreateEngagement {
 
 @InputType()
 export abstract class CreateLanguageEngagementInput {
+  @IdField({
+    description: 'The change object to associate these engagement changes with',
+    nullable: true,
+  })
+  readonly changeset?: ID;
+
   @Field()
   @Type(() => CreateLanguageEngagement)
   @ValidateNested()
@@ -101,6 +104,12 @@ export abstract class CreateLanguageEngagementOutput {
 
 @InputType()
 export abstract class CreateInternshipEngagementInput {
+  @IdField({
+    description: 'The change object to associate these engagement changes with',
+    nullable: true,
+  })
+  readonly changeset?: ID;
+
   @Field()
   @Type(() => CreateInternshipEngagement)
   @ValidateNested()

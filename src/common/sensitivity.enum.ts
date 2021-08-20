@@ -1,4 +1,7 @@
-import { registerEnumType } from '@nestjs/graphql';
+import { applyDecorators } from '@nestjs/common';
+import { Field, FieldOptions, registerEnumType } from '@nestjs/graphql';
+import { rankSens } from '../core/database/query';
+import { DbSort } from './db-sort.decorator';
 
 export enum Sensitivity {
   Low = 'Low',
@@ -10,21 +13,8 @@ registerEnumType(Sensitivity, {
   name: 'Sensitivity',
 });
 
-export const getHighestSensitivity = (
-  sensitivityArr: Sensitivity[]
-): Sensitivity | undefined => {
-  if (!sensitivityArr.length) return undefined;
-
-  const rank = {
-    Low: 0,
-    Medium: 1,
-    High: 2,
-  };
-
-  let currentMaxSensitivity = sensitivityArr[0];
-  for (const sensitivity of sensitivityArr) {
-    if (rank[sensitivity] > rank[currentMaxSensitivity])
-      currentMaxSensitivity = sensitivity;
-  }
-  return currentMaxSensitivity;
-};
+export const SensitivityField = (options: FieldOptions = {}) =>
+  applyDecorators(
+    Field(() => Sensitivity, options),
+    DbSort(rankSens)
+  );

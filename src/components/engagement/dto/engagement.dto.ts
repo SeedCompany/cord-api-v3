@@ -1,3 +1,4 @@
+import { Type } from '@nestjs/common';
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
@@ -7,6 +8,7 @@ import {
   DateTimeField,
   DbLabel,
   ID,
+  IntersectionType,
   parentIdMiddleware,
   Resource,
   Secured,
@@ -16,7 +18,10 @@ import {
   SecuredProps,
   SecuredString,
   Sensitivity,
+  SensitivityField,
 } from '../../../common';
+import { ScopedRole } from '../../authorization';
+import { ChangesetAware } from '../../changeset/dto';
 import { DefinedFile } from '../../file/dto';
 import { Product, SecuredMethodologies } from '../../product/dto';
 import { SecuredInternPosition } from './intern-position.enum';
@@ -31,18 +36,23 @@ export type AnyEngagement = MergeExclusive<
   InternshipEngagement
 >;
 
+const ChangesetAwareResource: Type<Resource & ChangesetAware> =
+  IntersectionType(Resource, ChangesetAware);
+
 @InterfaceType({
   resolveType: (val: AnyEngagement) => val.__typename,
-  implements: [Resource],
+  implements: [Resource, ChangesetAware],
 })
 /**
  * This should be used for GraphQL but never for TypeScript types.
  */
-class Engagement extends Resource {
+class Engagement extends ChangesetAwareResource {
   static readonly Props: string[] = keysOf<Engagement>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Engagement>>();
 
   readonly __typename: 'LanguageEngagement' | 'InternshipEngagement';
+
+  readonly project: ID;
 
   @Field(() => SecuredEngagementStatus, {
     middleware: [parentIdMiddleware],
@@ -61,9 +71,6 @@ class Engagement extends Resource {
   readonly disbursementCompleteDate: SecuredDateNullable;
 
   @Field()
-  readonly communicationsCompleteDate: SecuredDateNullable;
-
-  @Field()
   // Match the project mouStart. Could need to manually set for an extension.
   // formally stage_begin.
   readonly startDate: SecuredDateNullable;
@@ -79,7 +86,7 @@ class Engagement extends Resource {
   @Field()
   readonly endDateOverride: SecuredDateNullable;
 
-  @Field(() => Sensitivity, {
+  @SensitivityField({
     description: "Based on the project's sensitivity",
   })
   readonly sensitivity: Sensitivity;
@@ -104,6 +111,10 @@ class Engagement extends Resource {
 
   @DateTimeField()
   readonly modifiedAt: DateTime;
+
+  // A list of non-global roles the requesting user has available for this object.
+  // This is just a cache, to prevent extra db lookups within the same request.
+  readonly scope: ScopedRole[];
 }
 
 // class name has to match schema name for interface resolvers to work.

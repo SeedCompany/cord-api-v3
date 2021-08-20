@@ -1,5 +1,4 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import type { AWSError } from 'aws-sdk';
 import { Readable } from 'stream';
 import {
   DuplicateException,
@@ -120,9 +119,6 @@ export class FileService {
     } catch (e) {
       if (e instanceof NotFoundException) {
         throw e;
-      }
-      if ((e as AWSError).code === 'NotFound') {
-        throw new NotFoundException('Could not find file contents', e);
       }
       throw new ServerException('Failed to retrieve file contents', e);
     }
@@ -266,10 +262,7 @@ export class FileService {
       tempUpload.status === 'rejected' &&
       existingUpload.status === 'rejected'
     ) {
-      if (
-        (tempUpload.reason as AWSError).code === 'NotFound' ||
-        tempUpload.reason instanceof NotFoundException
-      ) {
+      if (tempUpload.reason instanceof NotFoundException) {
         throw new NotFoundException('Could not find upload', 'uploadId');
       }
       throw new ServerException('Unable to create file version');

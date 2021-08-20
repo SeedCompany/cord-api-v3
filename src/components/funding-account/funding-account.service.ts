@@ -6,12 +6,10 @@ import {
   ServerException,
   Session,
   UnauthorizedException,
+  UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger, OnIndex } from '../../core';
-import {
-  parseBaseNodeProperties,
-  runListQuery,
-} from '../../core/database/results';
+import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import {
   CreateFundingAccount,
@@ -97,20 +95,22 @@ export class FundingAccountService {
     }
 
     const result = await this.repo.readOne(id, session);
+    return await this.secure(result, session);
+  }
 
-    if (!result) {
-      throw new NotFoundException('FundingAccount.id', 'id');
-    }
-
-    const secured = await this.authorizationService.secureProperties(
+  private async secure(
+    dto: UnsecuredDto<FundingAccount>,
+    session: Session
+  ): Promise<FundingAccount> {
+    const securedProps = await this.authorizationService.secureProperties(
       FundingAccount,
-      result.propList,
+      dto,
       session
     );
     return {
-      ...parseBaseNodeProperties(result.node),
-      ...secured,
-      canDelete: await this.repo.checkDeletePermission(id, session),
+      ...dto,
+      ...securedProps,
+      canDelete: await this.repo.checkDeletePermission(dto.id, session),
     };
   }
 
@@ -155,7 +155,7 @@ export class FundingAccountService {
     input: FundingAccountListInput,
     session: Session
   ): Promise<FundingAccountListOutput> {
-    const query = this.repo.list(input, session);
-    return await runListQuery(query, input, (id) => this.readOne(id, session));
+    const results = await this.repo.list(input, session);
+    return await mapListResults(results, (id) => this.readOne(id, session));
   }
 }

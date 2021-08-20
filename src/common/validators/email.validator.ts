@@ -12,7 +12,8 @@ export const IsEmail = (
       constraints: [options],
       validator: {
         validate: (value, args) =>
-          typeof value === 'string' && isEmail(value, args?.constraints[0]),
+          !value ||
+          (typeof value === 'string' && isEmail(value, args?.constraints[0])),
         defaultMessage: () =>
           validationOptions?.each
             ? 'Each value in $property must be a valid email'

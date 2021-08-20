@@ -17,7 +17,9 @@ import { DbPartner } from '../../partner/model';
 import { DbPartnership } from '../../partnership/model';
 import { DbPeriodicReport } from '../../periodic-report/model';
 import { DbPost } from '../../post/model';
+import { StepProgress } from '../../product-progress/dto';
 import { DbProduct } from '../../product/model';
+import { DbProjectChangeRequest } from '../../project-change-request/model';
 /* eslint-disable @typescript-eslint/naming-convention */
 import { DbProject } from '../../project/model';
 import { DbProjectMember } from '../../project/project-member/model';
@@ -165,7 +167,6 @@ export const Controller = new DbRole({
       __className: 'DbInternshipEngagement',
       properties: [
         { propertyName: 'ceremony', permission: { read, }, },
-        { propertyName: 'communicationsCompleteDate', permission: { read, }, },
         { propertyName: 'completeDate', permission: { read, }, },
         { propertyName: 'countryOfOrigin', permission: { read, }, },
         { propertyName: 'disbursementCompleteDate', permission: { read, }, },
@@ -215,7 +216,6 @@ export const Controller = new DbRole({
       __className: 'DbLanguageEngagement',
       properties: [
         { propertyName: 'ceremony', permission: { read, }, },
-        { propertyName: 'communicationsCompleteDate', permission: { read, }, },
         { propertyName: 'completeDate', permission: { read, }, },
         { propertyName: 'disbursementCompleteDate', permission: { read, }, },
         { propertyName: 'endDate', permission: { read, }, },
@@ -314,10 +314,16 @@ export const Controller = new DbRole({
         { propertyName: 'mediums', permission: { read, }, },
         { propertyName: 'methodology', permission: { read, }, },
         { propertyName: 'purposes', permission: { read, }, },
+        { propertyName: 'steps', permission: { read, }, },
         { propertyName: 'scriptureReferences', permission: { read, }, },
         { propertyName: 'produces', permission: { read, }, },
         { propertyName: 'scriptureReferencesOverride', permission: { read, }, },
         { propertyName: 'isOverriding', permission: { read, }, },
+        { propertyName: 'describeCompletion', permission: { read, }, },
+        { propertyName: 'progressStepMeasurement', permission: { read, }, },
+        { propertyName: 'progressTarget', permission: { read, }, },
+        { propertyName: 'title', permission: { read, }, },
+        { propertyName: 'description', permission: { read, }, },
       ],
       canDelete: false,
     }),
@@ -363,10 +369,11 @@ export const Controller = new DbRole({
     new DbBaseNodeGrant<DbPeriodicReport>({
       __className: 'DbPeriodicReport',
       properties: [
-        { propertyName: 'type', permission: { read, write, }, },
-        { propertyName: 'start', permission: { read, write, }, },
-        { propertyName: 'end', permission: { read, write, }, },
-        { propertyName: 'reportFile', permission: { read, write, }, },
+        { propertyName: 'type', permission: { read, }, },
+        { propertyName: 'start', permission: { read, }, },
+        { propertyName: 'end', permission: { read, }, },
+        { propertyName: 'receivedDate', permission: { read, }, },
+        { propertyName: 'reportFile', permission: { read, }, },
       ],
       canDelete: true,
     }),
@@ -412,8 +419,26 @@ export const Controller = new DbRole({
     new DbBaseNodeGrant<DbStory>({
       __className: 'DbStory',
       properties: [
-        { propertyName: 'name', permission: { read, write, }, },
-        { propertyName: 'scriptureReferences', permission: { read, write, }, },
+        { propertyName: 'name',                       permission: { read, write, }, },
+        { propertyName: 'scriptureReferences',        permission: { read, write, }, },
+      ],
+      canDelete: false,
+    }),
+    new DbBaseNodeGrant<DbProjectChangeRequest>({
+      __className: 'DbProjectChangeRequest',
+      properties: [
+        { propertyName: 'types',                       permission: { read, write, }, },
+        { propertyName: 'summary',                     permission: { read, write, }, },
+        { propertyName: 'status',                      permission: { read, write, }, },
+      ],
+      canDelete: true,
+    }),
+    new DbBaseNodeGrant<StepProgress>({
+      __className: 'DbStepProgress',
+      properties: [
+        {
+          propertyName: 'completed', permission: { read },
+        }
       ],
       canDelete: false,
     }),

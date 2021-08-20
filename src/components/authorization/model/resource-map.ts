@@ -1,6 +1,7 @@
 import { ServerException } from '../../../common';
 import { Budget, BudgetRecord } from '../../budget/dto';
 import { Ceremony } from '../../ceremony/dto';
+import { Changeset } from '../../changeset/dto';
 import {
   IEngagement as Engagement,
   InternshipEngagement,
@@ -25,8 +26,10 @@ import {
 import {
   DerivativeScriptureProduct,
   DirectScriptureProduct,
+  Producible,
   Product,
 } from '../../product/dto';
+import { ProjectChangeRequest } from '../../project-change-request/dto';
 import {
   InternshipProject,
   IProject as Project,
@@ -43,6 +46,7 @@ export const ResourceMap = {
   Budget,
   BudgetRecord,
   Ceremony,
+  Changeset,
   Education,
   Engagement,
   EthnologueLanguage,
@@ -58,6 +62,7 @@ export const ResourceMap = {
   Organization,
   Partner,
   Partnership,
+  Producible,
   Product,
   DirectScriptureProduct,
   DerivativeScriptureProduct,
@@ -69,6 +74,7 @@ export const ResourceMap = {
   FinancialReport,
   NarrativeReport,
   ProgressReport,
+  ProjectChangeRequest,
   Song,
   Story,
   Unavailability,

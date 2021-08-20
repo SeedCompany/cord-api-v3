@@ -1,15 +1,9 @@
 import { Connection } from 'cypher-query-builder';
-import * as faker from 'faker';
 import { CalendarDate, Sensitivity } from '../../src/common';
-import { Powers } from '../../src/components/authorization/dto/powers';
+import { Powers, Role, ScopedRole } from '../../src/components/authorization';
 import { Budget } from '../../src/components/budget';
 import { PartnerType } from '../../src/components/partner';
-import {
-  Project,
-  ProjectType,
-  Role,
-  ScopedRole,
-} from '../../src/components/project';
+import { Project, ProjectType } from '../../src/components/project';
 import {
   addLocationToOrganization,
   createBudget,
@@ -19,7 +13,6 @@ import {
   createProject,
   createSession,
   createTestApp,
-  login,
   Raw,
   readBudgetRecords,
   readOneBudget,
@@ -37,27 +30,19 @@ import { getPermissions } from './permissions';
 describe('Budget Security e2e', () => {
   let app: TestApp;
   let db: Connection;
-  let email: string;
-  let password: string;
   let testProject: Raw<Project>;
   let testBudget: Budget;
 
   beforeAll(async () => {
     app = await createTestApp();
     db = app.get(Connection);
-    email = faker.internet.email();
-    password = faker.internet.password();
     await createSession(app);
-    await registerUserWithPower(
-      app,
-      [
-        Powers.CreateOrganization,
-        Powers.CreateProject,
-        Powers.CreatePartnership,
-        Powers.CreateBudget,
-      ],
-      { email: email, password: password }
-    );
+    await registerUserWithPower(app, [
+      Powers.CreateOrganization,
+      Powers.CreateProject,
+      Powers.CreatePartnership,
+      Powers.CreateBudget,
+    ]);
     testProject = await createProject(app);
     testBudget = await createBudget(app, { projectId: testProject.id });
     const org = await createOrganization(app);
@@ -112,11 +97,13 @@ describe('Budget Security e2e', () => {
             role: role,
             readOneFunction: readFunction,
             propToTest: property,
+            skipEditCheck: false,
           });
         }
       );
     });
   });
+
   describe('Restricted by Sensitivity', () => {
     describe.each`
       role                      | sensitivityToTest     | projectType
@@ -126,7 +113,6 @@ describe('Budget Security e2e', () => {
       'Role: $role - Sensitivity: $sensitivityToTest on $projectType Project',
       ({ role, sensitivityToTest, projectType }) => {
         it(' reading universalTemplateFile', async () => {
-          await login(app, { email: email, password: password });
           const proj = await createProject(app, { type: projectType });
           const budget = await createBudget(app, { projectId: proj.id });
           await expectSensitiveProperty({
@@ -145,8 +131,8 @@ describe('Budget Security e2e', () => {
             projectType: projectType,
           });
         });
+
         it(' reading records', async () => {
-          await login(app, { email: email, password: password });
           const proj = await createProject(app, { type: projectType });
           const budget = await createBudget(app, { projectId: proj.id });
           const org = await createOrganization(app);

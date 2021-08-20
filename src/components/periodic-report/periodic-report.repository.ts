@@ -1,81 +1,68 @@
 import { Injectable } from '@nestjs/common';
-import { stripIndent } from 'common-tags';
 import { node, Query, relation } from 'cypher-query-builder';
-import { DateTime, Interval } from 'luxon';
+import { Interval } from 'luxon';
 import {
   generateId,
   ID,
   NotFoundException,
   ServerException,
+  Session,
   UnsecuredDto,
 } from '../../common';
-import { DtoRepository, property } from '../../core';
+import { DtoRepository } from '../../core';
 import {
-  calculateTotalAndPaginateList,
+  createNode,
+  createRelationships,
   deleteBaseNode,
-  matchProps,
+  matchPropsAndProjectSensAndScopedRoles,
+  merge,
+  paginate,
+  sorting,
+  Variable,
 } from '../../core/database/query';
 import {
   CreatePeriodicReport,
-  FinancialReport,
   IPeriodicReport,
-  NarrativeReport,
   PeriodicReport,
   PeriodicReportListInput,
-  ProgressReport,
   ReportType,
+  resolveReportType,
 } from './dto';
 
 @Injectable()
 export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
   async create(input: CreatePeriodicReport) {
-    const id = await generateId();
-    const createdAt = DateTime.local();
     const reportFileId = await generateId();
 
+    const Report = resolveReportType(input);
+    const initialProps = {
+      type: input.type,
+      start: input.start,
+      end: input.end,
+      receivedDate: null,
+      reportFile: reportFileId,
+    };
     const query = this.db
       .query()
-      .create([
-        [
-          node(
-            'newPeriodicReport',
-            ['PeriodicReport', 'BaseNode', `${input.type}Report`],
-            {
-              createdAt,
-              id,
-            }
-          ),
-        ],
-        ...property('type', input.type, 'newPeriodicReport'),
-        ...property('start', input.start, 'newPeriodicReport'),
-        ...property('end', input.end, 'newPeriodicReport'),
-        ...property('reportFile', reportFileId, 'newPeriodicReport'),
-      ])
-      .with('newPeriodicReport')
-      .match(node('parent', 'BaseNode', { id: input.projectOrEngagementId }))
-      .create([
-        node('parent'),
-        relation('out', '', 'report', {
-          active: true,
-          createdAt,
-        }),
-        node('newPeriodicReport'),
-      ])
-      .return('newPeriodicReport.id as id');
+      .apply(await createNode(Report, { initialProps }))
+      .apply(
+        createRelationships(Report, 'in', {
+          report: ['BaseNode', input.projectOrEngagementId],
+        })
+      )
+      .return<{ id: ID }>('node.id as id');
     const result = await query.first();
     if (!result) {
       throw new ServerException('Failed to create a periodic report');
     }
-    return { id, reportFileId };
+    return { id: result.id, reportFileId };
   }
 
-  async readOne(id: ID) {
+  async readOne(id: ID, session: Session) {
     const query = this.db
       .query()
       .match([node('node', 'PeriodicReport', { id })])
-      .apply(this.hydrate())
-      .return('dto')
-      .asResult<{ dto: UnsecuredDto<PeriodicReport> }>();
+      .apply(this.hydrate(session));
 
     const result = await query.first();
     if (!result) {
@@ -85,48 +72,51 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
     return result.dto;
   }
 
-  listProjectReports(
-    projectId: string,
-    reportType: ReportType,
-    { filter, ...input }: PeriodicReportListInput
+  async listReports(
+    parentId: ID,
+    type: ReportType,
+    input: PeriodicReportListInput,
+    session: Session
   ) {
-    return this.db
+    const result = await this.db
       .query()
       .match([
-        node('project', 'Project', { id: projectId }),
+        node('parent', 'BaseNode', { id: parentId }),
         relation('out', '', 'report', { active: true }),
-        node('node', ['PeriodicReport', `${reportType}Report`]),
+        node('node', `${type}Report`),
       ])
-      .apply(
-        calculateTotalAndPaginateList(
-          reportType === 'Financial' ? FinancialReport : NarrativeReport,
-          input
-        )
-      );
+      .apply(sorting(resolveReportType({ type }), input))
+      .apply(paginate(input, this.hydrate(session)))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 
-  async getCurrentDue(parentId: ID, reportType: ReportType) {
+  matchCurrentDue(parentId: ID | Variable, reportType: ReportType) {
+    return (query: Query) =>
+      query.comment`matchCurrentDue()`
+        .match([
+          node('baseNode', 'BaseNode', { id: parentId }),
+          relation('out', '', 'report', { active: true }),
+          node('node', `${reportType}Report`),
+          relation('out', '', 'end', { active: true }),
+          node('end', 'Property'),
+        ])
+        .raw(`WHERE end.value < date()`)
+        .with('node, end')
+        .orderBy('end.value', 'desc')
+        .limit(1);
+  }
+
+  async getCurrentDue(parentId: ID, reportType: ReportType, session: Session) {
     const res = await this.db
       .query()
-      .match([
-        node('baseNode', 'BaseNode', { id: parentId }),
-        relation('out', '', 'report', { active: true }),
-        node('node', `${reportType}Report`),
-        relation('out', '', 'end', { active: true }),
-        node('end', 'Property'),
-      ])
-      .raw(`WHERE end.value < date()`)
-      .with('node, end')
-      .orderBy('end.value', 'desc')
-      .limit(1)
-      .apply(this.hydrate())
-      .return('dto')
-      .asResult<{ dto: UnsecuredDto<PeriodicReport> }>()
+      .apply(this.matchCurrentDue(parentId, reportType))
+      .apply(this.hydrate(session))
       .first();
     return res?.dto;
   }
 
-  async getNextDue(parentId: ID, reportType: ReportType) {
+  async getNextDue(parentId: ID, reportType: ReportType, session: Session) {
     const res = await this.db
       .query()
       .match([
@@ -140,14 +130,16 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
       .with('node, end')
       .orderBy('end.value', 'asc')
       .limit(1)
-      .apply(this.hydrate())
-      .return('dto')
-      .asResult<{ dto: UnsecuredDto<PeriodicReport> }>()
+      .apply(this.hydrate(session))
       .first();
     return res?.dto;
   }
 
-  async getLatestReportSubmitted(parentId: ID, type: ReportType) {
+  async getLatestReportSubmitted(
+    parentId: ID,
+    type: ReportType,
+    session: Session
+  ) {
     const res = await this.db
       .query()
       .match([
@@ -161,33 +153,33 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
       .with('node, sn')
       .orderBy('sn.value', 'desc')
       .limit(1)
-      .apply(this.hydrate())
-      .return('dto')
-      .asResult<{ dto: UnsecuredDto<PeriodicReport> }>()
+      .apply(this.hydrate(session))
       .first();
     return res?.dto;
   }
 
-  listEngagementReports(
-    engagementId: string,
-    { filter, ...input }: PeriodicReportListInput
-  ) {
-    return this.db
+  async getFinalReport(parentId: ID, type: ReportType, session: Session) {
+    const res = await this.db
       .query()
       .match([
-        node('engagement', 'Engagement', { id: engagementId }),
+        node('', 'BaseNode', { id: parentId }),
         relation('out', '', 'report', { active: true }),
-        node('node', 'ProgressReport'),
+        node('node', `${type}Report`),
       ])
-      .apply(calculateTotalAndPaginateList(ProgressReport, input));
-  }
-
-  /**
-   * Given a `(node:PeriodicReport)`
-   * output `dto as UnsecuredDto<PeriodicReport>`
-   */
-  private hydrate() {
-    return (q: Query) => q.apply(matchProps()).with('props as dto');
+      .match([
+        node('node'),
+        relation('out', '', 'start', { active: true }),
+        node('start', 'Property'),
+      ])
+      .match([
+        node('node'),
+        relation('out', '', 'end', { active: true }),
+        node('end', 'Property'),
+      ])
+      .raw(`where start.value = end.value`)
+      .apply(this.hydrate(session))
+      .first();
+    return res?.dto;
   }
 
   async delete(baseNodeId: ID, type: ReportType, intervals: Interval[]) {
@@ -205,18 +197,44 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
       ])
       .with('report, start')
       .raw(
-        stripIndent`
-        WHERE NOT (report)-[:reportFileNode]->(:File)<-[:parent { active: true }]-(:FileVersion)
-          AND start.value IN $startDates
-    `,
+        `
+          WHERE NOT (report)-[:reportFileNode]->(:File)<-[:parent { active: true }]-(:FileVersion)
+            AND start.value IN $startDates
+        `,
         {
           startDates: intervals.map((interval) => interval.start),
         }
       )
-      .with('report as baseNode')
-      .apply(deleteBaseNode)
-      .return('count(node) as count')
-      .asResult<{ count: number }>()
+      .apply(deleteBaseNode('report'))
+      .return<{ count: number }>('count(node) as count')
       .first();
+  }
+
+  protected hydrate(session: Session) {
+    return (query: Query) =>
+      query
+        .subQuery('node', (sub) =>
+          sub
+            .match([
+              node('node'),
+              relation('in', '', 'report', { active: true }),
+              node('project', 'Project'),
+            ])
+            .return('project')
+            .union()
+            .with('node')
+            .match([
+              node('node'),
+              relation('in', '', 'report', { active: true }),
+              node('', 'Engagement'),
+              relation('in', '', 'engagement', { active: true }),
+              node('project', 'Project'),
+            ])
+            .return('project')
+        )
+        .apply(matchPropsAndProjectSensAndScopedRoles(session))
+        .return<{ dto: UnsecuredDto<PeriodicReport> }>(
+          merge('props', { scope: 'scopedRoles' }).as('dto')
+        );
   }
 }

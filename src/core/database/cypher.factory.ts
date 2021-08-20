@@ -12,6 +12,7 @@ import { ConfigService } from '..';
 import { getPreviousList } from '../../common';
 import { jestSkipFileInExceptionSource } from '../jest-skip-source-file';
 import { ILogger, LoggerToken, LogLevel } from '../logger';
+import { AFTER_MESSAGE } from '../logger/formatters';
 import { createBetterError, isNeo4jError } from './errors';
 import { ParameterTransformer } from './parameter-transformer.service';
 import { MyTransformer } from './transformer';
@@ -89,6 +90,17 @@ export const CypherFactory: FactoryProvider<Connection> = {
                   accessMode: matched?.[2],
                   routingTable,
                 });
+              } else if (
+                level === LogLevel.ERROR &&
+                message.includes(
+                  'experienced a fatal error {"code":"ServiceUnavailable","name":"Neo4jError"}'
+                )
+              ) {
+                // Change connection failure messages to debug.
+                // Connection failures are thrown so they will get logged
+                // in exception handling (if they are not handled, i.e. retries/transactions).
+                // Otherwise, these are misleading as they aren't actual problems.
+                driverLogger.log(LogLevel.DEBUG, message);
               } else {
                 driverLogger.log(level, message);
               }
@@ -152,6 +164,8 @@ export const CypherFactory: FactoryProvider<Connection> = {
         return q;
       }
 
+      (q as any).__stacktrace = stack;
+
       const origBuild = q.buildQueryObject.bind(q);
       q.buildQueryObject = function () {
         const result = origBuild();
@@ -192,17 +206,13 @@ const wrapQueryRun = (
   return (origStatement, parameters) => {
     const statement = stripIndent(origStatement.slice(0, -1)) + ';';
     const level = (parameters?.logIt as LogLevel | undefined) ?? LogLevel.DEBUG;
-    if (parameters?.interpolated) {
-      logger.log(
-        level,
-        `Executing query: ${parameters.interpolated as string}`
-      );
-    } else {
-      logger.log(level, 'Executing query', {
-        statement,
-        ...parameters,
-      });
-    }
+    logger.log(
+      level,
+      `Executing ${(parameters?.__origin as string | undefined) ?? 'query'}`,
+      parameters?.interpolated
+        ? { [AFTER_MESSAGE]: parameters.interpolated }
+        : { statement, ...parameters }
+    );
 
     const params = parameters
       ? parameterTransformer.transform(parameters)

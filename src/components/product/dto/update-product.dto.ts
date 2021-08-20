@@ -2,7 +2,7 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
-import { ID, IdField, OmitType } from '../../../common';
+import { ID, IdField, NameField, OmitType } from '../../../common';
 import { CreateProduct } from './create-product.dto';
 import { AnyProduct, Product } from './product.dto';
 
@@ -31,6 +31,23 @@ export abstract class UpdateProductInput {
   @Type(() => UpdateProduct)
   @ValidateNested()
   readonly product: UpdateProduct;
+}
+
+@InputType()
+export abstract class UpdateOtherProduct extends OmitType(CreateProduct, [
+  'engagementId',
+  'produces',
+  'scriptureReferences',
+  'scriptureReferencesOverride',
+] as const) {
+  @IdField()
+  readonly id: ID;
+
+  @NameField({ nullable: true })
+  readonly title?: string;
+
+  @Field(() => String, { nullable: true })
+  readonly description?: string | null;
 }
 
 @ObjectType()

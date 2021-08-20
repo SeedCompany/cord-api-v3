@@ -7,8 +7,6 @@ services:
     build:
       context: .
       target: dev
-    # wait for db to be ready before running command
-    entrypoint: [wait-for, -q, db:7687, --]
     command: yarn start:prod
     ports:
       - 3000:80

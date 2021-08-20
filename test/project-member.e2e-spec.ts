@@ -3,12 +3,8 @@ import { Connection } from 'cypher-query-builder';
 import { times } from 'lodash';
 import { DateTime, Interval } from 'luxon';
 import { isValidId, NotFoundException } from '../src/common';
-import {
-  Powers,
-  Project,
-  ProjectMember,
-  Role,
-} from '../src/components/project';
+import { Powers, Role } from '../src/components/authorization';
+import { Project, ProjectMember } from '../src/components/project';
 import {
   createPerson,
   createProject,

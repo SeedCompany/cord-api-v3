@@ -1,7 +1,11 @@
 import { Interval } from 'luxon';
 import { DateInterval, ID, Session } from '../../../common';
 import { EventsHandler, IEventHandler, ILogger, Logger } from '../../../core';
-import { engagementRange, EngagementService } from '../../engagement';
+import {
+  engagementRange,
+  EngagementService,
+  IEngagement,
+} from '../../engagement';
 import {
   EngagementCreatedEvent,
   EngagementUpdatedEvent,
@@ -48,6 +52,7 @@ export class SyncProgressReportToEngagementDateRange
       for (const engagement of projectEngagements) {
         await this.deleteReports(engagement.id, diff.removals);
         await this.createReports(engagement.id, diff.additions, event.session);
+        await this.mergeFinalReport(engagement, event.session);
       }
     } else {
       const engagement =
@@ -56,6 +61,7 @@ export class SyncProgressReportToEngagementDateRange
           : event.engagement;
       await this.deleteReports(engagement.id, diff.removals);
       await this.createReports(engagement.id, diff.additions, event.session);
+      await this.mergeFinalReport(engagement, event.session);
     }
   }
 
@@ -119,5 +125,17 @@ export class SyncProgressReportToEngagementDateRange
       (engagement) =>
         !engagement.startDateOverride.value || !engagement.endDateOverride.value
     );
+  }
+
+  private async mergeFinalReport(engagement: IEngagement, session: Session) {
+    const dateRange = engagementRange(engagement);
+    if (dateRange) {
+      await this.periodicReports.mergeFinalReport(
+        engagement.id,
+        ReportType.Progress,
+        dateRange.end.endOf('quarter'),
+        session
+      );
+    }
   }
 }

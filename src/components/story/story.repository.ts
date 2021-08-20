@@ -1,20 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
-import { generateId, ID, Session } from '../../common';
+import { ID, NotFoundException, Session } from '../../common';
+import { DtoRepository, matchRequestingUser } from '../../core';
 import {
-  createBaseNode,
-  DtoRepository,
-  matchRequestingUser,
-  Property,
-} from '../../core';
-import {
-  calculateTotalAndPaginateList,
-  matchPropList,
+  createNode,
+  paginate,
   permissionsOfNode,
   requestingUser,
+  sorting,
 } from '../../core/database/query';
-import { DbPropsOfDto, StandardReadResult } from '../../core/database/results';
-import { Story, StoryListInput } from './dto';
+import { CreateStory, Story, StoryListInput } from './dto';
 
 @Injectable()
 export class StoryRepository extends DtoRepository(Story) {
@@ -26,13 +21,15 @@ export class StoryRepository extends DtoRepository(Story) {
       .first();
   }
 
-  async create(session: Session, secureProps: Property[]) {
+  async create(input: CreateStory, session: Session) {
+    const initialProps = {
+      name: input.name,
+      canDelete: true,
+    };
     return await this.db
       .query()
       .apply(matchRequestingUser(session))
-      .apply(
-        createBaseNode(await generateId(), ['Story', 'Producible'], secureProps)
-      )
+      .apply(await createNode(Story, { initialProps }))
       .return<{ id: ID }>('node.id as id')
       .first();
   }
@@ -42,17 +39,22 @@ export class StoryRepository extends DtoRepository(Story) {
       .query()
       .apply(matchRequestingUser(session))
       .match([node('node', 'Story', { id })])
-      .apply(matchPropList)
-      .return('node, propList')
-      .asResult<StandardReadResult<DbPropsOfDto<Story>>>();
+      .apply(this.hydrate());
 
-    return await query.first();
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException('Could not find story', 'story.id');
+    }
+    return result.dto;
   }
 
-  list({ filter, ...input }: StoryListInput, session: Session) {
-    return this.db
+  async list({ filter, ...input }: StoryListInput, session: Session) {
+    const result = await this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode('Story')])
-      .apply(calculateTotalAndPaginateList(Story, input));
+      .apply(sorting(Story, input))
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
   }
 }

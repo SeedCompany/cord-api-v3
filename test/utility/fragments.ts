@@ -633,6 +633,19 @@ export const partnership = gql`
       canRead
       canEdit
     }
+    sensitivity
+    financialReportingType {
+      value
+      canRead
+      canEdit
+    }
+    mou {
+      value {
+        id
+      }
+      canRead
+      canEdit
+    }
     partner {
       canEdit
       canRead
@@ -680,9 +693,6 @@ export const engagement = gql`
       value
     }
     disbursementCompleteDate {
-      value
-    }
-    communicationsCompleteDate {
       value
     }
     startDate {
@@ -935,24 +945,6 @@ export const song = gql`
   ${scriptureRange}
 `;
 
-export const workflow = gql`
-  fragment workflow on Workflow {
-    id
-    stateIdentifier
-    startingState {
-      id
-      value
-    }
-  }
-`;
-
-export const state = gql`
-  fragment state on State {
-    id
-    value
-  }
-`;
-
 export const ceremony = gql`
   fragment ceremony on Ceremony {
     id
@@ -1029,6 +1021,29 @@ export const location = gql`
   ${fieldRegion}
 `;
 
+export const projectChangeRequest = gql`
+  fragment projectChangeRequest on ProjectChangeRequest {
+    id
+    status {
+      value
+      canEdit
+      canRead
+    }
+    summary {
+      value
+      canEdit
+      canRead
+    }
+    types {
+      value
+      canEdit
+      canRead
+    }
+    createdAt
+    canEdit
+  }
+`;
+
 export const fragments = {
   org,
   user,
@@ -1046,8 +1061,6 @@ export const fragments = {
   location,
   budget,
   budgetRecord,
-  workflow,
-  state,
   film,
   literacyMaterial,
   story,
@@ -1055,4 +1068,5 @@ export const fragments = {
   ceremony,
   partner,
   fundingAccount,
+  projectChangeRequest,
 };

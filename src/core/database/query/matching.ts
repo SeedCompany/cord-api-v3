@@ -1,8 +1,6 @@
-import { stripIndent } from 'common-tags';
 import { node, Query, relation } from 'cypher-query-builder';
-import { Session } from '../../../common';
-import { collect } from './cypher-functions';
-import { mapping } from './mapping';
+import { ID, Many, Session } from '../../../common';
+import { apoc, collect, listConcat, merge } from './cypher-functions';
 
 export const requestingUser = (session: Session) =>
   node('requestingUser', 'User', {
@@ -12,7 +10,7 @@ export const requestingUser = (session: Session) =>
 /**
  * @deprecated DB SecurityGroups are deprecated
  */
-export const permissionsOfNode = (nodeLabel?: string) => [
+export const permissionsOfNode = (nodeLabel: Many<string>) => [
   relation('in', 'memberOfSecurityGroup', 'member'),
   node('security', 'SecurityGroup'),
   relation('out', 'sgPerms', 'permission'),
@@ -21,26 +19,18 @@ export const permissionsOfNode = (nodeLabel?: string) => [
   node('node', nodeLabel),
 ];
 
-/**
- * @deprecated use matchProps instead. It returns props as an object instead of the weird list.
- */
-export const matchPropList = (query: Query, nodeName = 'node') =>
-  query
-    .match([
-      node(nodeName),
-      relation('out', 'r', { active: true }),
-      node('props', 'Property'),
-    ])
-    .with([
-      collect(
-        mapping({
-          value: 'props.value',
-          property: 'type(r)',
-        }),
-        'propList'
-      ),
-      nodeName,
-    ]);
+export interface MatchPropsOptions {
+  // The node var to pull properties from
+  nodeName?: string;
+  // The variable name to output as
+  outputVar?: string;
+  // Whether we should move forward even without any properties matched
+  optional?: boolean;
+  // The optional change ID to reference
+  changeset?: ID;
+  // Don't merge in the actual BaseNode's properties into the resulting output object
+  excludeBaseProps?: boolean;
+}
 
 /**
  * Matches all the given `node`s properties and returns them plus the props on
@@ -49,23 +39,40 @@ export const matchPropList = (query: Query, nodeName = 'node') =>
  * This is executed in a sub-query so other variables in scope are passed-through
  * transparently.
  */
-export const matchProps =
-  ({ nodeName = 'node' } = {}) =>
-  (query: Query) =>
-    query.subQuery((sub) =>
+export const matchProps = (options: MatchPropsOptions = {}) => {
+  const {
+    nodeName = 'node',
+    outputVar = 'props',
+    optional = false,
+    changeset,
+    excludeBaseProps = false,
+  } = options;
+  return (query: Query) =>
+    query.comment`matchProps(${nodeName})`.subQuery(nodeName, (sub) =>
       sub
-        .with(nodeName)
-        .match([
-          node(nodeName),
-          relation('out', 'r', { active: true }),
-          node('prop', 'Property'),
-        ])
-        .return([
-          stripIndent`
-          apoc.map.mergeList(
-            [node] + collect(
-              apoc.map.fromValues([type(r), prop.value])
+        .match(
+          [
+            node(nodeName),
+            relation('out', 'r', { active: !changeset }),
+            node('prop', 'Property'),
+            ...(changeset
+              ? [
+                  relation('in', '', 'changeset', { active: true }),
+                  node('changeset', 'Changeset', { id: changeset }),
+                ]
+              : []),
+          ],
+          {
+            optional,
+          }
+        )
+        .return(
+          merge(
+            listConcat(
+              `[${excludeBaseProps ? '' : nodeName}]`,
+              collect(apoc.map.fromValues(['type(r)', 'prop.value']))
             )
-          ) as props`,
-        ])
+          ).as(outputVar)
+        )
     );
+};

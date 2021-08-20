@@ -2,6 +2,7 @@ import { Global, Module } from '@nestjs/common';
 import { APP_FILTER, APP_PIPE, BaseExceptionFilter } from '@nestjs/core';
 import { GraphQLModule } from '@nestjs/graphql';
 import { EmailModule } from '@seedcompany/nestjs-email';
+import { ConsoleModule } from 'nestjs-console';
 import { AwsS3Factory } from './aws-s3.factory';
 import { ConfigModule } from './config/config.module';
 import { ConfigService } from './config/config.service';
@@ -18,6 +19,7 @@ import { ValidationPipe } from './validation.pipe';
 @Module({
   imports: [
     ConfigModule,
+    ConsoleModule,
     DatabaseModule,
     EmailModule.forRootAsync({ useExisting: ConfigService }),
     GraphQLModule.forRootAsync({ useClass: GraphQLConfig }),

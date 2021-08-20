@@ -8,11 +8,6 @@ LABEL org.opencontainers.image.licenses="MIT"
 
 WORKDIR /opt/cord-api
 
-# Add wait-for utility to make waiting for db easier (see usage in docker-compose.yml)
-# From https://github.com/eficode/wait-for/pull/9 (has fixes for env handling)
-ADD https://raw.githubusercontent.com/eficode/wait-for/96511d65c6578d4866591283fdec6e2fba7e6770/wait-for /usr/local/bin/wait-for
-RUN chmod +x /usr/local/bin/wait-for
-
 RUN apk add --no-cache jq
 
 ENV NODE_ENV=development \

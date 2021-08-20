@@ -4,10 +4,15 @@ import { MergeExclusive } from 'type-fest';
 import {
   CalendarDate,
   Resource,
+  SecuredDateNullable,
   SecuredProperty,
   SecuredProps,
+  Sensitivity,
+  SensitivityField,
   ServerException,
+  simpleSwitch,
 } from '../../../common';
+import { ScopedRole } from '../../authorization';
 import { DefinedFile } from '../../file';
 import { ReportType } from './report-type.enum';
 
@@ -16,20 +21,20 @@ type AnyPeriodicReport = MergeExclusive<
   ProgressReport
 >;
 
-@InterfaceType({
-  resolveType: (val: PeriodicReport) => {
-    if (val.type === ReportType.Financial) {
-      return FinancialReport;
-    }
-    if (val.type === ReportType.Narrative) {
-      return NarrativeReport;
-    }
-    if (val.type === ReportType.Progress) {
-      return ProgressReport;
-    }
-
+export const resolveReportType = (report: Pick<PeriodicReport, 'type'>) => {
+  const type = simpleSwitch(report.type, {
+    Financial: FinancialReport,
+    Narrative: NarrativeReport,
+    Progress: ProgressReport,
+  });
+  if (!type) {
     throw new ServerException('Could not resolve periodic report type');
-  },
+  }
+  return type;
+};
+
+@InterfaceType({
+  resolveType: resolveReportType,
   implements: [Resource],
 })
 class PeriodicReport extends Resource {
@@ -45,7 +50,19 @@ class PeriodicReport extends Resource {
   @Field()
   readonly end: CalendarDate;
 
+  @Field()
+  readonly receivedDate: SecuredDateNullable;
+
   readonly reportFile: DefinedFile;
+
+  @SensitivityField({
+    description: "Based on the project's sensitivity",
+  })
+  readonly sensitivity: Sensitivity;
+
+  // A list of non-global roles the requesting user has available for this object.
+  // This is just a cache, to prevent extra db lookups within the same request.
+  readonly scope: ScopedRole[];
 }
 
 export {

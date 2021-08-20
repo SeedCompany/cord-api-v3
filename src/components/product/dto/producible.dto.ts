@@ -1,6 +1,6 @@
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
-import { SetRequired } from 'type-fest';
-import { Resource, SecuredProperty } from '../../../common';
+import { keys as keysOf } from 'ts-transformer-keys';
+import { Resource, SecuredProperty, SecuredProps } from '../../../common';
 import { SecuredScriptureRanges } from '../../scripture/dto';
 
 @InterfaceType({
@@ -13,6 +13,9 @@ import { SecuredScriptureRanges } from '../../scripture/dto';
   implements: [Resource],
 })
 export abstract class Producible extends Resource {
+  static readonly Props: string[] = keysOf<Producible>();
+  static readonly SecuredProps: string[] = keysOf<SecuredProps<Producible>>();
+
   @Field()
   readonly scriptureReferences: SecuredScriptureRanges;
 }
@@ -21,7 +24,7 @@ export abstract class Producible extends Resource {
 // via declaration merging
 export enum ProducibleType {}
 
-export type ProducibleResult = SetRequired<Partial<Producible>, 'id'> & {
+export type ProducibleResult = Producible & {
   __typename: ProducibleType;
 };
 

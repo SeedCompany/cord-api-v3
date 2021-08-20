@@ -1,6 +1,12 @@
-import { Field, ObjectType } from '@nestjs/graphql';
+import { ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { Resource, SecuredProps, SecuredString } from '../../../common';
+import {
+  DbLabel,
+  NameField,
+  Resource,
+  SecuredProps,
+  SecuredString,
+} from '../../../common';
 import { Producible, ProducibleType } from '../../product/dto';
 
 declare module '../../product/dto' {
@@ -18,6 +24,7 @@ export class Story extends Producible {
   static readonly Props = keysOf<Story>();
   static readonly SecuredProps = keysOf<SecuredProps<Story>>();
 
-  @Field()
+  @NameField()
+  @DbLabel('StoryName')
   readonly name: SecuredString;
 }

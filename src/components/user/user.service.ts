@@ -1,6 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { compact, difference } from 'lodash';
-import { DateTime } from 'luxon';
 import {
   DuplicateException,
   ID,
@@ -22,7 +21,7 @@ import {
   Transactional,
   UniquenessError,
 } from '../../core';
-import { runListQuery } from '../../core/database/results';
+import { mapListResults } from '../../core/database/results';
 import { Role } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
@@ -217,10 +216,9 @@ export class UserService {
     await this.userRepo.updateProperties(user, simpleChanges);
 
     // Update email
-    if (email) {
+    if (email !== undefined) {
       try {
-        const createdAt = DateTime.local();
-        await this.userRepo.updateEmail(user, email, createdAt);
+        await this.userRepo.updateEmail(user, email);
       } catch (e) {
         if (e instanceof UniquenessError && e.label === 'EmailAddress') {
           throw new DuplicateException(
@@ -255,8 +253,8 @@ export class UserService {
   }
 
   async list(input: UserListInput, session: Session): Promise<UserListOutput> {
-    const query = this.userRepo.list(input, session);
-    return await runListQuery(query, input, (id) => this.readOne(id, session));
+    const users = await this.userRepo.list(input, session);
+    return await mapListResults(users, (user) => this.secure(user, session));
   }
 
   async listEducations(

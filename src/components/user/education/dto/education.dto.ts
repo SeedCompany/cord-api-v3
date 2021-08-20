@@ -1,6 +1,7 @@
 import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
+  NameField,
   Resource,
   SecuredEnum,
   SecuredProperty,
@@ -34,9 +35,9 @@ export class Education extends Resource {
   @Field()
   readonly degree: SecuredDegree;
 
-  @Field()
+  @NameField()
   readonly major: SecuredString;
 
-  @Field()
+  @NameField()
   readonly institution: SecuredString;
 }

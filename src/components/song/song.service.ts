@@ -6,12 +6,10 @@ import {
   ServerException,
   Session,
   UnauthorizedException,
+  UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger, OnIndex } from '../../core';
-import {
-  parseBaseNodeProperties,
-  runListQuery,
-} from '../../core/database/results';
+import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
@@ -58,24 +56,8 @@ export class SongService {
       );
     }
 
-    const secureProps = [
-      {
-        key: 'name',
-        value: input.name,
-        isPublic: true,
-        isOrgPublic: true,
-        label: 'SongName',
-      },
-      {
-        key: 'canDelete',
-        value: true,
-        isPublic: false,
-        isOrgPublic: false,
-      },
-    ];
-
     try {
-      const result = await this.repo.create(session, secureProps);
+      const result = await this.repo.create(input, session);
 
       if (!result) {
         throw new ServerException('failed to create a song');
@@ -107,29 +89,31 @@ export class SongService {
   @HandleIdLookup(Song)
   async readOne(id: ID, session: Session): Promise<Song> {
     const result = await this.repo.readOne(id, session);
-    if (!result) {
-      throw new NotFoundException('Could not find song', 'song.id');
-    }
+    return await this.secure(result, session);
+  }
 
-    const scriptureReferences = await this.scriptureRefService.list(
-      id,
-      session
-    );
-
+  private async secure(
+    dto: UnsecuredDto<Song>,
+    session: Session
+  ): Promise<Song> {
     const securedProps = await this.authorizationService.secureProperties(
       Song,
-      result.propList,
+      dto,
       session
     );
 
+    const scriptureReferences = await this.scriptureRefService.list(
+      dto.id,
+      session
+    );
     return {
-      ...parseBaseNodeProperties(result.node),
+      ...dto,
       ...securedProps,
       scriptureReferences: {
         ...securedProps.scriptureReferences,
         value: scriptureReferences,
       },
-      canDelete: await this.repo.checkDeletePermission(id, session),
+      canDelete: await this.repo.checkDeletePermission(dto.id, session),
     };
   }
 
@@ -167,11 +151,8 @@ export class SongService {
     this.logger.debug(`deleted song with id`, { id });
   }
 
-  async list(
-    { filter, ...input }: SongListInput,
-    session: Session
-  ): Promise<SongListOutput> {
-    const query = this.repo.list({ filter, ...input }, session);
-    return await runListQuery(query, input, (id) => this.readOne(id, session));
+  async list(input: SongListInput, session: Session): Promise<SongListOutput> {
+    const results = await this.repo.list(input, session);
+    return await mapListResults(results, (id) => this.readOne(id, session));
   }
 }

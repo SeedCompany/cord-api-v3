@@ -1,79 +1,54 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
-import { DateTime } from 'luxon';
+import { node, Query, relation } from 'cypher-query-builder';
 import {
-  generateId,
   ID,
   NotFoundException,
   ServerException,
   Session,
+  UnsecuredDto,
 } from '../../common';
+import { DtoRepository } from '../../core';
 import {
-  createBaseNode,
-  DtoRepository,
-  matchRequestingUser,
-  Property,
-} from '../../core';
-import {
-  calculateTotalAndPaginateList,
+  createNode,
+  createRelationships,
+  matchChangesetAndChangedProps,
   matchPropsAndProjectSensAndScopedRoles,
-  permissionsOfNode,
-  requestingUser,
+  merge,
+  paginate,
+  sorting,
 } from '../../core/database/query';
-import { DbPropsOfDto } from '../../core/database/results';
-import { ScopedRole } from '../authorization';
 import { BudgetRecord, BudgetRecordListInput, CreateBudgetRecord } from './dto';
 
 @Injectable()
 export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
-  async create(session: Session, secureProps: Property[]) {
+  async create(input: CreateBudgetRecord, changeset?: ID) {
     const result = await this.db
       .query()
-      .apply(matchRequestingUser(session))
-      .apply(createBaseNode(await generateId(), 'BudgetRecord', secureProps))
-      .return('node.id as id')
-      .asResult<{ id: ID }>()
+      .apply(
+        await createNode(BudgetRecord, {
+          initialProps: {
+            fiscalYear: input.fiscalYear,
+            amount: null,
+          },
+        })
+      )
+      .apply(
+        createRelationships(BudgetRecord, {
+          in: {
+            record: ['Budget', input.budgetId],
+            changeset: ['Changeset', changeset],
+          },
+          out: {
+            organization: ['Organization', input.organizationId],
+          },
+        })
+      )
+      .return<{ id: ID }>('node.id as id')
       .first();
     if (!result) {
       throw new ServerException('Failed to create a budget record');
     }
     return result.id;
-  }
-
-  async connectToBudget(recordId: ID, budgetId: ID, createdAt: DateTime) {
-    await this.db
-      .query()
-      .match([node('budget', 'Budget', { id: budgetId })])
-      .match([node('br', 'BudgetRecord', { id: recordId })])
-      .create([
-        node('budget'),
-        relation('out', '', 'record', { active: true, createdAt }),
-        node('br'),
-      ])
-      .return('br')
-      .run();
-  }
-
-  async connectToOrganization(
-    recordId: ID,
-    organizationId: ID,
-    createdAt: DateTime
-  ) {
-    await this.db
-      .query()
-      .match([
-        node('organization', 'Organization', {
-          id: organizationId,
-        }),
-      ])
-      .match([node('br', 'BudgetRecord', { id: recordId })])
-      .create([
-        node('br'),
-        relation('out', '', 'organization', { active: true, createdAt }),
-        node('organization'),
-      ])
-      .return('br')
-      .run();
   }
 
   async doesRecordExist(input: CreateBudgetRecord) {
@@ -96,27 +71,19 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
     return !!result;
   }
 
-  async readOne(id: ID, session: Session) {
+  async readOne(id: ID, session: Session, changeset?: ID) {
     const query = this.db
       .query()
       .match([
         node('project', 'Project'),
-        relation('out', '', 'budget', { active: true }),
+        // omitting active checks on these two relations which could be either depending on changeset
+        relation('out', '', 'budget'),
         node('', 'Budget'),
-        relation('out', '', 'record', { active: true }),
+        relation('out', '', 'record'),
         node('node', 'BudgetRecord', { id }),
-        relation('out', '', 'organization', { active: true }),
-        node('organization', 'Organization'),
       ])
-      .apply(matchPropsAndProjectSensAndScopedRoles(session))
-      .return([
-        'apoc.map.merge(props, { organization: organization.id }) as props',
-        'scopedRoles',
-      ])
-      .asResult<{
-        props: DbPropsOfDto<BudgetRecord, true>;
-        scopedRoles: ScopedRole[];
-      }>();
+      .apply(this.hydrate({ session, changeset }))
+      .return<{ dto: UnsecuredDto<BudgetRecord> }>('dto');
     const result = await query.first();
     if (!result) {
       throw new NotFoundException(
@@ -125,24 +92,94 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
       );
     }
 
-    return result;
+    return result.dto;
   }
 
-  list(input: BudgetRecordListInput, session: Session) {
-    return this.db
+  async list(input: BudgetRecordListInput, session: Session, changeset?: ID) {
+    const { budgetId } = input.filter;
+    const result = await this.db
       .query()
-      .match([
-        requestingUser(session),
-        ...permissionsOfNode('BudgetRecord'),
-        ...(input.filter.budgetId
-          ? [
-              relation('in', '', 'record', { active: true }),
-              node('budget', 'Budget', {
-                id: input.filter.budgetId,
-              }),
-            ]
-          : []),
-      ])
-      .apply(calculateTotalAndPaginateList(BudgetRecord, input));
+      .matchNode('budget', 'Budget', { id: budgetId })
+      .apply(this.recordsOfBudget({ changeset }))
+      .apply(sorting(BudgetRecord, input))
+      .apply(paginate(input))
+      .first();
+    return result!; // result from paginate() will always have 1 row.
+  }
+
+  hydrate({
+    recordVar = 'node',
+    projectVar = 'project',
+    outputVar = 'dto',
+    session,
+    changeset,
+  }: {
+    recordVar?: string;
+    projectVar?: string;
+    outputVar?: string;
+    session: Session;
+    changeset?: ID;
+  }) {
+    return (query: Query) =>
+      query.subQuery((sub) =>
+        sub
+          .with([recordVar, projectVar]) // import
+          // rename to constant, only apply if making a change otherwise cypher breaks
+          .apply((q) =>
+            recordVar !== 'node' || projectVar !== 'project'
+              ? q.with({ [recordVar]: 'node', [projectVar]: 'project' })
+              : q
+          )
+          .match([
+            node('node'),
+            relation('out', '', 'organization', { active: true }),
+            node('organization', 'Organization'),
+          ])
+          .apply(matchChangesetAndChangedProps(changeset))
+          .apply(matchPropsAndProjectSensAndScopedRoles(session))
+          .return<{ dto: UnsecuredDto<BudgetRecord> }>(
+            merge('props', 'changedProps', {
+              organization: 'organization.id',
+              scope: 'scopedRoles',
+              changeset: 'changeset.id',
+            }).as(outputVar)
+          )
+      );
+  }
+
+  recordsOfBudget({
+    budgetVar = 'budget',
+    changeset,
+    outputVar = 'node',
+  }: {
+    budgetVar?: string;
+    changeset?: ID;
+    outputVar?: string;
+  }) {
+    return (query: Query) =>
+      query.subQuery((sub) =>
+        sub
+          .with(budgetVar)
+          .match([
+            node(budgetVar),
+            relation('out', '', 'record', { active: true }),
+            node('node', 'BudgetRecord'),
+          ])
+          .return({ node: outputVar })
+          .apply((q) =>
+            changeset
+              ? q
+                  .union()
+                  .match([
+                    node(budgetVar),
+                    relation('out', '', 'record', { active: false }),
+                    node('node', 'BudgetRecord'),
+                    relation('in', '', 'changeset', { active: true }),
+                    node('changeset', 'Changeset', { id: changeset }),
+                  ])
+                  .return({ node: outputVar })
+              : q
+          )
+      );
   }
 }
