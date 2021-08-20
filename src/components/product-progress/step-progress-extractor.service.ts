@@ -13,6 +13,7 @@ import { FileService, FileVersion } from '../file';
 import { ProductListInput } from '../product/dto/list-product.dto';
 import { MethodologyStep } from '../product/dto/methodology-step.enum';
 import { ProductService } from '../product/product.service';
+import { ScriptureRange } from '../scripture/dto/scripture-range.dto';
 import { ProductProgressService } from './product-progress.service';
 
 @Injectable()
@@ -58,9 +59,15 @@ export class StepProgressExtractor {
 
     for (const goal of goals.items) {
       // TODO: Validate all references share the same book
+
       const book = goal.scriptureReferences.value[0].start.book;
+      const verses = goal.scriptureReferences.value;
+      let totalVerses = 0;
+      for (const verse of verses) {
+        totalVerses += verse.end.verse - verse.start.verse + 1;
+      }
       for (const step of stepProgress) {
-        if (book === step.bookName) {
+        if (book === step.bookName && totalVerses === step.totalVerses) {
           await this.service.update(
             {
               productId: goal.id,
@@ -68,27 +75,27 @@ export class StepProgressExtractor {
               steps: [
                 {
                   step: step.backTranslation.step,
-                  completed: step.backTranslation.completed,
+                  percentDone: step.backTranslation.percentDone,
                 },
                 {
                   step: step.exegesisAndFirstDraft.step,
-                  completed: step.exegesisAndFirstDraft.completed,
+                  percentDone: step.exegesisAndFirstDraft.percentDone,
                 },
                 {
                   step: step.consultantCheck.step,
-                  completed: step.consultantCheck.completed,
+                  percentDone: step.consultantCheck.percentDone,
                 },
                 {
                   step: step.communityTesting.step,
-                  completed: step.communityTesting.completed,
+                  percentDone: step.communityTesting.percentDone,
                 },
                 {
                   step: step.teamCheck.step,
-                  completed: step.teamCheck.completed,
+                  percentDone: step.teamCheck.percentDone,
                 },
                 {
                   step: step.completed.step,
-                  completed: step.completed.completed,
+                  percentDone: step.completed.percentDone,
                 },
               ],
             },
@@ -124,6 +131,9 @@ export class StepProgressExtractor {
   }
 }
 
+// eslint-disable-next-line @seedcompany/no-unused-vars
+const validateReferences = (sr: ScriptureRange[]) => null;
+
 const parseGoalsProgress = (sheet: WorkSheet, fiscalYear: number) => {
   let i = 23;
   const goalsProgress = [];
@@ -140,27 +150,27 @@ const parseGoalsProgress = (sheet: WorkSheet, fiscalYear: number) => {
     const totalVerses = cellAsNumber(sheet[`Q${i}`]);
     const exegesisAndFirstDraft = {
       step: MethodologyStep.ExegesisAndFirstDraft,
-      completed: parseProgress(sheet[`R${i}`], sheet[`S${i}`], fiscalYear),
+      percentDone: parseProgress(sheet[`R${i}`], sheet[`S${i}`], fiscalYear),
     };
     const teamCheck = {
       step: MethodologyStep.TeamCheck,
-      completed: parseProgress(sheet[`T${i}`], sheet[`U${i}`], fiscalYear),
+      percentDone: parseProgress(sheet[`T${i}`], sheet[`U${i}`], fiscalYear),
     };
     const communityTesting = {
       step: MethodologyStep.CommunityTesting,
-      completed: parseProgress(sheet[`V${i}`], sheet[`W${i}`], fiscalYear),
+      percentDone: parseProgress(sheet[`V${i}`], sheet[`W${i}`], fiscalYear),
     };
     const backTranslation = {
       step: MethodologyStep.BackTranslation,
-      completed: parseProgress(sheet[`X${i}`], sheet[`Y${i}`], fiscalYear),
+      percentDone: parseProgress(sheet[`X${i}`], sheet[`Y${i}`], fiscalYear),
     };
     const consultantCheck = {
       step: MethodologyStep.ConsultantCheck,
-      completed: parseProgress(sheet[`Z${i}`], sheet[`AA${i}`], fiscalYear),
+      percentDone: parseProgress(sheet[`Z${i}`], sheet[`AA${i}`], fiscalYear),
     };
     const completed = {
       step: MethodologyStep.Completed,
-      completed: parseProgress(sheet[`AB${i}`], sheet[`AB${i}`], fiscalYear),
+      percentDone: parseProgress(sheet[`AB${i}`], sheet[`AB${i}`], fiscalYear),
     };
 
     goalsProgress.push({
