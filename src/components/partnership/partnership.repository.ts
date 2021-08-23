@@ -97,7 +97,7 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
                   .union()
                   .match([
                     node('project'),
-                    relation('out', '', 'partnership', ACTIVE),
+                    relation('out', '', 'partnership', INACTIVE),
                     node('node', label, { id }),
                     relation('in', '', 'changeset', ACTIVE),
                     node('changeset', 'Changeset', { id: view.changeset }),
