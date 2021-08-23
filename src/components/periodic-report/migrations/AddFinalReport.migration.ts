@@ -21,32 +21,38 @@ export class AddFinalReportMigration extends BaseMigration {
       .query()
       .raw(
         `
-          match (u:RootUser),
-                (b:BaseNode)-[:report]->(:${type}Report)
-          with u, collect(distinct b) as baseNodes
-          unwind baseNodes as baseNode
-          call {
-            with baseNode
-            match (baseNode)-[:report]->(rn:${type}Report)-[:end]->(en:Property),
-                  (rn)-[:start]->(sn:Property)
-            with en, sn
-            order by en.value desc, sn.value desc limit 1
-            return sn.value as lastStart, en.value as lastEnd
-          }
-          with u, baseNode, lastStart, lastEnd
-          where not lastStart = lastEnd
-          create
-            (baseNode)-[:report { active: true, createdAt: datetime() }]
-                ->(pr:${type}Report:PeriodicReport:BaseNode { finalReportMigration: true, createdAt: datetime(), id: apoc.create.uuid() }),
-              (pr)-[:type { active: true, createdAt: datetime() }]->(:Property { createdAt: datetime(), value: "${type}" }),
-              (pr)-[:start { active: true, createdAt: datetime() }]->(:Property { createdAt: datetime(), value: date(lastEnd) }),
-              (pr)-[:end { active: true, createdAt: datetime() }]->(:Property { createdAt: datetime(), value: date(lastEnd) }),
-              (pr)-[:receivedDate { active: true, createdAt: datetime() }]->(:Property { createdAt: datetime(), value: null }),
-              (pr)-[:reportFile { active: true, createdAt: datetime() }]->(reportFile:Property { createdAt: datetime(), value: apoc.create.uuid() }),
-              (pr)-[:reportFileNode { active: true } ]->(rfn:BaseFile:BaseNode:File:FileNode{ createdAt: datetime(), id: reportFile.value }),
-                (rfn)-[:createdBy { active: true, createdAt: datetime() }]->(u),
-                (rfn)-[:name { active: true, createdAt: datetime() }]->(:Property { value: toString(lastEnd) }),
-                (rfn)-[:canDelete { active: true, createdAt: datetime() }]->(:Property { value: true })
+          call apoc.periodic.iterate('
+            match (u:RootUser),
+                  (b:BaseNode)-[:report]->(:${type}Report)
+            with u, collect(distinct b) as baseNodes
+            unwind baseNodes as baseNode
+            call {
+              with baseNode
+              match (baseNode)-[:report]->(rn:${type}Report)-[:end]->(en:Property),
+                    (rn)-[:start]->(sn:Property)
+              with en, sn
+              order by en.value desc, sn.value desc limit 1
+              return sn.value as lastStart, en.value as lastEnd
+            }
+            with u, baseNode, lastStart, lastEnd
+            where not lastStart = lastEnd
+            return u, baseNode, lastEnd
+          ', '
+            create
+              (baseNode)-[:report { active: true, createdAt: datetime() }]
+                  ->(pr:${type}Report:PeriodicReport:BaseNode { finalReportMigration: true, createdAt: datetime(), id: apoc.create.uuid() }),
+                (pr)-[:type { active: true, createdAt: datetime() }]->(:Property { createdAt: datetime(), value: "${type}" }),
+                (pr)-[:start { active: true, createdAt: datetime() }]->(:Property { createdAt: datetime(), value: date(lastEnd) }),
+                (pr)-[:end { active: true, createdAt: datetime() }]->(:Property { createdAt: datetime(), value: date(lastEnd) }),
+                (pr)-[:receivedDate { active: true, createdAt: datetime() }]->(:Property { createdAt: datetime(), value: null }),
+                (pr)-[:reportFile { active: true, createdAt: datetime() }]->(reportFile:Property { createdAt: datetime(), value: apoc.create.uuid() }),
+                (pr)-[:reportFileNode { active: true } ]->(rfn:BaseFile:BaseNode:File:FileNode{ createdAt: datetime(), id: reportFile.value }),
+                  (rfn)-[:createdBy { active: true, createdAt: datetime() }]->(u),
+                  (rfn)-[:name { active: true, createdAt: datetime() }]->(:Property { value: toString(lastEnd) }),
+                  (rfn)-[:canDelete { active: true, createdAt: datetime() }]->(:Property { value: true })
+          ', {
+            batchSize: 100
+          })
         `
       )
       .run();
