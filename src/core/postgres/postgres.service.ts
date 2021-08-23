@@ -27,11 +27,8 @@ export class PostgresService {
       const fileOrDirPath = path.join(dirPath, name);
 
       if (fs.lstatSync(fileOrDirPath).isDirectory()) {
-        // this.logger.info('dir: ', { fileOrDirPath });
         await this.executeSQLFiles(fileOrDirPath);
       } else {
-        // load script into db
-        // this.logger.info('file: ', { fileOrDirPath });
         const sql = fs.readFileSync(fileOrDirPath).toString();
         await this.pool.query(sql);
       }
@@ -48,9 +45,7 @@ export class PostgresService {
       '..',
       'src/core/postgres/sql/db_init'
     );
-    // this.logger.info('path', { dbInitPath });
-    const fileExecutionStatus = await this.executeSQLFiles(dbInitPath);
-    // this.logger.info('here', { fileExecutionStatus });
+    await this.executeSQLFiles(dbInitPath);
 
     return 0;
   }
@@ -120,29 +115,33 @@ export class PostgresService {
       ]
     );
     // GRANTS & MEMBERSHIPS
-    const tables = ['locations_data', 'people_data', 'organizations_data'];
-    for (const table_name of tables) {
-      const columns = await this.pool.query(
-        `select column_name from information_schema.columns where table_schema='public' and table_name in ($1)`,
-        [table_name]
-      );
+    const tables = [
+      'locations_data',
+      'people_data',
+      'organizations_data',
+      'users_data',
+    ];
 
-      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+    const columns = await this.pool.query(
+      `select column_name,table_name from information_schema.columns where table_schema='public' and table_name = any($1::text[])`,
+      [tables]
+    );
+
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+    // this.logger.info(schemaTableName);
+    for (const { column_name, table_name } of columns.rows) {
       const schemaTableName = `public.${table_name}`;
-      // this.logger.info(schemaTableName);
-      for (const { column_name } of columns.rows) {
-        await this.pool.query(
-          `call public.create(0, 'public.global_role_column_grants', $1,2,0,0,3,0)`,
-          [
-            this.convertObjectToHstore({
-              global_role: 0,
-              table_name: schemaTableName,
-              column_name,
-              access_level: 'Write',
-            }),
-          ]
-        );
-      }
+      await this.pool.query(
+        `call public.create(0, 'public.global_role_column_grants', $1,2,0,0,3,0)`,
+        [
+          this.convertObjectToHstore({
+            global_role: 0,
+            table_name: schemaTableName,
+            column_name,
+            access_level: 'Write',
+          }),
+        ]
+      );
     }
 
     // PROJECTS
@@ -192,7 +191,6 @@ export class PostgresService {
       ]
     );
 
-    // this.logger.info('people inserted');
     await this.pool.query(
       `insert into public.organizations_data(id,name, sensitivity) values(1,'org1', 'Low')`
     );
@@ -220,7 +218,7 @@ export class PostgresService {
       );
     }
 
-    for (let i = 1; i < 10; i++) {
+    for (let i = 0; i < 10; i++) {
       await this.pool.query(
         `call public.create(0,'public.global_role_memberships',$1, 0,0,0,0,0)`,
         [
@@ -230,9 +228,7 @@ export class PostgresService {
           }),
         ]
       );
-      // this.logger.info('generic create run');
     }
-    // await this.pool.query(
     await this.pool.query(
       `call public.create(0,'public.global_role_memberships',$1, 2,2,0,3,0)`,
       [
@@ -259,10 +255,8 @@ export class PostgresService {
         `refresh materialized view concurrently public.organizations_materialized_view`
       );
     }
-    // await this.pool.query('analyze');
     for (let i = 1; i <= 10; i++) {
       console.log(i);
-      // refreshing mv outside the create fn is much faster for some reason
       await this.pool.query(
         `call public.create(0,'public.locations_data', $1,2,2,1,3,0)`,
         [
@@ -274,10 +268,9 @@ export class PostgresService {
           }),
         ]
       );
-      // await this.pool.query(
-      //   `refresh materialized view concurrently public.locations_materialized_view`
-      // );
+
     }
+    await this.pool.query(`analyze`);
   }
   // async usePool() {
   //   if (!this.pgInitStatus) {
