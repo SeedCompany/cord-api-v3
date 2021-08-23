@@ -189,7 +189,7 @@ describe('Project-Workflow e2e', () => {
       });
       expect(result.estimatedSubmission.value).toBe('2020-01-01');
 
-      expect(result.project.step.value).toBe(ProjectStep.EarlyConversations);
+      expect(result.step.value).toBe(ProjectStep.EarlyConversations);
 
       // TODO: Upload mock UBT file
       // TODO: Upload mock Approval docs
