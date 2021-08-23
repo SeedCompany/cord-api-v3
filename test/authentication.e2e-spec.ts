@@ -5,6 +5,7 @@ import * as faker from 'faker';
 import { isValidId } from '../src/common';
 import { SecuredTimeZone } from '../src/components/timezone';
 import { User } from '../src/components/user';
+import { PostgresService } from '../src/core';
 import {
   createSession,
   createTestApp,
@@ -25,6 +26,8 @@ describe('Authentication e2e', () => {
     app = await createTestApp();
     await createSession(app);
     db = app.get(Connection);
+    // await PostgresService.init();
+    // await PostgresService.loadTestData();
   });
 
   afterAll(async () => {

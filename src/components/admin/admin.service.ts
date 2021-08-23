@@ -34,21 +34,6 @@ export class AdminService implements OnApplicationBootstrap {
     }
   }
 
-  async loadData() {
-    await this.repo.loadData();
-  }
-
-  async fastInserts() {
-    await this.repo.fastInserts();
-  }
-
-  async pgInit() {
-    await this.repo.pgInit();
-  }
-
-  async loadTestData() {
-    await this.repo.loadTestData();
-  }
 
   @Transactional()
   private async setupRootObjects(): Promise<void> {

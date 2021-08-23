@@ -17,11 +17,7 @@ export class AuthenticationRepository {
   constructor(
     private readonly db: DatabaseService,
     private readonly pg: PostgresService
-  ) {
-    // void this.pg.init().then(() => {
-    //   console.log('db init executed');
-    // });
-  }
+  ) {}
 
   async saveSessionToken(token: string) {
     const result = await this.db
@@ -42,12 +38,7 @@ export class AuthenticationRepository {
         }
       )
       .first();
-    // const client = await this.pg.pool.connect();
-    // await client.query(
-    //   `insert into public.tokens(person,token) values($1,$2)`,
-    //   [0, Math.random().toString(36)]
-    // );
-    // client.release();
+
     if (!result) {
       throw new ServerException('Failed to save session token');
     }
@@ -236,11 +227,12 @@ export class AuthenticationRepository {
       .match([node('email', 'EmailAddress', { value: email })])
       .return('email')
       .first();
-    // POSTGRES
-    // const postgresResult = await this.pg.client.query(
-    //   `select email from public.users_data where email = $1`,
-    //   [email]
-    // );
+    const pool = PostgresService.pool;
+    const pgResult = pool.query(
+      `select email from public.users_materialized_view where email = $1 and __person_id = $2`,
+      [email, 0]
+    );
+    console.log(pgResult);
     return !!result;
   }
 
@@ -258,6 +250,17 @@ export class AuthenticationRepository {
         }
       )
       .run();
+    const pool = PostgresService.pool;
+    const pgResult = await pool.query(
+      `call public.create(0,'public.tokens',$1 ,0,0,0,0,0); `,
+      [
+        PostgresService.convertObjectToHstore({
+          email,
+          token,
+        }),
+      ]
+    );
+    console.log(pgResult);
   }
 
   async findEmailToken(token: string) {
@@ -271,11 +274,18 @@ export class AuthenticationRepository {
       ])
       .asResult<EmailToken>()
       .first();
-    // POSTGRES
-    // const postgresResult = await this.pg.client.query(
-    //   `select ud.email, t.token, ud.created_at from public.users_data ud inner join public.tokens t on t.person = ud.person where t.token = $1`,
-    //   [token]
-    // );
+
+    const pool = PostgresService.pool;
+    const pgResult = await pool.query(
+      `
+    with u as(
+    select email, created_at, person from public.users_materialized_view where __person_id = $2
+    ), t as (select token, person from public.tokens where token = $1 )
+    select u.email, t.token, u.created_at from u inner join t using (person)
+    `,
+      [token, 0]
+    );
+    console.log(pgResult);
     return result;
   }
 
