@@ -164,28 +164,42 @@ export class AuthenticationRepository {
   }
 
   async findSessionToken(token: string) {
-    const result = await this.db
-      .query()
-      .match([
-        node('token', 'Token', {
-          active: true,
-          value: token,
-        }),
-      ])
-      .optionalMatch([
-        node('token'),
-        relation('in', '', 'token', { active: true }),
-        node('user', 'User'),
-      ])
-      .return('token, user.id AS userId')
-      .asResult<{ token: string; userId?: ID }>()
-      .first();
+    // const result = await this.db
+    //   .query()
+    //   .match([
+    //     node('token', 'Token', {
+    //       active: true,
+    //       value: token,
+    //     }),
+    //   ])
+    //   .optionalMatch([
+    //     node('token'),
+    //     relation('in', '', 'token', { active: true }),
+    //     node('user', 'User'),
+    //   ])
+    //   .return('token, user.id AS userId')
+    //   .asResult<{ token: string; userId?: ID }>()
+    //   .first();
     // POSTGRES
-    // const postgresResult = await this.pg.client.query(
-    //   `select token,person from public.tokens where token = $1`,
-    //   [token]
-    // );
-    return result;
+    const pool = PostgresService.pool;
+    const tokenRow = await pool.query(
+      `select token,person from public.tokens where token = $1`,
+      [token]
+    );
+    let personNeo4jId: ID | undefined;
+    if (tokenRow.rows[0]?.person) {
+      const personRow = await pool.query(
+        `select neo4j_id from public.people_data where id = $1`,
+        [tokenRow.rows[0].person]
+      );
+
+      if (personRow.rows[0].neo4j_id) {
+        personNeo4jId = personRow.rows[0].neo4j_id;
+      }
+    }
+    const postgresResult = { token, userId: personNeo4jId };
+    console.log(postgresResult);
+    return postgresResult;
   }
 
   async getCurrentPasswordHash(session: Session) {

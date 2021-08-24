@@ -444,6 +444,7 @@ export class AdminRepository {
     anonUserId: string,
     publicSecurityGroupId: string
   ) {
+    //user account you're automatically logged in as until you login 
     await this.db
       .query()
       .merge([

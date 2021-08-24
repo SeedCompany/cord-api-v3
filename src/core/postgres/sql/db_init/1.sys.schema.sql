@@ -291,11 +291,12 @@ create table if not exists sil.table_of_languages (
 
 create table if not exists public.people_data (
     id serial primary key,
+	neo4j_id varchar(32),
     about text,
     created_at timestamp not null default CURRENT_TIMESTAMP,
-    created_by int default 0, -- don't make not null!
+    created_by int default 0,
     modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int, -- don't make not null or give a default!
+    modified_by int, 
     phone varchar(32),
 	picture varchar(255),
     primary_org int,
@@ -394,6 +395,7 @@ create table if not exists public.education_by_person_data (
 
 create table if not exists public.organizations_data (
 	id serial primary key,
+	neo4j_id varchar(32),
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by int not null default 0,
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
@@ -600,9 +602,9 @@ create table if not exists public.project_member_roles_data (
 
 create table if not exists public.tokens (
 	token varchar(512) primary key,
-	person int not null,
+	person int,
 	created_at timestamp not null default CURRENT_TIMESTAMP,
-	foreign key (person) references people_data(id)
+	-- foreign key (person) references people_data(id)
 );
 
 create table if not exists public.sessions (

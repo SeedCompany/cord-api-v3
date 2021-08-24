@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
-import { Pool, PoolClient } from 'pg';
+import { Pool } from 'pg';
 import { ConfigService } from '..';
 import { ILogger, Logger } from '../logger';
 
@@ -60,6 +60,8 @@ export class PostgresService {
   }
 
   static async loadTestData() {
+    //anon user - using email 
+    //root user 
     const genericFnsPath = path.join(
       __dirname,
       '..',
