@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
+import { intersection } from 'lodash';
 import { DateTime } from 'luxon';
 import { Except, Merge } from 'type-fest';
 import {
@@ -33,6 +34,7 @@ import {
   DerivativeScriptureProduct,
   DirectScriptureProduct,
   ProductMethodology as Methodology,
+  MethodologyAvailableSteps,
   OtherProduct,
   Product,
   ProductCompletionDescriptionSuggestionsInput,
@@ -150,11 +152,14 @@ export class ProductRepository extends CommonRepository {
     const Product = input.produces
       ? DerivativeScriptureProduct
       : DirectScriptureProduct;
+
+    const availableSteps = MethodologyAvailableSteps[input.methodology!];
+    const steps = intersection(availableSteps, input.steps);
     const initialProps = {
       mediums: input.mediums,
       purposes: input.purposes,
       methodology: input.methodology,
-      steps: input.steps,
+      steps,
       describeCompletion: input.describeCompletion,
       isOverriding: !!input.scriptureReferencesOverride,
       canDelete: true,
@@ -209,11 +214,13 @@ export class ProductRepository extends CommonRepository {
   }
 
   async createOther(input: CreateOtherProduct) {
+    const availableSteps = MethodologyAvailableSteps[input.methodology!];
+    const steps = intersection(availableSteps, input.steps);
     const initialProps = {
       mediums: input.mediums,
       purposes: input.purposes,
       methodology: input.methodology,
-      steps: input.steps,
+      steps,
       describeCompletion: input.describeCompletion,
       title: input.title,
       description: input.description,
