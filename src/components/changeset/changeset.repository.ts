@@ -4,6 +4,7 @@ import { ID, NotFoundException, Session } from '../../common';
 import { DtoRepository } from '../../core';
 import { ACTIVE } from '../../core/database/query';
 import { BaseNode } from '../../core/database/results';
+import { ProjectChangeRequestStatus } from '../project-change-request/dto';
 import { Changeset, ChangesetDiff } from './dto';
 
 @Injectable()
@@ -48,5 +49,23 @@ export class ChangesetRepository extends DtoRepository(Changeset) {
       throw new NotFoundException('Could not find changeset');
     }
     return result;
+  }
+
+  async isApproved(id: ID, _session: Session) {
+    const result = await this.db
+      .query()
+      .match([
+        node('changeset', 'Changeset', { id }),
+        relation('out', '', 'status', ACTIVE),
+        node('status', 'Property'),
+      ])
+      .where({
+        status: {
+          value: ProjectChangeRequestStatus.Approved,
+        },
+      })
+      .return('changeset.id')
+      .first();
+    return !!result;
   }
 }
