@@ -56,40 +56,42 @@ export const matchProjectScopedRoles =
     outputVar?: Output;
   }) =>
   <R>(query: Query<R>) =>
-    query.comment`matchProjectScopedRoles()`.subQuery(projectVar, (sub) =>
-      sub
-        .match([
-          [
-            node(projectVar),
-            relation('out', '', 'member'),
-            node('projectMember'),
-            relation('out', '', 'user'),
-            session instanceof Variable
-              ? node(session.name)
-              : node('user', 'User', {
-                  id: isIdLike(session) ? session : session.userId,
-                }),
-          ],
-          [
-            node('projectMember'),
-            relation('out', '', 'roles', ACTIVE),
-            node('rolesProp', 'Property'),
-          ],
-        ])
-        .return<{ [K in Output]: ScopedRole[] }>(
-          reduce(
-            'scopedRoles',
-            [],
-            apoc.coll.flatten(collect('rolesProp.value')),
-            'role',
-            listConcat('scopedRoles', [`"project:" + role`])
-          ).as(outputVar)
-        )
-        .union()
-        .with('project')
-        .with('project')
-        .raw('WHERE project IS NULL')
-        .return('[] as scopedRoles')
+    query.comment`matchProjectScopedRoles()`.subQuery(
+      [projectVar, ...(session instanceof Variable ? [session.name] : [])],
+      (sub) =>
+        sub
+          .match([
+            [
+              node(projectVar),
+              relation('out', '', 'member'),
+              node('projectMember'),
+              relation('out', '', 'user'),
+              session instanceof Variable
+                ? node(session.name)
+                : node('user', 'User', {
+                    id: isIdLike(session) ? session : session.userId,
+                  }),
+            ],
+            [
+              node('projectMember'),
+              relation('out', '', 'roles', ACTIVE),
+              node('rolesProp', 'Property'),
+            ],
+          ])
+          .return<{ [K in Output]: ScopedRole[] }>(
+            reduce(
+              'scopedRoles',
+              [],
+              apoc.coll.flatten(collect('rolesProp.value')),
+              'role',
+              listConcat('scopedRoles', [`"project:" + role`])
+            ).as(outputVar)
+          )
+          .union()
+          .with('project')
+          .with('project')
+          .raw('WHERE project IS NULL')
+          .return('[] as scopedRoles')
     );
 
 export const matchProjectSens =
