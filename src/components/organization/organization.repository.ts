@@ -105,7 +105,7 @@ export class OrganizationRepository extends DtoRepository(Organization) {
             .union()
             .with('projList')
             .with('projList')
-            .raw('WHERE apoc.coll.isEqualCollection(projList, [])')
+            .raw('WHERE size(projList) = 0')
             .return(`'High' as sensitivity`)
         )
         .apply(matchProps())
