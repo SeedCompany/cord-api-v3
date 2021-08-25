@@ -1,7 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { ID, Session } from '../../common';
-import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
+import {
+  ConfigService,
+  DatabaseService,
+  ILogger,
+  Logger,
+  PostgresService,
+} from '../../core';
 import { InternalRole, Role } from './dto';
 import { Powers } from './dto/powers';
 
@@ -98,6 +104,14 @@ export class AuthorizationRepository {
       .raw(`RETURN collect(role.value) as roles`)
       .asResult<{ roles: Role[] }>()
       .first();
+    const pool = PostgresService.pool;
+
+    const rolesOfPerson = await pool.query(
+      `select gr.name from public.global_role_memberships grm inner join public.global_roles_data gr on gr.id = grm.global_role 
+      where grm.person = (select id from people_data where neo4j_id = $1)`,
+      [id]
+    );
+    console.log(rolesOfPerson);
     return result?.roles ?? [];
   }
 

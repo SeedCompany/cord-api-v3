@@ -603,7 +603,7 @@ create table if not exists public.project_member_roles_data (
 create table if not exists public.tokens (
 	token varchar(512) primary key,
 	person int,
-	created_at timestamp not null default CURRENT_TIMESTAMP,
+	created_at timestamp not null default CURRENT_TIMESTAMP
 	-- foreign key (person) references people_data(id)
 );
 

@@ -1,6 +1,7 @@
 -- NOTE: using pg_catalog instead of information_schema might speed up the function
 
 -- NOTE: if function needs to be extended for multi-dimensional array datatypes for columns - https://stackoverflow.com/questions/39436189/how-to-get-the-dimensionality-of-an-array-column
+-- _data -> _materialized_view
 
 create or replace function public.create_materialized_views(p_schema_name text)
 returns int

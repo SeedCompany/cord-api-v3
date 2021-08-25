@@ -46,6 +46,7 @@ export class PostgresService {
       'src/core/postgres/sql/db_init'
     );
     await this.executeSQLFiles(dbInitPath);
+     
 
     return 0;
   }

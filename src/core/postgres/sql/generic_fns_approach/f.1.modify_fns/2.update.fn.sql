@@ -41,5 +41,5 @@ begin
         end if;
 
     end loop;
-    return 0;
+    return;
 end; $$;

@@ -1,6 +1,9 @@
 -- NOTE: using pg_catalog instead of information_schema might speed up the function
 
 -- NOTE: if function needs to be extended for multi-dimensional array datatypes for columns - https://stackoverflow.com/questions/39436189/how-to-get-the-dimensionality-of-an-array-column
+-- _data people_data -> people_history, people_security 
+-- locations_data -> id,name, address, phone
+-- locations_security -> __id, __person_id, _id, _name, _address, _phone
 
 
 create or replace function public.create_security_history_tables(p_schema_name text)

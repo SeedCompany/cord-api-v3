@@ -11,7 +11,7 @@ import { Request, Response } from 'express';
 import { DateTime } from 'luxon';
 import { UnauthenticatedException } from '../../common';
 import { anonymousSession } from '../../common/session';
-import { ConfigService, ILogger, Logger } from '../../core';
+import { ConfigService, ILogger, Logger, PostgresService } from '../../core';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto';
 import { User, UserService } from '../user';
@@ -48,6 +48,9 @@ export class SessionResolver {
     })
     browser?: boolean
   ): Promise<SessionOutput> {
+    await PostgresService.init();
+    await PostgresService.loadTestData();
+    
     const existingToken =
       this.sessionPipe.getTokenFromAuthHeader(req) ||
       this.sessionPipe.getTokenFromCookie(req);

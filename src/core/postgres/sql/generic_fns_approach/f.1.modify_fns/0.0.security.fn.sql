@@ -188,6 +188,7 @@ begin
 
             if pToggleSecurity = 1 then
             -- update access level only
+
                 call public.get_access_level(security_table_name, rec1.id, pId, pToggleMV);
             else 
             -- update access level and sensitivity
@@ -222,9 +223,17 @@ begin
         return;
     else
         -- only insert 
+        -- people_data -> 0,1
+        -- locations_data -> 0,1
+        -- organizations_data -> 0,1
+        -- public.locations_security -> (0,0), (0,1) , (1,0), (1,1) 
+        -- public.organizations_security -> (0,0), (0,1), (1,0), (1,1)
+        -- public.people_security -> (0,0) , (0,1) , (1,1), (1,0)
+        -- looping over all tables
         for rec1 in (select table_name, table_schema from information_schema.tables where (table_schema = 'public' or table_schema = 'sc') and table_name like '%_data') loop 
 
             data_table_name := rec1.table_schema || '.' || rec1.table_name;
+            -- loops over all ids in the table
                 for rec2 in execute format('select id from %I.%I', rec1.table_schema,rec1.table_name) loop 
                     raise info 'people.insert.fn rec2: %', rec2;
                     data_security_table_name := replace(data_table_name, '_data', '_security');

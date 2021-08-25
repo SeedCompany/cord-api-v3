@@ -1,5 +1,4 @@
-create or replace function public.delete(pPersonId int, pId int, pTableName text)
-returns int 
+create or replace procedure public.delete(pPersonId int, pId int, pTableName text)
 language plpgsql
 as $$ 
 declare
@@ -30,10 +29,10 @@ begin
     execute format('select __is_cleared,_id  from ' || security_table_name || ' where __id = ' || pId || ' and __person_id = '|| pPersonId) into table_is_cleared,table_id; 
     if table_is_cleared is false or table_id is null or table_id != 'Write' then 
         raise notice 'don''t have write access to _id column';
-        return 2;
+        return;
     end if;
    
 -- delete row! 
     execute format('delete from '|| pTableName || ' where id = ' || pId);
-    return 0;
+    return;
 end; $$;
