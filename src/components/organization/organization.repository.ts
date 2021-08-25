@@ -1,13 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
-import { ID, NotFoundException, Session, UnsecuredDto } from '../../common';
+import {
+  ID,
+  isIdLike,
+  NotFoundException,
+  Session,
+  UnsecuredDto,
+} from '../../common';
 import { DtoRepository, matchRequestingUser } from '../../core';
 import {
   ACTIVE,
   createNode,
-  matchPropsAndProjectSensAndScopedRoles,
+  matchProjectScopedRoles,
+  matchProjectSens,
+  matchProps,
+  merge,
   paginate,
   permissionsOfNode,
+  rankSens,
   requestingUser,
   sorting,
 } from '../../core/database/query';
@@ -68,8 +78,42 @@ export class OrganizationRepository extends DtoRepository(Organization) {
           relation('out', 'organization'),
           node('node'),
         ])
-        .apply(matchPropsAndProjectSensAndScopedRoles(session))
-        .return<{ dto: UnsecuredDto<Organization> }>('props as dto');
+        .apply(matchProjectScopedRoles({ session }))
+        .with([
+          'node',
+          'collect(project) as projList',
+          'apoc.coll.flatten(collect(distinct scopedRoles)) as scopedRoles',
+        ])
+        .subQuery((sub) =>
+          sub
+            .with('projList')
+            .raw('UNWIND projList as project')
+            .match([
+              node('project'),
+              relation('out', '', 'member'),
+              node('projectMember'),
+              relation('out', '', 'user'),
+              node('user', 'User', {
+                id: isIdLike(session) ? session : session.userId,
+              }),
+            ])
+            .apply(matchProjectSens())
+            .with('sensitivity')
+            .orderBy(rankSens('sensitivity'), 'ASC')
+            .raw('LIMIT 1')
+            .return('sensitivity')
+            .union()
+            .with('projList')
+            .with('projList')
+            .raw('WHERE apoc.coll.isEqualCollection(projList, [])')
+            .return(`'High' as sensitivity`)
+        )
+        .apply(matchProps())
+        .return<{ dto: UnsecuredDto<Organization> }>(
+          merge('props', {
+            scope: 'scopedRoles',
+          }).as('dto')
+        );
   }
 
   async list({ filter, ...input }: OrganizationListInput, session: Session) {

@@ -85,6 +85,10 @@ export const matchProjectScopedRoles =
             listConcat('scopedRoles', [`"project:" + role`])
           ).as(outputVar)
         )
+        .union()
+        .matchNode('project')
+        .raw('WHERE project IS NULL')
+        .return('[] as scopedRoles')
     );
 
 export const matchProjectSens =

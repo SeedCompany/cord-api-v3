@@ -3,6 +3,7 @@ import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   ID,
+  isIdLike,
   NotFoundException,
   ServerException,
   Session,
@@ -15,7 +16,7 @@ import {
   createRelationships,
   matchProjectScopedRoles,
   matchProjectSens,
-  matchPropsAndProjectSensAndScopedRoles,
+  matchProps,
   merge,
   paginate,
   rankSens,
@@ -95,7 +96,38 @@ export class PartnerRepository extends DtoRepository(Partner) {
           relation('out', '', 'partner'),
           node('node'),
         ])
-        .apply(matchPropsAndProjectSensAndScopedRoles(session))
+        .apply(matchProjectScopedRoles({ session }))
+        .with([
+          'node',
+          'collect(project) as projList',
+          'apoc.coll.flatten(collect(distinct scopedRoles)) as scopedRoles',
+        ])
+        .subQuery((sub) =>
+          sub
+            .with('projList')
+            .raw('UNWIND projList as project')
+            // TODO: have this match from line 92 so we don't have to match this twice
+            .match([
+              node('project'),
+              relation('out', '', 'member'),
+              node('projectMember'),
+              relation('out', '', 'user'),
+              node('user', 'User', {
+                id: isIdLike(session) ? session : session.userId,
+              }),
+            ])
+            .apply(matchProjectSens())
+            .with('sensitivity')
+            .orderBy(rankSens('sensitivity'), 'ASC')
+            .raw('LIMIT 1')
+            .return('sensitivity')
+            .union()
+            .with('projList')
+            .with('projList')
+            .raw('WHERE apoc.coll.isEqualCollection(projList, [])')
+            .return(`'High' as sensitivity`)
+        )
+        .apply(matchProps())
         .optionalMatch([
           node('node'),
           relation('out', '', 'organization', ACTIVE),
@@ -108,8 +140,10 @@ export class PartnerRepository extends DtoRepository(Partner) {
         ])
         .return<{ dto: UnsecuredDto<Partner> }>(
           merge('props', {
+            sensitivity: 'sensitivity',
             organization: 'organization.id',
             pointOfContact: 'pointOfContact.id',
+            scope: 'scopedRoles',
           }).as('dto')
         );
   }
