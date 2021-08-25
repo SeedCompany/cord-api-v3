@@ -21,7 +21,9 @@ export class ChangesetResolver {
   ): Promise<ChangesetDiff> {
     const diff = await this.repo.difference(changeset.id, session);
     const lookup = (node: BaseNode) =>
-      this.resources.lookupByBaseNode(node, session, changeset.id);
+      this.resources.lookupByBaseNode(node, session, {
+        changeset: changeset.id,
+      });
     const [added, removed, changed] = await Promise.all([
       Promise.all(diff.added.map(lookup)),
       Promise.all(diff.removed.map(lookup)),

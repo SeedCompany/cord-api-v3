@@ -3,6 +3,7 @@ import {
   DuplicateException,
   ID,
   NotFoundException,
+  ObjectView,
   ServerException,
   Session,
   UnauthorizedException,
@@ -87,7 +88,11 @@ export class FundingAccountService {
   }
 
   @HandleIdLookup(FundingAccount)
-  async readOne(id: ID, session: Session): Promise<FundingAccount> {
+  async readOne(
+    id: ID,
+    session: Session,
+    _view?: ObjectView
+  ): Promise<FundingAccount> {
     this.logger.info('readOne', { id, userId: session.userId });
 
     if (!id) {

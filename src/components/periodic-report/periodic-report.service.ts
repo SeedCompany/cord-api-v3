@@ -4,6 +4,7 @@ import {
   CalendarDate,
   ID,
   NotFoundException,
+  ObjectView,
   ServerException,
   Session,
   UnsecuredDto,
@@ -108,7 +109,11 @@ export class PeriodicReportService {
   }
 
   @HandleIdLookup([FinancialReport, NarrativeReport, ProgressReport])
-  async readOne(id: ID, session: Session): Promise<PeriodicReport> {
+  async readOne(
+    id: ID,
+    session: Session,
+    _view?: ObjectView
+  ): Promise<PeriodicReport> {
     this.logger.debug(`read one`, {
       id,
       userId: session.userId,

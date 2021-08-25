@@ -4,6 +4,7 @@ import {
   ID,
   InputException,
   NotFoundException,
+  ObjectView,
   ServerException,
   Session,
   UnauthorizedException,
@@ -82,7 +83,11 @@ export class PartnerService {
   }
 
   @HandleIdLookup(Partner)
-  async readOne(id: ID, session: Session): Promise<Partner> {
+  async readOne(
+    id: ID,
+    session: Session,
+    _view?: ObjectView
+  ): Promise<Partner> {
     this.logger.debug(`Read Partner by Partner Id`, {
       id: id,
       userId: session.userId,

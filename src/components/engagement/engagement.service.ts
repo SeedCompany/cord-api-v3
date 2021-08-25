@@ -4,11 +4,13 @@ import {
   ID,
   InputException,
   NotFoundException,
+  ObjectView,
   SecuredList,
   SecuredResource,
   ServerException,
   Session,
   UnauthorizedException,
+  viewOfChangeset,
 } from '../../common';
 import {
   ConfigService,
@@ -122,7 +124,7 @@ export class EngagementService {
     const languageEngagement = (await this.readOne(
       id,
       session,
-      changeset
+      viewOfChangeset(changeset)
     )) as LanguageEngagement;
     if (changeset) {
       return languageEngagement;
@@ -203,7 +205,7 @@ export class EngagementService {
     const internshipEngagement = (await this.readOne(
       id,
       session,
-      changeset
+      viewOfChangeset(changeset)
     )) as InternshipEngagement;
     if (changeset) {
       return internshipEngagement;
@@ -236,14 +238,14 @@ export class EngagementService {
   async readOne(
     id: ID,
     session: Session,
-    changeset?: ID
+    view?: ObjectView
   ): Promise<LanguageEngagement | InternshipEngagement> {
     this.logger.debug('readOne', { id, userId: session.userId });
 
     if (!id) {
       throw new NotFoundException('no id given', 'engagement.id');
     }
-    const result = await this.repo.readOne(id, session, changeset);
+    const result = await this.repo.readOne(id, session, view);
 
     const isLanguageEngagement = result.__typename === 'LanguageEngagement';
 
@@ -297,6 +299,7 @@ export class EngagementService {
     session: Session,
     changeset?: ID
   ): Promise<LanguageEngagement> {
+    const view: ObjectView = viewOfChangeset(changeset);
     if (input.firstScripture) {
       await this.verifyFirstScripture({ engagementId: input.id });
     }
@@ -313,7 +316,7 @@ export class EngagementService {
     const object = (await this.readOne(
       input.id,
       session,
-      changeset
+      view
     )) as LanguageEngagement;
 
     const changes = this.repo.getActualLanguageChanges(object, input);
@@ -349,7 +352,7 @@ export class EngagementService {
     const updated = (await this.readOne(
       input.id,
       session,
-      changeset
+      view
     )) as LanguageEngagement;
 
     if (changeset) {
@@ -372,6 +375,7 @@ export class EngagementService {
     session: Session,
     changeset?: ID
   ): Promise<InternshipEngagement> {
+    const view: ObjectView = viewOfChangeset(changeset);
     if (input.status) {
       await this.engagementRules.verifyStatusChange(
         input.id,
@@ -384,7 +388,7 @@ export class EngagementService {
     const object = (await this.readOne(
       input.id,
       session,
-      changeset
+      view
     )) as InternshipEngagement;
 
     const changes = this.repo.getActualInternshipChanges(object, input);
@@ -482,11 +486,11 @@ export class EngagementService {
   async list(
     input: EngagementListInput,
     session: Session,
-    changeset?: ID
+    view?: ObjectView
   ): Promise<EngagementListOutput> {
-    const results = await this.repo.list(input, session, changeset);
+    const results = await this.repo.list(input, session, view?.changeset);
     return await mapListResults(results, (id) =>
-      this.readOne(id, session, changeset)
+      this.readOne(id, session, view)
     );
   }
 

@@ -20,7 +20,13 @@ export const matchPropsAndProjectSensAndScopedRoles =
       matchPropsAndProjectSensAndScopedRoles()
     `.subQuery(['node', 'project'], (sub) =>
       sub
-        .apply(matchProps(propsOptions))
+        .apply(
+          matchProps(
+            propsOptions?.view?.deleted
+              ? propsOptions
+              : { ...propsOptions, view: { active: true } }
+          )
+        )
         .apply((q) =>
           !session ? q : q.apply(matchProjectScopedRoles({ session }))
         )

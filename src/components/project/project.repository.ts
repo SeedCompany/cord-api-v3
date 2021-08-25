@@ -371,7 +371,7 @@ export class ProjectRepository extends CommonRepository {
         relation('out', '', 'changeset', ACTIVE),
         node('changeset', 'Changeset', { id: changeset }),
       ])
-      .apply(matchProps({ changeset, optional: true }))
+      .apply(matchProps({ view: { changeset }, optional: true }))
       .return<{
         props: Partial<DbPropsOfDto<Project>> & {
           id: ID;

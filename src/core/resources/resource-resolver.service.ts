@@ -3,7 +3,14 @@ import { Injectable, SetMetadata } from '@nestjs/common';
 import { GraphQLSchemaHost } from '@nestjs/graphql';
 import { isObjectType } from 'graphql';
 import { ValueOf } from 'type-fest';
-import { ID, many, Many, ServerException, Session } from '../../common';
+import {
+  ID,
+  many,
+  Many,
+  ObjectView,
+  ServerException,
+  Session,
+} from '../../common';
 import { ResourceMap } from '../../components/authorization/model/resource-map';
 import { BaseNode } from '../database/results';
 import { ILogger, Logger } from '../logger';
@@ -53,13 +60,8 @@ export class ResourceResolver {
   /**
    * Lookup a resource from a Neo4j BaseNode.
    */
-  async lookupByBaseNode(node: BaseNode, session: Session, changeset?: ID) {
-    return await this.lookup(
-      node.labels,
-      node.properties.id,
-      session,
-      changeset
-    );
+  async lookupByBaseNode(node: BaseNode, session: Session, view?: ObjectView) {
+    return await this.lookup(node.labels, node.properties.id, session, view);
   }
 
   /**
@@ -71,25 +73,25 @@ export class ResourceResolver {
     type: TResource,
     id: ID,
     session: Session,
-    changeset?: ID
+    view?: ObjectView
   ): Promise<TResource['prototype']>;
   async lookup<TResourceName extends keyof ResourceMap>(
     type: TResourceName,
     id: ID,
     session: Session,
-    changeset?: ID
+    view?: ObjectView
   ): Promise<ResourceMap[TResourceName]['prototype']>;
   async lookup(
     possibleTypes: Many<string | SomeResource>,
     id: ID,
     session: Session,
-    changeset?: ID
+    view?: ObjectView
   ): Promise<SomeResource>;
   async lookup(
     possibleTypes: Many<string | SomeResource>,
     id: ID,
     session: Session,
-    changeset?: ID
+    view?: ObjectView
   ): Promise<SomeResource> {
     const type = this.resolveType(possibleTypes);
     const discovered = await this.discover.providerMethodsWithMetaAtKey<Shape>(
@@ -107,7 +109,7 @@ export class ResourceResolver {
       method.parentClass.instance,
       id,
       session,
-      changeset
+      view
     );
     return {
       __typename: type,

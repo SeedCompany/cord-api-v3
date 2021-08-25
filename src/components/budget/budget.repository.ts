@@ -2,10 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import {
   ID,
+  labelForView,
   NotFoundException,
+  ObjectView,
   ServerException,
   Session,
   UnsecuredDto,
+  viewOfChangeset,
 } from '../../common';
 import {
   DatabaseService,
@@ -83,16 +86,17 @@ export class BudgetRepository extends DtoRepository(Budget) {
     return result.id;
   }
 
-  async readOne(id: ID, session: Session, changeset?: ID) {
+  async readOne(id: ID, session: Session, view?: ObjectView) {
+    const label = labelForView('Budget', view);
     const result = await this.db
       .query()
       .match([
         node('project', 'Project'),
         relation('out', '', 'budget', ACTIVE),
-        node('node', 'Budget', { id }),
+        node('node', label, { id }),
       ])
-      .apply(matchPropsAndProjectSensAndScopedRoles(session))
-      .apply(matchChangesetAndChangedProps(changeset))
+      .apply(matchPropsAndProjectSensAndScopedRoles(session, { view }))
+      .apply(matchChangesetAndChangedProps(view?.changeset))
       .return<{ dto: UnsecuredDto<Budget> }>(
         merge('props', 'changedProps', {
           scope: 'scopedRoles',
@@ -209,14 +213,15 @@ export class BudgetRepository extends DtoRepository(Budget) {
   }
 
   async listRecordsForSync(projectId: ID, session: Session, changeset?: ID) {
+    const view: ObjectView = viewOfChangeset(changeset);
     const result = await this.db
       .query()
       .apply(this.currentBudgetForProject(projectId, changeset))
       .subQuery((sub) =>
         sub
           .with('project, budget')
-          .apply(this.records.recordsOfBudget({ changeset }))
-          .apply(this.records.hydrate({ session, changeset }))
+          .apply(this.records.recordsOfBudget({ view }))
+          .apply(this.records.hydrate({ session, view }))
           .return('collect(dto) as records')
       )
       .return<
