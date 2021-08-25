@@ -153,8 +153,9 @@ export class ProductRepository extends CommonRepository {
       ? DerivativeScriptureProduct
       : DirectScriptureProduct;
 
-    const availableSteps = MethodologyAvailableSteps[input.methodology!];
-    const steps = intersection(availableSteps, input.steps);
+    const steps = input.methodology
+      ? intersection(MethodologyAvailableSteps[input.methodology], input.steps)
+      : [];
     const initialProps = {
       mediums: input.mediums,
       purposes: input.purposes,
@@ -214,8 +215,9 @@ export class ProductRepository extends CommonRepository {
   }
 
   async createOther(input: CreateOtherProduct) {
-    const availableSteps = MethodologyAvailableSteps[input.methodology!];
-    const steps = intersection(availableSteps, input.steps);
+    const steps = input.methodology
+      ? intersection(MethodologyAvailableSteps[input.methodology], input.steps)
+      : [];
     const initialProps = {
       mediums: input.mediums,
       purposes: input.purposes,
