@@ -86,7 +86,8 @@ export const matchProjectScopedRoles =
           ).as(outputVar)
         )
         .union()
-        .matchNode('project')
+        .with('project')
+        .with('project')
         .raw('WHERE project IS NULL')
         .return('[] as scopedRoles')
     );
