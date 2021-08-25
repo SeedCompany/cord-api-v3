@@ -267,6 +267,7 @@ export const LeadFinancialAnalystGlobal = new DbRole({
     }),
     new DbBaseNodeGrant<DbPartner>({
       __className: 'DbPartner',
+      canList: true,
       properties: [
         { propertyName: 'organization', permission: { read, write, }, },
         { propertyName: 'pointOfContact', permission: { read, write, }, },

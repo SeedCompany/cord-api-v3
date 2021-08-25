@@ -1,12 +1,23 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
-import { ID, NotFoundException, Session } from '../../common';
+import { node, Query, relation } from 'cypher-query-builder';
+import {
+  ID,
+  isIdLike,
+  NotFoundException,
+  Session,
+  UnsecuredDto,
+} from '../../common';
 import { DtoRepository, matchRequestingUser } from '../../core';
 import {
   ACTIVE,
   createNode,
+  matchProjectScopedRoles,
+  matchProjectSens,
+  matchProps,
+  merge,
   paginate,
   permissionsOfNode,
+  rankSens,
   requestingUser,
   sorting,
 } from '../../core/database/query';
@@ -43,7 +54,7 @@ export class OrganizationRepository extends DtoRepository(Organization) {
       .query()
       .apply(matchRequestingUser(session))
       .match([node('node', 'Organization', { id: orgId })])
-      .apply(this.hydrate());
+      .apply(this.hydrate(session));
 
     const result = await query.first();
     if (!result) {
@@ -53,6 +64,56 @@ export class OrganizationRepository extends DtoRepository(Organization) {
       );
     }
     return result.dto;
+  }
+
+  protected hydrate(session: Session) {
+    return (query: Query) =>
+      query
+        .optionalMatch([
+          node('project', 'Project'),
+          relation('out', '', 'partnership'),
+          node('', 'Partnership'),
+          relation('out', '', 'partner'),
+          node('', 'Partner'),
+          relation('out', 'organization'),
+          node('node'),
+        ])
+        .apply(matchProjectScopedRoles({ session }))
+        .with([
+          'node',
+          'collect(project) as projList',
+          'keys(apoc.coll.frequenciesAsMap(apoc.coll.flatten(collect(scopedRoles)))) as scopedRoles',
+        ])
+        .subQuery((sub) =>
+          sub
+            .with('projList')
+            .raw('UNWIND projList as project')
+            .match([
+              node('project'),
+              relation('out', '', 'member'),
+              node('projectMember'),
+              relation('out', '', 'user'),
+              node('user', 'User', {
+                id: isIdLike(session) ? session : session.userId,
+              }),
+            ])
+            .apply(matchProjectSens())
+            .with('sensitivity')
+            .orderBy(rankSens('sensitivity'), 'ASC')
+            .raw('LIMIT 1')
+            .return('sensitivity')
+            .union()
+            .with('projList')
+            .with('projList')
+            .raw('WHERE size(projList) = 0')
+            .return(`'High' as sensitivity`)
+        )
+        .apply(matchProps())
+        .return<{ dto: UnsecuredDto<Organization> }>(
+          merge('props', {
+            scope: 'scopedRoles',
+          }).as('dto')
+        );
   }
 
   async list({ filter, ...input }: OrganizationListInput, session: Session) {
@@ -69,7 +130,7 @@ export class OrganizationRepository extends DtoRepository(Organization) {
           : []),
       ])
       .apply(sorting(Organization, input))
-      .apply(paginate(input))
+      .apply(paginate(input, this.hydrate(session)))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }

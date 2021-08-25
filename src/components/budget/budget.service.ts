@@ -175,7 +175,6 @@ export class BudgetService {
     const perms = await this.authorizationService.getPermissions({
       resource: Budget,
       sessionOrUserId: session,
-      otherRoles: result.scope,
       dto: result as ResourceShape<Budget>['prototype'],
     });
 
@@ -235,8 +234,7 @@ export class BudgetService {
     const securedProps = await this.authorizationService.secureProperties(
       BudgetRecord,
       result,
-      session,
-      result.scope
+      session
     );
 
     return {

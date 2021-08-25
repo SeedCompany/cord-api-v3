@@ -93,8 +93,7 @@ export class ProjectChangeRequestService {
     const securedProps = await this.authorizationService.secureProperties(
       ProjectChangeRequest,
       dto,
-      session,
-      dto.scope
+      session
     );
     return {
       ...dto,

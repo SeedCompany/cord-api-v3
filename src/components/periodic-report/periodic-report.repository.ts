@@ -16,7 +16,6 @@ import {
   createRelationships,
   deleteBaseNode,
   matchPropsAndProjectSensAndScopedRoles,
-  merge,
   paginate,
   sorting,
   Variable,
@@ -234,8 +233,6 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
             .return('project')
         )
         .apply(matchPropsAndProjectSensAndScopedRoles(session))
-        .return<{ dto: UnsecuredDto<PeriodicReport> }>(
-          merge('props', { scope: 'scopedRoles' }).as('dto')
-        );
+        .return<{ dto: UnsecuredDto<PeriodicReport> }>('props as dto');
   }
 }

@@ -111,7 +111,6 @@ export class ProductRepository extends CommonRepository {
             'props',
             {
               engagement: 'engagement.id',
-              scope: 'scopedRoles',
               produces: 'produces',
             }
           ).as('dto')

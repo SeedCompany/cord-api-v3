@@ -257,6 +257,7 @@ export const Leadership = new DbRole({
     }),
     new DbBaseNodeGrant<DbPartner>({
       __className: 'DbPartner',
+      canList: true,
       properties: [
         { propertyName: 'organization', permission: { read, }, },
         { propertyName: 'pointOfContact', permission: { read, }, },

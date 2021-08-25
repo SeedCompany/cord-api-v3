@@ -67,21 +67,16 @@ export class CeremonyService {
       throw new InputException('No ceremony id to search for', 'ceremony.id');
     }
 
-    const result = await this.ceremonyRepo.readOne(id, session);
-
-    if (!result) {
-      throw new NotFoundException('Could not find ceremony', 'ceremony.id');
-    }
+    const dto = await this.ceremonyRepo.readOne(id, session);
 
     const securedProps = await this.authorizationService.secureProperties(
       Ceremony,
-      result.props,
-      session,
-      result.scopedRoles
+      dto,
+      session
     );
 
     return {
-      ...result.props,
+      ...dto,
       ...securedProps,
       canDelete: await this.ceremonyRepo.checkDeletePermission(id, session),
     };

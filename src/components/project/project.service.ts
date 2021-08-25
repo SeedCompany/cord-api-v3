@@ -240,8 +240,7 @@ export class ProjectService {
     const securedProps = await this.authorizationService.secureProperties(
       IProject,
       project,
-      sessionOrUserId,
-      project.scope
+      sessionOrUserId
     );
     return {
       ...project,

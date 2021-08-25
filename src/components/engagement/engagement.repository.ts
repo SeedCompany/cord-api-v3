@@ -155,7 +155,6 @@ export class EngagementRepository extends CommonRepository {
             'props.endDateOverride',
             'mouEnd.value'
           ),
-          scope: 'scopedRoles',
           changeset: 'changeset.id',
         }).as('dto')
       );
