@@ -100,7 +100,7 @@ export class PartnerRepository extends DtoRepository(Partner) {
         .with([
           'node',
           'collect(project) as projList',
-          'apoc.coll.flatten(collect(distinct scopedRoles)) as scopedRoles',
+          'keys(apoc.coll.frequenciesAsMap(apoc.coll.flatten(collect(scopedRoles)))) as scopedRoles',
         ])
         .subQuery((sub) =>
           sub
