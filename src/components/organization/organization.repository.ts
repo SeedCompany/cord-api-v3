@@ -130,7 +130,7 @@ export class OrganizationRepository extends DtoRepository(Organization) {
           : []),
       ])
       .apply(sorting(Organization, input))
-      .apply(paginate(input))
+      .apply(paginate(input, this.hydrate(session)))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }

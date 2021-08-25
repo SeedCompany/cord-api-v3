@@ -188,7 +188,7 @@ export class PartnerService {
       ? undefined
       : await this.authorizationService.getListRoleSensitivityMapping(Partner);
     const results = await this.repo.list(input, session, limited);
-    return await mapListResults(results, (id) => this.readOne(id, session));
+    return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 
   protected verifyFinancialReportingType(

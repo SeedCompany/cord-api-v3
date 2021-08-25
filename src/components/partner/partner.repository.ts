@@ -248,7 +248,7 @@ export class PartnerRepository extends DtoRepository(Partner) {
               .return<{ sortValue: string }>('prop.value as sortValue'),
         })
       )
-      .apply(paginate(input))
+      .apply(paginate(input, this.hydrate(session)))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }
