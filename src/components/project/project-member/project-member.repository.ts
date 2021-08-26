@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { Node, node, relation } from 'cypher-query-builder';
+import { Node, node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { CreateProjectMember, ProjectMember, ProjectMemberListInput } from '.';
-import { ID, Session, UnsecuredDto } from '../../../common';
+import { ID, NotFoundException, Session, UnsecuredDto } from '../../../common';
 import { DtoRepository, property } from '../../../core';
 import {
   ACTIVE,
+  matchProps,
   matchPropsAndProjectSensAndScopedRoles,
+  merge,
   paginate,
   requestingUser,
   sorting,
@@ -85,15 +87,35 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
         node('project', 'Project'),
         relation('out', '', 'member', ACTIVE),
         node('node', 'ProjectMember', { id }),
-        relation('out', '', 'user'),
-        node('user', 'User'),
       ])
-      .apply(matchPropsAndProjectSensAndScopedRoles(session))
-      .return<{
-        dto: UnsecuredDto<ProjectMember>;
-        userId: ID;
-      }>(['props as dto', 'user.id as userId']);
-    return await query.first();
+      .apply(this.hydrate(session));
+
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException(
+        'Could not find project member',
+        'projectMember.id'
+      );
+    }
+
+    return result.dto;
+  }
+
+  protected hydrate(session: Session) {
+    return (query: Query) =>
+      query
+        .apply(matchPropsAndProjectSensAndScopedRoles(session))
+        .match([
+          node('node'),
+          relation('out', '', 'user'),
+          node('user', 'User'),
+        ])
+        .apply(matchProps({ nodeName: 'user', outputVar: 'userProps' }))
+        .return<{ dto: UnsecuredDto<ProjectMember> }>(
+          merge('props', {
+            user: 'userProps',
+          }).as('dto')
+        );
   }
 
   async list({ filter, ...input }: ProjectMemberListInput, session: Session) {
@@ -112,7 +134,7 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
       ])
       .match(requestingUser(session))
       .apply(sorting(ProjectMember, input))
-      .apply(paginate(input))
+      .apply(paginate(input, this.hydrate(session)))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }
