@@ -95,7 +95,7 @@ export class PostRepository extends DtoRepository(Post) {
         { requestingUserId: session.userId }
       )
       .apply(sorting(Post, input))
-      .apply(paginate(input))
+      .apply(paginate(input, this.hydrate()))
       .first();
     return result!;
   }
