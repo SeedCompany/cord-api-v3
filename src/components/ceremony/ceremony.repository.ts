@@ -35,13 +35,7 @@ export class CeremonyRepository extends DtoRepository(Ceremony) {
   async readOne(id: ID, session: Session) {
     const query = this.db
       .query()
-      .match([
-        node('project', 'Project'),
-        relation('out', '', 'engagement', ACTIVE),
-        node('', 'Engagement'),
-        relation('out', '', ACTIVE),
-        node('node', 'Ceremony', { id }),
-      ])
+      .matchNode('node', 'Ceremony', { id })
       .apply(this.hydrate(session));
 
     const result = await query.first();
@@ -55,6 +49,13 @@ export class CeremonyRepository extends DtoRepository(Ceremony) {
   protected hydrate(session: Session) {
     return (query: Query) =>
       query
+        .match([
+          node('project', 'Project'),
+          relation('out', '', 'engagement', ACTIVE),
+          node('', 'Engagement'),
+          relation('out', '', ACTIVE),
+          node('node'),
+        ])
         .apply(matchPropsAndProjectSensAndScopedRoles(session))
         .return<{ dto: UnsecuredDto<Ceremony> }>('props as dto');
   }
