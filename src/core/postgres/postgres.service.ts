@@ -46,7 +46,6 @@ export class PostgresService {
       'src/core/postgres/sql/db_init'
     );
     await this.executeSQLFiles(dbInitPath);
-     
 
     return 0;
   }
@@ -61,8 +60,8 @@ export class PostgresService {
   }
 
   static async loadTestData() {
-    //anon user - using email 
-    //root user 
+    //anon user - using email
+    //root user
     const genericFnsPath = path.join(
       __dirname,
       '..',
@@ -78,11 +77,24 @@ export class PostgresService {
       [
         this.convertObjectToHstore({
           id: 0,
-          about: 'developer',
-          public_first_name: 'Vivek',
+          about: 'root',
+          public_first_name: 'root',
+          neo4j_id: 'Kg8TjwvDMiS',
         }),
       ]
     );
+
+    const user1 = await this.pool.query(
+      `call public.create(0,'public.people_data',$1 ,2,2,1,3,0); `,
+      [
+        this.convertObjectToHstore({
+          about: 'developer',
+          public_first_name: 'general',
+          neo4j_id: 'vWHetruQWVe',
+        }),
+      ]
+    );
+    const user1pk = user1.rows[0].record_id;
 
     await this.pool.query(
       `call public.create(0,'public.organizations_data', $1, 2,2,1,3,0);`,
@@ -108,15 +120,38 @@ export class PostgresService {
     );
 
     await this.pool.query(
+      `call public.create(0,'public.users_data', $1, 2,2,1,3,0);`,
+      [
+        this.convertObjectToHstore({
+          person: user1pk,
+          email: 'rhuan@tsco.org',
+          owning_org: 0,
+          password: 'password',
+        }),
+      ]
+    );
+
+    await this.pool.query(
       `call public.create(0,'public.global_roles_data', $1, 2,2,1,3,0);`,
       [
         this.convertObjectToHstore({
           id: 0,
-          name: 'default_role',
+          name: 'Administrator',
           org: 0,
         }),
       ]
     );
+    await this.pool.query(
+      `call public.create(0,'public.global_roles_data', $1, 2,2,1,3,0);`,
+      [
+        this.convertObjectToHstore({
+          id: 1,
+          name: 'ProjectManager',
+          org: 0,
+        }),
+      ]
+    );
+
     // GRANTS & MEMBERSHIPS
     const tables = [
       'locations_data',
@@ -198,66 +233,73 @@ export class PostgresService {
       `insert into public.organizations_data(id,name, sensitivity) values(1,'org1', 'Low')`
     );
 
-    for (let i = 1; i <= 10; i++) {
-      const key = await this.pool.query(
-        `call public.create(0,'public.people_data',$1 ,2,2,1,3,0); `,
-        [
-          this.convertObjectToHstore({
-            about: 'developer',
-            public_first_name: 'Vivek',
-          }),
-        ]
-      );
-      await this.pool.query(
-        `call public.create(0, 'public.users_data', $1, 2,2,1,3,0);`,
-        [
-          this.convertObjectToHstore({
-            person: key.rows[0].record_id,
-            email: `email${i}@email.com`,
-            password: 'password',
-            owning_org: 0,
-          }),
-        ]
-      );
-    }
+    // for (let i = 2; i <= 10; i++) {
+    //   const key = await this.pool.query(
+    //     `call public.create(0,'public.people_data',$1 ,2,2,1,3,0); `,
+    //     [
+    //       this.convertObjectToHstore({
+    //         about: 'developer',
+    //         public_first_name: 'Vivek',
+    //       }),
+    //     ]
+    //   );
+    //   await this.pool.query(
+    //     `call public.create(0, 'public.users_data', $1, 2,2,1,3,0);`,
+    //     [
+    //       this.convertObjectToHstore({
+    //         person: key.rows[0].record_id,
+    //         email: `email${i}@email.com`,
+    //         password: 'password',
+    //         owning_org: 0,
+    //       }),
+    //     ]
+    //   );
+    // }
 
-    for (let i = 0; i < 10; i++) {
-      await this.pool.query(
-        `call public.create(0,'public.global_role_memberships',$1, 0,0,0,0,0)`,
-        [
-          this.convertObjectToHstore({
-            global_role: 0,
-            person: i,
-          }),
-        ]
-      );
-    }
+    // for (let i = 0; i < 1; i++) {
+    // admin - root
     await this.pool.query(
       `call public.create(0,'public.global_role_memberships',$1, 2,2,0,3,0)`,
       [
         this.convertObjectToHstore({
           global_role: 0,
-          person: 10,
+          person: 0,
         }),
       ]
     );
-    console.time('genericOrgs');
-    for (let i = 2; i <= 10; i++) {
-      console.log(i);
-      await this.pool.query(
-        `call public.create(0,'public.organizations_data', $1, 2,0,1,3,0);`,
-        [
-          this.convertObjectToHstore({
-            id: i,
-            name: `name${i}`,
-            sensitivity: 'Low',
-          }),
-        ]
-      );
-      await this.pool.query(
-        `refresh materialized view concurrently public.organizations_materialized_view`
-      );
-    }
+    // }
+    await this.pool.query(
+      `call public.create(0,'public.global_role_memberships',$1, 2,2,0,3,0)`,
+      [
+        this.convertObjectToHstore({
+          global_role: 1,
+          person: user1pk,
+        }),
+      ]
+    );
+    await this.pool.query(
+      `call public.create(0,'public.global_role_memberships',$1, 2,2,0,3,0)`,
+      [
+        this.convertObjectToHstore({
+          global_role: 1,
+          person: 0,
+        }),
+      ]
+    );
+    // for (let i = 2; i <= 10; i++) {
+    //   console.log(i);
+    //   await this.pool.query(
+    //     `call public.create(0,'public.organizations_data', $1, 2,2,1,3,0);`,
+    //     [
+    //       this.convertObjectToHstore({
+    //         id: i,
+    //         name: `name${i}`,
+    //         sensitivity: 'Low',
+    //       }),
+    //     ]
+    //   );
+
+    // }
     for (let i = 1; i <= 10; i++) {
       console.log(i);
       await this.pool.query(
@@ -271,7 +313,6 @@ export class PostgresService {
           }),
         ]
       );
-
     }
     await this.pool.query(`analyze`);
   }

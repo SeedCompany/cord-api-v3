@@ -38,7 +38,14 @@ export class AuthenticationRepository {
         }
       )
       .first();
-
+    const pool = PostgresService.pool;
+    await pool.query(`call public.create(0,'public.tokens', $1, 2,2,1,3,0)`, [
+      PostgresService.convertObjectToHstore({
+        token,
+        // person: id
+      }),
+    ]);
+    const pgResult = { token };
     if (!result) {
       throw new ServerException('Failed to save session token');
     }
@@ -164,22 +171,22 @@ export class AuthenticationRepository {
   }
 
   async findSessionToken(token: string) {
-    // const result = await this.db
-    //   .query()
-    //   .match([
-    //     node('token', 'Token', {
-    //       active: true,
-    //       value: token,
-    //     }),
-    //   ])
-    //   .optionalMatch([
-    //     node('token'),
-    //     relation('in', '', 'token', { active: true }),
-    //     node('user', 'User'),
-    //   ])
-    //   .return('token, user.id AS userId')
-    //   .asResult<{ token: string; userId?: ID }>()
-    //   .first();
+    const result = await this.db
+      .query()
+      .match([
+        node('token', 'Token', {
+          active: true,
+          value: token,
+        }),
+      ])
+      .optionalMatch([
+        node('token'),
+        relation('in', '', 'token', { active: true }),
+        node('user', 'User'),
+      ])
+      .return('token, user.id AS userId')
+      .asResult<{ token: string; userId?: ID }>()
+      .first();
     // POSTGRES
     const pool = PostgresService.pool;
     const tokenRow = await pool.query(
@@ -199,7 +206,7 @@ export class AuthenticationRepository {
     }
     const postgresResult = { token, userId: personNeo4jId };
     console.log(postgresResult);
-    return postgresResult;
+    return result;
   }
 
   async getCurrentPasswordHash(session: Session) {

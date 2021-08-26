@@ -107,12 +107,18 @@ export class AuthorizationRepository {
     const pool = PostgresService.pool;
 
     const rolesOfPerson = await pool.query(
-      `select gr.name from public.global_role_memberships grm inner join public.global_roles_data gr on gr.id = grm.global_role 
-      where grm.person = (select id from people_data where neo4j_id = $1)`,
+      `select gr.name, grm.person from public.global_role_memberships grm inner join public.global_roles_data gr on gr.id = grm.global_role inner join people_data p on p.id = grm.person 
+      where p.neo4j_id = $1`,
       [id]
     );
-    console.log(rolesOfPerson);
-    return result?.roles ?? [];
+    console.log(rolesOfPerson.rows);
+    const pgResult: { roles: Role[] } = { roles: [] };
+    for (let { name } of rolesOfPerson.rows) {
+      pgResult.roles?.push(name);
+    }
+    console.log(pgResult);
+    return pgResult.roles;
+    // return result?.roles ?? [];
   }
 
   async readPowerByUserId(id: ID | string) {
