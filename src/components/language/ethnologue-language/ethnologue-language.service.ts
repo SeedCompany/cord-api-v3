@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import {
   ID,
-  NotFoundException,
   Sensitivity,
   ServerException,
   Session,
+  UnsecuredDto,
 } from '../../../common';
 import { ILogger, Logger } from '../../../core';
 import { AuthorizationService } from '../../authorization/authorization.service';
@@ -50,25 +50,26 @@ export class EthnologueLanguageService {
     sensitivity: Sensitivity,
     session: Session
   ): Promise<EthnologueLanguage> {
-    const result = await this.repo.readOne(id, session);
-    if (!result) {
-      throw new NotFoundException(
-        'Could not find ethnologue language',
-        'ethnologue.id'
-      );
-    }
+    const dto = await this.repo.readOne(id, session);
+    return await this.secure(dto, sensitivity, session);
+  }
 
+  async secure(
+    dto: UnsecuredDto<EthnologueLanguage>,
+    sensitivity: Sensitivity,
+    session: Session
+  ): Promise<EthnologueLanguage> {
     const secured = await this.authorizationService.secureProperties(
       EthnologueLanguage,
-      { ...result.props, sensitivity },
+      { ...dto, sensitivity },
       session
     );
 
     return {
-      id,
+      ...dto,
       ...secured,
       sensitivity,
-      canDelete: await this.repo.checkDeletePermission(id, session),
+      canDelete: await this.repo.checkDeletePermission(dto.id, session),
     };
   }
 
