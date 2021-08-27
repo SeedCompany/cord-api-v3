@@ -8,6 +8,7 @@ import {
   UnsecuredDto,
 } from '../../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../../core';
+import { mapListResults } from '../../../core/database/results';
 import { AuthorizationService } from '../../authorization/authorization.service';
 import {
   CreateUnavailability,
@@ -121,18 +122,10 @@ export class UnavailabilityService {
   }
 
   async list(
-    { page, count, sort, order, filter }: UnavailabilityListInput,
+    input: UnavailabilityListInput,
     session: Session
   ): Promise<UnavailabilityListOutput> {
-    const result = await this.repo.list(
-      { page, count, sort, order, filter },
-      session
-    );
-
-    return {
-      items: result.items,
-      hasMore: result.hasMore,
-      total: result.total,
-    };
+    const results = await this.repo.list(input, session);
+    return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 }
