@@ -56,11 +56,7 @@ export class ProjectChangeRequestRepository extends DtoRepository(
   async readOne(id: ID, session?: Session) {
     const query = this.db
       .query()
-      .match([
-        node('node', 'ProjectChangeRequest', { id }),
-        relation('in', '', 'changeset', ACTIVE),
-        node('project', 'Project'),
-      ])
+      .matchNode('node', 'ProjectChangeRequest', { id })
       .apply(this.hydrate(session));
     const result = await query.first();
     if (!result) {
@@ -73,6 +69,11 @@ export class ProjectChangeRequestRepository extends DtoRepository(
   protected hydrate(session?: Session) {
     return (query: Query) =>
       query
+        .match([
+          node('node'),
+          relation('in', '', 'changeset', ACTIVE),
+          node('project', 'Project'),
+        ])
         .apply(matchPropsAndProjectSensAndScopedRoles(session))
         .return<{ dto: UnsecuredDto<ProjectChangeRequest> }>(
           merge('props', {
