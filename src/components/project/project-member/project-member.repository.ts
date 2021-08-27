@@ -83,11 +83,7 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
   async readOne(id: ID, session: Session) {
     const query = this.db
       .query()
-      .match([
-        node('project', 'Project'),
-        relation('out', '', 'member', ACTIVE),
-        node('node', 'ProjectMember', { id }),
-      ])
+      .matchNode('node', 'ProjectMember', { id })
       .apply(this.hydrate(session));
 
     const result = await query.first();
@@ -104,6 +100,11 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
   protected hydrate(session: Session) {
     return (query: Query) =>
       query
+        .match([
+          node('project', 'Project'),
+          relation('out', '', 'member', ACTIVE),
+          node('node'),
+        ])
         .apply(matchPropsAndProjectSensAndScopedRoles(session))
         .match([
           node('node'),
