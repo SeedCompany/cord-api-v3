@@ -15,6 +15,7 @@ import {
   simpleSwitch,
   typenameForView,
   UnsecuredDto,
+  viewOfChangeset,
 } from '../../common';
 import { CommonRepository } from '../../core';
 import { DbChanges, getChanges } from '../../core/database/changes';
@@ -39,6 +40,7 @@ import { ProjectType } from '../project';
 import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,
+  Engagement,
   EngagementListInput,
   EngagementStatus,
   IEngagement,
@@ -64,106 +66,90 @@ export class EngagementRepository extends CommonRepository {
   }
 
   async readOne(id: ID, session: Session, view?: ObjectView) {
-    const label = labelForView('Engagement', view);
-
     const query = this.db
       .query()
-      .subQuery((sub) =>
-        sub
-          .match([
-            node('project'),
-            relation(
-              'out',
-              '',
-              'engagement',
-              !view?.deleted ? ACTIVE : INACTIVE
-            ),
-            node('node', label, { id }),
-          ])
-          .return('project, node')
-          .apply((q) =>
-            view?.changeset
-              ? q
-                  .union()
-                  .match([
-                    node('project'),
-                    relation('out', '', 'engagement', INACTIVE),
-                    node('node', label, { id }),
-                    relation('in', '', 'changeset', ACTIVE),
-                    node('changeset', 'Changeset', { id: view.changeset }),
-                  ])
-                  .return('project, node')
-              : q
-          )
-      )
-      .apply(matchPropsAndProjectSensAndScopedRoles(session, { view }))
-      .apply(matchChangesetAndChangedProps(view?.changeset))
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'ceremony', ACTIVE),
-        node('ceremony'),
-      ])
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'language', ACTIVE),
-        node('language'),
-      ])
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'intern', ACTIVE),
-        node('intern'),
-      ])
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'countryOfOrigin', ACTIVE),
-        node('countryOfOrigin'),
-      ])
-      .optionalMatch([
-        node('node'),
-        relation('out', '', 'mentor', ACTIVE),
-        node('mentor'),
-      ])
-      .optionalMatch([
-        node('project'),
-        relation('out', '', 'mouStart', ACTIVE),
-        node('mouStart'),
-      ])
-      .optionalMatch([
-        node('project'),
-        relation('out', '', 'mouEnd', ACTIVE),
-        node('mouEnd'),
-      ])
-      .return<{ dto: UnsecuredDto<LanguageEngagement & InternshipEngagement> }>(
-        merge('props', 'changedProps', {
-          __typename: typenameForView(
-            ['LanguageEngagement', 'InternshipEngagement'],
-            view
-          ),
-          project: 'project.id',
-          language: 'language.id',
-          ceremony: 'ceremony.id',
-          intern: 'intern.id',
-          countryOfOrigin: 'countryOfOrigin.id',
-          mentor: 'mentor.id',
-          startDate: coalesce(
-            'changedProps.startDateOverride',
-            'props.startDateOverride',
-            'mouStart.value'
-          ),
-          endDate: coalesce(
-            'changedProps.endDateOverride',
-            'props.endDateOverride',
-            'mouEnd.value'
-          ),
-          changeset: 'changeset.id',
-        }).as('dto')
-      );
+      .matchNode('node', labelForView('Engagement', view), { id })
+      .apply(this.hydrate(session, view));
     const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find Engagement');
     }
 
     return result.dto;
+  }
+
+  protected hydrate(session: Session, view?: ObjectView) {
+    return (query: Query) =>
+      query
+        .match([
+          node('project'),
+          // active check not needed here as project will never change
+          // the relationships could be inactive if made in a changeset, we don't care either way.
+          relation('out', '', 'engagement'),
+          node('node'),
+        ])
+        .apply(matchPropsAndProjectSensAndScopedRoles(session, { view }))
+        .apply(matchChangesetAndChangedProps(view?.changeset))
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'ceremony', ACTIVE),
+          node('ceremony'),
+        ])
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'language', ACTIVE),
+          node('language'),
+        ])
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'intern', ACTIVE),
+          node('intern'),
+        ])
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'countryOfOrigin', ACTIVE),
+          node('countryOfOrigin'),
+        ])
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'mentor', ACTIVE),
+          node('mentor'),
+        ])
+        .optionalMatch([
+          node('project'),
+          relation('out', '', 'mouStart', ACTIVE),
+          node('mouStart'),
+        ])
+        .optionalMatch([
+          node('project'),
+          relation('out', '', 'mouEnd', ACTIVE),
+          node('mouEnd'),
+        ])
+        .return<{ dto: UnsecuredDto<Engagement> }>(
+          merge('props', 'changedProps', {
+            __typename: typenameForView(
+              ['LanguageEngagement', 'InternshipEngagement'],
+              view
+            ),
+            project: 'project.id',
+            language: 'language.id',
+            ceremony: 'ceremony.id',
+            intern: 'intern.id',
+            countryOfOrigin: 'countryOfOrigin.id',
+            mentor: 'mentor.id',
+            startDate: coalesce(
+              'changedProps.startDateOverride',
+              'props.startDateOverride',
+              'mouStart.value'
+            ),
+            endDate: coalesce(
+              'changedProps.endDateOverride',
+              'props.endDateOverride',
+              'mouEnd.value'
+            ),
+            changeset: 'changeset.id',
+          }).as('dto')
+        );
   }
 
   // CREATE ///////////////////////////////////////////////////////////
@@ -402,21 +388,21 @@ export class EngagementRepository extends CommonRepository {
           )
       )
       .apply(sorting(IEngagement, input))
-      .apply(paginate(input))
+      .apply(paginate(input, this.hydrate(session, viewOfChangeset(changeset))))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }
 
-  async listAllByProjectId(projectId: ID) {
+  async listAllByProjectId(projectId: ID, session: Session) {
     return await this.db
       .query()
       .match([
         node('project', 'Project', { id: projectId }),
         relation('out', '', 'engagement', ACTIVE),
-        node('engagement', 'Engagement'),
+        node('node', 'Engagement'),
       ])
-      .return('engagement.id as id')
-      .asResult<{ id: ID }>()
+      .apply(this.hydrate(session))
+      .map('dto')
       .run();
   }
 
@@ -435,8 +421,7 @@ export class EngagementRepository extends CommonRepository {
           value: inArray(OngoingEngagementStatuses),
         },
       })
-      .return('engagement.id as id')
-      .asResult<{ id: ID }>()
+      .return<{ id: ID }>('engagement.id as id')
       .run();
     return rows.map((r) => r.id);
   }
@@ -458,10 +443,9 @@ export class EngagementRepository extends CommonRepository {
         relation('out', 'r', 'roles', ACTIVE),
         node('roles', 'Property'),
       ])
-      .return('apoc.coll.flatten(collect(roles.value)) as memberRoles')
-      .asResult<{
-        memberRoles: Role[];
-      }>();
+      .return<{ memberRoles: Role[] }>(
+        'apoc.coll.flatten(collect(roles.value)) as memberRoles'
+      );
     const roles = await query.first();
 
     return roles?.memberRoles.map(rolesForScope('project')) ?? [];
