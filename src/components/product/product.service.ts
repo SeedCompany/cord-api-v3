@@ -1,4 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { intersection } from 'lodash';
 import { Except } from 'type-fest';
 import {
   has,
@@ -21,6 +22,7 @@ import {
   CreateProduct,
   DerivativeScriptureProduct,
   DirectScriptureProduct,
+  MethodologyAvailableSteps,
   MethodologyToApproach,
   OtherProduct,
   ProducibleResult,
@@ -268,8 +270,19 @@ export class ProductService {
     session: Session
   ) {
     let changes = this.repo.getActualDirectChanges(currentProduct, input);
+    const methodology = input.methodology ?? currentProduct.methodology;
+    const stepsToUpdate = input.steps?.length
+      ? input.steps
+      : currentProduct.steps;
+
+    const steps = methodology
+      ? intersection(MethodologyAvailableSteps[methodology], stepsToUpdate)
+      : [];
+
     changes = {
       ...changes,
+      steps,
+      methodology,
       progressTarget: this.restrictProgressTargetChange(
         currentProduct,
         input,
@@ -311,10 +324,21 @@ export class ProductService {
       currentProduct as unknown as DerivativeScriptureProduct,
       input
     );
+    const methodology = input.methodology ?? currentProduct.methodology;
+    const stepsToUpdate = input.steps?.length
+      ? input.steps
+      : currentProduct.steps;
+
+    const steps = methodology
+      ? intersection(MethodologyAvailableSteps[methodology], stepsToUpdate)
+      : [];
+
     changes = {
       ...changes,
       // This needs to be manually checked for changes as the existing value
       // is the object not the ID.
+      steps,
+      methodology,
       produces:
         currentProduct.produces.id !== input.produces
           ? input.produces
