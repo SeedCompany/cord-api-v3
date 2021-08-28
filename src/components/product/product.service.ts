@@ -324,6 +324,12 @@ export class ProductService {
       currentProduct as unknown as DerivativeScriptureProduct,
       input
     );
+    const purposes = input.purposes?.length
+      ? input.purposes
+      : currentProduct.purposes;
+    const mediums = input.mediums?.length
+      ? input.mediums
+      : currentProduct.mediums;
     const methodology = input.methodology ?? currentProduct.methodology;
     const stepsToUpdate = input.steps?.length
       ? input.steps
@@ -335,9 +341,11 @@ export class ProductService {
 
     changes = {
       ...changes,
+      mediums,
+      purposes,
+      steps,
       // This needs to be manually checked for changes as the existing value
       // is the object not the ID.
-      steps,
       methodology,
       produces:
         currentProduct.produces.id !== input.produces
