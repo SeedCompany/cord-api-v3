@@ -112,13 +112,15 @@ export class AuthorizationRepository {
       [id]
     );
     console.log(rolesOfPerson.rows);
-    const pgResult: { roles: Role[] } = { roles: [] };
+    const roles: Role[] = [];
     for (let { name } of rolesOfPerson.rows) {
-      pgResult.roles?.push(name);
+      roles?.push(name);
     }
-    console.log(pgResult);
-    return pgResult.roles;
-    // return result?.roles ?? [];
+    // console.log(pgResult);
+    console.log('pg', roles);
+    // return roles;
+    console.log('neo4j', result?.roles ?? []);
+    return result?.roles ?? [];
   }
 
   async readPowerByUserId(id: ID | string) {

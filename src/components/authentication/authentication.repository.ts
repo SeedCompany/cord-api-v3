@@ -206,7 +206,7 @@ export class AuthenticationRepository {
     }
     const postgresResult = { token, userId: personNeo4jId };
     console.log(postgresResult);
-    return result;
+    return postgresResult;
   }
 
   async getCurrentPasswordHash(session: Session) {

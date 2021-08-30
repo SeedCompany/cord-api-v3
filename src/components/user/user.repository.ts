@@ -6,6 +6,7 @@ import {
   generateId,
   ID,
   NotFoundException,
+  SecuredString,
   ServerException,
   Session,
   UnauthorizedException,
@@ -35,7 +36,7 @@ import {
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { Role } from '../authorization';
+import { Powers, Role } from '../authorization';
 import {
   AssignOrganizationToUser,
   CreatePerson,
@@ -87,21 +88,23 @@ export class UserRepository extends DtoRepository(User) {
       .query()
       .match([node('node', 'User', { id })])
       .apply(this.hydrate());
-    // .return('dto')
-    // .asResult<{ dto: UnsecuredDto<User> }>();
+
     const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find user', 'user.id');
     }
     const pool = await PostgresService.pool;
-    let [pgPersonData, pgUserData] = await Promise.all([
+    let [pgPersonData, rolesOfPerson] = await Promise.all([
       pool.query(
-        'select * from public.people_materialized_view where __id = $1 and __person_id = $2',
-        [0, 0]
+        `select public_last_name, password, title, public_first_name,email, private_last_name, private_first_name, time_zone,p.created_at, phone, about 
+        from public.people_data p inner join public.users_data u on u.person = p.id 
+        where p.neo4j_id = $1`,
+        [id]
       ),
       pool.query(
-        `select * from public.users_materialized_view where __id = $1 and __person_id = $2`,
-        [0, 0]
+        `select gr.name, grm.person from public.global_role_memberships grm inner join public.global_roles_data gr on gr.id = grm.global_role inner join people_data p on p.id = grm.person 
+        where p.neo4j_id = $1`,
+        [id]
       ),
     ]);
     let {
@@ -110,31 +113,39 @@ export class UserRepository extends DtoRepository(User) {
       private_first_name: realFirstName,
       private_last_name: realLastName,
       time_zone: timezone,
+      password,
       created_at: createdAt,
       phone,
       about,
-      status,
+      email,
+      title,
     } = pgPersonData.rows[0];
+    let roles: Role[] = [];
+    let powers: Powers[] = [];
+    for (let { name } of rolesOfPerson.rows) {
+      roles.push(name);
+    }
+    console.log('postgres roles', roles);
 
-    let { email, password } = pgUserData.rows[0];
-
-    // return {
-    //   displayFirstName,
-    //   displayLastName,
-    //   realFirstName,
-    //   realLastName,
-    //   timezone,
-    //   id,
-    //   email,
-    //   password,
-    //   createdAt,
-    //   phone,
-    //   about,
-    //   status,
-    //   roles: null,
-    //   title: null,
-    // };
-    return result.dto;
+    console.log('result.dto read user by id', result.dto);
+    return {
+      displayFirstName,
+      displayLastName,
+      realFirstName,
+      realLastName,
+      timezone,
+      id,
+      email,
+      createdAt,
+      phone,
+      password,
+      about,
+      status: 'Active',
+      roles,
+      title,
+      powers,
+    } as UnsecuredDto<User>;
+    // return result.dto;
   }
 
   async create(input: CreatePerson) {

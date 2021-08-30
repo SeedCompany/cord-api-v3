@@ -151,6 +151,7 @@ export class UserService {
   @HandleIdLookup(User)
   async readOne(id: ID, sessionOrUserId: Session | ID): Promise<User> {
     const user = await this.userRepo.readOne(id);
+    console.log('postgres user', user);
     return await this.secure(user, sessionOrUserId);
   }
 

@@ -105,6 +105,14 @@ export class PostgresService {
         }),
       ]
     );
+    await this.pool.query(
+      `call public.create(0,'public.organizations_data', $1, 2,2,1,3,0);`,
+      [
+        this.convertObjectToHstore({
+          name: 'org1',
+        }),
+      ]
+    );
 
     await this.pool.query(
       `call public.create(0,'public.users_data', $1, 2,2,1,3,0);`,
@@ -229,9 +237,9 @@ export class PostgresService {
       ]
     );
 
-    await this.pool.query(
-      `insert into public.organizations_data(id,name, sensitivity) values(1,'org1', 'Low')`
-    );
+    // await this.pool.query(
+    //   `insert into public.organizations_data(id,name, sensitivity) values(1,'org1', 'Low')`
+    // );
 
     // for (let i = 2; i <= 10; i++) {
     //   const key = await this.pool.query(

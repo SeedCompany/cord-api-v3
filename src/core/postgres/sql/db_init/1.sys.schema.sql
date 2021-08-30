@@ -310,6 +310,7 @@ create table if not exists public.people_data (
     sensitivity_clearance sensitivity default 'Low',
     time_zone varchar(32),
     title varchar(255),
+	status varchar(32),
     foreign key (created_by) references public.people_data(id),
     foreign key (modified_by) references public.people_data(id),
 -- foreign keys added after org table created
