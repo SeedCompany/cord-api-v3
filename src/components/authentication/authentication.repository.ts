@@ -248,12 +248,12 @@ export class AuthenticationRepository {
       .match([node('email', 'EmailAddress', { value: email })])
       .return('email')
       .first();
-    const pool = PostgresService.pool;
-    const pgResult = pool.query(
-      `select email from public.users_materialized_view where email = $1 and __person_id = $2`,
-      [email, 0]
-    );
-    console.log(pgResult);
+    // const pool = PostgresService.pool;
+    // const pgResult = pool.query(
+    //   `select email from public.users_materialized_view where email = $1 and __person_id = $2`,
+    //   [email, 0]
+    // );
+    // console.log('auth.repo', pgResult);
     return !!result;
   }
 
@@ -272,11 +272,17 @@ export class AuthenticationRepository {
       )
       .run();
     const pool = PostgresService.pool;
+    const personRows = await pool.query(
+      `select email,person from public.users_data where email = $1`,
+      [email]
+    );
+    const person = personRows.rows[0].person;
+
     const pgResult = await pool.query(
       `call public.create(0,'public.tokens',$1 ,0,0,0,0,0); `,
       [
         PostgresService.convertObjectToHstore({
-          email,
+          person,
           token,
         }),
       ]

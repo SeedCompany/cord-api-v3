@@ -602,8 +602,10 @@ create table if not exists public.project_member_roles_data (
 -- AUTHENTICATION ------------------------------------------------------------
 
 create table if not exists public.tokens (
-	token varchar(512) primary key,
+	id serial primary key,
+	token varchar(512),
 	person int,
+	unique(token),
 	created_at timestamp not null default CURRENT_TIMESTAMP
 	-- foreign key (person) references people_data(id)
 );

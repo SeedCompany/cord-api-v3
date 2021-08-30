@@ -497,6 +497,7 @@ export class UserRepository extends DtoRepository(User) {
       .matchNode('email', 'EmailAddress', { value: email })
       .return('email.value')
       .first();
+    console.log('user.repo', email);
     return !!result;
   }
 

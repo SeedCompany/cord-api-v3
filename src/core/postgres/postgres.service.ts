@@ -120,7 +120,7 @@ export class PostgresService {
         this.convertObjectToHstore({
           id: 0,
           person: 0,
-          email: 'vivek@tsco.org',
+          email: 'devops@tsco.org',
           owning_org: 0,
           password: 'password',
         }),
@@ -161,12 +161,13 @@ export class PostgresService {
     );
 
     // GRANTS & MEMBERSHIPS
-    const tables = [
+    let tables = [
       'locations_data',
       'people_data',
       'organizations_data',
       'users_data',
     ];
+    tables = [];
 
     const columns = await this.pool.query(
       `select column_name,table_name from information_schema.columns where table_schema='public' and table_name = any($1::text[])`,
