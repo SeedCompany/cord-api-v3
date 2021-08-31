@@ -146,6 +146,12 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
             ]
           : []),
         node('node', 'ProjectMember'),
+        ...(filter.roles
+          ? [
+              relation('out', '', 'roles', ACTIVE),
+              node('role', 'Property', { value: filter.roles }),
+            ]
+          : []),
       ])
       .match(requestingUser(session))
       .apply(sorting(ProjectMember, input))
