@@ -383,10 +383,16 @@ export class BudgetService {
     };
     const limited = (await this.authorizationService.canList(Budget, session))
       ? // --- need a sensitivity mapping for global because ConsultantManager has a global sensitivityAccess of Sensitivity.Medium for listing.
-        await this.authorizationService.getListRoleSensitivityMapping(
-          Budget,
-          'global'
-        )
+        {
+          ...(await this.authorizationService.getListRoleSensitivityMapping(
+            Budget,
+            'global'
+          )),
+          ...(await this.authorizationService.getListRoleSensitivityMapping(
+            Budget,
+            'project'
+          )),
+        }
       : await this.authorizationService.getListRoleSensitivityMapping(
           Budget,
           'project'
