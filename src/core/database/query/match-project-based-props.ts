@@ -8,7 +8,7 @@ import {
 } from '../../../components/authorization';
 import {
   AuthSensitivityMapping,
-  ProjectRoleSensitivityMapping,
+  GlobalRoleSensitivityMapping,
 } from '../../../components/authorization/authorization.service';
 import { ProjectType } from '../../../components/project/dto/type.enum';
 import {
@@ -147,10 +147,10 @@ export const matchProjectSens =
         .return<{ sensitivity: Sensitivity }>('"High" as sensitivity')
     );
 
-export function isMappingProjectScope(
+export function isMappingContainingGlobalRoleScope(
   authScope: AuthSensitivityMapping
-): authScope is ProjectRoleSensitivityMapping {
-  if (Object.keys(authScope).some((s) => s.startsWith('project:'))) {
+): authScope is GlobalRoleSensitivityMapping {
+  if (Object.keys(authScope).some((s) => s.startsWith('global:'))) {
     return true;
   } else {
     return false;
@@ -159,7 +159,7 @@ export function isMappingProjectScope(
 const matchUserGloballyScopedRoles =
   <Output extends string = 'scopedRoles'>(
     userVar = 'requestingUser',
-    outputVar = 'scopedRoles' as Output
+    outputVar = 'globalRoles' as Output
   ) =>
   <R>(query: Query<R>) =>
     query.comment('matchUserGloballyScopedRoles()').subQuery((sub) =>
@@ -181,12 +181,10 @@ const matchUserGloballyScopedRoles =
         )
     );
 
-const matchProjectSensAndGlobalRoles =
-  (userVar = 'requestingUser', projectVar = 'project') =>
+const matchGlobalRoles =
+  (userVar = 'requestingUser') =>
   <R>(query: Query<R>) =>
-    query
-      .apply(matchProjectSens(projectVar))
-      .apply(matchUserGloballyScopedRoles(userVar));
+    query.apply(matchUserGloballyScopedRoles(userVar));
 
 export const matchProjectSensToLimitedScopeMap =
   (
@@ -195,33 +193,36 @@ export const matchProjectSensToLimitedScopeMap =
     projectVar = 'project'
   ) =>
   <R>(query: Query<R>) =>
-    query.apply((q) =>
-      authScope
-        ? q
-            // group by project so this next bit doesn't run multiple times for a single project
-            .with([projectVar, 'collect(node) as nodeList', 'requestingUser'])
-            .apply((q) =>
-              isMappingProjectScope(authScope)
-                ? q.apply(matchPropsAndProjectSensAndScopedRoles(true, session))
-                : q.apply(
-                    matchProjectSensAndGlobalRoles('requestingUser', projectVar)
-                  )
-            )
-            .subQuery('sensitivity', (sub) =>
-              sub.return(`${rankSens('sensitivity')} as sens`)
-            )
-            .raw('UNWIND nodeList as node')
-            .matchNode('node')
-            .raw(
-              `WHERE any(role in scopedRoles WHERE role IN keys($sensMap) and sens <= ${rankSens(
-                'apoc.map.get($sensMap, role)'
-              )})`,
-              {
-                sensMap: authScope,
-              }
-            )
-        : q
-    );
+    query.apply((q) => {
+      if (authScope) {
+        const allRolesDef = isMappingContainingGlobalRoleScope(authScope)
+          ? `+ globalRoles`
+          : '';
+        q
+          // group by project so this next bit doesn't run multiple times for a single project
+          .with([projectVar, 'collect(node) as nodeList', 'requestingUser'])
+          .apply(matchPropsAndProjectSensAndScopedRoles(true, session))
+          .apply((q) =>
+            isMappingContainingGlobalRoleScope(authScope)
+              ? q.apply(matchGlobalRoles('requestingUser'))
+              : q
+          )
+          .subQuery('sensitivity', (sub) =>
+            sub.return(`${rankSens('sensitivity')} as sens`)
+          )
+          .with(['sens', 'nodeList', `scopedRoles${allRolesDef} as allRoles`])
+          .raw('UNWIND nodeList as node')
+          .matchNode('node')
+          .raw(
+            `WHERE any(role in allRoles WHERE role IN keys($sensMap) and sens <= ${rankSens(
+              'apoc.map.get($sensMap, role)'
+            )})`,
+            {
+              sensMap: authScope,
+            }
+          );
+      }
+    });
 export const rankSens = (variable: string) => oneLine`
   case ${variable}
     when 'High' then 2

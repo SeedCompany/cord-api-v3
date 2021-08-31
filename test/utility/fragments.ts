@@ -869,6 +869,7 @@ export const budget = gql`
     id
     createdAt
     status
+    sensitivity
     universalTemplateFile {
       canRead
       canEdit

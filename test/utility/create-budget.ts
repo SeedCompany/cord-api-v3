@@ -9,6 +9,24 @@ import { Organization } from '../../src/components/organization';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
 
+export async function listBudgets(app: TestApp) {
+  const result = await app.graphql.mutate(
+    gql`
+      query {
+        budgets(input: {}) {
+          items {
+            ...budget
+          }
+        }
+      }
+      ${fragments.budget}
+    `
+  );
+  const budgets = result.budgets.items;
+  expect(budgets).toBeTruthy();
+  return budgets;
+}
+
 export async function readOneBudgetRecordOrganization(
   app: TestApp,
   budgetId: string
@@ -40,7 +58,7 @@ export async function readBudgetRecords(
   app: TestApp,
   id: string
 ): Promise<BudgetRecord[]> {
-  const { budget: actual } = await app.graphql.query(
+  const result = await app.graphql.query(
     gql`
       query budget($id: ID!) {
         budget(id: $id) {
@@ -53,10 +71,9 @@ export async function readBudgetRecords(
       id: id,
     }
   );
-
-  expect(actual.id).toBe(id);
-  expect(isValidId(actual.id)).toBe(true);
-  return actual.records;
+  expect(result.budget.id).toBe(id);
+  expect(isValidId(result.budget.id)).toBe(true);
+  return result.budget.records;
 }
 
 export async function readOneBudget(app: TestApp, id: string): Promise<Budget> {
