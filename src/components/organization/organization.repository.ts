@@ -88,7 +88,7 @@ export class OrganizationRepository extends DtoRepository(Organization) {
           sub
             .with('projList')
             .raw('UNWIND projList as project')
-            .match([
+            .optionalMatch([
               node('project'),
               relation('out', '', 'member'),
               node('projectMember'),
