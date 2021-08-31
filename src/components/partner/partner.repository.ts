@@ -106,8 +106,8 @@ export class PartnerRepository extends DtoRepository(Partner) {
           sub
             .with('projList')
             .raw('UNWIND projList as project')
-            // TODO: have this match from line 92 so we don't have to match this twice
-            .match([
+            // TODO: I don't think this is needed.... more thought on this later.
+            .optionalMatch([
               node('project'),
               relation('out', '', 'member'),
               node('projectMember'),
