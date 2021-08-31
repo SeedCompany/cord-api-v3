@@ -110,7 +110,8 @@ export class PostgresService {
       [
         this.convertObjectToHstore({
           id: 0,
-          name: 'defaultOrg',
+          name: 'Seed Company',
+          neo4j_id: '5c4278da9503d5cd78e82f02',
         }),
       ]
     );

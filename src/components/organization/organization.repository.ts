@@ -7,7 +7,11 @@ import {
   Session,
   UnsecuredDto,
 } from '../../common';
-import { DtoRepository, matchRequestingUser } from '../../core';
+import {
+  DtoRepository,
+  matchRequestingUser,
+  PostgresService,
+} from '../../core';
 import {
   ACTIVE,
   createNode,
@@ -63,6 +67,16 @@ export class OrganizationRepository extends DtoRepository(Organization) {
         'organization.id'
       );
     }
+
+    const pool = await PostgresService.pool;
+    const orgData = await pool.query(
+      `select name, created_at as "createdAt", neo4j_id as "id" from public.organizations_data 
+      where neo4j_id = $1`,
+      [orgId]
+    );
+    const pgResult = orgData.rows[0];
+    console.log('neo4j Result: ', result.dto);
+    console.log('pg Result: ', pgResult);
     return result.dto;
   }
 
