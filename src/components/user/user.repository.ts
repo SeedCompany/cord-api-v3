@@ -498,6 +498,13 @@ export class UserRepository extends DtoRepository(User) {
       .return('email.value')
       .first();
     console.log('user.repo', email);
+
+    const pool = PostgresService.pool;
+    const pgResult = pool.query(
+      `select email from users_data where email = $1`,
+      [email, 0]
+    );
+    console.log("pgResult: ", pgResult);
     return !!result;
   }
 
