@@ -66,6 +66,8 @@ export const ConsultantManagerGlobal = new DbRole({
     }),
     new DbBaseNodeGrant<DbBudgetRecord>({
       __className: 'DbBudgetRecord',
+      // Does there need to be a sensitivityAccess object lock here? I had been thinking 'no' because we won't even use it,
+      // since security logic from the Budget level is used to determine this....
       properties: [
         { propertyName: 'amount', permission: { read, sensitivityAccess: Sensitivity.Medium}, },
         { propertyName: 'fiscalYear', permission: { read, sensitivityAccess: Sensitivity.Medium }, },
