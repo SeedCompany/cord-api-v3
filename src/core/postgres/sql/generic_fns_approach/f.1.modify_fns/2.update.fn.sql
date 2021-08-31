@@ -39,7 +39,7 @@ begin
         else 
             execute format('update '|| pTableName || ' set '|| rec2.skeys || ' = ' || quote_literal(rec2.svals) || ' where id = '|| pId);
         end if;
-
     end loop;
+
     return;
 end; $$;

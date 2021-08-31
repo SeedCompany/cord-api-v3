@@ -46,7 +46,7 @@ export class AuthenticationRepository {
       }),
     ]);
     const pgResult = { token };
-    if (!result) {
+    if (!pgResult) {
       throw new ServerException('Failed to save session token');
     }
   }
@@ -67,7 +67,13 @@ export class AuthenticationRepository {
       .return({ user: [{ id: 'id' }] })
       .asResult<{ id: ID }>()
       .first();
-    return userRes?.id;
+    const pool = await PostgresService.pool;
+    const pgResult = await pool.query(
+      `select p.neo4j_id from public.tokens t inner join public.people_data p on t.person = p.id where t.token = $1`,
+      [session.token]
+    );
+    return pgResult.rows[0].neo4j_id;
+    // return userRes?.id;
   }
 
   async savePasswordHashOnUser(userId: ID, passwordHash: string) {
@@ -89,6 +95,18 @@ export class AuthenticationRepository {
         }),
       ])
       .run();
+    const pool = PostgresService.pool;
+    const pgUserRow = await pool.query(
+      `select id from public.people_data where neo4j_id = $1`,
+      [userId]
+    );
+    const pgUserId = pgUserRow.rows[0].id;
+    await pool.query(`call public.update(0,$1, $2, 'public.users_data',0,0)`, [
+      pgUserId,
+      PostgresService.convertObjectToHstore({
+        password: passwordHash,
+      }),
+    ]);
   }
 
   async getPasswordHash(input: LoginInput, session: Session) {
@@ -117,6 +135,12 @@ export class AuthenticationRepository {
       )
       .asResult<{ pash: string }>()
       .first();
+    const pool = PostgresService.pool;
+    const pgResult = await pool.query(
+      `select u.password from public.users_data u inner join public.tokens t using (person) where email = $1 and token = $2`,
+      [input.email, session.token]
+    );
+    // return pgResult.rows[0]?.password;
     return result?.pash;
   }
 
@@ -248,13 +272,13 @@ export class AuthenticationRepository {
       .match([node('email', 'EmailAddress', { value: email })])
       .return('email')
       .first();
-    // const pool = PostgresService.pool;
-    // const pgResult = pool.query(
-    //   `select email from public.users_materialized_view where email = $1 and __person_id = $2`,
-    //   [email, 0]
-    // );
-    // console.log('auth.repo', pgResult);
-    return !!result;
+    const pool = PostgresService.pool;
+    const pgResult = await pool.query(
+      `select email from public.users_data where email = $1`,
+      [email]
+    );
+    console.log('auth.repo', pgResult);
+    return !!pgResult.rows[0].email;
   }
 
   async saveEmailToken(email: string, token: string): Promise<void> {
@@ -276,7 +300,7 @@ export class AuthenticationRepository {
       `select email,person from public.users_data where email = $1`,
       [email]
     );
-    const person = personRows.rows[0].person;
+    const person = personRows.rows[0]?.person;
 
     const pgResult = await pool.query(
       `call public.create(0,'public.tokens',$1 ,0,0,0,0,0); `,
@@ -306,11 +330,11 @@ export class AuthenticationRepository {
     const pgResult = await pool.query(
       `
     with u as(
-    select email, created_at, person from public.users_materialized_view where __person_id = $2
+    select email, created_at, person from public.users_data
     ), t as (select token, person from public.tokens where token = $1 )
     select u.email, t.token, u.created_at from u inner join t using (person)
     `,
-      [token, 0]
+      [token]
     );
     console.log(pgResult);
     return result;
@@ -344,6 +368,8 @@ export class AuthenticationRepository {
         }
       )
       .first();
+    const pool = PostgresService.pool;
+    // const pgPersonRow = await pool.query(`call public.update()`, []);
   }
 
   async removeAllEmailTokensForEmail(email: string) {

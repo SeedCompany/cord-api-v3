@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import * as fs from 'fs';
+import { Integer } from 'neo4j-driver';
 import * as path from 'path';
 import { Pool } from 'pg';
 import { ConfigService } from '..';
@@ -37,7 +38,10 @@ export class PostgresService {
     return 0;
   }
 
-  static async init(): Promise<number> {
+  static async init(toggle: number): Promise<void> {
+    if (toggle === 0) {
+      return;
+    }
     const dbInitPath = path.join(
       __dirname,
       '..',
@@ -47,7 +51,7 @@ export class PostgresService {
     );
     await this.executeSQLFiles(dbInitPath);
 
-    return 0;
+    return;
   }
   static convertObjectToHstore(obj: object): string {
     let string = '';
@@ -59,9 +63,12 @@ export class PostgresService {
     return string;
   }
 
-  static async loadTestData() {
+  static async loadTestData(toggle: number) {
     //anon user - using email
     //root user
+    if (toggle === 0) {
+      return;
+    }
     const genericFnsPath = path.join(
       __dirname,
       '..',
@@ -71,8 +78,10 @@ export class PostgresService {
     );
     await this.executeSQLFiles(genericFnsPath);
     // PEOPLE, ORGS, USERS
-
-    await this.pool.query(
+    // const anonuser = await this.pool.query(
+    //   `call public.create(0,'pb)`
+    // )
+    const user0 = await this.pool.query(
       `call public.create(0,'public.people_data',$1 ,2,2,1,3,0); `,
       [
         this.convertObjectToHstore({
@@ -132,7 +141,7 @@ export class PostgresService {
       [
         this.convertObjectToHstore({
           person: user1pk,
-          email: 'rhuan@tsco.org',
+          email: 'vivekvarma_dev@tsco.org',
           owning_org: 0,
           password: 'password',
         }),
