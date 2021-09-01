@@ -265,8 +265,8 @@ export class ProjectRepository extends CommonRepository {
       .query()
       .matchNode('node', `${filter.type ?? ''}Project`)
       .with('distinct(node) as node, node as project')
-      .apply(projectListFilter(filter))
       .match(requestingUser(session))
+      .apply(projectListFilter(filter))
       .apply(matchProjectSensToLimitedScopeMap(session, limitedScope))
       .apply(
         sorting(IProject, input, {
