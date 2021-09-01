@@ -40,7 +40,7 @@ export class AuthenticationRepository {
       )
       .first();
     const pool = PostgresService.pool;
-    await pool.query(`call public.create(0,'public.tokens', $1, 2,2,1,3,0)`, [
+    await pool.query(`call public.create(0,'public.tokens', $1, 0,0,0,0,0)`, [
       PostgresService.convertObjectToHstore({
         token,
         // person: id
