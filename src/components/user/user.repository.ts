@@ -48,6 +48,7 @@ import {
   User,
   UserListInput,
 } from './dto';
+import { isEqual } from 'lodash';
 
 @Injectable()
 export class UserRepository extends DtoRepository(User) {
@@ -129,7 +130,7 @@ export class UserRepository extends DtoRepository(User) {
     console.log('postgres roles', roles);
 
     console.log('result.dto read user by id', result.dto);
-    return {
+    const x = {
       displayFirstName,
       displayLastName,
       realFirstName,
@@ -145,8 +146,10 @@ export class UserRepository extends DtoRepository(User) {
       roles,
       title,
       powers,
-    } as UnsecuredDto<User>;
-    // return result.dto;
+    };
+    // as UnsecuredDto<User>;
+    console.log(isEqual(x, result.dto));
+    return result.dto;
   }
 
   async create(input: CreatePerson) {
