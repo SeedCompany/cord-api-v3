@@ -77,6 +77,7 @@ export class AuthenticationRepository {
       `select p.neo4j_id from public.tokens t inner join public.people_data p on t.person = p.id where t.token = $1`,
       [session.token]
     );
+    console.log('getUserFromSession', pgResult.rows[0].neo4j_id);
     return pgResult.rows[0].neo4j_id;
     // return userRes?.id;
   }
@@ -180,7 +181,7 @@ export class AuthenticationRepository {
     const pool = PostgresService.pool;
     // const tokenRow = await pool.query(`select token from `);
     const personRow = await pool.query(
-      `select p.id from public.users_data u inner join public.people_data p on p.id = u.person where u.email = $1`,
+      `select p.id, p.neo4j_id from public.users_data u inner join public.people_data p on p.id = u.person where u.email = $1`,
       [input.email]
     );
     const tokenRow = await pool.query(
@@ -193,6 +194,7 @@ export class AuthenticationRepository {
         person: personRow.rows[0].id,
       }),
     ]);
+    console.log('connectSessionToUser', result?.id, personRow.rows[0].neo4j_id);
     return result?.id;
   }
 
@@ -239,18 +241,13 @@ export class AuthenticationRepository {
       [token]
     );
     let personNeo4jId: ID | undefined;
-    if (tokenRow.rows[0]?.person) {
-      const personRow = await pool.query(
-        `select neo4j_id from public.people_data where id = $1`,
-        [tokenRow.rows[0].person]
-      );
-
-      if (personRow.rows[0].neo4j_id) {
-        personNeo4jId = personRow.rows[0].neo4j_id;
-      }
-    }
+    const personRow = await pool.query(
+      `select neo4j_id from public.people_data where id = $1`,
+      [tokenRow.rows[0]?.person]
+    );
+    personNeo4jId = personRow.rows[0]?.neo4j_id;
     const postgresResult = { token, userId: personNeo4jId };
-    console.log(postgresResult);
+    console.log('findSessionToken', postgresResult);
     return postgresResult;
   }
 

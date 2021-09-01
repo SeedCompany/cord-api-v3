@@ -63,7 +63,6 @@ export class SessionResolver {
     let rawSession;
     try {
       rawSession = await this.authentication.createSession(token);
-      console.log('rawSession', rawSession);
     } catch (exception) {
       if (!(exception instanceof UnauthenticatedException)) {
         throw exception;
@@ -76,11 +75,10 @@ export class SessionResolver {
       rawSession = await this.authentication.createSession(token);
     }
     const session = anonymousSession(rawSession);
-    console.log('session', session);
     const userFromSession = session.anonymous
       ? undefined
       : await this.repo.getUserFromSession(session);
-    console.log('userFromSession', userFromSession);
+    console.log({ token, user: userFromSession, session });
     if (browser) {
       const { name, expires, ...options } = this.config.sessionCookie;
       res.cookie(name, token, {

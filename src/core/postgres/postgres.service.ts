@@ -131,7 +131,8 @@ export class PostgresService {
           person: 0,
           email: 'devops@tsco.org',
           owning_org: 0,
-          password: 'password',
+          password:
+            '$argon2i$v=19$m=4096,t=3,p=1$uBKKK3lQ+sEFpBAw12oZ4g$JTOABdOo/qOWR8XeSOBU89tvrmwnaEHbm9Vz8Nt0sAs',
         }),
       ]
     );
@@ -143,7 +144,8 @@ export class PostgresService {
           person: user1pk,
           email: 'vivekvarma_dev@tsco.org',
           owning_org: 0,
-          password: 'password',
+          password:
+            '$argon2i$v=19$m=4096,t=3,p=1$7qgYq3ROouGLxRf/xoaPKg$a6RgC3dtubY+M+ZitnfKBYDRV5GxkkxJB0nhhqDC+D4',
         }),
       ]
     );
