@@ -1,5 +1,4 @@
 import { EventsHandler } from '../../../core';
-import { ReportType } from '../../periodic-report/dto';
 import { PnpProgressUploadedEvent } from '../../periodic-report/events';
 import { SummaryPeriod } from '../dto';
 import { ProgressExtractor } from '../progress-extractor.service';
@@ -13,10 +12,6 @@ export class ExtractPnpFileOnUploadHandler {
   ) {}
 
   async handle(event: PnpProgressUploadedEvent) {
-    if (event.report.type !== ReportType.Progress) {
-      return;
-    }
-
     const workbook = await this.extractor.readWorkbook(event.file);
 
     const extracted = this.extractor.extract(

@@ -51,6 +51,7 @@ export class PeriodicReportResolver {
 
   @Mutation(() => IPeriodicReport, {
     description: 'Update a report file',
+    deprecationReason: 'Moved to progress-report resolver',
   })
   async uploadPeriodicReport(
     @LoggedInSession() session: Session,
@@ -72,6 +73,8 @@ export class PeriodicReportResolver {
   @ResolveField(() => SecuredFile, {
     description:
       'Returns Pnp file for progress report. Otherwise returns first report file of directory',
+    deprecationReason:
+      "Use directory or progress report's pnp resolver instead",
   })
   async reportFile(
     @Parent() report: PeriodicReport,

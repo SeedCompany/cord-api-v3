@@ -1,1 +1,1 @@
-export * from './periodic-report-uploaded.event';
+export * from './progress-report-uploaded.event';

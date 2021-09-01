@@ -3,7 +3,7 @@ import { FileVersion } from '../../file';
 import { ProgressReport } from '../dto';
 
 /**
- * Dispatched when a new file is uploaded for a periodic report
+ * Dispatched when a new file is uploaded for a progress report
  */
 export class PnpProgressUploadedEvent {
   constructor(

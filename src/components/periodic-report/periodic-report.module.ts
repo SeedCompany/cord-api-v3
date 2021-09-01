@@ -10,6 +10,7 @@ import { PeriodicReportProjectConnectionResolver } from './periodic-report-proje
 import { PeriodicReportRepository } from './periodic-report.repository';
 import { PeriodicReportResolver } from './periodic-report.resolver';
 import { PeriodicReportService } from './periodic-report.service';
+import { ProgressReportResolver } from './progress-report.resolver';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { PeriodicReportService } from './periodic-report.service';
   providers: [
     PeriodicReportService,
     PeriodicReportResolver,
+    ProgressReportResolver,
     PeriodicReportProjectConnectionResolver,
     PeriodicReportEngagementConnectionResolver,
     PeriodicReportRepository,
