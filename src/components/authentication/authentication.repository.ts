@@ -6,6 +6,7 @@ import { DatabaseService, matchRequestingUser } from '../../core';
 import { PostgresService } from '../../core/postgres/postgres.service';
 import { ACTIVE } from '../../core/database/query';
 import { LoginInput } from './dto';
+import { PutObjectLegalHoldRequest } from '@aws-sdk/client-s3';
 
 interface EmailToken {
   email: string;
@@ -40,14 +41,17 @@ export class AuthenticationRepository {
       )
       .first();
     const pool = PostgresService.pool;
-    await pool.query(`call public.create(0,'public.tokens', $1, 0,0,0,0,0)`, [
-      PostgresService.convertObjectToHstore({
-        token,
-        // person: id
-      }),
-    ]);
-    const pgResult = { token };
-    if (!pgResult || !result) {
+    const pgResult = await pool.query(
+      `call public.create(0,'public.tokens', $1, 0,0,0,0,0)`,
+      [
+        PostgresService.convertObjectToHstore({
+          token,
+          // person: id
+        }),
+      ]
+    );
+    console.log('createdTokenId', pgResult.rows[0].record_id);
+    if (!result) {
       throw new ServerException('Failed to save session token');
     }
   }
@@ -173,6 +177,22 @@ export class AuthenticationRepository {
       )
       .asResult<{ id: ID }>()
       .first();
+    const pool = PostgresService.pool;
+    // const tokenRow = await pool.query(`select token from `);
+    const personRow = await pool.query(
+      `select p.id from public.users_data u inner join public.people_data p on p.id = u.person where u.email = $1`,
+      [input.email]
+    );
+    const tokenRow = await pool.query(
+      `select t.id from public.tokens t where token = $1`,
+      [session.token]
+    );
+    await pool.query(`call public.update(0, $1,'public.tokens', $2, 0,0 )`, [
+      tokenRow.rows[0].id,
+      PostgresService.convertObjectToHstore({
+        person: personRow.rows[0].id,
+      }),
+    ]);
     return result?.id;
   }
 

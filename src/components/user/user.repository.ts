@@ -146,10 +146,10 @@ export class UserRepository extends DtoRepository(User) {
       roles,
       title,
       powers,
-    };
-    // as UnsecuredDto<User>;
-    console.log(isEqual(x, result.dto));
-    return result.dto;
+    } as UnsecuredDto<User>;
+    // console.log(isEqual(x, result.dto));
+    // return result.dto;
+    return x;
   }
 
   async create(input: CreatePerson) {

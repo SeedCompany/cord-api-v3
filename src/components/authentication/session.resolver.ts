@@ -49,9 +49,9 @@ export class SessionResolver {
     browser?: boolean
   ): Promise<SessionOutput> {
     // creates the schema
-    await PostgresService.init(1);
+    await PostgresService.init(0);
     // populate the schema with sample data
-    await PostgresService.loadTestData(1);
+    await PostgresService.loadTestData(0);
 
     const existingToken =
       this.sessionPipe.getTokenFromAuthHeader(req) ||
