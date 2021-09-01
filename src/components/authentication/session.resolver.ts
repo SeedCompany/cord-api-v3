@@ -56,11 +56,14 @@ export class SessionResolver {
     const existingToken =
       this.sessionPipe.getTokenFromAuthHeader(req) ||
       this.sessionPipe.getTokenFromCookie(req);
+    console.log('existingToken', existingToken);
 
     let token = existingToken || (await this.authentication.createToken());
+    console.log('token', token);
     let rawSession;
     try {
       rawSession = await this.authentication.createSession(token);
+      console.log('rawSession', rawSession);
     } catch (exception) {
       if (!(exception instanceof UnauthenticatedException)) {
         throw exception;

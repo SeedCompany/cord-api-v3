@@ -47,7 +47,7 @@ export class AuthenticationRepository {
       }),
     ]);
     const pgResult = { token };
-    if (!pgResult) {
+    if (!pgResult || !result) {
       throw new ServerException('Failed to save session token');
     }
   }
