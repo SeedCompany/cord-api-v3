@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { ID, Session } from '../../common';
+import { ID, NotFoundException, Session, UnsecuredDto } from '../../common';
 import { DtoRepository, matchRequestingUser } from '../../core';
 import {
+  ACTIVE,
   createNode,
   matchPropsAndProjectSensAndScopedRoles,
   paginate,
@@ -10,8 +11,6 @@ import {
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { DbPropsOfDto } from '../../core/database/results';
-import { ScopedRole } from '../authorization';
 import { Ceremony, CeremonyListInput, CreateCeremony } from './dto';
 
 @Injectable()
@@ -33,23 +32,24 @@ export class CeremonyRepository extends DtoRepository(Ceremony) {
   }
 
   async readOne(id: ID, session: Session) {
-    const readCeremony = this.db
+    const query = this.db
       .query()
       .match([
         node('project', 'Project'),
-        relation('out', '', 'engagement', { active: true }),
+        relation('out', '', 'engagement', ACTIVE),
         node('', 'Engagement'),
-        relation('out', '', { active: true }),
+        relation('out', '', ACTIVE),
         node('node', 'Ceremony', { id }),
       ])
       .apply(matchPropsAndProjectSensAndScopedRoles(session))
-      .return(['props', 'scopedRoles'])
-      .asResult<{
-        props: DbPropsOfDto<Ceremony, true>;
-        scopedRoles: ScopedRole[];
-      }>();
+      .return<{ dto: UnsecuredDto<Ceremony> }>('props as dto');
 
-    return await readCeremony.first();
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException('Could not find ceremony', 'ceremony.id');
+    }
+
+    return result.dto;
   }
 
   async list({ filter, ...input }: CeremonyListInput, session: Session) {
@@ -61,7 +61,7 @@ export class CeremonyRepository extends DtoRepository(Ceremony) {
         ...permissionsOfNode(label),
         ...(filter.type
           ? [
-              relation('out', '', 'type', { active: true }),
+              relation('out', '', 'type', ACTIVE),
               node('name', 'Property', { value: filter.type }),
             ]
           : []),

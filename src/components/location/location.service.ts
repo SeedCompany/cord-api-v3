@@ -3,6 +3,7 @@ import {
   DuplicateException,
   ID,
   NotFoundException,
+  ObjectView,
   ResourceShape,
   SecuredList,
   ServerException,
@@ -70,7 +71,11 @@ export class LocationService {
   }
 
   @HandleIdLookup(Location)
-  async readOne(id: ID, session: Session): Promise<Location> {
+  async readOne(
+    id: ID,
+    session: Session,
+    _view?: ObjectView
+  ): Promise<Location> {
     this.logger.debug(`Read Location`, {
       id: id,
       userId: session.userId,

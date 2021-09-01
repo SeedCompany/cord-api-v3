@@ -4,10 +4,12 @@ import {
   ID,
   InputException,
   NotFoundException,
+  ObjectView,
   ServerException,
   Session,
   UnauthorizedException,
   UnsecuredDto,
+  viewOfChangeset,
 } from '../../common';
 import { HandleIdLookup, IEventBus, ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
@@ -106,7 +108,11 @@ export class PartnershipService {
         await this.repo.removePrimaryFromOtherPartnerships(id);
       }
 
-      const partnership = await this.readOne(id, session, changeset);
+      const partnership = await this.readOne(
+        id,
+        session,
+        viewOfChangeset(changeset)
+      );
 
       await this.eventBus.publish(
         new PartnershipCreatedEvent(partnership, session)
@@ -126,19 +132,19 @@ export class PartnershipService {
   async readOne(
     id: ID,
     session: Session,
-    changeset?: ID
+    view?: ObjectView
   ): Promise<Partnership> {
-    const dto = await this.readOneUnsecured(id, session, changeset);
+    const dto = await this.readOneUnsecured(id, session, view);
     return await this.secure(dto, session);
   }
 
   async readOneUnsecured(
     id: ID,
     session: Session,
-    changeset?: ID
+    view?: ObjectView
   ): Promise<UnsecuredDto<Partnership>> {
     this.logger.debug('readOne', { id, userId: session.userId });
-    return await this.repo.readOne(id, session, changeset);
+    return await this.repo.readOne(id, session, view);
   }
 
   async secure(
@@ -148,8 +154,7 @@ export class PartnershipService {
     const securedProps = await this.authorizationService.secureProperties(
       Partnership,
       dto,
-      session,
-      dto.scope
+      session
     );
 
     return {
@@ -171,9 +176,9 @@ export class PartnershipService {
     };
   }
 
-  async update(input: UpdatePartnership, session: Session, changeset?: ID) {
+  async update(input: UpdatePartnership, session: Session, view?: ObjectView) {
     // mou start and end are now computed fields and do not get updated directly
-    const object = await this.readOne(input.id, session, changeset);
+    const object = await this.readOne(input.id, session, view);
 
     const partner = await this.partnerService.readOne(
       object.partner.value!,
@@ -217,7 +222,7 @@ export class PartnershipService {
       await this.repo.removePrimaryFromOtherPartnerships(input.id);
     }
 
-    await this.repo.updateProperties(object, simpleChanges, changeset);
+    await this.repo.updateProperties(object, simpleChanges, view?.changeset);
     await this.files.updateDefinedFile(
       object.mou,
       'partnership.mou',
@@ -231,7 +236,7 @@ export class PartnershipService {
       session
     );
 
-    const partnership = await this.readOne(input.id, session, changeset);
+    const partnership = await this.readOne(input.id, session, view);
     const event = new PartnershipUpdatedEvent(
       partnership,
       object,
@@ -293,7 +298,7 @@ export class PartnershipService {
 
     const results = await this.repo.list(input, session, changeset);
     return await mapListResults(results, (id) =>
-      this.readOne(id, session, changeset)
+      this.readOne(id, session, viewOfChangeset(changeset))
     );
   }
 

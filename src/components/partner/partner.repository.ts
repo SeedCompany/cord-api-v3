@@ -3,6 +3,7 @@ import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   ID,
+  isIdLike,
   NotFoundException,
   ServerException,
   Session,
@@ -10,15 +11,20 @@ import {
 } from '../../common';
 import { DtoRepository, matchRequestingUser } from '../../core';
 import {
+  ACTIVE,
   createNode,
   createRelationships,
+  matchProjectScopedRoles,
+  matchProjectSens,
   matchProps,
   merge,
   paginate,
-  permissionsOfNode,
+  rankSens,
   requestingUser,
   sorting,
+  variable,
 } from '../../core/database/query';
+import { RoleSensitivityMapping } from '../authorization/authorization.service';
 import { CreatePartner, Partner, PartnerListInput } from './dto';
 
 @Injectable()
@@ -28,7 +34,7 @@ export class PartnerRepository extends DtoRepository(Partner) {
       .query()
       .match([
         node('node', 'Organization', { id: organizationId }),
-        relation('in', '', 'organization', { active: true }),
+        relation('in', '', 'organization', ACTIVE),
         node('partner', 'Partner'),
       ])
       .return<{ id: ID }>('partner.id as id')
@@ -70,7 +76,7 @@ export class PartnerRepository extends DtoRepository(Partner) {
       .query()
       .apply(matchRequestingUser(session))
       .match([node('node', 'Partner', { id: id })])
-      .apply(this.hydrate());
+      .apply(this.hydrate(session));
 
     const result = await query.first();
     if (!result) {
@@ -80,24 +86,64 @@ export class PartnerRepository extends DtoRepository(Partner) {
     return result.dto;
   }
 
-  protected hydrate() {
+  protected hydrate(session: Session) {
     return (query: Query) =>
       query
+        .optionalMatch([
+          node('project', 'Project'),
+          relation('out', '', 'partnership'),
+          node('', 'Partnership'),
+          relation('out', '', 'partner'),
+          node('node'),
+        ])
+        .apply(matchProjectScopedRoles({ session }))
+        .with([
+          'node',
+          'collect(project) as projList',
+          'keys(apoc.coll.frequenciesAsMap(apoc.coll.flatten(collect(scopedRoles)))) as scopedRoles',
+        ])
+        .subQuery((sub) =>
+          sub
+            .with('projList')
+            .raw('UNWIND projList as project')
+            // TODO: have this match from line 92 so we don't have to match this twice
+            .match([
+              node('project'),
+              relation('out', '', 'member'),
+              node('projectMember'),
+              relation('out', '', 'user'),
+              node('user', 'User', {
+                id: isIdLike(session) ? session : session.userId,
+              }),
+            ])
+            .apply(matchProjectSens())
+            .with('sensitivity')
+            .orderBy(rankSens('sensitivity'), 'ASC')
+            .raw('LIMIT 1')
+            .return('sensitivity')
+            .union()
+            .with('projList')
+            .with('projList')
+            .raw('WHERE size(projList) = 0')
+            .return(`'High' as sensitivity`)
+        )
         .apply(matchProps())
         .optionalMatch([
           node('node'),
-          relation('out', '', 'organization', { active: true }),
+          relation('out', '', 'organization', ACTIVE),
           node('organization', 'Organization'),
         ])
         .optionalMatch([
           node('node'),
-          relation('out', '', 'pointOfContact', { active: true }),
+          relation('out', '', 'pointOfContact', ACTIVE),
           node('pointOfContact', 'User'),
         ])
         .return<{ dto: UnsecuredDto<Partner> }>(
           merge('props', {
+            sensitivity: 'sensitivity',
             organization: 'organization.id',
             pointOfContact: 'pointOfContact.id',
+            scope: 'scopedRoles',
           }).as('dto')
         );
   }
@@ -133,36 +179,76 @@ export class PartnerRepository extends DtoRepository(Partner) {
       .run();
   }
 
-  async list({ filter, ...input }: PartnerListInput, session: Session) {
+  async list(
+    { filter, ...input }: PartnerListInput,
+    session: Session,
+    limitedScope?: RoleSensitivityMapping
+  ) {
     const result = await this.db
       .query()
       .match([
-        requestingUser(session),
-        ...permissionsOfNode('Partner'),
+        ...(limitedScope
+          ? [
+              node('project', 'Project'),
+              relation('out', '', 'partnership'),
+              node('', 'Partnership'),
+              relation('out', '', 'partner'),
+            ]
+          : []),
+        node('node', 'Partner'),
         ...(filter.userId && session.userId
           ? [
-              relation('out', '', 'organization', { active: true }),
+              relation('out', '', 'organization', ACTIVE),
               node('', 'Organization'),
-              relation('in', '', 'organization', { active: true }),
+              relation('in', '', 'organization', ACTIVE),
               node('user', 'User', { id: filter.userId }),
             ]
           : []),
       ])
+      // match requesting user once (instead of once per row)
+      .match(requestingUser(session))
+      .apply((q) =>
+        limitedScope
+          ? q
+              // group by project so this next bit doesn't run multiple times for a single project
+              .with(['project', 'collect(node) as partners', 'requestingUser'])
+              .apply(
+                matchProjectScopedRoles({
+                  session: variable('requestingUser'),
+                })
+              )
+              .subQuery('project', (sub) =>
+                sub
+                  .apply(matchProjectSens())
+                  .return(`${rankSens('sensitivity')} as sens`)
+              )
+              .raw('UNWIND partners as node')
+              .matchNode('node')
+              .raw(
+                `WHERE any(role in scopedRoles WHERE role IN keys($sensMap) and sens <= ${rankSens(
+                  'apoc.map.get($sensMap, role)'
+                )})`,
+                {
+                  sensMap: limitedScope,
+                }
+              )
+          : q
+      )
       .apply(
         sorting(Partner, input, {
           name: (query) =>
             query
               .match([
                 node('node'),
-                relation('out', '', 'organization', { active: true }),
+                relation('out', '', 'organization', ACTIVE),
                 node('organization', 'Organization'),
-                relation('out', '', 'name', { active: true }),
+                relation('out', '', 'name', ACTIVE),
                 node('prop', 'Property'),
               ])
               .return<{ sortValue: string }>('prop.value as sortValue'),
         })
       )
-      .apply(paginate(input))
+      .apply(paginate(input, this.hydrate(session)))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }

@@ -260,6 +260,7 @@ export const Translator = new DbRole({
     }),
     new DbBaseNodeGrant<DbPartner>({
       __className: 'DbPartner',
+      canList: false,
       properties: [
         { propertyName: 'organization', permission: {}, },
         { propertyName: 'pointOfContact', permission: {}, },

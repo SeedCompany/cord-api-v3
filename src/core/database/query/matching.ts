@@ -1,5 +1,6 @@
 import { node, Query, relation } from 'cypher-query-builder';
-import { ID, Many, Session } from '../../../common';
+import { labelForView, Many, ObjectView, Session } from '../../../common';
+import { variable } from '../query-augmentation/condition-variables';
 import { apoc, collect, listConcat, merge } from './cypher-functions';
 
 export const requestingUser = (session: Session) =>
@@ -19,6 +20,16 @@ export const permissionsOfNode = (nodeLabel: Many<string>) => [
   node('node', nodeLabel),
 ];
 
+/**
+ * Same as `{ active: true }` but it doesn't create a bound parameter
+ */
+export const ACTIVE = { active: variable('true') };
+
+/**
+ * Same as `{ active: false }` but it doesn't create a bound parameter
+ */
+export const INACTIVE = { active: variable('false') };
+
 export interface MatchPropsOptions {
   // The node var to pull properties from
   nodeName?: string;
@@ -26,10 +37,10 @@ export interface MatchPropsOptions {
   outputVar?: string;
   // Whether we should move forward even without any properties matched
   optional?: boolean;
-  // The optional change ID to reference
-  changeset?: ID;
   // Don't merge in the actual BaseNode's properties into the resulting output object
   excludeBaseProps?: boolean;
+  // View object
+  view?: ObjectView;
 }
 
 /**
@@ -44,35 +55,46 @@ export const matchProps = (options: MatchPropsOptions = {}) => {
     nodeName = 'node',
     outputVar = 'props',
     optional = false,
-    changeset,
     excludeBaseProps = false,
+    view = { active: true },
   } = options;
-  return (query: Query) =>
-    query.comment`matchProps(${nodeName})`.subQuery(nodeName, (sub) =>
-      sub
-        .match(
-          [
-            node(nodeName),
-            relation('out', 'r', { active: !changeset }),
-            node('prop', 'Property'),
-            ...(changeset
-              ? [
-                  relation('in', '', 'changeset', { active: true }),
-                  node('changeset', 'Changeset', { id: changeset }),
-                ]
-              : []),
-          ],
-          {
-            optional,
-          }
-        )
-        .return(
-          merge(
-            listConcat(
-              `[${excludeBaseProps ? '' : nodeName}]`,
-              collect(apoc.map.fromValues(['type(r)', 'prop.value']))
-            )
-          ).as(outputVar)
-        )
+  return (query: Query) => {
+    const lookupProps = (query: Query) =>
+      query.match([
+        node(nodeName),
+        relation('out', 'r', { active: !view.changeset }),
+        node('prop', labelForView('Property', view)),
+        ...(view.changeset
+          ? [
+              relation('in', '', 'changeset', ACTIVE),
+              node('changeset', 'Changeset', { id: view.changeset }),
+            ]
+          : []),
+      ]);
+    const collectProps = collect(
+      apoc.map.fromValues(['type(r)', 'prop.value'])
     );
+
+    return query.comment`matchProps(${nodeName})`.subQuery(nodeName, (sub) =>
+      // If optional match in another sub-query where the return clause's
+      // outer most function is collect() so that a single row with props
+      // as an empty list is returned when no properties are matched.
+      // OPTIONAL MATCH should work instead of this, but it bugs out
+      // with complex queries.
+      // Error is "Tried overwriting already taken variable name" with v4.2.8
+      (optional
+        ? sub.subQuery(nodeName, (sub2) =>
+            sub2.apply(lookupProps).return(collectProps.as('props'))
+          )
+        : sub.apply(lookupProps)
+      ).return(
+        merge(
+          listConcat(
+            `[${excludeBaseProps ? '' : nodeName}]`,
+            optional ? 'props' : collectProps
+          )
+        ).as(outputVar)
+      )
+    );
+  };
 };

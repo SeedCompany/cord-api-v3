@@ -4,16 +4,20 @@ import { DateTime } from 'luxon';
 import {
   generateId,
   ID,
+  labelForView,
   NotFoundException,
+  ObjectView,
   ServerException,
   Session,
   UnsecuredDto,
 } from '../../common';
 import { DtoRepository, matchRequestingUser } from '../../core';
 import {
+  ACTIVE,
   coalesce,
   createNode,
   createRelationships,
+  INACTIVE,
   matchChangesetAndChangedProps,
   matchProps,
   matchPropsAndProjectSensAndScopedRoles,
@@ -74,27 +78,29 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
     return { id: result.id, mouId, agreementId };
   }
 
-  async readOne(id: ID, session: Session, changeset?: ID) {
+  async readOne(id: ID, session: Session, view?: ObjectView) {
+    const label = labelForView('Partnership', view);
+
     const query = this.db
       .query()
       .subQuery((sub) =>
         sub
           .match([
             node('project'),
-            relation('out', '', 'partnership', { active: true }),
-            node('node', 'Partnership', { id }),
+            relation('out', '', 'partnership', ACTIVE),
+            node('node', label, { id }),
           ])
           .return('project, node')
           .apply((q) =>
-            changeset
+            view?.changeset
               ? q
                   .union()
                   .match([
                     node('project'),
-                    relation('out', '', 'partnership', { active: false }),
-                    node('node', 'Partnership', { id }),
-                    relation('in', '', 'changeset', { active: true }),
-                    node('changeset', 'Changeset', { id: changeset }),
+                    relation('out', '', 'partnership', INACTIVE),
+                    node('node', label, { id }),
+                    relation('in', '', 'changeset', ACTIVE),
+                    node('changeset', 'Changeset', { id: view.changeset }),
                   ])
                   .return('project, node')
               : q
@@ -104,16 +110,16 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
         node('node'),
         relation('out', '', 'partner'),
         node('partner', 'Partner'),
-        relation('out', '', 'organization', { active: true }),
+        relation('out', '', 'organization', ACTIVE),
         node('org', 'Organization'),
       ])
-      .apply(matchPropsAndProjectSensAndScopedRoles(session))
-      .apply(matchChangesetAndChangedProps(changeset))
+      .apply(matchPropsAndProjectSensAndScopedRoles(session, { view }))
+      .apply(matchChangesetAndChangedProps(view?.changeset))
       .apply(matchProps({ nodeName: 'project', outputVar: 'projectProps' }))
       .apply(
         matchProps({
           nodeName: 'project',
-          changeset,
+          view,
           optional: true,
           outputVar: 'projectChangedProps',
         })
@@ -136,7 +142,6 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
           partner: 'partner.id',
           organization: 'org.id',
           changeset: 'changeset.id',
-          scope: 'scopedRoles',
         }).as('dto')
       );
 
@@ -158,7 +163,7 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
             ...permissionsOfNode('Partnership'),
             ...(input.filter.projectId
               ? [
-                  relation('in', '', 'partnership', { active: true }),
+                  relation('in', '', 'partnership', ACTIVE),
                   node('project', 'Project', { id: input.filter.projectId }),
                 ]
               : []),
@@ -171,9 +176,9 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
                   .union()
                   .match([
                     node('', 'Project', { id: input.filter.projectId }),
-                    relation('out', '', 'partnership', { active: false }),
+                    relation('out', '', 'partnership', INACTIVE),
                     node('node', 'Partnership'),
-                    relation('in', '', 'changeset', { active: true }),
+                    relation('in', '', 'changeset', ACTIVE),
                     node('changeset', 'Changeset', { id: changeset }),
                   ])
                   .return('node')
@@ -201,9 +206,9 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
             .with('project, partner')
             .optionalMatch([
               node('project'),
-              relation('out', '', 'partnership', { active: true }),
+              relation('out', '', 'partnership', ACTIVE),
               node('partnership'),
-              relation('out', '', 'partner', { active: true }),
+              relation('out', '', 'partner', ACTIVE),
               node('partner'),
             ])
             .return(['partnership'])
@@ -215,14 +220,14 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
                     .match([node('changeset', 'Changeset', { id: changeset })])
                     .optionalMatch([
                       node('project'),
-                      relation('out', '', 'partnership', { active: false }),
+                      relation('out', '', 'partnership', INACTIVE),
                       node('partnership'),
-                      relation('in', '', 'changeset', { active: true }),
+                      relation('in', '', 'changeset', ACTIVE),
                       node('changeset'),
                     ])
                     .optionalMatch([
                       node('partnership'),
-                      relation('out', '', 'partner', { active: true }),
+                      relation('out', '', 'partner', ACTIVE),
                       node('partner'),
                     ])
                     .return(['partnership'])
@@ -242,7 +247,7 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
         sub
           .match([
             node('project', 'Project', { id: projectId }),
-            relation('out', '', 'partnership', { active: true }),
+            relation('out', '', 'partnership', ACTIVE),
             node('partnership'),
           ])
           .return(['partnership'])
@@ -253,9 +258,9 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
                   .match([node('changeset', 'Changeset', { id: changeset })])
                   .match([
                     node('project', 'Project', { id: projectId }),
-                    relation('out', '', 'partnership', { active: false }),
+                    relation('out', '', 'partnership', INACTIVE),
                     node('partnership'),
-                    relation('in', '', 'changeset', { active: true }),
+                    relation('in', '', 'changeset', ACTIVE),
                     node('changeset'),
                   ])
                   .return(['partnership'])
@@ -283,7 +288,7 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
       .apply(this.matchOtherPartnerships(id))
       .match([
         node('otherPartnership'),
-        relation('out', 'oldRel', 'primary', { active: true }),
+        relation('out', 'oldRel', 'primary', ACTIVE),
         node('', 'Property'),
       ])
       .setValues({
@@ -309,9 +314,9 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
       query
         .match([
           node('partnership', 'Partnership', { id }),
-          relation('in', '', 'partnership', { active: true }),
+          relation('in', '', 'partnership', ACTIVE),
           node('project', 'Project'),
-          relation('out', '', 'partnership', { active: true }),
+          relation('out', '', 'partnership', ACTIVE),
           node('otherPartnership'),
         ])
         .raw('WHERE partnership <> otherPartnership')

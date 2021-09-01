@@ -1,6 +1,10 @@
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { prefixNodeLabelsWithDeleted } from '../../core/database/query';
+import {
+  ACTIVE,
+  INACTIVE,
+  prefixNodeLabelsWithDeleted,
+} from '../../core/database/query';
 
 export interface CommitChangesetPropsOptions {
   nodeVar?: string;
@@ -18,9 +22,9 @@ export const commitChangesetProps =
         .comment('For all changed properties of node & changeset')
         .match([
           node(nodeVar),
-          relation('out', 'changedRel', { active: false }),
+          relation('out', 'changedRel', INACTIVE),
           node('changedProp', 'Property'),
-          relation('in', '', 'changeset', { active: true }),
+          relation('in', '', 'changeset', ACTIVE),
           node(changesetVar),
         ])
 
@@ -29,7 +33,7 @@ export const commitChangesetProps =
           sub
             .match([
               node(nodeVar),
-              relation('out', 'previouslyActiveRel', [], { active: true }),
+              relation('out', 'previouslyActiveRel', [], ACTIVE),
               node('previouslyActiveProp', 'Property'),
             ])
             .raw(`WHERE type(previouslyActiveRel) = type(changedRel)`)

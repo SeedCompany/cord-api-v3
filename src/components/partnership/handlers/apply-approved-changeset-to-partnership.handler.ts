@@ -7,7 +7,7 @@ import {
   ILogger,
   Logger,
 } from '../../../core';
-import { deleteBaseNode } from '../../../core/database/query';
+import { ACTIVE, deleteBaseNode } from '../../../core/database/query';
 import { commitChangesetProps } from '../../changeset/commit-changeset-props.query';
 import { ProjectChangeRequestApprovedEvent } from '../../project-change-request/events';
 import { PartnershipService } from '../partnership.service';
@@ -36,7 +36,7 @@ export class ApplyApprovedChangesetToPartnership
         .query()
         .match([
           node('project', 'Project'),
-          relation('out', '', 'changeset', { active: true }),
+          relation('out', '', 'changeset', ACTIVE),
           node('changesetNode', 'Changeset', { id: changeset }),
         ])
         .subQuery((sub) =>
@@ -58,7 +58,7 @@ export class ApplyApprovedChangesetToPartnership
                 active: false,
               }),
               node('node', 'Partnership'),
-              relation('in', 'changesetRel', 'changeset', { active: true }),
+              relation('in', 'changesetRel', 'changeset', ACTIVE),
               node('changesetNode'),
             ])
             .setValues({
@@ -76,9 +76,9 @@ export class ApplyApprovedChangesetToPartnership
             .query()
             .match([
               node('changeset', 'Changeset', { id: changeset }),
-              relation('in', '', 'changeset', { active: true }),
+              relation('in', '', 'changeset', ACTIVE),
               node('project', 'Project'),
-              relation('out', '', 'partnership', { active: true }),
+              relation('out', '', 'partnership', ACTIVE),
               node('node', 'Partnership', { id }),
             ])
             .apply(commitChangesetProps())
@@ -102,12 +102,12 @@ export class ApplyApprovedChangesetToPartnership
       .query()
       .match([
         node('project', 'Project'),
-        relation('out', '', 'changeset', { active: true }),
+        relation('out', '', 'changeset', ACTIVE),
         node('changeset', 'Changeset', { id: changeset }),
       ])
       .match([
         node('project'),
-        relation('out', '', 'partnership', { active: true }),
+        relation('out', '', 'partnership', ACTIVE),
         node('node', 'Partnership'),
         relation('in', '', 'changeset', { active: true, deleting: true }),
         node('changeset'),

@@ -10,6 +10,7 @@ import {
   SyntaxError,
 } from '../../core';
 import { PostgresService } from '../../core/postgres/postgres.service';
+import { ACTIVE } from '../../core/database/query';
 
 @Injectable()
 export class AdminRepository {
@@ -277,7 +278,7 @@ export class AdminRepository {
   //     `insert into sc.posts_directory(id) values(0);
   //     `
   //   );
-  //   await client.query(`insert into sc.projects_data(id,project,base64,active,department, root_directory, posts_directory) 
+  //   await client.query(`insert into sc.projects_data(id,project,base64,active,department, root_directory, posts_directory)
   //   values(0,0,'proj0', true,  'dept0', 0,0);`);
   //   await client.query(
   //     `insert into sc.files_data(id,directory,name) values(0,0,'defaultFile')`
@@ -306,7 +307,7 @@ export class AdminRepository {
   //   await client.query(`insert into sc.periodic_reports_directory(id) values(0);
   //   `);
 
-  //   await client.query(`insert into sc.periodic_reports_data(id, directory, start_at,end_at,type,reportFile) values 
+  //   await client.query(`insert into sc.periodic_reports_data(id, directory, start_at,end_at,type,reportFile) values
   //   (0,0,'2020-01-01', '2020-12-12','Narrative',0);`);
 
   //   await client.query(`insert into project_memberships(project,person) values (0,0);
@@ -372,7 +373,7 @@ export class AdminRepository {
   //       [projName]
   //     );
   //     await client.query(
-  //       `insert into sc.projects_data(project,base64,active,department, root_directory, posts_directory) 
+  //       `insert into sc.projects_data(project,base64,active,department, root_directory, posts_directory)
   //     values($1,$2, true, $3, 0, 0);`,
   //       [i, orgName, deptName]
   //     );
@@ -444,7 +445,7 @@ export class AdminRepository {
     anonUserId: string,
     publicSecurityGroupId: string
   ) {
-    //user account you're automatically logged in as until you login 
+    //user account you're automatically logged in as until you login
     await this.db
       .query()
       .merge([
@@ -472,9 +473,9 @@ export class AdminRepository {
       .query()
       .match([
         node('email', 'EmailAddress'),
-        relation('in', '', 'email', { active: true }),
+        relation('in', '', 'email', ACTIVE),
         node('root', ['RootUser']),
-        relation('out', '', 'password', { active: true }),
+        relation('out', '', 'password', ACTIVE),
         node('pw', 'Property'),
       ])
       .return(['root.id as id', 'email.value as email', 'pw.value as hash'])
@@ -487,9 +488,9 @@ export class AdminRepository {
       .query()
       .match([
         node('email', 'EmailAddress'),
-        relation('in', '', 'email', { active: true }),
+        relation('in', '', 'email', ACTIVE),
         node('root', ['RootUser']),
-        relation('out', '', 'password', { active: true }),
+        relation('out', '', 'password', ACTIVE),
         node('pw', 'Property'),
       ])
       .setValues({

@@ -11,8 +11,9 @@ import {
   LoggedInSession,
   SecuredDateRange,
   Session,
+  viewOfChangeset,
 } from '../../common';
-import { ChangesetIds } from '../changeset/dto';
+import { ChangesetIds, IdsAndView, IdsAndViewArg } from '../changeset/dto';
 import { FileService, SecuredFile } from '../file';
 import { SecuredPartner } from '../partner/dto';
 import { PartnerService } from '../partner/partner.service';
@@ -51,9 +52,9 @@ export class PartnershipResolver {
   })
   async partnership(
     @AnonSession() session: Session,
-    @Args() { id, changeset }: ChangesetIds
+    @IdsAndViewArg() { id, view }: IdsAndView
   ): Promise<Partnership> {
-    return await this.service.readOne(id, session, changeset);
+    return await this.service.readOne(id, session, view);
   }
 
   @ResolveField(() => SecuredFile, {
@@ -125,7 +126,11 @@ export class PartnershipResolver {
     @LoggedInSession() session: Session,
     @Args('input') { partnership: input, changeset }: UpdatePartnershipInput
   ): Promise<UpdatePartnershipOutput> {
-    const partnership = await this.service.update(input, session, changeset);
+    const partnership = await this.service.update(
+      input,
+      session,
+      viewOfChangeset(changeset)
+    );
     return { partnership };
   }
 

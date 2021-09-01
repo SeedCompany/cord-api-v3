@@ -4,6 +4,7 @@ import {
   ID,
   InputException,
   NotFoundException,
+  ObjectView,
   ServerException,
   Session,
   UnauthorizedException,
@@ -82,7 +83,11 @@ export class PartnerService {
   }
 
   @HandleIdLookup(Partner)
-  async readOne(id: ID, session: Session): Promise<Partner> {
+  async readOne(
+    id: ID,
+    session: Session,
+    _view?: ObjectView
+  ): Promise<Partner> {
     this.logger.debug(`Read Partner by Partner Id`, {
       id: id,
       userId: session.userId,
@@ -179,8 +184,11 @@ export class PartnerService {
     input: PartnerListInput,
     session: Session
   ): Promise<PartnerListOutput> {
-    const results = await this.repo.list(input, session);
-    return await mapListResults(results, (id) => this.readOne(id, session));
+    const limited = (await this.authorizationService.canList(Partner, session))
+      ? undefined
+      : await this.authorizationService.getListRoleSensitivityMapping(Partner);
+    const results = await this.repo.list(input, session, limited);
+    return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 
   protected verifyFinancialReportingType(

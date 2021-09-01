@@ -13,6 +13,7 @@ import {
 import { CommonRepository, OnIndex } from '../../core';
 import { DbChanges, getChanges } from '../../core/database/changes';
 import {
+  ACTIVE,
   createNode,
   createRelationships,
   escapeLuceneSyntax,
@@ -67,9 +68,9 @@ export class ProductRepository extends CommonRepository {
       .query()
       .match([
         node('project', 'Project'),
-        relation('out', '', 'engagement', { active: true }),
+        relation('out', '', 'engagement', ACTIVE),
         node('engagement', 'Engagement'),
-        relation('out', '', 'product', { active: true }),
+        relation('out', '', 'product', ACTIVE),
         node('node', 'Product', { id }),
       ])
       .apply(this.hydrate(session));
@@ -86,7 +87,7 @@ export class ProductRepository extends CommonRepository {
         .apply(matchPropsAndProjectSensAndScopedRoles(session))
         .optionalMatch([
           node('node'),
-          relation('out', '', 'produces', { active: true }),
+          relation('out', '', 'produces', ACTIVE),
           node('produces', 'Producible'),
         ])
         .return<{
@@ -110,7 +111,6 @@ export class ProductRepository extends CommonRepository {
             'props',
             {
               engagement: 'engagement.id',
-              scope: 'scopedRoles',
               produces: 'produces',
             }
           ).as('dto')
@@ -157,6 +157,8 @@ export class ProductRepository extends CommonRepository {
       describeCompletion: input.describeCompletion,
       isOverriding: !!input.scriptureReferencesOverride,
       canDelete: true,
+      progressTarget: input.progressTarget,
+      progressStepMeasurement: input.progressStepMeasurement,
     };
 
     const query = this.db
@@ -183,7 +185,7 @@ export class ProductRepository extends CommonRepository {
           (label: string) => (range: ScriptureRangeInput) =>
             [
               node('node'),
-              relation('out', '', label, { active: true }),
+              relation('out', '', label, ACTIVE),
               node('', getDbClassLabels(ScriptureRange), {
                 ...ScriptureRange.fromReferences(range),
                 createdAt,
@@ -217,6 +219,8 @@ export class ProductRepository extends CommonRepository {
       title: input.title,
       description: input.description,
       canDelete: true,
+      progressTarget: input.progressTarget,
+      progressStepMeasurement: input.progressStepMeasurement,
     };
 
     const query = this.db
@@ -247,7 +251,7 @@ export class ProductRepository extends CommonRepository {
       .query()
       .match([
         node('product', 'Product', { id: input.id }),
-        relation('out', 'rel', 'produces', { active: true }),
+        relation('out', 'rel', 'produces', ACTIVE),
         node('', 'Producible'),
       ])
       .setValues({
@@ -307,7 +311,7 @@ export class ProductRepository extends CommonRepository {
         ...permissionsOfNode(label),
         ...(filter.engagementId
           ? [
-              relation('in', '', 'product', { active: true }),
+              relation('in', '', 'product', ACTIVE),
               node('engagement', 'Engagement', {
                 id: filter.engagementId,
               }),

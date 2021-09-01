@@ -17,6 +17,7 @@ import {
 } from '../../core';
 import { DbChanges, getChanges } from '../../core/database/changes';
 import {
+  ACTIVE,
   createNode,
   createRelationships,
   matchChangesetAndChangedProps,
@@ -56,7 +57,7 @@ export class ProjectRepository extends CommonRepository {
       .query()
       .match([
         node('user', 'User', { id: session.userId }),
-        relation('out', '', 'roles', { active: true }),
+        relation('out', '', 'roles', ACTIVE),
         node('roles', 'Property'),
       ])
       .return<{ roles: Role }>('roles.value as roles')
@@ -85,22 +86,22 @@ export class ProjectRepository extends CommonRepository {
         .apply(matchChangesetAndChangedProps(changeset))
         .optionalMatch([
           node('node'),
-          relation('out', '', 'primaryLocation', { active: true }),
+          relation('out', '', 'primaryLocation', ACTIVE),
           node('primaryLocation', 'Location'),
         ])
         .optionalMatch([
           node('node'),
-          relation('out', '', 'marketingLocation', { active: true }),
+          relation('out', '', 'marketingLocation', ACTIVE),
           node('marketingLocation', 'Location'),
         ])
         .optionalMatch([
           node('node'),
-          relation('out', '', 'fieldRegion', { active: true }),
+          relation('out', '', 'fieldRegion', ACTIVE),
           node('fieldRegion', 'FieldRegion'),
         ])
         .optionalMatch([
           node('node'),
-          relation('out', '', 'owningOrganization', { active: true }),
+          relation('out', '', 'owningOrganization', ACTIVE),
           node('organization', 'Organization'),
         ])
         .raw('', { requestingUserId: userId })
@@ -113,7 +114,6 @@ export class ProjectRepository extends CommonRepository {
             marketingLocation: 'marketingLocation.id',
             fieldRegion: 'fieldRegion.id',
             owningOrganization: 'organization.id',
-            scope: 'scopedRoles',
             changeset: 'changeset.id',
           }).as('dto')
         );
@@ -210,7 +210,7 @@ export class ProjectRepository extends CommonRepository {
       .limit(1)
       .optionalMatch([
         node('project', 'Project', { id: input.id }),
-        relation('out', 'oldRel', 'primaryLocation', { active: true }),
+        relation('out', 'oldRel', 'primaryLocation', ACTIVE),
         node(''),
       ])
       .setValues({ 'oldRel.active': false })
@@ -237,7 +237,7 @@ export class ProjectRepository extends CommonRepository {
       .match([node('region', 'FieldRegion', { id: input.fieldRegionId })])
       .optionalMatch([
         node('project'),
-        relation('out', 'oldRel', 'fieldRegion', { active: true }),
+        relation('out', 'oldRel', 'fieldRegion', ACTIVE),
         node(''),
       ])
       .setValues({ 'oldRel.active': false })
@@ -320,14 +320,14 @@ export class ProjectRepository extends CommonRepository {
       .query()
       .match([
         node('node', 'Project', { projectId }),
-        relation('out', '', 'member', { active: true }),
+        relation('out', '', 'member', ACTIVE),
         node('projectMember', 'ProjectMember'),
-        relation('out', '', 'user', { active: true }),
+        relation('out', '', 'user', ACTIVE),
         node('user', 'User', { id: session.userId }),
       ])
       .match([
         node('projectMember'),
-        relation('out', 'r', 'roles', { active: true }),
+        relation('out', 'r', 'roles', ACTIVE),
         node('roles', 'Property'),
       ])
       .return('collect(roles.value) as memberRoles')
@@ -344,7 +344,7 @@ export class ProjectRepository extends CommonRepository {
       .optionalMatch([
         [
           node('project', 'Project', { id: projectId }),
-          relation('out', 'rootDirectory', { active: true }),
+          relation('out', 'rootDirectory', ACTIVE),
           node('directory', 'BaseNode:Directory'),
         ],
       ])
@@ -367,10 +367,10 @@ export class ProjectRepository extends CommonRepository {
       .query()
       .match([
         node('node', 'Project'),
-        relation('out', '', 'changeset', { active: true }),
+        relation('out', '', 'changeset', ACTIVE),
         node('changeset', 'Changeset', { id: changeset }),
       ])
-      .apply(matchProps({ changeset, optional: true }))
+      .apply(matchProps({ view: { changeset }, optional: true }))
       .return<{
         props: Partial<DbPropsOfDto<Project>> & {
           id: ID;

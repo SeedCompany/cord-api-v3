@@ -3,6 +3,7 @@ import {
   ID,
   InputException,
   NotFoundException,
+  ObjectView,
   ServerException,
   Session,
   UnauthorizedException,
@@ -56,27 +57,26 @@ export class CeremonyService {
   }
 
   @HandleIdLookup(Ceremony)
-  async readOne(id: ID, session: Session): Promise<Ceremony> {
+  async readOne(
+    id: ID,
+    session: Session,
+    _view?: ObjectView
+  ): Promise<Ceremony> {
     this.logger.debug(`Query readOne Ceremony`, { id, userId: session.userId });
     if (!id) {
       throw new InputException('No ceremony id to search for', 'ceremony.id');
     }
 
-    const result = await this.ceremonyRepo.readOne(id, session);
-
-    if (!result) {
-      throw new NotFoundException('Could not find ceremony', 'ceremony.id');
-    }
+    const dto = await this.ceremonyRepo.readOne(id, session);
 
     const securedProps = await this.authorizationService.secureProperties(
       Ceremony,
-      result.props,
-      session,
-      result.scopedRoles
+      dto,
+      session
     );
 
     return {
-      ...result.props,
+      ...dto,
       ...securedProps,
       canDelete: await this.ceremonyRepo.checkDeletePermission(id, session),
     };

@@ -1,5 +1,6 @@
 import { FactoryProvider } from '@nestjs/common/interfaces';
 import { AsyncLocalStorage } from 'async_hooks';
+import { highlight } from 'cli-highlight';
 import { stripIndent } from 'common-tags';
 import { Connection } from 'cypher-query-builder';
 import { compact } from 'lodash';
@@ -211,7 +212,13 @@ const wrapQueryRun = (
       `Executing ${(parameters?.__origin as string | undefined) ?? 'query'}`,
       parameters?.interpolated
         ? { [AFTER_MESSAGE]: parameters.interpolated }
-        : { statement, ...parameters }
+        : {
+            statement:
+              process.env.NODE_ENV !== 'production'
+                ? highlight(statement, { language: 'cypher' })
+                : statement,
+            ...parameters,
+          }
     );
 
     const params = parameters

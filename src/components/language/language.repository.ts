@@ -3,6 +3,7 @@ import { node, relation } from 'cypher-query-builder';
 import { ID, Session } from '../../common';
 import { DtoRepository, matchRequestingUser } from '../../core';
 import {
+  ACTIVE,
   collect,
   createNode,
   createRelationships,
@@ -87,9 +88,9 @@ export class LanguageRepository extends DtoRepository(Language) {
       .match([node('language', 'Language', { id: language.id })])
       .match([
         node('language'),
-        relation('in', '', 'language', { active: true }),
+        relation('in', '', 'language', ACTIVE),
         node('', 'LanguageEngagement'),
-        relation('in', '', 'engagement', { active: true }),
+        relation('in', '', 'engagement', ACTIVE),
         node('project', 'Project'),
       ])
       .return<{ id: ID }>({ project: [{ id: 'id' }] });
@@ -102,7 +103,7 @@ export class LanguageRepository extends DtoRepository(Language) {
       .query()
       .match([
         node('', 'Language', { id: language.id }),
-        relation('in', '', 'language', { active: true }),
+        relation('in', '', 'language', ACTIVE),
         node('engagement', 'LanguageEngagement'),
       ])
       .return(collect('engagement.id').as('engagementIds'))
@@ -115,9 +116,9 @@ export class LanguageRepository extends DtoRepository(Language) {
       .query()
       .match([
         node('language', 'Language', { id }),
-        relation('in', '', 'language', { active: true }),
+        relation('in', '', 'language', ACTIVE),
         node('languageEngagement', 'LanguageEngagement'),
-        relation('out', '', 'firstScripture', { active: true }),
+        relation('out', '', 'firstScripture', ACTIVE),
         node('firstScripture', 'Property'),
       ])
       .where({

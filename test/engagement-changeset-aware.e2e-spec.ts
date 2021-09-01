@@ -87,6 +87,40 @@ const readLanguageEngagement = (app: TestApp, id: string, changeset?: string) =>
     }
   );
 
+const readProjectChangeset = (app: TestApp, id: string, changeset?: string) =>
+  app.graphql.query(
+    gql`
+      query project($id: ID!, $changeset: ID) {
+        project(id: $id, changeset: $changeset) {
+          id
+          changeset {
+            id
+            difference {
+              added {
+                id
+              }
+              removed {
+                id
+              }
+              changed {
+                previous {
+                  id
+                }
+                updated {
+                  id
+                }
+              }
+            }
+          }
+        }
+      }
+    `,
+    {
+      id,
+      changeset,
+    }
+  );
+
 const activeProject = async (app: TestApp) => {
   const fundingAccount = await createFundingAccount(app);
   const location = await createLocation(app, {
@@ -338,9 +372,29 @@ describe('Engagement Changeset Aware e2e', () => {
     // List engagements with changeset
     result = await readEngagements(app, project.id, changeset.id);
     expect(result.project.engagements.items.length).toBe(1);
+
+    // Confirm engagement id is added to removed list
+    let projectChangeset = await readProjectChangeset(
+      app,
+      project.id,
+      changeset.id
+    );
+    expect(projectChangeset.project.changeset.difference.removed[0].id).toBe(
+      le.id
+    );
+
     await approveProjectChangeRequest(app, changeset.id);
     // List engagements without changeset
     result = await readEngagements(app, project.id);
     expect(result.project.engagements.items.length).toBe(1);
+
+    projectChangeset = await readProjectChangeset(
+      app,
+      project.id,
+      changeset.id
+    );
+    expect(projectChangeset.project.changeset.difference.removed[0].id).toBe(
+      le.id
+    );
   });
 });

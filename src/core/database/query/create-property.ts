@@ -1,7 +1,7 @@
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
-import { variable as varRef } from '.';
+import { ACTIVE, variable as varRef } from '.';
 import {
   getDbPropertyLabels,
   ID,
@@ -95,10 +95,7 @@ export const createProperty =
             value: variable ? varRef(variable) : value,
           }),
           ...(changeset
-            ? [
-                relation('in', '', 'changeset', { active: true }),
-                node('changeset'),
-              ]
+            ? [relation('in', '', 'changeset', ACTIVE), node('changeset')]
             : []),
         ])
         .return(`count(newPropNode) as ${numCreatedVar}`)

@@ -1,3 +1,4 @@
+
 import { DbBudget } from '../../budget/model';
 import { DbBudgetRecord } from '../../budget/model/budget-record.model.db';
 import { DbCeremony } from '../../ceremony/model';
@@ -266,6 +267,7 @@ export const FinancialAnalystOnProject = new DbRole({
     }),
     new DbBaseNodeGrant<DbPartner>({
       __className: 'DbPartner',
+      canList: true,
       properties: [
         { propertyName: 'organization', permission: { read, write, }, },
         { propertyName: 'pointOfContact', permission: { read, write, }, },

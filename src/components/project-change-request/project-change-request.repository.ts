@@ -9,6 +9,7 @@ import {
 } from '../../common';
 import { DtoRepository } from '../../core';
 import {
+  ACTIVE,
   createNode,
   createRelationships,
   matchPropsAndProjectSensAndScopedRoles,
@@ -57,13 +58,12 @@ export class ProjectChangeRequestRepository extends DtoRepository(
       .query()
       .match([
         node('node', 'ProjectChangeRequest', { id }),
-        relation('in', '', 'changeset', { active: true }),
+        relation('in', '', 'changeset', ACTIVE),
         node('project', 'Project'),
       ])
       .apply(matchPropsAndProjectSensAndScopedRoles(session))
       .return<{ dto: UnsecuredDto<ProjectChangeRequest> }>(
         merge('props', {
-          scope: 'scopedRoles',
           canEdit: `props.status = "${Status.Pending}"`,
         }).as('dto')
       );
@@ -84,7 +84,7 @@ export class ProjectChangeRequestRepository extends DtoRepository(
         node('node', 'ProjectChangeRequest'),
         ...(input.filter.projectId
           ? [
-              relation('in', '', 'changeset', { active: true }),
+              relation('in', '', 'changeset', ACTIVE),
               node('project', 'Project', {
                 id: input.filter.projectId,
               }),

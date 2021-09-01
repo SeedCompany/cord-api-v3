@@ -1,3 +1,5 @@
+
+
 import { DbBudget } from '../../budget/model';
 import { DbBudgetRecord } from '../../budget/model/budget-record.model.db';
 import { DbCeremony } from '../../ceremony/model';
@@ -255,24 +257,26 @@ export const ConsultantOnProject = new DbRole({
     }),
     new DbBaseNodeGrant<DbOrganization>({
       __className: 'DbOrganization',
+      canList: true,
       properties: [
-        { propertyName: 'name', permission: {}, },
+        { propertyName: 'name', permission: { read }, },
         { propertyName: 'address', permission: {}, },
-        { propertyName: 'locations', permission: {}, },
+        { propertyName: 'locations', permission: { read }, },
       ],
       canDelete: false,
     }),
     new DbBaseNodeGrant<DbPartner>({
       __className: 'DbPartner',
+      canList: true,
       properties: [
-        { propertyName: 'organization', permission: {}, },
+        { propertyName: 'organization', permission: { read }, },
         { propertyName: 'pointOfContact', permission: {}, },
-        { propertyName: 'types', permission: {}, },
-        { propertyName: 'financialReportingTypes', permission: {}, },
-        { propertyName: 'pmcEntityCode', permission: {}, },
-        { propertyName: 'globalInnovationsClient', permission: {}, },
-        { propertyName: 'active', permission: {}, },
-        { propertyName: 'address', permission: {}, },
+        { propertyName: 'types', permission: { read }, },
+        { propertyName: 'financialReportingTypes', permission: { read }, },
+        { propertyName: 'pmcEntityCode', permission: { read }, },
+        { propertyName: 'globalInnovationsClient', permission: { read }, },
+        { propertyName: 'active', permission: { read }, },
+        { propertyName: 'address', permission: { read }, },
         { propertyName: 'modifiedAt', permission: { read, write, }, },
       ],
       canDelete: false,

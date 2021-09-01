@@ -18,7 +18,7 @@ import {
   Session,
 } from '../../common';
 import { SecuredBudget } from '../budget';
-import { ChangesetIds } from '../changeset/dto';
+import { IdsAndView, IdsAndViewArg } from '../changeset/dto';
 import { EngagementListInput, SecuredEngagementList } from '../engagement';
 import { FieldRegionService, SecuredFieldRegion } from '../field-region';
 import { SecuredDirectory } from '../file';
@@ -73,12 +73,12 @@ export class ProjectResolver {
   })
   async project(
     @LoggedInSession() session: Session,
-    @Args() { id, changeset }: ChangesetIds
+    @IdsAndViewArg() { id, view }: IdsAndView
   ): Promise<Project> {
     const project = await this.projectService.readOneUnsecured(
       id,
       session,
-      changeset
+      view.changeset
     );
     const secured = await this.projectService.secure(project, session);
     return secured;
@@ -153,7 +153,7 @@ export class ProjectResolver {
       project,
       input,
       session,
-      project.changeset
+      project.changeset ? { changeset: project.changeset } : { active: true }
     );
   }
 

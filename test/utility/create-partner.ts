@@ -11,6 +11,23 @@ import { createOrganization } from './create-organization';
 import { createPerson } from './create-person';
 import { fragments } from './fragments';
 
+export async function listPartners(app: TestApp) {
+  const result = await app.graphql.mutate(
+    gql`
+      query {
+        partners(input: {}) {
+          items {
+            ...partner
+          }
+        }
+      }
+      ${fragments.partner}
+    `
+  );
+  const partners = result.partners.items;
+  expect(partners).toBeTruthy();
+  return partners;
+}
 export async function createPartner(
   app: TestApp,
   input: Partial<CreatePartner> = {}

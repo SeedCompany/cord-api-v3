@@ -13,16 +13,22 @@ declare module 'cypher-query-builder/dist/typings/query' {
     /**
      * Log this query execution at the given level
      * @param [level=Notice]
+     * @param interpolate Whether to interpolate parameters into query.
+     *                    Default is true for dev.
      */
-    logIt(level?: LogLevel): this;
+    logIt(level?: LogLevel, interpolate?: boolean): this;
   }
 }
 
-Query.prototype.logIt = function logIt(this: Query, level = LogLevel.NOTICE) {
+Query.prototype.logIt = function logIt(
+  this: Query,
+  level = LogLevel.NOTICE,
+  interpolate?: boolean
+) {
   const orig = this.buildQueryObject.bind(this);
   this.buildQueryObject = function buildQueryObject() {
     const result = orig();
-    if (process.env.NODE_ENV !== 'production') {
+    if (interpolate ?? process.env.NODE_ENV !== 'production') {
       let interpolated = this.interpolate();
       interpolated = highlight(interpolated, {
         language: 'cypher',

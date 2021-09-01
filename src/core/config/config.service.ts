@@ -41,7 +41,9 @@ export class ConfigService implements EmailOptionsFactory {
   createEmailOptions(): EmailModuleOptions {
     const send = this.env.boolean('EMAIL_SEND').optional(false);
     return {
-      from: this.env.string('EMAIL_FROM').optional('noreply@cordfield.com'),
+      from: this.env
+        .string('EMAIL_FROM')
+        .optional('CORD Field <noreply@cordfield.com>'),
       replyTo: this.env.string('EMAIL_REPLY_TO').optional() || undefined, // falsy -> undefined
       send,
       open:

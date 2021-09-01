@@ -3,6 +3,7 @@ import { Node, node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID, Range } from '../../common';
 import { DatabaseService } from '../../core';
+import { ACTIVE } from '../../core/database/query';
 import { ScriptureRange, ScriptureRangeInput } from './dto';
 
 @Injectable()
@@ -19,7 +20,7 @@ export class ScriptureReferenceRepository {
       ])
       .create([
         node('node'),
-        relation('out', '', 'scriptureReferences', { active: true }),
+        relation('out', '', 'scriptureReferences', ACTIVE),
         node('sr', ['ScriptureRange', 'BaseNode'], {
           ...ScriptureRange.fromReferences(sr),
 
@@ -41,7 +42,7 @@ export class ScriptureReferenceRepository {
         .query()
         .match([
           node('product', 'Product', { id: producibleId }),
-          relation('out', 'rel', 'isOverriding', { active: true }),
+          relation('out', 'rel', 'isOverriding', ACTIVE),
           node('propertyNode', 'Property'),
         ])
         .setValues({
@@ -54,7 +55,7 @@ export class ScriptureReferenceRepository {
       .query()
       .match([
         node('node', 'BaseNode', { id: producibleId }),
-        relation('out', 'rel', rel, { active: true }),
+        relation('out', 'rel', rel, ACTIVE),
         node('sr', 'ScriptureRange'),
       ])
       .setValues({
@@ -75,7 +76,7 @@ export class ScriptureReferenceRepository {
       .match([node('node', 'BaseNode', { id: producibleId })])
       .create([
         node('node'),
-        relation('out', '', rel, { active: true }),
+        relation('out', '', rel, ACTIVE),
         node('', ['ScriptureRange', 'BaseNode'], {
           ...ScriptureRange.fromReferences(sr),
 

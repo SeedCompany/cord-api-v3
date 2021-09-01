@@ -20,6 +20,7 @@ import {
   matchSession,
 } from '../../core';
 import {
+  ACTIVE,
   collect,
   count,
   createNode,
@@ -58,9 +59,9 @@ export class FileRepository {
     return await this.getBaseNodeBy(session, [
       [
         node('parent', 'FileNode', { id: parentId }),
-        relation('in', '', 'parent', { active: true }),
+        relation('in', '', 'parent', ACTIVE),
         node('node', 'FileNode'),
-        relation('out', '', 'name', { active: true }),
+        relation('out', '', 'name', ACTIVE),
         node('name', 'Property', { value: name }),
       ],
     ]);
@@ -70,7 +71,7 @@ export class FileRepository {
     const query = this.getBaseNodeQuery(session, [
       [
         node('start', 'FileNode', { id }),
-        relation('out', 'parent', 'parent', { active: true }, '*'),
+        relation('out', 'parent', 'parent', ACTIVE, '*'),
         node('node', 'FileNode'),
       ],
       matchName(),
@@ -91,7 +92,7 @@ export class FileRepository {
         matchSession(session),
         [
           node('start', 'FileNode', { id: nodeId }),
-          relation('in', '', 'parent', { active: true }),
+          relation('in', '', 'parent', ACTIVE),
           node('node', 'FileNode'),
         ],
         matchCreatedBy(),
@@ -175,7 +176,7 @@ export class FileRepository {
       .query()
       .match([
         node('node', 'FileNode', { id: fileId }),
-        relation('in', '', 'parent', { active: true }),
+        relation('in', '', 'parent', ACTIVE),
         node('fv', 'FileVersion'),
       ])
       .return<{ id: ID }>('fv.id as id')
@@ -195,7 +196,7 @@ export class FileRepository {
       .apply(matchProps())
       .match([
         node('node'),
-        relation('out', '', 'createdBy', { active: true }),
+        relation('out', '', 'createdBy', ACTIVE),
         node('createdBy'),
       ])
       .return<{ dto: UnsecuredDto<FileVersion> }>(
@@ -337,7 +338,7 @@ export class FileRepository {
       ])
       .create([
         node('node'),
-        relation('in', '', attachName, { active: true }),
+        relation('in', '', attachName, ACTIVE),
         node('attachNode'),
       ])
       .run();
@@ -352,7 +353,7 @@ export class FileRepository {
       ])
       .create([
         node('node'),
-        relation('out', '', 'parent', { active: true }),
+        relation('out', '', 'parent', ACTIVE),
         node('parent'),
       ])
       .run();
@@ -382,7 +383,7 @@ export class FileRepository {
           [node('newParent', [], { id: newParentId })],
           [
             node('file', 'FileNode', { id }),
-            relation('out', 'rel', 'parent', { active: true }),
+            relation('out', 'rel', 'parent', ACTIVE),
             node('oldParent', []),
           ],
         ])
@@ -421,12 +422,12 @@ export class FileRepository {
 
 const matchName = () => [
   node('node'),
-  relation('out', '', 'name', { active: true }),
+  relation('out', '', 'name', ACTIVE),
   node('name', 'Property'),
 ];
 const matchCreatedBy = () => [
   node('node'),
-  relation('out', '', 'createdBy', { active: true }),
+  relation('out', '', 'createdBy', ACTIVE),
   node('createdBy', 'User'),
 ];
 

@@ -3,6 +3,7 @@ import {
   DuplicateException,
   ID,
   NotFoundException,
+  ObjectView,
   ServerException,
   Session,
   UnauthorizedException,
@@ -93,7 +94,11 @@ export class LiteracyMaterialService {
   }
 
   @HandleIdLookup(LiteracyMaterial)
-  async readOne(id: ID, session: Session): Promise<LiteracyMaterial> {
+  async readOne(
+    id: ID,
+    session: Session,
+    _view?: ObjectView
+  ): Promise<LiteracyMaterial> {
     this.logger.debug(`Read literacyMaterial`, {
       id,
       userId: session.userId,

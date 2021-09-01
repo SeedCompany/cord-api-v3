@@ -2,10 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import {
   ID,
+  labelForView,
   NotFoundException,
+  ObjectView,
   ServerException,
   Session,
   UnsecuredDto,
+  viewOfChangeset,
 } from '../../common';
 import {
   DatabaseService,
@@ -14,6 +17,7 @@ import {
   matchSession,
 } from '../../core';
 import {
+  ACTIVE,
   createNode,
   createRelationships,
   matchChangesetAndChangedProps,
@@ -82,19 +86,19 @@ export class BudgetRepository extends DtoRepository(Budget) {
     return result.id;
   }
 
-  async readOne(id: ID, session: Session, changeset?: ID) {
+  async readOne(id: ID, session: Session, view?: ObjectView) {
+    const label = labelForView('Budget', view);
     const result = await this.db
       .query()
       .match([
         node('project', 'Project'),
-        relation('out', '', 'budget', { active: true }),
-        node('node', 'Budget', { id }),
+        relation('out', '', 'budget', ACTIVE),
+        node('node', label, { id }),
       ])
-      .apply(matchPropsAndProjectSensAndScopedRoles(session))
-      .apply(matchChangesetAndChangedProps(changeset))
+      .apply(matchPropsAndProjectSensAndScopedRoles(session, { view }))
+      .apply(matchChangesetAndChangedProps(view?.changeset))
       .return<{ dto: UnsecuredDto<Budget> }>(
         merge('props', 'changedProps', {
-          scope: 'scopedRoles',
           changeset: 'changeset.id',
         }).as('dto')
       )
@@ -112,9 +116,9 @@ export class BudgetRepository extends DtoRepository(Budget) {
       .query()
       .match([
         node('budgetRecord', 'BudgetRecord', { id: recordId }),
-        relation('in', '', 'record', { active: true }),
+        relation('in', '', 'record', ACTIVE),
         node('budget', 'Budget'),
-        relation('out', '', 'status', { active: true }),
+        relation('out', '', 'status', ACTIVE),
         node('status', 'Property'),
       ])
       .return<{ status: Status }>('status.value as status')
@@ -133,7 +137,7 @@ export class BudgetRepository extends DtoRepository(Budget) {
         ...permissionsOfNode('Budget'),
         ...(filter.projectId
           ? [
-              relation('in', '', 'budget', { active: true }),
+              relation('in', '', 'budget', ACTIVE),
               node('project', 'Project', {
                 id: filter.projectId,
               }),
@@ -153,7 +157,7 @@ export class BudgetRepository extends DtoRepository(Budget) {
         ...(filter.projectId
           ? [
               node('node', 'Budget'),
-              relation('in', '', 'budget', { active: true }),
+              relation('in', '', 'budget', ACTIVE),
               node('project', 'Project', {
                 id: filter.projectId,
               }),
@@ -172,9 +176,9 @@ export class BudgetRepository extends DtoRepository(Budget) {
         sub
           .match([
             node('project', 'Project', { id: projectId }),
-            relation('out', '', 'budget', { active: true }),
+            relation('out', '', 'budget', ACTIVE),
             node('budget', 'Budget'),
-            relation('out', '', 'status', { active: true }),
+            relation('out', '', 'status', ACTIVE),
             node('status', 'Property'),
           ])
           // Pending changeset
@@ -182,7 +186,7 @@ export class BudgetRepository extends DtoRepository(Budget) {
             changeset
               ? q.optionalMatch([
                   node('changeset', 'Changeset', { id: changeset }),
-                  relation('out', '', 'status', { active: true }),
+                  relation('out', '', 'status', ACTIVE),
                   node('changesetStatus', 'Property', { value: 'Pending' }),
                 ])
               : q.subQuery((sub2) => sub2.return('null as changesetStatus'))
@@ -208,14 +212,15 @@ export class BudgetRepository extends DtoRepository(Budget) {
   }
 
   async listRecordsForSync(projectId: ID, session: Session, changeset?: ID) {
+    const view: ObjectView = viewOfChangeset(changeset);
     const result = await this.db
       .query()
       .apply(this.currentBudgetForProject(projectId, changeset))
       .subQuery((sub) =>
         sub
           .with('project, budget')
-          .apply(this.records.recordsOfBudget({ changeset }))
-          .apply(this.records.hydrate({ session, changeset }))
+          .apply(this.records.recordsOfBudget({ view }))
+          .apply(this.records.hydrate({ session, view }))
           .return('collect(dto) as records')
       )
       .return<

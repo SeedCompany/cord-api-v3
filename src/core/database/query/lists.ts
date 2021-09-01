@@ -1,5 +1,6 @@
 import { node, Query, relation } from 'cypher-query-builder';
 import { identity } from 'rxjs';
+import { ACTIVE } from '.';
 import {
   getDbSortTransformer,
   ID,
@@ -103,7 +104,7 @@ const matchPropSort = (prop: string) => (query: Query) =>
   query
     .match([
       node('node'),
-      relation('out', '', prop, { active: true }),
+      relation('out', '', prop, ACTIVE),
       node('prop', 'Property'),
     ])
     .return('prop.value as sortValue');

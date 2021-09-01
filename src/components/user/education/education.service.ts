@@ -2,6 +2,7 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import {
   ID,
   NotFoundException,
+  ObjectView,
   ServerException,
   Session,
   UnsecuredDto,
@@ -46,7 +47,11 @@ export class EducationService {
   }
 
   @HandleIdLookup(Education)
-  async readOne(id: ID, session: Session): Promise<Education> {
+  async readOne(
+    id: ID,
+    session: Session,
+    _view?: ObjectView
+  ): Promise<Education> {
     this.logger.debug(`Read Education`, {
       id: id,
       userId: session.userId,

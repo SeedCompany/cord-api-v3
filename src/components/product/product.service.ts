@@ -5,6 +5,7 @@ import {
   ID,
   InputException,
   NotFoundException,
+  ObjectView,
   ServerException,
   Session,
   simpleSwitch,
@@ -100,7 +101,11 @@ export class ProductService {
   }
 
   @HandleIdLookup([DirectScriptureProduct, DerivativeScriptureProduct])
-  async readOne(id: ID, session: Session): Promise<AnyProduct> {
+  async readOne(
+    id: ID,
+    session: Session,
+    _view?: ObjectView
+  ): Promise<AnyProduct> {
     const dto = await this.readOneUnsecured(id, session);
     return await this.secure(dto, session);
   }
@@ -155,8 +160,7 @@ export class ProductService {
       const securedProps = await this.authorizationService.secureProperties(
         DerivativeScriptureProduct,
         dto,
-        session,
-        dto.scope
+        session
       );
       const derivative: DerivativeScriptureProduct = {
         ...dto,
@@ -169,6 +173,10 @@ export class ProductService {
           ...securedProps.purposes,
           value: securedProps.purposes.value ?? [],
         },
+        steps: {
+          ...securedProps.steps,
+          value: securedProps.steps.value ?? [],
+        },
         canDelete,
       };
       return derivative;
@@ -178,8 +186,7 @@ export class ProductService {
       const securedProps = await this.authorizationService.secureProperties(
         OtherProduct,
         dto,
-        session,
-        dto.scope
+        session
       );
       const other: OtherProduct = {
         ...dto,
@@ -192,6 +199,10 @@ export class ProductService {
           ...securedProps.purposes,
           value: securedProps.purposes.value ?? [],
         },
+        steps: {
+          ...securedProps.steps,
+          value: securedProps.steps.value ?? [],
+        },
         canDelete,
       };
       return other;
@@ -200,8 +211,7 @@ export class ProductService {
     const securedProps = await this.authorizationService.secureProperties(
       DirectScriptureProduct,
       dto,
-      session,
-      dto.scope
+      session
     );
     const direct: DirectScriptureProduct = {
       ...dto,
@@ -213,6 +223,10 @@ export class ProductService {
       purposes: {
         ...securedProps.purposes,
         value: securedProps.purposes.value ?? [],
+      },
+      steps: {
+        ...securedProps.steps,
+        value: securedProps.steps.value ?? [],
       },
       canDelete,
     };
