@@ -16,7 +16,6 @@ import {
   createRelationships,
   deleteBaseNode,
   matchPropsAndProjectSensAndScopedRoles,
-  matchProps,
   merge,
   paginate,
   sorting,
@@ -26,7 +25,6 @@ import { FileService } from '../file';
 import {
   CreatePeriodicReport,
   IPeriodicReport,
-  NarrativeReport,
   PeriodicReport,
   PeriodicReportListInput,
   ReportType,
@@ -260,4 +258,5 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
             directory: 'directory.id',
           }).as('dto')
         );
+  }
 }
