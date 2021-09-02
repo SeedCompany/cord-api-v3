@@ -267,7 +267,7 @@ export class ProjectRepository extends CommonRepository {
       .with('distinct(node) as node, node as project')
       .match(requestingUser(session))
       .apply(projectListFilter(filter))
-      .apply(matchProjectSensToLimitedScopeMap(session, limitedScope))
+      .apply(matchProjectSensToLimitedScopeMap(limitedScope))
       .apply(
         sorting(IProject, input, {
           sensitivity: (query) =>

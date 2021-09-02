@@ -207,7 +207,7 @@ export class PartnerRepository extends DtoRepository(Partner) {
       ])
       // match requesting user once (instead of once per row)
       .match(requestingUser(session))
-      .apply(matchProjectSensToLimitedScopeMap(session, limitedScope))
+      .apply(matchProjectSensToLimitedScopeMap(limitedScope))
       .apply(
         sorting(Partner, input, {
           name: (query) =>

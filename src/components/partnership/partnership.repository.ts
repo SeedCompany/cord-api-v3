@@ -201,7 +201,7 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
       )
 
       .match(requestingUser(session))
-      .apply(matchProjectSensToLimitedScopeMap(session, limitedScope))
+      .apply(matchProjectSensToLimitedScopeMap(limitedScope))
       .apply(sorting(Partnership, input))
       .apply(paginate(input))
       .first();

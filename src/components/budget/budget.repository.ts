@@ -156,7 +156,7 @@ export class BudgetRepository extends DtoRepository(Budget) {
         node('node', 'Budget'),
       ])
       .match(requestingUser(session))
-      .apply(matchProjectSensToLimitedScopeMap(session, limitedScope))
+      .apply(matchProjectSensToLimitedScopeMap(limitedScope))
       .apply(sorting(Budget, input))
       .apply(paginate(input))
       .first();
