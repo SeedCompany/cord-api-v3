@@ -30,6 +30,12 @@ export const projectListFilter = (filter: ProjectFilters) => (query: Query) => {
       .where({ engagementCount: greaterThan(1) });
   }
 
+  if (filter.step) {
+    query
+      .match(propMatch('step'))
+      .where({ step: { value: inArray(filter.step) } });
+  }
+
   if (filter.mine) {
     query.match([
       node('requestingUser'),
