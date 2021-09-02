@@ -72,6 +72,7 @@ export const ConsultantGlobal = new DbRole({
     }),
     new DbBaseNodeGrant<DbCeremony>({
       __className: 'DbCeremony',
+      canList: true,
       properties: [
         { propertyName: 'actualDate', permission: { read, }, },
         { propertyName: 'estimatedDate', permission: { read, }, },
