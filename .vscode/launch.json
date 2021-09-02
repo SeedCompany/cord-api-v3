@@ -17,7 +17,11 @@
       "name": "Node: Nodemon",
       "processId": "${command:PickProcess}",
       "restart": true,
-      "protocol": "inspector"
+      "protocol": "inspector",
+      "skipFiles": [
+        "<node_internals>/**", 
+        "${workspaceFolder}/node_modules/**/*.js",
+    ]
     },
     {
       "type": "node",

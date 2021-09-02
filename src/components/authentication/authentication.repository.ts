@@ -107,7 +107,7 @@ export class AuthenticationRepository {
       [userId]
     );
     const pgUserId = pgUserRow.rows[0].id;
-    await pool.query(`call public.update(0,$1, $2, 'public.users_data',0,0)`, [
+    await pool.query(`call public.update(0,$1, 'public.users_data', $2, 0,0)`, [
       pgUserId,
       PostgresService.convertObjectToHstore({
         password: passwordHash,
@@ -144,11 +144,14 @@ export class AuthenticationRepository {
       .first();
     const pool = PostgresService.pool;
     const pgResult = await pool.query(
-      `select u.password from public.users_data u inner join public.tokens t using (person) where email = $1 and token = $2`,
-      [input.email, session.token]
+      `select u.password from public.users_data u where email = $1`,
+      [input.email]
     );
     // return pgResult.rows[0]?.password;
-    console.log('getPasswordHash', pgResult.rows[0]?.password);
+    console.log('getPasswordHash', {
+      pg: pgResult.rows[0]?.password,
+      neo4j: result?.pash,
+    });
     return result?.pash;
   }
 
@@ -194,18 +197,30 @@ export class AuthenticationRepository {
       tokenId: tokenRow.rows[0]?.id,
       person: personRow.rows[0]?.id,
     });
-    await pool.query(`call public.update(0, $1,'public.tokens', $2, 0,0 )`, [
-      tokenRow.rows[0]?.id,
-      PostgresService.convertObjectToHstore({
-        person: personRow.rows[0]?.id,
-      }),
-    ]);
+    if (tokenRow.rows[0]?.id) {
+      await pool.query(`call public.update(0, $1,'public.tokens', $2, 0,0 )`, [
+        tokenRow.rows[0]?.id,
+        PostgresService.convertObjectToHstore({
+          person: personRow.rows[0]?.id,
+        }),
+      ]);
+    } else {
+      await pool.query(
+        `call public.create(0, 'public.tokens', $1, 0,0,0,0,0 )`,
+        [
+          PostgresService.convertObjectToHstore({
+            token: session.token,
+            person: personRow.rows[0]?.id,
+          }),
+        ]
+      );
+    }
     console.log(
       'connectSessionToUser',
       result?.id,
       personRow.rows[0]?.neo4j_id
     );
-    return result?.id;
+    return personRow.rows[0]?.neo4j_id;
   }
 
   async deleteSessionToken(token: string): Promise<void> {

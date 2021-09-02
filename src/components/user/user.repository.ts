@@ -49,6 +49,7 @@ import {
   UserListInput,
 } from './dto';
 import { isEqual } from 'lodash';
+import { resourceLimits } from 'node:worker_threads';
 
 @Injectable()
 export class UserRepository extends DtoRepository(User) {
@@ -127,10 +128,9 @@ export class UserRepository extends DtoRepository(User) {
     for (let { name } of rolesOfPerson.rows) {
       roles.push(name);
     }
-    console.log('postgres roles', roles);
 
     console.log('result.dto read user by id', result.dto);
-    const x = {
+    const pgResult = {
       displayFirstName,
       displayLastName,
       realFirstName,
@@ -149,7 +149,7 @@ export class UserRepository extends DtoRepository(User) {
     } as UnsecuredDto<User>;
     // console.log(isEqual(x, result.dto));
     // return result.dto;
-    return x;
+    return pgResult;
   }
 
   async create(input: CreatePerson) {
@@ -254,6 +254,7 @@ export class UserRepository extends DtoRepository(User) {
       `call public.create(0,'public.people_data',$1 ,2,1,1,1,0); `,
       [
         PostgresService.convertObjectToHstore({
+          neo4j_id: result.id,
           public_first_name: input.displayFirstName,
           public_last_name: input.displayLastName,
           private_first_name: input.realFirstName,
