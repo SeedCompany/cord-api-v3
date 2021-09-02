@@ -1,15 +1,17 @@
 import { Connection } from 'cypher-query-builder';
 import { Powers, Role } from '../../src/components/authorization';
-import { Project, ProjectMember } from '../../src/components/project';
-import { User } from '../../src/components/user/dto';
+import { Ceremony } from '../../src/components/ceremony';
+import { Project } from '../../src/components/project';
 import {
+  createLanguage,
+  createLanguageEngagement,
   createProject,
   createProjectMember,
   createSession,
   createTestApp,
-  listProjectMembers,
+  listCeremonies,
   Raw,
-  readOneProjectMember,
+  readOneCeremony,
   registerUser,
   registerUserWithPower,
   runInIsolatedSession,
@@ -22,8 +24,7 @@ describe('Ceremony Security e2e', () => {
   let app: TestApp;
   let db: Connection;
   let testProject: Raw<Project>;
-  let testProjectMember: Raw<ProjectMember>;
-  let testUser: User;
+  let testCeremony: Ceremony;
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -31,18 +32,23 @@ describe('Ceremony Security e2e', () => {
     await createSession(app);
     await registerUserWithPower(app, [
       Powers.CreateProject,
+      Powers.CreateLanguage,
+      Powers.CreateLanguageEngagement,
+      Powers.CreateCeremony,
       Powers.CreateProjectMember,
+      Powers.CreateEthnologueLanguage,
     ]);
-    testUser = await runInIsolatedSession(
+    await runInIsolatedSession(
       app,
       async () => await registerUser(app, { roles: [Role.Consultant] })
     );
     testProject = await createProject(app);
-    testProjectMember = await createProjectMember(app, {
+    const lang = await createLanguage(app);
+    const langEng = await createLanguageEngagement(app, {
       projectId: testProject.id,
-      userId: testUser.id,
-      roles: [Role.Consultant],
+      languageId: lang.id,
     });
+    testCeremony = await readOneCeremony(app, langEng.ceremony.value!.id);
   });
 
   afterAll(async () => {
@@ -70,15 +76,16 @@ describe('Ceremony Security e2e', () => {
       ${Role.RegionalCommunicationsCoordinator}
     `('Global $role', ({ role }) => {
       test.each`
-        property   | readFunction            | staticResource
-        ${'roles'} | ${readOneProjectMember} | ${ProjectMember}
-        ${'user'}  | ${readOneProjectMember} | ${ProjectMember}
+        property           | readFunction       | staticResource
+        ${'actualDate'}    | ${readOneCeremony} | ${Ceremony}
+        ${'estimatedDate'} | ${readOneCeremony} | ${Ceremony}
+        ${'planned'}       | ${readOneCeremony} | ${Ceremony}
       `(
         ' reading $staticResource.name $property',
         async ({ property, readFunction, staticResource }) => {
           await testRole({
             app: app,
-            resource: testProjectMember,
+            resource: testCeremony,
             staticResource: staticResource,
             role: role,
             readOneFunction: readFunction,
@@ -114,7 +121,7 @@ describe('Ceremony Security e2e', () => {
       it('Global canList', async () => {
         const read = await runInIsolatedSession(app, async () => {
           await registerUser(app, { roles: role });
-          return await listProjectMembers(app);
+          return await listCeremonies(app);
         });
         if (!globalCanList) {
           expect(read).toHaveLength(0);
@@ -135,7 +142,7 @@ describe('Ceremony Security e2e', () => {
           userId: user.id,
         });
         const read = await user.runAs(() => {
-          return listProjectMembers(app);
+          return listCeremonies(app);
         });
         if (!projectCanList) {
           expect(read).toHaveLength(0);

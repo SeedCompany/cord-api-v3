@@ -20,6 +20,40 @@ import {
   RawLanguageEngagement,
 } from './fragments';
 
+export async function listCeremonies(app: TestApp) {
+  const result = await app.graphql.mutate(
+    gql`
+      query {
+        ceremonies(input: {}) {
+          items {
+            ...ceremony
+          }
+        }
+      }
+      ${fragments.ceremony}
+    `
+  );
+  const ceremonies = result.ceremonies.items;
+  expect(ceremonies).toBeTruthy();
+  return ceremonies;
+}
+export async function readOneCeremony(app: TestApp, id: string) {
+  const result = await app.graphql.query(
+    gql`
+      query readOneCeremony($id: ID!) {
+        ceremony(id: $id) {
+          ...ceremony
+        }
+      }
+      ${fragments.ceremony}
+    `,
+    { id }
+  );
+  const actual = result.ceremony;
+  expect(actual).toBeTruthy();
+  return actual;
+}
+
 export async function createLanguageEngagement(
   app: TestApp,
   input: Partial<CreateLanguageEngagement> = {}
