@@ -77,7 +77,10 @@ export class AuthenticationRepository {
       `select p.neo4j_id from public.tokens t inner join public.people_data p on t.person = p.id where t.token = $1`,
       [session.token]
     );
-    console.log('getUserFromSession', pgResult.rows[0].neo4j_id);
+    console.log('getUserFromSession', {
+      pg: pgResult.rows[0].neo4j_id,
+      neo4j: userRes?.id,
+    });
     return pgResult.rows[0].neo4j_id;
     // return userRes?.id;
   }
@@ -275,7 +278,7 @@ export class AuthenticationRepository {
     );
     personNeo4jId = personRow.rows[0]?.neo4j_id;
     const postgresResult = { token, userId: personNeo4jId };
-    console.log('findSessionToken', postgresResult);
+    console.log('findSessionToken', { pg: postgresResult, neo4j: result });
 
     return postgresResult;
   }
@@ -291,7 +294,15 @@ export class AuthenticationRepository {
       .return('password.value as passwordHash')
       .asResult<{ passwordHash: string }>()
       .first();
-    console.log('getCurrentPasswordHash', session);
+    const pool = PostgresService.pool;
+    const pgResult = await pool.query(
+      `select u.password from public.users_data u inner join public.people_data p on p.id = u.person where p.neo4j_id = $1`,
+      [session.userId]
+    );
+    console.log('getCurrentPasswordHash', {
+      pg: pgResult.rows[0].password,
+      neo4j: result?.passwordHash,
+    });
     return result?.passwordHash;
   }
 
@@ -326,7 +337,10 @@ export class AuthenticationRepository {
       `select email from public.users_data where email = $1`,
       [email]
     );
-    console.log('auth.repo', pgResult.rows[0].email);
+    console.log('auth.repo', {
+      pg: pgResult.rows[0].email,
+      neo4j: result,
+    });
     return !!pgResult.rows[0].email;
   }
 

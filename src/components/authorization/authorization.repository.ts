@@ -112,7 +112,6 @@ export class AuthorizationRepository {
       where p.neo4j_id = $1`,
       [id]
     );
-    console.log(rolesOfPerson.rows);
     const roles: Role[] = [];
     for (let { name } of rolesOfPerson.rows) {
       roles?.push(name);

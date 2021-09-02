@@ -397,6 +397,7 @@ export class UserService {
         'locations',
         locationId
       );
+      
     } catch (e) {
       throw new ServerException('Could not add location to user', e);
     }
