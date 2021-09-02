@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
+
 import {
   ID,
   isIdLike,
