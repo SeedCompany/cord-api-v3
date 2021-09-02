@@ -118,9 +118,12 @@ export class AuthorizationRepository {
       roles?.push(name);
     }
     // console.log(pgResult);
-    console.log('pg', roles);
+    console.log('auth.getUserGlobalRoles', {
+      pg: roles,
+      neo4j: result?.roles ?? [],
+    });
     // return roles;
-    console.log('neo4j', result?.roles ?? []);
+    console.log();
     return result?.roles ?? [];
   }
 

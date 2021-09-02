@@ -50,7 +50,7 @@ export class AuthenticationRepository {
         }),
       ]
     );
-    console.log('createdTokenId', pgResult.rows[0].record_id);
+    console.log('saveSessionToken', pgResult.rows[0].record_id);
     if (!result) {
       throw new ServerException('Failed to save session token');
     }
@@ -113,6 +113,7 @@ export class AuthenticationRepository {
         password: passwordHash,
       }),
     ]);
+    console.log('savePasswordHashOnUser', pgUserId);
   }
 
   async getPasswordHash(input: LoginInput, session: Session) {
@@ -147,6 +148,7 @@ export class AuthenticationRepository {
       [input.email, session.token]
     );
     // return pgResult.rows[0]?.password;
+    console.log('getPasswordHash', pgResult.rows[0]?.password);
     return result?.pash;
   }
 
@@ -188,13 +190,21 @@ export class AuthenticationRepository {
       `select t.id from public.tokens t where token = $1`,
       [session.token]
     );
+    console.log('connectSessionToUser', {
+      tokenId: tokenRow.rows[0]?.id,
+      person: personRow.rows[0]?.id,
+    });
     await pool.query(`call public.update(0, $1,'public.tokens', $2, 0,0 )`, [
-      tokenRow.rows[0].id,
+      tokenRow.rows[0]?.id,
       PostgresService.convertObjectToHstore({
-        person: personRow.rows[0].id,
+        person: personRow.rows[0]?.id,
       }),
     ]);
-    console.log('connectSessionToUser', result?.id, personRow.rows[0].neo4j_id);
+    console.log(
+      'connectSessionToUser',
+      result?.id,
+      personRow.rows[0]?.neo4j_id
+    );
     return result?.id;
   }
 
@@ -215,6 +225,9 @@ export class AuthenticationRepository {
         }
       )
       .run();
+    const pool = PostgresService.pool;
+    await pool.query(`delete from public.tokens where token = $1`, [token]);
+    console.log('deleteSessionToken');
   }
 
   async findSessionToken(token: string) {
@@ -248,6 +261,7 @@ export class AuthenticationRepository {
     personNeo4jId = personRow.rows[0]?.neo4j_id;
     const postgresResult = { token, userId: personNeo4jId };
     console.log('findSessionToken', postgresResult);
+
     return postgresResult;
   }
 
@@ -262,6 +276,7 @@ export class AuthenticationRepository {
       .return('password.value as passwordHash')
       .asResult<{ passwordHash: string }>()
       .first();
+    console.log('getCurrentPasswordHash', session);
     return result?.passwordHash;
   }
 
@@ -282,6 +297,7 @@ export class AuthenticationRepository {
       })
       .return('password.value as passwordHash')
       .first();
+    console.log('updatePassword');
   }
 
   async doesEmailAddressExist(email: string) {
@@ -295,7 +311,7 @@ export class AuthenticationRepository {
       `select email from public.users_data where email = $1`,
       [email]
     );
-    console.log('auth.repo', pgResult);
+    console.log('auth.repo', pgResult.rows[0].email);
     return !!pgResult.rows[0].email;
   }
 
@@ -329,7 +345,7 @@ export class AuthenticationRepository {
         }),
       ]
     );
-    console.log(pgResult);
+    console.log('saveEmailToken', pgResult);
   }
 
   async findEmailToken(token: string) {
@@ -354,7 +370,7 @@ export class AuthenticationRepository {
     `,
       [token]
     );
-    console.log(pgResult);
+    console.log('findEmailToken', pgResult);
     return result;
   }
 
@@ -387,6 +403,7 @@ export class AuthenticationRepository {
       )
       .first();
     const pool = PostgresService.pool;
+    console.log('updatePasswordViaEmailToken');
     // const pgPersonRow = await pool.query(`call public.update()`, []);
   }
 
@@ -396,6 +413,7 @@ export class AuthenticationRepository {
       .match([node('emailToken', 'EmailToken', { value: email })])
       .delete('emailToken')
       .run();
+    console.log('removeAllEmailTokensForEmail');
   }
 
   async deactivateAllOtherSessions(session: Session) {
@@ -410,6 +428,7 @@ export class AuthenticationRepository {
       .where(not([{ 'token.value': session.token }]))
       .setValues({ 'oldRel.active': false })
       .run();
+    console.log('deactivateAllOtherSession');
   }
 
   async deactivateAllOtherSessionsByEmail(email: string, session: Session) {
@@ -425,5 +444,6 @@ export class AuthenticationRepository {
       .where(not([{ 'token.value': session.token }]))
       .setValues({ 'oldRel.active': false })
       .run();
+    console.log('deactivateAllOtherSessionsByEmail');
   }
 }
