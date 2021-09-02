@@ -82,7 +82,8 @@ export const sorting =
     { sort, order }: { sort: string; order: Order },
     customPropMatchers: {
       [K in string]?: (query: Query) => Query<{ sortValue: unknown }>;
-    } = {}
+    } = {},
+    nodeName = 'node'
   ) =>
   (query: Query) => {
     const sortTransformer = getDbSortTransformer(resource, sort) ?? identity;
@@ -95,7 +96,7 @@ export const sorting =
       (isBaseNodeProp ? matchBasePropSort : matchPropSort)(sort);
 
     return query.comment`sorting(${sort})`
-      .subQuery('node', matcher)
+      .subQuery(nodeName, matcher)
       .with('*')
       .orderBy(sortTransformer('sortValue'), order);
   };
