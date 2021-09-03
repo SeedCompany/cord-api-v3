@@ -1,9 +1,17 @@
-import { GetObjectOutput, HeadObjectOutput } from 'aws-sdk/clients/s3';
+import {
+  GetObjectOutput as AwsGetObjectOutput,
+  HeadObjectOutput,
+} from '@aws-sdk/client-s3';
 import { Duration } from 'luxon';
+import { Readable } from 'stream';
+import { Merge } from 'type-fest';
 
 export interface BucketOptions {
   signedUrlExpires?: Duration;
 }
+
+// Limit body to only Readable which is always the case for Nodejs execution.
+type GetObjectOutput = Merge<AwsGetObjectOutput, { Body: Readable }>;
 
 /**
  * Base interface for a bucket of files

@@ -1,4 +1,5 @@
 export * from './async-pool.util';
+export * from './buffer';
 export * from './temporal';
 export * from './context.type';
 export * from './date-filter.input';
