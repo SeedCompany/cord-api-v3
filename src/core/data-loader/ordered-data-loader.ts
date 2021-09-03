@@ -4,7 +4,6 @@ import { NestDataLoader } from './loader.decorator';
 
 export interface OrderedNestDataLoaderOptions<T, Key = ID> {
   propertyKey?: string;
-  query: (keys: readonly Key[]) => Promise<T[]>;
   typeName?: string;
   dataloaderConfig?: DataLoader.Options<Key, T>;
 }
@@ -12,7 +11,11 @@ export interface OrderedNestDataLoaderOptions<T, Key = ID> {
 export abstract class OrderedNestDataLoader<T, Key = ID>
   implements NestDataLoader<T, Key>
 {
-  protected abstract getOptions: () => OrderedNestDataLoaderOptions<T, Key>;
+  abstract loadMany(keys: readonly Key[]): Promise<readonly T[]>;
+
+  getOptions(): OrderedNestDataLoaderOptions<T, Key> {
+    return {};
+  }
 
   generateDataLoader() {
     return this.createLoader(this.getOptions());
@@ -24,7 +27,7 @@ export abstract class OrderedNestDataLoader<T, Key = ID>
     const defaultTypeName = this.constructor.name.replace('Loader', '');
     return new DataLoader<Key, T>(async (keys) => {
       return ensureOrder({
-        docs: await options.query(keys),
+        docs: await this.loadMany(keys),
         keys,
         prop: options.propertyKey || 'id',
         error: (keyValue: ID) =>
@@ -40,7 +43,7 @@ const ensureOrder = (options: any) => {
     docs,
     keys,
     prop,
-    error = (key: ID) => `Document does not exist (${key})`,
+    error = (key: ID) => `Node does not exist (${key})`,
   } = options;
   // Put documents (docs) into a map where key is a document's ID or some
   // property (prop) of a document and value is a document.

@@ -2,7 +2,8 @@ import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { GqlContextType, GqlExecutionContext } from '@nestjs/graphql';
 import * as DataLoader from 'dataloader';
-import { AnyFn, ID, ServerException } from '../../common';
+import { Class } from 'type-fest';
+import { ID, ServerException } from '../../common';
 import { NEST_LOADER_CONTEXT_KEY } from './constants';
 import { DataLoaderInterceptor } from './data-loader.interceptor';
 
@@ -21,8 +22,8 @@ export interface NestDataLoader<T, Key = ID> {
  * The decorator to be used within your graphql method.
  */
 export const Loader = createParamDecorator(
-  (data: string | AnyFn, context: ExecutionContext) => {
-    const name = typeof data === 'string' ? data : data?.name;
+  (data: Class<any>, context: ExecutionContext) => {
+    const name = data?.name;
     if (!name) {
       throw new ServerException(`Invalid name provider to @Loader ('${name}')`);
     }
