@@ -30,14 +30,17 @@ export class FileResolver {
   ) {}
 
   @Query(() => File)
-  async file(@IdArg() id: ID, @AnonSession() session: Session): Promise<File> {
+  async file(
+    @IdArg() id: ID,
+    @LoggedInSession() session: Session
+  ): Promise<File> {
     return await this.service.getFile(id, session);
   }
 
   @Query(() => IFileNode)
   async fileNode(
     @IdArg() id: ID,
-    @AnonSession() session: Session
+    @LoggedInSession() session: Session
   ): Promise<FileNode> {
     return await this.service.getFileNode(id, session);
   }

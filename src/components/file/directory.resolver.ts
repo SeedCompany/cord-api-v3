@@ -22,7 +22,7 @@ export class DirectoryResolver {
   @Query(() => Directory)
   async directory(
     @IdArg() id: ID,
-    @AnonSession() session: Session
+    @LoggedInSession() session: Session
   ): Promise<Directory> {
     return await this.service.getDirectory(id, session);
   }
