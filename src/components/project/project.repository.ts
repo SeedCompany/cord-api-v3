@@ -323,7 +323,7 @@ export class ProjectRepository extends CommonRepository {
     const query = this.db
       .query()
       .match([
-        node('node', 'Project', { projectId }),
+        node('node', 'Project', { id: projectId }),
         relation('out', '', 'member', ACTIVE),
         node('projectMember', 'ProjectMember'),
         relation('out', '', 'user', ACTIVE),
