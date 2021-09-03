@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { contains, hasLabel, node, relation } from 'cypher-query-builder';
-import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
+import {
+  contains,
+  hasLabel,
+  node,
+  Query,
+  relation,
+} from 'cypher-query-builder';
 import { AnyConditions } from 'cypher-query-builder/dist/typings/clauses/where-utils';
 import { isEmpty } from 'lodash';
 import { DateTime } from 'luxon';
@@ -10,7 +15,6 @@ import {
   ServerException,
   Session,
   UnauthorizedException,
-  UnsecuredDto,
 } from '../../common';
 import {
   DatabaseService,
@@ -21,20 +25,21 @@ import {
 } from '../../core';
 import {
   ACTIVE,
-  collect,
-  count,
   createNode,
   matchProps,
   merge,
+  paginate,
+  sorting,
 } from '../../core/database/query';
-import { hasMore } from '../../core/database/results';
 import {
-  BaseNode,
   Directory,
   File,
   FileListInput,
+  FileNode,
+  FileNodeType,
   FileVersion,
   IFileNode,
+  resolveFileNode,
 } from './dto';
 
 @Injectable()
@@ -44,176 +49,185 @@ export class FileRepository {
     @Logger('file:repository') private readonly logger: ILogger
   ) {}
 
-  async getBaseNodeById(id: ID, session: Session): Promise<BaseNode> {
-    return await this.getBaseNodeBy(session, [
-      [node('node', 'FileNode', { id })],
-      matchName(),
-    ]);
+  async getById(id: ID, _session: Session): Promise<FileNode> {
+    const result = await this.db
+      .query()
+      .matchNode('node', 'FileNode', { id })
+      .apply(this.hydrate())
+      .map('dto')
+      .run();
+    return first(result);
   }
 
-  async getBaseNodeByName(
+  async getByName(
     parentId: ID,
     name: string,
-    session: Session
-  ): Promise<BaseNode> {
-    return await this.getBaseNodeBy(session, [
-      [
+    _session: Session
+  ): Promise<FileNode> {
+    const result = await this.db
+      .query()
+      .match([
         node('parent', 'FileNode', { id: parentId }),
         relation('in', '', 'parent', ACTIVE),
         node('node', 'FileNode'),
         relation('out', '', 'name', ACTIVE),
         node('name', 'Property', { value: name }),
-      ],
-    ]);
+      ])
+      .apply(this.hydrate())
+      .map('dto')
+      .run();
+    return first(result);
   }
 
-  async getParentsById(id: ID, session: Session): Promise<readonly BaseNode[]> {
-    const query = this.getBaseNodeQuery(session, [
-      [
+  async getParentsById(
+    id: ID,
+    _session: Session
+  ): Promise<readonly FileNode[]> {
+    const result = await this.db
+      .query()
+      .match([
         node('start', 'FileNode', { id }),
         relation('out', 'parent', 'parent', ACTIVE, '*'),
         node('node', 'FileNode'),
-      ],
-      matchName(),
-    ]);
-    query.orderBy('size(parent)');
-    return await query.run();
+      ])
+      .with('node, parent')
+      .orderBy('size(parent)')
+      // Using paginate to maintain order through hydration
+      .apply(paginate({ page: 1, count: 100 }, this.hydrate()))
+      .first();
+    return result!.items;
   }
 
-  async getChildrenById(
-    session: Session,
-    nodeId: ID,
-    options: FileListInput | undefined
-  ) {
-    options = options ?? FileListInput.defaultVal;
-    const query = this.db
+  async getChildrenById(parent: FileNode, input?: FileListInput) {
+    input ??= FileListInput.defaultVal;
+    const result = await this.db
       .query()
       .match([
-        matchSession(session),
-        [
-          node('start', 'FileNode', { id: nodeId }),
-          relation('in', '', 'parent', ACTIVE),
-          node('node', 'FileNode'),
-        ],
-        matchCreatedBy(),
-        matchName(),
+        node('start', 'FileNode', { id: parent.id }),
+        relation('in', '', 'parent', ACTIVE),
+        node('node', 'FileNode'),
       ])
       .apply((q) => {
         const conditions: AnyConditions = {};
-        if (options?.filter?.name) {
-          conditions['name.value'] = contains(options.filter.name);
+        if (input?.filter?.name) {
+          q.match([
+            node('node'),
+            relation('out', '', 'name', ACTIVE),
+            node('name', 'Property'),
+          ]);
+          conditions['name.value'] = contains(input.filter.name);
         }
-        if (options?.filter?.type) {
-          conditions.node = hasLabel(options.filter.type);
+        if (input?.filter?.type) {
+          conditions.node = hasLabel(input.filter.type);
         }
         return isEmpty(conditions) ? q : q.where(conditions);
       })
-      .with([
-        collect({
-          id: 'node.id',
-          createdAt: 'node.createdAt',
-          type: typeFromLabel('node'),
-          name: 'name.value',
-          createdById: 'createdBy.id',
-        }).as('nodes'),
-        count('DISTINCT node').as('total'),
-      ])
-      .raw('unwind nodes as node')
-      .return(['node', 'total'])
-      .orderBy('node.' + options.sort, options.order)
-      .skip((options.page - 1) * options.count)
-      .limit(options.count)
-      .asResult<{ node: BaseNode; total: number }>();
-
-    const result = await query.run();
-    const total = result[0]?.total ?? 0;
-    const children = result.map((r) => r.node);
-
-    return {
-      children,
-      total,
-      hasMore: hasMore(options, total),
-    };
-  }
-
-  private async getBaseNodeBy(
-    session: Session,
-    patterns: Pattern[][]
-  ): Promise<BaseNode> {
-    const nodes = await this.getBaseNodesBy(session, patterns);
-    return first(nodes);
-  }
-
-  private async getBaseNodesBy(
-    session: Session,
-    patterns: Pattern[][]
-  ): Promise<readonly BaseNode[]> {
-    const query = this.getBaseNodeQuery(session, patterns);
-    const results = await query.run();
-    return results;
-  }
-
-  private getBaseNodeQuery(session: Session, patterns: Pattern[][]) {
-    this.db.assertPatternsIncludeIdentifier(patterns, 'node', 'name');
-
-    const query = this.db
-      .query()
-      .match([matchSession(session), ...patterns, matchCreatedBy()])
-      .return([
-        `${typeFromLabel('node')} as type`,
-        {
-          node: [{ id: 'id', createdAt: 'createdAt' }],
-          name: [{ value: 'name' }],
-          createdBy: [{ id: 'createdById' }],
-        },
-      ])
-      .asResult<BaseNode>();
-    return query;
-  }
-
-  async getLatestVersionId(fileId: ID): Promise<ID> {
-    const latestVersionResult = await this.db
-      .query()
-      .match([
-        node('node', 'FileNode', { id: fileId }),
-        relation('in', '', 'parent', ACTIVE),
-        node('fv', 'FileVersion'),
-      ])
-      .return<{ id: ID }>('fv.id as id')
-      .orderBy('fv.createdAt', 'DESC')
-      .limit(1)
+      .apply(sorting(resolveFileNode(parent), input))
+      .apply(paginate(input, this.hydrate()))
       .first();
-    if (!latestVersionResult) {
-      throw new NotFoundException();
-    }
-    return latestVersionResult.id;
+    return result!;
   }
 
-  async getVersionDetails(id: ID, session: Session): Promise<FileVersion> {
-    const query = this.db
-      .query()
-      .match(node('node', 'FileVersion', { id }))
-      .apply(matchProps())
-      .match([
-        node('node'),
-        relation('out', '', 'createdBy', ACTIVE),
-        node('createdBy'),
-      ])
-      .return<{ dto: UnsecuredDto<FileVersion> }>(
-        merge('props', {
-          type: typeFromLabel('node'),
-          createdById: 'createdBy.id',
-        }).as('dto')
-      );
+  private hydrate() {
+    return (query: Query) =>
+      query
+        .subQuery((sub) =>
+          sub
+            .with('node')
+            .with('node')
+            .where({ node: hasLabel(FileNodeType.File) })
+            .apply(this.hydrateFile())
+            .union()
+            .with('node')
+            .with('node')
+            .where({ node: hasLabel(FileNodeType.FileVersion) })
+            .apply(this.hydrateFileVersion())
+            .union()
+            .with('node')
+            .with('node')
+            .where({ node: hasLabel(FileNodeType.Directory) })
+            .apply(this.hydrateDirectory())
+        )
+        .return<{ dto: FileNode }>('dto');
+  }
 
-    const result = await query.first();
-    if (!result) {
-      throw new NotFoundException('Could not find file version');
-    }
-    return {
-      ...result.dto,
-      canDelete: await this.db.checkDeletePermission(id, session),
-    };
+  private hydrateFile() {
+    return (query: Query) =>
+      query
+        .apply(this.matchLatestVersion())
+        .apply(matchProps())
+        .apply(matchProps({ nodeName: 'version', outputVar: 'versionProps' }))
+        .match([
+          node('node'),
+          relation('out', '', 'createdBy', ACTIVE),
+          node('createdBy'),
+        ])
+        .match([
+          node('version'),
+          relation('out', '', 'createdBy', ACTIVE),
+          node('modifiedBy'),
+        ])
+        .return<{ dto: File }>(
+          merge('versionProps', 'props', {
+            type: `"${FileNodeType.File}"`,
+            latestVersionId: 'version.id',
+            modifiedById: 'modifiedBy.id',
+            modifiedAt: 'version.createdAt',
+            createdById: 'createdBy.id',
+            canDelete: true,
+          }).as('dto')
+        );
+  }
+
+  private hydrateDirectory() {
+    return (query: Query) =>
+      query
+        .apply(matchProps())
+        .match([
+          node('node'),
+          relation('out', '', 'createdBy', ACTIVE),
+          node('createdBy'),
+        ])
+        .return<{ dto: Directory }>(
+          merge('props', {
+            type: `"${FileNodeType.Directory}"`,
+            createdById: 'createdBy.id',
+            canDelete: true,
+          }).as('dto')
+        );
+  }
+
+  private hydrateFileVersion() {
+    return (query: Query) =>
+      query
+        .apply(matchProps())
+        .match([
+          node('node'),
+          relation('out', '', 'createdBy', ACTIVE),
+          node('createdBy'),
+        ])
+        .return<{ dto: FileVersion }>(
+          merge('props', {
+            type: `"${FileNodeType.FileVersion}"`,
+            createdById: 'createdBy.id',
+            canDelete: true,
+          }).as('dto')
+        );
+  }
+
+  private matchLatestVersion() {
+    return (query: Query) =>
+      query.subQuery('node', (sub) =>
+        sub
+          .match([
+            node('node', 'FileNode'),
+            relation('in', '', 'parent', ACTIVE),
+            node('version', 'FileVersion'),
+          ])
+          .return('version')
+          .orderBy('version.createdAt', 'DESC')
+          .raw('LIMIT 1')
+      );
   }
 
   async createDirectory(
@@ -359,7 +373,7 @@ export class FileRepository {
       .run();
   }
 
-  async rename(fileNode: BaseNode, newName: string): Promise<void> {
+  async rename(fileNode: FileNode, newName: string): Promise<void> {
     // TODO Do you have permission to rename the file?
     try {
       await this.db.updateProperty({
@@ -403,7 +417,7 @@ export class FileRepository {
     }
   }
 
-  async delete(fileNode: BaseNode, session: Session): Promise<void> {
+  async delete(fileNode: FileNode, session: Session): Promise<void> {
     const canDelete = await this.db.checkDeletePermission(fileNode.id, session);
 
     if (!canDelete)
@@ -420,17 +434,6 @@ export class FileRepository {
   }
 }
 
-const matchName = () => [
-  node('node'),
-  relation('out', '', 'name', ACTIVE),
-  node('name', 'Property'),
-];
-const matchCreatedBy = () => [
-  node('node'),
-  relation('out', '', 'createdBy', ACTIVE),
-  node('createdBy', 'User'),
-];
-
 function first<T>(nodes: readonly T[]): T {
   const node = nodes[0];
   if (!node) {
@@ -438,6 +441,3 @@ function first<T>(nodes: readonly T[]): T {
   }
   return node;
 }
-
-const typeFromLabel = (variable: string) =>
-  `[l in labels(${variable}) where l in ['FileVersion', 'File', 'Directory']][0]`;

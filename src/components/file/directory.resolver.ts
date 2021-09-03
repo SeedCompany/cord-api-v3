@@ -40,7 +40,7 @@ export class DirectoryResolver {
     })
     input: FileListInput
   ): Promise<FileListOutput> {
-    return this.service.listChildren(node.id, input, session);
+    return this.service.listChildren(node, input, session);
   }
 
   @Mutation(() => Directory)
