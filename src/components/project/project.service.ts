@@ -253,6 +253,10 @@ export class ProjectService {
         canRead: securedProps.primaryLocation.canRead,
         canEdit: securedProps.primaryLocation.canEdit,
       },
+      tags: {
+        ...securedProps.tags,
+        value: securedProps.tags.canRead ? securedProps.tags.value : [],
+      },
       canDelete: await this.repo.checkDeletePermission(
         project.id,
         sessionOrUserId
@@ -654,14 +658,21 @@ export class ProjectService {
 
   async getRootDirectory(
     projectId: ID,
+    sensitivity: Sensitivity,
     session: Session
   ): Promise<SecuredDirectory> {
     const rootRef = await this.repo.getRootDirectory(projectId, session);
+    const membershipRoles = await this.getMembershipRoles(projectId, session);
+    const permsOfProject = await this.authorizationService.getPermissions({
+      resource: IProject,
+      sessionOrUserId: session,
+      otherRoles: membershipRoles,
+      sensitivity,
+    });
 
-    if (!rootRef) {
+    if (!permsOfProject.rootDirectory.canRead) {
       return {
-        canEdit: false,
-        canRead: false,
+        ...permsOfProject.rootDirectory,
         value: undefined,
       };
     }
@@ -673,8 +684,7 @@ export class ProjectService {
     }
 
     return {
-      canEdit: false,
-      canRead: true,
+      ...permsOfProject.rootDirectory,
       value: await this.fileService.getDirectory(rootRef.id, session),
     };
   }

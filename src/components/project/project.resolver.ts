@@ -205,9 +205,9 @@ export class ProjectResolver {
   })
   async rootDirectory(
     @AnonSession() session: Session,
-    @Parent() { id }: Project
+    @Parent() { id, sensitivity }: Project
   ): Promise<SecuredDirectory> {
-    return await this.projectService.getRootDirectory(id, session);
+    return await this.projectService.getRootDirectory(id, sensitivity, session);
   }
 
   @ResolveField(() => SecuredLocation)
