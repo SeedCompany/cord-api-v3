@@ -3,7 +3,7 @@ import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { startCase, times } from 'lodash';
 import { DateTime, Duration, DurationObject, Settings } from 'luxon';
-import { ID } from '../src/common';
+import { bufferFromStream, ID } from '../src/common';
 import { Role } from '../src/components/authorization';
 import {
   Directory,
@@ -99,6 +99,16 @@ function resetNow() {
   Settings.now = () => Date.now();
 }
 
+const expectEqualContent = async (
+  bucket: LocalBucket,
+  url: string,
+  expected: FakeFile
+) => {
+  const actualFile = await bucket.download(url);
+  const contents = await bufferFromStream(actualFile.Body);
+  expect(contents.toString()).toEqual(expected.content.toString());
+};
+
 describe('File e2e', () => {
   let app: TestApp;
   let bucket: LocalBucket;
@@ -145,9 +155,7 @@ describe('File e2e', () => {
       expect(modifiedAt.diffNow().as('seconds')).toBeGreaterThan(-30);
       const createdAt = DateTime.fromISO(file.createdAt);
       expect(createdAt.diffNow().as('seconds')).toBeGreaterThan(-30);
-      expect((await bucket.download(file.downloadUrl)).Body).toEqual(
-        fakeFile.content
-      );
+      await expectEqualContent(bucket, file.downloadUrl, fakeFile);
       expect(file.parents[0].id).toEqual(root.id);
     }
   });
@@ -168,9 +176,7 @@ describe('File e2e', () => {
     expect(version.createdBy.id).toEqual(me.id);
     const createdAt = DateTime.fromISO(version.createdAt);
     expect(createdAt.diffNow().as('seconds')).toBeGreaterThan(-30);
-    expect((await bucket.download(version.downloadUrl)).Body).toEqual(
-      fakeFile.content
-    );
+    await expectEqualContent(bucket, file.downloadUrl, fakeFile);
     expect(version.parents[0].id).toEqual(file.id);
   });
 
@@ -209,9 +215,7 @@ describe('File e2e', () => {
     input: FakeFile
   ) {
     expect(updated.id).toEqual(initial.id);
-    expect((await bucket.download(updated.downloadUrl)).Body).toEqual(
-      input.content
-    );
+    await expectEqualContent(bucket, updated.downloadUrl, input);
     expect(updated.size).toEqual(input.size);
     expect(updated.mimeType).toEqual(input.mimeType);
     const createdAt = DateTime.fromISO(updated.createdAt);

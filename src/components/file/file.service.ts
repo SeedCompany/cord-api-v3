@@ -1,5 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import {
+  bufferFromStream,
   DuplicateException,
   generateId,
   ID,
@@ -125,11 +126,7 @@ export class FileService {
       throw new NotFoundException('Could not find file contents');
     }
 
-    const chunks = [];
-    for await (const chunk of data) {
-      chunks.push(chunk);
-    }
-    return Buffer.concat(chunks);
+    return await bufferFromStream(data);
   }
 
   async getDownloadUrl(node: FileNode): Promise<string> {
