@@ -36,6 +36,43 @@ export const projectListFilter = (filter: ProjectFilters) => (query: Query) => {
       .where({ step: { value: inArray(filter.step) } });
   }
 
+  if (filter.createdAt) {
+    if (filter.createdAt.before && filter.createdAt.after) {
+      query.raw(
+        `MATCH (node) WHERE node.createdAt <= datetime($date1) AND  noe.createdAt >= datetime($date2)`,
+        { date1: filter.createdAt.after, date2: filter.createdAt.before }
+      );
+    } else if (filter.createdAt.after) {
+      query.raw('MATCH (node) WHERE node.createdAt >= datetime($date)', {
+        date: filter.createdAt.after,
+      });
+    } else if (filter.createdAt.before) {
+      query.raw('MATCH (node) WHERE node.createdAt <= datetime($date)', {
+        date: filter.createdAt.before,
+      });
+    }
+  }
+
+  if (filter.modifiedAt) {
+    if (filter.modifiedAt.after && filter.modifiedAt.before) {
+      query.raw(
+        `MATCH (node)-[r:modifiedAt]-(modifiedAt:Property)
+         WHERE modifiedAt.value >= datetime($date1) AND modifiedAt.value <=  datetime($date2)`,
+        { date1: filter.modifiedAt.after, date2: filter.modifiedAt.before }
+      );
+    } else if (filter.modifiedAt.after) {
+      query.raw(
+        'MATCH (node)-[r:modifiedAt]-(modifiedAt:Property) WHERE modifiedAt.value >= datetime($date)',
+        { date: filter.modifiedAt.after }
+      );
+    } else if (filter.modifiedAt.before) {
+      query.raw(
+        'MATCH (node)-[r:modifiedAt]-(modifiedAt:Property) WHERE modifiedAt.value <= datetime($date)',
+        { date: filter.modifiedAt.before }
+      );
+    }
+  }
+
   if (filter.mine) {
     query.match([
       node('requestingUser'),
