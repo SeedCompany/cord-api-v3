@@ -346,7 +346,7 @@ export const ConsultantManagerGlobal = new DbRole({
         { propertyName: 'mouEnd', permission: { read, write, }, },
         { propertyName: 'initialMouEnd', permission: { read, write, }, },
         { propertyName: 'stepChangedAt', permission: { read, write, }, },
-        { propertyName: 'rootDirectory', permission: { read, write, }, },
+        { propertyName: 'rootDirectory', permission: { read, write, sensitivityAccess: Sensitivity.Medium }, },
         { propertyName: 'member', permission: { read, write, }, },
         { propertyName: 'otherLocations', permission: { read, write, sensitivityAccess: Sensitivity.Medium }, },
         { propertyName: 'primaryLocation', permission: { read, write, sensitivityAccess: Sensitivity.Medium }, },

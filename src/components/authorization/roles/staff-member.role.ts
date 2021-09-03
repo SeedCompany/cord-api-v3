@@ -334,7 +334,7 @@ export const StaffMember = new DbRole({
         { propertyName: 'mouEnd', permission: { read, }, },
         { propertyName: 'initialMouEnd', permission: { read, }, },
         { propertyName: 'stepChangedAt', permission: { read, }, },
-        { propertyName: 'rootDirectory', permission: { read, }, },
+        { propertyName: 'rootDirectory', permission: { }, },
         { propertyName: 'member', permission: { read, }, },
         { propertyName: 'otherLocations', permission: { read, sensitivityAccess: Sensitivity.Low }, },
         { propertyName: 'primaryLocation', permission: { read, sensitivityAccess: Sensitivity.Low }, },
