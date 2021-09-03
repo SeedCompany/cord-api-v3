@@ -89,6 +89,8 @@ describe('Project Security e2e', () => {
     `('Global $role', ({ role }) => {
       test.each`
         property                       | readFunction            | staticResource
+        ${'rootDirectory'}             | ${readOneProject}       | ${IProject}
+        ${'budget'}                    | ${readOneProjectBudget} | ${IProject}
         ${'estimatedSubmission'}       | ${readOneProject}       | ${IProject}
         ${'step'}                      | ${readOneProject}       | ${IProject}
         ${'name'}                      | ${readOneProject}       | ${IProject}
@@ -99,7 +101,6 @@ describe('Project Security e2e', () => {
         ${'tags'}                      | ${readOneProject}       | ${IProject}
         ${'financialReportReceivedAt'} | ${readOneProject}       | ${IProject}
         ${'primaryLocation'}           | ${readOneProject}       | ${IProject}
-        ${'budget'}                    | ${readOneProjectBudget} | ${IProject}
       `(
         ' reading $staticResource.name $property',
         async ({ property, readFunction, staticResource }) => {
@@ -194,7 +195,11 @@ describe('Project Security e2e', () => {
       });
     });
   });
+  // ------------------------------------------------------------------
+  //     Restriction on sensitivity
+  // ------------------------------------------------------------------
   describe('Restricted by Sensitivity', () => {
+    // ---- Primary Location
     describe.each`
       role                      | sensitivityToTest
       ${Role.StaffMember}       | ${Sensitivity.Low}
@@ -237,6 +242,52 @@ describe('Project Security e2e', () => {
         );
       }
     );
+
+    // ---- Root Directory
+    describe.each`
+      role                      | sensitivityToTest
+      ${Role.Marketing}         | ${Sensitivity.Low}
+      ${Role.Fundraising}       | ${Sensitivity.Medium}
+      ${Role.ConsultantManager} | ${Sensitivity.Medium}
+      ${Role.FinancialAnalyst}  | ${Sensitivity.Medium}
+      ${Role.ProjectManager}    | ${Sensitivity.Medium}
+      ${Role.RegionalDirector}  | ${Sensitivity.Medium}
+    `(
+      'Role: $role - Sensitivity: $sensitivityToTest',
+      ({ role, sensitivityToTest }) => {
+        test.each`
+          property           | resource    | readFunction      | type
+          ${'rootDirectory'} | ${IProject} | ${readOneProject} | ${ProjectType.Translation}
+          ${'rootDirectory'} | ${IProject} | ${readOneProject} | ${ProjectType.Internship}
+        `(
+          ' reading $type $resource.name $property',
+          async ({ property, resource, readFunction, type }) => {
+            const proj = await createProject(app, {
+              primaryLocationId: primaryLocation.id,
+              type,
+            });
+            await expectSensitiveProperty({
+              app,
+              role,
+              propertyToCheck: property,
+              projectId: proj.id,
+              resourceId: proj.id,
+              resource: resource,
+              sensitivityRestriction: sensitivityToTest,
+              projectType: type,
+              permissions: await getPermissions({
+                resource: resource,
+                userRole: `global:${role as Role}` as ScopedRole,
+                sensitivity: sensitivityToTest,
+              }),
+              readOneFunction: readFunction,
+            });
+          }
+        );
+      }
+    );
+
+    // ---- CurrentBudget
     it('reading currentBudget', async () => {
       const proj = await createProject(app);
       await createBudget(app, { projectId: proj.id });
@@ -271,6 +322,8 @@ describe('Project Security e2e', () => {
         readOneFunction: readOneProjectBudget,
       });
     });
+
+    // ---- otherLocations
     describe.each`
       role                      | sensitivityToTest
       ${Role.StaffMember}       | ${Sensitivity.Low}
