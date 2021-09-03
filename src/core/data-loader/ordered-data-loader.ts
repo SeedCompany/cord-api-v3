@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-restricted-imports -- it's ok in this folder
 import * as DataLoader from 'dataloader';
 import { GqlContextType, ID } from '../../common';
 import { anonymousSession } from '../../common/session';

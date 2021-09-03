@@ -4,11 +4,19 @@ import {
   GqlExecutionContext,
   GqlContextType as GqlRequestType,
 } from '@nestjs/graphql';
-import * as DataLoader from 'dataloader';
+// eslint-disable-next-line no-restricted-imports -- the one spot we do want to import it
+import * as DataLoaderLib from 'dataloader';
 import { Class } from 'type-fest';
 import { GqlContextType, ID, ServerException } from '../../common';
 import { NEST_LOADER_CONTEXT_KEY } from './constants';
 import { DataLoaderInterceptor } from './data-loader.interceptor';
+
+/**
+ * An alias for an actual DataLoader at runtime.
+ *
+ * The object type is first generic and key generic defaults to ID.
+ */
+export type DataLoader<T, Key = ID> = DataLoaderLib<Key, T>;
 
 /**
  * This interface will be used to generate the initial data loader.
@@ -18,7 +26,7 @@ export interface NestDataLoader<T, Key = ID> {
   /**
    * Should return a new instance of dataloader each time
    */
-  generateDataLoader: (context: GqlContextType) => DataLoader<Key, T>;
+  generateDataLoader: (context: GqlContextType) => DataLoader<T, Key>;
 }
 
 /**

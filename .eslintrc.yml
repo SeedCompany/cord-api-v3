@@ -69,6 +69,8 @@ rules:
         - name: express-serve-static-core
           importNames: [Dictionary]
           message: Use a type with strict keys instead
+        - name: dataloader
+          message: Import DataLoader from our core folder instead
 
   no-restricted-syntax:
     - error
