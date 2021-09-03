@@ -16,16 +16,11 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import {
-  DatabaseService,
-  ILogger,
-  Logger,
-  matchRequestingUser,
-  matchSession,
-} from '../../core';
+import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
 import {
   ACTIVE,
   createNode,
+  createRelationships,
   matchProps,
   merge,
   paginate,
@@ -242,22 +237,19 @@ export class FileRepository {
 
     const createFile = this.db
       .query()
-      .apply(matchRequestingUser(session))
       .apply(await createNode(Directory, { initialProps }))
+      .apply(
+        createRelationships(Directory, 'out', {
+          createdBy: ['User', session.userId],
+          parent: ['Directory', parentId],
+        })
+      )
       .return<{ id: ID }>('node.id as id');
 
     const result = await createFile.first();
-
     if (!result) {
       throw new ServerException('Failed to create directory');
     }
-
-    await this.attachCreator(result.id, session);
-
-    if (parentId) {
-      await this.attachParent(result.id, parentId);
-    }
-
     return result.id;
   }
 
@@ -269,24 +261,21 @@ export class FileRepository {
 
     const createFile = this.db
       .query()
-      .apply(matchRequestingUser(session))
       .apply(
         await createNode(File, { initialProps, baseNodeProps: { id: fileId } })
+      )
+      .apply(
+        createRelationships(File, 'out', {
+          createdBy: ['User', session.userId],
+          parent: ['Directory', parentId],
+        })
       )
       .return<{ id: ID }>('node.id as id');
 
     const result = await createFile.first();
-
     if (!result) {
       throw new ServerException('Failed to create file');
     }
-
-    await this.attachCreator(result.id, session);
-
-    if (parentId) {
-      await this.attachParent(result.id, parentId);
-    }
-
     return result.id;
   }
 
@@ -304,43 +293,25 @@ export class FileRepository {
 
     const createFile = this.db
       .query()
-      .apply(matchRequestingUser(session))
       .apply(
         await createNode(FileVersion, {
           initialProps,
           baseNodeProps: { id: input.id },
         })
       )
+      .apply(
+        createRelationships(FileVersion, 'out', {
+          createdBy: ['User', session.userId],
+          parent: ['File', fileId],
+        })
+      )
       .return<{ id: ID }>('node.id as id');
 
     const result = await createFile.first();
-
     if (!result) {
       throw new ServerException('Failed to create file version');
     }
-
-    await this.attachCreator(input.id, session);
-    await this.attachParent(input.id, fileId);
-
     return result;
-  }
-
-  private async attachCreator(id: ID, session: Session) {
-    await this.db
-      .query()
-      .match([
-        [node('node', 'FileNode', { id })],
-        [node('user', 'User', { id: session.userId })],
-      ])
-      .create([
-        node('node'),
-        relation('out', '', 'createdBy', {
-          createdAt: DateTime.local(),
-          active: true,
-        }),
-        node('user'),
-      ])
-      .run();
   }
 
   async attachBaseNode(id: ID, baseNodeId: ID, attachName: string) {
@@ -354,21 +325,6 @@ export class FileRepository {
         node('node'),
         relation('in', '', attachName, ACTIVE),
         node('attachNode'),
-      ])
-      .run();
-  }
-
-  private async attachParent(id: ID, parentId: ID) {
-    await this.db
-      .query()
-      .match([
-        [node('node', 'FileNode', { id })],
-        [node('parent', 'FileNode', { id: parentId })],
-      ])
-      .create([
-        node('node'),
-        relation('out', '', 'parent', ACTIVE),
-        node('parent'),
       ])
       .run();
   }
