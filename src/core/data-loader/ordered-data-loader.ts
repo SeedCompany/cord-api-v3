@@ -1,5 +1,7 @@
 import * as DataLoader from 'dataloader';
-import { ID } from '../../common';
+import { GqlContextType, ID } from '../../common';
+import { anonymousSession } from '../../common/session';
+import { NoSessionException } from '../../components/authentication/no-session.exception';
 import { NestDataLoader } from './loader.decorator';
 
 export interface OrderedNestDataLoaderOptions<T, Key = ID> {
@@ -11,13 +13,24 @@ export interface OrderedNestDataLoaderOptions<T, Key = ID> {
 export abstract class OrderedNestDataLoader<T, Key = ID>
   implements NestDataLoader<T, Key>
 {
+  private context: GqlContextType;
+
   abstract loadMany(keys: readonly Key[]): Promise<readonly T[]>;
 
   getOptions(): OrderedNestDataLoaderOptions<T, Key> {
     return {};
   }
 
-  generateDataLoader() {
+  get session() {
+    const session = this.context.request.session;
+    if (!session) {
+      throw new NoSessionException();
+    }
+    return anonymousSession(session);
+  }
+
+  generateDataLoader(context: GqlContextType) {
+    this.context = context;
     return this.createLoader(this.getOptions());
   }
 

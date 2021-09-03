@@ -1,9 +1,12 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { GqlContextType, GqlExecutionContext } from '@nestjs/graphql';
+import {
+  GqlExecutionContext,
+  GqlContextType as GqlRequestType,
+} from '@nestjs/graphql';
 import * as DataLoader from 'dataloader';
 import { Class } from 'type-fest';
-import { ID, ServerException } from '../../common';
+import { GqlContextType, ID, ServerException } from '../../common';
 import { NEST_LOADER_CONTEXT_KEY } from './constants';
 import { DataLoaderInterceptor } from './data-loader.interceptor';
 
@@ -15,7 +18,7 @@ export interface NestDataLoader<T, Key = ID> {
   /**
    * Should return a new instance of dataloader each time
    */
-  generateDataLoader: () => DataLoader<Key, T>;
+  generateDataLoader: (context: GqlContextType) => DataLoader<Key, T>;
 }
 
 /**
@@ -28,7 +31,7 @@ export const Loader = createParamDecorator(
       throw new ServerException(`Invalid name provider to @Loader ('${name}')`);
     }
 
-    if (context.getType<GqlContextType>() !== 'graphql') {
+    if (context.getType<GqlRequestType>() !== 'graphql') {
       throw new ServerException(
         '@Loader should only be used within the GraphQL context'
       );

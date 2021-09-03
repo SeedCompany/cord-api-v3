@@ -35,7 +35,7 @@ export class DataLoaderInterceptor implements NestInterceptor {
                     ctx[NEST_LOADER_CONTEXT_KEY].contextId,
                     { strict: false }
                   )
-                ).generateDataLoader();
+                ).generateDataLoader(ctx);
               } catch (e) {
                 throw new ServerException(
                   `The loader ${type} is not provided`,
