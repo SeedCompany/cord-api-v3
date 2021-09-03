@@ -1,6 +1,6 @@
-import { GetObjectOutput, HeadObjectOutput } from 'aws-sdk/clients/s3';
 import { promises as fs } from 'fs';
 import { dirname, join, resolve } from 'path';
+import { Readable } from 'stream';
 import { NotFoundException } from '../../../common';
 import { FakeAwsFile, LocalBucket, LocalBucketOptions } from './local-bucket';
 
@@ -31,13 +31,13 @@ export class FilesystemBucket extends LocalBucket {
     });
   }
 
-  async getObject(key: string): Promise<GetObjectOutput> {
+  async getObject(key: string) {
     const rest = await this.headObject(key);
-    const Body = await this.readFile(key);
+    const Body = Readable.from(await this.readFile(key));
     return { Body, ...rest };
   }
 
-  async headObject(key: string): Promise<HeadObjectOutput> {
+  async headObject(key: string) {
     const path = this.getPath(key);
     try {
       await fs.stat(path);
