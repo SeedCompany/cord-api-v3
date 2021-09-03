@@ -159,6 +159,11 @@ export class UserService {
     return await this.secure(user, sessionOrUserId);
   }
 
+  async readMany(ids: readonly ID[], session: Session) {
+    const users = await this.userRepo.readMany(ids);
+    return await Promise.all(users.map((dto) => this.secure(dto, session)));
+  }
+
   async secure(
     user: UnsecuredDto<User>,
     sessionOrUserId: Session | ID
