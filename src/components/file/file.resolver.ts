@@ -8,7 +8,8 @@ import {
 } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
-import { User, UserService } from '../user';
+import { DataLoader, Loader } from '../../core';
+import { User } from '../user';
 import {
   CreateFileVersionInput,
   File,
@@ -24,10 +25,7 @@ import { FileService } from './file.service';
 
 @Resolver(File)
 export class FileResolver {
-  constructor(
-    protected readonly service: FileService,
-    protected readonly users: UserService
-  ) {}
+  constructor(protected readonly service: FileService) {}
 
   @Query(() => File)
   async file(
@@ -50,9 +48,9 @@ export class FileResolver {
   })
   async modifiedBy(
     @Parent() node: File,
-    @AnonSession() session: Session
+    @Loader(User) users: DataLoader<User>
   ): Promise<User> {
-    return await this.users.readOne(node.modifiedById, session);
+    return await users.load(node.modifiedById);
   }
 
   @ResolveField(() => FileListOutput, {
