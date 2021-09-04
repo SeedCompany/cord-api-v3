@@ -9,9 +9,10 @@ import {
 } from '@nestjs/graphql';
 import { Request } from 'express';
 import { AnonSession, Session } from '../../common';
+import { DataLoader, Loader } from '../../core';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto';
-import { User, UserService } from '../user';
+import { User } from '../user';
 import { AuthenticationService } from './authentication.service';
 import { LoginInput, LoginOutput, RegisterOutput } from './dto';
 
@@ -20,8 +21,7 @@ export class LoginResolver {
   constructor(
     private readonly authentication: AuthenticationService,
     @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorization: AuthorizationService,
-    private readonly users: UserService
+    private readonly authorization: AuthorizationService
   ) {}
 
   @Mutation(() => LoginOutput, {
@@ -52,9 +52,9 @@ export class LoginResolver {
   @ResolveField(() => User, { description: 'The logged-in user' })
   async user(
     @Parent() { user }: RegisterOutput,
-    @AnonSession() session: Session
+    @Loader(User) users: DataLoader<User>
   ): Promise<User> {
-    return await this.users.readOne(user, session);
+    return await users.load(user);
   }
 
   @ResolveField(() => [Powers])

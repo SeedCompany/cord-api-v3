@@ -11,10 +11,10 @@ import { Request, Response } from 'express';
 import { DateTime } from 'luxon';
 import { UnauthenticatedException } from '../../common';
 import { anonymousSession } from '../../common/session';
-import { ConfigService, ILogger, Logger } from '../../core';
+import { ConfigService, DataLoader, ILogger, Loader, Logger } from '../../core';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto';
-import { User, UserService } from '../user';
+import { User } from '../user';
 import { AuthenticationRepository } from './authentication.repository';
 import { AuthenticationService } from './authentication.service';
 import { SessionOutput } from './dto';
@@ -27,7 +27,6 @@ export class SessionResolver {
     private readonly repo: AuthenticationRepository,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorization: AuthorizationService,
-    private readonly users: UserService,
     private readonly config: ConfigService,
     private readonly sessionPipe: SessionPipe,
     @Logger('session:resolver') private readonly logger: ILogger
@@ -67,6 +66,7 @@ export class SessionResolver {
       token = await this.authentication.createToken();
       rawSession = await this.authentication.createSession(token);
     }
+    req.session = rawSession; // Set for data loaders invoked later in operation
     const session = anonymousSession(rawSession);
 
     const userFromSession = session.anonymous
@@ -93,10 +93,11 @@ export class SessionResolver {
     description:
       'Only returned if there is a logged-in user tied to the current session.',
   })
-  async user(@Parent() output: SessionOutput): Promise<User | null> {
-    return output.user
-      ? await this.users.readOne(output.user, output.session)
-      : null;
+  async user(
+    @Parent() output: SessionOutput,
+    @Loader(User) users: DataLoader<User>
+  ): Promise<User | null> {
+    return output.user ? await users.load(output.user) : null;
   }
 
   @ResolveField(() => [Powers], { nullable: true })
