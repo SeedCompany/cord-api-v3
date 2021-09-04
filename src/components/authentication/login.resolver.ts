@@ -7,8 +7,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { Request } from 'express';
-import { AnonSession, Session } from '../../common';
+import { AnonSession, GqlContextType, Session } from '../../common';
 import { DataLoader, Loader } from '../../core';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto';
@@ -30,10 +29,10 @@ export class LoginResolver {
   async login(
     @Args('input') input: LoginInput,
     @AnonSession() session: Session,
-    @Context('request') req: Request
+    @Context() context: GqlContextType
   ): Promise<LoginOutput> {
     const user = await this.authentication.login(input, session);
-    await this.authentication.updateSession(req);
+    await this.authentication.updateSession(context);
     return { user };
   }
 
@@ -42,10 +41,10 @@ export class LoginResolver {
   })
   async logout(
     @AnonSession() session: Session,
-    @Context('request') req: Request
+    @Context() context: GqlContextType
   ): Promise<boolean> {
     await this.authentication.logout(session.token);
-    await this.authentication.updateSession(req); // ensure session data is fresh
+    await this.authentication.updateSession(context); // ensure session data is fresh
     return true;
   }
 

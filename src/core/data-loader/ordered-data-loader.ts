@@ -28,7 +28,7 @@ export abstract class OrderedNestDataLoader<T, Key = ID>
   }
 
   get session() {
-    const session = this.context.request.session;
+    const session = this.context.session;
     if (!session) {
       throw new NoSessionException();
     }

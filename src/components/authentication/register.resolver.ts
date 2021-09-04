@@ -7,8 +7,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { Request } from 'express';
-import { AnonSession, Session } from '../../common';
+import { AnonSession, GqlContextType, Session } from '../../common';
 import { DataLoader, Loader } from '../../core';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto';
@@ -30,11 +29,11 @@ export class RegisterResolver {
   async register(
     @Args('input') input: RegisterInput,
     @AnonSession() session: Session,
-    @Context('request') req: Request
+    @Context() context: GqlContextType
   ): Promise<RegisterOutput> {
     const user = await this.authentication.register(input, session);
     await this.authentication.login(input, session);
-    await this.authentication.updateSession(req);
+    await this.authentication.updateSession(context);
     return { user };
   }
 
