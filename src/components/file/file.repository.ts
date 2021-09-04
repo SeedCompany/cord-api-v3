@@ -26,6 +26,7 @@ import {
   paginate,
   sorting,
 } from '../../core/database/query';
+import { BaseNode } from '../../core/database/results';
 import {
   Directory,
   File,
@@ -223,6 +224,15 @@ export class FileRepository {
           .orderBy('version.createdAt', 'DESC')
           .raw('LIMIT 1')
       );
+  }
+
+  async getBaseNode(id: ID) {
+    return await this.db
+      .query()
+      .matchNode('node', 'FileNode', { id })
+      .return<{ node: BaseNode }>('node')
+      .map('node')
+      .first();
   }
 
   async createDirectory(

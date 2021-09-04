@@ -1,4 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { intersection } from 'lodash';
 import {
   bufferFromStream,
   DuplicateException,
@@ -23,6 +24,7 @@ import {
   FileListInput,
   FileListOutput,
   FileNode,
+  FileNodeType,
   FileVersion,
   isDirectory,
   isFile,
@@ -129,14 +131,11 @@ export class FileService {
   ): Promise<Directory> {
     await this.authorizationService.checkPower(Powers.CreateDirectory, session);
     if (parentId) {
-      // Enforce parent exists and is a directory
-      const parent = await this.getParentNode(parentId, session);
-      if (!isDirectory(parent)) {
-        throw new InputException(
-          'Directories can only be created under directories',
-          'parentId'
-        );
-      }
+      await this.validateParentNode(
+        parentId,
+        (type) => type === FileNodeType.Directory,
+        'Directories can only be created under directories'
+      );
       try {
         await this.repo.getByName(parentId, name, session);
         throw new DuplicateException(
@@ -219,17 +218,16 @@ export class FileService {
       }
     }
 
-    const parent = await this.getParentNode(parentId, session);
-    if (isFileVersion(parent)) {
-      throw new InputException(
-        'Only files and directories can be parents of a file version',
-        'parentId'
-      );
-    }
+    const parentType = await this.validateParentNode(
+      parentId,
+      (type) => type !== FileNodeType.FileVersion,
+      'Only files and directories can be parents of a file version'
+    );
 
-    const fileId = isFile(parent)
-      ? parent.id
-      : await this.getOrCreateFileByName(parent.id, name, session);
+    const fileId =
+      parentType === FileNodeType.File
+        ? parentId
+        : await this.getOrCreateFileByName(parentId, name, session);
     this.logger.debug('Creating file version', {
       parentId: fileId,
       fileName: name,
@@ -265,15 +263,23 @@ export class FileService {
     return await this.getFile(fileId, session);
   }
 
-  private async getParentNode(id: ID, session: Session) {
-    try {
-      return await this.repo.getById(id, session);
-    } catch (e) {
-      if (e instanceof NotFoundException) {
-        throw new NotFoundException('Could not find parent');
-      }
-      throw e;
+  private async validateParentNode(
+    id: ID,
+    isType: (type: FileNodeType) => boolean,
+    typeMismatchError: string
+  ) {
+    const node = await this.repo.getBaseNode(id);
+    if (!node) {
+      throw new NotFoundException('Could not find parent', 'parentId');
     }
+    const type = intersection(
+      node.labels,
+      Object.keys(FileNodeType)
+    )[0] as FileNodeType;
+    if (!isType(type)) {
+      throw new InputException(typeMismatchError, 'parentId');
+    }
+    return type;
   }
 
   private async getOrCreateFileByName(
