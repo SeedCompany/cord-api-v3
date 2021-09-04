@@ -96,7 +96,7 @@ export class UserRepository extends DtoRepository(User) {
     if (!result) {
       throw new NotFoundException('Could not find user', 'user.id');
     }
-    const pool = await PostgresService.pool;
+    const pool = await this.pg.pool;
     let [pgPersonData, rolesOfPerson] = await Promise.all([
       pool.query(
         `select public_last_name, password, title, public_first_name,email, private_last_name, private_first_name, time_zone,p.created_at, phone, about 
@@ -249,11 +249,11 @@ export class UserRepository extends DtoRepository(User) {
         //
       }
     }
-    const pool = await PostgresService.pool;
+    const pool = await this.pg.pool;
     const key = await pool.query(
       `call public.create(0,'public.people_data',$1 ,2,1,1,1,0); `,
       [
-        PostgresService.convertObjectToHstore({
+        this.pg.convertObjectToHstore({
           neo4j_id: result.id,
           public_first_name: input.displayFirstName,
           public_last_name: input.displayLastName,
@@ -270,7 +270,7 @@ export class UserRepository extends DtoRepository(User) {
     await pool.query(
       `call public.create(0,'public.users_data',$1 ,2,1,1,1,0); `,
       [
-        PostgresService.convertObjectToHstore({
+        this.pg.convertObjectToHstore({
           person: key.rows[0].record_id,
           email: input.email,
           password: 'password',
@@ -417,7 +417,7 @@ export class UserRepository extends DtoRepository(User) {
       })
       .asResult<{ canRead?: boolean; canEdit?: boolean }>()
       .first();
-    // const client = await PostgresService.pool.connect();
+    // const client = await this.pg.pool.connect();
     // const pgResult = await client.query(
     //   `delete from public.people_data where id = $1`,
     //   [0]

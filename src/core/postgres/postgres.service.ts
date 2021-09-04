@@ -12,18 +12,19 @@ export class PostgresService {
     private readonly config: ConfigService,
     @Logger('postgres:service') private readonly logger: ILogger
   ) {}
-
-  static pool = new Pool({
-    host: 'localhost',
-    user: 'postgres',
-    password: 'password',
-    database: 'postgres',
-    port: 5432,
+  //  pool = new Pool({
+  //   host: 'localhost',
+  //   user: 'postgres',
+  //   password: 'password',
+  //   database: 'postgres',
+  //   port: 5432,
+  // });
+  pool = new Pool({
+    ...this.config.postgres,
   });
 
-  static async executeSQLFiles(dirPath: string): Promise<number> {
+  async executeSQLFiles(dirPath: string): Promise<number> {
     const files = fs.readdirSync(dirPath);
-
     for (const name of files) {
       const fileOrDirPath = path.join(dirPath, name);
 
@@ -31,6 +32,7 @@ export class PostgresService {
         await this.executeSQLFiles(fileOrDirPath);
       } else {
         const sql = fs.readFileSync(fileOrDirPath).toString();
+        console.log(this.pool);
         await this.pool.query(sql);
       }
     }
@@ -38,7 +40,7 @@ export class PostgresService {
     return 0;
   }
 
-  static async init(toggle: number): Promise<void> {
+  async init(toggle: number): Promise<void> {
     if (toggle === 0) {
       return;
     }
@@ -53,7 +55,7 @@ export class PostgresService {
 
     return;
   }
-  static convertObjectToHstore(obj: object): string {
+  convertObjectToHstore(obj: object): string {
     let string = '';
     for (const [key, value] of Object.entries(obj)) {
       string += `"${key}"=>"${value}",`;
@@ -62,8 +64,18 @@ export class PostgresService {
     console.log(string);
     return string;
   }
+  makeid = (length: number) => {
+    var result = '';
+    var characters =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var charactersLength = characters.length;
+    for (var i = 0; i < length; i++) {
+      result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    return result;
+  };
 
-  static async loadTestData(toggle: number) {
+  async loadTestData(toggle: number) {
     //anon user - using email
     //root user
     if (toggle === 0) {
@@ -151,6 +163,29 @@ export class PostgresService {
       ]
     );
 
+    // for (let i = 0; i < 8; i++) {
+    //   const peopleId = await this.pool.query(
+    //     `call public.create(0,'public.people_data',$1 ,2,2,1,3,0);`,
+    //     [
+    //       this.convertObjectToHstore({
+    //         public_first_name: `user${i}`,
+    //         about: `about${i}`,
+    //       }),
+    //     ]
+    //   );
+    //   await this.pool.query(
+    //     `call public.create(0, 'public.users_data', $1, 2,2,1,3,0)`,
+    //     [
+    //       this.convertObjectToHstore({
+    //         person: peopleId.rows[0].record_id,
+    //         email: `email${i}@gmail.com`,
+    //         owning_org: 0,
+    //         password: this.makeid(10),
+    //       }),
+    //     ]
+    //   );
+    // }
+
     await this.pool.query(
       `call public.create(0,'public.global_roles_data', $1, 2,2,1,3,0);`,
       [
@@ -172,14 +207,14 @@ export class PostgresService {
       ]
     );
 
-    // GRANTS & MEMBERSHIPS
+    // // GRANTS & MEMBERSHIPS
     let tables = [
       'locations_data',
       'people_data',
       'organizations_data',
       'users_data',
     ];
-    tables = [];
+    // tables = [];
 
     const columns = await this.pool.query(
       `select column_name,table_name from information_schema.columns where table_schema='public' and table_name = any($1::text[])`,
@@ -188,67 +223,67 @@ export class PostgresService {
 
     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
     // this.logger.info(schemaTableName);
-    for (const { column_name, table_name } of columns.rows) {
-      const schemaTableName = `public.${table_name}`;
-      await this.pool.query(
-        `call public.create(0, 'public.global_role_column_grants', $1,2,0,0,3,0)`,
-        [
-          this.convertObjectToHstore({
-            global_role: 0,
-            table_name: schemaTableName,
-            column_name,
-            access_level: 'Write',
-          }),
-        ]
-      );
-    }
+    // for (const { column_name, table_name } of columns.rows) {
+    //   const schemaTableName = `public.${table_name}`;
+    //   await this.pool.query(
+    //     `call public.create(0, 'public.global_role_column_grants', $1,2,0,0,3,0)`,
+    //     [
+    //       this.convertObjectToHstore({
+    //         global_role: 0,
+    //         table_name: schemaTableName,
+    //         column_name,
+    //         access_level: 'Write',
+    //       }),
+    //     ]
+    //   );
+    // }
 
     // PROJECTS
-    await this.pool.query(
-      `call public.create(0, 'public.projects_data', $1,2,2,1,3,0)`,
-      [
-        this.convertObjectToHstore({
-          id: 0,
-          name: 'project0',
-        }),
-      ]
-    );
+    // await this.pool.query(
+    //   `call public.create(0, 'public.projects_data', $1,2,2,1,3,0)`,
+    //   [
+    //     this.convertObjectToHstore({
+    //       id: 0,
+    //       name: 'project0',
+    //     }),
+    //   ]
+    // );
     // LANGUAGES
-    await this.pool.query(
-      `call public.create(0,'sil.table_of_languages', $1, 2,0,0,3,0)`,
-      [
-        this.convertObjectToHstore({
-          id: 0,
-          iso_639: 'txn',
-          language_name: 'texan',
-        }),
-      ]
-    );
+    // await this.pool.query(
+    //   `call public.create(0,'sil.table_of_languages', $1, 2,0,0,3,0)`,
+    //   [
+    //     this.convertObjectToHstore({
+    //       id: 0,
+    //       iso_639: 'txn',
+    //       language_name: 'texan',
+    //     }),
+    //   ]
+    // );
 
-    await this.pool.query(
-      `call public.create(0,'sc.languages_data', $1,2,2,1,3,0)`,
-      [
-        this.convertObjectToHstore({
-          id: 0,
-          display_name: 'texan',
-          name: 'texan',
-          sensitivity: 'Medium',
-        }),
-      ]
-    );
+    // await this.pool.query(
+    //   `call public.create(0,'sc.languages_data', $1,2,2,1,3,0)`,
+    //   [
+    //     this.convertObjectToHstore({
+    //       id: 0,
+    //       display_name: 'texan',
+    //       name: 'texan',
+    //       sensitivity: 'Medium',
+    //     }),
+    //   ]
+    // );
 
     // LOCATIONS
-    await this.pool.query(
-      `call public.create(0,'public.locations_data', $1,2,2,1,3,0)`,
-      [
-        this.convertObjectToHstore({
-          id: 0,
-          name: 'location0',
-          sensitivity: 'Low',
-          type: 'Country',
-        }),
-      ]
-    );
+    // await this.pool.query(
+    //   `call public.create(0,'public.locations_data', $1,2,2,1,3,0)`,
+    //   [
+    //     this.convertObjectToHstore({
+    //       id: 0,
+    //       name: 'location0',
+    //       sensitivity: 'Low',
+    //       type: 'Country',
+    //     }),
+    //   ]
+    // );
 
     // await this.pool.query(
     //   `insert into public.organizations_data(id,name, sensitivity) values(1,'org1', 'Low')`
@@ -307,6 +342,23 @@ export class PostgresService {
         }),
       ]
     );
+    // const personRows = await this.pool.query(
+    //   `select id from public.people_data`
+    // );
+    // for (let { id } of personRows.rows) {
+    //   console.log(id);
+    //   if (id !== 0 && id !== user1pk) {
+    //     await this.pool.query(
+    //       `call public.create(0,'public.global_role_memberships',$1, 2,2,0,3,0)`,
+    //       [
+    //         this.convertObjectToHstore({
+    //           global_role: 0,
+    //           person: id,
+    //         }),
+    //       ]
+    //     );
+    //   }
+    // }
     // for (let i = 2; i <= 10; i++) {
     //   console.log(i);
     //   await this.pool.query(
@@ -322,12 +374,21 @@ export class PostgresService {
 
     // }
     for (let i = 1; i <= 10; i++) {
+      await this.pool.query(
+        `call public.create(0, 'public.chats_data', $1, 2,2,1,3,0)`,
+        [
+          this.convertObjectToHstore({
+            id: i,
+          }),
+        ]
+      );
       console.log(i);
       await this.pool.query(
         `call public.create(0,'public.locations_data', $1,2,2,1,3,0)`,
         [
           this.convertObjectToHstore({
             id: i,
+            chat_id: i,
             name: `location${i}`,
             sensitivity: 'Low',
             type: 'Country',

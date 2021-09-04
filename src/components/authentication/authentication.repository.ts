@@ -6,7 +6,6 @@ import { DatabaseService, matchRequestingUser } from '../../core';
 import { PostgresService } from '../../core/postgres/postgres.service';
 import { ACTIVE } from '../../core/database/query';
 import { LoginInput } from './dto';
-import { PutObjectLegalHoldRequest } from '@aws-sdk/client-s3';
 
 interface EmailToken {
   email: string;
@@ -40,17 +39,20 @@ export class AuthenticationRepository {
         }
       )
       .first();
-    const pool = PostgresService.pool;
+    const pool = this.pg.pool;
     const pgResult = await pool.query(
       `call public.create(0,'public.tokens', $1, 0,0,0,0,0)`,
       [
-        PostgresService.convertObjectToHstore({
+        this.pg.convertObjectToHstore({
           token,
           // person: id
         }),
       ]
     );
-    console.log('saveSessionToken', pgResult.rows[0].record_id);
+    console.log('saveSessionToken', {
+      pg: pgResult.rows[0].record_id,
+      neo4j: result,
+    });
     if (!result) {
       throw new ServerException('Failed to save session token');
     }
@@ -72,12 +74,15 @@ export class AuthenticationRepository {
       .return({ user: [{ id: 'id' }] })
       .asResult<{ id: ID }>()
       .first();
-    const pool = await PostgresService.pool;
+    const pool = await this.pg.pool;
     const pgResult = await pool.query(
       `select p.neo4j_id from public.tokens t inner join public.people_data p on t.person = p.id where t.token = $1`,
       [session.token]
     );
-    console.log('getUserFromSession', pgResult.rows[0].neo4j_id);
+    console.log('getUserFromSession', {
+      pg: pgResult.rows[0].neo4j_id,
+      neo4j: userRes?.id,
+    });
     return pgResult.rows[0].neo4j_id;
     // return userRes?.id;
   }
@@ -101,7 +106,7 @@ export class AuthenticationRepository {
         }),
       ])
       .run();
-    const pool = PostgresService.pool;
+    const pool = this.pg.pool;
     const pgUserRow = await pool.query(
       `select id from public.people_data where neo4j_id = $1`,
       [userId]
@@ -109,11 +114,11 @@ export class AuthenticationRepository {
     const pgUserId = pgUserRow.rows[0].id;
     await pool.query(`call public.update(0,$1, 'public.users_data', $2, 0,0)`, [
       pgUserId,
-      PostgresService.convertObjectToHstore({
+      this.pg.convertObjectToHstore({
         password: passwordHash,
       }),
     ]);
-    console.log('savePasswordHashOnUser', pgUserId);
+    console.log('savePasswordHashOnUser', { pg: pgUserId });
   }
 
   async getPasswordHash(input: LoginInput, session: Session) {
@@ -142,7 +147,7 @@ export class AuthenticationRepository {
       )
       .asResult<{ pash: string }>()
       .first();
-    const pool = PostgresService.pool;
+    const pool = this.pg.pool;
     const pgResult = await pool.query(
       `select u.password from public.users_data u where email = $1`,
       [input.email]
@@ -152,7 +157,7 @@ export class AuthenticationRepository {
       pg: pgResult.rows[0]?.password,
       neo4j: result?.pash,
     });
-    return result?.pash;
+    return pgResult.rows[0]?.password;
   }
 
   async connectSessionToUser(input: LoginInput, session: Session) {
@@ -183,7 +188,7 @@ export class AuthenticationRepository {
       )
       .asResult<{ id: ID }>()
       .first();
-    const pool = PostgresService.pool;
+    const pool = this.pg.pool;
     // const tokenRow = await pool.query(`select token from `);
     const personRow = await pool.query(
       `select p.id, p.neo4j_id from public.users_data u inner join public.people_data p on p.id = u.person where u.email = $1`,
@@ -200,7 +205,7 @@ export class AuthenticationRepository {
     if (tokenRow.rows[0]?.id) {
       await pool.query(`call public.update(0, $1,'public.tokens', $2, 0,0 )`, [
         tokenRow.rows[0]?.id,
-        PostgresService.convertObjectToHstore({
+        this.pg.convertObjectToHstore({
           person: personRow.rows[0]?.id,
         }),
       ]);
@@ -208,7 +213,7 @@ export class AuthenticationRepository {
       await pool.query(
         `call public.create(0, 'public.tokens', $1, 0,0,0,0,0 )`,
         [
-          PostgresService.convertObjectToHstore({
+          this.pg.convertObjectToHstore({
             token: session.token,
             person: personRow.rows[0]?.id,
           }),
@@ -240,7 +245,7 @@ export class AuthenticationRepository {
         }
       )
       .run();
-    const pool = PostgresService.pool;
+    const pool = this.pg.pool;
     await pool.query(`delete from public.tokens where token = $1`, [token]);
     console.log('deleteSessionToken');
   }
@@ -263,7 +268,7 @@ export class AuthenticationRepository {
       .asResult<{ token: string; userId?: ID }>()
       .first();
     // POSTGRES
-    const pool = PostgresService.pool;
+    const pool = this.pg.pool;
     const tokenRow = await pool.query(
       `select token,person from public.tokens where token = $1`,
       [token]
@@ -275,7 +280,7 @@ export class AuthenticationRepository {
     );
     personNeo4jId = personRow.rows[0]?.neo4j_id;
     const postgresResult = { token, userId: personNeo4jId };
-    console.log('findSessionToken', postgresResult);
+    console.log('findSessionToken', { pg: postgresResult, neo4j: result });
 
     return postgresResult;
   }
@@ -291,8 +296,16 @@ export class AuthenticationRepository {
       .return('password.value as passwordHash')
       .asResult<{ passwordHash: string }>()
       .first();
-    console.log('getCurrentPasswordHash', session);
-    return result?.passwordHash;
+    const pool = this.pg.pool;
+    const pgResult = await pool.query(
+      `select u.password from public.users_data u inner join public.people_data p on p.id = u.person where p.neo4j_id = $1`,
+      [session.userId]
+    );
+    console.log('getCurrentPasswordHash', {
+      pg: pgResult.rows[0]?.password,
+      neo4j: result?.passwordHash,
+    });
+    return pgResult.rows[0]?.password;
   }
 
   async updatePassword(
@@ -312,7 +325,23 @@ export class AuthenticationRepository {
       })
       .return('password.value as passwordHash')
       .first();
-    console.log('updatePassword');
+    const pgUserId = await this.pg.pool.query(
+      `select u.id from public.users_data u inner join public.people_data p on p.id = u.person where p.neo4j_id = $1`,
+      [session.userId]
+    );
+    await this.pg.pool.query(
+      `call public.update(0,$1, 'public.users_data', $2, 0,0)`,
+      [
+        pgUserId.rows[0].id,
+        this.pg.convertObjectToHstore({
+          password: newPasswordHash,
+        }),
+      ]
+    );
+    console.log('updatePassword', {
+      pg: pgUserId.rows[0].id,
+      neo4j: matchRequestingUser(session),
+    });
   }
 
   async doesEmailAddressExist(email: string) {
@@ -321,12 +350,15 @@ export class AuthenticationRepository {
       .match([node('email', 'EmailAddress', { value: email })])
       .return('email')
       .first();
-    const pool = PostgresService.pool;
+    const pool = this.pg.pool;
     const pgResult = await pool.query(
       `select email from public.users_data where email = $1`,
       [email]
     );
-    console.log('auth.repo', pgResult.rows[0].email);
+    console.log('auth.repo', {
+      pg: pgResult.rows[0].email,
+      neo4j: result,
+    });
     return !!pgResult.rows[0].email;
   }
 
@@ -344,7 +376,7 @@ export class AuthenticationRepository {
         }
       )
       .run();
-    const pool = PostgresService.pool;
+    const pool = this.pg.pool;
     const personRows = await pool.query(
       `select email,person from public.users_data where email = $1`,
       [email]
@@ -354,13 +386,13 @@ export class AuthenticationRepository {
     const pgResult = await pool.query(
       `call public.create(0,'public.tokens',$1 ,0,0,0,0,0); `,
       [
-        PostgresService.convertObjectToHstore({
+        this.pg.convertObjectToHstore({
           person,
           token,
         }),
       ]
     );
-    console.log('saveEmailToken', pgResult);
+    console.log('saveEmailToken', { pg: pgResult.rows[0].record_id });
   }
 
   async findEmailToken(token: string) {
@@ -375,8 +407,7 @@ export class AuthenticationRepository {
       .asResult<EmailToken>()
       .first();
 
-    const pool = PostgresService.pool;
-    const pgResult = await pool.query(
+    const pgResult = await this.pg.pool.query(
       `
     with u as(
     select email, created_at, person from public.users_data
@@ -385,7 +416,7 @@ export class AuthenticationRepository {
     `,
       [token]
     );
-    console.log('findEmailToken', pgResult);
+    console.log('findEmailToken', { pg: pgResult.rows[0], neo4j: result });
     return result;
   }
 
@@ -417,9 +448,8 @@ export class AuthenticationRepository {
         }
       )
       .first();
-    const pool = PostgresService.pool;
+    const pool = this.pg.pool;
     console.log('updatePasswordViaEmailToken');
-    // const pgPersonRow = await pool.query(`call public.update()`, []);
   }
 
   async removeAllEmailTokensForEmail(email: string) {
@@ -428,6 +458,13 @@ export class AuthenticationRepository {
       .match([node('emailToken', 'EmailToken', { value: email })])
       .delete('emailToken')
       .run();
+    const idRow = await this.pg.pool.query(
+      `select person from public.users_data u where email = $1`,
+      [email]
+    );
+    await this.pg.pool.query(`delete from public.tokens where person = $1`, [
+      idRow.rows[0].person,
+    ]);
     console.log('removeAllEmailTokensForEmail');
   }
 
@@ -443,6 +480,14 @@ export class AuthenticationRepository {
       .where(not([{ 'token.value': session.token }]))
       .setValues({ 'oldRel.active': false })
       .run();
+    const idRow = await this.pg.pool.query(
+      `select id from public.people_data p where neo4j_id = $1`,
+      [session.userId]
+    );
+    await this.pg.pool.query(
+      `delete from public.tokens where person = $1 and token <> $2`,
+      [idRow.rows[0].id, session.token]
+    );
     console.log('deactivateAllOtherSession');
   }
 
@@ -459,6 +504,14 @@ export class AuthenticationRepository {
       .where(not([{ 'token.value': session.token }]))
       .setValues({ 'oldRel.active': false })
       .run();
+    const idRow = await this.pg.pool.query(
+      `select person from public.users_data u where email = $1`,
+      [email]
+    );
+    await this.pg.pool.query(
+      `delete from public.tokens where person = $1 and token <> $2`,
+      [idRow.rows[0].person, session.token]
+    );
     console.log('deactivateAllOtherSessionsByEmail');
   }
 }

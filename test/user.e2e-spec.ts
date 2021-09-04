@@ -34,8 +34,8 @@ describe('User e2e', () => {
     app = await createTestApp();
     db = app.get(Connection);
     await createSession(app);
-    await PostgresService.init();
-    await PostgresService.loadTestData();
+    // await PostgresService.init();
+    // await PostgresService.loadTestData();
   });
 
   // afterAll(async () => {
