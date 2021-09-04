@@ -1,6 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { DirectoryResolver } from './directory.resolver';
+import { FileNodeLoader } from './file-node.loader';
 import { FileNodeResolver } from './file-node.resolver';
 import { FileVersionResolver } from './file-version.resolver';
 import { FileRepository } from './file.repository';
@@ -19,6 +20,7 @@ import { LocalBucketController } from './local-bucket.controller';
     FileRepository,
     FileResolver,
     FileVersionResolver,
+    FileNodeLoader,
     FileService,
     ...Object.values(handlers),
   ],
