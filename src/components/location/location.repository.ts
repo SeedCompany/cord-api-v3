@@ -8,7 +8,12 @@ import {
   Session,
   UnsecuredDto,
 } from '../../common';
-import { DtoRepository, matchRequestingUser, PostgresService } from '../../core';
+import {
+  DatabaseService,
+  DtoRepository,
+  matchRequestingUser,
+  PostgresService,
+} from '../../core';
 import {
   ACTIVE,
   createNode,
@@ -24,6 +29,9 @@ import { CreateLocation, Location, LocationListInput } from './dto';
 
 @Injectable()
 export class LocationRepository extends DtoRepository(Location) {
+  constructor(private readonly pg: PostgresService, db: DatabaseService) {
+    super(db);
+  }
   async doesNameExist(name: string) {
     const result = await this.db
       .query()
@@ -58,11 +66,11 @@ export class LocationRepository extends DtoRepository(Location) {
       throw new ServerException('Failed to create location');
     }
 
-    const pool = await PostgresService.pool;
+    const pool = await this.pg.pool;
     const pgResult = await pool.query(
       `call public.create(0,'public.locations_data',$1 ,2,1,1,1,0); `,
       [
-        PostgresService.convertObjectToHstore({
+        this.pg.convertObjectToHstore({
           name: input.name,
           type: input.type,
         }),
@@ -182,7 +190,7 @@ export class LocationRepository extends DtoRepository(Location) {
 
   async addLocationToNode(label: string, id: ID, rel: string, locationId: ID) {
     let firstTable = 'public.people_data';
-    switch(firstTable){
+    switch (firstTable) {
       case 'User':
         firstTable = 'public.people_data';
         break;
@@ -198,14 +206,15 @@ export class LocationRepository extends DtoRepository(Location) {
       default:
         console.log('Correspondent table not found');
     }
-    const pool = await PostgresService.pool;
+    const pool = await this.pg.pool;
     const pgResult = pool.query(
       `UPDATE ${firstTable}
        SET primary_location = $1
        WHERE id = $2
       `,
-      [locationId, id]);
-    
+      [locationId, id]
+    );
+
     console.log('pgResult: ', pgResult);
 
     await this.db

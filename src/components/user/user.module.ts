@@ -1,4 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
+import { PostgresModule } from '../../core';
 import { AuthenticationModule } from '../authentication/authentication.module';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { LanguageModule } from '../language/language.module';
@@ -24,6 +25,7 @@ import { UserService } from './user.service';
     TimeZoneModule,
     forwardRef(() => LocationModule),
     forwardRef(() => LanguageModule),
+    PostgresModule,
   ],
   providers: [KnownLanguageResolver, UserResolver, UserService, UserRepository],
   exports: [UserService, EducationModule, UnavailabilityModule],

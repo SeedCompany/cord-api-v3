@@ -9,6 +9,7 @@ import {
   UnsecuredDto,
 } from '../../common';
 import {
+  DatabaseService,
   DtoRepository,
   matchRequestingUser,
   PostgresService,
@@ -30,6 +31,9 @@ import { CreateOrganization, Organization, OrganizationListInput } from './dto';
 
 @Injectable()
 export class OrganizationRepository extends DtoRepository(Organization) {
+  constructor(db: DatabaseService, private readonly pg: PostgresService) {
+    super(db);
+  }
   async checkOrg(name: string) {
     return await this.db
       .query()
@@ -69,7 +73,7 @@ export class OrganizationRepository extends DtoRepository(Organization) {
       );
     }
 
-    const pool = await PostgresService.pool;
+    const pool = await this.pg.pool;
     const orgData = await pool.query(
       `select name, created_at as "createdAt", neo4j_id as "id" from public.organizations_data 
       where neo4j_id = $1`,

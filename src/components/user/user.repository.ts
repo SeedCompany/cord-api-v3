@@ -49,7 +49,6 @@ import {
   UserListInput,
 } from './dto';
 import { isEqual } from 'lodash';
-import { resourceLimits } from 'node:worker_threads';
 
 @Injectable()
 export class UserRepository extends DtoRepository(User) {
@@ -504,12 +503,12 @@ export class UserRepository extends DtoRepository(User) {
       .first();
     console.log('user.repo', email);
 
-    const pool = PostgresService.pool;
+    const pool = this.pg.pool;
     const pgResult = pool.query(
       `select email from users_data where email = $1`,
       [email, 0]
     );
-    console.log("pgResult: ", pgResult);
+    console.log('pgResult: ', pgResult);
     return !!result;
   }
 
