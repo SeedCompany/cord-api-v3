@@ -13,7 +13,7 @@ pToggleMV => 0,1,2
 pToggleHistory => 0,1
     0 - don't insert into history tables, 
     1 - insert into history tables
-pToggleGranters => 0,1,2
+pToggleGranters => 0,1,2,3
     0 - don't refresh security tables or materialized views, 
     1 - refresh security tables, 
     2 - refresh security tables & materialized views 

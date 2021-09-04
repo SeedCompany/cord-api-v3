@@ -240,9 +240,11 @@ create table if not exists public.locations_data (
 	created_by int not null default 0,
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
     modified_by int not null default 0,
+	chat_id int not null,
 	name varchar(255) unique not null,
 	sensitivity sensitivity not null default 'High',
 	type location_type not null
+	-- foreign key(chat_id) references public.chats_data(id)
 -- foreign keys added after people table created
 );
 
@@ -276,16 +278,7 @@ CREATE TABLE if not exists sil.language_index (
    name  varchar(75) not null
 );
 
-create table if not exists sil.table_of_languages (
-    id serial primary key,
-    sil_ethnologue_legacy varchar(32),
-	iso_639 char(3),
-	created_at timestamp not null default CURRENT_TIMESTAMP,
-	code varchar(32),
-	language_name varchar(50) not null,
-	population int,
-	provisional_code varchar(32)
-);
+
 
 -- PEOPLE ------------------------------------------------------------
 
@@ -315,6 +308,37 @@ create table if not exists public.people_data (
     foreign key (modified_by) references public.people_data(id),
 -- foreign keys added after org table created
     foreign key (primary_location) references public.locations_data(id)
+);
+create table if not exists public.chats_data (
+	id serial primary key,
+	created_at timestamp not null default CURRENT_TIMESTAMP,
+	created_by int not null default 0,
+	foreign key (created_by) references public.people_data(id)
+);
+
+create table if not exists public.posts_data (
+	id serial primary key,
+	content text not null,
+	chat_id int not null,
+	created_at timestamp not null default CURRENT_TIMESTAMP,
+	created_by int not null default 0,
+	modified_at timestamp not null default CURRENT_TIMESTAMP,
+	is_modified bool not null default false,
+	foreign key (created_by) references public.people_data(id)
+	-- foreign key (chat_id) references public.chats_data(id)
+);
+
+create table if not exists sil.table_of_languages (
+    id serial primary key,
+    sil_ethnologue_legacy varchar(32),
+	iso_639 char(3),
+	created_at timestamp not null default CURRENT_TIMESTAMP,
+	code varchar(32),
+	language_name varchar(50) not null,
+	population int,
+	chat_id int not null,
+	provisional_code varchar(32)
+	-- foreign key(chat_id) references public.chats_data(id)
 );
 
 -- fkey for a bunch of stuff
@@ -531,11 +555,13 @@ create table if not exists public.projects_data (
 	primary_org int,
 	primary_location int,
 	sensitivity sensitivity default 'High',
+	chat_id int not null,
 	unique (primary_org, name),
 	foreign key (created_by) references public.people_data(id),
     foreign key (modified_by) references public.people_data(id),
 	foreign key (primary_org) references organizations_data(id),
 	foreign key (primary_location) references locations_data(id)
+	-- foreign key (chat_id) references public.chats_data(id)
 );
 
 create table if not exists public.project_memberships (
@@ -618,3 +644,6 @@ create table if not exists public.sessions (
     foreign key (person) references public.people_data(id),
     foreign key (token) references public.tokens(token)
 );
+
+
+

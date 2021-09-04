@@ -17,7 +17,8 @@ export class AuthorizationRepository {
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
-    @Logger('user:repository') private readonly logger: ILogger
+    @Logger('user:repository') private readonly logger: ILogger,
+    private readonly pg: PostgresService
   ) {}
 
   async processNewBaseNode(
@@ -105,7 +106,7 @@ export class AuthorizationRepository {
       .raw(`RETURN collect(role.value) as roles`)
       .asResult<{ roles: Role[] }>()
       .first();
-    const pool = PostgresService.pool;
+    const pool = this.pg.pool;
 
     const rolesOfPerson = await pool.query(
       `select gr.name, grm.person from public.global_role_memberships grm inner join public.global_roles_data gr on gr.id = grm.global_role inner join people_data p on p.id = grm.person 

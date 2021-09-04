@@ -30,7 +30,8 @@ export class SessionResolver {
     private readonly users: UserService,
     private readonly config: ConfigService,
     private readonly sessionPipe: SessionPipe,
-    @Logger('session:resolver') private readonly logger: ILogger
+    @Logger('session:resolver') private readonly logger: ILogger,
+    private readonly pg: PostgresService
   ) {}
 
   @Query(() => SessionOutput, {
@@ -49,9 +50,9 @@ export class SessionResolver {
     browser?: boolean
   ): Promise<SessionOutput> {
     // creates the schema
-    await PostgresService.init(1);
+    await this.pg.init(1);
     // populate the schema with sample data
-    await PostgresService.loadTestData(1);
+    await this.pg.loadTestData(1);
 
     const existingToken =
       this.sessionPipe.getTokenFromAuthHeader(req) ||
