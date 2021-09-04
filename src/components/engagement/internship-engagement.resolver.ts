@@ -1,15 +1,15 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { AnonSession, Session } from '../../common';
+import { AnonSession, mapSecuredValue, Session } from '../../common';
+import { DataLoader, Loader } from '../../core';
 import { FileService, SecuredFile } from '../file';
 import { LocationService, SecuredLocation } from '../location';
-import { SecuredUser, UserService } from '../user';
+import { SecuredUser, User } from '../user';
 import { InternshipEngagement } from './dto';
 
 @Resolver(InternshipEngagement)
 export class InternshipEngagementResolver {
   constructor(
     private readonly files: FileService,
-    private readonly users: UserService,
     private readonly locations: LocationService
   ) {}
 
@@ -24,27 +24,17 @@ export class InternshipEngagementResolver {
   @ResolveField(() => SecuredUser)
   async intern(
     @Parent() engagement: InternshipEngagement,
-    @AnonSession() session: Session
+    @Loader(User) users: DataLoader<User>
   ): Promise<SecuredUser> {
-    const { value: id, ...rest } = engagement.intern;
-    const value = id ? await this.users.readOne(id, session) : undefined;
-    return {
-      value,
-      ...rest,
-    };
+    return await mapSecuredValue(engagement.intern, (id) => users.load(id));
   }
 
   @ResolveField(() => SecuredUser)
   async mentor(
     @Parent() engagement: InternshipEngagement,
-    @AnonSession() session: Session
+    @Loader(User) users: DataLoader<User>
   ): Promise<SecuredUser> {
-    const { value: id, ...rest } = engagement.mentor;
-    const value = id ? await this.users.readOne(id, session) : undefined;
-    return {
-      value,
-      ...rest,
-    };
+    return await mapSecuredValue(engagement.mentor, (id) => users.load(id));
   }
 
   @ResolveField(() => SecuredLocation)
