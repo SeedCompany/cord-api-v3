@@ -1,24 +1,21 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { AnonSession, mapSecuredValue, Session } from '../../common';
 import { DataLoader, Loader } from '../../core';
-import { FileService, SecuredFile } from '../file';
+import { FileNode, IFileNode, resolveDefinedFile, SecuredFile } from '../file';
 import { LocationService, SecuredLocation } from '../location';
 import { SecuredUser, User } from '../user';
 import { InternshipEngagement } from './dto';
 
 @Resolver(InternshipEngagement)
 export class InternshipEngagementResolver {
-  constructor(
-    private readonly files: FileService,
-    private readonly locations: LocationService
-  ) {}
+  constructor(private readonly locations: LocationService) {}
 
   @ResolveField(() => SecuredFile)
   async growthPlan(
     @Parent() engagement: InternshipEngagement,
-    @AnonSession() session: Session
+    @Loader(IFileNode) files: DataLoader<FileNode>
   ): Promise<SecuredFile> {
-    return await this.files.resolveDefinedFile(engagement.growthPlan, session);
+    return await resolveDefinedFile(files, engagement.growthPlan);
   }
 
   @ResolveField(() => SecuredUser)

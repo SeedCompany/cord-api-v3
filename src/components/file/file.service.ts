@@ -6,7 +6,6 @@ import {
   generateId,
   ID,
   InputException,
-  mapSecuredValue,
   NotFoundException,
   ServerException,
   Session,
@@ -33,7 +32,6 @@ import {
   MoveFileInput,
   RenameFileInput,
   RequestUploadOutput,
-  SecuredFile,
 } from './dto';
 import { FileRepository } from './file.repository';
 import { FilesBucketToken } from './files-bucket.factory';
@@ -400,24 +398,6 @@ export class FileService {
     // a consistent name is not required and automatically updating it is more
     // convenient for consumption.
     await this.rename({ id: file.value, name }, session);
-  }
-
-  async resolveDefinedFile(
-    input: DefinedFile,
-    session: Session
-  ): Promise<SecuredFile> {
-    return await mapSecuredValue(input, async (fileId) => {
-      try {
-        return await this.getFile(fileId, session);
-      } catch (e) {
-        // DefinedFiles are nullable. This works by creating the file without
-        // versions which causes the direct lookup to fail.
-        if (e instanceof NotFoundException) {
-          return undefined;
-        }
-        throw e;
-      }
-    });
   }
 
   async rename(input: RenameFileInput, session: Session): Promise<void> {
