@@ -1,6 +1,7 @@
 // eslint-disable-next-line no-restricted-imports -- it's ok in this folder
 import * as DataLoader from 'dataloader';
-import { GqlContextType, ID } from '../../common';
+import { startCase } from 'lodash';
+import { GqlContextType, ID, NotFoundException } from '../../common';
 import { anonymousSession } from '../../common/session';
 import { NoSessionException } from '../../components/authentication/no-session.exception';
 import { NestDataLoader } from './loader.decorator';
@@ -43,14 +44,15 @@ export abstract class OrderedNestDataLoader<T, Key = ID>
   protected createLoader(
     options: OrderedNestDataLoaderOptions<T, Key>
   ): DataLoader<Key, T> {
-    const defaultTypeName = this.constructor.name.replace('Loader', '');
+    const typeName =
+      options.typeName ??
+      startCase(this.constructor.name.replace('Loader', '')).toLowerCase();
     return new DataLoader<Key, T>(async (keys) => {
       return ensureOrder({
         docs: await this.loadMany(keys),
         keys,
         prop: options.propertyKey || 'id',
-        error: (keyValue: ID) =>
-          `${options.typeName || defaultTypeName} does not exist (${keyValue})`,
+        error: (keyValue: ID) => `Could not find ${typeName} (${keyValue})`,
       });
     }, options.dataloaderConfig);
   }
@@ -62,7 +64,7 @@ const ensureOrder = (options: any) => {
     docs,
     keys,
     prop,
-    error = (key: ID) => `Node does not exist (${key})`,
+    error = (key: ID) => `Could not find node (${key})`,
   } = options;
   // Put documents (docs) into a map where key is a document's ID or some
   // property (prop) of a document and value is a document.
@@ -73,7 +75,7 @@ const ensureOrder = (options: any) => {
   return keys.map((key: ID) => {
     return (
       docsMap.get(key) ||
-      new Error(typeof error === 'function' ? error(key) : error)
+      new NotFoundException(typeof error === 'function' ? error(key) : error)
     );
   });
 };
