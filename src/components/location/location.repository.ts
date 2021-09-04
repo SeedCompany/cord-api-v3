@@ -8,7 +8,7 @@ import {
   Session,
   UnsecuredDto,
 } from '../../common';
-import { DtoRepository, matchRequestingUser } from '../../core';
+import { DtoRepository, matchRequestingUser, PostgresService } from '../../core';
 import {
   ACTIVE,
   createNode,
@@ -57,6 +57,17 @@ export class LocationRepository extends DtoRepository(Location) {
     if (!result) {
       throw new ServerException('Failed to create location');
     }
+
+    const pool = await PostgresService.pool;
+    const pgResult = await pool.query(
+      `call public.create(0,'public.locations_data',$1 ,2,1,1,1,0); `,
+      [
+        PostgresService.convertObjectToHstore({
+          name: input.name,
+          type: input.type,
+        }),
+      ]
+    );
 
     return result.id;
   }
@@ -170,6 +181,33 @@ export class LocationRepository extends DtoRepository(Location) {
   }
 
   async addLocationToNode(label: string, id: ID, rel: string, locationId: ID) {
+    let firstTable = 'public.people_data';
+    switch(firstTable){
+      case 'User':
+        firstTable = 'public.people_data';
+        break;
+      case 'Organization':
+        firstTable = 'public.organizations_data';
+        break;
+      case 'Project':
+        firstTable = 'public.projects_data';
+        break;
+      case 'Language':
+        firstTable = '';
+        break;
+      default:
+        console.log('Correspondent table not found');
+    }
+    const pool = await PostgresService.pool;
+    const pgResult = pool.query(
+      `UPDATE ${firstTable}
+       SET primary_location = $1
+       WHERE id = $2
+      `,
+      [locationId, id]);
+    
+    console.log('pgResult: ', pgResult);
+
     await this.db
       .query()
       .matchNode('node', label, { id })
