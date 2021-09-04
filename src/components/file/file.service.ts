@@ -6,6 +6,7 @@ import {
   generateId,
   ID,
   InputException,
+  mapSecuredValue,
   NotFoundException,
   ServerException,
   Session,
@@ -405,24 +406,18 @@ export class FileService {
     input: DefinedFile,
     session: Session
   ): Promise<SecuredFile> {
-    const { value: fileId, ...rest } = input;
-    if (!rest.canRead || !fileId) {
-      return rest;
-    }
-    try {
-      const file = await this.getFile(fileId, session);
-      return {
-        ...rest,
-        value: file,
-      };
-    } catch (e) {
-      // DefinedFiles are nullable. This works by creating the file without
-      // versions which causes the direct lookup to fail.
-      if (e instanceof NotFoundException) {
-        return rest;
+    return await mapSecuredValue(input, async (fileId) => {
+      try {
+        return await this.getFile(fileId, session);
+      } catch (e) {
+        // DefinedFiles are nullable. This works by creating the file without
+        // versions which causes the direct lookup to fail.
+        if (e instanceof NotFoundException) {
+          return undefined;
+        }
+        throw e;
       }
-      throw e;
-    }
+    });
   }
 
   async rename(input: RenameFileInput, session: Session): Promise<void> {
