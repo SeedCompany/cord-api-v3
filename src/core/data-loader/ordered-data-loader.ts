@@ -19,7 +19,12 @@ export abstract class OrderedNestDataLoader<T, Key = ID>
   abstract loadMany(keys: readonly Key[]): Promise<readonly T[]>;
 
   getOptions(): OrderedNestDataLoaderOptions<T, Key> {
-    return {};
+    return {
+      dataloaderConfig: {
+        // Increase the batching timeframe from the same nodejs frame to 10ms
+        batchScheduleFn: (cb) => setTimeout(cb, 10),
+      },
+    };
   }
 
   get session() {
