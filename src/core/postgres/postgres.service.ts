@@ -162,28 +162,28 @@ export class PostgresService {
       ]
     );
 
-    for (let i = 0; i < 8; i++) {
-      const peopleId = await this.pool.query(
-        `call public.create(0,'public.people_data',$1 ,2,2,1,3,0);`,
-        [
-          this.convertObjectToHstore({
-            public_first_name: `user${i}`,
-            about: `about${i}`,
-          }),
-        ]
-      );
-      await this.pool.query(
-        `call public.create(0, 'public.users_data', $1, 2,2,1,3,0)`,
-        [
-          this.convertObjectToHstore({
-            person: peopleId.rows[0].record_id,
-            email: `email${i}@gmail.com`,
-            owning_org: 0,
-            password: this.makeid(10),
-          }),
-        ]
-      );
-    }
+    // for (let i = 0; i < 8; i++) {
+    //   const peopleId = await this.pool.query(
+    //     `call public.create(0,'public.people_data',$1 ,2,2,1,3,0);`,
+    //     [
+    //       this.convertObjectToHstore({
+    //         public_first_name: `user${i}`,
+    //         about: `about${i}`,
+    //       }),
+    //     ]
+    //   );
+    //   await this.pool.query(
+    //     `call public.create(0, 'public.users_data', $1, 2,2,1,3,0)`,
+    //     [
+    //       this.convertObjectToHstore({
+    //         person: peopleId.rows[0].record_id,
+    //         email: `email${i}@gmail.com`,
+    //         owning_org: 0,
+    //         password: this.makeid(10),
+    //       }),
+    //     ]
+    //   );
+    // }
 
     await this.pool.query(
       `call public.create(0,'public.global_roles_data', $1, 2,2,1,3,0);`,
@@ -222,20 +222,20 @@ export class PostgresService {
 
     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
     // this.logger.info(schemaTableName);
-    for (const { column_name, table_name } of columns.rows) {
-      const schemaTableName = `public.${table_name}`;
-      await this.pool.query(
-        `call public.create(0, 'public.global_role_column_grants', $1,2,0,0,3,0)`,
-        [
-          this.convertObjectToHstore({
-            global_role: 0,
-            table_name: schemaTableName,
-            column_name,
-            access_level: 'Write',
-          }),
-        ]
-      );
-    }
+    // for (const { column_name, table_name } of columns.rows) {
+    //   const schemaTableName = `public.${table_name}`;
+    //   await this.pool.query(
+    //     `call public.create(0, 'public.global_role_column_grants', $1,2,0,0,3,0)`,
+    //     [
+    //       this.convertObjectToHstore({
+    //         global_role: 0,
+    //         table_name: schemaTableName,
+    //         column_name,
+    //         access_level: 'Write',
+    //       }),
+    //     ]
+    //   );
+    // }
 
     // PROJECTS
     // await this.pool.query(
@@ -341,23 +341,23 @@ export class PostgresService {
         }),
       ]
     );
-    const personRows = await this.pool.query(
-      `select id from public.people_data`
-    );
-    for (let { id } of personRows.rows) {
-      console.log(id);
-      if (id !== 0 && id !== user1pk) {
-        await this.pool.query(
-          `call public.create(0,'public.global_role_memberships',$1, 2,2,0,3,0)`,
-          [
-            this.convertObjectToHstore({
-              global_role: 0,
-              person: id,
-            }),
-          ]
-        );
-      }
-    }
+    // const personRows = await this.pool.query(
+    //   `select id from public.people_data`
+    // );
+    // for (let { id } of personRows.rows) {
+    //   console.log(id);
+    //   if (id !== 0 && id !== user1pk) {
+    //     await this.pool.query(
+    //       `call public.create(0,'public.global_role_memberships',$1, 2,2,0,3,0)`,
+    //       [
+    //         this.convertObjectToHstore({
+    //           global_role: 0,
+    //           person: id,
+    //         }),
+    //       ]
+    //     );
+    //   }
+    // }
     // for (let i = 2; i <= 10; i++) {
     //   console.log(i);
     //   await this.pool.query(
@@ -372,7 +372,7 @@ export class PostgresService {
     //   );
 
     // }
-    for (let i = 1; i <= 100; i++) {
+    for (let i = 1; i <= 10; i++) {
       await this.pool.query(
         `call public.create(0, 'public.chats_data', $1, 2,2,1,3,0)`,
         [
