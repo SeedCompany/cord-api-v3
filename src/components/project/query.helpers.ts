@@ -8,7 +8,7 @@ import {
   Query,
   relation,
 } from 'cypher-query-builder';
-import { DateTime } from 'luxon';
+import { DateTimeFilter } from '../../common';
 import { ACTIVE } from '../../core/database/query';
 import { ProjectFilters } from './dto';
 
@@ -41,44 +41,18 @@ export const projectListFilter = (filter: ProjectFilters) => (query: Query) => {
   }
 
   if (filter.createdAt) {
-    if (filter.createdAt.before && filter.createdAt.after) {
-      const after = ISOtoNeo4jDateTime(filter.createdAt.after);
-      const before = ISOtoNeo4jDateTime(filter.createdAt.before);
-      query
-        .match(node('node'))
-        .where({ node: { createdAt: between(after, before) } });
-    } else if (filter.createdAt.after) {
-      const after = ISOtoNeo4jDateTime(filter.createdAt.after);
-      query
-        .match(node('node'))
-        .where({ node: { createdAt: greaterEqualTo(after) } });
-    } else if (filter.createdAt.before) {
-      const before = ISOtoNeo4jDateTime(filter.createdAt.before);
-      query
-        .match(node('node'))
-        .where({ node: { createdAt: lessEqualTo(before) } });
+    const comparison = comparisonOfDateTimeFilter(filter.createdAt);
+    if (comparison) {
+      query.where({ node: { createdAt: comparison } });
     }
   }
 
   if (filter.modifiedAt) {
-    if (filter.modifiedAt.after && filter.modifiedAt.before) {
-      const after = ISOtoNeo4jDateTime(filter.modifiedAt.after);
-      const before = ISOtoNeo4jDateTime(filter.modifiedAt.before);
+    const comparison = comparisonOfDateTimeFilter(filter.modifiedAt);
+    if (comparison) {
       query
         .match(propMatch('modifiedAt'))
-        .where({ modifiedAt: { value: between(after, before) } });
-    } else if (filter.modifiedAt.before) {
-      const before = ISOtoNeo4jDateTime(filter.modifiedAt.before);
-      query
-        .match(propMatch('modifiedAt'))
-        .where({ modifiedAt: { value: lessEqualTo(before) } });
-    } else if (filter.modifiedAt.after) {
-      const after = ISOtoNeo4jDateTime(filter.modifiedAt.after);
-      query.match(propMatch('modifiedAt')).where({
-        modifiedAt: {
-          value: greaterEqualTo(after),
-        },
-      });
+        .where({ modifiedAt: { value: comparison } });
     }
   }
 
@@ -111,6 +85,11 @@ export const propMatch = (property: string) => [
   node(property, 'Property'),
 ];
 
-const ISOtoNeo4jDateTime = (date: DateTime) => {
-  return DateTime.fromISO(date.toString()).toNeo4JDateTime();
-};
+const comparisonOfDateTimeFilter = ({ after, before }: DateTimeFilter) =>
+  after && before
+    ? between(after, before)
+    : after
+    ? greaterEqualTo(after)
+    : before
+    ? lessEqualTo(before)
+    : undefined;
