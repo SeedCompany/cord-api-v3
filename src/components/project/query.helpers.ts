@@ -9,7 +9,7 @@ import {
   relation,
 } from 'cypher-query-builder';
 import { DateTimeFilter } from '../../common';
-import { ACTIVE } from '../../core/database/query';
+import { ACTIVE, matchProjectSens } from '../../core/database/query';
 import { ProjectFilters } from './dto';
 
 export const projectListFilter = (filter: ProjectFilters) => (query: Query) => {
@@ -18,11 +18,7 @@ export const projectListFilter = (filter: ProjectFilters) => (query: Query) => {
       .match(propMatch('status'))
       .where({ status: { value: inArray(filter.status) } });
   }
-  if (filter.sensitivity) {
-    query
-      .match(propMatch('sensitivity'))
-      .where({ sensitivity: { value: inArray(filter.sensitivity) } });
-  }
+
   if (filter.onlyMultipleEngagements) {
     query
       .match([
@@ -76,6 +72,14 @@ export const projectListFilter = (filter: ProjectFilters) => (query: Query) => {
     } else {
       query.raw('where not (requestingUser)-[:pinned]->(node)');
     }
+  }
+
+  // last filter due to sub-query needed
+  if (filter.sensitivity) {
+    query
+      .apply(matchProjectSens('node'))
+      .with('*')
+      .where({ sensitivity: inArray(filter.sensitivity) });
   }
 };
 
