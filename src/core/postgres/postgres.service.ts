@@ -32,7 +32,6 @@ export class PostgresService {
         await this.executeSQLFiles(fileOrDirPath);
       } else {
         const sql = fs.readFileSync(fileOrDirPath).toString();
-        console.log(this.pool);
         await this.pool.query(sql);
       }
     }
@@ -100,7 +99,7 @@ export class PostgresService {
           id: 0,
           about: 'root',
           public_first_name: 'root',
-          neo4j_id: 'Kg8TjwvDMiS',
+          neo4j_id: 'UWpeqCYHU44',
         }),
       ]
     );

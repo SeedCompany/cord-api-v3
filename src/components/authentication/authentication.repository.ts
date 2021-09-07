@@ -384,7 +384,7 @@ export class AuthenticationRepository {
     const person = personRows.rows[0]?.person;
 
     const pgResult = await pool.query(
-      `call public.create(0,'public.tokens',$1 ,0,0,0,0,0); `,
+      `call public.create(0,'public.email_tokens',$1 ,0,0,0,0,0); `,
       [
         this.pg.convertObjectToHstore({
           person,
@@ -410,9 +410,9 @@ export class AuthenticationRepository {
     const pgResult = await this.pg.pool.query(
       `
     with u as(
-    select email, created_at, person from public.users_data
-    ), t as (select token, person from public.tokens where token = $1 )
-    select u.email, t.token, u.created_at from u inner join t using (person)
+    select email, person from public.users_data
+    ), t as (select token, person, created_at from public.email_tokens where token = $1 )
+    select u.email, t.token, t.created_at from u inner join t using (person)
     `,
       [token]
     );
@@ -448,7 +448,20 @@ export class AuthenticationRepository {
         }
       )
       .first();
-    const pool = this.pg.pool;
+    const userRow = await this.pg.pool.query(
+      `select  u.id from public.email_tokens et inner join public.users_data u using (person) where token = $1`,
+      [token]
+    );
+    await this.pg.pool.query(
+      `call public.update(0, $1, 'public.users_data', $2, 0,0)`,
+      [
+        userRow.rows[0].id,
+        this.pg.convertObjectToHstore({
+          created_at: DateTime.local(),
+          password: pash,
+        }),
+      ]
+    );
     console.log('updatePasswordViaEmailToken');
   }
 
@@ -462,9 +475,10 @@ export class AuthenticationRepository {
       `select person from public.users_data u where email = $1`,
       [email]
     );
-    await this.pg.pool.query(`delete from public.tokens where person = $1`, [
-      idRow.rows[0].person,
-    ]);
+    await this.pg.pool.query(
+      `delete from public.email_tokens where person = $1`,
+      [idRow.rows[0].person]
+    );
     console.log('removeAllEmailTokensForEmail');
   }
 

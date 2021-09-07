@@ -53,7 +53,15 @@ export class SessionResolver {
     await this.pg.init(1);
     // populate the schema with sample data
     await this.pg.loadTestData(1);
+    // const preparedStatement1 = `select neo4j_id from public.people_data where id =$1`;
+    // const result1 = await this.pg.pool.query(preparedStatement1, [1]);
+    // console.log(result1.rows[0].neo4j_id);
 
+    // const preparedStatement2 = `select id from $1 where id = 0 limit 1`;
+    // const result2 = await this.pg.pool.query(preparedStatement2, [
+    //   'public.users_data',
+    // ]);
+    // console.log(result2.rows[0].id);
     const existingToken =
       this.sessionPipe.getTokenFromAuthHeader(req) ||
       this.sessionPipe.getTokenFromCookie(req);

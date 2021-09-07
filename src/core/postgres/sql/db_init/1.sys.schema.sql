@@ -636,6 +636,15 @@ create table if not exists public.tokens (
 	-- foreign key (person) references people_data(id)
 );
 
+create table if not exists public.email_tokens (
+	id serial primary key,
+	token varchar(512),
+	person int,
+	unique(token),
+	created_at timestamp not null default CURRENT_TIMESTAMP
+	-- foreign key (person) references people_data(id)
+);
+
 create table if not exists public.sessions (
     session varchar(128) primary key,
     token varchar(512) not null,
