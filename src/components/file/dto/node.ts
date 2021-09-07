@@ -2,7 +2,7 @@ import { Field, Int, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { ConditionalExcept, MergeExclusive, Opaque } from 'type-fest';
+import { MergeExclusive, Opaque } from 'type-fest';
 import {
   DateTimeField,
   ID,
@@ -11,6 +11,7 @@ import {
   Secured,
   SecuredProperty,
   SecuredProps,
+  ServerException,
   simpleSwitch,
 } from '../../../common';
 import { FileNodeType } from './type';
@@ -24,13 +25,20 @@ export type AnyFileNode = MergeExclusive<
   FileVersion
 >;
 
+export const resolveFileNode = (val: AnyFileNode) => {
+  const type = simpleSwitch(val.type, {
+    [FileNodeType.Directory]: Directory,
+    [FileNodeType.File]: File,
+    [FileNodeType.FileVersion]: FileVersion,
+  });
+  if (!type) {
+    throw new ServerException('Could not resolve file node type');
+  }
+  return type;
+};
+
 @InterfaceType({
-  resolveType: (val: AnyFileNode) =>
-    simpleSwitch(val.type, {
-      [FileNodeType.Directory]: Directory,
-      [FileNodeType.File]: File,
-      [FileNodeType.FileVersion]: FileVersion,
-    }),
+  resolveType: resolveFileNode,
 })
 /**
  * This should be used for GraphQL but never for TypeScript types.
@@ -56,8 +64,6 @@ abstract class FileNode extends Resource {
 // class name has to match schema name for interface resolvers to work.
 // export as different names to maintain compatibility with our codebase.
 export { FileNode as IFileNode, AnyFileNode as FileNode };
-
-export type BaseNode = ConditionalExcept<FileNode, never>;
 
 @ObjectType({
   isAbstract: true,
@@ -128,14 +134,10 @@ export type DefinedFile = Secured<FileId>;
 export type FileId = ID & Opaque<string, 'FileId'>;
 
 export const isDirectory = (node: AnyFileNode): node is Directory =>
-  isDirectoryNode(node);
-export const isDirectoryNode = (node: BaseNode) =>
   node.type === FileNodeType.Directory;
 
-export const isFile = (node: AnyFileNode): node is File => isFileNode(node);
-export const isFileNode = (node: BaseNode) => node.type === FileNodeType.File;
+export const isFile = (node: AnyFileNode): node is File =>
+  node.type === FileNodeType.File;
 
 export const isFileVersion = (node: AnyFileNode): node is FileVersion =>
-  isFileVersionNode(node);
-export const isFileVersionNode = (node: BaseNode) =>
   node.type === FileNodeType.FileVersion;
