@@ -9,15 +9,17 @@ import {
   Query,
   relation,
 } from 'cypher-query-builder';
+import { AndConditions } from 'cypher-query-builder/src/clauses/where-utils';
 import { DateTimeFilter } from '../../common';
 import { ACTIVE, matchProjectSens, path } from '../../core/database/query';
 import { ProjectFilters } from './dto';
 
 export const projectListFilter = (filter: ProjectFilters) => (query: Query) => {
+  const conditions: AndConditions = {};
+
   if (filter.status) {
-    query
-      .match(propMatch('status'))
-      .where({ status: { value: inArray(filter.status) } });
+    query.match(propMatch('status'));
+    conditions.status = { value: inArray(filter.status) };
   }
 
   if (filter.onlyMultipleEngagements) {
@@ -27,37 +29,35 @@ export const projectListFilter = (filter: ProjectFilters) => (query: Query) => {
         relation('out', '', 'engagement', ACTIVE),
         node('engagement', 'Engagement'),
       ])
-      .with('node, count(engagement) as engagementCount')
-      .where({ engagementCount: greaterThan(1) });
+      .with('node, count(engagement) as engagementCount');
+    conditions.engagementCount = greaterThan(1);
   }
 
   if (filter.step) {
-    query
-      .match(propMatch('step'))
-      .where({ step: { value: inArray(filter.step) } });
+    query.match(propMatch('step'));
+    conditions.step = { value: inArray(filter.step) };
   }
 
   if (filter.createdAt) {
     const comparison = comparisonOfDateTimeFilter(filter.createdAt);
     if (comparison) {
-      query.where({ node: { createdAt: comparison } });
+      conditions.node = { createdAt: comparison };
     }
   }
 
   if (filter.modifiedAt) {
     const comparison = comparisonOfDateTimeFilter(filter.modifiedAt);
     if (comparison) {
-      query
-        .match(propMatch('modifiedAt'))
-        .where({ modifiedAt: { value: comparison } });
+      query.match(propMatch('modifiedAt'));
+      conditions.modifiedAt = { value: comparison };
     }
   }
 
   if (filter.mine) {
-    query.match([
+    conditions.mine = path([
       node('requestingUser'),
       relation('in', '', 'user'),
-      node('projectMember'),
+      node('', 'ProjectMember'),
       relation('in', '', 'member'),
       node('node'),
     ]);
@@ -69,9 +69,11 @@ export const projectListFilter = (filter: ProjectFilters) => (query: Query) => {
       relation('out', '', 'pinned'),
       node('node'),
     ]);
-    query.where({
-      pinned: filter.pinned ? pinned : not(pinned),
-    });
+    conditions.pinned = filter.pinned ? pinned : not(pinned);
+  }
+
+  if (Object.keys(conditions).length > 0) {
+    query.where(conditions);
   }
 
   // last filter due to sub-query needed
