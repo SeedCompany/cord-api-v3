@@ -162,7 +162,7 @@ export class ProjectResolver {
   })
   async team(
     @AnonSession() session: Session,
-    @Parent() { id }: Project,
+    @Parent() { id, sensitivity, scope }: Project,
     @Args({
       name: 'input',
       type: () => ProjectMemberListInput,
@@ -170,13 +170,19 @@ export class ProjectResolver {
     })
     input: ProjectMemberListInput
   ): Promise<SecuredProjectMemberList> {
-    return this.projectService.listProjectMembers(id, input, session);
+    return this.projectService.listProjectMembers(
+      id,
+      input,
+      session,
+      sensitivity,
+      scope
+    );
   }
 
   @ResolveField(() => SecuredPartnershipList)
   async partnerships(
     @AnonSession() session: Session,
-    @Parent() { id, changeset }: Project,
+    @Parent() project: Project,
     @Args({
       name: 'input',
       type: () => PartnershipListInput,
@@ -184,7 +190,14 @@ export class ProjectResolver {
     })
     input: PartnershipListInput
   ): Promise<SecuredPartnershipList> {
-    return this.projectService.listPartnerships(id, input, session, changeset);
+    return this.projectService.listPartnerships(
+      project.id,
+      input,
+      session,
+      project.sensitivity,
+      project.scope,
+      project.changeset
+    );
   }
 
   @ResolveField(() => SecuredDirectory, {

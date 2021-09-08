@@ -12,6 +12,24 @@ import { createPartner } from './create-partner';
 import { createProject } from './create-project';
 import { fragments } from './fragments';
 
+export async function listPartnerships(app: TestApp) {
+  const result = await app.graphql.mutate(
+    gql`
+      query {
+        partnerships(input: {}) {
+          items {
+            ...partnership
+          }
+        }
+      }
+      ${fragments.partnership}
+    `
+  );
+  const partnerships = result.partnerships.items;
+  expect(partnerships).toBeTruthy();
+  return partnerships;
+}
+
 export async function readOnePartnership(app: TestApp, id: string) {
   const result = await app.graphql.query(
     gql`

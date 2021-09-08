@@ -48,6 +48,7 @@ export const Translator = new DbRole({
   grants: [
     new DbBaseNodeGrant<DbBudget>({
       __className: 'DbBudget',
+      canList: true,
       properties: [
         { propertyName: 'universalTemplateFile', permission: { read, }, },
         { propertyName: 'records', permission: { read, }, },
@@ -276,6 +277,7 @@ export const Translator = new DbRole({
     }),
     new DbBaseNodeGrant<DbPartnership>({
       __className: 'DbPartnership',
+      canList: false,
       properties: [
         { propertyName: 'agreement', permission: {}, },
         { propertyName: 'agreementStatus', permission: {}, },
@@ -322,6 +324,7 @@ export const Translator = new DbRole({
     }),
     new DbBaseNodeGrant<DbProject>({
       __className: 'DbProject',
+      canList: true,
       properties: [
         { propertyName: 'estimatedSubmission', permission: { read, }, },
         { propertyName: 'step', permission: { read, }, },
@@ -351,6 +354,7 @@ export const Translator = new DbRole({
     }),
     new DbBaseNodeGrant<DbProjectMember>({
       __className: 'DbProjectMember',
+      canList: true,
       properties: [
         { propertyName: 'roles', permission: { read, }, },
         { propertyName: 'user', permission: { read, }, },

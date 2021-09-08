@@ -68,6 +68,7 @@ export const ProjectManagerOnProject = new DbRole({
   grants: [
     new DbBaseNodeGrant<DbBudget>({
       __className: 'DbBudget',
+      canList: true,
       properties: [
         { propertyName: 'universalTemplateFile', permission: { read, write, }, },
         { propertyName: 'records', permission: { read, write, }, },
@@ -279,6 +280,7 @@ export const ProjectManagerOnProject = new DbRole({
     }),
     new DbBaseNodeGrant<DbPartnership>({
       __className: 'DbPartnership',
+      canList: true,
       properties: [
         { propertyName: 'agreement', permission: { read, write, }, },
         { propertyName: 'agreementStatus', permission: { read, write, }, },
@@ -325,6 +327,7 @@ export const ProjectManagerOnProject = new DbRole({
     }),
     new DbBaseNodeGrant<DbProject>({
       __className: 'DbProject',
+      canList: true,
       properties: [
         { propertyName: 'estimatedSubmission', permission: { read, write, }, },
         { propertyName: 'step', permission: { read, write, }, },
@@ -372,6 +375,7 @@ export const ProjectManagerOnProject = new DbRole({
     }),
     new DbBaseNodeGrant<DbProjectMember>({
       __className: 'DbProjectMember',
+      canList: true,
       properties: [
         { propertyName: 'roles', permission: { read, write, }, },
         { propertyName: 'user', permission: { read, write, }, },

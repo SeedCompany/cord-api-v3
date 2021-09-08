@@ -668,6 +668,8 @@ export const projectMember = gql`
       canEdit
     }
     user {
+      canRead
+      canEdit
       value {
         id
       }
@@ -867,6 +869,7 @@ export const budget = gql`
     id
     createdAt
     status
+    sensitivity
     universalTemplateFile {
       canRead
       canEdit
