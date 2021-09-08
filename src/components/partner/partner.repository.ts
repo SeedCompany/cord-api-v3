@@ -3,7 +3,6 @@ import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   ID,
-  isIdLike,
   NotFoundException,
   ServerException,
   Session,
@@ -106,16 +105,6 @@ export class PartnerRepository extends DtoRepository(Partner) {
           sub
             .with('projList')
             .raw('UNWIND projList as project')
-            // TODO: I don't think this is needed.... more thought on this later.
-            .optionalMatch([
-              node('project'),
-              relation('out', '', 'member'),
-              node('projectMember'),
-              relation('out', '', 'user'),
-              node('user', 'User', {
-                id: isIdLike(session) ? session : session.userId,
-              }),
-            ])
             .apply(matchProjectSens())
             .with('sensitivity')
             .orderBy(rankSens('sensitivity'), 'ASC')
