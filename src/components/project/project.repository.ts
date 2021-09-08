@@ -344,7 +344,7 @@ export class ProjectRepository extends CommonRepository {
   async getRootDirectory(projectId: ID, session: Session) {
     return await this.db
       .query()
-      .match(matchSession(session, { withAclRead: 'canReadProjects' }))
+      .match(matchSession(session))
       .optionalMatch([
         [
           node('project', 'Project', { id: projectId }),
