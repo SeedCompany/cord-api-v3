@@ -9,6 +9,7 @@ import {
   GqlContextType as GqlRequestType,
 } from '@nestjs/graphql';
 import { Request } from 'express';
+import { GraphQLResolveInfo } from 'graphql';
 import { GqlContextType, UnauthenticatedException } from '../../common';
 import { RawSession } from '../../common/session';
 import { ConfigService } from '../../core';
@@ -27,8 +28,9 @@ export class SessionInterceptor implements NestInterceptor {
     }
     const gqlExecutionContext = GqlExecutionContext.create(executionContext);
     const ctx = gqlExecutionContext.getContext<GqlContextType>();
+    const info = gqlExecutionContext.getInfo<GraphQLResolveInfo>();
 
-    if (!ctx.session) {
+    if (!ctx.session && info.fieldName !== 'session') {
       ctx.session = await this.hydrateSession(ctx);
     }
 
