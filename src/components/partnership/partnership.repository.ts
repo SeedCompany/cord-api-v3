@@ -183,19 +183,22 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
             node('node', 'Partnership'),
           ])
           .apply(whereNotDeletedInChangeset(changeset))
-          .return('node')
+          .return([
+            'node',
+            input.filter.projectId || limitedScope ? 'project' : '',
+          ])
           .apply((q) =>
             changeset && input.filter.projectId
               ? q
                   .union()
                   .match([
-                    node('', 'Project', { id: input.filter.projectId }),
+                    node('project', 'Project', { id: input.filter.projectId }),
                     relation('out', '', 'partnership', INACTIVE),
                     node('node', 'Partnership'),
                     relation('in', '', 'changeset', ACTIVE),
                     node('changeset', 'Changeset', { id: changeset }),
                   ])
-                  .return('node')
+                  .return(['node', 'project'])
               : q
           )
       )
