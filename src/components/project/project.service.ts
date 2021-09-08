@@ -657,22 +657,20 @@ export class ProjectService {
   }
 
   async getRootDirectory(
-    projectId: ID,
-    sensitivity: Sensitivity,
+    project: Project,
     session: Session
   ): Promise<SecuredDirectory> {
-    const rootRef = await this.repo.getRootDirectory(projectId, session);
-    const membershipRoles = await this.getMembershipRoles(projectId, session);
+    const rootRef = await this.repo.getRootDirectory(project.id);
     const permsOfProject = await this.authorizationService.getPermissions({
       resource: IProject,
       sessionOrUserId: session,
-      otherRoles: membershipRoles,
-      sensitivity,
+      dto: project,
     });
 
-    if (!permsOfProject.rootDirectory.canRead) {
+    if (!rootRef) {
       return {
-        ...permsOfProject.rootDirectory,
+        canEdit: false,
+        canRead: false,
         value: undefined,
       };
     }
@@ -685,7 +683,9 @@ export class ProjectService {
 
     return {
       ...permsOfProject.rootDirectory,
-      value: await this.fileService.getDirectory(rootRef.id, session),
+      value: permsOfProject.rootDirectory.canRead
+        ? await this.fileService.getDirectory(rootRef.id, session)
+        : undefined,
     };
   }
 
