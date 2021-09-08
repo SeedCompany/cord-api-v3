@@ -53,12 +53,16 @@ export abstract class ProjectFilters {
     nullable: true,
     description: 'Only projects created within this time range',
   })
+  @Type(() => DateTimeFilter)
+  @ValidateNested()
   readonly createdAt?: DateTimeFilter;
 
   @Field({
     nullable: true,
     description: 'Only projects modified within this time range',
   })
+  @Type(() => DateTimeFilter)
+  @ValidateNested()
   readonly modifiedAt?: DateTimeFilter;
 
   // User IDs ANY of which are team members
