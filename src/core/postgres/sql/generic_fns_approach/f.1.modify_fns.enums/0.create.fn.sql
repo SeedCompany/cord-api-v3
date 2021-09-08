@@ -20,29 +20,7 @@ pToggleGranters => 0,1,2,3
     3 - refresh security tables & materialized views concurrently
 */
 
-create type public.toggle_security as enum(
-    'NoSecurity',
-    'AccessLevelSecurity',
-    'AccessLevelAndIsClearedSecurity'
-);
 
-create type public.toggle_mv as enum(
-    'NoRefresh',
-    'RefreshMV',
-    'RefreshMVConcurrently'
-);
-
-create type public.toggle_history as enum(
-    'NoHistory',
-    'History'
-);
-
-create type public.toggle_granters as enum(
-    'NoRefresh',
-    'RefreshSecurityTables',
-    'RefreshSecurityTablesMV',
-    'RefreshSecurityTablesMVConcurrently'
-);
 
 
 
@@ -50,10 +28,10 @@ create type public.toggle_granters as enum(
 create or replace procedure public.create(pPersonId int, pTableName text, 
 -- get record
 pRecord hstore,
-pToggleSecurity int, 
-pToggleMV int, 
-pToggleHistory int,
-pToggleGranters int, 
+pToggleSecurity public.toggle_security, 
+pToggleMV public.toggle_mv, 
+pToggleHistory public.toggle_history,
+pToggleGranters public.toggle_granters, 
 inout record_id int
 )
 -- returns int 

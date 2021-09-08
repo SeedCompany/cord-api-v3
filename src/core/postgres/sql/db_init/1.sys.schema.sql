@@ -26,6 +26,29 @@ DO $$ BEGIN
 	EXCEPTION
 	WHEN duplicate_object THEN null;
 END; $$;
+create type public.toggle_security as enum(
+    'NoSecurity',
+    'UpdateAccessLevelSecurity',
+    'UpdateAccessLevelAndIsClearedSecurity'
+);
+
+create type public.toggle_mv as enum(
+    'NoRefreshMV',
+    'RefreshMV',
+    'RefreshMVConcurrently'
+);
+
+create type public.toggle_history as enum(
+    'NoHistory',
+    'History'
+);
+
+create type public.toggle_granters as enum(
+    'NoRefresh',
+    'RefreshSecurityTables',
+    'RefreshSecurityTablesAndMV',
+    'RefreshSecurityTablesAndMVConcurrently'
+);
 
 DO $$ BEGIN
     create type public.sensitivity as enum (

@@ -1,4 +1,4 @@
-create or replace procedure public.get_access_level(pSecurityTableName text, pPersonId int, pId int, pToggleMV int)
+create or replace procedure public.get_access_level(pSecurityTableName text, pPersonId int, pId int, pToggleMV public.toggle_mv)
 language plpgsql 
 as $$
 declare
@@ -38,9 +38,9 @@ begin
             execute format('update %I.%I set '||security_column_name|| ' = ' 
                 || quote_literal(final_access_level) || ' where __id = '|| pId  
                 || ' and  __person_id = ' ||  pPersonId,split_part(pSecurityTableName, '.',1) , split_part(pSecurityTableName, '.', 2));
-            if pToggleMV = 1 then
+            if pToggleMV = 'RefreshMV' then
                 execute format('refresh materialized view %I.%I', split_part(pSecurityTableName, '.', 1), replace(split_part(pSecurityTableName, '.', 2), '_security', '_materialized_view'));
-            elsif pToggleMV = 2 then 
+            elsif pToggleMV = 'RefreshMVConcurrently' then 
                 execute format('refresh materialized view concurrently %I.%I', split_part(pSecurityTableName, '.', 1), replace(split_part(pSecurityTableName, '.', 2), '_security', '_materialized_view'));
             end if;
         end if;
@@ -49,7 +49,7 @@ begin
 end;$$;
 
 
-create or replace procedure public.get_is_cleared(pSecurityTableName text, pPersonId int, pId int, pToggleMV int)
+create or replace procedure public.get_is_cleared(pSecurityTableName text, pPersonId int, pId int, pToggleMV public.toggle_mv)
 language plpgsql
 as $$
 declare 
@@ -76,9 +76,9 @@ begin
         (data_sensitivity = 'High' and (person_sensitivity_clearance = 'Medium' or person_sensitivity_clearance = 'Low')) then 
 
             execute format('update  %I.%I set __is_cleared = false where __person_id = '|| pPersonId || ' and '|| ' __id = '|| pId,split_part(pSecurityTableName, '.',1), split_part(pSecurityTableName, '.',2) );
-            if pToggleMV = 1 then
+            if pToggleMV = 'RefreshMV' then
                 execute format('refresh materialized view %I.%I', split_part(pSecurityTableName, '.', 1), replace(split_part(pSecurityTableName, '.', 2), '_security', '_materialized_view'));
-            elsif pToggleMV = 2 then 
+            elsif pToggleMV = 'RefreshMVConcurrently' then 
                 execute format('refresh materialized view concurrently %I.%I', split_part(pSecurityTableName, '.', 1), replace(split_part(pSecurityTableName, '.', 2), '_security', '_materialized_view'));
             end if;
         end if;    
@@ -90,8 +90,8 @@ end; $$;
 create or replace procedure public.security_fn(
     pTableName text,
     pId int, 
-    pToggleSecurity int,
-    pToggleMV int
+    pToggleSecurity public.toggle_security,
+    pToggleMV public.toggle_mv
 )
 language plpgsql 
 as $$ 
@@ -107,7 +107,7 @@ begin
         return;
     end if;
 
-    if pToggleSecurity = 0 then 
+    if pToggleSecurity = 'NoSecurity' then 
         -- early return
         return;
     else
@@ -116,7 +116,7 @@ begin
 
             execute format('insert into  %I.%I  (__id, __person_id, __is_cleared) values (' || pId || ',' ||rec1.id ||', true)', split_part(security_table_name, '.',1),split_part(security_table_name, '.',2));
 
-            if pToggleSecurity = 1 then
+            if pToggleSecurity = 'UpdateAccessLevelSecurity' then
             -- update access level only
 
                 call public.get_access_level(security_table_name, rec1.id, pId, pToggleMV);
@@ -134,8 +134,8 @@ end; $$;
 
 create or replace procedure public.people_security_fn(
     pId int, 
-    pToggleSecurity int,
-    pToggleMV int
+    pToggleSecurity public.toggle_security,
+    pToggleMV public.toggle_mv
 )
 language plpgsql 
 as $$ 
@@ -148,7 +148,7 @@ rec2 record;
 begin
     
 
-    if pToggleSecurity = 0 then 
+    if pToggleSecurity = 'NoSecurity' then 
         -- early return
         return;
     else
@@ -169,7 +169,7 @@ begin
                     data_security_table_name := replace(data_table_name, '_data', '_security');
 
                     execute format('insert into %I.%I(__id, __person_id, __is_cleared) values (' || rec2.id || ',' || pId || ', true )',split_part(data_security_table_name, '.', 1), split_part(data_security_table_name, '.', 2));
-                    if pToggleSecurity = 1 then
+                    if pToggleSecurity = 'UpdateAccessLevelSecurity' then
                     -- update access level only
                         call public.get_access_level(data_security_table_name, pId, rec2.id, pToggleMV);
                     else 
@@ -180,7 +180,7 @@ begin
 
                     if data_table_name = 'public.people_data' and (pId != rec2.id) then 
                         execute format('insert into %I.%I(__id, __person_id, __is_cleared) values (' || pId || ',' || rec2.id || ', true )',split_part(data_security_table_name, '.', 1), split_part(data_security_table_name, '.', 2));
-                        if pToggleSecurity = 1 then
+                        if pToggleSecurity = 'UpdateAccessLevelSecurity' then
                         -- update access level only
                             call public.get_access_level(data_security_table_name, rec2.id, pId, pToggleMV);
                         else 
