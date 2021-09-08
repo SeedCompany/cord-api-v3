@@ -76,21 +76,16 @@ export class CeremonyRepository extends DtoRepository(Ceremony) {
       .match(requestingUser(session))
       .apply(matchProjectSensToLimitedScopeMap(limitedScope))
       .apply(
-        sorting(
-          Ceremony,
-          input,
-          {
-            projectName: (query) =>
-              query
-                .match([
-                  node('project'),
-                  relation('out', '', 'name', ACTIVE),
-                  node('prop', 'Property'),
-                ])
-                .return<{ sortValue: string }>('prop.value as sortValue'),
-          },
-          'project'
-        )
+        sorting(Ceremony, input, {
+          projectName: (query) =>
+            query
+              .match([
+                node('project'),
+                relation('out', '', 'name', ACTIVE),
+                node('prop', 'Property'),
+              ])
+              .return<{ sortValue: string }>('prop.value as sortValue'),
+        })
       )
       .apply(paginate(input))
       .first();
