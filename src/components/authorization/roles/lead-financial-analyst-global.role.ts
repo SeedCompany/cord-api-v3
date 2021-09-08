@@ -227,7 +227,7 @@ export const LeadFinancialAnalystGlobal = new DbRole({
         { propertyName: 'lastReactivatedAt', permission: { read, }, },
         { propertyName: 'lastSuspendedAt', permission: { read, }, },
         { propertyName: 'lukePartnership', permission: { read, }, },
-        { propertyName: 'paratextRegistryId', permission: { read, }, },
+        { propertyName: 'paratextRegistryId', permission: { }, },
         { propertyName: 'pnp', permission: { read, }, },
         { propertyName: 'historicGoal', permission: { read, }, },
         { propertyName: 'sentPrintingDate', permission: { read, }, },
