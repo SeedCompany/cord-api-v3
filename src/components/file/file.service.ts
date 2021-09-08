@@ -75,6 +75,11 @@ export class FileService {
     return await this.repo.getById(id, session);
   }
 
+  async getFileNodes(ids: readonly ID[], session: Session) {
+    this.logger.debug(`getNodes`, { ids, userId: session.userId });
+    return await this.repo.getByIds(ids, session);
+  }
+
   /**
    * Internal API method to download file contents from S3
    */
