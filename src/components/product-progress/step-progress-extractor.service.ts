@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
+import { sumBy } from 'lodash';
 import { CellObject, read, WorkBook, WorkSheet } from 'xlsx';
 import {
   CalendarDate,
@@ -9,11 +10,11 @@ import {
   Session,
 } from '../../common';
 import { DatabaseService, ILogger, Logger } from '../../core';
+import { ACTIVE } from '../../core/database/query';
 import { FileService, FileVersion } from '../file';
 import { ProductListInput } from '../product/dto/list-product.dto';
 import { MethodologyStep } from '../product/dto/methodology-step.enum';
 import { ProductService } from '../product/product.service';
-import { ScriptureRange } from '../scripture/dto/scripture-range.dto';
 import { ProductProgressService } from './product-progress.service';
 
 @Injectable()
@@ -59,13 +60,21 @@ export class StepProgressExtractor {
 
     for (const goal of goals.items) {
       // TODO: Validate all references share the same book
+      const sameBook = goal.scriptureReferences.value.every(
+        (el, _idx, arr) =>
+          el.start.book === arr[0].start.book && el.end.book === arr[0].end.book
+      );
+      if (!sameBook) {
+        this.logger.error('Goal references do not share the same book');
+        continue;
+      }
 
       const book = goal.scriptureReferences.value[0].start.book;
-      const verses = goal.scriptureReferences.value;
-      let totalVerses = 0;
-      for (const verse of verses) {
-        totalVerses += verse.end.verse - verse.start.verse + 1;
-      }
+      const totalVerses = sumBy(
+        goal.scriptureReferences.value,
+        (verse) => verse.end.verse - verse.start.verse + 1
+      );
+
       for (const step of stepProgress) {
         if (book === step.bookName && totalVerses === step.totalVerses) {
           await this.service.update(
@@ -74,28 +83,28 @@ export class StepProgressExtractor {
               reportId,
               steps: [
                 {
-                  step: step.backTranslation.step,
-                  percentDone: step.backTranslation.percentDone,
+                  step: MethodologyStep.BackTranslation,
+                  completed: step.backTranslation,
                 },
                 {
-                  step: step.exegesisAndFirstDraft.step,
-                  percentDone: step.exegesisAndFirstDraft.percentDone,
+                  step: MethodologyStep.ExegesisAndFirstDraft,
+                  completed: step.exegesisAndFirstDraft,
                 },
                 {
-                  step: step.consultantCheck.step,
-                  percentDone: step.consultantCheck.percentDone,
+                  step: MethodologyStep.ConsultantCheck,
+                  completed: step.consultantCheck,
                 },
                 {
-                  step: step.communityTesting.step,
-                  percentDone: step.communityTesting.percentDone,
+                  step: MethodologyStep.CommunityTesting,
+                  completed: step.communityTesting,
                 },
                 {
-                  step: step.teamCheck.step,
-                  percentDone: step.teamCheck.percentDone,
+                  step: MethodologyStep.TeamCheck,
+                  completed: step.teamCheck,
                 },
                 {
-                  step: step.completed.step,
-                  percentDone: step.completed.percentDone,
+                  step: MethodologyStep.Completed,
+                  completed: step.completed,
                 },
               ],
             },
@@ -118,7 +127,7 @@ export class StepProgressExtractor {
       .query()
       .match([
         node('eng', 'Engagement'),
-        relation('out', '', 'report', { active: true }),
+        relation('out', '', 'report', ACTIVE),
         node('report', 'ProgressReport', { id: reportId }),
       ])
       .return<{ id: ID }>('eng.id as id')
@@ -130,9 +139,6 @@ export class StepProgressExtractor {
     return result.id;
   }
 }
-
-// eslint-disable-next-line @seedcompany/no-unused-vars
-const validateReferences = (sr: ScriptureRange[]) => null;
 
 const parseGoalsProgress = (sheet: WorkSheet, fiscalYear: number) => {
   let i = 23;
@@ -148,30 +154,32 @@ const parseGoalsProgress = (sheet: WorkSheet, fiscalYear: number) => {
 
     const bookName = cellAsString(sheet[`P${i}`]);
     const totalVerses = cellAsNumber(sheet[`Q${i}`]);
-    const exegesisAndFirstDraft = {
-      step: MethodologyStep.ExegesisAndFirstDraft,
-      percentDone: parseProgress(sheet[`R${i}`], sheet[`S${i}`], fiscalYear),
-    };
-    const teamCheck = {
-      step: MethodologyStep.TeamCheck,
-      percentDone: parseProgress(sheet[`T${i}`], sheet[`U${i}`], fiscalYear),
-    };
-    const communityTesting = {
-      step: MethodologyStep.CommunityTesting,
-      percentDone: parseProgress(sheet[`V${i}`], sheet[`W${i}`], fiscalYear),
-    };
-    const backTranslation = {
-      step: MethodologyStep.BackTranslation,
-      percentDone: parseProgress(sheet[`X${i}`], sheet[`Y${i}`], fiscalYear),
-    };
-    const consultantCheck = {
-      step: MethodologyStep.ConsultantCheck,
-      percentDone: parseProgress(sheet[`Z${i}`], sheet[`AA${i}`], fiscalYear),
-    };
-    const completed = {
-      step: MethodologyStep.Completed,
-      percentDone: parseProgress(sheet[`AB${i}`], sheet[`AB${i}`], fiscalYear),
-    };
+    const exegesisAndFirstDraft = parseProgress(
+      sheet[`R${i}`],
+      sheet[`S${i}`],
+      fiscalYear
+    );
+    const teamCheck = parseProgress(sheet[`T${i}`], sheet[`U${i}`], fiscalYear);
+    const communityTesting = parseProgress(
+      sheet[`V${i}`],
+      sheet[`W${i}`],
+      fiscalYear
+    );
+    const backTranslation = parseProgress(
+      sheet[`X${i}`],
+      sheet[`Y${i}`],
+      fiscalYear
+    );
+    const consultantCheck = parseProgress(
+      sheet[`Z${i}`],
+      sheet[`AA${i}`],
+      fiscalYear
+    );
+    const completed = parseProgress(
+      sheet[`AB${i}`],
+      sheet[`AB${i}`],
+      fiscalYear
+    );
 
     goalsProgress.push({
       bookName,
@@ -199,8 +207,8 @@ const parseStepProgress = (cell: CellObject) =>
     : cellAsNumber(cell);
 
 const parseProgress = (
-  year: CellObject,
   stepProgress: CellObject,
+  year: CellObject,
   fiscalYear: number
 ) => {
   return cellAsNumber(year) === fiscalYear
