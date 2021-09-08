@@ -5,12 +5,13 @@ import { DtoRepository, matchRequestingUser } from '../../core';
 import {
   ACTIVE,
   createNode,
+  matchProjectSensToLimitedScopeMap,
   matchPropsAndProjectSensAndScopedRoles,
   paginate,
-  permissionsOfNode,
   requestingUser,
   sorting,
 } from '../../core/database/query';
+import { AuthSensitivityMapping } from '../authorization/authorization.service';
 import { Ceremony, CeremonyListInput, CreateCeremony } from './dto';
 
 @Injectable()
@@ -52,13 +53,19 @@ export class CeremonyRepository extends DtoRepository(Ceremony) {
     return result.dto;
   }
 
-  async list({ filter, ...input }: CeremonyListInput, session: Session) {
-    const label = 'Ceremony';
+  async list(
+    { filter, ...input }: CeremonyListInput,
+    session: Session,
+    limitedScope?: AuthSensitivityMapping
+  ) {
     const result = await this.db
       .query()
       .match([
-        requestingUser(session),
-        ...permissionsOfNode(label),
+        node('node', 'Ceremony'),
+        relation('in', '', ACTIVE),
+        node('', 'Engagement'),
+        relation('in', '', 'engagement', ACTIVE),
+        node('project', 'Project'),
         ...(filter.type
           ? [
               relation('out', '', 'type', ACTIVE),
@@ -66,6 +73,8 @@ export class CeremonyRepository extends DtoRepository(Ceremony) {
             ]
           : []),
       ])
+      .match(requestingUser(session))
+      .apply(matchProjectSensToLimitedScopeMap(limitedScope))
       .apply(sorting(Ceremony, input))
       .apply(paginate(input))
       .first();
