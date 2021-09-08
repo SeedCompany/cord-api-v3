@@ -9,12 +9,7 @@ import {
   Session,
   UnsecuredDto,
 } from '../../common';
-import {
-  CommonRepository,
-  ConfigService,
-  DatabaseService,
-  matchSession,
-} from '../../core';
+import { CommonRepository, ConfigService, DatabaseService } from '../../core';
 import { DbChanges, getChanges } from '../../core/database/changes';
 import {
   ACTIVE,
@@ -341,10 +336,9 @@ export class ProjectRepository extends CommonRepository {
     return await query.first();
   }
 
-  async getRootDirectory(projectId: ID, session: Session) {
+  async getRootDirectory(projectId: ID) {
     return await this.db
       .query()
-      .match(matchSession(session))
       .optionalMatch([
         [
           node('project', 'Project', { id: projectId }),
