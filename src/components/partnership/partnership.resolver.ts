@@ -13,8 +13,9 @@ import {
   Session,
   viewOfChangeset,
 } from '../../common';
+import { DataLoader, Loader } from '../../core';
 import { ChangesetIds, IdsAndView, IdsAndViewArg } from '../changeset/dto';
-import { FileService, SecuredFile } from '../file';
+import { FileNode, IFileNode, resolveDefinedFile, SecuredFile } from '../file';
 import { SecuredPartner } from '../partner/dto';
 import { PartnerService } from '../partner/partner.service';
 import {
@@ -32,7 +33,6 @@ import { PartnershipService } from './partnership.service';
 export class PartnershipResolver {
   constructor(
     private readonly service: PartnershipService,
-    private readonly files: FileService,
     private readonly partners: PartnerService
   ) {}
 
@@ -62,9 +62,9 @@ export class PartnershipResolver {
   })
   async mou(
     @Parent() partnership: Partnership,
-    @AnonSession() session: Session
+    @Loader(IFileNode) files: DataLoader<FileNode>
   ): Promise<SecuredFile> {
-    return await this.files.resolveDefinedFile(partnership.mou, session);
+    return await resolveDefinedFile(files, partnership.mou);
   }
 
   @ResolveField(() => SecuredFile, {
@@ -72,9 +72,9 @@ export class PartnershipResolver {
   })
   async agreement(
     @Parent() partnership: Partnership,
-    @AnonSession() session: Session
+    @Loader(IFileNode) files: DataLoader<FileNode>
   ): Promise<SecuredFile> {
-    return await this.files.resolveDefinedFile(partnership.agreement, session);
+    return await resolveDefinedFile(files, partnership.agreement);
   }
 
   @ResolveField(() => SecuredPartner)

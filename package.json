@@ -51,6 +51,7 @@
     "common-tags": "^1.8.0",
     "cookie-parser": "^1.4.5",
     "cypher-query-builder": "patch:cypher-query-builder@6.0.4#./patches/cypher-query-builder.patch",
+    "dataloader": "^2.0.0",
     "dotenv": "^8.2.0",
     "dotenv-expand": "^5.1.0",
     "execa": "^5.0.0",

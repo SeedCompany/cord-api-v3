@@ -5,13 +5,9 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import {
-  AnonSession,
-  CalendarDate,
-  LoggedInSession,
-  Session,
-} from '../../common';
-import { FileService, SecuredFile } from '../file';
+import { CalendarDate, LoggedInSession, Session } from '../../common';
+import { DataLoader, Loader } from '../../core';
+import { FileNode, IFileNode, resolveDefinedFile, SecuredFile } from '../file';
 import {
   IPeriodicReport,
   UpdatePeriodicReportInput,
@@ -21,10 +17,7 @@ import { PeriodicReportService } from './periodic-report.service';
 
 @Resolver(IPeriodicReport)
 export class PeriodicReportResolver {
-  constructor(
-    private readonly service: PeriodicReportService,
-    private readonly files: FileService
-  ) {}
+  constructor(private readonly service: PeriodicReportService) {}
 
   @ResolveField(() => CalendarDate, {
     description: 'When this report is due',
@@ -56,8 +49,8 @@ export class PeriodicReportResolver {
   @ResolveField(() => SecuredFile)
   async reportFile(
     @Parent() report: IPeriodicReport,
-    @AnonSession() session: Session
+    @Loader(IFileNode) files: DataLoader<FileNode>
   ): Promise<SecuredFile> {
-    return await this.files.resolveDefinedFile(report.reportFile, session);
+    return await resolveDefinedFile(files, report.reportFile);
   }
 }

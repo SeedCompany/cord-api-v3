@@ -32,7 +32,6 @@ import {
   MoveFileInput,
   RenameFileInput,
   RequestUploadOutput,
-  SecuredFile,
 } from './dto';
 import { FileRepository } from './file.repository';
 import { FilesBucketToken } from './files-bucket.factory';
@@ -74,6 +73,11 @@ export class FileService {
   async getFileNode(id: ID, session: Session): Promise<FileNode> {
     this.logger.debug(`getNode`, { id, userId: session.userId });
     return await this.repo.getById(id, session);
+  }
+
+  async getFileNodes(ids: readonly ID[], session: Session) {
+    this.logger.debug(`getNodes`, { ids, userId: session.userId });
+    return await this.repo.getByIds(ids, session);
   }
 
   /**
@@ -399,30 +403,6 @@ export class FileService {
     // a consistent name is not required and automatically updating it is more
     // convenient for consumption.
     await this.rename({ id: file.value, name }, session);
-  }
-
-  async resolveDefinedFile(
-    input: DefinedFile,
-    session: Session
-  ): Promise<SecuredFile> {
-    const { value: fileId, ...rest } = input;
-    if (!rest.canRead || !fileId) {
-      return rest;
-    }
-    try {
-      const file = await this.getFile(fileId, session);
-      return {
-        ...rest,
-        value: file,
-      };
-    } catch (e) {
-      // DefinedFiles are nullable. This works by creating the file without
-      // versions which causes the direct lookup to fail.
-      if (e instanceof NotFoundException) {
-        return rest;
-      }
-      throw e;
-    }
   }
 
   async rename(input: RenameFileInput, session: Session): Promise<void> {

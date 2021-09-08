@@ -1,5 +1,5 @@
-import { forwardRef, Global, Module, Provider } from '@nestjs/common';
-import { SESSION_PIPE_TOKEN } from '../../common/session';
+import { forwardRef, Global, Module } from '@nestjs/common';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { UserModule } from '../user/user.module';
 import { AuthenticationRepository } from './authentication.repository';
@@ -8,13 +8,8 @@ import { CryptoService } from './crypto.service';
 import { LoginResolver } from './login.resolver';
 import { PasswordResolver } from './password.resolver';
 import { RegisterResolver } from './register.resolver';
-import { SessionPipe } from './session.pipe';
+import { SessionInterceptor } from './session.interceptor';
 import { SessionResolver } from './session.resolver';
-
-const ProvideSessionPipe: Provider = {
-  provide: SESSION_PIPE_TOKEN,
-  useExisting: SessionPipe,
-};
 
 @Global()
 @Module({
@@ -30,15 +25,9 @@ const ProvideSessionPipe: Provider = {
     AuthenticationService,
     AuthenticationRepository,
     CryptoService,
-    SessionPipe,
-    ProvideSessionPipe,
+    SessionInterceptor,
+    { provide: APP_INTERCEPTOR, useExisting: SessionInterceptor },
   ],
-  exports: [
-    AuthenticationService,
-    CryptoService,
-    SessionPipe,
-    SESSION_PIPE_TOKEN,
-    AuthenticationRepository,
-  ],
+  exports: [AuthenticationService, CryptoService, AuthenticationRepository],
 })
 export class AuthenticationModule {}

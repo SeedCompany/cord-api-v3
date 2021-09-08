@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import {
   contains,
   hasLabel,
+  inArray,
   node,
   Query,
   relation,
@@ -53,6 +54,16 @@ export class FileRepository {
       .map('dto')
       .run();
     return first(result);
+  }
+
+  async getByIds(ids: readonly ID[], _session: Session) {
+    return await this.db
+      .query()
+      .matchNode('node', 'FileNode')
+      .where({ 'node.id': inArray(ids.slice()) })
+      .apply(this.hydrate())
+      .map('dto')
+      .run();
   }
 
   async getByName(
