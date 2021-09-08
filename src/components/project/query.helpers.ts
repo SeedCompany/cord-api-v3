@@ -5,11 +5,12 @@ import {
   inArray,
   lessEqualTo,
   node,
+  not,
   Query,
   relation,
 } from 'cypher-query-builder';
 import { DateTimeFilter } from '../../common';
-import { ACTIVE, matchProjectSens } from '../../core/database/query';
+import { ACTIVE, matchProjectSens, path } from '../../core/database/query';
 import { ProjectFilters } from './dto';
 
 export const projectListFilter = (filter: ProjectFilters) => (query: Query) => {
@@ -63,15 +64,14 @@ export const projectListFilter = (filter: ProjectFilters) => (query: Query) => {
   }
 
   if (filter.pinned != null) {
-    if (filter.pinned) {
-      query.match([
-        node('requestingUser'),
-        relation('out', '', 'pinned'),
-        node('node'),
-      ]);
-    } else {
-      query.raw('where not (requestingUser)-[:pinned]->(node)');
-    }
+    const pinned = path([
+      node('requestingUser'),
+      relation('out', '', 'pinned'),
+      node('node'),
+    ]);
+    query.where({
+      pinned: filter.pinned ? pinned : not(pinned),
+    });
   }
 
   // last filter due to sub-query needed
