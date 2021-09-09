@@ -535,6 +535,11 @@ export const project = gql`
       canRead
       canCreate
     }
+    presetInventory {
+      canRead
+      canEdit
+      value
+    }
   }
 `;
 

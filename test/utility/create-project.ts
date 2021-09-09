@@ -147,6 +147,7 @@ export async function createProject(
     step: ProjectStep.EarlyConversations,
     tags: ['tag1', 'tag2'],
     fieldRegionId: input.fieldRegionId || (await createRegion(app)).id,
+    presetInventory: true,
     ...input,
   };
 

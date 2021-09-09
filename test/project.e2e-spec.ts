@@ -181,6 +181,7 @@ describe('Project e2e', () => {
     expect(actual.estimatedSubmission.value).toBe(
       project.estimatedSubmission.value
     );
+    expect(actual.presetInventory.value).toBe(project.presetInventory.value);
   });
 
   it('create project with required fields', async () => {
@@ -646,6 +647,39 @@ describe('Project e2e', () => {
       ({ id }: Partial<Project>) => id === project.id
     );
     expect(result).toBeUndefined();
+  });
+
+  it('List view of presetInventory projects', async () => {
+    const numProjects = 2;
+    const type = ProjectType.Translation;
+    await Promise.all(
+      times(numProjects).map(
+        async () =>
+          await createProject(app, {
+            type,
+            presetInventory: true,
+          })
+      )
+    );
+
+    const { projects } = await app.graphql.query(
+      gql`
+        query projects {
+          projects(input: { filter: { presetInventory: true } }) {
+            items {
+              ...project
+            }
+            hasMore
+            total
+          }
+        }
+        ${fragments.project}
+      `
+    );
+
+    expect(projects.items.length).toBeGreaterThanOrEqual(numProjects);
+    //delete all projects
+    await Promise.all(projects.items.map(deleteProject(app)));
   });
 
   it('Project engagement and sensitivity connected to language engagements', async () => {
