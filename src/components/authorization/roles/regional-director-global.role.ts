@@ -1,3 +1,4 @@
+import { Sensitivity } from '../../../common';
 import { DbBudget } from '../../budget/model';
 import { DbBudgetRecord } from '../../budget/model/budget-record.model.db';
 import { DbCeremony } from '../../ceremony/model';
@@ -356,7 +357,7 @@ export const RegionalDirectorGlobal = new DbRole({
         { propertyName: 'mouEnd', permission: { read, }, },
         { propertyName: 'initialMouEnd', permission: { read, }, },
         { propertyName: 'stepChangedAt', permission: { read, }, },
-        { propertyName: 'rootDirectory', permission: { read, }, },
+        { propertyName: 'rootDirectory', permission: { read, sensitivityAccess: Sensitivity.Medium }, },
         { propertyName: 'member', permission: { read, }, },
         { propertyName: 'otherLocations', permission: { read, }, },
         { propertyName: 'primaryLocation', permission: { read, }, },

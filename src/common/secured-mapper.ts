@@ -6,12 +6,12 @@ import { Secured } from './secured-property';
  */
 export async function mapSecuredValue<T, S>(
   input: Secured<T>,
-  mapper: (unwrapped: T) => Promise<S>
+  mapper: (unwrapped: NonNullable<T>) => Promise<S>
 ): Promise<Secured<S>> {
   const { value, ...rest } = input;
-  if (!rest.canRead || !value) {
+  if (!rest.canRead || value == null) {
     return rest;
   }
-  const mapped = await mapper(value);
+  const mapped = await mapper(value as NonNullable<T>);
   return { ...rest, value: mapped };
 }

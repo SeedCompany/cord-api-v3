@@ -14,14 +14,16 @@ import {
   IdArg,
   IdField,
   LoggedInSession,
+  NotFoundException,
   SecuredDateRange,
   Session,
 } from '../../common';
+import { DataLoader, Loader } from '../../core';
 import { SecuredBudget } from '../budget';
 import { IdsAndView, IdsAndViewArg } from '../changeset/dto';
 import { EngagementListInput, SecuredEngagementList } from '../engagement';
 import { FieldRegionService, SecuredFieldRegion } from '../field-region';
-import { SecuredDirectory } from '../file';
+import { asDirectory, FileNode, IFileNode, SecuredDirectory } from '../file';
 import {
   LocationListInput,
   LocationService,
@@ -204,10 +206,28 @@ export class ProjectResolver {
     description: 'The root filesystem directory of this project',
   })
   async rootDirectory(
-    @AnonSession() session: Session,
-    @Parent() { id }: Project
+    @Parent() project: Project,
+    @Loader(IFileNode) files: DataLoader<FileNode>
   ): Promise<SecuredDirectory> {
-    return await this.projectService.getRootDirectory(id, session);
+    if (!project.rootDirectory.canRead) {
+      return {
+        canEdit: false,
+        canRead: false,
+        value: undefined,
+      };
+    }
+    if (!project.rootDirectory.value) {
+      throw new NotFoundException(
+        'Could not find root directory associated to this project'
+      );
+    }
+
+    const dir = asDirectory(await files.load(project.rootDirectory.value));
+    return {
+      canRead: true,
+      canEdit: false,
+      value: dir,
+    };
   }
 
   @ResolveField(() => SecuredLocation)

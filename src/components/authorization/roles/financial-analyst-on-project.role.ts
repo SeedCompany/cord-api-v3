@@ -1,4 +1,5 @@
 
+import { Sensitivity } from '../../../common';
 import { DbBudget } from '../../budget/model';
 import { DbBudgetRecord } from '../../budget/model/budget-record.model.db';
 import { DbCeremony } from '../../ceremony/model';
@@ -207,7 +208,7 @@ export const FinancialAnalystOnProject = new DbRole({
         { propertyName: 'ethnologue', permission: { read, }, },
         { propertyName: 'sensitivity', permission: { read, }, },
         { propertyName: 'hasExternalFirstScripture', permission: { read, }, },
-        { propertyName: 'locations', permission: { read, }, },
+        { propertyName: 'locations', permission: { read, sensitivityAccess: Sensitivity.Low}, },
         { propertyName: 'tags', permission: { read, }, },
       ],
       canDelete: false,

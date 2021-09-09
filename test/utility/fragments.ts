@@ -445,6 +445,8 @@ export const project = gql`
     type
     sensitivity
     rootDirectory {
+      canRead
+      canEdit
       value {
         id
         children {

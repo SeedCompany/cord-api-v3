@@ -9,12 +9,7 @@ import {
   Session,
   UnsecuredDto,
 } from '../../common';
-import {
-  CommonRepository,
-  ConfigService,
-  DatabaseService,
-  matchSession,
-} from '../../core';
+import { CommonRepository, ConfigService, DatabaseService } from '../../core';
 import { DbChanges, getChanges } from '../../core/database/changes';
 import {
   ACTIVE,
@@ -85,6 +80,12 @@ export class ProjectRepository extends CommonRepository {
         .with(['node', 'node as project'])
         .apply(matchPropsAndProjectSensAndScopedRoles(userId))
         .apply(matchChangesetAndChangedProps(changeset))
+        // optional because not defined until right after creation
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'rootDirectory', ACTIVE),
+          node('rootDirectory', 'Directory'),
+        ])
         .optionalMatch([
           node('node'),
           relation('out', '', 'primaryLocation', ACTIVE),
@@ -111,6 +112,7 @@ export class ProjectRepository extends CommonRepository {
             type: 'node.type',
             pinned:
               'exists((:User { id: $requestingUserId })-[:pinned]->(node))',
+            rootDirectory: 'rootDirectory.id',
             primaryLocation: 'primaryLocation.id',
             marketingLocation: 'marketingLocation.id',
             fieldRegion: 'fieldRegion.id',
@@ -323,7 +325,7 @@ export class ProjectRepository extends CommonRepository {
     const query = this.db
       .query()
       .match([
-        node('node', 'Project', { projectId }),
+        node('node', 'Project', { id: projectId }),
         relation('out', '', 'member', ACTIVE),
         node('projectMember', 'ProjectMember'),
         relation('out', '', 'user', ACTIVE),
@@ -339,23 +341,6 @@ export class ProjectRepository extends CommonRepository {
         memberRoles: Role[][];
       }>();
     return await query.first();
-  }
-
-  async getRootDirectory(projectId: ID, session: Session) {
-    return await this.db
-      .query()
-      .match(matchSession(session, { withAclRead: 'canReadProjects' }))
-      .optionalMatch([
-        [
-          node('project', 'Project', { id: projectId }),
-          relation('out', 'rootDirectory', ACTIVE),
-          node('directory', 'BaseNode:Directory'),
-        ],
-      ])
-      .return<{ id: ID }>({
-        directory: [{ id: 'id' }],
-      })
-      .first();
   }
 
   async validateOtherResourceId(id: string, label: string) {
