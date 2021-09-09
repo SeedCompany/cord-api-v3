@@ -227,7 +227,7 @@ export const ConsultantOnProject = new DbRole({
         { propertyName: 'lastReactivatedAt', permission: { read, write, }, },
         { propertyName: 'lastSuspendedAt', permission: { read, write, }, },
         { propertyName: 'lukePartnership', permission: { read, write, }, },
-        { propertyName: 'paratextRegistryId', permission: { read, write, }, },
+        { propertyName: 'paratextRegistryId', permission: { read, }, },
         { propertyName: 'pnp', permission: { read, write, }, },
         { propertyName: 'historicGoal', permission: { read, write, }, },
         { propertyName: 'sentPrintingDate', permission: { read, write, }, },
