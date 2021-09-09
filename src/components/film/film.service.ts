@@ -3,6 +3,7 @@ import {
   DuplicateException,
   ID,
   NotFoundException,
+  ObjectView,
   ServerException,
   Session,
   UnauthorizedException,
@@ -86,7 +87,7 @@ export class FilmService {
   }
 
   @HandleIdLookup(Film)
-  async readOne(id: ID, session: Session): Promise<Film> {
+  async readOne(id: ID, session: Session, _view?: ObjectView): Promise<Film> {
     this.logger.debug(`Read film`, {
       id,
       userId: session.userId,

@@ -3,6 +3,7 @@ import {
   DuplicateException,
   ID,
   NotFoundException,
+  ObjectView,
   ServerException,
   Session,
   UnauthorizedException,
@@ -96,7 +97,11 @@ export class OrganizationService {
   }
 
   @HandleIdLookup(Organization)
-  async readOne(orgId: ID, session: Session): Promise<Organization> {
+  async readOne(
+    orgId: ID,
+    session: Session,
+    _view?: ObjectView
+  ): Promise<Organization> {
     this.logger.debug(`Read Organization`, {
       id: orgId,
       userId: session.userId,
@@ -169,8 +174,7 @@ export class OrganizationService {
     session: Session
   ): Promise<OrganizationListOutput> {
     const results = await this.repo.list(input, session);
-
-    return await mapListResults(results, (id) => this.readOne(id, session));
+    return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 
   async addLocation(

@@ -6,6 +6,7 @@ import {
   keyBy,
   last,
   mapValues,
+  pickBy,
   startCase,
   union,
   without,
@@ -33,7 +34,15 @@ import {
   parseSecuredProperties,
 } from '../../core/database/results';
 import { AuthorizationRepository } from './authorization.repository';
-import { InternalRole, Role, rolesForScope, ScopedRole } from './dto';
+import {
+  AuthScope,
+  GlobalScopedRole,
+  InternalRole,
+  ProjectScopedRole,
+  Role,
+  rolesForScope,
+  ScopedRole,
+} from './dto';
 import { Powers } from './dto/powers';
 import { MissingPowerException } from './missing-power.exception';
 import { Action, DbRole, PermissionsForResource } from './model';
@@ -42,11 +51,27 @@ import * as AllRoles from './roles';
 const getDbRoles = (roles: ScopedRole[]): DbRole[] =>
   Object.values(AllRoles).filter((role) => roles.includes(role.name));
 
+const DbRolesForScope = (scope: AuthScope): Record<ScopedRole, DbRole> =>
+  mapFromList(Object.values(AllRoles), (role) =>
+    role.name.startsWith(scope) ? [role.name, role] : null
+  );
+
+export type ProjectRoleSensitivityMapping = {
+  [K in ProjectScopedRole]?: Sensitivity;
+};
+
+export type GlobalRoleSensitivityMapping = {
+  [K in GlobalScopedRole]?: Sensitivity;
+};
+
+export type AuthSensitivityMapping =
+  | ProjectRoleSensitivityMapping
+  | GlobalRoleSensitivityMapping;
+
 export const permissionDefaults = {
   canRead: false,
   canEdit: false,
 };
-
 export type Permission = typeof permissionDefaults;
 
 export type PermissionsOf<T> = Record<keyof T, Permission>;
@@ -106,7 +131,7 @@ export class AuthorizationService {
     resource: Resource,
     props: DbPropsOfDto<Resource['prototype']>,
     sessionOrUserId: Session | ID,
-    otherRoles: ScopedRole[] = []
+    otherRoles?: ScopedRole[]
   ): Promise<SecuredResource<Resource, false>> {
     const permissions = await this.getPermissions({
       resource,
@@ -171,6 +196,63 @@ export class AuthorizationService {
     );
   }
 
+  async getListRoleSensitivityMapping<Resource extends ResourceShape<any>>(
+    resource: Resource,
+    scope: AuthScope = 'project'
+  ): Promise<AuthSensitivityMapping> {
+    // convert resource to a list of resource names to check
+    const resources = getParentTypes(resource)
+      // if parent defines Props include it in mapping
+      .filter(isResourceClass)
+      .map((r) => r.name);
+
+    const roleGrantsFiltered = mapValues(DbRolesForScope(scope), (role) =>
+      role.grants.find((g) => resources.includes(g.__className.substring(2)))
+    );
+    const map = mapValues(roleGrantsFiltered, (grant) =>
+      grant?.canList ? grant?.sensitivityAccess : null
+    );
+    return pickBy(map, (sens) => sens !== null);
+  }
+
+  async canList<Resource extends ResourceShape<any>>(
+    resource: Resource,
+    sessionOrUserId: Session | ID,
+    otherRoles = [] as ScopedRole[]
+  ): Promise<boolean> {
+    const userGlobalRoles = isIdLike(sessionOrUserId)
+      ? await this.getUserGlobalRoles(sessionOrUserId)
+      : sessionOrUserId.roles;
+    const roles = [...userGlobalRoles, ...otherRoles];
+
+    // convert resource to a list of resource names to check
+    const resources = getParentTypes(resource)
+      // if parent defines Props include it in mapping
+      .filter(isResourceClass)
+      .map((r) => r.name);
+
+    const normalizeGrants = (role: DbRole) =>
+      !Array.isArray(role.grants)
+        ? role.grants
+        : mapValues(
+            // convert list of canList permissions keyed by resource name
+            keyBy(role.grants, (resourceGrant) =>
+              resourceGrant.__className.substring(2)
+            ),
+            (resourceGrant) => resourceGrant.canList
+          );
+    const dbRoles = getDbRoles(roles);
+    const grants = dbRoles.flatMap((role) =>
+      Object.entries(normalizeGrants(role)).flatMap(([name, grant]) => {
+        if (resources.includes(name)) {
+          return grant;
+        }
+        return [];
+      })
+    );
+    return grants.some((grant) => grant);
+  }
+
   /**
    * Get the permissions for a resource.
    *
@@ -185,7 +267,7 @@ export class AuthorizationService {
   async getPermissions<Resource extends ResourceShape<any>>({
     resource,
     sessionOrUserId,
-    otherRoles = [],
+    otherRoles,
     dto,
     sensitivity,
   }: {
@@ -198,7 +280,7 @@ export class AuthorizationService {
     const userGlobalRoles = isIdLike(sessionOrUserId)
       ? await this.getUserGlobalRoles(sessionOrUserId)
       : sessionOrUserId.roles;
-    const roles = [...userGlobalRoles, ...otherRoles];
+    const roles = [...userGlobalRoles, ...(otherRoles ?? dto?.scope ?? [])];
     sensitivity ??= dto?.sensitivity;
 
     // convert resource to a list of resource names to check

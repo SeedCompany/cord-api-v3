@@ -32,8 +32,8 @@ export const createGraphqlClient = async (
     // Session data changes between requests
     // Next request shouldn't rely on previously calculated data.
     // It doesn't when using actual requests.
-    if (options.context?.request?.session) {
-      delete options.context.request.session;
+    if (options.context?.session) {
+      delete options.context.session;
     }
   };
 

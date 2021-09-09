@@ -3,6 +3,7 @@ import {
   DuplicateException,
   ID,
   NotFoundException,
+  ObjectView,
   ServerException,
   Session,
   UnauthorizedException,
@@ -87,7 +88,7 @@ export class StoryService {
   }
 
   @HandleIdLookup(Story)
-  async readOne(id: ID, session: Session): Promise<Story> {
+  async readOne(id: ID, session: Session, _view?: ObjectView): Promise<Story> {
     this.logger.debug(`Read Story`, {
       id,
       userId: session.userId,

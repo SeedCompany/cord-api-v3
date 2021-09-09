@@ -1,3 +1,4 @@
+
 import { DbBudget } from '../../budget/model';
 import { DbBudgetRecord } from '../../budget/model/budget-record.model.db';
 import { DbCeremony } from '../../ceremony/model';
@@ -54,6 +55,7 @@ export const ConsultantManagerOnProject = new DbRole({
   grants: [
     new DbBaseNodeGrant<DbBudget>({
       __className: 'DbBudget',
+      canList: true,
       properties: [
         { propertyName: 'universalTemplateFile', permission: { read, }, },
         { propertyName: 'records', permission: { read, }, },
@@ -72,6 +74,7 @@ export const ConsultantManagerOnProject = new DbRole({
     }),
     new DbBaseNodeGrant<DbCeremony>({
       __className: 'DbCeremony',
+      canList: true,
       properties: [
         { propertyName: 'actualDate', permission: { read, }, },
         { propertyName: 'estimatedDate', permission: { read, }, },
@@ -266,6 +269,7 @@ export const ConsultantManagerOnProject = new DbRole({
     }),
     new DbBaseNodeGrant<DbPartner>({
       __className: 'DbPartner',
+      canList: true,
       properties: [
         { propertyName: 'organization', permission: { read, }, },
         { propertyName: 'pointOfContact', permission: { read, }, },
@@ -281,6 +285,7 @@ export const ConsultantManagerOnProject = new DbRole({
     }),
     new DbBaseNodeGrant<DbPartnership>({
       __className: 'DbPartnership',
+      canList: true,
       properties: [
         { propertyName: 'agreement', permission: { read, }, },
         { propertyName: 'agreementStatus', permission: { read, }, },
@@ -327,6 +332,7 @@ export const ConsultantManagerOnProject = new DbRole({
     }),
     new DbBaseNodeGrant<DbProject>({
       __className: 'DbProject',
+      canList: true,
       properties: [
         { propertyName: 'estimatedSubmission', permission: { read, write, }, },
         { propertyName: 'step', permission: { read, write, }, },
@@ -358,6 +364,7 @@ export const ConsultantManagerOnProject = new DbRole({
     }),
     new DbBaseNodeGrant<DbProjectMember>({
       __className: 'DbProjectMember',
+      canList: true,
       properties: [
         { propertyName: 'roles', permission: { read, write, }, },
         { propertyName: 'user', permission: { read, write, }, },

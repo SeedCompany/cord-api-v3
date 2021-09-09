@@ -46,6 +46,7 @@ export const StaffMember = new DbRole({
   grants: [
     new DbBaseNodeGrant<DbBudget>({
       __className: 'DbBudget',
+      canList: true,
       properties: [
         { propertyName: 'universalTemplateFile', permission: { read, }, },
         { propertyName: 'records', permission: { read, }, },
@@ -64,6 +65,7 @@ export const StaffMember = new DbRole({
     }),
     new DbBaseNodeGrant<DbCeremony>({
       __className: 'DbCeremony',
+      canList: true,
       properties: [
         { propertyName: 'actualDate', permission: { read, }, },
         { propertyName: 'estimatedDate', permission: { read, }, },
@@ -258,6 +260,7 @@ export const StaffMember = new DbRole({
     }),
     new DbBaseNodeGrant<DbPartner>({
       __className: 'DbPartner',
+      canList: true,
       properties: [
         { propertyName: 'organization', permission: { read, }, },
         { propertyName: 'pointOfContact', permission: { read, }, },
@@ -273,6 +276,7 @@ export const StaffMember = new DbRole({
     }),
     new DbBaseNodeGrant<DbPartnership>({
       __className: 'DbPartnership',
+      canList: true,
       properties: [
         { propertyName: 'agreement', permission: { read, }, },
         { propertyName: 'agreementStatus', permission: { read, }, },
@@ -319,6 +323,7 @@ export const StaffMember = new DbRole({
     }),
     new DbBaseNodeGrant<DbProject>({
       __className: 'DbProject',
+      canList: true,
       properties: [
         { propertyName: 'estimatedSubmission', permission: { read, }, },
         { propertyName: 'step', permission: { read, }, },
@@ -329,7 +334,7 @@ export const StaffMember = new DbRole({
         { propertyName: 'mouEnd', permission: { read, }, },
         { propertyName: 'initialMouEnd', permission: { read, }, },
         { propertyName: 'stepChangedAt', permission: { read, }, },
-        { propertyName: 'rootDirectory', permission: { read, }, },
+        { propertyName: 'rootDirectory', permission: { }, },
         { propertyName: 'member', permission: { read, }, },
         { propertyName: 'otherLocations', permission: { read, sensitivityAccess: Sensitivity.Low }, },
         { propertyName: 'primaryLocation', permission: { read, sensitivityAccess: Sensitivity.Low }, },
@@ -348,6 +353,7 @@ export const StaffMember = new DbRole({
     }),
     new DbBaseNodeGrant<DbProjectMember>({
       __className: 'DbProjectMember',
+      canList: true,
       properties: [
         { propertyName: 'roles', permission: { read, }, },
         { propertyName: 'user', permission: { read, }, },

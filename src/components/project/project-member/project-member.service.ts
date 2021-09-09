@@ -10,6 +10,8 @@ import {
   InputException,
   MaybeAsync,
   NotFoundException,
+  ObjectView,
+  SecuredList,
   ServerException,
   Session,
   UnauthorizedException,
@@ -130,7 +132,11 @@ export class ProjectMemberService {
   }
 
   @HandleIdLookup(ProjectMember)
-  async readOne(id: ID, session: Session): Promise<ProjectMember> {
+  async readOne(
+    id: ID,
+    session: Session,
+    _view?: ObjectView
+  ): Promise<ProjectMember> {
     this.logger.debug(`read one`, {
       id,
       userId: session.userId,
@@ -152,13 +158,12 @@ export class ProjectMemberService {
 
     const securedProps = await this.authorizationService.secureProperties(
       ProjectMember,
-      result.props,
-      session,
-      result.scopedRoles
+      result.dto,
+      session
     );
 
     return {
-      ...result.props,
+      ...result.dto,
       ...securedProps,
       user: {
         ...securedProps.user,
@@ -242,8 +247,14 @@ export class ProjectMemberService {
     input: ProjectMemberListInput,
     session: Session
   ): Promise<ProjectMemberListOutput> {
-    const results = await this.repo.list(input, session);
-    return await mapListResults(results, (id) => this.readOne(id, session));
+    // Since there is no case at the present where there is global versus scoped canList,
+    // not doing the whole limitedScope map thing for now.
+    if (await this.authorizationService.canList(ProjectMember, session)) {
+      const results = await this.repo.list(input, session);
+      return await mapListResults(results, (id) => this.readOne(id, session));
+    } else {
+      return SecuredList.Redacted;
+    }
   }
 
   protected filterByProject(
@@ -259,34 +270,4 @@ export class ProjectMemberService {
       node('node', label),
     ]);
   }
-
-  // when a new user is added to a project, all the project admins need to have access
-  // to some of that user's properties in order to know about that user
-  // async addProjectAdminsToUserSg(projectId: ID, userId: ID) {
-  //   // get all admins of a project, then add the role for them to see the user info
-  //   const result = await this.db
-  //     .query()
-  //     .match([
-  //       node('admins', 'User'),
-  //       relation('in', '', 'member'),
-  //       node('sg', 'SecurityGroup', { role: InternalRole.Admin }),
-  //       relation('out', '', 'permission'),
-  //       node('perms', 'Permission'),
-  //       relation('out', '', 'baseNode'),
-  //       node('project', 'Project', { id: projectId }),
-  //     ])
-  //     .raw('return collect(distinct admins.id) as ids')
-  //     .first();
-
-  //   for (const id of result?.ids) {
-  //     // creating user must be an admin, use role change event
-  //     const dbProjectMember = new DbProjectMember();
-  //     await this.authorizationService.processNewBaseNode(
-  //       InternalAdminViewOfProjectMemberRole,
-  //       dbProjectMember,
-  //       userId,
-  //       id
-  //     );
-  //   }
-  // }
 }

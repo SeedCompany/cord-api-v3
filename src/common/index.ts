@@ -1,4 +1,5 @@
 export * from './async-pool.util';
+export * from './buffer';
 export * from './temporal';
 export * from './context.type';
 export * from './date-filter.input';
@@ -19,6 +20,7 @@ export * from './resource.dto';
 export * from './secured-list';
 export * from './secured-property';
 export * from './secured-date';
+export * from './secured-mapper';
 export * from './sensitivity.enum';
 export * from './util';
 export { Session, LoggedInSession, AnonSession } from './session';
@@ -27,3 +29,4 @@ export * from './validators';
 export * from './name-field';
 export * from './id-field';
 export * from './base-node-labels.enum';
+export * from './object-view';

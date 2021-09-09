@@ -22,7 +22,7 @@ export class DirectoryResolver {
   @Query(() => Directory)
   async directory(
     @IdArg() id: ID,
-    @AnonSession() session: Session
+    @LoggedInSession() session: Session
   ): Promise<Directory> {
     return await this.service.getDirectory(id, session);
   }
@@ -40,7 +40,7 @@ export class DirectoryResolver {
     })
     input: FileListInput
   ): Promise<FileListOutput> {
-    return this.service.listChildren(node.id, input, session);
+    return this.service.listChildren(node, input, session);
   }
 
   @Mutation(() => Directory)

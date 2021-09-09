@@ -11,6 +11,10 @@ import {
   ACTIVE,
   createNode,
   createRelationships,
+  paginate,
+  permissionsOfNode,
+  requestingUser,
+  sorting,
 } from '../../../core/database/query';
 import {
   CreateUnavailability,
@@ -75,23 +79,13 @@ export class UnavailabilityRepository extends DtoRepository(Unavailability) {
       .first();
   }
 
-  async list(
-    { page, count, sort, order, filter }: UnavailabilityListInput,
-    session: Session
-  ) {
-    return await this.db.list<Unavailability>({
-      session,
-      nodevar: 'unavailability',
-      aclReadProp: 'canReadUnavailabilityList',
-      aclEditProp: 'canCreateUnavailability',
-      props: ['description', 'start', 'end'],
-      input: {
-        page,
-        count,
-        sort,
-        order,
-        filter,
-      },
-    });
+  async list(input: UnavailabilityListInput, session: Session) {
+    const result = await this.db
+      .query()
+      .match([requestingUser(session), ...permissionsOfNode('Unavailability')])
+      .apply(sorting(Unavailability, input))
+      .apply(paginate(input, this.hydrate()))
+      .first();
+    return result!; // result from paginate will always have 1 row.
   }
 }

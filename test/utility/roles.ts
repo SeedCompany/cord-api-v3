@@ -1,4 +1,4 @@
-import { TestApp } from '.';
+import { registerUser, runInIsolatedSession, TestApp } from '.';
 import { ResourceShape } from '../../src/common';
 import { Role, ScopedRole } from '../../src/components/authorization';
 import { getPermissions } from '../security/permissions';
@@ -29,21 +29,18 @@ export async function testRole<
     userRole: `global:${role}` as ScopedRole,
     sensitivity: resource.sensitivity,
   })) as Partial<ResourceObj>;
-  const readResource = await readOneFunction(app, resource.id);
+  const readResource = await runInIsolatedSession(app, async () => {
+    await registerUser(app, { roles: [role] });
+    return await readOneFunction(app, resource.id);
+  });
+
   expect(readResource[propToTest].canRead).toEqual(
     permissions[propToTest].canRead
   );
-  // try {
+
   if (!skipEditCheck) {
     expect(readResource[propToTest].canEdit).toEqual(
       permissions[propToTest].canEdit
     );
   }
-
-  // } catch (e) {
-  //   // covers for lists of items that has canCreate instead of canEdit
-  //   expect(readResource[propToTest].canEdit).toEqual(
-  //     permissions[propToTest].canCreate
-  //   );
-  // }
 }

@@ -13,7 +13,7 @@ import {
   Session,
 } from '../../common';
 import { CeremonyService, SecuredCeremony } from '../ceremony';
-import { ChangesetIds } from '../changeset/dto';
+import { ChangesetIds, IdsAndView, IdsAndViewArg } from '../changeset/dto';
 import {
   CreateInternshipEngagementInput,
   CreateInternshipEngagementOutput,
@@ -41,10 +41,10 @@ export class EngagementResolver {
     description: 'Lookup an engagement by ID',
   })
   async engagement(
-    @Args() { id, changeset }: ChangesetIds,
+    @IdsAndViewArg() { id, view }: IdsAndView,
     @AnonSession() session: Session
   ): Promise<Engagement> {
-    const engagement = await this.service.readOne(id, session, changeset);
+    const engagement = await this.service.readOne(id, session, view);
     return engagement;
   }
 

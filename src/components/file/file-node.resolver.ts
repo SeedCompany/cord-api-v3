@@ -1,16 +1,14 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { AnonSession, Session } from '../../common';
-import { User, UserService } from '../user';
+import { DataLoader, Loader } from '../../core';
+import { User } from '../user';
 import { FileNode, IFileNode } from './dto';
 import { FileService } from './file.service';
 
 @Resolver(IFileNode)
 export class FileNodeResolver {
-  constructor(
-    protected readonly service: FileService,
-    protected readonly users: UserService
-  ) {}
+  constructor(protected readonly service: FileService) {}
 
   @ResolveField(() => User, {
     description: stripIndent`
@@ -20,9 +18,9 @@ export class FileNodeResolver {
   })
   async createdBy(
     @Parent() node: FileNode,
-    @AnonSession() session: Session
+    @Loader(User) users: DataLoader<User>
   ): Promise<User> {
-    return await this.users.readOne(node.createdById, session);
+    return await users.load(node.createdById);
   }
 
   @ResolveField(() => [IFileNode], {

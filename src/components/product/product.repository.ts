@@ -111,7 +111,6 @@ export class ProductRepository extends CommonRepository {
             'props',
             {
               engagement: 'engagement.id',
-              scope: 'scopedRoles',
               produces: 'produces',
             }
           ).as('dto')
@@ -158,6 +157,8 @@ export class ProductRepository extends CommonRepository {
       describeCompletion: input.describeCompletion,
       isOverriding: !!input.scriptureReferencesOverride,
       canDelete: true,
+      progressTarget: input.progressTarget,
+      progressStepMeasurement: input.progressStepMeasurement,
     };
 
     const query = this.db
@@ -218,6 +219,8 @@ export class ProductRepository extends CommonRepository {
       title: input.title,
       description: input.description,
       canDelete: true,
+      progressTarget: input.progressTarget,
+      progressStepMeasurement: input.progressStepMeasurement,
     };
 
     const query = this.db

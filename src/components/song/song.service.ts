@@ -3,6 +3,7 @@ import {
   DuplicateException,
   ID,
   NotFoundException,
+  ObjectView,
   ServerException,
   Session,
   UnauthorizedException,
@@ -87,7 +88,7 @@ export class SongService {
   }
 
   @HandleIdLookup(Song)
-  async readOne(id: ID, session: Session): Promise<Song> {
+  async readOne(id: ID, session: Session, _view?: ObjectView): Promise<Song> {
     const result = await this.repo.readOne(id, session);
     return await this.secure(result, session);
   }

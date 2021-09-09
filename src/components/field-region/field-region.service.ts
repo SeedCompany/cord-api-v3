@@ -3,6 +3,7 @@ import {
   DuplicateException,
   ID,
   NotFoundException,
+  ObjectView,
   ServerException,
   Session,
   UnauthorizedException,
@@ -77,7 +78,11 @@ export class FieldRegionService {
   }
 
   @HandleIdLookup(FieldRegion)
-  async readOne(id: ID, session: Session): Promise<FieldRegion> {
+  async readOne(
+    id: ID,
+    session: Session,
+    _view?: ObjectView
+  ): Promise<FieldRegion> {
     this.logger.debug(`Read Field Region`, {
       id: id,
       userId: session.userId,

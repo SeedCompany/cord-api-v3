@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { RawSession } from './session';
 
 /**
  * The type for graphql @Context() decorator
@@ -6,4 +7,5 @@ import { Request, Response } from 'express';
 export interface GqlContextType {
   request: Request;
   response: Response;
+  session?: RawSession;
 }

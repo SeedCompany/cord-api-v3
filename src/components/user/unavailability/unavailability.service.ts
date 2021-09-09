@@ -2,11 +2,13 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import {
   ID,
   NotFoundException,
+  ObjectView,
   ServerException,
   Session,
   UnsecuredDto,
 } from '../../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../../core';
+import { mapListResults } from '../../../core/database/results';
 import { AuthorizationService } from '../../authorization/authorization.service';
 import {
   CreateUnavailability,
@@ -55,7 +57,11 @@ export class UnavailabilityService {
   }
 
   @HandleIdLookup(Unavailability)
-  async readOne(id: ID, session: Session): Promise<Unavailability> {
+  async readOne(
+    id: ID,
+    session: Session,
+    _view?: ObjectView
+  ): Promise<Unavailability> {
     const result = await this.repo.readOne(id, session);
     return await this.secure(result, session);
   }
@@ -116,18 +122,10 @@ export class UnavailabilityService {
   }
 
   async list(
-    { page, count, sort, order, filter }: UnavailabilityListInput,
+    input: UnavailabilityListInput,
     session: Session
   ): Promise<UnavailabilityListOutput> {
-    const result = await this.repo.list(
-      { page, count, sort, order, filter },
-      session
-    );
-
-    return {
-      items: result.items,
-      hasMore: result.hasMore,
-      total: result.total,
-    };
+    const results = await this.repo.list(input, session);
+    return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 }

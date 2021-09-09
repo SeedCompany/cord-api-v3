@@ -4,6 +4,7 @@ import { ID, NotFoundException, Session } from '../../common';
 import { DtoRepository } from '../../core';
 import { ACTIVE } from '../../core/database/query';
 import { BaseNode } from '../../core/database/results';
+import { ProjectChangeRequestStatus } from '../project-change-request/dto';
 import { Changeset, ChangesetDiff } from './dto';
 
 @Injectable()
@@ -28,15 +29,43 @@ export class ChangesetRepository extends DtoRepository(Changeset) {
           .where(not({ prop: hasLabel('modifiedAt') }))
           .return('collect(distinct node) as changed')
       )
+      .subQuery((sub) =>
+        sub
+          .with('changeset')
+          .match([
+            node('changeset'),
+            relation('out', '', [], { deleting: true }),
+            node('node'),
+          ])
+          .return('collect(distinct node) as removed')
+      )
       .return<Record<keyof ChangesetDiff, readonly BaseNode[]>>([
         'changed',
+        'removed',
         '[(changeset)-[changeType:changeset { active: true }]->(node:BaseNode) WHERE changeType.deleting IS NULL | node] as added',
-        '[(changeset)-[changeType:changeset { active: true }]->(node:BaseNode) WHERE changeType.deleting         | node] as removed',
       ])
       .first();
     if (!result) {
       throw new NotFoundException('Could not find changeset');
     }
     return result;
+  }
+
+  async isApproved(id: ID, _session: Session) {
+    const result = await this.db
+      .query()
+      .match([
+        node('changeset', 'Changeset', { id }),
+        relation('out', '', 'status', ACTIVE),
+        node('status', 'Property'),
+      ])
+      .where({
+        status: {
+          value: ProjectChangeRequestStatus.Approved,
+        },
+      })
+      .return('changeset.id')
+      .first();
+    return !!result;
   }
 }

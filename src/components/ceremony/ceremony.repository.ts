@@ -1,18 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { ID, Session } from '../../common';
+import { ID, NotFoundException, Session, UnsecuredDto } from '../../common';
 import { DtoRepository, matchRequestingUser } from '../../core';
 import {
   ACTIVE,
   createNode,
+  matchProjectSensToLimitedScopeMap,
   matchPropsAndProjectSensAndScopedRoles,
   paginate,
-  permissionsOfNode,
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { DbPropsOfDto } from '../../core/database/results';
-import { ScopedRole } from '../authorization';
+import { AuthSensitivityMapping } from '../authorization/authorization.service';
 import { Ceremony, CeremonyListInput, CreateCeremony } from './dto';
 
 @Injectable()
@@ -34,7 +33,7 @@ export class CeremonyRepository extends DtoRepository(Ceremony) {
   }
 
   async readOne(id: ID, session: Session) {
-    const readCeremony = this.db
+    const query = this.db
       .query()
       .match([
         node('project', 'Project'),
@@ -44,22 +43,29 @@ export class CeremonyRepository extends DtoRepository(Ceremony) {
         node('node', 'Ceremony', { id }),
       ])
       .apply(matchPropsAndProjectSensAndScopedRoles(session))
-      .return(['props', 'scopedRoles'])
-      .asResult<{
-        props: DbPropsOfDto<Ceremony, true>;
-        scopedRoles: ScopedRole[];
-      }>();
+      .return<{ dto: UnsecuredDto<Ceremony> }>('props as dto');
 
-    return await readCeremony.first();
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException('Could not find ceremony', 'ceremony.id');
+    }
+
+    return result.dto;
   }
 
-  async list({ filter, ...input }: CeremonyListInput, session: Session) {
-    const label = 'Ceremony';
+  async list(
+    { filter, ...input }: CeremonyListInput,
+    session: Session,
+    limitedScope?: AuthSensitivityMapping
+  ) {
     const result = await this.db
       .query()
       .match([
-        requestingUser(session),
-        ...permissionsOfNode(label),
+        node('node', 'Ceremony'),
+        relation('in', '', ACTIVE),
+        node('', 'Engagement'),
+        relation('in', '', 'engagement', ACTIVE),
+        node('project', 'Project'),
         ...(filter.type
           ? [
               relation('out', '', 'type', ACTIVE),
@@ -67,7 +73,20 @@ export class CeremonyRepository extends DtoRepository(Ceremony) {
             ]
           : []),
       ])
-      .apply(sorting(Ceremony, input))
+      .match(requestingUser(session))
+      .apply(matchProjectSensToLimitedScopeMap(limitedScope))
+      .apply(
+        sorting(Ceremony, input, {
+          projectName: (query) =>
+            query
+              .match([
+                node('project'),
+                relation('out', '', 'name', ACTIVE),
+                node('prop', 'Property'),
+              ])
+              .return<{ sortValue: string }>('prop.value as sortValue'),
+        })
+      )
       .apply(paginate(input))
       .first();
     return result!; // result from paginate() will always have 1 row.

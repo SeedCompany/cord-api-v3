@@ -9,7 +9,7 @@ export const matchChangesetAndChangedProps =
       ? query
           .apply(
             matchProps({
-              changeset,
+              view: { changeset },
               outputVar: 'changedProps',
               optional: true,
             })

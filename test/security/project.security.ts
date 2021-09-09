@@ -11,8 +11,10 @@ import {
   createPartner,
   createPartnership,
   createProject,
+  createProjectMember,
   createSession,
   createTestApp,
+  listProjects,
   Raw,
   readOneProject,
   readOneProjectBudget,
@@ -87,6 +89,8 @@ describe('Project Security e2e', () => {
     `('Global $role', ({ role }) => {
       test.each`
         property                       | readFunction            | staticResource
+        ${'rootDirectory'}             | ${readOneProject}       | ${IProject}
+        ${'budget'}                    | ${readOneProjectBudget} | ${IProject}
         ${'estimatedSubmission'}       | ${readOneProject}       | ${IProject}
         ${'step'}                      | ${readOneProject}       | ${IProject}
         ${'name'}                      | ${readOneProject}       | ${IProject}
@@ -97,7 +101,6 @@ describe('Project Security e2e', () => {
         ${'tags'}                      | ${readOneProject}       | ${IProject}
         ${'financialReportReceivedAt'} | ${readOneProject}       | ${IProject}
         ${'primaryLocation'}           | ${readOneProject}       | ${IProject}
-        ${'budget'}                    | ${readOneProjectBudget} | ${IProject}
       `(
         ' reading $staticResource.name $property',
         async ({ property, readFunction, staticResource }) => {
@@ -136,7 +139,67 @@ describe('Project Security e2e', () => {
       });
     });
   });
+  describe('Listing is secure', () => {
+    describe.each`
+      role                                      | globalCanList | projectCanList
+      ${Role.Administrator}                     | ${true}       | ${true}
+      ${Role.Consultant}                        | ${true}       | ${true}
+      ${Role.ConsultantManager}                 | ${true}       | ${true}
+      ${Role.Controller}                        | ${true}       | ${true}
+      ${Role.FieldOperationsDirector}           | ${true}       | ${true}
+      ${Role.FinancialAnalyst}                  | ${true}       | ${true}
+      ${Role.Fundraising}                       | ${true}       | ${true}
+      ${Role.Intern}                            | ${true}       | ${true}
+      ${Role.LeadFinancialAnalyst}              | ${true}       | ${true}
+      ${Role.Leadership}                        | ${true}       | ${true}
+      ${Role.Liaison}                           | ${true}       | ${true}
+      ${Role.Marketing}                         | ${true}       | ${true}
+      ${Role.Mentor}                            | ${true}       | ${true}
+      ${Role.ProjectManager}                    | ${true}       | ${true}
+      ${Role.RegionalCommunicationsCoordinator} | ${true}       | ${true}
+      ${Role.RegionalDirector}                  | ${true}       | ${true}
+      ${Role.StaffMember}                       | ${true}       | ${true}
+      ${Role.Translator}                        | ${true}       | ${true}
+    `('$role', ({ role, globalCanList, projectCanList }) => {
+      it('Global canList', async () => {
+        const read = await runInIsolatedSession(app, async () => {
+          await registerUser(app, { roles: role });
+          return await listProjects(app);
+        });
+        if (!globalCanList) {
+          expect(read).toHaveLength(0);
+        } else {
+          expect(read).not.toHaveLength(0);
+        }
+      });
+
+      it('Project canList', async () => {
+        const user = await runInIsolatedSession(app, async () => {
+          return await registerUser(app, {
+            roles: [role],
+          });
+        });
+        await createProjectMember(app, {
+          projectId: testProject.id,
+          roles: role,
+          userId: user.id,
+        });
+        const read = await user.runAs(() => {
+          return listProjects(app);
+        });
+        if (!projectCanList) {
+          expect(read).toHaveLength(0);
+        } else {
+          expect(read).not.toHaveLength(0);
+        }
+      });
+    });
+  });
+  // ------------------------------------------------------------------
+  //     Restriction on sensitivity
+  // ------------------------------------------------------------------
   describe('Restricted by Sensitivity', () => {
+    // ---- Primary Location
     describe.each`
       role                      | sensitivityToTest
       ${Role.StaffMember}       | ${Sensitivity.Low}
@@ -179,6 +242,52 @@ describe('Project Security e2e', () => {
         );
       }
     );
+
+    // ---- Root Directory
+    describe.each`
+      role                      | sensitivityToTest
+      ${Role.Marketing}         | ${Sensitivity.Low}
+      ${Role.Fundraising}       | ${Sensitivity.Medium}
+      ${Role.ConsultantManager} | ${Sensitivity.Medium}
+      ${Role.FinancialAnalyst}  | ${Sensitivity.Medium}
+      ${Role.ProjectManager}    | ${Sensitivity.Medium}
+      ${Role.RegionalDirector}  | ${Sensitivity.Medium}
+    `(
+      'Role: $role - Sensitivity: $sensitivityToTest',
+      ({ role, sensitivityToTest }) => {
+        test.each`
+          property           | resource    | readFunction      | type
+          ${'rootDirectory'} | ${IProject} | ${readOneProject} | ${ProjectType.Translation}
+          ${'rootDirectory'} | ${IProject} | ${readOneProject} | ${ProjectType.Internship}
+        `(
+          ' reading $type $resource.name $property',
+          async ({ property, resource, readFunction, type }) => {
+            const proj = await createProject(app, {
+              primaryLocationId: primaryLocation.id,
+              type,
+            });
+            await expectSensitiveProperty({
+              app,
+              role,
+              propertyToCheck: property,
+              projectId: proj.id,
+              resourceId: proj.id,
+              resource: resource,
+              sensitivityRestriction: sensitivityToTest,
+              projectType: type,
+              permissions: await getPermissions({
+                resource: resource,
+                userRole: `global:${role as Role}` as ScopedRole,
+                sensitivity: sensitivityToTest,
+              }),
+              readOneFunction: readFunction,
+            });
+          }
+        );
+      }
+    );
+
+    // ---- CurrentBudget
     it('reading currentBudget', async () => {
       const proj = await createProject(app);
       await createBudget(app, { projectId: proj.id });
@@ -213,6 +322,8 @@ describe('Project Security e2e', () => {
         readOneFunction: readOneProjectBudget,
       });
     });
+
+    // ---- otherLocations
     describe.each`
       role                      | sensitivityToTest
       ${Role.StaffMember}       | ${Sensitivity.Low}

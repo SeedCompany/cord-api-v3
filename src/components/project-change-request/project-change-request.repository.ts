@@ -64,7 +64,6 @@ export class ProjectChangeRequestRepository extends DtoRepository(
       .apply(matchPropsAndProjectSensAndScopedRoles(session))
       .return<{ dto: UnsecuredDto<ProjectChangeRequest> }>(
         merge('props', {
-          scope: 'scopedRoles',
           canEdit: `props.status = "${Status.Pending}"`,
         }).as('dto')
       );

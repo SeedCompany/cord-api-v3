@@ -9,12 +9,7 @@ import {
   Session,
   UnsecuredDto,
 } from '../../common';
-import {
-  CommonRepository,
-  ConfigService,
-  DatabaseService,
-  matchSession,
-} from '../../core';
+import { CommonRepository, ConfigService, DatabaseService } from '../../core';
 import { DbChanges, getChanges } from '../../core/database/changes';
 import {
   ACTIVE,
@@ -22,16 +17,17 @@ import {
   createRelationships,
   matchChangesetAndChangedProps,
   matchProjectSens,
+  matchProjectSensToLimitedScopeMap,
   matchProps,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
   paginate,
-  permissionsOfNode,
   requestingUser,
   sorting,
 } from '../../core/database/query';
 import { DbPropsOfDto } from '../../core/database/results';
 import { Role } from '../authorization';
+import { AuthSensitivityMapping } from '../authorization/authorization.service';
 import {
   CreateProject,
   InternshipProject,
@@ -84,6 +80,12 @@ export class ProjectRepository extends CommonRepository {
         .with(['node', 'node as project'])
         .apply(matchPropsAndProjectSensAndScopedRoles(userId))
         .apply(matchChangesetAndChangedProps(changeset))
+        // optional because not defined until right after creation
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'rootDirectory', ACTIVE),
+          node('rootDirectory', 'Directory'),
+        ])
         .optionalMatch([
           node('node'),
           relation('out', '', 'primaryLocation', ACTIVE),
@@ -110,11 +112,11 @@ export class ProjectRepository extends CommonRepository {
             type: 'node.type',
             pinned:
               'exists((:User { id: $requestingUserId })-[:pinned]->(node))',
+            rootDirectory: 'rootDirectory.id',
             primaryLocation: 'primaryLocation.id',
             marketingLocation: 'marketingLocation.id',
             fieldRegion: 'fieldRegion.id',
             owningOrganization: 'organization.id',
-            scope: 'scopedRoles',
             changeset: 'changeset.id',
           }).as('dto')
         );
@@ -256,15 +258,18 @@ export class ProjectRepository extends CommonRepository {
     await query.run();
   }
 
-  async list({ filter, ...input }: ProjectListInput, session: Session) {
+  async list(
+    { filter, ...input }: ProjectListInput,
+    session: Session,
+    limitedScope?: AuthSensitivityMapping
+  ) {
     const result = await this.db
       .query()
-      .match([
-        requestingUser(session),
-        ...permissionsOfNode(`${filter.type ?? ''}Project`),
-      ])
-      .with('distinct(node) as node, requestingUser')
+      .matchNode('node', `${filter.type ?? ''}Project`)
+      .with('distinct(node) as node, node as project')
+      .match(requestingUser(session))
       .apply(projectListFilter(filter))
+      .apply(matchProjectSensToLimitedScopeMap(limitedScope))
       .apply(
         sorting(IProject, input, {
           sensitivity: (query) =>
@@ -320,7 +325,7 @@ export class ProjectRepository extends CommonRepository {
     const query = this.db
       .query()
       .match([
-        node('node', 'Project', { projectId }),
+        node('node', 'Project', { id: projectId }),
         relation('out', '', 'member', ACTIVE),
         node('projectMember', 'ProjectMember'),
         relation('out', '', 'user', ACTIVE),
@@ -336,23 +341,6 @@ export class ProjectRepository extends CommonRepository {
         memberRoles: Role[][];
       }>();
     return await query.first();
-  }
-
-  async getRootDirectory(projectId: ID, session: Session) {
-    return await this.db
-      .query()
-      .match(matchSession(session, { withAclRead: 'canReadProjects' }))
-      .optionalMatch([
-        [
-          node('project', 'Project', { id: projectId }),
-          relation('out', 'rootDirectory', ACTIVE),
-          node('directory', 'BaseNode:Directory'),
-        ],
-      ])
-      .return<{ id: ID }>({
-        directory: [{ id: 'id' }],
-      })
-      .first();
   }
 
   async validateOtherResourceId(id: string, label: string) {
@@ -371,7 +359,7 @@ export class ProjectRepository extends CommonRepository {
         relation('out', '', 'changeset', ACTIVE),
         node('changeset', 'Changeset', { id: changeset }),
       ])
-      .apply(matchProps({ changeset, optional: true }))
+      .apply(matchProps({ view: { changeset }, optional: true }))
       .return<{
         props: Partial<DbPropsOfDto<Project>> & {
           id: ID;

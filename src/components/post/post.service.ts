@@ -11,7 +11,6 @@ import {
 } from '../../common';
 import { ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
-import { ScopedRole } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { UserService } from '../user';
 import { CreatePost, Post, UpdatePost } from './dto';
@@ -109,14 +108,13 @@ export class PostService {
 
   async securedList(
     parentType: ResourceShape<Postable>,
-    parent: Postable & Resource & { scope?: ScopedRole[] },
+    parent: Postable & Resource,
     input: PostListInput,
     session: Session
   ): Promise<SecuredPostList> {
     const perms = await this.authorizationService.getPermissions({
       resource: parentType,
       sessionOrUserId: session,
-      otherRoles: parent.scope,
       dto: parent,
     });
     if (!perms.posts.canRead) {
