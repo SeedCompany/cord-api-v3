@@ -354,6 +354,7 @@ export const ProjectManagerOnProject = new DbRole({
         { propertyName: 'financialReportReceivedAt', permission: { read, write, }, },
         { propertyName: 'financialReportPeriod', permission: { read, write, }, },
         { propertyName: 'posts', permission: { read, write, }, },
+        { propertyName: 'presetInventory', permission: { read, write, }, },
       ],
       canDelete: false,
     }),

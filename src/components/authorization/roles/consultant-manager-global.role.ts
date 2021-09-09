@@ -362,6 +362,7 @@ export const ConsultantManagerGlobal = new DbRole({
         { propertyName: 'financialReportPeriod', permission: { read, write, }, },
         { propertyName: 'owningOrganization', permission: { read, write, }, },
         { propertyName: 'posts', permission: { read, write, }, },
+        { propertyName: 'presetInventory', permission: { read, write, }, },
       ],
       canDelete: false,
     }),

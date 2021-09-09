@@ -359,6 +359,7 @@ export const LeadFinancialAnalystGlobal = new DbRole({
         { propertyName: 'financialReportReceivedAt', permission: { read, }, },
         { propertyName: 'financialReportPeriod', permission: { read, write, }, },
         { propertyName: 'posts', permission: { read, write, }, },
+        { propertyName: 'presetInventory', permission: { read, write, }, },
       ],
       canDelete: false,
     }),

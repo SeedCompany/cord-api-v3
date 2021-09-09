@@ -356,6 +356,7 @@ export const ConsultantGlobal = new DbRole({
         { propertyName: 'financialReportPeriod', permission: {  }, },
         { propertyName: 'owningOrganization', permission: {  }, },
         { propertyName: 'posts', permission: {  }, },
+        { propertyName: 'presetInventory', permission: {  }, },
       ],
       canDelete: false,
     }),
