@@ -78,7 +78,7 @@
     "ts-essentials": "^7.0.1",
     "ts-transformer-keys": "^0.4.3",
     "winston": "^3.3.3",
-    "xlsx": "^0.16.9"
+    "xlsx": "^0.17.1"
   },
   "devDependencies": {
     "@nestjs/cli": "^7.6.0",

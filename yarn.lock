@@ -5245,15 +5245,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"codepage@npm:~1.14.0":
-  version: 1.14.0
-  resolution: "codepage@npm:1.14.0"
-  dependencies:
-    commander: ~2.14.1
-    exit-on-epipe: ~1.0.1
-  bin:
-    codepage: ./bin/codepage.njs
-  checksum: dfef1d40ab47d54f3f9579d07f57f8a043d1a232c6ca76796c435e0e0e63ac0c9b9cac463baa1e021dda1e4fec1149414cfa9bc7634df6480b219591aec1bd3b
+"codepage@npm:~1.15.0":
+  version: 1.15.0
+  resolution: "codepage@npm:1.15.0"
+  checksum: 8d92eb4ad475177de31b600347452f2dfc0d13c623b7502a80f7366c7af2b47342eec993bc79d6a5992f046ce16454c4d271b443972ba18581b4121b4f332bd3
   languageName: node
   linkType: hard
 
@@ -5401,13 +5396,6 @@ __metadata:
   version: 7.2.0
   resolution: "commander@npm:7.2.0"
   checksum: bdc0eca5e25cd24af8440163d3c9a996785bbac4b49a590365699cdc1ed08cefbac8f268153208ab2bc5dc3cb1d3fb573fd1590c681e36e371342186bd331a4c
-  languageName: node
-  linkType: hard
-
-"commander@npm:~2.14.1":
-  version: 2.14.1
-  resolution: "commander@npm:2.14.1"
-  checksum: b3f6ba4b9c4e71a446e9f5d518ea5b3062b72bb731d617b1a56ef14f775365b1b9f52ecea65a184bbce1f9e2960ce01028fb7ac0202a4ac42e62d5d778257ddb
   languageName: node
   linkType: hard
 
@@ -5635,7 +5623,7 @@ __metadata:
     type-fest: ^1.0.1
     typescript: ^4.2.3
     winston: ^3.3.3
-    xlsx: ^0.16.9
+    xlsx: ^0.17.1
   languageName: unknown
   linkType: soft
 
@@ -14777,13 +14765,13 @@ resolve@^2.0.0-next.3:
   languageName: node
   linkType: hard
 
-"xlsx@npm:^0.16.9":
-  version: 0.16.9
-  resolution: "xlsx@npm:0.16.9"
+"xlsx@npm:^0.17.1":
+  version: 0.17.1
+  resolution: "xlsx@npm:0.17.1"
   dependencies:
     adler-32: ~1.2.0
     cfb: ^1.1.4
-    codepage: ~1.14.0
+    codepage: ~1.15.0
     commander: ~2.17.1
     crc-32: ~1.2.0
     exit-on-epipe: ~1.0.1
@@ -14793,7 +14781,7 @@ resolve@^2.0.0-next.3:
     word: ~0.3.0
   bin:
     xlsx: bin/xlsx.njs
-  checksum: f172dce6f08e5ed10d8a1b20fe2400b8edb5d8a4c297dd116b0f461c89b33e2ee71a65d11177697baeb7739d8cb3ff2c8b760adc89bf2d6e252ba25c9efe3efd
+  checksum: 4b61e850322ce751368b1c4a4daf8d4768582a967fd3398cd96ba7d77068c022d7c4d47ae095ba502755c27ae54672c35f382027fd174302df6396f2532525af
   languageName: node
   linkType: hard
 
