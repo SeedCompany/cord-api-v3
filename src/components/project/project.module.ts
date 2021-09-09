@@ -3,7 +3,6 @@ import { AuthorizationModule } from '../authorization/authorization.module';
 import { BudgetModule } from '../budget/budget.module';
 import { EngagementModule } from '../engagement/engagement.module';
 import { FieldRegionModule } from '../field-region/field-region.module';
-import { FileModule } from '../file/file.module';
 import { LocationModule } from '../location/location.module';
 import { OrganizationModule } from '../organization/organization.module';
 import { PartnerModule } from '../partner/partner.module';
@@ -28,7 +27,6 @@ import { ProjectService } from './project.service';
     forwardRef(() => ProjectChangeRequestModule),
     forwardRef(() => UserModule),
     forwardRef(() => LocationModule),
-    FileModule,
     forwardRef(() => EngagementModule),
     forwardRef(() => AuthorizationModule),
     PartnerModule,

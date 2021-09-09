@@ -80,6 +80,12 @@ export class ProjectRepository extends CommonRepository {
         .with(['node', 'node as project'])
         .apply(matchPropsAndProjectSensAndScopedRoles(userId))
         .apply(matchChangesetAndChangedProps(changeset))
+        // optional because not defined until right after creation
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'rootDirectory', ACTIVE),
+          node('rootDirectory', 'Directory'),
+        ])
         .optionalMatch([
           node('node'),
           relation('out', '', 'primaryLocation', ACTIVE),
@@ -106,6 +112,7 @@ export class ProjectRepository extends CommonRepository {
             type: 'node.type',
             pinned:
               'exists((:User { id: $requestingUserId })-[:pinned]->(node))',
+            rootDirectory: 'rootDirectory.id',
             primaryLocation: 'primaryLocation.id',
             marketingLocation: 'marketingLocation.id',
             fieldRegion: 'fieldRegion.id',
@@ -334,22 +341,6 @@ export class ProjectRepository extends CommonRepository {
         memberRoles: Role[][];
       }>();
     return await query.first();
-  }
-
-  async getRootDirectory(projectId: ID) {
-    return await this.db
-      .query()
-      .optionalMatch([
-        [
-          node('project', 'Project', { id: projectId }),
-          relation('out', 'rootDirectory', ACTIVE),
-          node('directory', 'BaseNode:Directory'),
-        ],
-      ])
-      .return<{ id: ID }>({
-        directory: [{ id: 'id' }],
-      })
-      .first();
   }
 
   async validateOtherResourceId(id: string, label: string) {

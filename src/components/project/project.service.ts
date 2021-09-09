@@ -34,7 +34,6 @@ import {
   EngagementService,
   SecuredEngagementList,
 } from '../engagement';
-import { FileService, SecuredDirectory } from '../file';
 import {
   LocationListInput,
   LocationService,
@@ -85,7 +84,6 @@ export class ProjectService {
     private readonly budgetService: BudgetService,
     @Inject(forwardRef(() => PartnershipService))
     private readonly partnerships: PartnershipService,
-    private readonly fileService: FileService,
     @Inject(forwardRef(() => EngagementService))
     private readonly engagementService: EngagementService,
     private readonly partnerService: PartnerService,
@@ -654,39 +652,6 @@ export class ProjectService {
     const result = await this.repo.getMembershipRoles(projectId, session);
 
     return result?.memberRoles.flat().map(rolesForScope('project')) ?? [];
-  }
-
-  async getRootDirectory(
-    project: Project,
-    session: Session
-  ): Promise<SecuredDirectory> {
-    const rootRef = await this.repo.getRootDirectory(project.id);
-    const permsOfProject = await this.authorizationService.getPermissions({
-      resource: IProject,
-      sessionOrUserId: session,
-      dto: project,
-    });
-
-    if (!rootRef) {
-      return {
-        canEdit: false,
-        canRead: false,
-        value: undefined,
-      };
-    }
-
-    if (!rootRef?.id) {
-      throw new NotFoundException(
-        'Could not find root directory associated to this project'
-      );
-    }
-
-    return {
-      ...permsOfProject.rootDirectory,
-      value: permsOfProject.rootDirectory.canRead
-        ? await this.fileService.getDirectory(rootRef.id, session)
-        : undefined,
-    };
   }
 
   protected async validateOtherResourceId(

@@ -140,6 +140,8 @@ class Project extends PinnablePostableChangesetAwareResource {
   @Field()
   readonly financialReportPeriod: SecuredReportPeriod;
 
+  readonly rootDirectory: Secured<ID | undefined>;
+
   // A list of non-global roles the requesting user has available for this object.
   // This is just a cache, to prevent extra db lookups within the same request.
   readonly scope: ScopedRole[];

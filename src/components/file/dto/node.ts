@@ -6,6 +6,7 @@ import { MergeExclusive, Opaque } from 'type-fest';
 import {
   DateTimeField,
   ID,
+  InputException,
   NameField,
   Resource,
   Secured,
@@ -135,6 +136,13 @@ export type FileId = ID & Opaque<string, 'FileId'>;
 
 export const isDirectory = (node: AnyFileNode): node is Directory =>
   node.type === FileNodeType.Directory;
+
+export const asDirectory = (node: AnyFileNode) => {
+  if (!isDirectory(node)) {
+    throw new InputException('Node is not a directory');
+  }
+  return node;
+};
 
 export const isFile = (node: AnyFileNode): node is File =>
   node.type === FileNodeType.File;
