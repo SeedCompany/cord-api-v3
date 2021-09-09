@@ -55,6 +55,6 @@ export class LocalBucketController {
 
     const out = await this.bucket.download(signed);
     res.setHeader('Content-Type', out.ContentType!);
-    res.send(out.Body);
+    out.Body.pipe(res);
   }
 }
