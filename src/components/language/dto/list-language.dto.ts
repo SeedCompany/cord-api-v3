@@ -4,6 +4,7 @@ import { ValidateNested } from 'class-validator';
 import {
   PaginatedList,
   SecuredList,
+  SensitivitiesFilter,
   Sensitivity,
   SortablePaginationInput,
 } from '../../../common';
@@ -15,6 +16,7 @@ export abstract class LanguageFilters {
     description: 'Only languages with these sensitivities',
     nullable: true,
   })
+  @SensitivitiesFilter()
   readonly sensitivity?: Sensitivity[];
 
   @Field({

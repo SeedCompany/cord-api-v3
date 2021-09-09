@@ -6,6 +6,7 @@ import {
   ID,
   PaginatedList,
   SecuredList,
+  SensitivitiesFilter,
   Sensitivity,
   SortablePaginationInput,
 } from '../../../common';
@@ -26,6 +27,7 @@ export abstract class ProjectFilters {
     description: 'Only projects with these sensitivities',
     nullable: true,
   })
+  @SensitivitiesFilter()
   readonly sensitivity?: Sensitivity[];
 
   @Field(() => [ProjectStatus], {
