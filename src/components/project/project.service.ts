@@ -178,9 +178,10 @@ export class ProjectService {
 
       const project = await this.readOneUnsecured(id, session);
 
-      await this.eventBus.publish(new ProjectCreatedEvent(project, session));
+      const event = new ProjectCreatedEvent(project, session);
+      await this.eventBus.publish(event);
 
-      return project;
+      return event.project;
     } catch (e) {
       if (e instanceof UniquenessError && e.label === 'ProjectName') {
         throw new DuplicateException(

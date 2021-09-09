@@ -22,7 +22,8 @@ export class AttachProjectRootDirectoryHandler
     private readonly authorizationService: AuthorizationService
   ) {}
 
-  async handle({ project, session }: ProjectCreatedEvent) {
+  async handle(event: ProjectCreatedEvent) {
+    const { project, session } = event;
     const { id } = project;
 
     const rootDir = await this.files.createDirectory(
@@ -46,6 +47,10 @@ export class AttachProjectRootDirectoryHandler
         node('dir'),
       ])
       .run();
+    event.project = {
+      ...event.project,
+      rootDirectory: rootDir.id,
+    };
 
     await this.authorizationService.processNewBaseNode(
       Directory,
