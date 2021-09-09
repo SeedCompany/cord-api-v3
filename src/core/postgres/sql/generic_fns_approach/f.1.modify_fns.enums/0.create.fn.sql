@@ -20,14 +20,18 @@ pToggleGranters => 0,1,2,3
     3 - refresh security tables & materialized views concurrently
 */
 
+
+
+
+
+
 create or replace procedure public.create(pPersonId int, pTableName text, 
 -- get record
 pRecord hstore,
--- pToggleParams hstore, 
-pToggleSecurity int, 
-pToggleMV int, 
-pToggleHistory int,
-pToggleGranters int, 
+pToggleSecurity public.toggle_security, 
+pToggleMV public.toggle_mv, 
+pToggleHistory public.toggle_history,
+pToggleGranters public.toggle_granters, 
 inout record_id int
 )
 -- returns int 

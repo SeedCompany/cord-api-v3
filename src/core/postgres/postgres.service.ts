@@ -3,25 +3,56 @@ import * as fs from 'fs';
 import { Integer } from 'neo4j-driver';
 import * as path from 'path';
 import { Pool } from 'pg';
+import { rootCertificates } from 'tls';
 import { ConfigService } from '..';
 import { ILogger, Logger } from '../logger';
 
+export type toggleSecurity =
+  | 'NoSecurity'
+  | 'UpdateAccessLevelSecurity'
+  | 'UpdateAccessLevelAndIsClearedSecurity';
+export type toggleMV = 'NoRefreshMV' | 'RefreshMV' | 'RefreshMVConcurrently';
+export type toggleHistory = 'NoHistory' | 'History';
+export type toggleGranters =
+  | 'NoRefresh'
+  | 'RefreshSecurityTables'
+  | 'RefreshSecurityTablesAndMV'
+  | 'RefreshSecurityTablesAndMVConcurrently';
 @Injectable()
 export class PostgresService {
   constructor(
     private readonly config: ConfigService,
     @Logger('postgres:service') private readonly logger: ILogger
   ) {}
-  //  pool = new Pool({
-  //   host: 'localhost',
-  //   user: 'postgres',
-  //   password: 'password',
-  //   database: 'postgres',
-  //   port: 5432,
-  // });
+
   pool = new Pool({
     ...this.config.postgres,
   });
+
+  async create(
+    personId: number,
+    tableName: string,
+    hstoreObject: object,
+    toggleSecurity: toggleSecurity,
+    toggleMV: toggleMV,
+    toggleHistory: toggleHistory,
+    toggleGranters: toggleGranters
+  ) {
+    const hstoreString = this.convertObjectToHstore(hstoreObject);
+    const insertedRow = await this.pool.query(
+      `call public.create($1::int,$2::text,$3::hstore,$4::public.toggle_security,$5::public.toggle_mv,$6::public.toggle_history,$7::public.toggle_granters,0)`,
+      [
+        personId,
+        tableName,
+        hstoreString,
+        toggleSecurity,
+        toggleMV,
+        toggleHistory,
+        toggleGranters,
+      ]
+    );
+    return insertedRow.rows[0].record_id;
+  }
 
   async executeSQLFiles(dirPath: string): Promise<number> {
     const files = fs.readdirSync(dirPath);
@@ -32,7 +63,6 @@ export class PostgresService {
         await this.executeSQLFiles(fileOrDirPath);
       } else {
         const sql = fs.readFileSync(fileOrDirPath).toString();
-        console.log(this.pool);
         await this.pool.query(sql);
       }
     }
@@ -93,29 +123,57 @@ export class PostgresService {
     // const anonuser = await this.pool.query(
     //   `call public.create(0,'pb)`
     // )
-    const user0 = await this.pool.query(
-      `call public.create(0,'public.people_data',$1 ,2,2,1,3,0); `,
-      [
-        this.convertObjectToHstore({
-          id: 0,
-          about: 'root',
-          public_first_name: 'root',
-          neo4j_id: 'Kg8TjwvDMiS',
-        }),
-      ]
+    // const user0 = await this.pool.query(
+    //   `call public.create(0,'public.people_data',$1 ,2,2,1,3,0); `,
+    //   [
+    //     this.convertObjectToHstore({
+    //       id: 0,
+    //       about: 'root',
+    //       public_first_name: 'root',
+    //       neo4j_id: 'UWpeqCYHU44',
+    //     }),
+    //   ]
+    // );
+    await this.create(
+      0,
+      'public.people_data',
+      {
+        id: 0,
+        about: 'root',
+        public_first_name: 'root',
+        neo4j_id: 'UWpeqCYHU44',
+      },
+      'UpdateAccessLevelAndIsClearedSecurity',
+      'RefreshMVConcurrently',
+      'History',
+      'RefreshSecurityTablesAndMVConcurrently'
     );
 
-    const user1 = await this.pool.query(
-      `call public.create(0,'public.people_data',$1 ,2,2,1,3,0); `,
-      [
-        this.convertObjectToHstore({
-          about: 'developer',
-          public_first_name: 'general',
-          neo4j_id: 'vWHetruQWVe',
-        }),
-      ]
+    // const user1Id = await this.pool.query(
+    //   `call public.create(0,'public.people_data',$1 ,2,2,1,3,0); `,
+    //   [
+    //     this.convertObjectToHstore({
+    //       about: 'developer',
+    //       public_first_name: 'general',
+    //       neo4j_id: 'vWHetruQWVe',
+    //     }),
+    //   ]
+    // );
+
+    const user1Id = await this.create(
+      0,
+      'public.people_data',
+      {
+        about: 'developer',
+        public_first_name: 'general',
+        neo4j_id: 'vWHetruQWVe',
+      },
+      'UpdateAccessLevelAndIsClearedSecurity',
+      'RefreshMVConcurrently',
+      'History',
+      'RefreshSecurityTablesAndMVConcurrently'
     );
-    const user1pk = user1.rows[0].record_id;
+    console.log('user1Id', user1Id);
 
     await this.pool.query(
       `call public.create(0,'public.organizations_data', $1, 2,2,1,3,0);`,
@@ -154,7 +212,7 @@ export class PostgresService {
       `call public.create(0,'public.users_data', $1, 2,2,1,3,0);`,
       [
         this.convertObjectToHstore({
-          person: user1pk,
+          person: user1Id,
           email: 'vivekvarma_dev@tsco.org',
           owning_org: 0,
           password:
@@ -329,7 +387,7 @@ export class PostgresService {
       [
         this.convertObjectToHstore({
           global_role: 1,
-          person: user1pk,
+          person: user1Id,
         }),
       ]
     );
