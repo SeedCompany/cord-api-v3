@@ -79,6 +79,12 @@ export abstract class ProjectFilters {
     description: 'Filter for projects with two or more engagements.',
   })
   readonly onlyMultipleEngagements?: boolean;
+
+  @Field({
+    nullable: true,
+    description: 'Only projects that are (not) in the "Preset Inventory"',
+  })
+  readonly presetInventory?: boolean;
 }
 
 const defaultFilters = {};
