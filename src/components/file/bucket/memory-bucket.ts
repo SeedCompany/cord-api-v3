@@ -1,4 +1,4 @@
-import { HeadObjectOutput } from 'aws-sdk/clients/s3';
+import { Readable } from 'stream';
 import { NotFoundException } from '../../../common';
 import { FakeAwsFile, LocalBucket } from './local-bucket';
 
@@ -16,21 +16,28 @@ export class MemoryBucket extends LocalBucket {
     this.files.set(key, file);
   }
 
-  async headObject(key: string): Promise<HeadObjectOutput> {
+  async headObject(key: string) {
     const { Body, ...rest } = await this.getObject(key);
     return rest;
   }
 
-  async getObject(key: string): Promise<FakeAwsFile> {
+  async getObject(key: string) {
     const file = this.files.get(key);
     if (!file) {
       throw new NotFoundException();
     }
-    return file;
+    return {
+      ...file,
+      Body: Readable.from(file.Body),
+    };
   }
 
   async copyObject(oldKey: string, newKey: string): Promise<void> {
-    this.files.set(newKey, await this.getObject(oldKey));
+    const file = this.files.get(oldKey);
+    if (!file) {
+      throw new NotFoundException();
+    }
+    this.files.set(newKey, file);
   }
 
   async deleteObject(key: string): Promise<void> {

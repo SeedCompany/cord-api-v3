@@ -4,6 +4,7 @@ import { ValidateNested } from 'class-validator';
 import {
   PaginatedList,
   SecuredList,
+  SensitivitiesFilter,
   Sensitivity,
   SortablePaginationInput,
 } from '../../../common';
@@ -15,6 +16,7 @@ export abstract class LanguageFilters {
     description: 'Only languages with these sensitivities',
     nullable: true,
   })
+  @SensitivitiesFilter()
   readonly sensitivity?: Sensitivity[];
 
   @Field({
@@ -32,6 +34,12 @@ export abstract class LanguageFilters {
     nullable: true,
   })
   readonly isSignLanguage?: boolean;
+
+  @Field({
+    nullable: true,
+    description: 'Only languages that are (not) in the "Preset Inventory"',
+  })
+  readonly presetInventory?: boolean;
 }
 
 const defaultFilters = {};

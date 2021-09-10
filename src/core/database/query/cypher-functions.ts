@@ -87,3 +87,12 @@ export const reduce = (
     `${exp(accumulator)} = ${exp(initial)}`,
     `${variable} IN ${exp(list)} | ${exp(iteratee)}`
   );
+
+/**
+ * @see https://neo4j.com/docs/cypher-manual/current/functions/predicate/#functions-any
+ */
+export const any = (
+  variable: string,
+  list: ExpressionInput,
+  predicate: ExpressionInput
+) => fn('any')(`${variable} IN ${exp(list)} WHERE ${exp(predicate)}`);

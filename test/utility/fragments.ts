@@ -228,6 +228,11 @@ export const language = gql`
       canRead
       canEdit
     }
+    presetInventory {
+      value
+      canRead
+      canEdit
+    }
     locations {
       canRead
       canCreate
@@ -445,6 +450,8 @@ export const project = gql`
     type
     sensitivity
     rootDirectory {
+      canRead
+      canEdit
       value {
         id
         children {
@@ -532,6 +539,11 @@ export const project = gql`
     team {
       canRead
       canCreate
+    }
+    presetInventory {
+      canRead
+      canEdit
+      value
     }
   }
 `;
@@ -668,6 +680,8 @@ export const projectMember = gql`
       canEdit
     }
     user {
+      canRead
+      canEdit
       value {
         id
       }
@@ -867,6 +881,7 @@ export const budget = gql`
     id
     createdAt
     status
+    sensitivity
     universalTemplateFile {
       canRead
       canEdit

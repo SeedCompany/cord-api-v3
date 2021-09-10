@@ -21,13 +21,14 @@ import {
   createNode,
   createRelationships,
   matchChangesetAndChangedProps,
+  matchProjectSensToLimitedScopeMap,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
   paginate,
-  permissionsOfNode,
   requestingUser,
   sorting,
 } from '../../core/database/query';
+import { AuthSensitivityMapping } from '../authorization/authorization.service';
 import { BudgetRecordRepository } from './budget-record.repository';
 import {
   Budget,
@@ -129,13 +130,22 @@ export class BudgetRepository extends DtoRepository(Budget) {
     return result.status;
   }
 
-  async list({ filter, ...input }: BudgetListInput, session: Session) {
+  async list(
+    { filter, ...input }: BudgetListInput,
+    session: Session,
+    limitedScope?: AuthSensitivityMapping
+  ) {
+    const matchProjectId = filter.projectId ? { id: filter.projectId } : {};
+
     const result = await this.db
       .query()
       .match([
-        requestingUser(session),
-        ...permissionsOfNode('Budget'),
-        ...(filter.projectId
+        ...(limitedScope
+          ? [
+              node('project', 'Project', matchProjectId),
+              relation('out', '', 'budget', ACTIVE),
+            ]
+          : filter.projectId
           ? [
               relation('in', '', 'budget', ACTIVE),
               node('project', 'Project', {
@@ -143,7 +153,10 @@ export class BudgetRepository extends DtoRepository(Budget) {
               }),
             ]
           : []),
+        node('node', 'Budget'),
       ])
+      .match(requestingUser(session))
+      .apply(matchProjectSensToLimitedScopeMap(limitedScope))
       .apply(sorting(Budget, input))
       .apply(paginate(input))
       .first();

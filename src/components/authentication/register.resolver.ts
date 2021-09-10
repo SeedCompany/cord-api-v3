@@ -7,11 +7,11 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { Request } from 'express';
-import { AnonSession, Session } from '../../common';
+import { AnonSession, GqlContextType, Session } from '../../common';
+import { DataLoader, Loader } from '../../core';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto';
-import { User, UserService } from '../user';
+import { User } from '../user';
 import { AuthenticationService } from './authentication.service';
 import { RegisterInput, RegisterOutput } from './dto';
 
@@ -20,8 +20,7 @@ export class RegisterResolver {
   constructor(
     private readonly authentication: AuthenticationService,
     @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorization: AuthorizationService,
-    private readonly users: UserService
+    private readonly authorization: AuthorizationService
   ) {}
 
   @Mutation(() => RegisterOutput, {
@@ -30,11 +29,11 @@ export class RegisterResolver {
   async register(
     @Args('input') input: RegisterInput,
     @AnonSession() session: Session,
-    @Context('request') req: Request
+    @Context() context: GqlContextType
   ): Promise<RegisterOutput> {
     const user = await this.authentication.register(input, session);
     await this.authentication.login(input, session);
-    await this.authentication.updateSession(req);
+    await this.authentication.updateSession(context);
     return { user };
   }
 
@@ -43,9 +42,9 @@ export class RegisterResolver {
   })
   async user(
     @Parent() { user }: RegisterOutput,
-    @AnonSession() session: Session
+    @Loader(User) users: DataLoader<User>
   ): Promise<User> {
-    return await this.users.readOne(user, session);
+    return await users.load(user);
   }
 
   @ResolveField(() => [Powers])

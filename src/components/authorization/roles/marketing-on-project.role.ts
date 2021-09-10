@@ -36,8 +36,8 @@ import { DbBaseNodeGrant, DbRole } from '../model';
 const read = true;
 const write = true;
 
-export const Marketing = new DbRole({
-  name: `global:${Role.Marketing}` as const,
+export const MarketingOnProject = new DbRole({
+  name: `project:${Role.Marketing}` as const,
   powers: [
     Powers.CreateDirectory,
     Powers.CreateEducation,
@@ -49,6 +49,7 @@ export const Marketing = new DbRole({
   grants: [
     new DbBaseNodeGrant<DbBudget>({
       __className: 'DbBudget',
+      canList: true,
       properties: [
         { propertyName: 'universalTemplateFile', permission: { read, }, },
         { propertyName: 'records', permission: { read, }, },
@@ -67,6 +68,7 @@ export const Marketing = new DbRole({
     }),
     new DbBaseNodeGrant<DbCeremony>({
       __className: 'DbCeremony',
+      canList: true,
       properties: [
         { propertyName: 'actualDate', permission: { read, }, },
         { propertyName: 'estimatedDate', permission: { read, }, },
@@ -200,8 +202,9 @@ export const Marketing = new DbRole({
         { propertyName: 'name', permission: { read, }, },
         { propertyName: 'sensitivity', permission: { read, }, },
         { propertyName: 'hasExternalFirstScripture', permission: { read, }, },
-        { propertyName: 'locations', permission: { read, sensitivityAccess: Sensitivity.Low }, },
+        { propertyName: 'locations', permission: { read, }, },
         { propertyName: 'tags', permission: { read, }, },
+        { propertyName: 'presetInventory', permission: { read, }, },
       ],
       canDelete: false,
     }),
@@ -290,7 +293,7 @@ export const Marketing = new DbRole({
         { propertyName: 'mouStatus', permission: { read, }, },
         { propertyName: 'types', permission: { read, }, },
         { propertyName: 'organization', permission: { read, }, },
-        { propertyName: 'partner', permission: { read, sensitivityAccess: Sensitivity.Low }, },
+        { propertyName: 'partner', permission: { read, }, },
         { propertyName: 'primary', permission: { read, }, },
       ],
       canDelete: false,
@@ -324,6 +327,7 @@ export const Marketing = new DbRole({
     }),
     new DbBaseNodeGrant<DbProject>({
       __className: 'DbProject',
+      canList: true,
       properties: [
         { propertyName: 'estimatedSubmission', permission: { read, }, },
         { propertyName: 'step', permission: { read, }, },
@@ -336,8 +340,8 @@ export const Marketing = new DbRole({
         { propertyName: 'stepChangedAt', permission: { read, }, },
         { propertyName: 'rootDirectory', permission: { read, write, }, },
         { propertyName: 'member', permission: { read, }, },
-        { propertyName: 'otherLocations', permission: { read, sensitivityAccess: Sensitivity.Low }, },
-        { propertyName: 'primaryLocation', permission: { read, sensitivityAccess: Sensitivity.Low }, },
+        { propertyName: 'otherLocations', permission: { read, }, },
+        { propertyName: 'primaryLocation', permission: { read, }, },
         { propertyName: 'marketingLocation', permission: { read, write, }, },
         { propertyName: 'partnership', permission: { read, }, },
         { propertyName: 'budget', permission: { read, }, },
@@ -348,11 +352,13 @@ export const Marketing = new DbRole({
         { propertyName: 'tags', permission: { read, }, },
         { propertyName: 'financialReportReceivedAt', permission: { read, }, },
         { propertyName: 'posts', permission: { read, write, }, },
+        { propertyName: 'presetInventory', permission: { read, write, }, },
       ],
       canDelete: false,
     }),
     new DbBaseNodeGrant<DbProjectMember>({
       __className: 'DbProjectMember',
+      canList: true,
       properties: [
         { propertyName: 'roles', permission: { read, }, },
         { propertyName: 'user', permission: { read, }, },

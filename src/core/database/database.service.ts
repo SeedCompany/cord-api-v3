@@ -8,7 +8,6 @@ import {
   regexp,
   relation,
 } from 'cypher-query-builder';
-import type { Pattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
 import {
   cloneDeep,
   isEmpty,
@@ -570,22 +569,5 @@ export class DatabaseService {
       .apply(deleteBaseNode('baseNode'))
       .return('*');
     await query.run();
-  }
-
-  assertPatternsIncludeIdentifier(
-    patterns: Pattern[][],
-    ...identifiers: string[]
-  ) {
-    if (process.env.NODE_ENV === 'production') {
-      return;
-    }
-    for (const identifier of identifiers) {
-      assert(
-        patterns.some((nodes) =>
-          nodes.some((node) => node.getNameString() === identifier)
-        ),
-        `Patterns must define identifier: "${identifier}"`
-      );
-    }
   }
 }

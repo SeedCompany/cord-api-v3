@@ -3,7 +3,6 @@ import { AuthorizationModule } from '../authorization/authorization.module';
 import { BudgetModule } from '../budget/budget.module';
 import { EngagementModule } from '../engagement/engagement.module';
 import { FieldRegionModule } from '../field-region/field-region.module';
-import { FileModule } from '../file/file.module';
 import { LocationModule } from '../location/location.module';
 import { OrganizationModule } from '../organization/organization.module';
 import { PartnerModule } from '../partner/partner.module';
@@ -12,6 +11,7 @@ import { ProjectChangeRequestModule } from '../project-change-request/project-ch
 import { UserModule } from '../user/user.module';
 import { ProjectEngagementConnectionResolver } from './engagement-connection.resolver';
 import * as handlers from './handlers';
+import * as migrations from './migrations';
 import { ProjectMemberModule } from './project-member/project-member.module';
 import { ProjectStepResolver } from './project-step.resolver';
 import { ProjectRepository } from './project.repository';
@@ -28,7 +28,6 @@ import { ProjectService } from './project.service';
     forwardRef(() => ProjectChangeRequestModule),
     forwardRef(() => UserModule),
     forwardRef(() => LocationModule),
-    FileModule,
     forwardRef(() => EngagementModule),
     forwardRef(() => AuthorizationModule),
     PartnerModule,
@@ -42,6 +41,7 @@ import { ProjectService } from './project.service';
     ProjectRules,
     ProjectRepository,
     ...Object.values(handlers),
+    ...Object.values(migrations),
   ],
   exports: [ProjectService, ProjectMemberModule, ProjectRules],
 })

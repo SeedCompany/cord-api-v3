@@ -18,6 +18,24 @@ import { createRegion } from './create-region';
 import { fragments } from './fragments';
 import { Raw } from './raw.type';
 
+export async function listProjects(app: TestApp) {
+  const result = await app.graphql.mutate(
+    gql`
+      query {
+        projects(input: {}) {
+          items {
+            ...project
+          }
+        }
+      }
+      ${fragments.project}
+    `
+  );
+  const projects = result.projects.items;
+  expect(projects).toBeTruthy();
+  return projects;
+}
+
 export async function readOneProjectOtherLocationsItems(
   app: TestApp,
   id: string
@@ -129,6 +147,7 @@ export async function createProject(
     step: ProjectStep.EarlyConversations,
     tags: ['tag1', 'tag2'],
     fieldRegionId: input.fieldRegionId || (await createRegion(app)).id,
+    presetInventory: true,
     ...input,
   };
 

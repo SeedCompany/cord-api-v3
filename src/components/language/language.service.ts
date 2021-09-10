@@ -188,6 +188,10 @@ export class LanguageService {
       },
       ethnologue,
       canDelete: await this.repo.checkDeletePermission(langId, session),
+      presetInventory: {
+        ...securedProps.presetInventory,
+        canEdit: false, // calculated
+      },
     };
   }
 

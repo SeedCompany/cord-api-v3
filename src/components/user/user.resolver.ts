@@ -16,6 +16,7 @@ import {
   LoggedInSession,
   Session,
 } from '../../common';
+import { DataLoader, Loader } from '../../core';
 import { LocationListInput, SecuredLocationList } from '../location';
 import {
   OrganizationListInput,
@@ -65,8 +66,11 @@ export class UserResolver {
   @Query(() => User, {
     description: 'Look up a user by its ID',
   })
-  async user(@AnonSession() session: Session, @IdArg() id: ID): Promise<User> {
-    return await this.userService.readOne(id, session);
+  async user(
+    @Loader(User) users: DataLoader<User>,
+    @IdArg() id: ID
+  ): Promise<User> {
+    return await users.load(id);
   }
 
   @ResolveField(() => String, { nullable: true })

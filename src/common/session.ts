@@ -1,13 +1,8 @@
-import {
-  ArgumentMetadata,
-  Inject,
-  Injectable,
-  PipeTransform,
-} from '@nestjs/common';
 import { Context } from '@nestjs/graphql';
-import { Request } from 'express';
 import { DateTime } from 'luxon';
+import { NoSessionException } from '../components/authentication/no-session.exception';
 import { ScopedRole } from '../components/authorization';
+import { GqlContextType } from './context.type';
 import { UnauthenticatedException } from './exceptions';
 import { ID } from './id-field';
 
@@ -39,21 +34,15 @@ export const anonymousSession = (session: RawSession): Session => ({
   anonymous: !session.userId,
 });
 
+const sessionFromContext = (context: GqlContextType) => {
+  if (!context.session) {
+    throw new NoSessionException();
+  }
+  return context.session;
+};
+
 export const AnonSession = () =>
-  Context('request', LazySessionPipe, { transform: anonymousSession });
+  Context({ transform: sessionFromContext }, { transform: anonymousSession });
 
 export const LoggedInSession = () =>
-  Context('request', LazySessionPipe, { transform: loggedInSession });
-
-export const SESSION_PIPE_TOKEN = Symbol('SessionPipe');
-
-@Injectable()
-class LazySessionPipe implements PipeTransform<Request, Promise<RawSession>> {
-  constructor(
-    @Inject(SESSION_PIPE_TOKEN) private readonly pipe: LazySessionPipe
-  ) {}
-
-  transform(request: Request, metadata: ArgumentMetadata): Promise<RawSession> {
-    return this.pipe.transform(request, metadata);
-  }
-}
+  Context({ transform: sessionFromContext }, { transform: loggedInSession });

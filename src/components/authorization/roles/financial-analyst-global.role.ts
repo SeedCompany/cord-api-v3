@@ -55,6 +55,7 @@ export const FinancialAnalyst = new DbRole({
   grants: [
     new DbBaseNodeGrant<DbBudget>({
       __className: 'DbBudget',
+      canList: true,
       properties: [
         { propertyName: 'universalTemplateFile', permission: { read, }, },
         { propertyName: 'records', permission: { read, }, },
@@ -73,6 +74,7 @@ export const FinancialAnalyst = new DbRole({
     }),
     new DbBaseNodeGrant<DbCeremony>({
       __className: 'DbCeremony',
+      canList: true,
       properties: [
         { propertyName: 'actualDate', permission: { read, }, },
         { propertyName: 'estimatedDate', permission: { read, }, },
@@ -207,6 +209,7 @@ export const FinancialAnalyst = new DbRole({
         { propertyName: 'hasExternalFirstScripture', permission: { read, }, },
         { propertyName: 'locations', permission: { read, sensitivityAccess: Sensitivity.Low }, },
         { propertyName: 'tags', permission: { read, }, },
+        { propertyName: 'presetInventory', permission: { read, }, },
       ],
       canDelete: false,
     }),
@@ -283,6 +286,7 @@ export const FinancialAnalyst = new DbRole({
     }),
     new DbBaseNodeGrant<DbPartnership>({
       __className: 'DbPartnership',
+      canList: true,
       properties: [
         { propertyName: 'agreement', permission: { read, }, },
         { propertyName: 'agreementStatus', permission: { read, }, },
@@ -329,6 +333,7 @@ export const FinancialAnalyst = new DbRole({
     }),
     new DbBaseNodeGrant<DbProject>({
       __className: 'DbProject',
+      canList: true,
       properties: [
         { propertyName: 'estimatedSubmission', permission: { read, write, }, },
         { propertyName: 'step', permission: { read, write, }, },
@@ -339,7 +344,7 @@ export const FinancialAnalyst = new DbRole({
         { propertyName: 'mouEnd', permission: { read, write, }, },
         { propertyName: 'initialMouEnd', permission: { read, write, }, },
         { propertyName: 'stepChangedAt', permission: { read, write, }, },
-        { propertyName: 'rootDirectory', permission: { read, write, }, },
+        { propertyName: 'rootDirectory', permission: { read, write, sensitivityAccess: Sensitivity.Medium }, },
         { propertyName: 'member', permission: { read, write, }, },
         { propertyName: 'otherLocations', permission: { read, write, sensitivityAccess: Sensitivity.Medium }, },
         { propertyName: 'primaryLocation', permission: { read, write, sensitivityAccess: Sensitivity.Medium }, },
@@ -355,11 +360,13 @@ export const FinancialAnalyst = new DbRole({
         { propertyName: 'financialReportReceivedAt', permission: { read, }, },
         { propertyName: 'financialReportPeriod', permission: { read, write, }, },
         { propertyName: 'posts', permission: { read, write, }, },
+        { propertyName: 'presetInventory', permission: { read, write, }, },
       ],
       canDelete: false,
     }),
     new DbBaseNodeGrant<DbProjectMember>({
       __className: 'DbProjectMember',
+      canList: true,
       properties: [
         { propertyName: 'roles', permission: { read, }, },
         { propertyName: 'user', permission: { read, }, },

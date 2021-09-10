@@ -107,15 +107,6 @@ export class OrganizationRepository extends DtoRepository(Organization) {
           sub
             .with('projList')
             .raw('UNWIND projList as project')
-            .match([
-              node('project'),
-              relation('out', '', 'member'),
-              node('projectMember'),
-              relation('out', '', 'user'),
-              node('user', 'User', {
-                id: isIdLike(session) ? session : session.userId,
-              }),
-            ])
             .apply(matchProjectSens())
             .with('sensitivity')
             .orderBy(rankSens('sensitivity'), 'ASC')

@@ -1,25 +1,51 @@
-import { inArray, node, Query } from 'cypher-query-builder';
+import {
+  equals,
+  inArray,
+  node,
+  not,
+  Query,
+  relation,
+} from 'cypher-query-builder';
+import { AndConditions } from 'cypher-query-builder/src/clauses/where-utils';
+import { identity } from 'rxjs';
+import { ACTIVE, path } from '../../core/database/query';
 import { propMatch } from '../project';
 import { LanguageFilters } from './dto';
+import { LanguageRepository } from './language.repository';
 
-export const languageListFilter = (filter: LanguageFilters) => (query: Query) =>
-  filter.sensitivity ||
-  filter.leastOfThese ||
-  filter.isSignLanguage ||
-  filter.isDialect
-    ? query
-        .match(filter.sensitivity ? propMatch('sensitivity') : [node('node')])
-        .match(filter.leastOfThese ? propMatch('leastOfThese') : [node('node')])
-        .match(
-          filter.isSignLanguage ? propMatch('isSignLanguage') : [node('node')]
-        )
-        .match(filter.isDialect ? propMatch('isDialect') : [node('node')])
-        .where({
-          ...(filter.sensitivity
-            ? { sensitivity: { value: inArray(filter.sensitivity) } }
-            : {}),
-          ...(filter.leastOfThese ? { leastOfThese: { value: true } } : {}),
-          ...(filter.isSignLanguage ? { isSignLanguage: { value: true } } : {}),
-          ...(filter.isDialect ? { isDialect: { value: true } } : {}),
-        })
-    : query;
+export const languageListFilter =
+  (filter: LanguageFilters, repo: LanguageRepository) => (query: Query) => {
+    const conditions: AndConditions = {};
+
+    if (filter.sensitivity) {
+      query.match(propMatch('sensitivity'));
+      conditions.sensitivity = { value: inArray(filter.sensitivity) };
+    }
+
+    if (filter.leastOfThese != null) {
+      conditions.lot = boolProp('leastOfThese', filter.leastOfThese);
+    }
+    if (filter.isSignLanguage != null) {
+      conditions.sign = boolProp('isSignLanguage', filter.isSignLanguage);
+    }
+    if (filter.isDialect != null) {
+      conditions.dialect = boolProp('isDialect', filter.isDialect);
+    }
+    if (filter.presetInventory != null) {
+      query.apply(repo.isPresetInventory()).with('*');
+      conditions.presetInventory = (filter.presetInventory ? identity : not)(
+        equals('true', true)
+      );
+    }
+
+    if (Object.keys(conditions).length > 0) {
+      query.where(conditions);
+    }
+  };
+
+const boolProp = (prop: string, val: boolean) =>
+  path([
+    node('node'),
+    relation('out', '', prop, ACTIVE),
+    node('', 'Property', { value: val }),
+  ]);
