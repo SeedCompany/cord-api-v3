@@ -256,9 +256,9 @@ export const Marketing = new DbRole({
     new DbBaseNodeGrant<DbOrganization>({
       __className: 'DbOrganization',
       properties: [
-        { propertyName: 'name', permission: { read, }, },
-        { propertyName: 'address', permission: { read, }, },
-        { propertyName: 'locations', permission: { read, }, },
+        { propertyName: 'name', permission: { read, sensitivityAccess: Sensitivity.Low }, },
+        { propertyName: 'address', permission: { }, },
+        { propertyName: 'locations', permission: { read, sensitivityAccess: Sensitivity.Low  }, },
       ],
       canDelete: false,
     }),

@@ -263,7 +263,7 @@ export const ConsultantManagerOnProject = new DbRole({
       __className: 'DbOrganization',
       properties: [
         { propertyName: 'name', permission: { read, }, },
-        { propertyName: 'address', permission: { read, }, },
+        { propertyName: 'address', permission: { }, },
         { propertyName: 'locations', permission: { read, }, },
       ],
       canDelete: false,

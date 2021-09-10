@@ -257,8 +257,8 @@ export const MarketingOnProject = new DbRole({
       __className: 'DbOrganization',
       properties: [
         { propertyName: 'name', permission: { read, }, },
-        { propertyName: 'address', permission: { read, }, },
-        { propertyName: 'locations', permission: { read, }, },
+        { propertyName: 'address', permission: { }, },
+        { propertyName: 'locations', permission: { read, sensitivityAccess: Sensitivity.Low }, },
       ],
       canDelete: false,
     }),
