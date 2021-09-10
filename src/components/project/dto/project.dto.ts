@@ -1,5 +1,6 @@
 import { Type } from '@nestjs/common';
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
+import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
@@ -13,6 +14,7 @@ import {
   parentIdMiddleware,
   Resource,
   Secured,
+  SecuredBoolean,
   SecuredDateNullable,
   SecuredDateTime,
   SecuredProps,
@@ -139,6 +141,19 @@ class Project extends PinnablePostableChangesetAwareResource {
 
   @Field()
   readonly financialReportPeriod: SecuredReportPeriod;
+
+  readonly rootDirectory: Secured<ID | undefined>;
+
+  @Field({
+    description: stripIndent`
+      Whether or not this project and its associated languages (via engagements)
+      are apart of our "Preset Inventory".
+
+      This indicates the project/language(s) will be exposed to major investors to directly fund.
+      It also means the project is committed to having quality, consistent reporting.
+    `,
+  })
+  readonly presetInventory: SecuredBoolean;
 
   // A list of non-global roles the requesting user has available for this object.
   // This is just a cache, to prevent extra db lookups within the same request.

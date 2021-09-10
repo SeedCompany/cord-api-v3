@@ -9,6 +9,7 @@ import {
   many,
   NotFoundException,
   ObjectView,
+  Sensitivity,
   ServerException,
   Session,
   UnauthorizedException,
@@ -33,7 +34,6 @@ import {
   EngagementService,
   SecuredEngagementList,
 } from '../engagement';
-import { FileService, SecuredDirectory } from '../file';
 import {
   LocationListInput,
   LocationService,
@@ -84,7 +84,6 @@ export class ProjectService {
     private readonly budgetService: BudgetService,
     @Inject(forwardRef(() => PartnershipService))
     private readonly partnerships: PartnershipService,
-    private readonly fileService: FileService,
     @Inject(forwardRef(() => EngagementService))
     private readonly engagementService: EngagementService,
     private readonly partnerService: PartnerService,
@@ -179,9 +178,10 @@ export class ProjectService {
 
       const project = await this.readOneUnsecured(id, session);
 
-      await this.eventBus.publish(new ProjectCreatedEvent(project, session));
+      const event = new ProjectCreatedEvent(project, session);
+      await this.eventBus.publish(event);
 
-      return project;
+      return event.project;
     } catch (e) {
       if (e instanceof UniquenessError && e.label === 'ProjectName') {
         throw new DuplicateException(
@@ -251,6 +251,10 @@ export class ProjectService {
           : null,
         canRead: securedProps.primaryLocation.canRead,
         canEdit: securedProps.primaryLocation.canEdit,
+      },
+      tags: {
+        ...securedProps.tags,
+        value: securedProps.tags.canRead ? securedProps.tags.value : [],
       },
       canDelete: await this.repo.checkDeletePermission(
         project.id,
@@ -408,7 +412,10 @@ export class ProjectService {
     input: ProjectListInput,
     session: Session
   ): Promise<ProjectListOutput> {
-    const results = await this.repo.list(input, session);
+    const limited = (await this.authorizationService.canList(IProject, session))
+      ? undefined
+      : await this.authorizationService.getListRoleSensitivityMapping(IProject);
+    const results = await this.repo.list(input, session, limited);
     return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 
@@ -455,7 +462,9 @@ export class ProjectService {
   async listProjectMembers(
     projectId: ID,
     input: ProjectMemberListInput,
-    session: Session
+    session: Session,
+    sensitivity?: Sensitivity,
+    scope?: ScopedRole[]
   ): Promise<SecuredProjectMemberList> {
     const result = await this.projectMembers.list(
       {
@@ -468,15 +477,17 @@ export class ProjectService {
       session
     );
 
-    const permissions = await this.repo.permissionsForListProp(
-      'member',
-      projectId,
-      session
-    );
+    const perms = await this.authorizationService.getPermissions({
+      resource: IProject,
+      sessionOrUserId: session,
+      sensitivity,
+      otherRoles: scope,
+    });
 
     return {
       ...result,
-      ...permissions,
+      canRead: perms.member.canRead,
+      canCreate: perms.member.canEdit,
     };
   }
 
@@ -484,6 +495,8 @@ export class ProjectService {
     projectId: ID,
     input: PartnershipListInput,
     session: Session,
+    sensitivity: Sensitivity,
+    scope: ScopedRole[],
     changeset?: ID
   ): Promise<SecuredPartnershipList> {
     const result = await this.partnerships.list(
@@ -498,15 +511,16 @@ export class ProjectService {
       changeset
     );
 
-    const permissions = await this.repo.permissionsForListProp(
-      'partnership',
-      projectId,
-      session
-    );
-
+    const perms = await this.authorizationService.getPermissions({
+      resource: IProject,
+      sessionOrUserId: session,
+      sensitivity,
+      otherRoles: scope,
+    });
     return {
       ...result,
-      ...permissions,
+      canRead: perms.partnership.canRead,
+      canCreate: perms.partnership.canEdit,
     };
   }
 
@@ -639,33 +653,6 @@ export class ProjectService {
     const result = await this.repo.getMembershipRoles(projectId, session);
 
     return result?.memberRoles.flat().map(rolesForScope('project')) ?? [];
-  }
-
-  async getRootDirectory(
-    projectId: ID,
-    session: Session
-  ): Promise<SecuredDirectory> {
-    const rootRef = await this.repo.getRootDirectory(projectId, session);
-
-    if (!rootRef) {
-      return {
-        canEdit: false,
-        canRead: false,
-        value: undefined,
-      };
-    }
-
-    if (!rootRef?.id) {
-      throw new NotFoundException(
-        'Could not find root directory associated to this project'
-      );
-    }
-
-    return {
-      canEdit: false,
-      canRead: true,
-      value: await this.fileService.getDirectory(rootRef.id, session),
-    };
   }
 
   protected async validateOtherResourceId(

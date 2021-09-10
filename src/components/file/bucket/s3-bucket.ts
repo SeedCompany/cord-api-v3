@@ -1,12 +1,7 @@
-import {
-  GetObjectCommand,
-  GetObjectOutput,
-  HeadObjectOutput,
-  PutObjectCommand,
-  S3,
-} from '@aws-sdk/client-s3';
+import { GetObjectCommand, PutObjectCommand, S3 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { SdkError } from '@aws-sdk/types';
+import { Readable } from 'stream';
 import { NotFoundException } from '../../../common';
 import { BucketOptions, FileBucket } from './file-bucket';
 
@@ -44,16 +39,20 @@ export class S3Bucket extends FileBucket {
     });
   }
 
-  async getObject(key: string): Promise<GetObjectOutput> {
-    return await this.s3
+  async getObject(key: string) {
+    const file = await this.s3
       .getObject({
         Bucket: this.bucket,
         Key: key,
       })
       .catch(handleNotFound);
+    return {
+      ...file,
+      Body: file.Body as Readable,
+    };
   }
 
-  async headObject(key: string): Promise<HeadObjectOutput> {
+  async headObject(key: string) {
     return await this.s3
       .headObject({
         Bucket: this.bucket,

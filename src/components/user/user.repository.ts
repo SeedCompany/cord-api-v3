@@ -282,6 +282,16 @@ export class UserRepository extends DtoRepository(User) {
     return result.id;
   }
 
+  async readMany(ids: readonly ID[]) {
+    return await this.db
+      .query()
+      .matchNode('node', 'User')
+      .where({ 'node.id': inArray(ids.slice()) })
+      .apply(this.hydrate())
+      .map('dto')
+      .run();
+  }
+
   protected hydrate() {
     return (query: Query) =>
       query

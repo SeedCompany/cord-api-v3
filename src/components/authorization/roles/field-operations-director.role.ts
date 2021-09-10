@@ -68,6 +68,7 @@ export const FieldOperationsDirector = new DbRole({
   grants: [
     new DbBaseNodeGrant<DbBudget>({
       __className: 'DbBudget',
+      canList: true,
       properties: [
         { propertyName: 'universalTemplateFile', permission: { read, write, }, },
         { propertyName: 'records', permission: { read, write, }, },
@@ -86,6 +87,7 @@ export const FieldOperationsDirector = new DbRole({
     }),
     new DbBaseNodeGrant<DbCeremony>({
       __className: 'DbCeremony',
+      canList: true,
       properties: [
         { propertyName: 'actualDate', permission: { read, write, }, },
         { propertyName: 'estimatedDate', permission: { read, write, }, },
@@ -220,6 +222,7 @@ export const FieldOperationsDirector = new DbRole({
         { propertyName: 'hasExternalFirstScripture', permission: { read, }, },
         { propertyName: 'locations', permission: { read, }, },
         { propertyName: 'tags', permission: { read, }, },
+        { propertyName: 'presetInventory', permission: { read, }, },
       ],
       canDelete: false,
     }),
@@ -295,6 +298,7 @@ export const FieldOperationsDirector = new DbRole({
     }),
     new DbBaseNodeGrant<DbPartnership>({
       __className: 'DbPartnership',
+      canList: true,
       properties: [
         { propertyName: 'agreement', permission: { read, write, }, },
         { propertyName: 'agreementStatus', permission: { read, write, }, },
@@ -341,6 +345,7 @@ export const FieldOperationsDirector = new DbRole({
     }),
     new DbBaseNodeGrant<DbProject>({
       __className: 'DbProject',
+      canList: true,
       properties: [
         { propertyName: 'estimatedSubmission', permission: { read, write, }, },
         { propertyName: 'step', permission: { read, write, }, },
@@ -367,11 +372,13 @@ export const FieldOperationsDirector = new DbRole({
         { propertyName: 'financialReportReceivedAt', permission: { read, write, }, },
         { propertyName: 'financialReportPeriod', permission: { read, write, }, },
         { propertyName: 'posts', permission: { read, write, }, },
+        { propertyName: 'presetInventory', permission: { read, write, }, },
       ],
       canDelete: false,
     }),
     new DbBaseNodeGrant<DbProjectMember>({
       __className: 'DbProjectMember',
+      canList: true,
       properties: [
         { propertyName: 'roles', permission: { read, write, }, },
         { propertyName: 'user', permission: { read, write, }, },

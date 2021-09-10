@@ -6,7 +6,6 @@ import { LanguageModule } from '../language/language.module';
 import { LocationModule } from '../location/location.module';
 import { ProductModule } from '../product/product.module';
 import { ProjectModule } from '../project/project.module';
-import { UserModule } from '../user/user.module';
 import { EngagementStatusResolver } from './engagement-status.resolver';
 import { EngagementRepository } from './engagement.repository';
 import { EngagementResolver } from './engagement.resolver';
@@ -22,7 +21,6 @@ import { EngagementProductConnectionResolver } from './product-connection.resolv
   imports: [
     forwardRef(() => AuthorizationModule),
     forwardRef(() => FileModule),
-    forwardRef(() => UserModule),
     CeremonyModule,
     ProductModule,
     forwardRef(() => LanguageModule),

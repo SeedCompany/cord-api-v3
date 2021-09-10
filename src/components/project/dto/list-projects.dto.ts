@@ -6,6 +6,7 @@ import {
   ID,
   PaginatedList,
   SecuredList,
+  SensitivitiesFilter,
   Sensitivity,
   SortablePaginationInput,
 } from '../../../common';
@@ -26,6 +27,7 @@ export abstract class ProjectFilters {
     description: 'Only projects with these sensitivities',
     nullable: true,
   })
+  @SensitivitiesFilter()
   readonly sensitivity?: Sensitivity[];
 
   @Field(() => [ProjectStatus], {
@@ -53,12 +55,16 @@ export abstract class ProjectFilters {
     nullable: true,
     description: 'Only projects created within this time range',
   })
+  @Type(() => DateTimeFilter)
+  @ValidateNested()
   readonly createdAt?: DateTimeFilter;
 
   @Field({
     nullable: true,
     description: 'Only projects modified within this time range',
   })
+  @Type(() => DateTimeFilter)
+  @ValidateNested()
   readonly modifiedAt?: DateTimeFilter;
 
   // User IDs ANY of which are team members
@@ -75,6 +81,12 @@ export abstract class ProjectFilters {
     description: 'Filter for projects with two or more engagements.',
   })
   readonly onlyMultipleEngagements?: boolean;
+
+  @Field({
+    nullable: true,
+    description: 'Only projects that are (not) in the "Preset Inventory"',
+  })
+  readonly presetInventory?: boolean;
 }
 
 const defaultFilters = {};

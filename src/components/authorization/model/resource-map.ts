@@ -9,6 +9,7 @@ import {
 } from '../../engagement/dto';
 import { FieldRegion } from '../../field-region/dto';
 import { FieldZone } from '../../field-zone/dto';
+import { Directory, File, FileVersion } from '../../file/dto';
 import { Film } from '../../film/dto';
 import { FundingAccount } from '../../funding-account/dto';
 import { EthnologueLanguage, Language } from '../../language/dto';
@@ -47,11 +48,14 @@ export const ResourceMap = {
   BudgetRecord,
   Ceremony,
   Changeset,
+  Directory,
   Education,
   Engagement,
   EthnologueLanguage,
   FieldRegion,
   FieldZone,
+  File,
+  FileVersion,
   Film,
   FundingAccount,
   InternshipEngagement,

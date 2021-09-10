@@ -9,7 +9,8 @@ import {
 } from '@nestjs/graphql';
 import { sumBy } from 'lodash';
 import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
-import { FileService, SecuredFile } from '../file';
+import { DataLoader, Loader } from '../../core';
+import { FileNode, IFileNode, resolveDefinedFile, SecuredFile } from '../file';
 import { BudgetService } from './budget.service';
 import {
   Budget,
@@ -23,10 +24,7 @@ import {
 
 @Resolver(Budget)
 export class BudgetResolver {
-  constructor(
-    private readonly service: BudgetService,
-    private readonly files: FileService
-  ) {}
+  constructor(private readonly service: BudgetService) {}
 
   @Query(() => Budget, {
     description: 'Look up a budget by its ID',
@@ -63,12 +61,9 @@ export class BudgetResolver {
   })
   async universalTemplateFile(
     @Parent() budget: Budget,
-    @AnonSession() session: Session
+    @Loader(IFileNode) files: DataLoader<FileNode>
   ): Promise<SecuredFile> {
-    return await this.files.resolveDefinedFile(
-      budget.universalTemplateFile,
-      session
-    );
+    return await resolveDefinedFile(files, budget.universalTemplateFile);
   }
 
   @Mutation(() => CreateBudgetOutput, {

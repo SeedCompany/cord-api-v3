@@ -1,5 +1,6 @@
+import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
-import { CalendarDate, Sensitivity } from '../../src/common';
+import { CalendarDate, ID, Sensitivity } from '../../src/common';
 import { Powers, Role, ScopedRole } from '../../src/components/authorization';
 import { Budget } from '../../src/components/budget';
 import { PartnerType } from '../../src/components/partner';
@@ -7,16 +8,23 @@ import { Project, ProjectType } from '../../src/components/project';
 import {
   addLocationToOrganization,
   createBudget,
+  createLanguage,
+  createLanguageEngagement,
   createOrganization,
   createPartner,
   createPartnership,
   createProject,
+  createProjectMember,
   createSession,
   createTestApp,
+  listBudgets,
   Raw,
   readBudgetRecords,
   readOneBudget,
+  readOneProjectBudget,
+  registerUser,
   registerUserWithPower,
+  runInIsolatedSession,
   TestApp,
 } from '../utility';
 import { resetDatabase } from '../utility/reset-database';
@@ -42,9 +50,14 @@ describe('Budget Security e2e', () => {
       Powers.CreateProject,
       Powers.CreatePartnership,
       Powers.CreateBudget,
+      Powers.CreateLanguage,
+      Powers.CreateLanguageEngagement,
+      Powers.CreatePartner,
+      Powers.CreateEthnologueLanguage,
     ]);
     testProject = await createProject(app);
-    testBudget = await createBudget(app, { projectId: testProject.id });
+    testBudget = (await readOneProjectBudget(app, testProject.id)).budget
+      .value!;
     const org = await createOrganization(app);
     const partner = await createPartner(app, {
       organizationId: org.id,
@@ -104,6 +117,148 @@ describe('Budget Security e2e', () => {
     });
   });
 
+  describe('Listing is secure', () => {
+    describe.each`
+      role                                      | globalCanList | projectCanList | sensitivityAccess
+      ${Role.Administrator}                     | ${true}       | ${true}        | ${Sensitivity.High}
+      ${Role.Consultant}                        | ${false}      | ${true}        | ${Sensitivity.High}
+      ${Role.ConsultantManager}                 | ${true}       | ${true}        | ${Sensitivity.Medium}
+      ${Role.Controller}                        | ${true}       | ${true}        | ${Sensitivity.High}
+      ${Role.FieldOperationsDirector}           | ${true}       | ${true}        | ${Sensitivity.High}
+      ${Role.FinancialAnalyst}                  | ${true}       | ${true}        | ${Sensitivity.High}
+      ${Role.Fundraising}                       | ${true}       | ${true}        | ${Sensitivity.High}
+      ${Role.Intern}                            | ${true}       | ${true}        | ${Sensitivity.High}
+      ${Role.LeadFinancialAnalyst}              | ${true}       | ${true}        | ${Sensitivity.High}
+      ${Role.Leadership}                        | ${true}       | ${true}        | ${Sensitivity.High}
+      ${Role.Liaison}                           | ${true}       | ${true}        | ${Sensitivity.High}
+      ${Role.Marketing}                         | ${true}       | ${true}        | ${Sensitivity.High}
+      ${Role.Mentor}                            | ${true}       | ${true}        | ${Sensitivity.High}
+      ${Role.ProjectManager}                    | ${true}       | ${true}        | ${Sensitivity.High}
+      ${Role.RegionalCommunicationsCoordinator} | ${false}      | ${false}       | ${Sensitivity.High}
+      ${Role.RegionalDirector}                  | ${true}       | ${true}        | ${Sensitivity.High}
+      ${Role.StaffMember}                       | ${true}       | ${true}        | ${Sensitivity.High}
+      ${Role.Translator}                        | ${true}       | ${true}        | ${Sensitivity.High}
+    `('$role', ({ role, globalCanList, projectCanList, sensitivityAccess }) => {
+      it('Global canList ', async () => {
+        const user = await runInIsolatedSession(app, async () => {
+          return await registerUser(app, {
+            roles: [role],
+          });
+        });
+        const proj = await createProject(app);
+
+        const read = await user.runAs(async () => {
+          return await listBudgets(app);
+        });
+
+        if (!globalCanList) {
+          expect(read).toHaveLength(0);
+        } else {
+          switch (sensitivityAccess) {
+            case Sensitivity.High: {
+              expect(read).not.toHaveLength(0);
+              break;
+            }
+            case Sensitivity.Medium: {
+              expect(read).toHaveLength(0);
+              break;
+            }
+            case Sensitivity.Low: {
+              expect(read).toHaveLength(0);
+            }
+          }
+        }
+
+        // Test if can list when the project is a medium sensitivity project
+        const medlang = await createLanguage(app, {
+          sensitivity: Sensitivity.Medium,
+        });
+        const medLangEng = await createLanguageEngagement(app, {
+          languageId: medlang.id,
+          projectId: proj.id,
+        });
+
+        const readMed = await user.runAs(async () => {
+          return await listBudgets(app);
+        });
+
+        if (!globalCanList) {
+          expect(readMed).toHaveLength(0);
+        } else {
+          switch (sensitivityAccess) {
+            case Sensitivity.High: {
+              expect(readMed).not.toHaveLength(0);
+              break;
+            }
+            case Sensitivity.Medium: {
+              expect(readMed).not.toHaveLength(0);
+              break;
+            }
+            case Sensitivity.Low: {
+              expect(readMed).toHaveLength(0);
+            }
+          }
+        }
+
+        // Test if can list when the project is a medium sensitivity project
+        const lang = await createLanguage(app, {
+          sensitivity: Sensitivity.Low,
+        });
+        const lowLangEng = await createLanguageEngagement(app, {
+          languageId: lang.id,
+          projectId: proj.id,
+        });
+
+        const readLow = await user.runAs(async () => {
+          return await listBudgets(app);
+        });
+
+        if (!globalCanList) {
+          expect(readLow).toHaveLength(0);
+        } else {
+          switch (sensitivityAccess) {
+            case Sensitivity.High: {
+              expect(readLow).not.toHaveLength(0);
+              break;
+            }
+            case Sensitivity.Medium: {
+              expect(readLow).not.toHaveLength(0);
+              break;
+            }
+            case Sensitivity.Low: {
+              expect(readLow).not.toHaveLength(0);
+            }
+          }
+        }
+        //reset after each test so that we only have budgets associated with highly sensitive projects
+        await deleteEngagement(app, medLangEng.id);
+        await deleteEngagement(app, lowLangEng.id);
+      });
+
+      it('Project canList', async () => {
+        const user = await runInIsolatedSession(app, async () => {
+          return await registerUser(app, {
+            roles: [role],
+          });
+        });
+        await createProjectMember(app, {
+          projectId: testProject.id,
+          roles: [role],
+          userId: user.id,
+        });
+        const read = await user.runAs(async () => {
+          return await listBudgets(app);
+        });
+
+        if (!projectCanList) {
+          expect(read).toHaveLength(0);
+        } else {
+          expect(read).not.toHaveLength(0);
+        }
+      });
+    });
+  });
+
   describe('Restricted by Sensitivity', () => {
     describe.each`
       role                      | sensitivityToTest     | projectType
@@ -134,10 +289,11 @@ describe('Budget Security e2e', () => {
 
         it(' reading records', async () => {
           const proj = await createProject(app, { type: projectType });
-          const budget = await createBudget(app, { projectId: proj.id });
+          const budget = await readOneProjectBudget(app, proj.id);
           const org = await createOrganization(app);
           const partner = await createPartner(app, {
             organizationId: org.id,
+            types: [PartnerType.Funding, PartnerType.Managing],
           });
           await createPartnership(app, {
             partnerId: partner.id,
@@ -148,23 +304,37 @@ describe('Budget Security e2e', () => {
             mouEndOverride: CalendarDate.fromISO('2004-01-01'),
           });
           await addLocationToOrganization(app, org.id);
-          await expectSensitiveRelationList({
-            app,
-            role,
-            sensitivityRestriction: sensitivityToTest,
-            projectId: proj.id,
-            projectType: projectType,
-            resource: Budget,
-            propertyToCheck: 'records',
-            readFunction: readBudgetRecords,
-            resourceId: budget.id,
-            perms: await getPermissions({
+          if (budget.budget.value) {
+            await expectSensitiveRelationList({
+              app,
+              role,
+              sensitivityRestriction: sensitivityToTest,
+              projectId: proj.id,
+              projectType: projectType,
               resource: Budget,
-              userRole: `global:${role as Role}` as ScopedRole,
-            }),
-          });
+              propertyToCheck: 'records',
+              readFunction: readBudgetRecords,
+              resourceId: budget.budget.value.id,
+              perms: await getPermissions({
+                resource: Budget,
+                userRole: `global:${role as Role}` as ScopedRole,
+              }),
+            });
+          }
         });
       }
     );
   });
 });
+async function deleteEngagement(app: TestApp, id: ID) {
+  await app.graphql.mutate(
+    gql`
+      mutation deleteEngagement($id: ID!) {
+        deleteEngagement(id: $id)
+      }
+    `,
+    {
+      id: id,
+    }
+  );
+}

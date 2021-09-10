@@ -3,7 +3,6 @@ import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   ID,
-  isIdLike,
   NotFoundException,
   ServerException,
   Session,
@@ -16,15 +15,15 @@ import {
   createRelationships,
   matchProjectScopedRoles,
   matchProjectSens,
+  matchProjectSensToLimitedScopeMap,
   matchProps,
   merge,
   paginate,
   rankSens,
   requestingUser,
   sorting,
-  variable,
 } from '../../core/database/query';
-import { RoleSensitivityMapping } from '../authorization/authorization.service';
+import { AuthSensitivityMapping } from '../authorization/authorization.service';
 import { CreatePartner, Partner, PartnerListInput } from './dto';
 
 @Injectable()
@@ -106,16 +105,6 @@ export class PartnerRepository extends DtoRepository(Partner) {
           sub
             .with('projList')
             .raw('UNWIND projList as project')
-            // TODO: have this match from line 92 so we don't have to match this twice
-            .match([
-              node('project'),
-              relation('out', '', 'member'),
-              node('projectMember'),
-              relation('out', '', 'user'),
-              node('user', 'User', {
-                id: isIdLike(session) ? session : session.userId,
-              }),
-            ])
             .apply(matchProjectSens())
             .with('sensitivity')
             .orderBy(rankSens('sensitivity'), 'ASC')
@@ -182,7 +171,7 @@ export class PartnerRepository extends DtoRepository(Partner) {
   async list(
     { filter, ...input }: PartnerListInput,
     session: Session,
-    limitedScope?: RoleSensitivityMapping
+    limitedScope?: AuthSensitivityMapping
   ) {
     const result = await this.db
       .query()
@@ -207,33 +196,7 @@ export class PartnerRepository extends DtoRepository(Partner) {
       ])
       // match requesting user once (instead of once per row)
       .match(requestingUser(session))
-      .apply((q) =>
-        limitedScope
-          ? q
-              // group by project so this next bit doesn't run multiple times for a single project
-              .with(['project', 'collect(node) as partners', 'requestingUser'])
-              .apply(
-                matchProjectScopedRoles({
-                  session: variable('requestingUser'),
-                })
-              )
-              .subQuery('project', (sub) =>
-                sub
-                  .apply(matchProjectSens())
-                  .return(`${rankSens('sensitivity')} as sens`)
-              )
-              .raw('UNWIND partners as node')
-              .matchNode('node')
-              .raw(
-                `WHERE any(role in scopedRoles WHERE role IN keys($sensMap) and sens <= ${rankSens(
-                  'apoc.map.get($sensMap, role)'
-                )})`,
-                {
-                  sensMap: limitedScope,
-                }
-              )
-          : q
-      )
+      .apply(matchProjectSensToLimitedScopeMap(limitedScope))
       .apply(
         sorting(Partner, input, {
           name: (query) =>

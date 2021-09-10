@@ -73,7 +73,6 @@ export async function expectSensitiveRelationList<
     )
   );
   const canReadProp = await user.runAs(() => readFunction(app, resourceId));
-
   if (perms[propertyToCheck]) {
     expect(canReadProp).not.toHaveLength(0);
   }

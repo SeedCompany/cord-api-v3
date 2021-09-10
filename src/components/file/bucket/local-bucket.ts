@@ -1,4 +1,4 @@
-import { GetObjectOutput } from 'aws-sdk/clients/s3';
+import { GetObjectOutput } from '@aws-sdk/client-s3';
 import { DateTime } from 'luxon';
 import { assert } from 'ts-essentials';
 import { InputException } from '../../../common';

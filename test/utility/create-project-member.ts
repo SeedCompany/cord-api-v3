@@ -13,6 +13,43 @@ import {
 } from '../utility';
 import { getUserFromSession } from './create-session';
 
+export async function listProjectMembers(app: TestApp) {
+  const result = await app.graphql.mutate(
+    gql`
+      query {
+        projectMembers(input: {}) {
+          items {
+            ...projectMember
+          }
+        }
+      }
+      ${fragments.projectMember}
+    `
+  );
+  const projectMembers = result.projectMembers.items;
+  expect(projectMembers).toBeTruthy();
+  return projectMembers;
+}
+
+export async function readOneProjectMember(app: TestApp, id: string) {
+  const result = await app.graphql.query(
+    gql`
+      query ReadProjectMember($id: ID!) {
+        projectMember(id: $id) {
+          ...projectMember
+        }
+      }
+      ${fragments.projectMember}
+    `,
+    { id }
+  );
+
+  const actual: ProjectMember = result.projectMember;
+  expect(actual).toBeTruthy();
+  expect(actual.id).toEqual(id);
+  return actual;
+}
+
 export async function createProjectMember(
   app: TestApp,
   input: Partial<CreateProjectMember> = {}

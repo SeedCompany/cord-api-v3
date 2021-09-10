@@ -5,3 +5,4 @@ export * from './database';
 export * from './events';
 export * from './resources';
 export * from './postgres';
+export * from './data-loader';

@@ -1,3 +1,5 @@
+import { Merge } from 'cypher-query-builder';
+import { PatternCollection } from 'cypher-query-builder/dist/typings/clauses/pattern-clause';
 import { Many, ServerException } from '../../../common';
 import { quoteKey } from '../query-augmentation/interpolate';
 
@@ -40,6 +42,13 @@ export const exp = (exp: ExpressionInput): CypherExpression => {
       },
     }
   );
+};
+
+exp.path = (pattern: Exclude<PatternCollection, any[][]>) => {
+  // Using merge as shortcut to compile path to string.
+  const clause = new Merge(pattern);
+  // Slice off the "MERGE " prefix from built clause.
+  return exp(clause.build().slice(6));
 };
 
 export const isExp = (value: unknown): value is CypherExpression =>

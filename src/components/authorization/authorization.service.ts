@@ -34,7 +34,15 @@ import {
   parseSecuredProperties,
 } from '../../core/database/results';
 import { AuthorizationRepository } from './authorization.repository';
-import { InternalRole, Role, rolesForScope, ScopedRole } from './dto';
+import {
+  AuthScope,
+  GlobalScopedRole,
+  InternalRole,
+  ProjectScopedRole,
+  Role,
+  rolesForScope,
+  ScopedRole,
+} from './dto';
 import { Powers } from './dto/powers';
 import { MissingPowerException } from './missing-power.exception';
 import { Action, DbRole, PermissionsForResource } from './model';
@@ -43,14 +51,22 @@ import * as AllRoles from './roles';
 const getDbRoles = (roles: ScopedRole[]): DbRole[] =>
   Object.values(AllRoles).filter((role) => roles.includes(role.name));
 
-const ProjectScopedDbRoles: Record<ScopedRole, DbRole> = mapFromList(
-  Object.values(AllRoles),
-  (role) => (role.name.startsWith('project') ? [role.name, role] : null)
-);
+const DbRolesForScope = (scope: AuthScope): Record<ScopedRole, DbRole> =>
+  mapFromList(Object.values(AllRoles), (role) =>
+    role.name.startsWith(scope) ? [role.name, role] : null
+  );
 
-export type RoleSensitivityMapping = {
-  [K in ScopedRole]?: Sensitivity;
+export type ProjectRoleSensitivityMapping = {
+  [K in ProjectScopedRole]?: Sensitivity;
 };
+
+export type GlobalRoleSensitivityMapping = {
+  [K in GlobalScopedRole]?: Sensitivity;
+};
+
+export type AuthSensitivityMapping =
+  | ProjectRoleSensitivityMapping
+  | GlobalRoleSensitivityMapping;
 
 export const permissionDefaults = {
   canRead: false,
@@ -181,15 +197,16 @@ export class AuthorizationService {
   }
 
   async getListRoleSensitivityMapping<Resource extends ResourceShape<any>>(
-    resource: Resource
-  ): Promise<RoleSensitivityMapping> {
+    resource: Resource,
+    scope: AuthScope = 'project'
+  ): Promise<AuthSensitivityMapping> {
     // convert resource to a list of resource names to check
     const resources = getParentTypes(resource)
       // if parent defines Props include it in mapping
       .filter(isResourceClass)
       .map((r) => r.name);
 
-    const roleGrantsFiltered = mapValues(ProjectScopedDbRoles, (role) =>
+    const roleGrantsFiltered = mapValues(DbRolesForScope(scope), (role) =>
       role.grants.find((g) => resources.includes(g.__className.substring(2)))
     );
     const map = mapValues(roleGrantsFiltered, (grant) =>

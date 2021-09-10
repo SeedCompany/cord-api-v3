@@ -8,7 +8,6 @@ import {
   ACTIVE,
   matchPropsAndProjectSensAndScopedRoles,
   paginate,
-  permissionsOfNode,
   requestingUser,
   sorting,
 } from '../../../core/database/query';
@@ -98,22 +97,20 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
   }
 
   async list({ filter, ...input }: ProjectMemberListInput, session: Session) {
-    const label = 'ProjectMember';
-
     const result = await this.db
       .query()
       .match([
-        requestingUser(session),
-        ...permissionsOfNode(label),
         ...(filter.projectId
           ? [
-              relation('in', '', 'member'),
               node('project', 'Project', {
                 id: filter.projectId,
               }),
+              relation('out', '', 'member'),
             ]
           : []),
+        node('node', 'ProjectMember'),
       ])
+      .match(requestingUser(session))
       .apply(sorting(ProjectMember, input))
       .apply(paginate(input))
       .first();

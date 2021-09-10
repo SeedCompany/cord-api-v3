@@ -8,7 +8,8 @@ import {
 } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
-import { User, UserService } from '../user';
+import { DataLoader, Loader } from '../../core';
+import { User } from '../user';
 import {
   CreateFileVersionInput,
   File,
@@ -24,20 +25,20 @@ import { FileService } from './file.service';
 
 @Resolver(File)
 export class FileResolver {
-  constructor(
-    protected readonly service: FileService,
-    protected readonly users: UserService
-  ) {}
+  constructor(protected readonly service: FileService) {}
 
   @Query(() => File)
-  async file(@IdArg() id: ID, @AnonSession() session: Session): Promise<File> {
+  async file(
+    @IdArg() id: ID,
+    @LoggedInSession() session: Session
+  ): Promise<File> {
     return await this.service.getFile(id, session);
   }
 
   @Query(() => IFileNode)
   async fileNode(
     @IdArg() id: ID,
-    @AnonSession() session: Session
+    @LoggedInSession() session: Session
   ): Promise<FileNode> {
     return await this.service.getFileNode(id, session);
   }
@@ -47,9 +48,9 @@ export class FileResolver {
   })
   async modifiedBy(
     @Parent() node: File,
-    @AnonSession() session: Session
+    @Loader(User) users: DataLoader<User>
   ): Promise<User> {
-    return await this.users.readOne(node.modifiedById, session);
+    return await users.load(node.modifiedById);
   }
 
   @ResolveField(() => FileListOutput, {
@@ -65,7 +66,7 @@ export class FileResolver {
     })
     input: FileListInput
   ): Promise<FileListOutput> {
-    return this.service.listChildren(node.id, input, session);
+    return this.service.listChildren(node, input, session);
   }
 
   @ResolveField(() => String, {

@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { EmailService } from '@seedcompany/nestjs-email';
-import { Request } from 'express';
 import { sign, verify } from 'jsonwebtoken';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
+  GqlContextType,
   ID,
   InputException,
   ServerException,
@@ -83,12 +83,12 @@ export class AuthenticationService {
     return userId;
   }
 
-  async updateSession(req: Request) {
-    if (!req.session) {
+  async updateSession(context: GqlContextType) {
+    if (!context.session) {
       throw new NoSessionException();
     }
-    const newSession = await this.createSession(req.session.token);
-    req.session = newSession; // replace session given with session pipe
+    const newSession = await this.createSession(context.session.token);
+    context.session = newSession; // replace session given with session pipe
     return newSession;
   }
 
