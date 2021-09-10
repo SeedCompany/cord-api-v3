@@ -1,12 +1,30 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { createLocation } from '.';
+import { ID } from '../../src/common';
 import {
   CreateOrganization,
   Organization,
 } from '../../src/components/organization';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
+
+export async function readOneOrganization(app: TestApp, id: ID) {
+  const result = await app.graphql.query(
+    gql`
+      query readOneOrganization($id: ID!) {
+        organization(id: $id) {
+          ...org
+        }
+      }
+      ${fragments.org}
+    `,
+    { id }
+  );
+  const actual = result.organization;
+  expect(actual).toBeTruthy();
+  return actual;
+}
 
 export async function createOrganization(
   app: TestApp,
