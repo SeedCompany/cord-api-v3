@@ -1,19 +1,24 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { ID, Session } from '../../common';
 import { DtoRepository, matchRequestingUser } from '../../core';
 import {
   ACTIVE,
+  any,
   collect,
   createNode,
   createRelationships,
+  exp,
   matchProps,
+  merge,
   paginate,
   permissionsOfNode,
   requestingUser,
   sorting,
+  variable,
 } from '../../core/database/query';
 import { DbPropsOfDto } from '../../core/database/results';
+import { ProjectStatus } from '../project';
 import { CreateLanguage, Language, LanguageListInput } from './dto';
 import { languageListFilter } from './query.helpers';
 
@@ -63,7 +68,13 @@ export class LanguageRepository extends DtoRepository(Language) {
         relation('out', '', 'ethnologue'),
         node('eth', 'EthnologueLanguage'),
       ])
-      .return('props, eth.id as ethnologueLanguageId')
+      .apply(this.isPresetInventory())
+      .return([
+        merge('props', {
+          presetInventory: 'presetInventory',
+        }).as('props'),
+        'eth.id as ethnologueLanguageId',
+      ])
       .asResult<{
         props: DbPropsOfDto<Language, true>;
         ethnologueLanguageId: ID;
@@ -128,5 +139,38 @@ export class LanguageRepository extends DtoRepository(Language) {
       })
       .return('languageEngagement')
       .first();
+  }
+
+  isPresetInventory() {
+    return (query: Query) =>
+      query.subQuery('node', (sub) =>
+        sub
+          .optionalMatch([
+            node('node'),
+            relation('in', '', 'language', ACTIVE),
+            node('', 'LanguageEngagement'),
+            relation('in', '', 'engagement', ACTIVE),
+            node('project', 'Project'),
+            relation('out', '', 'status', ACTIVE),
+            node('status', 'ProjectStatus'),
+          ])
+          .where({
+            'status.value': inArray(
+              `['${ProjectStatus.InDevelopment}', '${ProjectStatus.Active}']` as any,
+              true
+            ),
+          })
+          .return(
+            any(
+              'project',
+              collect('project'),
+              exp.path([
+                node('project'),
+                relation('out', '', 'presetInventory', ACTIVE),
+                node('', 'Property', { value: variable('true') }),
+              ])
+            ).as('presetInventory')
+          )
+      );
   }
 }

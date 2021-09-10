@@ -152,6 +152,17 @@ export class Language extends Resource {
 
   @Field()
   readonly tags: SecuredTags;
+
+  @Field({
+    description: stripIndent`
+      Whether or not this language is apart of our "Preset Inventory".
+
+      This is true if any engaged, non-closed, projects opt-in to this "Preset Inventory".
+
+      This indicates the language & mention projects will be exposed to major investors.
+    `,
+  })
+  readonly presetInventory: SecuredBoolean;
 }
 
 @ObjectType({
