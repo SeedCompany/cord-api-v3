@@ -345,7 +345,7 @@ export const ControllerOnProject = new DbRole({
         { propertyName: 'mouEnd', permission: { read, write, }, },
         { propertyName: 'initialMouEnd', permission: { read, write, }, },
         { propertyName: 'stepChangedAt', permission: { read, write, }, },
-        { propertyName: 'rootDirectory', permission: { read, write, }, },
+        { propertyName: 'rootDirectory', permission: { read, }, },
         { propertyName: 'member', permission: { read, write, }, },
         { propertyName: 'otherLocations', permission: { read, write, }, },
         { propertyName: 'primaryLocation', permission: { read, write, }, },
