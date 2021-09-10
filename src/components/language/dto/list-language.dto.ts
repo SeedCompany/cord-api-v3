@@ -34,6 +34,12 @@ export abstract class LanguageFilters {
     nullable: true,
   })
   readonly isSignLanguage?: boolean;
+
+  @Field({
+    nullable: true,
+    description: 'Only languages that are (not) in the "Preset Inventory"',
+  })
+  readonly presetInventory?: boolean;
 }
 
 const defaultFilters = {};

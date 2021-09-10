@@ -1,11 +1,20 @@
-import { inArray, node, Query, relation } from 'cypher-query-builder';
+import {
+  equals,
+  inArray,
+  node,
+  not,
+  Query,
+  relation,
+} from 'cypher-query-builder';
 import { AndConditions } from 'cypher-query-builder/src/clauses/where-utils';
+import { identity } from 'rxjs';
 import { ACTIVE, path } from '../../core/database/query';
 import { propMatch } from '../project';
 import { LanguageFilters } from './dto';
+import { LanguageRepository } from './language.repository';
 
 export const languageListFilter =
-  (filter: LanguageFilters) => (query: Query) => {
+  (filter: LanguageFilters, repo: LanguageRepository) => (query: Query) => {
     const conditions: AndConditions = {};
 
     if (filter.sensitivity) {
@@ -21,6 +30,12 @@ export const languageListFilter =
     }
     if (filter.isDialect != null) {
       conditions.dialect = boolProp('isDialect', filter.isDialect);
+    }
+    if (filter.presetInventory != null) {
+      query.apply(repo.isPresetInventory()).with('*');
+      conditions.presetInventory = (filter.presetInventory ? identity : not)(
+        equals('true', true)
+      );
     }
 
     if (Object.keys(conditions).length > 0) {

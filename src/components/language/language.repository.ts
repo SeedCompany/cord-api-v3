@@ -86,7 +86,7 @@ export class LanguageRepository extends DtoRepository(Language) {
     const result = await this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode('Language')])
-      .apply(languageListFilter(input.filter))
+      .apply(languageListFilter(input.filter, this))
       .apply(sorting(Language, input))
       .apply(paginate(input))
       .first();
