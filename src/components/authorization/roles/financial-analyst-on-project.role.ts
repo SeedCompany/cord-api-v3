@@ -210,6 +210,7 @@ export const FinancialAnalystOnProject = new DbRole({
         { propertyName: 'hasExternalFirstScripture', permission: { read, }, },
         { propertyName: 'locations', permission: { read, sensitivityAccess: Sensitivity.Low}, },
         { propertyName: 'tags', permission: { read, }, },
+        { propertyName: 'presetInventory', permission: { read, }, },
       ],
       canDelete: false,
     }),

@@ -209,6 +209,7 @@ export const LeadFinancialAnalystGlobal = new DbRole({
         { propertyName: 'hasExternalFirstScripture', permission: { read, }, },
         { propertyName: 'locations', permission: { read, sensitivityAccess: Sensitivity.Medium }, },
         { propertyName: 'tags', permission: { read, }, },
+        { propertyName: 'presetInventory', permission: { read, }, },
       ],
       canDelete: false,
     }),
