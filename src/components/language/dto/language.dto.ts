@@ -16,6 +16,8 @@ import {
   SecuredString,
   Sensitivity,
   SensitivityField,
+  SetUnsecuredType,
+  UnsecuredDto,
 } from '../../../common';
 import { SetChangeType } from '../../../core/database/changes';
 import { Location } from '../../location/dto';
@@ -60,7 +62,7 @@ export class EthnologueLanguage {
   @SensitivityField({
     description: "Based on the language's sensitivity",
   })
-  readonly sensitivity: Sensitivity;
+  readonly sensitivity: Sensitivity & SetUnsecuredType<never>;
 }
 
 @ObjectType({
@@ -102,6 +104,7 @@ export class Language extends Resource {
 
   @Field(() => EthnologueLanguage)
   readonly ethnologue: EthnologueLanguage &
+    SetUnsecuredType<UnsecuredDto<EthnologueLanguage>> &
     SetChangeType<'ethnologue', UpdateEthnologueLanguage>;
 
   @Field({

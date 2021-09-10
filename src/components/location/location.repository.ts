@@ -164,7 +164,7 @@ export class LocationRepository extends DtoRepository(Location) {
       .query()
       .match([requestingUser(session), ...permissionsOfNode('Location')])
       .apply(sorting(Location, input))
-      .apply(paginate(input))
+      .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }
@@ -222,7 +222,7 @@ export class LocationRepository extends DtoRepository(Location) {
         node(`${label.toLowerCase()}`, label, { id }),
       ])
       .apply(sorting(Location, input))
-      .apply(paginate(input))
+      .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }
@@ -241,7 +241,7 @@ export class LocationRepository extends DtoRepository(Location) {
         node(`${label.toLowerCase()}`, label, { id }),
       ])
       .apply(sorting(Location, input))
-      .apply(paginate(input))
+      .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }

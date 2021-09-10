@@ -199,7 +199,7 @@ export class UserRepository extends DtoRepository(User) {
       .run();
   }
 
-  protected hydrate() {
+  hydrate() {
     return (query: Query) =>
       query
         .optionalMatch([

@@ -12,6 +12,7 @@ import {
   Session,
   simpleSwitch,
   UnauthorizedException,
+  UnsecuredDto,
 } from '../../common';
 import {
   HandleIdLookup,
@@ -162,32 +163,35 @@ export class LanguageService {
     session: Session,
     _view?: ObjectView
   ): Promise<Language> {
-    const result = await this.repo.readOne(langId, session);
-    if (!result) {
-      throw new NotFoundException('Could not find language', 'language.id');
-    }
+    const dto = await this.repo.readOne(langId, session);
+    return await this.secure(dto, session);
+  }
 
+  private async secure(
+    dto: UnsecuredDto<Language>,
+    session: Session
+  ): Promise<Language> {
     const securedProps = await this.authorizationService.secureProperties(
       Language,
-      result.props,
+      dto,
       session
     );
 
-    const ethnologue = await this.ethnologueLanguageService.readOne(
-      result.ethnologueLanguageId,
-      result.props.sensitivity,
+    const ethnologue = await this.ethnologueLanguageService.secure(
+      dto.ethnologue,
+      dto.sensitivity,
       session
     );
 
     return {
-      ...result.props,
+      ...dto,
       ...securedProps,
+      ethnologue,
       tags: {
         ...securedProps.tags,
         value: securedProps.tags.value ?? [],
       },
-      ethnologue,
-      canDelete: await this.repo.checkDeletePermission(langId, session),
+      canDelete: await this.repo.checkDeletePermission(dto.id, session),
       presetInventory: {
         ...securedProps.presetInventory,
         canEdit: false, // calculated
@@ -251,7 +255,7 @@ export class LanguageService {
     session: Session
   ): Promise<LanguageListOutput> {
     const results = await this.repo.list(input, session);
-    return await mapListResults(results, (id) => this.readOne(id, session));
+    return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 
   async listLocations(

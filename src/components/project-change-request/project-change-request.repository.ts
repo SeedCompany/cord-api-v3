@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
 import {
   ID,
   NotFoundException,
@@ -56,17 +56,8 @@ export class ProjectChangeRequestRepository extends DtoRepository(
   async readOne(id: ID, session?: Session) {
     const query = this.db
       .query()
-      .match([
-        node('node', 'ProjectChangeRequest', { id }),
-        relation('in', '', 'changeset', ACTIVE),
-        node('project', 'Project'),
-      ])
-      .apply(matchPropsAndProjectSensAndScopedRoles(session))
-      .return<{ dto: UnsecuredDto<ProjectChangeRequest> }>(
-        merge('props', {
-          canEdit: `props.status = "${Status.Pending}"`,
-        }).as('dto')
-      );
+      .matchNode('node', 'ProjectChangeRequest', { id })
+      .apply(this.hydrate(session));
     const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find project change request');
@@ -75,7 +66,23 @@ export class ProjectChangeRequestRepository extends DtoRepository(
     return result.dto;
   }
 
-  async list(input: ProjectChangeRequestListInput, _session: Session) {
+  protected hydrate(session?: Session) {
+    return (query: Query) =>
+      query
+        .match([
+          node('node'),
+          relation('in', '', 'changeset', ACTIVE),
+          node('project', 'Project'),
+        ])
+        .apply(matchPropsAndProjectSensAndScopedRoles(session))
+        .return<{ dto: UnsecuredDto<ProjectChangeRequest> }>(
+          merge('props', {
+            canEdit: `props.status = "${Status.Pending}"`,
+          }).as('dto')
+        );
+  }
+
+  async list(input: ProjectChangeRequestListInput, session: Session) {
     const result = await this.db
       .query()
       .match([
@@ -92,7 +99,7 @@ export class ProjectChangeRequestRepository extends DtoRepository(
           : []),
       ])
       .apply(sorting(ProjectChangeRequest, input))
-      .apply(paginate(input))
+      .apply(paginate(input, this.hydrate(session)))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }

@@ -81,7 +81,7 @@ export class EducationRepository extends DtoRepository(Education) {
           : []),
       ])
       .apply(sorting(Education, input))
-      .apply(paginate(input))
+      .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }

@@ -15,6 +15,7 @@ import {
   ServerException,
   Session,
   UnauthorizedException,
+  UnsecuredDto,
 } from '../../../common';
 import {
   ConfigService,
@@ -148,32 +149,32 @@ export class ProjectMemberService {
       );
     }
 
-    const result = await this.repo.readOne(id, session);
-    if (!result) {
-      throw new NotFoundException(
-        'Could not find project member',
-        'projectMember.id'
-      );
-    }
+    const dto = await this.repo.readOne(id, session);
+    return await this.secure(dto, session);
+  }
 
+  private async secure(
+    dto: UnsecuredDto<ProjectMember>,
+    session: Session
+  ): Promise<ProjectMember> {
     const securedProps = await this.authorizationService.secureProperties(
       ProjectMember,
-      result.dto,
+      dto,
       session
     );
 
     return {
-      ...result.dto,
+      ...dto,
       ...securedProps,
       user: {
         ...securedProps.user,
-        value: await this.userService.readOne(result.userId, session),
+        value: await this.userService.secure(dto.user, session),
       },
       roles: {
         ...securedProps.roles,
         value: securedProps.roles.value ?? [],
       },
-      canDelete: await this.repo.checkDeletePermission(id, session), // TODO
+      canDelete: await this.repo.checkDeletePermission(dto.id, session), // TODO
     };
   }
 
@@ -251,7 +252,7 @@ export class ProjectMemberService {
     // not doing the whole limitedScope map thing for now.
     if (await this.authorizationService.canList(ProjectMember, session)) {
       const results = await this.repo.list(input, session);
-      return await mapListResults(results, (id) => this.readOne(id, session));
+      return await mapListResults(results, (dto) => this.secure(dto, session));
     } else {
       return SecuredList.Redacted;
     }
