@@ -10,7 +10,14 @@ import {
 import { DateTime } from 'luxon';
 import { GqlContextType, UnauthenticatedException } from '../../common';
 import { anonymousSession } from '../../common/session';
-import { ConfigService, DataLoader, ILogger, Loader, Logger, PostgresService } from '../../core';
+import {
+  ConfigService,
+  DataLoader,
+  ILogger,
+  Loader,
+  Logger,
+  PostgresService,
+} from '../../core';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto';
 import { User } from '../user';
@@ -27,8 +34,8 @@ export class SessionResolver {
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorization: AuthorizationService,
     private readonly config: ConfigService,
-    private readonly sessionPipe: SessionPipe,
-    private readonly pg: PostgresService
+    // private readonly sessionPipe: SessionPipe,
+    private readonly pg: PostgresService,
     private readonly sessionInt: SessionInterceptor,
     @Logger('session:resolver') private readonly logger: ILogger
   ) {}
