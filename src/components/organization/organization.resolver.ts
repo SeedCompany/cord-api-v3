@@ -95,7 +95,7 @@ export class OrganizationResolver {
     })
     input: LocationListInput
   ): Promise<SecuredLocationList> {
-    return await this.orgs.listLocations(organization.id, input, session);
+    return await this.orgs.listLocations(organization, input, session);
   }
 
   @Mutation(() => UpdateOrganizationOutput, {
