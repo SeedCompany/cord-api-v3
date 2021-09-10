@@ -22,6 +22,7 @@ export const org = gql`
   fragment org on Organization {
     createdAt
     id
+    sensitivity
     name {
       value
       canRead
