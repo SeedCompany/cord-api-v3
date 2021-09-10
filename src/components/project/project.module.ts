@@ -11,6 +11,7 @@ import { ProjectChangeRequestModule } from '../project-change-request/project-ch
 import { UserModule } from '../user/user.module';
 import { ProjectEngagementConnectionResolver } from './engagement-connection.resolver';
 import * as handlers from './handlers';
+import * as migrations from './migrations';
 import { ProjectMemberModule } from './project-member/project-member.module';
 import { ProjectStepResolver } from './project-step.resolver';
 import { ProjectRepository } from './project.repository';
@@ -40,6 +41,7 @@ import { ProjectService } from './project.service';
     ProjectRules,
     ProjectRepository,
     ...Object.values(handlers),
+    ...Object.values(migrations),
   ],
   exports: [ProjectService, ProjectMemberModule, ProjectRules],
 })

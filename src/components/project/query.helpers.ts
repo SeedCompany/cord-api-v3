@@ -72,6 +72,14 @@ export const projectListFilter = (filter: ProjectFilters) => (query: Query) => {
     conditions.pinned = filter.pinned ? pinned : not(pinned);
   }
 
+  if (filter.presetInventory != null) {
+    conditions.presetInventory = path([
+      node('node'),
+      relation('out', '', 'presetInventory', ACTIVE),
+      node('', 'Property', { value: filter.presetInventory }),
+    ]);
+  }
+
   if (Object.keys(conditions).length > 0) {
     query.where(conditions);
   }

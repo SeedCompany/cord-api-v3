@@ -228,6 +228,11 @@ export const language = gql`
       canRead
       canEdit
     }
+    presetInventory {
+      value
+      canRead
+      canEdit
+    }
     locations {
       canRead
       canCreate
@@ -534,6 +539,11 @@ export const project = gql`
     team {
       canRead
       canCreate
+    }
+    presetInventory {
+      canRead
+      canEdit
+      value
     }
   }
 `;
