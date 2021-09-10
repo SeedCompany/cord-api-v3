@@ -3,19 +3,23 @@ import { Node, node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { CreateProjectMember, ProjectMember, ProjectMemberListInput } from '.';
 import { ID, NotFoundException, Session, UnsecuredDto } from '../../../common';
-import { DtoRepository, property } from '../../../core';
+import { DatabaseService, DtoRepository, property } from '../../../core';
 import {
   ACTIVE,
-  matchProps,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
   paginate,
   requestingUser,
   sorting,
 } from '../../../core/database/query';
+import { UserRepository } from '../../user/user.repository';
 
 @Injectable()
 export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
+  constructor(private readonly users: UserRepository, db: DatabaseService) {
+    super(db);
+  }
+
   async verifyRelationshipEligibility(projectId: ID, userId: ID) {
     return await this.db
       .query()
@@ -111,11 +115,11 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
           relation('out', '', 'user'),
           node('user', 'User'),
         ])
-        .apply(matchProps({ nodeName: 'user', outputVar: 'userProps' }))
+        .subQuery('user', (sub) =>
+          sub.with('user as node').apply(this.users.hydrate())
+        )
         .return<{ dto: UnsecuredDto<ProjectMember> }>(
-          merge('props', {
-            user: 'userProps',
-          }).as('dto')
+          merge('props', { user: 'dto' }).as('dto')
         );
   }
 
