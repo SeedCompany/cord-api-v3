@@ -31,6 +31,7 @@ create type public.toggle_security as enum(
     'UpdateAccessLevelSecurity',
     'UpdateAccessLevelAndIsClearedSecurity'
 );
+create type public.toggle_sensitivity as enum('UpdateIsCleared', 'DontUpdateIsCleared');
 
 create type public.toggle_mv as enum(
     'NoRefreshMV',

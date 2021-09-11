@@ -1,10 +1,10 @@
-create or replace procedure public.mv_fn(pSecurityTableName text, pToggleMV public.toggle_mv)
+create or replace procedure public.mv_fn(pTableName text, pToggleMV public.toggle_mv)
 language plpgsql
 as $$
 declare    
     materialized_view_name text;  
 begin
-    materialized_view_name := replace(pSecurityTableName, '_data', '_materialized_view');
+    materialized_view_name := replace(pTableName, '_data', '_materialized_view');
     if pToggleMV = 'NoRefreshMV' then 
         return;
     elsif pToggleMV = 'RefreshMV' then 
