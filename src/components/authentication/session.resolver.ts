@@ -35,9 +35,9 @@ export class SessionResolver {
     private readonly authorization: AuthorizationService,
     private readonly config: ConfigService,
     // private readonly sessionPipe: SessionPipe,
-    @Logger('session:resolver') private readonly logger: ILogger,
     private readonly pg: PostgresService,
-    private readonly sessionInt: SessionInterceptor
+    private readonly sessionInt: SessionInterceptor,
+    @Logger('session:resolver') private readonly logger: ILogger
   ) {}
 
   @Query(() => SessionOutput, {

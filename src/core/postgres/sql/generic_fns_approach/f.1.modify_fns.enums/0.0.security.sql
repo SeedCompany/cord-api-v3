@@ -110,7 +110,7 @@ begin
     if pToggleSecurity = 'NoSecurity' then 
         -- early return
         return;
-    else
+    end if;
         -- only insert 
         for rec1 in execute format('select id, sensitivity_clearance from public.people_data') loop
 
@@ -127,7 +127,6 @@ begin
             end if;
         end loop; 
         return;
-    end if;
   
 end; $$;
 
@@ -151,7 +150,7 @@ begin
     if pToggleSecurity = 'NoSecurity' then 
         -- early return
         return;
-    else
+    end if;
         -- only insert 
         -- people_data -> 0,1
         -- locations_data -> 0,1
@@ -191,7 +190,6 @@ begin
                     end if;
                 end loop;     
         end loop; 
-    end if;
     return;
 end; $$;
 

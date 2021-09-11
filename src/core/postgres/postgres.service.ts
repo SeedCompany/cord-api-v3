@@ -18,6 +18,7 @@ export type toggleGranters =
   | 'RefreshSecurityTables'
   | 'RefreshSecurityTablesAndMV'
   | 'RefreshSecurityTablesAndMVConcurrently';
+export type toggleSensitivity = 'DontUpdateIsCleared' | 'UpdateIsCleared';
 @Injectable()
 export class PostgresService {
   constructor(
@@ -29,16 +30,43 @@ export class PostgresService {
     ...this.config.postgres,
   });
 
+  async update(
+    personId: number,
+    rowId: number,
+    tableName: string,
+    updatedValues: object,
+    toggleSensitivity: toggleSensitivity,
+    toggleMV: toggleMV,
+    toggleHistory: toggleHistory,
+    toggleGranters: toggleGranters
+  ) {
+    const hstoreString = this.convertObjectToHstore(updatedValues);
+    const updatedRow = await this.pool.query(
+      `call public.update($1::int, $2::int, $3::text,$4::hstore, $5::public.toggle_sensitivity, $6::public.toggle_mv, $7::public.toggle_history, $8::public.toggle_granters)`,
+      [
+        personId,
+        rowId,
+        tableName,
+        hstoreString,
+        toggleSensitivity,
+        toggleMV,
+        toggleHistory,
+        toggleGranters,
+      ]
+    );
+    console.log(updatedRow);
+    return updatedRow;
+  }
   async create(
     personId: number,
     tableName: string,
-    hstoreObject: object,
+    rowToInsert: object,
     toggleSecurity: toggleSecurity,
     toggleMV: toggleMV,
     toggleHistory: toggleHistory,
     toggleGranters: toggleGranters
   ) {
-    const hstoreString = this.convertObjectToHstore(hstoreObject);
+    const hstoreString = this.convertObjectToHstore(rowToInsert);
     const insertedRow = await this.pool.query(
       `call public.create($1::int,$2::text,$3::hstore,$4::public.toggle_security,$5::public.toggle_mv,$6::public.toggle_history,$7::public.toggle_granters,0)`,
       [
@@ -62,6 +90,7 @@ export class PostgresService {
       if (fs.lstatSync(fileOrDirPath).isDirectory()) {
         await this.executeSQLFiles(fileOrDirPath);
       } else {
+        console.log(fileOrDirPath);
         const sql = fs.readFileSync(fileOrDirPath).toString();
         await this.pool.query(sql);
       }

@@ -203,12 +203,25 @@ export class AuthenticationRepository {
       person: personRow.rows[0]?.id,
     });
     if (tokenRow.rows[0]?.id) {
-      await pool.query(`call public.update(0, $1,'public.tokens', $2, 0,0 )`, [
+      // await pool.query(`call public.update(0, $1,'public.tokens', $2, 0,0 )`, [
+      //   tokenRow.rows[0]?.id,
+      //   this.pg.convertObjectToHstore({
+      //     person: personRow.rows[0]?.id,
+      //   }),
+      // ]);
+
+      await this.pg.update(
+        0,
         tokenRow.rows[0]?.id,
-        this.pg.convertObjectToHstore({
+        'public.tokens',
+        {
           person: personRow.rows[0]?.id,
-        }),
-      ]);
+        },
+        'DontUpdateIsCleared',
+        'NoRefreshMV',
+        'NoHistory',
+        'NoRefresh'
+      );
     } else {
       await pool.query(
         `call public.create(0, 'public.tokens', $1, 0,0,0,0,0 )`,
