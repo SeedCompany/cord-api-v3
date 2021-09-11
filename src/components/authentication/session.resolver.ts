@@ -55,9 +55,9 @@ export class SessionResolver {
     browser?: boolean
   ): Promise<SessionOutput> {
     // creates the schema
-    await this.pg.init(1);
+    await this.pg.init(0);
     // populate the schema with sample data
-    await this.pg.loadTestData(1);
+    await this.pg.loadTestData(0);
     // const preparedStatement1 = `select neo4j_id from public.people_data where id =$1`;
     // const result1 = await this.pg.pool.query(preparedStatement1, [1]);
     // console.log(result1.rows[0].neo4j_id);

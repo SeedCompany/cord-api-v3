@@ -390,17 +390,13 @@ export class AuthenticationRepository {
       )
       .run();
     const pool = this.pg.pool;
-    const personRows = await pool.query(
-      `select email,person from public.users_data where email = $1`,
-      [email]
-    );
-    const person = personRows.rows[0]?.person;
+  
 
     const pgResult = await pool.query(
       `call public.create(0,'public.email_tokens',$1 ,0,0,0,0,0); `,
       [
         this.pg.convertObjectToHstore({
-          person,
+          email,
           token,
         }),
       ]
@@ -420,13 +416,9 @@ export class AuthenticationRepository {
       .asResult<EmailToken>()
       .first();
 
+   
     const pgResult = await this.pg.pool.query(
-      `
-    with u as(
-    select email, person from public.users_data
-    ), t as (select token, person, created_at from public.email_tokens where token = $1 )
-    select u.email, t.token, t.created_at from u inner join t using (person)
-    `,
+      `select email,token, created_at from public.email_tokens where token = $1`,
       [token]
     );
     console.log('findEmailToken', { pg: pgResult.rows[0], neo4j: result });
@@ -462,7 +454,7 @@ export class AuthenticationRepository {
       )
       .first();
     const userRow = await this.pg.pool.query(
-      `select  u.id from public.email_tokens et inner join public.users_data u using (person) where token = $1`,
+      `select  u.id from public.email_tokens et inner join public.users_data u using (email) where token = $1`,
       [token]
     );
     await this.pg.update(
@@ -487,13 +479,10 @@ export class AuthenticationRepository {
       .match([node('emailToken', 'EmailToken', { value: email })])
       .delete('emailToken')
       .run();
-    const idRow = await this.pg.pool.query(
-      `select person from public.users_data u where email = $1`,
-      [email]
-    );
+
     await this.pg.pool.query(
-      `delete from public.email_tokens where person = $1`,
-      [idRow.rows[0].person]
+      `delete from public.email_tokens where email = $1`,
+      [email]
     );
     console.log('removeAllEmailTokensForEmail');
   }
@@ -540,7 +529,7 @@ export class AuthenticationRepository {
     );
     await this.pg.pool.query(
       `delete from public.tokens where person = $1 and token <> $2`,
-      [idRow.rows[0].person, session.token]
+      [idRow.rows[0].id, session.token]
     );
     console.log('deactivateAllOtherSessionsByEmail');
   }
