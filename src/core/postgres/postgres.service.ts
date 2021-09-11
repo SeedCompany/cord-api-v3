@@ -42,8 +42,20 @@ export class PostgresService {
   ) {
     const hstoreString = this.convertObjectToHstore(updatedValues);
     const updatedRow = await this.pool.query(
-      `call public.update($1::int, $2::int, $3::text, $4::public.toggle_sensitivity, $5::public.toggle_mv, $6::public.toggle_history, $7::public.toggle_granters, '()')`
+      `call public.update($1::int, $2::int, $3::text,$4::hstore, $5::public.toggle_sensitivity, $6::public.toggle_mv, $7::public.toggle_history, $8::public.toggle_granters)`,
+      [
+        personId,
+        rowId,
+        tableName,
+        hstoreString,
+        toggleSensitivity,
+        toggleMV,
+        toggleHistory,
+        toggleGranters,
+      ]
     );
+    console.log(updatedRow);
+    return updatedRow;
   }
   async create(
     personId: number,

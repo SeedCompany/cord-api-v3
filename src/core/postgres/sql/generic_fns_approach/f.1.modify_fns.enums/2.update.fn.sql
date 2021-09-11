@@ -7,6 +7,7 @@ pToggleSensitivity public.toggle_sensitivity,
 pToggleMV public.toggle_mv,
 pToggleHistory public.toggle_history,
 pToggleGranters public.toggle_granters
+-- inout pUpdatedRow hstore
 )
 language plpgsql
 as $$ 
@@ -59,6 +60,7 @@ begin
     sqlString := substr(sqlString,1,length(sqlString) - 1) || ' where id = '|| pId || ' returning *';
     execute format(sqlString) into updated_row;
     raise info 'updated_row: %', updated_row;
+    -- pUpdatedRow := hstore(updated_row);
     if new_sensitivity_clearance is not null then  
         call public.people_sensitivity_fn(pId,
         new_sensitivity_clearance, pToggleSensitivity,pToggleMV);
