@@ -6,6 +6,7 @@ import { DatabaseService, matchRequestingUser } from '../../core';
 import { PostgresService } from '../../core/postgres/postgres.service';
 import { ACTIVE } from '../../core/database/query';
 import { LoginInput } from './dto';
+import { id } from 'common-tags';
 
 interface EmailToken {
   email: string;
@@ -112,12 +113,16 @@ export class AuthenticationRepository {
       [userId]
     );
     const pgUserId = pgUserRow.rows[0].id;
-    await pool.query(`call public.update(0,$1, 'public.users_data', $2, 0,0)`, [
+    await this.pg.update(
+      0,
       pgUserId,
-      this.pg.convertObjectToHstore({
-        password: passwordHash,
-      }),
-    ]);
+      'public.users_data',
+      { password: passwordHash },
+      'DontUpdateIsCleared',
+      'NoRefreshMV',
+      'NoHistory',
+      'NoRefresh'
+    );
     console.log('savePasswordHashOnUser', { pg: pgUserId });
   }
 
@@ -203,13 +208,6 @@ export class AuthenticationRepository {
       person: personRow.rows[0]?.id,
     });
     if (tokenRow.rows[0]?.id) {
-      // await pool.query(`call public.update(0, $1,'public.tokens', $2, 0,0 )`, [
-      //   tokenRow.rows[0]?.id,
-      //   this.pg.convertObjectToHstore({
-      //     person: personRow.rows[0]?.id,
-      //   }),
-      // ]);
-
       await this.pg.update(
         0,
         tokenRow.rows[0]?.id,
@@ -342,14 +340,16 @@ export class AuthenticationRepository {
       `select u.id from public.users_data u inner join public.people_data p on p.id = u.person where p.neo4j_id = $1`,
       [session.userId]
     );
-    await this.pg.pool.query(
-      `call public.update(0,$1, 'public.users_data', $2, 0,0)`,
-      [
-        pgUserId.rows[0].id,
-        this.pg.convertObjectToHstore({
-          password: newPasswordHash,
-        }),
-      ]
+
+    await this.pg.update(
+      0,
+      pgUserId.rows[0].id,
+      'public.users_data',
+      { password: newPasswordHash },
+      'DontUpdateIsCleared',
+      'NoRefreshMV',
+      'NoHistory',
+      'NoRefresh'
     );
     console.log('updatePassword', {
       pg: pgUserId.rows[0].id,
@@ -465,15 +465,18 @@ export class AuthenticationRepository {
       `select  u.id from public.email_tokens et inner join public.users_data u using (person) where token = $1`,
       [token]
     );
-    await this.pg.pool.query(
-      `call public.update(0, $1, 'public.users_data', $2, 0,0)`,
-      [
-        userRow.rows[0].id,
-        this.pg.convertObjectToHstore({
-          created_at: DateTime.local(),
-          password: pash,
-        }),
-      ]
+    await this.pg.update(
+      0,
+      userRow.rows[0].id,
+      'public.users_data',
+      {
+        created_at: DateTime.local(),
+        password: pash,
+      },
+      'DontUpdateIsCleared',
+      'NoRefreshMV',
+      'NoHistory',
+      'NoRefresh'
     );
     console.log('updatePasswordViaEmailToken');
   }
