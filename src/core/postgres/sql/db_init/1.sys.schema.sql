@@ -448,12 +448,12 @@ create table if not exists public.organizations_data (
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by int not null default 0,
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
+  modified_by int not null default 0,
 	name varchar(255) unique not null,
 	sensitivity sensitivity default 'High',
 	primary_location int,
 	foreign key (created_by) references public.people_data(id),
-    foreign key (modified_by) references public.people_data(id),
+  foreign key (modified_by) references public.people_data(id),
 	foreign key (primary_location) references locations_data(id)
 );
 

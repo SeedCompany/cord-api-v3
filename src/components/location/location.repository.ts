@@ -67,12 +67,17 @@ export class LocationRepository extends DtoRepository(Location) {
     }
 
     const pool = await this.pg.pool;
+    const chat = await pool.query(
+      `select chat_id from public.locations_data order by chat_id desc limit 1`
+    );
+    const chatId = chat.rows[0].chat_id;
     const pgResult = await pool.query(
       `call public.create(0,'public.locations_data',$1 ,2,1,1,1,0); `,
       [
         this.pg.convertObjectToHstore({
           name: input.name,
           type: input.type,
+          chat_id: chatId + 1,
         }),
       ]
     );

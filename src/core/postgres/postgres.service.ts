@@ -474,7 +474,6 @@ export class PostgresService {
         `call public.create(0,'public.locations_data', $1,2,2,1,3,0)`,
         [
           this.convertObjectToHstore({
-            id: i,
             chat_id: i,
             name: `location${i}`,
             sensitivity: 'Low',
