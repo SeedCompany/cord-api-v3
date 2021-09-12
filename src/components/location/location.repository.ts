@@ -70,11 +70,13 @@ export class LocationRepository extends DtoRepository(Location) {
     const chat = await pool.query(
       `select chat_id from public.locations_data order by chat_id desc limit 1`
     );
+    console.log('result: ', result);
     const chatId = chat.rows[0].chat_id;
     const pgResult = await pool.query(
       `call public.create(0,'public.locations_data',$1 ,2,1,1,1,0); `,
       [
         this.pg.convertObjectToHstore({
+          neo4j_id: result.id,
           name: input.name,
           type: input.type,
           chat_id: chatId + 1,
@@ -194,16 +196,45 @@ export class LocationRepository extends DtoRepository(Location) {
   }
 
   async addLocationToNode(label: string, id: ID, rel: string, locationId: ID) {
+    const pool = await this.pg.pool;
     let firstTable = 'public.people_data';
+    let locationPgId;
+    let newId;
+    
+    if (typeof(locationId === 'string')) locationPgId = await pool.query(
+      `SELECT id from public.locations_data WHERE neo4j_id = $1`,
+      [locationId]
+    );
+    
+    const location = typeof(locationId) === 'string' ? locationPgId?.rows[0].id : locationId;
+
     switch (firstTable) {
       case 'User':
         firstTable = 'public.people_data';
+        let userPgId;
+        if (typeof(id) === 'string') userPgId = await pool.query(
+          `SELECT id from public.people_data WHERE neo4j_id`,
+          [id]
+        )
+        newId = typeof(id) === 'string' ? userPgId?.rows[0].id : id;
         break;
       case 'Organization':
         firstTable = 'public.organizations_data';
+        let organizationPgId;
+        if (typeof(id) === 'string') organizationPgId = await pool.query(
+          `SELECT id from public.organizations_data WHERE neo4j_id = $1`,
+          [id]
+        )
+        newId = typeof(id) === 'string' ? organizationPgId?.rows[0].id : id;
         break;
       case 'Project':
         firstTable = 'public.projects_data';
+        let projectPgId;
+        if (typeof(id) === 'string') projectPgId = await pool.query(
+          `SELECT id from public.projects_data WHERE neo4j_id = $1`,
+          [id]
+        );
+        newId = (typeof(id) === 'string') ? projectPgId?.rows[0].id : id;
         break;
       case 'Language':
         firstTable = '';
@@ -211,13 +242,13 @@ export class LocationRepository extends DtoRepository(Location) {
       default:
         console.log('Correspondent table not found');
     }
-    const pool = await this.pg.pool;
+    
     const pgResult = pool.query(
       `UPDATE ${firstTable}
        SET primary_location = $1
        WHERE id = $2
       `,
-      [locationId, id]
+      [location, newId]
     );
 
     console.log('pgResult: ', pgResult);

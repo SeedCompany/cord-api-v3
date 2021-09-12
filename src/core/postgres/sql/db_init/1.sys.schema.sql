@@ -260,10 +260,11 @@ END; $$;
 
 create table if not exists public.locations_data (
 	id serial primary key,
+	neo4j_id varchar(32),
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by int not null default 0,
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
+  modified_by int not null default 0,
 	chat_id int not null,
 	name varchar(255) unique not null,
 	sensitivity sensitivity not null default 'High',
@@ -353,8 +354,8 @@ create table if not exists public.posts_data (
 );
 
 create table if not exists sil.table_of_languages (
-    id serial primary key,
-    sil_ethnologue_legacy varchar(32),
+  id serial primary key,
+  sil_ethnologue_legacy varchar(32),
 	iso_639 char(3),
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	code varchar(32),
@@ -413,29 +414,29 @@ END IF; END; $$;
 -- Education
 
 create table if not exists public.education_entries_data (
-    id serial primary key,
+  id serial primary key,
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by int not null,
-    degree varchar(64),
-    institution varchar(64),
-    major varchar(64),
-    modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
-    foreign key (created_by) references public.people_data(id),
-    foreign key (modified_by) references public.people_data(id)
+  degree varchar(64),
+  institution varchar(64),
+  major varchar(64),
+  modified_at timestamp not null default CURRENT_TIMESTAMP,
+  modified_by int not null default 0,
+  foreign key (created_by) references public.people_data(id),
+  foreign key (modified_by) references public.people_data(id)
 );
 
 create table if not exists public.education_by_person_data (
-    id serial primary key,
+  id serial primary key,
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by int not null default 0,
-    education int not null,
-    graduation_year int,
-    modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
-    person int not null,
-    foreign key (created_by) references public.people_data(id),
-    foreign key (modified_by) references public.people_data(id),
+  education int not null,
+  graduation_year int,
+  modified_at timestamp not null default CURRENT_TIMESTAMP,
+  modified_by int not null default 0,
+  person int not null,
+  foreign key (created_by) references public.people_data(id),
+  foreign key (modified_by) references public.people_data(id),
 	foreign key (person) references public.people_data(id),
 	foreign key (education) references public.education_entries_data(id)
 );
@@ -521,38 +522,38 @@ create table if not exists public.organization_memberships(
 );
 
 create table if not exists public.people_to_org_relationships_data (
-    id serial primary key,
+  id serial primary key,
 	org int,
 	person int,
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by int not null default 0,
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
+  modified_by int not null default 0,
 	foreign key (created_by) references public.people_data(id),
-    foreign key (modified_by) references public.people_data(id),
+  foreign key (modified_by) references public.people_data(id),
 	foreign key (org) references organizations_data(id),
 	foreign key (person) references people_data(id)
 );
 
 create table if not exists public.people_to_org_relationship_type (
-    id serial primary key,
+  id serial primary key,
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by int not null default 0,
-    begin_at timestamp not null,
+  begin_at timestamp not null,
 	end_at timestamp,
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
-    people_to_org int,
+  modified_by int not null default 0,
+  people_to_org int,
 	relationship_type person_to_org_relationship_type,
 	foreign key (created_by) references public.people_data(id),
-    foreign key (modified_by) references public.people_data(id),
+  foreign key (modified_by) references public.people_data(id),
 	foreign key (people_to_org) references people_to_org_relationships_data(id)
 );
 
 -- USERS ---------------------------------------------------------------------
 
 create table if not exists public.users_data(
-    id serial primary key,
+  id serial primary key,
 	person int not null,
 	owning_org int not null,
 	email varchar(255) unique not null,
@@ -560,9 +561,9 @@ create table if not exists public.users_data(
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by int not null default 0,
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
+  modified_by int not null default 0,
 	foreign key (created_by) references public.people_data(id),
-    foreign key (modified_by) references public.people_data(id),
+  foreign key (modified_by) references public.people_data(id),
 	foreign key (person) references public.people_data(id),
 	foreign key (owning_org) references public.organizations_data(id)
 );
@@ -571,10 +572,11 @@ create table if not exists public.users_data(
 
 create table if not exists public.projects_data (
 	id serial primary key,
+	neo4j_id varchar(32),
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by int not null default 0,
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
+  modified_by int not null default 0,
 	name varchar(32) not null,
 	primary_org int,
 	primary_location int,
@@ -582,24 +584,24 @@ create table if not exists public.projects_data (
 	chat_id int not null,
 	unique (primary_org, name),
 	foreign key (created_by) references public.people_data(id),
-    foreign key (modified_by) references public.people_data(id),
+  foreign key (modified_by) references public.people_data(id),
 	foreign key (primary_org) references organizations_data(id),
 	foreign key (primary_location) references locations_data(id)
 	-- foreign key (chat_id) references public.chats_data(id)
 );
 
 create table if not exists public.project_memberships (
-    id serial primary key,
-    created_at timestamp not null default CURRENT_TIMESTAMP,
-    created_by int not null default 0,
-    modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
-    person int not null,
-    project int not null,
-    foreign key (created_by) references public.people_data(id),
-    foreign key (modified_by) references public.people_data(id),
-    foreign key (project) references projects_data(id),
-    foreign key (person) references people_data(id)
+  id serial primary key,
+  created_at timestamp not null default CURRENT_TIMESTAMP,
+  created_by int not null default 0,
+  modified_at timestamp not null default CURRENT_TIMESTAMP,
+  modified_by int not null default 0,
+  person int not null,
+  project int not null,
+  foreign key (created_by) references public.people_data(id),
+  foreign key (modified_by) references public.people_data(id),
+  foreign key (project) references projects_data(id),
+  foreign key (person) references people_data(id)
 );
 
 create table if not exists public.project_roles_data (
@@ -607,43 +609,43 @@ create table if not exists public.project_roles_data (
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by int not null default 0,
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
+  modified_by int not null default 0,
 	name varchar(255) not null,
 	org int,
 	unique (org, name),
 	foreign key (created_by) references public.people_data(id),
-    foreign key (modified_by) references public.people_data(id),
+  foreign key (modified_by) references public.people_data(id),
 	foreign key (org) references public.organizations_data(id)
 );
 
 create table if not exists public.project_role_column_grants (
-    id serial primary key,
+  id serial primary key,
 	access_level access_level not null,
 	column_name varchar(32) not null,
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by int not null default 0,
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
+  modified_by int not null default 0,
 	project_role int not null,
 	table_name table_name not null,
 	unique (project_role, table_name, column_name, access_level),
 	foreign key (created_by) references public.people_data(id),
-    foreign key (modified_by) references public.people_data(id),
+  foreign key (modified_by) references public.people_data(id),
 	foreign key (project_role) references project_roles_data(id)
 );
 
 create table if not exists public.project_member_roles_data (
-    id serial primary key,
+  id serial primary key,
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by int not null default 0,
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
-    person int not null,
-    project int not null,
+  modified_by int not null default 0,
+  person int not null,
+  project int not null,
 	project_role int,
 	unique (project, person),
 	foreign key (created_by) references public.people_data(id),
-    foreign key (modified_by) references public.people_data(id),
+  foreign key (modified_by) references public.people_data(id),
 	foreign key (person) references people_data(id),
 	foreign key (project) references projects_data(id),
 	foreign key (project_role) references project_roles_data(id)

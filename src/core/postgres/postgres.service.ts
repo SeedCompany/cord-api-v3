@@ -288,7 +288,7 @@ export class PostgresService {
       [
         this.convertObjectToHstore({
           id: 1,
-          name: 'ProjectManager',
+        name: 'ProjectManager',
           org: 0,
         }),
       ]
@@ -475,6 +475,7 @@ export class PostgresService {
         [
           this.convertObjectToHstore({
             chat_id: i,
+            neo4j_id: "VU2BTYP66BH",
             name: `location${i}`,
             sensitivity: 'Low',
             type: 'Country',
