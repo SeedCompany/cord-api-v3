@@ -41,7 +41,6 @@ export class GraphQLConfig implements GqlOptionsFactory {
       autoSchemaFile: 'schema.graphql',
       context: this.context,
       cors: this.config.cors,
-      tracing: true,
       playground: {
         settings: {
           'request.credentials': 'same-origin',

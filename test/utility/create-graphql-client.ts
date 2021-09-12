@@ -2,7 +2,6 @@ import { INestApplicationContext } from '@nestjs/common';
 import { GqlModuleOptions, GraphQLModule } from '@nestjs/graphql';
 import { GRAPHQL_MODULE_OPTIONS } from '@nestjs/graphql/dist/graphql.constants';
 import { ApolloServerBase } from 'apollo-server-core';
-import { createTestClient } from 'apollo-server-testing';
 import { GraphQLResponse } from 'apollo-server-types';
 import { DocumentNode, GraphQLFormattedError } from 'graphql';
 import { GqlContextType } from '../../src/common';
@@ -27,7 +26,6 @@ export const createGraphqlClient = async (
   const options: GqlModuleOptions & { context: GqlContextType } = app.get(
     GRAPHQL_MODULE_OPTIONS
   );
-  const client = createTestClient(server);
 
   const resetRequest = () => {
     // Session data changes between requests
@@ -47,7 +45,7 @@ export const createGraphqlClient = async (
     query: async (q, variables) => {
       return await tracing.capture('query', async () => {
         try {
-          const result = await client.query({
+          const result = await server.executeOperation({
             query: q,
             variables: toPlain(variables),
           });
@@ -63,8 +61,8 @@ export const createGraphqlClient = async (
     mutate: async (mutation, variables) => {
       return await tracing.capture('mutation', async () => {
         try {
-          const result = await client.mutate({
-            mutation,
+          const result = await server.executeOperation({
+            query: mutation,
             variables: toPlain(variables),
           });
           validateResult(result);

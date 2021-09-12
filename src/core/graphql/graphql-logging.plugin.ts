@@ -1,12 +1,12 @@
 import { Plugin } from '@nestjs/graphql';
-import { GraphQLRequestContext } from 'apollo-server-core';
+import { GraphQLRequestContext as RequestContext } from 'apollo-server-core';
 import {
-  ApolloServerPlugin,
-  GraphQLRequestListener,
+  ApolloServerPlugin as ApolloPlugin,
+  GraphQLRequestListener as RequestListener,
 } from 'apollo-server-plugin-base';
-import { TracingFormat } from 'apollo-tracing';
 import { GraphQLError } from 'graphql';
 import { Neo4jError } from 'neo4j-driver';
+import { GqlContextType as ContextType } from '../../common';
 import { maskSecrets } from '../../common/mask-secrets';
 import { ILogger, Logger } from '../logger';
 
@@ -15,17 +15,17 @@ import { ILogger, Logger } from '../logger';
  * Note: Lots of assumptions here.
  */
 @Plugin()
-export class GraphqlLoggingPlugin implements ApolloServerPlugin {
+export class GraphqlLoggingPlugin implements ApolloPlugin<ContextType> {
   constructor(
     @Logger('graphql') private readonly logger: ILogger,
     @Logger('graphql:performance') private readonly perfLogger: ILogger
   ) {}
 
-  requestDidStart(
-    _context: GraphQLRequestContext
-  ): GraphQLRequestListener | void {
+  async requestDidStart(
+    _context: RequestContext<ContextType>
+  ): Promise<RequestListener<ContextType>> {
     return {
-      executionDidStart: ({ operationName, operation, request }) => {
+      executionDidStart: async ({ operationName, operation, request }) => {
         if (operationName === 'IntrospectionQuery') {
           return;
         }
@@ -34,18 +34,18 @@ export class GraphqlLoggingPlugin implements ApolloServerPlugin {
           ...maskSecrets(request.variables ?? {}),
         });
       },
-      didEncounterErrors: ({ errors }) => {
+      didEncounterErrors: async ({ errors }) => {
         for (const error of errors) {
           this.onError(error);
         }
       },
-      willSendResponse: ({ operationName, request, response }) => {
+      willSendResponse: async ({ operationName, request, response }) => {
         if (response.errors || operationName === 'IntrospectionQuery') {
           return;
         }
 
-        // because { tracing: true } in config
-        const tracing: TracingFormat | undefined = response.extensions?.tracing;
+        // No longer available with apollo server v3
+        const tracing: any | undefined = response.extensions?.tracing;
         if (!tracing) {
           return;
         }
