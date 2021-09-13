@@ -17,7 +17,13 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
+import {
+  DatabaseService,
+  ILogger,
+  Logger,
+  matchSession,
+  OnIndex,
+} from '../../core';
 import {
   ACTIVE,
   createNode,
@@ -45,6 +51,11 @@ export class FileRepository {
     private readonly db: DatabaseService,
     @Logger('file:repository') private readonly logger: ILogger
   ) {}
+
+  @OnIndex()
+  async createIndexes() {
+    return ['CREATE CONSTRAINT ON (n:FileNode) ASSERT n.id IS UNIQUE'];
+  }
 
   async getById(id: ID, _session: Session): Promise<FileNode> {
     const result = await this.db
