@@ -876,8 +876,7 @@ export class ProjectRules {
           relation('in', '', 'changeset', ACTIVE),
           node('', 'Changeset', { id: changeset }),
         ])
-        .raw('return step.value as step')
-        .asResult<{ step: ProjectStep }>()
+        .return<{ step: ProjectStep }>('step.value as step')
         .first();
       currentStep = result?.step;
     }
@@ -889,8 +888,7 @@ export class ProjectRules {
           relation('out', '', 'step', ACTIVE),
           node('step', 'Property'),
         ])
-        .raw('return step.value as step')
-        .asResult<{ step: ProjectStep }>()
+        .return<{ step: ProjectStep }>('step.value as step')
         .first();
       currentStep = result?.step;
     }
@@ -910,8 +908,7 @@ export class ProjectRules {
         relation('out', '', 'roles', ACTIVE),
         node('roles', 'Property'),
       ])
-      .raw('return collect(roles.value) as roles')
-      .asResult<{ roles: Role[] }>()
+      .return<{ roles: Role[] }>('collect(roles.value) as roles')
       .first();
 
     return userRolesQuery?.roles ?? [];
@@ -1000,7 +997,10 @@ export class ProjectRules {
     id: ID,
     steps: ProjectStep[]
   ): Promise<ProjectStep> {
-    const prevSteps = await this.getPreviousSteps(id);
+    const prevSteps = [
+      ...(await this.getPreviousSteps(id)),
+      await this.getCurrentStep(id),
+    ];
     const mostRecentMatchedStep = first(intersection(prevSteps, steps));
     if (!mostRecentMatchedStep) {
       throw new ServerException(
