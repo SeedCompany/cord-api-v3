@@ -33,9 +33,6 @@ export class ConfigService implements EmailOptionsFactory {
   /** Is this a jest process? */
   jest = Boolean(this.env.string('JEST_WORKER_ID').optional());
 
-  // Should app be configured for migration?
-  migration = this.env.boolean('MIGRATION').optional(false);
-
   jwtKey = this.env.string('JWT_AUTH_KEY').optional('cord-field');
 
   createEmailOptions(): EmailModuleOptions {
@@ -46,12 +43,11 @@ export class ConfigService implements EmailOptionsFactory {
         .optional('CORD Field <noreply@cordfield.com>'),
       replyTo: this.env.string('EMAIL_REPLY_TO').optional() || undefined, // falsy -> undefined
       send,
-      open:
-        this.jest || this.migration
-          ? false
-          : this.env
-              .boolean('EMAIL_OPEN')
-              .optional(!send && process.env.NODE_ENV === 'development'),
+      open: this.jest
+        ? false
+        : this.env
+            .boolean('EMAIL_OPEN')
+            .optional(!send && process.env.NODE_ENV === 'development'),
       ses: {
         region: this.env.string('SES_REGION').optional(),
       },
