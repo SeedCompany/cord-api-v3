@@ -175,7 +175,8 @@ export class FileRepository {
           node('modifiedBy'),
         ])
         .return<{ dto: File }>(
-          merge('versionProps', 'props', {
+          merge('versionProps', {
+            id: 'props.id',
             type: `"${FileNodeType.File}"`,
             latestVersionId: 'version.id',
             modifiedById: 'modifiedBy.id',
