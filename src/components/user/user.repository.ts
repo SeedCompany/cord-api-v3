@@ -249,34 +249,38 @@ export class UserRepository extends DtoRepository(User) {
         //
       }
     }
-    const pool = await this.pg.pool;
-    const key = await pool.query(
-      `call public.create(0,'public.people_data',$1 ,2,1,1,1,0); `,
-      [
-        this.pg.convertObjectToHstore({
-          neo4j_id: result.id,
-          public_first_name: input.displayFirstName,
-          public_last_name: input.displayLastName,
-          private_first_name: input.realFirstName,
-          private_last_name: input.realLastName,
-          time_zone: input.timezone,
-          about: input.about,
-          phone: input.phone,
-        }),
-      ]
-    );
 
-    console.log(key);
-    await pool.query(
-      `call public.create(0,'public.users_data',$1 ,2,1,1,1,0); `,
-      [
-        this.pg.convertObjectToHstore({
-          person: key.rows[0].record_id,
-          email: input.email,
-          password: 'password',
-          owning_org: 0,
-        }),
-      ]
+    const newPersonId = await this.pg.create(
+      0,
+      'public.people_data',
+      {
+        neo4j_id: result.id,
+        public_first_name: input.displayFirstName,
+        public_last_name: input.displayLastName,
+        private_first_name: input.realFirstName,
+        private_last_name: input.realLastName,
+        time_zone: input.timezone,
+        about: input.about,
+        phone: input.phone,
+      },
+      'NoSecurity',
+      'NoRefreshMV',
+      'NoHistory',
+      'NoRefresh'
+    );
+    await this.pg.create(
+      0,
+      'public.users_data',
+      {
+        person: newPersonId,
+        email: input.email,
+        password: 'password',
+        owning_org: 0,
+      },
+      'NoSecurity',
+      'NoRefreshMV',
+      'NoHistory',
+      'NoRefresh'
     );
 
     return result.id;

@@ -16,11 +16,10 @@ begin
 							'table_name', 'column_name'], ARRAY['0','Write', 
 							pTableName, rec1.column_name]);
 		raise notice '%', pHstore;
-		execute format('call public.create(0,$1,$2,0,0,0,3,0)') 
-	using 'public.global_role_column_grants', pHstore;
+		execute format('call public.create(0,$1,$2,$3,$4,$5,$6,0)') 
+	using 'public.global_role_column_grants', pHstore, 'UpdateAccessLevelAndIsClearedSecurity', 'RefreshMVConcurrently', 'History','RefreshSecurityTablesAndMVConcurrently';
 	end loop;
 	raise notice '%', pHstore;
 	
 end; $$;
 
-call public.add_grants_to_table('public.posts_data');

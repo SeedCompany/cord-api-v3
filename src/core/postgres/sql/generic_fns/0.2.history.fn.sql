@@ -12,8 +12,10 @@ begin
     if pToggleHistory = 'NoHistory' then 
         return;
     else 
+        if right(pTableName,5) != '_data' then 
+            return; 
+        end if; 
         history_table_name := replace(pTableName, '_data', '_history');
-
         sql_string_keys := 'insert into '|| history_table_name || '(';
         sql_string_values := ') values (';
         for rec1 in (select skeys(pRecord), svals(pRecord)) loop 

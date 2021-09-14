@@ -41,17 +41,18 @@ export class AuthenticationRepository {
       )
       .first();
     const pool = this.pg.pool;
-    const pgResult = await pool.query(
-      `call public.create(0,'public.tokens', $1, 0,0,0,0,0)`,
-      [
-        this.pg.convertObjectToHstore({
-          token,
-          // person: id
-        }),
-      ]
+
+    const pgId = await this.pg.create(
+      0,
+      'public.tokens',
+      { token },
+      'NoSecurity',
+      'NoRefreshMV',
+      'NoHistory',
+      'NoRefresh'
     );
     console.log('saveSessionToken', {
-      pg: pgResult.rows[0].record_id,
+      pg: pgId,
       neo4j: result,
     });
     if (!result) {
@@ -221,14 +222,14 @@ export class AuthenticationRepository {
         'NoRefresh'
       );
     } else {
-      await pool.query(
-        `call public.create(0, 'public.tokens', $1, 0,0,0,0,0 )`,
-        [
-          this.pg.convertObjectToHstore({
-            token: session.token,
-            person: personRow.rows[0]?.id,
-          }),
-        ]
+      await this.pg.create(
+        0,
+        'public.tokens',
+        { token: session.token, person: personRow.rows[0]?.id },
+        'NoSecurity',
+        'NoRefreshMV',
+        'NoHistory',
+        'NoRefresh'
       );
     }
     console.log(
@@ -390,18 +391,17 @@ export class AuthenticationRepository {
       )
       .run();
     const pool = this.pg.pool;
-  
 
-    const pgResult = await pool.query(
-      `call public.create(0,'public.email_tokens',$1 ,0,0,0,0,0); `,
-      [
-        this.pg.convertObjectToHstore({
-          email,
-          token,
-        }),
-      ]
+    const pgId = await this.pg.create(
+      0,
+      'public.email_tokens',
+      { email, token },
+      'NoSecurity',
+      'NoRefreshMV',
+      'NoHistory',
+      'NoRefresh'
     );
-    console.log('saveEmailToken', { pg: pgResult.rows[0].record_id });
+    console.log('saveEmailToken', { pg: pgId });
   }
 
   async findEmailToken(token: string) {
@@ -416,7 +416,6 @@ export class AuthenticationRepository {
       .asResult<EmailToken>()
       .first();
 
-   
     const pgResult = await this.pg.pool.query(
       `select email,token, created_at from public.email_tokens where token = $1`,
       [token]
