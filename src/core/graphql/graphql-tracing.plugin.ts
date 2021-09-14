@@ -20,6 +20,7 @@ export class GraphqlTracingPlugin implements ApolloPlugin<ContextType> {
         // Change url to be something meaningful since all gql requests hit a single http endpoint
         // @ts-expect-error xray library types suck
         segment.http.request.url = `/${segment.name}`;
+        segment.addAnnotation(reqContext.operation.operation, true);
 
         return {
           executionDidEnd: (err) => {
