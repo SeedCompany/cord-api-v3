@@ -55,6 +55,10 @@ export class TracingModule implements OnModuleInit, NestModule {
       runtime_version: process.version,
     });
 
+    if (this.config.xray.daemonAddress) {
+      XRay.setDaemonAddress(this.config.xray.daemonAddress);
+    }
+
     const log =
       (level: LogLevel): XRay.Logger[keyof XRay.Logger] =>
       (msg: string, err: Error | string) => {

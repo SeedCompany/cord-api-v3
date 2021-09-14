@@ -12,6 +12,7 @@ import {
 import * as XRay from 'aws-xray-sdk-core';
 import { Request, Response } from 'express';
 import { GqlContextType } from '../../common';
+import { ConfigService } from '../config/config.service';
 import { Sampler } from './sampler';
 import { TracingService } from './tracing.service';
 
@@ -19,7 +20,8 @@ import { TracingService } from './tracing.service';
 export class XRayMiddleware implements NestMiddleware, NestInterceptor {
   constructor(
     private readonly tracing: TracingService,
-    private readonly sampler: Sampler
+    private readonly sampler: Sampler,
+    private readonly config: ConfigService
   ) {}
 
   /**
@@ -78,7 +80,7 @@ export class XRayMiddleware implements NestMiddleware, NestInterceptor {
 
     // If no explicit address, disable tracing.
     // Otherwise traces will be buffered leading to memory leak
-    if (!process.env.AWS_XRAY_DAEMON_ADDRESS) {
+    if (!this.config.xray.daemonAddress) {
       sampled = false;
     }
 
