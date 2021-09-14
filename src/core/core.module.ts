@@ -19,6 +19,7 @@ import { ExceptionFilter } from './exception.filter';
 import { GraphqlLoggingPlugin } from './graphql-logging.plugin';
 import { GraphQLConfig } from './graphql.config';
 import { ResourceResolver } from './resources';
+import { TracingModule } from './tracing';
 import { ValidationPipe } from './validation.pipe';
 
 @Global()
@@ -30,6 +31,7 @@ import { ValidationPipe } from './validation.pipe';
     EmailModule.forRootAsync({ useExisting: ConfigService }),
     GraphQLModule.forRootAsync({ useClass: GraphQLConfig }),
     EventsModule,
+    TracingModule,
   ],
   providers: [
     AwsS3Factory,
@@ -48,6 +50,7 @@ import { ValidationPipe } from './validation.pipe';
     EmailModule,
     EventsModule,
     ResourceResolver,
+    TracingModule,
   ],
 })
 export class CoreModule {}
