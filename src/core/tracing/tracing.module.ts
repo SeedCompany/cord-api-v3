@@ -4,16 +4,24 @@ import {
   NestModule,
   OnModuleInit,
 } from '@nestjs/common';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import * as XRay from 'aws-xray-sdk-core';
 import { ConfigService } from '../config/config.service';
 import { VersionService } from '../config/version.service';
 import { ILogger, Logger, LoggerModule, LogLevel } from '../logger';
+import { Sampler } from './sampler';
 import { TracingService } from './tracing.service';
+import { XraySampler } from './xray-sampler';
 import { XRayMiddleware } from './xray.middleware';
 
 @Module({
   imports: [LoggerModule],
-  providers: [TracingService, XRayMiddleware],
+  providers: [
+    TracingService,
+    { provide: Sampler, useClass: XraySampler },
+    XRayMiddleware,
+    { provide: APP_INTERCEPTOR, useExisting: XRayMiddleware },
+  ],
   exports: [TracingService],
 })
 export class TracingModule implements OnModuleInit, NestModule {
