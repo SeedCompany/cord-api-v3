@@ -69,17 +69,22 @@ export class XRayMiddleware implements NestMiddleware, NestInterceptor {
     // @ts-expect-error we added it in middleware, so we don't have to parse it again
     const traceData = root.http.traceData;
 
-    const forced =
+    let sampled: string | boolean | undefined =
       traceData.sampled === '1'
         ? true
         : traceData.sampled === '0'
         ? false
         : undefined;
 
-    const sampled =
-      forced != null
-        ? forced
-        : await this.sampler.shouldTrace(context, rootSegment);
+    // If no explicit address, disable tracing.
+    // Otherwise traces will be buffered leading to memory leak
+    if (!process.env.AWS_XRAY_DAEMON_ADDRESS) {
+      sampled = false;
+    }
+
+    if (sampled == null) {
+      sampled = await this.sampler.shouldTrace(context, rootSegment);
+    }
 
     if (typeof sampled === 'string') {
       root.setMatchedSamplingRule(sampled);
