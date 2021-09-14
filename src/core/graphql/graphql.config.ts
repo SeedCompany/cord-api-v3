@@ -11,9 +11,9 @@ import { Request, Response } from 'express';
 import { GraphQLError, GraphQLFormattedError } from 'graphql';
 import { intersection } from 'lodash';
 import { sep } from 'path';
-import { GqlContextType } from '../common';
-import { ConfigService } from './config/config.service';
-import { VersionService } from './config/version.service';
+import { GqlContextType } from '../../common';
+import { ConfigService } from '../config/config.service';
+import { VersionService } from '../config/version.service';
 
 const escapedSep = sep === '/' ? '\\/' : '\\\\';
 const matchSrcPathInTrace = RegExp(

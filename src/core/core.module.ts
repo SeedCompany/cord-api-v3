@@ -5,7 +5,6 @@ import {
   APP_PIPE,
   BaseExceptionFilter,
 } from '@nestjs/core';
-import { GraphQLModule } from '@nestjs/graphql';
 import { EmailModule } from '@seedcompany/nestjs-email';
 import { ConsoleModule } from 'nestjs-console';
 import { AwsS3Factory } from './aws-s3.factory';
@@ -16,8 +15,7 @@ import { DataLoaderInterceptor } from './data-loader';
 import { DatabaseModule } from './database/database.module';
 import { EventsModule } from './events';
 import { ExceptionFilter } from './exception.filter';
-import { GraphqlLoggingPlugin } from './graphql-logging.plugin';
-import { GraphQLConfig } from './graphql.config';
+import { GraphqlModule } from './graphql';
 import { ResourceResolver } from './resources';
 import { TracingModule } from './tracing';
 import { ValidationPipe } from './validation.pipe';
@@ -29,13 +27,12 @@ import { ValidationPipe } from './validation.pipe';
     ConsoleModule,
     DatabaseModule,
     EmailModule.forRootAsync({ useExisting: ConfigService }),
-    GraphQLModule.forRootAsync({ useClass: GraphQLConfig }),
+    GraphqlModule,
     EventsModule,
     TracingModule,
   ],
   providers: [
     AwsS3Factory,
-    GraphqlLoggingPlugin,
     BaseExceptionFilter,
     { provide: APP_FILTER, useClass: ExceptionFilter },
     { provide: APP_PIPE, useClass: ValidationPipe },
