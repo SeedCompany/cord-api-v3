@@ -43,6 +43,10 @@ export class TracingModule implements OnModuleInit, NestModule {
 
     XRay.config([XRay.plugins.ECSPlugin]);
 
+    if (process.env.NODE_ENV !== 'production') {
+      XRay.middleware.disableCentralizedSampling();
+    }
+
     XRay.SegmentUtils.setServiceData({
       name: this.config.hostUrl,
       version: (await this.version.version).toString(),
