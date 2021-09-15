@@ -6,6 +6,7 @@ import { DatabaseService, matchRequestingUser } from '../../core';
 import { PostgresService } from '../../core/postgres/postgres.service';
 import { ACTIVE } from '../../core/database/query';
 import { LoginInput } from './dto';
+import { id } from 'common-tags';
 
 interface EmailToken {
   email: string;
@@ -40,17 +41,18 @@ export class AuthenticationRepository {
       )
       .first();
     const pool = this.pg.pool;
-    const pgResult = await pool.query(
-      `call public.create(0,'public.tokens', $1, 0,0,0,0,0)`,
-      [
-        this.pg.convertObjectToHstore({
-          token,
-          // person: id
-        }),
-      ]
+
+    const pgId = await this.pg.create(
+      0,
+      'public.tokens',
+      { token },
+      'NoSecurity',
+      'NoRefreshMV',
+      'NoHistory',
+      'NoRefresh'
     );
     console.log('saveSessionToken', {
-      pg: pgResult.rows[0].record_id,
+      pg: pgId,
       neo4j: result,
     });
     if (!result) {
@@ -112,12 +114,16 @@ export class AuthenticationRepository {
       [userId]
     );
     const pgUserId = pgUserRow.rows[0].id;
-    await pool.query(`call public.update(0,$1, 'public.users_data', $2, 0,0)`, [
+    await this.pg.update(
+      0,
       pgUserId,
-      this.pg.convertObjectToHstore({
-        password: passwordHash,
-      }),
-    ]);
+      'public.users_data',
+      { password: passwordHash },
+      'DontUpdateIsCleared',
+      'NoRefreshMV',
+      'NoHistory',
+      'NoRefresh'
+    );
     console.log('savePasswordHashOnUser', { pg: pgUserId });
   }
 
@@ -203,13 +209,6 @@ export class AuthenticationRepository {
       person: personRow.rows[0]?.id,
     });
     if (tokenRow.rows[0]?.id) {
-      // await pool.query(`call public.update(0, $1,'public.tokens', $2, 0,0 )`, [
-      //   tokenRow.rows[0]?.id,
-      //   this.pg.convertObjectToHstore({
-      //     person: personRow.rows[0]?.id,
-      //   }),
-      // ]);
-
       await this.pg.update(
         0,
         tokenRow.rows[0]?.id,
@@ -223,14 +222,14 @@ export class AuthenticationRepository {
         'NoRefresh'
       );
     } else {
-      await pool.query(
-        `call public.create(0, 'public.tokens', $1, 0,0,0,0,0 )`,
-        [
-          this.pg.convertObjectToHstore({
-            token: session.token,
-            person: personRow.rows[0]?.id,
-          }),
-        ]
+      await this.pg.create(
+        0,
+        'public.tokens',
+        { token: session.token, person: personRow.rows[0]?.id },
+        'NoSecurity',
+        'NoRefreshMV',
+        'NoHistory',
+        'NoRefresh'
       );
     }
     console.log(
@@ -342,14 +341,16 @@ export class AuthenticationRepository {
       `select u.id from public.users_data u inner join public.people_data p on p.id = u.person where p.neo4j_id = $1`,
       [session.userId]
     );
-    await this.pg.pool.query(
-      `call public.update(0,$1, 'public.users_data', $2, 0,0)`,
-      [
-        pgUserId.rows[0].id,
-        this.pg.convertObjectToHstore({
-          password: newPasswordHash,
-        }),
-      ]
+
+    await this.pg.update(
+      0,
+      pgUserId.rows[0].id,
+      'public.users_data',
+      { password: newPasswordHash },
+      'DontUpdateIsCleared',
+      'NoRefreshMV',
+      'NoHistory',
+      'NoRefresh'
     );
     console.log('updatePassword', {
       pg: pgUserId.rows[0].id,
@@ -390,22 +391,17 @@ export class AuthenticationRepository {
       )
       .run();
     const pool = this.pg.pool;
-    const personRows = await pool.query(
-      `select email,person from public.users_data where email = $1`,
-      [email]
-    );
-    const person = personRows.rows[0]?.person;
 
-    const pgResult = await pool.query(
-      `call public.create(0,'public.email_tokens',$1 ,0,0,0,0,0); `,
-      [
-        this.pg.convertObjectToHstore({
-          person,
-          token,
-        }),
-      ]
+    const pgId = await this.pg.create(
+      0,
+      'public.email_tokens',
+      { email, token },
+      'NoSecurity',
+      'NoRefreshMV',
+      'NoHistory',
+      'NoRefresh'
     );
-    console.log('saveEmailToken', { pg: pgResult.rows[0].record_id });
+    console.log('saveEmailToken', { pg: pgId });
   }
 
   async findEmailToken(token: string) {
@@ -421,12 +417,7 @@ export class AuthenticationRepository {
       .first();
 
     const pgResult = await this.pg.pool.query(
-      `
-    with u as(
-    select email, person from public.users_data
-    ), t as (select token, person, created_at from public.email_tokens where token = $1 )
-    select u.email, t.token, t.created_at from u inner join t using (person)
-    `,
+      `select email,token, created_at from public.email_tokens where token = $1`,
       [token]
     );
     console.log('findEmailToken', { pg: pgResult.rows[0], neo4j: result });
@@ -462,18 +453,21 @@ export class AuthenticationRepository {
       )
       .first();
     const userRow = await this.pg.pool.query(
-      `select  u.id from public.email_tokens et inner join public.users_data u using (person) where token = $1`,
+      `select  u.id from public.email_tokens et inner join public.users_data u using (email) where token = $1`,
       [token]
     );
-    await this.pg.pool.query(
-      `call public.update(0, $1, 'public.users_data', $2, 0,0)`,
-      [
-        userRow.rows[0].id,
-        this.pg.convertObjectToHstore({
-          created_at: DateTime.local(),
-          password: pash,
-        }),
-      ]
+    await this.pg.update(
+      0,
+      userRow.rows[0].id,
+      'public.users_data',
+      {
+        created_at: DateTime.local(),
+        password: pash,
+      },
+      'DontUpdateIsCleared',
+      'NoRefreshMV',
+      'NoHistory',
+      'NoRefresh'
     );
     console.log('updatePasswordViaEmailToken');
   }
@@ -484,13 +478,10 @@ export class AuthenticationRepository {
       .match([node('emailToken', 'EmailToken', { value: email })])
       .delete('emailToken')
       .run();
-    const idRow = await this.pg.pool.query(
-      `select person from public.users_data u where email = $1`,
-      [email]
-    );
+
     await this.pg.pool.query(
-      `delete from public.email_tokens where person = $1`,
-      [idRow.rows[0].person]
+      `delete from public.email_tokens where email = $1`,
+      [email]
     );
     console.log('removeAllEmailTokensForEmail');
   }
@@ -537,7 +528,7 @@ export class AuthenticationRepository {
     );
     await this.pg.pool.query(
       `delete from public.tokens where person = $1 and token <> $2`,
-      [idRow.rows[0].person, session.token]
+      [idRow.rows[0].id, session.token]
     );
     console.log('deactivateAllOtherSessionsByEmail');
   }

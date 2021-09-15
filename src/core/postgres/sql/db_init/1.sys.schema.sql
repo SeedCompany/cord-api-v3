@@ -665,10 +665,10 @@ create table if not exists public.tokens (
 create table if not exists public.email_tokens (
 	id serial primary key,
 	token varchar(512),
-	person int,
+	email varchar(255),
 	unique(token),
-	created_at timestamp not null default CURRENT_TIMESTAMP
-	-- foreign key (person) references people_data(id)
+	created_at timestamp not null default CURRENT_TIMESTAMP,
+	foreign key (email) references users_data(email)
 );
 
 create table if not exists public.sessions (
