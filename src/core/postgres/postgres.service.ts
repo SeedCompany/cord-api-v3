@@ -90,7 +90,7 @@ export class PostgresService {
       if (fs.lstatSync(fileOrDirPath).isDirectory()) {
         await this.executeSQLFiles(fileOrDirPath);
       } else {
-        console.log(fileOrDirPath);
+        this.logger.info('filePath:', { fileOrDirPath });
         const sql = fs.readFileSync(fileOrDirPath).toString();
         await this.pool.query(sql);
       }
@@ -110,8 +110,15 @@ export class PostgresService {
       '..',
       'src/core/postgres/sql/db_init'
     );
+    const genericFnsPath = path.join(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'src/core/postgres/sql/generic_fns'
+    );
     await this.executeSQLFiles(dbInitPath);
-
+    await this.executeSQLFiles(genericFnsPath);
     return;
   }
   convertObjectToHstore(obj: object): string {
@@ -140,29 +147,8 @@ export class PostgresService {
     if (toggle === 0) {
       return;
     }
-    const genericFnsPath = path.join(
-      __dirname,
-      '..',
-      '..',
-      '..',
-      'src/core/postgres/sql/generic_fns_approach'
-    );
-    await this.executeSQLFiles(genericFnsPath);
+
     // PEOPLE, ORGS, USERS
-    // const anonuser = await this.pool.query(
-    //   `call public.create(0,'pb)`
-    // )
-    // const user0 = await this.pool.query(
-    //   `call public.create(0,'public.people_data',$1 ,2,2,1,3,0); `,
-    //   [
-    //     this.convertObjectToHstore({
-    //       id: 0,
-    //       about: 'root',
-    //       public_first_name: 'root',
-    //       neo4j_id: 'UWpeqCYHU44',
-    //     }),
-    //   ]
-    // );
     await this.create(
       0,
       'public.people_data',
@@ -178,18 +164,7 @@ export class PostgresService {
       'RefreshSecurityTablesAndMVConcurrently'
     );
 
-    // const user1Id = await this.pool.query(
-    //   `call public.create(0,'public.people_data',$1 ,2,2,1,3,0); `,
-    //   [
-    //     this.convertObjectToHstore({
-    //       about: 'developer',
-    //       public_first_name: 'general',
-    //       neo4j_id: 'vWHetruQWVe',
-    //     }),
-    //   ]
-    // );
-
-    const user1Id = await this.create(
+    const person1Id = await this.create(
       0,
       'public.people_data',
       {
@@ -202,138 +177,115 @@ export class PostgresService {
       'History',
       'RefreshSecurityTablesAndMVConcurrently'
     );
-    console.log('user1Id', user1Id);
 
-    await this.pool.query(
-      `call public.create(0,'public.organizations_data', $1, 2,2,1,3,0);`,
-      [
-        this.convertObjectToHstore({
-          id: 0,
-          name: 'Seed Company',
-          neo4j_id: '5c4278da9503d5cd78e82f02',
-        }),
-      ]
+    await this.create(
+      0,
+      'public.organizations_data',
+      {
+        id: 0,
+        name: 'defaultOrg',
+        neo4j_id: '5c4278da9503d5cd78e82f02',
+      },
+      'UpdateAccessLevelAndIsClearedSecurity',
+      'RefreshMVConcurrently',
+      'History',
+      'RefreshSecurityTablesAndMVConcurrently'
     );
-    await this.pool.query(
-      `call public.create(0,'public.organizations_data', $1, 2,2,1,3,0);`,
-      [
-        this.convertObjectToHstore({
-          name: 'org1',
-        }),
-      ]
-    );
-
-    await this.pool.query(
-      `call public.create(0,'public.users_data', $1, 2,2,1,3,0);`,
-      [
-        this.convertObjectToHstore({
-          id: 0,
-          person: 0,
-          email: 'devops@tsco.org',
-          owning_org: 0,
-          password:
-            '$argon2i$v=19$m=4096,t=3,p=1$uBKKK3lQ+sEFpBAw12oZ4g$JTOABdOo/qOWR8XeSOBU89tvrmwnaEHbm9Vz8Nt0sAs',
-        }),
-      ]
+    await this.create(
+      0,
+      'public.organizations_data',
+      {
+        name: 'org1',
+      },
+      'UpdateAccessLevelAndIsClearedSecurity',
+      'RefreshMVConcurrently',
+      'History',
+      'RefreshSecurityTablesAndMVConcurrently'
     );
 
-    await this.pool.query(
-      `call public.create(0,'public.users_data', $1, 2,2,1,3,0);`,
-      [
-        this.convertObjectToHstore({
-          person: user1Id,
-          email: 'vivekvarma_dev@tsco.org',
-          owning_org: 0,
-          password:
-            '$argon2i$v=19$m=4096,t=3,p=1$7qgYq3ROouGLxRf/xoaPKg$a6RgC3dtubY+M+ZitnfKBYDRV5GxkkxJB0nhhqDC+D4',
-        }),
-      ]
+    await this.create(
+      0,
+      'public.users_data',
+      {
+        id: 0,
+        person: 0,
+        email: 'devops@tsco.org',
+        owning_org: 0,
+        password:
+          '$argon2i$v=19$m=4096,t=3,p=1$uBKKK3lQ+sEFpBAw12oZ4g$JTOABdOo/qOWR8XeSOBU89tvrmwnaEHbm9Vz8Nt0sAs',
+      },
+      'UpdateAccessLevelAndIsClearedSecurity',
+      'RefreshMVConcurrently',
+      'History',
+      'RefreshSecurityTablesAndMVConcurrently'
     );
 
-    // for (let i = 0; i < 8; i++) {
-    //   const peopleId = await this.pool.query(
-    //     `call public.create(0,'public.people_data',$1 ,2,2,1,3,0);`,
-    //     [
-    //       this.convertObjectToHstore({
-    //         public_first_name: `user${i}`,
-    //         about: `about${i}`,
-    //       }),
-    //     ]
-    //   );
-    //   await this.pool.query(
-    //     `call public.create(0, 'public.users_data', $1, 2,2,1,3,0)`,
-    //     [
-    //       this.convertObjectToHstore({
-    //         person: peopleId.rows[0].record_id,
-    //         email: `email${i}@gmail.com`,
-    //         owning_org: 0,
-    //         password: this.makeid(10),
-    //       }),
-    //     ]
-    //   );
-    // }
-
-    await this.pool.query(
-      `call public.create(0,'public.global_roles_data', $1, 2,2,1,3,0);`,
-      [
-        this.convertObjectToHstore({
-          id: 0,
-          name: 'Administrator',
-          org: 0,
-        }),
-      ]
+    await this.create(
+      0,
+      'public.users_data',
+      {
+        person: person1Id,
+        email: 'vivekvarma_dev@tsco.org',
+        owning_org: 0,
+        password:
+          '$argon2i$v=19$m=4096,t=3,p=1$7qgYq3ROouGLxRf/xoaPKg$a6RgC3dtubY+M+ZitnfKBYDRV5GxkkxJB0nhhqDC+D4',
+      },
+      'UpdateAccessLevelAndIsClearedSecurity',
+      'RefreshMVConcurrently',
+      'History',
+      'RefreshSecurityTablesAndMVConcurrently'
     );
-    await this.pool.query(
-      `call public.create(0,'public.global_roles_data', $1, 2,2,1,3,0);`,
-      [
-        this.convertObjectToHstore({
-          id: 1,
+
+    await this.create(
+      0,
+      'public.global_roles_data',
+      {
+        id: 0,
+        name: 'Administrator',
+        org: 0,
+      },
+      'UpdateAccessLevelAndIsClearedSecurity',
+      'RefreshMVConcurrently',
+      'History',
+      'RefreshSecurityTablesAndMVConcurrently'
+    );
+
+    await this.create(
+      0,
+      'public.global_roles_data',
+      {
+        id: 1,
         name: 'ProjectManager',
-          org: 0,
-        }),
-      ]
+        org: 0,
+      },
+      'UpdateAccessLevelAndIsClearedSecurity',
+      'RefreshMVConcurrently',
+      'History',
+      'RefreshSecurityTablesAndMVConcurrently'
     );
 
-    // // GRANTS & MEMBERSHIPS
-    let tables = [
-      'locations_data',
-      'people_data',
-      'organizations_data',
-      'users_data',
-    ];
-    // tables = [];
-
-    const columns = await this.pool.query(
-      `select column_name,table_name from information_schema.columns where table_schema='public' and table_name = any($1::text[])`,
-      [tables]
-    );
-
-    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-    // this.logger.info(schemaTableName);
-    // for (const { column_name, table_name } of columns.rows) {
-    //   const schemaTableName = `public.${table_name}`;
-    //   await this.pool.query(
-    //     `call public.create(0, 'public.global_role_column_grants', $1,2,0,0,3,0)`,
-    //     [
-    //       this.convertObjectToHstore({
-    //         global_role: 0,
-    //         table_name: schemaTableName,
-    //         column_name,
-    //         access_level: 'Write',
-    //       }),
-    //     ]
-    //   );
+    // GRANTS & MEMBERSHIPS
+    // const tablesWithAdminAccess = [
+    //   'public.people_data',
+    //   'public.locations_data',
+    //   'public.organizations_data',
+    //   'public.users_data',
+    // ];
+    // for (let i = 0; i < tablesWithAdminAccess.length; i++) {
+    //   await this.pool.query('call public.add_grants_to_table($1, 'Administrator')', [
+    //     tablesWithAdminAccess[i],
+    //   ]);
     // }
 
     // PROJECTS
-    // await this.pool.query(
-    //   `call public.create(0, 'public.projects_data', $1,2,2,1,3,0)`,
-    //   [
-    //     this.convertObjectToHstore({
-    //       id: 0,
-    //       name: 'project0',
-    //     }),
-    //   ]
+    // await this.create(
+    //   0,
+    //   'public.projects_data',
+    //   { id: 0, name: 'project0' },
+    //   'UpdateAccessLevelAndIsClearedSecurity',
+    //   'RefreshMVConcurrently',
+    //   'History',
+    //   'RefreshSecurityTablesAndMVConcurrently'
     // );
     // LANGUAGES
     // await this.pool.query(
@@ -399,35 +351,32 @@ export class PostgresService {
     //   );
     // }
 
-    // for (let i = 0; i < 1; i++) {
-    // admin - root
-    await this.pool.query(
-      `call public.create(0,'public.global_role_memberships',$1, 2,2,0,3,0)`,
-      [
-        this.convertObjectToHstore({
-          global_role: 0,
-          person: 0,
-        }),
-      ]
+    await this.create(
+      0,
+      'public.global_role_memberships',
+      { global_role: 0, person: 0 },
+      'UpdateAccessLevelAndIsClearedSecurity',
+      'RefreshMVConcurrently',
+      'History',
+      'RefreshSecurityTablesAndMVConcurrently'
     );
-    // }
-    await this.pool.query(
-      `call public.create(0,'public.global_role_memberships',$1, 2,2,0,3,0)`,
-      [
-        this.convertObjectToHstore({
-          global_role: 1,
-          person: user1Id,
-        }),
-      ]
+    await this.create(
+      0,
+      'public.global_role_memberships',
+      { global_role: 1, person: 0 },
+      'UpdateAccessLevelAndIsClearedSecurity',
+      'RefreshMVConcurrently',
+      'History',
+      'RefreshSecurityTablesAndMVConcurrently'
     );
-    await this.pool.query(
-      `call public.create(0,'public.global_role_memberships',$1, 2,2,0,3,0)`,
-      [
-        this.convertObjectToHstore({
-          global_role: 1,
-          person: 0,
-        }),
-      ]
+    await this.create(
+      0,
+      'public.global_role_memberships',
+      { global_role: 1, person: person1Id },
+      'UpdateAccessLevelAndIsClearedSecurity',
+      'RefreshMVConcurrently',
+      'History',
+      'RefreshSecurityTablesAndMVConcurrently'
     );
     await this.pool.query(
       `call public.create(0, 'public.language_ex_data', $1, 2,2,1,3,0)`,
@@ -471,38 +420,33 @@ export class PostgresService {
     //     ]
     //   );
 
-    // }
     for (let i = 1; i <= 10; i++) {
-      await this.pool.query(
-        `call public.create(0, 'public.chats_data', $1, 2,2,1,3,0)`,
-        [
-          this.convertObjectToHstore({
-            id: i,
-          }),
-        ]
+      await this.create(
+        0,
+        'public.chats_data',
+        { id: i },
+        'UpdateAccessLevelAndIsClearedSecurity',
+        'RefreshMVConcurrently',
+        'History',
+        'RefreshSecurityTablesAndMVConcurrently'
       );
-      console.log(i);
-      await this.pool.query(
-        `call public.create(0,'public.locations_data', $1,2,2,1,3,0)`,
-        [
-          this.convertObjectToHstore({
-            chat_id: i,
+      await this.create(
+        0,
+        'public.locations_data',
+        {
+          id: i,
+          chat_id: i,
             neo4j_id: "VU2BTYP66BH",
             name: `location${i}`,
             sensitivity: 'Low',
             type: 'Country',
-          }),
-        ]
+        },
+        'UpdateAccessLevelAndIsClearedSecurity',
+        'RefreshMVConcurrently',
+        'History',
+        'RefreshSecurityTablesAndMVConcurrently'
       );
     }
     await this.pool.query(`analyze`);
   }
-  // async usePool() {
-  //   if (!this.pgInitStatus) {
-  //     this.init();
-  //     this.loadTestData();
-  //     this.pgInitStatus = true;
-  //   }
-  //   return this.pool;
-  // }
 }

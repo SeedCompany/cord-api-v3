@@ -95,8 +95,9 @@ begin
     execute format(sql_string_keys || sql_string_values) into record_id;
 
     -- might need an entirely different fn for public.people_data
-    call public.history_fn(pTableName, pToggleHistory, pRecord);
-
+    if pTableName like '%data' then 
+        call public.history_fn(pTableName, pToggleHistory, pRecord);
+    end if; 
     if pTableName = 'public.people_data' then 
         call public.people_security_fn(record_id, pToggleSecurity, pToggleMV);
     elsif pTableName like '%_data' then
