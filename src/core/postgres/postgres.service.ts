@@ -271,7 +271,7 @@ export class PostgresService {
     //   'public.users_data',
     // ];
     // for (let i = 0; i < tablesWithAdminAccess.length; i++) {
-    //   await this.pool.query('call public.add_grants_to_table($1)', [
+    //   await this.pool.query('call public.add_grants_to_table($1, 'Administrator')', [
     //     tablesWithAdminAccess[i],
     //   ]);
     // }
