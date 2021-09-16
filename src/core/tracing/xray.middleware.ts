@@ -67,16 +67,13 @@ export class XRayMiddleware implements NestMiddleware, NestInterceptor {
    */
   async intercept(context: ExecutionContext, next: CallHandler) {
     const rootSegment = this.tracing.rootSegment;
-    const root = rootSegment as unknown as XRay.Segment;
+    const root = rootSegment as unknown as XRay.Segment | XRay.Subsegment;
     // @ts-expect-error we added it in middleware, so we don't have to parse it again
-    const traceData = root.http.traceData;
+    // Don't assume though, i.e. tests don't run through middleware above.
+    const sampledHeader: '1' | '0' | '?' = root.http?.traceData?.sampled ?? '?';
 
     let sampled: string | boolean | undefined =
-      traceData.sampled === '1'
-        ? true
-        : traceData.sampled === '0'
-        ? false
-        : undefined;
+      sampledHeader === '1' ? true : sampledHeader === '0' ? false : undefined;
 
     // If no explicit address, disable tracing.
     // Otherwise traces will be buffered leading to memory leak
@@ -88,7 +85,7 @@ export class XRayMiddleware implements NestMiddleware, NestInterceptor {
       sampled = await this.sampler.shouldTrace(context, rootSegment);
     }
 
-    if (typeof sampled === 'string') {
+    if (typeof sampled === 'string' && root instanceof XRay.Segment) {
       root.setMatchedSamplingRule(sampled);
     }
 
@@ -99,12 +96,14 @@ export class XRayMiddleware implements NestMiddleware, NestInterceptor {
             .response
         : context.switchToHttp().getResponse();
 
-    res.setHeader(
-      'x-amzn-trace-id',
-      `Root=${root.trace_id};Sampled=${sampled ? '1' : '0'}`
-    );
+    if (root instanceof XRay.Segment) {
+      res.setHeader(
+        'x-amzn-trace-id',
+        `Root=${root.trace_id};Sampled=${sampled ? '1' : '0'}`
+      );
+    }
 
-    if (!sampled) {
+    if (!sampled && root instanceof XRay.Segment) {
       root.notTraced = true;
     }
 

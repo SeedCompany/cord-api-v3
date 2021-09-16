@@ -104,7 +104,7 @@ export interface Segment {
 
   addThrottleFlag(): void;
 
-  setUser(userId: string): void;
+  setUser?: (userId: string) => void;
 
   addError(err: Error | string, remote?: boolean): void;
 

@@ -17,16 +17,20 @@ export class GraphqlTracingPlugin implements ApolloPlugin<ContextType> {
       executionDidStart: (reqContext): ExecutionListener<ContextType> => {
         const segment = this.tracing.rootSegment;
         segment.name = reqContext.operationName ?? reqContext.queryHash;
-        // Change url to be something meaningful since all gql requests hit a single http endpoint
-        // @ts-expect-error xray library types suck
-        segment.http.request.url = `/${segment.name}`;
         segment.addAnnotation(reqContext.operation.operation, true);
+
+        // Change url to be something meaningful since all gql requests hit a single http endpoint
+        // @ts-expect-error http middleware could have not run or this is a subsegment
+        if (segment.http?.request) {
+          // @ts-expect-error xray library types suck
+          segment.http.request.url = `/${segment.name}`;
+        }
 
         return {
           executionDidEnd: (err) => {
             const userId = reqContext.context.session?.userId;
             if (userId) {
-              segment.setUser(userId);
+              segment.setUser?.(userId);
             }
 
             if (err) {
