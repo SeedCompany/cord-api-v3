@@ -6,7 +6,8 @@ import { anonymousSession } from '../../common/session';
 import { NoSessionException } from '../../components/authentication/no-session.exception';
 import { NestDataLoader } from './loader.decorator';
 
-export interface OrderedNestDataLoaderOptions<T, Key = ID> {
+export interface OrderedNestDataLoaderOptions<T, Key = ID>
+  extends DataLoader.Options<Key, T> {
   /**
    * How should the object be identified?
    * An function to do so or a property key. Defaults to `id`
@@ -18,8 +19,6 @@ export interface OrderedNestDataLoaderOptions<T, Key = ID> {
    * Defaults to the class name minus loader suffix
    */
   typeName?: string;
-
-  dataloaderConfig?: DataLoader.Options<Key, T>;
 }
 
 export abstract class OrderedNestDataLoader<T, Key = ID>
@@ -31,10 +30,8 @@ export abstract class OrderedNestDataLoader<T, Key = ID>
 
   getOptions(): OrderedNestDataLoaderOptions<T, Key> {
     return {
-      dataloaderConfig: {
-        // Increase the batching timeframe from the same nodejs frame to 10ms
-        batchScheduleFn: (cb) => setTimeout(cb, 10),
-      },
+      // Increase the batching timeframe from the same nodejs frame to 10ms
+      batchScheduleFn: (cb) => setTimeout(cb, 10),
     };
   }
 
@@ -51,17 +48,19 @@ export abstract class OrderedNestDataLoader<T, Key = ID>
     return this.createLoader(this.getOptions());
   }
 
-  protected createLoader(
-    options: OrderedNestDataLoaderOptions<T, Key>
-  ): DataLoader<Key, T> {
-    const typeName =
-      options.typeName ??
-      startCase(this.constructor.name.replace('Loader', '')).toLowerCase();
+  protected createLoader({
+    typeName,
+    propertyKey,
+    ...options
+  }: OrderedNestDataLoaderOptions<T, Key>): DataLoader<Key, T> {
+    typeName ??= startCase(
+      this.constructor.name.replace('Loader', '')
+    ).toLowerCase();
 
     const getKey =
-      typeof options.propertyKey === 'function'
-        ? options.propertyKey
-        : (obj: T) => obj[(options.propertyKey ?? 'id') as keyof T];
+      typeof propertyKey === 'function'
+        ? propertyKey
+        : (obj: T) => obj[(propertyKey ?? 'id') as keyof T];
 
     const batchFn: DataLoader.BatchLoadFn<Key, T> = async (keys) => {
       const docs = await this.loadMany(keys);
@@ -80,6 +79,6 @@ export abstract class OrderedNestDataLoader<T, Key = ID>
       );
     };
 
-    return new DataLoader<Key, T>(batchFn, options.dataloaderConfig);
+    return new DataLoader<Key, T>(batchFn, options);
   }
 }
