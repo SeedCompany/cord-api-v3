@@ -6,8 +6,8 @@ import { anonymousSession } from '../../common/session';
 import { NoSessionException } from '../../components/authentication/no-session.exception';
 import { NestDataLoader } from './loader.decorator';
 
-export interface OrderedNestDataLoaderOptions<T, Key = ID>
-  extends DataLoader.Options<Key, T> {
+export interface OrderedNestDataLoaderOptions<T, Key = ID, CachedKey = Key>
+  extends DataLoader.Options<Key, T, CachedKey> {
   /**
    * How should the object be identified?
    * An function to do so or a property key. Defaults to `id`
@@ -21,14 +21,14 @@ export interface OrderedNestDataLoaderOptions<T, Key = ID>
   typeName?: string;
 }
 
-export abstract class OrderedNestDataLoader<T, Key = ID>
-  implements NestDataLoader<T, Key>
+export abstract class OrderedNestDataLoader<T, Key = ID, CachedKey = Key>
+  implements NestDataLoader<T, Key, CachedKey>
 {
   private context: GqlContextType;
 
   abstract loadMany(keys: readonly Key[]): Promise<readonly T[]>;
 
-  getOptions(): OrderedNestDataLoaderOptions<T, Key> {
+  getOptions(): OrderedNestDataLoaderOptions<T, Key, CachedKey> {
     return {
       // Increase the batching timeframe from the same nodejs frame to 10ms
       batchScheduleFn: (cb) => setTimeout(cb, 10),
@@ -52,7 +52,11 @@ export abstract class OrderedNestDataLoader<T, Key = ID>
     typeName,
     propertyKey,
     ...options
-  }: OrderedNestDataLoaderOptions<T, Key>): DataLoader<Key, T> {
+  }: OrderedNestDataLoaderOptions<T, Key, CachedKey>): DataLoader<
+    Key,
+    T,
+    CachedKey
+  > {
     typeName ??= startCase(
       this.constructor.name.replace('Loader', '')
     ).toLowerCase();
@@ -79,6 +83,6 @@ export abstract class OrderedNestDataLoader<T, Key = ID>
       );
     };
 
-    return new DataLoader<Key, T>(batchFn, options);
+    return new DataLoader<Key, T, CachedKey>(batchFn, options);
   }
 }
