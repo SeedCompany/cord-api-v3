@@ -8,7 +8,12 @@ import {
   Session,
   UnsecuredDto,
 } from '../../common';
-import { DtoRepository, matchRequestingUser } from '../../core';
+import {
+  DatabaseService,
+  DtoRepository,
+  matchRequestingUser,
+  PostgresService,
+} from '../../core';
 import {
   ACTIVE,
   createNode,
@@ -24,6 +29,9 @@ import { CreateLocation, Location, LocationListInput } from './dto';
 
 @Injectable()
 export class LocationRepository extends DtoRepository(Location) {
+  constructor(private readonly pg: PostgresService, db: DatabaseService) {
+    super(db);
+  }
   async doesNameExist(name: string) {
     const result = await this.db
       .query()
@@ -57,6 +65,28 @@ export class LocationRepository extends DtoRepository(Location) {
     if (!result) {
       throw new ServerException('Failed to create location');
     }
+
+    const pool = await this.pg.pool;
+    const chat = await pool.query(
+      `select chat_id from public.locations_data order by chat_id desc limit 1`
+    );
+    console.log('result: ', result);
+    const chatId = chat.rows[0].chat_id;
+
+    await this.pg.create(
+      0,
+      'public.locations_data',
+      {
+        neo4j_id: result.id,
+        name: input.name,
+        type: input.type,
+        chat_id: chatId + 1,
+      },
+      'UpdateAccessLevelAndIsClearedSecurity',
+      'RefreshMVConcurrently',
+      'History',
+      'RefreshSecurityTablesAndMVConcurrently'
+    );
 
     return result.id;
   }
@@ -170,6 +200,68 @@ export class LocationRepository extends DtoRepository(Location) {
   }
 
   async addLocationToNode(label: string, id: ID, rel: string, locationId: ID) {
+    const pool = await this.pg.pool;
+    let firstTable = 'public.people_data';
+    let locationPgId;
+    let newId;
+
+    if (typeof (locationId === 'string'))
+      locationPgId = await pool.query(
+        `SELECT id from public.locations_data WHERE neo4j_id = $1`,
+        [locationId]
+      );
+
+    const location =
+      typeof locationId === 'string' ? locationPgId?.rows[0].id : locationId;
+
+    switch (firstTable) {
+      case 'User':
+        firstTable = 'public.people_data';
+        let userPgId;
+        if (typeof id === 'string')
+          userPgId = await pool.query(
+            `SELECT id from public.people_data WHERE neo4j_id`,
+            [id]
+          );
+        newId = typeof id === 'string' ? userPgId?.rows[0].id : id;
+        break;
+      case 'Organization':
+        firstTable = 'public.organizations_data';
+        let organizationPgId;
+        if (typeof id === 'string')
+          organizationPgId = await pool.query(
+            `SELECT id from public.organizations_data WHERE neo4j_id = $1`,
+            [id]
+          );
+        newId = typeof id === 'string' ? organizationPgId?.rows[0].id : id;
+        break;
+      case 'Project':
+        firstTable = 'public.projects_data';
+        let projectPgId;
+        if (typeof id === 'string')
+          projectPgId = await pool.query(
+            `SELECT id from public.projects_data WHERE neo4j_id = $1`,
+            [id]
+          );
+        newId = typeof id === 'string' ? projectPgId?.rows[0].id : id;
+        break;
+      case 'Language':
+        firstTable = '';
+        break;
+      default:
+        console.log('Correspondent table not found');
+    }
+
+    const pgResult = pool.query(
+      `UPDATE ${firstTable}
+       SET primary_location = $1
+       WHERE id = $2
+      `,
+      [location, newId]
+    );
+
+    console.log('pgResult: ', pgResult);
+
     await this.db
       .query()
       .matchNode('node', label, { id })

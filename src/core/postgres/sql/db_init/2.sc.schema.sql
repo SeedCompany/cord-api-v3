@@ -26,12 +26,12 @@ create table if not exists sc.posts_data (
 -- ACCOUNTING TABLES --------------------------------------------------------
 
 create table if not exists sc.funding_account_data (
-    id serial primary key,
+  id serial primary key,
 	account_number varchar(32) unique not null,
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by int not null default 0,
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
+  modified_by int not null default 0,
 	name varchar(32),
 	foreign key (created_by) references public.people_data(id),
 	foreign key (modified_by) references public.people_data(id)
@@ -45,10 +45,10 @@ create table if not exists sc.field_zone_data (
 	created_by int not null default 0,
 	director int,
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
+  modified_by int not null default 0,
 	name varchar(32) unique not null,
 	foreign key (created_by) references public.people_data(id),
-    foreign key (modified_by) references public.people_data(id),
+  foreign key (modified_by) references public.people_data(id),
 	foreign key (director) references public.people_data(id)
 );
 
@@ -58,26 +58,27 @@ create table if not exists sc.field_regions_data (
 	created_by int not null default 0,
 	director int,
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
+  modified_by int not null default 0,
 	name varchar(32) unique not null,
 	foreign key (created_by) references public.people_data(id),
-    foreign key (modified_by) references public.people_data(id),
+	foreign key (modified_by) references public.people_data(id),
 	foreign key (director) references public.people_data(id)
 );
 
 create table if not exists sc.locations_data (
 	id int primary key not null,
+	neo4j_id varchar(32),
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by int not null default 0,
 	default_region int,
 	funding_account varchar(32),
 	iso_alpha_3 char(3),
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
+  modified_by int not null default 0,
 	name varchar(32) unique not null,
 	type location_type not null,
 	foreign key (created_by) references public.people_data(id),
-    foreign key (modified_by) references public.people_data(id),
+  foreign key (modified_by) references public.people_data(id),
 	foreign key (id) references public.locations_data(id),
 	foreign key (default_region) references sc.field_regions_data(id),
 	foreign key (funding_account) references sc.funding_account_data(account_number)
@@ -93,23 +94,23 @@ create table if not exists sc.organizations_data (
 	created_by int not null default 0,
 	internal varchar(32) unique not null,
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
+  modified_by int not null default 0,
 	foreign key (created_by) references public.people_data(id),
-    foreign key (modified_by) references public.people_data(id),
+  foreign key (modified_by) references public.people_data(id),
 	foreign key (id) references public.organizations_data(id)
 );
 
 create table if not exists sc.organization_locations_data(
-    id serial primary key,
+  id serial primary key,
 	organization varchar(32) not null,
 	location int not null,
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by int not null default 0,
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
+	modified_by int not null default 0,
 	unique (organization, location),
 	foreign key (created_by) references public.people_data(id),
-    foreign key (modified_by) references public.people_data(id),
+  foreign key (modified_by) references public.people_data(id),
 	foreign key (organization) references sc.organizations_data(base64),
 	foreign key (location) references public.locations_data(id)
 );
@@ -144,12 +145,12 @@ create table if not exists sc.partners_data (
 	financial_reporting_types public.financial_reporting_types[],
 	is_global_innovations_client bool,
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
+  modified_by int not null default 0,
 	pmc_entity_code varchar(32),
 	point_of_contact int,
 	types public.partner_types[],
 	foreign key (created_by) references public.people_data(id),
-    foreign key (modified_by) references public.people_data(id),
+  foreign key (modified_by) references public.people_data(id),
 	foreign key (point_of_contact) references public.people_data(id),
 	foreign key (organization) references sc.organizations_data(base64)
 );
@@ -161,7 +162,7 @@ create table if not exists sc.language_goal_definitions_data (
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by int not null default 0,
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
+  modified_by int not null default 0,
 	foreign key (created_by) references public.people_data(id),
 	foreign key (modified_by) references public.people_data(id)
 	-- todo
@@ -177,7 +178,7 @@ create table if not exists sc.languages_data (
 	display_name varchar(255) unique not null,
 	least_of_these_reason varchar(255),
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
+  modified_by int not null default 0,
 	name varchar(255) unique not null,
 	population_override int,
 	registry_of_dialects_code varchar(32),
@@ -185,37 +186,37 @@ create table if not exists sc.languages_data (
 	sign_language_code varchar(32),
 	sponsor_estimated_eng_date timestamp,
 	foreign key (created_by) references public.people_data(id),
-    foreign key (modified_by) references public.people_data(id),
+  foreign key (modified_by) references public.people_data(id),
 	foreign key (id) references sil.table_of_languages(id)
 );
 
 create table if not exists sc.language_locations_data (
-    id serial primary key,
+  id serial primary key,
 	ethnologue int not null,
 	location int not null,
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by int not null default 0,
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
+  modified_by int not null default 0,
 	unique (ethnologue, location),
 	foreign key (location) references public.locations_data(id),
 	foreign key (created_by) references public.people_data(id),
-    foreign key (modified_by) references public.people_data(id),
+  foreign key (modified_by) references public.people_data(id),
 	foreign key (ethnologue) references sil.table_of_languages(id)
 	-- todo
 );
 
 create table if not exists sc.language_goals_data (
-    id serial primary key,
-    ethnologue int not null,
+  id serial primary key,
+  ethnologue int not null,
 	goal int not null,
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by int not null default 0,
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
+  modified_by int not null default 0,
 	unique (ethnologue, goal),
 	foreign key (created_by) references public.people_data(id),
-    foreign key (modified_by) references public.people_data(id),
+  foreign key (modified_by) references public.people_data(id),
 	foreign key (ethnologue) references sil.table_of_languages(id),
 	foreign key (goal) references sc.language_goal_definitions_data(id)
 	-- todo
@@ -224,92 +225,92 @@ create table if not exists sc.language_goals_data (
 -- USER TABLES --------------------------------------------------------------
 
 create table if not exists sc.known_languages_by_person_data (
-    id serial primary key,
-    person int not null,
-    known_language int not null,
+  id serial primary key,
+  person int not null,
+  known_language int not null,
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by int not null default 0,
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
+  modified_by int not null default 0,
 	unique (person, known_language),
 	foreign key (created_by) references public.people_data(id),
-    foreign key (modified_by) references public.people_data(id),
+  foreign key (modified_by) references public.people_data(id),
 	foreign key (person) references public.people_data(id),
 	foreign key (known_language) references sil.table_of_languages(id)
 );
 
 create table if not exists sc.people_data (
-    id int primary key,
-    internal varchar(32) unique,
+  id int primary key,
+  internal varchar(32) unique,
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by int not null default 0,
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
+  modified_by int not null default 0,
 	skills varchar(32)[],
 	status varchar(32),
 	foreign key (created_by) references public.people_data(id),
-    foreign key (modified_by) references public.people_data(id),
+  foreign key (modified_by) references public.people_data(id),
 	foreign key (id) references public.people_data(id)
 );
 
 create table if not exists sc.person_unavailabilities_data (
-    id int primary key,
+  id int primary key,
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by int not null default 0,
 	description text,
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
+  modified_by int not null default 0,
 	period_end timestamp not null,
 	period_start timestamp not null,
 	foreign key (created_by) references public.people_data(id),
-    foreign key (modified_by) references public.people_data(id),
+	foreign key (modified_by) references public.people_data(id),
 	foreign key (id) references public.people_data(id)
 );
 
 -- FILES & DIRECTORIES ----------------------------------------------------------
 
 create table if not exists sc.directories_data (
-    id serial primary key,
+  id serial primary key,
 	parent int not null,
-    name varchar(255),
+  name varchar(255),
 	created_at timestamp not null default CURRENT_TIMESTAMP,
-    created_by int not null default 0,
-    modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
-    foreign key (created_by) references public.people_data(id),
-    foreign key (modified_by) references public.people_data(id),
+  created_by int not null default 0,
+  modified_at timestamp not null default CURRENT_TIMESTAMP,
+  modified_by int not null default 0,
+  foreign key (created_by) references public.people_data(id),
+  foreign key (modified_by) references public.people_data(id),
 	foreign key (parent) references sc.directories_data(id)
 	-- todo
 );
 
 create table if not exists sc.files_data (
-    id serial primary key,
+  id serial primary key,
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by int not null default 0,
-    directory int not null,
-    modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
+  directory int not null,
+  modified_at timestamp not null default CURRENT_TIMESTAMP,
+  modified_by int not null default 0,
 	name varchar(255),
 	foreign key (created_by) references public.people_data(id),
-    foreign key (modified_by) references public.people_data(id),
+  foreign key (modified_by) references public.people_data(id),
 	foreign key (directory) references sc.directories_data(id)
 );
 
 create table if not exists sc.file_versions_data (
-    id serial primary key,
-    category varchar(255),
+  id serial primary key,
+  category varchar(255),
 	created_at timestamp not null default CURRENT_TIMESTAMP,
-    created_by int not null default 0,
-    mime_type mime_type not null,
-    modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
-    name varchar(255) not null,
-    file int not null,
-    file_url varchar(255) not null,
-    file_size int, -- bytes
-    foreign key (created_by) references public.people_data(id),
-    foreign key (modified_by) references public.people_data(id),
-    foreign key (file) references sc.files_data(id)
+  created_by int not null default 0,
+  mime_type mime_type not null,
+  modified_at timestamp not null default CURRENT_TIMESTAMP,
+  modified_by int not null default 0,
+  name varchar(255) not null,
+  file int not null,
+  file_url varchar(255) not null,
+  file_size int, -- bytes
+  foreign key (created_by) references public.people_data(id),
+  foreign key (modified_by) references public.people_data(id),
+  foreign key (file) references sc.files_data(id)
 );
 
 -- PROJECT TABLES ----------------------------------------------------------
@@ -359,14 +360,14 @@ DO $$ BEGIN
 END; $$;
 
 create table if not exists sc.change_to_plans_data (
-    id serial primary key,
+  id serial primary key,
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by int not null default 0,
-    modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
-    status public.change_to_plan_status,
-    summary text,
-    type public.change_to_plan_type,
+  modified_at timestamp not null default CURRENT_TIMESTAMP,
+  modified_by int not null default 0,
+  status public.change_to_plan_status,
+  summary text,
+  type public.change_to_plan_type,
 	foreign key (created_by) references public.people_data(id),
 	foreign key (modified_by) references public.people_data(id)
 );
@@ -391,8 +392,8 @@ create table if not exists sc.periodic_reports_data (
 );
 
 create table if not exists sc.projects_data (
-    id serial primary key,
-    project int not null,
+  id serial primary key,
+  project int not null,
 	base64 varchar(32) not null,
 	change_to_plan int not null default 0,
 	active bool,
@@ -404,7 +405,7 @@ create table if not exists sc.projects_data (
 	initial_mou_end timestamp,
 	marketing_location int,
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
+  modified_by int not null default 0,
 	mou_start timestamp,
 	mou_end timestamp,
 	owning_organization varchar(32),
@@ -416,8 +417,8 @@ create table if not exists sc.projects_data (
 	status_changed_at timestamp,
 	step public.project_step,
 	unique (base64, change_to_plan),
-    foreign key (created_by) references public.people_data(id),
-    foreign key (modified_by) references public.people_data(id),
+  foreign key (created_by) references public.people_data(id),
+  foreign key (modified_by) references public.people_data(id),
 	foreign key (change_to_plan) references sc.change_to_plans_data(id),
 	foreign key (field_region) references sc.field_regions_data(id),
 	foreign key (marketing_location) references public.locations_data(id),
@@ -437,22 +438,22 @@ create table if not exists sc.pinned_projects (
 );
 
 create table if not exists sc.partnerships_data (
-    id serial primary key,
-    base64 varchar(32) unique not null,
-    project int not null,
-    partner varchar(32) not null,
-    change_to_plan int not null default 0,
-    active bool,
-    agreement int,
+  id serial primary key,
+  base64 varchar(32) unique not null,
+  project int not null,
+  partner varchar(32) not null,
+  change_to_plan int not null default 0,
+  active bool,
+  agreement int,
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by int not null default 0,
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
+  modified_by int not null default 0,
 	unique (project, partner, change_to_plan),
 	foreign key (agreement) references sc.file_versions_data(id),
 	foreign key (change_to_plan) references sc.change_to_plans_data(id),
 	foreign key (created_by) references public.people_data(id),
-    foreign key (modified_by) references public.people_data(id),
+  foreign key (modified_by) references public.people_data(id),
 	foreign key (partner) references sc.organizations_data(base64),
 	foreign key (project) references public.projects_data(id)
 );
@@ -471,61 +472,61 @@ DO $$ BEGIN
 END; $$;
 
 create table if not exists sc.budgets_data (
-    id serial primary key,
-    base64 varchar(32) not null,
-    change_to_plan int not null default 0,
-    project int not null,
+  id serial primary key,
+  base64 varchar(32) not null,
+  change_to_plan int not null default 0,
+  project int not null,
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by int not null default 0,
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
-    status public.budget_status,
-    universal_template int,
-    universal_template_file_url varchar(255),
-    unique (base64, change_to_plan),
-    foreign key (created_by) references public.people_data(id),
-    foreign key (modified_by) references public.people_data(id),
-    foreign key (project) references public.projects_data(id),
+  modified_by int not null default 0,
+  status public.budget_status,
+  universal_template int,
+  universal_template_file_url varchar(255),
+  unique (base64, change_to_plan),
+  foreign key (created_by) references public.people_data(id),
+  foreign key (modified_by) references public.people_data(id),
+  foreign key (project) references public.projects_data(id),
 	foreign key (universal_template) references sc.file_versions_data(id)
 );
 
 create table if not exists sc.budget_records_data (
-    id serial primary key,
-    base64 varchar(32) not null,
-    budget int not null,
-    change_to_plan int not null default 0,
-    active bool,
-    amount decimal,
-    fiscal_year int,
-    partnership varchar(32),
+	id serial primary key,
+  base64 varchar(32) not null,
+  budget int not null,
+  change_to_plan int not null default 0,
+  active bool,
+  amount decimal,
+  fiscal_year int,
+  partnership varchar(32),
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by int not null default 0,
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
+  modified_by int not null default 0,
 	unique (budget, change_to_plan),
 	foreign key (budget) references sc.budgets_data(id),
 	foreign key (change_to_plan) references sc.change_to_plans_data(id),
 	foreign key (created_by) references public.people_data(id),
-    foreign key (modified_by) references public.people_data(id),
+  foreign key (modified_by) references public.people_data(id),
 	foreign key (partnership) references sc.partnerships_data(base64)
 );
 
 -- PROJECT LOCATION
 
 create table if not exists sc.project_locations_data (
-    id serial primary key,
-    active bool,
-    change_to_plan int not null default 0,
+  id serial primary key,
+  active bool,
+  change_to_plan int not null default 0,
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by int not null default 0,
-    location int not null,
-    modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
-    project int not null,
+  location int not null,
+  modified_at timestamp not null default CURRENT_TIMESTAMP,
+  modified_by int not null default 0,
+  project int not null,
 	unique (project, location, change_to_plan),
 	foreign key (change_to_plan) references sc.change_to_plans_data(id),
 	foreign key (created_by) references public.people_data(id),
-    foreign key (modified_by) references public.people_data(id),
+  foreign key (modified_by) references public.people_data(id),
 	foreign key (location) references sc.locations_data(id),
 	foreign key (project) references public.projects_data(id)
 );
@@ -555,12 +556,12 @@ DO $$ BEGIN
 END; $$;
 
 create table if not exists sc.language_engagements_data (
-    id serial primary key,
-    base64 varchar(32) not null,
+  id serial primary key,
+  base64 varchar(32) not null,
 	project int not null,
 	ethnologue int not null,
 	change_to_plan int not null default 0,
-    active bool,
+  active bool,
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by int not null default 0,
 	communications_complete_date timestamp,
@@ -574,7 +575,7 @@ create table if not exists sc.language_engagements_data (
 	is_sent_printing bool,
 	last_reactivated_at timestamp,
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
+  modified_by int not null default 0,
 	paratext_registry varchar(32),
 	periodic_reports_directory int,
 	pnp varchar(255),
@@ -585,7 +586,7 @@ create table if not exists sc.language_engagements_data (
 	status public.engagement_status,
 	unique (project, ethnologue, change_to_plan),
 	foreign key (created_by) references public.people_data(id),
-    foreign key (modified_by) references public.people_data(id),
+  foreign key (modified_by) references public.people_data(id),
 	foreign key (change_to_plan) references sc.change_to_plans_data(id),
 	foreign key (ethnologue) references sil.table_of_languages(id),
 	foreign key (periodic_reports_directory) references sc.periodic_reports_directory(id),
@@ -703,11 +704,11 @@ DO $$ BEGIN
 END; $$;
 
 create table if not exists sc.internship_engagements_data (
-    id serial primary key,
+  id serial primary key,
 	project int not null,
 	ethnologue int not null,
 	change_to_plan int not null default 0,
-    active bool,
+  active bool,
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by int not null default 0,
 	communications_complete_date timestamp,
@@ -723,7 +724,7 @@ create table if not exists sc.internship_engagements_data (
 	mentor int,
 	methodology public.internship_methodology,
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
+  modified_by int not null default 0,
 	paratext_registry varchar(32),
 	periodic_reports_directory int,
 	position public.internship_position,
@@ -732,7 +733,7 @@ create table if not exists sc.internship_engagements_data (
 	status public.engagement_status,
 	unique (project, ethnologue, change_to_plan),
 	foreign key (created_by) references public.people_data(id),
-    foreign key (modified_by) references public.people_data(id),
+  foreign key (modified_by) references public.people_data(id),
 	foreign key (change_to_plan) references sc.change_to_plans_data(id),
 	foreign key (ethnologue) references sil.table_of_languages(id),
 	foreign key (project) references public.projects_data(id),
@@ -744,8 +745,8 @@ create table if not exists sc.internship_engagements_data (
 );
 
 create table if not exists sc.ceremonies_data (
-    id serial primary key,
-    project int not null,
+  id serial primary key,
+  project int not null,
 	ethnologue int not null,
 	actual_date timestamp,
 	created_at timestamp not null default CURRENT_TIMESTAMP,
@@ -753,12 +754,12 @@ create table if not exists sc.ceremonies_data (
 	estimated_date timestamp,
 	is_planned bool,
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-    modified_by int not null default 0,
+  modified_by int not null default 0,
 	type varchar(255),
 	foreign key (created_by) references public.people_data(id),
-    foreign key (modified_by) references public.people_data(id),
+  foreign key (modified_by) references public.people_data(id),
 	foreign key (ethnologue) references sil.table_of_languages(id),
-    foreign key (project) references public.projects_data(id)
+  foreign key (project) references public.projects_data(id)
 );
 
 -- CRM TABLES, WIP ------------------------------------------------------------------

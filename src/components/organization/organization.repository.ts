@@ -1,7 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
-import { ID, NotFoundException, Session, UnsecuredDto } from '../../common';
-import { DtoRepository, matchRequestingUser } from '../../core';
+
+import {
+  ID,
+  isIdLike,
+  NotFoundException,
+  Session,
+  UnsecuredDto,
+} from '../../common';
+import {
+  DatabaseService,
+  DtoRepository,
+  matchRequestingUser,
+  PostgresService,
+} from '../../core';
 import {
   ACTIVE,
   createNode,
@@ -19,6 +31,9 @@ import { CreateOrganization, Organization, OrganizationListInput } from './dto';
 
 @Injectable()
 export class OrganizationRepository extends DtoRepository(Organization) {
+  constructor(db: DatabaseService, private readonly pg: PostgresService) {
+    super(db);
+  }
   async checkOrg(name: string) {
     return await this.db
       .query()
@@ -57,6 +72,16 @@ export class OrganizationRepository extends DtoRepository(Organization) {
         'organization.id'
       );
     }
+
+    const pool = await this.pg.pool;
+    const orgData = await pool.query(
+      `select name, created_at as "createdAt", neo4j_id as "id" from public.organizations_data 
+      where neo4j_id = $1`,
+      [orgId]
+    );
+    const pgResult = orgData.rows[0];
+    console.log('neo4j Result: ', result.dto);
+    console.log('pg Result: ', pgResult);
     return result.dto;
   }
 

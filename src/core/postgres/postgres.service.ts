@@ -185,6 +185,7 @@ export class PostgresService {
       {
         id: 0,
         name: 'defaultOrg',
+        neo4j_id: '5c4278da9503d5cd78e82f02',
       },
       'UpdateAccessLevelAndIsClearedSecurity',
       'RefreshMVConcurrently',
@@ -378,6 +379,47 @@ export class PostgresService {
       'History',
       'RefreshSecurityTablesAndMVConcurrently'
     );
+    await this.pool.query(
+      `call public.create(0, 'public.language_ex_data', $1, 2,2,1,3,0)`,
+      [
+        this.convertObjectToHstore({
+          lang_name : 'english',
+          lang_code: 'ENG18',
+          location: 'US',
+          comments: 'test'
+
+        }),
+      ]
+    );
+    // const personRows = await this.pool.query(
+    //   `select id from public.people_data`
+    // );
+    // for (let { id } of personRows.rows) {
+    //   console.log(id);
+    //   if (id !== 0 && id !== user1pk) {
+    //     await this.pool.query(
+    //       `call public.create(0,'public.global_role_memberships',$1, 2,2,0,3,0)`,
+    //       [
+    //         this.convertObjectToHstore({
+    //           global_role: 0,
+    //           person: id,
+    //         }),
+    //       ]
+    //     );
+    //   }
+    // }
+    // for (let i = 2; i <= 10; i++) {
+    //   console.log(i);
+    //   await this.pool.query(
+    //     `call public.create(0,'public.organizations_data', $1, 2,2,1,3,0);`,
+    //     [
+    //       this.convertObjectToHstore({
+    //         id: i,
+    //         name: `name${i}`,
+    //         sensitivity: 'Low',
+    //       }),
+    //     ]
+    //   );
 
     for (let i = 1; i <= 10; i++) {
       await this.create(
@@ -395,9 +437,10 @@ export class PostgresService {
         {
           id: i,
           chat_id: i,
-          name: `locations${i}`,
-          sensitivity: 'Low',
-          type: 'Country',
+            neo4j_id: "VU2BTYP66BH",
+            name: `location${i}`,
+            sensitivity: 'Low',
+            type: 'Country',
         },
         'UpdateAccessLevelAndIsClearedSecurity',
         'RefreshMVConcurrently',
