@@ -378,18 +378,21 @@ export class PostgresService {
       'History',
       'RefreshSecurityTablesAndMVConcurrently'
     );
-    await this.pool.query(
-      `call public.create(0, 'public.language_ex_data', $1, 2,2,1,3,0)`,
-      [
-        this.convertObjectToHstore({
-          lang_name : 'english',
-          lang_code: 'ENG18',
-          location: 'US',
-          comments: 'test'
-
-        }),
-      ]
+    await this.create(
+      0,
+      'public.language_ex_data',
+      { 
+        lang_name : 'english',
+        lang_code: 'ENG18',
+        location: 'US',
+      comments: 'test'
+      },
+      'UpdateAccessLevelAndIsClearedSecurity',
+      'RefreshMVConcurrently',
+      'History',
+      'RefreshSecurityTablesAndMVConcurrently'
     );
+
     // const personRows = await this.pool.query(
     //   `select id from public.people_data`
     // );
