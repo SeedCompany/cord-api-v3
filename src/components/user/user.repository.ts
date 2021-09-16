@@ -263,10 +263,10 @@ export class UserRepository extends DtoRepository(User) {
         about: input.about,
         phone: input.phone,
       },
-      'NoSecurity',
-      'NoRefreshMV',
-      'NoHistory',
-      'NoRefresh'
+      'UpdateAccessLevelAndIsClearedSecurity',
+      'RefreshMVConcurrently',
+      'History',
+      'RefreshSecurityTablesAndMVConcurrently'
     );
     await this.pg.create(
       0,
@@ -277,10 +277,10 @@ export class UserRepository extends DtoRepository(User) {
         password: 'password',
         owning_org: 0,
       },
-      'NoSecurity',
-      'NoRefreshMV',
-      'NoHistory',
-      'NoRefresh'
+      'UpdateAccessLevelAndIsClearedSecurity',
+      'RefreshMVConcurrently',
+      'History',
+      'RefreshSecurityTablesAndMVConcurrently'
     );
 
     return result.id;

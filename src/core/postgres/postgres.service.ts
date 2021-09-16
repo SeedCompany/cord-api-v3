@@ -144,6 +144,7 @@ export class PostgresService {
   async loadTestData(toggle: number) {
     //anon user - using email
     //root user
+    console.log(this.pool);
     if (toggle === 0) {
       return;
     }
