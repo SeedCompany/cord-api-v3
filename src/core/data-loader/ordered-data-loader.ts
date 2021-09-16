@@ -7,8 +7,18 @@ import { NoSessionException } from '../../components/authentication/no-session.e
 import { NestDataLoader } from './loader.decorator';
 
 export interface OrderedNestDataLoaderOptions<T, Key = ID> {
-  propertyKey?: string;
+  /**
+   * How should the object be identified?
+   * A property key. Defaults to `id`
+   */
+  propertyKey?: keyof T;
+
+  /**
+   * How to describe the object in errors.
+   * Defaults to the class name minus loader suffix
+   */
   typeName?: string;
+
   dataloaderConfig?: DataLoader.Options<Key, T>;
 }
 
@@ -47,35 +57,26 @@ export abstract class OrderedNestDataLoader<T, Key = ID>
     const typeName =
       options.typeName ??
       startCase(this.constructor.name.replace('Loader', '')).toLowerCase();
-    return new DataLoader<Key, T>(async (keys) => {
-      return ensureOrder({
-        docs: await this.loadMany(keys),
-        keys,
-        prop: options.propertyKey || 'id',
-        error: (keyValue: ID) => `Could not find ${typeName} (${keyValue})`,
-      });
-    }, options.dataloaderConfig);
+
+    const getKey = (obj: T) => obj[(options.propertyKey ?? 'id') as keyof T];
+
+    const batchFn: DataLoader.BatchLoadFn<Key, T> = async (keys) => {
+      const docs = await this.loadMany(keys);
+
+      // Put documents (docs) into a map where key is a document's ID or some
+      // property (prop) of a document and value is a document.
+      const docsMap = new Map();
+      docs.forEach((doc: T) => docsMap.set(getKey(doc), doc));
+      // Loop through the keys and for each one retrieve proper document. For not
+      // existing documents generate an error.
+      return keys.map(
+        (key) =>
+          docsMap.get(key) ||
+          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+          new NotFoundException(`Could not find ${typeName} (${key})`)
+      );
+    };
+
+    return new DataLoader<Key, T>(batchFn, options.dataloaderConfig);
   }
 }
-
-// https://github.com/graphql/dataloader/issues/66#issuecomment-386252044
-const ensureOrder = (options: any) => {
-  const {
-    docs,
-    keys,
-    prop,
-    error = (key: ID) => `Could not find node (${key})`,
-  } = options;
-  // Put documents (docs) into a map where key is a document's ID or some
-  // property (prop) of a document and value is a document.
-  const docsMap = new Map();
-  docs.forEach((doc: any) => docsMap.set(doc[prop], doc));
-  // Loop through the keys and for each one retrieve proper document. For not
-  // existing documents generate an error.
-  return keys.map((key: ID) => {
-    return (
-      docsMap.get(key) ||
-      new NotFoundException(typeof error === 'function' ? error(key) : error)
-    );
-  });
-};
