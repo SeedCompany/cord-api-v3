@@ -1,6 +1,6 @@
 // eslint-disable-next-line no-restricted-imports -- it's ok in this folder
 import * as DataLoader from 'dataloader';
-import { startCase } from 'lodash';
+import { identity, startCase } from 'lodash';
 import { GqlContextType, ID, NotFoundException } from '../../common';
 import { anonymousSession } from '../../common/session';
 import { NoSessionException } from '../../components/authentication/no-session.exception';
@@ -12,7 +12,7 @@ export interface OrderedNestDataLoaderOptions<T, Key = ID, CachedKey = Key>
    * How should the object be identified?
    * An function to do so or a property key. Defaults to `id`
    */
-  propertyKey?: keyof T | ((obj: T) => CachedKey);
+  propertyKey?: keyof T | ((obj: T) => Key);
 
   /**
    * How to describe the object in errors.
@@ -64,7 +64,8 @@ export abstract class OrderedNestDataLoader<T, Key = ID, CachedKey = Key>
     const getKey =
       typeof propertyKey === 'function'
         ? propertyKey
-        : (obj: T) => obj[(propertyKey ?? 'id') as keyof T];
+        : (obj: T) => obj[(propertyKey ?? 'id') as keyof T] as unknown as Key;
+    const getCacheKey: (key: Key) => CachedKey = options.cacheKeyFn ?? identity;
 
     const batchFn: DataLoader.BatchLoadFn<Key, T> = async (keys) => {
       const docs = await this.loadMany(keys);
@@ -72,11 +73,11 @@ export abstract class OrderedNestDataLoader<T, Key = ID, CachedKey = Key>
       // Put documents (docs) into a map where key is a document's ID or some
       // property (prop) of a document and value is a document.
       const docsMap = new Map();
-      docs.forEach((doc: T) => docsMap.set(getKey(doc), doc));
+      docs.forEach((doc: T) => docsMap.set(getCacheKey(getKey(doc)), doc));
       // Loop through the keys and for each one retrieve proper document. For not
       // existing documents generate an error.
       return keys.map((key) => {
-        const cacheKey = options.cacheKeyFn?.(key) ?? key;
+        const cacheKey = getCacheKey(key);
         return (
           docsMap.get(cacheKey) ||
           // eslint-disable-next-line @typescript-eslint/restrict-template-expressions

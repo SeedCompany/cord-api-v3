@@ -1,5 +1,5 @@
 import { groupBy } from 'lodash';
-import { ID, ObjectView } from '../../common';
+import { ID, ObjectView, viewOfChangeset } from '../../common';
 import { ChangesetAware } from '../../components/changeset/dto';
 import {
   OrderedNestDataLoader as Loader,
@@ -43,10 +43,10 @@ export abstract class ObjectViewAwareLoader<
     const parent = super.getOptions();
     return {
       ...parent,
-      propertyKey: (obj: T) =>
-        `${obj.id}=${
-          obj.changeset ? `changeset=${obj.changeset}` : `active=true`
-        }`,
+      propertyKey: (obj: T) => ({
+        id: obj.id,
+        view: viewOfChangeset(obj.changeset),
+      }),
       cacheKeyFn: ({ id, view }) => `${id}=${viewId(view)}`,
     };
   }
