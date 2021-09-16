@@ -1,13 +1,13 @@
 // eslint-disable-next-line no-restricted-imports -- it's ok in this folder
-import * as DataLoader from 'dataloader';
+import * as DataLoaderLib from 'dataloader';
 import { identity, startCase } from 'lodash';
 import { GqlContextType, ID, NotFoundException } from '../../common';
 import { anonymousSession } from '../../common/session';
 import { NoSessionException } from '../../components/authentication/no-session.exception';
-import { NestDataLoader } from './loader.decorator';
+import { DataLoader, NestDataLoader } from './loader.decorator';
 
 export interface OrderedNestDataLoaderOptions<T, Key = ID, CachedKey = Key>
-  extends DataLoader.Options<Key, T, CachedKey> {
+  extends DataLoaderLib.Options<Key, T, CachedKey> {
   /**
    * How should the object be identified?
    * An function to do so or a property key. Defaults to `id`
@@ -53,8 +53,8 @@ export abstract class OrderedNestDataLoader<T, Key = ID, CachedKey = Key>
     propertyKey,
     ...options
   }: OrderedNestDataLoaderOptions<T, Key, CachedKey>): DataLoader<
-    Key,
     T,
+    Key,
     CachedKey
   > {
     typeName ??= startCase(
@@ -67,7 +67,7 @@ export abstract class OrderedNestDataLoader<T, Key = ID, CachedKey = Key>
         : (obj: T) => obj[(propertyKey ?? 'id') as keyof T] as unknown as Key;
     const getCacheKey: (key: Key) => CachedKey = options.cacheKeyFn ?? identity;
 
-    const batchFn: DataLoader.BatchLoadFn<Key, T> = async (keys) => {
+    const batchFn: DataLoaderLib.BatchLoadFn<Key, T> = async (keys) => {
       const docs = await this.loadMany(keys);
 
       // Put documents (docs) into a map where key is a document's ID or some
@@ -86,6 +86,18 @@ export abstract class OrderedNestDataLoader<T, Key = ID, CachedKey = Key>
       });
     };
 
-    return new DataLoader<Key, T, CachedKey>(batchFn, options);
+    const loader = new DataLoaderLib<Key, T, CachedKey>(
+      batchFn,
+      options
+    ) as DataLoader<T, Key, CachedKey>;
+
+    loader.primeAll = (items) => {
+      for (const item of items) {
+        loader.prime(getKey(item), item);
+      }
+      return loader;
+    };
+
+    return loader;
   }
 }

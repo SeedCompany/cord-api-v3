@@ -24,7 +24,12 @@ export type DataLoader<T, Key = ID, CachedKey = Key> = DataLoaderLib<
   Key,
   T,
   CachedKey
->;
+> & {
+  /**
+   * Shortcut for {@link prime}.
+   */
+  primeAll: (items: readonly T[]) => DataLoader<T, Key, CachedKey>;
+};
 
 /**
  * An actual DataLoader for the given loader factory
