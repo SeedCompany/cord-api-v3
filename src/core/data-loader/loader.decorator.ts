@@ -27,6 +27,17 @@ export type DataLoader<T, Key = ID, CachedKey = Key> = DataLoaderLib<
 >;
 
 /**
+ * An actual DataLoader for the given loader factory
+ */
+export type LoaderOf<Factory> = Factory extends NestDataLoader<
+  infer T,
+  infer Key,
+  infer CachedKey
+>
+  ? DataLoader<T, Key, CachedKey>
+  : never;
+
+/**
  * This interface will be used to generate the initial data loader.
  * The concrete implementation should be added as a provider to your module.
  */
