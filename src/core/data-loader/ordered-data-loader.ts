@@ -9,9 +9,9 @@ import { NestDataLoader } from './loader.decorator';
 export interface OrderedNestDataLoaderOptions<T, Key = ID> {
   /**
    * How should the object be identified?
-   * A property key. Defaults to `id`
+   * An function to do so or a property key. Defaults to `id`
    */
-  propertyKey?: keyof T;
+  propertyKey?: keyof T | ((obj: T) => string);
 
   /**
    * How to describe the object in errors.
@@ -58,7 +58,10 @@ export abstract class OrderedNestDataLoader<T, Key = ID>
       options.typeName ??
       startCase(this.constructor.name.replace('Loader', '')).toLowerCase();
 
-    const getKey = (obj: T) => obj[(options.propertyKey ?? 'id') as keyof T];
+    const getKey =
+      typeof options.propertyKey === 'function'
+        ? options.propertyKey
+        : (obj: T) => obj[(options.propertyKey ?? 'id') as keyof T];
 
     const batchFn: DataLoader.BatchLoadFn<Key, T> = async (keys) => {
       const docs = await this.loadMany(keys);
