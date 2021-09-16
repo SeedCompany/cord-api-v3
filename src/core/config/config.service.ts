@@ -216,7 +216,9 @@ export class ConfigService implements EmailOptionsFactory {
 
   @Lazy() get xray() {
     return {
-      daemonAddress: this.env.string('AWS_XRAY_DAEMON_ADDRESS').optional(),
+      daemonAddress: this.jest
+        ? undefined
+        : this.env.string('AWS_XRAY_DAEMON_ADDRESS').optional(),
     };
   }
 
