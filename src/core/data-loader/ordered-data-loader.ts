@@ -12,7 +12,7 @@ export interface OrderedNestDataLoaderOptions<T, Key = ID, CachedKey = Key>
    * How should the object be identified?
    * An function to do so or a property key. Defaults to `id`
    */
-  propertyKey?: keyof T | ((obj: T) => string);
+  propertyKey?: keyof T | ((obj: T) => CachedKey);
 
   /**
    * How to describe the object in errors.
@@ -75,12 +75,14 @@ export abstract class OrderedNestDataLoader<T, Key = ID, CachedKey = Key>
       docs.forEach((doc: T) => docsMap.set(getKey(doc), doc));
       // Loop through the keys and for each one retrieve proper document. For not
       // existing documents generate an error.
-      return keys.map(
-        (key) =>
-          docsMap.get(key) ||
+      return keys.map((key) => {
+        const cacheKey = options.cacheKeyFn?.(key) ?? key;
+        return (
+          docsMap.get(cacheKey) ||
           // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-          new NotFoundException(`Could not find ${typeName} (${key})`)
-      );
+          new NotFoundException(`Could not find ${typeName} (${cacheKey})`)
+        );
+      });
     };
 
     return new DataLoader<Key, T, CachedKey>(batchFn, options);

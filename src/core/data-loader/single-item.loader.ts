@@ -5,7 +5,7 @@ import {
 } from './ordered-data-loader';
 
 /**
- * An loader that will load each item one by one.
+ * A loader that will load each item one by one.
  * This is not ideal because it will make at least N requests to DB instead of 1.
  * Using this is only encouraged to adopt the DataLoader pattern, which can provide
  * caching even without batching.
