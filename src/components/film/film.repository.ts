@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
+import { inArray, node } from 'cypher-query-builder';
 import { ID, NotFoundException, Session } from '../../common';
 import { DtoRepository, matchRequestingUser } from '../../core';
 import {
@@ -46,6 +46,17 @@ export class FilmRepository extends DtoRepository(Film) {
       throw new NotFoundException('Could not find film', 'film.id');
     }
     return result.dto;
+  }
+
+  async readMany(ids: readonly ID[], session: Session) {
+    return await this.db
+      .query()
+      .apply(matchRequestingUser(session))
+      .matchNode('node', 'Film')
+      .where({ 'node.id': inArray(ids.slice()) })
+      .apply(this.hydrate())
+      .map('dto')
+      .run();
   }
 
   async list({ filter, ...input }: FilmListInput, session: Session) {

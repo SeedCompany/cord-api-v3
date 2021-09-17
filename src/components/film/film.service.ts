@@ -82,6 +82,11 @@ export class FilmService {
     return await this.secure(result, session);
   }
 
+  async readMany(ids: readonly ID[], session: Session) {
+    const films = await this.repo.readMany(ids, session);
+    return await Promise.all(films.map((dto) => this.secure(dto, session)));
+  }
+
   private async secure(
     dto: UnsecuredDto<Film>,
     session: Session
