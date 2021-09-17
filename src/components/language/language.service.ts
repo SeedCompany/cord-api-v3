@@ -14,13 +14,7 @@ import {
   UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
-import {
-  HandleIdLookup,
-  ILogger,
-  Logger,
-  OnIndex,
-  UniquenessError,
-} from '../../core';
+import { HandleIdLookup, ILogger, Logger, UniquenessError } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
@@ -57,52 +51,6 @@ export class LanguageService {
     private readonly repo: LanguageRepository,
     @Logger('language:service') private readonly logger: ILogger
   ) {}
-
-  @OnIndex()
-  async createIndexes() {
-    return [
-      // LANGUAGE NODE
-      'CREATE CONSTRAINT ON (n:Language) ASSERT EXISTS(n.id)',
-      'CREATE CONSTRAINT ON (n:Language) ASSERT n.id IS UNIQUE',
-
-      'CREATE CONSTRAINT ON (n:Language) ASSERT EXISTS(n.createdAt)',
-
-      // NAME REL
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
-
-      // NAME NODE
-      'CREATE CONSTRAINT ON (n:LanguageName) ASSERT EXISTS(n.value)',
-
-      // DISPLAYNAME REL
-      'CREATE CONSTRAINT ON ()-[r:displayName]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:displayName]-() ASSERT EXISTS(r.createdAt)',
-
-      // DISPLAYNAME NODE
-      'CREATE CONSTRAINT ON (n:LanguageDisplayName) ASSERT EXISTS(n.value)',
-
-      // REGISTRYOFDIALECTSCODE REL
-      'CREATE CONSTRAINT ON ()-[r:registryOfDialectsCode]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:registryOfDialectsCode]-() ASSERT EXISTS(r.createdAt)',
-
-      // REGISTRYOFDIALECTSCODE NODE
-      'CREATE CONSTRAINT ON (n:RegistryOfDialectsCode) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:RegistryOfDialectsCode) ASSERT n.value IS UNIQUE',
-
-      // ETHNOLOGUELANGUAGE REL
-      'CREATE CONSTRAINT ON ()-[r:ethnologue]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:ethnologue]-() ASSERT EXISTS(r.createdAt)',
-
-      // ETHNOLOGUELANGUAGE NODE
-      'CREATE CONSTRAINT ON (n:EthnologueLanguage) ASSERT EXISTS(n.id)',
-
-      'CREATE CONSTRAINT ON (n:EthnologueLanguage) ASSERT EXISTS(n.createdAt)',
-
-      // PROPERTY NODE
-      //'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.value)',
-      //'CREATE CONSTRAINT ON (n:Property) ASSERT EXISTS(n.active)',
-    ];
-  }
 
   async create(input: CreateLanguage, session: Session): Promise<Language> {
     await this.authorizationService.checkPower(Powers.CreateLanguage, session);

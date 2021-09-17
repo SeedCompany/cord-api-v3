@@ -8,6 +8,7 @@ import {
   DateInterval,
   DateTimeField,
   DbLabel,
+  DbUnique,
   ID,
   IntersectionType,
   NameField,
@@ -87,13 +88,13 @@ class Project extends PinnablePostableChangesetAwareResource {
   readonly sensitivity: Sensitivity;
 
   @NameField()
-  @DbLabel('ProjectName')
+  @DbUnique()
   readonly name: SecuredString;
 
   @Field({
     description: 'The legacy department ID',
   })
-  @DbLabel('DepartmentId')
+  @DbUnique('DepartmentId')
   readonly departmentId: SecuredStringNullable;
 
   @Field({

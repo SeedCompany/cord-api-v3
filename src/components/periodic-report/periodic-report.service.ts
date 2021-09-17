@@ -9,13 +9,7 @@ import {
   Session,
   UnsecuredDto,
 } from '../../common';
-import {
-  HandleIdLookup,
-  IEventBus,
-  ILogger,
-  Logger,
-  OnIndex,
-} from '../../core';
+import { HandleIdLookup, IEventBus, ILogger, Logger } from '../../core';
 import { Variable } from '../../core/database/query';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
@@ -46,14 +40,6 @@ export class PeriodicReportService {
     private readonly authorizationService: AuthorizationService,
     private readonly repo: PeriodicReportRepository
   ) {}
-
-  @OnIndex()
-  async createIndexes() {
-    return [
-      'CREATE CONSTRAINT ON (n:PeriodicReport) ASSERT EXISTS(n.id)',
-      'CREATE CONSTRAINT ON (n:PeriodicReport) ASSERT n.id IS UNIQUE',
-    ];
-  }
 
   async create(
     input: CreatePeriodicReport,

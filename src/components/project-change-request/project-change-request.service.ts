@@ -15,7 +15,6 @@ import {
   IEventBus,
   ILogger,
   Logger,
-  OnIndex,
 } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
@@ -44,14 +43,6 @@ export class ProjectChangeRequestService {
     private readonly projects: ProjectService,
     private readonly repo: ProjectChangeRequestRepository
   ) {}
-
-  @OnIndex()
-  async createIndexes() {
-    return [
-      'CREATE CONSTRAINT ON (n:ProjectChangeRequest) ASSERT EXISTS(n.id)',
-      'CREATE CONSTRAINT ON (n:ProjectChangeRequest) ASSERT n.id IS UNIQUE',
-    ];
-  }
 
   async create(
     input: CreateProjectChangeRequest,
