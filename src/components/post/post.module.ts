@@ -5,6 +5,7 @@ import * as migrations from './migrations';
 import { PostRepository } from './post.repository';
 import { PostResolver } from './post.resolver';
 import { PostService } from './post.service';
+import { PostableResolver } from './postable.resolver';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { PostService } from './post.service';
     PostResolver,
     PostService,
     PostRepository,
+    PostableResolver,
     ...Object.values(migrations),
   ],
   exports: [PostService],

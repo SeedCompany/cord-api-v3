@@ -14,10 +14,9 @@ import { ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { UserService } from '../user';
-import { CreatePost, Post, UpdatePost } from './dto';
+import { CreatePost, Post, Postable, UpdatePost } from './dto';
 import { PostListInput, SecuredPostList } from './dto/list-posts.dto';
 import { PostRepository } from './post.repository';
-import { Postable } from './postable/dto/postable.dto';
 
 @Injectable()
 export class PostService {

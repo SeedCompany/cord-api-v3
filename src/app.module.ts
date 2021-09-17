@@ -23,7 +23,6 @@ import { PartnershipModule } from './components/partnership/partnership.module';
 import { PeriodicReportModule } from './components/periodic-report/periodic-report.module';
 import { PinModule } from './components/pin/pin.module';
 import { PostModule } from './components/post/post.module';
-import { PostableModule } from './components/post/postable/postable.module';
 import { ProductProgressModule } from './components/product-progress/product-progress.module';
 import { ProductModule } from './components/product/product.module';
 import { ProgressSummaryModule } from './components/progress-summary/progress-summary.module';
@@ -73,7 +72,6 @@ assert(
     FieldZoneModule,
     PinModule,
     PostModule,
-    PostableModule,
     PeriodicReportModule,
     ProgressSummaryModule,
     ChangesetModule,
