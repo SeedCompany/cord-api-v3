@@ -5,3 +5,4 @@ export * from './database';
 export * from './events';
 export * from './resources';
 export * from './data-loader';
+export * from './tracing';

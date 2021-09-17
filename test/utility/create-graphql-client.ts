@@ -6,6 +6,7 @@ import { createTestClient } from 'apollo-server-testing';
 import { GraphQLResponse } from 'apollo-server-types';
 import { DocumentNode, GraphQLFormattedError } from 'graphql';
 import { GqlContextType } from '../../src/common';
+import { TracingService } from '../../src/core';
 
 export interface GraphQLTestClient {
   query: (
@@ -40,34 +41,40 @@ export const createGraphqlClient = async (
   // ensure variables are plain JSON as they would be over the wire
   const toPlain = (obj: unknown) =>
     obj ? JSON.parse(JSON.stringify(obj)) : obj;
+
+  const tracing = app.get(TracingService);
   return {
     query: async (q, variables) => {
-      try {
-        const result = await client.query({
-          query: q,
-          variables: toPlain(variables),
-        });
-        validateResult(result);
-        return result.data;
-      } catch (e) {
-        throw adjustError(e);
-      } finally {
-        resetRequest();
-      }
+      return await tracing.capture('query', async () => {
+        try {
+          const result = await client.query({
+            query: q,
+            variables: toPlain(variables),
+          });
+          validateResult(result);
+          return result.data;
+        } catch (e) {
+          throw adjustError(e);
+        } finally {
+          resetRequest();
+        }
+      });
     },
     mutate: async (mutation, variables) => {
-      try {
-        const result = await client.mutate({
-          mutation,
-          variables: toPlain(variables),
-        });
-        validateResult(result);
-        return result.data;
-      } catch (e) {
-        throw adjustError(e);
-      } finally {
-        resetRequest();
-      }
+      return await tracing.capture('mutation', async () => {
+        try {
+          const result = await client.mutate({
+            mutation,
+            variables: toPlain(variables),
+          });
+          validateResult(result);
+          return result.data;
+        } catch (e) {
+          throw adjustError(e);
+        } finally {
+          resetRequest();
+        }
+      });
     },
     get authToken() {
       return (
