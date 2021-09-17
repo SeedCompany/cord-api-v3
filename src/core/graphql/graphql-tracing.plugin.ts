@@ -19,11 +19,11 @@ export class GraphqlTracingPlugin implements ApolloPlugin<ContextType> {
         segment.name = reqContext.operationName ?? reqContext.queryHash;
         segment.addAnnotation(reqContext.operation.operation, true);
 
-        // Change url to be something meaningful since all gql requests hit a single http endpoint
+        // Append operation name to url since all gql requests hit a single http endpoint
         // @ts-expect-error http middleware could have not run or this is a subsegment
         if (segment.http?.request) {
           // @ts-expect-error xray library types suck
-          segment.http.request.url = `/${segment.name}`;
+          (segment.http.request.url as string) += '/' + segment.name;
         }
 
         return {
