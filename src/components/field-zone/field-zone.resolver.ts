@@ -25,6 +25,7 @@ import {
   UpdateFieldZoneInput,
   UpdateFieldZoneOutput,
 } from './dto';
+import { FieldZoneLoader } from './field-zone.loader';
 import { FieldZoneService } from './field-zone.service';
 
 @Resolver(FieldZone)
@@ -35,10 +36,10 @@ export class FieldZoneResolver {
     description: 'Read one field zone by id',
   })
   async fieldZone(
-    @AnonSession() session: Session,
+    @Loader(FieldZoneLoader) fieldZones: LoaderOf<FieldZoneLoader>,
     @IdArg() id: ID
   ): Promise<FieldZone> {
-    return await this.fieldZoneService.readOne(id, session);
+    return await fieldZones.load(id);
   }
 
   @Query(() => FieldZoneListOutput, {
@@ -51,9 +52,12 @@ export class FieldZoneResolver {
       type: () => FieldZoneListInput,
       defaultValue: FieldZoneListInput.defaultVal,
     })
-    input: FieldZoneListInput
+    input: FieldZoneListInput,
+    @Loader(FieldZoneLoader) fieldZones: LoaderOf<FieldZoneLoader>
   ): Promise<FieldZoneListOutput> {
-    return await this.fieldZoneService.list(input, session);
+    const list = await this.fieldZoneService.list(input, session);
+    fieldZones.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => SecuredUser)

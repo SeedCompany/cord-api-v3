@@ -15,7 +15,7 @@ import {
   Session,
 } from '../../common';
 import { Loader, LoaderOf } from '../../core';
-import { FieldZoneService, SecuredFieldZone } from '../field-zone';
+import { FieldZoneLoader, SecuredFieldZone } from '../field-zone';
 import { SecuredUser, UserLoader } from '../user';
 import {
   CreateFieldRegionInput,
@@ -30,10 +30,7 @@ import { FieldRegionService } from './field-region.service';
 
 @Resolver(FieldRegion)
 export class FieldRegionResolver {
-  constructor(
-    private readonly fieldRegionService: FieldRegionService,
-    private readonly fieldZoneService: FieldZoneService
-  ) {}
+  constructor(private readonly fieldRegionService: FieldRegionService) {}
 
   @Query(() => FieldRegion, {
     description: 'Read one field region by id',
@@ -70,17 +67,12 @@ export class FieldRegionResolver {
 
   @ResolveField(() => SecuredFieldZone)
   async fieldZone(
-    @Parent() region: FieldRegion,
-    @AnonSession() session: Session
+    @Parent() fieldRegion: FieldRegion,
+    @Loader(FieldZoneLoader) fieldZones: LoaderOf<FieldZoneLoader>
   ): Promise<SecuredFieldZone> {
-    const { value: id, ...rest } = region.fieldZone;
-    const value = id
-      ? await this.fieldZoneService.readOne(id, session)
-      : undefined;
-    return {
-      value,
-      ...rest,
-    };
+    return await mapSecuredValue(fieldRegion.fieldZone, (id) =>
+      fieldZones.load(id)
+    );
   }
 
   @Mutation(() => CreateFieldRegionOutput, {
