@@ -92,9 +92,11 @@ export class ProjectResolver {
       defaultValue: ProjectListInput.defaultVal,
     })
     input: ProjectListInput,
+    @Loader(IProject) projects: LoaderOf<ProjectLoader>,
     @AnonSession() session: Session
   ): Promise<ProjectListOutput> {
     const list = await this.projectService.list(input, session);
+    projects.primeAll(list.items);
     return list;
   }
 
