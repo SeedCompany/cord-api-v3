@@ -21,11 +21,11 @@ export const getDbPropertyLabels = (
   type: AbstractClassType<unknown>,
   property: string
 ) => {
-  // @ts-expect-error property decoration is on instance of object
-  const obj = new type();
-  const labels = Reflect.getMetadata(DbLabelSymbol, obj, property) as
-    | string[]
-    | undefined;
+  const labels: string[] | undefined = Reflect.getMetadata(
+    DbLabelSymbol,
+    type.prototype,
+    property
+  );
   const normalized = labels?.flatMap((l) => l.split(':'));
   return uniq([...(normalized ?? []), 'Property']);
 };
