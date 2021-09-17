@@ -1,10 +1,10 @@
 import { Args, Info, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { GraphQLResolveInfo } from 'graphql';
-import { LoggedInSession, Resource, Session } from '../../../common';
-import { resourceFromName } from '../../authorization/model/resource-map';
-import { PostListInput, SecuredPostList } from '../dto/list-posts.dto';
-import { PostService } from '../post.service';
-import { Postable } from './dto/postable.dto';
+import { LoggedInSession, Resource, Session } from '../../common';
+import { resourceFromName } from '../authorization/model/resource-map';
+import { Postable } from './dto';
+import { PostListInput, SecuredPostList } from './dto/list-posts.dto';
+import { PostService } from './post.service';
 
 @Resolver(Postable)
 export class PostableResolver {

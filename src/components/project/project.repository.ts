@@ -9,7 +9,12 @@ import {
   Session,
   UnsecuredDto,
 } from '../../common';
-import { CommonRepository, ConfigService, DatabaseService } from '../../core';
+import {
+  CommonRepository,
+  ConfigService,
+  DatabaseService,
+  OnIndex,
+} from '../../core';
 import { DbChanges, getChanges } from '../../core/database/changes';
 import {
   ACTIVE,
@@ -380,5 +385,10 @@ export class ProjectRepository extends CommonRepository {
 
     const result = await query.first();
     return result?.props;
+  }
+
+  @OnIndex()
+  private createIndexes() {
+    return this.getConstraintsFor(IProject);
   }
 }

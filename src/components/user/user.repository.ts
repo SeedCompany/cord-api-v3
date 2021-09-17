@@ -17,7 +17,6 @@ import {
   ILogger,
   Logger,
   matchSession,
-  OnIndex,
   property,
   UniquenessError,
 } from '../../core';
@@ -54,26 +53,6 @@ export class UserRepository extends DtoRepository(User) {
     @Logger('user:repository') private readonly logger: ILogger
   ) {
     super(db);
-  }
-
-  @OnIndex()
-  async createIndexes() {
-    // language=Cypher (for webstorm)
-    return [
-      // USER NODE
-      'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.id)',
-      'CREATE CONSTRAINT ON (n:User) ASSERT n.id IS UNIQUE',
-      'CREATE CONSTRAINT ON (n:User) ASSERT EXISTS(n.createdAt)',
-      // EMAIL REL
-      'CREATE CONSTRAINT ON ()-[r:email]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:email]-() ASSERT EXISTS(r.createdAt)',
-      // EMAIL NODE
-      'CREATE CONSTRAINT ON (n:EmailAddress) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:EmailAddress) ASSERT n.value IS UNIQUE',
-      // PASSWORD REL
-      'CREATE CONSTRAINT ON ()-[r:password]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:password]-() ASSERT EXISTS(r.createdAt)',
-    ];
   }
 
   private readonly roleProperties = (roles?: Role[]) =>

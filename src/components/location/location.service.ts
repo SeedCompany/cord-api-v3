@@ -11,7 +11,7 @@ import {
   UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
-import { HandleIdLookup, ILogger, Logger, OnIndex } from '../../core';
+import { HandleIdLookup, ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import {
@@ -32,22 +32,6 @@ export class LocationService {
     private readonly authorizationService: AuthorizationService,
     private readonly repo: LocationRepository
   ) {}
-
-  @OnIndex()
-  async createIndexes() {
-    return [
-      'CREATE CONSTRAINT ON (n:Location) ASSERT EXISTS(n.id)',
-      'CREATE CONSTRAINT ON (n:Location) ASSERT n.id IS UNIQUE',
-      'CREATE CONSTRAINT ON (n:Location) ASSERT EXISTS(n.createdAt)',
-
-      // LOCATION NAME NODE
-      'CREATE CONSTRAINT ON (n:LocationName) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:LocationName) ASSERT n.value IS UNIQUE',
-
-      // LOCATION TYPE NODE
-      'CREATE CONSTRAINT ON (n:LocationType) ASSERT EXISTS(n.value)',
-    ];
-  }
 
   async create(input: CreateLocation, session: Session): Promise<Location> {
     const checkName = await this.repo.doesNameExist(input.name);

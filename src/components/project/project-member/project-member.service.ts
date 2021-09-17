@@ -24,7 +24,6 @@ import {
   IEventBus,
   ILogger,
   Logger,
-  OnIndex,
 } from '../../../core';
 import { ACTIVE } from '../../../core/database/query';
 import { mapListResults } from '../../../core/database/results';
@@ -53,14 +52,6 @@ export class ProjectMemberService {
     private readonly authorizationService: AuthorizationService,
     private readonly repo: ProjectMemberRepository
   ) {}
-
-  @OnIndex()
-  async createIndexes() {
-    return [
-      'CREATE CONSTRAINT ON (n:ProjectMember) ASSERT EXISTS(n.id)',
-      'CREATE CONSTRAINT ON (n:ProjectMember) ASSERT n.id IS UNIQUE',
-    ];
-  }
 
   protected async verifyRelationshipEligibility(
     projectId: ID,

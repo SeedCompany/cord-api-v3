@@ -36,8 +36,9 @@ export class IndexerModule implements OnModuleInit {
 
     const finishing = this.db.runOnceUntilCompleteAfterConnecting(async () => {
       const serverInfo = await this.db.getServerInfo();
-      for (const discoveredOfMode of Object.values(groupedByMode)) {
+      for (const [mode, discoveredOfMode] of Object.entries(groupedByMode)) {
         await this.doIndexing(discoveredOfMode, serverInfo);
+        this.logger.debug(`Finished syncing ${mode} indexes`);
       }
     });
     // Wait for indexing to finish when running tests, else just let it run in
@@ -109,7 +110,5 @@ export class IndexerModule implements OnModuleInit {
         }
       }
     }
-
-    this.logger.debug('Finished indexing');
   }
 }

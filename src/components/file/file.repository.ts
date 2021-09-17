@@ -18,6 +18,7 @@ import {
   UnauthorizedException,
 } from '../../common';
 import {
+  CommonRepository,
   DatabaseService,
   ILogger,
   Logger,
@@ -46,15 +47,17 @@ import {
 } from './dto';
 
 @Injectable()
-export class FileRepository {
+export class FileRepository extends CommonRepository {
   constructor(
-    private readonly db: DatabaseService,
+    db: DatabaseService,
     @Logger('file:repository') private readonly logger: ILogger
-  ) {}
+  ) {
+    super(db);
+  }
 
   @OnIndex()
-  async createIndexes() {
-    return ['CREATE CONSTRAINT ON (n:FileNode) ASSERT n.id IS UNIQUE'];
+  private createIndexes() {
+    return this.getConstraintsFor(IFileNode);
   }
 
   async getById(id: ID, _session: Session): Promise<FileNode> {

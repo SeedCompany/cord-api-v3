@@ -9,7 +9,7 @@ import {
   UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
-import { HandleIdLookup, ILogger, Logger, OnIndex } from '../../core';
+import { HandleIdLookup, ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
@@ -30,22 +30,6 @@ export class LiteracyMaterialService {
     private readonly authorizationService: AuthorizationService,
     private readonly repo: LiteracyMaterialRepository
   ) {}
-
-  @OnIndex()
-  async createIndexes() {
-    return [
-      'CREATE CONSTRAINT ON (n:LiteracyMaterial) ASSERT EXISTS(n.id)',
-      'CREATE CONSTRAINT ON (n:LiteracyMaterial) ASSERT n.id IS UNIQUE',
-
-      'CREATE CONSTRAINT ON (n:LiteracyMaterial) ASSERT EXISTS(n.createdAt)',
-
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
-
-      'CREATE CONSTRAINT ON (n:LiteracyName) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:LiteracyName) ASSERT n.value IS UNIQUE',
-    ];
-  }
 
   async create(
     input: CreateLiteracyMaterial,

@@ -4,6 +4,7 @@ import { GraphQLString } from 'graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
   DbLabel,
+  DbUnique,
   ID,
   NameField,
   Resource,
@@ -119,6 +120,7 @@ export class Language extends Resource {
       https://globalrecordings.net/en/rod
     `,
   })
+  @DbUnique('RegistryOfDialectsCode')
   readonly registryOfDialectsCode: SecuredString;
 
   // consider making object
