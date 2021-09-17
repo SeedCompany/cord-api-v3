@@ -1,7 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
 import { ID, NotFoundException, Session } from '../../common';
-import { DtoRepository, matchRequestingUser } from '../../core';
+import {
+  DatabaseService,
+  DtoRepository,
+  matchRequestingUser,
+  PostgresService,
+} from '../../core';
 import {
   createNode,
   paginate,
@@ -17,6 +22,9 @@ import {
 
 @Injectable()
 export class FundingAccountRepository extends DtoRepository(FundingAccount) {
+  constructor(db: DatabaseService, private readonly pg: PostgresService) {
+    super(db);
+  }
   async checkFundingAccount(name: string) {
     return await this.db
       .query()
@@ -37,6 +45,20 @@ export class FundingAccountRepository extends DtoRepository(FundingAccount) {
       .apply(await createNode(FundingAccount, { initialProps }))
       .return<{ id: ID }>('node.id as id');
 
+    const result = await query.first();
+    await this.pg.create(
+      0,
+      'sc.funding_account_data',
+      {
+        account_number: input.accountNumber,
+        name: input.name,
+        neo4j_id: result?.id,
+      },
+      'UpdateAccessLevelAndIsClearedSecurity',
+      'RefreshMVConcurrently',
+      'History',
+      'RefreshSecurityTablesAndMVConcurrently'
+    );
     return await query.first();
   }
 
@@ -48,9 +70,24 @@ export class FundingAccountRepository extends DtoRepository(FundingAccount) {
       .apply(this.hydrate());
 
     const result = await query.first();
+    const pgResult = await this.pg.pool.query(
+      'select name, account_number, neo4j_id, created_at from sc.funding_account_data where neo4j_id = $1',
+      [id]
+    );
+
     if (!result) {
       throw new NotFoundException('Could not found funding account');
     }
+    console.log({
+      pg: {
+        name: pgResult.rows[0]?.name,
+        accountNumber: pgResult.rows[0]?.account_number,
+        createdAt: pgResult.rows[0]?.created_at,
+        canDelete: true,
+        id: pgResult.rows[0]?.neo4j_id,
+      },
+      neo4j: result.dto,
+    });
     return result.dto;
   }
 

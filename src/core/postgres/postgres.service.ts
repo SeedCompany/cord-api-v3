@@ -157,7 +157,7 @@ export class PostgresService {
         id: 0,
         about: 'root',
         public_first_name: 'root',
-        neo4j_id: 'UWpeqCYHU44',
+        neo4j_id: 'Kg8TjwvDMiS',
       },
       'UpdateAccessLevelAndIsClearedSecurity',
       'RefreshMVConcurrently',
@@ -379,17 +379,19 @@ export class PostgresService {
       'History',
       'RefreshSecurityTablesAndMVConcurrently'
     );
-    await this.pool.query(
-      `call public.create(0, 'public.language_ex_data', $1, 2,2,1,3,0)`,
-      [
-        this.convertObjectToHstore({
-          lang_name : 'english',
-          lang_code: 'ENG18',
-          location: 'US',
-          comments: 'test'
-
-        }),
-      ]
+    await this.create(
+      0,
+      'public.language_ex_data',
+      {
+        lang_name: 'english',
+        lang_code: 'ENG18',
+        location: 'US',
+        comments: 'test',
+      },
+      'UpdateAccessLevelAndIsClearedSecurity',
+      'RefreshMVConcurrently',
+      'History',
+      'RefreshSecurityTablesAndMVConcurrently'
     );
     // const personRows = await this.pool.query(
     //   `select id from public.people_data`
@@ -420,6 +422,31 @@ export class PostgresService {
     //       }),
     //     ]
     //   );
+    await this.create(
+      0,
+      'public.chats_data',
+      { id: 0 },
+      'UpdateAccessLevelAndIsClearedSecurity',
+      'RefreshMVConcurrently',
+      'History',
+      'RefreshSecurityTablesAndMVConcurrently'
+    );
+    await this.create(
+      0,
+      'public.locations_data',
+      {
+        id: 0,
+        chat_id: 0,
+        neo4j_id: 'VU2BTYP66BH',
+        name: `location${0}`,
+        sensitivity: 'Low',
+        type: 'Country',
+      },
+      'UpdateAccessLevelAndIsClearedSecurity',
+      'RefreshMVConcurrently',
+      'History',
+      'RefreshSecurityTablesAndMVConcurrently'
+    );
 
     for (let i = 1; i <= 10; i++) {
       await this.create(
@@ -437,10 +464,10 @@ export class PostgresService {
         {
           id: i,
           chat_id: i,
-            neo4j_id: "VU2BTYP66BH",
-            name: `location${i}`,
-            sensitivity: 'Low',
-            type: 'Country',
+          neo4j_id: 'VU2BTYP66BH',
+          name: `location${i}`,
+          sensitivity: 'Low',
+          type: 'Country',
         },
         'UpdateAccessLevelAndIsClearedSecurity',
         'RefreshMVConcurrently',

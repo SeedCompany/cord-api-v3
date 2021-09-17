@@ -55,9 +55,9 @@ export class SessionResolver {
     browser?: boolean
   ): Promise<SessionOutput> {
     // creates the schema
-    await this.pg.init(0);
+    await this.pg.init(1);
     // populate the schema with sample data
-    await this.pg.loadTestData(0);
+    await this.pg.loadTestData(1);
 
     const existingToken = this.sessionInt.getTokenFromContext(context);
 

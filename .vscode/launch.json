@@ -4,7 +4,7 @@
 
 
     {
-      "command": "yarn start:dev",
+      "command": "yarn start",
       "name": "Run npm start",
       "request": "launch",
       "type": "node-terminal",
