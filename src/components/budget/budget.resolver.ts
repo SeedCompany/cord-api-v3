@@ -48,7 +48,7 @@ export class BudgetResolver {
     })
     input: BudgetListInput
   ): Promise<BudgetListOutput> {
-    return this.service.list(input, session);
+    return await this.service.list(input, session);
   }
 
   @ResolveField(() => Float)

@@ -66,7 +66,7 @@ export class FileResolver {
     })
     input: FileListInput
   ): Promise<FileListOutput> {
-    return this.service.listChildren(node, input, session);
+    return await this.service.listChildren(node, input, session);
   }
 
   @ResolveField(() => String, {

@@ -54,7 +54,7 @@ export class ProjectMemberResolver {
     })
     input: ProjectMemberListInput
   ): Promise<ProjectMemberListOutput> {
-    return this.service.list(input, session);
+    return await this.service.list(input, session);
   }
 
   @Mutation(() => UpdateProjectMemberOutput, {

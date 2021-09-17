@@ -95,7 +95,7 @@ export class LanguageResolver {
     })
     input: LocationListInput
   ): Promise<SecuredLocationList> {
-    return this.langService.listLocations(language, input, session);
+    return await this.langService.listLocations(language, input, session);
   }
 
   @ResolveField(() => SecuredDate, {
@@ -139,7 +139,7 @@ export class LanguageResolver {
     })
     input: LanguageListInput
   ): Promise<LanguageListOutput> {
-    return this.langService.list(input, session);
+    return await this.langService.list(input, session);
   }
 
   @Mutation(() => CreateLanguageOutput, {

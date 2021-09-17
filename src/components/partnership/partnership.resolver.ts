@@ -116,7 +116,7 @@ export class PartnershipResolver {
     })
     input: PartnershipListInput
   ): Promise<PartnershipListOutput> {
-    return this.service.list(input, session);
+    return await this.service.list(input, session);
   }
 
   @Mutation(() => UpdatePartnershipOutput, {

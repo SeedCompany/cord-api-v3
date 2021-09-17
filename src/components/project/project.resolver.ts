@@ -119,7 +119,11 @@ export class ProjectResolver {
     })
     input: ProjectChangeRequestListInput
   ): Promise<SecuredProjectChangeRequestList> {
-    return this.projectService.listChangeRequests(project, input, session);
+    return await this.projectService.listChangeRequests(
+      project,
+      input,
+      session
+    );
   }
 
   @ResolveField(() => SecuredBudget, {
@@ -148,7 +152,7 @@ export class ProjectResolver {
     })
     input: EngagementListInput
   ): Promise<SecuredEngagementList> {
-    return this.projectService.listEngagements(
+    return await this.projectService.listEngagements(
       project,
       input,
       session,
@@ -169,7 +173,7 @@ export class ProjectResolver {
     })
     input: ProjectMemberListInput
   ): Promise<SecuredProjectMemberList> {
-    return this.projectService.listProjectMembers(
+    return await this.projectService.listProjectMembers(
       id,
       input,
       session,
@@ -189,7 +193,7 @@ export class ProjectResolver {
     })
     input: PartnershipListInput
   ): Promise<SecuredPartnershipList> {
-    return this.projectService.listPartnerships(
+    return await this.projectService.listPartnerships(
       project.id,
       input,
       session,
@@ -250,7 +254,11 @@ export class ProjectResolver {
     })
     input: LocationListInput
   ): Promise<SecuredLocationList> {
-    return this.projectService.listOtherLocations(project, input, session);
+    return await this.projectService.listOtherLocations(
+      project,
+      input,
+      session
+    );
   }
 
   @ResolveField(() => SecuredLocation)

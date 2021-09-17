@@ -111,7 +111,7 @@ export class UserResolver {
     })
     input: UserListInput
   ): Promise<UserListOutput> {
-    return this.userService.list(input, session);
+    return await this.userService.list(input, session);
   }
 
   @Query(() => Boolean, {
@@ -132,7 +132,7 @@ export class UserResolver {
     })
     input: UnavailabilityListInput
   ): Promise<SecuredUnavailabilityList> {
-    return this.userService.listUnavailabilities(id, input, session);
+    return await this.userService.listUnavailabilities(id, input, session);
   }
 
   @ResolveField(() => SecuredOrganizationList)
@@ -146,7 +146,7 @@ export class UserResolver {
     })
     input: OrganizationListInput
   ): Promise<SecuredOrganizationList> {
-    return this.userService.listOrganizations(id, input, session);
+    return await this.userService.listOrganizations(id, input, session);
   }
 
   @ResolveField(() => SecuredPartnerList)
@@ -160,7 +160,7 @@ export class UserResolver {
     })
     input: PartnerListInput
   ): Promise<SecuredPartnerList> {
-    return this.userService.listPartners(id, input, session);
+    return await this.userService.listPartners(id, input, session);
   }
 
   @ResolveField(() => SecuredEducationList)
@@ -174,7 +174,7 @@ export class UserResolver {
     })
     input: EducationListInput
   ): Promise<SecuredEducationList> {
-    return this.userService.listEducations(id, input, session);
+    return await this.userService.listEducations(id, input, session);
   }
 
   @ResolveField(() => SecuredLocationList)
@@ -188,7 +188,7 @@ export class UserResolver {
     })
     input: LocationListInput
   ): Promise<SecuredLocationList> {
-    return this.userService.listLocations(user.id, input, session);
+    return await this.userService.listLocations(user.id, input, session);
   }
 
   @ResolveField(() => [KnownLanguage])

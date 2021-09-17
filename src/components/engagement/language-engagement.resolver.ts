@@ -39,7 +39,7 @@ export class LanguageEngagementResolver {
     })
     input?: ProductListInput
   ): Promise<SecuredProductList> {
-    return this.engagements.listProducts(
+    return await this.engagements.listProducts(
       engagement,
       input || ProductListInput.defaultVal,
       session
