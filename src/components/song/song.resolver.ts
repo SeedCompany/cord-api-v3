@@ -1,5 +1,6 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
+import { Loader, LoaderOf } from '../../core';
 import {
   CreateSongInput,
   CreateSongOutput,
@@ -9,6 +10,7 @@ import {
   UpdateSongInput,
   UpdateSongOutput,
 } from './dto';
+import { SongLoader } from './song.loader';
 import { SongService } from './song.service';
 
 @Resolver(Song)
@@ -18,12 +20,15 @@ export class SongResolver {
   @Query(() => Song, {
     description: 'Look up a song by its ID',
   })
-  async song(@AnonSession() session: Session, @IdArg() id: ID): Promise<Song> {
-    return await this.storyService.readOne(id, session);
+  async song(
+    @Loader(SongLoader) songs: LoaderOf<SongLoader>,
+    @IdArg() id: ID
+  ): Promise<Song> {
+    return await songs.load(id);
   }
 
   @Query(() => SongListOutput, {
-    description: 'Look up stories',
+    description: 'Look up songs',
   })
   async songs(
     @AnonSession() session: Session,
@@ -32,9 +37,12 @@ export class SongResolver {
       type: () => SongListInput,
       defaultValue: SongListInput.defaultVal,
     })
-    input: SongListInput
+    input: SongListInput,
+    @Loader(SongLoader) songs: LoaderOf<SongLoader>
   ): Promise<SongListOutput> {
-    return await this.storyService.list(input, session);
+    const list = await this.storyService.list(input, session);
+    songs.primeAll(list.items);
+    return list;
   }
 
   @Mutation(() => CreateSongOutput, {
