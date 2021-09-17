@@ -60,7 +60,7 @@ export class FundingAccountRepository extends DtoRepository(FundingAccount) {
       .query()
       .match([requestingUser(session), ...permissionsOfNode(label)])
       .apply(sorting(FundingAccount, input))
-      .apply(paginate(input))
+      .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }

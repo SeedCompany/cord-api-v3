@@ -18,7 +18,7 @@ import {
   SecuredDateRange,
   Session,
 } from '../../common';
-import { DataLoader, Loader } from '../../core';
+import { DataLoader, Loader, LoaderOf } from '../../core';
 import { SecuredBudget } from '../budget';
 import { IdsAndView, IdsAndViewArg } from '../changeset/dto';
 import { EngagementListInput, SecuredEngagementList } from '../engagement';
@@ -50,6 +50,7 @@ import {
   ProjectMemberListInput,
   SecuredProjectMemberList,
 } from './project-member/dto';
+import { ProjectLoader } from './project.loader';
 import { ProjectService } from './project.service';
 
 @ArgsType()
@@ -74,16 +75,10 @@ export class ProjectResolver {
     description: 'Look up a project by its ID',
   })
   async project(
-    @LoggedInSession() session: Session,
-    @IdsAndViewArg() { id, view }: IdsAndView
+    @Loader(IProject) projects: LoaderOf<ProjectLoader>,
+    @IdsAndViewArg() key: IdsAndView
   ): Promise<Project> {
-    const project = await this.projectService.readOneUnsecured(
-      id,
-      session,
-      view.changeset
-    );
-    const secured = await this.projectService.secure(project, session);
-    return secured;
+    return await projects.load(key);
   }
 
   @Query(() => ProjectListOutput, {
@@ -97,9 +92,11 @@ export class ProjectResolver {
       defaultValue: ProjectListInput.defaultVal,
     })
     input: ProjectListInput,
+    @Loader(IProject) projects: LoaderOf<ProjectLoader>,
     @AnonSession() session: Session
   ): Promise<ProjectListOutput> {
     const list = await this.projectService.list(input, session);
+    projects.primeAll(list.items);
     return list;
   }
 

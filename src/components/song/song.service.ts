@@ -9,7 +9,7 @@ import {
   UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
-import { HandleIdLookup, ILogger, Logger, OnIndex } from '../../core';
+import { HandleIdLookup, ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
@@ -30,22 +30,6 @@ export class SongService {
     private readonly authorizationService: AuthorizationService,
     private readonly repo: SongRepository
   ) {}
-
-  @OnIndex()
-  async createIndexes() {
-    return [
-      'CREATE CONSTRAINT ON (n:Song) ASSERT EXISTS(n.id)',
-      'CREATE CONSTRAINT ON (n:Song) ASSERT n.id IS UNIQUE',
-
-      'CREATE CONSTRAINT ON (n:Song) ASSERT EXISTS(n.createdAt)',
-
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
-
-      'CREATE CONSTRAINT ON (n:SongName) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:SongName) ASSERT n.value IS UNIQUE',
-    ];
-  }
 
   async create(input: CreateSong, session: Session): Promise<Song> {
     const checkSong = await this.repo.checkSong(input);
@@ -154,6 +138,6 @@ export class SongService {
 
   async list(input: SongListInput, session: Session): Promise<SongListOutput> {
     const results = await this.repo.list(input, session);
-    return await mapListResults(results, (id) => this.readOne(id, session));
+    return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 }

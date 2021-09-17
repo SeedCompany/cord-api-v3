@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
-import { ID, Session } from '../../../common';
+import { ID, NotFoundException, Session } from '../../../common';
 import { DtoRepository, matchRequestingUser } from '../../../core';
-import { createNode, matchProps } from '../../../core/database/query';
-import { DbPropsOfDto } from '../../../core/database/results';
+import { createNode } from '../../../core/database/query';
 import { CreateEthnologueLanguage, EthnologueLanguage } from '../dto';
 
 @Injectable()
@@ -32,10 +31,15 @@ export class EthnologueLanguageRepository extends DtoRepository(
       .query()
       .apply(matchRequestingUser(session))
       .match([node('node', 'EthnologueLanguage', { id: id })])
-      .apply(matchProps())
-      .return('props')
-      .asResult<{ props: DbPropsOfDto<EthnologueLanguage> }>();
+      .apply(this.hydrate());
 
-    return await query.first();
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException(
+        'Could not find ethnologue language',
+        'ethnologue.id'
+      );
+    }
+    return result.dto;
   }
 }

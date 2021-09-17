@@ -38,11 +38,10 @@ Query.prototype.logIt = function logIt(
         enumerable: false,
       });
     }
-    const trace = (this as any).__stacktrace as string[] | undefined;
-    const frame = trace?.[0] ? /at (.+) \(/.exec(trace[0]) : undefined;
-    if (frame?.[1]) {
+    const name = (this as any).name as string | undefined;
+    if (name) {
       Object.defineProperty(result.params, '__origin', {
-        value: frame[1],
+        value: name,
         enumerable: false,
       });
     }

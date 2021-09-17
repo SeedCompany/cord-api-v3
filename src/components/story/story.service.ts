@@ -9,7 +9,7 @@ import {
   UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
-import { HandleIdLookup, ILogger, Logger, OnIndex } from '../../core';
+import { HandleIdLookup, ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
@@ -30,22 +30,6 @@ export class StoryService {
     private readonly authorizationService: AuthorizationService,
     private readonly repo: StoryRepository
   ) {}
-
-  @OnIndex()
-  async createIndexes() {
-    return [
-      'CREATE CONSTRAINT ON (n:Story) ASSERT EXISTS(n.id)',
-      'CREATE CONSTRAINT ON (n:Story) ASSERT n.id IS UNIQUE',
-
-      'CREATE CONSTRAINT ON (n:Story) ASSERT EXISTS(n.createdAt)',
-
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
-
-      'CREATE CONSTRAINT ON (n:StoryName) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:StoryName) ASSERT n.value IS UNIQUE',
-    ];
-  }
 
   async create(input: CreateStory, session: Session): Promise<Story> {
     const checkStory = await this.repo.checkStory(input.name);
@@ -162,6 +146,6 @@ export class StoryService {
     session: Session
   ): Promise<StoryListOutput> {
     const results = await this.repo.list(input, session);
-    return await mapListResults(results, (id) => this.readOne(id, session));
+    return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 }

@@ -9,7 +9,7 @@ import {
   UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
-import { HandleIdLookup, ILogger, Logger, OnIndex } from '../../core';
+import { HandleIdLookup, ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
@@ -30,21 +30,6 @@ export class FilmService {
     private readonly authorizationService: AuthorizationService,
     private readonly repo: FilmRepository
   ) {}
-
-  @OnIndex()
-  async createIndexes() {
-    return [
-      'CREATE CONSTRAINT ON (n:Film) ASSERT EXISTS(n.id)',
-      'CREATE CONSTRAINT ON (n:Film) ASSERT n.id IS UNIQUE',
-      'CREATE CONSTRAINT ON (n:Film) ASSERT EXISTS(n.createdAt)',
-
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
-
-      'CREATE CONSTRAINT ON (n:FilmName) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:FilmName) ASSERT n.value IS UNIQUE',
-    ];
-  }
 
   async create(input: CreateFilm, session: Session): Promise<Film> {
     const checkFm = await this.repo.checkFilm(input.name);
@@ -162,6 +147,6 @@ export class FilmService {
 
   async list(input: FilmListInput, session: Session): Promise<FilmListOutput> {
     const results = await this.repo.list(input, session);
-    return await mapListResults(results, (id) => this.readOne(id, session));
+    return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 }

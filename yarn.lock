@@ -1361,7 +1361,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aws-sdk/service-error-classification@npm:3.29.0":
+"@aws-sdk/service-error-classification@npm:3.29.0, @aws-sdk/service-error-classification@npm:^3.4.1":
   version: 3.29.0
   resolution: "@aws-sdk/service-error-classification@npm:3.29.0"
   checksum: 25bb0eebcc37c18817ba0111bb00d7df45ebb3f9c6b502d8a52c8a87d49efaa3c42c0c5e4cc0352147ad78e45a1a7314ab554ad0dd4fd98df3a873459e8b41be
@@ -1441,7 +1441,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aws-sdk/types@npm:3.29.0, @aws-sdk/types@npm:^3.1.0":
+"@aws-sdk/types@npm:3.29.0, @aws-sdk/types@npm:^3.1.0, @aws-sdk/types@npm:^3.4.1":
   version: 3.29.0
   resolution: "@aws-sdk/types@npm:3.29.0"
   checksum: e3773cb842695653b06f7fb4feedf9ddff77e679cf5cba397976ade2e736987ef0666136ef4ed6d00944132456a8b78a1f84e659ff95ddac25aa4edb04f8b208
@@ -2969,6 +2969,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/cls-hooked@npm:^4.3.3":
+  version: 4.3.3
+  resolution: "@types/cls-hooked@npm:4.3.3"
+  dependencies:
+    "@types/node": "*"
+  checksum: 335dedfad8ca00dd0a02d3227dcb96ba06e4c34be5fa2599e1f9c98255f732acc83b06ed5f561a42664fb2ff4bdbb20a7fde1c0343b14b9a3300c6a2f70656ba
+  languageName: node
+  linkType: hard
+
 "@types/color-name@npm:^1.1.1":
   version: 1.1.1
   resolution: "@types/color-name@npm:1.1.1"
@@ -4407,6 +4416,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"async-hook-jl@npm:^1.7.6":
+  version: 1.7.6
+  resolution: "async-hook-jl@npm:1.7.6"
+  dependencies:
+    stack-chain: ^1.3.7
+  checksum: fe41eaf51c7737fcf9b23183903637556a353fb05190ffcb601bf448834ba7fa19abfaa360ce842ef47a1fa731c945172e92bb50d00c5fe5e8abefda26dcd480
+  languageName: node
+  linkType: hard
+
 "async-limiter@npm:~1.0.0":
   version: 1.0.1
   resolution: "async-limiter@npm:1.0.1"
@@ -4453,10 +4471,31 @@ __metadata:
   languageName: node
   linkType: hard
 
+"atomic-batcher@npm:^1.0.2":
+  version: 1.0.2
+  resolution: "atomic-batcher@npm:1.0.2"
+  checksum: 80af23754ca64557d876a090b06fd2517c2f9ba603473b90fa75e39cedb716011d0728089c0634a5a50fbf62950a6772592d38caea1abad444a122b1dfd9ede6
+  languageName: node
+  linkType: hard
+
 "aws-sign2@npm:~0.7.0":
   version: 0.7.0
   resolution: "aws-sign2@npm:0.7.0"
   checksum: 7162b9b8fbd4cf451bd889b0ed27fc895f88e6a6cb5c5609de49759ea1a6e31646f86ca8e18d90bea0455c4caa466fc9692c1098a1784d2372a358cb68c1eea6
+  languageName: node
+  linkType: hard
+
+"aws-xray-sdk-core@npm:^3.3.3":
+  version: 3.3.3
+  resolution: "aws-xray-sdk-core@npm:3.3.3"
+  dependencies:
+    "@aws-sdk/service-error-classification": ^3.4.1
+    "@aws-sdk/types": ^3.4.1
+    "@types/cls-hooked": ^4.3.3
+    atomic-batcher: ^1.0.2
+    cls-hooked: ^4.2.2
+    semver: ^5.3.0
+  checksum: 710ebd280de27ab532ec5aca1a9a327f2971087e25faccf8298c69e4e6a5084e4a93744423472a7552c8a3cdc5dafb414e6b496958337c17f606c2cb8fe42448
   languageName: node
   linkType: hard
 
@@ -5224,6 +5263,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"cls-hooked@npm:^4.2.2":
+  version: 4.2.2
+  resolution: "cls-hooked@npm:4.2.2"
+  dependencies:
+    async-hook-jl: ^1.7.6
+    emitter-listener: ^1.0.1
+    semver: ^5.4.1
+  checksum: 35c463d18808821fc9c077c137ea9ff5d6f56a84b8debb5e7848290bb4cb043550515a421cdc8cc845481dc5f64f2761eedaa21b34879502d79c5bcdd554f392
+  languageName: node
+  linkType: hard
+
 "co@npm:^4.6.0":
   version: 4.6.0
   resolution: "co@npm:4.6.0"
@@ -5577,6 +5627,7 @@ __metadata:
     apollo-server-express: ^2.22.2
     apollo-server-testing: ^2.22.2
     argon2: ^0.27.2
+    aws-xray-sdk-core: ^3.3.3
     class-transformer: ^0.4.0
     class-validator: ^0.13.1
     cli-highlight: ^2.1.11
@@ -6405,6 +6456,15 @@ cypher-query-builder@6.0.4:
   version: 3.5.0
   resolution: "emailjs@npm:3.5.0"
   checksum: a11934896b3a35d86dad598dd5aca140e2a3ff201a6bbcb41103019d718409561560bb06adac10637640af546df4014145c0d9437ae9773f4af5bd718dbb3d9a
+  languageName: node
+  linkType: hard
+
+"emitter-listener@npm:^1.0.1":
+  version: 1.1.2
+  resolution: "emitter-listener@npm:1.1.2"
+  dependencies:
+    shimmer: ^1.2.0
+  checksum: 3dec4c92d9a0b573e321f304acc259db53cdf068873dd524e7bf27f205971b8b1bacb4eb0d42dae084a9a841ec519bede5246d04805f1689da306d995316a6a4
   languageName: node
   linkType: hard
 
@@ -12813,7 +12873,7 @@ resolve@^2.0.0-next.3:
   languageName: node
   linkType: hard
 
-"semver@npm:2 || 3 || 4 || 5, semver@npm:^5.4.1, semver@npm:^5.5.0, semver@npm:^5.6.0, semver@npm:^5.7.1":
+"semver@npm:2 || 3 || 4 || 5, semver@npm:^5.3.0, semver@npm:^5.4.1, semver@npm:^5.5.0, semver@npm:^5.6.0, semver@npm:^5.7.1":
   version: 5.7.1
   resolution: "semver@npm:5.7.1"
   bin:
@@ -12971,6 +13031,13 @@ resolve@^2.0.0-next.3:
   version: 0.1.1
   resolution: "shellwords@npm:0.1.1"
   checksum: 3559ff550917ece921d252edf42eb54827540e9676e537137ace236df8f9b78e48c542ae0b3f8876fea0faf5826c97629d5b8cb9ac7dee287260e9804fb8132c
+  languageName: node
+  linkType: hard
+
+"shimmer@npm:^1.2.0":
+  version: 1.2.1
+  resolution: "shimmer@npm:1.2.1"
+  checksum: 23431fc4c5cf2df4c4ffca20a415ac18fbc989bdec595b97b541c65b08cf04da55c5b4e1d7b7ea73d17fc92d4c33bd6e97e4da356adbf0349e06813068263d87
   languageName: node
   linkType: hard
 
@@ -13266,6 +13333,13 @@ resolve@^2.0.0-next.3:
   dependencies:
     minipass: ^3.1.1
   checksum: 97964745a80846b4a50d4506b10b08d35384c3cec482d687cae5f4b7c842afe239c8c368d620f5d7d92642ab75379b409aa809072c2b8e94ec15d9c70d843da5
+  languageName: node
+  linkType: hard
+
+"stack-chain@npm:^1.3.7":
+  version: 1.3.7
+  resolution: "stack-chain@npm:1.3.7"
+  checksum: 5d30ff35c5d6d795cbb87e39168643ba14e5ac633b0e7ea71478760dda38551b3f614ff52ebc9c7e372cf4f0868acc159ada9cee41c88604e33666e3420cfeb9
   languageName: node
   linkType: hard
 

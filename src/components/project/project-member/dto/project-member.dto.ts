@@ -7,9 +7,11 @@ import {
   SecuredProps,
   Sensitivity,
   SensitivityField,
+  SetUnsecuredType,
+  UnsecuredDto,
 } from '../../../../common';
 import { SecuredRoles } from '../../../authorization';
-import { SecuredUser } from '../../../user';
+import { SecuredUser, User } from '../../../user';
 
 @ObjectType({
   implements: [Resource],
@@ -18,8 +20,8 @@ export class ProjectMember extends Resource {
   static readonly Props = keysOf<ProjectMember>();
   static readonly SecuredProps = keysOf<SecuredProps<ProjectMember>>();
 
-  @Field()
-  readonly user: SecuredUser;
+  @Field(() => SecuredUser)
+  readonly user: SecuredUser & SetUnsecuredType<UnsecuredDto<User>>;
 
   @Field()
   readonly roles: SecuredRoles;

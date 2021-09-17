@@ -1,19 +1,23 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
-import { ID, Session } from '../../common';
+import { inArray, node, Query, relation } from 'cypher-query-builder';
+import { ID, NotFoundException, Session, UnsecuredDto } from '../../common';
 import { DtoRepository, matchRequestingUser } from '../../core';
 import {
   ACTIVE,
+  any,
   collect,
   createNode,
   createRelationships,
+  exp,
   matchProps,
+  merge,
   paginate,
   permissionsOfNode,
   requestingUser,
   sorting,
+  variable,
 } from '../../core/database/query';
-import { DbPropsOfDto } from '../../core/database/results';
+import { ProjectStatus } from '../project';
 import { CreateLanguage, Language, LanguageListInput } from './dto';
 import { languageListFilter } from './query.helpers';
 
@@ -57,27 +61,41 @@ export class LanguageRepository extends DtoRepository(Language) {
       .query()
       .apply(matchRequestingUser(session))
       .match([node('node', 'Language', { id: langId })])
-      .apply(matchProps())
-      .match([
-        node('node'),
-        relation('out', '', 'ethnologue'),
-        node('eth', 'EthnologueLanguage'),
-      ])
-      .return('props, eth.id as ethnologueLanguageId')
-      .asResult<{
-        props: DbPropsOfDto<Language, true>;
-        ethnologueLanguageId: ID;
-      }>();
-    return await query.first();
+      .apply(this.hydrate());
+
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException('Could not find language', 'language.id');
+    }
+    return result.dto;
+  }
+
+  protected hydrate() {
+    return (query: Query) =>
+      query
+        .apply(matchProps())
+        .match([
+          node('node'),
+          relation('out', '', 'ethnologue'),
+          node('eth', 'EthnologueLanguage'),
+        ])
+        .apply(matchProps({ nodeName: 'eth', outputVar: 'ethProps' }))
+        .apply(this.isPresetInventory())
+        .return<{ dto: UnsecuredDto<Language> }>(
+          merge('props', {
+            ethnologue: 'ethProps',
+            presetInventory: 'presetInventory',
+          }).as('dto')
+        );
   }
 
   async list(input: LanguageListInput, session: Session) {
     const result = await this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode('Language')])
-      .apply(languageListFilter(input.filter))
+      .apply(languageListFilter(input.filter, this))
       .apply(sorting(Language, input))
-      .apply(paginate(input))
+      .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }
@@ -128,5 +146,38 @@ export class LanguageRepository extends DtoRepository(Language) {
       })
       .return('languageEngagement')
       .first();
+  }
+
+  isPresetInventory() {
+    return (query: Query) =>
+      query.subQuery('node', (sub) =>
+        sub
+          .optionalMatch([
+            node('node'),
+            relation('in', '', 'language', ACTIVE),
+            node('', 'LanguageEngagement'),
+            relation('in', '', 'engagement', ACTIVE),
+            node('project', 'Project'),
+            relation('out', '', 'status', ACTIVE),
+            node('status', 'ProjectStatus'),
+          ])
+          .where({
+            'status.value': inArray(
+              `['${ProjectStatus.InDevelopment}', '${ProjectStatus.Active}']` as any,
+              true
+            ),
+          })
+          .return(
+            any(
+              'project',
+              collect('project'),
+              exp.path([
+                node('project'),
+                relation('out', '', 'presetInventory', ACTIVE),
+                node('', 'Property', { value: variable('true') }),
+              ])
+            ).as('presetInventory')
+          )
+      );
   }
 }

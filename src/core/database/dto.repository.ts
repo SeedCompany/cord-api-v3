@@ -8,6 +8,7 @@ import {
 } from '../../common';
 import { DbChanges, getChanges } from './changes';
 import { CommonRepository } from './common.repository';
+import { OnIndex } from './indexer';
 import { matchProps } from './query';
 
 /**
@@ -53,6 +54,11 @@ export const DtoRepository = <TResourceStatic extends ResourceShape<any>>(
           .return<{ dto: UnsecuredDto<TResourceStatic['prototype']> }>(
             'props as dto'
           );
+    }
+
+    @OnIndex()
+    private createResourceIndexes() {
+      return this.getConstraintsFor(resource);
     }
   }
 

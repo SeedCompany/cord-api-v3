@@ -1,7 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { ID, isIdLike, ServerException, Session } from '../../common';
+import {
+  getDbPropertyUnique,
+  ID,
+  isIdLike,
+  ResourceShape,
+  ServerException,
+  Session,
+} from '../../common';
 import { DatabaseService } from './database.service';
+import { createUniqueConstraint } from './indexer';
 
 /**
  * This provides a few methods out of the box.
@@ -35,5 +43,19 @@ export class CommonRepository {
     } catch (e) {
       throw new ServerException('Failed to remove node in changeset', e);
     }
+  }
+
+  protected getConstraintsFor(resource: ResourceShape<any>) {
+    return [
+      ...(resource.Props.includes('id')
+        ? [createUniqueConstraint(resource.name, 'id')]
+        : []),
+      ...resource.Props.flatMap((prop) => {
+        const label = getDbPropertyUnique(resource, prop);
+        return label
+          ? createUniqueConstraint(label, 'value', `${resource.name}_${prop}`)
+          : [];
+      }),
+    ];
   }
 }

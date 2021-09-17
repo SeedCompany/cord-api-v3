@@ -52,7 +52,7 @@ export class SongRepository extends DtoRepository(Song) {
       .query()
       .match([requestingUser(session), ...permissionsOfNode('Song')])
       .apply(sorting(Song, input))
-      .apply(paginate(input))
+      .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }

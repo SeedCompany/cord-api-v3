@@ -51,7 +51,28 @@ export type UnsecuredDto<Dto> = {
   [K in keyof Dto as Exclude<K, 'canDelete'>]: UnwrapSecured<Dto[K]>;
 };
 
-export type UnwrapSecured<T> = T extends Secured<infer P> ? P : T;
+/**
+ * Specify this on a property to override the value type for UnsecuredDto on
+ * the object.
+ *
+ * @example
+ * class Foo {
+ *   color: string & SetUnsecuredType<number>
+ * }
+ * const unsecured: UnsecuredDto<Foo> = {
+ *   hexColor: 0xFFFFFF,
+ * };
+ */
+export interface SetUnsecuredType<Value> {
+  // eslint-disable-next-line @typescript-eslint/naming-convention -- shush we are hiding this. It's only for TS types.
+  __unsecured_type__?: Value;
+}
+
+export type UnwrapSecured<T> = T extends SetUnsecuredType<infer Override>
+  ? Override
+  : T extends Secured<infer P>
+  ? P
+  : T;
 
 export const isSecured = <T>(value: T | Secured<T>): value is Secured<T> =>
   isObject(value) && 'canRead' in value && 'canEdit' in value;

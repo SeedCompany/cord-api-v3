@@ -21,7 +21,6 @@ import {
   IEventBus,
   ILogger,
   Logger,
-  OnIndex,
   UniquenessError,
 } from '../../core';
 import { mapListResults } from '../../core/database/results';
@@ -96,22 +95,6 @@ export class ProjectService {
     private readonly projectChangeRequests: ProjectChangeRequestService,
     @Logger('project:service') private readonly logger: ILogger
   ) {}
-
-  @OnIndex()
-  async createIndexes() {
-    return [
-      'CREATE CONSTRAINT ON (n:Project) ASSERT EXISTS(n.id)',
-      'CREATE CONSTRAINT ON (n:Project) ASSERT n.id IS UNIQUE',
-      'CREATE CONSTRAINT ON (n:DepartmentId) ASSERT n.value IS UNIQUE',
-      'CREATE CONSTRAINT ON (n:Project) ASSERT EXISTS(n.createdAt)',
-
-      'CREATE CONSTRAINT ON ()-[r:step]-() ASSERT EXISTS(r.createdAt)',
-      'CREATE CONSTRAINT ON ()-[r:status]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:status]-() ASSERT EXISTS(r.createdAt)',
-
-      'CREATE CONSTRAINT ON (n:ProjectName) ASSERT n.value IS UNIQUE',
-    ];
-  }
 
   async create(
     input: CreateProject,
@@ -230,7 +213,17 @@ export class ProjectService {
     const userId = isIdLike(sessionOrUserId)
       ? sessionOrUserId
       : sessionOrUserId.userId;
-    return await this.repo.readOneUnsecured(id, userId, changeset);
+    return await this.repo.readOne(id, userId, changeset);
+  }
+
+  async readMany(
+    ids: readonly ID[],
+    session: Session,
+    view: ObjectView
+  ): Promise<readonly Project[]> {
+    this.logger.debug('read many', { ids, view });
+    const projects = await this.repo.readMany(ids, session, view?.changeset);
+    return await Promise.all(projects.map((dto) => this.secure(dto, session)));
   }
 
   async secure(

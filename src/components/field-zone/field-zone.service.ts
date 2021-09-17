@@ -9,7 +9,7 @@ import {
   UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
-import { HandleIdLookup, ILogger, Logger, OnIndex } from '../../core';
+import { HandleIdLookup, ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import {
@@ -28,24 +28,6 @@ export class FieldZoneService {
     private readonly authorizationService: AuthorizationService,
     private readonly repo: FieldZoneRepository
   ) {}
-
-  @OnIndex()
-  async createIndexes() {
-    return [
-      // FIELD ZONE NODE
-      'CREATE CONSTRAINT ON (n:FieldZone) ASSERT EXISTS(n.id)',
-      'CREATE CONSTRAINT ON (n:FieldZone) ASSERT n.id IS UNIQUE',
-      'CREATE CONSTRAINT ON (n:FieldZone) ASSERT EXISTS(n.createdAt)',
-
-      // FIELD ZONE NAME REL
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
-
-      // FIELD ZONE NAME NODE
-      'CREATE CONSTRAINT ON (n:FieldZoneName) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:FieldZoneName) ASSERT n.value IS UNIQUE',
-    ];
-  }
 
   async create(input: CreateFieldZone, session: Session): Promise<FieldZone> {
     const checkName = await this.repo.checkName(input.name);
@@ -153,6 +135,6 @@ export class FieldZoneService {
     session: Session
   ): Promise<FieldZoneListOutput> {
     const results = await this.repo.list(input, session);
-    return await mapListResults(results, (id) => this.readOne(id, session));
+    return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 }

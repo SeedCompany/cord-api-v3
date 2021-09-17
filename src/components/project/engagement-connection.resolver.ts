@@ -1,18 +1,20 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { AnonSession, Session } from '../../common';
+import { viewOfChangeset } from '../../common';
+import { Loader, LoaderOf } from '../../core';
 import { IEngagement } from '../engagement';
 import { IProject } from './dto';
-import { ProjectService } from './project.service';
+import { ProjectLoader } from './project.loader';
 
 @Resolver(IEngagement)
 export class ProjectEngagementConnectionResolver {
-  constructor(private readonly projects: ProjectService) {}
-
   @ResolveField(() => IProject)
   async project(
     @Parent() engagement: IEngagement,
-    @AnonSession() session: Session
+    @Loader(IProject) projects: LoaderOf<ProjectLoader>
   ) {
-    return await this.projects.readOne(engagement.project, session);
+    return await projects.load({
+      id: engagement.project,
+      view: viewOfChangeset(engagement.changeset),
+    });
   }
 }

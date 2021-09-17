@@ -7,8 +7,8 @@ import {
 import { TracingFormat } from 'apollo-tracing';
 import { GraphQLError } from 'graphql';
 import { Neo4jError } from 'neo4j-driver';
-import { maskSecrets } from '../common/mask-secrets';
-import { ILogger, Logger } from './logger';
+import { maskSecrets } from '../../common/mask-secrets';
+import { ILogger, Logger } from '../logger';
 
 /**
  * Logging for GraphQL errors that are not handled anywhere else

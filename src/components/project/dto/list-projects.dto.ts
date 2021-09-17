@@ -6,6 +6,7 @@ import {
   ID,
   PaginatedList,
   SecuredList,
+  SensitivitiesFilter,
   Sensitivity,
   SortablePaginationInput,
 } from '../../../common';
@@ -26,6 +27,7 @@ export abstract class ProjectFilters {
     description: 'Only projects with these sensitivities',
     nullable: true,
   })
+  @SensitivitiesFilter()
   readonly sensitivity?: Sensitivity[];
 
   @Field(() => [ProjectStatus], {
@@ -79,6 +81,12 @@ export abstract class ProjectFilters {
     description: 'Filter for projects with two or more engagements.',
   })
   readonly onlyMultipleEngagements?: boolean;
+
+  @Field({
+    nullable: true,
+    description: 'Only projects that are (not) in the "Preset Inventory"',
+  })
+  readonly presetInventory?: boolean;
 }
 
 const defaultFilters = {};
