@@ -17,7 +17,7 @@ import {
   UnsecuredDto,
   viewOfChangeset,
 } from '../../common';
-import { CommonRepository } from '../../core';
+import { CommonRepository, OnIndex } from '../../core';
 import { DbChanges, getChanges } from '../../core/database/changes';
 import {
   ACTIVE,
@@ -535,5 +535,10 @@ export class EngagementRepository extends CommonRepository {
             node('language', 'Language'),
           ])
         : query.match([node('language', 'Language', { id: languageId })]);
+  }
+
+  @OnIndex()
+  private createIndexes() {
+    return this.getConstraintsFor(IEngagement);
   }
 }
