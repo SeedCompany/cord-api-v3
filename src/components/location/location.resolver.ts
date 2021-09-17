@@ -8,8 +8,16 @@ import {
 } from '@nestjs/graphql';
 import { whereAlpha3 } from 'iso-3166-1';
 import countries from 'iso-3166-1/dist/iso-3166';
-import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
-import { FieldRegionService, SecuredFieldRegion } from '../field-region';
+import {
+  AnonSession,
+  ID,
+  IdArg,
+  LoggedInSession,
+  mapSecuredValue,
+  Session,
+} from '../../common';
+import { Loader, LoaderOf } from '../../core';
+import { FieldRegionLoader, SecuredFieldRegion } from '../field-region';
 import {
   FundingAccountService,
   SecuredFundingAccount,
@@ -29,7 +37,6 @@ import { LocationService } from './location.service';
 @Resolver(Location)
 export class LocationResolver {
   constructor(
-    private readonly fieldRegionService: FieldRegionService,
     private readonly locationService: LocationService,
     private readonly fundingAccountService: FundingAccountService
   ) {}
@@ -77,16 +84,11 @@ export class LocationResolver {
   @ResolveField(() => SecuredFieldRegion)
   async defaultFieldRegion(
     @Parent() location: Location,
-    @AnonSession() session: Session
+    @Loader(FieldRegionLoader) fieldRegions: LoaderOf<FieldRegionLoader>
   ): Promise<SecuredFieldRegion> {
-    const { value: id, ...rest } = location.defaultFieldRegion;
-    const value = id
-      ? await this.fieldRegionService.readOne(id, session)
-      : undefined;
-    return {
-      value,
-      ...rest,
-    };
+    return await mapSecuredValue(location.defaultFieldRegion, (id) =>
+      fieldRegions.load(id)
+    );
   }
 
   @ResolveField(() => IsoCountry, {

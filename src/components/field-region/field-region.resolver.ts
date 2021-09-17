@@ -26,6 +26,7 @@ import {
   UpdateFieldRegionInput,
   UpdateFieldRegionOutput,
 } from './dto';
+import { FieldRegionLoader } from './field-region.loader';
 import { FieldRegionService } from './field-region.service';
 
 @Resolver(FieldRegion)
@@ -36,10 +37,10 @@ export class FieldRegionResolver {
     description: 'Read one field region by id',
   })
   async fieldRegion(
-    @AnonSession() session: Session,
+    @Loader(FieldRegionLoader) fieldRegions: LoaderOf<FieldRegionLoader>,
     @IdArg() id: ID
   ): Promise<FieldRegion> {
-    return await this.fieldRegionService.readOne(id, session);
+    return await fieldRegions.load(id);
   }
 
   @Query(() => FieldRegionListOutput, {
@@ -52,9 +53,12 @@ export class FieldRegionResolver {
       type: () => FieldRegionListInput,
       defaultValue: FieldRegionListInput.defaultVal,
     })
-    input: FieldRegionListInput
+    input: FieldRegionListInput,
+    @Loader(FieldRegionLoader) fieldRegions: LoaderOf<FieldRegionLoader>
   ): Promise<FieldRegionListOutput> {
-    return await this.fieldRegionService.list(input, session);
+    const list = await this.fieldRegionService.list(input, session);
+    fieldRegions.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => SecuredUser)

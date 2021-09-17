@@ -14,6 +14,7 @@ import {
   IdArg,
   IdField,
   LoggedInSession,
+  mapSecuredValue,
   NotFoundException,
   SecuredDateRange,
   Session,
@@ -22,7 +23,7 @@ import { Loader, LoaderOf } from '../../core';
 import { SecuredBudget } from '../budget';
 import { IdsAndView, IdsAndViewArg } from '../changeset/dto';
 import { EngagementListInput, SecuredEngagementList } from '../engagement';
-import { FieldRegionService, SecuredFieldRegion } from '../field-region';
+import { FieldRegionLoader, SecuredFieldRegion } from '../field-region';
 import { asDirectory, FileNodeLoader, SecuredDirectory } from '../file';
 import {
   LocationListInput,
@@ -67,7 +68,6 @@ export class ProjectResolver {
   constructor(
     private readonly projectService: ProjectService,
     private readonly locationService: LocationService,
-    private readonly fieldRegionService: FieldRegionService,
     private readonly organizationService: OrganizationService
   ) {}
 
@@ -276,13 +276,11 @@ export class ProjectResolver {
   @ResolveField(() => SecuredFieldRegion)
   async fieldRegion(
     @Parent() project: Project,
-    @AnonSession() session: Session
+    @Loader(FieldRegionLoader) fieldRegions: LoaderOf<FieldRegionLoader>
   ): Promise<SecuredFieldRegion> {
-    const { value: id, ...rest } = project.fieldRegion;
-    const value = id
-      ? await this.fieldRegionService.readOne(id, session)
-      : undefined;
-    return { value, ...rest };
+    return await mapSecuredValue(project.fieldRegion, (id) =>
+      fieldRegions.load(id)
+    );
   }
 
   @ResolveField(() => SecuredOrganization)
