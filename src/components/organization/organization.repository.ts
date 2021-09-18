@@ -42,6 +42,7 @@ export class OrganizationRepository extends DtoRepository(Organization) {
       .first();
   }
 
+  
   async create(input: CreateOrganization, session: Session) {
     const initialProps = {
       name: input.name,
@@ -55,7 +56,22 @@ export class OrganizationRepository extends DtoRepository(Organization) {
       .apply(await createNode(Organization, { initialProps }))
       .return<{ id: ID }>('node.id as id');
 
-    return await query.first();
+    const result = await query.first();
+    await this.pg.create(
+      0,
+      'public.organizations_data',
+      {
+        name: input.name,
+        address: input.address,
+        neo4j_id: result?.id,
+      },
+      'UpdateAccessLevelAndIsClearedSecurity',
+      'RefreshMVConcurrently',
+      'History',
+      'RefreshSecurityTablesAndMVConcurrently'
+    );
+    
+    return result;
   }
 
   async readOne(orgId: ID, session: Session) {

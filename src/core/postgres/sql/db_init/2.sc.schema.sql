@@ -88,7 +88,6 @@ create table if not exists sc.locations_data (
 
 create table if not exists sc.organizations_data (
 	id int primary key not null,
-	address varchar(255),
 	base64 varchar(32) unique not null,
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by int not null default 0,
@@ -170,6 +169,7 @@ create table if not exists sc.language_goal_definitions_data (
 
 create table if not exists sc.languages_data (
 	id int primary key,
+	neo4j_id varchar(32),
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by int not null default 0,
 	is_dialect bool,

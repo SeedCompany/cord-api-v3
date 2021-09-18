@@ -481,6 +481,7 @@ create table if not exists public.education_by_person_data (
 
 create table if not exists public.organizations_data (
 	id serial primary key,
+	address varchar(255),
 	neo4j_id varchar(32),
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by int not null default 0,
