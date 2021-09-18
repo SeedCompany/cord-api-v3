@@ -17,7 +17,11 @@ import {
   Session,
 } from '../../common';
 import { Loader, LoaderOf } from '../../core';
-import { LocationListInput, SecuredLocationList } from '../location';
+import {
+  LocationListInput,
+  LocationLoader,
+  SecuredLocationList,
+} from '../location';
 import {
   OrganizationListInput,
   SecuredOrganizationList,
@@ -187,9 +191,12 @@ export class UserResolver {
       type: () => LocationListInput,
       defaultValue: LocationListInput.defaultVal,
     })
-    input: LocationListInput
+    input: LocationListInput,
+    @Loader(LocationLoader) locations: LoaderOf<LocationLoader>
   ): Promise<SecuredLocationList> {
-    return await this.userService.listLocations(user.id, input, session);
+    const list = await this.userService.listLocations(user.id, input, session);
+    locations.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => [KnownLanguage])

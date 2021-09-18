@@ -32,6 +32,7 @@ import {
   UpdateLocationOutput,
 } from './dto';
 import { IsoCountry } from './dto/iso-country.dto';
+import { LocationLoader } from './location.loader';
 import { LocationService } from './location.service';
 
 @Resolver(Location)
@@ -45,10 +46,10 @@ export class LocationResolver {
     description: 'Read one Location by id',
   })
   async location(
-    @AnonSession() session: Session,
+    @Loader(LocationLoader) locations: LoaderOf<LocationLoader>,
     @IdArg() id: ID
   ): Promise<Location> {
-    return await this.locationService.readOne(id, session);
+    return await locations.load(id);
   }
 
   @Query(() => LocationListOutput, {
@@ -61,9 +62,12 @@ export class LocationResolver {
       type: () => LocationListInput,
       defaultValue: LocationListInput.defaultVal,
     })
-    input: LocationListInput
+    input: LocationListInput,
+    @Loader(LocationLoader) locations: LoaderOf<LocationLoader>
   ): Promise<LocationListOutput> {
-    return await this.locationService.list(input, session);
+    const list = await this.locationService.list(input, session);
+    locations.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => SecuredFundingAccount)

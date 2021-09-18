@@ -27,7 +27,7 @@ import { FieldRegionLoader, SecuredFieldRegion } from '../field-region';
 import { asDirectory, FileNodeLoader, SecuredDirectory } from '../file';
 import {
   LocationListInput,
-  LocationService,
+  LocationLoader,
   SecuredLocation,
   SecuredLocationList,
 } from '../location';
@@ -67,7 +67,6 @@ class ModifyOtherLocationArgs {
 export class ProjectResolver {
   constructor(
     private readonly projectService: ProjectService,
-    private readonly locationService: LocationService,
     private readonly organizationService: OrganizationService
   ) {}
 
@@ -234,13 +233,11 @@ export class ProjectResolver {
   @ResolveField(() => SecuredLocation)
   async primaryLocation(
     @Parent() project: Project,
-    @AnonSession() session: Session
+    @Loader(LocationLoader) locations: LoaderOf<LocationLoader>
   ): Promise<SecuredLocation> {
-    const { value: id, ...rest } = project.primaryLocation;
-    const value = id
-      ? await this.locationService.readOne(id, session)
-      : undefined;
-    return { value, ...rest };
+    return await mapSecuredValue(project.primaryLocation, (id) =>
+      locations.load(id)
+    );
   }
 
   @ResolveField(() => SecuredLocationList)
@@ -252,25 +249,26 @@ export class ProjectResolver {
       type: () => LocationListInput,
       defaultValue: LocationListInput.defaultVal,
     })
-    input: LocationListInput
+    input: LocationListInput,
+    @Loader(LocationLoader) locations: LoaderOf<LocationLoader>
   ): Promise<SecuredLocationList> {
-    return await this.projectService.listOtherLocations(
+    const list = await this.projectService.listOtherLocations(
       project,
       input,
       session
     );
+    locations.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => SecuredLocation)
   async marketingLocation(
     @Parent() project: Project,
-    @AnonSession() session: Session
+    @Loader(LocationLoader) locations: LoaderOf<LocationLoader>
   ): Promise<SecuredLocation> {
-    const { value: id, ...rest } = project.marketingLocation;
-    const value = id
-      ? await this.locationService.readOne(id, session)
-      : undefined;
-    return { value, ...rest };
+    return await mapSecuredValue(project.marketingLocation, (id) =>
+      locations.load(id)
+    );
   }
 
   @ResolveField(() => SecuredFieldRegion)

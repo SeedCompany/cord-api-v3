@@ -69,6 +69,11 @@ export class LocationService {
     return await this.secure(result, session);
   }
 
+  async readMany(ids: readonly ID[], session: Session) {
+    const locations = await this.repo.readMany(ids, session);
+    return await Promise.all(locations.map((dto) => this.secure(dto, session)));
+  }
+
   private async secure(
     dto: UnsecuredDto<Location>,
     session: Session
