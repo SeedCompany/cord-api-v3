@@ -83,6 +83,13 @@ export class FundingAccountService {
     return await this.secure(result, session);
   }
 
+  async readMany(ids: readonly ID[], session: Session) {
+    const fundingAccounts = await this.repo.readMany(ids, session);
+    return await Promise.all(
+      fundingAccounts.map((dto) => this.secure(dto, session))
+    );
+  }
+
   private async secure(
     dto: UnsecuredDto<FundingAccount>,
     session: Session

@@ -19,7 +19,7 @@ import {
 import { Loader, LoaderOf } from '../../core';
 import { FieldRegionLoader, SecuredFieldRegion } from '../field-region';
 import {
-  FundingAccountService,
+  FundingAccountLoader,
   SecuredFundingAccount,
 } from '../funding-account';
 import {
@@ -37,10 +37,7 @@ import { LocationService } from './location.service';
 
 @Resolver(Location)
 export class LocationResolver {
-  constructor(
-    private readonly locationService: LocationService,
-    private readonly fundingAccountService: FundingAccountService
-  ) {}
+  constructor(private readonly locationService: LocationService) {}
 
   @Query(() => Location, {
     description: 'Read one Location by id',
@@ -73,16 +70,12 @@ export class LocationResolver {
   @ResolveField(() => SecuredFundingAccount)
   async fundingAccount(
     @Parent() location: Location,
-    @AnonSession() session: Session
+    @Loader(FundingAccountLoader)
+    fundingAccounts: LoaderOf<FundingAccountLoader>
   ): Promise<SecuredFundingAccount> {
-    const { value: id, ...rest } = location.fundingAccount;
-    const value = id
-      ? await this.fundingAccountService.readOne(id, session)
-      : undefined;
-    return {
-      value,
-      ...rest,
-    };
+    return await mapSecuredValue(location.fundingAccount, (id) =>
+      fundingAccounts.load(id)
+    );
   }
 
   @ResolveField(() => SecuredFieldRegion)
