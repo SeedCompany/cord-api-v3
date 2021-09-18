@@ -595,29 +595,28 @@ export class UserRepository extends DtoRepository(User) {
 
     const pool = await this.pg.pool;
     let pgResult;
+    const resultPeople = await pool.query(
+      `select id from public.people_data where neo4j_id = $1`,
+      [userId]
+    );
+
+    if(!resultPeople.rows[0]) return;
+    const resultPeopleId = resultPeople.rows[0].id;
+    
+    const resultUser = await pool.query(
+      `select id from public.users_data where person = $1`,
+      [resultPeopleId]
+    )
+
+    const resultOrg = await pool.query(
+      `select id from public.organizations_data where neo4j_id = $1`,
+      [orgId]
+    )
+    const resultUserId = resultUser.rows[0].id;
+     const resultOrgId = resultOrg.rows[0].id;
     if(!primary){
       // Check if it's a neo4j_id or a pg id
       if(typeof(userId) === 'string' && typeof(orgId) === 'string'){
-        const resultPeople = await pool.query(
-          `select id from public.people_data where neo4j_id = $1`,
-          [userId]
-        );
-
-        if(!resultPeople.rows[0]) return;
-        const resultPeopleId = resultPeople.rows[0].id;
-        
-        const resultUser = await pool.query(
-          `select id from public.users_data where person = $1`,
-          [resultPeopleId]
-        )
-
-        const resultOrg = await pool.query(
-          `select id from public.organizations_data where neo4j_id = $1`,
-          [orgId]
-        )
-        
-        const resultUserId = resultUser.rows[0].id;
-        const resultOrgId = resultOrg.rows[0].id;
         pgResult = await pool.query(
           `UPDATE public.users_data
            SET owning_org = $1
@@ -638,7 +637,7 @@ export class UserRepository extends DtoRepository(User) {
           `UPDATE public.people_data
            SET primary_location = $1
            WHERE neo4j_id = $2`,
-           [orgId, userId]
+           [resultOrgId, resultUserId]
         )
       }else{
         pgResult = pool.query(
