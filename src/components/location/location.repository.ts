@@ -68,10 +68,18 @@ export class LocationRepository extends DtoRepository(Location) {
 
     const pool = await this.pg.pool;
     const chat = await pool.query(
-      `select chat_id from public.locations_data order by chat_id desc limit 1`
+      `select id from public.chats_data order by id desc limit 1`
     );
-    console.log('result: ', result);
-    const chatId = chat.rows[0].chat_id;
+    const chatId = chat.rows[0].id;
+    await this.pg.create(
+      0,
+      'public.chats_data',
+      { id: chatId  + 1 },
+      'UpdateAccessLevelAndIsClearedSecurity',
+      'RefreshMVConcurrently',
+      'History',
+      'RefreshSecurityTablesAndMVConcurrently'
+    );
 
     await this.pg.create(
       0,
@@ -283,6 +291,56 @@ export class LocationRepository extends DtoRepository(Location) {
     rel: string,
     locationId: ID
   ) {
+    const pool = await this.pg.pool;
+    let firstTable = '';
+    let newId;
+
+    switch (firstTable) {
+      case 'User':
+        firstTable = 'public.people_data';
+        let userPgId;
+        if (typeof id === 'string')
+          userPgId = await pool.query(
+            `SELECT id from public.people_data WHERE neo4j_id`,
+            [id]
+          );
+        newId = typeof id === 'string' ? userPgId?.rows[0].id : id;
+        break;
+      case 'Organization':
+        firstTable = 'public.organizations_data';
+        let organizationPgId;
+        if (typeof id === 'string')
+          organizationPgId = await pool.query(
+            `SELECT id from public.organizations_data WHERE neo4j_id = $1`,
+            [id]
+          );
+        newId = typeof id === 'string' ? organizationPgId?.rows[0].id : id;
+        break;
+      case 'Project':
+        firstTable = 'public.projects_data';
+        let projectPgId;
+        if (typeof id === 'string')
+          projectPgId = await pool.query(
+            `SELECT id from public.projects_data WHERE neo4j_id = $1`,
+            [id]
+          );
+        newId = typeof id === 'string' ? projectPgId?.rows[0].id : id;
+        break;
+      case 'Language':
+        firstTable = '';
+        break;
+      default:
+        console.log('Correspondent table not found');
+    }
+
+    const pgResult = pool.query(
+      `UPDATE ${firstTable}
+       SET primary_location = ''
+       WHERE id = $2
+      `,
+      [newId]
+    );
+
     await this.db
       .query()
       .matchNode('node', label, { id })

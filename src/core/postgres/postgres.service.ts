@@ -433,6 +433,7 @@ export class PostgresService {
         'History',
         'RefreshSecurityTablesAndMVConcurrently'
       );
+      /*
       await this.create(
         0,
         'public.locations_data',
@@ -449,6 +450,7 @@ export class PostgresService {
         'History',
         'RefreshSecurityTablesAndMVConcurrently'
       );
+        */
     }
     await this.pool.query(`analyze`);
   }
