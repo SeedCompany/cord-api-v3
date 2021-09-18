@@ -16,7 +16,7 @@ import {
   LoggedInSession,
   Session,
 } from '../../common';
-import { DataLoader, Loader } from '../../core';
+import { Loader, LoaderOf } from '../../core';
 import { LocationListInput, SecuredLocationList } from '../location';
 import {
   OrganizationListInput,
@@ -45,6 +45,7 @@ import {
   SecuredUnavailabilityList,
   UnavailabilityListInput,
 } from './unavailability';
+import { UserLoader } from './user.loader';
 import { fullName, UserService } from './user.service';
 
 @ArgsType()
@@ -67,7 +68,7 @@ export class UserResolver {
     description: 'Look up a user by its ID',
   })
   async user(
-    @Loader(User) users: DataLoader<User>,
+    @Loader(UserLoader) users: LoaderOf<UserLoader>,
     @IdArg() id: ID
   ): Promise<User> {
     return await users.load(id);

@@ -22,7 +22,7 @@ import {
 import { Loader, LoaderOf } from '../../core';
 import { LocationListInput, SecuredLocationList } from '../location';
 import { ProjectLoader } from '../project';
-import { IProject, ProjectListInput, SecuredProjectList } from '../project/dto';
+import { ProjectListInput, SecuredProjectList } from '../project/dto';
 import {
   CreateLanguageInput,
   CreateLanguageOutput,
@@ -120,7 +120,7 @@ export class LanguageResolver {
       defaultValue: ProjectListInput.defaultVal,
     })
     input: ProjectListInput,
-    @Loader(IProject) loader: LoaderOf<ProjectLoader>
+    @Loader(ProjectLoader) loader: LoaderOf<ProjectLoader>
   ): Promise<SecuredProjectList> {
     const list = await this.langService.listProjects(language, input, session);
     loader.primeAll(list.items);

@@ -10,10 +10,10 @@ import {
 import { DateTime } from 'luxon';
 import { GqlContextType, UnauthenticatedException } from '../../common';
 import { anonymousSession } from '../../common/session';
-import { ConfigService, DataLoader, ILogger, Loader, Logger } from '../../core';
+import { ConfigService, ILogger, Loader, LoaderOf, Logger } from '../../core';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto';
-import { User } from '../user';
+import { User, UserLoader } from '../user';
 import { AuthenticationRepository } from './authentication.repository';
 import { AuthenticationService } from './authentication.service';
 import { SessionOutput } from './dto';
@@ -91,7 +91,7 @@ export class SessionResolver {
   })
   async user(
     @Parent() output: SessionOutput,
-    @Loader(User) users: DataLoader<User>
+    @Loader(UserLoader) users: LoaderOf<UserLoader>
   ): Promise<User | null> {
     return output.user ? await users.load(output.user) : null;
   }

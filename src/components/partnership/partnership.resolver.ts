@@ -13,9 +13,9 @@ import {
   Session,
   viewOfChangeset,
 } from '../../common';
-import { DataLoader, Loader } from '../../core';
+import { Loader, LoaderOf } from '../../core';
 import { ChangesetIds, IdsAndView, IdsAndViewArg } from '../changeset/dto';
-import { FileNode, IFileNode, resolveDefinedFile, SecuredFile } from '../file';
+import { FileNodeLoader, resolveDefinedFile, SecuredFile } from '../file';
 import { SecuredPartner } from '../partner/dto';
 import { PartnerService } from '../partner/partner.service';
 import {
@@ -62,7 +62,7 @@ export class PartnershipResolver {
   })
   async mou(
     @Parent() partnership: Partnership,
-    @Loader(IFileNode) files: DataLoader<FileNode>
+    @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>
   ): Promise<SecuredFile> {
     return await resolveDefinedFile(files, partnership.mou);
   }
@@ -72,7 +72,7 @@ export class PartnershipResolver {
   })
   async agreement(
     @Parent() partnership: Partnership,
-    @Loader(IFileNode) files: DataLoader<FileNode>
+    @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>
   ): Promise<SecuredFile> {
     return await resolveDefinedFile(files, partnership.agreement);
   }
