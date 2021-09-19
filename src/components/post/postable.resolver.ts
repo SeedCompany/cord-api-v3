@@ -24,7 +24,7 @@ export class PostableResolver {
     input: PostListInput,
     @LoggedInSession() session: Session
   ): Promise<SecuredPostList> {
-    return this.service.securedList(
+    return await this.service.securedList(
       resourceFromName(info.parentType.name),
       parent,
       {

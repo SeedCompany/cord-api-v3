@@ -4,9 +4,9 @@ import { highlight } from 'cli-highlight';
 import { stripIndent } from 'common-tags';
 import { Connection } from 'cypher-query-builder';
 import { compact } from 'lodash';
-import { Session, Transaction } from 'neo4j-driver';
+import { Session, Transaction } from 'neo4j-driver-core';
 // @ts-expect-error this isn't typed but it exists
-import TransactionExecutor from 'neo4j-driver/lib/internal/transaction-executor';
+import * as RetryStrategy from 'neo4j-driver-core/lib/internal/retry-strategy';
 import QueryRunner from 'neo4j-driver/types/query-runner';
 import { Merge } from 'type-fest';
 import { ConfigService } from '..';
@@ -24,8 +24,8 @@ import './query-augmentation'; // import our query augmentation
 
 // Change transaction retry logic also check all previous exceptions when
 // looking for retryable errors.
-const canRetryOn = TransactionExecutor._canRetryOn.bind(TransactionExecutor);
-TransactionExecutor._canRetryOn = (error?: Error) =>
+const canRetryOn = RetryStrategy.canRetryOn;
+RetryStrategy.canRetryOn = (error?: Error) =>
   error && getPreviousList(error, true).some(canRetryOn);
 
 const csv = (str: string): string[] =>

@@ -8,8 +8,8 @@ import {
 } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
-import { DataLoader, Loader } from '../../core';
-import { User } from '../user';
+import { Loader, LoaderOf } from '../../core';
+import { User, UserLoader } from '../user';
 import {
   CreateFileVersionInput,
   File,
@@ -48,7 +48,7 @@ export class FileResolver {
   })
   async modifiedBy(
     @Parent() node: File,
-    @Loader(User) users: DataLoader<User>
+    @Loader(UserLoader) users: LoaderOf<UserLoader>
   ): Promise<User> {
     return await users.load(node.modifiedById);
   }
@@ -66,7 +66,7 @@ export class FileResolver {
     })
     input: FileListInput
   ): Promise<FileListOutput> {
-    return this.service.listChildren(node, input, session);
+    return await this.service.listChildren(node, input, session);
   }
 
   @ResolveField(() => String, {

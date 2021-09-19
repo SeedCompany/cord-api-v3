@@ -34,7 +34,7 @@ export class FilmResolver {
     })
     input: FilmListInput
   ): Promise<FilmListOutput> {
-    return this.filmService.list(input, session);
+    return await this.filmService.list(input, session);
   }
 
   @Mutation(() => CreateFilmOutput, {

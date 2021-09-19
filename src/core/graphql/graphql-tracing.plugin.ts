@@ -12,9 +12,11 @@ import { TracingService } from '../tracing';
 export class GraphqlTracingPlugin implements ApolloPlugin<ContextType> {
   constructor(private readonly tracing: TracingService) {}
 
-  requestDidStart(): Listener<ContextType> {
+  async requestDidStart(): Promise<Listener<ContextType>> {
     return {
-      executionDidStart: (reqContext): ExecutionListener<ContextType> => {
+      executionDidStart: async (
+        reqContext
+      ): Promise<ExecutionListener<ContextType>> => {
         const segment = this.tracing.rootSegment;
         segment.name = reqContext.operationName ?? reqContext.queryHash;
         segment.addAnnotation(reqContext.operation.operation, true);
@@ -27,7 +29,7 @@ export class GraphqlTracingPlugin implements ApolloPlugin<ContextType> {
         }
 
         return {
-          executionDidEnd: (err) => {
+          executionDidEnd: async (err) => {
             const userId = reqContext.context.session?.userId;
             if (userId) {
               segment.setUser?.(userId);

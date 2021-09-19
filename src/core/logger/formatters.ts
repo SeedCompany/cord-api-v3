@@ -5,7 +5,8 @@ import { identity } from 'lodash';
 import { TransformableInfo as ScuffedTransformableInfo } from 'logform';
 import { DateTime } from 'luxon';
 import { relative } from 'path';
-import { parse as parseTrace, StackFrame } from 'stack-trace';
+import { StackFrame } from 'stack-trace';
+import * as stacktrace from 'stack-trace';
 import { MESSAGE } from 'triple-beam';
 import { config, format, LogEntry } from 'winston';
 import { Exception } from '../../common/exceptions';
@@ -80,7 +81,7 @@ export const exceptionInfo = () =>
       const { name: _, message, stack: __, ...other } = ex;
       const stack = ex.stack!;
       const type = ex.constructor.name || stack.slice(0, stack.indexOf(':'));
-      const trace = parseTrace({ stack } as any);
+      const trace = stacktrace.parse({ stack } as any);
 
       return {
         type,

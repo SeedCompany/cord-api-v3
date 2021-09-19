@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { GqlModuleOptions, GqlOptionsFactory } from '@nestjs/graphql';
-import { ContextFunction } from 'apollo-server-core';
+import {
+  ApolloServerPluginLandingPageLocalDefault,
+  ContextFunction,
+} from 'apollo-server-core';
 import {
   PersistedQueryNotFoundError,
   PersistedQueryNotSupportedError,
@@ -41,19 +44,15 @@ export class GraphQLConfig implements GqlOptionsFactory {
       autoSchemaFile: 'schema.graphql',
       context: this.context,
       cors: this.config.cors,
-      tracing: true,
-      playground: {
-        settings: {
-          'request.credentials': 'same-origin',
-        },
-      },
-      introspection: true, // needed for playground
+      playground: false,
+      introspection: true,
       formatError: this.formatError,
       debug: this.debug,
       sortSchema: true,
       buildSchemaOptions: {
         fieldMiddleware: [this.tracing.fieldMiddleware()],
       },
+      plugins: [ApolloServerPluginLandingPageLocalDefault({ footer: false })],
     };
   }
 

@@ -22,7 +22,7 @@ import {
 import { Loader, LoaderOf } from '../../core';
 import { LocationListInput, SecuredLocationList } from '../location';
 import { ProjectLoader } from '../project';
-import { IProject, ProjectListInput, SecuredProjectList } from '../project/dto';
+import { ProjectListInput, SecuredProjectList } from '../project/dto';
 import {
   CreateLanguageInput,
   CreateLanguageOutput,
@@ -95,7 +95,7 @@ export class LanguageResolver {
     })
     input: LocationListInput
   ): Promise<SecuredLocationList> {
-    return this.langService.listLocations(language, input, session);
+    return await this.langService.listLocations(language, input, session);
   }
 
   @ResolveField(() => SecuredDate, {
@@ -120,7 +120,7 @@ export class LanguageResolver {
       defaultValue: ProjectListInput.defaultVal,
     })
     input: ProjectListInput,
-    @Loader(IProject) loader: LoaderOf<ProjectLoader>
+    @Loader(ProjectLoader) loader: LoaderOf<ProjectLoader>
   ): Promise<SecuredProjectList> {
     const list = await this.langService.listProjects(language, input, session);
     loader.primeAll(list.items);
@@ -139,7 +139,7 @@ export class LanguageResolver {
     })
     input: LanguageListInput
   ): Promise<LanguageListOutput> {
-    return this.langService.list(input, session);
+    return await this.langService.list(input, session);
   }
 
   @Mutation(() => CreateLanguageOutput, {

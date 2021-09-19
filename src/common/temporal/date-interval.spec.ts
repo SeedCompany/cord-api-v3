@@ -85,7 +85,7 @@ describe('DateInterval', () => {
   it('length', () => {
     const interval = DateInterval.fromISO('2020-03-04/2021-05-22');
     expect(interval.length()).toBe(445);
-    expect(interval.length('year')).toBeCloseTo(1.216);
+    expect(interval.length('years')).toBeCloseTo(1.216);
     expect(interval.length('months')).toBeCloseTo(14.612);
   });
   it('toDuration', () => {

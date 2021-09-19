@@ -462,11 +462,11 @@ export class Book implements Iterable<Chapter> {
     return this.index === books.length - 1;
   }
 
-  get previous() {
+  get previous(): Book | null {
     return this.isFirst ? null : new Book(books[this.index - 1]);
   }
 
-  get next() {
+  get next(): Book | null {
     return this.isLast ? null : new Book(books[this.index + 1]);
   }
 
@@ -487,7 +487,7 @@ export class Book implements Iterable<Chapter> {
     return this.chapter(this.totalChapters);
   }
 
-  get chapters() {
+  get chapters(): Chapter[] {
     return iterate(this);
   }
 
@@ -573,11 +573,11 @@ export class Chapter implements Iterable<Verse> {
     return this.chapter === this.book.totalChapters;
   }
 
-  get previousInBook() {
+  get previousInBook(): Chapter | null {
     return this.isFirst ? null : this.book.chapter(this.chapter - 1);
   }
 
-  get nextInBook() {
+  get nextInBook(): Chapter | null {
     return this.isLast ? null : this.book.chapter(this.chapter + 1);
   }
 

@@ -43,7 +43,7 @@ export class UnavailabilityResolver {
     })
     input: UnavailabilityListInput
   ): Promise<UnavailabilityListOutput> {
-    return this.service.list(input, session);
+    return await this.service.list(input, session);
   }
 
   @Mutation(() => CreateUnavailabilityOutput, {

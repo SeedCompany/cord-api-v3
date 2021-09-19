@@ -37,7 +37,7 @@ export class StoryResolver {
     })
     input: StoryListInput
   ): Promise<StoryListOutput> {
-    return this.storyService.list(input, session);
+    return await this.storyService.list(input, session);
   }
 
   @Mutation(() => CreateStoryOutput, {

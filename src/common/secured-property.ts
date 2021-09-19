@@ -112,8 +112,10 @@ export interface SecuredPropertyOptions<
   nullable?: Nullable;
 }
 
-type SecuredValue<T, Nullable extends boolean | undefined> =
-  Nullable extends true ? T | null : T;
+type SecuredValue<
+  T,
+  Nullable extends boolean | undefined
+> = Nullable extends true ? T | null : T;
 
 function InnerSecuredProperty<
   GqlType extends GqlTypeReference,

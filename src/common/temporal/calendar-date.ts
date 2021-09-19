@@ -1,12 +1,10 @@
 import {
-  DateObject,
   DateObjectUnits,
   DateTime,
   DateTimeJSOptions,
   DateTimeOptions,
-  Duration,
-  DurationObject,
-  DurationUnit,
+  DateTimeUnit,
+  DurationLike,
   LocaleOptions,
   ToISOTimeOptions,
   Zone,
@@ -61,7 +59,7 @@ export class CalendarDate extends DateTime {
     return CalendarDate.fromDateTime(super.fromMillis(ms, options));
   }
 
-  static fromObject(obj: DateObject): CalendarDate {
+  static fromObject(obj: DateObjectUnits): CalendarDate {
     return CalendarDate.fromDateTime(super.fromObject(obj));
   }
 
@@ -89,8 +87,52 @@ export class CalendarDate extends DateTime {
     return CalendarDate.fromDateTime(super.invalid(reason));
   }
 
-  static local(year?: number, month?: number, day?: number): CalendarDate {
-    return CalendarDate.fromDateTime(super.local(year, month, day));
+  static local(
+    year: number,
+    month: number,
+    day: number,
+    hour: number,
+    minute: number,
+    second: number,
+    millisecond: number,
+    opts?: DateTimeJSOptions
+  ): DateTime;
+  static local(
+    year: number,
+    month: number,
+    day: number,
+    hour: number,
+    minute: number,
+    second: number,
+    opts?: DateTimeJSOptions
+  ): DateTime;
+  static local(
+    year: number,
+    month: number,
+    day: number,
+    hour: number,
+    minute: number,
+    opts?: DateTimeJSOptions
+  ): DateTime;
+  static local(
+    year: number,
+    month: number,
+    day: number,
+    hour: number,
+    opts?: DateTimeJSOptions
+  ): DateTime;
+  static local(
+    year: number,
+    month: number,
+    day: number,
+    opts?: DateTimeJSOptions
+  ): DateTime;
+  static local(year: number, month: number, opts?: DateTimeJSOptions): DateTime;
+  static local(year: number, opts?: DateTimeJSOptions): DateTime;
+  static local(opts?: DateTimeJSOptions): DateTime;
+  static local(...args: any) {
+    const dt = super.local(...args);
+    return CalendarDate.fromDateTime(dt);
   }
 
   static max(): undefined;
@@ -105,23 +147,66 @@ export class CalendarDate extends DateTime {
     return CalendarDate.fromDateTime(super.min(...dateTimes));
   }
 
-  static utc(year?: number, month?: number, day?: number): CalendarDate {
-    return CalendarDate.fromDateTime(super.utc(year, month, day));
+  static utc(
+    year: number,
+    month: number,
+    day: number,
+    hour: number,
+    minute: number,
+    second: number,
+    millisecond: number,
+    options?: LocaleOptions
+  ): DateTime;
+  static utc(
+    year: number,
+    month: number,
+    day: number,
+    hour: number,
+    minute: number,
+    second: number,
+    options?: LocaleOptions
+  ): DateTime;
+  static utc(
+    year: number,
+    month: number,
+    day: number,
+    hour: number,
+    minute: number,
+    options?: LocaleOptions
+  ): DateTime;
+  static utc(
+    year: number,
+    month: number,
+    day: number,
+    hour: number,
+    options?: LocaleOptions
+  ): DateTime;
+  static utc(
+    year: number,
+    month: number,
+    day: number,
+    options?: LocaleOptions
+  ): DateTime;
+  static utc(year: number, month: number, options?: LocaleOptions): DateTime;
+  static utc(year: number, options?: LocaleOptions): DateTime;
+  static utc(options?: LocaleOptions): DateTime;
+  static utc(...args: any) {
+    return CalendarDate.fromDateTime(super.utc(...args));
   }
 
   until(other: CalendarDate): DateInterval {
     return DateInterval.fromDateTimes(this, other);
   }
 
-  endOf(unit: DurationUnit): CalendarDate {
+  endOf(unit: DateTimeUnit): CalendarDate {
     return CalendarDate.fromDateTime(super.endOf(unit));
   }
 
-  minus(duration: Duration | number | DurationObject): CalendarDate {
+  minus(duration: DurationLike): CalendarDate {
     return CalendarDate.fromDateTime(super.minus(duration));
   }
 
-  plus(duration: Duration | number | DurationObject): CalendarDate {
+  plus(duration: DurationLike): CalendarDate {
     return CalendarDate.fromDateTime(super.plus(duration));
   }
 
@@ -141,7 +226,7 @@ export class CalendarDate extends DateTime {
     return this; // noop
   }
 
-  startOf(unit: DurationUnit): CalendarDate {
+  startOf(unit: DateTimeUnit): CalendarDate {
     return CalendarDate.fromDateTime(super.startOf(unit));
   }
 

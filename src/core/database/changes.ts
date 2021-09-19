@@ -109,7 +109,7 @@ export const getChanges =
     if (
       Object.keys(actual).length > 0 &&
       resource.Props.includes('modifiedAt') &&
-      !actual.modifiedAt
+      !(actual as any).modifiedAt
     ) {
       return {
         ...(actual as any),

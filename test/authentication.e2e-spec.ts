@@ -3,8 +3,6 @@ import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { isValidId } from '../src/common';
-import { SecuredTimeZone } from '../src/components/timezone';
-import { User } from '../src/components/user';
 import {
   createSession,
   createTestApp,
@@ -15,6 +13,7 @@ import {
   registerUser,
   TestApp,
 } from './utility';
+import { RawUser } from './utility/fragments';
 import { resetDatabase } from './utility/reset-database';
 
 describe('Authentication e2e', () => {
@@ -103,7 +102,7 @@ describe('Authentication e2e', () => {
       }
     );
 
-    const actual: User = result.user;
+    const actual: RawUser = result.user;
     expect(actual).toBeTruthy();
     expect(isValidId(actual.id)).toBe(true);
     expect(actual.email.value).toBe(fakeUser.email.toLowerCase());
@@ -112,9 +111,7 @@ describe('Authentication e2e', () => {
     expect(actual.displayFirstName.value).toBe(fakeUser.displayFirstName);
     expect(actual.displayLastName.value).toBe(fakeUser.displayLastName);
     expect(actual.phone.value).toBe(fakeUser.phone);
-    expect((actual.timezone as SecuredTimeZone).value?.name).toBe(
-      fakeUser.timezone
-    );
+    expect(actual.timezone.value?.name).toBe(fakeUser.timezone);
     expect(actual.about.value).toBe(fakeUser.about);
 
     return true;

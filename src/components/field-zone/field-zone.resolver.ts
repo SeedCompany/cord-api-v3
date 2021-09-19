@@ -48,7 +48,7 @@ export class FieldZoneResolver {
     })
     input: FieldZoneListInput
   ): Promise<FieldZoneListOutput> {
-    return this.fieldZoneService.list(input, session);
+    return await this.fieldZoneService.list(input, session);
   }
 
   @ResolveField(() => SecuredUser)
