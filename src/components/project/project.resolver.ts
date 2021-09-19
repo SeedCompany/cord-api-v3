@@ -22,7 +22,11 @@ import {
 import { Loader, LoaderOf } from '../../core';
 import { SecuredBudget } from '../budget';
 import { IdsAndView, IdsAndViewArg } from '../changeset/dto';
-import { EngagementListInput, SecuredEngagementList } from '../engagement';
+import {
+  EngagementListInput,
+  EngagementLoader,
+  SecuredEngagementList,
+} from '../engagement';
 import { FieldRegionLoader, SecuredFieldRegion } from '../field-region';
 import { asDirectory, FileNodeLoader, SecuredDirectory } from '../file';
 import {
@@ -149,14 +153,17 @@ export class ProjectResolver {
       nullable: true,
       defaultValue: EngagementListInput.defaultVal,
     })
-    input: EngagementListInput
+    input: EngagementListInput,
+    @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>
   ): Promise<SecuredEngagementList> {
-    return await this.projectService.listEngagements(
+    const list = await this.projectService.listEngagements(
       project,
       input,
       session,
       project.changeset ? { changeset: project.changeset } : { active: true }
     );
+    engagements.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => SecuredProjectMemberList, {

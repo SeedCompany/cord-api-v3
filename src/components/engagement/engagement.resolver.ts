@@ -12,8 +12,10 @@ import {
   SecuredDateRange,
   Session,
 } from '../../common';
+import { Loader, LoaderOf } from '../../core';
 import { CeremonyService, SecuredCeremony } from '../ceremony';
 import { ChangesetIds, IdsAndView, IdsAndViewArg } from '../changeset/dto';
+import { EngagementLoader, EngagementService } from '../engagement';
 import {
   CreateInternshipEngagementInput,
   CreateInternshipEngagementOutput,
@@ -28,7 +30,6 @@ import {
   UpdateLanguageEngagementInput,
   UpdateLanguageEngagementOutput,
 } from './dto';
-import { EngagementService } from './engagement.service';
 
 @Resolver(IEngagement)
 export class EngagementResolver {
@@ -41,11 +42,10 @@ export class EngagementResolver {
     description: 'Lookup an engagement by ID',
   })
   async engagement(
-    @IdsAndViewArg() { id, view }: IdsAndView,
-    @AnonSession() session: Session
+    @IdsAndViewArg() key: IdsAndView,
+    @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>
   ): Promise<Engagement> {
-    const engagement = await this.service.readOne(id, session, view);
-    return engagement;
+    return await engagements.load(key);
   }
 
   @Query(() => EngagementListOutput, {
@@ -59,9 +59,12 @@ export class EngagementResolver {
       defaultValue: EngagementListInput.defaultVal,
     })
     input: EngagementListInput,
-    @AnonSession() session: Session
+    @AnonSession() session: Session,
+    @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>
   ): Promise<EngagementListOutput> {
-    return await this.service.list(input, session);
+    const list = await this.service.list(input, session);
+    engagements.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => SecuredCeremony)

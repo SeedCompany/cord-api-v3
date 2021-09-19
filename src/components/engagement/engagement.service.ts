@@ -245,6 +245,13 @@ export class EngagementService {
     return await this.secure(dto, session);
   }
 
+  async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
+    const engagements = await this.repo.readMany(ids, session, view);
+    return await Promise.all(
+      engagements.map((dto) => this.secure(dto, session))
+    );
+  }
+
   async secure(
     dto: UnsecuredDto<Engagement>,
     session: Session

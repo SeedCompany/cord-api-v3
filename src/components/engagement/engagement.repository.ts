@@ -77,6 +77,16 @@ export class EngagementRepository extends CommonRepository {
     return result.dto;
   }
 
+  async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
+    return await this.db
+      .query()
+      .matchNode('node', labelForView('Engagement', view))
+      .where({ 'node.id': inArray(ids.slice()) })
+      .apply(this.hydrate(session, view))
+      .map('dto')
+      .run();
+  }
+
   protected hydrate(session: Session, view?: ObjectView) {
     return (query: Query) =>
       query
