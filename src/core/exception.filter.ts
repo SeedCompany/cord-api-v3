@@ -18,6 +18,7 @@ import {
   GqlExceptionFilter,
 } from '@nestjs/graphql';
 import { compact, mapValues, uniq } from 'lodash';
+import { Neo4jError } from 'neo4j-driver';
 import {
   AbstractClassType,
   Exception,
@@ -64,6 +65,11 @@ export class ExceptionFilter implements GqlExceptionFilter {
     if (!this.logger) {
       return;
     }
+    if (error instanceof Neo4jError && error.logProps) {
+      // Assume these have already been logged.
+      return;
+    }
+
     const { codes } = info.extensions;
 
     if (codes.includes('Validation')) {
