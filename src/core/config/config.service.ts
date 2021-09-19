@@ -204,13 +204,10 @@ export class ConfigService implements EmailOptionsFactory {
       httpOnly: true,
       // All paths, not just the current one
       path: '/',
-      // If env is configured for HTTPS
-      ...(this.hostUrl.startsWith('https://') && {
-        // Require HTTPS (required for SameSite)
-        secure: true,
-        // Allow 3rd party (other domains)
-        sameSite: 'none',
-      }),
+      // Require HTTPS (required for SameSite) (ignored for localhost)
+      secure: true,
+      // Allow 3rd party (other domains)
+      sameSite: 'none',
     };
   }
 
