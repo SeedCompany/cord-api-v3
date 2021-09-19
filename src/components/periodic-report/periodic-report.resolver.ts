@@ -23,7 +23,7 @@ export class PeriodicReportResolver {
     description: 'When this report is due',
   })
   due(@Parent() report: IPeriodicReport) {
-    return report.end.plus({ month: 1 }).endOf('month');
+    return report.end.plus({ months: 1 }).endOf('month');
   }
 
   @Mutation(() => IPeriodicReport, {

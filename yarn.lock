@@ -3182,10 +3182,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/luxon@npm:^1.27.1":
-  version: 1.27.1
-  resolution: "@types/luxon@npm:1.27.1"
-  checksum: 732405c7459dd9f991cff056b801620b92d7c18ddad3cd7c6d3b9c2de714dbfca0c48fc103a5544d19c6e7b9bb7a954bbd2369b30733c680a4633fa60cb03f1f
+"@types/luxon@npm:^2.0.4":
+  version: 2.0.4
+  resolution: "@types/luxon@npm:2.0.4"
+  checksum: b1877da73ce5e42641c7416fe2af501b197dfba150d7fb230b51c5b9171a17e928ccd7422ac9368040647aab64fd36950c8df7303188221d9a1518dde91bf377
   languageName: node
   linkType: hard
 
@@ -5490,7 +5490,7 @@ __metadata:
     "@types/js-yaml": ^4.0.3
     "@types/jsonwebtoken": ^8.5.5
     "@types/lodash": ^4.14.173
-    "@types/luxon": ^1.27.1
+    "@types/luxon": ^2.0.4
     "@types/mjml-react": ^2.0.0
     "@types/node": ^16.9.2
     "@types/react": ^17.0.21
@@ -5529,7 +5529,7 @@ __metadata:
     lazy-get-decorator: ^2.2.0
     lint-staged: ^11.1.2
     lodash: ^4.17.21
-    luxon: ^1.28.0
+    luxon: ^2.0.2
     madge: ^5.0.1
     nanoid: ^3.1.25
     neo4j-driver: ^4.1.2
@@ -9907,10 +9907,10 @@ cypher-query-builder@6.0.4:
   languageName: node
   linkType: hard
 
-"luxon@npm:^1.28.0":
-  version: 1.28.0
-  resolution: "luxon@npm:1.28.0"
-  checksum: 5250cb9f138b6048eeb0b3a9044a4ac994d0058f680c72a0da4b6aeaec8612460385639cba2b1052ef6d5564879e9ed144d686f26d9d97b38ab920d82e18281c
+"luxon@npm:^2.0.2":
+  version: 2.0.2
+  resolution: "luxon@npm:2.0.2"
+  checksum: eb2e366cf41a129704ae3213e0aea3e1504390af2a84322a5bbb6a22c92d96c7cb70e58b941a109c5e1bfbed51784d08130278feeee6cdf169940af90a68ded5
   languageName: node
   linkType: hard
 

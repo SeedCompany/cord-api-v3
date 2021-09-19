@@ -6,7 +6,7 @@ import {
 } from '@seedcompany/nestjs-email';
 import { CookieOptions } from 'express';
 import { LazyGetter as Lazy } from 'lazy-get-decorator';
-import { Duration, DurationInput } from 'luxon';
+import { Duration, DurationLike } from 'luxon';
 import { Config as Neo4JDriverConfig } from 'neo4j-driver';
 import { join } from 'path';
 import { Merge } from 'type-fest';
@@ -184,7 +184,7 @@ export class ConfigService implements EmailOptionsFactory {
 
   @Lazy() get sessionCookie(): Merge<
     CookieOptions,
-    { name: string; expires?: DurationInput }
+    { name: string; expires?: DurationLike }
   > {
     const name = this.env.string('SESSION_COOKIE_NAME').optional('cordsession');
 

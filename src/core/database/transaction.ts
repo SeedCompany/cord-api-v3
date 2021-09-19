@@ -1,5 +1,5 @@
 import { Connection } from 'cypher-query-builder';
-import { Duration, DurationInput } from 'luxon';
+import { Duration, DurationLike } from 'luxon';
 import { Transaction } from 'neo4j-driver';
 import { ServerException } from '../../common';
 import { PatchedConnection } from './cypher.factory';
@@ -30,7 +30,7 @@ export interface TransactionOptions {
    * Specified timeout overrides the default timeout configured in configured
    * in the database using `dbms.transaction.timeout` setting.
    */
-  timeout?: DurationInput;
+  timeout?: DurationLike;
 
   /**
    * The transaction's metadata.
