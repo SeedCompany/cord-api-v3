@@ -20,7 +20,7 @@ export class SyntaxError extends Neo4jError {
   static readonly code = 'Neo.ClientError.Statement.SyntaxError' as const;
 
   constructor(message: string) {
-    super(message);
+    super(message, SyntaxError.code);
     this.name = this.constructor.name;
     defineLogEntry(this, {
       level: LogLevel.ERROR,
@@ -43,7 +43,7 @@ export class ServiceUnavailableError extends Neo4jError {
   static readonly code = 'ServiceUnavailable' as const;
 
   constructor(message: string) {
-    super(message);
+    super(message, ServiceUnavailableError.code);
     this.name = this.constructor.name;
   }
 
@@ -61,7 +61,7 @@ export class ConnectionTimeoutError extends Neo4jError {
   static readonly code = 'N/A' as const;
 
   constructor(message: string) {
-    super(message);
+    super(message, ConnectionTimeoutError.code);
     this.name = this.constructor.name;
   }
 
@@ -79,7 +79,7 @@ export class ConstraintError extends Neo4jError {
   static readonly code =
     'Neo.ClientError.Schema.ConstraintValidationFailed' as const;
   constructor(message: string) {
-    super(message);
+    super(message, ConstraintError.code);
     this.name = this.constructor.name;
   }
 

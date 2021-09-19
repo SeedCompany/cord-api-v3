@@ -5416,7 +5416,7 @@ __metadata:
     luxon: ^2.0.2
     madge: ^5.0.1
     nanoid: ^3.1.25
-    neo4j-driver: ^4.1.2
+    neo4j-driver: ^4.3.3
     nestjs-console: ^7.0.0
     p-retry: ^4.6.1
     pkg-up: ^3.1.0
@@ -10642,15 +10642,32 @@ cypher-query-builder@6.0.4:
   languageName: node
   linkType: hard
 
-"neo4j-driver@npm:^4.1.2":
-  version: 4.1.2
-  resolution: "neo4j-driver@npm:4.1.2"
+"neo4j-driver-bolt-connection@npm:^4.3.3":
+  version: 4.3.3
+  resolution: "neo4j-driver-bolt-connection@npm:4.3.3"
+  dependencies:
+    neo4j-driver-core: ^4.3.3
+    text-encoding-utf-8: ^1.0.2
+  checksum: e462f524544d694fd7d262b536c7dc74c3743c30f2a8fd6408048e3886d624440a0144d12b28e01fe9acb910d4cdbd08a4e3ca2c6b336e13f540de381d20c515
+  languageName: node
+  linkType: hard
+
+"neo4j-driver-core@npm:^4.3.3":
+  version: 4.3.3
+  resolution: "neo4j-driver-core@npm:4.3.3"
+  checksum: 015e06f423314116f4ab4cc43246b2ea14c17920024976c5abe46b9d8c1dcca5d4f5c08ee84a5b097e4f12ef698f75e28287b20e75f6730b314b805ce10ffbc5
+  languageName: node
+  linkType: hard
+
+"neo4j-driver@npm:^4.1.2, neo4j-driver@npm:^4.3.3":
+  version: 4.3.3
+  resolution: "neo4j-driver@npm:4.3.3"
   dependencies:
     "@babel/runtime": ^7.5.5
-    rxjs: ^6.5.2
-    text-encoding-utf-8: ^1.0.2
-    uri-js: ^4.2.2
-  checksum: 0d4ed574c6e3af46f0a49a8c15ece6fec16edcf2f70cf09af152b09a5b749233112c78e2e479ce67baf96e25aa36b4f8b3f64642dfb31d4b2fb4d919b18b38f3
+    neo4j-driver-bolt-connection: ^4.3.3
+    neo4j-driver-core: ^4.3.3
+    rxjs: ^6.6.3
+  checksum: bcea372a87a3fd7216d245413161156d8c19e844da0bd429567645ae94276059d9bbed9fc6aa41dc3f4bfd037732b54fd01244de0b444b60bff8f223f719b2ba
   languageName: node
   linkType: hard
 
@@ -12322,7 +12339,7 @@ resolve@^2.0.0-next.3:
   languageName: node
   linkType: hard
 
-"rxjs@npm:6.6.7, rxjs@npm:^6.5.2, rxjs@npm:^6.6.0, rxjs@npm:^6.6.6, rxjs@npm:^6.6.7":
+"rxjs@npm:6.6.7, rxjs@npm:^6.5.2, rxjs@npm:^6.6.0, rxjs@npm:^6.6.3, rxjs@npm:^6.6.6, rxjs@npm:^6.6.7":
   version: 6.6.7
   resolution: "rxjs@npm:6.6.7"
   dependencies:

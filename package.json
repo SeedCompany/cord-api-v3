@@ -69,7 +69,7 @@
     "lodash": "^4.17.21",
     "luxon": "^2.0.2",
     "nanoid": "^3.1.25",
-    "neo4j-driver": "^4.1.2",
+    "neo4j-driver": "^4.3.3",
     "nestjs-console": "^7.0.0",
     "p-retry": "^4.6.1",
     "pkg-up": "^3.1.0",
