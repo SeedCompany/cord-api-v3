@@ -21,6 +21,8 @@ export class SyntaxError extends Neo4jError {
 
   constructor(message: string) {
     super(message, SyntaxError.code);
+    this.constructor = SyntaxError;
+    this.__proto__ = SyntaxError.prototype;
     this.name = this.constructor.name;
     defineLogEntry(this, {
       level: LogLevel.ERROR,
@@ -44,6 +46,8 @@ export class ServiceUnavailableError extends Neo4jError {
 
   constructor(message: string) {
     super(message, ServiceUnavailableError.code);
+    this.constructor = ServiceUnavailableError;
+    this.__proto__ = ServiceUnavailableError.prototype;
     this.name = this.constructor.name;
   }
 
@@ -62,6 +66,8 @@ export class ConnectionTimeoutError extends Neo4jError {
 
   constructor(message: string) {
     super(message, ConnectionTimeoutError.code);
+    this.constructor = ConnectionTimeoutError;
+    this.__proto__ = ConnectionTimeoutError.prototype;
     this.name = this.constructor.name;
   }
 
@@ -80,6 +86,8 @@ export class ConstraintError extends Neo4jError {
     'Neo.ClientError.Schema.ConstraintValidationFailed' as const;
   constructor(message: string) {
     super(message, ConstraintError.code);
+    this.constructor = ConstraintError;
+    this.__proto__ = ConstraintError.prototype;
     this.name = this.constructor.name;
   }
 
@@ -102,6 +110,9 @@ export class UniquenessError extends ConstraintError {
     message: string
   ) {
     super(message);
+    this.constructor = UniquenessError;
+    this.__proto__ = UniquenessError.prototype;
+    this.name = this.constructor.name;
     defineLogEntry(this, {
       level: LogLevel.WARNING,
       message: 'Duplicate property',
