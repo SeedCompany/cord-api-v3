@@ -16,10 +16,7 @@ import { ILogger, Logger } from '../logger';
  */
 @Plugin()
 export class GraphqlLoggingPlugin implements ApolloPlugin<ContextType> {
-  constructor(
-    @Logger('graphql') private readonly logger: ILogger,
-    @Logger('graphql:performance') private readonly perfLogger: ILogger
-  ) {}
+  constructor(@Logger('graphql') private readonly logger: ILogger) {}
 
   async requestDidStart(
     _context: RequestContext<ContextType>
@@ -37,35 +34,6 @@ export class GraphqlLoggingPlugin implements ApolloPlugin<ContextType> {
       didEncounterErrors: async ({ errors }) => {
         for (const error of errors) {
           this.onError(error);
-        }
-      },
-      willSendResponse: async ({ operationName, request, response }) => {
-        if (response.errors || operationName === 'IntrospectionQuery') {
-          return;
-        }
-
-        // No longer available with apollo server v3
-        const tracing: any | undefined = response.extensions?.tracing;
-        if (!tracing) {
-          return;
-        }
-
-        this.perfLogger.info(`Operation performance`, {
-          operation: operationName,
-          duration: nanoToMs(tracing.duration),
-          ...maskSecrets(request.variables ?? {}),
-        });
-        for (const resolver of tracing.execution.resolvers) {
-          const ms = nanoToMs(resolver.duration);
-          // Assume >10ms we have logic for the field
-          if (ms < 10) {
-            continue;
-          }
-          this.perfLogger.info(`Resolver performance`, {
-            resolver: [resolver.parentType, resolver.fieldName].join('.'),
-            path: resolver.path.join('.'),
-            duration: ms,
-          });
         }
       },
     };
@@ -103,5 +71,3 @@ export class GraphqlLoggingPlugin implements ApolloPlugin<ContextType> {
     });
   }
 }
-
-const nanoToMs = (value: number) => ~~(value / 1e6);
