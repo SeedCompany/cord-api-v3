@@ -92,6 +92,13 @@ export class LiteracyMaterialService {
     return await this.secure(result, session);
   }
 
+  async readMany(ids: readonly ID[], session: Session) {
+    const literacyMaterials = await this.repo.readMany(ids, session);
+    return await Promise.all(
+      literacyMaterials.map((dto) => this.secure(dto, session))
+    );
+  }
+
   private async secure(
     dto: UnsecuredDto<LiteracyMaterial>,
     session: Session

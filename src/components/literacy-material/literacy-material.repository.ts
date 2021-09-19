@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
+import { inArray, node } from 'cypher-query-builder';
 import { ID, NotFoundException, Session } from '../../common';
 import { DtoRepository, matchRequestingUser } from '../../core';
 import {
@@ -55,6 +55,17 @@ export class LiteracyMaterialRepository extends DtoRepository(
       );
     }
     return result.dto;
+  }
+
+  async readMany(ids: readonly ID[], session: Session) {
+    return await this.db
+      .query()
+      .apply(matchRequestingUser(session))
+      .matchNode('node', 'LiteracyMaterial')
+      .where({ 'node.id': inArray(ids.slice()) })
+      .apply(this.hydrate())
+      .map('dto')
+      .run();
   }
 
   async list(input: LiteracyMaterialListInput, session: Session) {
