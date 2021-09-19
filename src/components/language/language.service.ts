@@ -115,6 +115,11 @@ export class LanguageService {
     return await this.secure(dto, session);
   }
 
+  async readMany(ids: readonly ID[], session: Session) {
+    const languages = await this.repo.readMany(ids, session);
+    return await Promise.all(languages.map((dto) => this.secure(dto, session)));
+  }
+
   private async secure(
     dto: UnsecuredDto<Language>,
     session: Session

@@ -70,6 +70,17 @@ export class LanguageRepository extends DtoRepository(Language) {
     return result.dto;
   }
 
+  async readMany(ids: readonly ID[], session: Session) {
+    return await this.db
+      .query()
+      .apply(matchRequestingUser(session))
+      .matchNode('node', 'Language')
+      .where({ 'node.id': inArray(ids.slice()) })
+      .apply(this.hydrate())
+      .map('dto')
+      .run();
+  }
+
   protected hydrate() {
     return (query: Query) =>
       query

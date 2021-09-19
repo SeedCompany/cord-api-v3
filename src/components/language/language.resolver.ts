@@ -21,6 +21,7 @@ import {
 } from '../../common';
 import { Loader, LoaderOf } from '../../core';
 import { LocationListInput, SecuredLocationList } from '../location';
+import { LocationLoader } from '../location/location.loader';
 import { ProjectLoader } from '../project';
 import { ProjectListInput, SecuredProjectList } from '../project/dto';
 import {
@@ -32,6 +33,7 @@ import {
   UpdateLanguageInput,
   UpdateLanguageOutput,
 } from './dto';
+import { LanguageLoader } from './language.loader';
 import { LanguageService } from './language.service';
 
 @ArgsType()
@@ -51,10 +53,10 @@ export class LanguageResolver {
     description: 'Look up a language by its ID',
   })
   async language(
-    @AnonSession() session: Session,
-    @IdArg() id: ID
+    @IdArg() id: ID,
+    @Loader(LanguageLoader) languages: LoaderOf<LanguageLoader>
   ): Promise<Language> {
-    return await this.langService.readOne(id, session);
+    return await languages.load(id);
   }
 
   @ResolveField(() => String, { nullable: true })
@@ -93,9 +95,12 @@ export class LanguageResolver {
       type: () => LocationListInput,
       defaultValue: LocationListInput.defaultVal,
     })
-    input: LocationListInput
+    input: LocationListInput,
+    @Loader(LocationLoader) locations: LoaderOf<LocationLoader>
   ): Promise<SecuredLocationList> {
-    return await this.langService.listLocations(language, input, session);
+    const list = await this.langService.listLocations(language, input, session);
+    locations.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => SecuredDate, {
@@ -137,9 +142,12 @@ export class LanguageResolver {
       type: () => LanguageListInput,
       defaultValue: LanguageListInput.defaultVal,
     })
-    input: LanguageListInput
+    input: LanguageListInput,
+    @Loader(LanguageLoader) languages: LoaderOf<LanguageLoader>
   ): Promise<LanguageListOutput> {
-    return await this.langService.list(input, session);
+    const list = await this.langService.list(input, session);
+    languages.primeAll(list.items);
+    return list;
   }
 
   @Mutation(() => CreateLanguageOutput, {
