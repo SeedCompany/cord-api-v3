@@ -24,6 +24,7 @@ import {
 } from '../location';
 import {
   OrganizationListInput,
+  OrganizationLoader,
   SecuredOrganizationList,
 } from '../organization';
 import { PartnerListInput, SecuredPartnerList } from '../partner';
@@ -149,9 +150,12 @@ export class UserResolver {
       type: () => OrganizationListInput,
       defaultValue: OrganizationListInput.defaultVal,
     })
-    input: OrganizationListInput
+    input: OrganizationListInput,
+    @Loader(OrganizationLoader) organizations: LoaderOf<OrganizationLoader>
   ): Promise<SecuredOrganizationList> {
-    return await this.userService.listOrganizations(id, input, session);
+    const list = await this.userService.listOrganizations(id, input, session);
+    organizations.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => SecuredPartnerList)

@@ -35,7 +35,7 @@ import {
   SecuredLocation,
   SecuredLocationList,
 } from '../location';
-import { OrganizationService, SecuredOrganization } from '../organization';
+import { OrganizationLoader, SecuredOrganization } from '../organization';
 import { PartnershipListInput, SecuredPartnershipList } from '../partnership';
 import {
   ProjectChangeRequestListInput,
@@ -69,10 +69,7 @@ class ModifyOtherLocationArgs {
 
 @Resolver(IProject)
 export class ProjectResolver {
-  constructor(
-    private readonly projectService: ProjectService,
-    private readonly organizationService: OrganizationService
-  ) {}
+  constructor(private readonly projectService: ProjectService) {}
 
   @Query(() => IProject, {
     description: 'Look up a project by its ID',
@@ -291,13 +288,11 @@ export class ProjectResolver {
   @ResolveField(() => SecuredOrganization)
   async owningOrganization(
     @Parent() project: Project,
-    @AnonSession() session: Session
+    @Loader(OrganizationLoader) organizations: LoaderOf<OrganizationLoader>
   ): Promise<SecuredOrganization> {
-    const { value: id, ...rest } = project.owningOrganization;
-    const value = id
-      ? await this.organizationService.readOne(id, session)
-      : undefined;
-    return { value, ...rest };
+    return await mapSecuredValue(project.owningOrganization, (id) =>
+      organizations.load(id)
+    );
   }
 
   @ResolveField()

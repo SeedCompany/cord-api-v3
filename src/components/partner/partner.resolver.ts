@@ -7,8 +7,16 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
-import { OrganizationService, SecuredOrganization } from '../organization';
+import {
+  AnonSession,
+  ID,
+  IdArg,
+  LoggedInSession,
+  mapSecuredValue,
+  Session,
+} from '../../common';
+import { Loader, LoaderOf } from '../../core';
+import { OrganizationLoader, SecuredOrganization } from '../organization';
 import { SecuredUser, UserService } from '../user';
 import {
   CreatePartnerInput,
@@ -25,7 +33,6 @@ import { PartnerService } from './partner.service';
 export class PartnerResolver {
   constructor(
     private readonly partnerService: PartnerService,
-    private readonly orgService: OrganizationService,
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService
   ) {}
@@ -58,14 +65,11 @@ export class PartnerResolver {
   @ResolveField(() => SecuredOrganization)
   async organization(
     @Parent() partner: Partner,
-    @AnonSession() session: Session
+    @Loader(OrganizationLoader) organizations: LoaderOf<OrganizationLoader>
   ): Promise<SecuredOrganization> {
-    const { value: id, ...rest } = partner.organization;
-    const value = id ? await this.orgService.readOne(id, session) : undefined;
-    return {
-      value,
-      ...rest,
-    };
+    return await mapSecuredValue(partner.organization, (id) =>
+      organizations.load(id)
+    );
   }
 
   @ResolveField(() => SecuredUser)
