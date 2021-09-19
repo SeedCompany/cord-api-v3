@@ -9,11 +9,12 @@ import {
 import {
   AnonSession,
   LoggedInSession,
+  mapSecuredValue,
   SecuredDateRange,
   Session,
 } from '../../common';
 import { Loader, LoaderOf } from '../../core';
-import { CeremonyService, SecuredCeremony } from '../ceremony';
+import { CeremonyLoader, SecuredCeremony } from '../ceremony';
 import { ChangesetIds, IdsAndView, IdsAndViewArg } from '../changeset/dto';
 import { EngagementLoader, EngagementService } from '../engagement';
 import {
@@ -33,10 +34,7 @@ import {
 
 @Resolver(IEngagement)
 export class EngagementResolver {
-  constructor(
-    private readonly service: EngagementService,
-    private readonly ceremonies: CeremonyService
-  ) {}
+  constructor(private readonly service: EngagementService) {}
 
   @Query(() => IEngagement, {
     description: 'Lookup an engagement by ID',
@@ -70,14 +68,11 @@ export class EngagementResolver {
   @ResolveField(() => SecuredCeremony)
   async ceremony(
     @Parent() engagement: Engagement,
-    @AnonSession() session: Session
+    @Loader(CeremonyLoader) ceremonies: LoaderOf<CeremonyLoader>
   ): Promise<SecuredCeremony> {
-    const { value: id, ...rest } = engagement.ceremony;
-    const value = id ? await this.ceremonies.readOne(id, session) : undefined;
-    return {
-      value,
-      ...rest,
-    };
+    return await mapSecuredValue(engagement.ceremony, (id) =>
+      ceremonies.load(id)
+    );
   }
 
   @ResolveField()
