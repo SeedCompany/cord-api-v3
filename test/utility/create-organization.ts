@@ -10,7 +10,7 @@ import {
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
 
-export async function readOneOrgLocations(app: TestApp, id: ID) {
+export async function readOneOrgLocations(app: TestApp, id: string) {
   const result = await app.graphql.query(
     gql`
       query readOneOrgLocations($id: ID!) {
@@ -30,7 +30,7 @@ export async function readOneOrgLocations(app: TestApp, id: ID) {
   );
   const actual: SecuredLocationList = result.organization.locations;
   expect(actual).toBeTruthy();
-  return actual;
+  return actual.items;
 }
 
 export async function readOneOrganization(app: TestApp, id: ID) {

@@ -1,35 +1,23 @@
-import { id } from 'common-tags';
 import { Connection } from 'cypher-query-builder';
-import { async } from 'rxjs';
 import { CalendarDate, Sensitivity } from '../../src/common';
 import { Powers, Role, ScopedRole } from '../../src/components/authorization';
 import { Organization } from '../../src/components/organization';
-import { Partner, PartnerType } from '../../src/components/partner';
-import {
-  FinancialReportingType,
-  Partnership,
-} from '../../src/components/partnership';
-import { Project, ProjectType } from '../../src/components/project';
+import { PartnerType } from '../../src/components/partner';
+import { FinancialReportingType } from '../../src/components/partnership';
+import { ProjectType } from '../../src/components/project';
 import {
   createOrganization,
   createPartner,
   createPartnership,
   createProject,
-  createProjectMember,
   createSession,
   createTestApp,
-  listPartnerships,
-  Raw,
   readOneOrganization,
   readOneOrgLocations,
-  readOnePartnership,
-  registerUser,
   registerUserWithPower,
-  runInIsolatedSession,
   TestApp,
 } from '../utility';
 import { resetDatabase } from '../utility/reset-database';
-import { testRole } from '../utility/roles';
 import {
   expectSensitiveProperty,
   expectSensitiveRelationList,
@@ -39,10 +27,7 @@ import { getPermissions } from './permissions';
 describe('Organization Security e2e', () => {
   let app: TestApp;
   let db: Connection;
-  let testProject: Raw<Project>;
-  let testPartner: Partner;
-  let testPartnership: Partnership;
-  let testOrg: Organization;
+
   beforeAll(async () => {
     app = await createTestApp();
     db = app.get(Connection);
@@ -58,8 +43,6 @@ describe('Organization Security e2e', () => {
       Powers.CreatePartner,
       Powers.CreatePartnership,
     ]);
-    testProject = await createProject(app);
-    testOrg = await createOrganization(app);
   });
 
   afterAll(async () => {
@@ -199,12 +182,12 @@ describe('Organization Security e2e', () => {
           resourceId: o.id,
           sensitivityRestriction: Sensitivity.Medium,
           projectType: type,
-          permissions: await getPermissions({
+          perms: await getPermissions({
             resource: Organization,
-            userRole: `global:${Role.ConsultantManager}` as ScopedRole,
+            userRole: `global:${Role.ConsultantManager}`,
             sensitivity: Sensitivity.Medium,
           }),
-          readOneFunction: readOneOrgLocations(app, o.id),
+          readFunction: readOneOrgLocations,
         });
       });
     });
