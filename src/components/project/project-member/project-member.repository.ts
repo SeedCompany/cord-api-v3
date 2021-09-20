@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Node, node, Query, relation } from 'cypher-query-builder';
+import { inArray, Node, node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { CreateProjectMember, ProjectMember, ProjectMemberListInput } from '.';
 import { ID, NotFoundException, Session, UnsecuredDto } from '../../../common';
@@ -99,6 +99,16 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
     }
 
     return result.dto;
+  }
+
+  async readMany(ids: readonly ID[], session: Session) {
+    return await this.db
+      .query()
+      .matchNode('node', 'ProjectMember')
+      .where({ 'node.id': inArray(ids.slice()) })
+      .apply(this.hydrate(session))
+      .map('dto')
+      .run();
   }
 
   protected hydrate(session: Session) {

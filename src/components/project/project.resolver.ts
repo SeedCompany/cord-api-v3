@@ -53,8 +53,9 @@ import {
 } from './dto';
 import {
   ProjectMemberListInput,
+  ProjectMemberLoader,
   SecuredProjectMemberList,
-} from './project-member/dto';
+} from './project-member';
 import { ProjectLoader } from './project.loader';
 import { ProjectService } from './project.service';
 
@@ -174,15 +175,18 @@ export class ProjectResolver {
       type: () => ProjectMemberListInput,
       defaultValue: ProjectMemberListInput.defaultVal,
     })
-    input: ProjectMemberListInput
+    input: ProjectMemberListInput,
+    @Loader(ProjectMemberLoader) projectMembers: LoaderOf<ProjectMemberLoader>
   ): Promise<SecuredProjectMemberList> {
-    return await this.projectService.listProjectMembers(
+    const list = await this.projectService.listProjectMembers(
       id,
       input,
       session,
       sensitivity,
       scope
     );
+    projectMembers.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => SecuredPartnershipList)
