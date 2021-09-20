@@ -56,7 +56,7 @@ export class LocationResolver {
     })
     input: LocationListInput
   ): Promise<LocationListOutput> {
-    return this.locationService.list(input, session);
+    return await this.locationService.list(input, session);
   }
 
   @ResolveField(() => SecuredFundingAccount)

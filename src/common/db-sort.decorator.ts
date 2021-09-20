@@ -16,10 +16,5 @@ export const DbSort = (transformer: SortTransformer) =>
 export const getDbSortTransformer = (
   type: AbstractClassType<unknown>,
   property: string
-) => {
-  // @ts-expect-error property decoration is on instance of object
-  const obj = new type();
-  return Reflect.getMetadata(DbSortSymbol, obj, property) as
-    | SortTransformer
-    | undefined;
-};
+): SortTransformer | undefined =>
+  Reflect.getMetadata(DbSortSymbol, type.prototype, property);

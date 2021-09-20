@@ -6,7 +6,7 @@ import {
 } from '@seedcompany/nestjs-email';
 import { CookieOptions } from 'express';
 import { LazyGetter as Lazy } from 'lazy-get-decorator';
-import { Duration, DurationInput } from 'luxon';
+import { Duration, DurationLike } from 'luxon';
 import { Config as Neo4JDriverConfig } from 'neo4j-driver';
 import { join } from 'path';
 import { Merge } from 'type-fest';
@@ -200,7 +200,7 @@ export class ConfigService implements EmailOptionsFactory {
 
   @Lazy() get sessionCookie(): Merge<
     CookieOptions,
-    { name: string; expires?: DurationInput }
+    { name: string; expires?: DurationLike }
   > {
     const name = this.env.string('SESSION_COOKIE_NAME').optional('cordsession');
 
@@ -220,13 +220,18 @@ export class ConfigService implements EmailOptionsFactory {
       httpOnly: true,
       // All paths, not just the current one
       path: '/',
-      // If env is configured for HTTPS
-      ...(this.hostUrl.startsWith('https://') && {
-        // Require HTTPS (required for SameSite)
-        secure: true,
-        // Allow 3rd party (other domains)
-        sameSite: 'none',
-      }),
+      // Require HTTPS (required for SameSite) (ignored for localhost)
+      secure: true,
+      // Allow 3rd party (other domains)
+      sameSite: 'none',
+    };
+  }
+
+  @Lazy() get xray() {
+    return {
+      daemonAddress: this.jest
+        ? undefined
+        : this.env.string('AWS_XRAY_DAEMON_ADDRESS').optional(),
     };
   }
 
@@ -254,7 +259,6 @@ export class ConfigService implements EmailOptionsFactory {
       'nest:loader,nest:router': LogLevel.WARNING,
       'config:environment': LogLevel.INFO,
       version: LogLevel.DEBUG,
-      'graphql:performance': LogLevel.NOTICE,
     },
   };
 

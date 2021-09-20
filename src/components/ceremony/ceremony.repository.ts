@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
 import { ID, NotFoundException, Session, UnsecuredDto } from '../../common';
 import { DtoRepository, matchRequestingUser } from '../../core';
 import {
@@ -35,15 +35,8 @@ export class CeremonyRepository extends DtoRepository(Ceremony) {
   async readOne(id: ID, session: Session) {
     const query = this.db
       .query()
-      .match([
-        node('project', 'Project'),
-        relation('out', '', 'engagement', ACTIVE),
-        node('', 'Engagement'),
-        relation('out', '', ACTIVE),
-        node('node', 'Ceremony', { id }),
-      ])
-      .apply(matchPropsAndProjectSensAndScopedRoles(session))
-      .return<{ dto: UnsecuredDto<Ceremony> }>('props as dto');
+      .matchNode('node', 'Ceremony', { id })
+      .apply(this.hydrate(session));
 
     const result = await query.first();
     if (!result) {
@@ -51,6 +44,20 @@ export class CeremonyRepository extends DtoRepository(Ceremony) {
     }
 
     return result.dto;
+  }
+
+  protected hydrate(session: Session) {
+    return (query: Query) =>
+      query
+        .match([
+          node('project', 'Project'),
+          relation('out', '', 'engagement', ACTIVE),
+          node('', 'Engagement'),
+          relation('out', '', ACTIVE),
+          node('node'),
+        ])
+        .apply(matchPropsAndProjectSensAndScopedRoles(session))
+        .return<{ dto: UnsecuredDto<Ceremony> }>('props as dto');
   }
 
   async list(
@@ -87,7 +94,7 @@ export class CeremonyRepository extends DtoRepository(Ceremony) {
               .return<{ sortValue: string }>('prop.value as sortValue'),
         })
       )
-      .apply(paginate(input))
+      .apply(paginate(input, this.hydrate(session)))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }

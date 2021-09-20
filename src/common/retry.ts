@@ -1,4 +1,4 @@
-import { Duration, DurationInput } from 'luxon';
+import { Duration, DurationLike } from 'luxon';
 import * as pRetry from 'p-retry';
 import { Merge } from 'type-fest';
 
@@ -11,17 +11,17 @@ export type RetryOptions = Merge<
      * The maximum time (in milliseconds) that the retried operation is allowed to run.
      * @default Infinity
      */
-    maxRetryTime?: DurationInput;
+    maxRetryTime?: DurationLike;
     /**
      * The duration before starting the first retry.
      * @default 1 second
      */
-    minTimeout?: DurationInput;
+    minTimeout?: DurationLike;
     /**
      * The maximum duration between two retries.
      * @default Infinity
      */
-    maxTimeout?: DurationInput;
+    maxTimeout?: DurationLike;
   }
 >;
 

@@ -109,7 +109,7 @@ export class SyncProgressReportToEngagementDateRange
       prevRange?.expandToFull('quarter'),
       updatedRange?.expandToFull('quarter')
     );
-    const splitByUnit = (range: Interval) => range.splitBy({ quarter: 1 });
+    const splitByUnit = (range: Interval) => range.splitBy({ quarters: 1 });
     return {
       additions: diff.additions.flatMap(splitByUnit),
       removals: diff.removals.flatMap(splitByUnit),

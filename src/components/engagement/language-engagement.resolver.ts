@@ -1,7 +1,7 @@
 import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { AnonSession, Session } from '../../common';
-import { DataLoader, Loader } from '../../core';
-import { FileNode, IFileNode, resolveDefinedFile, SecuredFile } from '../file';
+import { Loader, LoaderOf } from '../../core';
+import { FileNodeLoader, resolveDefinedFile, SecuredFile } from '../file';
 import { LanguageService } from '../language';
 import { SecuredLanguage } from '../language/dto';
 import { ProductListInput, SecuredProductList } from '../product/dto';
@@ -39,7 +39,7 @@ export class LanguageEngagementResolver {
     })
     input?: ProductListInput
   ): Promise<SecuredProductList> {
-    return this.engagements.listProducts(
+    return await this.engagements.listProducts(
       engagement,
       input || ProductListInput.defaultVal,
       session
@@ -49,7 +49,7 @@ export class LanguageEngagementResolver {
   @ResolveField(() => SecuredFile)
   async pnp(
     @Parent() engagement: LanguageEngagement,
-    @Loader(IFileNode) files: DataLoader<FileNode>
+    @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>
   ): Promise<SecuredFile> {
     return await resolveDefinedFile(files, engagement.pnp);
   }

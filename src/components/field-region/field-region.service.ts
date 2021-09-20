@@ -9,7 +9,7 @@ import {
   UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
-import { HandleIdLookup, ILogger, Logger, OnIndex } from '../../core';
+import { HandleIdLookup, ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import {
@@ -29,24 +29,6 @@ export class FieldRegionService {
     private readonly authorizationService: AuthorizationService,
     private readonly repo: FieldRegionRepository
   ) {}
-
-  @OnIndex()
-  async createIndexes() {
-    return [
-      // FIELD REGION NODE
-      'CREATE CONSTRAINT ON (n:FieldRegion) ASSERT EXISTS(n.id)',
-      'CREATE CONSTRAINT ON (n:FieldRegion) ASSERT n.id IS UNIQUE',
-      'CREATE CONSTRAINT ON (n:FieldRegion) ASSERT EXISTS(n.createdAt)',
-
-      // FIELD REGION NAME REL
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
-
-      // FIELD REGION NAME NODE
-      'CREATE CONSTRAINT ON (n:FieldRegionName) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:FieldRegionName) ASSERT n.value IS UNIQUE',
-    ];
-  }
 
   async create(
     input: CreateFieldRegion,
@@ -154,6 +136,6 @@ export class FieldRegionService {
     session: Session
   ): Promise<FieldRegionListOutput> {
     const results = await this.repo.list(input, session);
-    return await mapListResults(results, (id) => this.readOne(id, session));
+    return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 }

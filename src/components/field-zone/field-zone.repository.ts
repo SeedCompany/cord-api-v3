@@ -128,7 +128,7 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
       .query()
       .match([requestingUser(session), ...permissionsOfNode(label)])
       .apply(sorting(FieldZone, input))
-      .apply(paginate(input))
+      .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }

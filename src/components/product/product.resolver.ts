@@ -66,7 +66,7 @@ export class ProductResolver {
     })
     input: ProductListInput
   ): Promise<ProductListOutput> {
-    return this.productService.list(input, session);
+    return await this.productService.list(input, session);
   }
 
   @ResolveField(() => ProductApproach, { nullable: true })

@@ -81,7 +81,7 @@ export class OrganizationResolver {
     })
     input: OrganizationListInput
   ): Promise<OrganizationListOutput> {
-    return this.orgs.list(input, session);
+    return await this.orgs.list(input, session);
   }
 
   @ResolveField(() => SecuredLocationList)
@@ -95,7 +95,7 @@ export class OrganizationResolver {
     })
     input: LocationListInput
   ): Promise<SecuredLocationList> {
-    return this.orgs.listLocations(organization.id, input, session);
+    return await this.orgs.listLocations(organization.id, input, session);
   }
 
   @Mutation(() => UpdateOrganizationOutput, {

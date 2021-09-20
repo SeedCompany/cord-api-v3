@@ -16,6 +16,8 @@
       "./typings"
     ],
     "strictPropertyInitialization": false,
+    // Disabling for now, but it would be good to re-enable later
+    "useUnknownInCatchVariables": false,
     "skipLibCheck": true,
     "noImplicitAny": true,
     "noImplicitThis": true,

@@ -53,7 +53,7 @@ export class StoryRepository extends DtoRepository(Story) {
       .query()
       .match([requestingUser(session), ...permissionsOfNode('Story')])
       .apply(sorting(Story, input))
-      .apply(paginate(input))
+      .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }

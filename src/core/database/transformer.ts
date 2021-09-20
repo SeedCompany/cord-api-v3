@@ -46,11 +46,15 @@ export class MyTransformer extends PatchedTransformer {
     const zone = timeZoneOffsetSeconds
       ? FixedOffsetZone.instance(timeZoneOffsetSeconds / 60)
       : timeZoneId;
-    return DateTime.fromObject({
-      ...rest,
-      millisecond: nanosecond / 1e6,
-      zone,
-    });
+    return DateTime.fromObject(
+      {
+        ...rest,
+        millisecond: nanosecond / 1e6,
+      },
+      {
+        zone,
+      }
+    );
   }
 
   private transformDuration(duration: Neo.Duration) {

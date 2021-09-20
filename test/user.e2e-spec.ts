@@ -83,10 +83,7 @@ describe('User e2e', () => {
 
   it('create user with required input fields', async () => {
     const user = await generateRequireFieldsRegisterInput();
-    const result = await registerUserWithStrictInput(app, user);
-
-    const actual: User = result;
-    expect(actual).toBeTruthy();
+    const actual = await registerUserWithStrictInput(app, user);
 
     expect(isValidId(actual.id)).toBe(true);
     expect(actual.email.value).toBe(user.email.toLowerCase());

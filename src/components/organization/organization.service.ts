@@ -9,13 +9,7 @@ import {
   UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
-import {
-  ConfigService,
-  HandleIdLookup,
-  ILogger,
-  Logger,
-  OnIndex,
-} from '../../core';
+import { ConfigService, HandleIdLookup, ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
@@ -43,21 +37,6 @@ export class OrganizationService {
     private readonly locationService: LocationService,
     private readonly repo: OrganizationRepository
   ) {}
-
-  @OnIndex()
-  async createIndexes() {
-    return [
-      'CREATE CONSTRAINT ON (n:Organization) ASSERT EXISTS(n.id)',
-      'CREATE CONSTRAINT ON (n:Organization) ASSERT n.id IS UNIQUE',
-      'CREATE CONSTRAINT ON (n:Organization) ASSERT EXISTS(n.createdAt)',
-
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.active)',
-      'CREATE CONSTRAINT ON ()-[r:name]-() ASSERT EXISTS(r.createdAt)',
-
-      'CREATE CONSTRAINT ON (n:OrgName) ASSERT EXISTS(n.value)',
-      'CREATE CONSTRAINT ON (n:OrgName) ASSERT n.value IS UNIQUE',
-    ];
-  }
 
   async create(
     input: CreateOrganization,

@@ -136,6 +136,7 @@ export const user = gql`
     }
   }
 `;
+export type RawUser = Merge<Raw<User>, { timezone: Secured<{ name: string }> }>;
 
 export const language = gql`
   fragment language on Language {

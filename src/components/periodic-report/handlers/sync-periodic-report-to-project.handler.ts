@@ -1,4 +1,4 @@
-import { DurationUnit } from 'luxon';
+import { DateTimeUnit } from 'luxon';
 import { DateInterval } from '../../../common';
 import { EventsHandler, IEventHandler, ILogger, Logger } from '../../../core';
 import { projectRange } from '../../project';
@@ -35,12 +35,12 @@ export class SyncPeriodicReportsToProjectDateRange
 
     const previousIntervalUnit =
       previous.financialReportPeriod === ReportPeriod.Monthly
-        ? 'months'
-        : 'quarters';
+        ? 'month'
+        : 'quarter';
     const projectIntervalUnit =
       project.financialReportPeriod === ReportPeriod.Monthly
-        ? 'months'
-        : 'quarters';
+        ? 'month'
+        : 'quarter';
 
     const diff =
       project.financialReportPeriod !== previous.financialReportPeriod
@@ -61,8 +61,8 @@ export class SyncPeriodicReportsToProjectDateRange
         : this.diffBy(
             event,
             project.financialReportPeriod === ReportPeriod.Monthly
-              ? 'months'
-              : 'quarters'
+              ? 'month'
+              : 'quarter'
           );
 
     await this.periodicReports.delete(
@@ -127,7 +127,7 @@ export class SyncPeriodicReportsToProjectDateRange
     }
   }
 
-  private diffBy(event: SubscribedEvent, unit: DurationUnit) {
+  private diffBy(event: SubscribedEvent, unit: DateTimeUnit) {
     const diff = DateInterval.compare(
       projectRange(event.previous)?.expandToFull(unit),
       projectRange(event.updated)?.expandToFull(unit)

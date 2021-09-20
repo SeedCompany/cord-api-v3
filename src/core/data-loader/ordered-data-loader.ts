@@ -1,30 +1,37 @@
 // eslint-disable-next-line no-restricted-imports -- it's ok in this folder
-import * as DataLoader from 'dataloader';
-import { startCase } from 'lodash';
+import * as DataLoaderLib from 'dataloader';
+import { identity, startCase } from 'lodash';
 import { GqlContextType, ID, NotFoundException } from '../../common';
 import { anonymousSession } from '../../common/session';
 import { NoSessionException } from '../../components/authentication/no-session.exception';
-import { NestDataLoader } from './loader.decorator';
+import { DataLoader, NestDataLoader } from './loader.decorator';
 
-export interface OrderedNestDataLoaderOptions<T, Key = ID> {
-  propertyKey?: string;
+export interface OrderedNestDataLoaderOptions<T, Key = ID, CachedKey = Key>
+  extends DataLoaderLib.Options<Key, T, CachedKey> {
+  /**
+   * How should the object be identified?
+   * An function to do so or a property key. Defaults to `id`
+   */
+  propertyKey?: keyof T | ((obj: T) => Key);
+
+  /**
+   * How to describe the object in errors.
+   * Defaults to the class name minus loader suffix
+   */
   typeName?: string;
-  dataloaderConfig?: DataLoader.Options<Key, T>;
 }
 
-export abstract class OrderedNestDataLoader<T, Key = ID>
-  implements NestDataLoader<T, Key>
+export abstract class OrderedNestDataLoader<T, Key = ID, CachedKey = Key>
+  implements NestDataLoader<T, Key, CachedKey>
 {
   private context: GqlContextType;
 
   abstract loadMany(keys: readonly Key[]): Promise<readonly T[]>;
 
-  getOptions(): OrderedNestDataLoaderOptions<T, Key> {
+  getOptions(): OrderedNestDataLoaderOptions<T, Key, CachedKey> {
     return {
-      dataloaderConfig: {
-        // Increase the batching timeframe from the same nodejs frame to 10ms
-        batchScheduleFn: (cb) => setTimeout(cb, 10),
-      },
+      // Increase the batching timeframe from the same nodejs frame to 10ms
+      batchScheduleFn: (cb) => setTimeout(cb, 10),
     };
   }
 
@@ -41,41 +48,56 @@ export abstract class OrderedNestDataLoader<T, Key = ID>
     return this.createLoader(this.getOptions());
   }
 
-  protected createLoader(
-    options: OrderedNestDataLoaderOptions<T, Key>
-  ): DataLoader<Key, T> {
-    const typeName =
-      options.typeName ??
-      startCase(this.constructor.name.replace('Loader', '')).toLowerCase();
-    return new DataLoader<Key, T>(async (keys) => {
-      return ensureOrder({
-        docs: await this.loadMany(keys),
-        keys,
-        prop: options.propertyKey || 'id',
-        error: (keyValue: ID) => `Could not find ${typeName} (${keyValue})`,
+  protected createLoader({
+    typeName,
+    propertyKey,
+    ...options
+  }: OrderedNestDataLoaderOptions<T, Key, CachedKey>): DataLoader<
+    T,
+    Key,
+    CachedKey
+  > {
+    typeName ??= startCase(
+      this.constructor.name.replace('Loader', '')
+    ).toLowerCase();
+
+    const getKey =
+      typeof propertyKey === 'function'
+        ? propertyKey
+        : (obj: T) => obj[(propertyKey ?? 'id') as keyof T] as unknown as Key;
+    const getCacheKey: (key: Key) => CachedKey = options.cacheKeyFn ?? identity;
+
+    const batchFn: DataLoaderLib.BatchLoadFn<Key, T> = async (keys) => {
+      const docs = await this.loadMany(keys);
+
+      // Put documents (docs) into a map where key is a document's ID or some
+      // property (prop) of a document and value is a document.
+      const docsMap = new Map();
+      docs.forEach((doc: T) => docsMap.set(getCacheKey(getKey(doc)), doc));
+      // Loop through the keys and for each one retrieve proper document. For not
+      // existing documents generate an error.
+      return keys.map((key) => {
+        const cacheKey = getCacheKey(key);
+        return (
+          docsMap.get(cacheKey) ||
+          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+          new NotFoundException(`Could not find ${typeName} (${cacheKey})`)
+        );
       });
-    }, options.dataloaderConfig);
+    };
+
+    const loader = new DataLoaderLib<Key, T, CachedKey>(
+      batchFn,
+      options
+    ) as DataLoader<T, Key, CachedKey>;
+
+    loader.primeAll = (items) => {
+      for (const item of items) {
+        loader.prime(getKey(item), item);
+      }
+      return loader;
+    };
+
+    return loader;
   }
 }
-
-// https://github.com/graphql/dataloader/issues/66#issuecomment-386252044
-const ensureOrder = (options: any) => {
-  const {
-    docs,
-    keys,
-    prop,
-    error = (key: ID) => `Could not find node (${key})`,
-  } = options;
-  // Put documents (docs) into a map where key is a document's ID or some
-  // property (prop) of a document and value is a document.
-  const docsMap = new Map();
-  docs.forEach((doc: any) => docsMap.set(doc[prop], doc));
-  // Loop through the keys and for each one retrieve proper document. For not
-  // existing documents generate an error.
-  return keys.map((key: ID) => {
-    return (
-      docsMap.get(key) ||
-      new NotFoundException(typeof error === 'function' ? error(key) : error)
-    );
-  });
-};

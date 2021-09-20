@@ -25,8 +25,8 @@ DateTime.prototype.toNeo4JDateTime = function (this: DateTime) {
     this.minute,
     this.second,
     this.millisecond * 1e6,
-    this.zone.universal ? this.offset * 60 : undefined,
-    this.zone.universal ? undefined : this.zoneName
+    this.zone.isUniversal ? this.offset * 60 : undefined,
+    this.zone.isUniversal ? undefined : this.zoneName
   );
 };
 

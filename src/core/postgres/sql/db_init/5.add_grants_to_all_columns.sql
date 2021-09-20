@@ -27,3 +27,16 @@ begin
 	raise notice '%', pHstore;
 	
 end; $$;
+
+
+create or replace procedure  public.add_user_to_role(pUserId integer,pRoleId integer)
+language plpgsql
+as $$
+declare 
+	pHstore hstore;
+begin 
+	pHstore := hstore(ARRAY['global_role', 'person'], ARRAY[pRoleId::text, pUserId::text]);
+	execute format('call public.create(0,$1,$2,$3::public.toggle_security,
+		$4::public.toggle_mv,$5::public.toggle_history,$6::public.toggle_granters,0)')
+		using 'public.global_role_memberships', pHstore,'UpdateAccessLevelAndIsClearedSecurity', 'RefreshMVConcurrently', 'History','RefreshSecurityTablesAndMVConcurrently';
+end; $$;

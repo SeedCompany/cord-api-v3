@@ -18,12 +18,12 @@ import {
   SecuredDateRange,
   Session,
 } from '../../common';
-import { DataLoader, Loader } from '../../core';
+import { Loader, LoaderOf } from '../../core';
 import { SecuredBudget } from '../budget';
 import { IdsAndView, IdsAndViewArg } from '../changeset/dto';
 import { EngagementListInput, SecuredEngagementList } from '../engagement';
 import { FieldRegionService, SecuredFieldRegion } from '../field-region';
-import { asDirectory, FileNode, IFileNode, SecuredDirectory } from '../file';
+import { asDirectory, FileNodeLoader, SecuredDirectory } from '../file';
 import {
   LocationListInput,
   LocationService,
@@ -50,6 +50,7 @@ import {
   ProjectMemberListInput,
   SecuredProjectMemberList,
 } from './project-member/dto';
+import { ProjectLoader } from './project.loader';
 import { ProjectService } from './project.service';
 
 @ArgsType()
@@ -74,16 +75,10 @@ export class ProjectResolver {
     description: 'Look up a project by its ID',
   })
   async project(
-    @LoggedInSession() session: Session,
-    @IdsAndViewArg() { id, view }: IdsAndView
+    @Loader(ProjectLoader) projects: LoaderOf<ProjectLoader>,
+    @IdsAndViewArg() key: IdsAndView
   ): Promise<Project> {
-    const project = await this.projectService.readOneUnsecured(
-      id,
-      session,
-      view.changeset
-    );
-    const secured = await this.projectService.secure(project, session);
-    return secured;
+    return await projects.load(key);
   }
 
   @Query(() => ProjectListOutput, {
@@ -97,9 +92,11 @@ export class ProjectResolver {
       defaultValue: ProjectListInput.defaultVal,
     })
     input: ProjectListInput,
+    @Loader(ProjectLoader) projects: LoaderOf<ProjectLoader>,
     @AnonSession() session: Session
   ): Promise<ProjectListOutput> {
     const list = await this.projectService.list(input, session);
+    projects.primeAll(list.items);
     return list;
   }
 
@@ -122,7 +119,11 @@ export class ProjectResolver {
     })
     input: ProjectChangeRequestListInput
   ): Promise<SecuredProjectChangeRequestList> {
-    return this.projectService.listChangeRequests(project, input, session);
+    return await this.projectService.listChangeRequests(
+      project,
+      input,
+      session
+    );
   }
 
   @ResolveField(() => SecuredBudget, {
@@ -151,7 +152,7 @@ export class ProjectResolver {
     })
     input: EngagementListInput
   ): Promise<SecuredEngagementList> {
-    return this.projectService.listEngagements(
+    return await this.projectService.listEngagements(
       project,
       input,
       session,
@@ -172,7 +173,7 @@ export class ProjectResolver {
     })
     input: ProjectMemberListInput
   ): Promise<SecuredProjectMemberList> {
-    return this.projectService.listProjectMembers(
+    return await this.projectService.listProjectMembers(
       id,
       input,
       session,
@@ -192,7 +193,7 @@ export class ProjectResolver {
     })
     input: PartnershipListInput
   ): Promise<SecuredPartnershipList> {
-    return this.projectService.listPartnerships(
+    return await this.projectService.listPartnerships(
       project.id,
       input,
       session,
@@ -207,7 +208,7 @@ export class ProjectResolver {
   })
   async rootDirectory(
     @Parent() project: Project,
-    @Loader(IFileNode) files: DataLoader<FileNode>
+    @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>
   ): Promise<SecuredDirectory> {
     if (!project.rootDirectory.canRead) {
       return {
@@ -253,7 +254,11 @@ export class ProjectResolver {
     })
     input: LocationListInput
   ): Promise<SecuredLocationList> {
-    return this.projectService.listOtherLocations(project, input, session);
+    return await this.projectService.listOtherLocations(
+      project,
+      input,
+      session
+    );
   }
 
   @ResolveField(() => SecuredLocation)

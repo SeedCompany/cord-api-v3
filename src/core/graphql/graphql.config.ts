@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { GqlModuleOptions, GqlOptionsFactory } from '@nestjs/graphql';
-import { ContextFunction } from 'apollo-server-core';
+import {
+  ApolloServerPluginLandingPageLocalDefault,
+  ContextFunction,
+} from 'apollo-server-core';
 import {
   PersistedQueryNotFoundError,
   PersistedQueryNotSupportedError,
@@ -11,9 +14,10 @@ import { Request, Response } from 'express';
 import { GraphQLError, GraphQLFormattedError } from 'graphql';
 import { intersection } from 'lodash';
 import { sep } from 'path';
-import { GqlContextType } from '../common';
-import { ConfigService } from './config/config.service';
-import { VersionService } from './config/version.service';
+import { GqlContextType } from '../../common';
+import { ConfigService } from '../config/config.service';
+import { VersionService } from '../config/version.service';
+import { GraphqlTracingPlugin } from './graphql-tracing.plugin';
 
 const escapedSep = sep === '/' ? '\\/' : '\\\\';
 const matchSrcPathInTrace = RegExp(
@@ -24,6 +28,7 @@ const matchSrcPathInTrace = RegExp(
 export class GraphQLConfig implements GqlOptionsFactory {
   constructor(
     private readonly config: ConfigService,
+    private readonly tracing: GraphqlTracingPlugin,
     private readonly versionService: VersionService
   ) {}
 
@@ -39,16 +44,15 @@ export class GraphQLConfig implements GqlOptionsFactory {
       autoSchemaFile: 'schema.graphql',
       context: this.context,
       cors: this.config.cors,
-      tracing: true,
-      playground: {
-        settings: {
-          'request.credentials': 'same-origin',
-        },
-      },
-      introspection: true, // needed for playground
+      playground: false,
+      introspection: true,
       formatError: this.formatError,
       debug: this.debug,
       sortSchema: true,
+      buildSchemaOptions: {
+        fieldMiddleware: [this.tracing.fieldMiddleware()],
+      },
+      plugins: [ApolloServerPluginLandingPageLocalDefault({ footer: false })],
     };
   }
 

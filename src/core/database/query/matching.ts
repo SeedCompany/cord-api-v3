@@ -62,7 +62,7 @@ export const matchProps = (options: MatchPropsOptions = {}) => {
     const lookupProps = (query: Query) =>
       query.match([
         node(nodeName),
-        relation('out', 'r', { active: !view.changeset }),
+        relation('out', 'r', view.changeset ? INACTIVE : ACTIVE),
         node('prop', labelForView('Property', view)),
         ...(view.changeset
           ? [

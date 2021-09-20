@@ -107,6 +107,7 @@ create table if not exists public.global_roles_data (
 
 DO $$ BEGIN
     create type public.table_name as enum (
+		'public.language_ex_data',
 		'public.education_by_person_data',
 		'public.education_entries_data',
 		'public.global_role_column_grants',
@@ -401,6 +402,8 @@ create table if not exists sil.table_of_languages (
 	provisional_code varchar(32)
 	-- foreign key(chat_id) references public.chats_data(id)
 );
+
+
 
 -- fkey for a bunch of stuff
 DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'public_global_roles_created_by_fk') THEN

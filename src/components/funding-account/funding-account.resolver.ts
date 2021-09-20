@@ -37,7 +37,7 @@ export class FundingAccountResolver {
     })
     input: FundingAccountListInput
   ): Promise<FundingAccountListOutput> {
-    return this.fundingAccountService.list(input, session);
+    return await this.fundingAccountService.list(input, session);
   }
 
   @Mutation(() => CreateFundingAccountOutput, {

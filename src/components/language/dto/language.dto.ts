@@ -4,6 +4,7 @@ import { GraphQLString } from 'graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
   DbLabel,
+  DbUnique,
   ID,
   NameField,
   Resource,
@@ -16,6 +17,8 @@ import {
   SecuredString,
   Sensitivity,
   SensitivityField,
+  SetUnsecuredType,
+  UnsecuredDto,
 } from '../../../common';
 import { SetChangeType } from '../../../core/database/changes';
 import { Location } from '../../location/dto';
@@ -60,7 +63,7 @@ export class EthnologueLanguage {
   @SensitivityField({
     description: "Based on the language's sensitivity",
   })
-  readonly sensitivity: Sensitivity;
+  readonly sensitivity: Sensitivity & SetUnsecuredType<never>;
 }
 
 @ObjectType({
@@ -102,6 +105,7 @@ export class Language extends Resource {
 
   @Field(() => EthnologueLanguage)
   readonly ethnologue: EthnologueLanguage &
+    SetUnsecuredType<UnsecuredDto<EthnologueLanguage>> &
     SetChangeType<'ethnologue', UpdateEthnologueLanguage>;
 
   @Field({
@@ -116,6 +120,7 @@ export class Language extends Resource {
       https://globalrecordings.net/en/rod
     `,
   })
+  @DbUnique('RegistryOfDialectsCode')
   readonly registryOfDialectsCode: SecuredString;
 
   // consider making object

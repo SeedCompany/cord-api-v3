@@ -1,7 +1,7 @@
 import { ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
-  DbLabel,
+  DbUnique,
   NameField,
   Resource,
   SecuredProps,
@@ -25,6 +25,6 @@ export class LiteracyMaterial extends Producible {
   static readonly SecuredProps = keysOf<SecuredProps<LiteracyMaterial>>();
 
   @NameField()
-  @DbLabel('LiteracyName')
+  @DbUnique('LiteracyName')
   readonly name: SecuredString;
 }

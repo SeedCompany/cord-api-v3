@@ -8,15 +8,15 @@ import {
   SecuredList,
   ServerException,
   Session,
+  UnsecuredDto,
 } from '../../common';
 import { ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { UserService } from '../user';
-import { CreatePost, Post, UpdatePost } from './dto';
+import { CreatePost, Post, Postable, UpdatePost } from './dto';
 import { PostListInput, SecuredPostList } from './dto/list-posts.dto';
 import { PostRepository } from './post.repository';
-import { Postable } from './postable/dto/postable.dto';
 
 @Injectable()
 export class PostService {
@@ -64,18 +64,24 @@ export class PostService {
   }
 
   async readOne(postId: ID, session: Session): Promise<Post> {
-    const result = await this.repo.readOne(postId);
+    const dto = await this.repo.readOne(postId);
+    return await this.secure(dto, session);
+  }
 
+  private async secure(
+    dto: UnsecuredDto<Post>,
+    session: Session
+  ): Promise<Post> {
     const securedProps = await this.authorizationService.secureProperties(
       Post,
-      result,
+      dto,
       session
     );
 
     return {
-      ...result,
+      ...dto,
       ...securedProps,
-      canDelete: await this.repo.checkDeletePermission(postId, session),
+      canDelete: await this.repo.checkDeletePermission(dto.id, session),
     };
   }
 
@@ -124,7 +130,7 @@ export class PostService {
     const results = await this.repo.securedList(input, session);
 
     return {
-      ...(await mapListResults(results, (id) => this.readOne(id, session))),
+      ...(await mapListResults(results, (dto) => this.secure(dto, session))),
       canRead: true, // false handled above
       canCreate: perms.posts.canEdit,
     };

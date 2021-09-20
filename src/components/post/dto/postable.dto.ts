@@ -1,6 +1,6 @@
 import { InterfaceType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { ID, IdField } from '../../../../common';
+import { ID, IdField } from '../../../common';
 
 @InterfaceType({
   description: stripIndent`

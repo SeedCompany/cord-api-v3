@@ -1,4 +1,4 @@
-import { DateTime, DurationUnit, Interval } from 'luxon';
+import { DateTime, DateTimeUnit, Interval } from 'luxon';
 import { Mutable } from 'type-fest';
 import { inspect } from 'util';
 
@@ -10,7 +10,7 @@ declare module 'luxon/src/interval' {
     /**
      * Expand this interval to the full duration unit given
      */
-    expandToFull(unit: DurationUnit): Interval;
+    expandToFull(unit: DateTimeUnit): Interval;
   }
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Interval {
@@ -36,7 +36,7 @@ Interval.prototype[inspect.custom] = function (this: Interval) {
 
 Interval.prototype.expandToFull = function (
   this: Interval,
-  unit: DurationUnit
+  unit: DateTimeUnit
 ) {
   return Interval.fromDateTimes(this.start.startOf(unit), this.end.endOf(unit));
 };

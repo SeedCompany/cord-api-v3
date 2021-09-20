@@ -17,7 +17,14 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import { DatabaseService, ILogger, Logger, matchSession } from '../../core';
+import {
+  CommonRepository,
+  DatabaseService,
+  ILogger,
+  Logger,
+  matchSession,
+  OnIndex,
+} from '../../core';
 import {
   ACTIVE,
   createNode,
@@ -40,11 +47,18 @@ import {
 } from './dto';
 
 @Injectable()
-export class FileRepository {
+export class FileRepository extends CommonRepository {
   constructor(
-    private readonly db: DatabaseService,
+    db: DatabaseService,
     @Logger('file:repository') private readonly logger: ILogger
-  ) {}
+  ) {
+    super(db);
+  }
+
+  @OnIndex()
+  private createIndexes() {
+    return this.getConstraintsFor(IFileNode);
+  }
 
   async getById(id: ID, _session: Session): Promise<FileNode> {
     const result = await this.db

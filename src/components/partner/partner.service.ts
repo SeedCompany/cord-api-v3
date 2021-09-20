@@ -10,7 +10,7 @@ import {
   UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
-import { HandleIdLookup, ILogger, Logger, OnIndex } from '../../core';
+import { HandleIdLookup, ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { FinancialReportingType } from '../partnership/dto/financial-reporting-type';
@@ -32,16 +32,6 @@ export class PartnerService {
     private readonly authorizationService: AuthorizationService,
     private readonly repo: PartnerRepository
   ) {}
-
-  @OnIndex()
-  async createIndexes() {
-    return [
-      'CREATE CONSTRAINT ON (n:Partner) ASSERT EXISTS(n.id)',
-      'CREATE CONSTRAINT ON (n:Partner) ASSERT n.id IS UNIQUE',
-
-      'CREATE CONSTRAINT ON (n:Partner) ASSERT EXISTS(n.createdAt)',
-    ];
-  }
 
   async create(input: CreatePartner, session: Session): Promise<Partner> {
     this.verifyFinancialReportingType(

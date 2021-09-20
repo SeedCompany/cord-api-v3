@@ -53,7 +53,7 @@ export class FilmRepository extends DtoRepository(Film) {
       .query()
       .match([requestingUser(session), ...permissionsOfNode('Film')])
       .apply(sorting(Film, input))
-      .apply(paginate(input))
+      .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }

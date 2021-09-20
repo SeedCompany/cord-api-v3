@@ -1,9 +1,9 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { AnonSession, mapSecuredValue, Session } from '../../common';
-import { DataLoader, Loader } from '../../core';
-import { FileNode, IFileNode, resolveDefinedFile, SecuredFile } from '../file';
+import { Loader, LoaderOf } from '../../core';
+import { FileNodeLoader, resolveDefinedFile, SecuredFile } from '../file';
 import { LocationService, SecuredLocation } from '../location';
-import { SecuredUser, User } from '../user';
+import { SecuredUser, UserLoader } from '../user';
 import { InternshipEngagement } from './dto';
 
 @Resolver(InternshipEngagement)
@@ -13,7 +13,7 @@ export class InternshipEngagementResolver {
   @ResolveField(() => SecuredFile)
   async growthPlan(
     @Parent() engagement: InternshipEngagement,
-    @Loader(IFileNode) files: DataLoader<FileNode>
+    @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>
   ): Promise<SecuredFile> {
     return await resolveDefinedFile(files, engagement.growthPlan);
   }
@@ -21,7 +21,7 @@ export class InternshipEngagementResolver {
   @ResolveField(() => SecuredUser)
   async intern(
     @Parent() engagement: InternshipEngagement,
-    @Loader(User) users: DataLoader<User>
+    @Loader(UserLoader) users: LoaderOf<UserLoader>
   ): Promise<SecuredUser> {
     return await mapSecuredValue(engagement.intern, (id) => users.load(id));
   }
@@ -29,7 +29,7 @@ export class InternshipEngagementResolver {
   @ResolveField(() => SecuredUser)
   async mentor(
     @Parent() engagement: InternshipEngagement,
-    @Loader(User) users: DataLoader<User>
+    @Loader(UserLoader) users: LoaderOf<UserLoader>
   ): Promise<SecuredUser> {
     return await mapSecuredValue(engagement.mentor, (id) => users.load(id));
   }

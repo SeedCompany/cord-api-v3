@@ -7,6 +7,7 @@ import {
   ServerException,
   Session,
   UnauthorizedException,
+  UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
@@ -68,7 +69,10 @@ export class CeremonyService {
     }
 
     const dto = await this.ceremonyRepo.readOne(id, session);
+    return await this.secure(dto, session);
+  }
 
+  async secure(dto: UnsecuredDto<Ceremony>, session: Session) {
     const securedProps = await this.authorizationService.secureProperties(
       Ceremony,
       dto,
@@ -78,7 +82,7 @@ export class CeremonyService {
     return {
       ...dto,
       ...securedProps,
-      canDelete: await this.ceremonyRepo.checkDeletePermission(id, session),
+      canDelete: await this.ceremonyRepo.checkDeletePermission(dto.id, session),
     };
   }
 
@@ -128,6 +132,6 @@ export class CeremonyService {
       ? undefined
       : await this.authorizationService.getListRoleSensitivityMapping(Ceremony);
     const results = await this.ceremonyRepo.list(input, session, limited);
-    return await mapListResults(results, (id) => this.readOne(id, session));
+    return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 }

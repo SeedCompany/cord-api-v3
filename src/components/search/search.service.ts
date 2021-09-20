@@ -129,7 +129,7 @@ export class SearchService {
         const obj = await hydrator(...args);
         return {
           ...obj,
-          // eslint-disable-next-line @typescript-eslint/naming-convention
+          // @ts-expect-error Not sure why TS is failing here.
           __typename: type,
         };
       } catch (err) {

@@ -1,22 +1,26 @@
 import { Plugin } from '@nestjs/graphql';
-import { GraphQLRequestContext } from 'apollo-server-core';
+import { GraphQLRequestContext as RequestContext } from 'apollo-server-core';
 import {
-  ApolloServerPlugin,
-  GraphQLRequestListener,
+  ApolloServerPlugin as ApolloPlugin,
+  GraphQLRequestListener as RequestListener,
 } from 'apollo-server-plugin-base';
-import { InputException, NotFoundException } from '../../common';
+import {
+  GqlContextType as ContextType,
+  InputException,
+  NotFoundException,
+} from '../../common';
 import { ProjectChangeRequestRepository } from './project-change-request.repository';
 
 /**
  * Validation for changeset mutations
  */
 @Plugin()
-export class ChangesetValidationPlugin implements ApolloServerPlugin {
+export class ChangesetValidationPlugin implements ApolloPlugin<ContextType> {
   constructor(private readonly repo: ProjectChangeRequestRepository) {}
 
-  requestDidStart(
-    _context: GraphQLRequestContext
-  ): GraphQLRequestListener | void {
+  async requestDidStart(
+    _context: RequestContext<ContextType>
+  ): Promise<RequestListener<ContextType>> {
     return {
       responseForOperation: async ({ request, operation }) => {
         if (operation.operation !== 'mutation') {

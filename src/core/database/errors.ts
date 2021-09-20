@@ -1,4 +1,5 @@
 import { Neo4jError } from 'neo4j-driver';
+import { mapFromList } from '../../common';
 import { LogEntry, LogLevel } from '../logger';
 
 declare module 'neo4j-driver' {
@@ -7,26 +8,20 @@ declare module 'neo4j-driver' {
   }
 }
 
-const defineLogEntry = (obj: unknown, logEntry: LogEntry) => {
-  Object.defineProperty(obj, 'logProps', {
-    value: logEntry,
-    writable: true,
-    configurable: true,
-    enumerable: false,
-  });
-};
-
 export class SyntaxError extends Neo4jError {
   static readonly code = 'Neo.ClientError.Statement.SyntaxError' as const;
 
   constructor(message: string) {
-    super(message);
+    super(message, SyntaxError.code);
+    this.constructor = SyntaxError;
+    this.__proto__ = SyntaxError.prototype;
     this.name = this.constructor.name;
-    defineLogEntry(this, {
+    this.logProps = {
       level: LogLevel.ERROR,
       message: this.message,
       exception: this,
-    });
+    };
+    noEnumerate(this, 'constructor', '__proto__', 'name', 'code', 'logProps');
   }
 
   static fromNeo(e: Neo4jError) {
@@ -43,8 +38,11 @@ export class ServiceUnavailableError extends Neo4jError {
   static readonly code = 'ServiceUnavailable' as const;
 
   constructor(message: string) {
-    super(message);
+    super(message, ServiceUnavailableError.code);
+    this.constructor = ServiceUnavailableError;
+    this.__proto__ = ServiceUnavailableError.prototype;
     this.name = this.constructor.name;
+    noEnumerate(this, 'constructor', '__proto__', 'name', 'code');
   }
 
   static fromNeo(e: Neo4jError) {
@@ -61,8 +59,11 @@ export class ConnectionTimeoutError extends Neo4jError {
   static readonly code = 'N/A' as const;
 
   constructor(message: string) {
-    super(message);
+    super(message, ConnectionTimeoutError.code);
+    this.constructor = ConnectionTimeoutError;
+    this.__proto__ = ConnectionTimeoutError.prototype;
     this.name = this.constructor.name;
+    noEnumerate(this, 'constructor', '__proto__', 'name', 'code');
   }
 
   static fromNeo(e: Neo4jError) {
@@ -79,8 +80,11 @@ export class ConstraintError extends Neo4jError {
   static readonly code =
     'Neo.ClientError.Schema.ConstraintValidationFailed' as const;
   constructor(message: string) {
-    super(message);
+    super(message, ConstraintError.code);
+    this.constructor = ConstraintError;
+    this.__proto__ = ConstraintError.prototype;
     this.name = this.constructor.name;
+    noEnumerate(this, 'constructor', '__proto__', 'name', 'code');
   }
 
   static fromNeo(e: Neo4jError) {
@@ -102,13 +106,17 @@ export class UniquenessError extends ConstraintError {
     message: string
   ) {
     super(message);
-    defineLogEntry(this, {
+    this.constructor = UniquenessError;
+    this.__proto__ = UniquenessError.prototype;
+    this.name = this.constructor.name;
+    this.logProps = {
       level: LogLevel.WARNING,
       message: 'Duplicate property',
       label: this.label,
       property: this.property,
       value: this.value,
-    });
+    };
+    noEnumerate(this, 'constructor', '__proto__', 'name', 'code', 'logProps');
   }
 
   static fromNeo(e: Neo4jError) {
@@ -139,11 +147,6 @@ export const createBetterError = (e: Error) => {
 
   const better = cast(e);
 
-  // Hide worthless code
-  if (better.code === 'N/A') {
-    Object.defineProperty(better, 'code', { enumerable: false });
-  }
-
   return better;
 };
 
@@ -163,6 +166,13 @@ const cast = (e: Neo4jError): Neo4jError => {
   if (e.message.startsWith('Connection acquisition timed out in ')) {
     return ConnectionTimeoutError.fromNeo(e);
   }
+
+  noEnumerate(e, 'constructor', '__proto__', 'name');
+  // Hide worthless code
+  if (e.code === 'N/A') {
+    noEnumerate(e, 'code');
+  }
+
   return e;
 };
 
@@ -182,3 +192,12 @@ const getUniqueFailureInfo = (e: Neo4jError) => {
     value: matches[4],
   };
 };
+
+const noEnumerate = <T>(
+  obj: T,
+  ...keys: Array<(keyof T & string) | 'constructor'>
+) =>
+  Object.defineProperties(
+    obj,
+    mapFromList(keys, (key) => [key, { enumerable: false }])
+  );

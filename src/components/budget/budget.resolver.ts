@@ -9,8 +9,8 @@ import {
 } from '@nestjs/graphql';
 import { sumBy } from 'lodash';
 import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
-import { DataLoader, Loader } from '../../core';
-import { FileNode, IFileNode, resolveDefinedFile, SecuredFile } from '../file';
+import { Loader, LoaderOf } from '../../core';
+import { FileNodeLoader, resolveDefinedFile, SecuredFile } from '../file';
 import { BudgetService } from './budget.service';
 import {
   Budget,
@@ -48,7 +48,7 @@ export class BudgetResolver {
     })
     input: BudgetListInput
   ): Promise<BudgetListOutput> {
-    return this.service.list(input, session);
+    return await this.service.list(input, session);
   }
 
   @ResolveField(() => Float)
@@ -61,7 +61,7 @@ export class BudgetResolver {
   })
   async universalTemplateFile(
     @Parent() budget: Budget,
-    @Loader(IFileNode) files: DataLoader<FileNode>
+    @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>
   ): Promise<SecuredFile> {
     return await resolveDefinedFile(files, budget.universalTemplateFile);
   }

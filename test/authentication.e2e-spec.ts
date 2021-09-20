@@ -16,6 +16,7 @@ import {
   registerUser,
   TestApp,
 } from './utility';
+import { RawUser } from './utility/fragments';
 import { resetDatabase } from './utility/reset-database';
 
 describe('Authentication e2e', () => {
@@ -106,7 +107,7 @@ describe('Authentication e2e', () => {
       }
     );
 
-    const actual: User = result.user;
+    const actual: RawUser = result.user;
     expect(actual).toBeTruthy();
     expect(isValidId(actual.id)).toBe(true);
     expect(actual.email.value).toBe(fakeUser.email.toLowerCase());

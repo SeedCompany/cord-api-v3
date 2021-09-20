@@ -34,7 +34,7 @@ export class SongResolver {
     })
     input: SongListInput
   ): Promise<SongListOutput> {
-    return this.storyService.list(input, session);
+    return await this.storyService.list(input, session);
   }
 
   @Mutation(() => CreateSongOutput, {

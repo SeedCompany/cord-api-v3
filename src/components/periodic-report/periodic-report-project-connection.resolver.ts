@@ -24,7 +24,12 @@ export class PeriodicReportProjectConnectionResolver {
     })
     input: PeriodicReportListInput
   ): Promise<SecuredPeriodicReportList> {
-    return this.service.list(project.id, ReportType.Financial, input, session);
+    return await this.service.list(
+      project.id,
+      ReportType.Financial,
+      input,
+      session
+    );
   }
 
   @ResolveField(() => SecuredPeriodicReportList)
@@ -38,7 +43,12 @@ export class PeriodicReportProjectConnectionResolver {
     })
     input: PeriodicReportListInput
   ): Promise<SecuredPeriodicReportList> {
-    return this.service.list(project.id, ReportType.Narrative, input, session);
+    return await this.service.list(
+      project.id,
+      ReportType.Narrative,
+      input,
+      session
+    );
   }
 
   @ResolveField(() => SecuredPeriodicReport, {

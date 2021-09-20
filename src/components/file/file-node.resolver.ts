@@ -1,8 +1,8 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { AnonSession, Session } from '../../common';
-import { DataLoader, Loader } from '../../core';
-import { User } from '../user';
+import { Loader, LoaderOf } from '../../core';
+import { User, UserLoader } from '../user';
 import { FileNode, IFileNode } from './dto';
 import { FileService } from './file.service';
 
@@ -18,7 +18,7 @@ export class FileNodeResolver {
   })
   async createdBy(
     @Parent() node: FileNode,
-    @Loader(User) users: DataLoader<User>
+    @Loader(UserLoader) users: LoaderOf<UserLoader>
   ): Promise<User> {
     return await users.load(node.createdById);
   }

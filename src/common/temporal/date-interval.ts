@@ -1,8 +1,9 @@
 import {
   DateInput,
   DateTimeOptions,
+  DateTimeUnit,
   Duration,
-  DurationInput,
+  DurationLike,
   DurationUnit,
   DurationUnits,
   Interval,
@@ -13,10 +14,10 @@ import { CalendarDate } from './calendar-date';
 import './duration';
 
 const toSuper = (int: DateInterval): Interval =>
-  Interval.fromDateTimes(int.start, int.end.plus({ day: 1 }));
+  Interval.fromDateTimes(int.start, int.end.plus({ days: 1 }));
 
 const fromSuper = (int: Interval): DateInterval =>
-  DateInterval.fromDateTimes(int.start, int.end.minus({ day: 1 }));
+  DateInterval.fromDateTimes(int.start, int.end.minus({ days: 1 }));
 
 /**
  * An Interval for dates.
@@ -25,8 +26,12 @@ const fromSuper = (int: Interval): DateInterval =>
  * Luxon's Interval is half-open with it's end point not inclusive.
  */
 export class DateInterval extends Interval {
-  end: CalendarDate;
-  start: CalendarDate;
+  get end(): CalendarDate {
+    return super.end;
+  }
+  get start(): CalendarDate {
+    return super.start;
+  }
 
   protected constructor(config: Required<IntervalObject>) {
     config.start =
@@ -47,12 +52,12 @@ export class DateInterval extends Interval {
       end: dateTime.end,
     });
   }
-  static after(start: DateInput, duration: DurationInput) {
-    const dur = Duration.from(duration).minus({ day: 1 });
+  static after(start: DateInput, duration: DurationLike) {
+    const dur = Duration.from(duration).minus({ days: 1 });
     return DateInterval.fromInterval(super.after(start, dur));
   }
-  static before(end: DateInput, duration: DurationInput) {
-    const dur = Duration.from(duration).minus({ day: 1 });
+  static before(end: DateInput, duration: DurationLike) {
+    const dur = Duration.from(duration).minus({ days: 1 });
     return DateInterval.fromInterval(super.before(end, dur));
   }
   static fromDateTimes(start: DateInput, end: DateInput) {
@@ -136,7 +141,7 @@ export class DateInterval extends Interval {
       .splitAt(...dates)
       .map(fromSuper);
   }
-  splitBy(duration: DurationInput) {
+  splitBy(duration: DurationLike) {
     return toSuper(this).splitBy(duration).map(fromSuper);
   }
   union(other: DateInterval) {
@@ -163,7 +168,7 @@ export class DateInterval extends Interval {
   [inspect.custom]() {
     return `[Dates ${this.start.toISO()} – ${this.end.toISO()}]`;
   }
-  expandToFull(unit: DurationUnit): DateInterval {
+  expandToFull(unit: DateTimeUnit): DateInterval {
     return DateInterval.fromDateTimes(
       this.start.startOf(unit),
       this.end.endOf(unit)

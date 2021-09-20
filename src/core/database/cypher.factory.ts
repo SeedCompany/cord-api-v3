@@ -4,16 +4,18 @@ import { highlight } from 'cli-highlight';
 import { stripIndent } from 'common-tags';
 import { Connection } from 'cypher-query-builder';
 import { compact } from 'lodash';
-import { Session, Transaction } from 'neo4j-driver';
+import { Session, Transaction } from 'neo4j-driver-core';
 // @ts-expect-error this isn't typed but it exists
-import TransactionExecutor from 'neo4j-driver/lib/internal/transaction-executor';
+import * as RetryStrategy from 'neo4j-driver-core/lib/internal/retry-strategy';
 import QueryRunner from 'neo4j-driver/types/query-runner';
 import { Merge } from 'type-fest';
 import { ConfigService } from '..';
 import { getPreviousList } from '../../common';
+import { dropSecrets } from '../../common/mask-secrets';
 import { jestSkipFileInExceptionSource } from '../jest-skip-source-file';
 import { ILogger, LoggerToken, LogLevel } from '../logger';
 import { AFTER_MESSAGE } from '../logger/formatters';
+import { TracingService } from '../tracing';
 import { createBetterError, isNeo4jError } from './errors';
 import { ParameterTransformer } from './parameter-transformer.service';
 import { MyTransformer } from './transformer';
@@ -22,8 +24,8 @@ import './query-augmentation'; // import our query augmentation
 
 // Change transaction retry logic also check all previous exceptions when
 // looking for retryable errors.
-const canRetryOn = TransactionExecutor._canRetryOn.bind(TransactionExecutor);
-TransactionExecutor._canRetryOn = (error?: Error) =>
+const canRetryOn = RetryStrategy.canRetryOn;
+RetryStrategy.canRetryOn = (error?: Error) =>
   error && getPreviousList(error, true).some(canRetryOn);
 
 const csv = (str: string): string[] =>
@@ -60,6 +62,7 @@ export const CypherFactory: FactoryProvider<Connection> = {
   provide: Connection,
   useFactory: (
     config: ConfigService,
+    tracing: TracingService,
     parameterTransformer: ParameterTransformer,
     logger: ILogger,
     driverLogger: ILogger
@@ -166,6 +169,23 @@ export const CypherFactory: FactoryProvider<Connection> = {
       }
 
       (q as any).__stacktrace = stack;
+      const frame = stack?.[0] ? /at (.+) \(/.exec(stack[0]) : undefined;
+      const name = ((q as any).name = frame?.[1].replace('Repository', ''));
+
+      const orig = q.run.bind(q);
+      q.run = async () => {
+        return await tracing.capture(name ?? 'Query', (sub) => {
+          // Show this segment separately in service map
+          sub.namespace = 'remote';
+          // Help ID the segment as being for a database
+          sub.sql = {};
+
+          const { params } = q.buildQueryObject();
+          sub.addMetadata('parameters', dropSecrets(params));
+
+          return orig();
+        });
+      };
 
       const origBuild = q.buildQueryObject.bind(q);
       q.buildQueryObject = function () {
@@ -192,6 +212,7 @@ export const CypherFactory: FactoryProvider<Connection> = {
   },
   inject: [
     ConfigService,
+    TracingService,
     ParameterTransformer,
     LoggerToken('database:query'),
     LoggerToken('database:driver'),

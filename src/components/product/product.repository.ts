@@ -382,4 +382,9 @@ export class ProductRepository extends CommonRepository {
       }
     );
   }
+
+  @OnIndex()
+  private createResourceIndexes() {
+    return this.getConstraintsFor(Product);
+  }
 }
