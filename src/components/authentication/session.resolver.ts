@@ -10,7 +10,14 @@ import {
 import { DateTime } from 'luxon';
 import { GqlContextType, UnauthenticatedException } from '../../common';
 import { anonymousSession } from '../../common/session';
-import { ConfigService, ILogger, Loader, LoaderOf, Logger, PostgresService } from '../../core';
+import {
+  ConfigService,
+  ILogger,
+  Loader,
+  LoaderOf,
+  Logger,
+  PostgresService,
+} from '../../core';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto';
 import { User, UserLoader } from '../user';
@@ -48,9 +55,9 @@ export class SessionResolver {
     browser?: boolean
   ): Promise<SessionOutput> {
     // creates the schema
-    await this.pg.init(1);
+    await this.pg.init(0);
     // populate the schema with sample data
-    await this.pg.loadTestData(1);
+    await this.pg.loadTestData(0);
 
     const existingToken = this.sessionInt.getTokenFromContext(context);
 

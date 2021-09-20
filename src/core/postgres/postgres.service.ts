@@ -447,8 +447,9 @@ export class PostgresService {
       'History',
       'RefreshSecurityTablesAndMVConcurrently'
     );
+    await this.pool.query(`analyze`);
 
-    for (let i = 1; i <= 10; i++) {
+    for (let i = 1; i <= 0; i++) {
       await this.create(
         0,
         'public.chats_data',
@@ -475,6 +476,5 @@ export class PostgresService {
         'RefreshSecurityTablesAndMVConcurrently'
       );
     }
-    await this.pool.query(`analyze`);
   }
 }

@@ -72,7 +72,7 @@ create table if not exists sc.locations_data (
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by int not null default 0,
 	default_region int,
-	funding_account varchar(32),
+	funding_account int,
 	iso_alpha_3 char(3),
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
   modified_by int not null default 0,

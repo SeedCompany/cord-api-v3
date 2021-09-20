@@ -93,6 +93,7 @@ export class FundingAccountRepository extends DtoRepository(FundingAccount) {
   }
 
   async list(input: FundingAccountListInput, session: Session) {
+    //count,order,page,sort
     const label = 'FundingAccount';
     const result = await this.db
       .query()
@@ -100,6 +101,8 @@ export class FundingAccountRepository extends DtoRepository(FundingAccount) {
       .apply(sorting(FundingAccount, input))
       .apply(paginate(input, this.hydrate()))
       .first();
+    // const pgResult = await this.pg.pool.query(`select `);
+    console.log('fundingAccounts', { neo4j: result });
     return result!; // result from paginate() will always have 1 row.
   }
 }
