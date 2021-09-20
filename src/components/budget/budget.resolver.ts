@@ -10,8 +10,9 @@ import {
 import { sumBy } from 'lodash';
 import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
 import { Loader, LoaderOf } from '../../core';
+import { BudgetLoader, BudgetService } from '../budget';
+import { IdsAndView, IdsAndViewArg } from '../changeset/dto';
 import { FileNodeLoader, resolveDefinedFile, SecuredFile } from '../file';
-import { BudgetService } from './budget.service';
 import {
   Budget,
   BudgetListInput,
@@ -30,10 +31,10 @@ export class BudgetResolver {
     description: 'Look up a budget by its ID',
   })
   async budget(
-    @AnonSession() session: Session,
-    @IdArg() id: ID
+    @Loader(BudgetLoader) budgets: LoaderOf<BudgetLoader>,
+    @IdsAndViewArg() key: IdsAndView
   ): Promise<Budget> {
-    return await this.service.readOne(id, session);
+    return await budgets.load(key);
   }
 
   @Query(() => BudgetListOutput, {
@@ -46,9 +47,12 @@ export class BudgetResolver {
       type: () => BudgetListInput,
       defaultValue: BudgetListInput.defaultVal,
     })
-    input: BudgetListInput
+    input: BudgetListInput,
+    @Loader(BudgetLoader) budgets: LoaderOf<BudgetLoader>
   ): Promise<BudgetListOutput> {
-    return await this.service.list(input, session);
+    const list = await this.service.list(input, session);
+    budgets.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => Float)

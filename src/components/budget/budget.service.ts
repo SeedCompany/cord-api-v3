@@ -218,6 +218,13 @@ export class BudgetService {
     };
   }
 
+  async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
+    const budgets = await this.budgetRepo.readMany(ids, session, view);
+    return await Promise.all(
+      budgets.map(async (dto) => await this.readOne(dto.id, session, view))
+    );
+  }
+
   @HandleIdLookup(BudgetRecord)
   async readOneRecord(
     id: ID,
