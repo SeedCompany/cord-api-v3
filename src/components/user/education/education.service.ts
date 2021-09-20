@@ -61,6 +61,13 @@ export class EducationService {
     return await this.secure(result, session);
   }
 
+  async readMany(ids: readonly ID[], session: Session) {
+    const educations = await this.repo.readMany(ids, session);
+    return await Promise.all(
+      educations.map((dto) => this.secure(dto, session))
+    );
+  }
+
   private async secure(
     dto: UnsecuredDto<Education>,
     session: Session

@@ -49,7 +49,11 @@ import {
   KnownLanguage,
   ModifyKnownLanguageArgs,
 } from './dto/known-language.dto';
-import { EducationListInput, SecuredEducationList } from './education';
+import {
+  EducationListInput,
+  EducationLoader,
+  SecuredEducationList,
+} from './education';
 import {
   SecuredUnavailabilityList,
   UnavailabilityListInput,
@@ -188,9 +192,12 @@ export class UserResolver {
       type: () => EducationListInput,
       defaultValue: EducationListInput.defaultVal,
     })
-    input: EducationListInput
+    input: EducationListInput,
+    @Loader(EducationLoader) educations: LoaderOf<EducationLoader>
   ): Promise<SecuredEducationList> {
-    return await this.userService.listEducations(id, input, session);
+    const list = await this.userService.listEducations(id, input, session);
+    educations.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => SecuredLocationList)
