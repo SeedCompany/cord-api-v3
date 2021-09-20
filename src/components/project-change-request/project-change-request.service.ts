@@ -70,6 +70,13 @@ export class ProjectChangeRequestService {
     return await this.secure(dto, session);
   }
 
+  async readMany(ids: readonly ID[], session: Session) {
+    const projectChangeRequests = await this.repo.readMany(ids, session);
+    return await Promise.all(
+      projectChangeRequests.map((dto) => this.secure(dto, session))
+    );
+  }
+
   async readOneUnsecured(
     id: ID,
     session: Session

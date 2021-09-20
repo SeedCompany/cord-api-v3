@@ -37,6 +37,7 @@ import {
 } from '../location';
 import { OrganizationLoader, SecuredOrganization } from '../organization';
 import { PartnershipListInput, SecuredPartnershipList } from '../partnership';
+import { ProjectChangeRequestLoader } from '../project-change-request';
 import {
   ProjectChangeRequestListInput,
   SecuredProjectChangeRequestList,
@@ -118,13 +119,17 @@ export class ProjectResolver {
       nullable: true,
       defaultValue: ProjectChangeRequestListInput.defaultVal,
     })
-    input: ProjectChangeRequestListInput
+    input: ProjectChangeRequestListInput,
+    @Loader(ProjectChangeRequestLoader)
+    projectChangeRequests: LoaderOf<ProjectChangeRequestLoader>
   ): Promise<SecuredProjectChangeRequestList> {
-    return await this.projectService.listChangeRequests(
+    const list = await this.projectService.listChangeRequests(
       project,
       input,
       session
     );
+    projectChangeRequests.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => SecuredBudget, {
