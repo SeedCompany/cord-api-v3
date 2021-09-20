@@ -836,10 +836,6 @@ export class ProjectRules {
     nextStep: ProjectStep,
     changeset?: ID
   ) {
-    if (this.configService.migration) {
-      return;
-    }
-
     // If current user's roles include a role that can bypass workflow
     // stop the check here.
     const currentUserRoles = await this.getUserRoles(session.userId);

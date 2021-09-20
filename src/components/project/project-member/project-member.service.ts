@@ -199,7 +199,7 @@ export class ProjectMemberService {
     roles: Role[] | undefined,
     forUser: () => MaybeAsync<User>
   ) {
-    if (!roles || roles.length === 0 || this.config.migration) {
+    if (!roles || roles.length === 0) {
       return;
     }
     const user = await forUser();
