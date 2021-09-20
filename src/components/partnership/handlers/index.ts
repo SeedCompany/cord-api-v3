@@ -1,1 +1,1 @@
-export * from './apply-approved-changeset-to-partnership.handler';
+export * from './apply-finalized-changeset-to-partnership.handler';

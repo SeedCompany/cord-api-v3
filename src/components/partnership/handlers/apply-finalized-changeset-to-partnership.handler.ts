@@ -9,27 +9,35 @@ import {
 } from '../../../core';
 import { ACTIVE, deleteBaseNode } from '../../../core/database/query';
 import { commitChangesetProps } from '../../changeset/commit-changeset-props.query';
-import { ProjectChangeRequestApprovedEvent } from '../../project-change-request/events';
-import { PartnershipService } from '../partnership.service';
+import { rejectChangesetProps } from '../../changeset/reject-changeset-props.query';
+import { ProjectChangeRequestStatus } from '../../project-change-request/dto';
+import { ProjectChangeRequestFinalizedEvent } from '../../project-change-request/events';
 
-type SubscribedEvent = ProjectChangeRequestApprovedEvent;
+type SubscribedEvent = ProjectChangeRequestFinalizedEvent;
 
-@EventsHandler(ProjectChangeRequestApprovedEvent)
-export class ApplyApprovedChangesetToPartnership
+@EventsHandler(ProjectChangeRequestFinalizedEvent)
+export class ApplyFinalizedChangesetToPartnership
   implements IEventHandler<SubscribedEvent>
 {
   constructor(
     private readonly db: DatabaseService,
-    private readonly service: PartnershipService,
-    @Logger('partnership:change-request:approved')
+    @Logger('partnership:change-request:finalized')
     private readonly logger: ILogger
   ) {}
 
   async handle(event: SubscribedEvent) {
     this.logger.debug('Applying changeset props');
 
-    const changeset = event.changeRequest.id;
+    const changesetId = event.changeRequest.id;
+    const status = event.changeRequest.status;
+    if (status === ProjectChangeRequestStatus.Approved) {
+      await this.approvePartnershipChangeset(changesetId);
+    } else if (status === ProjectChangeRequestStatus.Rejected) {
+      await this.rejectPartnershipChangeset(changesetId);
+    }
+  }
 
+  async approvePartnershipChangeset(changesetId: ID) {
     try {
       // Update project partnership pending changes
       const partnerships = await this.db
@@ -37,7 +45,7 @@ export class ApplyApprovedChangesetToPartnership
         .match([
           node('project', 'Project'),
           relation('out', '', 'changeset', ACTIVE),
-          node('changesetNode', 'Changeset', { id: changeset }),
+          node('changesetNode', 'Changeset', { id: changesetId }),
         ])
         .subQuery((sub) =>
           sub
@@ -75,7 +83,7 @@ export class ApplyApprovedChangesetToPartnership
           await this.db
             .query()
             .match([
-              node('changeset', 'Changeset', { id: changeset }),
+              node('changeset', 'Changeset', { id: changesetId }),
               relation('in', '', 'changeset', ACTIVE),
               node('project', 'Project'),
               relation('out', '', 'partnership', ACTIVE),
@@ -88,10 +96,55 @@ export class ApplyApprovedChangesetToPartnership
       );
 
       // Remove deleting partnerships
-      await this.removeDeletingPartnerships(changeset);
+      await this.removeDeletingPartnerships(changesetId);
     } catch (exception) {
       throw new ServerException(
         'Failed to apply changeset to partnership',
+        exception
+      );
+    }
+  }
+
+  async rejectPartnershipChangeset(changesetId: ID) {
+    try {
+      // Reject Project, Engagement, Partnerships and Budget records properties
+      const query = this.db
+        .query()
+        .match([
+          node('project', 'Project'),
+          relation('out', '', 'changeset', ACTIVE),
+          node('changeset', 'Changeset', { id: changesetId }),
+        ])
+        .subQuery((sub) =>
+          sub
+            .with('project')
+            .match([
+              node('project'),
+              relation('out', 'partnershipRel', 'partnership', {
+                active: true,
+              }),
+              node('partnership', 'Partnership'),
+            ])
+            .return('partnership')
+            .union()
+            .with('project, changesetNode')
+            .match([
+              node('project'),
+              relation('out', 'partnershipRel', 'partnership', {
+                active: false,
+              }),
+              node('partnership', 'Partnership'),
+              relation('in', 'changesetRel', 'changeset', ACTIVE),
+              node('changesetNode'),
+            ])
+            .apply(rejectChangesetProps({ nodeVar: 'partnership' }))
+            .return('partnership')
+        )
+        .return('project');
+      await query.run();
+    } catch (exception) {
+      throw new ServerException(
+        'Failed to reject changeset to partnership',
         exception
       );
     }
