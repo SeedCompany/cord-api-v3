@@ -17,6 +17,8 @@ import {
   SecuredString,
   Session,
 } from '../../common';
+import { Loader, LoaderOf } from '../../core';
+import { ProductLoader, ProductService } from '../product';
 import { labelOfScriptureRanges } from '../scripture/labels';
 import {
   AnyProduct,
@@ -38,7 +40,6 @@ import {
   UpdateProductInput,
   UpdateProductOutput,
 } from './dto';
-import { ProductService } from './product.service';
 
 @Resolver(Product)
 export class ProductResolver {
@@ -48,10 +49,10 @@ export class ProductResolver {
     description: 'Read a product by id',
   })
   async product(
-    @AnonSession() session: Session,
+    @Loader(ProductLoader) products: LoaderOf<ProductLoader>,
     @IdArg() id: ID
   ): Promise<AnyProduct> {
-    return await this.productService.readOne(id, session);
+    return await products.load(id);
   }
 
   @Query(() => ProductListOutput, {
@@ -64,9 +65,12 @@ export class ProductResolver {
       type: () => ProductListInput,
       defaultValue: ProductListInput.defaultVal,
     })
-    input: ProductListInput
+    input: ProductListInput,
+    @Loader(ProductLoader) products: LoaderOf<ProductLoader>
   ): Promise<ProductListOutput> {
-    return await this.productService.list(input, session);
+    const list = await this.productService.list(input, session);
+    products.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => ProductApproach, { nullable: true })

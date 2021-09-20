@@ -6,15 +6,15 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { AnonSession, LoggedInSession, Session } from '../../common';
+import { Loader, LoaderOf } from '../../core';
 import { PeriodicReportService, ProgressReport } from '../periodic-report';
-import { Product, ProductService } from '../product';
+import { Product, ProductLoader } from '../product';
 import { ProductProgress, ProductProgressInput } from './dto';
 import { ProductProgressService } from './product-progress.service';
 
 @Resolver(ProductProgress)
 export class ProductProgressResolver {
   constructor(
-    private readonly products: ProductService,
     private readonly reports: PeriodicReportService,
     private readonly service: ProductProgressService
   ) {}
@@ -22,9 +22,9 @@ export class ProductProgressResolver {
   @ResolveField(() => Product)
   async product(
     @Parent() { productId }: ProductProgress,
-    @AnonSession() session: Session
+    @Loader(ProductLoader) products: LoaderOf<ProductLoader>
   ): Promise<Product> {
-    return await this.products.readOne(productId, session);
+    return await products.load(productId);
   }
 
   @ResolveField(() => ProgressReport)

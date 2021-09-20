@@ -4,6 +4,7 @@ import { Loader, LoaderOf } from '../../core';
 import { FileNodeLoader, resolveDefinedFile, SecuredFile } from '../file';
 import { LanguageLoader } from '../language';
 import { SecuredLanguage } from '../language/dto';
+import { ProductLoader } from '../product';
 import { ProductListInput, SecuredProductList } from '../product/dto';
 import { LanguageEngagement } from './dto';
 import { EngagementService } from './engagement.service';
@@ -31,13 +32,17 @@ export class LanguageEngagementResolver {
       type: () => ProductListInput,
       nullable: true,
     })
+    @Loader(ProductLoader)
+    products: LoaderOf<ProductLoader>,
     input?: ProductListInput
   ): Promise<SecuredProductList> {
-    return await this.engagements.listProducts(
+    const list = await this.engagements.listProducts(
       engagement,
       input || ProductListInput.defaultVal,
       session
     );
+    products.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => SecuredFile)
