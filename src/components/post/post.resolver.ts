@@ -6,8 +6,16 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { ID, IdArg, LoggedInSession, Session } from '../../common';
-import { SecuredUser, UserService } from '../user';
+import {
+  ID,
+  IdArg,
+  LoggedInSession,
+  mapSecuredValue,
+  Session,
+} from '../../common';
+import { Loader, LoaderOf } from '../../core';
+import { PostLoader, PostService } from '../post';
+import { SecuredUser, UserLoader } from '../user';
 import {
   CreatePostInput,
   CreatePostOutput,
@@ -15,14 +23,10 @@ import {
   UpdatePostInput,
   UpdatePostOutput,
 } from './dto';
-import { PostService } from './post.service';
 
 @Resolver(Post)
 export class PostResolver {
-  constructor(
-    private readonly service: PostService,
-    private readonly user: UserService
-  ) {}
+  constructor(private readonly service: PostService) {}
 
   @Mutation(() => CreatePostOutput, {
     description: 'Create a discussion post',
@@ -39,24 +43,18 @@ export class PostResolver {
     description: 'Look up a post by ID',
   })
   async post(
-    @LoggedInSession() session: Session,
-    @IdArg() id: ID
+    @IdArg() id: ID,
+    @Loader(PostLoader) posts: LoaderOf<PostLoader>
   ): Promise<Post> {
-    return await this.service.readOne(id, session);
+    return await posts.load(id);
   }
 
   @ResolveField(() => SecuredUser)
   async creator(
     @Parent() post: Post,
-    @LoggedInSession() session: Session
+    @Loader(UserLoader) users: LoaderOf<UserLoader>
   ): Promise<SecuredUser> {
-    const { value: id, ...rest } = post.creator;
-    const value = id ? await this.user.readOne(id, session) : undefined;
-
-    return {
-      value,
-      ...rest,
-    };
+    return await mapSecuredValue(post.creator, (id) => users.load(id));
   }
 
   @Mutation(() => UpdatePostOutput, {
