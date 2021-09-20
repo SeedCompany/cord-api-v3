@@ -27,7 +27,11 @@ import {
   OrganizationLoader,
   SecuredOrganizationList,
 } from '../organization';
-import { PartnerListInput, SecuredPartnerList } from '../partner';
+import {
+  PartnerListInput,
+  PartnerLoader,
+  SecuredPartnerList,
+} from '../partner';
 import { SecuredTimeZone, TimeZoneService } from '../timezone';
 import {
   AssignOrganizationToUserInput,
@@ -167,9 +171,12 @@ export class UserResolver {
       type: () => PartnerListInput,
       defaultValue: PartnerListInput.defaultVal,
     })
-    input: PartnerListInput
+    input: PartnerListInput,
+    @Loader(PartnerLoader) partners: LoaderOf<PartnerLoader>
   ): Promise<SecuredPartnerList> {
-    return await this.userService.listPartners(id, input, session);
+    const list = await this.userService.listPartners(id, input, session);
+    partners.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => SecuredEducationList)
