@@ -507,7 +507,7 @@ export class EngagementService {
     const { product: perms } = await this.authorizationService.getPermissions({
       resource: LanguageEngagement,
       sessionOrUserId: session,
-      otherRoles: await this.repo.rolesInScope(engagement.id, session),
+      dto: engagement,
     });
     if (!perms.canRead) {
       return SecuredList.Redacted;

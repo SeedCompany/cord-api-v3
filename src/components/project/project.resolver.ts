@@ -226,7 +226,7 @@ export class ProjectResolver {
     const dir = asDirectory(await files.load(project.rootDirectory.value));
     return {
       canRead: true,
-      canEdit: false,
+      canEdit: false, // rootDirectory of project unchangeable
       value: dir,
     };
   }

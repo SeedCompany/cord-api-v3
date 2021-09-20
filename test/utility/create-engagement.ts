@@ -54,6 +54,49 @@ export async function readOneCeremony(app: TestApp, id: string) {
   return actual;
 }
 
+export async function readOneLanguageEngagementParatextId(
+  app: TestApp,
+  id: ID
+) {
+  const result = await app.graphql.query(
+    gql`
+      query readOneLanguageEngagementParatextId($id: ID!) {
+        engagement(id: $id) {
+          sensitivity
+          ... on LanguageEngagement {
+            paratextRegistryId {
+              value
+              canRead
+              canEdit
+            }
+          }
+        }
+      }
+    `,
+    { id }
+  );
+  const actual: RawLanguageEngagement = result.engagement;
+  expect(actual).toBeTruthy();
+  return actual;
+}
+
+export async function readOneLanguageEngagement(app: TestApp, id: ID) {
+  const result = await app.graphql.query(
+    gql`
+      query readOneLanguageEngagement($id: ID!) {
+        engagement(id: $id) {
+          ...languageEngagement
+        }
+      }
+      ${fragments.languageEngagement}
+    `,
+    { id }
+  );
+  const actual: RawLanguageEngagement = result.engagement;
+  expect(actual).toBeTruthy();
+  return actual;
+}
+
 export async function createLanguageEngagement(
   app: TestApp,
   input: Partial<CreateLanguageEngagement> = {}
