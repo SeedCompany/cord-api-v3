@@ -177,13 +177,13 @@ export class PartnershipService {
   }
 
   async update(input: UpdatePartnership, session: Session, view?: ObjectView) {
-    // mou start and end are now computed fields and do not get updated directly
-    const object = await this.readOne(input.id, session, view);
-
+    const existing = await this.repo.readOne(input.id, session, view);
     const partner = await this.partnerService.readOne(
-      object.partner.value!,
+      existing.partner,
       session
     );
+    const object = await this.secure(existing, session);
+
     try {
       this.verifyFinancialReportingType(
         input.financialReportingType ?? object.financialReportingType.value,
