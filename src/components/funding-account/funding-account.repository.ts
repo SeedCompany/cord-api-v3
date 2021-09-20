@@ -45,22 +45,22 @@ export class FundingAccountRepository extends DtoRepository(FundingAccount) {
       .apply(await createNode(FundingAccount, { initialProps }))
       .return<{ id: ID }>('node.id as id');
 
-    // const result = await query.first();
-    console.log(query);
+    console.log(query.first.toString());
+    const result = await query.first();
     await this.pg.create(
       0,
       'sc.funding_account_data',
       {
         account_number: input.accountNumber,
         name: input.name,
-        // neo4j_id: result?.id,
+        neo4j_id: result?.id,
       },
       'UpdateAccessLevelAndIsClearedSecurity',
       'RefreshMVConcurrently',
       'History',
       'RefreshSecurityTablesAndMVConcurrently'
     );
-    return await query.first();
+    return result;
   }
 
   async readOne(id: ID, session: Session) {

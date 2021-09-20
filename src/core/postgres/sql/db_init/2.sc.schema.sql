@@ -28,7 +28,7 @@ create table if not exists sc.posts_data (
 create table if not exists sc.funding_account_data (
   	id serial primary key,
   	neo4j_id varchar(32),
-	account_number varchar(32) unique not null,
+	account_number int unique not null,
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by int not null default 0,
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
