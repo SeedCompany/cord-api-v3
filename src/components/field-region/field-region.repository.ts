@@ -42,7 +42,6 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
           zone: ['FieldZone', input.fieldZoneId],
         })
       )
-
       .return<{ id: ID }>('node.id as id');
 
     return await query.first();
@@ -93,7 +92,7 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
       .query()
       .match([requestingUser(session), ...permissionsOfNode(label)])
       .apply(sorting(FieldRegion, input))
-      .apply(paginate(input))
+      .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }

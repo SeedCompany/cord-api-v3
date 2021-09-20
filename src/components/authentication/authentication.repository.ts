@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { node, not, relation } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID, ServerException, Session } from '../../common';
 import { DatabaseService, matchRequestingUser } from '../../core';
 import { PostgresService } from '../../core/postgres/postgres.service';
-import { ACTIVE } from '../../core/database/query';
+import { ACTIVE, variable } from '../../core/database/query';
 import { LoginInput } from './dto';
 import { id } from 'common-tags';
 
@@ -61,20 +61,18 @@ export class AuthenticationRepository {
   }
 
   async getUserFromSession(session: Session) {
-    const userRes = await this.db
+    const result = await this.db
       .query()
+      .raw('', { token: session.token })
       .match([
         node('token', 'Token', {
-          active: true,
-          value: session.token,
+          ...ACTIVE,
+          value: variable('$token'),
         }),
-        relation('in', '', 'token', {
-          active: true,
-        }),
+        relation('in', '', 'token', ACTIVE),
         node('user', 'User'),
       ])
-      .return({ user: [{ id: 'id' }] })
-      .asResult<{ id: ID }>()
+      .return<{ id: ID }>('user.id as id')
       .first();
     const pool = await this.pg.pool;
     const pgResult = await pool.query(
@@ -83,10 +81,10 @@ export class AuthenticationRepository {
     );
     console.log('getUserFromSession', {
       pg: pgResult.rows[0].neo4j_id,
-      neo4j: userRes?.id,
+      neo4j: result?.id,
     });
     return pgResult.rows[0].neo4j_id;
-    // return userRes?.id;
+    // return result?.id;
   }
 
   async savePasswordHashOnUser(userId: ID, passwordHash: string) {
@@ -97,6 +95,7 @@ export class AuthenticationRepository {
           id: userId,
         }),
       ])
+      .raw('', { passwordHash })
       .create([
         node('user'),
         relation('out', '', 'password', {
@@ -104,7 +103,7 @@ export class AuthenticationRepository {
           createdAt: DateTime.local(),
         }),
         node('password', 'Property', {
-          value: passwordHash,
+          value: variable('$passwordHash'),
         }),
       ])
       .run();
@@ -265,12 +264,7 @@ export class AuthenticationRepository {
   async findSessionToken(token: string) {
     const result = await this.db
       .query()
-      .match([
-        node('token', 'Token', {
-          active: true,
-          value: token,
-        }),
-      ])
+      .raw('MATCH (token:Token { active: true, value: $token })', { token })
       .optionalMatch([
         node('token'),
         relation('in', '', 'token', ACTIVE),
@@ -407,7 +401,7 @@ export class AuthenticationRepository {
   async findEmailToken(token: string) {
     const result = await this.db
       .query()
-      .match(node('emailToken', 'EmailToken', { token }))
+      .raw('MATCH (emailToken:EmailToken { token: $token })', { token })
       .return([
         'emailToken.value as email',
         'emailToken.token as token',
@@ -495,7 +489,7 @@ export class AuthenticationRepository {
         relation('out', 'oldRel', 'token', ACTIVE),
         node('token', 'Token'),
       ])
-      .where(not([{ 'token.value': session.token }]))
+      .raw('WHERE NOT token.value = $token', { token: session.token })
       .setValues({ 'oldRel.active': false })
       .run();
     const idRow = await this.pg.pool.query(
@@ -519,7 +513,7 @@ export class AuthenticationRepository {
         relation('out', 'oldRel', 'token', ACTIVE),
         node('token', 'Token'),
       ])
-      .where(not([{ 'token.value': session.token }]))
+      .raw('WHERE NOT token.value = $token', { token: session.token })
       .setValues({ 'oldRel.active': false })
       .run();
     const idRow = await this.pg.pool.query(

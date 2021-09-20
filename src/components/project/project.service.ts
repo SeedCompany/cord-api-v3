@@ -230,7 +230,17 @@ export class ProjectService {
     const userId = isIdLike(sessionOrUserId)
       ? sessionOrUserId
       : sessionOrUserId.userId;
-    return await this.repo.readOneUnsecured(id, userId, changeset);
+    return await this.repo.readOne(id, userId, changeset);
+  }
+
+  async readMany(
+    ids: readonly ID[],
+    session: Session,
+    view: ObjectView
+  ): Promise<readonly Project[]> {
+    this.logger.debug('read many', { ids, view });
+    const projects = await this.repo.readMany(ids, session, view?.changeset);
+    return await Promise.all(projects.map((dto) => this.secure(dto, session)));
   }
 
   async secure(

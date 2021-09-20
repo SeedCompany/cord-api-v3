@@ -20,17 +20,39 @@ import { DataLoaderInterceptor } from './data-loader.interceptor';
  *
  * The object type is first generic and key generic defaults to ID.
  */
-export type DataLoader<T, Key = ID> = DataLoaderLib<Key, T>;
+export type DataLoader<T, Key = ID, CachedKey = Key> = DataLoaderLib<
+  Key,
+  T,
+  CachedKey
+> & {
+  /**
+   * Shortcut for {@link prime}.
+   */
+  primeAll: (items: readonly T[]) => DataLoader<T, Key, CachedKey>;
+};
+
+/**
+ * An actual DataLoader for the given loader factory
+ */
+export type LoaderOf<Factory> = Factory extends NestDataLoader<
+  infer T,
+  infer Key,
+  infer CachedKey
+>
+  ? DataLoader<T, Key, CachedKey>
+  : never;
 
 /**
  * This interface will be used to generate the initial data loader.
  * The concrete implementation should be added as a provider to your module.
  */
-export interface NestDataLoader<T, Key = ID> {
+export interface NestDataLoader<T, Key = ID, CachedKey = Key> {
   /**
    * Should return a new instance of dataloader each time
    */
-  generateDataLoader: (context: GqlContextType) => DataLoader<T, Key>;
+  generateDataLoader: (
+    context: GqlContextType
+  ) => DataLoader<T, Key, CachedKey>;
 }
 
 /**

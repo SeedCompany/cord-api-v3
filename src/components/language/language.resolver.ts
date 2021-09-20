@@ -19,8 +19,10 @@ import {
   SecuredInt,
   Session,
 } from '../../common';
+import { Loader, LoaderOf } from '../../core';
 import { LocationListInput, SecuredLocationList } from '../location';
-import { ProjectListInput, SecuredProjectList } from '../project/dto';
+import { ProjectLoader } from '../project';
+import { IProject, ProjectListInput, SecuredProjectList } from '../project/dto';
 import {
   CreateLanguageInput,
   CreateLanguageOutput,
@@ -117,9 +119,12 @@ export class LanguageResolver {
       type: () => ProjectListInput,
       defaultValue: ProjectListInput.defaultVal,
     })
-    input: ProjectListInput
+    input: ProjectListInput,
+    @Loader(IProject) loader: LoaderOf<ProjectLoader>
   ): Promise<SecuredProjectList> {
-    return this.langService.listProjects(language, input, session);
+    const list = await this.langService.listProjects(language, input, session);
+    loader.primeAll(list.items);
+    return list;
   }
 
   @Query(() => LanguageListOutput, {

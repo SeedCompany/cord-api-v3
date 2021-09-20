@@ -10,6 +10,7 @@ import {
   ServerException,
   Session,
   UnauthorizedException,
+  UnsecuredDto,
   viewOfChangeset,
 } from '../../common';
 import {
@@ -36,10 +37,10 @@ import { User } from '../user/dto';
 import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,
+  Engagement,
   EngagementListInput,
   EngagementListOutput,
   EngagementStatus,
-  IEngagement,
   InternshipEngagement,
   LanguageEngagement,
   UpdateInternshipEngagement,
@@ -241,28 +242,30 @@ export class EngagementService {
     view?: ObjectView
   ): Promise<LanguageEngagement | InternshipEngagement> {
     this.logger.debug('readOne', { id, userId: session.userId });
-
     if (!id) {
       throw new NotFoundException('no id given', 'engagement.id');
     }
-    const result = await this.repo.readOne(id, session, view);
+    const dto = await this.repo.readOne(id, session, view);
+    return await this.secure(dto, session);
+  }
 
-    const isLanguageEngagement = result.__typename === 'LanguageEngagement';
+  async secure(
+    dto: UnsecuredDto<Engagement>,
+    session: Session
+  ): Promise<Engagement> {
+    const isLanguageEngagement = dto.__typename === 'LanguageEngagement';
 
     const securedProperties = await this.authorizationService.secureProperties(
       isLanguageEngagement ? LanguageEngagement : InternshipEngagement,
-      result,
+      dto,
       session
     );
 
-    const common = {
-      ...result,
-      canDelete:
-        result.status !== EngagementStatus.InDevelopment &&
-        !session.roles.includes(`global:Administrator`)
-          ? false
-          : await this.repo.checkDeletePermission(id, session),
-    };
+    const canDelete =
+      dto.status !== EngagementStatus.InDevelopment &&
+      !session.roles.includes(`global:Administrator`)
+        ? false
+        : await this.repo.checkDeletePermission(dto.id, session);
 
     if (isLanguageEngagement) {
       // help TS understand that the secured props are for a LanguageEngagement
@@ -271,8 +274,9 @@ export class EngagementService {
         false
       >;
       return {
-        ...common,
+        ...(dto as UnsecuredDto<LanguageEngagement>),
         ...secured,
+        canDelete,
       };
     } else {
       // help TS understand that the secured props are for a InternshipEngagement
@@ -281,12 +285,13 @@ export class EngagementService {
         false
       >;
       return {
-        ...common,
+        ...(dto as UnsecuredDto<InternshipEngagement>),
         ...secured,
         methodologies: {
           ...secured.methodologies,
           value: secured.methodologies.value ?? [],
         },
+        canDelete,
       };
     }
   }
@@ -488,21 +493,14 @@ export class EngagementService {
     view?: ObjectView
   ): Promise<EngagementListOutput> {
     const results = await this.repo.list(input, session, view?.changeset);
-    return await mapListResults(results, (id) =>
-      this.readOne(id, session, view)
-    );
+    return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 
-  async listAllByProjectId(
-    projectId: ID,
-    session: Session
-  ): Promise<IEngagement[]> {
-    const engagementIds = await this.repo.listAllByProjectId(projectId);
-
-    const engagements = await Promise.all(
-      engagementIds.map((e) => this.readOne(e.id, session))
+  async listAllByProjectId(projectId: ID, session: Session) {
+    const engagements = await this.repo.listAllByProjectId(projectId, session);
+    return await Promise.all(
+      engagements.map((dto) => this.secure(dto, session))
     );
-    return engagements;
   }
 
   async listProducts(

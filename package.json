@@ -44,6 +44,7 @@
     "apollo-server-core": "^2.22.2",
     "apollo-server-express": "^2.22.2",
     "argon2": "^0.27.2",
+    "aws-xray-sdk-core": "^3.3.3",
     "class-transformer": "^0.4.0",
     "class-validator": "^0.13.1",
     "cli-highlight": "^2.1.11",

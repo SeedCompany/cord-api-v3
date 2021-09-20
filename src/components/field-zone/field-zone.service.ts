@@ -153,6 +153,6 @@ export class FieldZoneService {
     session: Session
   ): Promise<FieldZoneListOutput> {
     const results = await this.repo.list(input, session);
-    return await mapListResults(results, (id) => this.readOne(id, session));
+    return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 }

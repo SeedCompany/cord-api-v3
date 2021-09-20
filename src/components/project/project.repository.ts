@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   ID,
@@ -61,7 +61,7 @@ export class ProjectRepository extends CommonRepository {
     return result.map((row) => row.roles);
   }
 
-  async readOneUnsecured(id: ID, userId: ID, changeset?: ID) {
+  async readOne(id: ID, userId: ID, changeset?: ID) {
     const query = this.db
       .query()
       .match([node('node', 'Project', { id })])
@@ -72,6 +72,16 @@ export class ProjectRepository extends CommonRepository {
     }
 
     return result.dto;
+  }
+
+  async readMany(ids: readonly ID[], session: Session, changeset?: ID) {
+    return await this.db
+      .query()
+      .matchNode('node', 'Project')
+      .where({ 'node.id': inArray(ids.slice()) })
+      .apply(this.hydrate(session.userId, changeset))
+      .map('dto')
+      .run();
   }
 
   private hydrate(userId: ID, changeset?: ID) {

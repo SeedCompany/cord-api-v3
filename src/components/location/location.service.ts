@@ -160,7 +160,7 @@ export class LocationService {
   ): Promise<LocationListOutput> {
     const results = await this.repo.list(input, session);
 
-    return await mapListResults(results, (id) => this.readOne(id, session));
+    return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 
   async addLocationToNode(label: string, id: ID, rel: string, locationId: ID) {
@@ -208,7 +208,7 @@ export class LocationService {
 
     return {
       ...(perms[rel].canRead
-        ? await mapListResults(results, (id) => this.readOne(id, session))
+        ? await mapListResults(results, (dto) => this.secure(dto, session))
         : SecuredList.Redacted),
       canRead: perms[rel].canRead,
       canCreate: perms[rel].canEdit,
@@ -231,7 +231,7 @@ export class LocationService {
     );
 
     return {
-      ...(await mapListResults(results, (id) => this.readOne(id, session))),
+      ...(await mapListResults(results, (dto) => this.secure(dto, session))),
       canRead: true, // TODO
       canCreate: true, // TODO
     };
