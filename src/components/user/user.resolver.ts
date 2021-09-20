@@ -57,6 +57,7 @@ import {
 import {
   SecuredUnavailabilityList,
   UnavailabilityListInput,
+  UnavailabilityLoader,
 } from './unavailability';
 import { UserLoader } from './user.loader';
 import { fullName, UserService } from './user.service';
@@ -144,9 +145,17 @@ export class UserResolver {
       type: () => UnavailabilityListInput,
       defaultValue: UnavailabilityListInput.defaultVal,
     })
-    input: UnavailabilityListInput
+    input: UnavailabilityListInput,
+    @Loader(UnavailabilityLoader)
+    unavailabilities: LoaderOf<UnavailabilityLoader>
   ): Promise<SecuredUnavailabilityList> {
-    return await this.userService.listUnavailabilities(id, input, session);
+    const list = await this.userService.listUnavailabilities(
+      id,
+      input,
+      session
+    );
+    unavailabilities.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => SecuredOrganizationList)

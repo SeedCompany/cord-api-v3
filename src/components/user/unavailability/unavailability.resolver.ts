@@ -6,6 +6,8 @@ import {
   LoggedInSession,
   Session,
 } from '../../../common';
+import { Loader, LoaderOf } from '../../../core';
+import { UnavailabilityLoader, UnavailabilityService } from '../unavailability';
 import {
   CreateUnavailabilityInput,
   CreateUnavailabilityOutput,
@@ -15,7 +17,6 @@ import {
   UpdateUnavailabilityInput,
   UpdateUnavailabilityOutput,
 } from './dto';
-import { UnavailabilityService } from './unavailability.service';
 
 @Resolver()
 export class UnavailabilityResolver {
@@ -25,10 +26,11 @@ export class UnavailabilityResolver {
     description: 'Look up a unavailability by its ID',
   })
   async unavailability(
-    @AnonSession() session: Session,
+    @Loader(UnavailabilityLoader)
+    unavailabilities: LoaderOf<UnavailabilityLoader>,
     @IdArg() id: ID
   ): Promise<Unavailability> {
-    return await this.service.readOne(id, session);
+    return await unavailabilities.load(id);
   }
 
   @Query(() => UnavailabilityListOutput, {
@@ -41,9 +43,13 @@ export class UnavailabilityResolver {
       type: () => UnavailabilityListInput,
       defaultValue: UnavailabilityListInput.defaultVal,
     })
-    input: UnavailabilityListInput
+    input: UnavailabilityListInput,
+    @Loader(UnavailabilityLoader)
+    unavailabilities: LoaderOf<UnavailabilityLoader>
   ): Promise<UnavailabilityListOutput> {
-    return await this.service.list(input, session);
+    const list = await this.service.list(input, session);
+    unavailabilities.primeAll(list.items);
+    return list;
   }
 
   @Mutation(() => CreateUnavailabilityOutput, {
