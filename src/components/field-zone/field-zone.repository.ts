@@ -2,7 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID, NotFoundException, Session, UnsecuredDto } from '../../common';
-import { DtoRepository, matchRequestingUser } from '../../core';
+import {
+  DatabaseService,
+  DtoRepository,
+  matchRequestingUser,
+} from '../../core';
+
 import {
   ACTIVE,
   createNode,
@@ -14,10 +19,15 @@ import {
   requestingUser,
   sorting,
 } from '../../core/database/query';
+import { PostgresService } from '../../core/postgres/postgres.service';
 import { CreateFieldZone, FieldZone, FieldZoneListInput } from './dto';
 
 @Injectable()
 export class FieldZoneRepository extends DtoRepository(FieldZone) {
+  constructor(db: DatabaseService, private readonly pg: PostgresService) {
+    super(db);
+  }
+
   async checkName(name: string) {
     return await this.db
       .query()
@@ -43,6 +53,15 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
         })
       )
       .return<{ id: ID }>('node.id as id');
+
+    // const pgClient = await this.pg.connectedClient;
+    // await pgClient.query(
+    //   'INSERT INTO sc_field_zone (director_sys_person_id, name) VALUES($1, $2)',
+    //   [directorId, name]
+    // );
+    // await pgClient.end();
+
+    // const result = await query.first();
 
     return await query.first();
   }
@@ -79,7 +98,7 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
 
   async updateDirector(directorId: ID, id: ID) {
     const createdAt = DateTime.local();
-    const query = this.db
+    this.db
       .query()
       .match(node('fieldZone', 'FieldZone', { id }))
       .with('fieldZone')
@@ -101,8 +120,6 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
         }),
         node('director'),
       ]);
-
-    await query.run();
   }
 
   async list({ filter, ...input }: FieldZoneListInput, session: Session) {

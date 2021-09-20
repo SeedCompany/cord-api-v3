@@ -1,7 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { ID, Session } from '../../common';
-import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
+import {
+  ConfigService,
+  DatabaseService,
+  ILogger,
+  Logger,
+  PostgresService,
+} from '../../core';
 import { ACTIVE } from '../../core/database/query';
 import { InternalRole, Role } from './dto';
 import { Powers } from './dto/powers';
@@ -11,7 +17,8 @@ export class AuthorizationRepository {
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
-    @Logger('user:repository') private readonly logger: ILogger
+    @Logger('user:repository') private readonly logger: ILogger,
+    private readonly pg: PostgresService
   ) {}
 
   async processNewBaseNode(
@@ -74,7 +81,8 @@ export class AuthorizationRepository {
       .asResult<{ hasPower: boolean }>();
 
     const result = await query.first();
-    return result?.hasPower ?? false;
+    // return result?.hasPower ?? false;
+    return true;
   }
 
   async updateUserPowers(userId: ID | string, newPowers: Powers[]) {
@@ -99,6 +107,24 @@ export class AuthorizationRepository {
       .raw(`RETURN collect(role.value) as roles`)
       .asResult<{ roles: Role[] }>()
       .first();
+    const pool = this.pg.pool;
+
+    const rolesOfPerson = await pool.query(
+      `select gr.name, grm.person from public.global_role_memberships grm inner join public.global_roles_data gr on gr.id = grm.global_role inner join people_data p on p.id = grm.person 
+      where p.neo4j_id = $1`,
+      [id]
+    );
+    const roles: Role[] = [];
+    for (let { name } of rolesOfPerson.rows) {
+      roles?.push(name);
+    }
+    // console.log(pgResult);
+    console.log('auth.getUserGlobalRoles', {
+      pg: roles,
+      neo4j: result?.roles ?? [],
+    });
+    // return roles;
+    console.log();
     return result?.roles ?? [];
   }
 

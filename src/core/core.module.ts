@@ -15,6 +15,8 @@ import { DataLoaderInterceptor } from './data-loader';
 import { DatabaseModule } from './database/database.module';
 import { EventsModule } from './events';
 import { ExceptionFilter } from './exception.filter';
+
+import { PostgresModule } from './postgres/postgres.module';
 import { GraphqlModule } from './graphql';
 import { ResourceResolver } from './resources';
 import { TracingModule } from './tracing';
@@ -29,6 +31,7 @@ import { ValidationPipe } from './validation.pipe';
     EmailModule.forRootAsync({ useExisting: ConfigService }),
     GraphqlModule,
     EventsModule,
+    PostgresModule,
     TracingModule,
   ],
   providers: [
@@ -47,6 +50,7 @@ import { ValidationPipe } from './validation.pipe';
     EmailModule,
     EventsModule,
     ResourceResolver,
+    PostgresModule,
     TracingModule,
   ],
 })

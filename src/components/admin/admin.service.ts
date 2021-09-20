@@ -34,6 +34,7 @@ export class AdminService implements OnApplicationBootstrap {
     }
   }
 
+
   @Transactional()
   private async setupRootObjects(): Promise<void> {
     const apoc = await this.repo.apocVersion();

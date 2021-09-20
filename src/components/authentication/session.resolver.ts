@@ -10,7 +10,7 @@ import {
 import { DateTime } from 'luxon';
 import { GqlContextType, UnauthenticatedException } from '../../common';
 import { anonymousSession } from '../../common/session';
-import { ConfigService, ILogger, Loader, LoaderOf, Logger } from '../../core';
+import { ConfigService, ILogger, Loader, LoaderOf, Logger, PostgresService } from '../../core';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto';
 import { User, UserLoader } from '../user';
@@ -27,6 +27,8 @@ export class SessionResolver {
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorization: AuthorizationService,
     private readonly config: ConfigService,
+    // private readonly sessionPipe: SessionPipe,
+    private readonly pg: PostgresService,
     private readonly sessionInt: SessionInterceptor,
     @Logger('session:resolver') private readonly logger: ILogger
   ) {}
@@ -45,9 +47,15 @@ export class SessionResolver {
     })
     browser?: boolean
   ): Promise<SessionOutput> {
+    // creates the schema
+    await this.pg.init(1);
+    // populate the schema with sample data
+    await this.pg.loadTestData(1);
+
     const existingToken = this.sessionInt.getTokenFromContext(context);
 
     let token = existingToken || (await this.authentication.createToken());
+    console.log('token', token);
     let rawSession;
     try {
       rawSession = await this.authentication.createSession(token);
@@ -64,11 +72,10 @@ export class SessionResolver {
     }
     context.session = rawSession; // Set for data loaders invoked later in operation
     const session = anonymousSession(rawSession);
-
     const userFromSession = session.anonymous
       ? undefined
       : await this.repo.getUserFromSession(session);
-
+    console.log({ token, user: userFromSession, session });
     if (browser) {
       const { name, expires, ...options } = this.config.sessionCookie;
       context.response.cookie(name, token, {

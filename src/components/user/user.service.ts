@@ -132,6 +132,7 @@ export class UserService {
     _view?: ObjectView
   ): Promise<User> {
     const user = await this.userRepo.readOne(id);
+    console.log('postgres user', user);
     return await this.secure(user, sessionOrUserId);
   }
 
@@ -377,6 +378,7 @@ export class UserService {
         'locations',
         locationId
       );
+      
     } catch (e) {
       throw new ServerException('Could not add location to user', e);
     }

@@ -3,8 +3,10 @@ import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
+  generateId,
   ID,
   NotFoundException,
+  SecuredString,
   ServerException,
   Session,
   UnauthorizedException,
@@ -17,6 +19,7 @@ import {
   ILogger,
   Logger,
   matchSession,
+  PostgresService,
   property,
   UniquenessError,
 } from '../../core';
@@ -33,7 +36,7 @@ import {
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { Role } from '../authorization';
+import { Powers, Role } from '../authorization';
 import {
   AssignOrganizationToUser,
   CreatePerson,
@@ -44,11 +47,13 @@ import {
   User,
   UserListInput,
 } from './dto';
+import { isEqual } from 'lodash';
 
 @Injectable()
 export class UserRepository extends DtoRepository(User) {
   constructor(
     db: DatabaseService,
+    private readonly pg: PostgresService,
     private readonly config: ConfigService,
     @Logger('user:repository') private readonly logger: ILogger
   ) {
@@ -59,31 +64,100 @@ export class UserRepository extends DtoRepository(User) {
     (roles || []).flatMap((role) =>
       property('roles', role, 'node', `role${role}`)
     );
-
-  async create(input: CreatePerson) {
-    const initialProps = {
-      ...(input.email ? { email: input.email } : {}), // omit email prop/relation if it's undefined
-      realFirstName: input.realFirstName,
-      realLastName: input.realLastName,
-      displayFirstName: input.displayFirstName,
-      displayLastName: input.displayLastName,
-      phone: input.phone,
-      timezone: input.timezone,
-      about: input.about,
-      status: input.status,
-      title: input.title,
-      canDelete: true,
-    };
-
+  async readOne(id: ID) {
     const query = this.db
       .query()
-      .apply(await createNode(User, { initialProps }))
-      .apply((q) =>
-        input.roles && input.roles.length > 0
-          ? q.create([...this.roleProperties(input.roles)])
-          : q
-      )
-      .return<{ id: ID }>('node.id as id');
+      .match([node('node', 'User', { id })])
+      .apply(this.hydrate());
+
+    const result = await query.first();
+    if (!result) {
+      throw new NotFoundException('Could not find user', 'user.id');
+    }
+    const pool = await this.pg.pool;
+    let [pgPersonData, rolesOfPerson] = await Promise.all([
+      pool.query(
+        `select public_last_name, password, title, public_first_name,email, private_last_name, private_first_name, time_zone,p.created_at, phone, about 
+        from public.people_data p inner join public.users_data u on u.person = p.id 
+        where p.neo4j_id = $1`,
+        [id]
+      ),
+      pool.query(
+        `select gr.name, grm.person from public.global_role_memberships grm inner join public.global_roles_data gr on gr.id = grm.global_role inner join people_data p on p.id = grm.person 
+        where p.neo4j_id = $1`,
+        [id]
+      ),
+    ]);
+    let {
+      public_last_name: displayLastName,
+      public_first_name: displayFirstName,
+      private_first_name: realFirstName,
+      private_last_name: realLastName,
+      time_zone: timezone,
+      password,
+      created_at: createdAt,
+      phone,
+      about,
+      email,
+      title,
+    } = pgPersonData.rows[0];
+    let roles: Role[] = [];
+    let powers: Powers[] = [];
+    for (let { name } of rolesOfPerson.rows) {
+      roles.push(name);
+    }
+
+    console.log('result.dto read user by id', result.dto);
+    const pgResult = {
+      displayFirstName,
+      displayLastName,
+      realFirstName,
+      realLastName,
+      timezone,
+      id,
+      email,
+      createdAt,
+      phone,
+      password,
+      about,
+      status: 'Active',
+      roles,
+      title,
+      powers,
+    } as UnsecuredDto<User>;
+    // console.log(isEqual(x, result.dto));
+    // return result.dto;
+    return pgResult;
+  }
+
+  async create(input: CreatePerson) {
+    // await PostgresService.init();
+    const id = await generateId();
+    const createdAt = DateTime.local();
+    const query = this.db
+      .query()
+      .create([
+        [
+          node('user', ['User', 'BaseNode'], {
+            id,
+            createdAt,
+          }),
+        ],
+        ...property('email', input.email, 'user', 'email', 'EmailAddress'),
+        ...property('realFirstName', input.realFirstName, 'user'),
+        ...property('realLastName', input.realLastName, 'user'),
+        ...property('displayFirstName', input.displayFirstName, 'user'),
+        ...property('displayLastName', input.displayLastName, 'user'),
+        ...property('phone', input.phone, 'user'),
+        ...property('timezone', input.timezone, 'user'),
+        ...property('about', input.about, 'user'),
+        ...property('status', input.status, 'user'),
+        ...this.roleProperties(input.roles),
+        ...property('title', input.title, 'user'),
+        ...property('canDelete', true, 'user'),
+      ])
+      .return('user.id as id')
+      .asResult<{ id: ID }>();
     let result;
     try {
       result = await query.first();
@@ -97,10 +171,10 @@ export class UserRepository extends DtoRepository(User) {
       }
       throw new ServerException('Failed to create user', e);
     }
+
     if (!result) {
       throw new ServerException('Failed to create user');
     }
-    const id = result.id;
     // attach user to publicSG
     const attachUserToPublicSg = await this.db
       .query()
@@ -153,19 +227,41 @@ export class UserRepository extends DtoRepository(User) {
         //
       }
     }
-    return result.id;
-  }
 
-  async readOne(id: ID) {
-    const query = this.db
-      .query()
-      .match([node('node', 'User', { id })])
-      .apply(this.hydrate());
-    const result = await query.first();
-    if (!result) {
-      throw new NotFoundException('Could not find user', 'user.id');
-    }
-    return result.dto;
+    const newPersonId = await this.pg.create(
+      0,
+      'public.people_data',
+      {
+        neo4j_id: result.id,
+        public_first_name: input.displayFirstName,
+        public_last_name: input.displayLastName,
+        private_first_name: input.realFirstName,
+        private_last_name: input.realLastName,
+        time_zone: input.timezone,
+        about: input.about,
+        phone: input.phone,
+      },
+      'UpdateAccessLevelAndIsClearedSecurity',
+      'RefreshMVConcurrently',
+      'History',
+      'RefreshSecurityTablesAndMVConcurrently'
+    );
+    await this.pg.create(
+      0,
+      'public.users_data',
+      {
+        person: newPersonId,
+        email: input.email,
+        password: 'password',
+        owning_org: 0,
+      },
+      'UpdateAccessLevelAndIsClearedSecurity',
+      'RefreshMVConcurrently',
+      'History',
+      'RefreshSecurityTablesAndMVConcurrently'
+    );
+
+    return result.id;
   }
 
   async readMany(ids: readonly ID[]) {
@@ -313,6 +409,13 @@ export class UserRepository extends DtoRepository(User) {
       })
       .asResult<{ canRead?: boolean; canEdit?: boolean }>()
       .first();
+    // const client = await this.pg.pool.connect();
+    // const pgResult = await client.query(
+    //   `delete from public.people_data where id = $1`,
+    //   [0]
+    // );
+    // console.log(pgResult);
+    // client.release();
     if (!result) {
       throw new NotFoundException('Could not find user', 'userId');
     }
@@ -391,6 +494,14 @@ export class UserRepository extends DtoRepository(User) {
       .matchNode('email', 'EmailAddress', { value: email })
       .return('email.value')
       .first();
+    console.log('user.repo', email);
+
+    const pool = this.pg.pool;
+    const pgResult = pool.query(
+      `select email from users_data where email = $1`,
+      [email, 0]
+    );
+    console.log('pgResult: ', pgResult);
     return !!result;
   }
 
@@ -460,7 +571,65 @@ export class UserRepository extends DtoRepository(User) {
       ])
       .return('org.id')
       .first();
-    if (!result) {
+
+    const pool = await this.pg.pool;
+    let pgResult;
+    if(!primary){
+      // Check if it's a neo4j_id or a pg id
+      if(typeof(userId) === 'string' && typeof(orgId) === 'string'){
+        const resultPeople = await pool.query(
+          `select id from public.people_data where neo4j_id = $1`,
+          [userId]
+        );
+
+        if(!resultPeople.rows[0]) return;
+        const resultPeopleId = resultPeople.rows[0].id;
+        
+        const resultUser = await pool.query(
+          `select id from public.users_data where person = $1`,
+          [resultPeopleId]
+        )
+
+        const resultOrg = await pool.query(
+          `select id from public.organizations_data where neo4j_id = $1`,
+          [orgId]
+        )
+        
+        const resultUserId = resultUser.rows[0].id;
+        const resultOrgId = resultOrg.rows[0].id;
+        pgResult = await pool.query(
+          `UPDATE public.users_data
+           SET owning_org = $1
+           WHERE id = $2`
+           ,[resultOrgId, resultUserId]
+        )
+      }else{
+        pgResult = await pool.query(
+          `UPDATE public.users_data
+           SET owning_org = $1
+           WHERE id = $2
+           `, [orgId, userId]
+        )
+      };
+    }else{
+      if(typeof(userId) === 'string' && typeof(orgId) === 'string'){
+        pgResult = pool.query(
+          `UPDATE public.people_data
+           SET primary_location = $1
+           WHERE neo4j_id = $2`,
+           [orgId, userId]
+        )
+      }else{
+        pgResult = pool.query(
+          `UPDATE public.people_data
+           SET primary_location = $1
+           WHERE id = $2`,
+           [orgId, userId]
+        )
+      }
+    }
+
+    if (!result || !pgResult) {
       throw new ServerException('Failed to assign organization to user');
     }
   }

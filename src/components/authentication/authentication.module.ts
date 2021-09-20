@@ -1,4 +1,6 @@
-import { forwardRef, Global, Module } from '@nestjs/common';
+import { forwardRef, Global, Module, Provider } from '@nestjs/common';
+// import { SESSION_PIPE_TOKEN } from '../../common/session';
+import { PostgresModule } from '../../core/postgres/postgres.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { UserModule } from '../user/user.module';
@@ -16,6 +18,7 @@ import { SessionResolver } from './session.resolver';
   imports: [
     forwardRef(() => UserModule),
     forwardRef(() => AuthorizationModule),
+    PostgresModule,
   ],
   providers: [
     LoginResolver,

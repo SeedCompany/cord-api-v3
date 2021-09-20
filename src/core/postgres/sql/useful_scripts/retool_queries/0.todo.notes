@@ -1,0 +1,35 @@
+[ ] Projects
+    [√] Parent Table
+    [√] Budget
+    [√] Files
+    [√] Financial Reports
+    [√] Narrative Reports
+    [√] Team Members - public.project_memberships
+    [√] Partnerships
+    [√] Change Reqs 
+    [ ] Language Engagements 
+    [√] Posts 
+    -----------
+    [ ] Need to make directory queries recursive
+
+[ ] Languages
+    [√] Parent Table 
+    [ ] Locations
+    [ ] Projects 
+
+[ ] People 
+    [√] Parent Table 
+    [√] Users
+
+[ ] Partners
+    [√] Parent Table
+    [√] Partner Types 
+    [√] Address 
+    [√] Point of Contact 
+
+
+// REFACTORING
+[ ] USE CTES instead of subqueries and joins
+
+//TODO
+[ ] add more data to the projects (for retool)

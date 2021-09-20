@@ -78,6 +78,7 @@ export class ConfigService implements EmailOptionsFactory {
     .string('FRONTEND_URL')
     .optional('http://localhost:3001');
 
+  // use this for postgres service
   @Lazy() get neo4j() {
     const driverConfig: Neo4JDriverConfig = {
       maxTransactionRetryTime: 30_000,
@@ -98,6 +99,21 @@ export class ConfigService implements EmailOptionsFactory {
       username,
       password,
       driverConfig,
+    };
+  }
+  //
+  @Lazy() get postgres() {
+    const host = this.env.string('PGHOST').optional('localhost');
+    const user = this.env.string('PGUSER').optional('postgres');
+    const password = this.env.string('PGPASSWORD').optional('password');
+    const database = this.env.string('PGDATABASE').optional('postgres');
+    const port = this.env.number('PGPORT').optional(5432);
+    return {
+      host,
+      user,
+      password,
+      database,
+      port,
     };
   }
 
