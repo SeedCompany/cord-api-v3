@@ -28,11 +28,11 @@ pToggleGranters => 0,1,2,3
 create or replace procedure public.create(pPersonId int, pTableName text, 
 -- get record
 pRecord hstore,
-pToggleSecurity public.toggle_security default 'UpdateAccessLevelAndIsCleared',  
+pToggleSecurity public.toggle_security default 'UpdateAccessLevelAndIsClearedSecurity',  
 pToggleMV public.toggle_mv default 'RefreshMVConcurrently', 
 pToggleHistory public.toggle_history default 'History',
 pToggleGranters public.toggle_granters default 'RefreshSecurityTablesAndMVConcurrently', 
-inout record_id int
+inout record_id int default 0
 )
 -- returns int 
 language plpgsql
