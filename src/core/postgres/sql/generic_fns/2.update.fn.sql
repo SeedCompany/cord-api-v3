@@ -3,10 +3,10 @@ pPersonId int,
 pId int, 
 pTableName text, 
 pRecord hstore, 
-pToggleSensitivity public.toggle_sensitivity,
-pToggleMV public.toggle_mv,
-pToggleHistory public.toggle_history,
-pToggleGranters public.toggle_granters
+pToggleSensitivity public.toggle_sensitivity default 'UpdateIsCleared',
+pToggleMV public.toggle_mv default 'RefreshMVConcurrently',
+pToggleHistory public.toggle_history default 'History',
+pToggleGranters public.toggle_granters default 'RefreshSecurityTablesAndMVConcurrently'
 -- inout pUpdatedRow hstore
 )
 language plpgsql

@@ -35,10 +35,10 @@ export class PostgresService {
     rowId: number,
     tableName: string,
     updatedValues: object,
-    toggleSensitivity: toggleSensitivity,
-    toggleMV: toggleMV,
-    toggleHistory: toggleHistory,
-    toggleGranters: toggleGranters
+    toggleSensitivity: toggleSensitivity = 'UpdateIsCleared',
+    toggleMV: toggleMV = 'RefreshMVConcurrently',
+    toggleHistory: toggleHistory = 'History',
+    toggleGranters: toggleGranters = 'RefreshSecurityTablesAndMVConcurrently'
   ) {
     const hstoreString = this.convertObjectToHstore(updatedValues);
     const updatedRow = await this.pool.query(
