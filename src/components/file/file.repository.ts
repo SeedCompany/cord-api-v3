@@ -7,6 +7,7 @@ import {
   Query,
   relation,
 } from 'cypher-query-builder';
+import { Direction } from 'cypher-query-builder/dist/typings/clauses/order-by';
 import { AnyConditions } from 'cypher-query-builder/dist/typings/clauses/where-utils';
 import { isEmpty } from 'lodash';
 import { DateTime } from 'luxon';
@@ -209,13 +210,103 @@ export class FileRepository extends CommonRepository {
           relation('out', '', 'createdBy', ACTIVE),
           node('createdBy'),
         ])
+        // Fetch directory info determined by children
+        .subQuery('node', (sub) =>
+          sub
+            // region Match all files (with active versions) from all subdirectories
+            .optionalMatch([
+              node('node'),
+              relation('in', '', 'parent', ACTIVE, '*'),
+              node('file', 'File'),
+              relation('in', '', 'parent', ACTIVE),
+              node('', 'FileVersion'),
+            ])
+            // endregion
+            // region For each file, grab the first & latest version
+            .subQuery('file', (sub) =>
+              sub
+                .match([
+                  node('file'),
+                  relation('in', '', 'parent', ACTIVE),
+                  node('version', 'FileVersion'),
+                ])
+                .with('version')
+                .orderBy('version.createdAt')
+                .with('collect(version) as versions')
+                .return([
+                  'versions[0] as firstVersion',
+                  'versions[-1] as latestVersion',
+                ])
+            )
+            // endregion
+            // region For each latest file version grab its size
+            .optionalMatch([
+              node('latestVersion'),
+              relation('out', '', 'size', ACTIVE),
+              node('size'),
+            ])
+            // endregion
+            // region Group up file info
+            // This reduces back down to a single row per directory node
+            .with([
+              // distinct files here as each row is a different version of one file
+              'count(distinct file) as totalFiles',
+              'sum(size.value) as size',
+              'collect(latestVersion) as latestVersions',
+              'collect(firstVersion) as firstVersions',
+            ])
+            // endregion
+            // region Of all the file's first/last versions, grab the min/max
+            .apply(singleVersionFrom('firstVersions', 'firstVersion', 'asc'))
+            .apply(singleVersionFrom('latestVersions', 'latestVersion', 'desc'))
+            // endregion
+            .optionalMatch([
+              node('latestVersion'),
+              relation('out', '', 'createdBy', ACTIVE),
+              node('modifiedBy'),
+            ])
+            .optionalMatch([
+              node('firstVersion'),
+              relation('out', '', 'parent', ACTIVE),
+              node('firstFile', 'File'),
+            ])
+            .return([
+              'totalFiles',
+              'size',
+              'firstFile',
+              'latestVersion',
+              'modifiedBy',
+            ])
+        )
         .return<{ dto: Directory }>(
           merge('props', {
             type: `"${FileNodeType.Directory}"`,
             createdById: 'createdBy.id',
+            totalFiles: 'totalFiles',
+            size: 'size',
+            firstFileCreated: 'firstFile.id',
+            modifiedBy: 'coalesce(modifiedBy, createdBy).id',
+            modifiedAt: 'coalesce(latestVersion, node).createdAt',
             canDelete: true,
           }).as('dto')
         );
+
+    function singleVersionFrom(list: string, out: string, order: Direction) {
+      return (query: Query) =>
+        query.subQuery(list, (sub) =>
+          sub
+            .raw(`UNWIND ${list} as version`)
+            .with('version')
+            .orderBy('version.createdAt', order)
+            .return(`version as ${out}`)
+            .raw('LIMIT 1')
+            .union()
+            .with(list)
+            .with(list)
+            .raw(`WHERE size(${list}) = 0`)
+            .return(`null as ${out}`)
+        );
+    }
   }
 
   private hydrateFileVersion() {

@@ -6,13 +6,20 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
+import { stripIndent } from 'common-tags';
 import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
+import { Loader, LoaderOf } from '../../core';
+import { User, UserLoader } from '../user';
 import {
+  asDirectory,
   CreateDirectoryInput,
   Directory,
+  File,
   FileListInput,
   FileListOutput,
+  FileNode,
 } from './dto';
+import { FileNodeLoader } from './file-node.loader';
 import { FileService } from './file.service';
 
 @Resolver(Directory)
@@ -22,9 +29,9 @@ export class DirectoryResolver {
   @Query(() => Directory)
   async directory(
     @IdArg() id: ID,
-    @LoggedInSession() session: Session
+    @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>
   ): Promise<Directory> {
-    return await this.service.getDirectory(id, session);
+    return asDirectory(await files.load(id));
   }
 
   @ResolveField(() => FileListOutput, {
@@ -41,6 +48,34 @@ export class DirectoryResolver {
     input: FileListInput
   ): Promise<FileListOutput> {
     return await this.service.listChildren(node, input, session);
+  }
+
+  @ResolveField(() => User, {
+    description:
+      'The user who uploaded the most recent file in this directory or any subdirectories',
+  })
+  async modifiedBy(
+    @Parent() node: Directory,
+    @Loader(UserLoader) users: LoaderOf<UserLoader>
+  ): Promise<User> {
+    return await users.load(node.modifiedBy);
+  }
+
+  @ResolveField(() => File, {
+    nullable: true,
+    description: stripIndent`
+      The first file created in this directory or any subdirectories.
+
+      This can be useful to determine the time the directory was "first used".
+    `,
+  })
+  async firstFileCreated(
+    @Parent() node: Directory,
+    @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>
+  ): Promise<FileNode | null> {
+    return node.firstFileCreated
+      ? await files.load(node.firstFileCreated)
+      : null;
   }
 
   @Mutation(() => Directory)
