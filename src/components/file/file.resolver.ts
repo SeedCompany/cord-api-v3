@@ -11,6 +11,7 @@ import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
 import { Loader, LoaderOf } from '../../core';
 import { User, UserLoader } from '../user';
 import {
+  asFile,
   CreateFileVersionInput,
   File,
   FileListInput,
@@ -21,6 +22,7 @@ import {
   RenameFileInput,
   RequestUploadOutput,
 } from './dto';
+import { FileNodeLoader } from './file-node.loader';
 import { FileService } from './file.service';
 
 @Resolver(File)
@@ -30,17 +32,17 @@ export class FileResolver {
   @Query(() => File)
   async file(
     @IdArg() id: ID,
-    @LoggedInSession() session: Session
+    @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>
   ): Promise<File> {
-    return await this.service.getFile(id, session);
+    return asFile(await files.load(id));
   }
 
   @Query(() => IFileNode)
   async fileNode(
     @IdArg() id: ID,
-    @LoggedInSession() session: Session
+    @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>
   ): Promise<FileNode> {
-    return await this.service.getFileNode(id, session);
+    return await files.load(id);
   }
 
   @ResolveField(() => User, {

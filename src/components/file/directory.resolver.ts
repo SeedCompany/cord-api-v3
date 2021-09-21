@@ -7,12 +7,15 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
+import { Loader, LoaderOf } from '../../core';
 import {
+  asDirectory,
   CreateDirectoryInput,
   Directory,
   FileListInput,
   FileListOutput,
 } from './dto';
+import { FileNodeLoader } from './file-node.loader';
 import { FileService } from './file.service';
 
 @Resolver(Directory)
@@ -22,9 +25,9 @@ export class DirectoryResolver {
   @Query(() => Directory)
   async directory(
     @IdArg() id: ID,
-    @LoggedInSession() session: Session
+    @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>
   ): Promise<Directory> {
-    return await this.service.getDirectory(id, session);
+    return asDirectory(await files.load(id));
   }
 
   @ResolveField(() => FileListOutput, {

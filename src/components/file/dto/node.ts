@@ -147,5 +147,12 @@ export const asDirectory = (node: AnyFileNode) => {
 export const isFile = (node: AnyFileNode): node is File =>
   node.type === FileNodeType.File;
 
+export const asFile = (node: AnyFileNode) => {
+  if (!isFile(node)) {
+    throw new InputException('Node is not a file');
+  }
+  return node;
+};
+
 export const isFileVersion = (node: AnyFileNode): node is FileVersion =>
   node.type === FileNodeType.FileVersion;
