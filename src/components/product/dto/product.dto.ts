@@ -23,7 +23,11 @@ import { SecuredProgressMeasurement } from './progress-measurement.enum';
 
 @InterfaceType({
   resolveType: (product: AnyProduct) =>
-    product.produces ? DerivativeScriptureProduct : DirectScriptureProduct,
+    product.produces
+      ? DerivativeScriptureProduct
+      : product.title
+      ? OtherProduct
+      : DirectScriptureProduct,
   implements: [Producible],
 })
 export class Product extends Producible {

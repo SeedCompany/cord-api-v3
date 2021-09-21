@@ -27,6 +27,7 @@ import {
 import {
   DerivativeScriptureProduct,
   DirectScriptureProduct,
+  OtherProduct,
   Producible,
   Product,
 } from '../../product/dto';
@@ -70,6 +71,7 @@ export const ResourceMap = {
   Product,
   DirectScriptureProduct,
   DerivativeScriptureProduct,
+  OtherProduct,
   Project,
   TranslationProject,
   InternshipProject,
