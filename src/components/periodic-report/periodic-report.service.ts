@@ -115,6 +115,13 @@ export class PeriodicReportService {
     return await this.secure(result, session);
   }
 
+  async readMany(ids: readonly ID[], session: Session) {
+    const periodicReports = await this.repo.readMany(ids, session);
+    return await Promise.all(
+      periodicReports.map((dto) => this.secure(dto, session))
+    );
+  }
+
   private async secure(
     dto: UnsecuredDto<PeriodicReport>,
     session: Session
