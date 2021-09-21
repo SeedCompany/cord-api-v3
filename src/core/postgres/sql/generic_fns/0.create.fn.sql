@@ -28,10 +28,10 @@ pToggleGranters => 0,1,2,3
 create or replace procedure public.create(pPersonId int, pTableName text, 
 -- get record
 pRecord hstore,
-pToggleSecurity public.toggle_security, 
-pToggleMV public.toggle_mv, 
-pToggleHistory public.toggle_history,
-pToggleGranters public.toggle_granters, 
+pToggleSecurity public.toggle_security default 'UpdateAccessLevelAndIsCleared',  
+pToggleMV public.toggle_mv default 'RefreshMVConcurrently', 
+pToggleHistory public.toggle_history default 'History',
+pToggleGranters public.toggle_granters default 'RefreshSecurityTablesAndMVConcurrently', 
 inout record_id int
 )
 -- returns int 

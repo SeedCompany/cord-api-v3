@@ -61,10 +61,10 @@ export class PostgresService {
     personId: number,
     tableName: string,
     rowToInsert: object,
-    toggleSecurity: toggleSecurity,
-    toggleMV: toggleMV,
-    toggleHistory: toggleHistory,
-    toggleGranters: toggleGranters
+    toggleSecurity: toggleSecurity = 'UpdateAccessLevelAndIsClearedSecurity',
+    toggleMV: toggleMV = 'RefreshMVConcurrently',
+    toggleHistory: toggleHistory = 'History',
+    toggleGranters: toggleGranters = 'RefreshSecurityTablesAndMVConcurrently'
   ) {
     const hstoreString = this.convertObjectToHstore(rowToInsert);
     const insertedRow = await this.pool.query(
