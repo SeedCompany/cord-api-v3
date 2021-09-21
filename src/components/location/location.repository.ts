@@ -73,20 +73,12 @@ export class LocationRepository extends DtoRepository(Location) {
     console.log('result: ', result);
     const chatId = chat.rows[0].chat_id;
 
-    await this.pg.create(
-      0,
-      'public.locations_data',
-      {
-        neo4j_id: result.id,
-        name: input.name,
-        type: input.type,
-        chat_id: chatId + 1,
-      },
-      'UpdateAccessLevelAndIsClearedSecurity',
-      'RefreshMVConcurrently',
-      'History',
-      'RefreshSecurityTablesAndMVConcurrently'
-    );
+    await this.pg.create(0, 'public.locations_data', {
+      neo4j_id: result.id,
+      name: input.name,
+      type: input.type,
+      chat_id: chatId + 1,
+    });
 
     return result.id;
   }

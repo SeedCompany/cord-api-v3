@@ -47,19 +47,11 @@ export class FundingAccountRepository extends DtoRepository(FundingAccount) {
 
     console.log(query.first.toString());
     const result = await query.first();
-    await this.pg.create(
-      0,
-      'sc.funding_account_data',
-      {
-        account_number: input.accountNumber,
-        name: input.name,
-        neo4j_id: result?.id,
-      },
-      'UpdateAccessLevelAndIsClearedSecurity',
-      'RefreshMVConcurrently',
-      'History',
-      'RefreshSecurityTablesAndMVConcurrently'
-    );
+    await this.pg.create(0, 'sc.funding_account_data', {
+      account_number: input.accountNumber,
+      name: input.name,
+      neo4j_id: result?.id,
+    });
     return result;
   }
 
@@ -101,8 +93,14 @@ export class FundingAccountRepository extends DtoRepository(FundingAccount) {
       .apply(sorting(FundingAccount, input))
       .apply(paginate(input, this.hydrate()))
       .first();
-    // const pgResult = await this.pg.pool.query(`select `);
+    const { count, order, page, sort } = input;
+    const pgResult = await this.pg.pool.query(
+      `select * from sc.funding_account_data order by $1 limit $2 offset $3`,
+      [`${count} ${order}`, count, (page - 1) * count]
+    );
+    console.log(pgResult);
     console.log('fundingAccounts', { neo4j: result });
+    console.log('fundingAccountInput', FundingAccountListInput);
     return result!; // result from paginate() will always have 1 row.
   }
 }

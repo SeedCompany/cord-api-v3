@@ -228,38 +228,22 @@ export class UserRepository extends DtoRepository(User) {
       }
     }
 
-    const newPersonId = await this.pg.create(
-      0,
-      'public.people_data',
-      {
-        neo4j_id: result.id,
-        public_first_name: input.displayFirstName,
-        public_last_name: input.displayLastName,
-        private_first_name: input.realFirstName,
-        private_last_name: input.realLastName,
-        time_zone: input.timezone,
-        about: input.about,
-        phone: input.phone,
-      },
-      'UpdateAccessLevelAndIsClearedSecurity',
-      'RefreshMVConcurrently',
-      'History',
-      'RefreshSecurityTablesAndMVConcurrently'
-    );
-    await this.pg.create(
-      0,
-      'public.users_data',
-      {
-        person: newPersonId,
-        email: input.email,
-        password: 'password',
-        owning_org: 0,
-      },
-      'UpdateAccessLevelAndIsClearedSecurity',
-      'RefreshMVConcurrently',
-      'History',
-      'RefreshSecurityTablesAndMVConcurrently'
-    );
+    const newPersonId = await this.pg.create(0, 'public.people_data', {
+      neo4j_id: result.id,
+      public_first_name: input.displayFirstName,
+      public_last_name: input.displayLastName,
+      private_first_name: input.realFirstName,
+      private_last_name: input.realLastName,
+      time_zone: input.timezone,
+      about: input.about,
+      phone: input.phone,
+    });
+    await this.pg.create(0, 'public.users_data', {
+      person: newPersonId,
+      email: input.email,
+      password: 'password',
+      owning_org: 0,
+    });
 
     return result.id;
   }
@@ -574,58 +558,59 @@ export class UserRepository extends DtoRepository(User) {
 
     const pool = await this.pg.pool;
     let pgResult;
-    if(!primary){
+    if (!primary) {
       // Check if it's a neo4j_id or a pg id
-      if(typeof(userId) === 'string' && typeof(orgId) === 'string'){
+      if (typeof userId === 'string' && typeof orgId === 'string') {
         const resultPeople = await pool.query(
           `select id from public.people_data where neo4j_id = $1`,
           [userId]
         );
 
-        if(!resultPeople.rows[0]) return;
+        if (!resultPeople.rows[0]) return;
         const resultPeopleId = resultPeople.rows[0].id;
-        
+
         const resultUser = await pool.query(
           `select id from public.users_data where person = $1`,
           [resultPeopleId]
-        )
+        );
 
         const resultOrg = await pool.query(
           `select id from public.organizations_data where neo4j_id = $1`,
           [orgId]
-        )
-        
+        );
+
         const resultUserId = resultUser.rows[0].id;
         const resultOrgId = resultOrg.rows[0].id;
         pgResult = await pool.query(
           `UPDATE public.users_data
            SET owning_org = $1
-           WHERE id = $2`
-           ,[resultOrgId, resultUserId]
-        )
-      }else{
+           WHERE id = $2`,
+          [resultOrgId, resultUserId]
+        );
+      } else {
         pgResult = await pool.query(
           `UPDATE public.users_data
            SET owning_org = $1
            WHERE id = $2
-           `, [orgId, userId]
-        )
-      };
-    }else{
-      if(typeof(userId) === 'string' && typeof(orgId) === 'string'){
+           `,
+          [orgId, userId]
+        );
+      }
+    } else {
+      if (typeof userId === 'string' && typeof orgId === 'string') {
         pgResult = pool.query(
           `UPDATE public.people_data
            SET primary_location = $1
            WHERE neo4j_id = $2`,
-           [orgId, userId]
-        )
-      }else{
+          [orgId, userId]
+        );
+      } else {
         pgResult = pool.query(
           `UPDATE public.people_data
            SET primary_location = $1
            WHERE id = $2`,
-           [orgId, userId]
-        )
+          [orgId, userId]
+        );
       }
     }
 
