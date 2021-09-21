@@ -352,7 +352,7 @@ export const MarketingOnProject = new DbRole({
         { propertyName: 'tags', permission: { read, }, },
         { propertyName: 'financialReportReceivedAt', permission: { read, }, },
         { propertyName: 'posts', permission: { read, write, }, },
-        { propertyName: 'presetInventory', permission: { read, write, }, },
+        { propertyName: 'presetInventory', permission: { read, }, },
       ],
       canDelete: false,
     }),
