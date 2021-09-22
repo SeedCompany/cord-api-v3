@@ -1,5 +1,5 @@
 import { node, relation } from 'cypher-query-builder';
-import { ID, ServerException } from '../../../common';
+import { ServerException } from '../../../common';
 import {
   DatabaseService,
   EventsHandler,
@@ -29,14 +29,7 @@ export class ApplyFinalizedChangesetToProject
 
     const changesetId = event.changeRequest.id;
     const status = event.changeRequest.status;
-    if (status === ProjectChangeRequestStatus.Approved) {
-      await this.approveProjectChangeset(changesetId);
-    } else if (status === ProjectChangeRequestStatus.Rejected) {
-      await this.rejectProjectChangeset(changesetId);
-    }
-  }
 
-  async approveProjectChangeset(changesetId: ID) {
     try {
       const query = this.db
         .query()
@@ -45,7 +38,11 @@ export class ApplyFinalizedChangesetToProject
           relation('out', '', 'changeset', ACTIVE),
           node('changeset', 'Changeset', { id: changesetId }),
         ])
-        .apply(commitChangesetProps())
+        .apply(
+          status === ProjectChangeRequestStatus.Approved
+            ? commitChangesetProps()
+            : rejectChangesetProps()
+        )
         // Apply pending budget records
         .subQuery((sub) =>
           sub
@@ -60,11 +57,19 @@ export class ApplyFinalizedChangesetToProject
               relation('in', '', 'changeset', ACTIVE),
               node('changeset', 'Changeset', { id: changesetId }),
             ])
-            .setValues({
-              'recordRel.active': true,
-            })
+            .apply((q) =>
+              status === ProjectChangeRequestStatus.Approved
+                ? q.setValues({
+                    'recordRel.active': true,
+                  })
+                : q
+            )
             .with('br, changeset')
-            .apply(commitChangesetProps({ nodeVar: 'br' }))
+            .apply(
+              status === ProjectChangeRequestStatus.Approved
+                ? commitChangesetProps({ nodeVar: 'br' })
+                : rejectChangesetProps({ nodeVar: 'br' })
+            )
             .return('br')
         )
         .return('node');
@@ -73,42 +78,6 @@ export class ApplyFinalizedChangesetToProject
     } catch (exception) {
       throw new ServerException(
         'Failed to apply changeset to project',
-        exception
-      );
-    }
-  }
-
-  async rejectProjectChangeset(changesetId: ID) {
-    try {
-      // Reject Project and Budget records properties
-      const query = this.db
-        .query()
-        .match([
-          node('project', 'Project'),
-          relation('out', '', 'changeset', ACTIVE),
-          node('changeset', 'Changeset', { id: changesetId }),
-        ])
-        .apply(rejectChangesetProps())
-        .subQuery((sub) =>
-          sub
-            .with('project, changeset')
-            .match([
-              node('project'),
-              relation('out', '', 'budget', ACTIVE),
-              node('budget', 'Budget'),
-              relation('out', 'recordRel', 'record', INACTIVE),
-              node('br', 'BudgetRecord'),
-              relation('in', '', 'changeset', ACTIVE),
-              node('changeset', 'Changeset', { id: changesetId }),
-            ])
-            .apply(rejectChangesetProps({ nodeVar: 'br' }))
-            .return('br')
-        )
-        .return('project');
-      await query.run();
-    } catch (exception) {
-      throw new ServerException(
-        'Failed to reject changeset to project',
         exception
       );
     }

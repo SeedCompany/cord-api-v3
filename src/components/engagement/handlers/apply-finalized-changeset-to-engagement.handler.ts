@@ -30,14 +30,7 @@ export class ApplyFinalizedChangesetToEngagement
 
     const changesetId = event.changeRequest.id;
     const status = event.changeRequest.status;
-    if (status === ProjectChangeRequestStatus.Approved) {
-      await this.approveEngagementChangeset(changesetId);
-    } else if (status === ProjectChangeRequestStatus.Rejected) {
-      await this.rejectEngagementChangeset(changesetId);
-    }
-  }
 
-  async approveEngagementChangeset(changesetId: ID) {
     try {
       // Update project engagement pending changes
       const engagements = await this.db
@@ -69,14 +62,21 @@ export class ApplyFinalizedChangesetToEngagement
               relation('in', 'changesetRel', 'changeset', ACTIVE),
               node('changeset'),
             ])
-            .setValues({
-              'engagementRel.active': true,
-            })
+            .apply((q) =>
+              status === ProjectChangeRequestStatus.Approved
+                ? q.setValues({
+                    'engagementRel.active': true,
+                  })
+                : q.apply(rejectChangesetProps())
+            )
             .return('node')
         )
         .return<{ id: ID }>(['node.id as id'])
         .run();
 
+      if (status !== ProjectChangeRequestStatus.Approved) {
+        return;
+      }
       await Promise.all(
         engagements.map(async ({ id }) => {
           // Skip looping for engagements created in changeset
@@ -100,51 +100,6 @@ export class ApplyFinalizedChangesetToEngagement
     } catch (exception) {
       throw new ServerException(
         'Failed to apply changeset to project',
-        exception
-      );
-    }
-  }
-
-  async rejectEngagementChangeset(changesetId: ID) {
-    try {
-      // Reject Engagement properties
-      const query = this.db
-        .query()
-        .match([
-          node('project', 'Project'),
-          relation('out', '', 'changeset', ACTIVE),
-          node('changeset', 'Changeset', { id: changesetId }),
-        ])
-        .subQuery((sub) =>
-          sub
-            .with('project')
-            .match([
-              node('project'),
-              relation('out', 'engagementRel', 'engagement', {
-                active: true,
-              }),
-              node('engagement', 'Engagement'),
-            ])
-            .return('engagement')
-            .union()
-            .with('project, changeset')
-            .match([
-              node('project'),
-              relation('out', 'engagementRel', 'engagement', {
-                active: false,
-              }),
-              node('engagement', 'Engagement'),
-              relation('in', 'changesetRel', 'changeset', ACTIVE),
-              node('changeset'),
-            ])
-            .apply(rejectChangesetProps({ nodeVar: 'engagement' }))
-            .return('engagement')
-        )
-        .return('project');
-      await query.run();
-    } catch (exception) {
-      throw new ServerException(
-        'Failed to reject changeset to engagement',
         exception
       );
     }
