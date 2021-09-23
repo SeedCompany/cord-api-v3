@@ -124,9 +124,12 @@ export class UserResolver {
       type: () => UserListInput,
       defaultValue: UserListInput.defaultVal,
     })
-    input: UserListInput
+    input: UserListInput,
+    @Loader(UserLoader) users: LoaderOf<UserLoader>
   ): Promise<UserListOutput> {
-    return await this.userService.list(input, session);
+    const list = await this.userService.list(input, session);
+    users.primeAll(list.items);
+    return list;
   }
 
   @Query(() => Boolean, {
