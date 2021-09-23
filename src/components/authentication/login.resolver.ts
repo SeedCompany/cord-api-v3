@@ -8,10 +8,10 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { AnonSession, GqlContextType, Session } from '../../common';
-import { DataLoader, Loader } from '../../core';
+import { Loader, LoaderOf } from '../../core';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto';
-import { User } from '../user';
+import { User, UserLoader } from '../user';
 import { AuthenticationService } from './authentication.service';
 import { LoginInput, LoginOutput, RegisterOutput } from './dto';
 
@@ -51,7 +51,7 @@ export class LoginResolver {
   @ResolveField(() => User, { description: 'The logged-in user' })
   async user(
     @Parent() { user }: RegisterOutput,
-    @Loader(User) users: DataLoader<User>
+    @Loader(UserLoader) users: LoaderOf<UserLoader>
   ): Promise<User> {
     return await users.load(user);
   }

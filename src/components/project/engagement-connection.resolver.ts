@@ -10,7 +10,7 @@ export class ProjectEngagementConnectionResolver {
   @ResolveField(() => IProject)
   async project(
     @Parent() engagement: IEngagement,
-    @Loader(IProject) projects: LoaderOf<ProjectLoader>
+    @Loader(ProjectLoader) projects: LoaderOf<ProjectLoader>
   ) {
     return await projects.load({
       id: engagement.project,

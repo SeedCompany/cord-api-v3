@@ -1,4 +1,4 @@
-import { Duration, DurationInput } from 'luxon';
+import { Duration, DurationLike } from 'luxon';
 
 export type Many<T> = T | readonly T[];
 export const many = <T>(item: Many<T>): readonly T[] =>
@@ -8,7 +8,7 @@ export const maybeMany = <T>(
   item: Many<T> | null | undefined
 ): readonly T[] | undefined => (item != null ? many(item) : undefined);
 
-export const sleep = (duration: DurationInput) =>
+export const sleep = (duration: DurationLike) =>
   new Promise((resolve) =>
     setTimeout(resolve, Duration.from(duration).toMillis())
   );

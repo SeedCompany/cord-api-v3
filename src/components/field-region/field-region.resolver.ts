@@ -50,7 +50,7 @@ export class FieldRegionResolver {
     })
     input: FieldRegionListInput
   ): Promise<FieldRegionListOutput> {
-    return this.fieldRegionService.list(input, session);
+    return await this.fieldRegionService.list(input, session);
   }
 
   @ResolveField(() => SecuredUser)

@@ -221,11 +221,7 @@ export class EngagementService {
   }
 
   private verifyCreationStatus(status?: EngagementStatus) {
-    if (
-      status &&
-      status !== EngagementStatus.InDevelopment &&
-      !this.config.migration
-    ) {
+    if (status && status !== EngagementStatus.InDevelopment) {
       throw new InputException(
         'The Engagement status should be in development',
         'engagement.status'
@@ -511,7 +507,7 @@ export class EngagementService {
     const { product: perms } = await this.authorizationService.getPermissions({
       resource: LanguageEngagement,
       sessionOrUserId: session,
-      otherRoles: await this.repo.rolesInScope(engagement.id, session),
+      dto: engagement,
     });
     if (!perms.canRead) {
       return SecuredList.Redacted;
@@ -612,10 +608,7 @@ export class EngagementService {
    * [BUSINESS RULE] Only Projects with a Status of 'In Development' can have Engagements created or deleted.
    */
   protected async verifyProjectStatus(projectId: ID, session: Session) {
-    if (
-      this.config.migration ||
-      session.roles.includes('global:Administrator')
-    ) {
+    if (session.roles.includes('global:Administrator')) {
       return;
     }
 

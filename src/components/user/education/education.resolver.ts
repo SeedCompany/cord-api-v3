@@ -55,7 +55,7 @@ export class EducationResolver {
     })
     input: EducationListInput
   ): Promise<EducationListOutput> {
-    return this.service.list(input, session);
+    return await this.service.list(input, session);
   }
 
   @Mutation(() => UpdateEducationOutput, {

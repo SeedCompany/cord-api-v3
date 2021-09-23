@@ -2,7 +2,12 @@ import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { startCase, times } from 'lodash';
-import { DateTime, Duration, DurationObject, Settings } from 'luxon';
+import {
+  DateTime,
+  Duration,
+  DurationObjectUnits as DurationObject,
+  Settings,
+} from 'luxon';
 import { bufferFromStream, ID } from '../src/common';
 import { Role } from '../src/components/authorization';
 import {

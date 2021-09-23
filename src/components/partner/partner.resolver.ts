@@ -52,7 +52,7 @@ export class PartnerResolver {
     })
     input: PartnerListInput
   ): Promise<PartnerListOutput> {
-    return this.partnerService.list(input, session);
+    return await this.partnerService.list(input, session);
   }
 
   @ResolveField(() => SecuredOrganization)

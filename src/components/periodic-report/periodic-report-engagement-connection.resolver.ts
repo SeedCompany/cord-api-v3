@@ -24,7 +24,7 @@ export class PeriodicReportEngagementConnectionResolver {
     })
     input: PeriodicReportListInput
   ): Promise<SecuredPeriodicReportList> {
-    return this.service.list(
+    return await this.service.list(
       engagement.id,
       ReportType.Progress,
       input,

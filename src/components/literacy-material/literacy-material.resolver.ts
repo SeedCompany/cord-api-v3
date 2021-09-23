@@ -39,7 +39,7 @@ export class LiteracyMaterialResolver {
     })
     input: LiteracyMaterialListInput
   ): Promise<LiteracyMaterialListOutput> {
-    return this.literacyMaterialService.list(input, session);
+    return await this.literacyMaterialService.list(input, session);
   }
 
   @Mutation(() => CreateLiteracyMaterialOutput, {

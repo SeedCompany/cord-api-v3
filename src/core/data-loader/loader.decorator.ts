@@ -1,4 +1,4 @@
-import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+import { createParamDecorator, ExecutionContext, Type } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import {
   GqlExecutionContext,
@@ -6,12 +6,7 @@ import {
 } from '@nestjs/graphql';
 // eslint-disable-next-line no-restricted-imports -- the one spot we do want to import it
 import * as DataLoaderLib from 'dataloader';
-import {
-  AbstractClassType,
-  GqlContextType,
-  ID,
-  ServerException,
-} from '../../common';
+import { GqlContextType, ID, ServerException } from '../../common';
 import { NEST_LOADER_CONTEXT_KEY } from './constants';
 import { DataLoaderInterceptor } from './data-loader.interceptor';
 
@@ -59,13 +54,7 @@ export interface NestDataLoader<T, Key = ID, CachedKey = Key> {
  * The decorator to be used within your graphql method.
  */
 export const Loader = createParamDecorator(
-  (data: AbstractClassType<any>, context: ExecutionContext) => {
-    let name = data?.name;
-    if (!name) {
-      throw new ServerException(`Invalid name provider to @Loader ('${name}')`);
-    }
-    name += 'Loader';
-
+  (type: Type<NestDataLoader<any, any>>, context: ExecutionContext) => {
     if (context.getType<GqlRequestType>() !== 'graphql') {
       throw new ServerException(
         '@Loader should only be used within the GraphQL context'
@@ -79,6 +68,6 @@ export const Loader = createParamDecorator(
       );
     }
 
-    return ctx[NEST_LOADER_CONTEXT_KEY].getLoader(name);
+    return ctx[NEST_LOADER_CONTEXT_KEY].getLoader(type);
   }
 );

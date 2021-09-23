@@ -5,7 +5,7 @@ import { RegisterInput } from '../../src/components/authentication';
 import { Powers, Role } from '../../src/components/authorization';
 import { User, UserStatus } from '../../src/components/user';
 import { TestApp } from './create-app';
-import { fragments } from './fragments';
+import { fragments, RawUser } from './fragments';
 import { grantPower } from './grant-power';
 import { login, runAsAdmin, runInIsolatedSession } from './login';
 
@@ -51,7 +51,7 @@ export async function registerUserWithStrictInput(
       input: user,
     }
   );
-  const actual: User = result.register.user;
+  const actual: RawUser = result.register.user;
   expect(actual).toBeTruthy();
 
   expect(isValidId(actual.id)).toBe(true);

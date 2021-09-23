@@ -34,7 +34,6 @@ import {
   sorting,
   whereNotDeletedInChangeset,
 } from '../../core/database/query';
-import { Role, rolesForScope } from '../authorization';
 import { FileId } from '../file';
 import { ProjectType } from '../project';
 import {
@@ -424,31 +423,6 @@ export class EngagementRepository extends CommonRepository {
       .return<{ id: ID }>('engagement.id as id')
       .run();
     return rows.map((r) => r.id);
-  }
-
-  async rolesInScope(engagementId: string, session: Session) {
-    const query = this.db
-      .query()
-      .match([
-        node('eng', 'Engagement', { id: engagementId }),
-        relation('in', 'engagement', ACTIVE),
-        node('node', 'Project'),
-        relation('out', '', 'member', ACTIVE),
-        node('projectMember', 'ProjectMember'),
-        relation('out', '', 'user', ACTIVE),
-        node('user', 'User', { id: session.userId }),
-      ])
-      .match([
-        node('projectMember'),
-        relation('out', 'r', 'roles', ACTIVE),
-        node('roles', 'Property'),
-      ])
-      .return<{ memberRoles: Role[] }>(
-        'apoc.coll.flatten(collect(roles.value)) as memberRoles'
-      );
-    const roles = await query.first();
-
-    return roles?.memberRoles.map(rolesForScope('project')) ?? [];
   }
 
   async verifyRelationshipEligibility(

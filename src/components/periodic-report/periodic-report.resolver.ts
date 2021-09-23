@@ -6,8 +6,8 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { CalendarDate, LoggedInSession, Session } from '../../common';
-import { DataLoader, Loader } from '../../core';
-import { FileNode, IFileNode, resolveDefinedFile, SecuredFile } from '../file';
+import { Loader, LoaderOf } from '../../core';
+import { FileNodeLoader, resolveDefinedFile, SecuredFile } from '../file';
 import {
   IPeriodicReport,
   UpdatePeriodicReportInput,
@@ -23,7 +23,7 @@ export class PeriodicReportResolver {
     description: 'When this report is due',
   })
   due(@Parent() report: IPeriodicReport) {
-    return report.end.plus({ month: 1 }).endOf('month');
+    return report.end.plus({ months: 1 }).endOf('month');
   }
 
   @Mutation(() => IPeriodicReport, {
@@ -49,7 +49,7 @@ export class PeriodicReportResolver {
   @ResolveField(() => SecuredFile)
   async reportFile(
     @Parent() report: IPeriodicReport,
-    @Loader(IFileNode) files: DataLoader<FileNode>
+    @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>
   ): Promise<SecuredFile> {
     return await resolveDefinedFile(files, report.reportFile);
   }

@@ -8,9 +8,10 @@ import {
 } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
-import { DataLoader, Loader } from '../../core';
-import { User } from '../user';
+import { Loader, LoaderOf } from '../../core';
+import { User, UserLoader } from '../user';
 import {
+  asFile,
   CreateFileVersionInput,
   File,
   FileListInput,
@@ -21,6 +22,7 @@ import {
   RenameFileInput,
   RequestUploadOutput,
 } from './dto';
+import { FileNodeLoader } from './file-node.loader';
 import { FileService } from './file.service';
 
 @Resolver(File)
@@ -30,17 +32,17 @@ export class FileResolver {
   @Query(() => File)
   async file(
     @IdArg() id: ID,
-    @LoggedInSession() session: Session
+    @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>
   ): Promise<File> {
-    return await this.service.getFile(id, session);
+    return asFile(await files.load(id));
   }
 
   @Query(() => IFileNode)
   async fileNode(
     @IdArg() id: ID,
-    @LoggedInSession() session: Session
+    @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>
   ): Promise<FileNode> {
-    return await this.service.getFileNode(id, session);
+    return await files.load(id);
   }
 
   @ResolveField(() => User, {
@@ -48,7 +50,7 @@ export class FileResolver {
   })
   async modifiedBy(
     @Parent() node: File,
-    @Loader(User) users: DataLoader<User>
+    @Loader(UserLoader) users: LoaderOf<UserLoader>
   ): Promise<User> {
     return await users.load(node.modifiedById);
   }
@@ -66,7 +68,7 @@ export class FileResolver {
     })
     input: FileListInput
   ): Promise<FileListOutput> {
-    return this.service.listChildren(node, input, session);
+    return await this.service.listChildren(node, input, session);
   }
 
   @ResolveField(() => String, {

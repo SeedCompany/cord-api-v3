@@ -407,10 +407,6 @@ export class EngagementRules {
     nextStatus: EngagementStatus,
     changeset?: ID
   ) {
-    if (this.config.migration) {
-      return;
-    }
-
     // If current user's roles include a role that can bypass workflow
     // stop the check here.
     const currentUserRoles = await this.getUserRoles(session.userId);

@@ -58,9 +58,6 @@ export class AttachProjectRootDirectoryHandler
       session.userId
     );
 
-    if (this.config.migration) {
-      return; // skip default directories for migration
-    }
     const folders = [
       'Approval Documents',
       'Consultant Reports',

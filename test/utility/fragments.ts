@@ -136,6 +136,7 @@ export const user = gql`
     }
   }
 `;
+export type RawUser = Merge<Raw<User>, { timezone: Secured<{ name: string }> }>;
 
 export const language = gql`
   fragment language on Language {
@@ -694,58 +695,106 @@ export const engagement = gql`
     id
     createdAt
     modifiedAt
+    sensitivity
     # status, // WIP
     status {
       value
+      canRead
+      canEdit
     }
     ceremony {
+      canRead
+      canEdit
       value {
         id
       }
     }
     completeDate {
+      canEdit
+      canRead
       value
     }
     disbursementCompleteDate {
+      canEdit
+      canRead
       value
     }
     startDate {
+      canEdit
+      canRead
+      value
+    }
+    startDateOverride {
+      canEdit
+      canRead
       value
     }
     endDate {
+      canEdit
+      canRead
+      value
+    }
+    endDateOverride {
+      canEdit
+      canRead
       value
     }
     initialEndDate {
+      canEdit
+      canRead
       value
     }
     lastSuspendedAt {
+      canEdit
+      canRead
       value
     }
     lastReactivatedAt {
+      canEdit
+      canRead
       value
     }
     statusModifiedAt {
+      canEdit
+      canRead
       value
     }
     ... on LanguageEngagement {
       language {
+        canEdit
+        canRead
         value {
           ...language
         }
       }
+      historicGoal {
+        canEdit
+        canRead
+        value
+      }
       firstScripture {
+        canEdit
+        canRead
         value
       }
       lukePartnership {
+        canEdit
+        canRead
         value
       }
       sentPrintingDate {
+        canEdit
+        canRead
         value
       }
       paratextRegistryId {
+        canEdit
+        canRead
         value
       }
       pnp {
+        canEdit
+        canRead
         value {
           id
         }

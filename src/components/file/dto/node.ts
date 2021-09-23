@@ -76,7 +76,9 @@ abstract class BaseFile extends FileNode {
   @Field()
   readonly mimeType: string;
 
-  @Field(() => Int)
+  @Field(() => Int, {
+    description: 'The total size in bytes of this file',
+  })
   readonly size: number;
 }
 
@@ -115,6 +117,28 @@ export class Directory extends FileNode {
   static readonly SecuredProps = keysOf<SecuredProps<Directory>>();
 
   readonly type: FileNodeType.Directory;
+
+  @Field(() => Int, {
+    description:
+      'The total size in bytes of all files under this directory and all its subdirectories',
+  })
+  readonly size: number;
+
+  @Field(() => Int, {
+    description:
+      'The total number of files under this directory and all its subdirectories',
+  })
+  readonly totalFiles: number;
+
+  readonly firstFileCreated?: ID;
+
+  readonly modifiedBy: ID;
+
+  @DateTimeField({
+    description:
+      'The `DateTime` a file was most recently modified in this directory or any subdirectories',
+  })
+  readonly modifiedAt: DateTime;
 }
 
 @ObjectType({
@@ -146,6 +170,13 @@ export const asDirectory = (node: AnyFileNode) => {
 
 export const isFile = (node: AnyFileNode): node is File =>
   node.type === FileNodeType.File;
+
+export const asFile = (node: AnyFileNode) => {
+  if (!isFile(node)) {
+    throw new InputException('Node is not a file');
+  }
+  return node;
+};
 
 export const isFileVersion = (node: AnyFileNode): node is FileVersion =>
   node.type === FileNodeType.FileVersion;

@@ -19,6 +19,6 @@ export class SearchResolver {
     })
     input: SearchInput
   ): Promise<SearchOutput> {
-    return this.service.search(input, session);
+    return await this.service.search(input, session);
   }
 }

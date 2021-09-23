@@ -141,17 +141,15 @@ export class ProjectService {
 
       const roles = await this.repo.getRoles(session);
 
-      if (!this.config.migration) {
-        // Add creator to the project team if not in migration
-        await this.projectMembers.create(
-          {
-            userId: session.userId,
-            projectId: id,
-            roles,
-          },
-          session
-        );
-      }
+      // Add creator to the project team if not in migration
+      await this.projectMembers.create(
+        {
+          userId: session.userId,
+          projectId: id,
+          roles,
+        },
+        session
+      );
 
       await this.authorizationService.processNewBaseNode(
         IProject,

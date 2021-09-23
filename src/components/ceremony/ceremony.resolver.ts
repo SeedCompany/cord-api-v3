@@ -35,7 +35,7 @@ export class CeremonyResolver {
     })
     input: CeremonyListInput
   ): Promise<CeremonyListOutput> {
-    return this.service.list(input, session);
+    return await this.service.list(input, session);
   }
 
   @Mutation(() => UpdateCeremonyOutput, {
