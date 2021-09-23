@@ -4,7 +4,8 @@ import {
   SecuredList,
   SortablePaginationInput,
 } from '../../../common';
-import { IPeriodicReport, PeriodicReport } from './periodic-report.dto';
+import { PeriodicReport } from './merge-periodic-report.dto';
+import { IPeriodicReport } from './periodic-report.dto';
 
 @InputType()
 export class PeriodicReportListInput extends SortablePaginationInput<

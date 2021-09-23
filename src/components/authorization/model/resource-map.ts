@@ -16,12 +16,12 @@ import { FundingAccount } from '../../funding-account/dto';
 import { EthnologueLanguage, Language } from '../../language/dto';
 import { LiteracyMaterial } from '../../literacy-material/dto';
 import { Location } from '../../location/dto';
+import { NarrativeReport } from '../../narrative-report/dto';
 import { Organization } from '../../organization/dto';
 import { Partner } from '../../partner/dto';
 import { Partnership } from '../../partnership/dto';
 import {
   FinancialReport,
-  NarrativeReport,
   IPeriodicReport as PeriodicReport,
   ProgressReport,
 } from '../../periodic-report/dto';

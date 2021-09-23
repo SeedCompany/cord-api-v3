@@ -14,11 +14,10 @@ import { Variable } from '../../core/database/query';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { FileService } from '../file';
+import { NarrativeReport } from '../narrative-report/dto';
 import {
   CreatePeriodicReport,
   FinancialReport,
-  IPeriodicReport,
-  NarrativeReport,
   PeriodicReport,
   PeriodicReportListInput,
   ProgressReport,
@@ -131,7 +130,7 @@ export class PeriodicReportService {
     session: Session
   ): Promise<PeriodicReport> {
     const securedProps = await this.authorizationService.secureProperties(
-      IPeriodicReport,
+      resolveReportType(dto),
       dto,
       session,
       dto.scope
