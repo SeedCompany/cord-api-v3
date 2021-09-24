@@ -7,7 +7,5 @@ export const fiscalYear = (dt: DateTime) =>
 export const fiscalYears = (start?: DateTime, end?: DateTime) =>
   start && end ? range(fiscalYear(start), fiscalYear(end) + 1) : [];
 
-export const fiscalQuarter = (dt: DateTime) => {
-  const fiscalMonth = dt.plus({ months: 3 }).month;
-  return Math.floor((fiscalMonth + 2) / 3);
-};
+export const fiscalQuarter = (dt: DateTime) =>
+  dt.quarter === 4 ? 1 : dt.quarter + 1;
