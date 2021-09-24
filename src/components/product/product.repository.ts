@@ -40,6 +40,7 @@ import {
   UpdateProduct,
 } from './dto';
 import { ProgressMeasurement } from './dto/progress-measurement.enum';
+import { productListFilter } from './query.helpers';
 
 @Injectable()
 export class ProductRepository extends CommonRepository {
@@ -318,6 +319,7 @@ export class ProductRepository extends CommonRepository {
             ]
           : []),
       ])
+      .apply(productListFilter(filter))
       .apply(sorting(Product, input))
       .apply(paginate(input))
       .first();
