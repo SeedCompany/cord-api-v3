@@ -141,13 +141,13 @@ export class PeriodicReportService {
   }
 
   async list(
-    projectId: ID,
+    parentId: ID,
     reportType: ReportType,
     input: PeriodicReportListInput,
     session: Session
   ): Promise<SecuredPeriodicReportList> {
     const results = await this.repo.listReports(
-      projectId,
+      parentId,
       reportType,
       input,
       session
