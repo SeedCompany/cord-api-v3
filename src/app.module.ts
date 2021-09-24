@@ -19,6 +19,7 @@ import { FundingAccountModule } from './components/funding-account/funding-accou
 import { LanguageModule } from './components/language/language.module';
 import { LiteracyMaterialModule } from './components/literacy-material/literacy-material.module';
 import { LocationModule } from './components/location/location.module';
+import { NarrativeReportModule } from './components/narrative-report';
 import { OrganizationModule } from './components/organization/organization.module';
 import { PartnerModule } from './components/partner/partner.module';
 import { PartnershipProducingMediumModule } from './components/partnership-producing-medium/partnership-producing-medium.module';
@@ -31,6 +32,7 @@ import { ProductModule } from './components/product/product.module';
 import { ProgressSummaryModule } from './components/progress-summary/progress-summary.module';
 import { ProjectChangeRequestModule } from './components/project-change-request/project-change-request.module';
 import { ProjectModule } from './components/project/project.module';
+import { QuestionAnswerModule } from './components/question-answer';
 import { ScriptureModule } from './components/scripture/scripture.module';
 import { SearchModule } from './components/search/search.module';
 import { SongModule } from './components/song/song.module';
@@ -82,6 +84,8 @@ assert(
     ProjectChangeRequestModule,
     ProductProgressModule,
     PartnershipProducingMediumModule,
+    NarrativeReportModule,
+    QuestionAnswerModule,
   ],
   controllers: [],
   providers: [DateTimeScalar, DateScalar, UrlScalar],
