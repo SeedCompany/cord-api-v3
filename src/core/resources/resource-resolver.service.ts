@@ -86,13 +86,13 @@ export class ResourceResolver {
     id: ID,
     session: Session,
     view?: ObjectView
-  ): Promise<SomeResource>;
+  ): Promise<SomeResource['prototype'] & { __typename: string }>;
   async lookup(
     possibleTypes: Many<string | SomeResource>,
     id: ID,
     session: Session,
     view?: ObjectView
-  ): Promise<SomeResource> {
+  ): Promise<SomeResource['prototype'] & { __typename: string }> {
     const type = this.resolveType(possibleTypes);
     const discovered = await this.discover.providerMethodsWithMetaAtKey<Shape>(
       RESOLVE_BY_ID
