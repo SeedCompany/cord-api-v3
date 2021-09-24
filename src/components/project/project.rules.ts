@@ -997,10 +997,7 @@ export class ProjectRules {
     id: ID,
     steps: ProjectStep[]
   ): Promise<ProjectStep> {
-    const prevSteps = [
-      ...(await this.getPreviousSteps(id)),
-      await this.getCurrentStep(id),
-    ];
+    const prevSteps = await this.getPreviousSteps(id);
     const mostRecentMatchedStep = first(intersection(prevSteps, steps));
     if (!mostRecentMatchedStep) {
       throw new ServerException(
@@ -1019,7 +1016,7 @@ export class ProjectRules {
       .match([
         node('node', 'Project', { id }),
         relation('out', '', 'step', INACTIVE),
-        node('prop'),
+        node('prop', 'Deleted_ProjectStep'),
       ])
       .with('prop')
       .orderBy('prop.createdAt', 'DESC')
