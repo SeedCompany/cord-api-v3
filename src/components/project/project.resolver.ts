@@ -36,7 +36,11 @@ import {
   SecuredLocationList,
 } from '../location';
 import { OrganizationLoader, SecuredOrganization } from '../organization';
-import { PartnershipListInput, SecuredPartnershipList } from '../partnership';
+import {
+  PartnershipListInput,
+  PartnershipLoader,
+  SecuredPartnershipList,
+} from '../partnership';
 import { ProjectChangeRequestLoader } from '../project-change-request';
 import {
   ProjectChangeRequestListInput,
@@ -203,9 +207,10 @@ export class ProjectResolver {
       type: () => PartnershipListInput,
       defaultValue: PartnershipListInput.defaultVal,
     })
-    input: PartnershipListInput
+    input: PartnershipListInput,
+    @Loader(PartnershipLoader) partnerships: LoaderOf<PartnershipLoader>
   ): Promise<SecuredPartnershipList> {
-    return await this.projectService.listPartnerships(
+    const list = await this.projectService.listPartnerships(
       project.id,
       input,
       session,
@@ -213,6 +218,8 @@ export class ProjectResolver {
       project.scope,
       project.changeset
     );
+    partnerships.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => SecuredDirectory, {

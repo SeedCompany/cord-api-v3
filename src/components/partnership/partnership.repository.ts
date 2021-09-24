@@ -80,17 +80,27 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
   }
 
   async readOne(id: ID, session: Session, view?: ObjectView) {
+    const results = await this.readMany([id], session, view);
+    if (!results[0]) {
+      throw new NotFoundException('Could not find partnership');
+    }
+
+    return results[0];
+  }
+
+  async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
     const label = labelForView('Partnership', view);
 
-    const query = this.db
+    return await this.db
       .query()
       .subQuery((sub) =>
         sub
           .match([
             node('project'),
             relation('out', '', 'partnership', ACTIVE),
-            node('node', label, { id }),
+            node('node', label),
           ])
+          .raw('WHERE node.id in $ids', { ids })
           .return('project, node')
           .apply((q) =>
             view?.changeset
@@ -99,10 +109,11 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
                   .match([
                     node('project'),
                     relation('out', '', 'partnership', INACTIVE),
-                    node('node', label, { id }),
+                    node('node', label),
                     relation('in', '', 'changeset', ACTIVE),
                     node('changeset', 'Changeset', { id: view.changeset }),
                   ])
+                  .raw('WHERE node.id in $ids')
                   .return('project, node')
               : q
           )
@@ -144,14 +155,9 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
           organization: 'org.id',
           changeset: 'changeset.id',
         }).as('dto')
-      );
-
-    const result = await query.first();
-    if (!result) {
-      throw new NotFoundException('Could not find partnership');
-    }
-
-    return result.dto;
+      )
+      .map('dto')
+      .run();
   }
 
   async list(

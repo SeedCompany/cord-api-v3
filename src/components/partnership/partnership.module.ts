@@ -5,6 +5,7 @@ import { FileModule } from '../file/file.module';
 import { PartnerModule } from '../partner/partner.module';
 import { ProjectModule } from '../project/project.module';
 import * as handlers from './handlers';
+import { PartnershipLoader } from './partnership.loader';
 import { PartnershipRepository } from './partnership.repository';
 import { PartnershipResolver } from './partnership.resolver';
 import { PartnershipService } from './partnership.service';
@@ -21,6 +22,7 @@ import { PartnershipService } from './partnership.service';
     PartnershipResolver,
     PartnershipService,
     PartnershipRepository,
+    PartnershipLoader,
     ...Object.values(handlers),
   ],
   exports: [PartnershipService],
