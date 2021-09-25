@@ -23,7 +23,6 @@ export class SyncPeriodicReportsToProjectDateRange
       event: event.constructor.name,
     });
 
-    await this.syncNarrative(event);
     await this.syncFinancial(event);
   }
 
@@ -90,38 +89,6 @@ export class SyncPeriodicReportsToProjectDateRange
         project.id,
         ReportType.Financial,
         project.mouEnd.endOf(projectIntervalUnit),
-        event.session
-      );
-    }
-  }
-
-  private async syncNarrative(event: SubscribedEvent) {
-    const diff = this.diffBy(event, 'quarter');
-    await this.periodicReports.delete(
-      event.updated.id,
-      ReportType.Narrative,
-      diff.removals
-    );
-
-    await Promise.all(
-      diff.additions.map((interval) =>
-        this.periodicReports.create(
-          {
-            start: interval.start,
-            end: interval.end,
-            type: ReportType.Narrative,
-            projectOrEngagementId: event.updated.id,
-          },
-          event.session
-        )
-      )
-    );
-
-    if (event.updated.mouEnd) {
-      await this.periodicReports.mergeFinalReport(
-        event.updated.id,
-        ReportType.Narrative,
-        event.updated.mouEnd.endOf('quarter'),
         event.session
       );
     }
