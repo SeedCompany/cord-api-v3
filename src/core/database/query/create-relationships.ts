@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { Maybe as Nullable } from 'graphql/jsutils/Maybe';
@@ -122,6 +123,18 @@ export function createRelationships<TResourceStatic extends ResourceShape<any>>(
 
   const createdAt = DateTime.local();
 
+  const returnTerms = flattened.flatMap((f) =>
+    f.id instanceof Variable ? [] : f.variable
+  );
+  if (returnTerms.length === 0) {
+    // Create hash based on input to use as a unique return since a return
+    // statement is required for sub-queries but not needed here.
+    const hash = createHash('sha1')
+      .update(resource.name + JSON.stringify(normalizedArgs))
+      .digest('base64');
+    returnTerms.push(`"${hash}"`);
+  }
+
   return (query: Query) => {
     return query.comment`
       createRelationships(${resource.name})
@@ -156,11 +169,7 @@ export function createRelationships<TResourceStatic extends ResourceShape<any>>(
               node(variable),
             ])
           )
-          .return(
-            flattened.flatMap((f) =>
-              f.id instanceof Variable ? [] : f.variable
-            )
-          )
+          .return(returnTerms)
     );
   };
 }
