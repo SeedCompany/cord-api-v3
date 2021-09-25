@@ -13,6 +13,7 @@ import { isEmpty } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   ID,
+  isIdLike,
   NotFoundException,
   ServerException,
   Session,
@@ -356,19 +357,10 @@ export class FileRepository extends CommonRepository {
     name: string,
     session: Session
   ): Promise<ID> {
-    const initialProps = {
-      name,
-      canDelete: true,
-    };
-
     const createFile = this.db
       .query()
-      .apply(await createNode(Directory, { initialProps }))
       .apply(
-        createRelationships(Directory, 'out', {
-          createdBy: ['User', session.userId],
-          parent: ['Directory', parentId],
-        })
+        await createDirectory({ name, parent: parentId, creator: session })
       )
       .return<{ id: ID }>('node.id as id');
 
@@ -515,6 +507,25 @@ export class FileRepository extends CommonRepository {
     }
   }
 }
+
+export const createDirectory = async ({
+  name,
+  parent,
+  creator,
+}: {
+  name: string;
+  parent?: ID;
+  creator: ID | Session;
+}) => {
+  const nodeCreator = await createNode(Directory, { initialProps: { name } });
+  return (query: Query) =>
+    query.apply(nodeCreator).apply(
+      createRelationships(Directory, 'out', {
+        createdBy: ['User', isIdLike(creator) ? creator : creator.userId],
+        parent: ['Directory', parent],
+      })
+    );
+};
 
 function first<T>(nodes: readonly T[]): T {
   const node = nodes[0];
