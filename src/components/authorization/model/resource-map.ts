@@ -39,6 +39,7 @@ import {
   TranslationProject,
 } from '../../project/dto';
 import { ProjectMember } from '../../project/project-member/dto';
+import { QuestionAnswer } from '../../question-answer/dto';
 import { Song } from '../../song/dto';
 import { Story } from '../../story/dto';
 import { User } from '../../user/dto';
@@ -87,6 +88,7 @@ export const ResourceMap = {
   Story,
   Unavailability,
   User,
+  QuestionAnswer,
 } as const;
 export type ResourceMap = typeof ResourceMap;
 
