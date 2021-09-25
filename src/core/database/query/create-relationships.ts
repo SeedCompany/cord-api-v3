@@ -4,13 +4,15 @@ import { Maybe as Nullable } from 'graphql/jsutils/Maybe';
 import { DateTime } from 'luxon';
 import { ID, many, ResourceShape } from '../../../common';
 import { ResourceMap } from '../../../components/authorization/model/resource-map';
+import { Variable } from '../query-augmentation/condition-variables';
 
 type RelationshipDefinition = Record<
   string,
-  [
-    baseNodeLabel: keyof ResourceMap | 'BaseNode',
-    id: Nullable<ID> | readonly ID[]
-  ]
+  | [
+      baseNodeLabel: keyof ResourceMap | 'BaseNode',
+      id: Nullable<ID> | readonly ID[]
+    ]
+  | Variable
 >;
 type AnyDirectionalDefinition = Partial<
   Record<RelationDirection, RelationshipDefinition>
@@ -45,6 +47,30 @@ type AnyDirectionalDefinition = Partial<
  *     createdBy: ['User', input.creatorId],
  *   },
  * })
+ *
+ * IDs can also be given as variables, referencing BaseNodes already defined
+ * in the query. In this case, this will import it into the sub-query instead of
+ * matching it, and it will also not return it so it doesn't conflict.
+ * @example
+ * .match([
+ *   [node('node', 'Location', { id })],
+ *   [node('user', 'User')], // `user` defined in query - in any way.
+ * ])
+ * .apply(createRelationships(Location, 'out', {
+ *   createdBy: variable('user'),
+ *   fundingAccount: ['FundingAccount', input.fundingAccountId]
+ * }))
+ * // This above yields the below cypher
+ * MATCH (node:Location { id: $id }),
+ *       (user:User)
+ * CALL {
+ *   WITH node, user
+ *   MATCH (fundingAccount:FundingAccount { id: $fundingAccountId })
+ *   CREATE (node)-[:fundingAccount]->(fundingAccount),
+ *          (node)-[:createdBy]->(user)
+ *   RETURN fundingAccount
+ * }
+ * // Note how `user` is imported, not matched, and not returned.
  */
 export function createRelationships<TResourceStatic extends ResourceShape<any>>(
   resource: TResourceStatic,
@@ -67,15 +93,20 @@ export function createRelationships<TResourceStatic extends ResourceShape<any>>(
 
   const flattened = Object.entries(normalizedArgs).flatMap(
     ([direction, relationships]) =>
-      Object.entries(relationships ?? {}).flatMap(
-        ([relLabel, [nodeLabel, ids]]) =>
-          many(ids ?? []).map((id, i) => ({
-            nodeLabel,
+      Object.entries(relationships ?? {}).flatMap(([relLabel, varOrTuple]) =>
+        many(Array.isArray(varOrTuple) ? varOrTuple[1] ?? [] : varOrTuple).map(
+          (id, i) => ({
+            nodeLabel: Array.isArray(varOrTuple) ? varOrTuple[0] : undefined, // no labels for variables
             id,
             direction: direction as RelationDirection,
             relLabel: relLabel,
-            variable: Array.isArray(ids) ? `${relLabel}${i}` : relLabel,
-          }))
+            variable: !Array.isArray(varOrTuple)
+              ? varOrTuple.value // For variables this is the variable's value
+              : Array.isArray(varOrTuple[1])
+              ? `${relLabel}${i}`
+              : relLabel,
+          })
+        )
       )
   );
 
@@ -90,33 +121,46 @@ export function createRelationships<TResourceStatic extends ResourceShape<any>>(
   );
 
   const createdAt = DateTime.local();
-  return (query: Query) =>
-    query.comment`
+
+  return (query: Query) => {
+    return query.comment`
       createRelationships(${resource.name})
-    `.subQuery('node', (sub) =>
-      sub
-        .match(
-          flattened.map(({ variable, nodeLabel, id }) => [
-            node(variable, nodeLabel, { id }),
-          ])
-        )
-        .create(
-          flattened.map(({ direction, relLabel, variable }) => [
-            node('node'),
-            relation(direction, '', relLabel, {
-              // When creating inside of changeset, all relationships into the
-              // node (besides changeset relation) are marked as inactive until
-              // changeset is applied
-              active: !(
-                inChangeset &&
-                direction === 'in' &&
-                relLabel !== 'changeset'
-              ),
-              createdAt,
-            }),
-            node(variable),
-          ])
-        )
-        .return(flattened.map((f) => f.variable))
+    `.subQuery(
+      [
+        'node',
+        ...flattened.flatMap(({ id }) =>
+          id instanceof Variable ? id.value : []
+        ),
+      ],
+      (sub) =>
+        sub
+          .match(
+            flattened.map(({ variable, nodeLabel, id }) =>
+              id instanceof Variable ? [] : [node(variable, nodeLabel, { id })]
+            )
+          )
+          .create(
+            flattened.map(({ direction, relLabel, variable }) => [
+              node('node'),
+              relation(direction, '', relLabel, {
+                // When creating inside of changeset, all relationships into the
+                // node (besides changeset relation) are marked as inactive until
+                // changeset is applied
+                active: !(
+                  inChangeset &&
+                  direction === 'in' &&
+                  relLabel !== 'changeset'
+                ),
+                createdAt,
+              }),
+              node(variable),
+            ])
+          )
+          .return(
+            flattened.flatMap((f) =>
+              f.id instanceof Variable ? [] : f.variable
+            )
+          )
     );
+  };
 }
