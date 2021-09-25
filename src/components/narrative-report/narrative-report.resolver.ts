@@ -2,13 +2,36 @@ import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { LoggedInSession, Session } from '../../common';
 import { ResourceResolver } from '../../core';
 import { LanguageEngagement } from '../engagement';
-import { QuestionBankEntry } from '../question-answer/dto';
+import {
+  QuestionAnswerService,
+  QuestionBankEntry,
+  SecuredQuestionAnswerList,
+} from '../question-answer';
 import { NarrativeReport } from './dto';
+import { NarrativeReportService } from './narrative-report.service';
 import { getBank } from './question-bank';
 
 @Resolver(NarrativeReport)
 export class NarrativeReportResolver {
-  constructor(private readonly resources: ResourceResolver) {}
+  constructor(
+    private readonly service: NarrativeReportService,
+    private readonly qa: QuestionAnswerService,
+    private readonly resources: ResourceResolver
+  ) {}
+
+  @ResolveField(() => SecuredQuestionAnswerList)
+  async questions(
+    @Parent() report: NarrativeReport,
+    @LoggedInSession() session: Session
+  ): Promise<SecuredQuestionAnswerList> {
+    const list = await this.qa.list(report.id, session);
+    const perms = await this.service.getQuestionPerms(report, session);
+    return {
+      ...list,
+      ...perms,
+      items: list.items.map(perms.secure),
+    };
+  }
 
   @ResolveField(() => [QuestionBankEntry])
   async questionBank(

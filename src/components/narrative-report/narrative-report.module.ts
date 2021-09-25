@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
+import { AuthorizationModule } from '../authorization/authorization.module';
 import { EngagementModule } from '../engagement/engagement.module';
 import { FileModule } from '../file/file.module';
 import { PeriodicReportModule } from '../periodic-report/periodic-report.module';
+import { QuestionAnswerModule } from '../question-answer';
 import { NarrativeReportEngagementConnectionResolver } from './engagement-connection.resolver';
 import * as handlers from './handlers';
 import { NarrativeReportRepository } from './narrative-report.repository';
@@ -9,7 +11,13 @@ import { NarrativeReportResolver } from './narrative-report.resolver';
 import { NarrativeReportService } from './narrative-report.service';
 
 @Module({
-  imports: [PeriodicReportModule, FileModule, EngagementModule],
+  imports: [
+    AuthorizationModule,
+    PeriodicReportModule,
+    FileModule,
+    EngagementModule,
+    QuestionAnswerModule,
+  ],
   providers: [
     NarrativeReportResolver,
     NarrativeReportEngagementConnectionResolver,
