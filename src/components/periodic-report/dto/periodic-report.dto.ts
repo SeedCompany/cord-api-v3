@@ -53,6 +53,12 @@ class PeriodicReport extends Resource {
   @Field()
   readonly receivedDate: SecuredDateNullable;
 
+  @Field()
+  readonly skipped: boolean;
+
+  @Field()
+  readonly skippedReason?: string;
+
   readonly reportFile: DefinedFile;
 
   @SensitivityField({

@@ -39,6 +39,8 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
       type: input.type,
       start: input.start,
       end: input.end,
+      skipped: input.skipped,
+      skippedReason: input.skippedReason,
       receivedDate: null,
       reportFile: reportFileId,
     };
