@@ -555,6 +555,7 @@ export const partner = gql`
     id
     createdAt
     modifiedAt
+    sensitivity
     organization {
       canEdit
       canRead
