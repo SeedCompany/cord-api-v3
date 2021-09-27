@@ -194,13 +194,13 @@ export class OrganizationService {
   }
 
   async listLocations(
-    organizationId: ID,
+    organization: Organization,
     input: LocationListInput,
     session: Session
   ): Promise<SecuredLocationList> {
-    return await this.locationService.listLocationsFromNode(
-      'Organization',
-      organizationId,
+    return await this.locationService.listLocationForResource(
+      Organization,
+      organization,
       'locations',
       input,
       session

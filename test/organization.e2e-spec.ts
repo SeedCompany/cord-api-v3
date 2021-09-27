@@ -25,7 +25,7 @@ describe('Organization e2e', () => {
     db = app.get(Connection);
     await createSession(app);
     await registerUserWithPower(app, [Powers.CreateOrganization], {
-      roles: [Role.FinancialAnalyst],
+      roles: [Role.Controller],
     });
   });
 

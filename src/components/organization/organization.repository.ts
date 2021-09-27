@@ -97,6 +97,7 @@ export class OrganizationRepository extends DtoRepository(Organization) {
         .return<{ dto: UnsecuredDto<Organization> }>(
           merge('props', {
             scope: 'scopedRoles',
+            sensitivity: 'sensitivity',
           }).as('dto')
         );
   }
