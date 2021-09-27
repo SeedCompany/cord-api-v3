@@ -4,7 +4,7 @@ import { ResourceResolver } from '../../core';
 import { LanguageEngagement } from '../engagement';
 import {
   QuestionAnswerService,
-  QuestionBankEntry,
+  QuestionBank,
   SecuredQuestionAnswerList,
 } from '../question-answer';
 import { NarrativeReport } from './dto';
@@ -33,11 +33,11 @@ export class NarrativeReportResolver {
     };
   }
 
-  @ResolveField(() => [QuestionBankEntry])
+  @ResolveField(() => QuestionBank)
   async questionBank(
     @Parent() report: NarrativeReport,
     @LoggedInSession() session: Session
-  ): Promise<readonly QuestionBankEntry[]> {
+  ): Promise<QuestionBank> {
     // TODO use EngagementLoader whn available
     const parent = await this.resources.lookupByBaseNode(
       report.parent,
@@ -46,10 +46,8 @@ export class NarrativeReportResolver {
     const isLangEng = (obj: typeof parent): obj is LanguageEngagement =>
       parent.__typename === 'LanguageEngagement';
     if (!isLangEng(parent)) {
-      return [];
+      return { categories: [] };
     }
-    return getBank().filter((entry) =>
-      !entry.filter ? true : entry.filter({ report, eng: parent })
-    );
+    return getBank({ report, eng: parent });
   }
 }
