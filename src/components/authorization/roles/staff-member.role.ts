@@ -341,7 +341,7 @@ export const StaffMember = new DbRole({
         { propertyName: 'primaryLocation', permission: { read, sensitivityAccess: Sensitivity.Low }, },
         { propertyName: 'marketingLocation', permission: { read, }, },
         { propertyName: 'partnership', permission: { read, }, },
-        { propertyName: 'budget', permission: { read, }, },
+        { propertyName: 'budget', permission: { }, },
         { propertyName: 'modifiedAt', permission: { read, }, },
         { propertyName: 'fieldRegion', permission: { read, }, },
         { propertyName: 'engagement', permission: { read, }, },
