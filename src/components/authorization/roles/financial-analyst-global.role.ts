@@ -284,7 +284,7 @@ export const FinancialAnalyst = new DbRole({
       canList: true,
       properties: [
         { propertyName: 'organization', permission: { read, write, }, },
-        { propertyName: 'pointOfContact', permission: { read, write, }, },
+        { propertyName: 'pointOfContact', permission: { read, write, sensitivityAccess: Sensitivity.Medium, }, },
         { propertyName: 'types', permission: { read, write, }, },
         { propertyName: 'financialReportingTypes', permission: { read, write, }, },
         { propertyName: 'pmcEntityCode', permission: { read, write, }, },
