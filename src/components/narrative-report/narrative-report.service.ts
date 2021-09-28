@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { intersection } from 'lodash';
 import {
   CalendarDate,
   DateInterval,
@@ -9,13 +10,28 @@ import {
 } from '../../common';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { FileService } from '../file';
-import { PeriodicReportService, ReportType } from '../periodic-report';
+import {
+  PeriodicReportService,
+  ReportType,
+  ScopedRole,
+} from '../periodic-report';
 import { QuestionAnswer } from '../question-answer';
-import { NarrativeReport } from './dto';
+import { NarrativeReport, NarrativeReportStatus as Status } from './dto';
 import { NarrativeReportRepository } from './narrative-report.repository';
 
 @Injectable()
 export class NarrativeReportService {
+  private readonly answerers: ScopedRole[] = [
+    // TODO "Answerer" role
+    'global:Administrator',
+  ];
+  private readonly reviewers: ScopedRole[] = [
+    'project:ProjectManager',
+    'project:RegionalDirector',
+    'project:FieldOperationsDirector',
+    'global:Administrator',
+  ];
+
   constructor(
     private readonly repo: NarrativeReportRepository,
     private readonly auth: AuthorizationService,
@@ -24,26 +40,41 @@ export class NarrativeReportService {
   ) {}
 
   async getQuestionPerms(report: NarrativeReport, session: Session) {
-    const { questions: perms } = await this.auth.getPermissions({
+    // Our auth system cannot currently express workflow, so we'll determine
+    // edibility ourselves below.
+    const {
+      questions: { canRead },
+    } = await this.auth.getPermissions({
       resource: NarrativeReport,
       dto: report,
       sessionOrUserId: session,
     });
-    // TODO Need report & user roles to determine editability in workflow.
+
+    const roles = [...report.scope, ...session.roles];
+    const isAnswerer = intersection(this.answerers, roles).length > 0;
+    const isReviewer = intersection(this.reviewers, roles).length > 0;
+
+    const canAddRemove = isAnswerer && report.status === Status.Draft;
+    const canEdit =
+      (isAnswerer && report.status === Status.Draft) ||
+      (isReviewer && report.status === Status.InReview);
+
     return {
-      ...perms,
-      canCreate: perms.canEdit,
+      canRead,
+      canCreate: canAddRemove,
       secure: (dto: UnsecuredDto<QuestionAnswer>): QuestionAnswer => ({
         ...dto,
         answer: {
-          ...perms,
-          value: perms.canRead ? dto.answer : undefined,
+          canRead,
+          canEdit,
+          value: canRead ? dto.answer : undefined,
         },
         media: {
-          ...perms,
-          value: perms.canRead ? dto.media : undefined,
+          canRead,
+          canEdit,
+          value: canRead ? dto.media : undefined,
         },
-        canDelete: perms.canEdit,
+        canDelete: canAddRemove,
       }),
     };
   }
