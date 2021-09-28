@@ -6,4 +6,5 @@ export abstract class CreatePeriodicReport {
   readonly type: ReportType;
   readonly start: CalendarDate;
   readonly end: CalendarDate;
+  readonly skippedReason?: string;
 }

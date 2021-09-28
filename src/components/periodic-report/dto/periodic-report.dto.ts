@@ -7,6 +7,7 @@ import {
   SecuredDateNullable,
   SecuredProperty,
   SecuredProps,
+  SecuredStringNullable,
   Sensitivity,
   SensitivityField,
   ServerException,
@@ -52,6 +53,9 @@ class PeriodicReport extends Resource {
 
   @Field()
   readonly receivedDate: SecuredDateNullable;
+
+  @Field()
+  readonly skippedReason: SecuredStringNullable;
 
   readonly reportFile: DefinedFile;
 
