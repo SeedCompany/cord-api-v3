@@ -264,6 +264,8 @@ export class FileService {
       await this.bucket.moveObject(`temp/${uploadId}`, uploadId);
     }
 
+    await this.rename({ id: fileId, name }, session);
+
     return await this.getFile(fileId, session);
   }
 
@@ -407,7 +409,9 @@ export class FileService {
 
   async rename(input: RenameFileInput, session: Session): Promise<void> {
     const fileNode = await this.repo.getById(input.id, session);
-    await this.repo.rename(fileNode, input.name);
+    if (fileNode.name !== input.name) {
+      await this.repo.rename(fileNode, input.name);
+    }
   }
 
   async move(input: MoveFileInput, session: Session): Promise<FileNode> {
