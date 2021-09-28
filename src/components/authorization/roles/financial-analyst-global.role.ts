@@ -290,7 +290,7 @@ export const FinancialAnalyst = new DbRole({
       properties: [
         { propertyName: 'agreement', permission: { read, }, },
         { propertyName: 'agreementStatus', permission: { read, }, },
-        { propertyName: 'financialReportingType', permission: { read, }, },
+        { propertyName: 'financialReportingType', permission: { read, write }, },
         { propertyName: 'mou', permission: { read, }, },
         { propertyName: 'mouEnd', permission: { read, }, },
         { propertyName: 'mouEndOverride', permission: { read, }, },
