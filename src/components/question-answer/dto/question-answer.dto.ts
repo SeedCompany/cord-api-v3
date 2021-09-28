@@ -27,10 +27,9 @@ export class QuestionAnswer extends Resource {
   readonly question: string;
 
   @Field({
-    description: 'An optional category for the question given',
-    nullable: true,
+    description: 'The category for the question given',
   })
-  readonly category?: string;
+  readonly category: string;
 
   @Field()
   readonly answer: SecuredStringNullable;
