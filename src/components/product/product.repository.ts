@@ -110,7 +110,11 @@ export class ProductRepository extends CommonRepository {
         .return<{
           dto: Merge<
             Omit<
-              UnsecuredDto<DirectScriptureProduct & DerivativeScriptureProduct>,
+              UnsecuredDto<
+                DirectScriptureProduct &
+                  DerivativeScriptureProduct &
+                  OtherProduct
+              >,
               'scriptureReferences' | 'scriptureReferencesOverride'
             >,
             {

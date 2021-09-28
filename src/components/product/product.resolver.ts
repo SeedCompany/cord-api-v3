@@ -121,7 +121,9 @@ export class ProductResolver {
     `,
   })
   category(@Parent() product: AnyProduct): string | null {
-    return !product.produces
+    return product.title
+      ? 'Other'
+      : !product.produces
       ? 'Scripture'
       : startCase(product.produces.value?.__typename) || null;
   }

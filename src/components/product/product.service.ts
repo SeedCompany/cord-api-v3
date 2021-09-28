@@ -100,7 +100,11 @@ export class ProductService {
     return await this.readOne(id, session);
   }
 
-  @HandleIdLookup([DirectScriptureProduct, DerivativeScriptureProduct])
+  @HandleIdLookup([
+    DirectScriptureProduct,
+    DerivativeScriptureProduct,
+    OtherProduct,
+  ])
   async readOne(
     id: ID,
     session: Session,
@@ -121,10 +125,8 @@ export class ProductService {
     id: ID,
     session: Session
   ): Promise<UnsecuredDto<AnyProduct>> {
-    const { isOverriding, produces, ...props } = await this.repo.readOne(
-      id,
-      session
-    );
+    const { isOverriding, produces, title, description, ...props } =
+      await this.repo.readOne(id, session);
 
     const producible = produces
       ? ((await this.resources.lookupByBaseNode(
@@ -139,12 +141,22 @@ export class ProductService {
       { isOverriding: !!producible }
     );
 
+    if (title) {
+      return {
+        ...props,
+        title,
+        description,
+        scriptureReferences: scriptureReferencesValue,
+      };
+    }
+
     if (!producible) {
       return {
         ...props,
         scriptureReferences: scriptureReferencesValue,
       };
     }
+
     return {
       ...props,
       produces: producible,
