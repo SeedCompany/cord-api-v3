@@ -394,6 +394,7 @@ export const RegionalDirectorOnProject = new DbRole({
         { propertyName: 'end', permission: { read, }, },
         { propertyName: 'receivedDate', permission: { read, }, },
         { propertyName: 'reportFile', permission: { read, }, },
+        { propertyName: 'skippedReason', permission: { read, }, },
       ],
       canDelete: true,
     }),
