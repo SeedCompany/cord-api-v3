@@ -186,22 +186,26 @@ export class PartnerRepository extends DtoRepository(Partner) {
   ) {
     const result = await this.db
       .query()
+      .matchNode('node', 'Partner')
       .match([
+        ...(filter.userId && session.userId
+          ? [
+              node('node'),
+              relation('out', '', 'organization', ACTIVE),
+              node('', 'Organization'),
+              relation('in', '', 'organization', ACTIVE),
+              node('user', 'User', { id: filter.userId }),
+            ]
+          : []),
+      ])
+      .optionalMatch([
         ...(limitedScope
           ? [
               node('project', 'Project'),
               relation('out', '', 'partnership'),
               node('', 'Partnership'),
               relation('out', '', 'partner'),
-            ]
-          : []),
-        node('node', 'Partner'),
-        ...(filter.userId && session.userId
-          ? [
-              relation('out', '', 'organization', ACTIVE),
-              node('', 'Organization'),
-              relation('in', '', 'organization', ACTIVE),
-              node('user', 'User', { id: filter.userId }),
+              node('node'),
             ]
           : []),
       ])
@@ -223,6 +227,7 @@ export class PartnerRepository extends DtoRepository(Partner) {
         })
       )
       .apply(paginate(input, this.hydrate(session)))
+      .logIt()
       .first();
     return result!; // result from paginate() will always have 1 row.
   }
