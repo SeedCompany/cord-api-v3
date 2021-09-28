@@ -288,7 +288,7 @@ describe('Project Security e2e', () => {
     );
 
     // ---- CurrentBudget
-    it('reading currentBudget', async () => {
+    it('reading Translation Project currentBudget', async () => {
       const proj = await createProject(app);
       await createBudget(app, { projectId: proj.id });
       const org = await createOrganization(app);
