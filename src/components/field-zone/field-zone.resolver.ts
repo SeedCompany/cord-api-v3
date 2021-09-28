@@ -6,8 +6,16 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
-import { SecuredUser, UserService } from '../user';
+import {
+  AnonSession,
+  ID,
+  IdArg,
+  LoggedInSession,
+  mapSecuredValue,
+  Session,
+} from '../../common';
+import { Loader, LoaderOf } from '../../core';
+import { SecuredUser, UserLoader } from '../user';
 import {
   CreateFieldZoneInput,
   CreateFieldZoneOutput,
@@ -21,10 +29,7 @@ import { FieldZoneService } from './field-zone.service';
 
 @Resolver(FieldZone)
 export class FieldZoneResolver {
-  constructor(
-    private readonly fieldZoneService: FieldZoneService,
-    private readonly userService: UserService
-  ) {}
+  constructor(private readonly fieldZoneService: FieldZoneService) {}
 
   @Query(() => FieldZone, {
     description: 'Read one field zone by id',
@@ -54,14 +59,9 @@ export class FieldZoneResolver {
   @ResolveField(() => SecuredUser)
   async director(
     @Parent() fieldZone: FieldZone,
-    @AnonSession() session: Session
+    @Loader(UserLoader) users: LoaderOf<UserLoader>
   ): Promise<SecuredUser> {
-    const { value: id, ...rest } = fieldZone.director;
-    const value = id ? await this.userService.readOne(id, session) : undefined;
-    return {
-      value,
-      ...rest,
-    };
+    return await mapSecuredValue(fieldZone.director, (id) => users.load(id));
   }
 
   @Mutation(() => CreateFieldZoneOutput, {

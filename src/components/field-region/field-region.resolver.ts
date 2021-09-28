@@ -6,9 +6,17 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
+import {
+  AnonSession,
+  ID,
+  IdArg,
+  LoggedInSession,
+  mapSecuredValue,
+  Session,
+} from '../../common';
+import { Loader, LoaderOf } from '../../core';
 import { FieldZoneService, SecuredFieldZone } from '../field-zone';
-import { SecuredUser, UserService } from '../user';
+import { SecuredUser, UserLoader } from '../user';
 import {
   CreateFieldRegionInput,
   CreateFieldRegionOutput,
@@ -24,8 +32,7 @@ import { FieldRegionService } from './field-region.service';
 export class FieldRegionResolver {
   constructor(
     private readonly fieldRegionService: FieldRegionService,
-    private readonly fieldZoneService: FieldZoneService,
-    private readonly userService: UserService
+    private readonly fieldZoneService: FieldZoneService
   ) {}
 
   @Query(() => FieldRegion, {
@@ -56,14 +63,9 @@ export class FieldRegionResolver {
   @ResolveField(() => SecuredUser)
   async director(
     @Parent() fieldRegion: FieldRegion,
-    @AnonSession() session: Session
+    @Loader(UserLoader) users: LoaderOf<UserLoader>
   ): Promise<SecuredUser> {
-    const { value: id, ...rest } = fieldRegion.director;
-    const value = id ? await this.userService.readOne(id, session) : undefined;
-    return {
-      value,
-      ...rest,
-    };
+    return await mapSecuredValue(fieldRegion.director, (id) => users.load(id));
   }
 
   @ResolveField(() => SecuredFieldZone)
