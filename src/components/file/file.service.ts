@@ -265,9 +265,6 @@ export class FileService {
     }
 
     // Change the file's name to match the latest version name
-    // Since defined files are explicitly referenced by a named property
-    // a consistent name is not required and automatically updating it is more
-    // convenient for consumption.
     await this.rename({ id: fileId, name }, session);
 
     return await this.getFile(fileId, session);
