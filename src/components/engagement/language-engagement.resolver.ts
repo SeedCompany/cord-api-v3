@@ -1,31 +1,26 @@
 import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { AnonSession, Session } from '../../common';
+import { AnonSession, mapSecuredValue, Session } from '../../common';
 import { Loader, LoaderOf } from '../../core';
 import { FileNodeLoader, resolveDefinedFile, SecuredFile } from '../file';
-import { LanguageService } from '../language';
+import { LanguageLoader } from '../language';
 import { SecuredLanguage } from '../language/dto';
+import { ProductLoader } from '../product';
 import { ProductListInput, SecuredProductList } from '../product/dto';
 import { LanguageEngagement } from './dto';
 import { EngagementService } from './engagement.service';
 
 @Resolver(LanguageEngagement)
 export class LanguageEngagementResolver {
-  constructor(
-    private readonly engagements: EngagementService,
-    private readonly languages: LanguageService
-  ) {}
+  constructor(private readonly engagements: EngagementService) {}
 
   @ResolveField(() => SecuredLanguage)
   async language(
     @Parent() engagement: LanguageEngagement,
-    @AnonSession() session: Session
+    @Loader(LanguageLoader) languages: LoaderOf<LanguageLoader>
   ): Promise<SecuredLanguage> {
-    const { value: id, ...rest } = engagement.language;
-    const value = id ? await this.languages.readOne(id, session) : undefined;
-    return {
-      value,
-      ...rest,
-    };
+    return await mapSecuredValue(engagement.language, (id) =>
+      languages.load(id)
+    );
   }
 
   @ResolveField(() => SecuredProductList)
@@ -37,13 +32,17 @@ export class LanguageEngagementResolver {
       type: () => ProductListInput,
       nullable: true,
     })
+    @Loader(ProductLoader)
+    products: LoaderOf<ProductLoader>,
     input?: ProductListInput
   ): Promise<SecuredProductList> {
-    return await this.engagements.listProducts(
+    const list = await this.engagements.listProducts(
       engagement,
       input || ProductListInput.defaultVal,
       session
     );
+    products.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => SecuredFile)

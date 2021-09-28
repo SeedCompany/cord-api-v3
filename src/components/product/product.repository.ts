@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { Except, Merge } from 'type-fest';
 import {
@@ -80,6 +80,22 @@ export class ProductRepository extends CommonRepository {
       throw new NotFoundException('Could not find product');
     }
     return result.dto;
+  }
+
+  async readMany(ids: readonly ID[], session: Session) {
+    return await this.db
+      .query()
+      .match([
+        node('project', 'Project'),
+        relation('out', '', 'engagement', ACTIVE),
+        node('engagement', 'Engagement'),
+        relation('out', '', 'product', ACTIVE),
+        node('node', 'Product'),
+      ])
+      .where({ 'node.id': inArray(ids.slice()) })
+      .apply(this.hydrate(session))
+      .map('dto')
+      .run();
   }
 
   protected hydrate(session: Session) {

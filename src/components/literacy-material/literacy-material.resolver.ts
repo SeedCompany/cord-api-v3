@@ -1,5 +1,6 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
+import { Loader, LoaderOf } from '../../core';
 import {
   CreateLiteracyMaterialInput,
   CreateLiteracyMaterialOutput,
@@ -9,6 +10,7 @@ import {
   UpdateLiteracyMaterialInput,
   UpdateLiteracyMaterialOutput,
 } from './dto';
+import { LiteracyMaterialLoader } from './literacy-material.loader';
 import { LiteracyMaterialService } from './literacy-material.service';
 
 @Resolver(LiteracyMaterial)
@@ -21,10 +23,11 @@ export class LiteracyMaterialResolver {
     description: 'Look up a literacy material',
   })
   async literacyMaterial(
-    @AnonSession() session: Session,
-    @IdArg() id: ID
+    @IdArg() id: ID,
+    @Loader(LiteracyMaterialLoader)
+    literacyMaterials: LoaderOf<LiteracyMaterialLoader>
   ): Promise<LiteracyMaterial> {
-    return await this.literacyMaterialService.readOne(id, session);
+    return await literacyMaterials.load(id);
   }
 
   @Query(() => LiteracyMaterialListOutput, {
@@ -37,9 +40,13 @@ export class LiteracyMaterialResolver {
       type: () => LiteracyMaterialListInput,
       defaultValue: LiteracyMaterialListInput.defaultVal,
     })
-    input: LiteracyMaterialListInput
+    input: LiteracyMaterialListInput,
+    @Loader(LiteracyMaterialLoader)
+    literacyMaterials: LoaderOf<LiteracyMaterialLoader>
   ): Promise<LiteracyMaterialListOutput> {
-    return await this.literacyMaterialService.list(input, session);
+    const list = await this.literacyMaterialService.list(input, session);
+    literacyMaterials.primeAll(list.items);
+    return list;
   }
 
   @Mutation(() => CreateLiteracyMaterialOutput, {

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { inArray, node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID, NotFoundException, Session, UnsecuredDto } from '../../common';
 import { DtoRepository, matchRequestingUser } from '../../core';
@@ -61,6 +61,16 @@ export class PostRepository extends DtoRepository(Post) {
       throw new NotFoundException('Could not find post', 'post.id');
     }
     return result.dto;
+  }
+
+  async readMany(ids: readonly ID[]) {
+    return await this.db
+      .query()
+      .matchNode('node', 'Post')
+      .where({ 'node.id': inArray(ids.slice()) })
+      .apply(this.hydrate())
+      .map('dto')
+      .run();
   }
 
   async securedList({ filter, ...input }: PostListInput, session: Session) {

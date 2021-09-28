@@ -14,6 +14,7 @@ import {
   IdArg,
   IdField,
   LoggedInSession,
+  mapSecuredValue,
   NotFoundException,
   SecuredDateRange,
   Session,
@@ -21,17 +22,26 @@ import {
 import { Loader, LoaderOf } from '../../core';
 import { SecuredBudget } from '../budget';
 import { IdsAndView, IdsAndViewArg } from '../changeset/dto';
-import { EngagementListInput, SecuredEngagementList } from '../engagement';
-import { FieldRegionService, SecuredFieldRegion } from '../field-region';
+import {
+  EngagementListInput,
+  EngagementLoader,
+  SecuredEngagementList,
+} from '../engagement';
+import { FieldRegionLoader, SecuredFieldRegion } from '../field-region';
 import { asDirectory, FileNodeLoader, SecuredDirectory } from '../file';
 import {
   LocationListInput,
-  LocationService,
+  LocationLoader,
   SecuredLocation,
   SecuredLocationList,
 } from '../location';
-import { OrganizationService, SecuredOrganization } from '../organization';
-import { PartnershipListInput, SecuredPartnershipList } from '../partnership';
+import { OrganizationLoader, SecuredOrganization } from '../organization';
+import {
+  PartnershipListInput,
+  PartnershipLoader,
+  SecuredPartnershipList,
+} from '../partnership';
+import { ProjectChangeRequestLoader } from '../project-change-request';
 import {
   ProjectChangeRequestListInput,
   SecuredProjectChangeRequestList,
@@ -48,8 +58,9 @@ import {
 } from './dto';
 import {
   ProjectMemberListInput,
+  ProjectMemberLoader,
   SecuredProjectMemberList,
-} from './project-member/dto';
+} from './project-member';
 import { ProjectLoader } from './project.loader';
 import { ProjectService } from './project.service';
 
@@ -64,12 +75,7 @@ class ModifyOtherLocationArgs {
 
 @Resolver(IProject)
 export class ProjectResolver {
-  constructor(
-    private readonly projectService: ProjectService,
-    private readonly locationService: LocationService,
-    private readonly fieldRegionService: FieldRegionService,
-    private readonly organizationService: OrganizationService
-  ) {}
+  constructor(private readonly projectService: ProjectService) {}
 
   @Query(() => IProject, {
     description: 'Look up a project by its ID',
@@ -117,13 +123,17 @@ export class ProjectResolver {
       nullable: true,
       defaultValue: ProjectChangeRequestListInput.defaultVal,
     })
-    input: ProjectChangeRequestListInput
+    input: ProjectChangeRequestListInput,
+    @Loader(ProjectChangeRequestLoader)
+    projectChangeRequests: LoaderOf<ProjectChangeRequestLoader>
   ): Promise<SecuredProjectChangeRequestList> {
-    return await this.projectService.listChangeRequests(
+    const list = await this.projectService.listChangeRequests(
       project,
       input,
       session
     );
+    projectChangeRequests.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => SecuredBudget, {
@@ -150,14 +160,17 @@ export class ProjectResolver {
       nullable: true,
       defaultValue: EngagementListInput.defaultVal,
     })
-    input: EngagementListInput
+    input: EngagementListInput,
+    @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>
   ): Promise<SecuredEngagementList> {
-    return await this.projectService.listEngagements(
+    const list = await this.projectService.listEngagements(
       project,
       input,
       session,
       project.changeset ? { changeset: project.changeset } : { active: true }
     );
+    engagements.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => SecuredProjectMemberList, {
@@ -171,15 +184,18 @@ export class ProjectResolver {
       type: () => ProjectMemberListInput,
       defaultValue: ProjectMemberListInput.defaultVal,
     })
-    input: ProjectMemberListInput
+    input: ProjectMemberListInput,
+    @Loader(ProjectMemberLoader) projectMembers: LoaderOf<ProjectMemberLoader>
   ): Promise<SecuredProjectMemberList> {
-    return await this.projectService.listProjectMembers(
+    const list = await this.projectService.listProjectMembers(
       id,
       input,
       session,
       sensitivity,
       scope
     );
+    projectMembers.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => SecuredPartnershipList)
@@ -191,9 +207,10 @@ export class ProjectResolver {
       type: () => PartnershipListInput,
       defaultValue: PartnershipListInput.defaultVal,
     })
-    input: PartnershipListInput
+    input: PartnershipListInput,
+    @Loader(PartnershipLoader) partnerships: LoaderOf<PartnershipLoader>
   ): Promise<SecuredPartnershipList> {
-    return await this.projectService.listPartnerships(
+    const list = await this.projectService.listPartnerships(
       project.id,
       input,
       session,
@@ -201,6 +218,8 @@ export class ProjectResolver {
       project.scope,
       project.changeset
     );
+    partnerships.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => SecuredDirectory, {
@@ -234,13 +253,11 @@ export class ProjectResolver {
   @ResolveField(() => SecuredLocation)
   async primaryLocation(
     @Parent() project: Project,
-    @AnonSession() session: Session
+    @Loader(LocationLoader) locations: LoaderOf<LocationLoader>
   ): Promise<SecuredLocation> {
-    const { value: id, ...rest } = project.primaryLocation;
-    const value = id
-      ? await this.locationService.readOne(id, session)
-      : undefined;
-    return { value, ...rest };
+    return await mapSecuredValue(project.primaryLocation, (id) =>
+      locations.load(id)
+    );
   }
 
   @ResolveField(() => SecuredLocationList)
@@ -252,49 +269,46 @@ export class ProjectResolver {
       type: () => LocationListInput,
       defaultValue: LocationListInput.defaultVal,
     })
-    input: LocationListInput
+    input: LocationListInput,
+    @Loader(LocationLoader) locations: LoaderOf<LocationLoader>
   ): Promise<SecuredLocationList> {
-    return await this.projectService.listOtherLocations(
+    const list = await this.projectService.listOtherLocations(
       project,
       input,
       session
     );
+    locations.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => SecuredLocation)
   async marketingLocation(
     @Parent() project: Project,
-    @AnonSession() session: Session
+    @Loader(LocationLoader) locations: LoaderOf<LocationLoader>
   ): Promise<SecuredLocation> {
-    const { value: id, ...rest } = project.marketingLocation;
-    const value = id
-      ? await this.locationService.readOne(id, session)
-      : undefined;
-    return { value, ...rest };
+    return await mapSecuredValue(project.marketingLocation, (id) =>
+      locations.load(id)
+    );
   }
 
   @ResolveField(() => SecuredFieldRegion)
   async fieldRegion(
     @Parent() project: Project,
-    @AnonSession() session: Session
+    @Loader(FieldRegionLoader) fieldRegions: LoaderOf<FieldRegionLoader>
   ): Promise<SecuredFieldRegion> {
-    const { value: id, ...rest } = project.fieldRegion;
-    const value = id
-      ? await this.fieldRegionService.readOne(id, session)
-      : undefined;
-    return { value, ...rest };
+    return await mapSecuredValue(project.fieldRegion, (id) =>
+      fieldRegions.load(id)
+    );
   }
 
   @ResolveField(() => SecuredOrganization)
   async owningOrganization(
     @Parent() project: Project,
-    @AnonSession() session: Session
+    @Loader(OrganizationLoader) organizations: LoaderOf<OrganizationLoader>
   ): Promise<SecuredOrganization> {
-    const { value: id, ...rest } = project.owningOrganization;
-    const value = id
-      ? await this.organizationService.readOne(id, session)
-      : undefined;
-    return { value, ...rest };
+    return await mapSecuredValue(project.owningOrganization, (id) =>
+      organizations.load(id)
+    );
   }
 
   @ResolveField()

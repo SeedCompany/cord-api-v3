@@ -1,5 +1,6 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
+import { Loader, LoaderOf } from '../../core';
 import {
   CreateFundingAccountInput,
   CreateFundingAccountOutput,
@@ -9,6 +10,7 @@ import {
   UpdateFundingAccountInput,
   UpdateFundingAccountOutput,
 } from './dto';
+import { FundingAccountLoader } from './funding-account.loader';
 import { FundingAccountService } from './funding-account.service';
 
 @Resolver(FundingAccount)
@@ -19,10 +21,11 @@ export class FundingAccountResolver {
     description: 'Look up a funding account by its ID',
   })
   async fundingAccount(
-    @AnonSession() session: Session,
+    @Loader(FundingAccountLoader)
+    fundingAccounts: LoaderOf<FundingAccountLoader>,
     @IdArg() id: ID
   ): Promise<FundingAccount> {
-    return await this.fundingAccountService.readOne(id, session);
+    return await fundingAccounts.load(id);
   }
 
   @Query(() => FundingAccountListOutput, {
@@ -35,9 +38,13 @@ export class FundingAccountResolver {
       type: () => FundingAccountListInput,
       defaultValue: FundingAccountListInput.defaultVal,
     })
-    input: FundingAccountListInput
+    input: FundingAccountListInput,
+    @Loader(FundingAccountLoader)
+    fundingAccounts: LoaderOf<FundingAccountLoader>
   ): Promise<FundingAccountListOutput> {
-    return await this.fundingAccountService.list(input, session);
+    const list = await this.fundingAccountService.list(input, session);
+    fundingAccounts.primeAll(list.items);
+    return list;
   }
 
   @Mutation(() => CreateFundingAccountOutput, {

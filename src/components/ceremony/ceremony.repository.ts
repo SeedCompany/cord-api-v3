@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { ID, NotFoundException, Session, UnsecuredDto } from '../../common';
 import { DtoRepository, matchRequestingUser } from '../../core';
 import {
@@ -44,6 +44,16 @@ export class CeremonyRepository extends DtoRepository(Ceremony) {
     }
 
     return result.dto;
+  }
+
+  async readMany(ids: readonly ID[], session: Session) {
+    return await this.db
+      .query()
+      .matchNode('node', 'Ceremony')
+      .where({ 'node.id': inArray(ids.slice()) })
+      .apply(this.hydrate(session))
+      .map('dto')
+      .run();
   }
 
   protected hydrate(session: Session) {

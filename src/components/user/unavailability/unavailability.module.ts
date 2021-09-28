@@ -1,4 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
+import { UnavailabilityLoader } from '.';
 import { AuthorizationModule } from '../../authorization/authorization.module';
 import { UnavailabilityRepository } from './unavailability.repository';
 import { UnavailabilityResolver } from './unavailability.resolver';
@@ -10,6 +11,7 @@ import { UnavailabilityService } from './unavailability.service';
     UnavailabilityResolver,
     UnavailabilityService,
     UnavailabilityRepository,
+    UnavailabilityLoader,
   ],
   exports: [UnavailabilityService],
 })

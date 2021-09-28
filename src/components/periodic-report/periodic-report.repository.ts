@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { Interval } from 'luxon';
 import {
   generateId,
@@ -70,6 +70,16 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
     }
 
     return result.dto;
+  }
+
+  async readMany(ids: readonly ID[], session: Session) {
+    return await this.db
+      .query()
+      .matchNode('node', 'PeriodicReport')
+      .where({ 'node.id': inArray(ids.slice()) })
+      .apply(this.hydrate(session))
+      .map('dto')
+      .run();
   }
 
   async listReports(

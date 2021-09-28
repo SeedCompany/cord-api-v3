@@ -5,8 +5,9 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { AnonSession, LoggedInSession, Session } from '../../common';
-import { OrganizationService } from '../organization';
+import { LoggedInSession, mapSecuredValue, Session } from '../../common';
+import { Loader, LoaderOf } from '../../core';
+import { OrganizationLoader } from '../organization';
 import { SecuredOrganization } from '../organization/dto';
 import { BudgetService } from './budget.service';
 import {
@@ -17,24 +18,16 @@ import {
 
 @Resolver(BudgetRecord)
 export class BudgetRecordResolver {
-  constructor(
-    private readonly service: BudgetService,
-    private readonly organizations: OrganizationService
-  ) {}
+  constructor(private readonly service: BudgetService) {}
 
   @ResolveField(() => SecuredOrganization)
   async organization(
-    @AnonSession() session: Session,
-    @Parent() record: BudgetRecord
+    @Parent() record: BudgetRecord,
+    @Loader(OrganizationLoader) organizations: LoaderOf<OrganizationLoader>
   ): Promise<SecuredOrganization> {
-    const id = record.organization.value;
-    const value = id
-      ? await this.organizations.readOne(id, session)
-      : undefined;
-    return {
-      ...record.organization,
-      value,
-    };
+    return await mapSecuredValue(record.organization, (id) =>
+      organizations.load(id)
+    );
   }
 
   @Mutation(() => UpdateBudgetRecordOutput, {

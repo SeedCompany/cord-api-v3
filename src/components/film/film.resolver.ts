@@ -1,5 +1,6 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
+import { Loader, LoaderOf } from '../../core';
 import {
   CreateFilmInput,
   CreateFilmOutput,
@@ -9,6 +10,7 @@ import {
   UpdateFilmInput,
   UpdateFilmOutput,
 } from './dto';
+import { FilmLoader } from './film.loader';
 import { FilmService } from './film.service';
 
 @Resolver(Film)
@@ -18,23 +20,29 @@ export class FilmResolver {
   @Query(() => Film, {
     description: 'Look up a film by its ID',
   })
-  async film(@AnonSession() session: Session, @IdArg() id: ID): Promise<Film> {
-    return await this.filmService.readOne(id, session);
+  async film(
+    @Loader(FilmLoader) films: LoaderOf<FilmLoader>,
+    @IdArg() id: ID
+  ): Promise<Film> {
+    return await films.load(id);
   }
 
   @Query(() => FilmListOutput, {
     description: 'Look up films',
   })
   async films(
-    @AnonSession() session: Session,
     @Args({
       name: 'input',
       type: () => FilmListInput,
       defaultValue: FilmListInput.defaultVal,
     })
-    input: FilmListInput
+    input: FilmListInput,
+    @Loader(FilmLoader) films: LoaderOf<FilmLoader>,
+    @AnonSession() session: Session
   ): Promise<FilmListOutput> {
-    return await this.filmService.list(input, session);
+    const list = await this.filmService.list(input, session);
+    films.primeAll(list.items);
+    return list;
   }
 
   @Mutation(() => CreateFilmOutput, {

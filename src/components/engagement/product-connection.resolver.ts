@@ -1,18 +1,19 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { AnonSession, Session } from '../../common';
+import { Loader, LoaderOf } from '../../core';
 import { Product } from '../product';
 import { LanguageEngagement } from './dto';
-import { EngagementService } from './engagement.service';
+import { EngagementLoader } from './engagement.loader';
 
 @Resolver(Product)
 export class EngagementProductConnectionResolver {
-  constructor(private readonly engagements: EngagementService) {}
-
   @ResolveField(() => LanguageEngagement)
   async engagement(
     @Parent() product: Product,
-    @AnonSession() session: Session
+    @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>
   ) {
-    return await this.engagements.readOne(product.engagement, session);
+    return await engagements.load({
+      id: product.engagement,
+      view: { active: true },
+    });
   }
 }

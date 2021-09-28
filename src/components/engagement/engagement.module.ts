@@ -7,6 +7,7 @@ import { LocationModule } from '../location/location.module';
 import { ProductModule } from '../product/product.module';
 import { ProjectModule } from '../project/project.module';
 import { EngagementStatusResolver } from './engagement-status.resolver';
+import { EngagementLoader } from './engagement.loader';
 import { EngagementRepository } from './engagement.repository';
 import { EngagementResolver } from './engagement.resolver';
 import { EngagementRules } from './engagement.rules';
@@ -37,6 +38,7 @@ import { EngagementProductConnectionResolver } from './product-connection.resolv
     EngagementRules,
     EngagementService,
     EngagementRepository,
+    EngagementLoader,
     ...Object.values(handlers),
   ],
   exports: [EngagementService, EngagementRepository],

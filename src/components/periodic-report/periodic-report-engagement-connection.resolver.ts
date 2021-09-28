@@ -1,13 +1,17 @@
 import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { AnonSession, Session } from '../../common';
+import { Loader, LoaderOf } from '../../core';
 import { Engagement, LanguageEngagement } from '../engagement/dto';
+import {
+  PeriodicReportLoader,
+  PeriodicReportService,
+} from '../periodic-report';
 import {
   PeriodicReportListInput,
   ReportType,
   SecuredPeriodicReport,
   SecuredPeriodicReportList,
 } from './dto';
-import { PeriodicReportService } from './periodic-report.service';
 
 @Resolver(LanguageEngagement)
 export class PeriodicReportEngagementConnectionResolver {
@@ -22,14 +26,18 @@ export class PeriodicReportEngagementConnectionResolver {
       type: () => PeriodicReportListInput,
       defaultValue: PeriodicReportListInput.defaultVal,
     })
-    input: PeriodicReportListInput
+    input: PeriodicReportListInput,
+    @Loader(PeriodicReportLoader)
+    periodicReports: LoaderOf<PeriodicReportLoader>
   ): Promise<SecuredPeriodicReportList> {
-    return await this.service.list(
+    const list = await this.service.list(
       engagement.id,
       ReportType.Progress,
       input,
       session
     );
+    periodicReports.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => SecuredPeriodicReport, {

@@ -69,6 +69,13 @@ export class FieldZoneService {
     return await this.secure(result, session);
   }
 
+  async readMany(ids: readonly ID[], session: Session) {
+    const fieldZones = await this.repo.readMany(ids, session);
+    return await Promise.all(
+      fieldZones.map((dto) => this.secure(dto, session))
+    );
+  }
+
   private async secure(
     dto: UnsecuredDto<FieldZone>,
     session: Session

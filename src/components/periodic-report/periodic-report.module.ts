@@ -7,6 +7,7 @@ import * as handlers from './handlers';
 import * as migrations from './migrations';
 import { PeriodicReportEngagementConnectionResolver } from './periodic-report-engagement-connection.resolver';
 import { PeriodicReportProjectConnectionResolver } from './periodic-report-project-connection.resolver';
+import { PeriodicReportLoader } from './periodic-report.loader';
 import { PeriodicReportRepository } from './periodic-report.repository';
 import { PeriodicReportResolver } from './periodic-report.resolver';
 import { PeriodicReportService } from './periodic-report.service';
@@ -24,6 +25,7 @@ import { PeriodicReportService } from './periodic-report.service';
     PeriodicReportProjectConnectionResolver,
     PeriodicReportEngagementConnectionResolver,
     PeriodicReportRepository,
+    PeriodicReportLoader,
     ...Object.values(handlers),
     ...Object.values(migrations),
   ],

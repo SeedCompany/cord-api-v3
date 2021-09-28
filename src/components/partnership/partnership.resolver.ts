@@ -9,6 +9,7 @@ import {
 import {
   AnonSession,
   LoggedInSession,
+  mapSecuredValue,
   SecuredDateRange,
   Session,
   viewOfChangeset,
@@ -16,8 +17,8 @@ import {
 import { Loader, LoaderOf } from '../../core';
 import { ChangesetIds, IdsAndView, IdsAndViewArg } from '../changeset/dto';
 import { FileNodeLoader, resolveDefinedFile, SecuredFile } from '../file';
-import { SecuredPartner } from '../partner/dto';
-import { PartnerService } from '../partner/partner.service';
+import { PartnerLoader, SecuredPartner } from '../partner';
+import { PartnershipLoader, PartnershipService } from '../partnership';
 import {
   CreatePartnershipInput,
   CreatePartnershipOutput,
@@ -27,14 +28,10 @@ import {
   UpdatePartnershipInput,
   UpdatePartnershipOutput,
 } from './dto';
-import { PartnershipService } from './partnership.service';
 
 @Resolver(Partnership)
 export class PartnershipResolver {
-  constructor(
-    private readonly service: PartnershipService,
-    private readonly partners: PartnerService
-  ) {}
+  constructor(private readonly service: PartnershipService) {}
 
   @Mutation(() => CreatePartnershipOutput, {
     description: 'Create a Partnership entry',
@@ -51,10 +48,10 @@ export class PartnershipResolver {
     description: 'Look up a partnership by ID',
   })
   async partnership(
-    @AnonSession() session: Session,
-    @IdsAndViewArg() { id, view }: IdsAndView
+    @Loader(PartnershipLoader) partnerships: LoaderOf<PartnershipLoader>,
+    @IdsAndViewArg() key: IdsAndView
   ): Promise<Partnership> {
-    return await this.service.readOne(id, session, view);
+    return await partnerships.load(key);
   }
 
   @ResolveField(() => SecuredFile, {
@@ -79,16 +76,12 @@ export class PartnershipResolver {
 
   @ResolveField(() => SecuredPartner)
   async partner(
-    @Parent()
-    partnership: Partnership,
-    @AnonSession() session: Session
+    @Parent() partnership: Partnership,
+    @Loader(PartnerLoader) partners: LoaderOf<PartnerLoader>
   ): Promise<SecuredPartner> {
-    const { value: id, ...rest } = partnership.partner;
-    const value = id ? await this.partners.readOne(id, session) : undefined;
-    return {
-      value,
-      ...rest,
-    };
+    return await mapSecuredValue(partnership.partner, (id) =>
+      partners.load(id)
+    );
   }
 
   @ResolveField()
@@ -114,9 +107,12 @@ export class PartnershipResolver {
       type: () => PartnershipListInput,
       defaultValue: PartnershipListInput.defaultVal,
     })
-    input: PartnershipListInput
+    input: PartnershipListInput,
+    @Loader(PartnershipLoader) partnerships: LoaderOf<PartnershipLoader>
   ): Promise<PartnershipListOutput> {
-    return await this.service.list(input, session);
+    const list = await this.service.list(input, session);
+    partnerships.primeAll(list.items);
+    return list;
   }
 
   @Mutation(() => UpdatePartnershipOutput, {

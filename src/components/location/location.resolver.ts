@@ -8,10 +8,18 @@ import {
 } from '@nestjs/graphql';
 import { whereAlpha3 } from 'iso-3166-1';
 import countries from 'iso-3166-1/dist/iso-3166';
-import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
-import { FieldRegionService, SecuredFieldRegion } from '../field-region';
 import {
-  FundingAccountService,
+  AnonSession,
+  ID,
+  IdArg,
+  LoggedInSession,
+  mapSecuredValue,
+  Session,
+} from '../../common';
+import { Loader, LoaderOf } from '../../core';
+import { FieldRegionLoader, SecuredFieldRegion } from '../field-region';
+import {
+  FundingAccountLoader,
   SecuredFundingAccount,
 } from '../funding-account';
 import {
@@ -24,24 +32,21 @@ import {
   UpdateLocationOutput,
 } from './dto';
 import { IsoCountry } from './dto/iso-country.dto';
+import { LocationLoader } from './location.loader';
 import { LocationService } from './location.service';
 
 @Resolver(Location)
 export class LocationResolver {
-  constructor(
-    private readonly fieldRegionService: FieldRegionService,
-    private readonly locationService: LocationService,
-    private readonly fundingAccountService: FundingAccountService
-  ) {}
+  constructor(private readonly locationService: LocationService) {}
 
   @Query(() => Location, {
     description: 'Read one Location by id',
   })
   async location(
-    @AnonSession() session: Session,
+    @Loader(LocationLoader) locations: LoaderOf<LocationLoader>,
     @IdArg() id: ID
   ): Promise<Location> {
-    return await this.locationService.readOne(id, session);
+    return await locations.load(id);
   }
 
   @Query(() => LocationListOutput, {
@@ -54,39 +59,33 @@ export class LocationResolver {
       type: () => LocationListInput,
       defaultValue: LocationListInput.defaultVal,
     })
-    input: LocationListInput
+    input: LocationListInput,
+    @Loader(LocationLoader) locations: LoaderOf<LocationLoader>
   ): Promise<LocationListOutput> {
-    return await this.locationService.list(input, session);
+    const list = await this.locationService.list(input, session);
+    locations.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => SecuredFundingAccount)
   async fundingAccount(
     @Parent() location: Location,
-    @AnonSession() session: Session
+    @Loader(FundingAccountLoader)
+    fundingAccounts: LoaderOf<FundingAccountLoader>
   ): Promise<SecuredFundingAccount> {
-    const { value: id, ...rest } = location.fundingAccount;
-    const value = id
-      ? await this.fundingAccountService.readOne(id, session)
-      : undefined;
-    return {
-      value,
-      ...rest,
-    };
+    return await mapSecuredValue(location.fundingAccount, (id) =>
+      fundingAccounts.load(id)
+    );
   }
 
   @ResolveField(() => SecuredFieldRegion)
   async defaultFieldRegion(
     @Parent() location: Location,
-    @AnonSession() session: Session
+    @Loader(FieldRegionLoader) fieldRegions: LoaderOf<FieldRegionLoader>
   ): Promise<SecuredFieldRegion> {
-    const { value: id, ...rest } = location.defaultFieldRegion;
-    const value = id
-      ? await this.fieldRegionService.readOne(id, session)
-      : undefined;
-    return {
-      value,
-      ...rest,
-    };
+    return await mapSecuredValue(location.defaultFieldRegion, (id) =>
+      fieldRegions.load(id)
+    );
   }
 
   @ResolveField(() => IsoCountry, {

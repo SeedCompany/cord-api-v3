@@ -1,4 +1,3 @@
-import { forwardRef, Inject } from '@nestjs/common';
 import {
   Args,
   Mutation,
@@ -7,9 +6,18 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
-import { OrganizationService, SecuredOrganization } from '../organization';
-import { SecuredUser, UserService } from '../user';
+import {
+  AnonSession,
+  ID,
+  IdArg,
+  LoggedInSession,
+  mapSecuredValue,
+  Session,
+} from '../../common';
+import { Loader, LoaderOf } from '../../core';
+import { OrganizationLoader, SecuredOrganization } from '../organization';
+import { PartnerLoader, PartnerService } from '../partner';
+import { SecuredUser, UserLoader } from '../user';
 import {
   CreatePartnerInput,
   CreatePartnerOutput,
@@ -19,25 +27,19 @@ import {
   UpdatePartnerInput,
   UpdatePartnerOutput,
 } from './dto';
-import { PartnerService } from './partner.service';
 
 @Resolver(Partner)
 export class PartnerResolver {
-  constructor(
-    private readonly partnerService: PartnerService,
-    private readonly orgService: OrganizationService,
-    @Inject(forwardRef(() => UserService))
-    private readonly userService: UserService
-  ) {}
+  constructor(private readonly partnerService: PartnerService) {}
 
   @Query(() => Partner, {
     description: 'Look up a partner by its ID',
   })
   async partner(
-    @AnonSession() session: Session,
+    @Loader(PartnerLoader) partners: LoaderOf<PartnerLoader>,
     @IdArg() id: ID
   ): Promise<Partner> {
-    return await this.partnerService.readOne(id, session);
+    return await partners.load(id);
   }
 
   @Query(() => PartnerListOutput, {
@@ -50,35 +52,32 @@ export class PartnerResolver {
       type: () => PartnerListInput,
       defaultValue: PartnerListInput.defaultVal,
     })
-    input: PartnerListInput
+    input: PartnerListInput,
+    @Loader(PartnerLoader) partners: LoaderOf<PartnerLoader>
   ): Promise<PartnerListOutput> {
-    return await this.partnerService.list(input, session);
+    const list = await this.partnerService.list(input, session);
+    partners.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => SecuredOrganization)
   async organization(
     @Parent() partner: Partner,
-    @AnonSession() session: Session
+    @Loader(OrganizationLoader) organizations: LoaderOf<OrganizationLoader>
   ): Promise<SecuredOrganization> {
-    const { value: id, ...rest } = partner.organization;
-    const value = id ? await this.orgService.readOne(id, session) : undefined;
-    return {
-      value,
-      ...rest,
-    };
+    return await mapSecuredValue(partner.organization, (id) =>
+      organizations.load(id)
+    );
   }
 
   @ResolveField(() => SecuredUser)
   async pointOfContact(
     @Parent() partner: Partner,
-    @AnonSession() session: Session
+    @Loader(UserLoader) users: LoaderOf<UserLoader>
   ): Promise<SecuredUser> {
-    const { value: id, ...rest } = partner.pointOfContact;
-    const value = id ? await this.userService.readOne(id, session) : undefined;
-    return {
-      value,
-      ...rest,
-    };
+    return await mapSecuredValue(partner.pointOfContact, (id) =>
+      users.load(id)
+    );
   }
 
   @Mutation(() => CreatePartnerOutput, {
