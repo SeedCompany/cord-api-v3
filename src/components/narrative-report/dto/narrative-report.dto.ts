@@ -4,7 +4,7 @@ import { SecuredProps } from '../../../common';
 import { IPeriodicReport } from '../../periodic-report/dto/periodic-report.dto';
 import { ReportType } from '../../periodic-report/dto/report-type.enum';
 import { QuestionAnswer } from '../../question-answer';
-import { NarrativeReportStatus } from './narrative-report-status.enum';
+import { SecuredNarrativeReportStatus } from './narrative-report-status.enum';
 
 @ObjectType({
   implements: [IPeriodicReport],
@@ -18,6 +18,6 @@ export class NarrativeReport extends IPeriodicReport {
 
   readonly type: ReportType.Narrative;
 
-  @Field(() => NarrativeReportStatus)
-  readonly status: NarrativeReportStatus;
+  @Field()
+  readonly status: SecuredNarrativeReportStatus;
 }

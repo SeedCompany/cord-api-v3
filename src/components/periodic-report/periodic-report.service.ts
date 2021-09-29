@@ -26,7 +26,10 @@ import {
   SecuredPeriodicReportList,
   UpdatePeriodicReportInput,
 } from './dto';
-import { PeriodicReportUploadedEvent } from './events';
+import {
+  PeriodicReportUploadedEvent,
+  SecurePeriodicReportEvent as SecureEvent,
+} from './events';
 import { PeriodicReportRepository } from './periodic-report.repository';
 
 @Injectable()
@@ -129,12 +132,22 @@ export class PeriodicReportService {
     dto: UnsecuredDto<PeriodicReport>,
     session: Session
   ): Promise<PeriodicReport> {
+    const secured = await SecureEvent.run(this.eventBus, dto, session);
+    if (secured) {
+      return secured;
+    }
+
     const securedProps = await this.authorizationService.secureProperties(
       resolveReportType(dto),
       dto,
       session,
       dto.scope
     );
+    if (dto.type === 'Narrative') {
+      throw new ServerException(
+        "Narrative Report should've been secured via event"
+      );
+    }
 
     return {
       ...dto,

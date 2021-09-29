@@ -1,4 +1,5 @@
-import { registerEnumType } from '@nestjs/graphql';
+import { ObjectType, registerEnumType } from '@nestjs/graphql';
+import { SecuredEnum } from '../../../common';
 
 export enum NarrativeReportStatus {
   Draft = 'Draft',
@@ -9,3 +10,10 @@ export enum NarrativeReportStatus {
 registerEnumType(NarrativeReportStatus, {
   name: 'NarrativeReportStatus',
 });
+
+@ObjectType({
+  description: SecuredEnum.descriptionFor('a narrative report status'),
+})
+export class SecuredNarrativeReportStatus extends SecuredEnum(
+  NarrativeReportStatus
+) {}

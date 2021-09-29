@@ -23,13 +23,11 @@ import { NarrativeReportRepository } from './narrative-report.repository';
 export class NarrativeReportService {
   private readonly answerers: ScopedRole[] = [
     // TODO "Answerer" role
-    'global:Administrator',
   ];
   private readonly reviewers: ScopedRole[] = [
     'project:ProjectManager',
     'project:RegionalDirector',
     'project:FieldOperationsDirector',
-    'global:Administrator',
   ];
 
   constructor(
@@ -48,16 +46,20 @@ export class NarrativeReportService {
       resource: NarrativeReport,
       dto: report,
       sessionOrUserId: session,
+      otherRoles: report.scope,
     });
 
     const roles = [...report.scope, ...session.roles];
     const isAnswerer = intersection(this.answerers, roles).length > 0;
     const isReviewer = intersection(this.reviewers, roles).length > 0;
 
-    const canAddRemove = isAnswerer && report.status === Status.Draft;
+    const isAdmin = session.roles.includes('global:Administrator');
+    const canAddRemove =
+      isAdmin || (isAnswerer && report.status.value === Status.Draft);
     const canEdit =
-      (isAnswerer && report.status === Status.Draft) ||
-      (isReviewer && report.status === Status.InReview);
+      isAdmin ||
+      (isAnswerer && report.status.value === Status.Draft) ||
+      (isReviewer && report.status.value === Status.InReview);
 
     return {
       canRead,
@@ -76,6 +78,40 @@ export class NarrativeReportService {
         },
         canDelete: canAddRemove,
       }),
+    };
+  }
+
+  async secure(
+    dto: UnsecuredDto<NarrativeReport>,
+    session: Session
+  ): Promise<NarrativeReport> {
+    const roles = [...dto.scope, ...session.roles];
+    const isAnswerer = intersection(this.answerers, roles).length > 0;
+    const isReviewer = intersection(this.reviewers, roles).length > 0;
+    const isAdmin = session.roles.includes('global:Administrator');
+
+    const canAdvance =
+      (isAdmin && dto.status !== Status.Finalized) ||
+      (isAnswerer && dto.status === Status.Draft) ||
+      (isReviewer && dto.status === Status.InReview);
+
+    // Our auth system cannot currently express workflow, so we'll determine
+    // edibility ourselves above.
+    const securedProps = await this.auth.secureProperties(
+      NarrativeReport,
+      dto,
+      session,
+      dto.scope
+    );
+
+    return {
+      ...dto,
+      ...securedProps,
+      status: {
+        ...securedProps.status,
+        canEdit: canAdvance,
+      },
+      canDelete: false, // Auto generated, no user deleting.
     };
   }
 
