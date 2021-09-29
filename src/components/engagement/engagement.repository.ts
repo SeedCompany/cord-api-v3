@@ -29,11 +29,11 @@ import {
   matchPropsAndProjectSensAndScopedRoles,
   merge,
   paginate,
-  permissionsOfNode,
   requestingUser,
   sorting,
   whereNotDeletedInChangeset,
 } from '../../core/database/query';
+import { AuthSensitivityMapping } from '../authorization/authorization.service';
 import { FileId } from '../file';
 import { ProjectType } from '../project';
 import {
@@ -363,7 +363,12 @@ export class EngagementRepository extends CommonRepository {
 
   // LIST ///////////////////////////////////////////////////////////
 
-  async list(input: EngagementListInput, session: Session, changeset?: ID) {
+  async list(
+    input: EngagementListInput,
+    session: Session,
+    changeset?: ID,
+    limitedScope?: AuthSensitivityMapping
+  ) {
     const label =
       simpleSwitch(input.filter.type, {
         language: 'LanguageEngagement',
@@ -375,15 +380,16 @@ export class EngagementRepository extends CommonRepository {
       .subQuery((sub) =>
         sub
           .match([
-            requestingUser(session),
-            ...permissionsOfNode(label),
-            ...(input.filter.projectId
+            ...(limitedScope
+              ? [node()]
+              : input.filter.projectId
               ? [
                   relation('in', '', 'engagement', ACTIVE),
                   node('project', 'Project', { id: input.filter.projectId }),
                 ]
               : []),
           ])
+          .match(requestingUser(session))
           .apply(whereNotDeletedInChangeset(changeset))
           .return('node')
           .apply((q) =>
