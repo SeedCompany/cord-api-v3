@@ -62,17 +62,15 @@ export class ApplyFinalizedChangesetToEngagement
               relation('in', 'changesetRel', 'changeset', ACTIVE),
               node('changeset'),
             ])
-            .apply((q) =>
-              status === ProjectChangeRequestStatus.Approved
-                ? q
-                    .setValues({
-                      'engagementRel.active': true,
-                    })
-                    .with('node, changeset')
-                    .apply(commitChangesetProps())
-                : q.apply(rejectChangesetProps())
-            )
+            .setValues({
+              'engagementRel.active': true,
+            })
             .return('node')
+        )
+        .apply((q) =>
+          status === ProjectChangeRequestStatus.Approved
+            ? q.apply(commitChangesetProps())
+            : q.apply(rejectChangesetProps())
         )
         .return<{ id: ID }>(['node.id as id'])
         .run();
