@@ -33,7 +33,7 @@ export class ApplyFinalizedChangesetToEngagement
 
     try {
       // Update project engagement pending changes
-      const engagements = await this.db
+      await this.db
         .query()
         .match([
           node('project', 'Project'),
@@ -64,36 +64,18 @@ export class ApplyFinalizedChangesetToEngagement
             ])
             .apply((q) =>
               status === ProjectChangeRequestStatus.Approved
-                ? q.setValues({
-                    'engagementRel.active': true,
-                  })
+                ? q
+                    .setValues({
+                      'engagementRel.active': true,
+                    })
+                    .with('node, changeset')
+                    .apply(commitChangesetProps())
                 : q.apply(rejectChangesetProps())
             )
             .return('node')
         )
         .return<{ id: ID }>(['node.id as id'])
         .run();
-
-      if (status !== ProjectChangeRequestStatus.Approved) {
-        return;
-      }
-      await Promise.all(
-        engagements.map(async ({ id }) => {
-          // Skip looping for engagements created in changeset
-          await this.db
-            .query()
-            .match([
-              node('changeset', 'Changeset', { id: changesetId }),
-              relation('in', '', 'changeset', ACTIVE),
-              node('project', 'Project'),
-              relation('out', '', 'engagement', ACTIVE),
-              node('node', 'Engagement', { id }),
-            ])
-            .apply(commitChangesetProps())
-            .return('node')
-            .run();
-        })
-      );
 
       // Remove deleting engagements
       await this.removeDeletingEngagements(changesetId);
