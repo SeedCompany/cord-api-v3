@@ -1,5 +1,5 @@
-import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { LoggedInSession, Session } from '../../common';
+import { Mutation, Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { ID, IdArg, LoggedInSession, Session } from '../../common';
 import { ResourceResolver } from '../../core';
 import { LanguageEngagement } from '../engagement';
 import {
@@ -49,5 +49,14 @@ export class NarrativeReportResolver {
       return { categories: [] };
     }
     return getBank({ report, eng: parent });
+  }
+
+  @Mutation(() => NarrativeReport)
+  async advanceNarrativeReportStatus(
+    @IdArg() id: ID,
+    @LoggedInSession() session: Session
+  ): Promise<NarrativeReport> {
+    await this.service.advanceStatus(id, session);
+    return await this.resources.lookup(NarrativeReport, id, session);
   }
 }

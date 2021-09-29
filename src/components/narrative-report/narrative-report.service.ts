@@ -6,6 +6,7 @@ import {
   ID,
   ServerException,
   Session,
+  simpleSwitch,
   UnsecuredDto,
 } from '../../common';
 import { AuthorizationService } from '../authorization/authorization.service';
@@ -151,5 +152,28 @@ export class NarrativeReportService {
       at,
       session
     );
+  }
+
+  async advanceStatus(id: ID, session: Session) {
+    const report = (await this.periodicReports.readOne(
+      id,
+      session
+    )) as NarrativeReport;
+
+    await this.auth.verifyCanEdit({
+      resource: NarrativeReport,
+      baseNode: report,
+      prop: 'status',
+    });
+
+    const newStatus = simpleSwitch(report.status.value, {
+      Draft: Status.InReview,
+      InReview: Status.Finalized,
+      Finalized: undefined,
+    });
+
+    if (newStatus) {
+      await this.repo.updateProperties(report, { status: newStatus });
+    }
   }
 }
