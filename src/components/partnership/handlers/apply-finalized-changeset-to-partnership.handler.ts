@@ -7,7 +7,7 @@ import {
   ILogger,
   Logger,
 } from '../../../core';
-import { ACTIVE, deleteBaseNode } from '../../../core/database/query';
+import { ACTIVE, deleteBaseNode, INACTIVE } from '../../../core/database/query';
 import { commitChangesetProps } from '../../changeset/commit-changeset-props.query';
 import { rejectChangesetProps } from '../../changeset/reject-changeset-props.query';
 import { ProjectChangeRequestStatus } from '../../project-change-request/dto';
@@ -42,22 +42,25 @@ export class ApplyFinalizedChangesetToPartnership
         ])
         .subQuery((sub) =>
           sub
-            .with('project')
-            .match([
-              node('project'),
-              relation('out', 'partnershipRel', 'partnership', {
-                active: true,
-              }),
-              node('node', 'Partnership'),
-            ])
-            .return('node')
-            .union()
             .with('project, changeset')
             .match([
               node('project'),
-              relation('out', 'partnershipRel', 'partnership', {
-                active: false,
-              }),
+              relation('out', 'partnershipRel', 'partnership', ACTIVE),
+              node('node', 'Partnership'),
+            ])
+            .apply((q) =>
+              status === ProjectChangeRequestStatus.Approved
+                ? q.apply(commitChangesetProps())
+                : q.apply(rejectChangesetProps())
+            )
+            .return('1')
+        )
+        .subQuery((sub) =>
+          sub
+            .with('project, changeset')
+            .match([
+              node('project'),
+              relation('out', 'partnershipRel', 'partnership', INACTIVE),
               node('node', 'Partnership'),
               relation('in', 'changesetRel', 'changeset', ACTIVE),
               node('changeset'),
@@ -65,14 +68,9 @@ export class ApplyFinalizedChangesetToPartnership
             .setValues({
               'partnershipRel.active': true,
             })
-            .return('node')
+            .return('2')
         )
-        .apply((q) =>
-          status === ProjectChangeRequestStatus.Approved
-            ? q.apply(commitChangesetProps())
-            : q.apply(rejectChangesetProps())
-        )
-        .return<{ id: ID }>(['node.id as id'])
+        .return('project')
         .run();
 
       // Remove deleting partnerships
