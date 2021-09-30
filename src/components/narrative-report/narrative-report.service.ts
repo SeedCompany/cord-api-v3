@@ -174,6 +174,11 @@ export class NarrativeReportService {
 
     if (newStatus) {
       await this.repo.updateProperties(report, { status: newStatus });
+      if (newStatus === Status.InReview) {
+        // TODO send in review notification to project's ProjectManagers, RegionalDirectors, FieldOpsDirectors
+      }
     }
+
+    // TODO Notify project's FieldPartners & ProjectManagers when report period ends that report is due in a month.
   }
 }

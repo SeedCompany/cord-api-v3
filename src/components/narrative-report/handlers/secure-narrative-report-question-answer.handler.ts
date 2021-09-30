@@ -33,6 +33,7 @@ export class SecureNarrativeReportQuestionAnswerHandler
           'You cannot add question/answers to this report'
         );
       }
+      // TODO confirm question & category are in question bank
 
       event.markAllowed();
       return;
