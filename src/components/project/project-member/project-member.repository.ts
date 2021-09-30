@@ -146,13 +146,21 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
             ]
           : []),
         node('node', 'ProjectMember'),
-        ...(filter.roles
-          ? [
-              relation('out', '', 'roles', ACTIVE),
-              node('role', 'Property', { value: filter.roles }),
-            ]
-          : []),
       ])
+      .apply((q) =>
+        filter.roles
+          ? q
+              .match([
+                node('node'),
+                relation('out', '', 'roles', ACTIVE),
+                node('role', 'Property'),
+              ])
+              .raw(
+                `WHERE size(apoc.coll.intersection(role.value, $filteredRoles)) > 0`,
+                { filteredRoles: filter.roles }
+              )
+          : q
+      )
       .match(requestingUser(session))
       .apply(sorting(ProjectMember, input))
       .apply(paginate(input, this.hydrate(session)))
