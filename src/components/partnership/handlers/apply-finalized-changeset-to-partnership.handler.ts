@@ -48,13 +48,23 @@ export class ApplyFinalizedChangesetToPartnership
               relation('out', 'partnershipRel', 'partnership', ACTIVE),
               node('node', 'Partnership'),
             ])
-            .apply((q) =>
+            .apply(
               status === ProjectChangeRequestStatus.Approved
-                ? q.apply(commitChangesetProps())
-                : q.apply(rejectChangesetProps())
+                ? commitChangesetProps()
+                : rejectChangesetProps()
             )
             .return('1')
         )
+        .return('project')
+        .run();
+
+      await this.db
+        .query()
+        .match([
+          node('project', 'Project'),
+          relation('out', '', 'changeset', ACTIVE),
+          node('changeset', 'Changeset', { id: changesetId }),
+        ])
         .subQuery((sub) =>
           sub
             .with('project, changeset')
@@ -68,7 +78,7 @@ export class ApplyFinalizedChangesetToPartnership
             .setValues({
               'partnershipRel.active': true,
             })
-            .return('2')
+            .return('1')
         )
         .return('project')
         .run();

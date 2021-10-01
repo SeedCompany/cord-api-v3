@@ -48,13 +48,23 @@ export class ApplyFinalizedChangesetToEngagement
               relation('out', 'engagementRel', 'engagement', ACTIVE),
               node('node', 'Engagement'),
             ])
-            .apply((q) =>
+            .apply(
               status === ProjectChangeRequestStatus.Approved
-                ? q.apply(commitChangesetProps())
-                : q.apply(rejectChangesetProps())
+                ? commitChangesetProps()
+                : rejectChangesetProps()
             )
             .return('1')
         )
+        .return('project')
+        .run();
+
+      await this.db
+        .query()
+        .match([
+          node('project', 'Project'),
+          relation('out', '', 'changeset', ACTIVE),
+          node('changeset', 'Changeset', { id: changesetId }),
+        ])
         .subQuery((sub) =>
           sub
             .with('project, changeset')
@@ -68,7 +78,7 @@ export class ApplyFinalizedChangesetToEngagement
             .setValues({
               'engagementRel.active': true,
             })
-            .return('2')
+            .return('1')
         )
         .return('project')
         .run();
