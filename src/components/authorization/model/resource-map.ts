@@ -26,6 +26,7 @@ import {
   IPeriodicReport as PeriodicReport,
   ProgressReport,
 } from '../../periodic-report/dto';
+import { StepProgress } from '../../product-progress/dto';
 import {
   DerivativeScriptureProduct,
   DirectScriptureProduct,
@@ -86,6 +87,7 @@ export const ResourceMap = {
   NarrativeReport,
   ProgressReport,
   ProjectChangeRequest,
+  StepProgress,
   Song,
   Story,
   Unavailability,
