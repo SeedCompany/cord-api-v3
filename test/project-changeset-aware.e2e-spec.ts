@@ -261,4 +261,51 @@ describe('Project Changeset Aware e2e', () => {
     result = await readProject(app, project.id);
     expect(result.project.budget.value.records.length).toBe(2);
   });
+
+  it('project step', async () => {
+    const project = await activeProject(app);
+    const changeset = await createProjectChangeRequest(app, {
+      projectId: project.id,
+    });
+
+    // Update project step with changeset
+    const mutationResult = await app.graphql.mutate(
+      gql`
+        mutation updateProject($input: UpdateProjectInput!) {
+          updateProject(input: $input) {
+            project {
+              ...project
+            }
+          }
+        }
+        ${fragments.project}
+      `,
+      {
+        input: {
+          project: {
+            id: project.id,
+            step: ProjectStep.FinalizingCompletion,
+          },
+          changeset: changeset.id,
+        },
+      }
+    );
+    expect(mutationResult.updateProject.project.step.value).toBe(
+      ProjectStep.FinalizingCompletion
+    );
+
+    // Query project without changeset
+    let result = await readProject(app, project.id);
+    expect(result.project.step.value).toBe(ProjectStep.Active);
+
+    // Query project with changeset
+    result = await readProject(app, project.id, changeset.id);
+    expect(result.project.step.value).toBe(ProjectStep.FinalizingCompletion);
+
+    await approveProjectChangeRequest(app, changeset.id);
+
+    // Project name is changed without changeset
+    result = await readProject(app, project.id);
+    expect(result.project.step.value).toBe(ProjectStep.FinalizingCompletion);
+  });
 });
