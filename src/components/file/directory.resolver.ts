@@ -56,7 +56,7 @@ export class DirectoryResolver {
   })
   async modifiedBy(
     @Parent() node: Directory,
-    @Loader(UserLoader) users: LoaderOf<UserLoader>
+    @Loader(() => UserLoader) users: LoaderOf<UserLoader>
   ): Promise<User> {
     return await users.load(node.modifiedBy);
   }

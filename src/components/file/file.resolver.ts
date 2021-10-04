@@ -52,7 +52,7 @@ export class FileResolver {
   })
   async modifiedBy(
     @Parent() node: File,
-    @Loader(UserLoader) users: LoaderOf<UserLoader>
+    @Loader(() => UserLoader) users: LoaderOf<UserLoader>
   ): Promise<User> {
     return await users.load(node.modifiedById);
   }
