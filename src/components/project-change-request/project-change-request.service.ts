@@ -27,7 +27,7 @@ import {
   ProjectChangeRequestStatus as Status,
   UpdateProjectChangeRequest,
 } from './dto';
-import { ProjectChangeRequestApprovedEvent } from './events';
+import { ProjectChangeRequestFinalizedEvent } from './events';
 import { ProjectChangeRequestRepository } from './project-change-request.repository';
 
 @Injectable()
@@ -120,10 +120,10 @@ export class ProjectChangeRequestService {
 
     if (
       object.status === Status.Pending &&
-      changes.status === Status.Approved
+      (changes.status === Status.Approved || changes.status === Status.Rejected)
     ) {
       await this.eventBus.publish(
-        new ProjectChangeRequestApprovedEvent(updated, session)
+        new ProjectChangeRequestFinalizedEvent(updated, session)
       );
     }
 

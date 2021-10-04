@@ -7,56 +7,70 @@ import {
   ILogger,
   Logger,
 } from '../../../core';
-import { ACTIVE, deleteBaseNode } from '../../../core/database/query';
+import { ACTIVE, deleteBaseNode, INACTIVE } from '../../../core/database/query';
 import { commitChangesetProps } from '../../changeset/commit-changeset-props.query';
-import { EngagementService } from '../../engagement';
-import { ProjectChangeRequestApprovedEvent } from '../../project-change-request/events';
+import { rejectChangesetProps } from '../../changeset/reject-changeset-props.query';
+import { ProjectChangeRequestStatus } from '../../project-change-request/dto';
+import { ProjectChangeRequestFinalizedEvent } from '../../project-change-request/events';
 
-type SubscribedEvent = ProjectChangeRequestApprovedEvent;
+type SubscribedEvent = ProjectChangeRequestFinalizedEvent;
 
-@EventsHandler(ProjectChangeRequestApprovedEvent)
-export class ApplyApprovedChangesetToEngagement
+@EventsHandler(ProjectChangeRequestFinalizedEvent)
+export class ApplyFinalizedChangesetToEngagement
   implements IEventHandler<SubscribedEvent>
 {
   constructor(
     private readonly db: DatabaseService,
-    private readonly service: EngagementService,
-    @Logger('engagement:change-request:approved')
+    @Logger('engagement:change-request:finalized')
     private readonly logger: ILogger
   ) {}
 
   async handle(event: SubscribedEvent) {
     this.logger.debug('Applying changeset props');
 
-    const changeset = event.changeRequest.id;
+    const changesetId = event.changeRequest.id;
+    const status = event.changeRequest.status;
 
     try {
       // Update project engagement pending changes
-      const engagements = await this.db
+      await this.db
         .query()
         .match([
           node('project', 'Project'),
           relation('out', '', 'changeset', ACTIVE),
-          node('changeset', 'Changeset', { id: changeset }),
+          node('changeset', 'Changeset', { id: changesetId }),
         ])
         .subQuery((sub) =>
           sub
-            .with('project')
-            .match([
-              node('project'),
-              relation('out', 'engagementRel', 'engagement', {
-                active: true,
-              }),
-              node('node', 'Engagement'),
-            ])
-            .return('node')
-            .union()
             .with('project, changeset')
             .match([
               node('project'),
-              relation('out', 'engagementRel', 'engagement', {
-                active: false,
-              }),
+              relation('out', 'engagementRel', 'engagement', ACTIVE),
+              node('node', 'Engagement'),
+            ])
+            .apply(
+              status === ProjectChangeRequestStatus.Approved
+                ? commitChangesetProps()
+                : rejectChangesetProps()
+            )
+            .return('1')
+        )
+        .return('project')
+        .run();
+
+      await this.db
+        .query()
+        .match([
+          node('project', 'Project'),
+          relation('out', '', 'changeset', ACTIVE),
+          node('changeset', 'Changeset', { id: changesetId }),
+        ])
+        .subQuery((sub) =>
+          sub
+            .with('project, changeset')
+            .match([
+              node('project'),
+              relation('out', 'engagementRel', 'engagement', INACTIVE),
               node('node', 'Engagement'),
               relation('in', 'changesetRel', 'changeset', ACTIVE),
               node('changeset'),
@@ -64,31 +78,13 @@ export class ApplyApprovedChangesetToEngagement
             .setValues({
               'engagementRel.active': true,
             })
-            .return('node')
+            .return('1')
         )
-        .return<{ id: ID }>(['node.id as id'])
+        .return('project')
         .run();
 
-      await Promise.all(
-        engagements.map(async ({ id }) => {
-          // Skip looping for engagements created in changeset
-          await this.db
-            .query()
-            .match([
-              node('changeset', 'Changeset', { id: changeset }),
-              relation('in', '', 'changeset', ACTIVE),
-              node('project', 'Project'),
-              relation('out', '', 'engagement', ACTIVE),
-              node('node', 'Engagement', { id }),
-            ])
-            .apply(commitChangesetProps())
-            .return('node')
-            .run();
-        })
-      );
-
       // Remove deleting engagements
-      await this.removeDeletingEngagements(changeset);
+      await this.removeDeletingEngagements(changesetId);
     } catch (exception) {
       throw new ServerException(
         'Failed to apply changeset to project',
