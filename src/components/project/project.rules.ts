@@ -75,6 +75,9 @@ export class ProjectRules {
     id: ID,
     changeset?: ID
   ): Promise<StepRule> {
+    const mostRecentPreviousStep = (steps: ProjectStep[]) =>
+      this.getMostRecentPreviousStep(id, steps, changeset);
+
     switch (step) {
       case ProjectStep.EarlyConversations:
         return {
@@ -462,11 +465,10 @@ export class ProjectRules {
               label: 'Discuss Suspension',
             },
             {
-              to: await this.getMostRecentPreviousStep(
-                id,
-                [ProjectStep.Active, ProjectStep.ActiveChangedPlan],
-                changeset
-              ),
+              to: await mostRecentPreviousStep([
+                ProjectStep.Active,
+                ProjectStep.ActiveChangedPlan,
+              ]),
               type: TransitionType.Neutral,
               label: 'Will Not Change Plan',
             },
@@ -496,11 +498,10 @@ export class ProjectRules {
               label: 'Approve Change to Plan',
             },
             {
-              to: await this.getMostRecentPreviousStep(
-                id,
-                [ProjectStep.Active, ProjectStep.ActiveChangedPlan],
-                changeset
-              ),
+              to: await mostRecentPreviousStep([
+                ProjectStep.Active,
+                ProjectStep.ActiveChangedPlan,
+              ]),
               type: TransitionType.Reject,
               label: 'Reject Change to Plan',
             },
@@ -526,11 +527,10 @@ export class ProjectRules {
               label: 'Approve Change to Plan',
             },
             {
-              to: await this.getMostRecentPreviousStep(
-                id,
-                [ProjectStep.Active, ProjectStep.ActiveChangedPlan],
-                changeset
-              ),
+              to: await mostRecentPreviousStep([
+                ProjectStep.Active,
+                ProjectStep.ActiveChangedPlan,
+              ]),
               type: TransitionType.Reject,
               label: 'Reject Change to Plan',
             },
@@ -557,11 +557,10 @@ export class ProjectRules {
               label: 'Submit for Approval',
             },
             {
-              to: await this.getMostRecentPreviousStep(
-                id,
-                [ProjectStep.Active, ProjectStep.ActiveChangedPlan],
-                changeset
-              ),
+              to: await mostRecentPreviousStep([
+                ProjectStep.Active,
+                ProjectStep.ActiveChangedPlan,
+              ]),
               type: TransitionType.Neutral,
               label: 'Will Not Suspend',
             },
@@ -590,11 +589,10 @@ export class ProjectRules {
               label: 'Approve Suspension',
             },
             {
-              to: await this.getMostRecentPreviousStep(
-                id,
-                [ProjectStep.Active, ProjectStep.ActiveChangedPlan],
-                changeset
-              ),
+              to: await mostRecentPreviousStep([
+                ProjectStep.Active,
+                ProjectStep.ActiveChangedPlan,
+              ]),
               type: TransitionType.Reject,
               label: 'Reject Suspension',
             },
@@ -698,16 +696,12 @@ export class ProjectRules {
               label: 'Submit for Approval',
             },
             {
-              to: await this.getMostRecentPreviousStep(
-                id,
-                [
-                  ProjectStep.DiscussingReactivation,
-                  ProjectStep.Suspended,
-                  ProjectStep.Active,
-                  ProjectStep.ActiveChangedPlan,
-                ],
-                changeset
-              ),
+              to: await mostRecentPreviousStep([
+                ProjectStep.DiscussingReactivation,
+                ProjectStep.Suspended,
+                ProjectStep.Active,
+                ProjectStep.ActiveChangedPlan,
+              ]),
               type: TransitionType.Neutral,
               label: 'Will Not Terminate',
             },
@@ -736,16 +730,12 @@ export class ProjectRules {
               label: 'Send Back for Corrections',
             },
             {
-              to: await this.getMostRecentPreviousStep(
-                id,
-                [
-                  ProjectStep.DiscussingReactivation,
-                  ProjectStep.Suspended,
-                  ProjectStep.Active,
-                  ProjectStep.ActiveChangedPlan,
-                ],
-                changeset
-              ),
+              to: await mostRecentPreviousStep([
+                ProjectStep.DiscussingReactivation,
+                ProjectStep.Suspended,
+                ProjectStep.Active,
+                ProjectStep.ActiveChangedPlan,
+              ]),
               type: TransitionType.Neutral,
               label: 'Will Not Terminate',
             },
@@ -767,11 +757,10 @@ export class ProjectRules {
           ],
           transitions: [
             {
-              to: await this.getMostRecentPreviousStep(
-                id,
-                [ProjectStep.Active, ProjectStep.ActiveChangedPlan],
-                changeset
-              ),
+              to: await mostRecentPreviousStep([
+                ProjectStep.Active,
+                ProjectStep.ActiveChangedPlan,
+              ]),
               type: TransitionType.Neutral,
               label: 'Still Working',
             },
