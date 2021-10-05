@@ -3,7 +3,10 @@ import { ClauseCollection, Query } from 'cypher-query-builder';
 export class SubClauseCollection extends ClauseCollection {
   build() {
     return this.clauses
-      .map((clause) => `  ${clause.build()}`.replace(/\n/g, `\n  `))
+      .flatMap((clause) => {
+        const built = clause.build();
+        return built ? `  ${built}`.replace(/\n/g, `\n  `) : [];
+      })
       .join('\n');
   }
 

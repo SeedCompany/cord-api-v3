@@ -50,11 +50,27 @@ export interface NestDataLoader<T, Key = ID, CachedKey = Key> {
   ) => DataLoader<T, Key, CachedKey>;
 }
 
+type LoaderType = Type<NestDataLoader<any, any>>;
+type LoaderTypeOrFn = LoaderType | (() => LoaderType);
+
 /**
  * The decorator to be used within your graphql method.
  */
-export const Loader = createParamDecorator(
-  (type: Type<NestDataLoader<any, any>>, context: ExecutionContext) => {
+export const Loader =
+  (type: LoaderTypeOrFn): ParameterDecorator =>
+  (target, key, index) => {
+    if (!type) {
+      const source = `${target.constructor.name}.${String(key)}[${index}]`;
+      throw new ServerException(
+        `@Loader for ${source} failed to reference loader class. Try wrapping the loader class in \`() => Type\`.`
+      );
+    }
+
+    LoaderInner(type)(target, key, index);
+  };
+
+export const LoaderInner = createParamDecorator(
+  (type: LoaderTypeOrFn, context: ExecutionContext) => {
     if (context.getType<GqlRequestType>() !== 'graphql') {
       throw new ServerException(
         '@Loader should only be used within the GraphQL context'
@@ -68,6 +84,9 @@ export const Loader = createParamDecorator(
       );
     }
 
-    return ctx[NEST_LOADER_CONTEXT_KEY].getLoader(type);
+    const resolvedType = type.prototype
+      ? (type as LoaderType)
+      : (type as () => LoaderType)();
+    return ctx[NEST_LOADER_CONTEXT_KEY].getLoader(resolvedType);
   }
 );

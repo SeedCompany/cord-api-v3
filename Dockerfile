@@ -10,13 +10,7 @@ WORKDIR /opt/cord-api
 
 RUN apk add --no-cache jq
 
-ENV NODE_ENV=development \
-    NEO4J_URL= \
-    NEO4J_USERNAME= \
-    NEO4J_PASSWORD= \
-    JWT_AUTH_KEY= \
-    FILES_S3_BUCKET= \
-    PORT=80
+ENV NODE_ENV=development PORT=80
 
 EXPOSE 80
 

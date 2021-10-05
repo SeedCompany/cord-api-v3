@@ -4,12 +4,14 @@ import {
   getDbPropertyUnique,
   ID,
   isIdLike,
+  Many,
   ResourceShape,
   ServerException,
   Session,
 } from '../../common';
 import { DatabaseService } from './database.service';
 import { createUniqueConstraint } from './indexer';
+import { BaseNode } from './results';
 
 /**
  * This provides a few methods out of the box.
@@ -17,6 +19,18 @@ import { createUniqueConstraint } from './indexer';
 @Injectable()
 export class CommonRepository {
   constructor(protected db: DatabaseService) {}
+
+  async getBaseNode(
+    id: ID,
+    label?: Many<string>
+  ): Promise<BaseNode | undefined> {
+    return await this.db
+      .query()
+      .matchNode('node', label ?? 'BaseNode', { id })
+      .return<{ node: BaseNode }>('node')
+      .map('node')
+      .first();
+  }
 
   async checkDeletePermission(id: ID, session: Session | ID) {
     return await this.db.checkDeletePermission(id, session);
