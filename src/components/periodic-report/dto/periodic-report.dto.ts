@@ -13,6 +13,7 @@ import {
   ServerException,
   simpleSwitch,
 } from '../../../common';
+import { BaseNode as DbBaseNode } from '../../../core/database/results';
 import { ScopedRole } from '../../authorization';
 import { DefinedFile } from '../../file';
 import { ReportType } from './report-type.enum';
@@ -44,6 +45,8 @@ class PeriodicReport extends Resource {
 
   @Field(() => ReportType)
   readonly type: ReportType;
+
+  readonly parent: DbBaseNode;
 
   @Field()
   readonly start: CalendarDate;

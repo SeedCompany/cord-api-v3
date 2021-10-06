@@ -20,6 +20,7 @@ import {
   CreateFileVersionInput,
   DefinedFile,
   Directory,
+  Downloadable,
   File,
   FileListInput,
   FileListOutput,
@@ -68,6 +69,18 @@ export class FileService {
       throw new InputException('Node is not a file version');
     }
     return node;
+  }
+
+  asDownloadable(file: FileVersion): Downloadable<FileVersion> {
+    let downloading: Promise<Buffer> | undefined;
+    return Object.assign(file, {
+      download: () => {
+        if (!downloading) {
+          downloading = this.downloadFileVersion(file.id);
+        }
+        return downloading;
+      },
+    });
   }
 
   async getFileNode(id: ID, session: Session): Promise<FileNode> {

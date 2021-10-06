@@ -506,6 +506,10 @@ export class ProductService {
     return await mapListResults(results, (id) => this.readOne(id, session));
   }
 
+  async listIdsAndScriptureRefs(engagementId: ID) {
+    return await this.repo.listIdsAndScriptureRefs(engagementId);
+  }
+
   protected getMethodologiesByApproach(
     approach: ProductApproach
   ): ProductMethodology[] {

@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, Query, relation } from 'cypher-query-builder';
+import { inArray, Node, node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { Except, Merge } from 'type-fest';
 import {
   getDbClassLabels,
   ID,
   NotFoundException,
+  Range,
   ServerException,
   Session,
   UnsecuredDto,
@@ -14,6 +15,7 @@ import { CommonRepository, OnIndex } from '../../core';
 import { DbChanges, getChanges } from '../../core/database/changes';
 import {
   ACTIVE,
+  collect,
   createNode,
   createRelationships,
   escapeLuceneSyntax,
@@ -95,6 +97,27 @@ export class ProductRepository extends CommonRepository {
       .where({ 'node.id': inArray(ids.slice()) })
       .apply(this.hydrate(session))
       .map('dto')
+      .run();
+  }
+
+  async listIdsAndScriptureRefs(engagementId: ID) {
+    return await this.db
+      .query()
+      .match([
+        node('engagement', 'Engagement', { id: engagementId }),
+        relation('out', '', 'product', ACTIVE),
+        node('node', 'DirectScriptureProduct'),
+      ])
+      // Only concerned with Direct Scripture Products for this, so no need to worry about overrides
+      .match([
+        node('node'),
+        relation('out', '', 'scriptureReferences', ACTIVE),
+        node('scriptureRanges', 'ScriptureRange'),
+      ])
+      .return<{
+        id: ID;
+        scriptureRanges: ReadonlyArray<Node<Range<number>>>;
+      }>(['node.id as id', collect('scriptureRanges').as('scriptureRanges')])
       .run();
   }
 

@@ -87,7 +87,11 @@ export class PeriodicReportService {
         session
       );
       await this.eventBus.publish(
-        new PeriodicReportUploadedEvent(updated, newVersion, session)
+        new PeriodicReportUploadedEvent(
+          updated,
+          this.files.asDownloadable(newVersion),
+          session
+        )
       );
     }
 
@@ -141,13 +145,13 @@ export class PeriodicReportService {
   }
 
   async list(
-    projectId: ID,
+    parentId: ID,
     reportType: ReportType,
     input: PeriodicReportListInput,
     session: Session
   ): Promise<SecuredPeriodicReportList> {
     const results = await this.repo.listReports(
-      projectId,
+      parentId,
       reportType,
       input,
       session
