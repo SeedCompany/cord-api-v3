@@ -87,7 +87,11 @@ export class PeriodicReportService {
         session
       );
       await this.eventBus.publish(
-        new PeriodicReportUploadedEvent(updated, newVersion, session)
+        new PeriodicReportUploadedEvent(
+          updated,
+          this.files.asDownloadable(newVersion),
+          session
+        )
       );
     }
 

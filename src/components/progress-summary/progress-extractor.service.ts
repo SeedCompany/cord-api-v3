@@ -3,15 +3,12 @@ import { CellObject, read, WorkBook, WorkSheet } from 'xlsx';
 import { CalendarDate, fiscalQuarter, fiscalYear } from '../../common';
 import { cellAsNumber } from '../../common/xlsx.util';
 import { ILogger, Logger } from '../../core';
-import { FileService, FileVersion } from '../file';
+import { Downloadable, FileVersion } from '../file';
 import { ProgressSummary as Progress } from './dto';
 
 @Injectable()
 export class ProgressExtractor {
-  constructor(
-    private readonly files: FileService,
-    @Logger('progress:extractor') private readonly logger: ILogger
-  ) {}
+  constructor(@Logger('progress:extractor') private readonly logger: ILogger) {}
 
   extract(pnp: WorkBook, file: FileVersion, date: CalendarDate) {
     const sheet = pnp.Sheets.Progress;
@@ -40,8 +37,8 @@ export class ProgressExtractor {
     };
   }
 
-  async readWorkbook(file: FileVersion) {
-    const buffer = await this.files.downloadFileVersion(file.id);
+  async readWorkbook(file: Downloadable<FileVersion>) {
+    const buffer = await file.download();
     return read(buffer, { type: 'buffer' });
   }
 

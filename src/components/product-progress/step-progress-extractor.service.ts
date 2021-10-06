@@ -3,19 +3,18 @@ import { CellObject, read, WorkSheet } from 'xlsx';
 import { entries } from '../../common';
 import { cellAsNumber, cellAsString } from '../../common/xlsx.util';
 import { ILogger, Logger } from '../../core';
-import { FileService, FileVersion } from '../file';
+import { Downloadable, FileVersion } from '../file';
 import { MethodologyStep } from '../product';
 import { StepProgressInput } from './dto';
 
 @Injectable()
 export class StepProgressExtractor {
   constructor(
-    private readonly files: FileService,
     @Logger('step-progress:extractor') private readonly logger: ILogger
   ) {}
 
-  async extract(file: FileVersion) {
-    const buffer = await this.files.downloadFileVersion(file.id);
+  async extract(file: Downloadable<FileVersion>) {
+    const buffer = await file.download();
     const pnp = read(buffer, { type: 'buffer' });
 
     const sheet = pnp.Sheets.Progress;

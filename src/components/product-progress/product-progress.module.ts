@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { AuthorizationModule } from '../authorization/authorization.module';
-import { FileModule } from '../file/file.module';
 import { PeriodicReportModule } from '../periodic-report/periodic-report.module';
 import { ProductModule } from '../product/product.module';
 import * as handlers from './handlers';
@@ -13,12 +12,7 @@ import { StepProgressExtractor } from './step-progress-extractor.service';
 import { StepProgressResolver } from './step-progress.resolver';
 
 @Module({
-  imports: [
-    ProductModule,
-    PeriodicReportModule,
-    AuthorizationModule,
-    FileModule,
-  ],
+  imports: [ProductModule, PeriodicReportModule, AuthorizationModule],
   providers: [
     ProgressReportConnectionResolver,
     ProductProgressResolver,
