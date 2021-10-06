@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CellObject, read, WorkBook, WorkSheet } from 'xlsx';
 import { CalendarDate, fiscalQuarter, fiscalYear } from '../../common';
+import { cellAsNumber } from '../../common/xlsx.util';
 import { ILogger, Logger } from '../../core';
 import { FileService, FileVersion } from '../file';
 import { ProgressSummary as Progress } from './dto';
@@ -70,6 +71,3 @@ const findFiscalYearRow = (sheet: WorkSheet, fiscalYear: number) => {
     i++;
   }
 };
-
-const cellAsNumber = (cell: CellObject) =>
-  cell && cell.t === 'n' && typeof cell.v === 'number' ? cell.v : undefined;
