@@ -13,7 +13,10 @@ import {
   SensitivityField,
 } from '../../../common';
 import { SetChangeType } from '../../../core/database/changes';
-import { SecuredScriptureRangesOverride } from '../../scripture';
+import {
+  SecuredScriptureRangesOverride,
+  SecuredUnspecifiedScripturePortion,
+} from '../../scripture';
 import { SecuredMethodologySteps } from './methodology-step.enum';
 import { Producible, SecuredProducible } from './producible.dto';
 import { SecuredProductMediums } from './product-medium';
@@ -95,6 +98,16 @@ export class Product extends Producible {
 export class DirectScriptureProduct extends Product {
   static readonly Props = keysOf<DirectScriptureProduct>();
   static readonly SecuredProps = keysOf<SecuredProps<DirectScriptureProduct>>();
+
+  @Field({
+    description: stripIndent`
+      An unspecified portion of scripture which this product is translating.
+
+      Usage of this is always discouraged in favor of explicit scripture references.
+      This is needed for legacy data where we only know the total verse count.
+    `,
+  })
+  unspecifiedScripture: SecuredUnspecifiedScripturePortion;
 }
 
 @ObjectType({

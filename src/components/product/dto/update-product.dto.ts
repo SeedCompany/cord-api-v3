@@ -29,7 +29,10 @@ export abstract class UpdateBaseProduct extends OmitType(CreateBaseProduct, [
 @InputType()
 export abstract class UpdateDirectScriptureProduct extends IntersectionType(
   UpdateBaseProduct,
-  PickType(CreateDirectScriptureProduct, ['scriptureReferences'])
+  PickType(CreateDirectScriptureProduct, [
+    'scriptureReferences',
+    'unspecifiedScripture',
+  ])
 ) {}
 
 @InputType()

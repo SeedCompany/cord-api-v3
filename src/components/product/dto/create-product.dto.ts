@@ -4,7 +4,10 @@ import { IsPositive, ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
 import { uniq } from 'lodash';
 import { ID, IdField, NameField } from '../../../common';
-import { ScriptureRangeInput } from '../../scripture';
+import {
+  ScriptureRangeInput,
+  UnspecifiedScripturePortionInput,
+} from '../../scripture';
 import { MethodologyStep } from './methodology-step.enum';
 import { ProductMedium } from './product-medium';
 import { ProductMethodology } from './product-methodology';
@@ -64,6 +67,13 @@ export abstract class CreateDirectScriptureProduct extends CreateBaseProduct {
   @ValidateNested()
   @Type(() => ScriptureRangeInput)
   readonly scriptureReferences?: readonly ScriptureRangeInput[];
+
+  @Field(() => UnspecifiedScripturePortionInput, {
+    nullable: true,
+  })
+  @ValidateNested()
+  @Type(() => UnspecifiedScripturePortionInput)
+  readonly unspecifiedScripture?: UnspecifiedScripturePortionInput | null;
 }
 
 @InputType()
