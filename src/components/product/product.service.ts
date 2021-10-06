@@ -137,22 +137,24 @@ export class ProductService {
     );
 
     if (title) {
-      return {
+      const dto: UnsecuredDto<OtherProduct> = {
         ...props,
         title,
         description,
         scriptureReferences: scriptureReferencesValue,
       };
+      return dto;
     }
 
     if (!producible) {
-      return {
+      const dto: UnsecuredDto<DirectScriptureProduct> = {
         ...props,
         scriptureReferences: scriptureReferencesValue,
       };
+      return dto;
     }
 
-    return {
+    const dto: UnsecuredDto<DerivativeScriptureProduct> = {
       ...props,
       produces: producible,
       scriptureReferences: !isOverriding
@@ -162,6 +164,7 @@ export class ProductService {
         ? null
         : scriptureReferencesValue,
     };
+    return dto;
   }
 
   async secure(
@@ -224,7 +227,7 @@ export class ProductService {
 
     const securedProps = await this.authorizationService.secureProperties(
       DirectScriptureProduct,
-      dto,
+      dto as UnsecuredDto<DirectScriptureProduct>,
       session
     );
     const direct: DirectScriptureProduct = {
@@ -265,7 +268,11 @@ export class ProductService {
           'product.scriptureReferencesOverride'
         );
       }
-      return await this.updateDirect(currentProduct, input, session);
+      return await this.updateDirect(
+        currentProduct as UnsecuredDto<DirectScriptureProduct>,
+        input,
+        session
+      );
     }
 
     // If current product is a Derivative Scripture Product, cannot update scriptureReferencesOverride
@@ -282,7 +289,7 @@ export class ProductService {
     currentProduct: UnsecuredDto<DirectScriptureProduct>,
     input: Except<UpdateProduct, 'produces' | 'scriptureReferencesOverride'>,
     session: Session
-  ) {
+  ): Promise<DirectScriptureProduct> {
     let changes = this.repo.getActualDirectChanges(currentProduct, input);
     changes = {
       ...changes,
@@ -305,10 +312,10 @@ export class ProductService {
 
     await this.mergeCompletionDescription(changes, currentProduct);
 
-    const productUpdatedScriptureReferences = await this.readOne(
+    const productUpdatedScriptureReferences = (await this.readOne(
       input.id,
       session
-    );
+    )) as DirectScriptureProduct;
 
     return await this.repo.updateProperties(
       productUpdatedScriptureReferences,
@@ -320,7 +327,7 @@ export class ProductService {
     currentProduct: UnsecuredDto<DerivativeScriptureProduct>,
     input: Except<UpdateProduct, 'scriptureReferences'>,
     session: Session
-  ) {
+  ): Promise<DerivativeScriptureProduct> {
     let changes = this.repo.getActualDerivativeChanges(
       // getChanges doesn't care if current is secured or not.
       // Applying this type so that the SetChangeType<> overrides still apply
@@ -376,10 +383,10 @@ export class ProductService {
       { isOverriding: true }
     );
 
-    const productUpdatedScriptureReferences = await this.readOne(
+    const productUpdatedScriptureReferences = (await this.readOne(
       input.id,
       session
-    );
+    )) as DerivativeScriptureProduct;
 
     return await this.repo.updateDerivativeProperties(
       productUpdatedScriptureReferences,

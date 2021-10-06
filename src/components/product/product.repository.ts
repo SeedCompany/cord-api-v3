@@ -300,10 +300,7 @@ export class ProductRepository extends CommonRepository {
   }
 
   async updateDerivativeProperties(
-    object: Except<
-      DerivativeScriptureProduct,
-      'produces' | 'scriptureReferencesOverride'
-    >,
+    object: DerivativeScriptureProduct,
     changes: DbChanges<DerivativeScriptureProduct>
   ) {
     return await this.db.updateProperties({
