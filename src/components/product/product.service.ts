@@ -116,13 +116,6 @@ export class ProductService {
     return await this.secure(dto, session);
   }
 
-  async readMany(ids: readonly ID[], session: Session) {
-    const products = await this.repo.readMany(ids, session);
-    return await Promise.all(
-      products.map(async (dto) => await this.readOne(dto.id, session))
-    );
-  }
-
   async readOneUnsecured(
     id: ID,
     session: Session
