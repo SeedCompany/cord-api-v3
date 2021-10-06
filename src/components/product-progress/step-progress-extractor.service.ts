@@ -35,7 +35,8 @@ function findProductProgressRows(sheet: WorkSheet) {
   let row = 23;
   while (
     cellAsString(sheet[`P${row}`]) &&
-    cellAsString(sheet[`P${row}`]) !== 'Other Goals and Milestones'
+    cellAsString(sheet[`P${row}`]) !== 'Other Goals and Milestones' &&
+    (cellAsNumber(sheet[`Q${row}`]) ?? 0) > 0
   ) {
     matchedRows.push(row);
     row++;
@@ -45,6 +46,7 @@ function findProductProgressRows(sheet: WorkSheet) {
 
 const parseProgressRow = (sheet: WorkSheet) => (row: number) => {
   const bookName = cellAsString(sheet[`P${row}`])!; // Asserting bc loop verified this
+  const totalVerses = cellAsNumber(sheet[`Q${row}`])!;
   const stepColumns = {
     [MethodologyStep.ExegesisAndFirstDraft]: 'R',
     [MethodologyStep.TeamCheck]: 'T',
@@ -68,5 +70,5 @@ const parseProgressRow = (sheet: WorkSheet) => (row: number) => {
       completed: progress(column),
     })
   );
-  return { bookName, steps };
+  return { bookName, totalVerses, steps };
 };

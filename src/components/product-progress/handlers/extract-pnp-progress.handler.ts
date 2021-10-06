@@ -1,4 +1,4 @@
-import { uniq } from 'lodash';
+import { sumBy, uniq } from 'lodash';
 import { ID } from '../../../common';
 import { EventsHandler, ILogger, Logger } from '../../../core';
 import { ReportType } from '../../periodic-report/dto';
@@ -32,17 +32,20 @@ export class ExtractPnpProgressHandler {
     const bookMap = await this.getProductsMappedToBook(event);
 
     // Convert book name to product ID
-    const updates = progressRows.flatMap(({ bookName, steps }) => {
-      const productId = bookMap[bookName];
+    const updates = progressRows.flatMap(({ bookName, totalVerses, steps }) => {
+      const productId = bookMap[`${bookName}:${totalVerses}`];
       if (productId) {
         return { productId, steps };
       }
 
-      this.logger.warning('Could not find product for book in pnp', {
-        bookName,
-        report: event.report.id,
-        file: event.file.id,
-      });
+      this.logger.warning(
+        'Could not find product for book & verse count in pnp',
+        {
+          bookName,
+          report: event.report.id,
+          file: event.file.id,
+        }
+      );
       return [];
     });
 
@@ -73,6 +76,10 @@ export class ExtractPnpProgressHandler {
       const bookEnds = uniq(
         refs.flatMap((ref) => [ref.start.book, ref.end.book])
       );
+      const totalVerses = sumBy(
+        productRef.scriptureRanges,
+        (raw) => raw.properties.end - raw.properties.start + 1
+      );
 
       const warn = (msg: string) =>
         this.logger.warning(
@@ -88,16 +95,17 @@ export class ExtractPnpProgressHandler {
         warn('Product scripture range spans multiple books');
         return booksSoFar;
       }
-      const book = bookEnds[0];
+      const book: string = bookEnds[0];
+      const ref = `${book}:${totalVerses}`;
 
-      if (book in booksSoFar) {
+      if (ref in booksSoFar) {
         warn(
-          'Product references a book that has already been assigned to another product'
+          'Product references a book & verse count that has already been assigned to another product'
         );
         return booksSoFar;
       }
 
-      booksSoFar[book] = productRef.id;
+      booksSoFar[ref] = productRef.id;
       return booksSoFar;
     }, {});
   }
