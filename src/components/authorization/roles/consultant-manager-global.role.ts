@@ -357,7 +357,7 @@ export const ConsultantManagerGlobal = new DbRole({
         { propertyName: 'modifiedAt', permission: { read, write, sensitivityAccess: Sensitivity.Medium }, },
         { propertyName: 'fieldRegion', permission: { read, write, }, },
         { propertyName: 'engagement', permission: { read, write, }, },
-        { propertyName: 'sensitivity', permission: { read, write, }, },
+        { propertyName: 'sensitivity', permission: { read, write, sensitivityAccess: Sensitivity.Medium }, },
         { propertyName: 'tags', permission: { read, write, }, },
         { propertyName: 'financialReportReceivedAt', permission: { read, write, }, },
         { propertyName: 'financialReportPeriod', permission: { read, write, }, },

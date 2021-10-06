@@ -85,11 +85,15 @@ export async function createOrganization(
   return org;
 }
 
-export async function addLocationToOrganization(
-  app: TestApp,
-  orgId?: string,
-  locId?: string
-) {
+export async function addLocationToOrganization({
+  app,
+  orgId,
+  locId,
+}: {
+  app: TestApp;
+  orgId?: string;
+  locId?: string;
+}) {
   const locationId = locId || (await createLocation(app)).id;
   const organizationId = orgId || (await createOrganization(app)).id;
   const result = await app.graphql.mutate(

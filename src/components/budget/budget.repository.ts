@@ -184,7 +184,7 @@ export class BudgetRepository extends DtoRepository(Budget) {
     return result!; // result from paginate() will always have 1 row.
   }
 
-  async listNoSecGroups({ filter, ...input }: BudgetListInput) {
+  async listUnsecure({ filter, ...input }: BudgetListInput) {
     const result = await this.db
       .query()
       .match([

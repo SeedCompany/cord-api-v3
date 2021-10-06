@@ -411,7 +411,7 @@ export class BudgetService {
     );
   }
 
-  async listNoSecGroups(
+  async listUnsecure(
     partialInput: Partial<BudgetListInput>,
     session: Session,
     changeset?: ID
@@ -420,7 +420,7 @@ export class BudgetService {
       ...BudgetListInput.defaultVal,
       ...partialInput,
     };
-    const results = await this.budgetRepo.listNoSecGroups(input);
+    const results = await this.budgetRepo.listUnsecure(input);
     return await mapListResults(results, (id) =>
       this.readOne(id, session, viewOfChangeset(changeset))
     );

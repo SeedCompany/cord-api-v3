@@ -25,7 +25,7 @@ import {
 } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { rolesForScope, ScopedRole } from '../authorization/dto';
+import { ScopedRole } from '../authorization/dto';
 import { Powers } from '../authorization/dto/powers';
 import { BudgetService, BudgetStatus, SecuredBudget } from '../budget';
 import {
@@ -590,25 +590,23 @@ export class ProjectService {
   }
 
   async currentBudget(
-    { id, sensitivity }: Pick<Project, 'id' | 'sensitivity'>,
+    project: IProject,
     session: Session,
     changeset?: ID
   ): Promise<SecuredBudget> {
     let budgetToReturn;
 
-    const membershipRoles = await this.getMembershipRoles(id, session);
     const permsOfProject = await this.authorizationService.getPermissions({
       resource: IProject,
       sessionOrUserId: session,
-      otherRoles: membershipRoles,
-      sensitivity,
+      dto: project,
     });
 
     if (permsOfProject.budget.canRead) {
-      const budgets = await this.budgetService.listNoSecGroups(
+      const budgets = await this.budgetService.listUnsecure(
         {
           filter: {
-            projectId: id,
+            projectId: project.id,
           },
         },
         session,
@@ -631,19 +629,6 @@ export class ProjectService {
         : permsOfProject.budget.canEdit &&
           budgetToReturn?.status === BudgetStatus.Pending,
     };
-  }
-
-  private async getMembershipRoles(
-    projectId: ID | Project,
-    session: Session
-  ): Promise<ScopedRole[]> {
-    if (!isIdLike(projectId)) {
-      return projectId.scope;
-    }
-
-    const result = await this.repo.getMembershipRoles(projectId, session);
-
-    return result?.memberRoles.flat().map(rolesForScope('project')) ?? [];
   }
 
   protected async validateOtherResourceId(

@@ -6,6 +6,7 @@ import { PartnerType } from '../../src/components/partner';
 import { FinancialReportingType } from '../../src/components/partnership';
 import { ProjectType } from '../../src/components/project';
 import {
+  addLocationToOrganization,
   createOrganization,
   createPartner,
   createPartnership,
@@ -132,6 +133,7 @@ describe('Organization Security e2e', () => {
               mouStartOverride: CalendarDate.fromISO('2000-01-01'),
               mouEndOverride: CalendarDate.fromISO('2004-01-01'),
             });
+            await addLocationToOrganization({ app, orgId: o.id });
             await expectSensitiveProperty({
               app,
               role,
@@ -156,8 +158,10 @@ describe('Organization Security e2e', () => {
       type
       ${ProjectType.Translation}
       ${ProjectType.Internship}
-    `('', async ({ type }) => {
-      it('Role: ConsultantManager - Sensitivity: Medium\n reading $type Organization locations', async () => {
+    `('', ({ type }) => {
+      it(`Role: ConsultantManager - Sensitivity: Medium\n reading ${
+        type as string
+      } Organization locations`, async () => {
         const proj = await createProject(app, {
           type,
         });
@@ -173,6 +177,7 @@ describe('Organization Security e2e', () => {
           mouStartOverride: CalendarDate.fromISO('2000-01-01'),
           mouEndOverride: CalendarDate.fromISO('2004-01-01'),
         });
+        await addLocationToOrganization({ app, orgId: o.id });
         await expectSensitiveRelationList({
           app,
           role: Role.ConsultantManager,
