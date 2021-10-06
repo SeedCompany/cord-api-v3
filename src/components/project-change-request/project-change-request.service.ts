@@ -27,7 +27,10 @@ import {
   ProjectChangeRequestStatus as Status,
   UpdateProjectChangeRequest,
 } from './dto';
-import { ProjectChangeRequestFinalizedEvent } from './events';
+import {
+  ProjectChangesetAfterFinalizedEvent,
+  ProjectChangesetFinalizedEvent,
+} from './events';
 import { ProjectChangeRequestRepository } from './project-change-request.repository';
 
 @Injectable()
@@ -123,7 +126,10 @@ export class ProjectChangeRequestService {
       (changes.status === Status.Approved || changes.status === Status.Rejected)
     ) {
       await this.eventBus.publish(
-        new ProjectChangeRequestFinalizedEvent(updated, session)
+        new ProjectChangesetFinalizedEvent(updated, session)
+      );
+      await this.eventBus.publish(
+        new ProjectChangesetAfterFinalizedEvent(updated, session)
       );
     }
 

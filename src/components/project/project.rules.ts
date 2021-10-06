@@ -70,7 +70,14 @@ export class ProjectRules {
     @Logger('project:rules') private readonly logger: ILogger
   ) {}
 
-  private async getStepRule(step: ProjectStep, id: ID): Promise<StepRule> {
+  private async getStepRule(
+    step: ProjectStep,
+    id: ID,
+    changeset?: ID
+  ): Promise<StepRule> {
+    const mostRecentPreviousStep = (steps: ProjectStep[]) =>
+      this.getMostRecentPreviousStep(id, steps, changeset);
+
     switch (step) {
       case ProjectStep.EarlyConversations:
         return {
@@ -458,7 +465,7 @@ export class ProjectRules {
               label: 'Discuss Suspension',
             },
             {
-              to: await this.getMostRecentPreviousStep(id, [
+              to: await mostRecentPreviousStep([
                 ProjectStep.Active,
                 ProjectStep.ActiveChangedPlan,
               ]),
@@ -491,7 +498,7 @@ export class ProjectRules {
               label: 'Approve Change to Plan',
             },
             {
-              to: await this.getMostRecentPreviousStep(id, [
+              to: await mostRecentPreviousStep([
                 ProjectStep.Active,
                 ProjectStep.ActiveChangedPlan,
               ]),
@@ -520,7 +527,7 @@ export class ProjectRules {
               label: 'Approve Change to Plan',
             },
             {
-              to: await this.getMostRecentPreviousStep(id, [
+              to: await mostRecentPreviousStep([
                 ProjectStep.Active,
                 ProjectStep.ActiveChangedPlan,
               ]),
@@ -550,7 +557,7 @@ export class ProjectRules {
               label: 'Submit for Approval',
             },
             {
-              to: await this.getMostRecentPreviousStep(id, [
+              to: await mostRecentPreviousStep([
                 ProjectStep.Active,
                 ProjectStep.ActiveChangedPlan,
               ]),
@@ -582,7 +589,7 @@ export class ProjectRules {
               label: 'Approve Suspension',
             },
             {
-              to: await this.getMostRecentPreviousStep(id, [
+              to: await mostRecentPreviousStep([
                 ProjectStep.Active,
                 ProjectStep.ActiveChangedPlan,
               ]),
@@ -689,7 +696,7 @@ export class ProjectRules {
               label: 'Submit for Approval',
             },
             {
-              to: await this.getMostRecentPreviousStep(id, [
+              to: await mostRecentPreviousStep([
                 ProjectStep.DiscussingReactivation,
                 ProjectStep.Suspended,
                 ProjectStep.Active,
@@ -723,7 +730,7 @@ export class ProjectRules {
               label: 'Send Back for Corrections',
             },
             {
-              to: await this.getMostRecentPreviousStep(id, [
+              to: await mostRecentPreviousStep([
                 ProjectStep.DiscussingReactivation,
                 ProjectStep.Suspended,
                 ProjectStep.Active,
@@ -750,7 +757,7 @@ export class ProjectRules {
           ],
           transitions: [
             {
-              to: await this.getMostRecentPreviousStep(id, [
+              to: await mostRecentPreviousStep([
                 ProjectStep.Active,
                 ProjectStep.ActiveChangedPlan,
               ]),
@@ -813,7 +820,8 @@ export class ProjectRules {
     // get roles that can approve the current step
     const { approvers, transitions } = await this.getStepRule(
       currentStep,
-      projectId
+      projectId,
+      changeset
     );
 
     // If current user is not an approver (based on roles) then don't allow any transitions
@@ -918,11 +926,13 @@ export class ProjectRules {
     projectId: ID,
     step: ProjectStep,
     changedById: ID,
-    previousStep: ProjectStep
+    previousStep: ProjectStep,
+    changeset?: ID
   ): Promise<EmailNotification[]> {
     const { getNotifiers: arrivalNotifiers } = await this.getStepRule(
       step,
-      projectId
+      projectId,
+      changeset
     );
 
     const transitionNotifiers = (
@@ -995,9 +1005,10 @@ export class ProjectRules {
   /** Of the given steps which one was the most recent previous step */
   private async getMostRecentPreviousStep(
     id: ID,
-    steps: ProjectStep[]
+    steps: ProjectStep[],
+    changeset?: ID
   ): Promise<ProjectStep> {
-    const prevSteps = await this.getPreviousSteps(id);
+    const prevSteps = await this.getPreviousSteps(id, changeset);
     const mostRecentMatchedStep = first(intersection(prevSteps, steps));
     if (!mostRecentMatchedStep) {
       throw new ServerException(
@@ -1010,14 +1021,28 @@ export class ProjectRules {
   }
 
   /** A list of the project's previous steps ordered most recent to furthest in the past */
-  private async getPreviousSteps(id: ID): Promise<ProjectStep[]> {
+  private async getPreviousSteps(
+    id: ID,
+    changeset?: ID
+  ): Promise<ProjectStep[]> {
     const result = await this.db
       .query()
       .match([
+        ...(changeset
+          ? [
+              node('changeset', 'Changeset', { id: changeset }),
+              relation('in', '', 'changeset', ACTIVE),
+            ]
+          : []),
         node('node', 'Project', { id }),
-        relation('out', '', 'step', INACTIVE),
+        relation('out', '', 'step', changeset ? undefined : INACTIVE),
         node('prop'),
       ])
+      .apply((q) =>
+        changeset
+          ? q.raw('WHERE NOT (changeset)-[:changeset {active:true}]->(prop)')
+          : q
+      )
       .with('prop')
       .orderBy('prop.createdAt', 'DESC')
       .return<{ steps: ProjectStep[] }>(`collect(prop.value) as steps`)

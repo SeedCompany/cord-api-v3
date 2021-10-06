@@ -11,11 +11,11 @@ import { ACTIVE, INACTIVE } from '../../../core/database/query';
 import { commitChangesetProps } from '../../changeset/commit-changeset-props.query';
 import { rejectChangesetProps } from '../../changeset/reject-changeset-props.query';
 import { ProjectChangeRequestStatus } from '../../project-change-request/dto';
-import { ProjectChangeRequestFinalizedEvent } from '../../project-change-request/events';
+import { ProjectChangesetFinalizedEvent } from '../../project-change-request/events';
 
-type SubscribedEvent = ProjectChangeRequestFinalizedEvent;
+type SubscribedEvent = ProjectChangesetFinalizedEvent;
 
-@EventsHandler(ProjectChangeRequestFinalizedEvent)
+@EventsHandler(ProjectChangesetFinalizedEvent)
 export class ApplyFinalizedChangesetToProject
   implements IEventHandler<SubscribedEvent>
 {
