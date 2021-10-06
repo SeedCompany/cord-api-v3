@@ -20,8 +20,9 @@ import { ScriptureRange } from '../scripture';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
   AnyProduct,
+  CreateDerivativeScriptureProduct,
+  CreateDirectScriptureProduct,
   CreateOtherProduct,
-  CreateProduct,
   DerivativeScriptureProduct,
   DirectScriptureProduct,
   MethodologyToApproach,
@@ -50,7 +51,10 @@ export class ProductService {
   ) {}
 
   async create(
-    input: CreateProduct | CreateOtherProduct,
+    input:
+      | CreateDirectScriptureProduct
+      | CreateDerivativeScriptureProduct
+      | CreateOtherProduct,
     session: Session
   ): Promise<AnyProduct> {
     const engagement = await this.repo.findNode(
@@ -68,10 +72,7 @@ export class ProductService {
     }
 
     if (has('produces', input) && input.produces) {
-      const producible = await this.repo.findNode(
-        'producible',
-        input.produces as ID
-      );
+      const producible = await this.repo.findNode('producible', input.produces);
       if (!producible) {
         this.logger.warning(`Could not find producible node`, {
           id: input.produces,
