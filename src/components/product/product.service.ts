@@ -1,6 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { has as hasPath, set, sumBy, uniq } from 'lodash';
-import { Except } from 'type-fest';
 import {
   has,
   ID,
@@ -34,6 +33,8 @@ import {
   ProductListInput,
   ProductListOutput,
   ProductMethodology,
+  UpdateDerivativeScriptureProduct,
+  UpdateDirectScriptureProduct,
   UpdateOtherProduct,
   UpdateProduct,
 } from './dto';
@@ -251,6 +252,9 @@ export class ProductService {
     return direct;
   }
 
+  /**
+   * @deprecated
+   */
   async update(input: UpdateProduct, session: Session): Promise<AnyProduct> {
     const currentProduct = await this.readOneUnsecured(input.id, session);
 
@@ -270,9 +274,9 @@ export class ProductService {
         );
       }
       return await this.updateDirect(
-        currentProduct as UnsecuredDto<DirectScriptureProduct>,
         input,
-        session
+        session,
+        currentProduct as UnsecuredDto<DirectScriptureProduct>
       );
     }
 
@@ -283,14 +287,19 @@ export class ProductService {
         'product.scriptureReferences'
       );
     }
-    return await this.updateDerivative(currentProduct, input, session);
+    return await this.updateDerivative(input, session, currentProduct);
   }
 
-  private async updateDirect(
-    currentProduct: UnsecuredDto<DirectScriptureProduct>,
-    input: Except<UpdateProduct, 'produces' | 'scriptureReferencesOverride'>,
-    session: Session
+  async updateDirect(
+    input: UpdateDirectScriptureProduct,
+    session: Session,
+    currentProduct?: UnsecuredDto<DirectScriptureProduct>
   ): Promise<DirectScriptureProduct> {
+    currentProduct ??= (await this.readOneUnsecured(
+      input.id,
+      session
+    )) as UnsecuredDto<DirectScriptureProduct>;
+
     let changes = this.repo.getActualDirectChanges(currentProduct, input);
     changes = {
       ...changes,
@@ -324,11 +333,16 @@ export class ProductService {
     );
   }
 
-  private async updateDerivative(
-    currentProduct: UnsecuredDto<DerivativeScriptureProduct>,
-    input: Except<UpdateProduct, 'scriptureReferences'>,
-    session: Session
+  async updateDerivative(
+    input: UpdateDerivativeScriptureProduct,
+    session: Session,
+    currentProduct?: UnsecuredDto<DerivativeScriptureProduct>
   ): Promise<DerivativeScriptureProduct> {
+    currentProduct ??= (await this.readOneUnsecured(
+      input.id,
+      session
+    )) as UnsecuredDto<DerivativeScriptureProduct>;
+
     let changes = this.repo.getActualDerivativeChanges(
       // getChanges doesn't care if current is secured or not.
       // Applying this type so that the SetChangeType<> overrides still apply

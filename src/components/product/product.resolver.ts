@@ -23,6 +23,8 @@ import {
   CreateDirectScriptureProduct,
   ProductLoader,
   ProductService,
+  UpdateDerivativeScriptureProduct,
+  UpdateDirectScriptureProduct,
 } from '../product';
 import { labelOfScriptureRanges } from '../scripture/labels';
 import {
@@ -231,12 +233,36 @@ export class ProductResolver {
 
   @Mutation(() => UpdateProductOutput, {
     description: 'Update a product entry',
+    deprecationReason:
+      'Use `updateDirectScriptureProduct` or `updateDerivativeScriptureProduct` instead',
   })
   async updateProduct(
     @LoggedInSession() session: Session,
     @Args('input') { product: input }: UpdateProductInput
   ): Promise<UpdateProductOutput> {
     const product = await this.productService.update(input, session);
+    return { product };
+  }
+
+  @Mutation(() => UpdateProductOutput, {
+    description: 'Update a direct scripture product',
+  })
+  async updateDirectScriptureProduct(
+    @LoggedInSession() session: Session,
+    @Args('input') input: UpdateDirectScriptureProduct
+  ): Promise<UpdateProductOutput> {
+    const product = await this.productService.updateDirect(input, session);
+    return { product };
+  }
+
+  @Mutation(() => UpdateProductOutput, {
+    description: 'Update a derivative scripture product',
+  })
+  async updateDerivativeScriptureProduct(
+    @LoggedInSession() session: Session,
+    @Args('input') input: UpdateDerivativeScriptureProduct
+  ): Promise<UpdateProductOutput> {
+    const product = await this.productService.updateDerivative(input, session);
     return { product };
   }
 
