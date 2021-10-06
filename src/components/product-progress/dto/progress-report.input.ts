@@ -41,7 +41,7 @@ export abstract class StepProgressInput {
     nullable: true,
     description:
       'The new percent (0-100) complete for the step or null to remove the current value.',
-    deprecationReason: 'Use `StepProgressInput.percentDone` instead.',
+    deprecationReason: 'Use `StepProgressInput.completed` instead.',
   })
   @Min(0)
   @Max(100)
