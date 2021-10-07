@@ -9,6 +9,7 @@ import {
   SecuredResource,
   ServerException,
   Session,
+  simpleSwitch,
   UnauthorizedException,
   UnsecuredDto,
   viewOfChangeset,
@@ -41,6 +42,7 @@ import {
   EngagementListInput,
   EngagementListOutput,
   EngagementStatus,
+  IEngagement,
   InternshipEngagement,
   LanguageEngagement,
   UpdateInternshipEngagement,
@@ -274,13 +276,13 @@ export class EngagementService {
       !session.roles.includes(`global:Administrator`)
         ? false
         : await this.repo.checkDeletePermission(dto.id, session);
-
     if (isLanguageEngagement) {
       // help TS understand that the secured props are for a LanguageEngagement
       const secured = securedProperties as SecuredResource<
         typeof LanguageEngagement,
         false
       >;
+
       return {
         ...(dto as UnsecuredDto<LanguageEngagement>),
         ...secured,
@@ -501,7 +503,28 @@ export class EngagementService {
     session: Session,
     view?: ObjectView
   ): Promise<EngagementListOutput> {
-    const results = await this.repo.list(input, session, view?.changeset);
+    const engagementType =
+      simpleSwitch(input.filter.type, {
+        language: LanguageEngagement,
+        internship: InternshipEngagement,
+      }) ?? IEngagement;
+
+    const limited = (await this.authorizationService.canList(
+      engagementType,
+      session
+    ))
+      ? undefined
+      : await this.authorizationService.getListRoleSensitivityMapping(
+          engagementType
+        );
+
+    const results = await this.repo.list(
+      input,
+      session,
+      view?.changeset,
+      limited
+    );
+
     return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 

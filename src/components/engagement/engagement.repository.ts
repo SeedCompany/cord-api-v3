@@ -26,6 +26,7 @@ import {
   createRelationships,
   INACTIVE,
   matchChangesetAndChangedProps,
+  matchProjectSensToLimitedScopeMap,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
   paginate,
@@ -381,17 +382,23 @@ export class EngagementRepository extends CommonRepository {
         sub
           .match([
             ...(limitedScope
-              ? [node()]
+              ? [
+                  node('project', 'Project'),
+                  relation('out', '', 'engagement', ACTIVE),
+                ]
               : input.filter.projectId
               ? [
                   relation('in', '', 'engagement', ACTIVE),
                   node('project', 'Project', { id: input.filter.projectId }),
                 ]
               : []),
+            node('node', 'Engagement'),
           ])
-          .match(requestingUser(session))
           .apply(whereNotDeletedInChangeset(changeset))
-          .return('node')
+          .return([
+            'node',
+            input.filter.projectId || limitedScope ? 'project' : '',
+          ])
           .apply((q) =>
             changeset && input.filter.projectId
               ? q
@@ -407,6 +414,8 @@ export class EngagementRepository extends CommonRepository {
               : q
           )
       )
+      .match(requestingUser(session))
+      .apply(matchProjectSensToLimitedScopeMap(limitedScope))
       .apply(sorting(IEngagement, input))
       .apply(paginate(input, this.hydrate(session, viewOfChangeset(changeset))))
       .first();
