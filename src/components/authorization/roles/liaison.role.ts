@@ -169,6 +169,7 @@ export const Liaison = new DbRole({
     }),
     new DbBaseNodeGrant<DbInternshipEngagement>({
       __className: 'DbInternshipEngagement',
+      canList: true,
       properties: [
         { propertyName: 'ceremony', permission: { read, }, },
         { propertyName: 'completeDate', permission: { read, }, },
@@ -219,6 +220,7 @@ export const Liaison = new DbRole({
     }),
     new DbBaseNodeGrant<DbLanguageEngagement>({
       __className: 'DbLanguageEngagement',
+      canList: true,
       properties: [
         { propertyName: 'ceremony', permission: { read, }, },
         { propertyName: 'completeDate', permission: { read, }, },
