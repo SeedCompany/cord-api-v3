@@ -41,7 +41,6 @@ import {
   ProductListInput,
   UpdateProduct,
 } from './dto';
-import { ProgressMeasurement } from './dto/progress-measurement.enum';
 import { productListFilter } from './query.helpers';
 
 @Injectable()
@@ -146,18 +145,10 @@ export class ProductRepository extends CommonRepository {
             }
           >;
         }>(
-          merge(
-            {
-              // BC with existing products
-              progressStepMeasurement: `"${ProgressMeasurement.Percent}"`,
-              progressTarget: 100,
-            },
-            'props',
-            {
-              engagement: 'engagement.id',
-              produces: 'produces',
-            }
-          ).as('dto')
+          merge('props', {
+            engagement: 'engagement.id',
+            produces: 'produces',
+          }).as('dto')
         );
   }
 
