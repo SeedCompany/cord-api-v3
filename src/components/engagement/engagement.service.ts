@@ -130,7 +130,11 @@ export class EngagementService {
     if (changeset) {
       return languageEngagement;
     }
-    const event = new EngagementCreatedEvent(languageEngagement, session);
+    const event = new EngagementCreatedEvent(
+      languageEngagement,
+      input,
+      session
+    );
     await this.eventBus.publish(event);
 
     return event.engagement as LanguageEngagement;
@@ -213,6 +217,7 @@ export class EngagementService {
     }
     const engagementCreatedEvent = new EngagementCreatedEvent(
       internshipEngagement,
+      input,
       session
     );
     await this.eventBus.publish(engagementCreatedEvent);

@@ -12,7 +12,7 @@ export class ScriptureReferenceService {
 
   async create(
     producibleId: ID,
-    scriptureRefs: ScriptureRangeInput[] | undefined,
+    scriptureRefs: readonly ScriptureRangeInput[] | undefined,
     // eslint-disable-next-line @seedcompany/no-unused-vars
     session: Session
   ): Promise<void> {
@@ -27,7 +27,7 @@ export class ScriptureReferenceService {
 
   async update(
     producibleId: ID,
-    scriptureRefs: ScriptureRangeInput[] | undefined,
+    scriptureRefs: readonly ScriptureRangeInput[] | undefined,
     options: { isOverriding?: boolean } = {}
   ): Promise<void> {
     if (scriptureRefs === undefined) {

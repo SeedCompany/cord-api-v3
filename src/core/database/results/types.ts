@@ -36,4 +36,4 @@ export type NativeDbValue =
   | number
   | DateTime
   | null
-  | string[];
+  | readonly string[];

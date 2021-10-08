@@ -146,7 +146,7 @@ SecuredEnum.descriptionFor = SecuredProperty.descriptionFor = (
 `;
 
 type SecuredList<T, Nullable extends boolean | undefined> = SecuredValue<
-  T[],
+  readonly T[],
   Nullable
 >;
 

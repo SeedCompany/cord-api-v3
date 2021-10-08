@@ -38,7 +38,7 @@ export abstract class CreateProduct {
   })
   @ValidateNested()
   @Type(() => ScriptureRangeInput)
-  readonly scriptureReferences?: ScriptureRangeInput[];
+  readonly scriptureReferences?: readonly ScriptureRangeInput[];
 
   @Field(() => [ScriptureRangeInput], {
     nullable: true,
@@ -53,25 +53,25 @@ export abstract class CreateProduct {
   })
   @ValidateNested()
   @Type(() => ScriptureRangeInput)
-  readonly scriptureReferencesOverride?: ScriptureRangeInput[];
+  readonly scriptureReferencesOverride?: readonly ScriptureRangeInput[];
 
   @Field(() => [ProductMedium], { nullable: true })
   @Transform(({ value }) => uniq(value))
-  readonly mediums?: ProductMedium[] = [];
+  readonly mediums?: readonly ProductMedium[] = [];
 
   @Field(() => [ProductPurpose], { nullable: true })
   @Transform(({ value }) => uniq(value))
-  readonly purposes?: ProductPurpose[] = [];
+  readonly purposes?: readonly ProductPurpose[] = [];
 
   @Field(() => ProductMethodology, { nullable: true })
   readonly methodology?: ProductMethodology;
 
   @Field(() => [MethodologyStep], { nullable: true })
   @Transform(({ value }) => uniq(value))
-  readonly steps?: MethodologyStep[] = [];
+  readonly steps?: readonly MethodologyStep[] = [];
 
-  @Field({ nullable: true })
-  readonly describeCompletion?: string;
+  @Field(() => String, { nullable: true })
+  readonly describeCompletion?: string | null;
 
   @Field(() => ProgressMeasurement, {
     description: 'How will progress for each step be measured?',

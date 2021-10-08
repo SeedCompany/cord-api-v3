@@ -1,4 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { has as hasPath, set, sumBy, uniq } from 'lodash';
 import { Except } from 'type-fest';
 import {
   has,
@@ -15,6 +16,7 @@ import {
 import { HandleIdLookup, ILogger, Logger, ResourceResolver } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { ScriptureRange } from '../scripture';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
   AnyProduct,
@@ -506,8 +508,53 @@ export class ProductService {
     return await mapListResults(results, (id) => this.readOne(id, session));
   }
 
-  async listIdsAndScriptureRefs(engagementId: ID) {
-    return await this.repo.listIdsAndScriptureRefs(engagementId);
+  async loadProductIdsForBookAndVerse(
+    engagementId: ID,
+    logger: ILogger = this.logger
+  ) {
+    const productRefs = await this.repo.listIdsAndScriptureRefs(engagementId);
+
+    const productIds: { [Book in string]?: { [TotalVerses in number]?: ID } } =
+      {};
+
+    for (const productRef of productRefs) {
+      const refs = productRef.scriptureRanges.map((raw) =>
+        ScriptureRange.fromIds(raw.properties)
+      );
+      const bookEnds = uniq(
+        refs.flatMap((ref) => [ref.start.book, ref.end.book])
+      );
+      const totalVerses = sumBy(
+        productRef.scriptureRanges,
+        (raw) => raw.properties.end - raw.properties.start + 1
+      );
+
+      const warn = (msg: string) =>
+        logger.warning(`${msg} and is therefore ignored`, {
+          product: productRef.id,
+        });
+
+      if (bookEnds.length === 0) {
+        warn('Product has not defined any scripture ranges');
+        continue;
+      }
+      if (bookEnds.length > 1) {
+        warn('Product scripture range spans multiple books');
+        continue;
+      }
+      const book: string = bookEnds[0];
+
+      if (hasPath(productIds, [book, totalVerses])) {
+        warn(
+          'Product references a book & verse count that has already been assigned to another product'
+        );
+        continue;
+      }
+
+      set(productIds, [book, totalVerses], productRef.id);
+    }
+
+    return productIds;
   }
 
   protected getMethodologiesByApproach(
