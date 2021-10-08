@@ -19,4 +19,10 @@ export abstract class UpdatePeriodicReportInput {
 
   @DateField({ nullable: true })
   readonly receivedDate?: CalendarDate;
+
+  @Field({
+    description: 'Why this report is skipped',
+    nullable: true,
+  })
+  readonly skippedReason?: string;
 }
