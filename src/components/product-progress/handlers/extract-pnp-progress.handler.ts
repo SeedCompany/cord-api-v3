@@ -1,10 +1,8 @@
-import { sumBy, uniq } from 'lodash';
-import { ID } from '../../../common';
+import { get } from 'lodash';
 import { EventsHandler, ILogger, Logger } from '../../../core';
 import { ReportType } from '../../periodic-report/dto';
 import { PeriodicReportUploadedEvent } from '../../periodic-report/events';
 import { ProductService } from '../../product';
-import { ScriptureRange } from '../../scripture';
 import { ProductProgressService } from '../product-progress.service';
 import { StepProgressExtractor } from '../step-progress-extractor.service';
 
@@ -29,11 +27,15 @@ export class ExtractPnpProgressHandler {
     }
 
     // Fetch products for report mapped to a book name
-    const bookMap = await this.getProductsMappedToBook(event);
+    const engagementId = event.report.parent.properties.id;
+    const products = await this.products.loadProductIdsForBookAndVerse(
+      engagementId,
+      this.logger
+    );
 
     // Convert book name to product ID
     const updates = progressRows.flatMap(({ bookName, totalVerses, steps }) => {
-      const productId = bookMap[`${bookName}:${totalVerses}`];
+      const productId = get(products, [bookName, totalVerses]);
       if (productId) {
         return { productId, steps };
       }
@@ -61,52 +63,5 @@ export class ExtractPnpProgressHandler {
         );
       })
     );
-  }
-
-  private async getProductsMappedToBook(
-    event: PeriodicReportUploadedEvent
-  ): Promise<Record<string, ID>> {
-    const productRefs = await this.products.listIdsAndScriptureRefs(
-      event.report.parent.properties.id
-    );
-    return productRefs.reduce((booksSoFar: Record<string, ID>, productRef) => {
-      const refs = productRef.scriptureRanges.map((raw) =>
-        ScriptureRange.fromIds(raw.properties)
-      );
-      const bookEnds = uniq(
-        refs.flatMap((ref) => [ref.start.book, ref.end.book])
-      );
-      const totalVerses = sumBy(
-        productRef.scriptureRanges,
-        (raw) => raw.properties.end - raw.properties.start + 1
-      );
-
-      const warn = (msg: string) =>
-        this.logger.warning(
-          `${msg} and is therefore ignored from pnp progress extraction`,
-          { product: productRef.id }
-        );
-
-      if (bookEnds.length === 0) {
-        warn('Product has not defined any scripture ranges');
-        return booksSoFar;
-      }
-      if (bookEnds.length > 1) {
-        warn('Product scripture range spans multiple books');
-        return booksSoFar;
-      }
-      const book: string = bookEnds[0];
-      const ref = `${book}:${totalVerses}`;
-
-      if (ref in booksSoFar) {
-        warn(
-          'Product references a book & verse count that has already been assigned to another product'
-        );
-        return booksSoFar;
-      }
-
-      booksSoFar[ref] = productRef.id;
-      return booksSoFar;
-    }, {});
   }
 }
