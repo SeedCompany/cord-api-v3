@@ -71,12 +71,16 @@ export class FileService {
     return node;
   }
 
-  asDownloadable(file: FileVersion): Downloadable<FileVersion> {
+  asDownloadable<T>(obj: T, fileVersionId: ID): Downloadable<T>;
+  asDownloadable(fileVersion: FileVersion): Downloadable<FileVersion>;
+  asDownloadable<T>(obj: T, fileVersionId?: ID): Downloadable<T> {
     let downloading: Promise<Buffer> | undefined;
-    return Object.assign(file, {
+    return Object.assign(obj, {
       download: () => {
         if (!downloading) {
-          downloading = this.downloadFileVersion(file.id);
+          downloading = this.downloadFileVersion(
+            fileVersionId ?? (obj as unknown as FileVersion).id
+          );
         }
         return downloading;
       },
