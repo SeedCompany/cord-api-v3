@@ -66,7 +66,7 @@ export const labelOfScriptureRange = (
   }
 };
 
-export const labelOfScriptureRanges = (refs: ScriptureRange[]) => {
+export const labelOfScriptureRanges = (refs: readonly ScriptureRange[]) => {
   if (refs.length === 0) {
     return '';
   }

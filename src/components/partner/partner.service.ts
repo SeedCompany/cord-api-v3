@@ -199,8 +199,8 @@ export class PartnerService {
   }
 
   protected validateFinancialReportingType(
-    financialReportingTypes: FinancialReportingType[] | undefined,
-    types: PartnerType[] | undefined
+    financialReportingTypes: readonly FinancialReportingType[] | undefined,
+    types: readonly PartnerType[] | undefined
   ) {
     return financialReportingTypes?.length &&
       !types?.includes(PartnerType.Managing)

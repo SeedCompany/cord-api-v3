@@ -320,7 +320,7 @@ export class PartnershipService {
 
   protected verifyFinancialReportingType(
     financialReportingType: FinancialReportingType | null | undefined,
-    types: PartnerType[],
+    types: readonly PartnerType[],
     partner: Partner
   ) {
     if (!financialReportingType) {
