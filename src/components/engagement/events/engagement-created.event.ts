@@ -1,6 +1,14 @@
 import { Session } from '../../../common';
-import { Engagement } from '../dto';
+import {
+  CreateInternshipEngagement,
+  CreateLanguageEngagement,
+  Engagement,
+} from '../dto';
 
 export class EngagementCreatedEvent {
-  constructor(public engagement: Engagement, readonly session: Session) {}
+  constructor(
+    public engagement: Engagement,
+    readonly input: CreateLanguageEngagement | CreateInternshipEngagement,
+    readonly session: Session
+  ) {}
 }
