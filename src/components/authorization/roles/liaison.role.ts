@@ -105,6 +105,7 @@ export const Liaison = new DbRole({
     }),
     new DbBaseNodeGrant<DbFieldRegion>({
       __className: 'DbFieldRegion',
+      canList: false,
       properties: [
         { propertyName: 'director', permission: {}, },
         { propertyName: 'name', permission: {}, },
