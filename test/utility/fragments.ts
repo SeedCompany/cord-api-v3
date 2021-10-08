@@ -809,27 +809,39 @@ export const engagement = gql`
     }
     ... on InternshipEngagement {
       countryOfOrigin {
+        canRead
+        canEdit
         value {
           id
         }
       }
       intern {
+        canRead
+        canEdit
         value {
           id
         }
       }
       mentor {
+        canRead
+        canEdit
         value {
           id
         }
       }
       position {
+        canRead
+        canEdit
         value
       }
       methodologies {
+        canRead
+        canEdit
         value
       }
       growthPlan {
+        canRead
+        canEdit
         value {
           id
         }
