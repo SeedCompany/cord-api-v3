@@ -70,8 +70,8 @@ export abstract class CreateProduct {
   @Transform(({ value }) => uniq(value))
   readonly steps?: readonly MethodologyStep[] = [];
 
-  @Field({ nullable: true })
-  readonly describeCompletion?: string;
+  @Field(() => String, { nullable: true })
+  readonly describeCompletion?: string | null;
 
   @Field(() => ProgressMeasurement, {
     description: 'How will progress for each step be measured?',
