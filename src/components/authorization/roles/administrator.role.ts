@@ -118,6 +118,7 @@ export const Administrator = new DbRole({
     }),
     new DbBaseNodeGrant<DbFieldZone>({
       __className: 'DbFieldZone',
+      canList: true,
       properties: [
         { propertyName: 'director', permission: { read, write, }, },
         { propertyName: 'name', permission: { read, write, }, },

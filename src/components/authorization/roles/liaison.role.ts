@@ -124,6 +124,7 @@ export const Liaison = new DbRole({
     }),
     new DbBaseNodeGrant<DbFieldZone>({
       __className: 'DbFieldZone',
+      canList: false,
       properties: [
         { propertyName: 'director', permission: {}, },
         { propertyName: 'name', permission: {}, },

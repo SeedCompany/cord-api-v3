@@ -125,6 +125,7 @@ export const MarketingOnProject = new DbRole({
     }),
     new DbBaseNodeGrant<DbFieldZone>({
       __className: 'DbFieldZone',
+      canList: true,
       properties: [
         { propertyName: 'director', permission: { read, }, },
         { propertyName: 'name', permission: { read, }, },
