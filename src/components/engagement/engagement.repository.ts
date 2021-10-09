@@ -404,13 +404,13 @@ export class EngagementRepository extends CommonRepository {
               ? q
                   .union()
                   .match([
-                    node('', 'Project', { id: input.filter.projectId }),
+                    node('project', 'Project', { id: input.filter.projectId }),
                     relation('out', '', 'engagement', INACTIVE),
                     node('node', label),
                     relation('in', '', 'changeset', ACTIVE),
                     node('changeset', 'Changeset', { id: changeset }),
                   ])
-                  .return('node')
+                  .return(['node', 'project'])
               : q
           )
       )
