@@ -5,7 +5,6 @@ import { DtoRepository, matchRequestingUser } from '../../core';
 import {
   createNode,
   paginate,
-  permissionsOfNode,
   requestingUser,
   sorting,
 } from '../../core/database/query';
@@ -62,7 +61,8 @@ export class FilmRepository extends DtoRepository(Film) {
   async list({ filter, ...input }: FilmListInput, session: Session) {
     const result = await this.db
       .query()
-      .match([requestingUser(session), ...permissionsOfNode('Film')])
+      .match(requestingUser(session))
+      .match(node('node', 'Film'))
       .apply(sorting(Film, input))
       .apply(paginate(input, this.hydrate()))
       .first();
