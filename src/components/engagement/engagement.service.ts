@@ -9,7 +9,6 @@ import {
   SecuredResource,
   ServerException,
   Session,
-  simpleSwitch,
   UnauthorizedException,
   UnsecuredDto,
   viewOfChangeset,
@@ -42,7 +41,6 @@ import {
   EngagementListInput,
   EngagementListOutput,
   EngagementStatus,
-  IEngagement,
   InternshipEngagement,
   LanguageEngagement,
   UpdateInternshipEngagement,
@@ -503,27 +501,7 @@ export class EngagementService {
     session: Session,
     view?: ObjectView
   ): Promise<EngagementListOutput> {
-    const engagementType =
-      simpleSwitch(input.filter.type, {
-        language: LanguageEngagement,
-        internship: InternshipEngagement,
-      }) ?? IEngagement;
-
-    const limited = (await this.authorizationService.canList(
-      engagementType,
-      session
-    ))
-      ? undefined
-      : await this.authorizationService.getListRoleSensitivityMapping(
-          engagementType
-        );
-
-    const results = await this.repo.list(
-      input,
-      session,
-      view?.changeset,
-      limited
-    );
+    const results = await this.repo.list(input, session, view?.changeset);
 
     return await mapListResults(results, (dto) => this.secure(dto, session));
   }

@@ -368,7 +368,7 @@ export class EngagementRepository extends CommonRepository {
     input: EngagementListInput,
     session: Session,
     changeset?: ID,
-    limitedScope?: AuthSensitivityMapping
+    limitedScope?: AuthSensitivityMapping // setup limitedScope just in case we need it later on
   ) {
     const label =
       simpleSwitch(input.filter.type, {
@@ -388,8 +388,8 @@ export class EngagementRepository extends CommonRepository {
                 ]
               : input.filter.projectId
               ? [
-                  relation('in', '', 'engagement', ACTIVE),
                   node('project', 'Project', { id: input.filter.projectId }),
+                  relation('out', '', 'engagement', ACTIVE),
                 ]
               : []),
             node('node', 'Engagement'),
