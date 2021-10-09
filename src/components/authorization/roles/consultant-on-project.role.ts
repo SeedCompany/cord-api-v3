@@ -162,6 +162,7 @@ export const ConsultantOnProject = new DbRole({
     }),
     new DbBaseNodeGrant<DbFilm>({
       __className: 'DbFilm',
+      canList: true,
       properties: [
         { propertyName: 'name', permission: { read, }, },
         { propertyName: 'scriptureReferences', permission: { read, }, },

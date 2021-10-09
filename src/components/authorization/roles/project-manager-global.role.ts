@@ -156,6 +156,7 @@ export const ProjectManagerGlobal = new DbRole({
     }),
     new DbBaseNodeGrant<DbFilm>({
       __className: 'DbFilm',
+      canList: true,
       properties: [
         { propertyName: 'name', permission: { read, write, }, },
         { propertyName: 'scriptureReferences', permission: { read, write, }, },
