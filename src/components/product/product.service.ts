@@ -550,30 +550,32 @@ export class ProductService {
 
     for (const productRef of productRefs) {
       const refs = productRef.scriptureRanges.map((raw) =>
-        ScriptureRange.fromIds(raw.properties)
+        ScriptureRange.fromIds(raw)
       );
-      const bookEnds = uniq(
-        refs.flatMap((ref) => [ref.start.book, ref.end.book])
-      );
-      const totalVerses = sumBy(
-        productRef.scriptureRanges,
-        (raw) => raw.properties.end - raw.properties.start + 1
-      );
+      const books = uniq([
+        ...refs.flatMap((ref) => [ref.start.book, ref.end.book]),
+        ...(productRef.unspecifiedScripture
+          ? [productRef.unspecifiedScripture.book]
+          : []),
+      ]);
+      const totalVerses =
+        productRef.unspecifiedScripture?.totalVerses ??
+        sumBy(productRef.scriptureRanges, (raw) => raw.end - raw.start + 1);
 
       const warn = (msg: string) =>
         logger.warning(`${msg} and is therefore ignored`, {
           product: productRef.id,
         });
 
-      if (bookEnds.length === 0) {
+      if (books.length === 0) {
         warn('Product has not defined any scripture ranges');
         continue;
       }
-      if (bookEnds.length > 1) {
+      if (books.length > 1) {
         warn('Product scripture range spans multiple books');
         continue;
       }
-      const book: string = bookEnds[0];
+      const book: string = books[0];
 
       if (hasPath(productIds, [book, totalVerses])) {
         warn(

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Node, node, Query, relation } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { Except, Merge } from 'type-fest';
 import {
@@ -99,16 +99,32 @@ export class ProductRepository extends CommonRepository {
         relation('out', '', 'product', ACTIVE),
         node('node', 'DirectScriptureProduct'),
       ])
-      // Only concerned with Direct Scripture Products for this, so no need to worry about overrides
-      .match([
+      .optionalMatch([
         node('node'),
-        relation('out', '', 'scriptureReferences', ACTIVE),
-        node('scriptureRanges', 'ScriptureRange'),
+        relation('out', '', 'unspecifiedScripture', ACTIVE),
+        node('unspecifiedScripture', 'UnspecifiedScripturePortion'),
       ])
+      .subQuery('node', (sub) =>
+        // Only concerned with Direct Scripture Products for this, so no need to worry about overrides
+        sub
+          .match([
+            node('node'),
+            relation('out', '', 'scriptureReferences', ACTIVE),
+            node('scriptureRanges', 'ScriptureRange'),
+          ])
+          .return(
+            collect('scriptureRanges { .start, .end }').as('scriptureRanges')
+          )
+      )
       .return<{
         id: ID;
-        scriptureRanges: ReadonlyArray<Node<Range<number>>>;
-      }>(['node.id as id', collect('scriptureRanges').as('scriptureRanges')])
+        scriptureRanges: ReadonlyArray<Range<number>>;
+        unspecifiedScripture: UnspecifiedScripturePortion | null;
+      }>([
+        'node.id as id',
+        'scriptureRanges',
+        'unspecifiedScripture { .book, .totalVerses } as unspecifiedScripture',
+      ])
       .run();
   }
 
