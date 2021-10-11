@@ -29,7 +29,12 @@ import {
   sorting,
 } from '../../core/database/query';
 import { BaseNode } from '../../core/database/results';
-import { ScriptureRange, ScriptureRangeInput } from '../scripture';
+import {
+  ScriptureRange,
+  ScriptureRangeInput,
+  UnspecifiedScripturePortion,
+  UnspecifiedScripturePortionInput,
+} from '../scripture';
 import {
   CreateDerivativeScriptureProduct,
   CreateDirectScriptureProduct,
@@ -115,6 +120,11 @@ export class ProductRepository extends CommonRepository {
           relation('out', '', 'produces', ACTIVE),
           node('produces', 'Producible'),
         ])
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'unspecifiedScripture', ACTIVE),
+          node('unspecifiedScripture', 'UnspecifiedScripturePortion'),
+        ])
         .return<{
           dto: Merge<
             Omit<
@@ -128,12 +138,14 @@ export class ProductRepository extends CommonRepository {
             {
               isOverriding: boolean;
               produces: BaseNode | null;
+              unspecifiedScripture: Node<UnspecifiedScripturePortion> | null;
             }
           >;
         }>(
           merge('props', {
             engagement: 'engagement.id',
             produces: 'produces',
+            unspecifiedScripture: 'unspecifiedScripture',
           }).as('dto')
         );
   }
@@ -228,6 +240,16 @@ export class ProductRepository extends CommonRepository {
           ...(isDerivative ? input.scriptureReferencesOverride ?? [] : []).map(
             connectScriptureRange('scriptureReferencesOverride')
           ),
+          !isDerivative && input.unspecifiedScripture
+            ? [
+                node('node'),
+                relation('out', '', 'unspecifiedScripture', ACTIVE),
+                node('', 'UnspecifiedScripturePortion', {
+                  ...input.unspecifiedScripture,
+                  createdAt,
+                }),
+              ]
+            : [],
         ]);
       })
       .return<{ id: ID }>('node.id as id');
@@ -304,6 +326,39 @@ export class ProductRepository extends CommonRepository {
           createdAt: DateTime.local(),
         }),
         node('producible'),
+      ])
+      .return('rel')
+      .first();
+  }
+
+  async updateUnspecifiedScripture(
+    productId: ID,
+    unspecifiedScriptureInput: UnspecifiedScripturePortionInput
+  ) {
+    await this.db
+      .query()
+      .match([
+        node('product', 'Product', { id: productId }),
+        relation('out', 'rel', 'unspecifiedScripture', ACTIVE),
+        node('', 'UnspecifiedScripturePortion'),
+      ])
+      .setValues({
+        'rel.active': false,
+      })
+      .return('rel')
+      .first();
+
+    await this.db
+      .query()
+      .match([node('product', 'Product', { id: productId })])
+      .create([
+        node('product'),
+        relation('out', 'rel', 'unspecifiedScripture', ACTIVE),
+        node('', 'UnspecifiedScripturePortion', {
+          book: unspecifiedScriptureInput.book,
+          totalVerses: unspecifiedScriptureInput.totalVerses,
+          createdAt: DateTime.local(),
+        }),
       ])
       .return('rel')
       .first();

@@ -82,6 +82,45 @@ describe('Product e2e', () => {
     expect(actual.methodology.value).toBe(product.methodology.value);
   });
 
+  it('create DirectScriptureProduct with unspecifiedScripture', async () => {
+    const product = await createDirectProduct(app, {
+      engagementId: engagement.id,
+      unspecifiedScripture: {
+        totalVerses: 10,
+        book: 'Matt',
+      },
+    });
+
+    const result = await app.graphql.query(
+      gql`
+        query product($id: ID!) {
+          product(id: $id) {
+            ...product
+            ... on DirectScriptureProduct {
+              unspecifiedScripture {
+                value {
+                  book
+                  totalVerses
+                }
+                canRead
+                canEdit
+              }
+            }
+          }
+        }
+        ${fragments.product}
+      `,
+      {
+        id: product.id,
+      }
+    );
+    const actual: AnyProduct = result.product;
+    expect(actual?.unspecifiedScripture?.value).toMatchObject({
+      book: 'Matt',
+      totalVerses: 10,
+    });
+  });
+
   it('create product with scriptureReferences', async () => {
     const randomScriptureReferences = ScriptureRange.randomList();
     const product = await createDirectProduct(app, {
@@ -283,6 +322,10 @@ describe('Product e2e', () => {
       purposes: [ProductPurpose.ChurchMaturity],
       methodology: ProductMethodology.OneStory,
       scriptureReferences: ScriptureRange.randomList(),
+      unspecifiedScripture: {
+        book: 'Matt',
+        totalVerses: 10,
+      },
     };
 
     const result = await app.graphql.query(
@@ -293,6 +336,16 @@ describe('Product e2e', () => {
           updateDirectScriptureProduct(input: $input) {
             product {
               ...product
+              ... on DirectScriptureProduct {
+                unspecifiedScripture {
+                  value {
+                    book
+                    totalVerses
+                  }
+                  canRead
+                  canEdit
+                }
+              }
             }
           }
         }
@@ -313,6 +366,10 @@ describe('Product e2e', () => {
     expect(actual.scriptureReferences.value).toEqual(
       expect.arrayContaining(updateProduct.scriptureReferences)
     );
+    expect(actual?.unspecifiedScripture?.value).toMatchObject({
+      book: 'Matt',
+      totalVerses: 10,
+    });
   });
 
   it('update DerivativeScriptureProduct', async () => {
