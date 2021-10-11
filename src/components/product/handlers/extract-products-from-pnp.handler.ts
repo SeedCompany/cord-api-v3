@@ -1,4 +1,5 @@
 import { has } from 'lodash';
+import { DateTime } from 'luxon';
 import { asyncPool } from '../../../common';
 import { EventsHandler, IEventHandler, ILogger, Logger } from '../../../core';
 import {
@@ -8,7 +9,7 @@ import {
 import { FileService } from '../../file';
 import { ScriptureRangeInput } from '../../scripture';
 import { Book } from '../../scripture/books';
-import { CreateProduct, ProgressMeasurement } from '../dto';
+import { CreateDirectScriptureProduct, ProgressMeasurement } from '../dto';
 import { ProductExtractor } from '../product-extractor.service';
 import { ProductService } from '../product.service';
 
@@ -56,8 +57,9 @@ export class ExtractProductsFromPnpHandler
     );
 
     // Filter out existing products, and convert new ones to create product input.
+    const createdAt = DateTime.now();
     const productsToCreate = productRows.flatMap(
-      ({ bookName, totalVerses, steps }) => {
+      ({ bookName, totalVerses, steps }, index) => {
         if (has(products, [bookName, totalVerses])) {
           this.logger.debug('Product already exists, skipping', {
             bookName,
@@ -82,13 +84,21 @@ export class ExtractProductsFromPnpHandler
           ? undefined
           : { book: bookName, totalVerses };
 
-        return { scriptureReferences, unspecifiedScripture, steps };
+        return {
+          scriptureReferences,
+          unspecifiedScripture,
+          steps,
+          // Attempt to order products in the same order as specified in the PnP
+          // The default sort prop is createdAt.
+          // This doesn't account for row changes in subsequent PnP uploads
+          createdAt: createdAt.plus({ milliseconds: index }),
+        };
       }
     );
 
     // Create products 5 at a time.
     await asyncPool(5, productsToCreate, async (input) => {
-      const create: CreateProduct = {
+      const create: CreateDirectScriptureProduct = {
         engagementId: engagement.id,
         progressStepMeasurement: ProgressMeasurement.Percent,
         ...input,

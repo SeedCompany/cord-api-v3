@@ -3,8 +3,12 @@ import { Transform, Type } from 'class-transformer';
 import { IsPositive, ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
 import { uniq } from 'lodash';
-import { ID, IdField, NameField, OmitType } from '../../../common';
-import { ScriptureRangeInput } from '../../scripture';
+import { DateTime } from 'luxon';
+import { ID, IdField, NameField } from '../../../common';
+import {
+  ScriptureRangeInput,
+  UnspecifiedScripturePortionInput,
+} from '../../scripture';
 import { MethodologyStep } from './methodology-step.enum';
 import { ProductMedium } from './product-medium';
 import { ProductMethodology } from './product-methodology';
@@ -12,13 +16,98 @@ import { ProductPurpose } from './product-purpose';
 import { AnyProduct, Product } from './product.dto';
 import { ProgressMeasurement } from './progress-measurement.enum';
 
-@InputType()
-export abstract class CreateProduct {
+@InputType({
+  isAbstract: true,
+})
+export abstract class CreateBaseProduct {
   @IdField({
     description: 'An ID of a `LanguageEngagement` to create this product for',
   })
   readonly engagementId: ID;
 
+  @Field(() => [ProductMedium], { nullable: true })
+  @Transform(({ value }) => uniq(value))
+  readonly mediums?: readonly ProductMedium[] = [];
+
+  @Field(() => [ProductPurpose], { nullable: true })
+  @Transform(({ value }) => uniq(value))
+  readonly purposes?: readonly ProductPurpose[] = [];
+
+  @Field(() => ProductMethodology, { nullable: true })
+  readonly methodology?: ProductMethodology;
+
+  @Field(() => [MethodologyStep], { nullable: true })
+  @Transform(({ value }) => uniq(value))
+  readonly steps?: readonly MethodologyStep[] = [];
+
+  @Field({ nullable: true })
+  readonly describeCompletion?: string;
+
+  @Field(() => ProgressMeasurement, {
+    description: 'How will progress for each step be measured?',
+  })
+  readonly progressStepMeasurement?: ProgressMeasurement =
+    ProgressMeasurement.Percent;
+
+  @Field(() => Float, {
+    nullable: true,
+    description: stripIndent`
+      The target number that \`StepProgress\` is working towards.
+      This input is only considered if \`progressStepMeasurement\` is \`Number\`
+    `,
+  })
+  @IsPositive()
+  readonly progressTarget?: number;
+
+  // Allow specifying this internally only.
+  readonly createdAt?: DateTime;
+}
+
+@InputType()
+export abstract class CreateDirectScriptureProduct extends CreateBaseProduct {
+  @Field(() => [ScriptureRangeInput], {
+    nullable: true,
+  })
+  @ValidateNested()
+  @Type(() => ScriptureRangeInput)
+  readonly scriptureReferences?: readonly ScriptureRangeInput[];
+
+  @Field(() => UnspecifiedScripturePortionInput, {
+    nullable: true,
+  })
+  @ValidateNested()
+  @Type(() => UnspecifiedScripturePortionInput)
+  readonly unspecifiedScripture?: UnspecifiedScripturePortionInput | null;
+}
+
+@InputType()
+export abstract class CreateDerivativeScriptureProduct extends CreateBaseProduct {
+  @IdField({
+    description: stripIndent`
+      An ID of a \`Producible\` object.
+    `,
+  })
+  readonly produces: ID;
+
+  @Field(() => [ScriptureRangeInput], {
+    nullable: true,
+    description: stripIndent`
+      The \`Producible\` defines a \`scriptureReferences\` list, and this is
+      used by default in this product's \`scriptureReferences\` list.
+      If this product _specifically_ needs to customize the references, then
+      this property can be set (and read) to "override" the \`producible\`'s list.
+    `,
+  })
+  @ValidateNested()
+  @Type(() => ScriptureRangeInput)
+  readonly scriptureReferencesOverride?: readonly ScriptureRangeInput[];
+}
+
+/**
+ * @deprecated
+ */
+@InputType()
+export abstract class CreateProduct extends CreateBaseProduct {
   @IdField({
     nullable: true,
     description: stripIndent`
@@ -54,42 +143,11 @@ export abstract class CreateProduct {
   @ValidateNested()
   @Type(() => ScriptureRangeInput)
   readonly scriptureReferencesOverride?: readonly ScriptureRangeInput[];
-
-  @Field(() => [ProductMedium], { nullable: true })
-  @Transform(({ value }) => uniq(value))
-  readonly mediums?: readonly ProductMedium[] = [];
-
-  @Field(() => [ProductPurpose], { nullable: true })
-  @Transform(({ value }) => uniq(value))
-  readonly purposes?: readonly ProductPurpose[] = [];
-
-  @Field(() => ProductMethodology, { nullable: true })
-  readonly methodology?: ProductMethodology;
-
-  @Field(() => [MethodologyStep], { nullable: true })
-  @Transform(({ value }) => uniq(value))
-  readonly steps?: readonly MethodologyStep[] = [];
-
-  @Field(() => String, { nullable: true })
-  readonly describeCompletion?: string | null;
-
-  @Field(() => ProgressMeasurement, {
-    description: 'How will progress for each step be measured?',
-  })
-  readonly progressStepMeasurement?: ProgressMeasurement =
-    ProgressMeasurement.Percent;
-
-  @Field(() => Float, {
-    nullable: true,
-    description: stripIndent`
-      The target number that \`StepProgress\` is working towards.
-      This input is only considered if \`progressStepMeasurement\` is \`Number\`
-    `,
-  })
-  @IsPositive()
-  readonly progressTarget?: number;
 }
 
+/**
+ * @deprecated
+ */
 @InputType()
 export abstract class CreateProductInput {
   @Field()
@@ -99,11 +157,7 @@ export abstract class CreateProductInput {
 }
 
 @InputType()
-export abstract class CreateOtherProduct extends OmitType(CreateProduct, [
-  'produces',
-  'scriptureReferences',
-  'scriptureReferencesOverride',
-] as const) {
+export abstract class CreateOtherProduct extends CreateBaseProduct {
   @NameField()
   readonly title: string;
 

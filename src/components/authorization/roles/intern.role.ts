@@ -322,6 +322,7 @@ export const Intern = new DbRole({
         { propertyName: 'progressTarget', permission: { read, write, }, },
         { propertyName: 'title', permission: { read, write, }, },
         { propertyName: 'description', permission: { read, write, }, },
+        { propertyName: 'unspecifiedScripture', permission: { read, write, }, },
       ],
       canDelete: false,
     }),

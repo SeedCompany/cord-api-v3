@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, Node, node, Query, relation } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { Except, Merge } from 'type-fest';
 import {
   getDbClassLabels,
+  has,
   ID,
   NotFoundException,
   Range,
@@ -18,6 +19,7 @@ import {
   collect,
   createNode,
   createRelationships,
+  deactivateProperty,
   escapeLuceneSyntax,
   fullTextQuery,
   matchPropsAndProjectSensAndScopedRoles,
@@ -28,10 +30,16 @@ import {
   sorting,
 } from '../../core/database/query';
 import { BaseNode } from '../../core/database/results';
-import { ScriptureRange, ScriptureRangeInput } from '../scripture';
 import {
+  ScriptureRange,
+  ScriptureRangeInput,
+  UnspecifiedScripturePortion,
+  UnspecifiedScripturePortionInput,
+} from '../scripture';
+import {
+  CreateDerivativeScriptureProduct,
+  CreateDirectScriptureProduct,
   CreateOtherProduct,
-  CreateProduct,
   DerivativeScriptureProduct,
   DirectScriptureProduct,
   ProductMethodology as Methodology,
@@ -83,22 +91,6 @@ export class ProductRepository extends CommonRepository {
     return result.dto;
   }
 
-  async readMany(ids: readonly ID[], session: Session) {
-    return await this.db
-      .query()
-      .match([
-        node('project', 'Project'),
-        relation('out', '', 'engagement', ACTIVE),
-        node('engagement', 'Engagement'),
-        relation('out', '', 'product', ACTIVE),
-        node('node', 'Product'),
-      ])
-      .where({ 'node.id': inArray(ids.slice()) })
-      .apply(this.hydrate(session))
-      .map('dto')
-      .run();
-  }
-
   async listIdsAndScriptureRefs(engagementId: ID) {
     return await this.db
       .query()
@@ -107,16 +99,32 @@ export class ProductRepository extends CommonRepository {
         relation('out', '', 'product', ACTIVE),
         node('node', 'DirectScriptureProduct'),
       ])
-      // Only concerned with Direct Scripture Products for this, so no need to worry about overrides
-      .match([
+      .optionalMatch([
         node('node'),
-        relation('out', '', 'scriptureReferences', ACTIVE),
-        node('scriptureRanges', 'ScriptureRange'),
+        relation('out', '', 'unspecifiedScripture', ACTIVE),
+        node('unspecifiedScripture', 'UnspecifiedScripturePortion'),
       ])
+      .subQuery('node', (sub) =>
+        // Only concerned with Direct Scripture Products for this, so no need to worry about overrides
+        sub
+          .match([
+            node('node'),
+            relation('out', '', 'scriptureReferences', ACTIVE),
+            node('scriptureRanges', 'ScriptureRange'),
+          ])
+          .return(
+            collect('scriptureRanges { .start, .end }').as('scriptureRanges')
+          )
+      )
       .return<{
         id: ID;
-        scriptureRanges: ReadonlyArray<Node<Range<number>>>;
-      }>(['node.id as id', collect('scriptureRanges').as('scriptureRanges')])
+        scriptureRanges: ReadonlyArray<Range<number>>;
+        unspecifiedScripture: UnspecifiedScripturePortion | null;
+      }>([
+        'node.id as id',
+        'scriptureRanges',
+        'unspecifiedScripture { .book, .totalVerses } as unspecifiedScripture',
+      ])
       .run();
   }
 
@@ -128,6 +136,11 @@ export class ProductRepository extends CommonRepository {
           node('node'),
           relation('out', '', 'produces', ACTIVE),
           node('produces', 'Producible'),
+        ])
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'unspecifiedScripture', ACTIVE),
+          node('unspecifiedScripture', 'UnspecifiedScripturePortion'),
         ])
         .return<{
           dto: Merge<
@@ -142,12 +155,15 @@ export class ProductRepository extends CommonRepository {
             {
               isOverriding: boolean;
               produces: BaseNode | null;
+              unspecifiedScripture: UnspecifiedScripturePortion | null;
             }
           >;
         }>(
           merge('props', {
             engagement: 'engagement.id',
             produces: 'produces',
+            unspecifiedScripture:
+              'unspecifiedScripture { .book, .totalVerses }',
           }).as('dto')
         );
   }
@@ -180,8 +196,11 @@ export class ProductRepository extends CommonRepository {
       .first();
   }
 
-  async create(input: CreateProduct) {
-    const Product = input.produces
+  async create(
+    input: CreateDerivativeScriptureProduct | CreateDirectScriptureProduct
+  ) {
+    const isDerivative = has('produces', input);
+    const Product = isDerivative
       ? DerivativeScriptureProduct
       : DirectScriptureProduct;
     const initialProps = {
@@ -190,10 +209,14 @@ export class ProductRepository extends CommonRepository {
       methodology: input.methodology,
       steps: input.steps,
       describeCompletion: input.describeCompletion,
-      isOverriding: !!input.scriptureReferencesOverride,
       canDelete: true,
       progressTarget: input.progressTarget,
       progressStepMeasurement: input.progressStepMeasurement,
+      ...(isDerivative
+        ? {
+            isOverriding: !!input.scriptureReferencesOverride,
+          }
+        : {}),
     };
 
     const query = this.db
@@ -201,6 +224,9 @@ export class ProductRepository extends CommonRepository {
       .apply(
         await createNode(Product, {
           initialProps,
+          baseNodeProps: {
+            createdAt: input.createdAt,
+          },
         })
       )
       .apply(
@@ -208,9 +234,11 @@ export class ProductRepository extends CommonRepository {
           in: {
             product: ['LanguageEngagement', input.engagementId],
           },
-          out: {
-            produces: ['Producible', input.produces],
-          },
+          out: isDerivative
+            ? {
+                produces: ['Producible', input.produces],
+              }
+            : {},
         })
       )
       // Connect scripture ranges
@@ -227,13 +255,22 @@ export class ProductRepository extends CommonRepository {
               }),
             ];
         return q.create([
-          ...(!input.produces ? input.scriptureReferences ?? [] : []).map(
+          ...(!isDerivative ? input.scriptureReferences ?? [] : []).map(
             connectScriptureRange('scriptureReferences')
           ),
-          ...(input.produces
-            ? input.scriptureReferencesOverride ?? []
-            : []
-          ).map(connectScriptureRange('scriptureReferencesOverride')),
+          ...(isDerivative ? input.scriptureReferencesOverride ?? [] : []).map(
+            connectScriptureRange('scriptureReferencesOverride')
+          ),
+          !isDerivative && input.unspecifiedScripture
+            ? [
+                node('node'),
+                relation('out', '', 'unspecifiedScripture', ACTIVE),
+                node('', ['UnspecifiedScripturePortion', 'Property'], {
+                  ...input.unspecifiedScripture,
+                  createdAt,
+                }),
+              ]
+            : [],
         ]);
       })
       .return<{ id: ID }>('node.id as id');
@@ -315,11 +352,37 @@ export class ProductRepository extends CommonRepository {
       .first();
   }
 
+  async updateUnspecifiedScripture(
+    productId: ID,
+    input: UnspecifiedScripturePortionInput | null
+  ) {
+    await this.db
+      .query()
+      .matchNode('node', 'Product', { id: productId })
+      .apply(
+        deactivateProperty({
+          resource: DirectScriptureProduct,
+          key: 'unspecifiedScripture',
+        })
+      )
+      .apply((q) =>
+        input
+          ? q.create([
+              node('node'),
+              relation('out', 'rel', 'unspecifiedScripture', ACTIVE),
+              node('', ['UnspecifiedScripturePortion', 'Property'], {
+                ...input,
+                createdAt: DateTime.local(),
+              }),
+            ])
+          : q
+      )
+      .return('numPropsDeactivated')
+      .first();
+  }
+
   async updateDerivativeProperties(
-    object: Except<
-      DerivativeScriptureProduct,
-      'produces' | 'scriptureReferencesOverride'
-    >,
+    object: DerivativeScriptureProduct,
     changes: DbChanges<DerivativeScriptureProduct>
   ) {
     return await this.db.updateProperties({

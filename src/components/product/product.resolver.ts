@@ -18,7 +18,15 @@ import {
   Session,
 } from '../../common';
 import { Loader, LoaderOf } from '../../core';
-import { ProductLoader, ProductService } from '../product';
+import {
+  CreateDerivativeScriptureProduct,
+  CreateDirectScriptureProduct,
+  ProductLoader,
+  ProductService,
+  UpdateDerivativeScriptureProduct,
+  UpdateDirectScriptureProduct,
+} from '../product';
+import { Book } from '../scripture/books';
 import { labelOfScriptureRanges } from '../scripture/labels';
 import {
   AnyProduct,
@@ -98,8 +106,17 @@ export class ProductResolver {
       return product.title.value ?? null;
     }
     if (!product.produces) {
-      if (!product.scriptureReferences.canRead) {
+      if (
+        !product.scriptureReferences.canRead ||
+        !product.unspecifiedScripture.canRead
+      ) {
         return null;
+      }
+      if (product.unspecifiedScripture.value) {
+        const { book, totalVerses: verses } =
+          product.unspecifiedScripture.value;
+        const totalVerses = Book.find(book).totalVerses;
+        return `${book} (${verses} / ${totalVerses} verses)`;
       }
       return labelOfScriptureRanges(product.scriptureReferences.value);
     }
@@ -179,6 +196,8 @@ export class ProductResolver {
 
   @Mutation(() => CreateProductOutput, {
     description: 'Create a product entry',
+    deprecationReason:
+      'Use `createDirectScriptureProduct` or `createDerivativeScriptureProduct` instead',
   })
   async createProduct(
     @LoggedInSession() session: Session,
@@ -189,14 +208,25 @@ export class ProductResolver {
     };
   }
 
-  @Mutation(() => UpdateProductOutput, {
-    description: 'Update a product entry',
+  @Mutation(() => CreateProductOutput, {
+    description: 'Create a direct scripture product',
   })
-  async updateProduct(
+  async createDirectScriptureProduct(
     @LoggedInSession() session: Session,
-    @Args('input') { product: input }: UpdateProductInput
-  ): Promise<UpdateProductOutput> {
-    const product = await this.productService.update(input, session);
+    @Args('input') input: CreateDirectScriptureProduct
+  ): Promise<CreateProductOutput> {
+    const product = await this.productService.create(input, session);
+    return { product };
+  }
+
+  @Mutation(() => CreateProductOutput, {
+    description: 'Create a derivative scripture product',
+  })
+  async createDerivativeScriptureProduct(
+    @LoggedInSession() session: Session,
+    @Args('input') input: CreateDerivativeScriptureProduct
+  ): Promise<CreateProductOutput> {
+    const product = await this.productService.create(input, session);
     return { product };
   }
 
@@ -208,6 +238,41 @@ export class ProductResolver {
     @Args('input') input: CreateOtherProduct
   ): Promise<CreateProductOutput> {
     const product = await this.productService.create(input, session);
+    return { product };
+  }
+
+  @Mutation(() => UpdateProductOutput, {
+    description: 'Update a product entry',
+    deprecationReason:
+      'Use `updateDirectScriptureProduct` or `updateDerivativeScriptureProduct` instead',
+  })
+  async updateProduct(
+    @LoggedInSession() session: Session,
+    @Args('input') { product: input }: UpdateProductInput
+  ): Promise<UpdateProductOutput> {
+    const product = await this.productService.update(input, session);
+    return { product };
+  }
+
+  @Mutation(() => UpdateProductOutput, {
+    description: 'Update a direct scripture product',
+  })
+  async updateDirectScriptureProduct(
+    @LoggedInSession() session: Session,
+    @Args('input') input: UpdateDirectScriptureProduct
+  ): Promise<UpdateProductOutput> {
+    const product = await this.productService.updateDirect(input, session);
+    return { product };
+  }
+
+  @Mutation(() => UpdateProductOutput, {
+    description: 'Update a derivative scripture product',
+  })
+  async updateDerivativeScriptureProduct(
+    @LoggedInSession() session: Session,
+    @Args('input') input: UpdateDerivativeScriptureProduct
+  ): Promise<UpdateProductOutput> {
+    const product = await this.productService.updateDerivative(input, session);
     return { product };
   }
 

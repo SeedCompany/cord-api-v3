@@ -325,6 +325,7 @@ export const ProjectManagerGlobal = new DbRole({
         { propertyName: 'progressTarget', permission: { read, write, }, },
         { propertyName: 'title', permission: { read, write, }, },
         { propertyName: 'description', permission: { read, write, }, },
+        { propertyName: 'unspecifiedScripture', permission: { read, }, },
       ],
       canDelete: false,
     }),

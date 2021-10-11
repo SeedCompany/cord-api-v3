@@ -32,3 +32,5 @@ export * from './register';
 export * from './update-project';
 export * from './create-pin';
 export * from './project-change-request';
+export * from './create-product-derivative';
+export * from './create-product-direct';
