@@ -122,14 +122,8 @@ export class ProductService {
     id: ID,
     session: Session
   ): Promise<UnsecuredDto<AnyProduct>> {
-    const {
-      isOverriding,
-      produces,
-      title,
-      description,
-      unspecifiedScripture,
-      ...props
-    } = await this.repo.readOne(id, session);
+    const { isOverriding, produces, title, description, ...props } =
+      await this.repo.readOne(id, session);
 
     const producible = produces
       ? ((await this.resources.lookupByBaseNode(
@@ -158,7 +152,6 @@ export class ProductService {
       const dto: UnsecuredDto<DirectScriptureProduct> = {
         ...props,
         scriptureReferences: scriptureReferencesValue,
-        unspecifiedScripture: unspecifiedScripture?.properties ?? null,
       };
       return dto;
     }

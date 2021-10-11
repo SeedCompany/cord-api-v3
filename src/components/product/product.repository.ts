@@ -138,14 +138,15 @@ export class ProductRepository extends CommonRepository {
             {
               isOverriding: boolean;
               produces: BaseNode | null;
-              unspecifiedScripture: Node<UnspecifiedScripturePortion> | null;
+              unspecifiedScripture: UnspecifiedScripturePortion | null;
             }
           >;
         }>(
           merge('props', {
             engagement: 'engagement.id',
             produces: 'produces',
-            unspecifiedScripture: 'unspecifiedScripture',
+            unspecifiedScripture:
+              'unspecifiedScripture { .book, .totalVerses }',
           }).as('dto')
         );
   }
