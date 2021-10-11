@@ -4,6 +4,7 @@ import { DateTime } from 'luxon';
 import { Except, Merge } from 'type-fest';
 import {
   getDbClassLabels,
+  has,
   ID,
   NotFoundException,
   Range,
@@ -30,8 +31,9 @@ import {
 import { BaseNode } from '../../core/database/results';
 import { ScriptureRange, ScriptureRangeInput } from '../scripture';
 import {
+  CreateDerivativeScriptureProduct,
+  CreateDirectScriptureProduct,
   CreateOtherProduct,
-  CreateProduct,
   DerivativeScriptureProduct,
   DirectScriptureProduct,
   ProductMethodology as Methodology,
@@ -164,8 +166,11 @@ export class ProductRepository extends CommonRepository {
       .first();
   }
 
-  async create(input: CreateProduct) {
-    const Product = input.produces
+  async create(
+    input: CreateDerivativeScriptureProduct | CreateDirectScriptureProduct
+  ) {
+    const isDerivative = has('produces', input);
+    const Product = isDerivative
       ? DerivativeScriptureProduct
       : DirectScriptureProduct;
     const initialProps = {
@@ -174,10 +179,14 @@ export class ProductRepository extends CommonRepository {
       methodology: input.methodology,
       steps: input.steps,
       describeCompletion: input.describeCompletion,
-      isOverriding: !!input.scriptureReferencesOverride,
       canDelete: true,
       progressTarget: input.progressTarget,
       progressStepMeasurement: input.progressStepMeasurement,
+      ...(isDerivative
+        ? {
+            isOverriding: !!input.scriptureReferencesOverride,
+          }
+        : {}),
     };
 
     const query = this.db
@@ -192,9 +201,11 @@ export class ProductRepository extends CommonRepository {
           in: {
             product: ['LanguageEngagement', input.engagementId],
           },
-          out: {
-            produces: ['Producible', input.produces],
-          },
+          out: isDerivative
+            ? {
+                produces: ['Producible', input.produces],
+              }
+            : {},
         })
       )
       // Connect scripture ranges
@@ -211,13 +222,12 @@ export class ProductRepository extends CommonRepository {
               }),
             ];
         return q.create([
-          ...(!input.produces ? input.scriptureReferences ?? [] : []).map(
+          ...(!isDerivative ? input.scriptureReferences ?? [] : []).map(
             connectScriptureRange('scriptureReferences')
           ),
-          ...(input.produces
-            ? input.scriptureReferencesOverride ?? []
-            : []
-          ).map(connectScriptureRange('scriptureReferencesOverride')),
+          ...(isDerivative ? input.scriptureReferencesOverride ?? [] : []).map(
+            connectScriptureRange('scriptureReferencesOverride')
+          ),
         ]);
       })
       .return<{ id: ID }>('node.id as id');
