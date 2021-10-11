@@ -5,7 +5,6 @@ import { DtoRepository, matchRequestingUser } from '../../core';
 import {
   createNode,
   paginate,
-  permissionsOfNode,
   requestingUser,
   sorting,
 } from '../../core/database/query';
@@ -66,10 +65,10 @@ export class FundingAccountRepository extends DtoRepository(FundingAccount) {
   }
 
   async list(input: FundingAccountListInput, session: Session) {
-    const label = 'FundingAccount';
     const result = await this.db
       .query()
-      .match([requestingUser(session), ...permissionsOfNode(label)])
+      .match(requestingUser(session))
+      .match(node('node', 'FundingAccount'))
       .apply(sorting(FundingAccount, input))
       .apply(paginate(input, this.hydrate()))
       .first();
