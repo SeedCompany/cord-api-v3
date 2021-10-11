@@ -171,6 +171,7 @@ export const ConsultantOnProject = new DbRole({
     }),
     new DbBaseNodeGrant<DbFundingAccount>({
       __className: 'DbFundingAccount',
+      canList: false,
       properties: [
         { propertyName: 'name', permission: {}, },
         { propertyName: 'accountNumber', permission: {}, },

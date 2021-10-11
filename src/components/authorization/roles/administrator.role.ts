@@ -157,6 +157,7 @@ export const Administrator = new DbRole({
     }),
     new DbBaseNodeGrant<DbFundingAccount>({
       __className: 'DbFundingAccount',
+      canList: true,
       properties: [
         { propertyName: 'name', permission: { read, write, }, },
         { propertyName: 'accountNumber', permission: { read, write, }, },

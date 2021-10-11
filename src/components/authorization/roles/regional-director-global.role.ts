@@ -184,6 +184,7 @@ export const RegionalDirectorGlobal = new DbRole({
     }),
     new DbBaseNodeGrant<DbFundingAccount>({
       __className: 'DbFundingAccount',
+      canList: true,
       properties: [
         { propertyName: 'name', permission: { read, }, },
         { propertyName: 'accountNumber', permission: { read, }, },
