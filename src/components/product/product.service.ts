@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { has as hasPath, set, sumBy, uniq } from 'lodash';
+import { has as hasPath, isEqual, set, sumBy, uniq } from 'lodash';
 import {
   has,
   ID,
@@ -308,6 +308,13 @@ export class ProductService {
         input,
         changes
       ),
+      unspecifiedScripture:
+        input.unspecifiedScripture !== undefined &&
+        !isEqual(currentProduct.unspecifiedScripture, {
+          ...input.unspecifiedScripture, // spread to not compare class prototype
+        })
+          ? input.unspecifiedScripture
+          : undefined,
     };
 
     await this.authorizationService.verifyCanEditChanges(
