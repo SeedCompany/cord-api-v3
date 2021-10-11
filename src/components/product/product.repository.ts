@@ -224,6 +224,9 @@ export class ProductRepository extends CommonRepository {
       .apply(
         await createNode(Product, {
           initialProps,
+          baseNodeProps: {
+            createdAt: input.createdAt,
+          },
         })
       )
       .apply(

@@ -3,6 +3,7 @@ import { Transform, Type } from 'class-transformer';
 import { IsPositive, ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
 import { uniq } from 'lodash';
+import { DateTime } from 'luxon';
 import { ID, IdField, NameField } from '../../../common';
 import {
   ScriptureRangeInput,
@@ -57,6 +58,9 @@ export abstract class CreateBaseProduct {
   })
   @IsPositive()
   readonly progressTarget?: number;
+
+  // Allow specifying this internally only.
+  readonly createdAt?: DateTime;
 }
 
 @InputType()
