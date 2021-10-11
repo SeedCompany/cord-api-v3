@@ -17,4 +17,5 @@ export class DbProduct extends DbBaseNode {
   progressTarget: any = null;
   title: any = null;
   description: any = null;
+  unspecifiedScripture: any = null;
 }
