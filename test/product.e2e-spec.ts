@@ -13,6 +13,8 @@ import {
 import { ScriptureRange } from '../src/components/scripture/dto';
 import { Story } from '../src/components/story';
 import {
+  createDerivativeProduct,
+  createDirectProduct,
   createFilm,
   createLanguageEngagement,
   createSession,
@@ -23,7 +25,6 @@ import {
   registerUserWithPower,
   TestApp,
 } from './utility';
-import { createProduct } from './utility/create-product';
 import { RawLanguageEngagement, RawProduct } from './utility/fragments';
 import { resetDatabase } from './utility/reset-database';
 
@@ -56,7 +57,7 @@ describe('Product e2e', () => {
   });
 
   it('create & read product by id', async () => {
-    const product = await createProduct(app, {
+    const product = await createDirectProduct(app, {
       engagementId: engagement.id,
     });
 
@@ -83,7 +84,7 @@ describe('Product e2e', () => {
 
   it('create product with scriptureReferences', async () => {
     const randomScriptureReferences = ScriptureRange.randomList();
-    const product = await createProduct(app, {
+    const product = await createDirectProduct(app, {
       engagementId: engagement.id,
       scriptureReferences: randomScriptureReferences,
     });
@@ -95,7 +96,7 @@ describe('Product e2e', () => {
   });
 
   it('create DerivativeScriptureProduct with produces', async () => {
-    const product = await createProduct(app, {
+    const product = await createDerivativeProduct(app, {
       engagementId: engagement.id,
       produces: story.id,
     });
@@ -173,7 +174,7 @@ describe('Product e2e', () => {
 
   it('create DerivativeScriptureProduct with scriptureReferencesOverride', async () => {
     const randomScriptureReferences = ScriptureRange.randomList();
-    const product = await createProduct(app, {
+    const product = await createDerivativeProduct(app, {
       engagementId: engagement.id,
       produces: story.id,
       scriptureReferencesOverride: randomScriptureReferences,
@@ -248,14 +249,14 @@ describe('Product e2e', () => {
   });
 
   it('update product', async () => {
-    const product = await createProduct(app, {
+    const product = await createDirectProduct(app, {
       engagementId: engagement.id,
     });
 
     const result = await app.graphql.query(
       gql`
-        mutation updateProduct($id: ID!) {
-          updateProduct(input: { product: { id: $id } }) {
+        mutation updateDirectScriptureProduct($id: ID!) {
+          updateDirectScriptureProduct(input: { id: $id }) {
             product {
               ...product
             }
@@ -268,11 +269,11 @@ describe('Product e2e', () => {
       }
     );
 
-    expect(result.updateProduct.product.id).toBe(product.id);
+    expect(result.updateDirectScriptureProduct.product.id).toBe(product.id);
   });
 
   it('update DirectScriptureProduct', async () => {
-    const product = await createProduct(app, {
+    const product = await createDirectProduct(app, {
       engagementId: engagement.id,
       scriptureReferences: ScriptureRange.randomList(),
     });
@@ -286,8 +287,10 @@ describe('Product e2e', () => {
 
     const result = await app.graphql.query(
       gql`
-        mutation updateProduct($input: UpdateProductInput!) {
-          updateProduct(input: $input) {
+        mutation updateDirectScriptureProduct(
+          $input: UpdateDirectScriptureProduct!
+        ) {
+          updateDirectScriptureProduct(input: $input) {
             product {
               ...product
             }
@@ -297,18 +300,13 @@ describe('Product e2e', () => {
       `,
       {
         input: {
-          product: {
-            id: product.id,
-            mediums: updateProduct.mediums,
-            purposes: updateProduct.purposes,
-            methodology: updateProduct.methodology,
-            scriptureReferences: updateProduct.scriptureReferences,
-          },
+          id: product.id,
+          ...updateProduct,
         },
       }
     );
 
-    const actual: AnyProduct = result.updateProduct.product;
+    const actual: AnyProduct = result.updateDirectScriptureProduct.product;
     expect(actual.mediums.value).toEqual(updateProduct.mediums);
     expect(actual.purposes.value).toEqual(updateProduct.purposes);
     expect(actual.methodology.value).toEqual(updateProduct.methodology);
@@ -317,102 +315,8 @@ describe('Product e2e', () => {
     );
   });
 
-  it('update DirectScriptureProduct with scriptureReferencesOverride errors', async () => {
-    const product = await createProduct(app, {
-      engagementId: engagement.id,
-    });
-
-    await expect(
-      app.graphql.query(
-        gql`
-          mutation updateProduct($input: UpdateProductInput!) {
-            updateProduct(input: $input) {
-              product {
-                ...product
-              }
-            }
-          }
-          ${fragments.product}
-        `,
-        {
-          input: {
-            product: {
-              id: product.id,
-              scriptureReferencesOverride: ScriptureRange.randomList(),
-            },
-          },
-        }
-      )
-    ).rejects.toThrowError(
-      'Cannot update Scripture References Override on a Direct Scripture Product'
-    );
-  });
-
-  it('update produces on DirectScriptureProduct errors', async () => {
-    const product = await createProduct(app, {
-      engagementId: engagement.id,
-    });
-
-    await expect(
-      app.graphql.query(
-        gql`
-          mutation updateProduct($input: UpdateProductInput!) {
-            updateProduct(input: $input) {
-              product {
-                ...product
-              }
-            }
-          }
-          ${fragments.product}
-        `,
-        {
-          input: {
-            product: {
-              id: product.id,
-              produces: film.id,
-            },
-          },
-        }
-      )
-    ).rejects.toThrowError(
-      'Cannot update produces on a Direct Scripture Product'
-    );
-  });
-
-  it('update DerivativeScriptureProduct with scriptureReferences errors', async () => {
-    const product = await createProduct(app, {
-      engagementId: engagement.id,
-      produces: film.id,
-    });
-
-    await expect(
-      app.graphql.query(
-        gql`
-          mutation updateProduct($input: UpdateProductInput!) {
-            updateProduct(input: $input) {
-              product {
-                ...product
-              }
-            }
-          }
-          ${fragments.product}
-        `,
-        {
-          input: {
-            product: {
-              id: product.id,
-              scriptureReferences: ScriptureRange.randomList(),
-            },
-          },
-        }
-      )
-    ).rejects.toThrowError(
-      'Cannot update Scripture References on a Derivative Scripture Product'
-    );
-  });
-
   it('update DerivativeScriptureProduct', async () => {
-    const product = await createProduct(app, {
+    const product = await createDerivativeProduct(app, {
       engagementId: engagement.id,
       produces: story.id,
     });
@@ -421,8 +325,10 @@ describe('Product e2e', () => {
 
     const result = await app.graphql.query(
       gql`
-        mutation updateProduct($input: UpdateProductInput!) {
-          updateProduct(input: $input) {
+        mutation updateDerivativeScriptureProduct(
+          $input: UpdateDerivativeScriptureProduct!
+        ) {
+          updateDerivativeScriptureProduct(input: $input) {
             product {
               ...product
               ... on DerivativeScriptureProduct {
@@ -474,15 +380,13 @@ describe('Product e2e', () => {
       `,
       {
         input: {
-          product: {
-            id: product.id,
-            produces: updateProduces,
-          },
+          id: product.id,
+          produces: updateProduces,
         },
       }
     );
 
-    const actual: AnyProduct = result.updateProduct.product;
+    const actual: AnyProduct = result.updateDerivativeScriptureProduct.product;
     expect(actual.produces).toBeDefined();
     expect(actual.produces?.value).toBeDefined();
     expect(actual.produces?.value?.id).toBe(film.id);
@@ -494,7 +398,7 @@ describe('Product e2e', () => {
   });
 
   it('update DerivativeScriptureProduct with scriptureReferencesOverride', async () => {
-    const product = await createProduct(app, {
+    const product = await createDerivativeProduct(app, {
       engagementId: engagement.id,
       produces: story.id,
       scriptureReferencesOverride: ScriptureRange.randomList(),
@@ -504,8 +408,10 @@ describe('Product e2e', () => {
 
     const result = await app.graphql.query(
       gql`
-        mutation updateProduct($input: UpdateProductInput!) {
-          updateProduct(input: $input) {
+        mutation updateDerivativeScriptureProduct(
+          $input: UpdateDerivativeScriptureProduct!
+        ) {
+          updateDerivativeScriptureProduct(input: $input) {
             product {
               ...product
               ... on DerivativeScriptureProduct {
@@ -557,15 +463,13 @@ describe('Product e2e', () => {
       `,
       {
         input: {
-          product: {
-            id: product.id,
-            scriptureReferencesOverride: override,
-          },
+          id: product.id,
+          scriptureReferencesOverride: override,
         },
       }
     );
 
-    const actual: AnyProduct = result.updateProduct.product;
+    const actual: AnyProduct = result.updateDerivativeScriptureProduct.product;
 
     expect(actual.scriptureReferencesOverride?.value).toEqual(
       expect.arrayContaining(override)
@@ -579,7 +483,7 @@ describe('Product e2e', () => {
   });
 
   it('update DerivativeScriptureProduct with scriptureReferencesOverride which is null', async () => {
-    const product = await createProduct(app, {
+    const product = await createDerivativeProduct(app, {
       engagementId: engagement.id,
       produces: story.id,
       scriptureReferencesOverride: ScriptureRange.randomList(),
@@ -587,8 +491,10 @@ describe('Product e2e', () => {
 
     const result = await app.graphql.query(
       gql`
-        mutation updateProduct($input: UpdateProductInput!) {
-          updateProduct(input: $input) {
+        mutation updateDerivativeScriptureProduct(
+          $input: UpdateDerivativeScriptureProduct!
+        ) {
+          updateDerivativeScriptureProduct(input: $input) {
             product {
               ...product
               ... on DerivativeScriptureProduct {
@@ -640,15 +546,13 @@ describe('Product e2e', () => {
       `,
       {
         input: {
-          product: {
-            id: product.id,
-            scriptureReferencesOverride: null,
-          },
+          id: product.id,
+          scriptureReferencesOverride: null,
         },
       }
     );
 
-    const actual: AnyProduct = result.updateProduct.product;
+    const actual: AnyProduct = result.updateDerivativeScriptureProduct.product;
     expect(actual.scriptureReferencesOverride?.value).toBeNull();
     expect(actual.produces?.value?.scriptureReferences?.value).toEqual(
       actual.scriptureReferences.value
@@ -656,7 +560,7 @@ describe('Product e2e', () => {
   });
 
   it.skip('delete product', async () => {
-    const product = await createProduct(app, {
+    const product = await createDirectProduct(app, {
       engagementId: engagement.id,
     });
     expect(product.id).toBeTruthy();
@@ -695,7 +599,7 @@ describe('Product e2e', () => {
     const numProducts = 2;
     await Promise.all(
       times(numProducts).map(() =>
-        createProduct(app, {
+        createDirectProduct(app, {
           engagementId: engagement.id,
         })
       )
@@ -724,7 +628,7 @@ describe('Product e2e', () => {
     const numProducts = 2;
     await Promise.all(
       times(numProducts).map(() =>
-        createProduct(app, {
+        createDirectProduct(app, {
           engagementId: engagement.id,
           scriptureReferences: ScriptureRange.randomList(),
         })
@@ -764,7 +668,7 @@ describe('Product e2e', () => {
     const numProducts = 2;
     await Promise.all(
       times(numProducts).map(() =>
-        createProduct(app, {
+        createDerivativeProduct(app, {
           engagementId: engagement.id,
           produces: story.id,
           scriptureReferencesOverride: ScriptureRange.randomList(),
@@ -823,7 +727,7 @@ describe('Product e2e', () => {
     const numProducts = 2;
     await Promise.all(
       times(numProducts).map(() =>
-        createProduct(app, {
+        createDirectProduct(app, {
           engagementId: engagement.id,
         })
       )
