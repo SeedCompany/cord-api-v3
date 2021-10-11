@@ -116,7 +116,7 @@ describe('Product e2e', () => {
     );
     const actual: AnyProduct = result.product;
     expect(actual?.unspecifiedScripture?.value).toMatchObject({
-      book: 'Matt',
+      book: 'Matthew',
       totalVerses: 10,
     });
   });
@@ -367,7 +367,7 @@ describe('Product e2e', () => {
       expect.arrayContaining(updateProduct.scriptureReferences)
     );
     expect(actual?.unspecifiedScripture?.value).toMatchObject({
-      book: 'Matt',
+      book: 'Matthew',
       totalVerses: 10,
     });
   });

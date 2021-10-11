@@ -1,7 +1,9 @@
+import { applyDecorators } from '@nestjs/common';
 import { ValidationArguments } from 'class-validator';
 import { Merge } from 'type-fest';
 import { createValidationDecorator } from '../../../common/validators/validateBy';
 import { Book, Chapter, Verse } from '../books';
+import { NormalizeBook } from './book.transformer';
 import { ScriptureReference } from './scripture-reference.dto';
 
 // We assume this is only used on the ScriptureReference object
@@ -10,7 +12,10 @@ type ValidationArgs = Merge<
   { object: ScriptureReference }
 >;
 
-export const IsValidBook = createValidationDecorator({
+export const IsValidBook = () =>
+  applyDecorators(NormalizeBook(), IsScriptureBook());
+
+const IsScriptureBook = createValidationDecorator({
   name: 'ScriptureBook',
   validator: {
     validate: Book.isValid,
