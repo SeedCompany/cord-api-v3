@@ -26,6 +26,7 @@ import {
   UpdateDerivativeScriptureProduct,
   UpdateDirectScriptureProduct,
 } from '../product';
+import { Book } from '../scripture/books';
 import { labelOfScriptureRanges } from '../scripture/labels';
 import {
   AnyProduct,
@@ -105,8 +106,17 @@ export class ProductResolver {
       return product.title.value ?? null;
     }
     if (!product.produces) {
-      if (!product.scriptureReferences.canRead) {
+      if (
+        !product.scriptureReferences.canRead ||
+        !product.unspecifiedScripture.canRead
+      ) {
         return null;
+      }
+      if (product.unspecifiedScripture.value) {
+        const { book, totalVerses: verses } =
+          product.unspecifiedScripture.value;
+        const totalVerses = Book.find(book).totalVerses;
+        return `${book} (${verses} / ${totalVerses} verses)`;
       }
       return labelOfScriptureRanges(product.scriptureReferences.value);
     }
