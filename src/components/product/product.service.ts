@@ -322,7 +322,7 @@ export class ProductService {
     await this.scriptureRefService.update(input.id, scriptureReferences);
 
     // update unspecifiedScripture if it's defined
-    if (unspecifiedScripture) {
+    if (unspecifiedScripture !== undefined) {
       await this.repo.updateUnspecifiedScripture(
         input.id,
         unspecifiedScripture

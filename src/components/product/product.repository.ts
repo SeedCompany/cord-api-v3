@@ -19,6 +19,7 @@ import {
   collect,
   createNode,
   createRelationships,
+  deactivateProperty,
   escapeLuceneSyntax,
   fullTextQuery,
   matchPropsAndProjectSensAndScopedRoles,
@@ -245,7 +246,7 @@ export class ProductRepository extends CommonRepository {
             ? [
                 node('node'),
                 relation('out', '', 'unspecifiedScripture', ACTIVE),
-                node('', 'UnspecifiedScripturePortion', {
+                node('', ['UnspecifiedScripturePortion', 'Property'], {
                   ...input.unspecifiedScripture,
                   createdAt,
                 }),
@@ -334,34 +335,30 @@ export class ProductRepository extends CommonRepository {
 
   async updateUnspecifiedScripture(
     productId: ID,
-    unspecifiedScriptureInput: UnspecifiedScripturePortionInput
+    input: UnspecifiedScripturePortionInput | null
   ) {
     await this.db
       .query()
-      .match([
-        node('product', 'Product', { id: productId }),
-        relation('out', 'rel', 'unspecifiedScripture', ACTIVE),
-        node('', 'UnspecifiedScripturePortion'),
-      ])
-      .setValues({
-        'rel.active': false,
-      })
-      .return('rel')
-      .first();
-
-    await this.db
-      .query()
-      .match([node('product', 'Product', { id: productId })])
-      .create([
-        node('product'),
-        relation('out', 'rel', 'unspecifiedScripture', ACTIVE),
-        node('', 'UnspecifiedScripturePortion', {
-          book: unspecifiedScriptureInput.book,
-          totalVerses: unspecifiedScriptureInput.totalVerses,
-          createdAt: DateTime.local(),
-        }),
-      ])
-      .return('rel')
+      .matchNode('node', 'Product', { id: productId })
+      .apply(
+        deactivateProperty({
+          resource: DirectScriptureProduct,
+          key: 'unspecifiedScripture',
+        })
+      )
+      .apply((q) =>
+        input
+          ? q.create([
+              node('node'),
+              relation('out', 'rel', 'unspecifiedScripture', ACTIVE),
+              node('', ['UnspecifiedScripturePortion', 'Property'], {
+                ...input,
+                createdAt: DateTime.local(),
+              }),
+            ])
+          : q
+      )
+      .return('numPropsDeactivated')
       .first();
   }
 

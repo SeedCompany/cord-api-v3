@@ -107,6 +107,7 @@ export class DirectScriptureProduct extends Product {
       This is needed for legacy data where we only know the total verse count.
     `,
   })
+  @DbLabel('UnspecifiedScripturePortion')
   unspecifiedScripture: SecuredUnspecifiedScripturePortion;
 }
 
