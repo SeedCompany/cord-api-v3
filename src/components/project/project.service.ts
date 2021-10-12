@@ -1,6 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Many } from 'lodash';
-import { DateTime } from 'luxon';
 import {
   DuplicateException,
   ID,
@@ -316,32 +315,32 @@ export class ProjectService {
       changeset
     );
 
-    if (primaryLocationId) {
-      try {
-        const location = await this.locationService.readOne(
-          primaryLocationId,
-          session
-        );
-        if (!location.fundingAccount.value) {
-          throw new InputException(
-            'Cannot connect location without a funding account',
-            'project.primaryLocationId'
+    if (primaryLocationId !== undefined) {
+      if (primaryLocationId) {
+        try {
+          const location = await this.locationService.readOne(
+            primaryLocationId,
+            session
           );
+          if (!location.fundingAccount.value) {
+            throw new InputException(
+              'Cannot connect location without a funding account',
+              'project.primaryLocationId'
+            );
+          }
+        } catch (e) {
+          if (e instanceof NotFoundException) {
+            throw new NotFoundException(
+              'Primary location not found',
+              'project.primaryLocationId',
+              e
+            );
+          }
+          throw e;
         }
-      } catch (e) {
-        if (e instanceof NotFoundException) {
-          throw new NotFoundException(
-            'Primary location not found',
-            'project.primaryLocationId',
-            e
-          );
-        }
-        throw e;
       }
 
-      const createdAt = DateTime.local();
-
-      await this.repo.updateLocation(input, createdAt);
+      await this.repo.updateLocation(input.id, primaryLocationId);
 
       result = {
         ...result,
@@ -349,15 +348,16 @@ export class ProjectService {
       };
     }
 
-    if (fieldRegionId) {
-      await this.validateOtherResourceId(
-        fieldRegionId,
-        'FieldRegion',
-        'fieldRegionId',
-        'Field region not found'
-      );
-      const createdAt = DateTime.local();
-      await this.repo.updateFieldRegion(input, createdAt);
+    if (fieldRegionId !== undefined) {
+      if (fieldRegionId) {
+        await this.validateOtherResourceId(
+          fieldRegionId,
+          'FieldRegion',
+          'fieldRegionId',
+          'Field region not found'
+        );
+      }
+      await this.repo.updateFieldRegion(input.id, fieldRegionId);
       result = {
         ...result,
         fieldRegion: fieldRegionId,
