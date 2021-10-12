@@ -30,6 +30,7 @@ import {
   Language,
   LanguageListInput,
   LanguageListOutput,
+  SecuredFirstScripture,
   UpdateLanguageInput,
   UpdateLanguageOutput,
 } from './dto';
@@ -84,6 +85,17 @@ export class LanguageResolver {
         ? value ?? language.ethnologue.population.value
         : undefined,
     };
+  }
+
+  @ResolveField()
+  firstScripture(@Parent() language: Language): SecuredFirstScripture {
+    if (!language.hasExternalFirstScripture.canRead) {
+      return { canRead: false, canEdit: false };
+    }
+    const value = language.firstScriptureEngagement
+      ? { hasFirst: true, engagement: language.firstScriptureEngagement }
+      : { hasFirst: language.hasExternalFirstScripture.value! };
+    return { canRead: true, canEdit: false, value };
   }
 
   @ResolveField(() => SecuredLocationList)
