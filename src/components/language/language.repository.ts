@@ -92,10 +92,18 @@ export class LanguageRepository extends DtoRepository(Language) {
         ])
         .apply(matchProps({ nodeName: 'eth', outputVar: 'ethProps' }))
         .apply(this.isPresetInventory())
+        .optionalMatch([
+          node('node'),
+          relation('in', '', 'language', ACTIVE),
+          node('firstScriptureEngagement', 'LanguageEngagement'),
+          relation('out', '', 'firstScripture', ACTIVE),
+          node('', 'Property', { value: variable('true') }),
+        ])
         .return<{ dto: UnsecuredDto<Language> }>(
           merge('props', {
             ethnologue: 'ethProps',
             presetInventory: 'presetInventory',
+            firstScriptureEngagement: 'firstScriptureEngagement.id',
           }).as('dto')
         );
   }
