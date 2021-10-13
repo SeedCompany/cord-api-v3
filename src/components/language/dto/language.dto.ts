@@ -155,6 +155,9 @@ export class Language extends Resource {
   @Field()
   readonly hasExternalFirstScripture: SecuredBoolean;
 
+  // Internal First Scripture == true via this engagement
+  readonly firstScriptureEngagement?: ID;
+
   @Field()
   readonly tags: SecuredTags;
 
