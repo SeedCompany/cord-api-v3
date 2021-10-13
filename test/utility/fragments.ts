@@ -898,6 +898,14 @@ export const fieldRegion = gql`
       canEdit
       canRead
     }
+    fieldZone {
+      canRead
+      canEdit
+    }
+    director {
+      canRead
+      canEdit
+    }
   }
 `;
 

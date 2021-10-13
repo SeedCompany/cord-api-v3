@@ -4,6 +4,7 @@ import {
   ID,
   NotFoundException,
   ObjectView,
+  SecuredList,
   ServerException,
   Session,
   UnauthorizedException,
@@ -142,7 +143,11 @@ export class FieldRegionService {
     input: FieldRegionListInput,
     session: Session
   ): Promise<FieldRegionListOutput> {
-    const results = await this.repo.list(input, session);
-    return await mapListResults(results, (dto) => this.secure(dto, session));
+    if (await this.authorizationService.canList(FieldRegion, session)) {
+      const results = await this.repo.list(input, session);
+      return await mapListResults(results, (dto) => this.secure(dto, session));
+    } else {
+      return SecuredList.Redacted;
+    }
   }
 }

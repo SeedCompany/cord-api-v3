@@ -370,6 +370,7 @@ export const ProjectManagerOnProject = new DbRole({
     }),
     new DbBaseNodeGrant<DbFieldRegion>({
       __className: 'DbFieldRegion',
+      canList: true,
       properties: [
         { propertyName: 'director', permission: { read, write, }, },
         { propertyName: 'name', permission: { read, write, }, },
