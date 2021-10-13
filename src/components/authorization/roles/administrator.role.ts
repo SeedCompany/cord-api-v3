@@ -191,6 +191,7 @@ export const Administrator = new DbRole({
     }),
     new DbBaseNodeGrant<DbLanguage>({
       __className: 'DbLanguage',
+      canList: true,
       properties: [
         { propertyName: 'displayName', permission: { read, write, }, },
         { propertyName: 'displayNamePronunciation', permission: { read, write, }, },

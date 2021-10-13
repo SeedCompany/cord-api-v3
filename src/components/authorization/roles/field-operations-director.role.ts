@@ -219,6 +219,7 @@ export const FieldOperationsDirector = new DbRole({
     }),
     new DbBaseNodeGrant<DbLanguage>({
       __className: 'DbLanguage',
+      canList: true,
       properties: [
         { propertyName: 'displayName', permission: { read, }, },
         { propertyName: 'displayNamePronunciation', permission: { read, }, },
