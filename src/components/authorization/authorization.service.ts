@@ -131,13 +131,15 @@ export class AuthorizationService {
     resource: Resource,
     props: DbPropsOfDto<Resource['prototype']>,
     sessionOrUserId: Session | ID,
-    otherRoles?: ScopedRole[]
+    otherRoles?: ScopedRole[],
+    sensitivity?: Sensitivity
   ): Promise<SecuredResource<Resource, false>> {
     const permissions = await this.getPermissions({
       resource,
       sessionOrUserId,
       otherRoles,
       dto: props,
+      sensitivity,
     });
     // @ts-expect-error not matching for some reason but declared return type is correct
     return parseSecuredProperties(props, permissions, resource.SecuredProps);
