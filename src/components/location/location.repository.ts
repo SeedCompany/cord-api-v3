@@ -108,14 +108,24 @@ export class LocationRepository extends DtoRepository(Location) {
         );
   }
 
-  async updateFundingAccount(id: ID, fundingAccount: ID, session: Session) {
+  async updateFundingAccount(
+    id: ID,
+    fundingAccount: ID | null,
+    session: Session
+  ) {
     await this.db
       .query()
       .apply(matchRequestingUser(session))
       .matchNode('location', 'Location', { id })
-      .matchNode('newFundingAccount', 'FundingAccount', {
-        id: fundingAccount,
-      })
+      .match([
+        fundingAccount
+          ? [
+              node('newFundingAccount', 'FundingAccount', {
+                id: fundingAccount,
+              }),
+            ]
+          : [],
+      ])
       .optionalMatch([
         node('location'),
         relation('out', 'oldFundingAccountRel', 'fundingAccount', {
@@ -139,14 +149,24 @@ export class LocationRepository extends DtoRepository(Location) {
       .run();
   }
 
-  async updateDefaultFieldRegion(id: ID, fieldRegion: ID, session: Session) {
+  async updateDefaultFieldRegion(
+    id: ID,
+    fieldRegion: ID | null,
+    session: Session
+  ) {
     await this.db
       .query()
       .apply(matchRequestingUser(session))
       .matchNode('location', 'Location', { id })
-      .matchNode('newDefaultFieldRegion', 'FieldRegion', {
-        id: fieldRegion,
-      })
+      .match([
+        fieldRegion
+          ? [
+              node('newDefaultFieldRegion', 'FieldRegion', {
+                id: fieldRegion,
+              }),
+            ]
+          : [],
+      ])
       .optionalMatch([
         node('location'),
         relation('out', 'oldDefaultFieldRegionRel', 'defaultFieldRegion', {

@@ -106,11 +106,11 @@ export class LocationService {
 
     await this.repo.updateProperties(location, simpleChanges);
 
-    if (fundingAccountId) {
+    if (fundingAccountId !== undefined) {
       await this.repo.updateFundingAccount(input.id, fundingAccountId, session);
     }
 
-    if (defaultFieldRegionId) {
+    if (defaultFieldRegionId !== undefined) {
       await this.repo.updateDefaultFieldRegion(
         input.id,
         defaultFieldRegionId,
