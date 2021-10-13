@@ -127,7 +127,9 @@ export class LanguageService {
     const securedProps = await this.authorizationService.secureProperties(
       Language,
       dto,
-      session
+      session,
+      undefined,
+      dto.effectiveSensitivity
     );
 
     const ethnologue = await this.ethnologueLanguageService.secure(
@@ -207,7 +209,10 @@ export class LanguageService {
     input: LanguageListInput,
     session: Session
   ): Promise<LanguageListOutput> {
-    const results = await this.repo.list(input, session);
+    const limited = (await this.authorizationService.canList(Language, session))
+      ? undefined
+      : await this.authorizationService.getListRoleSensitivityMapping(Language);
+    const results = await this.repo.list(input, session, limited);
     return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 
