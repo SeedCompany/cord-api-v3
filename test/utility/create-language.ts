@@ -10,6 +10,23 @@ import { SecuredLocationList } from '../../src/components/location';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
 
+export async function listLanguageIds(app: TestApp) {
+  const result = await app.graphql.mutate(
+    gql`
+      query {
+        languages(input: {}) {
+          items {
+            id
+          }
+        }
+      }
+    `
+  );
+  const languages = result.languages.items;
+  expect(languages).toBeTruthy();
+  return languages;
+}
+
 export async function readOneLanguageLocation(
   app: TestApp,
   langId: string
