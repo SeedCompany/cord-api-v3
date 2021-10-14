@@ -54,6 +54,12 @@ export const labelOfScriptureRange = (
     }
   } else if (start.isFirst && end.isLast) {
     if (start.chapter.isFirst && end.chapter.isLast) {
+      if (start.book.name === 'Genesis' && end.book.name === 'Malachi') {
+        return 'Old Testament';
+      }
+      if (start.book.name === 'Matthew' && end.book.name === 'Revelation') {
+        return 'New Testament';
+      }
       // Matthew-John
       return `${start.book.label}-${end.book.label}`;
     } else {
