@@ -1,5 +1,12 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { has as hasPath, isEqual, set, sumBy, uniq } from 'lodash';
+import {
+  has as hasPath,
+  intersection,
+  isEqual,
+  set,
+  sumBy,
+  uniq,
+} from 'lodash';
 import {
   has,
   ID,
@@ -24,6 +31,7 @@ import {
   CreateOtherProduct,
   DerivativeScriptureProduct,
   DirectScriptureProduct,
+  MethodologyAvailableSteps,
   MethodologyToApproach,
   OtherProduct,
   ProducibleResult,
@@ -85,14 +93,18 @@ export class ProductService {
       }
     }
 
+    const steps = input.methodology
+      ? intersection(MethodologyAvailableSteps[input.methodology], input.steps)
+      : [];
+
     const progressTarget = simpleSwitch(input.progressStepMeasurement, {
       Percent: 100,
       Boolean: 1,
       Number: input.progressTarget ?? 1,
     });
     const id = has('title', input)
-      ? await this.repo.createOther({ ...input, progressTarget })
-      : await this.repo.create({ ...input, progressTarget });
+      ? await this.repo.createOther({ ...input, progressTarget, steps })
+      : await this.repo.create({ ...input, progressTarget, steps });
 
     await this.authorizationService.processNewBaseNode(
       Product,
