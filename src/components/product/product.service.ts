@@ -19,6 +19,7 @@ import { ScriptureRange } from '../scripture';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
   AnyProduct,
+  asProductType,
   CreateDerivativeScriptureProduct,
   CreateDirectScriptureProduct,
   CreateOtherProduct,
@@ -229,7 +230,7 @@ export class ProductService {
 
     const securedProps = await this.authorizationService.secureProperties(
       DirectScriptureProduct,
-      dto as UnsecuredDto<DirectScriptureProduct>,
+      asProductType(DirectScriptureProduct)(dto),
       session
     );
     const direct: DirectScriptureProduct = {
@@ -276,7 +277,7 @@ export class ProductService {
       return await this.updateDirect(
         input,
         session,
-        currentProduct as UnsecuredDto<DirectScriptureProduct>
+        asProductType(DirectScriptureProduct)(currentProduct)
       );
     }
 
@@ -295,10 +296,9 @@ export class ProductService {
     session: Session,
     currentProduct?: UnsecuredDto<DirectScriptureProduct>
   ): Promise<DirectScriptureProduct> {
-    currentProduct ??= (await this.readOneUnsecured(
-      input.id,
-      session
-    )) as UnsecuredDto<DirectScriptureProduct>;
+    currentProduct ??= asProductType(DirectScriptureProduct)(
+      await this.readOneUnsecured(input.id, session)
+    );
 
     let changes = this.repo.getActualDirectChanges(currentProduct, input);
     changes = {
@@ -338,10 +338,9 @@ export class ProductService {
 
     await this.mergeCompletionDescription(changes, currentProduct);
 
-    const productUpdatedScriptureReferences = (await this.readOne(
-      input.id,
-      session
-    )) as DirectScriptureProduct;
+    const productUpdatedScriptureReferences = asProductType(
+      DirectScriptureProduct
+    )(await this.readOne(input.id, session));
 
     return await this.repo.updateProperties(
       productUpdatedScriptureReferences,
@@ -354,10 +353,9 @@ export class ProductService {
     session: Session,
     currentProduct?: UnsecuredDto<DerivativeScriptureProduct>
   ): Promise<DerivativeScriptureProduct> {
-    currentProduct ??= (await this.readOneUnsecured(
-      input.id,
-      session
-    )) as UnsecuredDto<DerivativeScriptureProduct>;
+    currentProduct ??= asProductType(DerivativeScriptureProduct)(
+      await this.readOneUnsecured(input.id, session)
+    );
 
     let changes = this.repo.getActualDerivativeChanges(
       // getChanges doesn't care if current is secured or not.
@@ -414,10 +412,9 @@ export class ProductService {
       { isOverriding: true }
     );
 
-    const productUpdatedScriptureReferences = (await this.readOne(
-      input.id,
-      session
-    )) as DerivativeScriptureProduct;
+    const productUpdatedScriptureReferences = asProductType(
+      DerivativeScriptureProduct
+    )(await this.readOne(input.id, session));
 
     return await this.repo.updateDerivativeProperties(
       productUpdatedScriptureReferences,
@@ -450,10 +447,9 @@ export class ProductService {
 
     await this.mergeCompletionDescription(changes, currentProduct);
 
-    const currentSecured = (await this.secure(
-      currentProduct,
-      session
-    )) as OtherProduct;
+    const currentSecured = asProductType(OtherProduct)(
+      await this.secure(currentProduct, session)
+    );
     return await this.repo.updateOther(currentSecured, changes);
   }
 

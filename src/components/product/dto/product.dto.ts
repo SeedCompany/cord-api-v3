@@ -1,5 +1,6 @@
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
+import { startCase } from 'lodash';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
 import {
@@ -11,6 +12,8 @@ import {
   SecuredStringNullable,
   Sensitivity,
   SensitivityField,
+  ServerException,
+  UnsecuredDto,
 } from '../../../common';
 import { SetChangeType } from '../../../core/database/changes';
 import {
@@ -24,13 +27,15 @@ import { SecuredMethodology } from './product-methodology';
 import { SecuredProductPurposes } from './product-purpose';
 import { SecuredProgressMeasurement } from './progress-measurement.enum';
 
+const resolveProductType = (product: AnyProduct | UnsecuredDto<AnyProduct>) =>
+  product.produces
+    ? DerivativeScriptureProduct
+    : product.title
+    ? OtherProduct
+    : DirectScriptureProduct;
+
 @InterfaceType({
-  resolveType: (product: AnyProduct) =>
-    product.produces
-      ? DerivativeScriptureProduct
-      : product.title
-      ? OtherProduct
-      : DirectScriptureProduct,
+  resolveType: resolveProductType,
   implements: [Producible],
 })
 export class Product extends Producible {
@@ -162,3 +167,27 @@ export type AnyProduct = MergeExclusive<
   MergeExclusive<DirectScriptureProduct, DerivativeScriptureProduct>,
   OtherProduct
 >;
+
+/**
+ * Confirms the given product is of the type specified, if not an error is thrown.
+ *
+ * This should be used when we assume the product type is one of the concretes and
+ * we just want to narrow the type in a safe way.
+ */
+export const asProductType =
+  <Concrete extends ReturnType<typeof resolveProductType>>(
+    expected: Concrete
+  ) =>
+  <Given extends AnyProduct | UnsecuredDto<AnyProduct>>(
+    product: Given
+  ): Given extends AnyProduct
+    ? Concrete['prototype']
+    : UnsecuredDto<Concrete['prototype']> => {
+    if (resolveProductType(product) !== expected) {
+      const type = startCase(expected.name.replace(/Product$/, ''));
+      throw new ServerException(`Product was not the ${type} type`);
+    }
+    // Ironic that we need to bail out here, but the input/output of this method
+    // is safe and this logic is sound.
+    return product as any;
+  };

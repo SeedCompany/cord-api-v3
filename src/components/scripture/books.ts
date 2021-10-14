@@ -509,6 +509,12 @@ export class Book implements Iterable<Chapter> {
     return this.name === other.name;
   }
 
+  static [Symbol.iterator] = function* () {
+    for (const book of books) {
+      yield Book.find(book.names[0]);
+    }
+  };
+
   [Symbol.iterator] = function* (this: Book) {
     for (const chapter of range(1, this.totalChapters + 1)) {
       yield this.chapter(chapter);
