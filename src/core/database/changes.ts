@@ -129,7 +129,7 @@ export const isRelation = (prop: string, existingObject: Record<string, any>) =>
   prop.endsWith('Id') &&
   prop.slice(0, -2) in existingObject;
 
-const isSame = (a: unknown, b: unknown) => {
+export const isSame = (a: unknown, b: unknown) => {
   if (a == null && b == null) {
     return true;
   }
