@@ -27,18 +27,18 @@ export abstract class CreateBaseProduct {
 
   @Field(() => [ProductMedium], { nullable: true })
   @Transform(({ value }) => uniq(value))
-  readonly mediums?: readonly ProductMedium[] = [];
+  readonly mediums?: readonly ProductMedium[];
 
   @Field(() => [ProductPurpose], { nullable: true })
   @Transform(({ value }) => uniq(value))
-  readonly purposes?: readonly ProductPurpose[] = [];
+  readonly purposes?: readonly ProductPurpose[];
 
   @Field(() => ProductMethodology, { nullable: true })
   readonly methodology?: ProductMethodology;
 
   @Field(() => [MethodologyStep], { nullable: true })
   @Transform(({ value }) => uniq(value))
-  readonly steps?: readonly MethodologyStep[] = [];
+  readonly steps?: readonly MethodologyStep[];
 
   @Field({ nullable: true })
   readonly describeCompletion?: string;

@@ -204,10 +204,10 @@ export class ProductRepository extends CommonRepository {
       ? DerivativeScriptureProduct
       : DirectScriptureProduct;
     const initialProps = {
-      mediums: input.mediums,
-      purposes: input.purposes,
+      mediums: input.mediums ?? [],
+      purposes: input.purposes ?? [],
       methodology: input.methodology,
-      steps: input.steps,
+      steps: input.steps ?? [],
       describeCompletion: input.describeCompletion,
       canDelete: true,
       progressTarget: input.progressTarget,
@@ -283,10 +283,10 @@ export class ProductRepository extends CommonRepository {
 
   async createOther(input: CreateOtherProduct) {
     const initialProps = {
-      mediums: input.mediums,
-      purposes: input.purposes,
+      mediums: input.mediums ?? [],
+      purposes: input.purposes ?? [],
       methodology: input.methodology,
-      steps: input.steps,
+      steps: input.steps ?? [],
       describeCompletion: input.describeCompletion,
       title: input.title,
       description: input.description,
