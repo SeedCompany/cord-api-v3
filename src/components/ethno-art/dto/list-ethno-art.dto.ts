@@ -17,7 +17,7 @@ export class EthnoArtListInput extends SortablePaginationInput<keyof EthnoArt>({
 
   @Type(() => EthnoArtFilters)
   @ValidateNested()
-  readonly filters: EthnoArtFilters = defaultFilters;
+  readonly filter: EthnoArtFilters = defaultFilters;
 }
 
 @ObjectType()
