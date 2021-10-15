@@ -1,6 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
+import { stripIndent } from 'common-tags';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { CalendarDate, DateField, ID, IdField } from '../../../common';
 import { CreateDefinedFileVersionInput } from '../../file/dto';
@@ -52,6 +53,16 @@ export abstract class CreateLanguageEngagement extends CreateEngagement {
   @Type(() => CreateDefinedFileVersionInput)
   @ValidateNested()
   readonly pnp?: CreateDefinedFileVersionInput;
+
+  @Field(() => ProductMethodology, {
+    nullable: true,
+    description: stripIndent`
+      This is the methodology that will be set on products extracted out of the pnp.
+      Only a subset is supported here.
+      Required to create products when uploading \`pnp\`.
+    `,
+  })
+  readonly methodology?: ProductMethodology;
 
   @Field({ nullable: true })
   readonly historicGoal?: string;

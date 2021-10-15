@@ -38,7 +38,11 @@ export class ExtractProductsFromPnpHandler
       event instanceof EngagementCreatedEvent
         ? event.input.pnp?.uploadId
         : event.updates.pnp?.uploadId;
-    if (!pnpFileId) {
+    const methodology =
+      event instanceof EngagementCreatedEvent
+        ? event.input.methodology
+        : event.updates.methodology;
+    if (!pnpFileId || !methodology) {
       return;
     }
 
@@ -101,6 +105,7 @@ export class ExtractProductsFromPnpHandler
       const create: CreateDirectScriptureProduct = {
         engagementId: engagement.id,
         progressStepMeasurement: ProgressMeasurement.Percent,
+        methodology,
         ...input,
       };
       await this.products.create(create, event.session);
