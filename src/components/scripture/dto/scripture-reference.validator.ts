@@ -5,6 +5,7 @@ import { createValidationDecorator } from '../../../common/validators/validateBy
 import { Book, Chapter, Verse } from '../books';
 import { NormalizeBook } from './book.transformer';
 import { ScriptureReference } from './scripture-reference.dto';
+import { UnspecifiedScripturePortionInput } from './unspecified-scripture-portion.dto';
 
 // We assume this is only used on the ScriptureReference object
 type ValidationArgs = Merge<
@@ -50,5 +51,27 @@ export const IsValidVerse = createValidationDecorator({
     },
     defaultMessage: ({ object: ref }: ValidationArgs) =>
       `${Chapter.fromRef(ref).label} does not have verse ${ref.verse}`,
+  },
+});
+
+export const IsValidVerseTotal = createValidationDecorator({
+  name: 'IsValidVerseTotal',
+  validator: {
+    validate: (value, args) => {
+      try {
+        const obj = args?.object as UnspecifiedScripturePortionInput | null;
+        const book = Book.find(obj?.book ?? '');
+        return book.totalVerses > value;
+      } catch (e) {
+        return true; // Let book field fail validation
+      }
+    },
+    defaultMessage: (args) => {
+      const bookName = (args!.object as UnspecifiedScripturePortionInput).book;
+      const totalVerses = Book.find(bookName).totalVerses;
+      return totalVerses === args!.value
+        ? `${totalVerses} verses of ${bookName} is the full book. Set as a known scripture reference instead.`
+        : `${bookName} only has ${totalVerses} verses`;
+    },
   },
 });

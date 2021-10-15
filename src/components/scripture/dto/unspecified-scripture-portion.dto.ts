@@ -1,7 +1,10 @@
 import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
 import { IsPositive } from 'class-validator';
 import { SecuredProperty } from '../../../common';
-import { IsValidBook } from './scripture-reference.validator';
+import {
+  IsValidBook,
+  IsValidVerseTotal,
+} from './scripture-reference.validator';
 
 @InputType({
   description:
@@ -23,6 +26,7 @@ export abstract class UnspecifiedScripturePortionInput {
     description: 'The number of verses',
   })
   @IsPositive()
+  @IsValidVerseTotal()
   totalVerses: number;
 }
 
