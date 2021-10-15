@@ -331,7 +331,8 @@ export class EngagementService {
       view
     )) as LanguageEngagement;
 
-    const changes = this.repo.getActualLanguageChanges(object, input);
+    const { methodology: _, ...maybeChanges } = input;
+    const changes = this.repo.getActualLanguageChanges(object, maybeChanges);
     await this.authorizationService.verifyCanEditChanges(
       LanguageEngagement,
       object,

@@ -169,7 +169,12 @@ export class EngagementRepository extends CommonRepository {
   ) {
     const pnpId = (await generateId()) as FileId;
 
-    const { projectId, languageId, ...initialProps } = {
+    const {
+      projectId,
+      languageId,
+      methodology: _,
+      ...initialProps
+    } = {
       ...mapFromList(CreateLanguageEngagement.Props, (k) => [k, undefined]),
       ...input,
       status: input.status || EngagementStatus.InDevelopment,
