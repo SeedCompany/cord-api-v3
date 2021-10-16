@@ -18,8 +18,10 @@ import {
   SecuredDate,
   SecuredInt,
   Session,
+  viewOfChangeset,
 } from '../../common';
 import { Loader, LoaderOf } from '../../core';
+import { IdsAndView, IdsAndViewArg } from '../changeset/dto';
 import { LocationListInput, SecuredLocationList } from '../location';
 import { LocationLoader } from '../location/location.loader';
 import { ProjectLoader } from '../project';
@@ -54,10 +56,10 @@ export class LanguageResolver {
     description: 'Look up a language by its ID',
   })
   async language(
-    @IdArg() id: ID,
+    @IdsAndViewArg() key: IdsAndView,
     @Loader(LanguageLoader) languages: LoaderOf<LanguageLoader>
   ): Promise<Language> {
-    return await languages.load(id);
+    return await languages.load(key);
   }
 
   @ResolveField(() => String, { nullable: true })
@@ -178,9 +180,13 @@ export class LanguageResolver {
   })
   async updateLanguage(
     @LoggedInSession() session: Session,
-    @Args('input') { language: input }: UpdateLanguageInput
+    @Args('input') { language: input, changeset }: UpdateLanguageInput
   ): Promise<UpdateLanguageOutput> {
-    const language = await this.langService.update(input, session);
+    const language = await this.langService.update(
+      input,
+      session,
+      viewOfChangeset(changeset)
+    );
     return { language };
   }
 

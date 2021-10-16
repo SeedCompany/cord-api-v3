@@ -103,6 +103,12 @@ export abstract class UpdateLanguage {
 
 @InputType()
 export abstract class UpdateLanguageInput {
+  @IdField({
+    description: 'The change object to associate these engagement changes with',
+    nullable: true,
+  })
+  readonly changeset?: ID;
+
   @Field()
   @Type(() => UpdateLanguage)
   @ValidateNested()

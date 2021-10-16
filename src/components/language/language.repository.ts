@@ -1,6 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, Query, relation } from 'cypher-query-builder';
-import { ID, NotFoundException, Session, UnsecuredDto } from '../../common';
+import {
+  ID,
+  labelForView,
+  NotFoundException,
+  ObjectView,
+  Session,
+  UnsecuredDto,
+} from '../../common';
 import { DtoRepository, matchRequestingUser } from '../../core';
 import {
   ACTIVE,
@@ -9,6 +16,7 @@ import {
   createNode,
   createRelationships,
   exp,
+  matchChangesetAndChangedProps,
   matchProjectScopedRoles,
   matchProjectSens,
   matchProjectSensToLimitedScopeMap,
@@ -60,12 +68,12 @@ export class LanguageRepository extends DtoRepository(Language) {
     return await createLanguage.first();
   }
 
-  async readOne(langId: ID, session: Session) {
+  async readOne(langId: ID, session: Session, view?: ObjectView) {
     const query = this.db
       .query()
       .apply(matchRequestingUser(session))
-      .match([node('node', 'Language', { id: langId })])
-      .apply(this.hydrate(session));
+      .match([node('node', labelForView('Language', view), { id: langId })])
+      .apply(this.hydrate(session, view));
 
     const result = await query.first();
     if (!result) {
@@ -74,21 +82,20 @@ export class LanguageRepository extends DtoRepository(Language) {
     return result.dto;
   }
 
-  async readMany(ids: readonly ID[], session: Session) {
+  async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
     return await this.db
       .query()
       .apply(matchRequestingUser(session))
       .matchNode('node', 'Language')
       .where({ 'node.id': inArray(ids.slice()) })
-      .apply(this.hydrate(session))
+      .apply(this.hydrate(session, view))
       .map('dto')
       .run();
   }
 
-  protected hydrate(session: Session) {
+  protected hydrate(session: Session, view?: ObjectView) {
     return (query: Query) =>
       query
-        .apply(matchProps())
         .optionalMatch([
           node('project', 'Project'),
           relation('out', '', 'engagement', ACTIVE),
@@ -98,11 +105,12 @@ export class LanguageRepository extends DtoRepository(Language) {
         ])
         .apply(matchProjectScopedRoles({ session }))
         .with([
-          'props',
           'node',
           'collect(project) as projList',
           'keys(apoc.coll.frequenciesAsMap(apoc.coll.flatten(collect(scopedRoles)))) as scopedRoles',
         ])
+        .apply(matchProps())
+        .apply(matchChangesetAndChangedProps(view?.changeset))
         // get lowest sensitivity across all projects associated with each language.
         .subQuery((sub) =>
           sub
@@ -134,11 +142,12 @@ export class LanguageRepository extends DtoRepository(Language) {
           node('', 'Property', { value: variable('true') }),
         ])
         .return<{ dto: UnsecuredDto<Language> }>(
-          merge('props', {
+          merge('props', 'changedProps', {
             ethnologue: 'ethProps',
             presetInventory: 'presetInventory',
             firstScriptureEngagement: 'firstScriptureEngagement.id',
             scope: 'scopedRoles',
+            changeset: 'changeset.id',
           }).as('dto')
         );
   }
