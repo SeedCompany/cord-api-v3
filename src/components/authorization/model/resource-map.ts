@@ -7,6 +7,7 @@ import {
   InternshipEngagement,
   LanguageEngagement,
 } from '../../engagement/dto';
+import { EthnoArt } from '../../ethno-art/dto';
 import { FieldRegion } from '../../field-region/dto';
 import { FieldZone } from '../../field-zone/dto';
 import { Directory, File, FileVersion } from '../../file/dto';
@@ -52,6 +53,7 @@ export const ResourceMap = {
   Directory,
   Education,
   Engagement,
+  EthnoArt,
   EthnologueLanguage,
   FieldRegion,
   FieldZone,
