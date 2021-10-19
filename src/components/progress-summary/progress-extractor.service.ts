@@ -9,7 +9,7 @@ import { ProgressSummary as Progress } from './dto';
 export class ProgressExtractor {
   constructor(
     private readonly files: FileService,
-    @Logger('progress:extractor') private readonly logger: ILogger
+    @Logger('progress-summary:extractor') private readonly logger: ILogger
   ) {}
 
   extract(pnp: WorkBook, file: FileVersion, date: CalendarDate) {
