@@ -46,7 +46,7 @@ export class ProgressSummaryRepository extends DtoRepository(ProgressSummary) {
         relation('out', '', 'summary', ACTIVE),
         node('summary', 'ProgressSummary', { period }),
       ])
-      .setValues({ summary: data })
+      .setValues({ summary: { ...data, period } })
       .run();
   }
 }
