@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { PeriodicReportModule } from '../periodic-report/periodic-report.module';
 import * as handlers from './handlers';
+import * as migrations from './migrations';
 import { ProgressExtractor } from './progress-extractor.service';
 import { ProgressReportConnectionResolver } from './progress-report-connection.resolver';
 import { ProgressSummaryEngagementConnectionResolver } from './progress-summary-engagement-connection.resolver';
@@ -16,6 +17,7 @@ import { ProgressSummaryResolver } from './progress-summary.resolver';
     ProgressSummaryRepository,
     ProgressExtractor,
     ...Object.values(handlers),
+    ...Object.values(migrations),
   ],
 })
 export class ProgressSummaryModule {}

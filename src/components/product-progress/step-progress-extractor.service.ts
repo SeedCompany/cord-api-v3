@@ -3,7 +3,7 @@ import { CellObject, read, WorkSheet } from 'xlsx';
 import { entries } from '../../common';
 import { cellAsNumber, cellAsString } from '../../common/xlsx.util';
 import { ILogger, Logger } from '../../core';
-import { Downloadable, FileVersion } from '../file';
+import { Downloadable, FileNode } from '../file';
 import { MethodologyStep } from '../product';
 import { StepProgressInput } from './dto';
 
@@ -13,7 +13,7 @@ export class StepProgressExtractor {
     @Logger('step-progress:extractor') private readonly logger: ILogger
   ) {}
 
-  async extract(file: Downloadable<FileVersion>) {
+  async extract(file: Downloadable<FileNode>) {
     const buffer = await file.download();
     const pnp = read(buffer, { type: 'buffer' });
 

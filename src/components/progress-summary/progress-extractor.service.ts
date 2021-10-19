@@ -3,14 +3,16 @@ import { CellObject, read, WorkBook, WorkSheet } from 'xlsx';
 import { CalendarDate, fiscalQuarter, fiscalYear } from '../../common';
 import { cellAsNumber } from '../../common/xlsx.util';
 import { ILogger, Logger } from '../../core';
-import { Downloadable, FileVersion } from '../file';
+import { Downloadable, FileNode } from '../file';
 import { ProgressSummary as Progress } from './dto';
 
 @Injectable()
 export class ProgressExtractor {
-  constructor(@Logger('progress:extractor') private readonly logger: ILogger) {}
+  constructor(
+    @Logger('progress-summary:extractor') private readonly logger: ILogger
+  ) {}
 
-  extract(pnp: WorkBook, file: FileVersion, date: CalendarDate) {
+  extract(pnp: WorkBook, file: FileNode, date: CalendarDate) {
     const sheet = pnp.Sheets.Progress;
     if (!sheet) {
       this.logger.warning('Unable to find progress sheet in pnp file', {
@@ -37,7 +39,7 @@ export class ProgressExtractor {
     };
   }
 
-  async readWorkbook(file: Downloadable<FileVersion>) {
+  async readWorkbook(file: Downloadable<unknown>) {
     const buffer = await file.download();
     return read(buffer, { type: 'buffer' });
   }

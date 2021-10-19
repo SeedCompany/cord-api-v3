@@ -5,12 +5,12 @@
 export const asyncPool = async <T, R>(
   concurrencyLimit: number,
   items: readonly T[],
-  iteratee: (item: T) => Promise<R>
+  iteratee: (item: T, index: number) => Promise<R>
 ): Promise<readonly R[]> => {
   const ret: Array<Promise<R>> = [];
   const executing: Array<Promise<void>> = [];
-  for (const item of items) {
-    const itemRunning = iteratee(item);
+  for (let i = 0; i < items.length; i++) {
+    const itemRunning = iteratee(items[i], i);
     ret.push(itemRunning);
     if (concurrencyLimit > items.length) {
       // skip pool logic and just promise.all on the entire array after iterating
