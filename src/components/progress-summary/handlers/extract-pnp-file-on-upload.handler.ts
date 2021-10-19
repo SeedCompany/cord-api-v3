@@ -1,4 +1,4 @@
-import { EventsHandler } from '../../../core';
+import { EventsHandler, ILogger, Logger } from '../../../core';
 import { ReportType } from '../../periodic-report/dto';
 import { PeriodicReportUploadedEvent } from '../../periodic-report/events';
 import { SummaryPeriod } from '../dto';
@@ -9,7 +9,8 @@ import { ProgressSummaryRepository } from '../progress-summary.repository';
 export class ExtractPnpFileOnUploadHandler {
   constructor(
     private readonly repo: ProgressSummaryRepository,
-    private readonly extractor: ProgressExtractor
+    private readonly extractor: ProgressExtractor,
+    @Logger('progress-summary:extractor') private readonly logger: ILogger
   ) {}
 
   async handle(event: PeriodicReportUploadedEvent) {
@@ -17,6 +18,11 @@ export class ExtractPnpFileOnUploadHandler {
       return;
     }
 
+    this.logger.info('Extracting progress summary', {
+      report: event.report.id,
+      userId: event.session.userId,
+      fileId: event.file.id,
+    });
     const workbook = await this.extractor.readWorkbook(event.file);
 
     const extracted = this.extractor.extract(
@@ -24,6 +30,13 @@ export class ExtractPnpFileOnUploadHandler {
       event.file,
       event.report.start
     );
+    this.logger.info('Extracted progress summary', {
+      ...extracted,
+      report: event.report.id,
+      userId: event.session.userId,
+      fileId: event.file.id,
+    });
+
     if (extracted?.cumulative) {
       await this.repo.save(
         event.report,
