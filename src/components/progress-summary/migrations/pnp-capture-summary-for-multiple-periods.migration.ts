@@ -25,7 +25,9 @@ export class PnpCaptureSummaryForMultiplePeriodsMigration extends BaseMigration 
     const session = this.fakeAdminSession;
 
     // Re-extract pnp progress for all results
-    await asyncPool(2, result, async (row) => {
+    await asyncPool(2, result, async (row, i) => {
+      this.logger.debug(`Re-extracting PnP ${i} / ${result.length}`);
+
       try {
         const [report, fv] = await Promise.all([
           this.reports.readOne(row.reportId, session),
