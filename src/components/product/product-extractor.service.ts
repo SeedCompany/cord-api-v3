@@ -40,12 +40,13 @@ export class ProductExtractor {
 function findProductRows(sheet: WorkSheet) {
   const matchedRows = [];
   let row = 23;
-  while (
-    cellAsString(sheet[`Q${row}`]) &&
-    cellAsString(sheet[`Q${row}`]) !== 'Other Goals and Milestones' &&
-    (cellAsNumber(sheet[`T${row}`]) ?? 0) > 0
-  ) {
-    matchedRows.push(row);
+  while (cellAsString(sheet[`Q${row}`]) !== 'Other Goals and Milestones') {
+    if (
+      cellAsString(sheet[`Q${row}`]) &&
+      (cellAsNumber(sheet[`T${row}`]) ?? 0) > 0
+    ) {
+      matchedRows.push(row);
+    }
     row++;
   }
   return matchedRows;
