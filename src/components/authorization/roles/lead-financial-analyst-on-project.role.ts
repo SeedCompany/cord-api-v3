@@ -2,6 +2,7 @@ import { DbBudget } from '../../budget/model';
 import { DbBudgetRecord } from '../../budget/model/budget-record.model.db';
 import { DbCeremony } from '../../ceremony/model';
 import { DbInternshipEngagement, DbLanguageEngagement } from '../../engagement/model';
+import { DbEthnoArt } from '../../ethno-art/model';
 import { DbFieldRegion } from '../../field-region/model';
 import { DbFieldZone } from '../../field-zone/model';
 import { DbDirectory, DbFile } from '../../file/model';
@@ -97,6 +98,14 @@ export const LeadFinancialAnalystOnProject = new DbRole({
         { propertyName: 'degree', permission: { read, }, },
         { propertyName: 'institution', permission: { read, }, },
         { propertyName: 'major', permission: { read, }, },
+      ],
+      canDelete: false,
+    }),
+    new DbBaseNodeGrant<DbEthnoArt>({
+      __className: 'DbEthnoArt',
+      properties: [
+        { propertyName: 'name', permission: { read, }, },
+        { propertyName: 'scriptureReferences', permission: { read, }, },
       ],
       canDelete: false,
     }),

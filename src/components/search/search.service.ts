@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { compact } from 'lodash';
 import { ID, NotFoundException, ServerException, Session } from '../../common';
 import { ResourceResolver } from '../../core';
+import { EthnoArtService } from '../ethno-art';
 import { FieldRegionService } from '../field-region';
 import { FieldZoneService } from '../field-zone';
 import { FilmService } from '../film';
@@ -44,6 +45,7 @@ export class SearchService {
     TranslationProject: (...args) => this.projects.readOneTranslation(...args),
     InternshipProject: (...args) => this.projects.readOneInternship(...args),
     Film: (...args) => this.film.readOne(...args),
+    EthnoArt: (...args) => this.ethnoArt.readOne(...args),
     Story: (...args) => this.story.readOne(...args),
     LiteracyMaterial: (...args) => this.literacyMaterial.readOne(...args),
     Song: (...args) => this.song.readOne(...args),
@@ -64,6 +66,7 @@ export class SearchService {
     private readonly projects: ProjectService,
     private readonly film: FilmService,
     private readonly story: StoryService,
+    private readonly ethnoArt: EthnoArtService,
     private readonly literacyMaterial: LiteracyMaterialService,
     private readonly song: SongService,
     private readonly zone: FieldZoneService,

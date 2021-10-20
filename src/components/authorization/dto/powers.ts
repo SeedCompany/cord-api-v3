@@ -9,6 +9,7 @@ export enum Powers {
   CreateCeremony = 'CreateCeremony',
   CreateDirectory = 'CreateDirectory',
   CreateEducation = 'CreateEducation',
+  CreateEthnoArt = 'CreateEthnoArt',
   CreateEthnologueLanguage = 'CreateEthnologueLanguage',
   CreateFieldRegion = 'CreateFieldRegion',
   CreateFieldZone = 'CreateFieldZone',

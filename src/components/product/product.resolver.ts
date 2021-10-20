@@ -152,7 +152,9 @@ export class ProductResolver {
   legacyType(@Parent() product: AnyProduct): ProductType {
     if (product.produces) {
       const type = product.produces.value?.__typename;
-      if (type === ProducibleType.Film) {
+      if (type === ProducibleType.EthnoArt) {
+        return ProductType.EthnoArts;
+      } else if (type === ProducibleType.Film) {
         return ProductType.JesusFilm; // TODO not entirely true
       } else if (type === ProducibleType.Song) {
         return ProductType.Songs;

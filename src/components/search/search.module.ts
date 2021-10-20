@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { EthnoArtModule } from '../ethno-art/ethno-art.module';
 import { FieldRegionModule } from '../field-region/field-region.module';
 import { FieldZoneModule } from '../field-zone/field-zone.module';
 import { FilmModule } from '../film/film.module';
@@ -26,6 +27,7 @@ import { SearchService } from './search.service';
     ProjectModule,
     FilmModule,
     StoryModule,
+    EthnoArtModule,
     LiteracyMaterialModule,
     SongModule,
     FieldZoneModule,

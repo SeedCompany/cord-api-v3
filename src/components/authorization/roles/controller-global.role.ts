@@ -3,6 +3,7 @@ import { DbBudget } from '../../budget/model';
 import { DbBudgetRecord } from '../../budget/model/budget-record.model.db';
 import { DbCeremony } from '../../ceremony/model';
 import { DbInternshipEngagement, DbLanguageEngagement } from '../../engagement/model';
+import { DbEthnoArt } from '../../ethno-art/model';
 import { DbFieldRegion } from '../../field-region/model';
 import { DbFieldZone } from '../../field-zone/model';
 import { DbDirectory, DbFile } from '../../file/model';
@@ -89,6 +90,14 @@ export const Controller = new DbRole({
         { propertyName: 'name', permission: { read, write, }, },
         { propertyName: 'createdBy', permission: { read, write, }, },
         { propertyName: 'parent', permission: { read, write, }, },
+      ],
+      canDelete: false,
+    }),
+    new DbBaseNodeGrant<DbEthnoArt>({
+      __className: 'DbEthnoArt',
+      properties: [
+        { propertyName: 'name', permission: { read, write, }, },
+        { propertyName: 'scriptureReferences', permission: { read, write, }, },
       ],
       canDelete: false,
     }),
