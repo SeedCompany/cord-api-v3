@@ -24,6 +24,6 @@ export const expandToFullFiscalYears = (dates: DateInterval) =>
 
 export const fullFiscalYear = (fiscalYear: number) =>
   DateInterval.fromDateTimes(
-    CalendarDate.local(fiscalYear, 10, 1),
-    CalendarDate.local(fiscalYear + 1, 9, 30)
+    CalendarDate.local(fiscalYear - 1, 10, 1),
+    CalendarDate.local(fiscalYear, 9, 30)
   );
