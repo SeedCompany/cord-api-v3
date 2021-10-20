@@ -2,14 +2,14 @@ import { EventsHandler, ILogger, Logger } from '../../../core';
 import { ReportType } from '../../periodic-report/dto';
 import { PeriodicReportUploadedEvent } from '../../periodic-report/events';
 import { SummaryPeriod } from '../dto';
-import { ProgressExtractor } from '../progress-extractor.service';
+import { ProgressSummaryExtractor } from '../progress-summary.extractor';
 import { ProgressSummaryRepository } from '../progress-summary.repository';
 
 @EventsHandler(PeriodicReportUploadedEvent)
 export class ExtractPnpFileOnUploadHandler {
   constructor(
     private readonly repo: ProgressSummaryRepository,
-    private readonly extractor: ProgressExtractor,
+    private readonly extractor: ProgressSummaryExtractor,
     @Logger('progress-summary:extractor') private readonly logger: ILogger
   ) {}
 
