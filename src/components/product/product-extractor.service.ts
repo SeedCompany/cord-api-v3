@@ -33,7 +33,9 @@ export class ProductExtractor {
       return [];
     }
 
-    return findProductRows(sheet).map(parseProductRow(sheet, interval));
+    return findProductRows(sheet)
+      .map(parseProductRow(sheet, interval))
+      .filter((row) => row.steps.length > 1);
   }
 }
 
