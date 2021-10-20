@@ -23,7 +23,7 @@ export class ProductExtractor {
     }
 
     const interval = DateInterval.tryFrom(
-      cellAsDate(sheet.Z13),
+      cellAsDate(sheet.Z14),
       cellAsDate(sheet.Z15)
     );
     if (!interval) {
