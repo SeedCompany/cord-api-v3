@@ -24,7 +24,7 @@ import { EthnoArtRepository } from './ethno-art.repository';
 @Injectable()
 export class EthnoArtService {
   constructor(
-    @Logger('ethnoArt:service') private readonly logger: ILogger,
+    @Logger('ethno-art:service') private readonly logger: ILogger,
     private readonly scriptureRefService: ScriptureReferenceService,
     private readonly authorizationService: AuthorizationService,
     private readonly repo: EthnoArtRepository
@@ -46,12 +46,6 @@ export class EthnoArtService {
       if (!result) {
         throw new ServerException('Failed to create ethno art');
       }
-
-      await this.authorizationService.processNewBaseNode(
-        EthnoArt,
-        result.id,
-        session.userId
-      );
 
       await this.scriptureRefService.create(
         result.id,
