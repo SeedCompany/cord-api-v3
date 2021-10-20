@@ -7,7 +7,7 @@ import { FileService, FileVersion } from '../file';
 import { ProgressSummary as Progress } from './dto';
 
 @Injectable()
-export class ProgressExtractor {
+export class ProgressSummaryExtractor {
   constructor(
     private readonly files: FileService,
     @Logger('progress-summary:extractor') private readonly logger: ILogger
