@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { read, WorkSheet } from 'xlsx';
-import { DateInterval, entries, fullFiscalYear } from '../../common';
+import {
+  DateInterval,
+  entries,
+  expandToFullFiscalYears,
+  fullFiscalYear,
+} from '../../common';
 import { cellAsDate, cellAsNumber, cellAsString } from '../../common/xlsx.util';
 import { ILogger, Logger } from '../../core';
 import { Downloadable, File } from '../file';
@@ -23,7 +28,7 @@ export class ProductExtractor {
     }
 
     const interval = DateInterval.tryFrom(
-      cellAsDate(sheet.Z13),
+      cellAsDate(sheet.Z14),
       cellAsDate(sheet.Z15)
     );
     if (!interval) {
@@ -33,7 +38,9 @@ export class ProductExtractor {
       return [];
     }
 
-    return findProductRows(sheet).map(parseProductRow(sheet, interval));
+    return findProductRows(sheet)
+      .map(parseProductRow(sheet, expandToFullFiscalYears(interval)))
+      .filter((row) => row.steps.length > 1);
   }
 }
 
