@@ -27,13 +27,12 @@ export class LanguageEngagementResolver {
   async products(
     @Parent() engagement: LanguageEngagement,
     @AnonSession() session: Session,
+    @Loader(ProductLoader) products: LoaderOf<ProductLoader>,
     @Args({
       name: 'input',
       type: () => ProductListInput,
       nullable: true,
     })
-    @Loader(ProductLoader)
-    products: LoaderOf<ProductLoader>,
     input?: ProductListInput
   ): Promise<SecuredProductList> {
     const list = await this.engagements.listProducts(
