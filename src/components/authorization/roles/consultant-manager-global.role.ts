@@ -293,7 +293,7 @@ export const ConsultantManagerGlobal = new DbRole({
       canList: true,
       properties: [
         { propertyName: 'organization', permission: { read, }, },
-        { propertyName: 'pointOfContact', permission: { read, }, },
+        { propertyName: 'pointOfContact', permission: { }, },
         { propertyName: 'types', permission: { read, }, },
         { propertyName: 'financialReportingTypes', permission: { read, }, },
         { propertyName: 'pmcEntityCode', permission: { read, }, },
