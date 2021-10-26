@@ -28,21 +28,17 @@ export class EthnoArtRepository extends DtoRepository(EthnoArt) {
   }
 
   async readOne(id: ID, _session: Session) {
-    const result = await this.db
-      .query()
-      .match([node('node', 'EthnoArt', { id })])
-      .apply(this.hydrate())
-      .first();
+    const result = (await this.readMany([id], _session))[0];
     if (!result) {
       throw new NotFoundException('Could not find EthnoArt', 'ethnoArt.id');
     }
-    return result.dto;
+    return result;
   }
 
   async readMany(ids: readonly ID[], _session: Session) {
     return await this.db
       .query()
-      .matchNode('node', 'EthoArt')
+      .matchNode('node', 'EthnoArt')
       .where({ 'node.id': inArray(ids.slice()) })
       .apply(this.hydrate())
       .map('dto')
@@ -52,6 +48,7 @@ export class EthnoArtRepository extends DtoRepository(EthnoArt) {
   async list(input: EthnoArtListInput, _session: Session) {
     const result = await this.db
       .query()
+      .matchNode('node', 'EthnoArt')
       .apply(sorting(EthnoArt, input))
       .apply(paginate(input, this.hydrate()))
       .first();
