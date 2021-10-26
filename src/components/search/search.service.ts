@@ -8,12 +8,10 @@ import { FieldZoneService } from '../field-zone';
 import { FilmService } from '../film';
 import { FundingAccountService } from '../funding-account';
 import { LanguageService } from '../language';
-import { LiteracyMaterialService } from '../literacy-material';
 import { LocationService } from '../location';
 import { OrganizationService } from '../organization';
 import { PartnerService } from '../partner';
 import { ProjectService } from '../project';
-import { SongService } from '../song';
 import { StoryService } from '../story';
 import { UserService } from '../user';
 import {
@@ -47,8 +45,8 @@ export class SearchService {
     Film: (...args) => this.film.readOne(...args),
     EthnoArt: (...args) => this.ethnoArt.readOne(...args),
     Story: (...args) => this.story.readOne(...args),
-    LiteracyMaterial: (...args) => this.literacyMaterial.readOne(...args),
-    Song: (...args) => this.song.readOne(...args),
+    LiteracyMaterial: (...args) => this.ethnoArt.readOne(...args),
+    Song: (...args) => this.ethnoArt.readOne(...args),
     Location: (...args) => this.location.readOne(...args),
     FieldZone: (...args) => this.zone.readOne(...args),
     FieldRegion: (...args) => this.region.readOne(...args),
@@ -67,8 +65,6 @@ export class SearchService {
     private readonly film: FilmService,
     private readonly story: StoryService,
     private readonly ethnoArt: EthnoArtService,
-    private readonly literacyMaterial: LiteracyMaterialService,
-    private readonly song: SongService,
     private readonly zone: FieldZoneService,
     private readonly region: FieldRegionService,
     private readonly fundingAccount: FundingAccountService,

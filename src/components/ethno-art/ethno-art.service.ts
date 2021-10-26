@@ -12,7 +12,9 @@ import {
 import { HandleIdLookup, ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { LiteracyMaterial } from '../literacy-material/dto';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
+import { Song } from '../song/dto';
 import {
   CreateEthnoArt,
   EthnoArt,
@@ -63,7 +65,7 @@ export class EthnoArtService {
     }
   }
 
-  @HandleIdLookup(EthnoArt)
+  @HandleIdLookup([EthnoArt, Song, LiteracyMaterial])
   async readOne(
     id: ID,
     session: Session,
