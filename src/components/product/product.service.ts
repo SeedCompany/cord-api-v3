@@ -33,7 +33,7 @@ import {
   CreateOtherProduct,
   DerivativeScriptureProduct,
   DirectScriptureProduct,
-  MethodologyAvailableSteps,
+  getAvailableSteps,
   MethodologyToApproach,
   OtherProduct,
   ProducibleResult,
@@ -48,6 +48,7 @@ import {
   UpdateOtherProduct,
   UpdateProduct,
 } from './dto';
+import { ProducibleType } from './dto/producible.dto';
 import { ProductRepository } from './product.repository';
 
 @Injectable()
@@ -82,6 +83,7 @@ export class ProductService {
       );
     }
 
+    let producibleType: ProducibleType | undefined = undefined;
     if (has('produces', input) && input.produces) {
       const producible = await this.repo.getBaseNode(
         input.produces,
@@ -96,10 +98,20 @@ export class ProductService {
           'product.produces'
         );
       }
+      producibleType = this.resources.resolveTypeByBaseNode(
+        producible
+      ) as ProducibleType;
     }
 
+    const type = has('title', input)
+      ? ProducibleType.OtherProduct
+      : producibleType ?? ProducibleType.DirectScriptureProduct;
+    const availableSteps = getAvailableSteps({
+      type,
+      methodology: input.methodology,
+    });
     const steps = input.methodology
-      ? intersection(MethodologyAvailableSteps[input.methodology], input.steps)
+      ? intersection(availableSteps, input.steps)
       : [];
 
     const progressTarget = simpleSwitch(input.progressStepMeasurement, {
@@ -498,7 +510,10 @@ export class ProductService {
   }
 
   private restrictStepsChange(
-    current: Pick<UpdateDirectScriptureProduct, 'methodology' | 'steps'>,
+    current: Pick<
+      UnsecuredDto<AnyProduct>,
+      'methodology' | 'steps' | 'produces'
+    >,
     changes: Partial<
       Pick<UpdateDirectScriptureProduct, 'methodology' | 'steps'>
     >
@@ -514,8 +529,14 @@ export class ProductService {
       return current.steps?.length === 0 ? undefined : [];
     }
 
+    const availableSteps = getAvailableSteps({
+      type: current.produces
+        ? current.produces.__typename
+        : ProducibleType.DirectScriptureProduct,
+      methodology,
+    });
     const steps = intersection(
-      MethodologyAvailableSteps[methodology],
+      availableSteps,
       changes.steps ? changes.steps : current.steps ?? []
     );
     // Check again to see if new steps value is different than current.

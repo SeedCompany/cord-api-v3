@@ -14,6 +14,8 @@ export enum MethodologyStep {
   Test = 'Test',
   Check = 'Check',
   Record = 'Record',
+  Develop = 'Develop',
+  Translate = 'Translate',
   Completed = 'Completed',
 }
 

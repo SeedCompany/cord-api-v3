@@ -1,66 +1,76 @@
-import { Field, ObjectType } from '@nestjs/graphql';
-import { stripIndent } from 'common-tags';
-import { keys } from '../../../common';
+import { ArgsType, Field } from '@nestjs/graphql';
+import { IsEnum } from 'class-validator';
 import { MethodologyStep as Step } from './methodology-step.enum';
+import { ProducibleType } from './producible.dto';
 import { ProductApproach as Approach } from './product-approach';
 import {
   ApproachToMethodologies,
   ProductMethodology as Methodology,
 } from './product-methodology';
 
-type StepMap = Record<Methodology, Step[]>;
+@ArgsType()
+export class AvailableMethodologyStepsOptions {
+  @Field(() => String, {
+    nullable: true,
+  })
+  @IsEnum(ProducibleType)
+  type?: ProducibleType;
 
-const steps = (approach: Approach | Methodology[], steps: Step[]): StepMap =>
-  Object.assign(
-    {},
-    ...(Array.isArray(approach)
-      ? approach
-      : ApproachToMethodologies[approach]
-    ).map((m) => ({
-      [m]: steps,
-    }))
-  );
-
-export const MethodologyAvailableSteps: StepMap = {
-  // default fallback
-  ...steps(keys<Methodology>(Methodology), [Step.Completed]),
-  ...steps(Approach.Written, [
-    Step.ExegesisAndFirstDraft,
-    Step.TeamCheck,
-    Step.CommunityTesting,
-    Step.BackTranslation,
-    Step.ConsultantCheck,
-    Step.Completed,
-  ]),
-  ...steps(Approach.OralTranslation, [
-    Step.InternalizationAndDrafting,
-    Step.PeerRevision,
-    Step.CommunityTesting,
-    Step.BackTranslation,
-    Step.ConsultantCheck,
-    Step.ConsistencyCheckAndFinalEdits,
-    Step.Completed,
-  ]),
-  ...steps(Approach.OralStories, [
-    Step.Craft,
-    Step.Test,
-    Step.Check,
-    Step.Record,
-    Step.Completed,
-  ]),
-};
-
-@ObjectType({
-  description: stripIndent`
-    Describes what steps a certain methodology has available.
-    This is probably used in a list because GraphQL cannot describe objects with
-    dynamic keys.
-  `,
-})
-export class AvailableMethodologySteps {
-  @Field(() => Methodology)
-  methodology: Methodology;
-
-  @Field(() => [Step])
-  steps: Step[];
+  @Field(() => Methodology, {
+    nullable: true,
+  })
+  methodology?: Methodology;
 }
+
+export const getAvailableSteps = ({
+  type,
+  methodology,
+}: AvailableMethodologyStepsOptions): readonly Step[] => {
+  if (type === 'OtherProduct') {
+    return [Step.Completed];
+  }
+  if (type === ProducibleType.EthnoArt) {
+    return [Step.Develop, Step.Completed];
+  }
+  if (!methodology) {
+    return [];
+  }
+  if (methodology === Methodology.Film) {
+    return [Step.Translate, Step.Completed];
+  }
+  if (methodology === Methodology.SignLanguage) {
+    return [
+      Step.ExegesisAndFirstDraft,
+      Step.TeamCheck,
+      Step.CommunityTesting,
+      Step.BackTranslation,
+      Step.ConsultantCheck,
+      Step.Completed,
+    ];
+  }
+  if (ApproachToMethodologies[Approach.OralStories].includes(methodology)) {
+    return [Step.Craft, Step.Test, Step.Check, Step.Completed];
+  }
+  if (ApproachToMethodologies[Approach.OralTranslation].includes(methodology)) {
+    return [
+      Step.InternalizationAndDrafting,
+      Step.PeerRevision,
+      Step.CommunityTesting,
+      Step.BackTranslation,
+      Step.ConsultantCheck,
+      Step.Completed,
+    ];
+  }
+  if (ApproachToMethodologies[Approach.Written].includes(methodology)) {
+    return [
+      Step.ExegesisAndFirstDraft,
+      Step.TeamCheck,
+      Step.CommunityTesting,
+      Step.BackTranslation,
+      Step.ConsultantCheck,
+      Step.Completed,
+    ];
+  }
+
+  return [];
+};
