@@ -40,7 +40,7 @@ export class ProductExtractor {
 
     return findProductRows(sheet)
       .map(parseProductRow(sheet, expandToFullFiscalYears(interval)))
-      .filter((row) => row.steps.length > 1);
+      .filter((row) => row.steps.length > 0);
   }
 }
 
