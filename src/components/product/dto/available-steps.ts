@@ -1,5 +1,4 @@
 import { ArgsType, Field } from '@nestjs/graphql';
-import { IsEnum } from 'class-validator';
 import { ProducibleType } from './producible.dto';
 import { ProductApproach as Approach } from './product-approach';
 import {
@@ -10,10 +9,9 @@ import { ProductStep as Step } from './product-step.enum';
 
 @ArgsType()
 export class AvailableStepsOptions {
-  @Field(() => String, {
+  @Field(() => ProducibleType, {
     nullable: true,
   })
-  @IsEnum(ProducibleType)
   type?: ProducibleType;
 
   @Field(() => Methodology, {

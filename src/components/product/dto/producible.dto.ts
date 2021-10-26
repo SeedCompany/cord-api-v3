@@ -1,4 +1,9 @@
-import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
+import {
+  Field,
+  InterfaceType,
+  ObjectType,
+  registerEnumType,
+} from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { Resource, SecuredProperty, SecuredProps } from '../../../common';
 import { SecuredScriptureRanges } from '../../scripture/dto';
@@ -27,6 +32,10 @@ export enum ProducibleType {
   DerivativeScriptureProduct = 'DerivativeScriptureProduct',
   OtherProduct = 'OtherProduct',
 }
+
+registerEnumType(ProducibleType, {
+  name: 'ProducibleType',
+});
 
 export type ProducibleResult = Producible & {
   __typename: ProducibleType;
