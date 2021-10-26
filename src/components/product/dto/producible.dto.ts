@@ -22,7 +22,11 @@ export abstract class Producible extends Resource {
 
 // Augment this enum with each implementation of Producible
 // via declaration merging
-export enum ProducibleType {}
+export enum ProducibleType {
+  DirectScriptureProduct = 'DirectScriptureProduct',
+  DerivativeScriptureProduct = 'DerivativeScriptureProduct',
+  OtherProduct = 'OtherProduct',
+}
 
 export type ProducibleResult = Producible & {
   __typename: ProducibleType;
