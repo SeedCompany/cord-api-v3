@@ -127,9 +127,7 @@ export class EngagementService {
       session,
       viewOfChangeset(changeset)
     )) as LanguageEngagement;
-    if (changeset) {
-      return languageEngagement;
-    }
+
     const event = new EngagementCreatedEvent(
       languageEngagement,
       input,

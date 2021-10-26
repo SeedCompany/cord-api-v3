@@ -40,6 +40,10 @@ export class SyncProgressReportToEngagementDateRange
       event: event.constructor.name,
     });
 
+    if (event instanceof EngagementCreatedEvent && event.engagement.changeset) {
+      return;
+    }
+
     await this.syncProgress(event);
   }
 
