@@ -53,26 +53,6 @@ import { productListFilter } from './query.helpers';
 
 @Injectable()
 export class ProductRepository extends CommonRepository {
-  async findNode(type: 'engagement' | 'producible', id: ID) {
-    if (type === 'engagement') {
-      return await this.db
-        .query()
-        .match([node('engagement', 'Engagement', { id })])
-        .return('engagement')
-        .first();
-    } else {
-      return await this.db
-        .query()
-        .match([
-          node('producible', 'Producible', {
-            id,
-          }),
-        ])
-        .return('producible')
-        .first();
-    }
-  }
-
   async readOne(id: ID, session: Session) {
     const query = this.db
       .query()

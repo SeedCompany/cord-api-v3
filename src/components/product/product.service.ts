@@ -68,9 +68,9 @@ export class ProductService {
       | CreateOtherProduct,
     session: Session
   ): Promise<AnyProduct> {
-    const engagement = await this.repo.findNode(
-      'engagement',
-      input.engagementId
+    const engagement = await this.repo.getBaseNode(
+      input.engagementId,
+      'Engagement'
     );
     if (!engagement) {
       this.logger.warning(`Could not find engagement`, {
@@ -83,7 +83,10 @@ export class ProductService {
     }
 
     if (has('produces', input) && input.produces) {
-      const producible = await this.repo.findNode('producible', input.produces);
+      const producible = await this.repo.getBaseNode(
+        input.produces,
+        'Producible'
+      );
       if (!producible) {
         this.logger.warning(`Could not find producible node`, {
           id: input.produces,
