@@ -18,13 +18,13 @@ import {
 } from '../../common';
 import { Loader, LoaderOf } from '../../core';
 import {
-  AvailableMethodologyStepsOptions,
+  AvailableStepsOptions,
   CreateDerivativeScriptureProduct,
   CreateDirectScriptureProduct,
   getAvailableSteps,
-  MethodologyStep,
   ProductLoader,
   ProductService,
+  ProductStep as Step,
   UpdateDerivativeScriptureProduct,
   UpdateDirectScriptureProduct,
 } from '../product';
@@ -168,14 +168,14 @@ export class ProductResolver {
     return ProductType.IndividualBooks;
   }
 
-  @Query(() => [MethodologyStep], {
+  @Query(() => [Step], {
     description: stripIndent`
       Returns a list of available steps for the given constraints.
     `,
   })
-  methodologyAvailableSteps(
-    @Args() options: AvailableMethodologyStepsOptions
-  ): readonly MethodologyStep[] {
+  availableProductSteps(
+    @Args() options: AvailableStepsOptions
+  ): readonly Step[] {
     return getAvailableSteps(options);
   }
 

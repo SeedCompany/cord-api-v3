@@ -9,10 +9,10 @@ import {
   ScriptureRangeInput,
   UnspecifiedScripturePortionInput,
 } from '../../scripture';
-import { MethodologyStep } from './methodology-step.enum';
 import { ProductMedium } from './product-medium';
 import { ProductMethodology } from './product-methodology';
 import { ProductPurpose } from './product-purpose';
+import { ProductStep as Step } from './product-step.enum';
 import { AnyProduct, Product } from './product.dto';
 import { ProgressMeasurement } from './progress-measurement.enum';
 
@@ -36,9 +36,9 @@ export abstract class CreateBaseProduct {
   @Field(() => ProductMethodology, { nullable: true })
   readonly methodology?: ProductMethodology;
 
-  @Field(() => [MethodologyStep], { nullable: true })
+  @Field(() => [Step], { nullable: true })
   @Transform(({ value }) => uniq(value))
-  readonly steps?: readonly MethodologyStep[];
+  readonly steps?: readonly Step[];
 
   @Field({ nullable: true })
   readonly describeCompletion?: string;

@@ -20,11 +20,11 @@ import {
   SecuredScriptureRangesOverride,
   SecuredUnspecifiedScripturePortion,
 } from '../../scripture';
-import { SecuredMethodologySteps } from './methodology-step.enum';
 import { Producible, SecuredProducible } from './producible.dto';
 import { SecuredProductMediums } from './product-medium';
 import { SecuredMethodology } from './product-methodology';
 import { SecuredProductPurposes } from './product-purpose';
+import { SecuredProductSteps } from './product-step.enum';
 import { SecuredProgressMeasurement } from './progress-measurement.enum';
 
 const resolveProductType = (product: AnyProduct | UnsecuredDto<AnyProduct>) =>
@@ -67,7 +67,7 @@ export class Product extends Producible {
       Only certain steps are available according to the chosen methodology.
     `,
   })
-  readonly steps: SecuredMethodologySteps;
+  readonly steps: SecuredProductSteps;
 
   @Field({
     description: stripIndent`

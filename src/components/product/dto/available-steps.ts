@@ -1,15 +1,15 @@
 import { ArgsType, Field } from '@nestjs/graphql';
 import { IsEnum } from 'class-validator';
-import { MethodologyStep as Step } from './methodology-step.enum';
 import { ProducibleType } from './producible.dto';
 import { ProductApproach as Approach } from './product-approach';
 import {
   ApproachToMethodologies,
   ProductMethodology as Methodology,
 } from './product-methodology';
+import { ProductStep as Step } from './product-step.enum';
 
 @ArgsType()
-export class AvailableMethodologyStepsOptions {
+export class AvailableStepsOptions {
   @Field(() => String, {
     nullable: true,
   })
@@ -25,7 +25,7 @@ export class AvailableMethodologyStepsOptions {
 export const getAvailableSteps = ({
   type,
   methodology,
-}: AvailableMethodologyStepsOptions): readonly Step[] => {
+}: AvailableStepsOptions): readonly Step[] => {
   if (type === 'OtherProduct') {
     return [Step.Completed];
   }

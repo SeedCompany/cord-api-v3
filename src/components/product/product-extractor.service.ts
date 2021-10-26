@@ -9,7 +9,7 @@ import {
 import { cellAsDate, cellAsNumber, cellAsString } from '../../common/xlsx.util';
 import { ILogger, Logger } from '../../core';
 import { Downloadable, File } from '../file';
-import { MethodologyStep } from './dto';
+import { ProductStep as Step } from './dto';
 
 @Injectable()
 export class ProductExtractor {
@@ -64,12 +64,12 @@ const parseProductRow =
     const bookName = cellAsString(sheet[`Q${row}`])!; // Asserting bc loop verified this
     const totalVerses = cellAsNumber(sheet[`T${row}`])!;
     const stepColumns = {
-      [MethodologyStep.ExegesisAndFirstDraft]: 'U',
-      [MethodologyStep.TeamCheck]: 'V',
-      [MethodologyStep.CommunityTesting]: 'W',
-      [MethodologyStep.BackTranslation]: 'X',
-      [MethodologyStep.ConsultantCheck]: 'Y',
-      [MethodologyStep.Completed]: 'Z',
+      [Step.ExegesisAndFirstDraft]: 'U',
+      [Step.TeamCheck]: 'V',
+      [Step.CommunityTesting]: 'W',
+      [Step.BackTranslation]: 'X',
+      [Step.ConsultantCheck]: 'Y',
+      [Step.Completed]: 'Z',
     };
     // include step if it references a fiscal year within the project
     const includeStep = (column: string) => {
@@ -78,7 +78,7 @@ const parseProductRow =
         fiscalYear && projectRange.intersection(fullFiscalYear(fiscalYear))
       );
     };
-    const steps: readonly MethodologyStep[] = entries(stepColumns).flatMap(
+    const steps: readonly Step[] = entries(stepColumns).flatMap(
       ([step, column]) => (includeStep(column) ? step : [])
     );
     return { bookName, totalVerses, steps };
