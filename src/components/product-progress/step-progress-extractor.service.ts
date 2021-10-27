@@ -5,6 +5,7 @@ import { cellAsNumber, cellAsString } from '../../common/xlsx.util';
 import { ILogger, Logger } from '../../core';
 import { Downloadable, FileNode } from '../file';
 import { ProductStep as Step } from '../product';
+import { findStepColumns } from '../product/product-extractor.service';
 import { StepProgressInput } from './dto';
 
 @Injectable()
@@ -26,7 +27,11 @@ export class StepProgressExtractor {
       return [];
     }
 
-    return findProductProgressRows(sheet).map(parseProgressRow(sheet));
+    const stepColumns = findStepColumns(sheet, 'R19:AB19');
+
+    return findProductProgressRows(sheet).map(
+      parseProgressRow(sheet, stepColumns)
+    );
   }
 }
 
@@ -45,31 +50,24 @@ function findProductProgressRows(sheet: WorkSheet) {
   return matchedRows;
 }
 
-const parseProgressRow = (sheet: WorkSheet) => (row: number) => {
-  const bookName = cellAsString(sheet[`P${row}`])!; // Asserting bc loop verified this
-  const totalVerses = cellAsNumber(sheet[`Q${row}`])!;
-  const stepColumns = {
-    [Step.ExegesisAndFirstDraft]: 'R',
-    [Step.TeamCheck]: 'T',
-    [Step.CommunityTesting]: 'V',
-    [Step.BackTranslation]: 'X',
-    [Step.ConsultantCheck]: 'Z',
-    [Step.Completed]: 'AB',
+const parseProgressRow =
+  (sheet: WorkSheet, stepColumns: Record<Step, string>) => (row: number) => {
+    const bookName = cellAsString(sheet[`P${row}`])!; // Asserting bc loop verified this
+    const totalVerses = cellAsNumber(sheet[`Q${row}`])!;
+    const progress = (column: string) => {
+      const cell: CellObject = sheet[`${column}${row}`];
+      if (cellAsString(cell)?.startsWith('Q')) {
+        // Q# means completed that quarter
+        return 100;
+      }
+      const percentDecimal = cellAsNumber(cell);
+      return percentDecimal ? percentDecimal * 100 : undefined;
+    };
+    const steps = entries(stepColumns).map(
+      ([step, column]): StepProgressInput => ({
+        step,
+        completed: progress(column),
+      })
+    );
+    return { bookName, totalVerses, steps };
   };
-  const progress = (column: string) => {
-    const cell: CellObject = sheet[`${column}${row}`];
-    if (cellAsString(cell)?.startsWith('Q')) {
-      // Q# means completed that quarter
-      return 100;
-    }
-    const percentDecimal = cellAsNumber(cell);
-    return percentDecimal ? percentDecimal * 100 : undefined;
-  };
-  const steps = entries(stepColumns).map(
-    ([step, column]): StepProgressInput => ({
-      step,
-      completed: progress(column),
-    })
-  );
-  return { bookName, totalVerses, steps };
-};

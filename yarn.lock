@@ -5416,6 +5416,7 @@ __metadata:
     iso-3166-1: ^2.1.0
     ix: ^4.5.2
     jest: ^26.6.3
+    js-levenshtein-esm: ^1.2.0
     js-yaml: ^4.1.0
     jsonwebtoken: ^8.5.1
     lazy-get-decorator: ^2.2.0
@@ -9092,6 +9093,13 @@ cypher-query-builder@6.0.4:
     html-beautify: js/bin/html-beautify.js
     js-beautify: js/bin/js-beautify.js
   checksum: f59805e7ca9de76ba4e457eaf5092321f96a52ed3b1f95dea22c123b82e39f76c5bb33b54ae73203fdb689840f3619b71c92363de20abaa4cc5c45cd5ca88cd7
+  languageName: node
+  linkType: hard
+
+"js-levenshtein-esm@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "js-levenshtein-esm@npm:1.2.0"
+  checksum: 577c3e609d3f3b6ab46071638fee14f96a0a8a9148548d4da12d40cb1a12fd197a93d2ff1047a01562c892bad243e35431e015ab020535c9dead96da64a2c3dd
   languageName: node
   linkType: hard
 

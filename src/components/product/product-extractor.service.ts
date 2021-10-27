@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { read, WorkSheet } from 'xlsx';
+import levenshtein from 'js-levenshtein-esm';
+import { sortBy, startCase, without } from 'lodash';
+import { read, utils, WorkSheet } from 'xlsx';
 import {
   DateInterval,
   entries,
@@ -15,7 +17,10 @@ import { ProductStep as Step } from './dto';
 export class ProductExtractor {
   constructor(@Logger('product:extractor') private readonly logger: ILogger) {}
 
-  async extract(file: Downloadable<Pick<File, 'id'>>) {
+  async extract(
+    file: Downloadable<Pick<File, 'id'>>,
+    availableSteps: readonly Step[]
+  ) {
     const buffer = await file.download();
     const pnp = read(buffer, { type: 'buffer', cellDates: true });
 
@@ -38,8 +43,12 @@ export class ProductExtractor {
       return [];
     }
 
+    const stepColumns = findStepColumns(sheet, 'U18:Z18', availableSteps);
+
     return findProductRows(sheet)
-      .map(parseProductRow(sheet, expandToFullFiscalYears(interval)))
+      .map(
+        parseProductRow(sheet, expandToFullFiscalYears(interval), stepColumns)
+      )
       .filter((row) => row.steps.length > 0);
   }
 }
@@ -59,18 +68,50 @@ function findProductRows(sheet: WorkSheet) {
   return matchedRows;
 }
 
+/**
+ * Fuzzy match available steps to their column address.
+ */
+export function findStepColumns(
+  sheet: WorkSheet,
+  fromRange: string,
+  availableSteps: readonly Step[] = Object.values(Step)
+) {
+  const matchedColumns: Partial<Record<Step, string>> = {};
+  let remainingSteps = availableSteps;
+  const range = utils.decode_range(fromRange);
+  for (let column = range.s.c; column <= range.e.c; ++column) {
+    const cellRef = utils.encode_cell({ r: range.s.r, c: column });
+    const label = cellAsString(sheet[cellRef]);
+    if (!label) {
+      continue;
+    }
+    const distances = remainingSteps.map((step) => {
+      const humanLabel = startCase(step).replace(' And ', ' & ');
+      const distance = levenshtein(label, humanLabel);
+      return [step, distance] as const;
+    });
+    // Grab the
+    const chosen = sortBy(
+      // 5 is too far ignore those
+      distances.filter(([_, distance]) => distance < 5),
+      ([_, distance]) => distance
+    )[0][0];
+    matchedColumns[chosen] = utils.encode_col(column);
+
+    remainingSteps = without(remainingSteps, chosen);
+  }
+  return matchedColumns as Record<Step, string>;
+}
+
 const parseProductRow =
-  (sheet: WorkSheet, projectRange: DateInterval) => (row: number) => {
+  (
+    sheet: WorkSheet,
+    projectRange: DateInterval,
+    stepColumns: Record<Step, string>
+  ) =>
+  (row: number) => {
     const bookName = cellAsString(sheet[`Q${row}`])!; // Asserting bc loop verified this
     const totalVerses = cellAsNumber(sheet[`T${row}`])!;
-    const stepColumns = {
-      [Step.ExegesisAndFirstDraft]: 'U',
-      [Step.TeamCheck]: 'V',
-      [Step.CommunityTesting]: 'W',
-      [Step.BackTranslation]: 'X',
-      [Step.ConsultantCheck]: 'Y',
-      [Step.Completed]: 'Z',
-    };
     // include step if it references a fiscal year within the project
     const includeStep = (column: string) => {
       const fiscalYear = cellAsNumber(sheet[`${column}${row}`]);

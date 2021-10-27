@@ -9,7 +9,12 @@ import {
 import { FileService } from '../../file';
 import { ScriptureRangeInput } from '../../scripture';
 import { Book } from '../../scripture/books';
-import { CreateDirectScriptureProduct, ProgressMeasurement } from '../dto';
+import {
+  CreateDirectScriptureProduct,
+  getAvailableSteps,
+  ProducibleType,
+  ProgressMeasurement,
+} from '../dto';
 import { ProductExtractor } from '../product-extractor.service';
 import { ProductService } from '../product.service';
 
@@ -48,7 +53,11 @@ export class ExtractProductsFromPnpHandler
 
     const file = this.files.asDownloadable({ id: pnpFileId }, pnpFileId);
 
-    const productRows = await this.extractor.extract(file);
+    const availableSteps = getAvailableSteps({
+      methodology,
+      type: ProducibleType.DirectScriptureProduct,
+    });
+    const productRows = await this.extractor.extract(file, availableSteps);
     if (productRows.length === 0) {
       return;
     }
