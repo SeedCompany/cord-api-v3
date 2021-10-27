@@ -10,7 +10,6 @@ import { stripIndent } from 'common-tags';
 import { startCase } from 'lodash';
 import {
   AnonSession,
-  entries,
   ID,
   IdArg,
   LoggedInSession,
@@ -19,10 +18,13 @@ import {
 } from '../../common';
 import { Loader, LoaderOf } from '../../core';
 import {
+  AvailableStepsOptions,
   CreateDerivativeScriptureProduct,
   CreateDirectScriptureProduct,
+  getAvailableSteps,
   ProductLoader,
   ProductService,
+  ProductStep as Step,
   UpdateDerivativeScriptureProduct,
   UpdateDirectScriptureProduct,
 } from '../product';
@@ -30,13 +32,10 @@ import { Book } from '../scripture/books';
 import { labelOfScriptureRanges } from '../scripture/labels';
 import {
   AnyProduct,
-  AvailableMethodologySteps,
   CreateOtherProduct,
   CreateProductInput,
   CreateProductOutput,
-  MethodologyAvailableSteps,
   MethodologyToApproach,
-  ProducibleType,
   Product,
   ProductApproach,
   ProductCompletionDescriptionSuggestionsInput,
@@ -48,6 +47,7 @@ import {
   UpdateProductInput,
   UpdateProductOutput,
 } from './dto';
+import { ProducibleType } from './dto/producible.dto';
 
 @Resolver(Product)
 export class ProductResolver {
@@ -168,20 +168,15 @@ export class ProductResolver {
     return ProductType.IndividualBooks;
   }
 
-  @Query(() => [AvailableMethodologySteps], {
+  @Query(() => [Step], {
     description: stripIndent`
-      Returns a list of available steps for each methodology.
-      This is returned as a list because GraphQL cannot describe an object with
-      dynamic keys. It's probably best to convert this to a map on retrieval.
+      Returns a list of available steps for the given constraints.
     `,
   })
-  methodologyAvailableSteps(): AvailableMethodologySteps[] {
-    return entries(MethodologyAvailableSteps).map(
-      ([methodology, steps]): AvailableMethodologySteps => ({
-        methodology,
-        steps,
-      })
-    );
+  availableProductSteps(
+    @Args() options: AvailableStepsOptions
+  ): readonly Step[] {
+    return getAvailableSteps(options);
   }
 
   @Query(() => ProductCompletionDescriptionSuggestionsOutput, {

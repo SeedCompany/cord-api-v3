@@ -1,7 +1,7 @@
 import { ObjectType, registerEnumType } from '@nestjs/graphql';
 import { SecuredEnumList } from '../../../common';
 
-export enum MethodologyStep {
+export enum ProductStep {
   ExegesisAndFirstDraft = 'ExegesisAndFirstDraft',
   TeamCheck = 'TeamCheck',
   CommunityTesting = 'CommunityTesting',
@@ -14,16 +14,17 @@ export enum MethodologyStep {
   Test = 'Test',
   Check = 'Check',
   Record = 'Record',
+  Develop = 'Develop',
+  Translate = 'Translate',
   Completed = 'Completed',
 }
 
-registerEnumType(MethodologyStep, {
-  name: 'MethodologyStep',
-  description:
-    'A step required to produce a product following a given methodology.',
+registerEnumType(ProductStep, {
+  name: 'ProductStep',
+  description: 'A step required to complete a product/"goal".',
 });
 
 @ObjectType({
   description: SecuredEnumList.descriptionFor('product steps'),
 })
-export class SecuredMethodologySteps extends SecuredEnumList(MethodologyStep) {}
+export class SecuredProductSteps extends SecuredEnumList(ProductStep) {}

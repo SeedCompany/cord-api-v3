@@ -4,7 +4,7 @@ import { entries } from '../../common';
 import { cellAsNumber, cellAsString } from '../../common/xlsx.util';
 import { ILogger, Logger } from '../../core';
 import { Downloadable, FileNode } from '../file';
-import { MethodologyStep } from '../product';
+import { ProductStep as Step } from '../product';
 import { StepProgressInput } from './dto';
 
 @Injectable()
@@ -49,12 +49,12 @@ const parseProgressRow = (sheet: WorkSheet) => (row: number) => {
   const bookName = cellAsString(sheet[`P${row}`])!; // Asserting bc loop verified this
   const totalVerses = cellAsNumber(sheet[`Q${row}`])!;
   const stepColumns = {
-    [MethodologyStep.ExegesisAndFirstDraft]: 'R',
-    [MethodologyStep.TeamCheck]: 'T',
-    [MethodologyStep.CommunityTesting]: 'V',
-    [MethodologyStep.BackTranslation]: 'X',
-    [MethodologyStep.ConsultantCheck]: 'Z',
-    [MethodologyStep.Completed]: 'AB',
+    [Step.ExegesisAndFirstDraft]: 'R',
+    [Step.TeamCheck]: 'T',
+    [Step.CommunityTesting]: 'V',
+    [Step.BackTranslation]: 'X',
+    [Step.ConsultantCheck]: 'Z',
+    [Step.Completed]: 'AB',
   };
   const progress = (column: string) => {
     const cell: CellObject = sheet[`${column}${row}`];
