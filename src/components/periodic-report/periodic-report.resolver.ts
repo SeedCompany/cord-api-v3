@@ -2,10 +2,18 @@ import {
   Args,
   Mutation,
   Parent,
+  Query,
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { CalendarDate, LoggedInSession, Session } from '../../common';
+import { PeriodicReportLoader } from '.';
+import {
+  CalendarDate,
+  ID,
+  IdArg,
+  LoggedInSession,
+  Session,
+} from '../../common';
 import { Loader, LoaderOf } from '../../core';
 import { FileNodeLoader, resolveDefinedFile, SecuredFile } from '../file';
 import {
@@ -18,6 +26,17 @@ import { PeriodicReportService } from './periodic-report.service';
 @Resolver(IPeriodicReport)
 export class PeriodicReportResolver {
   constructor(private readonly service: PeriodicReportService) {}
+
+  @Query(() => IPeriodicReport, {
+    description: 'Read a periodic report by id.',
+  })
+  async periodicReport(
+    @Loader(PeriodicReportLoader)
+    periodicReports: LoaderOf<PeriodicReportLoader>,
+    @IdArg() id: ID
+  ): Promise<IPeriodicReport> {
+    return await periodicReports.load(id);
+  }
 
   @ResolveField(() => CalendarDate, {
     description: 'When this report is due',
