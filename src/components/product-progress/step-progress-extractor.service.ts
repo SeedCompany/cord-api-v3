@@ -38,7 +38,10 @@ export class StepProgressExtractor {
 function findProductProgressRows(sheet: WorkSheet) {
   const matchedRows = [];
   let row = 23;
-  while (cellAsString(sheet[`P${row}`]) !== 'Other Goals and Milestones') {
+  while (
+    sheet[`P${row}`] &&
+    cellAsString(sheet[`P${row}`]) !== 'Other Goals and Milestones'
+  ) {
     if (
       cellAsString(sheet[`P${row}`]) &&
       (cellAsNumber(sheet[`Q${row}`]) ?? 0) > 0

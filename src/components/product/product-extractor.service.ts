@@ -56,7 +56,10 @@ export class ProductExtractor {
 function findProductRows(sheet: WorkSheet) {
   const matchedRows = [];
   let row = 23;
-  while (cellAsString(sheet[`Q${row}`]) !== 'Other Goals and Milestones') {
+  while (
+    sheet[`Q${row}`] &&
+    cellAsString(sheet[`Q${row}`]) !== 'Other Goals and Milestones'
+  ) {
     if (
       cellAsString(sheet[`Q${row}`]) &&
       (cellAsNumber(sheet[`T${row}`]) ?? 0) > 0
