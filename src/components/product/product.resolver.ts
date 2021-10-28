@@ -184,7 +184,7 @@ export class ProductResolver {
       Returns a list of available steps of product.
     `,
   })
-  productAvailableSteps(@Parent() product: AnyProduct): readonly Step[] {
+  availableSteps(@Parent() product: AnyProduct): readonly Step[] {
     return getAvailableSteps({
       type: product.produces?.value?.__typename,
       methodology: product.methodology.value,
