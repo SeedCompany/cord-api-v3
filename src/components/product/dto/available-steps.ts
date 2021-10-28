@@ -24,7 +24,7 @@ export const getAvailableSteps = ({
   type,
   methodology,
 }: AvailableStepsOptions): readonly Step[] => {
-  if (type === 'OtherProduct') {
+  if (type === 'OtherProduct' || methodology === Methodology.OtherVisual) {
     return [Step.Completed];
   }
   if (type === ProducibleType.EthnoArt) {
