@@ -232,6 +232,7 @@ export const MarketingOnProject = new DbRole({
         { propertyName: 'lastReactivatedAt', permission: { read, }, },
         { propertyName: 'lastSuspendedAt', permission: { read, }, },
         { propertyName: 'lukePartnership', permission: { read, }, },
+        { propertyName: 'openToInvestorVisit', permission: { read, }, },
         { propertyName: 'paratextRegistryId', permission: { }, },
         { propertyName: 'pnp', permission: { read, }, },
         { propertyName: 'historicGoal', permission: { read, }, },

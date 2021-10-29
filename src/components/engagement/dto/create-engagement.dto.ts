@@ -47,6 +47,9 @@ export abstract class CreateLanguageEngagement extends CreateEngagement {
   readonly lukePartnership?: boolean;
 
   @Field({ nullable: true })
+  readonly openToInvestorVisit?: boolean;
+
+  @Field({ nullable: true })
   readonly paratextRegistryId?: string;
 
   @Field({ nullable: true })

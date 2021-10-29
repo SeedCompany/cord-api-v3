@@ -234,6 +234,7 @@ export const ProjectManagerGlobal = new DbRole({
         { propertyName: 'lastReactivatedAt', permission: { read, write, }, },
         { propertyName: 'lastSuspendedAt', permission: { read, write, }, },
         { propertyName: 'lukePartnership', permission: { read, write, }, },
+        { propertyName: 'openToInvestorVisit', permission: { read, write, }, },
         { propertyName: 'paratextRegistryId', permission: { read, write, }, },
         { propertyName: 'pnp', permission: { read, write, }, },
         { propertyName: 'historicGoal', permission: { read, write, }, },
