@@ -54,10 +54,11 @@ export class ProductExtractor {
 }
 
 function findProductRows(sheet: WorkSheet) {
+  const lastRow = sheet['!ref'] ? utils.decode_range(sheet['!ref']).e.r : 200;
   const matchedRows = [];
   let row = 23;
   while (
-    sheet[`Q${row}`] &&
+    row < lastRow &&
     cellAsString(sheet[`Q${row}`]) !== 'Other Goals and Milestones'
   ) {
     if (

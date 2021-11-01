@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { CellObject, read, WorkSheet } from 'xlsx';
+import { CellObject, read, utils, WorkSheet } from 'xlsx';
 import { entries } from '../../common';
 import { cellAsNumber, cellAsString } from '../../common/xlsx.util';
 import { ILogger, Logger } from '../../core';
@@ -36,10 +36,11 @@ export class StepProgressExtractor {
 }
 
 function findProductProgressRows(sheet: WorkSheet) {
+  const lastRow = sheet['!ref'] ? utils.decode_range(sheet['!ref']).e.r : 200;
   const matchedRows = [];
   let row = 23;
   while (
-    sheet[`P${row}`] &&
+    row < lastRow &&
     cellAsString(sheet[`P${row}`]) !== 'Other Goals and Milestones'
   ) {
     if (
