@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { CellObject, read, utils, WorkSheet } from 'xlsx';
+import { CellObject, read, WorkSheet } from 'xlsx';
 import { entries } from '../../common';
-import { cellAsNumber, cellAsString } from '../../common/xlsx.util';
+import { cellAsNumber, cellAsString, sheetRange } from '../../common/xlsx.util';
 import { ILogger, Logger } from '../../core';
 import { Downloadable, FileNode } from '../file';
 import { ProductStep as Step } from '../product';
@@ -37,7 +37,7 @@ export class StepProgressExtractor {
 }
 
 function findProductProgressRows(sheet: WorkSheet) {
-  const lastRow = sheet['!ref'] ? utils.decode_range(sheet['!ref']).e.r : 200;
+  const lastRow = sheetRange(sheet)?.e.r ?? 200;
   const matchedRows = [];
   let row = 23;
   while (

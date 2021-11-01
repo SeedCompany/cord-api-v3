@@ -1,4 +1,5 @@
-import type { CellObject } from 'xlsx';
+import { utils } from 'xlsx';
+import type { CellObject, WorkSheet } from 'xlsx';
 import { CalendarDate } from './temporal';
 
 export const cellAsNumber = (cell: CellObject) =>
@@ -14,3 +15,6 @@ export const cellAsDate = (cell: CellObject) =>
   cell && cell.t === 'd' && cell.v instanceof Date
     ? CalendarDate.fromJSDate(cell.v)
     : undefined;
+
+export const sheetRange = (ws: WorkSheet) =>
+  ws['!ref'] ? utils.decode_range(ws['!ref']) : undefined;

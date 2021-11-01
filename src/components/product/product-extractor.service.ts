@@ -8,7 +8,12 @@ import {
   expandToFullFiscalYears,
   fullFiscalYear,
 } from '../../common';
-import { cellAsDate, cellAsNumber, cellAsString } from '../../common/xlsx.util';
+import {
+  cellAsDate,
+  cellAsNumber,
+  cellAsString,
+  sheetRange,
+} from '../../common/xlsx.util';
 import { ILogger, Logger } from '../../core';
 import { Downloadable, File } from '../file';
 import { Book } from '../scripture/books';
@@ -55,7 +60,7 @@ export class ProductExtractor {
 }
 
 function findProductRows(sheet: WorkSheet) {
-  const lastRow = sheet['!ref'] ? utils.decode_range(sheet['!ref']).e.r : 200;
+  const lastRow = sheetRange(sheet)?.e.r ?? 200;
   const matchedRows = [];
   let row = 23;
   while (
