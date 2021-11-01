@@ -11,6 +11,7 @@ import {
 import { cellAsDate, cellAsNumber, cellAsString } from '../../common/xlsx.util';
 import { ILogger, Logger } from '../../core';
 import { Downloadable, File } from '../file';
+import { Book } from '../scripture/books';
 import { ProductStep as Step } from './dto';
 
 @Injectable()
@@ -54,16 +55,16 @@ export class ProductExtractor {
 }
 
 function findProductRows(sheet: WorkSheet) {
+  const lastRow = sheet['!ref'] ? utils.decode_range(sheet['!ref']).e.r : 200;
   const matchedRows = [];
   let row = 23;
   while (
-    sheet[`Q${row}`] &&
+    row < lastRow &&
     cellAsString(sheet[`Q${row}`]) !== 'Other Goals and Milestones'
   ) {
-    if (
-      cellAsString(sheet[`Q${row}`]) &&
-      (cellAsNumber(sheet[`T${row}`]) ?? 0) > 0
-    ) {
+    const book = Book.tryFind(cellAsString(sheet[`Q${row}`]));
+    const totalVerses = cellAsNumber(sheet[`T${row}`]) ?? 0;
+    if (book && totalVerses > 0 && totalVerses <= book.totalVerses) {
       matchedRows.push(row);
     }
     row++;
@@ -93,12 +94,15 @@ export function findStepColumns(
       const distance = levenshtein(label, humanLabel);
       return [step, distance] as const;
     });
-    // Grab the
+    // Pick the step that is the closest fuzzy match
     const chosen = sortBy(
       // 5 is too far ignore those
       distances.filter(([_, distance]) => distance < 5),
       ([_, distance]) => distance
-    )[0][0];
+    )[0]?.[0];
+    if (!chosen) {
+      continue;
+    }
     matchedColumns[chosen] = utils.encode_col(column);
 
     remainingSteps = without(remainingSteps, chosen);

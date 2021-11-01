@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { CellObject, read, WorkSheet } from 'xlsx';
+import { CellObject, read, utils, WorkSheet } from 'xlsx';
 import { entries } from '../../common';
 import { cellAsNumber, cellAsString } from '../../common/xlsx.util';
 import { ILogger, Logger } from '../../core';
 import { Downloadable, FileNode } from '../file';
 import { ProductStep as Step } from '../product';
 import { findStepColumns } from '../product/product-extractor.service';
+import { Book } from '../scripture/books';
 import { StepProgressInput } from './dto';
 
 @Injectable()
@@ -36,16 +37,16 @@ export class StepProgressExtractor {
 }
 
 function findProductProgressRows(sheet: WorkSheet) {
+  const lastRow = sheet['!ref'] ? utils.decode_range(sheet['!ref']).e.r : 200;
   const matchedRows = [];
   let row = 23;
   while (
-    sheet[`P${row}`] &&
+    row < lastRow &&
     cellAsString(sheet[`P${row}`]) !== 'Other Goals and Milestones'
   ) {
-    if (
-      cellAsString(sheet[`P${row}`]) &&
-      (cellAsNumber(sheet[`Q${row}`]) ?? 0) > 0
-    ) {
+    const book = Book.tryFind(cellAsString(sheet[`P${row}`]));
+    const totalVerses = cellAsNumber(sheet[`Q${row}`]) ?? 0;
+    if (book && totalVerses > 0 && totalVerses <= book.totalVerses) {
       matchedRows.push(row);
     }
     row++;
