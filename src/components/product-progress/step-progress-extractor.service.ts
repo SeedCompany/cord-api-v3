@@ -6,6 +6,7 @@ import { ILogger, Logger } from '../../core';
 import { Downloadable, FileNode } from '../file';
 import { ProductStep as Step } from '../product';
 import { findStepColumns } from '../product/product-extractor.service';
+import { Book } from '../scripture/books';
 import { StepProgressInput } from './dto';
 
 @Injectable()
@@ -44,7 +45,7 @@ function findProductProgressRows(sheet: WorkSheet) {
     cellAsString(sheet[`P${row}`]) !== 'Other Goals and Milestones'
   ) {
     if (
-      cellAsString(sheet[`P${row}`]) &&
+      Book.isValid(cellAsString(sheet[`P${row}`])) &&
       (cellAsNumber(sheet[`Q${row}`]) ?? 0) > 0
     ) {
       matchedRows.push(row);

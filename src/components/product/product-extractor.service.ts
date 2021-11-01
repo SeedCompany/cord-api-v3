@@ -11,6 +11,7 @@ import {
 import { cellAsDate, cellAsNumber, cellAsString } from '../../common/xlsx.util';
 import { ILogger, Logger } from '../../core';
 import { Downloadable, File } from '../file';
+import { Book } from '../scripture/books';
 import { ProductStep as Step } from './dto';
 
 @Injectable()
@@ -62,7 +63,7 @@ function findProductRows(sheet: WorkSheet) {
     cellAsString(sheet[`Q${row}`]) !== 'Other Goals and Milestones'
   ) {
     if (
-      cellAsString(sheet[`Q${row}`]) &&
+      Book.isValid(cellAsString(sheet[`Q${row}`])) &&
       (cellAsNumber(sheet[`T${row}`]) ?? 0) > 0
     ) {
       matchedRows.push(row);
