@@ -94,12 +94,15 @@ export function findStepColumns(
       const distance = levenshtein(label, humanLabel);
       return [step, distance] as const;
     });
-    // Grab the
+    // Pick the step that is the closest fuzzy match
     const chosen = sortBy(
       // 5 is too far ignore those
       distances.filter(([_, distance]) => distance < 5),
       ([_, distance]) => distance
-    )[0][0];
+    )[0]?.[0];
+    if (!chosen) {
+      continue;
+    }
     matchedColumns[chosen] = utils.encode_col(column);
 
     remainingSteps = without(remainingSteps, chosen);
