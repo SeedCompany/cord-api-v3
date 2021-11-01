@@ -4,7 +4,7 @@ import { SecuredEnum } from '../../../common';
 export enum ProgressMeasurement {
   Percent = 'Percent',
   Number = 'Number',
-  Boolean = 'Boolean',
+  Done = 'Done',
 }
 
 registerEnumType(ProgressMeasurement, {

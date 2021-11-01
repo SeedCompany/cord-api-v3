@@ -116,7 +116,7 @@ export class ProductService {
 
     const progressTarget = simpleSwitch(input.progressStepMeasurement, {
       Percent: 100,
-      Boolean: 1,
+      Done: 1,
       Number: input.progressTarget ?? 1,
     });
     const id = has('title', input)
@@ -501,10 +501,10 @@ export class ProductService {
           : // If measurement was already number,
             // accept new target value if given or accept no change.
             changes.progressTarget,
-        // If measurement is changing to percent or boolean, change target
+        // If measurement is changing to percent or done, change target
         // to its enforced value, otherwise don't allow any changes.
         Percent: changes.progressStepMeasurement ? 100 : undefined,
-        Boolean: changes.progressStepMeasurement ? 1 : undefined,
+        Done: changes.progressStepMeasurement ? 1 : undefined,
       }
     );
   }
