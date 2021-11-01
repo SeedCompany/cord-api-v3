@@ -44,10 +44,9 @@ function findProductProgressRows(sheet: WorkSheet) {
     row < lastRow &&
     cellAsString(sheet[`P${row}`]) !== 'Other Goals and Milestones'
   ) {
-    if (
-      Book.isValid(cellAsString(sheet[`P${row}`])) &&
-      (cellAsNumber(sheet[`Q${row}`]) ?? 0) > 0
-    ) {
+    const book = Book.tryFind(cellAsString(sheet[`P${row}`]));
+    const totalVerses = cellAsNumber(sheet[`Q${row}`]) ?? 0;
+    if (book && totalVerses > 0 && totalVerses <= book.totalVerses) {
       matchedRows.push(row);
     }
     row++;

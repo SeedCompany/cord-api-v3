@@ -62,10 +62,9 @@ function findProductRows(sheet: WorkSheet) {
     row < lastRow &&
     cellAsString(sheet[`Q${row}`]) !== 'Other Goals and Milestones'
   ) {
-    if (
-      Book.isValid(cellAsString(sheet[`Q${row}`])) &&
-      (cellAsNumber(sheet[`T${row}`]) ?? 0) > 0
-    ) {
+    const book = Book.tryFind(cellAsString(sheet[`Q${row}`]));
+    const totalVerses = cellAsNumber(sheet[`T${row}`]) ?? 0;
+    if (book && totalVerses > 0 && totalVerses <= book.totalVerses) {
       matchedRows.push(row);
     }
     row++;
