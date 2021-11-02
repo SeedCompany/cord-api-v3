@@ -87,6 +87,8 @@ export abstract class ProjectFilters {
     description: 'Only projects that are (not) in the "Preset Inventory"',
   })
   readonly presetInventory?: boolean;
+
+  readonly partnerId?: ID;
 }
 
 const defaultFilters = {};

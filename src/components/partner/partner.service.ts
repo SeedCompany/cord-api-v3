@@ -13,7 +13,13 @@ import {
 import { HandleIdLookup, ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { Powers } from '../authorization/dto/powers';
 import { FinancialReportingType } from '../partnership/dto/financial-reporting-type';
+import {
+  ProjectListInput,
+  ProjectService,
+  SecuredProjectList,
+} from '../project';
 import {
   CreatePartner,
   Partner,
@@ -30,6 +36,8 @@ export class PartnerService {
     @Logger('partner:service') private readonly logger: ILogger,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
+    @Inject(forwardRef(() => ProjectService))
+    private readonly projectService: ProjectService,
     private readonly repo: PartnerRepository
   ) {}
 
@@ -184,6 +192,26 @@ export class PartnerService {
       : await this.authorizationService.getListRoleSensitivityMapping(Partner);
     const results = await this.repo.list(input, session, limited);
     return await mapListResults(results, (dto) => this.secure(dto, session));
+  }
+
+  async listProjects(
+    partner: Partner,
+    input: ProjectListInput,
+    session: Session
+  ): Promise<SecuredProjectList> {
+    const projectListOutput = await this.projectService.list(
+      { ...input, filter: { ...input.filter, partnerId: partner.id } },
+      session
+    );
+
+    return {
+      ...projectListOutput,
+      canRead: true,
+      canCreate: await this.authorizationService.hasPower(
+        session,
+        Powers.CreateProject
+      ),
+    };
   }
 
   protected verifyFinancialReportingType(
