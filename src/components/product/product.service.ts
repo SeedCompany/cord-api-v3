@@ -110,7 +110,9 @@ export class ProductService {
       type,
       methodology: input.methodology,
     });
-    const steps = input.methodology
+    const steps = type.includes('OtherProduct')
+      ? availableSteps
+      : input.methodology
       ? intersection(availableSteps, input.steps)
       : [];
 
