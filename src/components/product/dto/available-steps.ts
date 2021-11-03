@@ -24,7 +24,7 @@ export const getAvailableSteps = ({
   type,
   methodology,
 }: AvailableStepsOptions): readonly Step[] => {
-  if (type === 'OtherProduct' || methodology === Methodology.OtherVisual) {
+  if (type === 'OtherProduct') {
     return [Step.Completed];
   }
   if (type === ProducibleType.EthnoArt) {
@@ -33,6 +33,7 @@ export const getAvailableSteps = ({
   if (!methodology) {
     return [];
   }
+  // region Visual Approach
   if (methodology === Methodology.Film) {
     return [Step.Translate, Step.Completed];
   }
@@ -46,6 +47,10 @@ export const getAvailableSteps = ({
       Step.Completed,
     ];
   }
+  if (methodology === Methodology.OtherVisual) {
+    return [Step.Completed];
+  }
+  // endregion
   if (ApproachToMethodologies[Approach.OralStories].includes(methodology)) {
     return [Step.Craft, Step.Test, Step.Check, Step.Completed];
   }
