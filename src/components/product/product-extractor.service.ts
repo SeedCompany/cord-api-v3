@@ -50,10 +50,16 @@ export class ProductExtractor {
     }
 
     const stepColumns = findStepColumns(sheet, 'U18:Z18', availableSteps);
+    const noteFallback = cellAsString(sheet.AI16);
 
     return findProductRows(sheet)
       .map(
-        parseProductRow(sheet, expandToFullFiscalYears(interval), stepColumns)
+        parseProductRow(
+          sheet,
+          expandToFullFiscalYears(interval),
+          stepColumns,
+          noteFallback
+        )
       )
       .filter((row) => row.steps.length > 0);
   }
@@ -119,7 +125,8 @@ const parseProductRow =
   (
     sheet: WorkSheet,
     projectRange: DateInterval,
-    stepColumns: Record<Step, string>
+    stepColumns: Record<Step, string>,
+    noteFallback?: string
   ) =>
   (row: number) => {
     const bookName = cellAsString(sheet[`Q${row}`])!; // Asserting bc loop verified this
@@ -134,5 +141,6 @@ const parseProductRow =
     const steps: readonly Step[] = entries(stepColumns).flatMap(
       ([step, column]) => (includeStep(column) ? step : [])
     );
-    return { bookName, totalVerses, steps };
+    const note = cellAsString(sheet[`AI${row}`]) ?? noteFallback;
+    return { bookName, totalVerses, steps, note };
   };

@@ -72,7 +72,7 @@ export class ExtractProductsFromPnpHandler
     // Filter out existing products, and convert new ones to create product input.
     const createdAt = DateTime.now();
     const productsToCreate = productRows.flatMap(
-      ({ bookName, totalVerses, steps }, index) => {
+      ({ bookName, totalVerses, steps, note }, index) => {
         if (has(products, [bookName, totalVerses])) {
           this.logger.debug('Product already exists, skipping', {
             bookName,
@@ -101,6 +101,7 @@ export class ExtractProductsFromPnpHandler
           scriptureReferences,
           unspecifiedScripture,
           steps,
+          describeCompletion: note,
           // Attempt to order products in the same order as specified in the PnP
           // The default sort prop is createdAt.
           // This doesn't account for row changes in subsequent PnP uploads
