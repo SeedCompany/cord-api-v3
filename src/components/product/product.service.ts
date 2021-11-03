@@ -110,9 +110,7 @@ export class ProductService {
       type,
       methodology: input.methodology,
     });
-    const steps = input.methodology
-      ? intersection(availableSteps, input.steps)
-      : [];
+    const steps = intersection(availableSteps, input.steps);
 
     const progressTarget = simpleSwitch(input.progressStepMeasurement, {
       Percent: 100,
@@ -522,13 +520,6 @@ export class ProductService {
       changes.methodology !== undefined
         ? changes.methodology
         : current.methodology;
-    if (!methodology) {
-      // If no methodology is defined don't allow steps to be changed to anything
-      // Or if methodology is cleared clear steps as well.
-      // If steps is already empty though, there's nothing to change.
-      return current.steps?.length === 0 ? undefined : [];
-    }
-
     const availableSteps = getAvailableSteps({
       type: current.produces
         ? current.produces.__typename
