@@ -362,7 +362,7 @@ export const FinancialAnalyst = new DbRole({
         { propertyName: 'primaryLocation', permission: { read, write, sensitivityAccess: Sensitivity.Medium }, },
         { propertyName: 'marketingLocation', permission: { read, write, }, },
         { propertyName: 'partnership', permission: { read, write, }, },
-        { propertyName: 'budget', permission: { read, write, }, },
+        { propertyName: 'budget', permission: { read, }, },
         { propertyName: 'modifiedAt', permission: { read, write, }, },
         { propertyName: 'fieldRegion', permission: { read, }, },
         { propertyName: 'engagement', permission: { read, }, },
