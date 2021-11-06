@@ -20,6 +20,7 @@ import { LiteracyMaterialModule } from './components/literacy-material/literacy-
 import { LocationModule } from './components/location/location.module';
 import { OrganizationModule } from './components/organization/organization.module';
 import { PartnerModule } from './components/partner/partner.module';
+import { PartnershipProducingMediumModule } from './components/partnership-producing-medium/partnership-producing-medium.module';
 import { PartnershipModule } from './components/partnership/partnership.module';
 import { PeriodicReportModule } from './components/periodic-report/periodic-report.module';
 import { PinModule } from './components/pin/pin.module';
@@ -79,6 +80,7 @@ assert(
     ChangesetModule,
     ProjectChangeRequestModule,
     ProductProgressModule,
+    PartnershipProducingMediumModule,
   ],
   controllers: [],
   providers: [DateTimeScalar, DateScalar],
