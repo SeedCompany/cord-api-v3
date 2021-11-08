@@ -6,11 +6,13 @@ import { ProjectModule } from '../project/project.module';
 import * as handlers from './handlers';
 import * as migrations from './migrations';
 import { PeriodicReportEngagementConnectionResolver } from './periodic-report-engagement-connection.resolver';
+import { PeriodicReportParentResolver } from './periodic-report-parent.resolver';
 import { PeriodicReportProjectConnectionResolver } from './periodic-report-project-connection.resolver';
 import { PeriodicReportLoader } from './periodic-report.loader';
 import { PeriodicReportRepository } from './periodic-report.repository';
 import { PeriodicReportResolver } from './periodic-report.resolver';
 import { PeriodicReportService } from './periodic-report.service';
+import { ProgressReportParentResolver } from './progress-report-parent.resolver';
 
 @Module({
   imports: [
@@ -24,6 +26,8 @@ import { PeriodicReportService } from './periodic-report.service';
     PeriodicReportResolver,
     PeriodicReportProjectConnectionResolver,
     PeriodicReportEngagementConnectionResolver,
+    PeriodicReportParentResolver,
+    ProgressReportParentResolver,
     PeriodicReportRepository,
     PeriodicReportLoader,
     ...Object.values(handlers),
