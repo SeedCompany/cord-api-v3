@@ -1,6 +1,6 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { AnonSession, ID, IdArg, Session } from '../../common';
+import { AnonSession, ID, Session } from '../../common';
 import { ProjectStepTransition, SecuredProjectStep } from './dto';
 import { ProjectRules } from './project.rules';
 
@@ -12,9 +12,8 @@ export class ProjectStepResolver {
     description: 'The available steps a project can be transitioned to.',
   })
   async transitions(
-    @Parent() step: SecuredProjectStep & { parentId: ID },
-    @AnonSession() session: Session,
-    @IdArg({ nullable: true }) id?: ID
+    @Parent() step: SecuredProjectStep & { parentId: ID; changeset?: ID },
+    @AnonSession() session: Session
   ): Promise<ProjectStepTransition[]> {
     if (!step.canRead || !step.canEdit || !step.value) {
       return [];
@@ -23,7 +22,7 @@ export class ProjectStepResolver {
       step.parentId,
       session,
       undefined,
-      id
+      step.changeset
     );
   }
 
