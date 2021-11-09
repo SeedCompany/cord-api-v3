@@ -12,7 +12,8 @@ export class EngagementStatusResolver {
     description: 'The available statuses a engagement can be transitioned to.',
   })
   async transitions(
-    @Parent() status: SecuredEngagementStatus & { parentId: ID },
+    @Parent()
+    status: SecuredEngagementStatus & { parentId: ID; changeset?: ID },
     @AnonSession() session: Session
   ): Promise<EngagementStatusTransition[]> {
     if (!status.canRead || !status.value) {
@@ -20,7 +21,9 @@ export class EngagementStatusResolver {
     }
     return await this.engagementRules.getAvailableTransitions(
       status.parentId,
-      session
+      session,
+      undefined,
+      status.changeset
     );
   }
 
