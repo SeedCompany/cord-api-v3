@@ -597,8 +597,9 @@ export class ProductService {
   ) {
     const productRefs = await this.repo.listIdsAndScriptureRefs(engagementId);
 
-    const productIds: { [Book in string]?: { [TotalVerses in number]?: ID } } =
-      {};
+    const productIds: {
+      [Book in string]?: { [TotalVerses in number | string]?: ID };
+    } = {};
 
     for (const productRef of productRefs) {
       const refs = productRef.scriptureRanges.map((raw) =>
