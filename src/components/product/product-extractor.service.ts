@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import levenshtein from 'js-levenshtein-esm';
-import { sortBy, startCase, without } from 'lodash';
+import { range, sortBy, startCase, without } from 'lodash';
+import { MergeExclusive } from 'type-fest';
 import { read, utils, WorkSheet } from 'xlsx';
 import {
   DateInterval,
@@ -16,7 +17,9 @@ import {
 } from '../../common/xlsx.util';
 import { ILogger, Logger } from '../../core';
 import { Downloadable, File } from '../file';
+import { ScriptureRange } from '../scripture';
 import { Book } from '../scripture/books';
+import { parseScripture } from '../scripture/parser';
 import { ProductStep as Step } from './dto';
 
 @Injectable()
@@ -38,6 +41,8 @@ export class ProductExtractor {
       return [] as const;
     }
 
+    const isOBS = cellAsString(sheet.P19) === 'Stories';
+
     const interval = DateInterval.tryFrom(
       cellAsDate(sheet.Z14),
       cellAsDate(sheet.Z15)
@@ -49,23 +54,42 @@ export class ProductExtractor {
       return [];
     }
 
-    const stepColumns = findStepColumns(sheet, 'U18:Z18', availableSteps);
-    const noteFallback = cellAsString(sheet.AI16);
+    const stepColumns = findStepColumns(
+      sheet,
+      isOBS ? 'U20:X20' : 'U18:Z18',
+      availableSteps
+    );
+    const noteFallback = isOBS ? undefined : cellAsString(sheet.AI16);
 
-    return findProductRows(sheet)
+    const productRows = findProductRows(sheet, isOBS)
       .map(
         parseProductRow(
           sheet,
+          isOBS,
           expandToFullFiscalYears(interval),
           stepColumns,
           noteFallback
         )
       )
       .filter((row) => row.steps.length > 0);
+
+    // Ignoring for now because not sure how to track progress
+    const _otherRows = isOBS
+      ? range(17, 20 + 1)
+          .map((row) => ({
+            title: `Train ${
+              cellAsString(sheet[`Y${row}`])?.replace(/:$/, '') ?? ''
+            }`,
+            count: cellAsNumber(sheet[`AA${row}`]) ?? 0,
+          }))
+          .filter((row) => row.count > 0)
+      : [];
+
+    return productRows;
   }
 }
 
-function findProductRows(sheet: WorkSheet) {
+function findProductRows(sheet: WorkSheet, isOBS: boolean) {
   const lastRow = sheetRange(sheet)?.e.r ?? 200;
   const matchedRows = [];
   let row = 23;
@@ -73,15 +97,22 @@ function findProductRows(sheet: WorkSheet) {
     row < lastRow &&
     cellAsString(sheet[`Q${row}`]) !== 'Other Goals and Milestones'
   ) {
-    const book = Book.tryFind(cellAsString(sheet[`Q${row}`]));
-    const totalVerses = cellAsNumber(sheet[`T${row}`]) ?? 0;
-    if (book && totalVerses > 0 && totalVerses <= book.totalVerses) {
+    if (isProductRow(sheet, isOBS, row)) {
       matchedRows.push(row);
     }
     row++;
   }
   return matchedRows;
 }
+
+const isProductRow = (sheet: WorkSheet, isOBS: boolean, row: number) => {
+  if (isOBS) {
+    return !!cellAsString(sheet[`Q${row}`]);
+  }
+  const book = Book.tryFind(cellAsString(sheet[`Q${row}`]));
+  const totalVerses = cellAsNumber(sheet[`T${row}`]) ?? 0;
+  return book && totalVerses > 0 && totalVerses <= book.totalVerses;
+};
 
 /**
  * Fuzzy match available steps to their column address.
@@ -124,13 +155,12 @@ export function findStepColumns(
 const parseProductRow =
   (
     sheet: WorkSheet,
+    isOBS: boolean,
     projectRange: DateInterval,
     stepColumns: Record<Step, string>,
     noteFallback?: string
   ) =>
   (row: number): ExtractedRow => {
-    const bookName = cellAsString(sheet[`Q${row}`])!; // Asserting bc loop verified this
-    const totalVerses = cellAsNumber(sheet[`T${row}`])!;
     // include step if it references a fiscal year within the project
     const includeStep = (column: string) => {
       const fiscalYear = cellAsNumber(sheet[`${column}${row}`]);
@@ -141,13 +171,49 @@ const parseProductRow =
     const steps: readonly Step[] = entries(stepColumns).flatMap(
       ([step, column]) => (includeStep(column) ? step : [])
     );
-    const note = cellAsString(sheet[`AI${row}`]) ?? noteFallback;
-    return { bookName, totalVerses, steps, note };
+    const note =
+      cellAsString(sheet[`${isOBS ? 'Y' : 'AI'}${row}`]) ?? noteFallback;
+
+    return {
+      ...(isOBS
+        ? {
+            story: cellAsString(sheet[`Q${row}`])!, // Asserting bc loop verified this
+            scripture: (() => {
+              try {
+                return parseScripture(
+                  cellAsString(sheet[`R${row}`])
+                    // Ignore these two strings that are meaningless here
+                    ?.replace('Composite', '')
+                    .replace('other portions', '') ?? ''
+                );
+              } catch (e) {
+                return [];
+              }
+            })(),
+            totalVerses: cellAsNumber(sheet[`T${row}`]),
+            composite: cellAsString(sheet[`S${row}`])?.toUpperCase() === 'Y',
+          }
+        : {
+            bookName: cellAsString(sheet[`Q${row}`])!, // Asserting bc loop verified this
+            totalVerses: cellAsNumber(sheet[`T${row}`])!, // Asserting bc loop verified this
+          }),
+      steps,
+      note,
+    };
   };
 
-export interface ExtractedRow {
-  bookName: string;
-  totalVerses: number;
+export type ExtractedRow = MergeExclusive<
+  {
+    story: string;
+    scripture: readonly ScriptureRange[];
+    totalVerses: number | undefined;
+    composite: boolean;
+  },
+  {
+    bookName: string;
+    totalVerses: number;
+  }
+> & {
   steps: readonly Step[];
   note: string | undefined;
-}
+};

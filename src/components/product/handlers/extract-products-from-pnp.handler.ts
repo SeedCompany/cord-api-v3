@@ -13,7 +13,6 @@ import { Book } from '../../scripture/books';
 import {
   CreateDirectScriptureProduct,
   getAvailableSteps,
-  ProducibleType,
   ProgressMeasurement,
   UpdateDirectScriptureProduct,
 } from '../dto';
@@ -57,7 +56,6 @@ export class ExtractProductsFromPnpHandler
 
     const availableSteps = getAvailableSteps({
       methodology,
-      type: ProducibleType.DirectScriptureProduct,
     });
     const productRows = await this.extractor.extract(file, availableSteps);
     if (productRows.length === 0) {
@@ -128,10 +126,16 @@ export class ExtractProductsFromPnpHandler
   ) {
     // Given that we have products to potentially create, load the existing ones
     // and map them to a book and total verse count.
-    const products = await this.products.loadProductIdsForBookAndVerse(
-      engagement.id,
-      this.logger
-    );
+    const scriptureProducts = rows[0].bookName
+      ? await this.products.loadProductIdsForBookAndVerse(
+          engagement.id,
+          this.logger
+        )
+      : {};
+
+    if (!rows[0].bookName) {
+      return []; // skip until implemented
+    }
 
     const actionableProductRows = Object.values(
       groupBy(
@@ -140,7 +144,7 @@ export class ExtractProductsFromPnpHandler
       )
     ).flatMap((rowsOfBook) => {
       const bookName = rowsOfBook[0].bookName;
-      const existing = products[bookName] ?? new Map<number, ID>();
+      const existing = scriptureProducts[bookName] ?? new Map<number, ID>();
 
       const matches: Array<
         ExtractedRow & { index: number; existingId: ID | undefined }
