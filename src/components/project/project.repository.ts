@@ -231,12 +231,20 @@ export class ProjectRepository extends CommonRepository {
         [node('project', 'Project', { id })],
         otherId ? [node('other', otherLabel, { id: otherId })] : [],
       ])
-      .optionalMatch([
-        node('project'),
-        relation('out', 'oldRel', relationName, ACTIVE),
-        node('', otherLabel),
-      ])
-      .setValues({ 'oldRel.active': false })
+      .subQuery('project', (sub) =>
+        sub
+          .match([
+            node('project'),
+            relation('out', 'oldRel', relationName, ACTIVE),
+            node('', otherLabel),
+          ])
+          .setVariables({
+            'oldRel.active': 'false',
+            'oldRel.deletedAt': 'datetime()',
+          })
+          // Ensure exactly one row is returned, for the create below
+          .return('count(oldRel) as removedRelationCount')
+      )
       .create([
         node('project'),
         relation('out', '', relationName, {
