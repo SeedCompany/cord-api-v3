@@ -282,10 +282,10 @@ export const StaffMember = new DbRole({
       sensitivityAccess: Sensitivity.Low,
       properties: [
         { propertyName: 'organization', permission: { read, sensitivityAccess: Sensitivity.Low }, },
-        { propertyName: 'pointOfContact', permission: { read, }, },
+        { propertyName: 'pointOfContact', permission: { }, },
         { propertyName: 'types', permission: { read, sensitivityAccess: Sensitivity.Low }, },
         { propertyName: 'financialReportingTypes', permission: { read, sensitivityAccess: Sensitivity.Low }, },
-        { propertyName: 'pmcEntityCode', permission: { read, sensitivityAccess: Sensitivity.Low }, },
+        { propertyName: 'pmcEntityCode', permission: { }, },
         { propertyName: 'globalInnovationsClient', permission: { read, sensitivityAccess: Sensitivity.Low }, },
         { propertyName: 'active', permission: { read, sensitivityAccess: Sensitivity.Low }, },
         { propertyName: 'address', permission: { read, sensitivityAccess: Sensitivity.Low }, },
