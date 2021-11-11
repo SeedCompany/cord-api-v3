@@ -17,6 +17,11 @@ import {
 import { Loader, LoaderOf } from '../../core';
 import { OrganizationLoader, SecuredOrganization } from '../organization';
 import { PartnerLoader, PartnerService } from '../partner';
+import {
+  ProjectListInput,
+  SecuredProjectList,
+} from '../project/dto/list-projects.dto';
+import { ProjectLoader } from '../project/project.loader';
 import { SecuredUser, UserLoader } from '../user';
 import {
   CreatePartnerInput,
@@ -78,6 +83,29 @@ export class PartnerResolver {
     return await mapSecuredValue(partner.pointOfContact, (id) =>
       users.load(id)
     );
+  }
+
+  @ResolveField(() => SecuredProjectList, {
+    description: 'The list of projects the partner has a partnership with.',
+  })
+  async projects(
+    @AnonSession() session: Session,
+    @Parent() partner: Partner,
+    @Args({
+      name: 'input',
+      type: () => ProjectListInput,
+      defaultValue: ProjectListInput.defaultVal,
+    })
+    input: ProjectListInput,
+    @Loader(ProjectLoader) loader: LoaderOf<ProjectLoader>
+  ): Promise<SecuredProjectList> {
+    const list = await this.partnerService.listProjects(
+      partner,
+      input,
+      session
+    );
+    loader.primeAll(list.items);
+    return list;
   }
 
   @Mutation(() => CreatePartnerOutput, {

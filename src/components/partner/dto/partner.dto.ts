@@ -16,6 +16,7 @@ import {
 } from '../../../common';
 import { ScopedRole } from '../../authorization';
 import { FinancialReportingType } from '../../partnership/dto/financial-reporting-type';
+import { IProject } from '../../project/dto';
 import { SecuredPartnerTypes } from './partner-type.enum';
 
 @ObjectType({
@@ -31,6 +32,9 @@ export abstract class SecuredFinancialReportingTypes extends SecuredEnumList(
 export class Partner extends Resource {
   static readonly Props = keysOf<Partner>();
   static readonly SecuredProps = keysOf<SecuredProps<Partner>>();
+  static readonly Relations = {
+    projects: [IProject],
+  };
 
   readonly organization: Secured<ID>;
 
