@@ -198,17 +198,17 @@ export class PartnerRepository extends DtoRepository(Partner) {
             ]
           : []),
       ])
-      .optionalMatch([
-        ...(limitedScope
-          ? [
+      .apply((q) =>
+        limitedScope
+          ? q.optionalMatch([
               node('project', 'Project'),
               relation('out', '', 'partnership'),
               node('', 'Partnership'),
               relation('out', '', 'partner'),
               node('node'),
-            ]
-          : []),
-      ])
+            ])
+          : q
+      )
       // match requesting user once (instead of once per row)
       .match(requestingUser(session))
       .apply(matchProjectSensToLimitedScopeMap(limitedScope))
@@ -227,7 +227,6 @@ export class PartnerRepository extends DtoRepository(Partner) {
         })
       )
       .apply(paginate(input, this.hydrate(session)))
-      .logIt()
       .first();
     return result!; // result from paginate() will always have 1 row.
   }
