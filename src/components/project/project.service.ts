@@ -339,7 +339,12 @@ export class ProjectService {
       }
     }
     if (primaryLocationId !== undefined) {
-      await this.repo.updateLocation(input.id, primaryLocationId);
+      await this.repo.updateRelation(
+        'primaryLocation',
+        'Location',
+        input.id,
+        primaryLocationId
+      );
       result = {
         ...result,
         primaryLocation: primaryLocationId,
@@ -353,7 +358,12 @@ export class ProjectService {
         'fieldRegionId',
         'Field region not found'
       );
-      await this.repo.updateFieldRegion(input.id, fieldRegionId);
+      await this.repo.updateRelation(
+        'fieldRegion',
+        'FieldRegion',
+        input.id,
+        fieldRegionId
+      );
       result = {
         ...result,
         fieldRegion: fieldRegionId,

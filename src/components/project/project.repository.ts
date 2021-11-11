@@ -219,54 +219,31 @@ export class ProjectRepository extends CommonRepository {
     });
   }
 
-  async updateLocation(id: ID, primaryLocationId: ID | null) {
+  async updateRelation(
+    relationName: string,
+    otherLabel: string,
+    id: ID,
+    otherId: ID | null
+  ) {
     await this.db
       .query()
-      .match(node('project', 'Project', { id: id }))
-      .match(
-        primaryLocationId
-          ? [node('location', 'Location', { id: primaryLocationId })]
-          : []
-      )
+      .match([
+        [node('project', 'Project', { id })],
+        otherId ? [node('other', otherLabel, { id: otherId })] : [],
+      ])
       .optionalMatch([
-        node('project', 'Project', { id: id }),
-        relation('out', 'oldRel', 'primaryLocation', ACTIVE),
-        node(''),
+        node('project'),
+        relation('out', 'oldRel', relationName, ACTIVE),
+        node('', otherLabel),
       ])
       .setValues({ 'oldRel.active': false })
       .create([
         node('project'),
-        relation('out', '', 'primaryLocation', {
+        relation('out', '', relationName, {
           active: true,
           createdAt: DateTime.local(),
         }),
-        node('location'),
-      ])
-      .run();
-  }
-
-  async updateFieldRegion(id: ID, fieldRegionId: ID | null) {
-    await this.db
-      .query()
-      .match([node('project', 'Project', { id: id })])
-      .match(
-        fieldRegionId
-          ? [node('region', 'FieldRegion', { id: fieldRegionId })]
-          : []
-      )
-      .optionalMatch([
-        node('project'),
-        relation('out', 'oldRel', 'fieldRegion', ACTIVE),
-        node(''),
-      ])
-      .setValues({ 'oldRel.active': false })
-      .create([
-        node('project'),
-        relation('out', '', 'fieldRegion', {
-          active: true,
-          createdAt: DateTime.local(),
-        }),
-        node('region'),
+        node('other'),
       ])
       .run();
   }
