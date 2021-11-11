@@ -10,7 +10,6 @@ import {
   matchProps,
   merge,
   paginate,
-  permissionsOfNode,
   requestingUser,
   sorting,
 } from '../../core/database/query';
@@ -117,10 +116,10 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
   }
 
   async list({ filter, ...input }: FieldZoneListInput, session: Session) {
-    const label = 'FieldZone';
     const result = await this.db
       .query()
-      .match([requestingUser(session), ...permissionsOfNode(label)])
+      .match(requestingUser(session))
+      .match(node('node', 'FieldZone'))
       .apply(sorting(FieldZone, input))
       .apply(paginate(input, this.hydrate()))
       .first();

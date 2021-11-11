@@ -171,6 +171,9 @@ export class Language extends Resource {
     `,
   })
   readonly presetInventory: SecuredBoolean;
+
+  // Not returned, only used to cache the sensitivity for determining permissions
+  readonly effectiveSensitivity: Sensitivity;
 }
 
 @ObjectType({

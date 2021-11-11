@@ -12,12 +12,18 @@ import {
   Language,
 } from '../../src/components/language/dto';
 import { Location, SecuredLocationList } from '../../src/components/location';
+import { Project } from '../../src/components/project';
 import {
   addLocationToLanguage,
   createLanguage,
+  createLanguageEngagement,
   createLocation,
+  createProject,
+  createProjectMember,
   createSession,
   createTestApp,
+  listLanguageIds,
+  Raw,
   readOneLanguage,
   readOneLanguageEthnologue,
   readOneLanguageLocation,
@@ -36,6 +42,7 @@ describe('Language Security e2e', () => {
   let db: Connection;
   let testLanguage: Language;
   let testLocation: Location;
+  let testProject: Raw<Project>;
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -45,9 +52,13 @@ describe('Language Security e2e', () => {
       Powers.CreateLanguage,
       Powers.CreateLocation,
       Powers.CreateEthnologueLanguage,
+      Powers.CreateProject,
+      Powers.CreateProjectMember,
+      Powers.CreateLanguageEngagement,
     ]);
     testLocation = await createLocation(app);
     testLanguage = await createLanguage(app, { sensitivity: Sensitivity.Low });
+    testProject = await createProject(app);
     await addLocationToLanguage(app, testLocation.id, testLanguage.id);
   });
 
@@ -127,6 +138,64 @@ describe('Language Security e2e', () => {
           expect(read.items).toHaveLength(0);
         } else {
           expect(read.items).not.toHaveLength(0);
+        }
+      });
+    });
+  });
+
+  describe('Listing is secure', () => {
+    describe.each`
+      role                                      | globalCanList | projectCanList
+      ${Role.Administrator}                     | ${true}       | ${true}
+      ${Role.Consultant}                        | ${true}       | ${true}
+      ${Role.ConsultantManager}                 | ${true}       | ${true}
+      ${Role.Controller}                        | ${true}       | ${true}
+      ${Role.FieldOperationsDirector}           | ${true}       | ${true}
+      ${Role.FinancialAnalyst}                  | ${true}       | ${true}
+      ${Role.Fundraising}                       | ${true}       | ${true}
+      ${Role.Intern}                            | ${true}       | ${true}
+      ${Role.LeadFinancialAnalyst}              | ${true}       | ${true}
+      ${Role.Leadership}                        | ${true}       | ${true}
+      ${Role.Liaison}                           | ${true}       | ${true}
+      ${Role.Marketing}                         | ${true}       | ${true}
+      ${Role.Mentor}                            | ${true}       | ${true}
+      ${Role.ProjectManager}                    | ${true}       | ${true}
+      ${Role.RegionalCommunicationsCoordinator} | ${true}       | ${true}
+      ${Role.RegionalDirector}                  | ${true}       | ${true}
+      ${Role.StaffMember}                       | ${true}       | ${true}
+      ${Role.Translator}                        | ${true}       | ${true}
+    `('$role', ({ role, globalCanList, projectCanList }) => {
+      it('Global canList', async () => {
+        const read = await runInIsolatedSession(app, async () => {
+          await registerUser(app, { roles: role });
+          return await listLanguageIds(app);
+        });
+        if (!globalCanList) {
+          expect(read).toHaveLength(0);
+        } else {
+          expect(read).not.toHaveLength(0);
+        }
+      });
+
+      it('Project canList', async () => {
+        const user = await runInIsolatedSession(app, async () => {
+          return await registerUser(app, {
+            roles: [role],
+          });
+        });
+        await createProjectMember(app, {
+          projectId: testProject.id,
+          roles: role,
+          userId: user.id,
+        });
+        await createLanguageEngagement(app, { projectId: testProject.id });
+        const read = await user.runAs(() => {
+          return listLanguageIds(app);
+        });
+        if (!projectCanList) {
+          expect(read).toHaveLength(0);
+        } else {
+          expect(read).not.toHaveLength(0);
         }
       });
     });

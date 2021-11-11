@@ -118,6 +118,7 @@ export const Administrator = new DbRole({
     }),
     new DbBaseNodeGrant<DbFieldZone>({
       __className: 'DbFieldZone',
+      canList: true,
       properties: [
         { propertyName: 'director', permission: { read, write, }, },
         { propertyName: 'name', permission: { read, write, }, },
@@ -147,6 +148,7 @@ export const Administrator = new DbRole({
     }),
     new DbBaseNodeGrant<DbFilm>({
       __className: 'DbFilm',
+      canList: true,
       properties: [
         { propertyName: 'name', permission: { read, write, }, },
         { propertyName: 'scriptureReferences', permission: { read, write, }, },
@@ -155,6 +157,7 @@ export const Administrator = new DbRole({
     }),
     new DbBaseNodeGrant<DbFundingAccount>({
       __className: 'DbFundingAccount',
+      canList: true,
       properties: [
         { propertyName: 'name', permission: { read, write, }, },
         { propertyName: 'accountNumber', permission: { read, write, }, },
@@ -189,6 +192,7 @@ export const Administrator = new DbRole({
     }),
     new DbBaseNodeGrant<DbLanguage>({
       __className: 'DbLanguage',
+      canList: true,
       properties: [
         { propertyName: 'displayName', permission: { read, write, }, },
         { propertyName: 'displayNamePronunciation', permission: { read, write, }, },

@@ -894,6 +894,10 @@ export const fieldZone = gql`
   fragment fieldZone on FieldZone {
     id
     createdAt
+    director {
+      canRead
+      canEdit
+    }
     name {
       value
       canEdit

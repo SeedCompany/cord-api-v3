@@ -156,6 +156,7 @@ export const ProjectManagerGlobal = new DbRole({
     }),
     new DbBaseNodeGrant<DbFilm>({
       __className: 'DbFilm',
+      canList: true,
       properties: [
         { propertyName: 'name', permission: { read, write, }, },
         { propertyName: 'scriptureReferences', permission: { read, write, }, },
@@ -164,6 +165,7 @@ export const ProjectManagerGlobal = new DbRole({
     }),
     new DbBaseNodeGrant<DbFundingAccount>({
       __className: 'DbFundingAccount',
+      canList: true,
       properties: [
         { propertyName: 'name', permission: { read, }, },
         { propertyName: 'accountNumber', permission: { read, }, },
@@ -198,6 +200,7 @@ export const ProjectManagerGlobal = new DbRole({
     }),
     new DbBaseNodeGrant<DbLanguage>({
       __className: 'DbLanguage',
+      canList: true,
       properties: [
         { propertyName: 'displayName', permission: { read, }, },
         { propertyName: 'displayNamePronunciation', permission: { read, }, },
@@ -376,6 +379,7 @@ export const ProjectManagerGlobal = new DbRole({
     }),
     new DbBaseNodeGrant<DbFieldZone>({
       __className: 'DbFieldZone',
+      canList: true,
       properties: [
         { propertyName: 'director', permission: { read, write, }, },
         { propertyName: 'name', permission: { read, write, }, },

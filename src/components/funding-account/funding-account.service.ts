@@ -4,6 +4,7 @@ import {
   ID,
   NotFoundException,
   ObjectView,
+  SecuredList,
   ServerException,
   Session,
   UnauthorizedException,
@@ -147,7 +148,11 @@ export class FundingAccountService {
     input: FundingAccountListInput,
     session: Session
   ): Promise<FundingAccountListOutput> {
-    const results = await this.repo.list(input, session);
-    return await mapListResults(results, (dto) => this.secure(dto, session));
+    if (await this.authorizationService.canList(FundingAccount, session)) {
+      const results = await this.repo.list(input, session);
+      return await mapListResults(results, (dto) => this.secure(dto, session));
+    } else {
+      return SecuredList.Redacted;
+    }
   }
 }
