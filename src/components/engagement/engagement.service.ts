@@ -274,13 +274,13 @@ export class EngagementService {
       !session.roles.includes(`global:Administrator`)
         ? false
         : await this.repo.checkDeletePermission(dto.id, session);
-
     if (isLanguageEngagement) {
       // help TS understand that the secured props are for a LanguageEngagement
       const secured = securedProperties as SecuredResource<
         typeof LanguageEngagement,
         false
       >;
+
       return {
         ...(dto as UnsecuredDto<LanguageEngagement>),
         ...secured,
@@ -502,6 +502,7 @@ export class EngagementService {
     view?: ObjectView
   ): Promise<EngagementListOutput> {
     const results = await this.repo.list(input, session, view?.changeset);
+
     return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 

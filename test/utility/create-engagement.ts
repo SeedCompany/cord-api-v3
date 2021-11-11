@@ -20,6 +20,41 @@ import {
   RawLanguageEngagement,
 } from './fragments';
 
+export async function listInternshipEngagements(app: TestApp) {
+  const result = await app.graphql.mutate(
+    gql`
+      query {
+        engagements(input: { filter: { type: "language" } }) {
+          items {
+            ...internshipEngagement
+          }
+        }
+      }
+      ${fragments.internshipEngagement}
+    `
+  );
+  const engagements = result.engagements.items;
+  expect(engagements).toBeTruthy();
+  return engagements;
+}
+export async function listLanguageEngagements(app: TestApp) {
+  const result = await app.graphql.mutate(
+    gql`
+      query {
+        engagements(input: { filter: { type: "language" } }) {
+          items {
+            ...languageEngagement
+          }
+        }
+      }
+      ${fragments.languageEngagement}
+    `
+  );
+  const engagements = result.engagements.items;
+  expect(engagements).toBeTruthy();
+  return engagements;
+}
+
 export async function listCeremonies(app: TestApp) {
   const result = await app.graphql.mutate(
     gql`
@@ -76,6 +111,23 @@ export async function readOneLanguageEngagementParatextId(
     { id }
   );
   const actual: RawLanguageEngagement = result.engagement;
+  expect(actual).toBeTruthy();
+  return actual;
+}
+
+export async function readOneInternshipEngagement(app: TestApp, id: ID) {
+  const result = await app.graphql.query(
+    gql`
+      query readOneInternshipEngagement($id: ID!) {
+        engagement(id: $id) {
+          ...internshipEngagement
+        }
+      }
+      ${fragments.internshipEngagement}
+    `,
+    { id }
+  );
+  const actual: RawInternshipEngagement = result.engagement;
   expect(actual).toBeTruthy();
   return actual;
 }
