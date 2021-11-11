@@ -167,7 +167,7 @@ export class PartnerService {
 
     try {
       await this.repo.deleteNode(object);
-    } catch (exception) {
+    } catch (exception: any) {
       this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);
     }
@@ -180,8 +180,21 @@ export class PartnerService {
     session: Session
   ): Promise<PartnerListOutput> {
     const limited = (await this.authorizationService.canList(Partner, session))
-      ? undefined
-      : await this.authorizationService.getListRoleSensitivityMapping(Partner);
+      ? // --- need a sensitivity mapping for global because several roles have a global and/or project sensitivity access for nearly all props.
+        {
+          ...(await this.authorizationService.getListRoleSensitivityMapping(
+            Partner,
+            'global'
+          )),
+          ...(await this.authorizationService.getListRoleSensitivityMapping(
+            Partner,
+            'project'
+          )),
+        }
+      : await this.authorizationService.getListRoleSensitivityMapping(
+          Partner,
+          'project'
+        );
     const results = await this.repo.list(input, session, limited);
     return await mapListResults(results, (dto) => this.secure(dto, session));
   }

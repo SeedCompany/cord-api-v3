@@ -186,18 +186,11 @@ export class PartnerRepository extends DtoRepository(Partner) {
   ) {
     const result = await this.db
       .query()
+      .matchNode('node', 'Partner')
       .match([
-        ...(limitedScope
-          ? [
-              node('project', 'Project'),
-              relation('out', '', 'partnership'),
-              node('', 'Partnership'),
-              relation('out', '', 'partner'),
-            ]
-          : []),
-        node('node', 'Partner'),
         ...(filter.userId && session.userId
           ? [
+              node('node'),
               relation('out', '', 'organization', ACTIVE),
               node('', 'Organization'),
               relation('in', '', 'organization', ACTIVE),
@@ -205,6 +198,17 @@ export class PartnerRepository extends DtoRepository(Partner) {
             ]
           : []),
       ])
+      .apply((q) =>
+        limitedScope
+          ? q.optionalMatch([
+              node('project', 'Project'),
+              relation('out', '', 'partnership'),
+              node('', 'Partnership'),
+              relation('out', '', 'partner'),
+              node('node'),
+            ])
+          : q
+      )
       // match requesting user once (instead of once per row)
       .match(requestingUser(session))
       .apply(matchProjectSensToLimitedScopeMap(limitedScope))
