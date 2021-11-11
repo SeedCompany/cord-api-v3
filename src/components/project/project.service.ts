@@ -315,33 +315,31 @@ export class ProjectService {
       changeset
     );
 
-    if (primaryLocationId !== undefined) {
-      if (primaryLocationId) {
-        try {
-          const location = await this.locationService.readOne(
-            primaryLocationId,
-            session
+    if (primaryLocationId) {
+      try {
+        const location = await this.locationService.readOne(
+          primaryLocationId,
+          session
+        );
+        if (!location.fundingAccount.value) {
+          throw new InputException(
+            'Cannot connect location without a funding account',
+            'project.primaryLocationId'
           );
-          if (!location.fundingAccount.value) {
-            throw new InputException(
-              'Cannot connect location without a funding account',
-              'project.primaryLocationId'
-            );
-          }
-        } catch (e) {
-          if (e instanceof NotFoundException) {
-            throw new NotFoundException(
-              'Primary location not found',
-              'project.primaryLocationId',
-              e
-            );
-          }
-          throw e;
         }
+      } catch (e) {
+        if (e instanceof NotFoundException) {
+          throw new NotFoundException(
+            'Primary location not found',
+            'project.primaryLocationId',
+            e
+          );
+        }
+        throw e;
       }
-
+    }
+    if (primaryLocationId !== undefined) {
       await this.repo.updateLocation(input.id, primaryLocationId);
-
       result = {
         ...result,
         primaryLocation: primaryLocationId,
@@ -349,14 +347,12 @@ export class ProjectService {
     }
 
     if (fieldRegionId !== undefined) {
-      if (fieldRegionId) {
-        await this.validateOtherResourceId(
-          fieldRegionId,
-          'FieldRegion',
-          'fieldRegionId',
-          'Field region not found'
-        );
-      }
+      await this.validateOtherResourceId(
+        fieldRegionId,
+        'FieldRegion',
+        'fieldRegionId',
+        'Field region not found'
+      );
       await this.repo.updateFieldRegion(input.id, fieldRegionId);
       result = {
         ...result,
@@ -632,7 +628,7 @@ export class ProjectService {
   }
 
   protected async validateOtherResourceId(
-    ids: Many<string> | undefined,
+    ids: Many<string> | null | undefined,
     label: string,
     resourceField: string,
     errMsg: string
