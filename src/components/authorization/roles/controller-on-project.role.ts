@@ -181,7 +181,7 @@ export const ControllerOnProject = new DbRole({
         { propertyName: 'ceremony', permission: { read, }, },
         { propertyName: 'completeDate', permission: { read, }, },
         { propertyName: 'countryOfOrigin', permission: { read, }, },
-        { propertyName: 'disbursementCompleteDate', permission: { read, }, },
+        { propertyName: 'disbursementCompleteDate', permission: { read, write, }, },
         { propertyName: 'endDate', permission: { read, }, },
         { propertyName: 'endDateOverride', permission: { read, }, },
         { propertyName: 'growthPlan', permission: { read, }, },
@@ -230,7 +230,7 @@ export const ControllerOnProject = new DbRole({
       properties: [
         { propertyName: 'ceremony', permission: { read, }, },
         { propertyName: 'completeDate', permission: { read, }, },
-        { propertyName: 'disbursementCompleteDate', permission: { read, }, },
+        { propertyName: 'disbursementCompleteDate', permission: { read, write, }, },
         { propertyName: 'endDate', permission: { read, }, },
         { propertyName: 'endDateOverride', permission: { read, }, },
         { propertyName: 'firstScripture', permission: { read, }, },

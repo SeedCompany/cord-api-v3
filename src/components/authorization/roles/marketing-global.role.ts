@@ -174,7 +174,7 @@ export const Marketing = new DbRole({
         { propertyName: 'ceremony', permission: { read, write, }, },
         { propertyName: 'completeDate', permission: { read, write, }, },
         { propertyName: 'countryOfOrigin', permission: { read, write, }, },
-        { propertyName: 'disbursementCompleteDate', permission: { read, write, }, },
+        { propertyName: 'disbursementCompleteDate', permission: { read, }, },
         { propertyName: 'endDate', permission: { read, write, }, },
         { propertyName: 'endDateOverride', permission: { read, write, }, },
         { propertyName: 'growthPlan', permission: { read, write, }, },
