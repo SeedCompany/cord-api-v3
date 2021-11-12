@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Query } from 'cypher-query-builder';
 import {
+  getDbClassLabels,
   ID,
   MaybeUnsecuredInstance,
   ResourceShape,
@@ -36,6 +37,21 @@ export const DtoRepository = <TResourceStatic extends ResourceShape<any>>(
         changes,
         changeset,
       });
+    }
+
+    async updateRelation(
+      relationName: string,
+      otherLabel: string,
+      id: ID,
+      otherId: ID | null
+    ) {
+      await super.updateRelation(
+        relationName,
+        otherLabel,
+        id,
+        otherId,
+        getDbClassLabels(resource)[0]
+      );
     }
 
     /**
