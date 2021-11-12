@@ -225,35 +225,13 @@ export class ProjectRepository extends CommonRepository {
     id: ID,
     otherId: ID | null
   ) {
-    await this.db
-      .query()
-      .match([
-        [node('project', 'Project', { id })],
-        otherId ? [node('other', otherLabel, { id: otherId })] : [],
-      ])
-      .subQuery('project', (sub) =>
-        sub
-          .match([
-            node('project'),
-            relation('out', 'oldRel', relationName, ACTIVE),
-            node('', otherLabel),
-          ])
-          .setVariables({
-            'oldRel.active': 'false',
-            'oldRel.deletedAt': 'datetime()',
-          })
-          // Ensure exactly one row is returned, for the create below
-          .return('count(oldRel) as removedRelationCount')
-      )
-      .create([
-        node('project'),
-        relation('out', '', relationName, {
-          active: true,
-          createdAt: DateTime.local(),
-        }),
-        node('other'),
-      ])
-      .run();
+    await super.updateRelation(
+      relationName,
+      otherLabel,
+      id,
+      otherId,
+      'Project'
+    );
   }
 
   async list(
