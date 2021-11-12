@@ -83,6 +83,38 @@ export class ApplyFinalizedChangesetToEngagement
         .return('project')
         .run();
 
+      /**
+       * Apply Language changes
+       * Even if the LanguageEngagement is created in changesets,
+       * We need to commit changes because Language Node is not connected directly with Changeset
+       */
+      await this.db
+        .query()
+        .match([
+          node('project', 'Project'),
+          relation('out', '', 'changeset', ACTIVE),
+          node('changeset', 'Changeset', { id: changesetId }),
+        ])
+        .subQuery((sub) =>
+          sub
+            .with('project, changeset')
+            .match([
+              node('project'),
+              relation('out', 'engagement', ACTIVE),
+              node('le', 'LanguageEngagement'),
+              relation('out', '', 'language', ACTIVE),
+              node('node', 'Language'),
+            ])
+            .apply(
+              status === ProjectChangeRequestStatus.Approved
+                ? commitChangesetProps()
+                : rejectChangesetProps()
+            )
+            .return('1')
+        )
+        .return('project')
+        .run();
+
       // Remove deleting engagements
       await this.removeDeletingEngagements(changesetId);
     } catch (exception) {

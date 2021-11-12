@@ -109,14 +109,14 @@ export class LanguageService {
   async readOne(
     langId: ID,
     session: Session,
-    _view?: ObjectView
+    view?: ObjectView
   ): Promise<Language> {
-    const dto = await this.repo.readOne(langId, session);
+    const dto = await this.repo.readOne(langId, session, view);
     return await this.secure(dto, session);
   }
 
-  async readMany(ids: readonly ID[], session: Session) {
-    const languages = await this.repo.readMany(ids, session);
+  async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
+    const languages = await this.repo.readMany(ids, session, view);
     return await Promise.all(languages.map((dto) => this.secure(dto, session)));
   }
 
@@ -154,12 +154,16 @@ export class LanguageService {
     };
   }
 
-  async update(input: UpdateLanguage, session: Session): Promise<Language> {
+  async update(
+    input: UpdateLanguage,
+    session: Session,
+    view?: ObjectView
+  ): Promise<Language> {
     if (input.hasExternalFirstScripture) {
       await this.verifyExternalFirstScripture(input.id);
     }
 
-    const object = await this.readOne(input.id, session);
+    const object = await this.readOne(input.id, session, view);
     const changes = this.repo.getActualChanges(object, input);
     await this.authorizationService.verifyCanEditChanges(
       Language,
@@ -178,9 +182,9 @@ export class LanguageService {
       );
     }
 
-    await this.repo.updateProperties(object, simpleChanges);
+    await this.repo.updateProperties(object, simpleChanges, view?.changeset);
 
-    return await this.readOne(input.id, session);
+    return await this.readOne(input.id, session, view);
   }
 
   async delete(id: ID, session: Session): Promise<void> {

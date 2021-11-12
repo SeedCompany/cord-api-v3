@@ -10,6 +10,9 @@ export class KnownLanguageResolver {
     @Parent() knownLanguage: KnownLanguage,
     @Loader(LanguageLoader) languages: LoaderOf<LanguageLoader>
   ): Promise<Language> {
-    return await languages.load(knownLanguage.language);
+    return await languages.load({
+      id: knownLanguage.language,
+      view: { active: true },
+    });
   }
 }

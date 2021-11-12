@@ -1,5 +1,10 @@
 import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { AnonSession, mapSecuredValue, Session } from '../../common';
+import {
+  AnonSession,
+  mapSecuredValue,
+  Session,
+  viewOfChangeset,
+} from '../../common';
 import { Loader, LoaderOf } from '../../core';
 import { FileNodeLoader, resolveDefinedFile, SecuredFile } from '../file';
 import { LanguageLoader } from '../language';
@@ -19,7 +24,7 @@ export class LanguageEngagementResolver {
     @Loader(LanguageLoader) languages: LoaderOf<LanguageLoader>
   ): Promise<SecuredLanguage> {
     return await mapSecuredValue(engagement.language, (id) =>
-      languages.load(id)
+      languages.load({ id, view: viewOfChangeset(engagement.changeset) })
     );
   }
 
