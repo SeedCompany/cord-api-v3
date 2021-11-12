@@ -44,9 +44,9 @@ export class SearchRepository {
       .apply(fullTextQuery('propValue', '$query', ['node as property']))
       .apply(propToBaseNode())
       .apply(
-        // Ignore authorization if only searching for EthnoArt
+        // Ignore authorization if only searching for EthnoArt or FundingAccounts
         // This is a temporary fix while authorization refactor is in progress
-        input.type?.join(',') === 'EthnoArt'
+        ['EthnoArt', 'FundingAccount'].includes(input.type?.join(',') ?? '')
           ? null
           : filterToRequestedAndAllowed()
       )
