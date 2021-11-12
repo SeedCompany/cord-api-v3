@@ -219,58 +219,41 @@ export class ProjectRepository extends CommonRepository {
     });
   }
 
-  async updateLocation(input: UpdateProject, createdAt: DateTime) {
-    const query = this.db
+  async updateRelation(
+    relationName: string,
+    otherLabel: string,
+    id: ID,
+    otherId: ID | null
+  ) {
+    await this.db
       .query()
-      .match(node('project', 'Project', { id: input.id }))
-      .match(node('location', 'Location', { id: input.primaryLocationId }))
-      .with('project, location')
-      .limit(1)
-      .optionalMatch([
-        node('project', 'Project', { id: input.id }),
-        relation('out', 'oldRel', 'primaryLocation', ACTIVE),
-        node(''),
+      .match([
+        [node('project', 'Project', { id })],
+        otherId ? [node('other', otherLabel, { id: otherId })] : [],
       ])
-      .setValues({ 'oldRel.active': false })
-      .with('project, location')
-      .limit(1)
+      .subQuery('project', (sub) =>
+        sub
+          .match([
+            node('project'),
+            relation('out', 'oldRel', relationName, ACTIVE),
+            node('', otherLabel),
+          ])
+          .setVariables({
+            'oldRel.active': 'false',
+            'oldRel.deletedAt': 'datetime()',
+          })
+          // Ensure exactly one row is returned, for the create below
+          .return('count(oldRel) as removedRelationCount')
+      )
       .create([
         node('project'),
-        relation('out', '', 'primaryLocation', {
+        relation('out', '', relationName, {
           active: true,
-          createdAt,
+          createdAt: DateTime.local(),
         }),
-        node('location'),
-      ]);
-
-    await query.run();
-  }
-
-  async updateFieldRegion(input: UpdateProject, createdAt: DateTime) {
-    const query = this.db
-      .query()
-      .match(node('project', 'Project', { id: input.id }))
-      .with('project')
-      .limit(1)
-      .match([node('region', 'FieldRegion', { id: input.fieldRegionId })])
-      .optionalMatch([
-        node('project'),
-        relation('out', 'oldRel', 'fieldRegion', ACTIVE),
-        node(''),
+        node('other'),
       ])
-      .setValues({ 'oldRel.active': false })
-      .with('project, region')
-      .limit(1)
-      .create([
-        node('project'),
-        relation('out', '', 'fieldRegion', {
-          active: true,
-          createdAt,
-        }),
-        node('region'),
-      ]);
-
-    await query.run();
+      .run();
   }
 
   async list(

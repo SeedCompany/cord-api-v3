@@ -1,6 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Many } from 'lodash';
-import { DateTime } from 'luxon';
 import {
   DuplicateException,
   ID,
@@ -338,26 +337,33 @@ export class ProjectService {
         }
         throw e;
       }
-
-      const createdAt = DateTime.local();
-
-      await this.repo.updateLocation(input, createdAt);
-
+    }
+    if (primaryLocationId !== undefined) {
+      await this.repo.updateRelation(
+        'primaryLocation',
+        'Location',
+        input.id,
+        primaryLocationId
+      );
       result = {
         ...result,
         primaryLocation: primaryLocationId,
       };
     }
 
-    if (fieldRegionId) {
+    if (fieldRegionId !== undefined) {
       await this.validateOtherResourceId(
         fieldRegionId,
         'FieldRegion',
         'fieldRegionId',
         'Field region not found'
       );
-      const createdAt = DateTime.local();
-      await this.repo.updateFieldRegion(input, createdAt);
+      await this.repo.updateRelation(
+        'fieldRegion',
+        'FieldRegion',
+        input.id,
+        fieldRegionId
+      );
       result = {
         ...result,
         fieldRegion: fieldRegionId,
@@ -632,7 +638,7 @@ export class ProjectService {
   }
 
   protected async validateOtherResourceId(
-    ids: Many<string> | undefined,
+    ids: Many<string> | null | undefined,
     label: string,
     resourceField: string,
     errMsg: string
