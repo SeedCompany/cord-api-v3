@@ -29,6 +29,7 @@ import { ProjectListInput, SecuredProjectList } from '../project/dto';
 import {
   CreateLanguageInput,
   CreateLanguageOutput,
+  DeleteLanguageOutput,
   Language,
   LanguageListInput,
   LanguageListOutput,
@@ -190,15 +191,15 @@ export class LanguageResolver {
     return { language };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => DeleteLanguageOutput, {
     description: 'Delete a language',
   })
   async deleteLanguage(
     @LoggedInSession() session: Session,
     @IdArg() id: ID
-  ): Promise<boolean> {
+  ): Promise<DeleteLanguageOutput> {
     await this.langService.delete(id, session);
-    return true;
+    return { success: true };
   }
 
   @Mutation(() => Language, {

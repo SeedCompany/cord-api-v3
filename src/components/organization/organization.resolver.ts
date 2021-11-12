@@ -26,6 +26,7 @@ import { OrganizationLoader, OrganizationService } from '../organization';
 import {
   CreateOrganizationInput,
   CreateOrganizationOutput,
+  DeleteOrganizationOutput,
   Organization,
   OrganizationListInput,
   OrganizationListOutput,
@@ -120,15 +121,15 @@ export class OrganizationResolver {
     return { organization };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => DeleteOrganizationOutput, {
     description: 'Delete an organization',
   })
   async deleteOrganization(
     @LoggedInSession() session: Session,
     @IdArg() id: ID
-  ): Promise<boolean> {
+  ): Promise<DeleteOrganizationOutput> {
     await this.orgs.delete(id, session);
-    return true;
+    return { success: true };
   }
 
   @Mutation(() => Organization, {

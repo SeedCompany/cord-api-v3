@@ -103,7 +103,9 @@ describe('Location e2e', () => {
     const result = await app.graphql.mutate(
       gql`
         mutation deleteLocation($id: ID!) {
-          deleteLocation(id: $id)
+          deleteLocation(id: $id) {
+            __typename
+          }
         }
       `,
       {

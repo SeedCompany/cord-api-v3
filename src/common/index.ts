@@ -6,6 +6,7 @@ export * from './date-filter.input';
 export * from './db-label.decorator';
 export * from './db-sort.decorator';
 export * from './db-unique.decorator';
+export * from './mutation-placeholder.output';
 export * from './exceptions';
 export * from './firstLettersOfWords';
 export * from './fiscal-year';

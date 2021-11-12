@@ -4,6 +4,7 @@ import { Loader, LoaderOf } from '../../core';
 import {
   CreateFilmInput,
   CreateFilmOutput,
+  DeleteFilmOutput,
   Film,
   FilmListInput,
   FilmListOutput,
@@ -67,14 +68,14 @@ export class FilmResolver {
     return { film };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => DeleteFilmOutput, {
     description: 'Delete a film',
   })
   async deleteFilm(
     @LoggedInSession() session: Session,
     @IdArg() id: ID
-  ): Promise<boolean> {
+  ): Promise<DeleteFilmOutput> {
     await this.filmService.delete(id, session);
-    return true;
+    return { success: true };
   }
 }

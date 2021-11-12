@@ -22,6 +22,7 @@ import {
   CreateInternshipEngagementOutput,
   CreateLanguageEngagementInput,
   CreateLanguageEngagementOutput,
+  DeleteEngagementOutput,
   Engagement,
   EngagementListInput,
   EngagementListOutput,
@@ -152,14 +153,14 @@ export class EngagementResolver {
     return { engagement };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => DeleteEngagementOutput, {
     description: 'Delete an engagement',
   })
   async deleteEngagement(
     @Args() { id, changeset }: ChangesetIds,
     @LoggedInSession() session: Session
-  ): Promise<boolean> {
+  ): Promise<DeleteEngagementOutput> {
     await this.service.delete(id, session, changeset);
-    return true;
+    return { success: true };
   }
 }

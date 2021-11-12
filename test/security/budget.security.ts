@@ -330,7 +330,9 @@ async function deleteEngagement(app: TestApp, id: ID) {
   await app.graphql.mutate(
     gql`
       mutation deleteEngagement($id: ID!) {
-        deleteEngagement(id: $id)
+        deleteEngagement(id: $id) {
+          __typename
+        }
       }
     `,
     {

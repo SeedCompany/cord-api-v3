@@ -110,7 +110,9 @@ describe('Film e2e', () => {
     const result = await app.graphql.mutate(
       gql`
         mutation deleteFilm($id: ID!) {
-          deleteFilm(id: $id)
+          deleteFilm(id: $id) {
+            __typename
+          }
         }
       `,
       {

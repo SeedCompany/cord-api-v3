@@ -49,6 +49,7 @@ import {
 import {
   CreateProjectInput,
   CreateProjectOutput,
+  DeleteProjectOutput,
   IProject,
   Project,
   ProjectListInput,
@@ -340,15 +341,15 @@ export class ProjectResolver {
     return { project: secured };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => DeleteProjectOutput, {
     description: 'Delete a project',
   })
   async deleteProject(
     @IdArg() id: ID,
     @LoggedInSession() session: Session
-  ): Promise<boolean> {
+  ): Promise<DeleteProjectOutput> {
     await this.projectService.delete(id, session);
-    return true;
+    return { success: true };
   }
 
   @Mutation(() => IProject, {

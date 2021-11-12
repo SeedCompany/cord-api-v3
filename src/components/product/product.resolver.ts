@@ -35,6 +35,7 @@ import {
   CreateOtherProduct,
   CreateProductInput,
   CreateProductOutput,
+  DeleteProductOutput,
   MethodologyToApproach,
   Product,
   ProductApproach,
@@ -296,14 +297,14 @@ export class ProductResolver {
     return { product };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => DeleteProductOutput, {
     description: 'Delete a product entry',
   })
   async deleteProduct(
     @LoggedInSession() session: Session,
     @IdArg() id: ID
-  ): Promise<boolean> {
+  ): Promise<DeleteProductOutput> {
     await this.productService.delete(id, session);
-    return true;
+    return { success: true };
   }
 }

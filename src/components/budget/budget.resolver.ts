@@ -19,6 +19,7 @@ import {
   BudgetListOutput,
   CreateBudgetInput,
   CreateBudgetOutput,
+  DeleteBudgetOutput,
   UpdateBudgetInput,
   UpdateBudgetOutput,
 } from './dto';
@@ -92,14 +93,14 @@ export class BudgetResolver {
     return { budget };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => DeleteBudgetOutput, {
     description: 'Delete a budget',
   })
   async deleteBudget(
     @LoggedInSession() session: Session,
     @IdArg() id: ID
-  ): Promise<boolean> {
+  ): Promise<DeleteBudgetOutput> {
     await this.service.delete(id, session);
-    return true;
+    return { success: true };
   }
 }

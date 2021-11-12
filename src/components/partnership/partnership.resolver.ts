@@ -22,6 +22,7 @@ import { PartnershipLoader, PartnershipService } from '../partnership';
 import {
   CreatePartnershipInput,
   CreatePartnershipOutput,
+  DeletePartnershipOutput,
   Partnership,
   PartnershipListInput,
   PartnershipListOutput,
@@ -130,14 +131,14 @@ export class PartnershipResolver {
     return { partnership };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => DeletePartnershipOutput, {
     description: 'Delete a Partnership',
   })
   async deletePartnership(
     @LoggedInSession() session: Session,
     @Args() { id, changeset }: ChangesetIds
-  ): Promise<boolean> {
+  ): Promise<DeletePartnershipOutput> {
     await this.service.delete(id, session, changeset);
-    return true;
+    return { success: true };
   }
 }

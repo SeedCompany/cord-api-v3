@@ -4,6 +4,7 @@ import { Loader, LoaderOf } from '../../core';
 import {
   CreateStoryInput,
   CreateStoryOutput,
+  DeleteStoryOutput,
   Story,
   StoryListInput,
   StoryListOutput,
@@ -67,14 +68,14 @@ export class StoryResolver {
     return { story };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => DeleteStoryOutput, {
     description: 'Delete a story',
   })
   async deleteStory(
     @LoggedInSession() session: Session,
     @IdArg() id: ID
-  ): Promise<boolean> {
+  ): Promise<DeleteStoryOutput> {
     await this.storyService.delete(id, session);
-    return true;
+    return { success: true };
   }
 }

@@ -3,43 +3,46 @@ import { AnonSession, LoggedInSession, Session } from '../../common';
 import { AuthenticationService } from './authentication.service';
 import {
   ChangePasswordArgs,
+  ChangePasswordOutput,
   ForgotPasswordArgs,
+  ForgotPasswordOutput,
   ResetPasswordInput,
+  ResetPasswordOutput,
 } from './dto';
 
 @Resolver()
 export class PasswordResolver {
   constructor(private readonly authentication: AuthenticationService) {}
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => ChangePasswordOutput, {
     description: 'Change your password',
   })
   async changePassword(
     @Args() { oldPassword, newPassword }: ChangePasswordArgs,
     @LoggedInSession() session: Session
-  ): Promise<boolean> {
+  ): Promise<ChangePasswordOutput> {
     await this.authentication.changePassword(oldPassword, newPassword, session);
-    return true;
+    return { success: true };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => ForgotPasswordOutput, {
     description: 'Forgot password; send password reset email',
   })
   async forgotPassword(
     @Args() { email }: ForgotPasswordArgs
-  ): Promise<boolean> {
+  ): Promise<ForgotPasswordOutput> {
     await this.authentication.forgotPassword(email);
-    return true;
+    return { success: true };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => ResetPasswordOutput, {
     description: 'Reset Password',
   })
   async resetPassword(
     @Args('input') input: ResetPasswordInput,
     @AnonSession() session: Session
-  ): Promise<boolean> {
+  ): Promise<ResetPasswordOutput> {
     await this.authentication.resetPassword(input, session);
-    return true;
+    return { success: true };
   }
 }

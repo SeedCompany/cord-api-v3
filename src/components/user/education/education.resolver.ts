@@ -12,6 +12,7 @@ import { EducationLoader, EducationService } from '../education';
 import {
   CreateEducationInput,
   CreateEducationOutput,
+  DeleteEducationOutput,
   Education,
   EducationListInput,
   EducationListOutput,
@@ -73,14 +74,14 @@ export class EducationResolver {
     return { education };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => DeleteEducationOutput, {
     description: 'Delete an education',
   })
   async deleteEducation(
     @LoggedInSession() session: Session,
     @IdArg() id: ID
-  ): Promise<boolean> {
+  ): Promise<DeleteEducationOutput> {
     await this.service.delete(id, session);
-    return true;
+    return { success: true };
   }
 }

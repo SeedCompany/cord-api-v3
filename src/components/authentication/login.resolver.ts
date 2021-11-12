@@ -13,7 +13,7 @@ import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto';
 import { User, UserLoader } from '../user';
 import { AuthenticationService } from './authentication.service';
-import { LoginInput, LoginOutput, RegisterOutput } from './dto';
+import { LoginInput, LoginOutput, LogoutOutput, RegisterOutput } from './dto';
 
 @Resolver(LoginOutput)
 export class LoginResolver {
@@ -36,16 +36,16 @@ export class LoginResolver {
     return { user };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => LogoutOutput, {
     description: 'Logout a user',
   })
   async logout(
     @AnonSession() session: Session,
     @Context() context: GqlContextType
-  ): Promise<boolean> {
+  ): Promise<LogoutOutput> {
     await this.authentication.logout(session.token);
     await this.authentication.updateSession(context); // ensure session data is fresh
-    return true;
+    return { success: true };
   }
 
   @ResolveField(() => User, { description: 'The logged-in user' })

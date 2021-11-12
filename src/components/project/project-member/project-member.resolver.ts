@@ -11,6 +11,7 @@ import { ProjectMemberLoader, ProjectMemberService } from '../project-member';
 import {
   CreateProjectMemberInput,
   CreateProjectMemberOutput,
+  DeleteProjectMemberOutput,
   ProjectMember,
   ProjectMemberListInput,
   ProjectMemberListOutput,
@@ -72,14 +73,14 @@ export class ProjectMemberResolver {
     return { projectMember };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => DeleteProjectMemberOutput, {
     description: 'Delete a project member',
   })
   async deleteProjectMember(
     @LoggedInSession() session: Session,
     @IdArg() id: ID
-  ): Promise<boolean> {
+  ): Promise<DeleteProjectMemberOutput> {
     await this.service.delete(id, session);
-    return true;
+    return { success: true };
   }
 }

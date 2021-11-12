@@ -35,10 +35,13 @@ import {
 import { SecuredTimeZone, TimeZoneService } from '../timezone';
 import {
   AssignOrganizationToUserInput,
+  AssignOrganizationToUserOutput,
   CheckEmailArgs,
   CreatePersonInput,
   CreatePersonOutput,
+  DeleteUserOutput,
   RemoveOrganizationFromUserInput,
+  RemoveOrganizationFromUserOutput,
   UpdateUserInput,
   UpdateUserOutput,
   User,
@@ -260,12 +263,15 @@ export class UserResolver {
     return { user };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => DeleteUserOutput, {
     description: 'Delete a user',
   })
-  async deleteUser(@LoggedInSession() session: Session, @IdArg() id: ID) {
+  async deleteUser(
+    @LoggedInSession() session: Session,
+    @IdArg() id: ID
+  ): Promise<DeleteUserOutput> {
     await this.userService.delete(id, session);
-    return true;
+    return { success: true };
   }
 
   @Mutation(() => User, {
@@ -290,26 +296,26 @@ export class UserResolver {
     return await this.userService.readOne(userId, session);
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => AssignOrganizationToUserOutput, {
     description: 'Assign organization OR primaryOrganization to user',
   })
   async assignOrganizationToUser(
     @LoggedInSession() session: Session,
     @Args('input') input: AssignOrganizationToUserInput
-  ): Promise<boolean> {
+  ): Promise<AssignOrganizationToUserOutput> {
     await this.userService.assignOrganizationToUser(input.request, session);
-    return true;
+    return { success: true };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => RemoveOrganizationFromUserOutput, {
     description: 'Remove organization OR primaryOrganization from user',
   })
   async removeOrganizationFromUser(
     @LoggedInSession() session: Session,
     @Args('input') input: RemoveOrganizationFromUserInput
-  ): Promise<boolean> {
+  ): Promise<RemoveOrganizationFromUserOutput> {
     await this.userService.removeOrganizationFromUser(input.request, session);
-    return true;
+    return { success: true };
   }
 
   @Mutation(() => User, {

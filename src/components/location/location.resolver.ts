@@ -25,6 +25,7 @@ import {
 import {
   CreateLocationInput,
   CreateLocationOutput,
+  DeleteLocationOutput,
   Location,
   LocationListInput,
   LocationListOutput,
@@ -130,14 +131,14 @@ export class LocationResolver {
     return { location };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => DeleteLocationOutput, {
     description: 'Delete a location',
   })
   async deleteLocation(
     @LoggedInSession() session: Session,
     @IdArg() id: ID
-  ): Promise<boolean> {
+  ): Promise<DeleteLocationOutput> {
     await this.locationService.delete(id, session);
-    return true;
+    return { success: true };
   }
 }

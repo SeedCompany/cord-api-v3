@@ -20,6 +20,7 @@ import { SecuredUser, UserLoader } from '../user';
 import {
   CreateFieldRegionInput,
   CreateFieldRegionOutput,
+  DeleteFieldRegionOutput,
   FieldRegion,
   FieldRegionListInput,
   FieldRegionListOutput,
@@ -101,14 +102,14 @@ export class FieldRegionResolver {
     return { fieldRegion };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => DeleteFieldRegionOutput, {
     description: 'Delete a field region',
   })
   async deleteFieldRegion(
     @LoggedInSession() session: Session,
     @IdArg() id: ID
-  ): Promise<boolean> {
+  ): Promise<DeleteFieldRegionOutput> {
     await this.fieldRegionService.delete(id, session);
-    return true;
+    return { success: true };
   }
 }

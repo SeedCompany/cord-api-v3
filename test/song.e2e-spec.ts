@@ -110,7 +110,9 @@ describe('Song e2e', () => {
     const result = await app.graphql.mutate(
       gql`
         mutation deleteSong($id: ID!) {
-          deleteSong(id: $id)
+          deleteSong(id: $id) {
+            __typename
+          }
         }
       `,
       {

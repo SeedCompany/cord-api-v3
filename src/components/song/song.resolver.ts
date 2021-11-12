@@ -5,6 +5,7 @@ import { EthnoArtLoader, EthnoArtService } from '../ethno-art';
 import {
   CreateSongInput,
   CreateSongOutput,
+  DeleteSongOutput,
   Song,
   SongListInput,
   SongListOutput,
@@ -70,15 +71,15 @@ export class SongResolver {
     return { song };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => DeleteSongOutput, {
     description: 'Delete a song',
     deprecationReason: 'Use `deleteEthnoArt` instead',
   })
   async deleteSong(
     @LoggedInSession() session: Session,
     @IdArg() id: ID
-  ): Promise<boolean> {
+  ): Promise<DeleteSongOutput> {
     await this.ethnoArts.delete(id, session);
-    return true;
+    return { success: true };
   }
 }

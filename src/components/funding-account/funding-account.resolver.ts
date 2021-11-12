@@ -4,6 +4,7 @@ import { Loader, LoaderOf } from '../../core';
 import {
   CreateFundingAccountInput,
   CreateFundingAccountOutput,
+  DeleteFundingAccountOutput,
   FundingAccount,
   FundingAccountListInput,
   FundingAccountListOutput,
@@ -75,14 +76,14 @@ export class FundingAccountResolver {
     return { fundingAccount };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => DeleteFundingAccountOutput, {
     description: 'Delete a funding account',
   })
   async deleteFundingAccount(
     @LoggedInSession() session: Session,
     @IdArg() id: ID
-  ): Promise<boolean> {
+  ): Promise<DeleteFundingAccountOutput> {
     await this.fundingAccountService.delete(id, session);
-    return true;
+    return { success: true };
   }
 }

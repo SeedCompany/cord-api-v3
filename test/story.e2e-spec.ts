@@ -109,7 +109,9 @@ describe('Story e2e', () => {
     const result = await app.graphql.mutate(
       gql`
         mutation deleteStory($id: ID!) {
-          deleteStory(id: $id)
+          deleteStory(id: $id) {
+            __typename
+          }
         }
       `,
       {
