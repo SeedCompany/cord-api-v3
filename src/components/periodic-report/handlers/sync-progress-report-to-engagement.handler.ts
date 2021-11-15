@@ -40,7 +40,11 @@ export class SyncProgressReportToEngagementDateRange
       event: event.constructor.name,
     });
 
-    if (event instanceof EngagementCreatedEvent && event.engagement.changeset) {
+    // In changeset mode, skip progressing
+    if (
+      (event instanceof EngagementCreatedEvent && event.engagement.changeset) ||
+      (event instanceof EngagementUpdatedEvent && event.updated.changeset)
+    ) {
       return;
     }
 

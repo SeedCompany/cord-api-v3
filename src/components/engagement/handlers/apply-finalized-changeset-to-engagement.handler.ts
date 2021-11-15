@@ -1,8 +1,10 @@
 import { node, relation } from 'cypher-query-builder';
-import { ID, ServerException } from '../../../common';
+import { union } from 'lodash';
+import { ID, ServerException, Session } from '../../../common';
 import {
   DatabaseService,
   EventsHandler,
+  IEventBus,
   IEventHandler,
   ILogger,
   Logger,
@@ -12,6 +14,8 @@ import { commitChangesetProps } from '../../changeset/commit-changeset-props.que
 import { rejectChangesetProps } from '../../changeset/reject-changeset-props.query';
 import { ProjectChangeRequestStatus } from '../../project-change-request/dto';
 import { ProjectChangesetFinalizedEvent } from '../../project-change-request/events';
+import { EngagementService } from '../engagement.service';
+import { EngagementUpdatedEvent } from '../events';
 
 type SubscribedEvent = ProjectChangesetFinalizedEvent;
 
@@ -21,6 +25,8 @@ export class ApplyFinalizedChangesetToEngagement
 {
   constructor(
     private readonly db: DatabaseService,
+    private readonly engagementService: EngagementService,
+    private readonly eventBus: IEventBus,
     @Logger('engagement:change-request:finalized')
     private readonly logger: ILogger
   ) {}
@@ -33,7 +39,7 @@ export class ApplyFinalizedChangesetToEngagement
 
     try {
       // Update project engagement pending changes
-      await this.db
+      const result = await this.db
         .query()
         .match([
           node('project', 'Project'),
@@ -53,12 +59,14 @@ export class ApplyFinalizedChangesetToEngagement
                 ? commitChangesetProps()
                 : rejectChangesetProps()
             )
-            .return('1')
+            .return('node.id as engagementId')
         )
-        .return('project')
-        .run();
+        .return<{ engagementIds: ID[] }>(
+          'collect(engagementId) as engagementIds'
+        )
+        .first();
 
-      await this.db
+      const newResult = await this.db
         .query()
         .match([
           node('project', 'Project'),
@@ -78,10 +86,12 @@ export class ApplyFinalizedChangesetToEngagement
             .setValues({
               'engagementRel.active': true,
             })
-            .return('1')
+            .return('node.id as engagementId')
         )
-        .return('project')
-        .run();
+        .return<{ engagementIds: ID[] }>(
+          'collect(engagementId) as engagementIds'
+        )
+        .first();
 
       /**
        * Apply Language changes
@@ -117,6 +127,16 @@ export class ApplyFinalizedChangesetToEngagement
 
       // Remove deleting engagements
       await this.removeDeletingEngagements(changesetId);
+
+      // Trigger sync-progress-report-to-engagement handler
+      const allEngagementIds = union(
+        result?.engagementIds || [],
+        newResult?.engagementIds || []
+      );
+      await this.triggerSyncProgressReportEvent(
+        allEngagementIds,
+        event.session
+      );
     } catch (exception) {
       throw new ServerException(
         'Failed to apply changeset to project',
@@ -143,5 +163,20 @@ export class ApplyFinalizedChangesetToEngagement
       .apply(deleteBaseNode('node'))
       .return<{ count: number }>('count(node) as count')
       .run();
+  }
+
+  async triggerSyncProgressReportEvent(ids: ID[], session: Session) {
+    await Promise.all(
+      ids.map(async (id) => {
+        const object = await this.engagementService.readOne(id, session);
+        const engagementUpdatedEvent = new EngagementUpdatedEvent(
+          object,
+          object,
+          { id },
+          session
+        );
+        await this.eventBus.publish(engagementUpdatedEvent);
+      })
+    );
   }
 }

@@ -366,10 +366,6 @@ export class EngagementService {
       view
     )) as LanguageEngagement;
 
-    if (changeset) {
-      return updated;
-    }
-
     const engagementUpdatedEvent = new EngagementUpdatedEvent(
       updated,
       object,
