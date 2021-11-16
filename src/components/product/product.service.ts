@@ -1,12 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import {
-  has as hasPath,
-  intersection,
-  isEqual,
-  set,
-  sumBy,
-  uniq,
-} from 'lodash';
+import { intersection, isEqual, sumBy, uniq } from 'lodash';
 import {
   has,
   ID,
@@ -598,7 +591,7 @@ export class ProductService {
     const productRefs = await this.repo.listIdsAndScriptureRefs(engagementId);
 
     const productIds: {
-      [Book in string]?: { [TotalVerses in number | string]?: ID };
+      [Book in string]?: Map<number, ID>;
     } = {};
 
     for (const productRef of productRefs) {
@@ -630,14 +623,17 @@ export class ProductService {
       }
       const book: string = books[0];
 
-      if (hasPath(productIds, [book, totalVerses])) {
+      if (productIds[book]?.has(totalVerses)) {
         warn(
           'Product references a book & verse count that has already been assigned to another product'
         );
         continue;
       }
 
-      set(productIds, [book, totalVerses], productRef.id);
+      (productIds[book] ?? (productIds[book] = new Map())).set(
+        totalVerses,
+        productRef.id
+      );
     }
 
     return productIds;
