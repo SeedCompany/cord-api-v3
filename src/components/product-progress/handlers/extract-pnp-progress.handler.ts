@@ -1,4 +1,3 @@
-import { get } from 'lodash';
 import { EventsHandler, ILogger, Logger } from '../../../core';
 import { ReportType } from '../../periodic-report/dto';
 import { PeriodicReportUploadedEvent } from '../../periodic-report/events';
@@ -35,7 +34,7 @@ export class ExtractPnpProgressHandler {
 
     // Convert book name to product ID
     const updates = progressRows.flatMap(({ bookName, totalVerses, steps }) => {
-      const productId = get(products, [bookName, totalVerses]);
+      const productId = products[bookName]?.get(totalVerses);
       if (productId) {
         return { productId, steps };
       }
