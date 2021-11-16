@@ -1,6 +1,7 @@
 import { createUnionType, registerEnumType } from '@nestjs/graphql';
 import { mapValues, uniq } from 'lodash';
 import { keys, simpleSwitch } from '../../../common';
+import { EthnoArt } from '../../ethno-art/dto';
 import { FieldRegion } from '../../field-region/dto';
 import { FieldZone } from '../../field-zone/dto';
 import { Film } from '../../film/dto';
@@ -31,6 +32,7 @@ const publicSearchable = {
   User,
   Film,
   Story,
+  EthnoArt,
   LiteracyMaterial,
   Song,
   Location,

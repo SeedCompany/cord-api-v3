@@ -5,6 +5,7 @@ export enum DbBaseNodeLabel {
   Directory = 'DbDirectory',
   Education = 'DbEducation',
   Engagement = 'DbEngagement',
+  EthnoArt = 'DbEthnoArt',
   EthnologueLanguage = 'DbEthnologueLanguage',
   FieldRegion = 'DbFieldRegion',
   FieldZone = 'DbFieldZone',

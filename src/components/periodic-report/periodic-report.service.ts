@@ -87,7 +87,11 @@ export class PeriodicReportService {
         session
       );
       await this.eventBus.publish(
-        new PeriodicReportUploadedEvent(updated, newVersion, session)
+        new PeriodicReportUploadedEvent(
+          updated,
+          this.files.asDownloadable(newVersion),
+          session
+        )
       );
     }
 
@@ -115,6 +119,13 @@ export class PeriodicReportService {
     return await this.secure(result, session);
   }
 
+  async readMany(ids: readonly ID[], session: Session) {
+    const periodicReports = await this.repo.readMany(ids, session);
+    return await Promise.all(
+      periodicReports.map((dto) => this.secure(dto, session))
+    );
+  }
+
   private async secure(
     dto: UnsecuredDto<PeriodicReport>,
     session: Session
@@ -134,13 +145,13 @@ export class PeriodicReportService {
   }
 
   async list(
-    projectId: ID,
+    parentId: ID,
     reportType: ReportType,
     input: PeriodicReportListInput,
     session: Session
   ): Promise<SecuredPeriodicReportList> {
     const results = await this.repo.listReports(
-      projectId,
+      parentId,
       reportType,
       input,
       session

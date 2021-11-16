@@ -121,7 +121,9 @@ describe('Language e2e', () => {
     const result = await app.graphql.mutate(
       gql`
         mutation deleteLanguage($id: ID!) {
-          deleteLanguage(id: $id)
+          deleteLanguage(id: $id) {
+            __typename
+          }
         }
       `,
       {

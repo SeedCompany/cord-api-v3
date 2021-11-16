@@ -3,6 +3,7 @@ import { DbBudget } from '../../budget/model';
 import { DbBudgetRecord } from '../../budget/model/budget-record.model.db';
 import { DbCeremony } from '../../ceremony/model';
 import { DbInternshipEngagement, DbLanguageEngagement } from '../../engagement/model';
+import { DbEthnoArt } from '../../ethno-art/model';
 import { DbFieldRegion } from '../../field-region/model';
 import { DbFieldZone } from '../../field-zone/model';
 import { DbDirectory, DbFile } from '../../file/model';
@@ -101,6 +102,14 @@ export const FinancialAnalyst = new DbRole({
       ],
       canDelete: false,
     }),
+    new DbBaseNodeGrant<DbEthnoArt>({
+      __className: 'DbEthnoArt',
+      properties: [
+        { propertyName: 'name', permission: { read, }, },
+        { propertyName: 'scriptureReferences', permission: { read, }, },
+      ],
+      canDelete: false,
+    }),
     new DbBaseNodeGrant<DbEthnologueLanguage>({
       __className: 'DbEthnologueLanguage',
       properties: [
@@ -113,6 +122,7 @@ export const FinancialAnalyst = new DbRole({
     }),
     new DbBaseNodeGrant<DbFieldRegion>({
       __className: 'DbFieldRegion',
+      canList: true,
       properties: [
         { propertyName: 'director', permission: { read, }, },
         { propertyName: 'name', permission: { read, }, },
@@ -122,6 +132,7 @@ export const FinancialAnalyst = new DbRole({
     }),
     new DbBaseNodeGrant<DbFieldZone>({
       __className: 'DbFieldZone',
+      canList: true,
       properties: [
         { propertyName: 'director', permission: { read, }, },
         { propertyName: 'name', permission: { read, }, },
@@ -151,6 +162,7 @@ export const FinancialAnalyst = new DbRole({
     }),
     new DbBaseNodeGrant<DbFilm>({
       __className: 'DbFilm',
+      canList: true,
       properties: [
         { propertyName: 'name', permission: { read, }, },
         { propertyName: 'scriptureReferences', permission: { read, }, },
@@ -159,6 +171,7 @@ export const FinancialAnalyst = new DbRole({
     }),
     new DbBaseNodeGrant<DbFundingAccount>({
       __className: 'DbFundingAccount',
+      canList: true,
       properties: [
         { propertyName: 'name', permission: { read, }, },
         { propertyName: 'accountNumber', permission: { read, }, },
@@ -167,6 +180,7 @@ export const FinancialAnalyst = new DbRole({
     }),
     new DbBaseNodeGrant<DbInternshipEngagement>({
       __className: 'DbInternshipEngagement',
+      canList: true,
       properties: [
         { propertyName: 'ceremony', permission: { read, }, },
         { propertyName: 'completeDate', permission: { read, }, },
@@ -192,6 +206,7 @@ export const FinancialAnalyst = new DbRole({
     }),
     new DbBaseNodeGrant<DbLanguage>({
       __className: 'DbLanguage',
+      canList: true,
       properties: [
         { propertyName: 'displayName', permission: { read, }, },
         { propertyName: 'displayNamePronunciation', permission: { read, }, },
@@ -215,6 +230,7 @@ export const FinancialAnalyst = new DbRole({
     }),
     new DbBaseNodeGrant<DbLanguageEngagement>({
       __className: 'DbLanguageEngagement',
+      canList: true,
       properties: [
         { propertyName: 'ceremony', permission: { read, }, },
         { propertyName: 'completeDate', permission: { read, }, },
@@ -227,6 +243,7 @@ export const FinancialAnalyst = new DbRole({
         { propertyName: 'lastReactivatedAt', permission: { read, }, },
         { propertyName: 'lastSuspendedAt', permission: { read, }, },
         { propertyName: 'lukePartnership', permission: { read, }, },
+        { propertyName: 'openToInvestorVisit', permission: { read, }, },
         { propertyName: 'paratextRegistryId', permission: { read, }, },
         { propertyName: 'pnp', permission: { read, }, },
         { propertyName: 'historicGoal', permission: { read, }, },
@@ -262,9 +279,9 @@ export const FinancialAnalyst = new DbRole({
     new DbBaseNodeGrant<DbOrganization>({
       __className: 'DbOrganization',
       properties: [
-        { propertyName: 'name', permission: { read, write, }, },
-        { propertyName: 'address', permission: { read, write, }, },
-        { propertyName: 'locations', permission: { read, write, }, },
+        { propertyName: 'name', permission: { read, write, sensitivityAccess: Sensitivity.Medium }, },
+        { propertyName: 'address', permission: { read, write, sensitivityAccess: Sensitivity.Medium }, },
+        { propertyName: 'locations', permission: { read, write, sensitivityAccess: Sensitivity.Medium }, },
       ],
       canDelete: false,
     }),
@@ -272,15 +289,15 @@ export const FinancialAnalyst = new DbRole({
       __className: 'DbPartner',
       canList: true,
       properties: [
-        { propertyName: 'organization', permission: { read, write, }, },
-        { propertyName: 'pointOfContact', permission: { read, write, }, },
-        { propertyName: 'types', permission: { read, write, }, },
-        { propertyName: 'financialReportingTypes', permission: { read, write, }, },
-        { propertyName: 'pmcEntityCode', permission: { read, write, }, },
-        { propertyName: 'globalInnovationsClient', permission: { read, write, }, },
-        { propertyName: 'active', permission: { read, write, }, },
-        { propertyName: 'address', permission: { read, write, }, },
-        { propertyName: 'modifiedAt', permission: { read, write, }, },
+        { propertyName: 'organization', permission: { read, sensitivityAccess: Sensitivity.Medium }, },
+        { propertyName: 'pointOfContact', permission: { read, sensitivityAccess: Sensitivity.Medium }, },
+        { propertyName: 'types', permission: { read, }, },
+        { propertyName: 'financialReportingTypes', permission: { read, }, },
+        { propertyName: 'pmcEntityCode', permission: { read, }, },
+        { propertyName: 'globalInnovationsClient', permission: { read, }, },
+        { propertyName: 'active', permission: { read, }, },
+        { propertyName: 'address', permission: { read, }, },
+        { propertyName: 'modifiedAt', permission: { read,  }, },
       ],
       canDelete: false,
     }),
@@ -290,7 +307,7 @@ export const FinancialAnalyst = new DbRole({
       properties: [
         { propertyName: 'agreement', permission: { read, }, },
         { propertyName: 'agreementStatus', permission: { read, }, },
-        { propertyName: 'financialReportingType', permission: { read, }, },
+        { propertyName: 'financialReportingType', permission: { read, write }, },
         { propertyName: 'mou', permission: { read, }, },
         { propertyName: 'mouEnd', permission: { read, }, },
         { propertyName: 'mouEndOverride', permission: { read, }, },
@@ -328,6 +345,7 @@ export const FinancialAnalyst = new DbRole({
         { propertyName: 'progressTarget', permission: { read, }, },
         { propertyName: 'title', permission: { read, }, },
         { propertyName: 'description', permission: { read, }, },
+        { propertyName: 'unspecifiedScripture', permission: { read, }, },
       ],
       canDelete: false,
     }),
@@ -335,23 +353,23 @@ export const FinancialAnalyst = new DbRole({
       __className: 'DbProject',
       canList: true,
       properties: [
-        { propertyName: 'estimatedSubmission', permission: { read, write, }, },
-        { propertyName: 'step', permission: { read, write, }, },
-        { propertyName: 'name', permission: { read, write, }, },
-        { propertyName: 'status', permission: { read, write, }, },
-        { propertyName: 'departmentId', permission: { read, write, }, },
-        { propertyName: 'mouStart', permission: { read, write, }, },
-        { propertyName: 'mouEnd', permission: { read, write, }, },
-        { propertyName: 'initialMouEnd', permission: { read, write, }, },
-        { propertyName: 'stepChangedAt', permission: { read, write, }, },
-        { propertyName: 'rootDirectory', permission: { read, write, sensitivityAccess: Sensitivity.Medium }, },
-        { propertyName: 'member', permission: { read, write, }, },
-        { propertyName: 'otherLocations', permission: { read, write, sensitivityAccess: Sensitivity.Medium }, },
-        { propertyName: 'primaryLocation', permission: { read, write, sensitivityAccess: Sensitivity.Medium }, },
-        { propertyName: 'marketingLocation', permission: { read, write, }, },
-        { propertyName: 'partnership', permission: { read, write, }, },
-        { propertyName: 'budget', permission: { read, write, }, },
-        { propertyName: 'modifiedAt', permission: { read, write, }, },
+        { propertyName: 'estimatedSubmission', permission: { read, }, },
+        { propertyName: 'step', permission: { read, }, },
+        { propertyName: 'name', permission: { read, }, },
+        { propertyName: 'status', permission: { read, }, },
+        { propertyName: 'departmentId', permission: { read, }, },
+        { propertyName: 'mouStart', permission: { read, }, },
+        { propertyName: 'mouEnd', permission: { read, }, },
+        { propertyName: 'initialMouEnd', permission: { read, }, },
+        { propertyName: 'stepChangedAt', permission: { read, }, },
+        { propertyName: 'rootDirectory', permission: { read, sensitivityAccess: Sensitivity.Medium }, },
+        { propertyName: 'member', permission: { read, }, },
+        { propertyName: 'otherLocations', permission: { read, sensitivityAccess: Sensitivity.Medium }, },
+        { propertyName: 'primaryLocation', permission: { read, sensitivityAccess: Sensitivity.Medium }, },
+        { propertyName: 'marketingLocation', permission: { read, }, },
+        { propertyName: 'partnership', permission: { read, }, },
+        { propertyName: 'budget', permission: { read, }, },
+        { propertyName: 'modifiedAt', permission: { read, }, },
         { propertyName: 'fieldRegion', permission: { read, }, },
         { propertyName: 'engagement', permission: { read, }, },
         { propertyName: 'owningOrganization', permission: { read, }, },
@@ -382,6 +400,7 @@ export const FinancialAnalyst = new DbRole({
         { propertyName: 'end', permission: { read, }, },
         { propertyName: 'receivedDate', permission: { read, }, },
         { propertyName: 'reportFile', permission: { read, }, },
+        { propertyName: 'skippedReason', permission: { read, }, },
       ],
       canDelete: true,
     }),

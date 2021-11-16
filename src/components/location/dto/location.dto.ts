@@ -39,9 +39,9 @@ export class Location extends Resource {
   @DbLabel('IsoAlpha3')
   readonly isoAlpha3: SecuredStringNullable;
 
-  readonly fundingAccount: Secured<ID>;
+  readonly fundingAccount: Secured<ID | null>;
 
-  readonly defaultFieldRegion: Secured<ID>;
+  readonly defaultFieldRegion: Secured<ID | null>;
 }
 
 @ObjectType({

@@ -355,7 +355,9 @@ describe('Engagement Changeset Aware e2e', () => {
     let result = await app.graphql.mutate(
       gql`
         mutation deleteEngagement($id: ID!, $changeset: ID) {
-          deleteEngagement(id: $id, changeset: $changeset)
+          deleteEngagement(id: $id, changeset: $changeset) {
+            __typename
+          }
         }
       `,
       {

@@ -147,6 +147,13 @@ export class PartnershipService {
     return await this.repo.readOne(id, session, view);
   }
 
+  async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
+    const partnerships = await this.repo.readMany(ids, session, view);
+    return await Promise.all(
+      partnerships.map((dto) => this.secure(dto, session))
+    );
+  }
+
   async secure(
     dto: UnsecuredDto<Partnership>,
     session: Session
@@ -313,7 +320,7 @@ export class PartnershipService {
 
   protected verifyFinancialReportingType(
     financialReportingType: FinancialReportingType | null | undefined,
-    types: PartnerType[],
+    types: readonly PartnerType[],
     partner: Partner
   ) {
     if (!financialReportingType) {

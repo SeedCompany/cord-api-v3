@@ -155,6 +155,9 @@ export class Language extends Resource {
   @Field()
   readonly hasExternalFirstScripture: SecuredBoolean;
 
+  // Internal First Scripture == true via this engagement
+  readonly firstScriptureEngagement?: ID;
+
   @Field()
   readonly tags: SecuredTags;
 
@@ -168,6 +171,9 @@ export class Language extends Resource {
     `,
   })
   readonly presetInventory: SecuredBoolean;
+
+  // Not returned, only used to cache the sensitivity for determining permissions
+  readonly effectiveSensitivity: Sensitivity;
 }
 
 @ObjectType({

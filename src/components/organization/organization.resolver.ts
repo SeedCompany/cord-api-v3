@@ -16,17 +16,23 @@ import {
   LoggedInSession,
   Session,
 } from '../../common';
-import { LocationListInput, SecuredLocationList } from '../location';
+import { Loader, LoaderOf } from '../../core';
+import {
+  LocationListInput,
+  LocationLoader,
+  SecuredLocationList,
+} from '../location';
+import { OrganizationLoader, OrganizationService } from '../organization';
 import {
   CreateOrganizationInput,
   CreateOrganizationOutput,
+  DeleteOrganizationOutput,
   Organization,
   OrganizationListInput,
   OrganizationListOutput,
   UpdateOrganizationInput,
   UpdateOrganizationOutput,
 } from './dto';
-import { OrganizationService } from './organization.service';
 
 @ArgsType()
 class ModifyLocationArgs {
@@ -56,10 +62,10 @@ export class OrganizationResolver {
     description: 'Look up an organization by its ID',
   })
   async organization(
-    @AnonSession() session: Session,
+    @Loader(OrganizationLoader) organizations: LoaderOf<OrganizationLoader>,
     @IdArg() id: ID
   ): Promise<Organization> {
-    return await this.orgs.readOne(id, session);
+    return await organizations.load(id);
   }
 
   @ResolveField(() => String, { nullable: true })
@@ -79,9 +85,12 @@ export class OrganizationResolver {
       type: () => OrganizationListInput,
       defaultValue: OrganizationListInput.defaultVal,
     })
-    input: OrganizationListInput
+    input: OrganizationListInput,
+    @Loader(OrganizationLoader) organizations: LoaderOf<OrganizationLoader>
   ): Promise<OrganizationListOutput> {
-    return await this.orgs.list(input, session);
+    const list = await this.orgs.list(input, session);
+    organizations.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => SecuredLocationList)
@@ -93,9 +102,12 @@ export class OrganizationResolver {
       type: () => LocationListInput,
       defaultValue: LocationListInput.defaultVal,
     })
-    input: LocationListInput
+    input: LocationListInput,
+    @Loader(LocationLoader) locations: LoaderOf<LocationLoader>
   ): Promise<SecuredLocationList> {
-    return await this.orgs.listLocations(organization.id, input, session);
+    const list = await this.orgs.listLocations(organization, input, session);
+    locations.primeAll(list.items);
+    return list;
   }
 
   @Mutation(() => UpdateOrganizationOutput, {
@@ -109,15 +121,15 @@ export class OrganizationResolver {
     return { organization };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => DeleteOrganizationOutput, {
     description: 'Delete an organization',
   })
   async deleteOrganization(
     @LoggedInSession() session: Session,
     @IdArg() id: ID
-  ): Promise<boolean> {
+  ): Promise<DeleteOrganizationOutput> {
     await this.orgs.delete(id, session);
-    return true;
+    return { success: true };
   }
 
   @Mutation(() => Organization, {

@@ -218,6 +218,13 @@ export class BudgetService {
     };
   }
 
+  async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
+    const budgets = await this.budgetRepo.readMany(ids, session, view);
+    return await Promise.all(
+      budgets.map(async (dto) => await this.readOne(dto.id, session, view))
+    );
+  }
+
   @HandleIdLookup(BudgetRecord)
   async readOneRecord(
     id: ID,
@@ -404,7 +411,7 @@ export class BudgetService {
     );
   }
 
-  async listNoSecGroups(
+  async listUnsecure(
     partialInput: Partial<BudgetListInput>,
     session: Session,
     changeset?: ID
@@ -413,7 +420,7 @@ export class BudgetService {
       ...BudgetListInput.defaultVal,
       ...partialInput,
     };
-    const results = await this.budgetRepo.listNoSecGroups(input);
+    const results = await this.budgetRepo.listUnsecure(input);
     return await mapListResults(results, (id) =>
       this.readOne(id, session, viewOfChangeset(changeset))
     );

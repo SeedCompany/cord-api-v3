@@ -98,7 +98,9 @@ describe('Education e2e', () => {
     const result = await app.graphql.mutate(
       gql`
         mutation deleteEducation($id: ID!) {
-          deleteEducation(id: $id)
+          deleteEducation(id: $id) {
+            __typename
+          }
         }
       `,
       {

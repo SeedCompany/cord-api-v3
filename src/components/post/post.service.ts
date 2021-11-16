@@ -68,6 +68,11 @@ export class PostService {
     return await this.secure(dto, session);
   }
 
+  async readMany(ids: readonly ID[], session: Session) {
+    const posts = await this.repo.readMany(ids);
+    return await Promise.all(posts.map((dto) => this.secure(dto, session)));
+  }
+
   private async secure(
     dto: UnsecuredDto<Post>,
     session: Session

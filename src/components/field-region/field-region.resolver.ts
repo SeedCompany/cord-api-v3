@@ -6,36 +6,42 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
-import { FieldZoneService, SecuredFieldZone } from '../field-zone';
-import { SecuredUser, UserService } from '../user';
+import {
+  AnonSession,
+  ID,
+  IdArg,
+  LoggedInSession,
+  mapSecuredValue,
+  Session,
+} from '../../common';
+import { Loader, LoaderOf } from '../../core';
+import { FieldZoneLoader, SecuredFieldZone } from '../field-zone';
+import { SecuredUser, UserLoader } from '../user';
 import {
   CreateFieldRegionInput,
   CreateFieldRegionOutput,
+  DeleteFieldRegionOutput,
   FieldRegion,
   FieldRegionListInput,
   FieldRegionListOutput,
   UpdateFieldRegionInput,
   UpdateFieldRegionOutput,
 } from './dto';
+import { FieldRegionLoader } from './field-region.loader';
 import { FieldRegionService } from './field-region.service';
 
 @Resolver(FieldRegion)
 export class FieldRegionResolver {
-  constructor(
-    private readonly fieldRegionService: FieldRegionService,
-    private readonly fieldZoneService: FieldZoneService,
-    private readonly userService: UserService
-  ) {}
+  constructor(private readonly fieldRegionService: FieldRegionService) {}
 
   @Query(() => FieldRegion, {
     description: 'Read one field region by id',
   })
   async fieldRegion(
-    @AnonSession() session: Session,
+    @Loader(FieldRegionLoader) fieldRegions: LoaderOf<FieldRegionLoader>,
     @IdArg() id: ID
   ): Promise<FieldRegion> {
-    return await this.fieldRegionService.readOne(id, session);
+    return await fieldRegions.load(id);
   }
 
   @Query(() => FieldRegionListOutput, {
@@ -48,37 +54,30 @@ export class FieldRegionResolver {
       type: () => FieldRegionListInput,
       defaultValue: FieldRegionListInput.defaultVal,
     })
-    input: FieldRegionListInput
+    input: FieldRegionListInput,
+    @Loader(FieldRegionLoader) fieldRegions: LoaderOf<FieldRegionLoader>
   ): Promise<FieldRegionListOutput> {
-    return await this.fieldRegionService.list(input, session);
+    const list = await this.fieldRegionService.list(input, session);
+    fieldRegions.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => SecuredUser)
   async director(
     @Parent() fieldRegion: FieldRegion,
-    @AnonSession() session: Session
+    @Loader(UserLoader) users: LoaderOf<UserLoader>
   ): Promise<SecuredUser> {
-    const { value: id, ...rest } = fieldRegion.director;
-    const value = id ? await this.userService.readOne(id, session) : undefined;
-    return {
-      value,
-      ...rest,
-    };
+    return await mapSecuredValue(fieldRegion.director, (id) => users.load(id));
   }
 
   @ResolveField(() => SecuredFieldZone)
   async fieldZone(
-    @Parent() region: FieldRegion,
-    @AnonSession() session: Session
+    @Parent() fieldRegion: FieldRegion,
+    @Loader(FieldZoneLoader) fieldZones: LoaderOf<FieldZoneLoader>
   ): Promise<SecuredFieldZone> {
-    const { value: id, ...rest } = region.fieldZone;
-    const value = id
-      ? await this.fieldZoneService.readOne(id, session)
-      : undefined;
-    return {
-      value,
-      ...rest,
-    };
+    return await mapSecuredValue(fieldRegion.fieldZone, (id) =>
+      fieldZones.load(id)
+    );
   }
 
   @Mutation(() => CreateFieldRegionOutput, {
@@ -103,14 +102,14 @@ export class FieldRegionResolver {
     return { fieldRegion };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => DeleteFieldRegionOutput, {
     description: 'Delete a field region',
   })
   async deleteFieldRegion(
     @LoggedInSession() session: Session,
     @IdArg() id: ID
-  ): Promise<boolean> {
+  ): Promise<DeleteFieldRegionOutput> {
     await this.fieldRegionService.delete(id, session);
-    return true;
+    return { success: true };
   }
 }

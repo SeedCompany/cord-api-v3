@@ -27,7 +27,10 @@ import {
   ProjectChangeRequestStatus as Status,
   UpdateProjectChangeRequest,
 } from './dto';
-import { ProjectChangeRequestApprovedEvent } from './events';
+import {
+  ProjectChangesetAfterFinalizedEvent,
+  ProjectChangesetFinalizedEvent,
+} from './events';
 import { ProjectChangeRequestRepository } from './project-change-request.repository';
 
 @Injectable()
@@ -68,6 +71,13 @@ export class ProjectChangeRequestService {
   ): Promise<ProjectChangeRequest> {
     const dto = await this.readOneUnsecured(id, session);
     return await this.secure(dto, session);
+  }
+
+  async readMany(ids: readonly ID[], session: Session) {
+    const projectChangeRequests = await this.repo.readMany(ids, session);
+    return await Promise.all(
+      projectChangeRequests.map((dto) => this.secure(dto, session))
+    );
   }
 
   async readOneUnsecured(
@@ -113,10 +123,13 @@ export class ProjectChangeRequestService {
 
     if (
       object.status === Status.Pending &&
-      changes.status === Status.Approved
+      (changes.status === Status.Approved || changes.status === Status.Rejected)
     ) {
       await this.eventBus.publish(
-        new ProjectChangeRequestApprovedEvent(updated, session)
+        new ProjectChangesetFinalizedEvent(updated, session)
+      );
+      await this.eventBus.publish(
+        new ProjectChangesetAfterFinalizedEvent(updated, session)
       );
     }
 

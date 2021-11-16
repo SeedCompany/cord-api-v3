@@ -5,7 +5,9 @@ export async function logout(app: TestApp) {
   return await app.graphql.mutate(
     gql`
       mutation {
-        logout
+        logout {
+          __typename
+        }
       }
     `
   );

@@ -24,6 +24,7 @@ export class ProjectStepChangedNotificationHandler
   async handle(event: ProjectUpdatedEvent) {
     if (
       event.updated.step === event.previous.step ||
+      event.updated.changeset ||
       !this.config.email.notifyProjectStepChanges
     ) {
       return;

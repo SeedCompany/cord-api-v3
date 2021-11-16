@@ -86,13 +86,13 @@ export class ResourceResolver {
     id: ID,
     session: Session,
     view?: ObjectView
-  ): Promise<SomeResource>;
+  ): Promise<SomeResource['prototype'] & { __typename: string }>;
   async lookup(
     possibleTypes: Many<string | SomeResource>,
     id: ID,
     session: Session,
     view?: ObjectView
-  ): Promise<SomeResource> {
+  ): Promise<SomeResource['prototype'] & { __typename: string }> {
     const type = this.resolveType(possibleTypes);
     const discovered = await this.discover.providerMethodsWithMetaAtKey<Shape>(
       RESOLVE_BY_ID
@@ -117,7 +117,11 @@ export class ResourceResolver {
     };
   }
 
-  private resolveType(types: Many<string | SomeResource>): keyof ResourceMap {
+  resolveTypeByBaseNode(node: BaseNode) {
+    return this.resolveType(node.labels);
+  }
+
+  resolveType(types: Many<string | SomeResource>): keyof ResourceMap {
     // Remove `Deleted_` prefix
     const names = many(types).map((t) =>
       (typeof t === 'string' ? t : t.name).replace(/^Deleted_/, '')

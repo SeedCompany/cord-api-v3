@@ -12,7 +12,7 @@ export const IsEmail = (
       constraints: [options],
       validator: {
         validate: (value, args) =>
-          !value ||
+          value == null ||
           (typeof value === 'string' && isEmail(value, args?.constraints[0])),
         defaultMessage: () =>
           validationOptions?.each

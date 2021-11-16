@@ -9,6 +9,7 @@ import { BudgetModule } from './components/budget/budget.module';
 import { CeremonyModule } from './components/ceremony/ceremony.module';
 import { ChangesetModule } from './components/changeset/changeset.module';
 import { EngagementModule } from './components/engagement/engagement.module';
+import { EthnoArtModule } from './components/ethno-art/ethno-art.module';
 import { FieldRegionModule } from './components/field-region/field-region.module';
 import { FieldZoneModule } from './components/field-zone/field-zone.module';
 import { FileModule } from './components/file/file.module';
@@ -19,6 +20,7 @@ import { LiteracyMaterialModule } from './components/literacy-material/literacy-
 import { LocationModule } from './components/location/location.module';
 import { OrganizationModule } from './components/organization/organization.module';
 import { PartnerModule } from './components/partner/partner.module';
+import { PartnershipProducingMediumModule } from './components/partnership-producing-medium/partnership-producing-medium.module';
 import { PartnershipModule } from './components/partnership/partnership.module';
 import { PeriodicReportModule } from './components/periodic-report/periodic-report.module';
 import { PinModule } from './components/pin/pin.module';
@@ -50,6 +52,7 @@ assert(
     AuthorizationModule,
     BudgetModule,
     CeremonyModule,
+    EthnoArtModule,
     FileModule,
     FilmModule,
     LanguageModule,
@@ -77,6 +80,7 @@ assert(
     ChangesetModule,
     ProjectChangeRequestModule,
     ProductProgressModule,
+    PartnershipProducingMediumModule,
   ],
   controllers: [],
   providers: [DateTimeScalar, DateScalar],

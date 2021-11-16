@@ -72,6 +72,13 @@ export class CeremonyService {
     return await this.secure(dto, session);
   }
 
+  async readMany(ids: readonly ID[], session: Session) {
+    const ceremonies = await this.ceremonyRepo.readMany(ids, session);
+    return await Promise.all(
+      ceremonies.map((dto) => this.secure(dto, session))
+    );
+  }
+
   async secure(dto: UnsecuredDto<Ceremony>, session: Session) {
     const securedProps = await this.authorizationService.secureProperties(
       Ceremony,

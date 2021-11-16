@@ -26,10 +26,10 @@ export abstract class UpdateLocation {
   readonly isoAlpha3?: string | null;
 
   @IdField({ nullable: true })
-  readonly fundingAccountId?: ID;
+  readonly fundingAccountId?: ID | null;
 
   @IdField({ nullable: true })
-  readonly defaultFieldRegionId?: ID;
+  readonly defaultFieldRegionId?: ID | null;
 }
 
 @InputType()

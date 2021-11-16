@@ -8,12 +8,16 @@ import {
   createLanguage,
   createLanguageEngagement,
   createProject,
+  createProjectMember,
   createSession,
   createTestApp,
+  listLanguageEngagements,
   Raw,
   readOneLanguageEngagement,
   readOneLanguageEngagementParatextId,
+  registerUser,
   registerUserWithPower,
+  runInIsolatedSession,
   TestApp,
 } from '../utility';
 import { RawLanguageEngagement } from '../utility/fragments';
@@ -150,5 +154,77 @@ describe('Language Engagment Security e2e', () => {
         );
       }
     );
+  });
+  describe('Restricted by role', () => {
+    describe.each`
+      role                                      | globalCanList | projectCanList
+      ${Role.Administrator}                     | ${true}       | ${true}
+      ${Role.Consultant}                        | ${true}       | ${true}
+      ${Role.ConsultantManager}                 | ${true}       | ${true}
+      ${Role.Controller}                        | ${true}       | ${true}
+      ${Role.FieldOperationsDirector}           | ${true}       | ${true}
+      ${Role.FinancialAnalyst}                  | ${true}       | ${true}
+      ${Role.Fundraising}                       | ${true}       | ${true}
+      ${Role.Intern}                            | ${true}       | ${true}
+      ${Role.LeadFinancialAnalyst}              | ${true}       | ${true}
+      ${Role.Leadership}                        | ${true}       | ${true}
+      ${Role.Liaison}                           | ${true}       | ${true}
+      ${Role.Marketing}                         | ${true}       | ${true}
+      ${Role.Mentor}                            | ${true}       | ${true}
+      ${Role.ProjectManager}                    | ${true}       | ${true}
+      ${Role.RegionalCommunicationsCoordinator} | ${true}       | ${true}
+      ${Role.RegionalDirector}                  | ${true}       | ${true}
+      ${Role.StaffMember}                       | ${true}       | ${true}
+      ${Role.Translator}                        | ${true}       | ${true}
+    `('$role', ({ role, globalCanList, projectCanList }) => {
+      it('Global canList', async () => {
+        const proj = await createProject(app);
+        const lang = await createLanguage(app, {
+          sensitivity: Sensitivity.Low, // setting to low because we don't want it to effect the other lang engagements for testing
+        });
+        await createLanguageEngagement(app, {
+          projectId: proj.id,
+          languageId: lang.id,
+        });
+        const read = await runInIsolatedSession(app, async () => {
+          await registerUser(app, { roles: role });
+          return await listLanguageEngagements(app);
+        });
+        if (!globalCanList) {
+          expect(read).toHaveLength(0);
+        } else {
+          expect(read).not.toHaveLength(0);
+        }
+      });
+
+      it('Project canList', async () => {
+        const user = await runInIsolatedSession(app, async () => {
+          return await registerUser(app, {
+            roles: [role],
+          });
+        });
+        const proj = await createProject(app);
+        const lang = await createLanguage(app, {
+          sensitivity: Sensitivity.Low, // setting to low because we don't want it to effect the other lang engagements for testing
+        });
+        await createLanguageEngagement(app, {
+          projectId: proj.id,
+          languageId: lang.id,
+        });
+        await createProjectMember(app, {
+          projectId: proj.id,
+          roles: role,
+          userId: user.id,
+        });
+        const read = await user.runAs(() => {
+          return listLanguageEngagements(app);
+        });
+        if (!projectCanList) {
+          expect(read).toHaveLength(0);
+        } else {
+          expect(read).not.toHaveLength(0);
+        }
+      });
+    });
   });
 });

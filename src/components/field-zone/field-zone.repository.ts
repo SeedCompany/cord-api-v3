@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID, NotFoundException, Session, UnsecuredDto } from '../../common';
 import { DtoRepository, matchRequestingUser } from '../../core';
@@ -10,7 +10,6 @@ import {
   matchProps,
   merge,
   paginate,
-  permissionsOfNode,
   requestingUser,
   sorting,
 } from '../../core/database/query';
@@ -61,6 +60,17 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
     return result.dto;
   }
 
+  async readMany(ids: readonly ID[], session: Session) {
+    return await this.db
+      .query()
+      .apply(matchRequestingUser(session))
+      .matchNode('node', 'FieldZone')
+      .where({ 'node.id': inArray(ids.slice()) })
+      .apply(this.hydrate())
+      .map('dto')
+      .run();
+  }
+
   protected hydrate() {
     return (query: Query) =>
       query
@@ -106,10 +116,10 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
   }
 
   async list({ filter, ...input }: FieldZoneListInput, session: Session) {
-    const label = 'FieldZone';
     const result = await this.db
       .query()
-      .match([requestingUser(session), ...permissionsOfNode(label)])
+      .match(requestingUser(session))
+      .match(node('node', 'FieldZone'))
       .apply(sorting(FieldZone, input))
       .apply(paginate(input, this.hydrate()))
       .first();

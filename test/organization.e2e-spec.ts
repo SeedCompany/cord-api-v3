@@ -25,7 +25,7 @@ describe('Organization e2e', () => {
     db = app.get(Connection);
     await createSession(app);
     await registerUserWithPower(app, [Powers.CreateOrganization], {
-      roles: [Role.FinancialAnalyst],
+      roles: [Role.Controller],
     });
   });
 
@@ -296,7 +296,9 @@ describe('Organization e2e', () => {
     const result = await app.graphql.mutate(
       gql`
         mutation deleteOrganization($id: ID!) {
-          deleteOrganization(id: $id)
+          deleteOrganization(id: $id) {
+            __typename
+          }
         }
       `,
       {
@@ -315,7 +317,9 @@ describe('Organization e2e', () => {
       app.graphql.mutate(
         gql`
           mutation deleteOrganization($id: ID!) {
-            deleteOrganization(id: $id)
+            deleteOrganization(id: $id) {
+              __typename
+            }
           }
         `,
         {
@@ -328,7 +332,9 @@ describe('Organization e2e', () => {
       app.graphql.mutate(
         gql`
           mutation deleteOrganization($id: ID!) {
-            deleteOrganization(id: $id)
+            deleteOrganization(id: $id) {
+              __typename
+            }
           }
         `,
         {}
@@ -339,7 +345,9 @@ describe('Organization e2e', () => {
       app.graphql.mutate(
         gql`
           mutation deleteOrganization($id: ID!) {
-            deleteOrganization(id: $id)
+            deleteOrganization(id: $id) {
+              __typename
+            }
           }
         `,
         {
@@ -352,7 +360,9 @@ describe('Organization e2e', () => {
       app.graphql.mutate(
         gql`
           mutation deleteOrganization($id: ID!) {
-            deleteOrganization(id: $id)
+            deleteOrganization(id: $id) {
+              __typename
+            }
           }
         `,
         {

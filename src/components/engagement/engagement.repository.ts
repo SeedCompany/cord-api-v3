@@ -26,14 +26,15 @@ import {
   createRelationships,
   INACTIVE,
   matchChangesetAndChangedProps,
+  matchProjectSensToLimitedScopeMap,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
   paginate,
-  permissionsOfNode,
   requestingUser,
   sorting,
   whereNotDeletedInChangeset,
 } from '../../core/database/query';
+import { AuthSensitivityMapping } from '../authorization/authorization.service';
 import { FileId } from '../file';
 import { ProjectType } from '../project';
 import {
@@ -75,6 +76,16 @@ export class EngagementRepository extends CommonRepository {
     }
 
     return result.dto;
+  }
+
+  async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
+    return await this.db
+      .query()
+      .matchNode('node', labelForView('Engagement', view))
+      .where({ 'node.id': inArray(ids.slice()) })
+      .apply(this.hydrate(session, view))
+      .map('dto')
+      .run();
   }
 
   protected hydrate(session: Session, view?: ObjectView) {
@@ -159,7 +170,12 @@ export class EngagementRepository extends CommonRepository {
   ) {
     const pnpId = (await generateId()) as FileId;
 
-    const { projectId, languageId, ...initialProps } = {
+    const {
+      projectId,
+      languageId,
+      methodology: _,
+      ...initialProps
+    } = {
       ...mapFromList(CreateLanguageEngagement.Props, (k) => [k, undefined]),
       ...input,
       status: input.status || EngagementStatus.InDevelopment,
@@ -348,7 +364,12 @@ export class EngagementRepository extends CommonRepository {
 
   // LIST ///////////////////////////////////////////////////////////
 
-  async list(input: EngagementListInput, session: Session, changeset?: ID) {
+  async list(
+    input: EngagementListInput,
+    session: Session,
+    changeset?: ID,
+    limitedScope?: AuthSensitivityMapping // setup limitedScope just in case we need it later on
+  ) {
     const label =
       simpleSwitch(input.filter.type, {
         language: 'LanguageEngagement',
@@ -360,32 +381,41 @@ export class EngagementRepository extends CommonRepository {
       .subQuery((sub) =>
         sub
           .match([
-            requestingUser(session),
-            ...permissionsOfNode(label),
-            ...(input.filter.projectId
+            ...(limitedScope
               ? [
-                  relation('in', '', 'engagement', ACTIVE),
+                  node('project', 'Project'),
+                  relation('out', '', 'engagement', ACTIVE),
+                ]
+              : input.filter.projectId
+              ? [
                   node('project', 'Project', { id: input.filter.projectId }),
+                  relation('out', '', 'engagement', ACTIVE),
                 ]
               : []),
+            node('node', 'Engagement'),
           ])
           .apply(whereNotDeletedInChangeset(changeset))
-          .return('node')
+          .return([
+            'node',
+            input.filter.projectId || limitedScope ? 'project' : '',
+          ])
           .apply((q) =>
             changeset && input.filter.projectId
               ? q
                   .union()
                   .match([
-                    node('', 'Project', { id: input.filter.projectId }),
+                    node('project', 'Project', { id: input.filter.projectId }),
                     relation('out', '', 'engagement', INACTIVE),
                     node('node', label),
                     relation('in', '', 'changeset', ACTIVE),
                     node('changeset', 'Changeset', { id: changeset }),
                   ])
-                  .return('node')
+                  .return(['node', 'project'])
               : q
           )
       )
+      .match(requestingUser(session))
+      .apply(matchProjectSensToLimitedScopeMap(limitedScope))
       .apply(sorting(IEngagement, input))
       .apply(paginate(input, this.hydrate(session, viewOfChangeset(changeset))))
       .first();

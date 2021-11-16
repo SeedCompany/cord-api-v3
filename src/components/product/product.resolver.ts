@@ -10,23 +10,33 @@ import { stripIndent } from 'common-tags';
 import { startCase } from 'lodash';
 import {
   AnonSession,
-  entries,
   ID,
   IdArg,
   LoggedInSession,
   SecuredString,
   Session,
 } from '../../common';
+import { Loader, LoaderOf } from '../../core';
+import {
+  AvailableStepsOptions,
+  CreateDerivativeScriptureProduct,
+  CreateDirectScriptureProduct,
+  getAvailableSteps,
+  ProductLoader,
+  ProductService,
+  ProductStep as Step,
+  UpdateDerivativeScriptureProduct,
+  UpdateDirectScriptureProduct,
+} from '../product';
+import { Book } from '../scripture/books';
 import { labelOfScriptureRanges } from '../scripture/labels';
 import {
   AnyProduct,
-  AvailableMethodologySteps,
   CreateOtherProduct,
   CreateProductInput,
   CreateProductOutput,
-  MethodologyAvailableSteps,
+  DeleteProductOutput,
   MethodologyToApproach,
-  ProducibleType,
   Product,
   ProductApproach,
   ProductCompletionDescriptionSuggestionsInput,
@@ -38,7 +48,7 @@ import {
   UpdateProductInput,
   UpdateProductOutput,
 } from './dto';
-import { ProductService } from './product.service';
+import { ProducibleType } from './dto/producible.dto';
 
 @Resolver(Product)
 export class ProductResolver {
@@ -48,10 +58,10 @@ export class ProductResolver {
     description: 'Read a product by id',
   })
   async product(
-    @AnonSession() session: Session,
+    @Loader(ProductLoader) products: LoaderOf<ProductLoader>,
     @IdArg() id: ID
   ): Promise<AnyProduct> {
-    return await this.productService.readOne(id, session);
+    return await products.load(id);
   }
 
   @Query(() => ProductListOutput, {
@@ -64,9 +74,12 @@ export class ProductResolver {
       type: () => ProductListInput,
       defaultValue: ProductListInput.defaultVal,
     })
-    input: ProductListInput
+    input: ProductListInput,
+    @Loader(ProductLoader) products: LoaderOf<ProductLoader>
   ): Promise<ProductListOutput> {
-    return await this.productService.list(input, session);
+    const list = await this.productService.list(input, session);
+    products.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => ProductApproach, { nullable: true })
@@ -94,8 +107,17 @@ export class ProductResolver {
       return product.title.value ?? null;
     }
     if (!product.produces) {
-      if (!product.scriptureReferences.canRead) {
+      if (
+        !product.scriptureReferences.canRead ||
+        !product.unspecifiedScripture.canRead
+      ) {
         return null;
+      }
+      if (product.unspecifiedScripture.value) {
+        const { book, totalVerses: verses } =
+          product.unspecifiedScripture.value;
+        const totalVerses = Book.find(book).totalVerses;
+        return `${book} (${verses} / ${totalVerses} verses)`;
       }
       return labelOfScriptureRanges(product.scriptureReferences.value);
     }
@@ -117,7 +139,9 @@ export class ProductResolver {
     `,
   })
   category(@Parent() product: AnyProduct): string | null {
-    return !product.produces
+    return product.title
+      ? 'Other'
+      : !product.produces
       ? 'Scripture'
       : startCase(product.produces.value?.__typename) || null;
   }
@@ -129,7 +153,9 @@ export class ProductResolver {
   legacyType(@Parent() product: AnyProduct): ProductType {
     if (product.produces) {
       const type = product.produces.value?.__typename;
-      if (type === ProducibleType.Film) {
+      if (type === ProducibleType.EthnoArt) {
+        return ProductType.EthnoArts;
+      } else if (type === ProducibleType.Film) {
         return ProductType.JesusFilm; // TODO not entirely true
       } else if (type === ProducibleType.Song) {
         return ProductType.Songs;
@@ -143,20 +169,27 @@ export class ProductResolver {
     return ProductType.IndividualBooks;
   }
 
-  @Query(() => [AvailableMethodologySteps], {
+  @Query(() => [Step], {
     description: stripIndent`
-      Returns a list of available steps for each methodology.
-      This is returned as a list because GraphQL cannot describe an object with
-      dynamic keys. It's probably best to convert this to a map on retrieval.
+      Returns a list of available steps for the given constraints.
     `,
   })
-  methodologyAvailableSteps(): AvailableMethodologySteps[] {
-    return entries(MethodologyAvailableSteps).map(
-      ([methodology, steps]): AvailableMethodologySteps => ({
-        methodology,
-        steps,
-      })
-    );
+  availableProductSteps(
+    @Args() options: AvailableStepsOptions
+  ): readonly Step[] {
+    return getAvailableSteps(options);
+  }
+
+  @ResolveField(() => [Step], {
+    description: stripIndent`
+      Returns a list of available steps of product.
+    `,
+  })
+  availableSteps(@Parent() product: AnyProduct): readonly Step[] {
+    return getAvailableSteps({
+      type: product.produces?.value?.__typename,
+      methodology: product.methodology.value,
+    });
   }
 
   @Query(() => ProductCompletionDescriptionSuggestionsOutput, {
@@ -173,6 +206,8 @@ export class ProductResolver {
 
   @Mutation(() => CreateProductOutput, {
     description: 'Create a product entry',
+    deprecationReason:
+      'Use `createDirectScriptureProduct` or `createDerivativeScriptureProduct` instead',
   })
   async createProduct(
     @LoggedInSession() session: Session,
@@ -183,14 +218,25 @@ export class ProductResolver {
     };
   }
 
-  @Mutation(() => UpdateProductOutput, {
-    description: 'Update a product entry',
+  @Mutation(() => CreateProductOutput, {
+    description: 'Create a direct scripture product',
   })
-  async updateProduct(
+  async createDirectScriptureProduct(
     @LoggedInSession() session: Session,
-    @Args('input') { product: input }: UpdateProductInput
-  ): Promise<UpdateProductOutput> {
-    const product = await this.productService.update(input, session);
+    @Args('input') input: CreateDirectScriptureProduct
+  ): Promise<CreateProductOutput> {
+    const product = await this.productService.create(input, session);
+    return { product };
+  }
+
+  @Mutation(() => CreateProductOutput, {
+    description: 'Create a derivative scripture product',
+  })
+  async createDerivativeScriptureProduct(
+    @LoggedInSession() session: Session,
+    @Args('input') input: CreateDerivativeScriptureProduct
+  ): Promise<CreateProductOutput> {
+    const product = await this.productService.create(input, session);
     return { product };
   }
 
@@ -206,6 +252,41 @@ export class ProductResolver {
   }
 
   @Mutation(() => UpdateProductOutput, {
+    description: 'Update a product entry',
+    deprecationReason:
+      'Use `updateDirectScriptureProduct` or `updateDerivativeScriptureProduct` instead',
+  })
+  async updateProduct(
+    @LoggedInSession() session: Session,
+    @Args('input') { product: input }: UpdateProductInput
+  ): Promise<UpdateProductOutput> {
+    const product = await this.productService.update(input, session);
+    return { product };
+  }
+
+  @Mutation(() => UpdateProductOutput, {
+    description: 'Update a direct scripture product',
+  })
+  async updateDirectScriptureProduct(
+    @LoggedInSession() session: Session,
+    @Args('input') input: UpdateDirectScriptureProduct
+  ): Promise<UpdateProductOutput> {
+    const product = await this.productService.updateDirect(input, session);
+    return { product };
+  }
+
+  @Mutation(() => UpdateProductOutput, {
+    description: 'Update a derivative scripture product',
+  })
+  async updateDerivativeScriptureProduct(
+    @LoggedInSession() session: Session,
+    @Args('input') input: UpdateDerivativeScriptureProduct
+  ): Promise<UpdateProductOutput> {
+    const product = await this.productService.updateDerivative(input, session);
+    return { product };
+  }
+
+  @Mutation(() => UpdateProductOutput, {
     description: 'Update an other product entry',
   })
   async updateOtherProduct(
@@ -216,14 +297,14 @@ export class ProductResolver {
     return { product };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => DeleteProductOutput, {
     description: 'Delete a product entry',
   })
   async deleteProduct(
     @LoggedInSession() session: Session,
     @IdArg() id: ID
-  ): Promise<boolean> {
+  ): Promise<DeleteProductOutput> {
     await this.productService.delete(id, session);
-    return true;
+    return { success: true };
   }
 }

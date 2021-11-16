@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Node, node, Query, relation } from 'cypher-query-builder';
+import { inArray, Node, node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { CreateProjectMember, ProjectMember, ProjectMemberListInput } from '.';
 import { ID, NotFoundException, Session, UnsecuredDto } from '../../../common';
@@ -101,6 +101,16 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
     return result.dto;
   }
 
+  async readMany(ids: readonly ID[], session: Session) {
+    return await this.db
+      .query()
+      .matchNode('node', 'ProjectMember')
+      .where({ 'node.id': inArray(ids.slice()) })
+      .apply(this.hydrate(session))
+      .map('dto')
+      .run();
+  }
+
   protected hydrate(session: Session) {
     return (query: Query) =>
       query
@@ -137,6 +147,20 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
           : []),
         node('node', 'ProjectMember'),
       ])
+      .apply((q) =>
+        filter.roles
+          ? q
+              .match([
+                node('node'),
+                relation('out', '', 'roles', ACTIVE),
+                node('role', 'Property'),
+              ])
+              .raw(
+                `WHERE size(apoc.coll.intersection(role.value, $filteredRoles)) > 0`,
+                { filteredRoles: filter.roles }
+              )
+          : q
+      )
       .match(requestingUser(session))
       .apply(sorting(ProjectMember, input))
       .apply(paginate(input, this.hydrate(session)))

@@ -390,7 +390,7 @@ const books = [
 
 type BookData = ArrayItem<typeof books>;
 
-const bookCache: Record<string, BookData> = {};
+const bookCache = new Map<string, BookData | null>();
 
 export class Book implements Iterable<Chapter> {
   readonly #book: BookData;
@@ -407,17 +407,25 @@ export class Book implements Iterable<Chapter> {
     return new Book(books[books.length - 1]);
   }
 
-  static find(name: string) {
-    name = name.toLowerCase();
-    if (bookCache[name]) {
-      return new Book(bookCache[name]);
+  static tryFind(name: string | null | undefined) {
+    if (!name) {
+      return null;
     }
-    const book = books.find((book) =>
-      book.names.map((n) => n.toLowerCase()).includes(name)
-    );
+    const normalizedName = name.toLowerCase();
+    if (!bookCache.has(normalizedName)) {
+      const book = books.find((book) =>
+        book.names.map((n) => n.toLowerCase()).includes(normalizedName)
+      );
+      bookCache.set(normalizedName, book ?? null);
+    }
+    const cached = bookCache.get(normalizedName);
+    return cached ? new Book(cached) : null;
+  }
+
+  static find(name: string) {
+    const book = Book.tryFind(name);
     if (book) {
-      bookCache[name] = book;
-      return new Book(book);
+      return book;
     }
     throw new NotFoundException(`Book "${name}" does not exist`);
   }
@@ -426,13 +434,8 @@ export class Book implements Iterable<Chapter> {
     return Book.find(ref.book);
   }
 
-  static isValid(book: string) {
-    try {
-      Book.find(book);
-      return true;
-    } catch {
-      return false;
-    }
+  static isValid(book: string | null | undefined) {
+    return !!Book.tryFind(book);
   }
 
   static random(after?: Book) {
@@ -508,6 +511,12 @@ export class Book implements Iterable<Chapter> {
   equals(other: Book) {
     return this.name === other.name;
   }
+
+  static [Symbol.iterator] = function* () {
+    for (const book of books) {
+      yield Book.find(book.names[0]);
+    }
+  };
 
   [Symbol.iterator] = function* (this: Book) {
     for (const chapter of range(1, this.totalChapters + 1)) {

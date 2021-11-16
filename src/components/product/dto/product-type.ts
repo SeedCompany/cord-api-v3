@@ -6,6 +6,7 @@ export enum ProductType {
   JesusFilm = 'JesusFilm',
   Songs = 'Songs',
   LiteracyMaterials = 'LiteracyMaterials',
+  EthnoArts = 'EthnoArts',
 
   // Normal Types (can be assumed from books)
   OldTestamentPortions = 'OldTestamentPortions',

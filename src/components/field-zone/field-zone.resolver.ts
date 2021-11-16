@@ -6,34 +6,41 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
-import { SecuredUser, UserService } from '../user';
+import {
+  AnonSession,
+  ID,
+  IdArg,
+  LoggedInSession,
+  mapSecuredValue,
+  Session,
+} from '../../common';
+import { Loader, LoaderOf } from '../../core';
+import { SecuredUser, UserLoader } from '../user';
 import {
   CreateFieldZoneInput,
   CreateFieldZoneOutput,
+  DeleteFieldZoneOutput,
   FieldZone,
   FieldZoneListInput,
   FieldZoneListOutput,
   UpdateFieldZoneInput,
   UpdateFieldZoneOutput,
 } from './dto';
+import { FieldZoneLoader } from './field-zone.loader';
 import { FieldZoneService } from './field-zone.service';
 
 @Resolver(FieldZone)
 export class FieldZoneResolver {
-  constructor(
-    private readonly fieldZoneService: FieldZoneService,
-    private readonly userService: UserService
-  ) {}
+  constructor(private readonly fieldZoneService: FieldZoneService) {}
 
   @Query(() => FieldZone, {
     description: 'Read one field zone by id',
   })
   async fieldZone(
-    @AnonSession() session: Session,
+    @Loader(FieldZoneLoader) fieldZones: LoaderOf<FieldZoneLoader>,
     @IdArg() id: ID
   ): Promise<FieldZone> {
-    return await this.fieldZoneService.readOne(id, session);
+    return await fieldZones.load(id);
   }
 
   @Query(() => FieldZoneListOutput, {
@@ -46,22 +53,20 @@ export class FieldZoneResolver {
       type: () => FieldZoneListInput,
       defaultValue: FieldZoneListInput.defaultVal,
     })
-    input: FieldZoneListInput
+    input: FieldZoneListInput,
+    @Loader(FieldZoneLoader) fieldZones: LoaderOf<FieldZoneLoader>
   ): Promise<FieldZoneListOutput> {
-    return await this.fieldZoneService.list(input, session);
+    const list = await this.fieldZoneService.list(input, session);
+    fieldZones.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => SecuredUser)
   async director(
     @Parent() fieldZone: FieldZone,
-    @AnonSession() session: Session
+    @Loader(UserLoader) users: LoaderOf<UserLoader>
   ): Promise<SecuredUser> {
-    const { value: id, ...rest } = fieldZone.director;
-    const value = id ? await this.userService.readOne(id, session) : undefined;
-    return {
-      value,
-      ...rest,
-    };
+    return await mapSecuredValue(fieldZone.director, (id) => users.load(id));
   }
 
   @Mutation(() => CreateFieldZoneOutput, {
@@ -86,14 +91,14 @@ export class FieldZoneResolver {
     return { fieldZone };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => DeleteFieldZoneOutput, {
     description: 'Delete a field zone',
   })
   async deleteFieldZone(
     @LoggedInSession() session: Session,
     @IdArg() id: ID
-  ): Promise<boolean> {
+  ): Promise<DeleteFieldZoneOutput> {
     await this.fieldZoneService.delete(id, session);
-    return true;
+    return { success: true };
   }
 }

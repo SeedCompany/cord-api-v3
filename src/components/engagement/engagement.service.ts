@@ -130,7 +130,11 @@ export class EngagementService {
     if (changeset) {
       return languageEngagement;
     }
-    const event = new EngagementCreatedEvent(languageEngagement, session);
+    const event = new EngagementCreatedEvent(
+      languageEngagement,
+      input,
+      session
+    );
     await this.eventBus.publish(event);
 
     return event.engagement as LanguageEngagement;
@@ -213,6 +217,7 @@ export class EngagementService {
     }
     const engagementCreatedEvent = new EngagementCreatedEvent(
       internshipEngagement,
+      input,
       session
     );
     await this.eventBus.publish(engagementCreatedEvent);
@@ -245,6 +250,13 @@ export class EngagementService {
     return await this.secure(dto, session);
   }
 
+  async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
+    const engagements = await this.repo.readMany(ids, session, view);
+    return await Promise.all(
+      engagements.map((dto) => this.secure(dto, session))
+    );
+  }
+
   async secure(
     dto: UnsecuredDto<Engagement>,
     session: Session
@@ -262,13 +274,13 @@ export class EngagementService {
       !session.roles.includes(`global:Administrator`)
         ? false
         : await this.repo.checkDeletePermission(dto.id, session);
-
     if (isLanguageEngagement) {
       // help TS understand that the secured props are for a LanguageEngagement
       const secured = securedProperties as SecuredResource<
         typeof LanguageEngagement,
         false
       >;
+
       return {
         ...(dto as UnsecuredDto<LanguageEngagement>),
         ...secured,
@@ -319,7 +331,8 @@ export class EngagementService {
       view
     )) as LanguageEngagement;
 
-    const changes = this.repo.getActualLanguageChanges(object, input);
+    const { methodology: _, ...maybeChanges } = input;
+    const changes = this.repo.getActualLanguageChanges(object, maybeChanges);
     await this.authorizationService.verifyCanEditChanges(
       LanguageEngagement,
       object,
@@ -489,6 +502,7 @@ export class EngagementService {
     view?: ObjectView
   ): Promise<EngagementListOutput> {
     const results = await this.repo.list(input, session, view?.changeset);
+
     return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 

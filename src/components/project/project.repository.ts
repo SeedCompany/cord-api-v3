@@ -219,58 +219,19 @@ export class ProjectRepository extends CommonRepository {
     });
   }
 
-  async updateLocation(input: UpdateProject, createdAt: DateTime) {
-    const query = this.db
-      .query()
-      .match(node('project', 'Project', { id: input.id }))
-      .match(node('location', 'Location', { id: input.primaryLocationId }))
-      .with('project, location')
-      .limit(1)
-      .optionalMatch([
-        node('project', 'Project', { id: input.id }),
-        relation('out', 'oldRel', 'primaryLocation', ACTIVE),
-        node(''),
-      ])
-      .setValues({ 'oldRel.active': false })
-      .with('project, location')
-      .limit(1)
-      .create([
-        node('project'),
-        relation('out', '', 'primaryLocation', {
-          active: true,
-          createdAt,
-        }),
-        node('location'),
-      ]);
-
-    await query.run();
-  }
-
-  async updateFieldRegion(input: UpdateProject, createdAt: DateTime) {
-    const query = this.db
-      .query()
-      .match(node('project', 'Project', { id: input.id }))
-      .with('project')
-      .limit(1)
-      .match([node('region', 'FieldRegion', { id: input.fieldRegionId })])
-      .optionalMatch([
-        node('project'),
-        relation('out', 'oldRel', 'fieldRegion', ACTIVE),
-        node(''),
-      ])
-      .setValues({ 'oldRel.active': false })
-      .with('project, region')
-      .limit(1)
-      .create([
-        node('project'),
-        relation('out', '', 'fieldRegion', {
-          active: true,
-          createdAt,
-        }),
-        node('region'),
-      ]);
-
-    await query.run();
+  async updateRelation(
+    relationName: string,
+    otherLabel: string,
+    id: ID,
+    otherId: ID | null
+  ) {
+    await super.updateRelation(
+      relationName,
+      otherLabel,
+      id,
+      otherId,
+      'Project'
+    );
   }
 
   async list(

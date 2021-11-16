@@ -3,6 +3,7 @@ import { DbBudget } from '../../budget/model';
 import { DbBudgetRecord } from '../../budget/model/budget-record.model.db';
 import { DbCeremony } from '../../ceremony/model';
 import { DbInternshipEngagement, DbLanguageEngagement } from '../../engagement/model';
+import { DbEthnoArt } from '../../ethno-art/model';
 import { DbFieldRegion } from '../../field-region/model';
 import { DbFieldZone } from '../../field-zone/model';
 import { DbDirectory, DbFile } from '../../file/model';
@@ -114,6 +115,14 @@ export const ProjectManagerGlobal = new DbRole({
       ],
       canDelete: false,
     }),
+    new DbBaseNodeGrant<DbEthnoArt>({
+      __className: 'DbEthnoArt',
+      properties: [
+        { propertyName: 'name', permission: { read, write, }, },
+        { propertyName: 'scriptureReferences', permission: { read, write, }, },
+      ],
+      canDelete: false,
+    }),
     new DbBaseNodeGrant<DbEthnologueLanguage>({
       __className: 'DbEthnologueLanguage',
       properties: [
@@ -147,6 +156,7 @@ export const ProjectManagerGlobal = new DbRole({
     }),
     new DbBaseNodeGrant<DbFilm>({
       __className: 'DbFilm',
+      canList: true,
       properties: [
         { propertyName: 'name', permission: { read, write, }, },
         { propertyName: 'scriptureReferences', permission: { read, write, }, },
@@ -155,6 +165,7 @@ export const ProjectManagerGlobal = new DbRole({
     }),
     new DbBaseNodeGrant<DbFundingAccount>({
       __className: 'DbFundingAccount',
+      canList: true,
       properties: [
         { propertyName: 'name', permission: { read, }, },
         { propertyName: 'accountNumber', permission: { read, }, },
@@ -163,11 +174,12 @@ export const ProjectManagerGlobal = new DbRole({
     }),
     new DbBaseNodeGrant<DbInternshipEngagement>({
       __className: 'DbInternshipEngagement',
+      canList: true,
       properties: [
         { propertyName: 'ceremony', permission: { read, write, }, },
         { propertyName: 'completeDate', permission: { read, write, }, },
         { propertyName: 'countryOfOrigin', permission: { read, write, }, },
-        { propertyName: 'disbursementCompleteDate', permission: { read, write, }, },
+        { propertyName: 'disbursementCompleteDate', permission: { read, }, },
         { propertyName: 'endDate', permission: { read, write, }, },
         { propertyName: 'endDateOverride', permission: { read, write, }, },
         { propertyName: 'growthPlan', permission: { read, write, }, },
@@ -188,6 +200,7 @@ export const ProjectManagerGlobal = new DbRole({
     }),
     new DbBaseNodeGrant<DbLanguage>({
       __className: 'DbLanguage',
+      canList: true,
       properties: [
         { propertyName: 'displayName', permission: { read, }, },
         { propertyName: 'displayNamePronunciation', permission: { read, }, },
@@ -213,10 +226,11 @@ export const ProjectManagerGlobal = new DbRole({
     }),
     new DbBaseNodeGrant<DbLanguageEngagement>({
       __className: 'DbLanguageEngagement',
+      canList: true,
       properties: [
         { propertyName: 'ceremony', permission: { read, write, }, },
         { propertyName: 'completeDate', permission: { read, write, }, },
-        { propertyName: 'disbursementCompleteDate', permission: { read, write, }, },
+        { propertyName: 'disbursementCompleteDate', permission: { read, }, },
         { propertyName: 'endDate', permission: { read, write, }, },
         { propertyName: 'endDateOverride', permission: { read, write, }, },
         { propertyName: 'firstScripture', permission: { read, write, }, },
@@ -225,6 +239,7 @@ export const ProjectManagerGlobal = new DbRole({
         { propertyName: 'lastReactivatedAt', permission: { read, write, }, },
         { propertyName: 'lastSuspendedAt', permission: { read, write, }, },
         { propertyName: 'lukePartnership', permission: { read, write, }, },
+        { propertyName: 'openToInvestorVisit', permission: { read, write, }, },
         { propertyName: 'paratextRegistryId', permission: { read, write, }, },
         { propertyName: 'pnp', permission: { read, write, }, },
         { propertyName: 'historicGoal', permission: { read, write, }, },
@@ -288,11 +303,11 @@ export const ProjectManagerGlobal = new DbRole({
         { propertyName: 'agreement', permission: { read, write, }, },
         { propertyName: 'agreementStatus', permission: { read, write, }, },
         { propertyName: 'financialReportingType', permission: { read, }, },
-        { propertyName: 'mou', permission: { read, write, }, },
-        { propertyName: 'mouEnd', permission: { read, write, }, },
-        { propertyName: 'mouEndOverride', permission: { read, write, }, },
-        { propertyName: 'mouStart', permission: { read, write, }, },
-        { propertyName: 'mouStartOverride', permission: { read, write, }, },
+        { propertyName: 'mou', permission: { read, }, },
+        { propertyName: 'mouEnd', permission: { read, }, },
+        { propertyName: 'mouEndOverride', permission: { read, }, },
+        { propertyName: 'mouStart', permission: { read, }, },
+        { propertyName: 'mouStartOverride', permission: { read, }, },
         { propertyName: 'mouStatus', permission: { read, }, },
         { propertyName: 'types', permission: { read, write, }, },
         { propertyName: 'organization', permission: { read, write, }, },
@@ -325,6 +340,7 @@ export const ProjectManagerGlobal = new DbRole({
         { propertyName: 'progressTarget', permission: { read, write, }, },
         { propertyName: 'title', permission: { read, write, }, },
         { propertyName: 'description', permission: { read, write, }, },
+        { propertyName: 'unspecifiedScripture', permission: { read, }, },
       ],
       canDelete: false,
     }),
@@ -363,6 +379,7 @@ export const ProjectManagerGlobal = new DbRole({
     }),
     new DbBaseNodeGrant<DbFieldZone>({
       __className: 'DbFieldZone',
+      canList: true,
       properties: [
         { propertyName: 'director', permission: { read, write, }, },
         { propertyName: 'name', permission: { read, write, }, },
@@ -371,6 +388,7 @@ export const ProjectManagerGlobal = new DbRole({
     }),
     new DbBaseNodeGrant<DbFieldRegion>({
       __className: 'DbFieldRegion',
+      canList: true,
       properties: [
         { propertyName: 'director', permission: { read, write, }, },
         { propertyName: 'name', permission: { read, write, }, },
@@ -396,6 +414,7 @@ export const ProjectManagerGlobal = new DbRole({
         { propertyName: 'end', permission: { read, }, },
         { propertyName: 'receivedDate', permission: { read, }, },
         { propertyName: 'reportFile', permission: { read, }, },
+        { propertyName: 'skippedReason', permission: { read, }, },
       ],
       canDelete: true,
     }),

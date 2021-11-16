@@ -4,8 +4,10 @@ import { DateTime } from 'luxon';
 import { Except, Merge } from 'type-fest';
 import {
   getDbClassLabels,
+  has,
   ID,
   NotFoundException,
+  Range,
   ServerException,
   Session,
   UnsecuredDto,
@@ -14,8 +16,10 @@ import { CommonRepository, OnIndex } from '../../core';
 import { DbChanges, getChanges } from '../../core/database/changes';
 import {
   ACTIVE,
+  collect,
   createNode,
   createRelationships,
+  deactivateProperty,
   escapeLuceneSyntax,
   fullTextQuery,
   matchPropsAndProjectSensAndScopedRoles,
@@ -26,10 +30,16 @@ import {
   sorting,
 } from '../../core/database/query';
 import { BaseNode } from '../../core/database/results';
-import { ScriptureRange, ScriptureRangeInput } from '../scripture';
 import {
+  ScriptureRange,
+  ScriptureRangeInput,
+  UnspecifiedScripturePortion,
+  UnspecifiedScripturePortionInput,
+} from '../scripture';
+import {
+  CreateDerivativeScriptureProduct,
+  CreateDirectScriptureProduct,
   CreateOtherProduct,
-  CreateProduct,
   DerivativeScriptureProduct,
   DirectScriptureProduct,
   ProductMethodology as Methodology,
@@ -39,30 +49,10 @@ import {
   ProductListInput,
   UpdateProduct,
 } from './dto';
-import { ProgressMeasurement } from './dto/progress-measurement.enum';
+import { productListFilter } from './query.helpers';
 
 @Injectable()
 export class ProductRepository extends CommonRepository {
-  async findNode(type: 'engagement' | 'producible', id: ID) {
-    if (type === 'engagement') {
-      return await this.db
-        .query()
-        .match([node('engagement', 'Engagement', { id })])
-        .return('engagement')
-        .first();
-    } else {
-      return await this.db
-        .query()
-        .match([
-          node('producible', 'Producible', {
-            id,
-          }),
-        ])
-        .return('producible')
-        .first();
-    }
-  }
-
   async readOne(id: ID, session: Session) {
     const query = this.db
       .query()
@@ -81,6 +71,43 @@ export class ProductRepository extends CommonRepository {
     return result.dto;
   }
 
+  async listIdsAndScriptureRefs(engagementId: ID) {
+    return await this.db
+      .query()
+      .match([
+        node('engagement', 'Engagement', { id: engagementId }),
+        relation('out', '', 'product', ACTIVE),
+        node('node', 'DirectScriptureProduct'),
+      ])
+      .optionalMatch([
+        node('node'),
+        relation('out', '', 'unspecifiedScripture', ACTIVE),
+        node('unspecifiedScripture', 'UnspecifiedScripturePortion'),
+      ])
+      .subQuery('node', (sub) =>
+        // Only concerned with Direct Scripture Products for this, so no need to worry about overrides
+        sub
+          .match([
+            node('node'),
+            relation('out', '', 'scriptureReferences', ACTIVE),
+            node('scriptureRanges', 'ScriptureRange'),
+          ])
+          .return(
+            collect('scriptureRanges { .start, .end }').as('scriptureRanges')
+          )
+      )
+      .return<{
+        id: ID;
+        scriptureRanges: ReadonlyArray<Range<number>>;
+        unspecifiedScripture: UnspecifiedScripturePortion | null;
+      }>([
+        'node.id as id',
+        'scriptureRanges',
+        'unspecifiedScripture { .book, .totalVerses } as unspecifiedScripture',
+      ])
+      .run();
+  }
+
   protected hydrate(session: Session) {
     return (query: Query) =>
       query
@@ -90,30 +117,34 @@ export class ProductRepository extends CommonRepository {
           relation('out', '', 'produces', ACTIVE),
           node('produces', 'Producible'),
         ])
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'unspecifiedScripture', ACTIVE),
+          node('unspecifiedScripture', 'UnspecifiedScripturePortion'),
+        ])
         .return<{
           dto: Merge<
             Omit<
-              UnsecuredDto<DirectScriptureProduct & DerivativeScriptureProduct>,
+              UnsecuredDto<
+                DirectScriptureProduct &
+                  DerivativeScriptureProduct &
+                  OtherProduct
+              >,
               'scriptureReferences' | 'scriptureReferencesOverride'
             >,
             {
               isOverriding: boolean;
               produces: BaseNode | null;
+              unspecifiedScripture: UnspecifiedScripturePortion | null;
             }
           >;
         }>(
-          merge(
-            {
-              // BC with existing products
-              progressStepMeasurement: `"${ProgressMeasurement.Percent}"`,
-              progressTarget: 100,
-            },
-            'props',
-            {
-              engagement: 'engagement.id',
-              produces: 'produces',
-            }
-          ).as('dto')
+          merge('props', {
+            engagement: 'engagement.id',
+            produces: 'produces',
+            unspecifiedScripture:
+              'unspecifiedScripture { .book, .totalVerses }',
+          }).as('dto')
         );
   }
 
@@ -145,20 +176,27 @@ export class ProductRepository extends CommonRepository {
       .first();
   }
 
-  async create(input: CreateProduct) {
-    const Product = input.produces
+  async create(
+    input: CreateDerivativeScriptureProduct | CreateDirectScriptureProduct
+  ) {
+    const isDerivative = has('produces', input);
+    const Product = isDerivative
       ? DerivativeScriptureProduct
       : DirectScriptureProduct;
     const initialProps = {
-      mediums: input.mediums,
-      purposes: input.purposes,
+      mediums: input.mediums ?? [],
+      purposes: input.purposes ?? [],
       methodology: input.methodology,
-      steps: input.steps,
+      steps: input.steps ?? [],
       describeCompletion: input.describeCompletion,
-      isOverriding: !!input.scriptureReferencesOverride,
       canDelete: true,
       progressTarget: input.progressTarget,
       progressStepMeasurement: input.progressStepMeasurement,
+      ...(isDerivative
+        ? {
+            isOverriding: !!input.scriptureReferencesOverride,
+          }
+        : {}),
     };
 
     const query = this.db
@@ -166,6 +204,9 @@ export class ProductRepository extends CommonRepository {
       .apply(
         await createNode(Product, {
           initialProps,
+          baseNodeProps: {
+            createdAt: input.createdAt,
+          },
         })
       )
       .apply(
@@ -173,9 +214,11 @@ export class ProductRepository extends CommonRepository {
           in: {
             product: ['LanguageEngagement', input.engagementId],
           },
-          out: {
-            produces: ['Producible', input.produces],
-          },
+          out: isDerivative
+            ? {
+                produces: ['Producible', input.produces],
+              }
+            : {},
         })
       )
       // Connect scripture ranges
@@ -192,13 +235,22 @@ export class ProductRepository extends CommonRepository {
               }),
             ];
         return q.create([
-          ...(!input.produces ? input.scriptureReferences ?? [] : []).map(
+          ...(!isDerivative ? input.scriptureReferences ?? [] : []).map(
             connectScriptureRange('scriptureReferences')
           ),
-          ...(input.produces
-            ? input.scriptureReferencesOverride ?? []
-            : []
-          ).map(connectScriptureRange('scriptureReferencesOverride')),
+          ...(isDerivative ? input.scriptureReferencesOverride ?? [] : []).map(
+            connectScriptureRange('scriptureReferencesOverride')
+          ),
+          !isDerivative && input.unspecifiedScripture
+            ? [
+                node('node'),
+                relation('out', '', 'unspecifiedScripture', ACTIVE),
+                node('', ['UnspecifiedScripturePortion', 'Property'], {
+                  ...input.unspecifiedScripture,
+                  createdAt,
+                }),
+              ]
+            : [],
         ]);
       })
       .return<{ id: ID }>('node.id as id');
@@ -211,10 +263,10 @@ export class ProductRepository extends CommonRepository {
 
   async createOther(input: CreateOtherProduct) {
     const initialProps = {
-      mediums: input.mediums,
-      purposes: input.purposes,
+      mediums: input.mediums ?? [],
+      purposes: input.purposes ?? [],
       methodology: input.methodology,
-      steps: input.steps,
+      steps: input.steps ?? [],
       describeCompletion: input.describeCompletion,
       title: input.title,
       description: input.description,
@@ -280,11 +332,37 @@ export class ProductRepository extends CommonRepository {
       .first();
   }
 
+  async updateUnspecifiedScripture(
+    productId: ID,
+    input: UnspecifiedScripturePortionInput | null
+  ) {
+    await this.db
+      .query()
+      .matchNode('node', 'Product', { id: productId })
+      .apply(
+        deactivateProperty({
+          resource: DirectScriptureProduct,
+          key: 'unspecifiedScripture',
+        })
+      )
+      .apply((q) =>
+        input
+          ? q.create([
+              node('node'),
+              relation('out', 'rel', 'unspecifiedScripture', ACTIVE),
+              node('', ['UnspecifiedScripturePortion', 'Property'], {
+                ...input,
+                createdAt: DateTime.local(),
+              }),
+            ])
+          : q
+      )
+      .return('numPropsDeactivated')
+      .first();
+  }
+
   async updateDerivativeProperties(
-    object: Except<
-      DerivativeScriptureProduct,
-      'produces' | 'scriptureReferencesOverride'
-    >,
+    object: DerivativeScriptureProduct,
     changes: DbChanges<DerivativeScriptureProduct>
   ) {
     return await this.db.updateProperties({
@@ -318,6 +396,7 @@ export class ProductRepository extends CommonRepository {
             ]
           : []),
       ])
+      .apply(productListFilter(filter))
       .apply(sorting(Product, input))
       .apply(paginate(input))
       .first();

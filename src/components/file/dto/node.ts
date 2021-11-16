@@ -180,3 +180,7 @@ export const asFile = (node: AnyFileNode) => {
 
 export const isFileVersion = (node: AnyFileNode): node is FileVersion =>
   node.type === FileNodeType.FileVersion;
+
+export type Downloadable<T> = T & {
+  download: () => Promise<Buffer>;
+};

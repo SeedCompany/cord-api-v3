@@ -66,6 +66,13 @@ export class UnavailabilityService {
     return await this.secure(result, session);
   }
 
+  async readMany(ids: readonly ID[], session: Session) {
+    const unavailabilities = await this.repo.readMany(ids, session);
+    return await Promise.all(
+      unavailabilities.map((dto) => this.secure(dto, session))
+    );
+  }
+
   private async secure(
     dto: UnsecuredDto<Unavailability>,
     session: Session

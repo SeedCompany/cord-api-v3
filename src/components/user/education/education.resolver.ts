@@ -7,16 +7,18 @@ import {
   LoggedInSession,
   Session,
 } from '../../../common';
+import { Loader, LoaderOf } from '../../../core';
+import { EducationLoader, EducationService } from '../education';
 import {
   CreateEducationInput,
   CreateEducationOutput,
+  DeleteEducationOutput,
   Education,
   EducationListInput,
   EducationListOutput,
   UpdateEducationInput,
   UpdateEducationOutput,
 } from './dto';
-import { EducationService } from './education.service';
 
 @Injectable()
 export class EducationResolver {
@@ -37,10 +39,10 @@ export class EducationResolver {
     description: 'Look up an education by its ID',
   })
   async education(
-    @AnonSession() session: Session,
+    @Loader(EducationLoader) educations: LoaderOf<EducationLoader>,
     @IdArg() id: ID
   ): Promise<Education> {
-    return await this.service.readOne(id, session);
+    return await educations.load(id);
   }
 
   @Query(() => EducationListOutput, {
@@ -53,9 +55,12 @@ export class EducationResolver {
       type: () => EducationListInput,
       defaultValue: EducationListInput.defaultVal,
     })
-    input: EducationListInput
+    input: EducationListInput,
+    @Loader(EducationLoader) educations: LoaderOf<EducationLoader>
   ): Promise<EducationListOutput> {
-    return await this.service.list(input, session);
+    const list = await this.service.list(input, session);
+    educations.primeAll(list.items);
+    return list;
   }
 
   @Mutation(() => UpdateEducationOutput, {
@@ -69,14 +74,14 @@ export class EducationResolver {
     return { education };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => DeleteEducationOutput, {
     description: 'Delete an education',
   })
   async deleteEducation(
     @LoggedInSession() session: Session,
     @IdArg() id: ID
-  ): Promise<boolean> {
+  ): Promise<DeleteEducationOutput> {
     await this.service.delete(id, session);
-    return true;
+    return { success: true };
   }
 }

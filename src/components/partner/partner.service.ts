@@ -13,7 +13,13 @@ import {
 import { HandleIdLookup, ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { Powers } from '../authorization/dto/powers';
 import { FinancialReportingType } from '../partnership/dto/financial-reporting-type';
+import {
+  ProjectListInput,
+  ProjectService,
+  SecuredProjectList,
+} from '../project';
 import {
   CreatePartner,
   Partner,
@@ -30,6 +36,8 @@ export class PartnerService {
     @Logger('partner:service') private readonly logger: ILogger,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
+    @Inject(forwardRef(() => ProjectService))
+    private readonly projectService: ProjectService,
     private readonly repo: PartnerRepository
   ) {}
 
@@ -85,6 +93,11 @@ export class PartnerService {
 
     const result = await this.repo.readOne(id, session);
     return await this.secure(result, session);
+  }
+
+  async readMany(ids: readonly ID[], session: Session) {
+    const partners = await this.repo.readMany(ids, session);
+    return await Promise.all(partners.map((dto) => this.secure(dto, session)));
   }
 
   private async secure(dto: UnsecuredDto<Partner>, session: Session) {
@@ -162,7 +175,7 @@ export class PartnerService {
 
     try {
       await this.repo.deleteNode(object);
-    } catch (exception) {
+    } catch (exception: any) {
       this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);
     }
@@ -175,10 +188,43 @@ export class PartnerService {
     session: Session
   ): Promise<PartnerListOutput> {
     const limited = (await this.authorizationService.canList(Partner, session))
-      ? undefined
-      : await this.authorizationService.getListRoleSensitivityMapping(Partner);
+      ? // --- need a sensitivity mapping for global because several roles have a global and/or project sensitivity access for nearly all props.
+        {
+          ...(await this.authorizationService.getListRoleSensitivityMapping(
+            Partner,
+            'global'
+          )),
+          ...(await this.authorizationService.getListRoleSensitivityMapping(
+            Partner,
+            'project'
+          )),
+        }
+      : await this.authorizationService.getListRoleSensitivityMapping(
+          Partner,
+          'project'
+        );
     const results = await this.repo.list(input, session, limited);
     return await mapListResults(results, (dto) => this.secure(dto, session));
+  }
+
+  async listProjects(
+    partner: Partner,
+    input: ProjectListInput,
+    session: Session
+  ): Promise<SecuredProjectList> {
+    const projectListOutput = await this.projectService.list(
+      { ...input, filter: { ...input.filter, partnerId: partner.id } },
+      session
+    );
+
+    return {
+      ...projectListOutput,
+      canRead: true,
+      canCreate: await this.authorizationService.hasPower(
+        session,
+        Powers.CreateProject
+      ),
+    };
   }
 
   protected verifyFinancialReportingType(
@@ -194,8 +240,8 @@ export class PartnerService {
   }
 
   protected validateFinancialReportingType(
-    financialReportingTypes: FinancialReportingType[] | undefined,
-    types: PartnerType[] | undefined
+    financialReportingTypes: readonly FinancialReportingType[] | undefined,
+    types: readonly PartnerType[] | undefined
   ) {
     return financialReportingTypes?.length &&
       !types?.includes(PartnerType.Managing)

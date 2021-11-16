@@ -9,16 +9,20 @@ import {
 import {
   AnonSession,
   LoggedInSession,
+  mapSecuredValue,
   SecuredDateRange,
   Session,
 } from '../../common';
-import { CeremonyService, SecuredCeremony } from '../ceremony';
+import { Loader, LoaderOf } from '../../core';
+import { CeremonyLoader, SecuredCeremony } from '../ceremony';
 import { ChangesetIds, IdsAndView, IdsAndViewArg } from '../changeset/dto';
+import { EngagementLoader, EngagementService } from '../engagement';
 import {
   CreateInternshipEngagementInput,
   CreateInternshipEngagementOutput,
   CreateLanguageEngagementInput,
   CreateLanguageEngagementOutput,
+  DeleteEngagementOutput,
   Engagement,
   EngagementListInput,
   EngagementListOutput,
@@ -28,24 +32,19 @@ import {
   UpdateLanguageEngagementInput,
   UpdateLanguageEngagementOutput,
 } from './dto';
-import { EngagementService } from './engagement.service';
 
 @Resolver(IEngagement)
 export class EngagementResolver {
-  constructor(
-    private readonly service: EngagementService,
-    private readonly ceremonies: CeremonyService
-  ) {}
+  constructor(private readonly service: EngagementService) {}
 
   @Query(() => IEngagement, {
     description: 'Lookup an engagement by ID',
   })
   async engagement(
-    @IdsAndViewArg() { id, view }: IdsAndView,
-    @AnonSession() session: Session
+    @IdsAndViewArg() key: IdsAndView,
+    @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>
   ): Promise<Engagement> {
-    const engagement = await this.service.readOne(id, session, view);
-    return engagement;
+    return await engagements.load(key);
   }
 
   @Query(() => EngagementListOutput, {
@@ -59,22 +58,22 @@ export class EngagementResolver {
       defaultValue: EngagementListInput.defaultVal,
     })
     input: EngagementListInput,
-    @AnonSession() session: Session
+    @AnonSession() session: Session,
+    @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>
   ): Promise<EngagementListOutput> {
-    return await this.service.list(input, session);
+    const list = await this.service.list(input, session);
+    engagements.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => SecuredCeremony)
   async ceremony(
     @Parent() engagement: Engagement,
-    @AnonSession() session: Session
+    @Loader(CeremonyLoader) ceremonies: LoaderOf<CeremonyLoader>
   ): Promise<SecuredCeremony> {
-    const { value: id, ...rest } = engagement.ceremony;
-    const value = id ? await this.ceremonies.readOne(id, session) : undefined;
-    return {
-      value,
-      ...rest,
-    };
+    return await mapSecuredValue(engagement.ceremony, (id) =>
+      ceremonies.load(id)
+    );
   }
 
   @ResolveField()
@@ -154,14 +153,14 @@ export class EngagementResolver {
     return { engagement };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => DeleteEngagementOutput, {
     description: 'Delete an engagement',
   })
   async deleteEngagement(
     @Args() { id, changeset }: ChangesetIds,
     @LoggedInSession() session: Session
-  ): Promise<boolean> {
+  ): Promise<DeleteEngagementOutput> {
     await this.service.delete(id, session, changeset);
-    return true;
+    return { success: true };
   }
 }

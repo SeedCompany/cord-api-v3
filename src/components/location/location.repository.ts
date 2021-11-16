@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   ID,
@@ -75,6 +75,17 @@ export class LocationRepository extends DtoRepository(Location) {
     return result.dto;
   }
 
+  async readMany(ids: readonly ID[], session: Session) {
+    return await this.db
+      .query()
+      .apply(matchRequestingUser(session))
+      .matchNode('node', 'Location')
+      .where({ 'node.id': inArray(ids.slice()) })
+      .apply(this.hydrate())
+      .map('dto')
+      .run();
+  }
+
   protected hydrate() {
     return (query: Query) =>
       query
@@ -95,68 +106,6 @@ export class LocationRepository extends DtoRepository(Location) {
             defaultFieldRegion: 'defaultFieldRegion.id',
           }).as('dto')
         );
-  }
-
-  async updateFundingAccount(id: ID, fundingAccount: ID, session: Session) {
-    await this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .matchNode('location', 'Location', { id })
-      .matchNode('newFundingAccount', 'FundingAccount', {
-        id: fundingAccount,
-      })
-      .optionalMatch([
-        node('location'),
-        relation('out', 'oldFundingAccountRel', 'fundingAccount', {
-          active: true,
-        }),
-        node('fundingAccount', 'FundingAccount'),
-      ])
-      .create([
-        node('location'),
-        relation('out', '', 'fundingAccount', {
-          active: true,
-          createdAt: DateTime.local(),
-        }),
-        node('newFundingAccount'),
-      ])
-      .set({
-        values: {
-          'oldFundingAccountRel.active': false,
-        },
-      })
-      .run();
-  }
-
-  async updateDefaultFieldRegion(id: ID, fieldRegion: ID, session: Session) {
-    await this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .matchNode('location', 'Location', { id })
-      .matchNode('newDefaultFieldRegion', 'FieldRegion', {
-        id: fieldRegion,
-      })
-      .optionalMatch([
-        node('location'),
-        relation('out', 'oldDefaultFieldRegionRel', 'defaultFieldRegion', {
-          active: true,
-        }),
-        node('defaultFieldRegion', 'FieldRegion'),
-      ])
-      .create([
-        node('location'),
-        relation('out', '', 'defaultFieldRegion', {
-          active: true,
-          createdAt: DateTime.local(),
-        }),
-        node('newDefaultFieldRegion'),
-      ])
-      .set({
-        values: {
-          'oldDefaultFieldRegionRel.active': false,
-        },
-      })
-      .run();
   }
 
   async list({ filter, ...input }: LocationListInput, session: Session) {

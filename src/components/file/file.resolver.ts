@@ -13,6 +13,7 @@ import { User, UserLoader } from '../user';
 import {
   asFile,
   CreateFileVersionInput,
+  DeleteFileNodeOutput,
   File,
   FileListInput,
   FileListOutput,
@@ -78,15 +79,15 @@ export class FileResolver {
     return this.service.getDownloadUrl(node);
   }
 
-  @Mutation(() => Boolean, {
-    description: 'Delete a file or directory',
+  @Mutation(() => DeleteFileNodeOutput, {
+    description: 'Delete a file node',
   })
   async deleteFileNode(
     @IdArg() id: ID,
     @LoggedInSession() session: Session
-  ): Promise<boolean> {
+  ): Promise<DeleteFileNodeOutput> {
     await this.service.delete(id, session);
-    return true;
+    return { success: true };
   }
 
   @Mutation(() => RequestUploadOutput, {

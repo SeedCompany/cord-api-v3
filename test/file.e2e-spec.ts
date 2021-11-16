@@ -69,7 +69,9 @@ async function deleteNode(app: TestApp, id: ID) {
   await app.graphql.mutate(
     gql`
       mutation deleteFileNode($id: ID!) {
-        deleteFileNode(id: $id)
+        deleteFileNode(id: $id) {
+          __typename
+        }
       }
     `,
     {

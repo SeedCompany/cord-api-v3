@@ -1,5 +1,5 @@
 import { Session } from '../../../common';
-import { FileVersion } from '../../file';
+import { Downloadable, FileNode } from '../../file';
 import { PeriodicReport } from '../dto';
 
 /**
@@ -8,7 +8,7 @@ import { PeriodicReport } from '../dto';
 export class PeriodicReportUploadedEvent {
   constructor(
     readonly report: PeriodicReport,
-    readonly file: FileVersion,
+    readonly file: Downloadable<FileNode>,
     readonly session: Session
   ) {}
 }

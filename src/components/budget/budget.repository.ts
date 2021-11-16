@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import { inArray, node, Query, relation } from 'cypher-query-builder';
 import {
   ID,
   labelForView,
@@ -112,6 +112,27 @@ export class BudgetRepository extends DtoRepository(Budget) {
     return result;
   }
 
+  async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
+    const label = labelForView('Budget', view);
+    return await this.db
+      .query()
+      .match([
+        node('project', 'Project'),
+        relation('out', '', 'budget', ACTIVE),
+        node('node', label),
+      ])
+      .where({ 'node.id': inArray(ids.slice()) })
+      .apply(matchPropsAndProjectSensAndScopedRoles(session, { view }))
+      .apply(matchChangesetAndChangedProps(view?.changeset))
+      .return<{ dto: UnsecuredDto<Budget> }>(
+        merge('props', 'changedProps', {
+          changeset: 'changeset.id',
+        }).as('dto')
+      )
+      .map((row) => row.dto)
+      .run();
+  }
+
   async getStatusByRecord(recordId: ID) {
     const result = await this.db
       .query()
@@ -163,7 +184,7 @@ export class BudgetRepository extends DtoRepository(Budget) {
     return result!; // result from paginate() will always have 1 row.
   }
 
-  async listNoSecGroups({ filter, ...input }: BudgetListInput) {
+  async listUnsecure({ filter, ...input }: BudgetListInput) {
     const result = await this.db
       .query()
       .match([

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   ID,
@@ -83,6 +83,17 @@ export class PartnerRepository extends DtoRepository(Partner) {
     }
 
     return result.dto;
+  }
+
+  async readMany(ids: readonly ID[], session: Session) {
+    return await this.db
+      .query()
+      .apply(matchRequestingUser(session))
+      .matchNode('node', 'Partner')
+      .where({ 'node.id': inArray(ids.slice()) })
+      .apply(this.hydrate(session))
+      .map('dto')
+      .run();
   }
 
   protected hydrate(session: Session) {
@@ -175,18 +186,11 @@ export class PartnerRepository extends DtoRepository(Partner) {
   ) {
     const result = await this.db
       .query()
+      .matchNode('node', 'Partner')
       .match([
-        ...(limitedScope
-          ? [
-              node('project', 'Project'),
-              relation('out', '', 'partnership'),
-              node('', 'Partnership'),
-              relation('out', '', 'partner'),
-            ]
-          : []),
-        node('node', 'Partner'),
         ...(filter.userId && session.userId
           ? [
+              node('node'),
               relation('out', '', 'organization', ACTIVE),
               node('', 'Organization'),
               relation('in', '', 'organization', ACTIVE),
@@ -194,6 +198,17 @@ export class PartnerRepository extends DtoRepository(Partner) {
             ]
           : []),
       ])
+      .apply((q) =>
+        limitedScope
+          ? q.optionalMatch([
+              node('project', 'Project'),
+              relation('out', '', 'partnership'),
+              node('', 'Partnership'),
+              relation('out', '', 'partner'),
+              node('node'),
+            ])
+          : q
+      )
       // match requesting user once (instead of once per row)
       .match(requestingUser(session))
       .apply(matchProjectSensToLimitedScopeMap(limitedScope))

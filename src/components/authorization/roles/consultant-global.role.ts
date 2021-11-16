@@ -2,6 +2,7 @@ import { DbBudget } from '../../budget/model';
 import { DbBudgetRecord } from '../../budget/model/budget-record.model.db';
 import { DbCeremony } from '../../ceremony/model';
 import { DbInternshipEngagement, DbLanguageEngagement } from '../../engagement/model';
+import { DbEthnoArt } from '../../ethno-art/model';
 import { DbFieldRegion } from '../../field-region/model';
 import { DbFieldZone } from '../../field-zone/model';
 import { DbDirectory, DbFile } from '../../file/model';
@@ -99,6 +100,14 @@ export const ConsultantGlobal = new DbRole({
       ],
       canDelete: false,
     }),
+    new DbBaseNodeGrant<DbEthnoArt>({
+      __className: 'DbEthnoArt',
+      properties: [
+        { propertyName: 'name', permission: { read, }, },
+        { propertyName: 'scriptureReferences', permission: { read, }, },
+      ],
+      canDelete: false,
+    }),
     new DbBaseNodeGrant<DbEthnologueLanguage>({
       __className: 'DbEthnologueLanguage',
       properties: [
@@ -111,6 +120,7 @@ export const ConsultantGlobal = new DbRole({
     }),
     new DbBaseNodeGrant<DbFieldRegion>({
       __className: 'DbFieldRegion',
+      canList: true,
       properties: [
         { propertyName: 'director', permission: { read, }, },
         { propertyName: 'name', permission: { read, }, },
@@ -120,6 +130,7 @@ export const ConsultantGlobal = new DbRole({
     }),
     new DbBaseNodeGrant<DbFieldZone>({
       __className: 'DbFieldZone',
+      canList: true,
       properties: [
         { propertyName: 'director', permission: { read, }, },
         { propertyName: 'name', permission: { read, }, },
@@ -149,6 +160,7 @@ export const ConsultantGlobal = new DbRole({
     }),
     new DbBaseNodeGrant<DbFilm>({
       __className: 'DbFilm',
+      canList: true,
       properties: [
         { propertyName: 'name', permission: { read, }, },
         { propertyName: 'scriptureReferences', permission: { read, }, },
@@ -157,6 +169,7 @@ export const ConsultantGlobal = new DbRole({
     }),
     new DbBaseNodeGrant<DbFundingAccount>({
       __className: 'DbFundingAccount',
+      canList: false,
       properties: [
         { propertyName: 'name', permission: {}, },
         { propertyName: 'accountNumber', permission: {}, },
@@ -165,11 +178,12 @@ export const ConsultantGlobal = new DbRole({
     }),
     new DbBaseNodeGrant<DbInternshipEngagement>({
       __className: 'DbInternshipEngagement',
+      canList: true,
       properties: [
         { propertyName: 'ceremony', permission: { read, write, }, },
         { propertyName: 'completeDate', permission: { read, write, }, },
         { propertyName: 'countryOfOrigin', permission: { read, write, }, },
-        { propertyName: 'disbursementCompleteDate', permission: { read, write, }, },
+        { propertyName: 'disbursementCompleteDate', permission: { }, },
         { propertyName: 'endDate', permission: { read, write, }, },
         { propertyName: 'endDateOverride', permission: { read, write, }, },
         { propertyName: 'growthPlan', permission: { read, write, }, },
@@ -190,6 +204,7 @@ export const ConsultantGlobal = new DbRole({
     }),
     new DbBaseNodeGrant<DbLanguage>({
       __className: 'DbLanguage',
+      canList: true,
       properties: [
         { propertyName: 'displayName', permission: { read, }, },
         { propertyName: 'displayNamePronunciation', permission: { read, }, },
@@ -213,10 +228,11 @@ export const ConsultantGlobal = new DbRole({
     }),
     new DbBaseNodeGrant<DbLanguageEngagement>({
       __className: 'DbLanguageEngagement',
+      canList: true,
       properties: [
         { propertyName: 'ceremony', permission: { read, write, }, },
         { propertyName: 'completeDate', permission: { read, write, }, },
-        { propertyName: 'disbursementCompleteDate', permission: { read, write, }, },
+        { propertyName: 'disbursementCompleteDate', permission: { }, },
         { propertyName: 'endDate', permission: { read, write, }, },
         { propertyName: 'endDateOverride', permission: { read, write, }, },
         { propertyName: 'firstScripture', permission: { read, write, }, },
@@ -225,6 +241,7 @@ export const ConsultantGlobal = new DbRole({
         { propertyName: 'lastReactivatedAt', permission: { read, write, }, },
         { propertyName: 'lastSuspendedAt', permission: { read, write, }, },
         { propertyName: 'lukePartnership', permission: { read, write, }, },
+        { propertyName: 'openToInvestorVisit', permission: { read, write, }, },
         { propertyName: 'paratextRegistryId', permission: { }, },
         { propertyName: 'pnp', permission: { read, write, }, },
         { propertyName: 'historicGoal', permission: { read, write, }, },
@@ -325,6 +342,7 @@ export const ConsultantGlobal = new DbRole({
         { propertyName: 'progressTarget', permission: { read, }, },
         { propertyName: 'title', permission: { read, }, },
         { propertyName: 'description', permission: { read, }, },
+        { propertyName: 'unspecifiedScripture', permission: { read, }, },
       ],
       canDelete: false,
     }),
@@ -379,6 +397,7 @@ export const ConsultantGlobal = new DbRole({
         { propertyName: 'end', permission: { read, }, },
         { propertyName: 'receivedDate', permission: { read, }, },
         { propertyName: 'reportFile', permission: { read, }, },
+        { propertyName: 'skippedReason', permission: { read, }, },
       ],
       canDelete: true,
     }),

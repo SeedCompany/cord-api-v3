@@ -22,6 +22,7 @@ export const org = gql`
   fragment org on Organization {
     createdAt
     id
+    sensitivity
     name {
       value
       canRead
@@ -554,6 +555,7 @@ export const partner = gql`
     id
     createdAt
     modifiedAt
+    sensitivity
     organization {
       canEdit
       canRead
@@ -808,27 +810,39 @@ export const engagement = gql`
     }
     ... on InternshipEngagement {
       countryOfOrigin {
+        canRead
+        canEdit
         value {
           id
         }
       }
       intern {
+        canRead
+        canEdit
         value {
           id
         }
       }
       mentor {
+        canRead
+        canEdit
         value {
           id
         }
       }
       position {
+        canRead
+        canEdit
         value
       }
       methodologies {
+        canRead
+        canEdit
         value
       }
       growthPlan {
+        canRead
+        canEdit
         value {
           id
         }
@@ -880,6 +894,10 @@ export const fieldZone = gql`
   fragment fieldZone on FieldZone {
     id
     createdAt
+    director {
+      canRead
+      canEdit
+    }
     name {
       value
       canEdit
@@ -896,6 +914,14 @@ export const fieldRegion = gql`
       value
       canEdit
       canRead
+    }
+    fieldZone {
+      canRead
+      canEdit
+    }
+    director {
+      canRead
+      canEdit
     }
   }
 `;

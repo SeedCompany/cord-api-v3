@@ -33,8 +33,9 @@ export class PnpHandleTotalVerseEquivalentsMigration extends BaseMigration {
           this.reports.readOne(row.reportId, session),
           this.files.getFileVersion(row.versionId, session),
         ]);
+        const file = this.files.asDownloadable(fv);
 
-        const event = new PeriodicReportUploadedEvent(report, fv, session);
+        const event = new PeriodicReportUploadedEvent(report, file, session);
         await this.eventBus.publish(event);
       } catch (e) {
         this.logger.error('Failed to re-extract PnP', {

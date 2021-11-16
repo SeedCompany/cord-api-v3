@@ -4,6 +4,7 @@ import {
   ID,
   NotFoundException,
   ObjectView,
+  SecuredList,
   ServerException,
   Session,
   UnauthorizedException,
@@ -83,6 +84,13 @@ export class FundingAccountService {
     return await this.secure(result, session);
   }
 
+  async readMany(ids: readonly ID[], session: Session) {
+    const fundingAccounts = await this.repo.readMany(ids, session);
+    return await Promise.all(
+      fundingAccounts.map((dto) => this.secure(dto, session))
+    );
+  }
+
   private async secure(
     dto: UnsecuredDto<FundingAccount>,
     session: Session
@@ -140,7 +148,11 @@ export class FundingAccountService {
     input: FundingAccountListInput,
     session: Session
   ): Promise<FundingAccountListOutput> {
-    const results = await this.repo.list(input, session);
-    return await mapListResults(results, (dto) => this.secure(dto, session));
+    if (await this.authorizationService.canList(FundingAccount, session)) {
+      const results = await this.repo.list(input, session);
+      return await mapListResults(results, (dto) => this.secure(dto, session));
+    } else {
+      return SecuredList.Redacted;
+    }
   }
 }

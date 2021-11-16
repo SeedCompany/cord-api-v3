@@ -65,7 +65,9 @@ const deleteProject =
     await app.graphql.mutate(
       gql`
         mutation DeleteProject($id: ID!) {
-          deleteProject(id: $id)
+          deleteProject(id: $id) {
+            __typename
+          }
         }
       `,
       {

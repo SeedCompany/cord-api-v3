@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { ID, NotFoundException, Session, UnsecuredDto } from '../../common';
 import { DtoRepository, matchRequestingUser } from '../../core';
 import {
@@ -60,6 +60,17 @@ export class OrganizationRepository extends DtoRepository(Organization) {
     return result.dto;
   }
 
+  async readMany(ids: readonly ID[], session: Session) {
+    return await this.db
+      .query()
+      .apply(matchRequestingUser(session))
+      .matchNode('node', 'Organization')
+      .where({ 'node.id': inArray(ids.slice()) })
+      .apply(this.hydrate(session))
+      .map('dto')
+      .run();
+  }
+
   protected hydrate(session: Session) {
     return (query: Query) =>
       query
@@ -97,6 +108,7 @@ export class OrganizationRepository extends DtoRepository(Organization) {
         .return<{ dto: UnsecuredDto<Organization> }>(
           merge('props', {
             scope: 'scopedRoles',
+            sensitivity: 'sensitivity',
           }).as('dto')
         );
   }

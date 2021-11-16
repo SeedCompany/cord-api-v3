@@ -80,6 +80,16 @@ export const projectListFilter = (filter: ProjectFilters) => (query: Query) => {
     ]);
   }
 
+  if (filter.partnerId != null) {
+    conditions.partnerId = path([
+      node('node'),
+      relation('out', '', 'partnership', ACTIVE),
+      node('', 'Partnership'),
+      relation('out', '', 'partner', ACTIVE),
+      node('', 'Partner', { id: filter.partnerId }),
+    ]);
+  }
+
   if (Object.keys(conditions).length > 0) {
     query.where(conditions);
   }

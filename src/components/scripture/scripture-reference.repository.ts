@@ -34,7 +34,7 @@ export class ScriptureReferenceRepository {
   async update(
     isOverriding: boolean | undefined,
     producibleId: ID,
-    scriptureRefs: ScriptureRangeInput[],
+    scriptureRefs: readonly ScriptureRangeInput[],
     rel: 'scriptureReferencesOverride' | 'scriptureReferences'
   ) {
     if (isOverriding) {

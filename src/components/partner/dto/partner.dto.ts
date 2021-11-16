@@ -11,8 +11,12 @@ import {
   SecuredProperty,
   SecuredProps,
   SecuredString,
+  Sensitivity,
+  SensitivityField,
 } from '../../../common';
+import { ScopedRole } from '../../authorization';
 import { FinancialReportingType } from '../../partnership/dto/financial-reporting-type';
+import { IProject } from '../../project/dto';
 import { SecuredPartnerTypes } from './partner-type.enum';
 
 @ObjectType({
@@ -28,6 +32,9 @@ export abstract class SecuredFinancialReportingTypes extends SecuredEnumList(
 export class Partner extends Resource {
   static readonly Props = keysOf<Partner>();
   static readonly SecuredProps = keysOf<SecuredProps<Partner>>();
+  static readonly Relations = {
+    projects: [IProject],
+  };
 
   readonly organization: Secured<ID>;
 
@@ -53,6 +60,15 @@ export class Partner extends Resource {
 
   @DateTimeField()
   readonly modifiedAt: DateTime;
+
+  @SensitivityField({
+    description: "Based on the project's sensitivity",
+  })
+  readonly sensitivity: Sensitivity;
+
+  // A list of non-global roles the requesting user has available for this object.
+  // This is just a cache, to prevent extra db lookups within the same request.
+  readonly scope: ScopedRole[];
 }
 
 @ObjectType({

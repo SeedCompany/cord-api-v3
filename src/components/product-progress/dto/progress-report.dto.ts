@@ -9,7 +9,7 @@ import {
   SecuredProps,
   UnsecuredDto,
 } from '../../../common';
-import { MethodologyStep } from '../../product';
+import { ProductStep } from '../../product';
 
 @ObjectType({
   description: 'The progress of a product for a given report',
@@ -56,8 +56,8 @@ export class StepProgress {
   readonly id?: ID;
   readonly createdAt?: DateTime;
 
-  @Field(() => MethodologyStep)
-  readonly step: MethodologyStep;
+  @Field(() => ProductStep)
+  readonly step: ProductStep;
 
   @Field({
     description: stripIndent`

@@ -63,6 +63,8 @@
     "graphql": "^15.5.3",
     "highlightjs-cypher": "^1.1.1",
     "iso-3166-1": "^2.1.0",
+    "ix": "^4.5.2",
+    "js-levenshtein-esm": "^1.2.0",
     "js-yaml": "^4.1.0",
     "jsonwebtoken": "^8.5.1",
     "lazy-get-decorator": "^2.2.0",

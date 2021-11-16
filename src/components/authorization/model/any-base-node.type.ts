@@ -5,6 +5,7 @@ import {
   DbInternshipEngagement,
   DbLanguageEngagement,
 } from '../../engagement/model';
+import { DbEthnoArt } from '../../ethno-art/model';
 import { DbFieldRegion } from '../../field-region/model';
 import { DbFieldZone } from '../../field-zone/model';
 import { DbDirectory, DbFile } from '../../file/model';
@@ -32,6 +33,7 @@ export type AnyBaseNode = DbBudget &
   DbCeremony &
   DbDirectory &
   DbEducation &
+  DbEthnoArt &
   DbEthnologueLanguage &
   DbFieldRegion &
   DbFieldZone &
@@ -63,6 +65,7 @@ export type OneBaseNode =
   | DbCeremony
   | DbDirectory
   | DbEducation
+  | DbEthnoArt
   | DbEthnologueLanguage
   | DbFieldRegion
   | DbFieldZone

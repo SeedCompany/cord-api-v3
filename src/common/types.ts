@@ -76,8 +76,15 @@ export const OmitType = BaseOmitType as <T, K extends keyof T>(
  *
  * @see https://docs.nestjs.com/graphql/mapped-types#intersection
  */
-export const IntersectionType = BaseIntersectionType as <A, B>(
-  classARef: AbstractClassType<A>,
-  classBRef: AbstractClassType<B>,
-  decorator?: ClassDecoratorFactory
-) => Type<A & B>;
+export const IntersectionType = BaseIntersectionType as {
+  <A, B>(
+    classARef: abstract new (...args: any[]) => A,
+    classBRef: abstract new (...args: any[]) => B,
+    decorator?: ClassDecoratorFactory
+  ): Type<A & B>;
+  <A, B>(
+    classARef: AbstractClassType<A>,
+    classBRef: AbstractClassType<B>,
+    decorator?: ClassDecoratorFactory
+  ): Type<A & B>;
+};

@@ -6,16 +6,18 @@ import {
   LoggedInSession,
   Session,
 } from '../../../common';
+import { Loader, LoaderOf } from '../../../core';
+import { ProjectMemberLoader, ProjectMemberService } from '../project-member';
 import {
   CreateProjectMemberInput,
   CreateProjectMemberOutput,
+  DeleteProjectMemberOutput,
   ProjectMember,
   ProjectMemberListInput,
   ProjectMemberListOutput,
   UpdateProjectMemberInput,
   UpdateProjectMemberOutput,
 } from './dto';
-import { ProjectMemberService } from './project-member.service';
 
 @Resolver()
 export class ProjectMemberResolver {
@@ -36,10 +38,10 @@ export class ProjectMemberResolver {
     description: 'Look up a project member by ID',
   })
   async projectMember(
-    @AnonSession() session: Session,
+    @Loader(ProjectMemberLoader) projectMembers: LoaderOf<ProjectMemberLoader>,
     @IdArg() id: ID
   ): Promise<ProjectMember> {
-    return await this.service.readOne(id, session);
+    return await projectMembers.load(id);
   }
 
   @Query(() => ProjectMemberListOutput, {
@@ -52,9 +54,12 @@ export class ProjectMemberResolver {
       type: () => ProjectMemberListInput,
       defaultValue: ProjectMemberListInput.defaultVal,
     })
-    input: ProjectMemberListInput
+    input: ProjectMemberListInput,
+    @Loader(ProjectMemberLoader) projectMembers: LoaderOf<ProjectMemberLoader>
   ): Promise<ProjectMemberListOutput> {
-    return await this.service.list(input, session);
+    const list = await this.service.list(input, session);
+    projectMembers.primeAll(list.items);
+    return list;
   }
 
   @Mutation(() => UpdateProjectMemberOutput, {
@@ -68,14 +73,14 @@ export class ProjectMemberResolver {
     return { projectMember };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => DeleteProjectMemberOutput, {
     description: 'Delete a project member',
   })
   async deleteProjectMember(
     @LoggedInSession() session: Session,
     @IdArg() id: ID
-  ): Promise<boolean> {
+  ): Promise<DeleteProjectMemberOutput> {
     await this.service.delete(id, session);
-    return true;
+    return { success: true };
   }
 }

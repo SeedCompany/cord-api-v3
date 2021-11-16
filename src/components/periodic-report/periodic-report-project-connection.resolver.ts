@@ -1,5 +1,10 @@
 import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { AnonSession, Session } from '../../common';
+import { Loader, LoaderOf } from '../../core';
+import {
+  PeriodicReportLoader,
+  PeriodicReportService,
+} from '../periodic-report';
 import { IProject, Project } from '../project/dto';
 import {
   PeriodicReportListInput,
@@ -7,7 +12,6 @@ import {
   SecuredPeriodicReport,
   SecuredPeriodicReportList,
 } from './dto';
-import { PeriodicReportService } from './periodic-report.service';
 
 @Resolver(IProject)
 export class PeriodicReportProjectConnectionResolver {
@@ -16,20 +20,25 @@ export class PeriodicReportProjectConnectionResolver {
   @ResolveField(() => SecuredPeriodicReportList)
   async financialReports(
     @AnonSession() session: Session,
-    @Parent() project: Project,
+    @Parent()
+    project: Project,
     @Args({
       name: 'input',
       type: () => PeriodicReportListInput,
       defaultValue: PeriodicReportListInput.defaultVal,
     })
-    input: PeriodicReportListInput
+    input: PeriodicReportListInput,
+    @Loader(PeriodicReportLoader)
+    periodicReports: LoaderOf<PeriodicReportLoader>
   ): Promise<SecuredPeriodicReportList> {
-    return await this.service.list(
+    const list = await this.service.list(
       project.id,
       ReportType.Financial,
       input,
       session
     );
+    periodicReports.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => SecuredPeriodicReportList)
@@ -41,14 +50,18 @@ export class PeriodicReportProjectConnectionResolver {
       type: () => PeriodicReportListInput,
       defaultValue: PeriodicReportListInput.defaultVal,
     })
-    input: PeriodicReportListInput
+    input: PeriodicReportListInput,
+    @Loader(PeriodicReportLoader)
+    periodicReports: LoaderOf<PeriodicReportLoader>
   ): Promise<SecuredPeriodicReportList> {
-    return await this.service.list(
+    const list = await this.service.list(
       project.id,
       ReportType.Narrative,
       input,
       session
     );
+    periodicReports.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => SecuredPeriodicReport, {

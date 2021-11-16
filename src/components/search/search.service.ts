@@ -2,17 +2,16 @@ import { Injectable } from '@nestjs/common';
 import { compact } from 'lodash';
 import { ID, NotFoundException, ServerException, Session } from '../../common';
 import { ResourceResolver } from '../../core';
+import { EthnoArtService } from '../ethno-art';
 import { FieldRegionService } from '../field-region';
 import { FieldZoneService } from '../field-zone';
 import { FilmService } from '../film';
 import { FundingAccountService } from '../funding-account';
 import { LanguageService } from '../language';
-import { LiteracyMaterialService } from '../literacy-material';
 import { LocationService } from '../location';
 import { OrganizationService } from '../organization';
 import { PartnerService } from '../partner';
 import { ProjectService } from '../project';
-import { SongService } from '../song';
 import { StoryService } from '../story';
 import { UserService } from '../user';
 import {
@@ -44,9 +43,10 @@ export class SearchService {
     TranslationProject: (...args) => this.projects.readOneTranslation(...args),
     InternshipProject: (...args) => this.projects.readOneInternship(...args),
     Film: (...args) => this.film.readOne(...args),
+    EthnoArt: (...args) => this.ethnoArt.readOne(...args),
     Story: (...args) => this.story.readOne(...args),
-    LiteracyMaterial: (...args) => this.literacyMaterial.readOne(...args),
-    Song: (...args) => this.song.readOne(...args),
+    LiteracyMaterial: (...args) => this.ethnoArt.readOne(...args),
+    Song: (...args) => this.ethnoArt.readOne(...args),
     Location: (...args) => this.location.readOne(...args),
     FieldZone: (...args) => this.zone.readOne(...args),
     FieldRegion: (...args) => this.region.readOne(...args),
@@ -64,8 +64,7 @@ export class SearchService {
     private readonly projects: ProjectService,
     private readonly film: FilmService,
     private readonly story: StoryService,
-    private readonly literacyMaterial: LiteracyMaterialService,
-    private readonly song: SongService,
+    private readonly ethnoArt: EthnoArtService,
     private readonly zone: FieldZoneService,
     private readonly region: FieldRegionService,
     private readonly fundingAccount: FundingAccountService,

@@ -4,7 +4,7 @@ import { ValueOf } from 'type-fest';
 import { Resource } from '../../../common';
 import { ResourceMap } from '../../authorization/model/resource-map';
 
-type SomeResource = ValueOf<ResourceMap>;
+type SomeResource = ValueOf<ResourceMap>['prototype'];
 
 @ObjectType({
   description:

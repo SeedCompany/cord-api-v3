@@ -4,6 +4,7 @@ import {
   ID,
   NotFoundException,
   ObjectView,
+  SecuredList,
   ServerException,
   Session,
   UnauthorizedException,
@@ -67,6 +68,13 @@ export class FieldZoneService {
 
     const result = await this.repo.readOne(id, session);
     return await this.secure(result, session);
+  }
+
+  async readMany(ids: readonly ID[], session: Session) {
+    const fieldZones = await this.repo.readMany(ids, session);
+    return await Promise.all(
+      fieldZones.map((dto) => this.secure(dto, session))
+    );
   }
 
   private async secure(
@@ -134,7 +142,11 @@ export class FieldZoneService {
     input: FieldZoneListInput,
     session: Session
   ): Promise<FieldZoneListOutput> {
-    const results = await this.repo.list(input, session);
-    return await mapListResults(results, (dto) => this.secure(dto, session));
+    if (await this.authorizationService.canList(FieldZone, session)) {
+      const results = await this.repo.list(input, session);
+      return await mapListResults(results, (dto) => this.secure(dto, session));
+    } else {
+      return SecuredList.Redacted;
+    }
   }
 }

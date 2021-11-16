@@ -90,6 +90,13 @@ export class OrganizationService {
     return await this.secure(result, session);
   }
 
+  async readMany(ids: readonly ID[], session: Session) {
+    const organizations = await this.repo.readMany(ids, session);
+    return await Promise.all(
+      organizations.map((dto) => this.secure(dto, session))
+    );
+  }
+
   private async secure(
     dto: UnsecuredDto<Organization>,
     session: Session
@@ -194,13 +201,13 @@ export class OrganizationService {
   }
 
   async listLocations(
-    organizationId: ID,
+    organization: Organization,
     input: LocationListInput,
     session: Session
   ): Promise<SecuredLocationList> {
-    return await this.locationService.listLocationsFromNode(
-      'Organization',
-      organizationId,
+    return await this.locationService.listLocationForResource(
+      Organization,
+      organization,
       'locations',
       input,
       session

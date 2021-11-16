@@ -4,6 +4,7 @@ import {
   ID,
   NotFoundException,
   ObjectView,
+  SecuredList,
   ServerException,
   Session,
   UnauthorizedException,
@@ -82,6 +83,11 @@ export class FilmService {
     return await this.secure(result, session);
   }
 
+  async readMany(ids: readonly ID[], session: Session) {
+    const films = await this.repo.readMany(ids, session);
+    return await Promise.all(films.map((dto) => this.secure(dto, session)));
+  }
+
   private async secure(
     dto: UnsecuredDto<Film>,
     session: Session
@@ -146,7 +152,11 @@ export class FilmService {
   }
 
   async list(input: FilmListInput, session: Session): Promise<FilmListOutput> {
-    const results = await this.repo.list(input, session);
-    return await mapListResults(results, (dto) => this.secure(dto, session));
+    if (await this.authorizationService.canList(Film, session)) {
+      const results = await this.repo.list(input, session);
+      return await mapListResults(results, (dto) => this.secure(dto, session));
+    } else {
+      return SecuredList.Redacted;
+    }
   }
 }

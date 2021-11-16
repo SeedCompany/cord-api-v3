@@ -1,11 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
+import { inArray, node } from 'cypher-query-builder';
 import { ID, NotFoundException, Session } from '../../common';
 import { DtoRepository, matchRequestingUser } from '../../core';
 import {
   createNode,
   paginate,
-  permissionsOfNode,
   requestingUser,
   sorting,
 } from '../../core/database/query';
@@ -48,10 +47,22 @@ export class FilmRepository extends DtoRepository(Film) {
     return result.dto;
   }
 
+  async readMany(ids: readonly ID[], session: Session) {
+    return await this.db
+      .query()
+      .apply(matchRequestingUser(session))
+      .matchNode('node', 'Film')
+      .where({ 'node.id': inArray(ids.slice()) })
+      .apply(this.hydrate())
+      .map('dto')
+      .run();
+  }
+
   async list({ filter, ...input }: FilmListInput, session: Session) {
     const result = await this.db
       .query()
-      .match([requestingUser(session), ...permissionsOfNode('Film')])
+      .match(requestingUser(session))
+      .match(node('node', 'Film'))
       .apply(sorting(Film, input))
       .apply(paginate(input, this.hydrate()))
       .first();

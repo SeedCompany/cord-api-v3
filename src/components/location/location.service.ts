@@ -69,6 +69,11 @@ export class LocationService {
     return await this.secure(result, session);
   }
 
+  async readMany(ids: readonly ID[], session: Session) {
+    const locations = await this.repo.readMany(ids, session);
+    return await Promise.all(locations.map((dto) => this.secure(dto, session)));
+  }
+
   private async secure(
     dto: UnsecuredDto<Location>,
     session: Session
@@ -101,15 +106,21 @@ export class LocationService {
 
     await this.repo.updateProperties(location, simpleChanges);
 
-    if (fundingAccountId) {
-      await this.repo.updateFundingAccount(input.id, fundingAccountId, session);
+    if (fundingAccountId !== undefined) {
+      await this.repo.updateRelation(
+        'fundingAccount',
+        'FundingAccount',
+        input.id,
+        fundingAccountId
+      );
     }
 
-    if (defaultFieldRegionId) {
-      await this.repo.updateDefaultFieldRegion(
+    if (defaultFieldRegionId !== undefined) {
+      await this.repo.updateRelation(
+        'defaultFieldRegion',
+        'FieldRegion',
         input.id,
-        defaultFieldRegionId,
-        session
+        defaultFieldRegionId
       );
     }
 

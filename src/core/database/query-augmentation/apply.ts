@@ -29,12 +29,12 @@ declare module 'cypher-query-builder/dist/typings/query' {
      * db.query().apply(matchFoo('Movie'));
      */
     apply<S>(fn: (query: Query<Result>) => Query<S>): Query<S>;
-    apply(fn: (query: this) => void): this;
+    apply(fn: ((query: this) => void) | null | undefined): this;
   }
 }
 
 Query.prototype.apply = function apply<R>(
-  fn: (q: Query) => R
+  fn: ((q: Query) => R) | null | undefined
 ): R extends void ? Query : R {
-  return (fn(this) || this) as Exclude<R, void>;
+  return (fn?.(this) || this) as Exclude<R, void>;
 };

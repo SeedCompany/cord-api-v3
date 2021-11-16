@@ -17,19 +17,31 @@ import {
   Session,
 } from '../../common';
 import { Loader, LoaderOf } from '../../core';
-import { LocationListInput, SecuredLocationList } from '../location';
+import {
+  LocationListInput,
+  LocationLoader,
+  SecuredLocationList,
+} from '../location';
 import {
   OrganizationListInput,
+  OrganizationLoader,
   SecuredOrganizationList,
 } from '../organization';
-import { PartnerListInput, SecuredPartnerList } from '../partner';
+import {
+  PartnerListInput,
+  PartnerLoader,
+  SecuredPartnerList,
+} from '../partner';
 import { SecuredTimeZone, TimeZoneService } from '../timezone';
 import {
   AssignOrganizationToUserInput,
+  AssignOrganizationToUserOutput,
   CheckEmailArgs,
   CreatePersonInput,
   CreatePersonOutput,
+  DeleteUserOutput,
   RemoveOrganizationFromUserInput,
+  RemoveOrganizationFromUserOutput,
   UpdateUserInput,
   UpdateUserOutput,
   User,
@@ -40,10 +52,15 @@ import {
   KnownLanguage,
   ModifyKnownLanguageArgs,
 } from './dto/known-language.dto';
-import { EducationListInput, SecuredEducationList } from './education';
+import {
+  EducationListInput,
+  EducationLoader,
+  SecuredEducationList,
+} from './education';
 import {
   SecuredUnavailabilityList,
   UnavailabilityListInput,
+  UnavailabilityLoader,
 } from './unavailability';
 import { UserLoader } from './user.loader';
 import { fullName, UserService } from './user.service';
@@ -110,9 +127,12 @@ export class UserResolver {
       type: () => UserListInput,
       defaultValue: UserListInput.defaultVal,
     })
-    input: UserListInput
+    input: UserListInput,
+    @Loader(UserLoader) users: LoaderOf<UserLoader>
   ): Promise<UserListOutput> {
-    return await this.userService.list(input, session);
+    const list = await this.userService.list(input, session);
+    users.primeAll(list.items);
+    return list;
   }
 
   @Query(() => Boolean, {
@@ -131,9 +151,17 @@ export class UserResolver {
       type: () => UnavailabilityListInput,
       defaultValue: UnavailabilityListInput.defaultVal,
     })
-    input: UnavailabilityListInput
+    input: UnavailabilityListInput,
+    @Loader(UnavailabilityLoader)
+    unavailabilities: LoaderOf<UnavailabilityLoader>
   ): Promise<SecuredUnavailabilityList> {
-    return await this.userService.listUnavailabilities(id, input, session);
+    const list = await this.userService.listUnavailabilities(
+      id,
+      input,
+      session
+    );
+    unavailabilities.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => SecuredOrganizationList)
@@ -145,9 +173,12 @@ export class UserResolver {
       type: () => OrganizationListInput,
       defaultValue: OrganizationListInput.defaultVal,
     })
-    input: OrganizationListInput
+    input: OrganizationListInput,
+    @Loader(OrganizationLoader) organizations: LoaderOf<OrganizationLoader>
   ): Promise<SecuredOrganizationList> {
-    return await this.userService.listOrganizations(id, input, session);
+    const list = await this.userService.listOrganizations(id, input, session);
+    organizations.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => SecuredPartnerList)
@@ -159,9 +190,12 @@ export class UserResolver {
       type: () => PartnerListInput,
       defaultValue: PartnerListInput.defaultVal,
     })
-    input: PartnerListInput
+    input: PartnerListInput,
+    @Loader(PartnerLoader) partners: LoaderOf<PartnerLoader>
   ): Promise<SecuredPartnerList> {
-    return await this.userService.listPartners(id, input, session);
+    const list = await this.userService.listPartners(id, input, session);
+    partners.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => SecuredEducationList)
@@ -173,9 +207,12 @@ export class UserResolver {
       type: () => EducationListInput,
       defaultValue: EducationListInput.defaultVal,
     })
-    input: EducationListInput
+    input: EducationListInput,
+    @Loader(EducationLoader) educations: LoaderOf<EducationLoader>
   ): Promise<SecuredEducationList> {
-    return await this.userService.listEducations(id, input, session);
+    const list = await this.userService.listEducations(id, input, session);
+    educations.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => SecuredLocationList)
@@ -187,9 +224,12 @@ export class UserResolver {
       type: () => LocationListInput,
       defaultValue: LocationListInput.defaultVal,
     })
-    input: LocationListInput
+    input: LocationListInput,
+    @Loader(LocationLoader) locations: LoaderOf<LocationLoader>
   ): Promise<SecuredLocationList> {
-    return await this.userService.listLocations(user.id, input, session);
+    const list = await this.userService.listLocations(user.id, input, session);
+    locations.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => [KnownLanguage])
@@ -223,12 +263,15 @@ export class UserResolver {
     return { user };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => DeleteUserOutput, {
     description: 'Delete a user',
   })
-  async deleteUser(@LoggedInSession() session: Session, @IdArg() id: ID) {
+  async deleteUser(
+    @LoggedInSession() session: Session,
+    @IdArg() id: ID
+  ): Promise<DeleteUserOutput> {
     await this.userService.delete(id, session);
-    return true;
+    return { success: true };
   }
 
   @Mutation(() => User, {
@@ -253,26 +296,26 @@ export class UserResolver {
     return await this.userService.readOne(userId, session);
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => AssignOrganizationToUserOutput, {
     description: 'Assign organization OR primaryOrganization to user',
   })
   async assignOrganizationToUser(
     @LoggedInSession() session: Session,
     @Args('input') input: AssignOrganizationToUserInput
-  ): Promise<boolean> {
+  ): Promise<AssignOrganizationToUserOutput> {
     await this.userService.assignOrganizationToUser(input.request, session);
-    return true;
+    return { success: true };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => RemoveOrganizationFromUserOutput, {
     description: 'Remove organization OR primaryOrganization from user',
   })
   async removeOrganizationFromUser(
     @LoggedInSession() session: Session,
     @Args('input') input: RemoveOrganizationFromUserInput
-  ): Promise<boolean> {
+  ): Promise<RemoveOrganizationFromUserOutput> {
     await this.userService.removeOrganizationFromUser(input.request, session);
-    return true;
+    return { success: true };
   }
 
   @Mutation(() => User, {

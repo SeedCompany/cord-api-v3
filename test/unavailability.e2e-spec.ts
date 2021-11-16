@@ -97,7 +97,9 @@ describe('Unavailability e2e', () => {
     const result = await app.graphql.mutate(
       gql`
         mutation deleteUnavailability($id: ID!) {
-          deleteUnavailability(id: $id)
+          deleteUnavailability(id: $id) {
+            __typename
+          }
         }
       `,
       {

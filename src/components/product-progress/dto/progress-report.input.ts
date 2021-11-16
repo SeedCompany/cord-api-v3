@@ -3,7 +3,7 @@ import { Type } from 'class-transformer';
 import { Max, Min, ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
 import { ID, IdField } from '../../../common';
-import { MethodologyStep } from '../../product';
+import { ProductStep } from '../../product';
 
 @InputType()
 export abstract class ProductProgressInput {
@@ -34,14 +34,14 @@ export abstract class ProductProgressInput {
 
 @InputType()
 export abstract class StepProgressInput {
-  @Field(() => MethodologyStep)
-  readonly step: MethodologyStep;
+  @Field(() => ProductStep)
+  readonly step: ProductStep;
 
   @Field(() => Float, {
     nullable: true,
     description:
       'The new percent (0-100) complete for the step or null to remove the current value.',
-    deprecationReason: 'Use `StepProgressInput.percentDone` instead.',
+    deprecationReason: 'Use `StepProgressInput.completed` instead.',
   })
   @Min(0)
   @Max(100)

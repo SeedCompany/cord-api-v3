@@ -43,7 +43,13 @@ export class SearchRepository {
       })
       .apply(fullTextQuery('propValue', '$query', ['node as property']))
       .apply(propToBaseNode())
-      .apply(filterToRequestedAndAllowed())
+      .apply(
+        // Ignore authorization if only searching for EthnoArt or FundingAccounts
+        // This is a temporary fix while authorization refactor is in progress
+        ['EthnoArt', 'FundingAccount'].includes(input.type?.join(',') ?? '')
+          ? null
+          : filterToRequestedAndAllowed()
+      )
       .returnDistinct<{ id: ID; type: keyof SearchResultMap }>([
         'node.id as id',
         `[l in labels(node) where l in $types][0] as type`,

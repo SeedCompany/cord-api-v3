@@ -18,20 +18,26 @@ import {
   SecuredDate,
   SecuredInt,
   Session,
+  viewOfChangeset,
 } from '../../common';
 import { Loader, LoaderOf } from '../../core';
+import { IdsAndView, IdsAndViewArg } from '../changeset/dto';
 import { LocationListInput, SecuredLocationList } from '../location';
+import { LocationLoader } from '../location/location.loader';
 import { ProjectLoader } from '../project';
 import { ProjectListInput, SecuredProjectList } from '../project/dto';
 import {
   CreateLanguageInput,
   CreateLanguageOutput,
+  DeleteLanguageOutput,
   Language,
   LanguageListInput,
   LanguageListOutput,
+  SecuredFirstScripture,
   UpdateLanguageInput,
   UpdateLanguageOutput,
 } from './dto';
+import { LanguageLoader } from './language.loader';
 import { LanguageService } from './language.service';
 
 @ArgsType()
@@ -51,10 +57,10 @@ export class LanguageResolver {
     description: 'Look up a language by its ID',
   })
   async language(
-    @AnonSession() session: Session,
-    @IdArg() id: ID
+    @IdsAndViewArg() key: IdsAndView,
+    @Loader(LanguageLoader) languages: LoaderOf<LanguageLoader>
   ): Promise<Language> {
-    return await this.langService.readOne(id, session);
+    return await languages.load(key);
   }
 
   @ResolveField(() => String, { nullable: true })
@@ -84,6 +90,17 @@ export class LanguageResolver {
     };
   }
 
+  @ResolveField()
+  firstScripture(@Parent() language: Language): SecuredFirstScripture {
+    if (!language.hasExternalFirstScripture.canRead) {
+      return { canRead: false, canEdit: false };
+    }
+    const value = language.firstScriptureEngagement
+      ? { hasFirst: true, engagement: language.firstScriptureEngagement }
+      : { hasFirst: language.hasExternalFirstScripture.value! };
+    return { canRead: true, canEdit: false, value };
+  }
+
   @ResolveField(() => SecuredLocationList)
   async locations(
     @AnonSession() session: Session,
@@ -93,9 +110,12 @@ export class LanguageResolver {
       type: () => LocationListInput,
       defaultValue: LocationListInput.defaultVal,
     })
-    input: LocationListInput
+    input: LocationListInput,
+    @Loader(LocationLoader) locations: LoaderOf<LocationLoader>
   ): Promise<SecuredLocationList> {
-    return await this.langService.listLocations(language, input, session);
+    const list = await this.langService.listLocations(language, input, session);
+    locations.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => SecuredDate, {
@@ -137,9 +157,12 @@ export class LanguageResolver {
       type: () => LanguageListInput,
       defaultValue: LanguageListInput.defaultVal,
     })
-    input: LanguageListInput
+    input: LanguageListInput,
+    @Loader(LanguageLoader) languages: LoaderOf<LanguageLoader>
   ): Promise<LanguageListOutput> {
-    return await this.langService.list(input, session);
+    const list = await this.langService.list(input, session);
+    languages.primeAll(list.items);
+    return list;
   }
 
   @Mutation(() => CreateLanguageOutput, {
@@ -158,21 +181,25 @@ export class LanguageResolver {
   })
   async updateLanguage(
     @LoggedInSession() session: Session,
-    @Args('input') { language: input }: UpdateLanguageInput
+    @Args('input') { language: input, changeset }: UpdateLanguageInput
   ): Promise<UpdateLanguageOutput> {
-    const language = await this.langService.update(input, session);
+    const language = await this.langService.update(
+      input,
+      session,
+      viewOfChangeset(changeset)
+    );
     return { language };
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => DeleteLanguageOutput, {
     description: 'Delete a language',
   })
   async deleteLanguage(
     @LoggedInSession() session: Session,
     @IdArg() id: ID
-  ): Promise<boolean> {
+  ): Promise<DeleteLanguageOutput> {
     await this.langService.delete(id, session);
-    return true;
+    return { success: true };
   }
 
   @Mutation(() => Language, {

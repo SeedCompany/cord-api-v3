@@ -1,15 +1,13 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { AnonSession, mapSecuredValue, Session } from '../../common';
+import { mapSecuredValue } from '../../common';
 import { Loader, LoaderOf } from '../../core';
 import { FileNodeLoader, resolveDefinedFile, SecuredFile } from '../file';
-import { LocationService, SecuredLocation } from '../location';
+import { LocationLoader, SecuredLocation } from '../location';
 import { SecuredUser, UserLoader } from '../user';
 import { InternshipEngagement } from './dto';
 
 @Resolver(InternshipEngagement)
 export class InternshipEngagementResolver {
-  constructor(private readonly locations: LocationService) {}
-
   @ResolveField(() => SecuredFile)
   async growthPlan(
     @Parent() engagement: InternshipEngagement,
@@ -37,13 +35,10 @@ export class InternshipEngagementResolver {
   @ResolveField(() => SecuredLocation)
   async countryOfOrigin(
     @Parent() engagement: InternshipEngagement,
-    @AnonSession() session: Session
+    @Loader(LocationLoader) locations: LoaderOf<LocationLoader>
   ): Promise<SecuredLocation> {
-    const { value: id, ...rest } = engagement.countryOfOrigin;
-    const value = id ? await this.locations.readOne(id, session) : undefined;
-    return {
-      value,
-      ...rest,
-    };
+    return await mapSecuredValue(engagement.countryOfOrigin, (id) =>
+      locations.load(id)
+    );
   }
 }

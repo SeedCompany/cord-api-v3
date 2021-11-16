@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { ID, NotFoundException, Session, UnsecuredDto } from '../../common';
 import { DtoRepository, matchRequestingUser } from '../../core';
 import {
@@ -9,7 +9,6 @@ import {
   matchProps,
   merge,
   paginate,
-  permissionsOfNode,
   requestingUser,
   sorting,
 } from '../../core/database/query';
@@ -64,6 +63,17 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
     return result.dto;
   }
 
+  async readMany(ids: readonly ID[], session: Session) {
+    return await this.db
+      .query()
+      .apply(matchRequestingUser(session))
+      .matchNode('node', 'FieldRegion')
+      .where({ 'node.id': inArray(ids.slice()) })
+      .apply(this.hydrate())
+      .map('dto')
+      .run();
+  }
+
   protected hydrate() {
     return (query: Query) =>
       query
@@ -87,10 +97,10 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
   }
 
   async list({ filter, ...input }: FieldRegionListInput, session: Session) {
-    const label = 'FieldRegion';
     const result = await this.db
       .query()
-      .match([requestingUser(session), ...permissionsOfNode(label)])
+      .match(requestingUser(session))
+      .match(node('node', 'FieldRegion'))
       .apply(sorting(FieldRegion, input))
       .apply(paginate(input, this.hydrate()))
       .first();

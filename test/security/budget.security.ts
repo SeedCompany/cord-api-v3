@@ -70,7 +70,7 @@ describe('Budget Security e2e', () => {
       mouStartOverride: CalendarDate.fromISO('2000-01-01'),
       mouEndOverride: CalendarDate.fromISO('2004-01-01'),
     });
-    await addLocationToOrganization(app, org.id);
+    await addLocationToOrganization({ app, orgId: org.id });
   });
 
   afterAll(async () => {
@@ -303,7 +303,7 @@ describe('Budget Security e2e', () => {
             mouStartOverride: CalendarDate.fromISO('2000-01-01'),
             mouEndOverride: CalendarDate.fromISO('2004-01-01'),
           });
-          await addLocationToOrganization(app, org.id);
+          await addLocationToOrganization({ app, orgId: org.id });
           if (budget.budget.value) {
             await expectSensitiveRelationList({
               app,
@@ -330,7 +330,9 @@ async function deleteEngagement(app: TestApp, id: ID) {
   await app.graphql.mutate(
     gql`
       mutation deleteEngagement($id: ID!) {
-        deleteEngagement(id: $id)
+        deleteEngagement(id: $id) {
+          __typename
+        }
       }
     `,
     {

@@ -2,6 +2,7 @@ import { DbBudget } from '../../budget/model';
 import { DbBudgetRecord } from '../../budget/model/budget-record.model.db';
 import { DbCeremony } from '../../ceremony/model';
 import { DbInternshipEngagement, DbLanguageEngagement } from '../../engagement/model';
+import { DbEthnoArt } from '../../ethno-art/model';
 import { DbFieldRegion } from '../../field-region/model';
 import { DbFieldZone } from '../../field-zone/model';
 import { DbDirectory, DbFile } from '../../file/model';
@@ -93,6 +94,14 @@ export const RegionalCommunicationsCoordinator = new DbRole({
       ],
       canDelete: false,
     }),
+    new DbBaseNodeGrant<DbEthnoArt>({
+      __className: 'DbEthnoArt',
+      properties: [
+        { propertyName: 'name', permission: { read, }, },
+        { propertyName: 'scriptureReferences', permission: { read, }, },
+      ],
+      canDelete: false,
+    }),
     new DbBaseNodeGrant<DbEthnologueLanguage>({
       __className: 'DbEthnologueLanguage',
       properties: [
@@ -105,6 +114,7 @@ export const RegionalCommunicationsCoordinator = new DbRole({
     }),
     new DbBaseNodeGrant<DbFieldRegion>({
       __className: 'DbFieldRegion',
+      canList: false,
       properties: [
         { propertyName: 'director', permission: {}, },
         { propertyName: 'name', permission: {}, },
@@ -114,6 +124,7 @@ export const RegionalCommunicationsCoordinator = new DbRole({
     }),
     new DbBaseNodeGrant<DbFieldZone>({
       __className: 'DbFieldZone',
+      canList: false,
       properties: [
         { propertyName: 'director', permission: {}, },
         { propertyName: 'name', permission: {}, },
@@ -143,6 +154,7 @@ export const RegionalCommunicationsCoordinator = new DbRole({
     }),
     new DbBaseNodeGrant<DbFilm>({
       __className: 'DbFilm',
+      canList: true,
       properties: [
         { propertyName: 'name', permission: { read, }, },
         { propertyName: 'scriptureReferences', permission: { read, }, },
@@ -151,6 +163,7 @@ export const RegionalCommunicationsCoordinator = new DbRole({
     }),
     new DbBaseNodeGrant<DbFundingAccount>({
       __className: 'DbFundingAccount',
+      canList: false,
       properties: [
         { propertyName: 'name', permission: {}, },
         { propertyName: 'accountNumber', permission: {}, },
@@ -159,6 +172,7 @@ export const RegionalCommunicationsCoordinator = new DbRole({
     }),
     new DbBaseNodeGrant<DbInternshipEngagement>({
       __className: 'DbInternshipEngagement',
+      canList: true,
       properties: [
         { propertyName: 'ceremony', permission: { read, }, },
         { propertyName: 'completeDate', permission: { read, }, },
@@ -184,6 +198,7 @@ export const RegionalCommunicationsCoordinator = new DbRole({
     }),
     new DbBaseNodeGrant<DbLanguage>({
       __className: 'DbLanguage',
+      canList: true,
       properties: [
         { propertyName: 'displayName', permission: { read, }, },
         { propertyName: 'displayNamePronunciation', permission: { read, }, },
@@ -209,6 +224,7 @@ export const RegionalCommunicationsCoordinator = new DbRole({
     }),
     new DbBaseNodeGrant<DbLanguageEngagement>({
       __className: 'DbLanguageEngagement',
+      canList: true,
       properties: [
         { propertyName: 'ceremony', permission: { read, }, },
         { propertyName: 'completeDate', permission: { read, }, },
@@ -221,6 +237,7 @@ export const RegionalCommunicationsCoordinator = new DbRole({
         { propertyName: 'lastReactivatedAt', permission: { read, }, },
         { propertyName: 'lastSuspendedAt', permission: { read, }, },
         { propertyName: 'lukePartnership', permission: { read, }, },
+        { propertyName: 'openToInvestorVisit', permission: { read, }, },
         { propertyName: 'paratextRegistryId', permission: { read, }, },
         { propertyName: 'pnp', permission: { read, }, },
         { propertyName: 'historicGoal', permission: { read, }, },
@@ -321,6 +338,7 @@ export const RegionalCommunicationsCoordinator = new DbRole({
         { propertyName: 'progressTarget', permission: { read, }, },
         { propertyName: 'title', permission: { read, }, },
         { propertyName: 'description', permission: { read, }, },
+        { propertyName: 'unspecifiedScripture', permission: { read, }, },
       ],
       canDelete: false,
     }),
@@ -373,6 +391,7 @@ export const RegionalCommunicationsCoordinator = new DbRole({
         { propertyName: 'end', permission: { read, }, },
         { propertyName: 'receivedDate', permission: { read, }, },
         { propertyName: 'reportFile', permission: { read, }, },
+        { propertyName: 'skippedReason', permission: { read, }, },
       ],
       canDelete: true,
     }),
