@@ -1,6 +1,8 @@
+import { groupBy } from 'lodash';
 import { DateTime } from 'luxon';
-import { asyncPool } from '../../../common';
+import { asyncPool, ID } from '../../../common';
 import { EventsHandler, IEventHandler, ILogger, Logger } from '../../../core';
+import { Engagement } from '../../engagement';
 import {
   EngagementCreatedEvent,
   EngagementUpdatedEvent,
@@ -15,7 +17,7 @@ import {
   ProgressMeasurement,
   UpdateDirectScriptureProduct,
 } from '../dto';
-import { ProductExtractor } from '../product-extractor.service';
+import { ExtractedRow, ProductExtractor } from '../product-extractor.service';
 import { ProductService } from '../product.service';
 
 type SubscribedEvent = EngagementCreatedEvent | EngagementUpdatedEvent;
@@ -62,44 +64,10 @@ export class ExtractProductsFromPnpHandler
       return;
     }
 
-    // Given that we have products to potentially create, load the existing ones
-    // and map them to a book and total verse count.
-    const products = await this.products.loadProductIdsForBookAndVerse(
-      engagement.id,
-      this.logger
+    const actionableProductRows = await this.matchRowsToProductChanges(
+      engagement,
+      productRows
     );
-
-    // Determine which product rows correspond to an existing product
-    // or if they should create a new one or if they should be skipped.
-    const actionableProductRows = productRows.flatMap((row, index, rows) => {
-      const { bookName, totalVerses } = row;
-
-      // Exact match
-      const existingId = products[bookName]?.[totalVerses];
-      if (existingId) {
-        return { ...row, index, existingId };
-      }
-
-      if (rows.filter((other) => other.bookName === bookName).length === 1) {
-        const existingProductsOfBook = products[bookName] ?? {};
-        const numOfExistingProductsOfBook = Object.keys(
-          existingProductsOfBook
-        ).length;
-        if (numOfExistingProductsOfBook === 1) {
-          // If pnp has one of these books and we have one existing product of
-          // this book then treat as an update with a total verses change.
-          const existingId =
-            existingProductsOfBook[Object.keys(existingProductsOfBook)[0]];
-          return { ...row, index, existingId };
-        } else if (numOfExistingProductsOfBook === 0) {
-          // If pnp has one of these books and we have no existing product of
-          // this book then treat as a new product.
-          return { ...row, index, existingId: undefined };
-        }
-      }
-
-      return []; // skip
-    });
 
     const createdAt = DateTime.now();
 
@@ -148,5 +116,76 @@ export class ExtractProductsFromPnpHandler
         await this.products.create(create, event.session);
       }
     });
+  }
+
+  /**
+   * Determine which product rows correspond to an existing product
+   * or if they should create a new one or if they should be skipped.
+   */
+  private async matchRowsToProductChanges(
+    engagement: Engagement,
+    rows: readonly ExtractedRow[]
+  ) {
+    // Given that we have products to potentially create, load the existing ones
+    // and map them to a book and total verse count.
+    const products = await this.products.loadProductIdsForBookAndVerse(
+      engagement.id,
+      this.logger
+    );
+
+    const actionableProductRows = Object.values(
+      groupBy(
+        rows.map((row, index) => ({ ...row, index })), // save original indexes
+        (row) => row.bookName // group by book name
+      )
+    ).flatMap((rowsOfBook) => {
+      const bookName = rowsOfBook[0].bookName;
+      const existing = products[bookName] ?? new Map<number, ID>();
+
+      const matches: Array<
+        ExtractedRow & { index: number; existingId: ID | undefined }
+      > = [];
+      let nonExactMatches: typeof rowsOfBook = [];
+
+      // Exact matches
+      for (const row of rowsOfBook) {
+        const { totalVerses } = row;
+        const existingId = existing.get(totalVerses);
+        if (existingId) {
+          matches.push({ ...row, existingId });
+          existing.delete(totalVerses);
+        } else {
+          nonExactMatches.push(row);
+        }
+      }
+
+      // If there's only one product left for this book that hasn't been matched
+      // And there's only one row left that can't be matched to a book & verse count
+      if (existing.size === 1 && nonExactMatches.length === 1) {
+        // Assume that ID belongs to this row.
+        // Use case: A single row changes total verse count while other rows
+        // for this book remain the same or are new.
+        const oldVerseCount = [...existing.keys()][0];
+        matches.push({
+          ...nonExactMatches[0],
+          existingId: existing.get(oldVerseCount)!,
+        });
+        existing.delete(oldVerseCount);
+        nonExactMatches = [];
+      }
+
+      if (existing.size === 0) {
+        // All remaining are new
+        return [
+          ...matches,
+          ...nonExactMatches.map((row) => ({ ...row, existingId: undefined })),
+        ];
+      }
+
+      // Not sure how to handle remaining so doing nothing with them
+
+      return matches;
+    });
+    return actionableProductRows;
   }
 }

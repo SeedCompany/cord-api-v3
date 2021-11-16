@@ -26,7 +26,7 @@ export class ProductExtractor {
   async extract(
     file: Downloadable<Pick<File, 'id'>>,
     availableSteps: readonly Step[]
-  ) {
+  ): Promise<readonly ExtractedRow[]> {
     const buffer = await file.download();
     const pnp = read(buffer, { type: 'buffer', cellDates: true });
 
@@ -128,7 +128,7 @@ const parseProductRow =
     stepColumns: Record<Step, string>,
     noteFallback?: string
   ) =>
-  (row: number) => {
+  (row: number): ExtractedRow => {
     const bookName = cellAsString(sheet[`Q${row}`])!; // Asserting bc loop verified this
     const totalVerses = cellAsNumber(sheet[`T${row}`])!;
     // include step if it references a fiscal year within the project
@@ -144,3 +144,10 @@ const parseProductRow =
     const note = cellAsString(sheet[`AI${row}`]) ?? noteFallback;
     return { bookName, totalVerses, steps, note };
   };
+
+export interface ExtractedRow {
+  bookName: string;
+  totalVerses: number;
+  steps: readonly Step[];
+  note: string | undefined;
+}
