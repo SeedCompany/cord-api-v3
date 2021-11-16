@@ -300,6 +300,7 @@ export const FinancialAnalystOnProject = new DbRole({
         { propertyName: 'active', permission: { read, sensitivityAccess: Sensitivity.Medium, }, },
         { propertyName: 'address', permission: { read, sensitivityAccess: Sensitivity.Medium, }, },
         { propertyName: 'modifiedAt', permission: { read, sensitivityAccess: Sensitivity.Medium, }, },
+        { propertyName: 'posts', permission: { read, write, }, },
       ],
       canDelete: false,
     }),

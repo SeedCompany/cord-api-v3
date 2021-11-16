@@ -312,6 +312,7 @@ export const RegionalDirectorGlobal = new DbRole({
         { propertyName: 'active', permission: { read, }, },
         { propertyName: 'address', permission: { read, }, },
         { propertyName: 'modifiedAt', permission: { read, }, },
+        { propertyName: 'posts', permission: { read, write, }, },
       ],
       canDelete: false,
     }),

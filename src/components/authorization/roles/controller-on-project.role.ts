@@ -299,6 +299,7 @@ export const ControllerOnProject = new DbRole({
         { propertyName: 'active', permission: { read, write, }, },
         { propertyName: 'address', permission: { read, write, }, },
         { propertyName: 'modifiedAt', permission: { read, write, }, },
+        { propertyName: 'posts', permission: { read, write, }, },
       ],
       canDelete: false,
     }),

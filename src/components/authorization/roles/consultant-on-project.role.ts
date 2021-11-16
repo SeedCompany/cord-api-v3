@@ -299,6 +299,7 @@ export const ConsultantOnProject = new DbRole({
         { propertyName: 'active', permission: { read }, },
         { propertyName: 'address', permission: { read }, },
         { propertyName: 'modifiedAt', permission: { read, write, }, },
+        { propertyName: 'posts', permission: { read, }, },
       ],
       canDelete: false,
     }),
