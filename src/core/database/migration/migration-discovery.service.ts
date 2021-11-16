@@ -1,6 +1,6 @@
 import { DiscoveryService } from '@golevelup/nestjs-discovery';
 import { Injectable } from '@nestjs/common';
-import { startCase } from 'lodash';
+import { sortBy, startCase } from 'lodash';
 import { DateTime } from 'luxon';
 import { BaseMigration } from './base-migration.service';
 import { DB_MIGRATION_KEY } from './migration.decorator';
@@ -13,7 +13,7 @@ export class MigrationDiscovery {
     const discovered = await this.discover.providersWithMetaAtKey<DateTime>(
       DB_MIGRATION_KEY
     );
-    return discovered.map((d): DiscoveredMigration => {
+    const mapped = discovered.map((d): DiscoveredMigration => {
       const instance = d.discoveredClass.instance as BaseMigration;
       const name = instance.constructor.name.replace('Migration', '');
       return {
@@ -23,6 +23,7 @@ export class MigrationDiscovery {
         humanName: startCase(name),
       };
     });
+    return sortBy(mapped, (d) => d.version);
   }
 }
 
