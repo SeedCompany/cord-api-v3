@@ -56,6 +56,7 @@ import {
   ProjectListInput,
   ProjectListOutput,
   ProjectStatus,
+  ProjectTransitionInput,
   ProjectType,
   TranslationProject,
   UpdateProject,
@@ -368,6 +369,47 @@ export class ProjectService {
         fieldRegion: fieldRegionId,
       };
     }
+
+    const event = new ProjectUpdatedEvent(
+      result,
+      currentProject,
+      input,
+      session
+    );
+    await this.eventBus.publish(event);
+    return event.updated;
+  }
+
+  async updateStep(
+    input: ProjectTransitionInput,
+    session: Session
+  ): Promise<UnsecuredDto<Project>> {
+    const currentProject = await this.readOneUnsecured(
+      input.id,
+      session,
+      input.changeset
+    );
+
+    const changes = this.repo.getActualChanges(currentProject, input);
+
+    if (!changes.step) {
+      return currentProject;
+    }
+
+    // verify new project step
+    await this.projectRules.verifyStepChange(
+      input.id,
+      session,
+      changes.step,
+      input.changeset
+    );
+
+    // update project step prop
+    const result = await this.repo.updateProperties(
+      currentProject,
+      { step: changes.step },
+      input.changeset
+    );
 
     const event = new ProjectUpdatedEvent(
       result,

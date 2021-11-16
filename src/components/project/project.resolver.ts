@@ -57,6 +57,8 @@ import {
   ProjectListOutput,
   ProjectType,
   TranslationProjectListOutput,
+  ProjectTransitionInput,
+  ProjectTransitionOutput,
   UpdateProjectInput,
   UpdateProjectOutput,
 } from './dto';
@@ -435,5 +437,17 @@ export class ProjectResolver {
       session
     );
     return await this.projectService.readOne(projectId, session);
+  }
+
+  @Mutation(() => ProjectTransitionOutput, {
+    description: 'Change project step',
+  })
+  async transitionProject(
+    @LoggedInSession() session: Session,
+    @Args() input: ProjectTransitionInput
+  ): Promise<ProjectTransitionOutput> {
+    const project = await this.projectService.updateStep(input, session);
+    const secured = await this.projectService.secure(project, session);
+    return { project: secured };
   }
 }

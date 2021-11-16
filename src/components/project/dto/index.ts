@@ -6,3 +6,4 @@ export * from './list-projects.dto';
 export * from './project.dto';
 export * from './update-project.dto';
 export * from './delete-project.dto';
+export * from './project-transition.dto';

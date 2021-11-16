@@ -40,6 +40,8 @@ import {
   Project,
   ProjectListInput,
   ProjectStep,
+  ProjectStepChange,
+  ProjectTransitionInput,
   ProjectType,
   stepToStatus,
   TranslationProject,
@@ -346,6 +348,30 @@ export class ProjectRepository extends CommonRepository {
 
     const result = await query.first();
     return result?.props;
+  }
+
+  async addProjectStep(input: ProjectTransitionInput, session: Session) {
+    const { id, changeset, ...initialProps } = input;
+
+    const result = await this.db
+      .query()
+      .apply(await createNode(ProjectStepChange, { initialProps }))
+      .apply(
+        createRelationships(ProjectStepChange, {
+          in: {
+            transition: ['Project', id],
+          },
+          out: {
+            by: ['User', session.userId],
+          },
+        })
+      )
+      .return<{ id: ID }>('node.id as id')
+      .first();
+    if (!result) {
+      throw new ServerException('Failed to create Project Transition');
+    }
+    return result.id;
   }
 
   @OnIndex()
