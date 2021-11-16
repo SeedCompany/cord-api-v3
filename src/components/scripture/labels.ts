@@ -20,11 +20,11 @@ export const labelOfScriptureRange = (
         }
         return start.chapter.label;
       } else {
-        // Matthew 1-4
+        // Matthew 1–4
         if (omit === 'book') {
-          return `${start.chapter.chapter}-${end.chapter.chapter}`;
+          return `${start.chapter.chapter}–${end.chapter.chapter}`;
         }
-        return `${start.chapter.label}-${end.chapter.chapter}`;
+        return `${start.chapter.label}–${end.chapter.chapter}`;
       }
     } else if (start.chapter.equals(end.chapter)) {
       if (start.equals(end)) {
@@ -37,21 +37,21 @@ export const labelOfScriptureRange = (
         }
         return start.label;
       } else {
-        // Matthew 1:1-20
+        // Matthew 1:1–20
         if (omit === 'chapter') {
-          return `${start.verse}-${end.verse}`;
+          return `${start.verse}–${end.verse}`;
         }
         if (omit === 'book') {
-          return `${start.chapter.chapter}:${start.verse}-${end.chapter.chapter}:${end.verse}`;
+          return `${start.chapter.chapter}:${start.verse}–${end.chapter.chapter}:${end.verse}`;
         }
-        return `${start.label}-${end.verse}`;
+        return `${start.label}–${end.verse}`;
       }
     } else {
-      // Matthew 1:1-4:21
+      // Matthew 1:1–4:21
       if (omit === 'book') {
-        return `${start.chapter.chapter}:${start.verse}-${end.chapter.chapter}:${end.verse}`;
+        return `${start.chapter.chapter}:${start.verse}–${end.chapter.chapter}:${end.verse}`;
       }
-      return `${start.label}-${end.chapter.chapter}:${end.verse}`;
+      return `${start.label}–${end.chapter.chapter}:${end.verse}`;
     }
   } else if (start.isFirst && end.isLast) {
     if (start.chapter.isFirst && end.chapter.isLast) {
@@ -62,14 +62,14 @@ export const labelOfScriptureRange = (
         return 'New Testament';
       }
       // Matthew-John
-      return `${start.book.label}-${end.book.label}`;
+      return `${start.book.label}–${end.book.label}`;
     } else {
       // Matthew 1-John 2
-      return `${start.chapter.label}-${end.chapter.label}`;
+      return `${start.chapter.label}–${end.chapter.label}`;
     }
   } else {
     // Matthew 1:1-John 2:4
-    return `${start.label}-${end.label}`;
+    return `${start.label}–${end.label}`;
   }
 };
 
