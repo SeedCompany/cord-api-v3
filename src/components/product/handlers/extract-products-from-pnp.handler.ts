@@ -145,7 +145,7 @@ export class ExtractProductsFromPnpHandler
       const matches: Array<
         ExtractedRow & { index: number; existingId: ID | undefined }
       > = [];
-      let nonExactMatches: typeof rowsOfBook = [];
+      let nonExactMatches: Array<ExtractedRow & { index: number }> = [];
 
       // Exact matches
       for (const row of rowsOfBook) {
