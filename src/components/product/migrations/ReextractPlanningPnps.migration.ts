@@ -10,7 +10,7 @@ import { ACTIVE } from '../../../core/database/query';
 import { EngagementUpdatedEvent } from '../../engagement/events';
 import { ProductMethodology as Methodology } from '../dto';
 
-@Migration('2021-11-26T18:13:00')
+@Migration('2021-11-26T18:13:01')
 export class ReextractPlanningPnpsMigration extends BaseMigration {
   constructor(
     private readonly resources: ResourceResolver,
