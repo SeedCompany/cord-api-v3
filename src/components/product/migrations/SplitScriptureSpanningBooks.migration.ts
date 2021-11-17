@@ -7,7 +7,13 @@ import 'ix/add/asynciterable-operators/map';
 import 'ix/add/asynciterable-operators/tap';
 import 'ix/add/asynciterable-operators/toarray';
 import { sum } from 'lodash';
-import { has, ID, Range, UnsecuredDto } from '../../../common';
+import {
+  has,
+  ID,
+  NotFoundException,
+  Range,
+  UnsecuredDto,
+} from '../../../common';
 import { BaseMigration, Migration } from '../../../core';
 import { ACTIVE } from '../../../core/database/query';
 import { mapRange, ScriptureRange } from '../../scripture';
@@ -45,14 +51,23 @@ export class SplitScriptureSpanningBooksMigration extends BaseMigration {
           })
         )
         // Lookup the product DTO for the ID
-        .map(async (id: ID) =>
-          asProductType(DirectScriptureProduct)(
-            await this.productService.readOneUnsecured(
-              id,
-              this.fakeAdminSession
-            )
-          )
-        )
+        .flatMap(async (id: ID) => {
+          try {
+            const product = asProductType(DirectScriptureProduct)(
+              await this.productService.readOneUnsecured(
+                id,
+                this.fakeAdminSession
+              )
+            );
+            return ix([product]);
+          } catch (e) {
+            if (e instanceof NotFoundException) {
+              // Prob deleted, ignore
+              return ix([]);
+            }
+            throw e;
+          }
+        })
         // Split the product into multiple with a scripture refs for a single book
         // per product and return update & create inputs
         .flatMap((product) => this.splitProduct(product));
