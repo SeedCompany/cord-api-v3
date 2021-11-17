@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
-import { sortBy } from 'lodash';
+import { last } from 'lodash';
 import { DateTime } from 'luxon';
 import { ConfigService } from '../../config/config.service';
 import { ILogger, Logger } from '../../logger';
@@ -33,24 +33,39 @@ export class MigrationRunner {
       return;
     }
 
-    const migratorsToRun = sortBy(
-      discovered.filter((d) => d.version > existing),
-      (d) => d.version
-    );
+    const migratorsToRun = discovered.filter((d) => d.version > existing);
 
+    if (migratorsToRun.length === 0) {
+      this.logger.info('Schema is already up to date');
+      return;
+    }
+
+    const latest = last(discovered)?.version ?? DateTime.local();
     let current = existing;
     try {
       for (const migrator of migratorsToRun) {
         this.logger.info('Running migration', { name: migrator.humanName });
-        await migrator.instance.up();
-        current = migrator.version;
+        try {
+          await migrator.instance.up();
+          current = migrator.version;
+        } catch (e) {
+          this.logger.error('Migration failed', {
+            name: migrator.humanName,
+            exception: e,
+          });
+          throw e;
+        }
       }
     } finally {
       if (current > existing) {
         await this.setSchemaVersion(current);
-        this.logger.info('Schema is now up to date');
+      }
+      if (current < latest) {
+        this.logger.info(
+          'Schema migration finished incompletely due to error(s)'
+        );
       } else {
-        this.logger.debug('Schema is already up to date');
+        this.logger.info('Schema is now up to date');
       }
     }
   }
