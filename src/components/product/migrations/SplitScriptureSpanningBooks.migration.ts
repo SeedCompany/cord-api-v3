@@ -1,4 +1,4 @@
-import { greaterThan, lessThan, node, relation } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
 import { from as ix } from 'ix/asynciterable';
 import 'ix/add/asynciterable/from';
 import 'ix/add/asynciterable-operators/flatmap';
@@ -7,7 +7,7 @@ import 'ix/add/asynciterable-operators/map';
 import 'ix/add/asynciterable-operators/tap';
 import 'ix/add/asynciterable-operators/toarray';
 import { sum } from 'lodash';
-import { has, ID, UnsecuredDto } from '../../../common';
+import { has, ID, Range, UnsecuredDto } from '../../../common';
 import { BaseMigration, Migration } from '../../../core';
 import { ACTIVE } from '../../../core/database/query';
 import { mapRange, ScriptureRange } from '../../scripture';
@@ -25,7 +25,7 @@ import { ProductService } from '../product.service';
  * Split products up so that each product only references a single book.
  * #1 Product Matt-Rev -> 27 Products (all other props identical)
  */
-@Migration('2021-10-11T16:17:00')
+@Migration('2021-11-26T18:12:00')
 export class SplitScriptureSpanningBooksMigration extends BaseMigration {
   constructor(private readonly productService: ProductService) {
     super();
@@ -35,13 +35,14 @@ export class SplitScriptureSpanningBooksMigration extends BaseMigration {
     const changes =
       // For all books
       ix(Book)
-        // Get last verse ID of book to split on
-        .map((book) => book.lastChapter.lastVerse.id)
-        // Find product IDs who have scripture references spanning over this verse ID
+        // Find product IDs who have scripture references spanning over this book
         // This will match the same product multiple times unless the product is
         // changed first. i.e Matt-Rev will match for Matt, Mark, etc.
-        .flatMap((verse) =>
-          this.findProductsWithScriptureSpanningOverVerseId(verse)
+        .flatMap((book) =>
+          this.findProductsWithScriptureSpanningOverBooks({
+            start: book.firstChapter.firstVerse.id,
+            end: book.lastChapter.lastVerse.id,
+          })
         )
         // Lookup the product DTO for the ID
         .map(async (id: ID) =>
@@ -62,7 +63,7 @@ export class SplitScriptureSpanningBooksMigration extends BaseMigration {
 
     for await (const input of changes) {
       if (has('id', input)) {
-        this.logger.debug('Updating product', {
+        this.logger.info('Updating product', {
           id: input.id,
           refs: labelOfScriptureRanges(input.scriptureReferences ?? []),
         });
@@ -70,7 +71,7 @@ export class SplitScriptureSpanningBooksMigration extends BaseMigration {
         updated++;
         stats[input.id] = (stats[input.id] ?? 0) + 1;
       } else {
-        this.logger.debug('Creating product', {
+        this.logger.info('Creating product', {
           refs: labelOfScriptureRanges(input.scriptureReferences ?? []),
           ...input,
         });
@@ -90,7 +91,9 @@ export class SplitScriptureSpanningBooksMigration extends BaseMigration {
     this.logger.info(`Created ${created} products`);
   }
 
-  private async findProductsWithScriptureSpanningOverVerseId(verseId: number) {
+  private async findProductsWithScriptureSpanningOverBooks(
+    book: Range<number>
+  ) {
     const ids = await this.db
       .query()
       .match([
@@ -98,12 +101,14 @@ export class SplitScriptureSpanningBooksMigration extends BaseMigration {
         relation('out', '', 'scriptureReferences', ACTIVE),
         node('ref', 'ScriptureRange'),
       ])
-      .where({
-        ref: {
-          start: lessThan(verseId),
-          end: greaterThan(verseId),
-        },
-      })
+      .with(['node', 'collect(ref) as refs'])
+      .raw(
+        `
+          WHERE any(ref in refs WHERE ref.start >= $start AND ref.end <= $end) // has book
+            AND any(ref in refs WHERE ref.start < $start OR ref.end > $end) // has other book
+        `,
+        book
+      )
       .return<{ id: ID }>('node.id as id')
       .map('id')
       .run();
