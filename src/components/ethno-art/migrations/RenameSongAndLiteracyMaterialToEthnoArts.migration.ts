@@ -26,7 +26,7 @@ export class RenameSongAndLiteracyMaterialToEthnoArts extends BaseMigration {
       .detachDelete(['produces', 'unknownLM', 'name'])
       .create([
         node('product'),
-        relation('out', 'produces', ACTIVE),
+        relation('out', '', 'produces', ACTIVE),
         node('unknownSong'),
       ])
       .return('*')
