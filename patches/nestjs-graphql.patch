@@ -1,0 +1,24 @@
+diff --git a/dist/graphql.module.js b/dist/graphql.module.js
+index b73e0f271d9312612e62fb7e275097b1ea470035..583f4e0e4126a8bfe998f203ae366d14bf3cd9f1 100644
+--- a/dist/graphql.module.js
++++ b/dist/graphql.module.js
+@@ -85,9 +85,6 @@ let GraphQLModule = GraphQLModule_1 = class GraphQLModule {
+             return;
+         }
+         const httpAdapter = this.httpAdapterHost.httpAdapter;
+-        if (!httpAdapter) {
+-            return;
+-        }
+         const typeDefs = (await this.graphqlTypesLoader.mergeTypesByPaths(this.options.typePaths)) || [];
+         const mergedTypeDefs = (0, utils_1.extend)(typeDefs, this.options.typeDefs);
+         const apolloOptions = await this.graphqlFactory.mergeOptions({
+@@ -98,6 +95,9 @@ let GraphQLModule = GraphQLModule_1 = class GraphQLModule {
+         if (this.options.definitions && this.options.definitions.path) {
+             await this.graphqlFactory.generateDefinitions((0, graphql_1.printSchema)(apolloOptions.schema), this.options);
+         }
++        if (!httpAdapter) {
++            return;
++        }
+         await this.registerGqlServer(apolloOptions);
+         if (this.options.installSubscriptionHandlers ||
+             this.options.subscriptions) {
