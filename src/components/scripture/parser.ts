@@ -52,16 +52,8 @@ const parseRange = (input: string, fallbackBook?: string) => {
     book: endBook.name,
     ...(given.start.chapter &&
     given.start.verse &&
-    given.end.chapter &&
+    !given.end.chapter &&
     !given.end.verse
-      ? {
-          chapter: start.chapter.chapter,
-          verse: given.end.chapter,
-        }
-      : given.start.chapter &&
-        given.start.verse &&
-        !given.end.chapter &&
-        !given.end.verse
       ? {
           chapter: start.chapter.chapter,
           verse: start.verse,
@@ -85,10 +77,14 @@ const parseRange = (input: string, fallbackBook?: string) => {
 
 const lexRange = (input: string) => {
   const [startRaw, endRaw] = input.split('-');
-  return {
-    start: lexRef(startRaw.trim()),
-    end: lexRef(endRaw?.trim() ?? ''),
-  };
+  const start = lexRef(startRaw.trim());
+  const end = lexRef(endRaw?.trim() ?? '');
+  // Handle special case of `1:1-3` where 3 should be the end verse not the end chapter
+  if (start.verse && end.chapter && !end.verse) {
+    end.verse = end.chapter;
+    end.chapter = start.chapter;
+  }
+  return { start, end };
 };
 
 const lexRef = (str: string) => {
