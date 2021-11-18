@@ -143,3 +143,23 @@ export abstract class SecuredProjectList extends SecuredList<IProject, Project>(
     itemsDescription: PaginatedList.itemDescriptionFor('projects'),
   }
 ) {}
+
+@ObjectType({
+  description: SecuredList.descriptionFor('translation projects'),
+})
+export abstract class SecuredTranslationProjectList extends SecuredList(
+  TranslationProject,
+  {
+    itemsDescription: PaginatedList.itemDescriptionFor('translation projects'),
+  }
+) {}
+
+@ObjectType({
+  description: SecuredList.descriptionFor('internship projects'),
+})
+export abstract class SecuredInternshipProjectList extends SecuredList(
+  InternshipProject,
+  {
+    itemsDescription: PaginatedList.itemDescriptionFor('internship projects'),
+  }
+) {}
