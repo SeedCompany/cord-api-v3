@@ -50,10 +50,13 @@ import {
   CreateProjectInput,
   CreateProjectOutput,
   DeleteProjectOutput,
+  InternshipProjectListOutput,
   IProject,
   Project,
   ProjectListInput,
   ProjectListOutput,
+  ProjectType,
+  TranslationProjectListOutput,
   UpdateProjectInput,
   UpdateProjectOutput,
 } from './dto';
@@ -103,6 +106,62 @@ export class ProjectResolver {
     @AnonSession() session: Session
   ): Promise<ProjectListOutput> {
     const list = await this.projectService.list(input, session);
+    projects.primeAll(list.items);
+    return list;
+  }
+
+  @Query(() => TranslationProjectListOutput, {
+    description: 'Look up translation projects',
+  })
+  async translationProjects(
+    @Args({
+      name: 'input',
+      type: () => ProjectListInput,
+      nullable: true,
+      defaultValue: ProjectListInput.defaultVal,
+    })
+    input: ProjectListInput,
+    @Loader(ProjectLoader) projects: LoaderOf<ProjectLoader>,
+    @AnonSession() session: Session
+  ): Promise<ProjectListOutput> {
+    const list = await this.projectService.list(
+      {
+        ...input,
+        filter: {
+          ...input.filter,
+          type: ProjectType.Translation,
+        },
+      },
+      session
+    );
+    projects.primeAll(list.items);
+    return list;
+  }
+
+  @Query(() => InternshipProjectListOutput, {
+    description: 'Look up internship projects',
+  })
+  async internshipProjects(
+    @Args({
+      name: 'input',
+      type: () => ProjectListInput,
+      nullable: true,
+      defaultValue: ProjectListInput.defaultVal,
+    })
+    input: ProjectListInput,
+    @Loader(ProjectLoader) projects: LoaderOf<ProjectLoader>,
+    @AnonSession() session: Session
+  ): Promise<ProjectListOutput> {
+    const list = await this.projectService.list(
+      {
+        ...input,
+        filter: {
+          ...input.filter,
+          type: ProjectType.Internship,
+        },
+      },
+      session
+    );
     projects.primeAll(list.items);
     return list;
   }

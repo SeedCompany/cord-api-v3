@@ -10,7 +10,12 @@ import {
   Sensitivity,
   SortablePaginationInput,
 } from '../../../common';
-import { IProject, Project } from './project.dto';
+import {
+  InternshipProject,
+  IProject,
+  Project,
+  TranslationProject,
+} from './project.dto';
 import { ProjectStatus } from './status.enum';
 import { ProjectStep } from './step.enum';
 import { ProjectType } from './type.enum';
@@ -110,6 +115,22 @@ export class ProjectListOutput extends PaginatedList<IProject, Project>(
   IProject,
   {
     itemsDescription: PaginatedList.itemDescriptionFor('projects'),
+  }
+) {}
+
+@ObjectType()
+export class TranslationProjectListOutput extends PaginatedList(
+  TranslationProject,
+  {
+    itemsDescription: PaginatedList.itemDescriptionFor('translation projects'),
+  }
+) {}
+
+@ObjectType()
+export class InternshipProjectListOutput extends PaginatedList(
+  InternshipProject,
+  {
+    itemsDescription: PaginatedList.itemDescriptionFor('internship projects'),
   }
 ) {}
 
