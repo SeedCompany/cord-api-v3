@@ -76,7 +76,7 @@ const parseRange = (input: string, fallbackBook?: string) => {
 };
 
 const lexRange = (input: string) => {
-  const [startRaw, endRaw] = input.split('-');
+  const [startRaw, endRaw] = input.split(/[-–]/);
   const start = lexRef(startRaw.trim());
   const end = lexRef(endRaw?.trim() ?? '');
   // Handle special case of `1:1-3` where 3 should be the end verse not the end chapter

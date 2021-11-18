@@ -5,6 +5,7 @@ describe('parseScripture', () => {
     ['Genesis 1', ['Genesis', 1, 1, 'Genesis', 1, 31]],
     ['Genesis 1:1', ['Genesis', 1, 1, 'Genesis', 1, 1]],
     ['Genesis 1-2', ['Genesis', 1, 1, 'Genesis', 2, 25]],
+    ['Genesis 1–2', ['Genesis', 1, 1, 'Genesis', 2, 25]],
     ['Genesis 1 - 2', ['Genesis', 1, 1, 'Genesis', 2, 25]],
     ['Genesis 3:5-20', ['Genesis', 3, 5, 'Genesis', 3, 20]],
     ['Genesis 3-6:20', ['Genesis', 3, 1, 'Genesis', 6, 20]],
