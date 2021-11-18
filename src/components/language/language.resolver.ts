@@ -24,7 +24,7 @@ import { Loader, LoaderOf } from '../../core';
 import { IdsAndView, IdsAndViewArg } from '../changeset/dto';
 import { LocationListInput, SecuredLocationList } from '../location';
 import { LocationLoader } from '../location/location.loader';
-import { ProjectLoader } from '../project';
+import { ProjectLoader, SecuredTranslationProjectList } from '../project';
 import { ProjectListInput, SecuredProjectList } from '../project/dto';
 import {
   CreateLanguageInput,
@@ -128,7 +128,7 @@ export class LanguageResolver {
     return await this.langService.sponsorStartDate(language, session);
   }
 
-  @ResolveField(() => SecuredProjectList, {
+  @ResolveField(() => SecuredTranslationProjectList, {
     description: 'The list of projects the language is engagement in.',
   })
   async projects(
