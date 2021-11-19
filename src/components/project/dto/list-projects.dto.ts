@@ -10,7 +10,12 @@ import {
   Sensitivity,
   SortablePaginationInput,
 } from '../../../common';
-import { IProject, Project } from './project.dto';
+import {
+  InternshipProject,
+  IProject,
+  Project,
+  TranslationProject,
+} from './project.dto';
 import { ProjectStatus } from './status.enum';
 import { ProjectStep } from './step.enum';
 import { ProjectType } from './type.enum';
@@ -113,6 +118,22 @@ export class ProjectListOutput extends PaginatedList<IProject, Project>(
   }
 ) {}
 
+@ObjectType()
+export class TranslationProjectListOutput extends PaginatedList(
+  TranslationProject,
+  {
+    itemsDescription: PaginatedList.itemDescriptionFor('translation projects'),
+  }
+) {}
+
+@ObjectType()
+export class InternshipProjectListOutput extends PaginatedList(
+  InternshipProject,
+  {
+    itemsDescription: PaginatedList.itemDescriptionFor('internship projects'),
+  }
+) {}
+
 @ObjectType({
   description: SecuredList.descriptionFor('projects'),
 })
@@ -120,5 +141,25 @@ export abstract class SecuredProjectList extends SecuredList<IProject, Project>(
   IProject,
   {
     itemsDescription: PaginatedList.itemDescriptionFor('projects'),
+  }
+) {}
+
+@ObjectType({
+  description: SecuredList.descriptionFor('translation projects'),
+})
+export abstract class SecuredTranslationProjectList extends SecuredList(
+  TranslationProject,
+  {
+    itemsDescription: PaginatedList.itemDescriptionFor('translation projects'),
+  }
+) {}
+
+@ObjectType({
+  description: SecuredList.descriptionFor('internship projects'),
+})
+export abstract class SecuredInternshipProjectList extends SecuredList(
+  InternshipProject,
+  {
+    itemsDescription: PaginatedList.itemDescriptionFor('internship projects'),
   }
 ) {}

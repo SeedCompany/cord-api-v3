@@ -11,6 +11,7 @@ import { ProjectChangeRequestModule } from '../project-change-request/project-ch
 import { UserModule } from '../user/user.module';
 import { ProjectEngagementConnectionResolver } from './engagement-connection.resolver';
 import * as handlers from './handlers';
+import { InternshipProjectResolver } from './internship-project.resolver';
 import * as migrations from './migrations';
 import { ProjectMemberModule } from './project-member/project-member.module';
 import { ProjectStepResolver } from './project-step.resolver';
@@ -19,6 +20,7 @@ import { ProjectRepository } from './project.repository';
 import { ProjectResolver } from './project.resolver';
 import { ProjectRules } from './project.rules';
 import { ProjectService } from './project.service';
+import { TranslationProjectResolver } from './translation-project.resolver';
 
 @Module({
   imports: [
@@ -36,6 +38,8 @@ import { ProjectService } from './project.service';
   ],
   providers: [
     ProjectResolver,
+    TranslationProjectResolver,
+    InternshipProjectResolver,
     ProjectEngagementConnectionResolver,
     ProjectService,
     ProjectStepResolver,
