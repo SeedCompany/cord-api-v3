@@ -1,4 +1,4 @@
-import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
+import { Field, Float, Int, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { startCase } from 'lodash';
 import { keys as keysOf } from 'ts-transformer-keys';
@@ -114,6 +114,20 @@ export class DirectScriptureProduct extends Product {
   })
   @DbLabel('UnspecifiedScripturePortion')
   unspecifiedScripture: SecuredUnspecifiedScripturePortion;
+
+  @Field(() => Int, {
+    description:
+      'The total number of verses of the selected scripture in this product',
+  })
+  totalVerses: number;
+
+  @Field(() => Float, {
+    description: stripIndent`
+      The total number of verse equivalents of the selected scripture in this product.
+      Verse equivalents weight each verse based on its translation difficulty.
+    `,
+  })
+  totalVerseEquivalents: number;
 }
 
 @ObjectType({
@@ -145,6 +159,20 @@ export class DerivativeScriptureProduct extends Product {
     `,
   })
   readonly scriptureReferencesOverride: SecuredScriptureRangesOverride;
+
+  @Field(() => Int, {
+    description:
+      'The total number of verses of the selected scripture in this product',
+  })
+  totalVerses: number;
+
+  @Field(() => Float, {
+    description: stripIndent`
+      The total number of verse equivalents of the selected scripture in this product.
+      Verse equivalents weight each verse based on its translation difficulty.
+    `,
+  })
+  totalVerseEquivalents: number;
 }
 
 @ObjectType({
