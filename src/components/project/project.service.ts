@@ -134,7 +134,7 @@ export class ProjectService {
     );
 
     try {
-      const id = await this.repo.create(input);
+      const id = await this.repo.create(input, session);
 
       // get the creating user's roles. Assign them on this project.
       // I'm going direct for performance reasons
@@ -405,9 +405,10 @@ export class ProjectService {
     );
 
     // update project step prop
-    const result = await this.repo.updateProperties(
-      currentProject,
-      { step: changes.step },
+    await this.repo.addProjectStep(input, session);
+    const result = await this.readOneUnsecured(
+      input.id,
+      session,
       input.changeset
     );
 
@@ -678,6 +679,11 @@ export class ProjectService {
           session.roles.concat(project.scope)
         ),
     };
+  }
+
+  async listStepChangeHistory(_id: ID, _changeset?: ID) {
+    // TODO
+    return [];
   }
 
   protected async validateOtherResourceId(

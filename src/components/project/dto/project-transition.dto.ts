@@ -13,7 +13,7 @@ import { ProjectStep } from './step.enum';
 
 @InputType()
 export abstract class ProjectTransitionInput {
-  @IdField({ nullable: false })
+  @IdField()
   id: ID;
 
   @IdField({ nullable: true })
@@ -46,7 +46,7 @@ export abstract class ProjectStepChange {
   @DbLabel('ProjectStep')
   readonly step: ProjectStep;
 
-  @Field(() => String)
+  @Field(() => String, { nullable: true })
   readonly comment: string | null;
 
   readonly user: ID | null;

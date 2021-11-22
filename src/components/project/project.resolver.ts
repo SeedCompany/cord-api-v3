@@ -444,7 +444,7 @@ export class ProjectResolver {
   })
   async transitionProject(
     @LoggedInSession() session: Session,
-    @Args() input: ProjectTransitionInput
+    @Args('input') input: ProjectTransitionInput
   ): Promise<ProjectTransitionOutput> {
     const project = await this.projectService.updateStep(input, session);
     const secured = await this.projectService.secure(project, session);

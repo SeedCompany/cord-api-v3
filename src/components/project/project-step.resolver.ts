@@ -1,12 +1,20 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { AnonSession, ID, Session } from '../../common';
-import { ProjectStepTransition, SecuredProjectStep } from './dto';
+import {
+  ProjectStepChange,
+  ProjectStepTransition,
+  SecuredProjectStep,
+} from './dto';
 import { ProjectRules } from './project.rules';
+import { ProjectService } from './project.service';
 
 @Resolver(SecuredProjectStep)
 export class ProjectStepResolver {
-  constructor(private readonly projectRules: ProjectRules) {}
+  constructor(
+    private readonly projectRules: ProjectRules,
+    private readonly projectService: ProjectService
+  ) {}
 
   @ResolveField(() => [ProjectStepTransition], {
     description: 'The available steps a project can be transitioned to.',
@@ -22,6 +30,22 @@ export class ProjectStepResolver {
       step.parentId,
       session,
       undefined,
+      step.changeset
+    );
+  }
+
+  @ResolveField(() => [ProjectStepChange], {
+    description: 'The history of project steps.',
+  })
+  async history(
+    @Parent() step: SecuredProjectStep & { parentId: ID; changeset?: ID },
+    @AnonSession() _session: Session
+  ): Promise<ProjectStepChange[]> {
+    if (!step.canRead || !step.canEdit || !step.value) {
+      return [];
+    }
+    return await this.projectService.listStepChangeHistory(
+      step.parentId,
       step.changeset
     );
   }

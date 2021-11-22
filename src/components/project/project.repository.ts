@@ -100,6 +100,13 @@ export class ProjectRepository extends CommonRepository {
         // optional because not defined until right after creation
         .optionalMatch([
           node('node'),
+          relation('out', '', 'transition', { active: !changeset }),
+          node('stepChange', 'ProjectStepChange'),
+          relation('out', '', 'stepRel', ACTIVE),
+          node('step', 'ProjectStep'),
+        ])
+        .optionalMatch([
+          node('node'),
           relation('out', '', 'rootDirectory', ACTIVE),
           node('rootDirectory', 'Directory'),
         ])
@@ -134,6 +141,7 @@ export class ProjectRepository extends CommonRepository {
             marketingLocation: 'marketingLocation.id',
             fieldRegion: 'fieldRegion.id',
             owningOrganization: 'organization.id',
+            step: 'step.value',
             changeset: 'changeset.id',
           }).as('dto')
         );
@@ -149,7 +157,7 @@ export class ProjectRepository extends CommonRepository {
     });
   }
 
-  async create(input: CreateProject) {
+  async create(input: CreateProject, session: Session) {
     const step = input.step ?? ProjectStep.EarlyConversations;
     const now = DateTime.local();
     const {
@@ -202,6 +210,14 @@ export class ProjectRepository extends CommonRepository {
     if (!result) {
       throw new ServerException('Failed to create project');
     }
+    // create step
+    await this.addProjectStep(
+      {
+        id: result.id,
+        step,
+      },
+      session
+    );
     return result.id;
   }
 
@@ -353,6 +369,25 @@ export class ProjectRepository extends CommonRepository {
   async addProjectStep(input: ProjectTransitionInput, session: Session) {
     const { id, changeset, ...initialProps } = input;
 
+    // disable active project step
+    await this.db
+      .query()
+      .match([
+        node('project', 'Project', { id }),
+        relation('out', 'transitionRel', 'transition', { active: !changeset }),
+        node('stepChange', 'ProjectStepChange'),
+        ...(changeset
+          ? [
+              relation('in', 'oldChange', 'changeset', ACTIVE),
+              node('changeNode', 'Changeset', { id: changeset }),
+            ]
+          : []),
+      ])
+      .setValues({
+        [`${changeset ? 'oldChange' : 'transitionRel'}.active`]: false,
+      })
+      .run();
+
     const result = await this.db
       .query()
       .apply(await createNode(ProjectStepChange, { initialProps }))
@@ -360,6 +395,7 @@ export class ProjectRepository extends CommonRepository {
         createRelationships(ProjectStepChange, {
           in: {
             transition: ['Project', id],
+            changeset: ['Changeset', changeset],
           },
           out: {
             by: ['User', session.userId],
