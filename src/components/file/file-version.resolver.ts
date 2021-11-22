@@ -1,4 +1,5 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { URL } from 'url';
 import { FileVersion } from './dto';
 import { FileService } from './file.service';
 
@@ -6,7 +7,7 @@ import { FileService } from './file.service';
 export class FileVersionResolver {
   constructor(protected readonly service: FileService) {}
 
-  @ResolveField(() => String, {
+  @ResolveField(() => URL, {
     description: 'A direct url to download the file version',
   })
   downloadUrl(@Parent() node: FileVersion): Promise<string> {

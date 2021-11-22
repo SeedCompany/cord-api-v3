@@ -7,6 +7,7 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
+import { URL } from 'url';
 import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
 import { Loader, LoaderOf } from '../../core';
 import { User, UserLoader } from '../user';
@@ -72,7 +73,7 @@ export class FileResolver {
     return await this.service.listChildren(node, input, session);
   }
 
-  @ResolveField(() => String, {
+  @ResolveField(() => URL, {
     description: 'A direct url to download the file',
   })
   downloadUrl(@Parent() node: File): Promise<string> {
