@@ -9,11 +9,11 @@ class ScriptureReferenceStartInput extends ScriptureReferenceInput {
   verse = 1;
 }
 
-class ScriptureReferenceEndInput implements ScriptureReferenceInput {
-  chapter: number;
-  verse: number;
+class ScriptureReferenceEndInput extends ScriptureReferenceInput {
   private bookName: string;
 
+  // @ts-expect-error Yes we are clobbering the property definition from the parent.
+  // It's ok for this use case and the parent decorators are still applied.
   get book() {
     return this.bookName;
   }

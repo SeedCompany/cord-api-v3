@@ -599,7 +599,7 @@ export class Chapter implements Iterable<Verse> {
   }
 
   verse(verseNumber: number) {
-    if (verseNumber > this.totalVerses) {
+    if (verseNumber <= 0 || verseNumber > this.totalVerses) {
       throw new NotFoundException(
         `Verse ${verseNumber} of ${this.label} does not exist`
       );
