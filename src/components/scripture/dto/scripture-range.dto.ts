@@ -1,4 +1,7 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { applyDecorators } from '@nestjs/common';
+import { Field, FieldOptions, InputType, ObjectType } from '@nestjs/graphql';
+import { Type } from 'class-transformer';
+import { ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
 import { random, times } from 'lodash';
 import { keys as keysOf } from 'ts-transformer-keys';
@@ -26,6 +29,13 @@ export const mapRange = <T, U = T>(
   start: mapper(input.start),
   end: mapper(input.end),
 });
+
+export const ScriptureField = (options: FieldOptions) =>
+  applyDecorators(
+    Field(() => [ScriptureRangeInput], options),
+    ValidateNested(),
+    Type(() => ScriptureRangeInput)
+  );
 
 @InputType()
 export abstract class ScriptureRangeInput {

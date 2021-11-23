@@ -2,7 +2,7 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { NameField } from '../../../common';
-import { ScriptureRangeInput } from '../../scripture';
+import { ScriptureField, ScriptureRangeInput } from '../../scripture';
 import { LiteracyMaterial } from './literacy-material.dto';
 
 @InputType()
@@ -10,9 +10,7 @@ export abstract class CreateLiteracyMaterial {
   @NameField()
   readonly name: string;
 
-  @Field(() => [ScriptureRangeInput], { nullable: true })
-  @ValidateNested()
-  @Type(() => ScriptureRangeInput)
+  @ScriptureField({ nullable: true })
   readonly scriptureReferences?: ScriptureRangeInput[] = [];
 }
 
