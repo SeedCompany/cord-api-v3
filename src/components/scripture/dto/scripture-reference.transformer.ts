@@ -3,6 +3,7 @@ import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { Book } from '../books';
 import { ScriptureReferenceInput } from './scripture-reference.dto';
+import { IsValidBook } from './scripture-reference.validator';
 
 class ScriptureReferenceStartInput extends ScriptureReferenceInput {
   chapter = 1;
@@ -12,6 +13,7 @@ class ScriptureReferenceStartInput extends ScriptureReferenceInput {
 class ScriptureReferenceEndInput implements ScriptureReferenceInput {
   chapter: number;
   verse: number;
+  @IsValidBook()
   private bookName: string;
 
   get book() {
