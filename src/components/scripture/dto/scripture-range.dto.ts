@@ -1,12 +1,13 @@
 import { applyDecorators } from '@nestjs/common';
 import { Field, FieldOptions, InputType, ObjectType } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
 import { random, times } from 'lodash';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { Range, SecuredPropertyList, SecuredProps } from '../../../common';
 import { Verse } from '../books';
+import { mergeScriptureRanges } from '../labels';
 import { IsValidOrder } from './scripture-range.validator';
 import {
   ScriptureReference,
@@ -34,7 +35,8 @@ export const ScriptureField = (options: FieldOptions) =>
   applyDecorators(
     Field(() => [ScriptureRangeInput], options),
     ValidateNested(),
-    Type(() => ScriptureRangeInput)
+    Type(() => ScriptureRangeInput),
+    Transform(({ value }) => (value ? mergeScriptureRanges(value) : value))
   );
 
 @InputType()
