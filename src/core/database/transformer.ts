@@ -43,9 +43,10 @@ export class MyTransformer extends PatchedTransformer {
   protected transformDateTime(dt: Neo.DateTime) {
     const plain: Neo.DateTime<number> = this.transformValue({ ...dt });
     const { nanosecond, timeZoneOffsetSeconds, timeZoneId, ...rest } = plain;
-    const zone = timeZoneOffsetSeconds
-      ? FixedOffsetZone.instance(timeZoneOffsetSeconds / 60)
-      : timeZoneId;
+    const zone =
+      timeZoneOffsetSeconds != null
+        ? FixedOffsetZone.instance(timeZoneOffsetSeconds / 60)
+        : timeZoneId;
     return DateTime.fromObject(
       {
         ...rest,
