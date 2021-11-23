@@ -3,19 +3,17 @@ import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { Book } from '../books';
 import { ScriptureReferenceInput } from './scripture-reference.dto';
-import { IsValidBook } from './scripture-reference.validator';
 
 class ScriptureReferenceStartInput extends ScriptureReferenceInput {
   chapter = 1;
   verse = 1;
 }
 
-class ScriptureReferenceEndInput implements ScriptureReferenceInput {
-  chapter: number;
-  verse: number;
-  @IsValidBook()
+class ScriptureReferenceEndInput extends ScriptureReferenceInput {
   private bookName: string;
 
+  // @ts-expect-error Yes we are clobbering the property definition from the parent.
+  // It's ok for this use case and the parent decorators are still applied.
   get book() {
     return this.bookName;
   }
