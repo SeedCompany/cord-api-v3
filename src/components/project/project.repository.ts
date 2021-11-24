@@ -100,13 +100,6 @@ export class ProjectRepository extends CommonRepository {
         // optional because not defined until right after creation
         .optionalMatch([
           node('node'),
-          relation('out', '', 'transition', { active: !changeset }),
-          node('stepChange', 'ProjectStepChange'),
-          relation('out', '', 'stepRel', ACTIVE),
-          node('step', 'ProjectStep'),
-        ])
-        .optionalMatch([
-          node('node'),
           relation('out', '', 'rootDirectory', ACTIVE),
           node('rootDirectory', 'Directory'),
         ])
@@ -130,6 +123,23 @@ export class ProjectRepository extends CommonRepository {
           relation('out', '', 'owningOrganization', ACTIVE),
           node('organization', 'Organization'),
         ])
+        // match project transition step
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'transition', { active: !changeset }),
+          node('stepChange', 'ProjectStepChange'),
+          ...(changeset
+            ? [
+                relation('in', '', 'changeset', ACTIVE),
+                node('changeset', 'Changeset', { id: changeset }),
+              ]
+            : []),
+        ])
+        .optionalMatch([
+          node('stepChange'),
+          relation('out', '', 'step', ACTIVE),
+          node('step', 'ProjectStep'),
+        ])
         .raw('', { requestingUserId: userId })
         .return<{ dto: UnsecuredDto<Project> }>(
           merge('props', 'changedProps', {
@@ -149,7 +159,7 @@ export class ProjectRepository extends CommonRepository {
 
   getActualChanges(
     currentProject: UnsecuredDto<Project>,
-    input: UpdateProject
+    input: UpdateProject & { step?: ProjectStep }
   ) {
     return getChanges(IProject)(currentProject, {
       ...input,

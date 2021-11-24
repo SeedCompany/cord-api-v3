@@ -1,8 +1,7 @@
 import { gql } from 'apollo-server-core';
 import { isValidId } from '../../src/common';
-import { Project, ProjectTransitionInput } from '../../src/components/project';
+import { ProjectTransitionInput } from '../../src/components/project';
 import { TestApp } from './create-app';
-import { fragments } from './fragments';
 
 export async function createTransitionProject(
   app: TestApp,
@@ -13,11 +12,20 @@ export async function createTransitionProject(
       mutation transitionProject($input: ProjectTransitionInput!) {
         transitionProject(input: $input) {
           project {
-            ...project
+            id
+            step {
+              canRead
+              canEdit
+              value
+              transitions {
+                to
+                type
+                label
+              }
+            }
           }
         }
       }
-      ${fragments.project}
     `,
     {
       input: {
@@ -26,7 +34,7 @@ export async function createTransitionProject(
     }
   );
 
-  const actual: Project = result.transitionProject.project;
+  const actual = result.transitionProject.project;
   expect(actual).toBeTruthy();
 
   expect(isValidId(actual.id)).toBe(true);

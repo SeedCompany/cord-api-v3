@@ -31,7 +31,7 @@ export class ApplyFinalizedChangesetToProject
     const status = event.changeRequest.status;
 
     try {
-      const query = this.db
+      let query = this.db
         .query()
         .match([
           node('node', 'Project'),
@@ -71,6 +71,43 @@ export class ApplyFinalizedChangesetToProject
                 : rejectChangesetProps({ nodeVar: 'br' })
             )
             .return('br')
+        )
+        .return('node');
+      await query.run();
+
+      // Apply transition project step
+      query = this.db
+        .query()
+        .match([
+          node('node', 'Project'),
+          relation('out', '', 'changeset', ACTIVE),
+          node('changeset', 'Changeset', { id: changesetId }),
+        ])
+        .subQuery((sub) =>
+          sub
+            .comment('Apply pending transition project step')
+            .with('node, changeset')
+            .match([
+              node('node'),
+              relation('out', 'oldTransitionRel', 'transition', ACTIVE),
+              node('oldStepChange', 'ProjectStepChange'),
+            ])
+            .match([
+              node('node'),
+              relation('out', 'transitionRel', 'transition', INACTIVE),
+              node('stepChange', 'ProjectStepChange'),
+              relation('in', '', 'changeset', ACTIVE),
+              node('changeset', 'Changeset', { id: changesetId }),
+            ])
+            .apply((q) =>
+              status === ProjectChangeRequestStatus.Approved
+                ? q.setValues({
+                    'oldTransitionRel.active': false,
+                    'transitionRel.active': true,
+                  })
+                : q
+            )
+            .return('stepChange')
         )
         .return('node');
       await query.run();

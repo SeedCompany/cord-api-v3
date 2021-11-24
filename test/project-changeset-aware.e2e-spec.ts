@@ -15,6 +15,7 @@ import {
   createRegion,
   createSession,
   createTestApp,
+  createTransitionProject,
   registerUserWithPower,
   runAsAdmin,
   TestApp,
@@ -269,30 +270,12 @@ describe('Project Changeset Aware e2e', () => {
     });
 
     // Update project step with changeset
-    const mutationResult = await app.graphql.mutate(
-      gql`
-        mutation updateProject($input: UpdateProjectInput!) {
-          updateProject(input: $input) {
-            project {
-              ...project
-            }
-          }
-        }
-        ${fragments.project}
-      `,
-      {
-        input: {
-          project: {
-            id: project.id,
-            step: ProjectStep.FinalizingCompletion,
-          },
-          changeset: changeset.id,
-        },
-      }
-    );
-    expect(mutationResult.updateProject.project.step.value).toBe(
-      ProjectStep.FinalizingCompletion
-    );
+    const transitionProject = await createTransitionProject(app, {
+      id: project.id,
+      step: ProjectStep.FinalizingCompletion,
+      changeset: changeset.id,
+    });
+    expect(transitionProject.step.value).toBe(ProjectStep.FinalizingCompletion);
 
     // Query project without changeset
     let result = await readProject(app, project.id);
@@ -304,7 +287,7 @@ describe('Project Changeset Aware e2e', () => {
 
     await approveProjectChangeRequest(app, changeset.id);
 
-    // Project name is changed without changeset
+    // Project step is changed without changeset
     result = await readProject(app, project.id);
     expect(result.project.step.value).toBe(ProjectStep.FinalizingCompletion);
   });

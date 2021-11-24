@@ -269,8 +269,7 @@ export class ProjectService {
   async update(
     input: UpdateProject,
     session: Session,
-    changeset?: ID,
-    stepValidation = true
+    changeset?: ID
   ): Promise<UnsecuredDto<Project>> {
     const currentProject = await this.readOneUnsecured(
       input.id,
@@ -293,19 +292,21 @@ export class ProjectService {
       'project'
     );
 
-    if (changes.step && stepValidation) {
-      await this.projectRules.verifyStepChange(
-        input.id,
-        session,
-        changes.step,
-        changeset
-      );
-    }
+    // if (changes.step && stepValidation) {
+    //   await this.projectRules.verifyStepChange(
+    //     input.id,
+    //     session,
+    //     changes.step,
+    //     changeset
+    //   );
+    // }
 
     const {
       primaryLocationId,
       marketingLocationId,
       fieldRegionId,
+      step,
+      status,
       ...simpleChanges
     } = changes;
 
@@ -406,6 +407,14 @@ export class ProjectService {
 
     // update project step prop
     await this.repo.addProjectStep(input, session);
+    // update project status
+    if (changes.status) {
+      await this.repo.updateProperties(
+        currentProject,
+        { status: changes.status },
+        input.changeset
+      );
+    }
     const result = await this.readOneUnsecured(
       input.id,
       session,

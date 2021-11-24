@@ -32,6 +32,7 @@ export abstract class ProjectTransitionOutput {
   readonly project: Project;
 }
 
+@ObjectType()
 export abstract class ProjectStepChange {
   static readonly Props: string[] = keysOf<ProjectStepChange>();
   static readonly SecuredProps: string[] =
