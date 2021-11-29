@@ -1,12 +1,6 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
-import {
-  DbLabel,
-  ID,
-  IdField,
-  parentIdMiddleware,
-  SecuredProps,
-} from '../../../common';
+import { DbLabel, ID, IdField, Secured, SecuredProps } from '../../../common';
 import { User } from '../../user/dto';
 import { IProject, Project } from './project.dto';
 import { ProjectStep } from './step.enum';
@@ -41,14 +35,12 @@ export abstract class ProjectStepChange {
     by: User,
   };
 
-  @Field({
-    middleware: [parentIdMiddleware],
-  })
+  @Field(() => ProjectStep)
   @DbLabel('ProjectStep')
   readonly step: ProjectStep;
 
   @Field(() => String, { nullable: true })
-  readonly comment: string | null;
+  readonly comment?: string | null;
 
-  readonly user: ID | null;
+  readonly user?: Secured<ID | null>;
 }

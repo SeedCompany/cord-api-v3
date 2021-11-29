@@ -681,9 +681,8 @@ export class ProjectService {
     };
   }
 
-  async listStepChangeHistory(_id: ID, _changeset?: ID) {
-    // TODO
-    return [];
+  async listStepChangeHistory(id: ID, changeset?: ID) {
+    return await this.repo.listStepChangeHistory(id, changeset);
   }
 
   protected async validateOtherResourceId(

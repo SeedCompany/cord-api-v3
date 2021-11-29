@@ -20,6 +20,7 @@ import {
   ACTIVE,
   createNode,
   createRelationships,
+  INACTIVE,
   matchChangesetAndChangedProps,
   matchProjectSens,
   matchProjectSensToLimitedScopeMap,
@@ -417,6 +418,46 @@ export class ProjectRepository extends CommonRepository {
       throw new ServerException('Failed to create Project Transition');
     }
     return result.id;
+  }
+
+  async listStepChangeHistory(
+    id: ID,
+    _changeset?: ID
+  ): Promise<ProjectStepChange[]> {
+    const query = this.db
+      .query()
+      .match([
+        node('project', 'Project', { id }),
+        relation('out', '', 'transition', INACTIVE),
+        node('stepChange', 'ProjectStepChange'),
+      ])
+      .optionalMatch([
+        node('stepChange'),
+        relation('out', '', 'step', ACTIVE),
+        node('step', 'ProjectStep'),
+      ])
+      .optionalMatch([
+        node('stepChange'),
+        relation('out', '', 'comment', ACTIVE),
+        node('comment', 'Property'),
+      ])
+      .optionalMatch([
+        node('stepChange'),
+        relation('out', '', 'by', ACTIVE),
+        node('user', 'User'),
+      ])
+      .with('stepChange, step, comment, user')
+      .orderBy('stepChange.createdAt', 'DESC')
+      .return<ProjectStepChange>([
+        'step.value as step',
+        'comment',
+        'user.id as user',
+      ]);
+
+    const result = await query.run();
+    const changes: ProjectStepChange[] = [];
+    result.map((change) => changes.push(change));
+    return changes;
   }
 
   @OnIndex()
