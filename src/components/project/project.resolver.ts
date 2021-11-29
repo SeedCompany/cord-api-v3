@@ -55,10 +55,10 @@ import {
   Project,
   ProjectListInput,
   ProjectListOutput,
-  ProjectType,
-  TranslationProjectListOutput,
   ProjectTransitionInput,
   ProjectTransitionOutput,
+  ProjectType,
+  TranslationProjectListOutput,
   UpdateProjectInput,
   UpdateProjectOutput,
 } from './dto';

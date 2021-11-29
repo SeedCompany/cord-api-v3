@@ -497,10 +497,15 @@ export class EngagementRules {
         .query()
         .match([
           node('project', 'Project', { id: projectId }),
-          relation('out', '', 'step', INACTIVE),
-          node('step', 'Property'),
+          relation('out', '', 'transition', INACTIVE),
+          node('stepChange', 'ProjectStepChange'),
           relation('in', '', 'changeset', ACTIVE),
           node('', 'Changeset', { id: changeset }),
+        ])
+        .match([
+          node('stepChange'),
+          relation('out', '', 'step', ACTIVE),
+          node('step', 'ProjectStep'),
         ])
         .raw('return step.value as step')
         .asResult<{ step: ProjectStep }>()
@@ -512,8 +517,10 @@ export class EngagementRules {
         .query()
         .match([
           node('project', 'Project', { id: projectId }),
+          relation('out', '', 'transition', ACTIVE),
+          node('stepChange', 'ProjectStepChange'),
           relation('out', '', 'step', ACTIVE),
-          node('step', 'Property'),
+          node('step', 'ProjectStep'),
         ])
         .raw('return step.value as step')
         .asResult<{ step: ProjectStep }>()

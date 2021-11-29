@@ -15,6 +15,7 @@ import {
 } from '../../../common';
 import { ReportPeriod } from '../../periodic-report/dto';
 import { IProject, Project } from './project.dto';
+import { ProjectStep } from './step.enum';
 
 @InputType()
 export abstract class UpdateProject {
@@ -53,8 +54,11 @@ export abstract class UpdateProject {
   @DateField({ nullable: true })
   readonly estimatedSubmission?: CalendarDate | null;
 
-  // @Field(() => ProjectStep, { nullable: true })
-  // readonly step?: ProjectStep;
+  @Field(() => ProjectStep, {
+    nullable: true,
+    deprecationReason: 'Use `transitionProject` mutation instead',
+  })
+  readonly step?: ProjectStep;
 
   @SensitivityField({
     description: 'Update only available to internship projects',

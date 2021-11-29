@@ -292,21 +292,12 @@ export class ProjectService {
       'project'
     );
 
-    // if (changes.step && stepValidation) {
-    //   await this.projectRules.verifyStepChange(
-    //     input.id,
-    //     session,
-    //     changes.step,
-    //     changeset
-    //   );
-    // }
-
     const {
       primaryLocationId,
       marketingLocationId,
       fieldRegionId,
-      step,
-      status,
+      step, // skip step, use this.updateStep
+      status, // skip status, use this.updateStep
       ...simpleChanges
     } = changes;
 

@@ -888,8 +888,8 @@ describe('Project e2e', () => {
 
       const result = await app.graphql.mutate(
         gql`
-          mutation updateProject($id: ID!, $step: ProjectStep!) {
-            updateProject(input: { project: { id: $id, step: $step } }) {
+          mutation transitionProject($id: ID!, $step: ProjectStep!) {
+            transitionProject(input: { id: $id, step: $step }) {
               project {
                 departmentId {
                   value
@@ -913,14 +913,14 @@ describe('Project e2e', () => {
         }
       );
 
-      expect(result?.updateProject.project.budget.value.status).toBe(
+      expect(result?.transitionProject.project.budget.value.status).toBe(
         BudgetStatus.Current
       );
-      expect(result?.updateProject.project.departmentId.value).toContain(
+      expect(result?.transitionProject.project.departmentId.value).toContain(
         fundingAccount.accountNumber.value
       );
       // Ensure the initialMouEnd is updated to mouEnd value
-      expect(result?.updateProject.project.initialMouEnd.value).toBe(
+      expect(result?.transitionProject.project.initialMouEnd.value).toBe(
         project.mouEnd.value
       );
     });
@@ -1133,8 +1133,8 @@ describe('Project e2e', () => {
         });
         const updatedProject = await app.graphql.mutate(
           gql`
-            mutation updateProject($id: ID!, $step: ProjectStep!) {
-              updateProject(input: { project: { id: $id, step: $step } }) {
+            mutation transitionProject($id: ID!, $step: ProjectStep!) {
+              transitionProject(input: { id: $id, step: $step }) {
                 project {
                   departmentId {
                     value
@@ -1149,7 +1149,7 @@ describe('Project e2e', () => {
             step: ProjectStep.PendingFinanceConfirmation,
           }
         );
-        return updatedProject.updateProject.project;
+        return updatedProject.transitionProject.project;
       };
       const projects = await Promise.all(
         ['1', '2'].map(async (i) => {

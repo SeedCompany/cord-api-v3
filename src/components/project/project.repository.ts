@@ -159,7 +159,7 @@ export class ProjectRepository extends CommonRepository {
 
   getActualChanges(
     currentProject: UnsecuredDto<Project>,
-    input: UpdateProject & { step?: ProjectStep }
+    input: UpdateProject
   ) {
     return getChanges(IProject)(currentProject, {
       ...input,
@@ -189,7 +189,6 @@ export class ProjectRepository extends CommonRepository {
       tags: input.tags,
       financialReportReceivedAt: input.financialReportReceivedAt,
       financialReportPeriod: input.financialReportPeriod,
-      step,
       status: stepToStatus(step),
       modifiedAt: now,
       canDelete: true,
