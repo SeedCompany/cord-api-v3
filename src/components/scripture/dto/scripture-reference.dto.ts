@@ -17,7 +17,7 @@ export abstract class ScriptureReferenceInput {
     description: 'The Bible book',
   })
   @IsValidBook()
-  book: string;
+  readonly book: string;
 
   @Field(() => Int, {
     description: stripIndent`
@@ -27,7 +27,7 @@ export abstract class ScriptureReferenceInput {
     nullable: true,
   })
   @IsValidChapter()
-  chapter: number;
+  readonly chapter: number;
 
   @Field(() => Int, {
     description: stripIndent`
@@ -37,7 +37,7 @@ export abstract class ScriptureReferenceInput {
     nullable: true,
   })
   @IsValidVerse()
-  verse: number;
+  readonly verse: number;
 }
 
 @ObjectType({
@@ -47,10 +47,10 @@ export abstract class ScriptureReference extends ScriptureReferenceInput {
   @Field(() => Int, {
     description: `The chapter number.`,
   })
-  chapter: number;
+  readonly chapter: number;
 
   @Field(() => Int, {
     description: `The verse number.`,
   })
-  verse: number;
+  readonly verse: number;
 }

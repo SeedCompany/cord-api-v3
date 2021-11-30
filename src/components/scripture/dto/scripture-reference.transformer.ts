@@ -1,6 +1,7 @@
 import { applyDecorators } from '@nestjs/common';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
+import { Mutable } from 'type-fest';
 import { Book } from '../books';
 import { ScriptureReferenceInput } from './scripture-reference.dto';
 
@@ -25,8 +26,8 @@ class ScriptureReferenceEndInput extends ScriptureReferenceInput {
     // after this. Also ignoring errors, as the validator reports better.
     try {
       const book = Book.find(value);
-      this.chapter = book.lastChapter.chapter;
-      this.verse = book.lastChapter.lastVerse.verse;
+      (this as Mutable<this>).chapter = book.lastChapter.chapter;
+      (this as Mutable<this>).verse = book.lastChapter.lastVerse.verse;
     } catch (e) {
       // let validator will throw error
     }

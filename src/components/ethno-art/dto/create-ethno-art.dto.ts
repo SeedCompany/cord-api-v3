@@ -11,7 +11,7 @@ export abstract class CreateEthnoArt {
   readonly name: string;
 
   @ScriptureField({ nullable: true })
-  readonly scriptureReferences?: ScriptureRangeInput[] = [];
+  readonly scriptureReferences?: readonly ScriptureRangeInput[] = [];
 }
 
 @InputType()

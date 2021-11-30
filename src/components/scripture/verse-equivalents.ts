@@ -5,13 +5,12 @@ import {
   BookDifficulty,
   mapRange,
   ScriptureRange,
-  ScriptureRangeInput,
   UnspecifiedScripturePortion,
 } from './dto';
 import { mergeScriptureRanges } from './labels';
 
 export const getTotalVerseEquivalents = (
-  ...refs: ReadonlyArray<ScriptureRange | ScriptureRangeInput>
+  ...refs: readonly ScriptureRange[]
 ) => {
   const verses = mergeScriptureRanges(refs)
     .map((range) => mapRange(range, Verse.fromRef))
@@ -30,9 +29,7 @@ export const getVerseEquivalentsFromUnspecified = (
   return factor * portion.totalVerses;
 };
 
-export const getTotalVerses = (
-  ...refs: ReadonlyArray<ScriptureRange | ScriptureRangeInput>
-) =>
+export const getTotalVerses = (...refs: readonly ScriptureRange[]) =>
   sumBy(mergeScriptureRanges(refs), (range) => {
     const { start, end } = mapRange(range, Verse.fromRef);
     return end.id - start.id + 1;

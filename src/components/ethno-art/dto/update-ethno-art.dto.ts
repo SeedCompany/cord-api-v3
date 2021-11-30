@@ -14,7 +14,7 @@ export abstract class UpdateEthnoArt {
   readonly name?: string;
 
   @ScriptureField({ nullable: true })
-  readonly scriptureReferences?: ScriptureRangeInput[];
+  readonly scriptureReferences?: readonly ScriptureRangeInput[];
 }
 
 @InputType()

@@ -45,14 +45,14 @@ export abstract class ScriptureRangeInput {
     description: 'The starting point',
   })
   @ScriptureStart()
-  start: ScriptureReferenceInput;
+  readonly start: ScriptureReferenceInput;
 
   @Field({
     description: 'The ending point',
   })
   @IsValidOrder()
   @ScriptureEnd()
-  end: ScriptureReferenceInput;
+  readonly end: ScriptureReferenceInput;
 }
 
 @ObjectType({
@@ -65,12 +65,12 @@ export abstract class ScriptureRange implements Range<ScriptureReference> {
   @Field({
     description: 'The starting point',
   })
-  start: ScriptureReference;
+  readonly start: ScriptureReference;
 
   @Field({
     description: 'The ending point',
   })
-  end: ScriptureReference;
+  readonly end: ScriptureReference;
 
   static fromIds(range: Range<number>) {
     return mapRange(range, (p) => Verse.fromId(p).reference);
