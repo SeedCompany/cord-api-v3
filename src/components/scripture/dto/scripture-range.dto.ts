@@ -89,7 +89,9 @@ export abstract class ScriptureRange implements Range<ScriptureReference> {
   }
 
   static randomList(min = 2, max = 4) {
-    return times(random(min, max)).map(ScriptureRange.random);
+    return mergeScriptureRanges(
+      times(random(min, max)).map(ScriptureRange.random)
+    );
   }
 }
 
