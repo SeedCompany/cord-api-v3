@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import got from 'got/dist/source';
 import { compact } from 'lodash';
 import {
   CalendarDate,
@@ -7,7 +8,9 @@ import {
   InputException,
   NotFoundException,
   ObjectView,
+  PaginatedListType,
   SecuredDate,
+  Sensitivity,
   ServerException,
   Session,
   simpleSwitch,
@@ -32,13 +35,54 @@ import {
 } from '../project';
 import {
   CreateLanguage,
+  EthnologueLanguage,
   Language,
   LanguageListInput,
   LanguageListOutput,
+  TablesLanguage,
+  TablesLanguages,
   UpdateLanguage,
 } from './dto';
 import { EthnologueLanguageService } from './ethnologue-language';
 import { LanguageRepository } from './language.repository';
+
+function transformTablesToCord(
+  tablesLang: TablesLanguage
+): UnsecuredDto<Language> {
+  // fill in this stuff with a readOne from CordTables API later...
+  // probably just make a call to cord tables here and map it to EthnologueLang.
+  const eth: UnsecuredDto<EthnologueLanguage> = {
+    id: 'id' as ID,
+    code: 'string',
+    provisionalCode: 'lkj',
+    name: 'lkj',
+    population: 1234,
+    sensitivity: undefined,
+    // sensitivity: "High",
+  };
+  return {
+    name: tablesLang.name,
+    id: tablesLang.neo4j_id as ID,
+    populationOverride: tablesLang.population_override,
+    registryOfDialectsCode: tablesLang.registry_of_dialects_code,
+    leastOfThese: tablesLang.least_of_these,
+    signLanguageCode: tablesLang.sign_language_code,
+    sponsorEstimatedEndDate: tablesLang.sponsor_estimated_end_date,
+    hasExternalFirstScripture: tablesLang.has_external_first_scripture,
+    sensitivity: tablesLang.sensitivity,
+    ethnologue: eth,
+    displayName: tablesLang.display_name,
+    displayNamePronunciation: tablesLang.display_name_pronunciation,
+    tags: tablesLang.tags,
+    presetInventory: tablesLang.preset_inventory,
+    isDialect: tablesLang.is_dialect,
+    isSignLanguage: tablesLang.is_sign_language,
+    leastOfTheseReason: tablesLang.least_of_these_reason,
+    createdAt: tablesLang.created_at,
+    effectiveSensitivity: Sensitivity.High, //todo
+    pinned: false, //todo
+  };
+}
 
 @Injectable()
 export class LanguageService {
@@ -117,7 +161,22 @@ export class LanguageService {
 
   async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
     const languages = await this.repo.readMany(ids, session, view);
-    return await Promise.all(languages.map((dto) => this.secure(dto, session)));
+  }
+  async getLanguage(langId: ID, session: Session): Promise<Language> {
+    const response = await got.post('http://localhost:8080/sc-languages/read', {
+      json: {
+        token:
+          '6SXkazOrHP1irRpkFEQXPSERDrJK4op0F2OWM2xqgyb56LddmwLGim6ktqIoFXIF',
+        responseType: 'json',
+        id: langId,
+      },
+    });
+    const language = response.body;
+
+    const iLanguage: TablesLanguage = JSON.parse(language);
+
+    const dto: UnsecuredDto<Language> = transformTablesToCord(iLanguage);
+    return await this.secure(dto, session);
   }
 
   private async secure(
@@ -213,11 +272,39 @@ export class LanguageService {
     input: LanguageListInput,
     session: Session
   ): Promise<LanguageListOutput> {
-    const limited = (await this.authorizationService.canList(Language, session))
-      ? undefined
-      : await this.authorizationService.getListRoleSensitivityMapping(Language);
-    const results = await this.repo.list(input, session, limited);
-    return await mapListResults(results, (dto) => this.secure(dto, session));
+    // const limited = (await this.authorizationService.canList(Language, session))
+    //   ? undefined
+    //   : await this.authorizationService.getListRoleSensitivityMapping(Language);
+    // const results = await this.repo.list(input, session, limited);
+    // return await mapListResults(results, (dto) => this.secure(dto, session));
+    return await this.getLanguages(session);
+  }
+
+  async getLanguages(session: Session): Promise<LanguageListOutput> {
+    const response = await got.post('http://localhost:8080/sc-languages/list', {
+      json: {
+        token:
+          '6SXkazOrHP1irRpkFEQXPSERDrJK4op0F2OWM2xqgyb56LddmwLGim6ktqIoFXIF',
+        responseType: 'json',
+      },
+    });
+    const languages = response.body;
+
+    const iLanguages: TablesLanguages = JSON.parse(languages);
+
+    const langArray: Array<UnsecuredDto<Language>> = iLanguages.languages.map(
+      (lang) => {
+        return transformTablesToCord(lang);
+      }
+    );
+
+    const langList: PaginatedListType<UnsecuredDto<Language>> = {
+      items: langArray,
+      total: langArray.length,
+      hasMore: false, //not sure about how to handle the pagination.... will be handled by cordtables later I think.
+    };
+
+    return await mapListResults(langList, (dto) => this.secure(dto, session));
   }
 
   async listLocations(
