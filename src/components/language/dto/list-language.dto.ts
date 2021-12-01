@@ -40,6 +40,13 @@ export abstract class LanguageFilters {
     description: 'Only languages that are (not) in the "Preset Inventory"',
   })
   readonly presetInventory?: boolean;
+
+  @Field({
+    description:
+      'Only languages that are pinned/unpinned by the requesting user',
+    nullable: true,
+  })
+  readonly pinned?: boolean;
 }
 
 const defaultFilters = {};
