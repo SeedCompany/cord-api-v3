@@ -25,6 +25,7 @@ import {
 } from '../../core/database/query';
 import { AuthSensitivityMapping } from '../authorization/authorization.service';
 import { CreatePartner, Partner, PartnerListInput } from './dto';
+import { partnerListFilter } from './query.helpers';
 
 @Injectable()
 export class PartnerRepository extends DtoRepository(Partner) {
@@ -138,12 +139,15 @@ export class PartnerRepository extends DtoRepository(Partner) {
           relation('out', '', 'pointOfContact', ACTIVE),
           node('pointOfContact', 'User'),
         ])
+        .raw('', { requestingUserId: session.userId })
         .return<{ dto: UnsecuredDto<Partner> }>(
           merge('props', {
             sensitivity: 'sensitivity',
             organization: 'organization.id',
             pointOfContact: 'pointOfContact.id',
             scope: 'scopedRoles',
+            pinned:
+              'exists((:User { id: $requestingUserId })-[:pinned]->(node))',
           }).as('dto')
         );
   }
@@ -211,6 +215,7 @@ export class PartnerRepository extends DtoRepository(Partner) {
       )
       // match requesting user once (instead of once per row)
       .match(requestingUser(session))
+      .apply(partnerListFilter(filter))
       .apply(matchProjectSensToLimitedScopeMap(limitedScope))
       .apply(
         sorting(Partner, input, {
