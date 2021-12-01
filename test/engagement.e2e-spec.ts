@@ -94,7 +94,7 @@ describe('Engagement e2e', () => {
   });
 
   afterAll(async () => {
-    await resetDatabase(db);
+    //await resetDatabase(db);
     await app.close();
   });
 
