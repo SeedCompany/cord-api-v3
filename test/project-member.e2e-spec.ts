@@ -37,7 +37,7 @@ describe('ProjectMember e2e', () => {
     project = await createProject(app);
   });
   afterAll(async () => {
-    await resetDatabase(db);
+    //await resetDatabase(db);
     await app.close();
   });
 
