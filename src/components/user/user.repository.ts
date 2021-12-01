@@ -44,6 +44,7 @@ import {
   User,
   UserListInput,
 } from './dto';
+import { userListFilter } from './query.helpers';
 
 @Injectable()
 export class UserRepository extends DtoRepository(User) {
@@ -156,11 +157,11 @@ export class UserRepository extends DtoRepository(User) {
     return result.id;
   }
 
-  async readOne(id: ID) {
+  async readOne(id: ID, userId: ID) {
     const query = this.db
       .query()
       .match([node('node', 'User', { id })])
-      .apply(this.hydrate());
+      .apply(this.hydrate(userId));
     const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find user', 'user.id');
@@ -168,17 +169,17 @@ export class UserRepository extends DtoRepository(User) {
     return result.dto;
   }
 
-  async readMany(ids: readonly ID[]) {
+  async readMany(ids: readonly ID[], session: Session) {
     return await this.db
       .query()
       .matchNode('node', 'User')
       .where({ 'node.id': inArray(ids.slice()) })
-      .apply(this.hydrate())
+      .apply(this.hydrate(session.userId))
       .map('dto')
       .run();
   }
 
-  hydrate() {
+  hydrate(userId: ID) {
     return (query: Query) =>
       query
         .optionalMatch([
@@ -187,9 +188,12 @@ export class UserRepository extends DtoRepository(User) {
           node('role', 'Property'),
         ])
         .apply(matchProps())
+        .raw('', { requestingUserId: userId })
         .return<{ dto: UnsecuredDto<User> }>(
           merge({ email: null }, 'props', {
             roles: collect('role.value'),
+            pinned:
+              'exists((:User { id: $requestingUserId })-[:pinned]->(node))',
           }).as('dto')
         );
   }
@@ -268,12 +272,13 @@ export class UserRepository extends DtoRepository(User) {
     }
   }
 
-  async list(input: UserListInput, session: Session) {
+  async list({ filter, ...input }: UserListInput, session: Session) {
     const result = await this.db
       .query()
       .match([requestingUser(session), ...permissionsOfNode('User')])
+      .apply(userListFilter(filter))
       .apply(sorting(User, input))
-      .apply(paginate(input, this.hydrate()))
+      .apply(paginate(input, this.hydrate(session.userId)))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }
