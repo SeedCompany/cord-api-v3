@@ -1,9 +1,11 @@
+import { Type } from '@nestjs/common';
 import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
   DateTimeField,
   ID,
+  IntersectionType,
   Resource,
   Secured,
   SecuredBoolean,
@@ -16,8 +18,14 @@ import {
 } from '../../../common';
 import { ScopedRole } from '../../authorization';
 import { FinancialReportingType } from '../../partnership/dto/financial-reporting-type';
+import { Pinnable } from '../../pin/dto';
 import { IProject } from '../../project/dto';
 import { SecuredPartnerTypes } from './partner-type.enum';
+
+const PinnableResource: Type<Resource & Pinnable> = IntersectionType(
+  Resource,
+  Pinnable
+);
 
 @ObjectType({
   description: SecuredEnumList.descriptionFor('financial reporting types'),
@@ -27,9 +35,9 @@ export abstract class SecuredFinancialReportingTypes extends SecuredEnumList(
 ) {}
 
 @ObjectType({
-  implements: Resource,
+  implements: [Resource, Pinnable],
 })
-export class Partner extends Resource {
+export class Partner extends PinnableResource {
   static readonly Props = keysOf<Partner>();
   static readonly SecuredProps = keysOf<SecuredProps<Partner>>();
   static readonly Relations = {

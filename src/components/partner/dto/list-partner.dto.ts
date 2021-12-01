@@ -1,4 +1,4 @@
-import { InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import {
@@ -13,6 +13,13 @@ import { Partner } from './partner.dto';
 export abstract class PartnerFilters {
   readonly organizationId?: ID;
   readonly userId?: ID;
+
+  @Field({
+    description:
+      'Only partners that are pinned/unpinned by the requesting user',
+    nullable: true,
+  })
+  readonly pinned?: boolean;
 }
 
 const defaultFilters = {};
