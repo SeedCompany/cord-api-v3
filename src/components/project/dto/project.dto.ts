@@ -63,7 +63,7 @@ const PinnablePostableChangesetAwareResource: Type<
 
     throw new Error('Could not resolve project type');
   },
-  implements: [Resource, Pinnable, ChangesetAware],
+  implements: [Resource, Pinnable, Postable, ChangesetAware],
 })
 class Project extends PinnablePostableChangesetAwareResource {
   static readonly Props: string[] = keysOf<Project>();
