@@ -1,11 +1,17 @@
 import {
   CalendarDate,
+  ID,
   ServerException,
-  Session,
   UnauthorizedException,
 } from '../../../common';
 import { EventsHandler, IEventHandler, ILogger, Logger } from '../../../core';
-import { Engagement, EngagementStatus } from '../dto';
+import {
+  Engagement,
+  EngagementStatus,
+  InternshipEngagement,
+  LanguageEngagement,
+} from '../dto';
+import { EngagementRepository } from '../engagement.repository';
 import { EngagementService } from '../engagement.service';
 import { EngagementCreatedEvent, EngagementUpdatedEvent } from '../events';
 
@@ -14,6 +20,7 @@ type SubscribedEvent = EngagementCreatedEvent | EngagementUpdatedEvent;
 @EventsHandler(EngagementCreatedEvent, EngagementUpdatedEvent)
 export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
   constructor(
+    private readonly engagementRepo: EngagementRepository,
     private readonly engagementService: EngagementService,
     @Logger('engagement:set-initial-end-date') private readonly logger: ILogger
   ) {}
@@ -52,11 +59,18 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
     try {
       const initialEndDate = engagement.endDate.value;
 
-      const updatedEngagement = await this.updateEngagementInitialEndDate(
+      await this.updateEngagementInitialEndDate(
         engagement,
         initialEndDate,
-        event.session
+        engagement.changeset
       );
+      const updatedEngagement = {
+        ...engagement,
+        initialEndDate: {
+          ...engagement.initialEndDate,
+          value: initialEndDate,
+        },
+      };
 
       if (event instanceof EngagementUpdatedEvent) {
         event.updated = updatedEngagement;
@@ -78,22 +92,22 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
   private async updateEngagementInitialEndDate(
     engagement: Engagement,
     initialEndDate: CalendarDate | null | undefined,
-    session: Session
+    changeset?: ID
   ) {
     const updateInput = {
-      id: engagement.id,
       initialEndDate: initialEndDate || null,
     };
-    // TODO: Refactor to call repository directly instead of engagementService methods
     if (engagement.__typename === 'LanguageEngagement') {
-      return await this.engagementService.updateLanguageEngagement(
+      await this.engagementRepo.updateLanguageProperties(
+        engagement as LanguageEngagement,
         updateInput,
-        session
+        changeset
       );
     } else {
-      return await this.engagementService.updateInternshipEngagement(
+      await this.engagementRepo.updateInternshipProperties(
+        engagement as InternshipEngagement,
         updateInput,
-        session
+        changeset
       );
     }
   }
