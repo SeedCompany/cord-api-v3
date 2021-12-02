@@ -131,10 +131,10 @@ export class UserService {
     sessionOrUserId: Session | ID,
     _view?: ObjectView
   ): Promise<User> {
-    const userId = isIdLike(sessionOrUserId)
+    const requestingUser = isIdLike(sessionOrUserId)
       ? sessionOrUserId
       : sessionOrUserId.userId;
-    const user = await this.userRepo.readOne(id, userId);
+    const user = await this.userRepo.readOne(id, requestingUser);
     return await this.secure(user, sessionOrUserId);
   }
 

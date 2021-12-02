@@ -157,11 +157,11 @@ export class UserRepository extends DtoRepository(User) {
     return result.id;
   }
 
-  async readOne(id: ID, userId: ID) {
+  async readOne(id: ID, requestingUser: ID) {
     const query = this.db
       .query()
       .match([node('node', 'User', { id })])
-      .apply(this.hydrate(userId));
+      .apply(this.hydrate(requestingUser));
     const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find user', 'user.id');
@@ -179,7 +179,7 @@ export class UserRepository extends DtoRepository(User) {
       .run();
   }
 
-  hydrate(userId: ID) {
+  hydrate(requestingUser: ID) {
     return (query: Query) =>
       query
         .optionalMatch([
@@ -188,12 +188,11 @@ export class UserRepository extends DtoRepository(User) {
           node('role', 'Property'),
         ])
         .apply(matchProps())
-        .raw('', { requestingUserId: userId })
+        .raw('', { requestingUser })
         .return<{ dto: UnsecuredDto<User> }>(
           merge({ email: null }, 'props', {
             roles: collect('role.value'),
-            pinned:
-              'exists((:User { id: $requestingUserId })-[:pinned]->(node))',
+            pinned: 'exists((:User { id: $requestingUser })-[:pinned]->(node))',
           }).as('dto')
         );
   }
