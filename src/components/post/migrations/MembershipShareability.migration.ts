@@ -1,7 +1,7 @@
 import { node, relation } from 'cypher-query-builder';
 import { BaseMigration, Migration } from '../../../core';
 
-@Migration('2021-11-19T17:49:20')
+@Migration('2021-12-02T17:49:20')
 export class MembershipShareability extends BaseMigration {
   async up() {
     const res = await this.db
