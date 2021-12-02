@@ -3,7 +3,6 @@ import {
   ID,
   ServerException,
   UnauthorizedException,
-  viewOfChangeset,
 } from '../../../common';
 import { EventsHandler, IEventHandler, ILogger, Logger } from '../../../core';
 import {
@@ -34,9 +33,6 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
 
     const engagement = 'engagement' in event ? event.engagement : event.updated;
 
-    if (event instanceof EngagementCreatedEvent && engagement.changeset) {
-      return;
-    }
     if (
       event instanceof EngagementUpdatedEvent && // allow setting initial if creating with non-in-dev status
       engagement.status.value !== EngagementStatus.InDevelopment
@@ -68,11 +64,13 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
         initialEndDate,
         engagement.changeset
       );
-      const updatedEngagement = await this.engagementService.readOne(
-        engagement.id,
-        event.session,
-        viewOfChangeset(engagement.changeset)
-      );
+      const updatedEngagement = {
+        ...engagement,
+        initialEndDate: {
+          ...engagement.initialEndDate,
+          value: initialEndDate,
+        },
+      };
 
       if (event instanceof EngagementUpdatedEvent) {
         event.updated = updatedEngagement;
