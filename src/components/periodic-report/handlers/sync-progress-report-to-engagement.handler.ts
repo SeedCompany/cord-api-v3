@@ -40,11 +40,12 @@ export class SyncProgressReportToEngagementDateRange
       event: event.constructor.name,
     });
 
-    // In changeset mode, skip progressing
     if (
       (event instanceof EngagementCreatedEvent && event.engagement.changeset) ||
       (event instanceof EngagementUpdatedEvent && event.updated.changeset)
     ) {
+      // Progress reports are not changeset aware yet. Skip processing this
+      // until changeset is approved and another update event is fired.
       return;
     }
 

@@ -1,6 +1,6 @@
 import { node, relation } from 'cypher-query-builder';
 import { union } from 'lodash';
-import { ID, ServerException, Session } from '../../../common';
+import { asyncPool, ID, ServerException, Session } from '../../../common';
 import {
   DatabaseService,
   EventsHandler,
@@ -128,15 +128,13 @@ export class ApplyFinalizedChangesetToEngagement
       // Remove deleting engagements
       await this.removeDeletingEngagements(changesetId);
 
-      // Trigger sync-progress-report-to-engagement handler
+      // Trigger update event for all changed engagements
+      // progress report sync is an example of a handler that needs to run
       const allEngagementIds = union(
         result?.engagementIds || [],
         newResult?.engagementIds || []
       );
-      await this.triggerSyncProgressReportEvent(
-        allEngagementIds,
-        event.session
-      );
+      await this.triggerUpdateEvent(allEngagementIds, event.session);
     } catch (exception) {
       throw new ServerException(
         'Failed to apply changeset to project',
@@ -165,18 +163,11 @@ export class ApplyFinalizedChangesetToEngagement
       .run();
   }
 
-  async triggerSyncProgressReportEvent(ids: ID[], session: Session) {
-    await Promise.all(
-      ids.map(async (id) => {
-        const object = await this.engagementService.readOne(id, session);
-        const engagementUpdatedEvent = new EngagementUpdatedEvent(
-          object,
-          object,
-          { id },
-          session
-        );
-        await this.eventBus.publish(engagementUpdatedEvent);
-      })
-    );
+  async triggerUpdateEvent(ids: ID[], session: Session) {
+    await asyncPool(1, ids, async (id) => {
+      const object = await this.engagementService.readOne(id, session);
+      const event = new EngagementUpdatedEvent(object, object, { id }, session);
+      await this.eventBus.publish(event);
+    });
   }
 }
