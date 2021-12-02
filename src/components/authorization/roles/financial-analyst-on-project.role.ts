@@ -226,6 +226,7 @@ export const FinancialAnalystOnProject = new DbRole({
         { propertyName: 'locations', permission: { read, sensitivityAccess: Sensitivity.Low}, },
         { propertyName: 'tags', permission: { read, }, },
         { propertyName: 'presetInventory', permission: { read, }, },
+        { propertyName: 'posts', permission: { read, }, },
       ],
       canDelete: false,
     }),

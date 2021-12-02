@@ -21,4 +21,5 @@ export class DbLanguage extends DbBaseNode {
   locations: any = null;
   tags: any = null;
   presetInventory: any = null;
+  posts: any = null;
 }

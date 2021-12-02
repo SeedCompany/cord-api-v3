@@ -227,6 +227,7 @@ export const Controller = new DbRole({
         { propertyName: 'locations', permission: { read, sensitivityAccess: Sensitivity.Medium  }, },
         { propertyName: 'tags', permission: { read, }, },
         { propertyName: 'presetInventory', permission: { read, }, },
+        { propertyName: 'posts', permission: { read, }, },
       ],
       canDelete: false,
     }),

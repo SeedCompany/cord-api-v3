@@ -217,6 +217,7 @@ export const FundraisingOnProject = new DbRole({
         { propertyName: 'locations', permission: { read, }, },
         { propertyName: 'tags', permission: { read, }, },
         { propertyName: 'presetInventory', permission: { read, }, },
+        { propertyName: 'posts', permission: { read, }, },
       ],
       canDelete: false,
     }),
