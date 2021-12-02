@@ -291,6 +291,7 @@ export const Liaison = new DbRole({
         { propertyName: 'active', permission: {}, },
         { propertyName: 'address', permission: {}, },
         { propertyName: 'modifiedAt', permission: {}, },
+        { propertyName: 'posts', permission: { read, write, }, },
       ],
       canDelete: false,
     }),

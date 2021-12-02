@@ -295,6 +295,7 @@ export const ConsultantGlobal = new DbRole({
         { propertyName: 'active', permission: {}, },
         { propertyName: 'address', permission: {}, },
         { propertyName: 'modifiedAt', permission: { read, write, }, },
+        { propertyName: 'posts', permission: {}, },
       ],
       canDelete: false,
     }),

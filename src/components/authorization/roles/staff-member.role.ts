@@ -290,6 +290,7 @@ export const StaffMember = new DbRole({
         { propertyName: 'active', permission: { read, sensitivityAccess: Sensitivity.Low }, },
         { propertyName: 'address', permission: { read, sensitivityAccess: Sensitivity.Low }, },
         { propertyName: 'modifiedAt', permission: { read, sensitivityAccess: Sensitivity.Low }, },
+        { propertyName: 'posts', permission: { read, write, }, },
       ],
       canDelete: false,
     }),

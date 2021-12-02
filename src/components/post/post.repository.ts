@@ -95,9 +95,9 @@ export class PostRepository extends DtoRepository(Post) {
         // Parentheses for readability only, neo4j doesn't require them
         `
             WHERE (
-              NOT props.shareability = '${PostShareability.ProjectTeam}'
+              NOT props.shareability = '${PostShareability.Membership}'
             ) OR (
-              props.shareability = '${PostShareability.ProjectTeam}'
+              props.shareability = '${PostShareability.Membership}'
               AND
               (node)<-[:post]-(:BaseNode)-[:member]-(:BaseNode)-[:user]->(:User { id: $requestingUserId })
             )
