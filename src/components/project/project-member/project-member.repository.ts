@@ -126,7 +126,7 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
           node('user', 'User'),
         ])
         .subQuery('user', (sub) =>
-          sub.with('user as node').apply(this.users.hydrate())
+          sub.with('user as node').apply(this.users.hydrate(session.userId))
         )
         .return<{ dto: UnsecuredDto<ProjectMember> }>(
           merge('props', { user: 'dto' }).as('dto')

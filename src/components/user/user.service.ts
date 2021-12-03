@@ -131,12 +131,15 @@ export class UserService {
     sessionOrUserId: Session | ID,
     _view?: ObjectView
   ): Promise<User> {
-    const user = await this.userRepo.readOne(id);
+    const requestingUser = isIdLike(sessionOrUserId)
+      ? sessionOrUserId
+      : sessionOrUserId.userId;
+    const user = await this.userRepo.readOne(id, requestingUser);
     return await this.secure(user, sessionOrUserId);
   }
 
   async readMany(ids: readonly ID[], session: Session) {
-    const users = await this.userRepo.readMany(ids);
+    const users = await this.userRepo.readMany(ids, session);
     return await Promise.all(users.map((dto) => this.secure(dto, session)));
   }
 
