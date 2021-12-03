@@ -18,13 +18,14 @@ import {
 } from '../../../common';
 import { ScopedRole } from '../../authorization';
 import { FinancialReportingType } from '../../partnership/dto/financial-reporting-type';
+import { Pinnable } from '../../pin/dto';
 import { Post, Postable } from '../../post';
 import { IProject } from '../../project/dto';
 import { SecuredPartnerTypes } from './partner-type.enum';
 
-const ResourcePostable: Type<Resource & Postable> = IntersectionType(
+const Interfaces: Type<Resource & Pinnable & Postable> = IntersectionType(
   Resource,
-  Postable
+  IntersectionType(Pinnable, Postable)
 );
 
 @ObjectType({
@@ -35,9 +36,9 @@ export abstract class SecuredFinancialReportingTypes extends SecuredEnumList(
 ) {}
 
 @ObjectType({
-  implements: [Resource, Postable],
+  implements: [Resource, Pinnable, Postable],
 })
-export class Partner extends ResourcePostable {
+export class Partner extends Interfaces {
   static readonly Props = keysOf<Partner>();
   static readonly SecuredProps = keysOf<SecuredProps<Partner>>();
   static readonly Relations = {
