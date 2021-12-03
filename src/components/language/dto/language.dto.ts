@@ -24,12 +24,13 @@ import {
 } from '../../../common';
 import { SetChangeType } from '../../../core/database/changes';
 import { Location } from '../../location/dto';
+import { Pinnable } from '../../pin/dto';
 import { Post, Postable } from '../../post';
 import { UpdateEthnologueLanguage } from './update-language.dto';
 
-const ResourcePostable: Type<Resource & Postable> = IntersectionType(
+const Interfaces: Type<Resource & Pinnable & Postable> = IntersectionType(
   Resource,
-  Postable
+  IntersectionType(Pinnable, Postable)
 );
 
 @ObjectType({
@@ -75,9 +76,9 @@ export class EthnologueLanguage {
 }
 
 @ObjectType({
-  implements: [Resource, Postable],
+  implements: [Resource, Pinnable, Postable],
 })
-export class Language extends ResourcePostable {
+export class Language extends Interfaces {
   static readonly Props = keysOf<Language>();
   static readonly SecuredProps = keysOf<SecuredProps<Language>>();
   static readonly Relations = {

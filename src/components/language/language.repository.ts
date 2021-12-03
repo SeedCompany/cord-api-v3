@@ -141,9 +141,12 @@ export class LanguageRepository extends DtoRepository(Language) {
           relation('out', '', 'firstScripture', ACTIVE),
           node('', 'Property', { value: variable('true') }),
         ])
+        .raw('', { requestingUserId: session.userId })
         .return<{ dto: UnsecuredDto<Language> }>(
           merge('props', 'changedProps', {
             ethnologue: 'ethProps',
+            pinned:
+              'exists((:User { id: $requestingUserId })-[:pinned]->(node))',
             presetInventory: 'presetInventory',
             firstScriptureEngagement: 'firstScriptureEngagement.id',
             scope: 'scopedRoles',
