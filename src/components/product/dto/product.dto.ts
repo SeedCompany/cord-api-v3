@@ -4,6 +4,8 @@ import { startCase } from 'lodash';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
 import {
+  CalendarDate,
+  DateField,
   DbLabel,
   ID,
   SecuredFloat,
@@ -92,6 +94,9 @@ export class Product extends Producible {
     `,
   })
   readonly progressTarget: SecuredFloat;
+
+  @DateField()
+  readonly plannedCompleteDate: CalendarDate;
 }
 
 @ObjectType({
