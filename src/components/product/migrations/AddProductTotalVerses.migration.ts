@@ -1,69 +1,122 @@
-import { node, not, relation } from 'cypher-query-builder';
+import { hasLabel, node, not, relation } from 'cypher-query-builder';
+import { asyncPool, ID, Range } from '../../../common';
 import { BaseMigration, Migration } from '../../../core';
-import { createProperty, path } from '../../../core/database/query';
+import {
+  ACTIVE,
+  collect,
+  createProperty,
+  path,
+} from '../../../core/database/query';
+import { ScriptureRange, UnspecifiedScripturePortion } from '../../scripture';
+import {
+  getTotalVerseEquivalents,
+  getTotalVerses,
+  getVerseEquivalentsFromUnspecified,
+} from '../../scripture/verse-equivalents';
 import { DirectScriptureProduct } from '../dto';
 
-@Migration('2021-11-27T00:00:00')
+interface ProductRef {
+  id: ID;
+  scriptureRanges: ReadonlyArray<Range<number>>;
+  unspecifiedScripture: UnspecifiedScripturePortion | null;
+}
+
+@Migration('2021-12-10T00:00:00')
 export class AddProductTotalVersesMigration extends BaseMigration {
   async up() {
+    const products = await this.findProductRefsWithoutTotalVerses();
+    this.logger.info(`Found ${products.length} products without total verses`);
+
+    await asyncPool(5, products, async (product, i) => {
+      const totalVerses = product.unspecifiedScripture
+        ? product.unspecifiedScripture.totalVerses
+        : getTotalVerses(
+            ...product.scriptureRanges.map(ScriptureRange.fromIds)
+          );
+      const totalVerseEquivalents = product.unspecifiedScripture
+        ? getVerseEquivalentsFromUnspecified(product.unspecifiedScripture)
+        : getTotalVerseEquivalents(
+            ...product.scriptureRanges.map(ScriptureRange.fromIds)
+          );
+
+      await this.save(product, totalVerses, totalVerseEquivalents);
+
+      this.logger.info(`Saved product ${i} / ${products.length}`, {
+        id: product.id,
+        totalVerses,
+        totalVerseEquivalents,
+      });
+    });
+  }
+
+  private async findProductRefsWithoutTotalVerses() {
     const res = await this.db
       .query()
-      .match([
-        node('node', 'Product'),
-        relation('out', '', 'unspecifiedScripture'),
-        node('usp', 'UnspecifiedScripturePortion'),
-      ])
-      .where(
-        not(
+      .matchNode('node', 'Product')
+      .where({
+        node: [
+          hasLabel('DirectScriptureProduct'),
+          hasLabel('DerivativeScriptureProduct'),
+        ],
+        noProp: not(
           path([
             node('node'),
             relation('out', '', 'totalVerses'),
             node('', 'Property'),
           ])
-        )
-      )
-      .apply(
-        createProperty({
-          resource: DirectScriptureProduct,
-          key: 'totalVerses',
-          variable: 'usp.totalVerses',
-          numCreatedVar: 'unspecifiedScripturePortions',
-        })
-      )
-      .with(
-        'sum(unspecifiedScripturePortions) as unspecifiedScripturePortionTotalVerses'
-      )
-      .match([
-        node('node', 'Product'),
-        relation('out'),
-        node('sr', 'ScriptureRange'),
+        ),
+      })
+      .optionalMatch([
+        node('node'),
+        relation('out', '', 'unspecifiedScripture', ACTIVE),
+        node('unspecifiedScripture', 'UnspecifiedScripturePortion'),
       ])
-      .where(
-        not(
-          path([
+      .subQuery('node', (sub) =>
+        sub
+          .match([
             node('node'),
-            relation('out', '', 'totalVerses'),
-            node('', 'Property'),
+            relation('out', '', undefined, ACTIVE),
+            node('scriptureRanges', 'ScriptureRange'),
           ])
-        )
+          .return(
+            collect('scriptureRanges { .start, .end }').as('scriptureRanges')
+          )
       )
-      .apply(
-        createProperty({
-          resource: DirectScriptureProduct,
-          key: 'totalVerses',
-          variable: 'sr.end - sr.start + 1',
-          numCreatedVar: 'scriptureRanges',
-        })
-      )
-      .return<{ numTotalVersesPropAdded: number }>(
-        'sum(scriptureRanges) + unspecifiedScriptureTotalVerses as numTotalVersesPropAdded'
-      )
-      .first();
+      .logIt()
+      .return<ProductRef>([
+        'node.id as id',
+        'scriptureRanges',
+        'unspecifiedScripture { .book, .totalVerses } as unspecifiedScripture',
+      ])
+      .run();
+    return res;
+  }
 
-    this.logger.info(
-      `totalVerses property added to ${
-        res?.numTotalVersesPropAdded ?? 0
-      } products`
-    );
+  private async save(
+    row: ProductRef,
+    totalVerses: number,
+    totalVerseEquivalents: number
+  ) {
+    await this.db
+      .query()
+      .matchNode('node', 'Product', { id: row.id })
+      .apply(
+        createProperty({
+          resource: DirectScriptureProduct,
+          key: 'totalVerses',
+          value: totalVerses,
+          numCreatedVar: 'numTvCreated',
+        })
+      )
+      .apply(
+        createProperty({
+          resource: DirectScriptureProduct,
+          key: 'totalVerseEquivalents',
+          value: totalVerseEquivalents,
+          numCreatedVar: 'numTveCreated',
+        })
+      )
+      .return('numTvCreated, numTveCreated')
+      .first();
   }
 }
