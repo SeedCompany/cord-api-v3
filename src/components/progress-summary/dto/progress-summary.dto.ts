@@ -18,6 +18,11 @@ export abstract class ProgressSummary {
 
   @Field(() => Float)
   actual: number;
+
+  // Total verses across all products in the engagement this summary is under
+  totalVerses?: number;
+  // Total verse equivalents across all products in the engagement this summary is under
+  totalVerseEquivalents?: number;
 }
 
 export enum SummaryPeriod {

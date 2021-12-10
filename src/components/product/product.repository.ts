@@ -177,7 +177,10 @@ export class ProductRepository extends CommonRepository {
   }
 
   async create(
-    input: CreateDerivativeScriptureProduct | CreateDirectScriptureProduct
+    input: (CreateDerivativeScriptureProduct | CreateDirectScriptureProduct) & {
+      totalVerses: number;
+      totalVerseEquivalents: number;
+    }
   ) {
     const isDerivative = has('produces', input);
     const Product = isDerivative
@@ -197,6 +200,8 @@ export class ProductRepository extends CommonRepository {
             isOverriding: !!input.scriptureReferencesOverride,
           }
         : {}),
+      totalVerses: input.totalVerses,
+      totalVerseEquivalents: input.totalVerseEquivalents,
     };
 
     const query = this.db

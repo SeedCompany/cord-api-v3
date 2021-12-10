@@ -33,6 +33,16 @@ export class ProductProgress {
       The progress of each step in this report.
       This list is ordered based order of product's steps, which is based on \`MethodologyAvailableSteps\`.
     `,
+    middleware: [
+      // Add productId so it can be accessed in StepProgress.completed resolver
+      async (ctx, next) => {
+        const value = await next();
+        for (const sp of value) {
+          sp.productId = ctx.source.productId;
+        }
+        return value;
+      },
+    ],
   })
   readonly steps: readonly StepProgress[];
 }
@@ -62,8 +72,6 @@ export class StepProgress {
   @Field({
     description: stripIndent`
       The currently completed value for the step.
-
-      This will be 0 <= \`completed\` <= the product's \`progressTarget\` number.
 
       If no progress has been reported yet this will be null,
       or this could be explicitly set to null.
