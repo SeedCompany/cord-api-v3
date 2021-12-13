@@ -89,12 +89,12 @@ export class ApplyFinalizedChangesetToProject
             .with('node, changeset')
             .match([
               node('node'),
-              relation('out', 'oldTransitionRel', 'transition', ACTIVE),
+              relation('out', 'oldTransitionRel', 'stepChange', ACTIVE),
               node('oldStepChange', 'ProjectStepChange'),
             ])
             .match([
               node('node'),
-              relation('out', 'transitionRel', 'transition', INACTIVE),
+              relation('out', 'transitionRel', 'stepChange', INACTIVE),
               node('stepChange', 'ProjectStepChange'),
               relation('in', '', 'changeset', ACTIVE),
               node('changeset', 'Changeset', { id: changesetId }),

@@ -5,15 +5,12 @@ import { SecuredUser, UserLoader } from '../user';
 import { ProjectStepChange } from './dto';
 
 @Resolver(ProjectStepChange)
-export class ProjectStepTransitionResolver {
+export class ProjectStepChangeResolver {
   @ResolveField(() => SecuredUser)
   async user(
     @Parent() stepChange: ProjectStepChange,
     @Loader(UserLoader) users: LoaderOf<UserLoader>
-  ): Promise<SecuredUser | null> {
-    if (!stepChange.user) {
-      return null;
-    }
+  ): Promise<SecuredUser> {
     return await mapSecuredValue(stepChange.user, (id) => users.load(id));
   }
 }

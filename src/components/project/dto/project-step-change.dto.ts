@@ -6,7 +6,7 @@ import { IProject, Project } from './project.dto';
 import { ProjectStep } from './step.enum';
 
 @InputType()
-export abstract class ProjectTransitionInput {
+export abstract class ProjectStepChangeInput {
   @IdField()
   id: ID;
 
@@ -21,7 +21,7 @@ export abstract class ProjectTransitionInput {
 }
 
 @ObjectType()
-export abstract class ProjectTransitionOutput {
+export abstract class ProjectStepChangeOutput {
   @Field(() => IProject)
   readonly project: Project;
 }
@@ -42,5 +42,5 @@ export abstract class ProjectStepChange {
   @Field(() => String, { nullable: true })
   readonly comment?: string | null;
 
-  readonly user?: Secured<ID | null>;
+  readonly user: Secured<ID | null>;
 }

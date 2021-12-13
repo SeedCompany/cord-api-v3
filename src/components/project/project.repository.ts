@@ -42,7 +42,7 @@ import {
   ProjectListInput,
   ProjectStep,
   ProjectStepChange,
-  ProjectTransitionInput,
+  ProjectStepChangeInput,
   ProjectType,
   stepToStatus,
   TranslationProject,
@@ -127,7 +127,7 @@ export class ProjectRepository extends CommonRepository {
         // match project transition step
         .optionalMatch([
           node('node'),
-          relation('out', '', 'transition', { active: !changeset }),
+          relation('out', '', 'stepChange', { active: !changeset }),
           node('stepChange', 'ProjectStepChange'),
           ...(changeset
             ? [
@@ -376,7 +376,7 @@ export class ProjectRepository extends CommonRepository {
     return result?.props;
   }
 
-  async addProjectStep(input: ProjectTransitionInput, session: Session) {
+  async addProjectStep(input: ProjectStepChangeInput, session: Session) {
     const { id, changeset, ...initialProps } = input;
 
     // disable active project step
@@ -384,7 +384,7 @@ export class ProjectRepository extends CommonRepository {
       .query()
       .match([
         node('project', 'Project', { id }),
-        relation('out', 'transitionRel', 'transition', { active: !changeset }),
+        relation('out', 'transitionRel', 'stepChange', { active: !changeset }),
         node('stepChange', 'ProjectStepChange'),
         ...(changeset
           ? [
@@ -428,7 +428,7 @@ export class ProjectRepository extends CommonRepository {
       .query()
       .match([
         node('project', 'Project', { id }),
-        relation('out', '', 'transition', INACTIVE),
+        relation('out', '', 'stepChange', INACTIVE),
         node('stepChange', 'ProjectStepChange'),
       ])
       .optionalMatch([

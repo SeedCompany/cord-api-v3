@@ -41,7 +41,7 @@ export class ProjectStepResolver {
     @Parent() step: SecuredProjectStep & { parentId: ID; changeset?: ID },
     @AnonSession() _session: Session
   ): Promise<ProjectStepChange[]> {
-    if (!step.canRead || !step.canEdit || !step.value) {
+    if (!step.canRead || !step.value) {
       return [];
     }
     return await this.projectService.listStepChangeHistory(

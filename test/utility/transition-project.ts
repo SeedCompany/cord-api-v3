@@ -5,7 +5,7 @@ import {
   SecuredProjectStep,
 } from '../../src/components/project/dto';
 import { TestApp } from './create-app';
-import { createTransitionProject } from './create-transition-project';
+import { createProjectStepChange } from './create-project-step-change';
 
 export const stepsFromEarlyConversationToBeforeActive = [
   ProjectStep.PendingConceptApproval,
@@ -41,7 +41,7 @@ export const changeProjectStep = async (
   id: ID,
   to: ProjectStep
 ): Promise<SecuredStep> => {
-  const project = await createTransitionProject(app, {
+  const project = await createProjectStepChange(app, {
     id: id,
     step: to,
   });

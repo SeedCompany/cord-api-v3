@@ -876,7 +876,7 @@ export class ProjectRules {
         .query()
         .match([
           node('project', 'Project', { id }),
-          relation('out', '', 'transition', INACTIVE),
+          relation('out', '', 'stepChange', INACTIVE),
           node('stepChange', 'ProjectStepChange'),
           relation('in', '', 'changeset', ACTIVE),
           node('', 'Changeset', { id: changeset }),
@@ -896,7 +896,7 @@ export class ProjectRules {
         .query()
         .match([
           node('project', 'Project', { id }),
-          relation('out', '', 'transition', ACTIVE),
+          relation('out', '', 'stepChange', ACTIVE),
           node('stepChange', 'ProjectStepChange'),
           relation('out', '', 'step', ACTIVE),
           node('step', 'ProjectStep'),
@@ -1019,7 +1019,7 @@ export class ProjectRules {
             ]
           : []),
         node('node', 'Project', { id }),
-        relation('out', '', 'transition', changeset ? undefined : INACTIVE),
+        relation('out', '', 'stepChange', changeset ? undefined : INACTIVE),
         node('stepChange', 'ProjectStepChange'),
         relation('out', '', 'step'),
         node('prop'),

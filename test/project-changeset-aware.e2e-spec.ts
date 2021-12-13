@@ -12,10 +12,10 @@ import {
   createPartnership,
   createProject,
   createProjectChangeRequest,
+  createProjectStepChange,
   createRegion,
   createSession,
   createTestApp,
-  createTransitionProject,
   registerUserWithPower,
   runAsAdmin,
   TestApp,
@@ -270,7 +270,7 @@ describe('Project Changeset Aware e2e', () => {
     });
 
     // Update project step with changeset
-    const transitionProject = await createTransitionProject(app, {
+    const transitionProject = await createProjectStepChange(app, {
       id: project.id,
       step: ProjectStep.FinalizingCompletion,
       changeset: changeset.id,

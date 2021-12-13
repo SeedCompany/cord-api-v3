@@ -1,15 +1,15 @@
 import { gql } from 'apollo-server-core';
 import { isValidId } from '../../src/common';
-import { ProjectTransitionInput } from '../../src/components/project';
+import { ProjectStepChangeInput } from '../../src/components/project';
 import { TestApp } from './create-app';
 
-export async function createTransitionProject(
+export async function createProjectStepChange(
   app: TestApp,
-  projectTransition: ProjectTransitionInput
+  projectStepChange: ProjectStepChangeInput
 ) {
   const result = await app.graphql.mutate(
     gql`
-      mutation transitionProject($input: ProjectTransitionInput!) {
+      mutation transitionProject($input: ProjectStepChangeInput!) {
         transitionProject(input: $input) {
           project {
             id
@@ -29,7 +29,7 @@ export async function createTransitionProject(
     `,
     {
       input: {
-        ...projectTransition,
+        ...projectStepChange,
       },
     }
   );

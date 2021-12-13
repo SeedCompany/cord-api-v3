@@ -34,4 +34,4 @@ export * from './create-pin';
 export * from './project-change-request';
 export * from './create-product-derivative';
 export * from './create-product-direct';
-export * from './create-transition-project';
+export * from './create-project-step-change';

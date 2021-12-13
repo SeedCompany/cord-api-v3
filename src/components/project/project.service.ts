@@ -56,7 +56,7 @@ import {
   ProjectListInput,
   ProjectListOutput,
   ProjectStatus,
-  ProjectTransitionInput,
+  ProjectStepChangeInput,
   ProjectType,
   TranslationProject,
   UpdateProject,
@@ -373,7 +373,7 @@ export class ProjectService {
   }
 
   async updateStep(
-    input: ProjectTransitionInput,
+    input: ProjectStepChangeInput,
     session: Session
   ): Promise<UnsecuredDto<Project>> {
     const currentProject = await this.readOneUnsecured(

@@ -55,8 +55,8 @@ import {
   Project,
   ProjectListInput,
   ProjectListOutput,
-  ProjectTransitionInput,
-  ProjectTransitionOutput,
+  ProjectStepChangeInput,
+  ProjectStepChangeOutput,
   ProjectType,
   TranslationProjectListOutput,
   UpdateProjectInput,
@@ -439,13 +439,13 @@ export class ProjectResolver {
     return await this.projectService.readOne(projectId, session);
   }
 
-  @Mutation(() => ProjectTransitionOutput, {
+  @Mutation(() => ProjectStepChangeOutput, {
     description: 'Change project step',
   })
   async transitionProject(
     @LoggedInSession() session: Session,
-    @Args('input') input: ProjectTransitionInput
-  ): Promise<ProjectTransitionOutput> {
+    @Args('input') input: ProjectStepChangeInput
+  ): Promise<ProjectStepChangeOutput> {
     const project = await this.projectService.updateStep(input, session);
     const secured = await this.projectService.secure(project, session);
     return { project: secured };
