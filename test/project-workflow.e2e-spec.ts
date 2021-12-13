@@ -222,6 +222,7 @@ describe('Project-Workflow e2e', () => {
       // Add products
       await createProduct(app, {
         engagementId: languageEngagement.id,
+        plannedCompleteDate: CalendarDate.local(),
       });
     });
 

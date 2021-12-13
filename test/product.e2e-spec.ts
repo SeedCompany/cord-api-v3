@@ -1,6 +1,7 @@
 import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
 import { times } from 'lodash';
+import { CalendarDate } from '../src/common';
 import { Powers, Role } from '../src/components/authorization';
 import { Film } from '../src/components/film';
 import {
@@ -59,6 +60,7 @@ describe('Product e2e', () => {
   it('create & read product by id', async () => {
     const product = await createDirectProduct(app, {
       engagementId: engagement.id,
+      plannedCompleteDate: CalendarDate.local(),
     });
 
     const result = await app.graphql.query(
@@ -89,6 +91,7 @@ describe('Product e2e', () => {
         totalVerses: 10,
         book: 'Matt',
       },
+      plannedCompleteDate: CalendarDate.local(),
     });
 
     const result = await app.graphql.query(
@@ -126,6 +129,7 @@ describe('Product e2e', () => {
     const product = await createDirectProduct(app, {
       engagementId: engagement.id,
       scriptureReferences: randomScriptureReferences,
+      plannedCompleteDate: CalendarDate.local(),
     });
 
     expect(product.scriptureReferences.value).toBeDefined();
@@ -138,6 +142,7 @@ describe('Product e2e', () => {
     const product = await createDerivativeProduct(app, {
       engagementId: engagement.id,
       produces: story.id,
+      plannedCompleteDate: CalendarDate.local(),
     });
 
     const result = await app.graphql.query(
@@ -217,6 +222,7 @@ describe('Product e2e', () => {
       engagementId: engagement.id,
       produces: story.id,
       scriptureReferencesOverride: randomScriptureReferences,
+      plannedCompleteDate: CalendarDate.local(),
     });
 
     const result = await app.graphql.query(
@@ -290,6 +296,7 @@ describe('Product e2e', () => {
   it('update product', async () => {
     const product = await createDirectProduct(app, {
       engagementId: engagement.id,
+      plannedCompleteDate: CalendarDate.local(),
     });
 
     const result = await app.graphql.query(
@@ -315,6 +322,7 @@ describe('Product e2e', () => {
     const product = await createDirectProduct(app, {
       engagementId: engagement.id,
       scriptureReferences: ScriptureRange.randomList(),
+      plannedCompleteDate: CalendarDate.local(),
     });
 
     const updateProduct = {
@@ -376,6 +384,7 @@ describe('Product e2e', () => {
     const product = await createDerivativeProduct(app, {
       engagementId: engagement.id,
       produces: story.id,
+      plannedCompleteDate: CalendarDate.local(),
     });
 
     const updateProduces = film.id;
@@ -459,6 +468,7 @@ describe('Product e2e', () => {
       engagementId: engagement.id,
       produces: story.id,
       scriptureReferencesOverride: ScriptureRange.randomList(),
+      plannedCompleteDate: CalendarDate.local(),
     });
 
     const override = ScriptureRange.randomList();
@@ -544,6 +554,7 @@ describe('Product e2e', () => {
       engagementId: engagement.id,
       produces: story.id,
       scriptureReferencesOverride: ScriptureRange.randomList(),
+      plannedCompleteDate: CalendarDate.local(),
     });
 
     const result = await app.graphql.query(
@@ -619,6 +630,7 @@ describe('Product e2e', () => {
   it.skip('delete product', async () => {
     const product = await createDirectProduct(app, {
       engagementId: engagement.id,
+      plannedCompleteDate: CalendarDate.local(),
     });
     expect(product.id).toBeTruthy();
     const result = await app.graphql.mutate(
@@ -660,6 +672,7 @@ describe('Product e2e', () => {
       times(numProducts).map(() =>
         createDirectProduct(app, {
           engagementId: engagement.id,
+          plannedCompleteDate: CalendarDate.local(),
         })
       )
     );
@@ -690,6 +703,7 @@ describe('Product e2e', () => {
         createDirectProduct(app, {
           engagementId: engagement.id,
           scriptureReferences: ScriptureRange.randomList(),
+          plannedCompleteDate: CalendarDate.local(),
         })
       )
     );
@@ -731,6 +745,7 @@ describe('Product e2e', () => {
           engagementId: engagement.id,
           produces: story.id,
           scriptureReferencesOverride: ScriptureRange.randomList(),
+          plannedCompleteDate: CalendarDate.local(),
         })
       )
     );
@@ -788,6 +803,7 @@ describe('Product e2e', () => {
       times(numProducts).map(() =>
         createDirectProduct(app, {
           engagementId: engagement.id,
+          plannedCompleteDate: CalendarDate.local(),
         })
       )
     );

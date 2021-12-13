@@ -3,7 +3,7 @@ import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { some } from 'lodash';
 import { DateTime, Interval } from 'luxon';
-import { generateId, ID, InputException } from '../src/common';
+import { CalendarDate, generateId, ID, InputException } from '../src/common';
 import { Powers, Role } from '../src/components/authorization';
 import {
   CreateInternshipEngagement,
@@ -488,9 +488,11 @@ describe('Engagement e2e', () => {
 
     const product1 = await createProduct(app, {
       engagementId: languageEngagement.id,
+      plannedCompleteDate: CalendarDate.local(),
     });
     const product2 = await createProduct(app, {
       engagementId: languageEngagement.id,
+      plannedCompleteDate: CalendarDate.local(),
     });
     const result = await app.graphql.query(
       gql`
