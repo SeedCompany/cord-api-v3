@@ -3,6 +3,8 @@ import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
 import {
+  CalendarDate,
+  DateField,
   ID,
   IdField,
   IntersectionType,
@@ -22,9 +24,13 @@ import { AnyProduct, Product } from './product.dto';
 export abstract class UpdateBaseProduct extends OmitType(CreateBaseProduct, [
   'engagementId',
   'createdAt',
+  'plannedCompleteDate',
 ]) {
   @IdField()
   readonly id: ID;
+
+  @DateField({ nullable: true })
+  readonly plannedCompleteDate?: CalendarDate;
 }
 
 @InputType()
@@ -57,6 +63,7 @@ export abstract class UpdateDerivativeScriptureProduct extends IntersectionType(
 export abstract class UpdateProduct extends OmitType(CreateProduct, [
   'engagementId',
   'produces',
+  'plannedCompleteDate',
 ] as const) {
   @IdField()
   readonly id: ID;
@@ -70,6 +77,9 @@ export abstract class UpdateProduct extends OmitType(CreateProduct, [
     `,
   })
   readonly produces?: ID;
+
+  @DateField({ nullable: true })
+  readonly plannedCompleteDate?: CalendarDate;
 }
 
 /**

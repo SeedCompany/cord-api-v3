@@ -3,6 +3,7 @@ import levenshtein from 'js-levenshtein-esm';
 import { sortBy, startCase, without } from 'lodash';
 import { read, utils, WorkSheet } from 'xlsx';
 import {
+  CalendarDate,
   DateInterval,
   entries,
   expandToFullFiscalYears,
@@ -131,6 +132,8 @@ const parseProductRow =
   (row: number): ExtractedRow => {
     const bookName = cellAsString(sheet[`Q${row}`])!; // Asserting bc loop verified this
     const totalVerses = cellAsNumber(sheet[`T${row}`])!;
+    // TODO correct column name
+    const plannedCompleteDate = cellAsDate(sheet[`D${row}`])!;
     // include step if it references a fiscal year within the project
     const includeStep = (column: string) => {
       const fiscalYear = cellAsNumber(sheet[`${column}${row}`]);
@@ -142,7 +145,7 @@ const parseProductRow =
       ([step, column]) => (includeStep(column) ? step : [])
     );
     const note = cellAsString(sheet[`AI${row}`]) ?? noteFallback;
-    return { bookName, totalVerses, steps, note };
+    return { bookName, totalVerses, steps, note, plannedCompleteDate };
   };
 
 export interface ExtractedRow {
@@ -150,4 +153,5 @@ export interface ExtractedRow {
   totalVerses: number;
   steps: readonly Step[];
   note: string | undefined;
+  plannedCompleteDate: CalendarDate;
 }

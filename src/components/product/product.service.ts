@@ -1,6 +1,7 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { intersection, isEqual, sumBy, uniq } from 'lodash';
 import {
+  CalendarDate,
   has,
   ID,
   InputException,
@@ -16,6 +17,7 @@ import { HandleIdLookup, ILogger, Logger, ResourceResolver } from '../../core';
 import { isSame } from '../../core/database/changes';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { EngagementService } from '../engagement/engagement.service';
 import { ScriptureRange } from '../scripture';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
@@ -52,6 +54,8 @@ export class ProductService {
     private readonly authorizationService: AuthorizationService,
     private readonly repo: ProductRepository,
     private readonly resources: ResourceResolver,
+    @Inject(forwardRef(() => EngagementService))
+    private readonly engagementService: EngagementService,
     @Logger('product:service') private readonly logger: ILogger
   ) {}
 
@@ -75,6 +79,11 @@ export class ProductService {
         'product.engagementId'
       );
     }
+    await this.validatePlannedCompleteDate(
+      input.engagementId,
+      input.plannedCompleteDate,
+      session
+    );
 
     let producibleType: ProducibleType | undefined = undefined;
     if (has('produces', input) && input.produces) {
@@ -307,6 +316,15 @@ export class ProductService {
         'product.scriptureReferences'
       );
     }
+
+    // plannedCompleteDate should be in Engagement date range
+    if (input.plannedCompleteDate) {
+      await this.validatePlannedCompleteDate(
+        currentProduct.engagement,
+        input.plannedCompleteDate,
+        session
+      );
+    }
     return await this.updateDerivative(input, session, currentProduct);
   }
 
@@ -318,6 +336,15 @@ export class ProductService {
     currentProduct ??= asProductType(DirectScriptureProduct)(
       await this.readOneUnsecured(input.id, session)
     );
+
+    // plannedCompleteDate should be in Engagement date range
+    if (input.plannedCompleteDate) {
+      await this.validatePlannedCompleteDate(
+        currentProduct.engagement,
+        input.plannedCompleteDate,
+        session
+      );
+    }
 
     let changes = this.repo.getActualDirectChanges(currentProduct, input);
     changes = {
@@ -376,6 +403,15 @@ export class ProductService {
     currentProduct ??= asProductType(DerivativeScriptureProduct)(
       await this.readOneUnsecured(input.id, session)
     );
+
+    // plannedCompleteDate should be in Engagement date range
+    if (input.plannedCompleteDate) {
+      await this.validatePlannedCompleteDate(
+        currentProduct.engagement,
+        input.plannedCompleteDate,
+        session
+      );
+    }
 
     let changes = this.repo.getActualDerivativeChanges(
       // getChanges doesn't care if current is secured or not.
@@ -651,5 +687,37 @@ export class ProductService {
     input: ProductCompletionDescriptionSuggestionsInput
   ) {
     return await this.repo.suggestCompletionDescriptions(input);
+  }
+
+  protected async validatePlannedCompleteDate(
+    engagementId: ID,
+    plannedCompleteDate: CalendarDate,
+    session: Session
+  ) {
+    const engagement = await this.engagementService.readOne(
+      engagementId,
+      session
+    );
+    if (engagement.startDate.value) {
+      if (
+        plannedCompleteDate.toMillis() < engagement.startDate.value.toMillis()
+      ) {
+        throw new InputException(
+          'The Product plannedCompleteDate should be in Engagement date range',
+          'product.plannedCompleteDate'
+        );
+      }
+    }
+    if (engagement.endDate.value) {
+      if (
+        plannedCompleteDate.toMillis() > engagement.endDate.value.toMillis()
+      ) {
+        throw new InputException(
+          'The Product plannedCompleteDate should be in Engagement date range',
+          'product.plannedCompleteDate'
+        );
+      }
+    }
+    return true;
   }
 }

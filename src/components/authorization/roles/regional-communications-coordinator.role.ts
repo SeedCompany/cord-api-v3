@@ -341,6 +341,7 @@ export const RegionalCommunicationsCoordinator = new DbRole({
         { propertyName: 'title', permission: { read, }, },
         { propertyName: 'description', permission: { read, }, },
         { propertyName: 'unspecifiedScripture', permission: { read, }, },
+        { propertyName: 'plannedCompleteDate', permission: { read, }, },
       ],
       canDelete: false,
     }),

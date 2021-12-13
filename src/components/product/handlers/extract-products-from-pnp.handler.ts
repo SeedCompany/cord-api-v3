@@ -73,7 +73,15 @@ export class ExtractProductsFromPnpHandler
 
     // Create/update products 5 at a time.
     await asyncPool(5, actionableProductRows, async (row) => {
-      const { existingId, bookName, totalVerses, steps, note, index } = row;
+      const {
+        existingId,
+        bookName,
+        totalVerses,
+        steps,
+        note,
+        index,
+        plannedCompleteDate,
+      } = row;
 
       // Populate one of the two product props based on whether its a known verse range or not.
       const book = Book.find(bookName);
@@ -96,6 +104,7 @@ export class ExtractProductsFromPnpHandler
         unspecifiedScripture,
         steps,
         describeCompletion: note,
+        plannedCompleteDate,
       };
       if (existingId) {
         const updates: UpdateDirectScriptureProduct = {

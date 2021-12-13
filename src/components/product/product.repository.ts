@@ -192,6 +192,7 @@ export class ProductRepository extends CommonRepository {
       canDelete: true,
       progressTarget: input.progressTarget,
       progressStepMeasurement: input.progressStepMeasurement,
+      plannedCompleteDate: input.plannedCompleteDate,
       ...(isDerivative
         ? {
             isOverriding: !!input.scriptureReferencesOverride,
@@ -273,6 +274,7 @@ export class ProductRepository extends CommonRepository {
       canDelete: true,
       progressTarget: input.progressTarget,
       progressStepMeasurement: input.progressStepMeasurement,
+      plannedCompleteDate: input.plannedCompleteDate,
     };
 
     const query = this.db
