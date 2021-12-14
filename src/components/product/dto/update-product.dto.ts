@@ -34,7 +34,10 @@ export abstract class UpdateDirectScriptureProduct extends IntersectionType(
     'scriptureReferences',
     'unspecifiedScripture',
   ])
-) {}
+) {
+  totalVerses?: number;
+  totalVerseEquivalents?: number;
+}
 
 @InputType()
 export abstract class UpdateDerivativeScriptureProduct extends IntersectionType(
@@ -48,6 +51,9 @@ export abstract class UpdateDerivativeScriptureProduct extends IntersectionType(
     `,
   })
   readonly produces?: ID;
+
+  totalVerses?: number;
+  totalVerseEquivalents?: number;
 }
 
 /**

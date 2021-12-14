@@ -6,6 +6,7 @@ import { uniq } from 'lodash';
 import { DateTime } from 'luxon';
 import { ID, IdField, NameField } from '../../../common';
 import {
+  ScriptureField,
   ScriptureRangeInput,
   UnspecifiedScripturePortionInput,
 } from '../../scripture';
@@ -65,11 +66,9 @@ export abstract class CreateBaseProduct {
 
 @InputType()
 export abstract class CreateDirectScriptureProduct extends CreateBaseProduct {
-  @Field(() => [ScriptureRangeInput], {
+  @ScriptureField({
     nullable: true,
   })
-  @ValidateNested()
-  @Type(() => ScriptureRangeInput)
   readonly scriptureReferences?: readonly ScriptureRangeInput[];
 
   @Field(() => UnspecifiedScripturePortionInput, {
@@ -89,7 +88,7 @@ export abstract class CreateDerivativeScriptureProduct extends CreateBaseProduct
   })
   readonly produces: ID;
 
-  @Field(() => [ScriptureRangeInput], {
+  @ScriptureField({
     nullable: true,
     description: stripIndent`
       The \`Producible\` defines a \`scriptureReferences\` list, and this is
@@ -98,8 +97,6 @@ export abstract class CreateDerivativeScriptureProduct extends CreateBaseProduct
       this property can be set (and read) to "override" the \`producible\`'s list.
     `,
   })
-  @ValidateNested()
-  @Type(() => ScriptureRangeInput)
   readonly scriptureReferencesOverride?: readonly ScriptureRangeInput[];
 }
 
@@ -117,7 +114,7 @@ export abstract class CreateProduct extends CreateBaseProduct {
   })
   readonly produces?: ID;
 
-  @Field(() => [ScriptureRangeInput], {
+  @ScriptureField({
     nullable: true,
     description: stripIndent`
       Change this list of \`scriptureReferences\` if provided.
@@ -125,11 +122,9 @@ export abstract class CreateProduct extends CreateBaseProduct {
       Note only \`DirectScriptureProduct\`s can use this field.
     `,
   })
-  @ValidateNested()
-  @Type(() => ScriptureRangeInput)
   readonly scriptureReferences?: readonly ScriptureRangeInput[];
 
-  @Field(() => [ScriptureRangeInput], {
+  @ScriptureField({
     nullable: true,
     description: stripIndent`
       The \`Producible\` defines a \`scriptureReferences\` list, and this is
@@ -140,8 +135,6 @@ export abstract class CreateProduct extends CreateBaseProduct {
       Note only \`DerivativeScriptureProduct\`s can use this field.
     `,
   })
-  @ValidateNested()
-  @Type(() => ScriptureRangeInput)
   readonly scriptureReferencesOverride?: readonly ScriptureRangeInput[];
 }
 

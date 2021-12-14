@@ -22,3 +22,25 @@ index b73e0f271d9312612e62fb7e275097b1ea470035..583f4e0e4126a8bfe998f203ae366d14
          await this.registerGqlServer(apolloOptions);
          if (this.options.installSubscriptionHandlers ||
              this.options.subscriptions) {
+diff --git a/dist/schema-builder/storages/type-metadata.storage.js b/dist/schema-builder/storages/type-metadata.storage.js
+index 9448062282f762413aed6e33c475065e2d8db2c9..4f4abc1dd234aac07cf2ddb6bab674985c21105d 100644
+--- a/dist/schema-builder/storages/type-metadata.storage.js
++++ b/dist/schema-builder/storages/type-metadata.storage.js
+@@ -6,6 +6,7 @@ const field_decorator_1 = require("../../decorators/field.decorator");
+ const plugin_constants_1 = require("../../plugin/plugin-constants");
+ const cannot_determine_host_type_error_1 = require("../errors/cannot-determine-host-type.error");
+ const undefined_type_error_1 = require("../errors/undefined-type.error");
++const get_interfaces_array_util_1 = require("../utils/get-interfaces-array.util");
+ const is_target_equal_util_1 = require("../utils/is-target-equal-util");
+ const is_throwing_util_1 = require("../utils/is-throwing.util");
+ class TypeMetadataStorageHost {
+@@ -282,6 +283,9 @@ class TypeMetadataStorageHost {
+             };
+             this.addClassFieldMetadata(fieldMetadata);
+             objectOrInterfaceTypeMetadata.properties.push(fieldMetadata);
++            // Add field to other interfaces implementing this interface
++            this.interfaces.filter(i => get_interfaces_array_util_1.getInterfacesArray(i.interfaces).includes(objectTypeRef))
++              .forEach(i => i.properties.push(fieldMetadata));
+         }
+         else {
+             const isEmpty = (arr) => arr.length === 0;

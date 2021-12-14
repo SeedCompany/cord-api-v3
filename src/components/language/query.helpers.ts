@@ -37,6 +37,14 @@ export const languageListFilter =
         equals('true', true)
       );
     }
+    if (filter.pinned != null) {
+      const pinned = path([
+        node('requestingUser'),
+        relation('out', '', 'pinned'),
+        node('node'),
+      ]);
+      conditions.pinned = filter.pinned ? pinned : not(pinned);
+    }
 
     if (Object.keys(conditions).length > 0) {
       query.where(conditions);

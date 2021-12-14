@@ -300,6 +300,9 @@ describe('Engagement Changeset Aware e2e', () => {
         },
       }
     );
+    expect(
+      changesetEngagement.createLanguageEngagement.engagement.ceremony
+    ).toBeDefined();
 
     const engagementId =
       changesetEngagement.createLanguageEngagement.engagement.id;

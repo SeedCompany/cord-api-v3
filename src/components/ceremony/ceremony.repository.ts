@@ -61,7 +61,7 @@ export class CeremonyRepository extends DtoRepository(Ceremony) {
       query
         .match([
           node('project', 'Project'),
-          relation('out', '', 'engagement', ACTIVE),
+          relation('out', '', 'engagement'),
           node('', 'Engagement'),
           relation('out', '', ACTIVE),
           node('node'),

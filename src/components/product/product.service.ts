@@ -19,6 +19,11 @@ import { AuthorizationService } from '../authorization/authorization.service';
 import { ScriptureRange } from '../scripture';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
+  getTotalVerseEquivalents,
+  getTotalVerses,
+  getVerseEquivalentsFromUnspecified,
+} from '../scripture/verse-equivalents';
+import {
   AnyProduct,
   asProductType,
   CreateDerivativeScriptureProduct,
@@ -76,15 +81,27 @@ export class ProductService {
       );
     }
 
+    const otherInput: CreateOtherProduct | undefined =
+      // @prettier-ignore
+      has('title', input) ? input : undefined;
+    const derivativeInput: CreateDerivativeScriptureProduct | undefined =
+      // @prettier-ignore
+      has('produces', input) ? input : undefined;
+    const scriptureInput: CreateDirectScriptureProduct | undefined =
+      !otherInput && !derivativeInput ? input : undefined;
+
+    let totalVerses = 0;
+    let totalVerseEquivalents = 0;
+
     let producibleType: ProducibleType | undefined = undefined;
-    if (has('produces', input) && input.produces) {
+    if (derivativeInput) {
       const producible = await this.repo.getBaseNode(
-        input.produces,
+        derivativeInput.produces,
         'Producible'
       );
       if (!producible) {
         this.logger.warning(`Could not find producible node`, {
-          id: input.produces,
+          id: derivativeInput.produces,
         });
         throw new NotFoundException(
           'Could not find producible node',
@@ -94,6 +111,24 @@ export class ProductService {
       producibleType = this.resources.resolveTypeByBaseNode(
         producible
       ) as ProducibleType;
+
+      totalVerses = getTotalVerses(
+        ...(derivativeInput.scriptureReferencesOverride ?? [])
+      );
+      totalVerseEquivalents = getTotalVerseEquivalents(
+        ...(derivativeInput.scriptureReferencesOverride ?? [])
+      );
+    } else if (scriptureInput) {
+      totalVerses = scriptureInput.unspecifiedScripture
+        ? scriptureInput.unspecifiedScripture.totalVerses
+        : getTotalVerses(...(scriptureInput.scriptureReferences ?? []));
+      totalVerseEquivalents = scriptureInput.unspecifiedScripture
+        ? getVerseEquivalentsFromUnspecified(
+            scriptureInput.unspecifiedScripture
+          )
+        : getTotalVerseEquivalents(
+            ...(scriptureInput.scriptureReferences ?? [])
+          );
     }
 
     const type = has('title', input)
@@ -110,9 +145,16 @@ export class ProductService {
       Boolean: 1,
       Number: input.progressTarget ?? 1,
     });
+
     const id = has('title', input)
       ? await this.repo.createOther({ ...input, progressTarget, steps })
-      : await this.repo.create({ ...input, progressTarget, steps });
+      : await this.repo.create({
+          ...input,
+          progressTarget,
+          steps,
+          totalVerses,
+          totalVerseEquivalents,
+        });
 
     await this.authorizationService.processNewBaseNode(
       Product,
@@ -254,6 +296,8 @@ export class ProductService {
     );
     const direct: DirectScriptureProduct = {
       ...dto,
+      totalVerses: dto.totalVerses ?? 0,
+      totalVerseEquivalents: dto.totalVerseEquivalents ?? 0,
       ...securedProps,
       mediums: {
         ...securedProps.mediums,
@@ -336,6 +380,20 @@ export class ProductService {
           ? input.unspecifiedScripture
           : undefined,
     };
+    if (
+      changes.unspecifiedScripture !== undefined ||
+      changes.scriptureReferences !== undefined
+    ) {
+      changes = {
+        ...changes,
+        totalVerses: changes.unspecifiedScripture
+          ? changes.unspecifiedScripture.totalVerses
+          : getTotalVerses(...(changes.scriptureReferences ?? [])),
+        totalVerseEquivalents: changes.unspecifiedScripture
+          ? getVerseEquivalentsFromUnspecified(changes.unspecifiedScripture)
+          : getTotalVerseEquivalents(...(changes.scriptureReferences ?? [])),
+      };
+    }
 
     await this.authorizationService.verifyCanEditChanges(
       Product,
@@ -398,6 +456,16 @@ export class ProductService {
         changes
       ),
     };
+    if (changes.scriptureReferencesOverride !== undefined) {
+      const scripture =
+        changes.scriptureReferencesOverride ??
+        currentProduct.produces.scriptureReferences.value;
+      changes = {
+        ...changes,
+        totalVerses: getTotalVerses(...scripture),
+        totalVerseEquivalents: getTotalVerseEquivalents(...scripture),
+      };
+    }
 
     await this.authorizationService.verifyCanEditChanges(
       Product,

@@ -1,3 +1,4 @@
+import { Type } from '@nestjs/common';
 import { Field, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { GraphQLString } from 'graphql';
@@ -6,6 +7,7 @@ import {
   DbLabel,
   DbUnique,
   ID,
+  IntersectionType,
   NameField,
   Resource,
   SecuredBoolean,
@@ -22,7 +24,14 @@ import {
 } from '../../../common';
 import { SetChangeType } from '../../../core/database/changes';
 import { Location } from '../../location/dto';
+import { Pinnable } from '../../pin/dto';
+import { Post, Postable } from '../../post';
 import { UpdateEthnologueLanguage } from './update-language.dto';
+
+const Interfaces: Type<Resource & Pinnable & Postable> = IntersectionType(
+  Resource,
+  IntersectionType(Pinnable, Postable)
+);
 
 @ObjectType({
   description: SecuredPropertyList.descriptionFor('tags'),
@@ -67,14 +76,15 @@ export class EthnologueLanguage {
 }
 
 @ObjectType({
-  implements: [Resource],
+  implements: [Resource, Pinnable, Postable],
 })
-export class Language extends Resource {
+export class Language extends Interfaces {
   static readonly Props = keysOf<Language>();
   static readonly SecuredProps = keysOf<SecuredProps<Language>>();
   static readonly Relations = {
     ethnologue: EthnologueLanguage,
     locations: [Location],
+    posts: [Post],
   };
 
   @NameField({

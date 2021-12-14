@@ -1,6 +1,7 @@
 import { registerEnumType } from '@nestjs/graphql';
 
 export enum PostShareability {
+  Membership = 'Membership',
   ProjectTeam = 'ProjectTeam',
   Internal = 'Internal',
   AskToShareExternally = 'AskToShareExternally',
@@ -9,4 +10,9 @@ export enum PostShareability {
 
 registerEnumType(PostShareability, {
   name: 'PostShareability',
+  valuesMap: {
+    ProjectTeam: {
+      deprecationReason: 'Use `Membership` instead',
+    },
+  },
 });
