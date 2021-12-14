@@ -33,3 +33,4 @@ export * from './id-field';
 export * from './url.field';
 export * from './base-node-labels.enum';
 export * from './object-view';
+export * from './cordtables';

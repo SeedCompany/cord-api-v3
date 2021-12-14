@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
+import { getFromContainer } from 'class-validator';
 import got from 'got/dist/source';
 import { compact } from 'lodash';
 import {
   CalendarDate,
   DuplicateException,
+  getFromCordTables,
   ID,
   InputException,
   NotFoundException,
@@ -161,15 +163,11 @@ export class LanguageService {
 
   async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
     const languages = await this.repo.readMany(ids, session, view);
+    return await Promise.all(languages.map((dto) => this.secure(dto, session)));
   }
   async getLanguage(langId: ID, session: Session): Promise<Language> {
-    const response = await got.post('http://localhost:8080/sc-languages/read', {
-      json: {
-        token:
-          '6SXkazOrHP1irRpkFEQXPSERDrJK4op0F2OWM2xqgyb56LddmwLGim6ktqIoFXIF',
-        responseType: 'json',
-        id: langId,
-      },
+    const response = await getFromCordTables('sc-languages/read', {
+      id: langId,
     });
     const language = response.body;
 
