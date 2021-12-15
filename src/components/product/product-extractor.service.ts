@@ -43,10 +43,9 @@ export class ProductExtractor {
 
     const isOBS = cellAsString(sheet.P19) === 'Stories';
 
-    const interval = DateInterval.tryFrom(
-      cellAsDate(sheet.Z14),
-      cellAsDate(sheet.Z15)
-    );
+    const interval = isOBS
+      ? DateInterval.tryFrom(cellAsDate(sheet.X16), cellAsDate(sheet.X17))
+      : DateInterval.tryFrom(cellAsDate(sheet.Z14), cellAsDate(sheet.Z15));
     if (!interval) {
       this.logger.warning('Unable to find project date range', {
         id: file.id,

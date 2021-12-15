@@ -736,6 +736,10 @@ export class ProductService {
     return productIds;
   }
 
+  async getProducibleId(producibleName: string) {
+    return await this.repo.getProducibleId(producibleName);
+  }
+
   protected getMethodologiesByApproach(
     approach: ProductApproach
   ): ProductMethodology[] {

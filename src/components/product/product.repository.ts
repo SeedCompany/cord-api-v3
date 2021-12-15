@@ -124,6 +124,19 @@ export class ProductRepository extends CommonRepository {
       .run();
   }
 
+  async getProducibleId(producibleName: string) {
+    const res = await this.db
+      .query()
+      .match([
+        node('producible', 'Producible'),
+        relation('out', '', 'name', ACTIVE),
+        node('', 'Property', { value: producibleName }),
+      ])
+      .return<{ id: ID }>('producible.id as id')
+      .first();
+    return res?.id;
+  }
+
   protected hydrate(session: Session) {
     return (query: Query) =>
       query
@@ -214,6 +227,7 @@ export class ProductRepository extends CommonRepository {
       ...(isDerivative
         ? {
             isOverriding: !!input.scriptureReferencesOverride,
+            composite: input.composite,
           }
         : {}),
       totalVerses: input.totalVerses,
