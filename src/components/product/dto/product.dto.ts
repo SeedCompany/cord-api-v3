@@ -6,6 +6,7 @@ import { MergeExclusive } from 'type-fest';
 import {
   DbLabel,
   ID,
+  SecuredBoolean,
   SecuredFloat,
   SecuredProps,
   SecuredString,
@@ -159,6 +160,13 @@ export class DerivativeScriptureProduct extends Product {
     `,
   })
   readonly scriptureReferencesOverride: SecuredScriptureRangesOverride;
+
+  @Field({
+    description: stripIndent`
+      Represents whether the \`Producible\` being referenced is multiple composite stories
+    `,
+  })
+  readonly composite: SecuredBoolean;
 
   @Field(() => Int, {
     description:

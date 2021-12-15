@@ -98,6 +98,13 @@ export abstract class CreateDerivativeScriptureProduct extends CreateBaseProduct
     `,
   })
   readonly scriptureReferencesOverride?: readonly ScriptureRangeInput[];
+
+  @Field({
+    description: stripIndent`
+      Represents whether the \`Producible\` being referenced is multiple composite stories
+    `,
+  })
+  readonly composite: boolean = false;
 }
 
 /**
