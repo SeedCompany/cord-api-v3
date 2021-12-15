@@ -36,7 +36,13 @@ export const ScriptureField = (options: FieldOptions) =>
     Field(() => [ScriptureRangeInput], options),
     ValidateNested(),
     Type(() => ScriptureRangeInput),
-    Transform(({ value }) => (value ? mergeScriptureRanges(value) : value))
+    Transform(({ value }) => {
+      try {
+        return value ? mergeScriptureRanges(value) : value;
+      } catch (e) {
+        return value;
+      }
+    })
   );
 
 @InputType()
