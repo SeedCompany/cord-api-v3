@@ -43,12 +43,10 @@ import {
   ProductCompletionDescriptionSuggestionsOutput,
   ProductListInput,
   ProductListOutput,
-  ProductType,
   UpdateOtherProduct,
   UpdateProductInput,
   UpdateProductOutput,
 } from './dto';
-import { ProducibleType } from './dto/producible.dto';
 
 @Resolver(Product)
 export class ProductResolver {
@@ -144,29 +142,6 @@ export class ProductResolver {
       : !product.produces
       ? 'Scripture'
       : startCase(product.produces.value?.__typename) || null;
-  }
-
-  @ResolveField(() => ProductType, {
-    description:
-      'Provide what would be the "type" of product in the old schema.',
-  })
-  legacyType(@Parent() product: AnyProduct): ProductType {
-    if (product.produces) {
-      const type = product.produces.value?.__typename;
-      if (type === ProducibleType.EthnoArt) {
-        return ProductType.EthnoArts;
-      } else if (type === ProducibleType.Film) {
-        return ProductType.JesusFilm; // TODO not entirely true
-      } else if (type === ProducibleType.Song) {
-        return ProductType.Songs;
-      } else if (type === ProducibleType.Story) {
-        return ProductType.BibleStories;
-      } else if (type === ProducibleType.LiteracyMaterial) {
-        return ProductType.LiteracyMaterials;
-      }
-    }
-    // TODO determine from product.scriptureReferences
-    return ProductType.IndividualBooks;
   }
 
   @Query(() => [Step], {
