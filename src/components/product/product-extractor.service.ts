@@ -4,6 +4,7 @@ import { range, sortBy, startCase, without } from 'lodash';
 import { MergeExclusive } from 'type-fest';
 import { read, utils, WorkSheet } from 'xlsx';
 import {
+  CalendarDate,
   DateInterval,
   entries,
   expandToFullFiscalYears,
@@ -169,16 +170,15 @@ const parseProductRow =
     noteFallback?: string
   ) =>
   (row: number): ExtractedRow => {
-    // include step if it references a fiscal year within the project
-    const includeStep = (column: string) => {
+    const steps = entries(stepColumns).flatMap(([step, column]) => {
       const fiscalYear = cellAsNumber(sheet[`${column}${row}`]);
-      return (
-        fiscalYear && projectRange.intersection(fullFiscalYear(fiscalYear))
-      );
-    };
-    const steps: readonly Step[] = entries(stepColumns).flatMap(
-      ([step, column]) => (includeStep(column) ? step : [])
-    );
+      const fullFY = fiscalYear ? fullFiscalYear(fiscalYear) : undefined;
+      // only include step if it references a fiscal year within the project
+      if (!fullFY || !projectRange.intersection(fullFY)) {
+        return [];
+      }
+      return { step, plannedCompleteDate: fullFY.end };
+    });
     const note =
       cellAsString(sheet[`${isOBS ? 'Y' : 'AI'}${row}`]) ?? noteFallback;
 
@@ -222,6 +222,6 @@ export type ExtractedRow = MergeExclusive<
     totalVerses: number;
   }
 > & {
-  steps: readonly Step[];
+  steps: ReadonlyArray<{ step: Step; plannedCompleteDate: CalendarDate }>;
   note: string | undefined;
 };

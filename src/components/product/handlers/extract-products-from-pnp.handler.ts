@@ -106,7 +106,7 @@ export class ExtractProductsFromPnpHandler
           methodology,
           scriptureReferences,
           unspecifiedScripture,
-          steps,
+          steps: steps.map((s) => s.step),
           describeCompletion: note,
         };
         if (existingId) {
@@ -130,7 +130,7 @@ export class ExtractProductsFromPnpHandler
       } else if (row.story) {
         const props = {
           methodology,
-          steps,
+          steps: steps.map((s) => s.step),
           scriptureReferencesOverride: row.scripture,
           composite: row.composite,
           describeCompletion: note,
