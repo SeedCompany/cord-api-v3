@@ -130,6 +130,13 @@ export function findStepColumns(
     if (!label) {
       continue;
     }
+    if (column === range.e.c) {
+      // The last step should always be called Completed in CORD per Seth.
+      // Written PnP already match, but OBS calls it Record. This is mislabeled
+      // depending on the methodology.
+      matchedColumns[Step.Completed] = utils.encode_col(column);
+      continue;
+    }
     const distances = remainingSteps.map((step) => {
       const humanLabel = startCase(step).replace(' And ', ' & ');
       const distance = levenshtein(label, humanLabel);
