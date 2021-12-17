@@ -235,7 +235,7 @@ export class ProductRepository extends CommonRepository {
       ...(isDerivative
         ? {
             isOverriding: !!input.scriptureReferencesOverride,
-            composite: input.composite,
+            composite: input.composite ?? false,
           }
         : {}),
       totalVerses: input.totalVerses,

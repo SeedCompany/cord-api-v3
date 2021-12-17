@@ -42,7 +42,10 @@ export abstract class UpdateDirectScriptureProduct extends IntersectionType(
 @InputType()
 export abstract class UpdateDerivativeScriptureProduct extends IntersectionType(
   UpdateBaseProduct,
-  PickType(CreateDerivativeScriptureProduct, ['scriptureReferencesOverride'])
+  PickType(CreateDerivativeScriptureProduct, [
+    'scriptureReferencesOverride',
+    'composite',
+  ])
 ) {
   @IdField({
     nullable: true,

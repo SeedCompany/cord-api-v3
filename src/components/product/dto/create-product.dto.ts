@@ -101,10 +101,12 @@ export abstract class CreateDerivativeScriptureProduct extends CreateBaseProduct
 
   @Field({
     description: stripIndent`
-      Represents whether the \`Producible\` being referenced is multiple composite stories
+      Represents whether the referenced \`Producible\` is a combination of
+      multiple individual producibles.
     `,
+    nullable: true,
   })
-  readonly composite: boolean = false;
+  readonly composite?: boolean;
 }
 
 /**
