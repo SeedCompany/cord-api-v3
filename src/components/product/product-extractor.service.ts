@@ -182,29 +182,34 @@ const parseProductRow =
     const note =
       cellAsString(sheet[`${isOBS ? 'Y' : 'AI'}${row}`]) ?? noteFallback;
 
+    if (isOBS) {
+      const story = cellAsString(sheet[`Q${row}`])!; // Asserting bc loop verified this
+      const scripture = (() => {
+        try {
+          return parseScripture(
+            cellAsString(sheet[`R${row}`])
+              // Ignore these two strings that are meaningless here
+              ?.replace('Composite', '')
+              .replace('other portions', '') ?? ''
+          );
+        } catch (e) {
+          return [];
+        }
+      })();
+      const totalVerses = cellAsNumber(sheet[`T${row}`]);
+      return {
+        story,
+        scripture,
+        totalVerses,
+        composite: cellAsString(sheet[`S${row}`])?.toUpperCase() === 'Y',
+        placeholder: scripture.length === 0 && !totalVerses,
+        steps,
+        note,
+      };
+    }
     return {
-      ...(isOBS
-        ? {
-            story: cellAsString(sheet[`Q${row}`])!, // Asserting bc loop verified this
-            scripture: (() => {
-              try {
-                return parseScripture(
-                  cellAsString(sheet[`R${row}`])
-                    // Ignore these two strings that are meaningless here
-                    ?.replace('Composite', '')
-                    .replace('other portions', '') ?? ''
-                );
-              } catch (e) {
-                return [];
-              }
-            })(),
-            totalVerses: cellAsNumber(sheet[`T${row}`]),
-            composite: cellAsString(sheet[`S${row}`])?.toUpperCase() === 'Y',
-          }
-        : {
-            bookName: cellAsString(sheet[`Q${row}`])!, // Asserting bc loop verified this
-            totalVerses: cellAsNumber(sheet[`T${row}`])!, // Asserting bc loop verified this
-          }),
+      bookName: cellAsString(sheet[`Q${row}`])!, // Asserting bc loop verified this
+      totalVerses: cellAsNumber(sheet[`T${row}`])!, // Asserting bc loop verified this
       steps,
       note,
     };
@@ -216,6 +221,7 @@ export type ExtractedRow = MergeExclusive<
     scripture: readonly ScriptureRange[];
     totalVerses: number | undefined;
     composite: boolean;
+    placeholder: boolean;
   },
   {
     bookName: string;
