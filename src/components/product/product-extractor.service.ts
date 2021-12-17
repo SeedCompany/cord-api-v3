@@ -123,19 +123,21 @@ export function findStepColumns(
 ) {
   const matchedColumns: Partial<Record<Step, string>> = {};
   let remainingSteps = availableSteps;
-  const range = utils.decode_range(fromRange);
-  for (let column = range.s.c; column <= range.e.c; ++column) {
-    const cellRef = utils.encode_cell({ r: range.s.r, c: column });
-    const label = cellAsString(sheet[cellRef]);
-    if (!label) {
-      continue;
+  const selection = utils.decode_range(fromRange);
+  const possibleSteps = range(selection.s.c, selection.e.c + 1).flatMap(
+    (column) => {
+      const cellRef = utils.encode_cell({ r: selection.s.r, c: column });
+      const label = cellAsString(sheet[cellRef]);
+      return label ? { label, column: utils.encode_col(column) } : [];
     }
-    if (column === range.e.c) {
+  );
+  possibleSteps.forEach(({ label, column }, index) => {
+    if (index === possibleSteps.length - 1) {
       // The last step should always be called Completed in CORD per Seth.
       // Written PnP already match, but OBS calls it Record. This is mislabeled
       // depending on the methodology.
-      matchedColumns[Step.Completed] = utils.encode_col(column);
-      continue;
+      matchedColumns[Step.Completed] = column;
+      return;
     }
     const distances = remainingSteps.map((step) => {
       const humanLabel = startCase(step).replace(' And ', ' & ');
@@ -149,12 +151,12 @@ export function findStepColumns(
       ([_, distance]) => distance
     )[0]?.[0];
     if (!chosen) {
-      continue;
+      return;
     }
-    matchedColumns[chosen] = utils.encode_col(column);
+    matchedColumns[chosen] = column;
 
     remainingSteps = without(remainingSteps, chosen);
-  }
+  });
   return matchedColumns as Record<Step, string>;
 }
 
