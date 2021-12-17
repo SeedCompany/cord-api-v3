@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { Except, Merge } from 'type-fest';
 import {
@@ -44,6 +44,7 @@ import {
   DirectScriptureProduct,
   ProductMethodology as Methodology,
   OtherProduct,
+  ProducibleType,
   Product,
   ProductCompletionDescriptionSuggestionsInput,
   ProductListInput,
@@ -108,7 +109,7 @@ export class ProductRepository extends CommonRepository {
       .run();
   }
 
-  async listIdsWithProducibleNames(engagementId: ID) {
+  async listIdsWithProducibleNames(engagementId: ID, type?: ProducibleType) {
     return await this.db
       .query()
       .match([
@@ -116,7 +117,7 @@ export class ProductRepository extends CommonRepository {
         relation('out', '', 'product', ACTIVE),
         node('node', 'DerivativeScriptureProduct'),
         relation('out', '', 'produces', ACTIVE),
-        node('', 'Producible'),
+        node('', ['Producible', ...(type ? [type] : [])]),
         relation('out', '', 'name', ACTIVE),
         node('name', 'Property'),
       ])
@@ -124,17 +125,24 @@ export class ProductRepository extends CommonRepository {
       .run();
   }
 
-  async getProducibleId(producibleName: string) {
+  async getProducibleIdsByNames(
+    names: readonly string[],
+    type?: ProducibleType
+  ) {
     const res = await this.db
       .query()
       .match([
-        node('producible', 'Producible'),
+        node('producible', ['Producible', ...(type ? [type] : [])]),
         relation('out', '', 'name', ACTIVE),
-        node('', 'Property', { value: producibleName }),
+        node('prop', 'Property'),
       ])
-      .return<{ id: ID }>('producible.id as id')
-      .first();
-    return res?.id;
+      .where({ 'prop.value': inArray([...names]) })
+      .return<{ id: ID; name: string }>([
+        'producible.id as id',
+        'prop.value as name',
+      ])
+      .run();
+    return res;
   }
 
   protected hydrate(session: Session) {

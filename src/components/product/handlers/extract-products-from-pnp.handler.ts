@@ -1,6 +1,6 @@
-import { groupBy } from 'lodash';
+import { difference, groupBy, uniq } from 'lodash';
 import { DateTime } from 'luxon';
-import { asyncPool, ID } from '../../../common';
+import { asyncPool, ID, mapFromList, Session } from '../../../common';
 import { EventsHandler, IEventHandler, ILogger, Logger } from '../../../core';
 import { Engagement } from '../../engagement';
 import {
@@ -10,15 +10,18 @@ import {
 import { FileService } from '../../file';
 import { ScriptureRangeInput } from '../../scripture';
 import { Book } from '../../scripture/books';
+import { StoryService } from '../../story';
 import {
   CreateDerivativeScriptureProduct,
   CreateDirectScriptureProduct,
   getAvailableSteps,
+  ProducibleType,
   ProgressMeasurement,
   UpdateDerivativeScriptureProduct,
   UpdateDirectScriptureProduct,
 } from '../dto';
 import { ExtractedRow, ProductExtractor } from '../product-extractor.service';
+import { ProductRepository } from '../product.repository';
 import { ProductService } from '../product.service';
 
 type SubscribedEvent = EngagementCreatedEvent | EngagementUpdatedEvent;
@@ -31,6 +34,8 @@ export class ExtractProductsFromPnpHandler
     private readonly products: ProductService,
     private readonly files: FileService,
     private readonly extractor: ProductExtractor,
+    private readonly repo: ProductRepository,
+    private readonly stories: StoryService,
     @Logger('product:extractor') private readonly logger: ILogger
   ) {}
 
@@ -64,65 +69,26 @@ export class ExtractProductsFromPnpHandler
       return;
     }
 
-    if (productRows[0].story) {
-      const actionableStoryRows = await this.matchRowsToStoryChanges(
-        engagement,
-        productRows
-      );
+    const actionableProductRows = await this.matchRowsToProductChanges(
+      engagement,
+      productRows
+    );
 
-      const createdAt = DateTime.now();
+    const storyIds = await this.getOrCreateStoriesByName(
+      productRows,
+      event.session
+    );
 
-      await asyncPool(5, actionableStoryRows, async (row) => {
-        const {
-          existingId,
-          index,
-          steps,
-          note,
-          scripture,
-          composite,
-          producibleId,
-        } = row;
+    const createdAt = DateTime.now();
 
-        const props = {
-          methodology,
-          steps,
-          scriptureReferencesOverride: scripture,
-          describeCompletion: note,
-        };
+    // Create/update products 5 at a time.
+    await asyncPool(5, actionableProductRows, async (row) => {
+      const { existingId, steps, note, index } = row;
 
-        if (existingId) {
-          const updates: UpdateDerivativeScriptureProduct = {
-            ...props,
-            id: existingId,
-          };
-          await this.products.updateDerivative(updates, event.session);
-        } else {
-          const create: CreateDerivativeScriptureProduct = {
-            ...props,
-            engagementId: engagement.id,
-            progressStepMeasurement: ProgressMeasurement.Percent,
-            composite: !!composite,
-            produces: producibleId!,
-            scriptureReferencesOverride: scripture,
-            createdAt: createdAt.plus({ milliseconds: index }),
-          };
-          await this.products.create(create, event.session);
-        }
-      });
-    } else {
-      const actionableProductRows = await this.matchRowsToProductChanges(
-        engagement,
-        productRows
-      );
-
-      const createdAt = DateTime.now();
-
-      // Create/update products 5 at a time.
-      await asyncPool(5, actionableProductRows, async (row) => {
-        const { existingId, bookName, totalVerses, steps, note, index } = row;
-
+      if (row.bookName) {
         // Populate one of the two product props based on whether its a known verse range or not.
-        const book = Book.find(bookName!);
+        const book = Book.find(row.bookName);
+        const { totalVerses } = row;
         const isKnown = book.totalVerses === totalVerses;
         const scriptureReferences: ScriptureRangeInput[] = isKnown
           ? [
@@ -134,7 +100,7 @@ export class ExtractProductsFromPnpHandler
           : [];
         const unspecifiedScripture = isKnown
           ? null
-          : { book: bookName, totalVerses };
+          : { book: book.name, totalVerses };
 
         const props = {
           methodology,
@@ -144,14 +110,12 @@ export class ExtractProductsFromPnpHandler
           describeCompletion: note,
         };
         if (existingId) {
-          // @ts-expect-error skipping this validation for now
           const updates: UpdateDirectScriptureProduct = {
             id: existingId,
             ...props,
           };
           await this.products.updateDirect(updates, event.session);
         } else {
-          // @ts-expect-error skipping this validation for now
           const create: CreateDirectScriptureProduct = {
             engagementId: engagement.id,
             progressStepMeasurement: ProgressMeasurement.Percent,
@@ -163,8 +127,32 @@ export class ExtractProductsFromPnpHandler
           };
           await this.products.create(create, event.session);
         }
-      });
-    }
+      } else if (row.story) {
+        const props = {
+          methodology,
+          steps,
+          scriptureReferencesOverride: row.scripture,
+          composite: row.composite,
+          describeCompletion: note,
+        };
+        if (existingId) {
+          const updates: UpdateDerivativeScriptureProduct = {
+            ...props,
+            id: existingId,
+          };
+          await this.products.updateDerivative(updates, event.session);
+        } else {
+          const create: CreateDerivativeScriptureProduct = {
+            engagementId: engagement.id,
+            progressStepMeasurement: ProgressMeasurement.Percent,
+            ...props,
+            produces: storyIds[row.story],
+            createdAt: createdAt.plus({ milliseconds: index }),
+          };
+          await this.products.create(create, event.session);
+        }
+      }
+    });
   }
 
   /**
@@ -183,9 +171,18 @@ export class ExtractProductsFromPnpHandler
           this.logger
         )
       : {};
+    const storyProducts = rows[0].story
+      ? await this.products.loadProductIdsForStories(engagement.id, this.logger)
+      : {};
 
-    if (!rows[0].bookName) {
-      return []; // skip until implemented
+    if (rows[0].story) {
+      return rows.flatMap((row, index) => {
+        if (!row.story) return [];
+        if (row.story in storyProducts) {
+          return { ...row, index, existingId: storyProducts[row.story]! };
+        }
+        return { ...row, index, existingId: undefined };
+      });
     }
 
     const actionableProductRows = Object.values(
@@ -195,7 +192,8 @@ export class ExtractProductsFromPnpHandler
       )
     ).flatMap((rowsOfBook) => {
       const bookName = rowsOfBook[0].bookName;
-      const existing = scriptureProducts[bookName!] ?? new Map<number, ID>();
+      if (!bookName) return [];
+      const existing = scriptureProducts[bookName] ?? new Map<number, ID>();
 
       const matches: Array<
         ExtractedRow & { index: number; existingId: ID | undefined }
@@ -204,11 +202,11 @@ export class ExtractProductsFromPnpHandler
 
       // Exact matches
       for (const row of rowsOfBook) {
-        const { totalVerses } = row;
-        const existingId = existing.get(totalVerses!);
+        const totalVerses = row.totalVerses!;
+        const existingId = existing.get(totalVerses);
         if (existingId) {
           matches.push({ ...row, existingId });
-          existing.delete(totalVerses!);
+          existing.delete(totalVerses);
         } else {
           nonExactMatches.push(row);
         }
@@ -244,57 +242,24 @@ export class ExtractProductsFromPnpHandler
     return actionableProductRows;
   }
 
-  private async matchRowsToStoryChanges(
-    engagement: Engagement,
-    rows: readonly ExtractedRow[]
+  private async getOrCreateStoriesByName(
+    rows: readonly ExtractedRow[],
+    session: Session
   ) {
-    const storyProducts = rows[0].story
-      ? await this.products.loadProductIdsForStories(engagement.id, this.logger)
-      : {};
-
-    if (!rows[0].story) {
-      return [];
+    const names = uniq(rows.flatMap((row) => row.story ?? []));
+    if (names.length === 0) {
+      return {};
     }
-
-    const actionableStoryRows = Object.values(
-      groupBy(
-        rows.map((row, index) => ({ ...row, index })),
-        (row) => row.story
-      )
-    ).flatMap(async (rowsOfStory) => {
-      const story = rowsOfStory[0].story;
-      const existingId = storyProducts[story!];
-      const producibleId = await this.products.getProducibleId(story!);
-      const matches: Array<
-        ExtractedRow & {
-          index: number;
-          existingId: ID | undefined;
-          producibleId: ID | undefined;
-        }
-      > = [];
-      const nonExactMatches: Array<ExtractedRow & { index: number }> = [];
-
-      for (const row of rowsOfStory) {
-        if (existingId) {
-          matches.push({
-            ...row,
-            existingId: existingId,
-            producibleId: producibleId,
-          });
-        } else {
-          nonExactMatches.push(row);
-        }
-      }
-      return [
-        ...matches,
-        ...nonExactMatches.map((row) => ({
-          ...row,
-          existingId: undefined,
-          producibleId: producibleId,
-        })),
-      ];
+    const existingList = await this.repo.getProducibleIdsByNames(
+      names,
+      ProducibleType.Story
+    );
+    const existing = mapFromList(existingList, (row) => [row.name, row.id]);
+    const newNames = difference(names, Object.keys(existing));
+    await asyncPool(3, newNames, async (name) => {
+      const story = await this.stories.create({ name }, session);
+      existing[name] = story.id;
     });
-
-    return (await Promise.all(actionableStoryRows)).flat();
+    return existing;
   }
 }
