@@ -25,28 +25,33 @@ export class ExtractPnpProgressHandler {
       return;
     }
 
-    // Fetch products for report mapped to a book name
+    // Fetch products for report mapped to a book/story name
     const engagementId = event.report.parent.properties.id;
-    const products = await this.products.loadProductIdsForBookAndVerse(
-      engagementId,
-      this.logger
-    );
+    const storyProducts = progressRows[0].story
+      ? await this.products.loadProductIdsForStories(engagementId, this.logger)
+      : {};
+    const scriptureProducts = progressRows[0].bookName
+      ? await this.products.loadProductIdsForBookAndVerse(
+          engagementId,
+          this.logger
+        )
+      : {};
 
-    // Convert book name to product ID
-    const updates = progressRows.flatMap(({ bookName, totalVerses, steps }) => {
-      const productId = products[bookName]?.get(totalVerses);
+    // Convert row to product ID
+    const updates = progressRows.flatMap((row) => {
+      const { steps, ...rest } = row;
+      const productId = row.bookName
+        ? scriptureProducts[row.bookName]?.get(row.totalVerses)
+        : storyProducts[row.story!];
       if (productId) {
         return { productId, steps };
       }
 
-      this.logger.warning(
-        'Could not find product for book & verse count in pnp',
-        {
-          bookName,
-          report: event.report.id,
-          file: event.file.id,
-        }
-      );
+      this.logger.warning('Could not find product in pnp', {
+        ...rest,
+        report: event.report.id,
+        file: event.file.id,
+      });
       return [];
     });
 

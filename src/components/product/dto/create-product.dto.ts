@@ -98,6 +98,15 @@ export abstract class CreateDerivativeScriptureProduct extends CreateBaseProduct
     `,
   })
   readonly scriptureReferencesOverride?: readonly ScriptureRangeInput[];
+
+  @Field({
+    description: stripIndent`
+      Represents whether the referenced \`Producible\` is a combination of
+      multiple individual producibles.
+    `,
+    nullable: true,
+  })
+  readonly composite?: boolean;
 }
 
 /**

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { Except, Merge } from 'type-fest';
 import {
@@ -44,6 +44,7 @@ import {
   DirectScriptureProduct,
   ProductMethodology as Methodology,
   OtherProduct,
+  ProducibleType,
   Product,
   ProductCompletionDescriptionSuggestionsInput,
   ProductListInput,
@@ -106,6 +107,42 @@ export class ProductRepository extends CommonRepository {
         'unspecifiedScripture { .book, .totalVerses } as unspecifiedScripture',
       ])
       .run();
+  }
+
+  async listIdsWithProducibleNames(engagementId: ID, type?: ProducibleType) {
+    return await this.db
+      .query()
+      .match([
+        node('engagement', 'Engagement', { id: engagementId }),
+        relation('out', '', 'product', ACTIVE),
+        node('node', 'DerivativeScriptureProduct'),
+        relation('out', '', 'produces', ACTIVE),
+        node('', ['Producible', ...(type ? [type] : [])]),
+        relation('out', '', 'name', ACTIVE),
+        node('name', 'Property'),
+      ])
+      .return<{ id: ID; name: string }>(['node.id as id', 'name.value as name'])
+      .run();
+  }
+
+  async getProducibleIdsByNames(
+    names: readonly string[],
+    type?: ProducibleType
+  ) {
+    const res = await this.db
+      .query()
+      .match([
+        node('producible', ['Producible', ...(type ? [type] : [])]),
+        relation('out', '', 'name', ACTIVE),
+        node('prop', 'Property'),
+      ])
+      .where({ 'prop.value': inArray([...names]) })
+      .return<{ id: ID; name: string }>([
+        'producible.id as id',
+        'prop.value as name',
+      ])
+      .run();
+    return res;
   }
 
   protected hydrate(session: Session) {
@@ -198,6 +235,7 @@ export class ProductRepository extends CommonRepository {
       ...(isDerivative
         ? {
             isOverriding: !!input.scriptureReferencesOverride,
+            composite: input.composite ?? false,
           }
         : {}),
       totalVerses: input.totalVerses,

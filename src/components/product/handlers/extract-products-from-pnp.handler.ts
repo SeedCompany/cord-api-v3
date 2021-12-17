@@ -1,6 +1,6 @@
-import { groupBy } from 'lodash';
+import { difference, groupBy, uniq } from 'lodash';
 import { DateTime } from 'luxon';
-import { asyncPool, ID } from '../../../common';
+import { asyncPool, ID, mapFromList, Session } from '../../../common';
 import { EventsHandler, IEventHandler, ILogger, Logger } from '../../../core';
 import { Engagement } from '../../engagement';
 import {
@@ -10,14 +10,18 @@ import {
 import { FileService } from '../../file';
 import { ScriptureRangeInput } from '../../scripture';
 import { Book } from '../../scripture/books';
+import { StoryService } from '../../story';
 import {
+  CreateDerivativeScriptureProduct,
   CreateDirectScriptureProduct,
   getAvailableSteps,
   ProducibleType,
   ProgressMeasurement,
+  UpdateDerivativeScriptureProduct,
   UpdateDirectScriptureProduct,
 } from '../dto';
 import { ExtractedRow, ProductExtractor } from '../product-extractor.service';
+import { ProductRepository } from '../product.repository';
 import { ProductService } from '../product.service';
 
 type SubscribedEvent = EngagementCreatedEvent | EngagementUpdatedEvent;
@@ -30,6 +34,8 @@ export class ExtractProductsFromPnpHandler
     private readonly products: ProductService,
     private readonly files: FileService,
     private readonly extractor: ProductExtractor,
+    private readonly repo: ProductRepository,
+    private readonly stories: StoryService,
     @Logger('product:extractor') private readonly logger: ILogger
   ) {}
 
@@ -57,7 +63,6 @@ export class ExtractProductsFromPnpHandler
 
     const availableSteps = getAvailableSteps({
       methodology,
-      type: ProducibleType.DirectScriptureProduct,
     });
     const productRows = await this.extractor.extract(file, availableSteps);
     if (productRows.length === 0) {
@@ -69,51 +74,83 @@ export class ExtractProductsFromPnpHandler
       productRows
     );
 
+    const storyIds = await this.getOrCreateStoriesByName(
+      productRows,
+      event.session
+    );
+
     const createdAt = DateTime.now();
 
     // Create/update products 5 at a time.
     await asyncPool(5, actionableProductRows, async (row) => {
-      const { existingId, bookName, totalVerses, steps, note, index } = row;
+      const { existingId, steps, note, index } = row;
 
-      // Populate one of the two product props based on whether its a known verse range or not.
-      const book = Book.find(bookName);
-      const isKnown = book.totalVerses === totalVerses;
-      const scriptureReferences: ScriptureRangeInput[] = isKnown
-        ? [
-            {
-              start: book.firstChapter.firstVerse.reference,
-              end: book.lastChapter.lastVerse.reference,
-            },
-          ]
-        : [];
-      const unspecifiedScripture = isKnown
-        ? null
-        : { book: bookName, totalVerses };
+      if (row.bookName) {
+        // Populate one of the two product props based on whether its a known verse range or not.
+        const book = Book.find(row.bookName);
+        const { totalVerses } = row;
+        const isKnown = book.totalVerses === totalVerses;
+        const scriptureReferences: ScriptureRangeInput[] = isKnown
+          ? [
+              {
+                start: book.firstChapter.firstVerse.reference,
+                end: book.lastChapter.lastVerse.reference,
+              },
+            ]
+          : [];
+        const unspecifiedScripture = isKnown
+          ? null
+          : { book: book.name, totalVerses };
 
-      const props = {
-        methodology,
-        scriptureReferences,
-        unspecifiedScripture,
-        steps,
-        describeCompletion: note,
-      };
-      if (existingId) {
-        const updates: UpdateDirectScriptureProduct = {
-          id: existingId,
-          ...props,
+        const props = {
+          methodology,
+          scriptureReferences,
+          unspecifiedScripture,
+          steps,
+          describeCompletion: note,
         };
-        await this.products.updateDirect(updates, event.session);
-      } else {
-        const create: CreateDirectScriptureProduct = {
-          engagementId: engagement.id,
-          progressStepMeasurement: ProgressMeasurement.Percent,
-          ...props,
-          // Attempt to order products in the same order as specified in the PnP
-          // The default sort prop is createdAt.
-          // This doesn't account for row changes in subsequent PnP uploads
-          createdAt: createdAt.plus({ milliseconds: index }),
+        if (existingId) {
+          const updates: UpdateDirectScriptureProduct = {
+            id: existingId,
+            ...props,
+          };
+          await this.products.updateDirect(updates, event.session);
+        } else {
+          const create: CreateDirectScriptureProduct = {
+            engagementId: engagement.id,
+            progressStepMeasurement: ProgressMeasurement.Percent,
+            ...props,
+            // Attempt to order products in the same order as specified in the PnP
+            // The default sort prop is createdAt.
+            // This doesn't account for row changes in subsequent PnP uploads
+            createdAt: createdAt.plus({ milliseconds: index }),
+          };
+          await this.products.create(create, event.session);
+        }
+      } else if (row.story) {
+        const props = {
+          methodology,
+          steps,
+          scriptureReferencesOverride: row.scripture,
+          composite: row.composite,
+          describeCompletion: note,
         };
-        await this.products.create(create, event.session);
+        if (existingId) {
+          const updates: UpdateDerivativeScriptureProduct = {
+            ...props,
+            id: existingId,
+          };
+          await this.products.updateDerivative(updates, event.session);
+        } else {
+          const create: CreateDerivativeScriptureProduct = {
+            engagementId: engagement.id,
+            progressStepMeasurement: ProgressMeasurement.Percent,
+            ...props,
+            produces: storyIds[row.story],
+            createdAt: createdAt.plus({ milliseconds: index }),
+          };
+          await this.products.create(create, event.session);
+        }
       }
     });
   }
@@ -128,10 +165,25 @@ export class ExtractProductsFromPnpHandler
   ) {
     // Given that we have products to potentially create, load the existing ones
     // and map them to a book and total verse count.
-    const products = await this.products.loadProductIdsForBookAndVerse(
-      engagement.id,
-      this.logger
-    );
+    const scriptureProducts = rows[0].bookName
+      ? await this.products.loadProductIdsForBookAndVerse(
+          engagement.id,
+          this.logger
+        )
+      : {};
+    const storyProducts = rows[0].story
+      ? await this.products.loadProductIdsForStories(engagement.id, this.logger)
+      : {};
+
+    if (rows[0].story) {
+      return rows.flatMap((row, index) => {
+        if (!row.story) return [];
+        if (row.story in storyProducts) {
+          return { ...row, index, existingId: storyProducts[row.story]! };
+        }
+        return { ...row, index, existingId: undefined };
+      });
+    }
 
     const actionableProductRows = Object.values(
       groupBy(
@@ -140,7 +192,8 @@ export class ExtractProductsFromPnpHandler
       )
     ).flatMap((rowsOfBook) => {
       const bookName = rowsOfBook[0].bookName;
-      const existing = products[bookName] ?? new Map<number, ID>();
+      if (!bookName) return [];
+      const existing = scriptureProducts[bookName] ?? new Map<number, ID>();
 
       const matches: Array<
         ExtractedRow & { index: number; existingId: ID | undefined }
@@ -149,7 +202,7 @@ export class ExtractProductsFromPnpHandler
 
       // Exact matches
       for (const row of rowsOfBook) {
-        const { totalVerses } = row;
+        const totalVerses = row.totalVerses!;
         const existingId = existing.get(totalVerses);
         if (existingId) {
           matches.push({ ...row, existingId });
@@ -187,5 +240,26 @@ export class ExtractProductsFromPnpHandler
       return matches;
     });
     return actionableProductRows;
+  }
+
+  private async getOrCreateStoriesByName(
+    rows: readonly ExtractedRow[],
+    session: Session
+  ) {
+    const names = uniq(rows.flatMap((row) => row.story ?? []));
+    if (names.length === 0) {
+      return {};
+    }
+    const existingList = await this.repo.getProducibleIdsByNames(
+      names,
+      ProducibleType.Story
+    );
+    const existing = mapFromList(existingList, (row) => [row.name, row.id]);
+    const newNames = difference(names, Object.keys(existing));
+    await asyncPool(3, newNames, async (name) => {
+      const story = await this.stories.create({ name }, session);
+      existing[name] = story.id;
+    });
+    return existing;
   }
 }

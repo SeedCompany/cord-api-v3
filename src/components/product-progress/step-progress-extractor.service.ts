@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { MergeExclusive } from 'type-fest';
 import { CellObject, read, WorkSheet } from 'xlsx';
 import { entries } from '../../common';
 import { cellAsNumber, cellAsString, sheetRange } from '../../common/xlsx.util';
@@ -8,6 +9,16 @@ import { ProductStep as Step } from '../product';
 import { findStepColumns } from '../product/product-extractor.service';
 import { Book } from '../scripture/books';
 import { StepProgressInput } from './dto';
+
+type ExtractedRow = MergeExclusive<
+  {
+    bookName: string;
+    totalVerses: number;
+  },
+  { story: string }
+> & {
+  steps: ReadonlyArray<{ step: Step; completed?: number | null }>;
+};
 
 @Injectable()
 export class StepProgressExtractor {
@@ -28,15 +39,17 @@ export class StepProgressExtractor {
       return [];
     }
 
+    const isOBS = cellAsString(sheet.P19) === 'Stories';
+
     const stepColumns = findStepColumns(sheet, 'R19:AB19');
 
-    return findProductProgressRows(sheet).map(
-      parseProgressRow(sheet, stepColumns)
+    return findProductProgressRows(sheet, isOBS).map(
+      parseProgressRow(sheet, stepColumns, isOBS)
     );
   }
 }
 
-function findProductProgressRows(sheet: WorkSheet) {
+function findProductProgressRows(sheet: WorkSheet, isOBS: boolean) {
   const lastRow = sheetRange(sheet)?.e.r ?? 200;
   const matchedRows = [];
   let row = 23;
@@ -44,9 +57,7 @@ function findProductProgressRows(sheet: WorkSheet) {
     row < lastRow &&
     cellAsString(sheet[`P${row}`]) !== 'Other Goals and Milestones'
   ) {
-    const book = Book.tryFind(cellAsString(sheet[`P${row}`]));
-    const totalVerses = cellAsNumber(sheet[`Q${row}`]) ?? 0;
-    if (book && totalVerses > 0 && totalVerses <= book.totalVerses) {
+    if (isProductRow(sheet, isOBS, row)) {
       matchedRows.push(row);
     }
     row++;
@@ -54,10 +65,18 @@ function findProductProgressRows(sheet: WorkSheet) {
   return matchedRows;
 }
 
+const isProductRow = (sheet: WorkSheet, isOBS: boolean, row: number) => {
+  if (isOBS) {
+    return !!cellAsString(sheet[`Q${row}`]);
+  }
+  const book = Book.tryFind(cellAsString(sheet[`P${row}`]));
+  const totalVerses = cellAsNumber(sheet[`Q${row}`]) ?? 0;
+  return book && totalVerses > 0 && totalVerses <= book.totalVerses;
+};
+
 const parseProgressRow =
-  (sheet: WorkSheet, stepColumns: Record<Step, string>) => (row: number) => {
-    const bookName = cellAsString(sheet[`P${row}`])!; // Asserting bc loop verified this
-    const totalVerses = cellAsNumber(sheet[`Q${row}`])!;
+  (sheet: WorkSheet, stepColumns: Record<Step, string>, isOBS: boolean) =>
+  (row: number): ExtractedRow => {
     const progress = (column: string) => {
       const cell: CellObject = sheet[`${column}${row}`];
       if (cellAsString(cell)?.startsWith('Q')) {
@@ -73,5 +92,11 @@ const parseProgressRow =
         completed: progress(column),
       })
     );
+    if (isOBS) {
+      const story = cellAsString(sheet[`Q${row}`])!; // Asserting bc loop verified this
+      return { story, steps };
+    }
+    const bookName = cellAsString(sheet[`P${row}`])!; // Asserting bc loop verified this
+    const totalVerses = cellAsNumber(sheet[`Q${row}`])!; // Asserting bc loop verified this
     return { bookName, totalVerses, steps };
   };

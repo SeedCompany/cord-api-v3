@@ -707,6 +707,35 @@ export class ProductService {
     return productIds;
   }
 
+  async loadProductIdsForStories(
+    engagementId: ID,
+    logger: ILogger = this.logger
+  ) {
+    const productRefs = await this.repo.listIdsWithProducibleNames(
+      engagementId
+    );
+
+    const productIds: {
+      [StoryName in string]?: ID;
+    } = {};
+
+    for (const { id, name } of productRefs) {
+      if (productIds[name]) {
+        logger.warning(
+          `Product references a producible name that has already been assigned to another product and is therefore ignored`,
+          {
+            product: id,
+          }
+        );
+        continue;
+      }
+
+      productIds[name] = id;
+    }
+
+    return productIds;
+  }
+
   protected getMethodologiesByApproach(
     approach: ProductApproach
   ): ProductMethodology[] {
