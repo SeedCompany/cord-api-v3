@@ -93,6 +93,14 @@ export class Product extends Producible {
     `,
   })
   readonly progressTarget: SecuredFloat;
+
+  @Field({
+    description: stripIndent`
+      Is this product a placeholder for a real product to be determined later?
+      If so, this is the description to show in the mean time.
+    `,
+  })
+  readonly placeholderDescription: SecuredStringNullable;
 }
 
 @ObjectType({
