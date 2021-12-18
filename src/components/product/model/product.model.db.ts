@@ -19,4 +19,5 @@ export class DbProduct extends DbBaseNode {
   description: any = null;
   unspecifiedScripture: any = null;
   composite: any = null;
+  placeholderDescription: any = null;
 }

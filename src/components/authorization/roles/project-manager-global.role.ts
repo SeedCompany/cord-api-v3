@@ -343,6 +343,7 @@ export const ProjectManagerGlobal = new DbRole({
         { propertyName: 'title', permission: { read, write, }, },
         { propertyName: 'description', permission: { read, write, }, },
         { propertyName: 'unspecifiedScripture', permission: { read, }, },
+        { propertyName: 'placeholderDescription', permission: { read, }, },
       ],
       canDelete: false,
     }),
