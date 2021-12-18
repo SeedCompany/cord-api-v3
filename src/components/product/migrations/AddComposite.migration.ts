@@ -3,7 +3,7 @@ import { DerivativeScriptureProduct } from '..';
 import { BaseMigration, Migration } from '../../../core';
 import { ACTIVE, createProperty, path } from '../../../core/database/query';
 
-@Migration('2021-12-14-T00:00:00')
+@Migration('2021-12-14T00:00:00')
 export class AddCompositeMigration extends BaseMigration {
   async up() {
     const res = await this.db
