@@ -101,6 +101,9 @@ export class ProductResolver {
     `,
   })
   label(@Parent() product: AnyProduct): string | null {
+    if (product.placeholderDescription.value) {
+      return product.placeholderDescription.value;
+    }
     if (product.title) {
       return product.title.value ?? null;
     }

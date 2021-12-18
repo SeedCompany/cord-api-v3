@@ -3,17 +3,17 @@ import { DerivativeScriptureProduct } from '..';
 import { BaseMigration, Migration } from '../../../core';
 import { ACTIVE, createProperty, path } from '../../../core/database/query';
 
-@Migration('2021-12-14T00:00:00')
-export class AddCompositeMigration extends BaseMigration {
+@Migration('2021-12-16T00:00:00')
+export class AddProductPlaceholderPropMigration extends BaseMigration {
   async up() {
     const res = await this.db
       .query()
-      .matchNode('node', 'DerivativeScriptureProduct')
+      .matchNode('node', 'Product')
       .where(
         not(
           path([
             node('node'),
-            relation('out', '', 'composite', ACTIVE),
+            relation('out', '', 'placeholderDescription', ACTIVE),
             node('', 'Property'),
           ])
         )
@@ -21,17 +21,16 @@ export class AddCompositeMigration extends BaseMigration {
       .apply(
         createProperty({
           resource: DerivativeScriptureProduct,
-          key: 'composite',
-          value: false,
-          numCreatedVar: 'numCompositeCreated',
+          key: 'placeholderDescription',
+          value: null,
         })
       )
-      .return<{ numCompositeCreated: number }>(
-        'sum(numCompositeCreated) as numCompositeCreated'
+      .return<{ numPropsCreated: number }>(
+        'sum(numPropsCreated) as numPropsCreated'
       )
       .first();
     this.logger.info(
-      `Composite prop added to ${res?.numCompositeCreated ?? 0} products`
+      `Placeholder prop added to ${res?.numPropsCreated ?? 0} products`
     );
   }
 }

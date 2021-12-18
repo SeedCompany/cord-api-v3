@@ -60,6 +60,16 @@ export abstract class CreateBaseProduct {
   @IsPositive()
   readonly progressTarget?: number;
 
+  @Field(() => String, {
+    nullable: true,
+    description: stripIndent`
+      Is this product a placeholder for a real product to be determined later?
+      If so, this is the description to show in the mean time.
+    `,
+  })
+  @Transform(({ value }) => (value === '' ? null : value))
+  readonly placeholderDescription?: string | null;
+
   // Allow specifying this internally only.
   readonly createdAt?: DateTime;
 }

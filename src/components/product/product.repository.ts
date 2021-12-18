@@ -229,6 +229,7 @@ export class ProductRepository extends CommonRepository {
       methodology: input.methodology,
       steps: input.steps ?? [],
       describeCompletion: input.describeCompletion,
+      placeholderDescription: input.placeholderDescription,
       canDelete: true,
       progressTarget: input.progressTarget,
       progressStepMeasurement: input.progressStepMeasurement,

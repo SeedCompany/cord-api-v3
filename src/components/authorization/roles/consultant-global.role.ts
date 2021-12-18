@@ -345,6 +345,7 @@ export const ConsultantGlobal = new DbRole({
         { propertyName: 'title', permission: { read, }, },
         { propertyName: 'description', permission: { read, }, },
         { propertyName: 'unspecifiedScripture', permission: { read, }, },
+        { propertyName: 'placeholderDescription', permission: { read, }, },
       ],
       canDelete: false,
     }),

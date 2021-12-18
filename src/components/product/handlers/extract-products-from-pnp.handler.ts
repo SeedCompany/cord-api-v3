@@ -106,7 +106,7 @@ export class ExtractProductsFromPnpHandler
           methodology,
           scriptureReferences,
           unspecifiedScripture,
-          steps,
+          steps: steps.map((s) => s.step),
           describeCompletion: note,
         };
         if (existingId) {
@@ -129,8 +129,10 @@ export class ExtractProductsFromPnpHandler
         }
       } else if (row.story) {
         const props = {
+          produces: storyIds[row.placeholder ? 'Unknown' : row.story]!,
+          placeholderDescription: row.placeholder ? row.story : null,
           methodology,
-          steps,
+          steps: steps.map((s) => s.step),
           scriptureReferencesOverride: row.scripture,
           composite: row.composite,
           describeCompletion: note,
@@ -146,7 +148,6 @@ export class ExtractProductsFromPnpHandler
             engagementId: engagement.id,
             progressStepMeasurement: ProgressMeasurement.Percent,
             ...props,
-            produces: storyIds[row.story],
             createdAt: createdAt.plus({ milliseconds: index }),
           };
           await this.products.create(create, event.session);
@@ -246,8 +247,13 @@ export class ExtractProductsFromPnpHandler
     rows: readonly ExtractedRow[],
     session: Session
   ) {
-    const names = uniq(rows.flatMap((row) => row.story ?? []));
-    if (names.length === 0) {
+    const names = uniq([
+      'Unknown',
+      ...rows.flatMap((row) =>
+        row.story && !row.placeholder ? row.story : []
+      ),
+    ]);
+    if (names.length === 1) {
       return {};
     }
     const existingList = await this.repo.getProducibleIdsByNames(
