@@ -16,6 +16,7 @@ import {
   ServerException,
   Session,
   simpleSwitch,
+  transformLanguagePayloadToDto,
   UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
@@ -43,48 +44,11 @@ import {
   LanguageListOutput,
   TablesLanguage,
   TablesLanguages,
+  TablesReadLanguage,
   UpdateLanguage,
 } from './dto';
 import { EthnologueLanguageService } from './ethnologue-language';
 import { LanguageRepository } from './language.repository';
-
-function transformTablesToCord(
-  tablesLang: TablesLanguage
-): UnsecuredDto<Language> {
-  // fill in this stuff with a readOne from CordTables API later...
-  // probably just make a call to cord tables here and map it to EthnologueLang.
-  const eth: UnsecuredDto<EthnologueLanguage> = {
-    id: 'id' as ID,
-    code: 'string',
-    provisionalCode: 'lkj',
-    name: 'lkj',
-    population: 1234,
-    sensitivity: undefined,
-    // sensitivity: "High",
-  };
-  return {
-    name: tablesLang.name,
-    id: tablesLang.neo4j_id as ID,
-    populationOverride: tablesLang.population_override,
-    registryOfDialectsCode: tablesLang.registry_of_dialects_code,
-    leastOfThese: tablesLang.least_of_these,
-    signLanguageCode: tablesLang.sign_language_code,
-    sponsorEstimatedEndDate: tablesLang.sponsor_estimated_end_date,
-    hasExternalFirstScripture: tablesLang.has_external_first_scripture,
-    sensitivity: tablesLang.sensitivity,
-    ethnologue: eth,
-    displayName: tablesLang.display_name,
-    displayNamePronunciation: tablesLang.display_name_pronunciation,
-    tags: tablesLang.tags,
-    presetInventory: tablesLang.preset_inventory,
-    isDialect: tablesLang.is_dialect,
-    isSignLanguage: tablesLang.is_sign_language,
-    leastOfTheseReason: tablesLang.least_of_these_reason,
-    createdAt: tablesLang.created_at,
-    effectiveSensitivity: Sensitivity.High, //todo
-    pinned: false, //todo
-  };
-}
 
 @Injectable()
 export class LanguageService {
@@ -157,23 +121,34 @@ export class LanguageService {
     session: Session,
     view?: ObjectView
   ): Promise<Language> {
-    const dto = await this.repo.readOne(langId, session, view);
-    return await this.secure(dto, session);
+    //const dto = await this.repo.readOne(langId, session, view);
+    // return await this.secure(dto, session);
+    return await this.getLanguage(langId, session);
   }
 
   async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
     const languages = await this.repo.readMany(ids, session, view);
-    return await Promise.all(languages.map((dto) => this.secure(dto, session)));
+    // return await Promise.all(languages.map((dto) => this.secure(dto, session)));
+    return await Promise.all(
+      ids.map(async (id) => {
+        return await this.getLanguage(id, session);
+      })
+    );
   }
   async getLanguage(langId: ID, session: Session): Promise<Language> {
     const response = await getFromCordTables('sc-languages/read', {
       id: langId,
     });
     const language = response.body;
+    // console.log(response)
+    // console.log("\n\n\n\n\n")
+    // console.log(language)
 
-    const iLanguage: TablesLanguage = JSON.parse(language);
+    const iLanguage: TablesReadLanguage = JSON.parse(language);
 
-    const dto: UnsecuredDto<Language> = transformTablesToCord(iLanguage);
+    const dto: UnsecuredDto<Language> = transformLanguagePayloadToDto(
+      iLanguage.language
+    );
     return await this.secure(dto, session);
   }
 
@@ -279,20 +254,13 @@ export class LanguageService {
   }
 
   async getLanguages(session: Session): Promise<LanguageListOutput> {
-    const response = await got.post('http://localhost:8080/sc-languages/list', {
-      json: {
-        token:
-          '6SXkazOrHP1irRpkFEQXPSERDrJK4op0F2OWM2xqgyb56LddmwLGim6ktqIoFXIF',
-        responseType: 'json',
-      },
-    });
+    const response = await getFromCordTables('sc-languages/list');
     const languages = response.body;
-
     const iLanguages: TablesLanguages = JSON.parse(languages);
 
     const langArray: Array<UnsecuredDto<Language>> = iLanguages.languages.map(
       (lang) => {
-        return transformTablesToCord(lang);
+        return transformLanguagePayloadToDto(lang);
       }
     );
 
