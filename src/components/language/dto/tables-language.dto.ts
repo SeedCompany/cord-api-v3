@@ -1,15 +1,22 @@
+import { internal } from 'neo4j-driver-core';
 import { EthnologueLanguage } from '.';
 import { CalendarDate, Sensitivity, ID, UnsecuredDto } from '../../../common';
 
 export interface TablesLanguages {
   languages: TablesLanguage[];
 }
+
+export interface TablesReadLanguage {
+  language: TablesLanguage;
+}
+
 export interface TablesLanguage {
   name: string;
-  neo4j_id: string;
+  id: string;
   ethnologue: TablesEthnologueLanguage;
   display_name: string;
   display_name_pronunciation: string;
+  first_scripture_engagement: string;
   tags: string[];
   preset_inventory: boolean;
   is_dialect: boolean;
