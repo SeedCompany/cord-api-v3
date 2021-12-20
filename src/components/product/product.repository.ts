@@ -317,6 +317,7 @@ export class ProductRepository extends CommonRepository {
       canDelete: true,
       progressTarget: input.progressTarget,
       progressStepMeasurement: input.progressStepMeasurement,
+      placeholderDescription: input.placeholderDescription,
     };
 
     const query = this.db
