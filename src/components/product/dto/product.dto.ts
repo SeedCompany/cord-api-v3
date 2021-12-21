@@ -8,6 +8,7 @@ import {
   ID,
   SecuredBoolean,
   SecuredFloat,
+  SecuredIntNullable,
   SecuredProps,
   SecuredString,
   SecuredStringNullable,
@@ -137,6 +138,8 @@ export class DirectScriptureProduct extends Product {
     `,
   })
   totalVerseEquivalents: number;
+
+  readonly pnpIndex: SecuredIntNullable;
 }
 
 @ObjectType({

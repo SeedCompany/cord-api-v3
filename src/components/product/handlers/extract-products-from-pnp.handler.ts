@@ -123,6 +123,7 @@ export class ExtractProductsFromPnpHandler
             // Attempt to order products in the same order as specified in the PnP
             // The default sort prop is createdAt.
             // This doesn't account for row changes in subsequent PnP uploads
+            pnpIndex: index,
             createdAt: createdAt.plus({ milliseconds: index }),
           };
           await this.products.create(create, event.session);
@@ -149,6 +150,7 @@ export class ExtractProductsFromPnpHandler
             progressStepMeasurement: ProgressMeasurement.Percent,
             ...props,
             createdAt: createdAt.plus({ milliseconds: index }),
+            pnpIndex: index,
           };
           await this.products.create(create, event.session);
         }
@@ -172,15 +174,16 @@ export class ExtractProductsFromPnpHandler
           this.logger
         )
       : {};
+
     const storyProducts = rows[0].story
-      ? await this.products.loadProductIdsForStories(engagement.id, this.logger)
+      ? await this.products.loadProductIdsForPnpStories(engagement.id)
       : {};
 
     if (rows[0].story) {
       return rows.flatMap((row, index) => {
         if (!row.story) return [];
-        if (row.story in storyProducts) {
-          return { ...row, index, existingId: storyProducts[row.story]! };
+        if (index in storyProducts) {
+          return { ...row, index, existingId: storyProducts[index]! };
         }
         return { ...row, index, existingId: undefined };
       });

@@ -736,6 +736,20 @@ export class ProductService {
     return productIds;
   }
 
+  async loadProductIdsForPnpStories(engagementId: ID) {
+    const productRefs = await this.repo.listIdsWithPnpIndexes(engagementId);
+
+    const productIds: {
+      [PnpIndex in number]?: ID;
+    } = {};
+
+    for (const { id, pnpIndex } of productRefs) {
+      productIds[pnpIndex] = id;
+    }
+
+    return productIds;
+  }
+
   protected getMethodologiesByApproach(
     approach: ProductApproach
   ): ProductMethodology[] {

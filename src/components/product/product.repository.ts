@@ -126,6 +126,21 @@ export class ProductRepository extends CommonRepository {
       .run();
   }
 
+  async listIdsWithPnpIndexes(engagementId: ID) {
+    return await this.db
+      .query()
+      .match([
+        node('engagement', 'Engagement', { id: engagementId }),
+        relation('out', '', 'product', ACTIVE),
+        node('node', 'DerivativeScriptureProduct'),
+      ])
+      .return<{ id: ID; pnpIndex: number }>([
+        'node.id as id',
+        'node.pnpIndex as pnpIndex',
+      ])
+      .run();
+  }
+
   async getProducibleIdsByNames(
     names: readonly string[],
     type?: ProducibleType
@@ -251,6 +266,7 @@ export class ProductRepository extends CommonRepository {
         await createNode(Product, {
           initialProps,
           baseNodeProps: {
+            pnpIndex: input.pnpIndex,
             createdAt: input.createdAt,
           },
         })
