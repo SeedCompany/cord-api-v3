@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { memoize } from 'lodash';
 import { CellObject, read, WorkBook, WorkSheet } from 'xlsx';
 import { CalendarDate, fiscalQuarter, fiscalYear } from '../../common';
-import { cellAsNumber } from '../../common/xlsx.util';
+import { cellAsNumber, cellAsString } from '../../common/xlsx.util';
 import { ILogger, Logger } from '../../core';
 import { Downloadable, FileNode } from '../file';
 import { ProgressSummary as Progress } from './dto';
@@ -23,7 +23,9 @@ export class ProgressSummaryExtractor {
       return null;
     }
 
-    const yearRow = findFiscalYearRow(sheet, fiscalYear(date));
+    const isOBS = cellAsString(sheet.P19) === 'Stories';
+
+    const yearRow = findFiscalYearRow(sheet, fiscalYear(date), isOBS);
     if (!yearRow) {
       this.logger.warning('Unable to find fiscal year in pnp file', {
         name: file.name,
@@ -78,8 +80,12 @@ export class ProgressSummaryExtractor {
   }
 }
 
-const findFiscalYearRow = (sheet: WorkSheet, fiscalYear: number) => {
-  let i = 20;
+const findFiscalYearRow = (
+  sheet: WorkSheet,
+  fiscalYear: number,
+  isOBS: boolean
+) => {
+  let i = isOBS ? 28 : 20;
   // eslint-disable-next-line no-constant-condition
   while (true) {
     const cell: CellObject = sheet[`AG${i}`];
