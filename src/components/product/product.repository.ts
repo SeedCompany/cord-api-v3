@@ -100,10 +100,12 @@ export class ProductRepository extends CommonRepository {
       )
       .return<{
         id: ID;
+        pnpIndex: number;
         scriptureRanges: ReadonlyArray<Range<number>>;
         unspecifiedScripture: UnspecifiedScripturePortion | null;
       }>([
         'node.id as id',
+        'node.pnpIndex as pnpIndex',
         'scriptureRanges',
         'unspecifiedScripture { .book, .totalVerses } as unspecifiedScripture',
       ])

@@ -111,15 +111,15 @@ export class ExtractProductsFromPnpHandler
         };
         if (existingId) {
           const updates: UpdateDirectScriptureProduct = {
-            id: existingId,
             ...props,
+            id: existingId,
           };
           await this.products.updateDirect(updates, event.session);
         } else {
           const create: CreateDirectScriptureProduct = {
+            ...props,
             engagementId: engagement.id,
             progressStepMeasurement: ProgressMeasurement.Percent,
-            ...props,
             // Attempt to order products in the same order as specified in the PnP
             // The default sort prop is createdAt.
             // This doesn't account for row changes in subsequent PnP uploads
@@ -146,9 +146,9 @@ export class ExtractProductsFromPnpHandler
           await this.products.updateDerivative(updates, event.session);
         } else {
           const create: CreateDerivativeScriptureProduct = {
+            ...props,
             engagementId: engagement.id,
             progressStepMeasurement: ProgressMeasurement.Percent,
-            ...props,
             createdAt: createdAt.plus({ milliseconds: index }),
             pnpIndex: index,
           };
@@ -169,10 +169,7 @@ export class ExtractProductsFromPnpHandler
     // Given that we have products to potentially create, load the existing ones
     // and map them to a book and total verse count.
     const scriptureProducts = rows[0].bookName
-      ? await this.products.loadProductIdsForBookAndVerse(
-          engagement.id,
-          this.logger
-        )
+      ? await this.products.loadProductIdsForPnpBookAndVerse(engagement.id)
       : {};
 
     const storyProducts = rows[0].story
@@ -194,10 +191,10 @@ export class ExtractProductsFromPnpHandler
         rows.map((row, index) => ({ ...row, index })), // save original indexes
         (row) => row.bookName // group by book name
       )
-    ).flatMap((rowsOfBook) => {
+    ).flatMap((rowsOfBook, index) => {
       const bookName = rowsOfBook[0].bookName;
       if (!bookName) return [];
-      const existing = scriptureProducts[bookName] ?? new Map<number, ID>();
+      const existing = scriptureProducts[index] ?? new Map<number, ID>();
 
       const matches: Array<
         ExtractedRow & { index: number; existingId: ID | undefined }

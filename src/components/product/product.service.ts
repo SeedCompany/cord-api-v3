@@ -707,6 +707,54 @@ export class ProductService {
     return productIds;
   }
 
+  async loadProductIdsForPnpBookAndVerse(
+    engagementId: ID,
+    logger: ILogger = this.logger
+  ) {
+    const productRefs = await this.repo.listIdsAndScriptureRefs(engagementId);
+
+    const productIds: {
+      [PnpIndex in number]?: Map<number, ID>;
+    } = {};
+
+    for (const productRef of productRefs) {
+      const refs = productRef.scriptureRanges.map((raw) =>
+        ScriptureRange.fromIds(raw)
+      );
+      const books = uniq([
+        ...refs.flatMap((ref) => [ref.start.book, ref.end.book]),
+        ...(productRef.unspecifiedScripture
+          ? [productRef.unspecifiedScripture.book]
+          : []),
+      ]);
+      const totalVerses =
+        productRef.unspecifiedScripture?.totalVerses ??
+        sumBy(productRef.scriptureRanges, (raw) => raw.end - raw.start + 1);
+
+      const warn = (msg: string) =>
+        logger.warning(`${msg} and is therefore ignored`, {
+          product: productRef.id,
+        });
+
+      if (books.length === 0) {
+        warn('Product has not defined any scripture ranges');
+        continue;
+      }
+      if (books.length > 1) {
+        warn('Product scripture range spans multiple books');
+        continue;
+      }
+      const pnpIndex = productRef.pnpIndex;
+
+      (productIds[pnpIndex] ?? (productIds[pnpIndex] = new Map())).set(
+        totalVerses,
+        productRef.id
+      );
+    }
+
+    return productIds;
+  }
+
   async loadProductIdsForStories(
     engagementId: ID,
     logger: ILogger = this.logger
