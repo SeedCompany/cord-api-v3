@@ -131,7 +131,9 @@ export class ExtractProductsFromPnpHandler
       } else if (row.story) {
         const props = {
           produces: storyIds[row.placeholder ? 'Unknown' : row.story]!,
-          placeholderDescription: row.placeholder ? row.story : null,
+          placeholderDescription: row.placeholder
+            ? `#${row.order} ${row.story}`
+            : null,
           methodology,
           steps: steps.map((s) => s.step),
           scriptureReferencesOverride: row.scripture,
