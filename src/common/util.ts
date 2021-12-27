@@ -49,7 +49,7 @@ export const keys: <K extends string>(o: Record<K, unknown>) => K[] =
 
 export const iterate = <T>(
   iterator: Iterable<T> | IterableIterator<T>
-): T[] => {
+): readonly T[] => {
   const res: T[] = [];
   for (const item of iterator) {
     res.push(item);
