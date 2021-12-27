@@ -45,10 +45,10 @@ export abstract class CreateBaseProduct {
   readonly describeCompletion?: string;
 
   @Field(() => ProgressMeasurement, {
+    nullable: true,
     description: 'How will progress for each step be measured?',
   })
-  readonly progressStepMeasurement?: ProgressMeasurement =
-    ProgressMeasurement.Percent;
+  readonly progressStepMeasurement?: ProgressMeasurement;
 
   @Field(() => Float, {
     nullable: true,
