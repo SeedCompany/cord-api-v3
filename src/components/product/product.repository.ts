@@ -318,7 +318,8 @@ export class ProductRepository extends CommonRepository {
       description: input.description,
       canDelete: true,
       progressTarget: input.progressTarget,
-      progressStepMeasurement: input.progressStepMeasurement,
+      progressStepMeasurement:
+        input.progressStepMeasurement ?? ProgressMeasurement.Percent,
       placeholderDescription: input.placeholderDescription,
     };
 
