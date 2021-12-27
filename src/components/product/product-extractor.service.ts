@@ -60,15 +60,17 @@ export class ProductExtractor {
       availableSteps
     );
     const noteFallback = isOBS ? undefined : cellAsString(sheet.AI16);
+    const startingRow = 23;
 
-    const productRows = findProductRows(sheet, isOBS)
+    const productRows = findProductRows(sheet, isOBS, startingRow)
       .map(
         parseProductRow(
           sheet,
           isOBS,
           expandToFullFiscalYears(interval),
           stepColumns,
-          noteFallback
+          noteFallback,
+          startingRow
         )
       )
       .filter((row) => row.steps.length > 0);
@@ -89,10 +91,14 @@ export class ProductExtractor {
   }
 }
 
-function findProductRows(sheet: WorkSheet, isOBS: boolean) {
+function findProductRows(
+  sheet: WorkSheet,
+  isOBS: boolean,
+  startingRow: number
+) {
   const lastRow = sheetRange(sheet)?.e.r ?? 200;
   const matchedRows = [];
-  let row = 23;
+  let row = startingRow;
   while (
     row < lastRow &&
     cellAsString(sheet[`Q${row}`]) !== 'Other Goals and Milestones'
@@ -167,9 +173,10 @@ const parseProductRow =
     isOBS: boolean,
     projectRange: DateInterval,
     stepColumns: Record<Step, string>,
-    noteFallback?: string
+    noteFallback: string | undefined,
+    startingRow: number
   ) =>
-  (row: number): ExtractedRow => {
+  (row: number, index: number): ExtractedRow => {
     const steps = entries(stepColumns).flatMap(([step, column]) => {
       const fiscalYear = cellAsNumber(sheet[`${column}${row}`]);
       const fullFY = fiscalYear ? fullFiscalYear(fiscalYear) : undefined;
@@ -181,6 +188,13 @@ const parseProductRow =
     });
     const note =
       cellAsString(sheet[`${isOBS ? 'Y' : 'AI'}${row}`]) ?? noteFallback;
+
+    const common = {
+      rowIndex: row - startingRow + 1,
+      order: index + 1,
+      steps,
+      note,
+    };
 
     if (isOBS) {
       const story = cellAsString(sheet[`Q${row}`])!; // Asserting bc loop verified this
@@ -198,20 +212,18 @@ const parseProductRow =
       })();
       const totalVerses = cellAsNumber(sheet[`T${row}`]);
       return {
+        ...common,
         story,
         scripture,
         totalVerses,
         composite: cellAsString(sheet[`S${row}`])?.toUpperCase() === 'Y',
         placeholder: scripture.length === 0 && !totalVerses,
-        steps,
-        note,
       };
     }
     return {
+      ...common,
       bookName: cellAsString(sheet[`Q${row}`])!, // Asserting bc loop verified this
       totalVerses: cellAsNumber(sheet[`T${row}`])!, // Asserting bc loop verified this
-      steps,
-      note,
     };
   };
 
@@ -228,6 +240,17 @@ export type ExtractedRow = MergeExclusive<
     totalVerses: number;
   }
 > & {
+  /**
+   * 1-indexed row for the order of the goal.
+   * This will not have jumps in numbers, blank rows are ignored.
+   */
+  order: number;
+  /**
+   * 1-indexed row number with the starting row normalized out.
+   * This could have jumps in numbers because blank rows are accounted for here.
+   * If those rows are filled in later the previously defined rows will be unaffected.
+   */
+  rowIndex: number;
   steps: ReadonlyArray<{ step: Step; plannedCompleteDate: CalendarDate }>;
   note: string | undefined;
 };
