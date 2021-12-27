@@ -358,7 +358,7 @@ export const ConsultantOnProject = new DbRole({
       canList: true,
       properties: [
         { propertyName: 'estimatedSubmission', permission: { read, }, },
-        { propertyName: 'step', permission: { read, }, },
+        { propertyName: 'step', permission: { read, write, }, },
         { propertyName: 'name', permission: { read, }, },
         { propertyName: 'status', permission: { read, }, },
         { propertyName: 'departmentId', permission: { }, },
