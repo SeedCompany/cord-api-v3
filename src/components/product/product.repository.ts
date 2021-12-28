@@ -1,5 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, Query, relation } from 'cypher-query-builder';
+import {
+  inArray,
+  isNull,
+  node,
+  not,
+  Query,
+  relation,
+} from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { Except, Merge } from 'type-fest';
 import {
@@ -100,7 +107,7 @@ export class ProductRepository extends CommonRepository {
       )
       .return<{
         id: ID;
-        pnpIndex: number;
+        pnpIndex?: number;
         scriptureRanges: ReadonlyArray<Range<number>>;
         unspecifiedScripture: UnspecifiedScripturePortion | null;
       }>([
@@ -112,30 +119,15 @@ export class ProductRepository extends CommonRepository {
       .run();
   }
 
-  async listIdsWithProducibleNames(engagementId: ID, type?: ProducibleType) {
-    return await this.db
-      .query()
-      .match([
-        node('engagement', 'Engagement', { id: engagementId }),
-        relation('out', '', 'product', ACTIVE),
-        node('node', 'DerivativeScriptureProduct'),
-        relation('out', '', 'produces', ACTIVE),
-        node('', ['Producible', ...(type ? [type] : [])]),
-        relation('out', '', 'name', ACTIVE),
-        node('name', 'Property'),
-      ])
-      .return<{ id: ID; name: string }>(['node.id as id', 'name.value as name'])
-      .run();
-  }
-
   async listIdsWithPnpIndexes(engagementId: ID) {
     return await this.db
       .query()
       .match([
         node('engagement', 'Engagement', { id: engagementId }),
         relation('out', '', 'product', ACTIVE),
-        node('node', 'DerivativeScriptureProduct'),
+        node('node', 'Product'),
       ])
+      .where({ 'node.pnpIndex': not(isNull()) })
       .return<{ id: ID; pnpIndex: number }>([
         'node.id as id',
         'node.pnpIndex as pnpIndex',

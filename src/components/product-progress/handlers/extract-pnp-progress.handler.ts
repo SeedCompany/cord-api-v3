@@ -27,22 +27,14 @@ export class ExtractPnpProgressHandler {
 
     // Fetch products for report mapped to a book/story name
     const engagementId = event.report.parent.properties.id;
-    const storyProducts = progressRows[0].story
-      ? await this.products.loadProductIdsForStories(engagementId, this.logger)
-      : {};
-    const scriptureProducts = progressRows[0].bookName
-      ? await this.products.loadProductIdsForBookAndVerse(
-          engagementId,
-          this.logger
-        )
-      : {};
+    const productIds = await this.products.loadProductIdsByPnpIndex(
+      engagementId
+    );
 
     // Convert row to product ID
     const updates = progressRows.flatMap((row) => {
       const { steps, ...rest } = row;
-      const productId = row.bookName
-        ? scriptureProducts[row.bookName]?.get(row.totalVerses)
-        : storyProducts[row.story!];
+      const productId = productIds[row.rowIndex];
       if (productId) {
         return { productId, steps };
       }

@@ -4,6 +4,7 @@ import {
   has,
   ID,
   InputException,
+  mapFromList,
   NotFoundException,
   ObjectView,
   ServerException,
@@ -657,12 +658,7 @@ export class ProductService {
     logger: ILogger = this.logger
   ) {
     const productRefs = await this.repo.listIdsAndScriptureRefs(engagementId);
-
-    const productIds: {
-      [Book in string]?: Map<number, ID>;
-    } = {};
-
-    for (const productRef of productRefs) {
+    return productRefs.flatMap((productRef) => {
       const refs = productRef.scriptureRanges.map((raw) =>
         ScriptureRange.fromIds(raw)
       );
@@ -683,119 +679,26 @@ export class ProductService {
 
       if (books.length === 0) {
         warn('Product has not defined any scripture ranges');
-        continue;
+        return [];
       }
       if (books.length > 1) {
         warn('Product scripture range spans multiple books');
-        continue;
+        return [];
       }
       const book: string = books[0];
 
-      if (productIds[book]?.has(totalVerses)) {
-        warn(
-          'Product references a book & verse count that has already been assigned to another product'
-        );
-        continue;
-      }
-
-      (productIds[book] ?? (productIds[book] = new Map())).set(
+      return {
+        id: productRef.id,
+        pnpIndex: productRef.pnpIndex,
+        book,
         totalVerses,
-        productRef.id
-      );
-    }
-
-    return productIds;
+      };
+    });
   }
 
-  async loadProductIdsForPnpBookAndVerse(
-    engagementId: ID,
-    logger: ILogger = this.logger
-  ) {
-    const productRefs = await this.repo.listIdsAndScriptureRefs(engagementId);
-
-    const productIds: {
-      [PnpIndex in number]?: Map<number, ID>;
-    } = {};
-
-    for (const productRef of productRefs) {
-      const refs = productRef.scriptureRanges.map((raw) =>
-        ScriptureRange.fromIds(raw)
-      );
-      const books = uniq([
-        ...refs.flatMap((ref) => [ref.start.book, ref.end.book]),
-        ...(productRef.unspecifiedScripture
-          ? [productRef.unspecifiedScripture.book]
-          : []),
-      ]);
-      const totalVerses =
-        productRef.unspecifiedScripture?.totalVerses ??
-        sumBy(productRef.scriptureRanges, (raw) => raw.end - raw.start + 1);
-
-      const warn = (msg: string) =>
-        logger.warning(`${msg} and is therefore ignored`, {
-          product: productRef.id,
-        });
-
-      if (books.length === 0) {
-        warn('Product has not defined any scripture ranges');
-        continue;
-      }
-      if (books.length > 1) {
-        warn('Product scripture range spans multiple books');
-        continue;
-      }
-      const pnpIndex = productRef.pnpIndex;
-
-      (productIds[pnpIndex] ?? (productIds[pnpIndex] = new Map())).set(
-        totalVerses,
-        productRef.id
-      );
-    }
-
-    return productIds;
-  }
-
-  async loadProductIdsForStories(
-    engagementId: ID,
-    logger: ILogger = this.logger
-  ) {
-    const productRefs = await this.repo.listIdsWithProducibleNames(
-      engagementId
-    );
-
-    const productIds: {
-      [StoryName in string]?: ID;
-    } = {};
-
-    for (const { id, name } of productRefs) {
-      if (productIds[name]) {
-        logger.warning(
-          `Product references a producible name that has already been assigned to another product and is therefore ignored`,
-          {
-            product: id,
-          }
-        );
-        continue;
-      }
-
-      productIds[name] = id;
-    }
-
-    return productIds;
-  }
-
-  async loadProductIdsForPnpStories(engagementId: ID) {
+  async loadProductIdsByPnpIndex(engagementId: ID) {
     const productRefs = await this.repo.listIdsWithPnpIndexes(engagementId);
-
-    const productIds: {
-      [PnpIndex in number]?: ID;
-    } = {};
-
-    for (const { id, pnpIndex } of productRefs) {
-      productIds[pnpIndex] = id;
-    }
-
-    return productIds;
+    return mapFromList(productRefs, (ref) => [ref.pnpIndex, ref.id]);
   }
 
   protected getMethodologiesByApproach(
