@@ -250,11 +250,20 @@ export class LanguageService {
     //   : await this.authorizationService.getListRoleSensitivityMapping(Language);
     // const results = await this.repo.list(input, session, limited);
     // return await mapListResults(results, (dto) => this.secure(dto, session));
-    return await this.getLanguages(session);
+    return await this.getLanguages(session, input);
   }
 
-  async getLanguages(session: Session): Promise<LanguageListOutput> {
-    const response = await getFromCordTables('sc-languages/list');
+  async getLanguages(
+    session: Session,
+    input: LanguageListInput
+  ): Promise<LanguageListOutput> {
+    const response = await getFromCordTables('sc-languages/list', {
+      sort: input.sort,
+      order: input.order,
+      page: input.page,
+      resultsPerPage: input.count,
+      filter: { ...input.filter },
+    });
     const languages = response.body;
     const iLanguages: TablesLanguages = JSON.parse(languages);
 
@@ -264,10 +273,11 @@ export class LanguageService {
       }
     );
 
+    const totalLoaded = input.count * (input.page - 1) + langArray.length;
     const langList: PaginatedListType<UnsecuredDto<Language>> = {
       items: langArray,
-      total: langArray.length,
-      hasMore: false, //not sure about how to handle the pagination.... will be handled by cordtables later I think.
+      total: totalLoaded, // ui is wanting the total loaded, not total for this 'load' that has been loaded.
+      hasMore: totalLoaded < iLanguages.size,
     };
 
     return await mapListResults(langList, (dto) => this.secure(dto, session));
