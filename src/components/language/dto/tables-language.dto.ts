@@ -3,6 +3,7 @@ import { EthnologueLanguage } from '.';
 import { CalendarDate, Sensitivity, ID, UnsecuredDto } from '../../../common';
 
 export interface TablesLanguages {
+  size: number;
   languages: TablesLanguage[];
 }
 
