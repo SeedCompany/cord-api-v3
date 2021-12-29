@@ -41,6 +41,11 @@ describe('parseScripture', () => {
       ['Genesis', 6, 1, 'Genesis', 8, 22],
       ['Genesis', 9, 3, 'Genesis', 9, 3],
     ],
+    [
+      'Genesis 9:18-28; 19  :  31  -  38',
+      ['Genesis', 9, 18, 'Genesis', 9, 28],
+      ['Genesis', 19, 31, 'Genesis', 19, 38],
+    ],
 
     [''],
     [' '],
