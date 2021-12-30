@@ -22,7 +22,7 @@ export const parseScripture = (
   const rawRefs = compact(
     input
       .replace(/ and /gi, ' , ')
-      .split(',')
+      .split(/[,;]/)
       .map((p) => p.trim())
   );
 
@@ -77,8 +77,8 @@ const parseRange = (input: string, fallbackBook?: string) => {
 
 const lexRange = (input: string) => {
   const [startRaw, endRaw] = input.split(/[-–]/);
-  const start = lexRef(startRaw.trim());
-  const end = lexRef(endRaw?.trim() ?? '');
+  const start = lexRef(startRaw);
+  const end = lexRef(endRaw ?? '');
   // Handle special case of `1:1-3` where 3 should be the end verse not the end chapter
   if (start.verse && end.chapter && !end.verse) {
     end.verse = end.chapter;
@@ -88,11 +88,9 @@ const lexRange = (input: string) => {
 };
 
 const lexRef = (str: string) => {
-  const matches = /^(\d?[ A-Za-z]+)?\s?([\d:]*)$/.exec(str);
+  const matches = /^(\d?[ A-Za-z]+)?(\d*)(?:\s*:\s*(\d+))?$/.exec(str.trim());
   const book = matches?.[1]?.trim() || undefined;
-  const [chapter, verse] =
-    matches?.[2]
-      ?.split(':')
-      .map((num) => (num ? parseInt(num, 10) : undefined)) ?? [];
+  const chapter = parseInt(matches?.[2] ?? '', 10) || undefined;
+  const verse = parseInt(matches?.[3] ?? '', 10) || undefined;
   return { book, chapter, verse };
 };
