@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import levenshtein from 'js-levenshtein-esm';
-import { range, sortBy, startCase, without } from 'lodash';
+import { sortBy, startCase, without } from 'lodash';
 import { MergeExclusive } from 'type-fest';
-import { read, utils, WorkSheet } from 'xlsx';
 import {
   CalendarDate,
   DateInterval,
@@ -10,17 +9,15 @@ import {
   expandToFullFiscalYears,
   fullFiscalYear,
 } from '../../common';
-import {
-  cellAsDate,
-  cellAsNumber,
-  cellAsString,
-  sheetRange,
-} from '../../common/xlsx.util';
+import { Column, Range, Row, WorkBook } from '../../common/xlsx.util';
 import { Downloadable } from '../file';
 import { ScriptureRange } from '../scripture';
 import { Book } from '../scripture/books';
 import { parseScripture } from '../scripture/parser';
 import { ProductStep as Step } from './dto';
+import 'ix/add/iterable-operators/filter';
+import 'ix/add/iterable-operators/map';
+import 'ix/add/iterable-operators/toarray';
 
 @Injectable()
 export class ProductExtractor {
@@ -29,34 +26,31 @@ export class ProductExtractor {
     availableSteps: readonly Step[]
   ): Promise<readonly ExtractedRow[]> {
     const buffer = await file.download();
-    const pnp = read(buffer, { type: 'buffer', cellDates: true });
+    const pnp = WorkBook.fromBuffer(buffer);
 
-    const sheet = pnp.Sheets.Planning;
-    if (!sheet) {
-      throw new Error('Unable to find planning sheet');
-    }
+    const sheet = pnp.sheet('Planning');
 
-    const isOBS = cellAsString(sheet.P19) === 'Stories';
+    const isOBS = sheet.cell('P19').asString === 'Stories';
 
-    const interval = isOBS
-      ? DateInterval.tryFrom(cellAsDate(sheet.X16), cellAsDate(sheet.X17))
-      : DateInterval.tryFrom(cellAsDate(sheet.Z14), cellAsDate(sheet.Z15));
+    const dates = sheet.range(
+      sheet.cell(isOBS ? 'X16' : 'Z14'),
+      sheet.cell(isOBS ? 'X17' : 'Z15')
+    );
+    const interval = DateInterval.tryFrom(dates.start.asDate, dates.end.asDate);
     if (!interval) {
       throw new Error('Unable to find project date range');
     }
 
     const stepColumns = findStepColumns(
-      sheet,
-      isOBS ? 'U20:X20' : 'U18:Z18',
+      sheet.range(isOBS ? 'U20:X20' : 'U18:Z18'),
       availableSteps
     );
-    const noteFallback = isOBS ? undefined : cellAsString(sheet.AI16);
-    const startingRow = 23;
+    const noteFallback = isOBS ? undefined : sheet.cell('AI16').asString;
+    const startingRow = sheet.row(23);
 
-    const productRows = findProductRows(sheet, isOBS, startingRow)
+    const productRows = findProductRows(startingRow, isOBS)
       .map(
         parseProductRow(
-          sheet,
           isOBS,
           expandToFullFiscalYears(interval),
           stepColumns,
@@ -64,50 +58,46 @@ export class ProductExtractor {
           startingRow
         )
       )
-      .filter((row) => row.steps.length > 0);
+      .filter((goal) => goal.steps.length > 0);
 
     // Ignoring for now because not sure how to track progress
     const _otherRows = isOBS
-      ? range(17, 20 + 1)
-          .map((row) => ({
-            title: `Train ${
-              cellAsString(sheet[`Y${row}`])?.replace(/:$/, '') ?? ''
-            }`,
-            count: cellAsNumber(sheet[`AA${row}`]) ?? 0,
+      ? sheet
+          .range('Y17:AA20')
+          .walkDown()
+          .map((cell) => ({
+            title: `Train ${cell.asString?.replace(/:$/, '') ?? ''}`,
+            count: cell.row.cell('AA').asNumber ?? 0,
           }))
-          .filter((row) => row.count > 0)
+          .filter((goal) => goal.count > 0)
       : [];
 
     return productRows;
   }
 }
 
-function findProductRows(
-  sheet: WorkSheet,
-  isOBS: boolean,
-  startingRow: number
-) {
-  const lastRow = sheetRange(sheet)?.e.r ?? 200;
+function findProductRows(startingRow: Row, isOBS: boolean) {
+  const lastRow = startingRow.sheet.sheetRange.end.row;
   const matchedRows = [];
   let row = startingRow;
   while (
     row < lastRow &&
-    cellAsString(sheet[`Q${row}`]) !== 'Other Goals and Milestones'
+    row.cell('Q').asString !== 'Other Goals and Milestones'
   ) {
-    if (isProductRow(sheet, isOBS, row)) {
+    if (isProductRow(row, isOBS)) {
       matchedRows.push(row);
     }
-    row++;
+    row = row.next();
   }
   return matchedRows;
 }
 
-const isProductRow = (sheet: WorkSheet, isOBS: boolean, row: number) => {
+const isProductRow = (row: Row, isOBS: boolean) => {
   if (isOBS) {
-    return !!cellAsString(sheet[`Q${row}`]);
+    return !!row.cell('Q').asString;
   }
-  const book = Book.tryFind(cellAsString(sheet[`Q${row}`]));
-  const totalVerses = cellAsNumber(sheet[`T${row}`]) ?? 0;
+  const book = Book.tryFind(row.cell('Q').asString);
+  const totalVerses = row.cell('T').asNumber ?? 0;
   return book && totalVerses > 0 && totalVerses <= book.totalVerses;
 };
 
@@ -115,20 +105,16 @@ const isProductRow = (sheet: WorkSheet, isOBS: boolean, row: number) => {
  * Fuzzy match available steps to their column address.
  */
 export function findStepColumns(
-  sheet: WorkSheet,
-  fromRange: string,
+  fromRange: Range,
   availableSteps: readonly Step[] = Object.values(Step)
 ) {
-  const matchedColumns: Partial<Record<Step, string>> = {};
+  const matchedColumns: Partial<Record<Step, Column>> = {};
   let remainingSteps = availableSteps;
-  const selection = utils.decode_range(fromRange);
-  const possibleSteps = range(selection.s.c, selection.e.c + 1).flatMap(
-    (column) => {
-      const cellRef = utils.encode_cell({ r: selection.s.r, c: column });
-      const label = cellAsString(sheet[cellRef]);
-      return label ? { label, column: utils.encode_col(column) } : [];
-    }
-  );
+  const possibleSteps = fromRange
+    .walkRight()
+    .filter((cell) => !!cell.asString)
+    .map((cell) => ({ label: cell.asString!, column: cell.column }))
+    .toArray();
   possibleSteps.forEach(({ label, column }, index) => {
     if (index === possibleSteps.length - 1) {
       // The last step should always be called Completed in CORD per Seth.
@@ -155,21 +141,20 @@ export function findStepColumns(
 
     remainingSteps = without(remainingSteps, chosen);
   });
-  return matchedColumns as Record<Step, string>;
+  return matchedColumns as Record<Step, Column>;
 }
 
 const parseProductRow =
   (
-    sheet: WorkSheet,
     isOBS: boolean,
     projectRange: DateInterval,
-    stepColumns: Record<Step, string>,
+    stepColumns: Record<Step, Column>,
     noteFallback: string | undefined,
-    startingRow: number
+    startingRow: Row
   ) =>
-  (row: number, index: number): ExtractedRow => {
+  (row: Row, index: number): ExtractedRow => {
     const steps = entries(stepColumns).flatMap(([step, column]) => {
-      const fiscalYear = cellAsNumber(sheet[`${column}${row}`]);
+      const fiscalYear = row.cell(column).asNumber;
       const fullFY = fiscalYear ? fullFiscalYear(fiscalYear) : undefined;
       // only include step if it references a fiscal year within the project
       if (!fullFY || !projectRange.intersection(fullFY)) {
@@ -177,44 +162,42 @@ const parseProductRow =
       }
       return { step, plannedCompleteDate: fullFY.end };
     });
-    const note =
-      cellAsString(sheet[`${isOBS ? 'Y' : 'AI'}${row}`]) ?? noteFallback;
+    const note = row.cell(isOBS ? 'Y' : 'AI').asString ?? noteFallback;
 
     const common = {
-      rowIndex: row - startingRow + 1,
+      rowIndex: row.a1 - startingRow.a1 + 1,
       order: index + 1,
       steps,
       note,
     };
 
     if (isOBS) {
-      const story = cellAsString(sheet[`Q${row}`])!; // Asserting bc loop verified this
+      const story = row.cell('Q').asString!; // Asserting bc loop verified this
       const scripture = (() => {
         try {
+          const raw = row.cell('R').asString;
           return parseScripture(
-            cellAsString(sheet[`R${row}`])
-              // Ignore these two strings that are meaningless here
-              ?.replace('Composite', '')
-              .replace('other portions', '') ?? ''
+            // Ignore these two strings that are meaningless here
+            raw?.replace('Composite', '').replace('other portions', '') ?? ''
           );
         } catch (e) {
           return [];
         }
       })();
-      const totalVerses = cellAsNumber(sheet[`T${row}`]);
+      const totalVerses = row.cell('T').asNumber;
       return {
         ...common,
         story,
         scripture,
         totalVerses,
-        composite: cellAsString(sheet[`S${row}`])?.toUpperCase() === 'Y',
+        composite: row.cell('S').asString?.toUpperCase() === 'Y',
         placeholder: scripture.length === 0 && !totalVerses,
       };
     }
     return {
       ...common,
-      bookName: cellAsString(sheet[`Q${row}`])!, // Asserting bc loop verified this
-      totalVerses: cellAsNumber(sheet[`T${row}`])!, // Asserting bc loop verified this
+      bookName: row.cell('Q').asString!, // Asserting bc loop verified this
+      totalVerses: row.cell('T').asNumber!, // Asserting bc loop verified this
     };
   };
 

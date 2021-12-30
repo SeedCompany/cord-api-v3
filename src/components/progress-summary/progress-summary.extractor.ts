@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { memoize } from 'lodash';
-import { CellObject, read, WorkSheet } from 'xlsx';
 import { CalendarDate, fiscalQuarter, fiscalYear } from '../../common';
-import { cellAsNumber, cellAsString } from '../../common/xlsx.util';
+import { Row, Sheet, WorkBook } from '../../common/xlsx.util';
 import { Downloadable } from '../file';
 import { ProgressSummary as Progress } from './dto';
 
@@ -10,21 +9,15 @@ import { ProgressSummary as Progress } from './dto';
 export class ProgressSummaryExtractor {
   async extract(file: Downloadable<unknown>, date: CalendarDate) {
     const buffer = await file.download();
-    const pnp = read(buffer, { type: 'buffer' });
-    const sheet = pnp.Sheets.Progress;
-    if (!sheet) {
-      throw new Error('Unable to find progress sheet in pnp file');
-    }
+    const pnp = WorkBook.fromBuffer(buffer);
+    const sheet = pnp.sheet('Progress');
 
-    const isOBS = cellAsString(sheet.P19) === 'Stories';
+    const isOBS = sheet.cell('P19').asString === 'Stories';
 
     const yearRow = findFiscalYearRow(sheet, fiscalYear(date), isOBS);
-    if (!yearRow) {
-      throw new Error('Unable to find fiscal year in pnp file');
-    }
 
     const convertToPercent = percentConverter(() => {
-      const total = cellAsNumber(sheet.AG18);
+      const total = sheet.cell('AG18').asNumber;
       if (total) {
         return total;
       }
@@ -34,45 +27,40 @@ export class ProgressSummaryExtractor {
     const quarterCol = ['AH', 'AI', 'AJ', 'AK'][fiscalQuarter(date) - 1];
     return {
       reportPeriod: convertToPercent(
-        this.summaryFrom(sheet, yearRow, quarterCol, quarterCol)
+        this.summaryFrom(yearRow, quarterCol, quarterCol)
       ),
-      fiscalYear: convertToPercent(
-        this.summaryFrom(sheet, yearRow, 'AL', 'AM')
-      ),
-      cumulative: convertToPercent(
-        this.summaryFrom(sheet, yearRow, 'AN', 'AO')
-      ),
+      fiscalYear: convertToPercent(this.summaryFrom(yearRow, 'AL', 'AM')),
+      cumulative: convertToPercent(this.summaryFrom(yearRow, 'AN', 'AO')),
     };
   }
 
   private summaryFrom(
-    sheet: WorkSheet,
-    fiscalYearRow: number,
+    fiscalYear: Row,
     plannedColumn: string,
     actualColumn: string
   ): Progress | null {
-    const planned = cellAsNumber(sheet[`${plannedColumn}${fiscalYearRow}`]);
-    const actual = cellAsNumber(sheet[`${actualColumn}${fiscalYearRow}`]);
+    const planned = fiscalYear.cell(plannedColumn).asNumber;
+    const actual = fiscalYear.cell(actualColumn).asNumber;
     return planned && actual ? { planned, actual } : null;
   }
 }
 
 const findFiscalYearRow = (
-  sheet: WorkSheet,
+  sheet: Sheet,
   fiscalYear: number,
   isOBS: boolean
 ) => {
-  let i = isOBS ? 28 : 20;
+  let row = sheet.row(isOBS ? 28 : 20);
   // eslint-disable-next-line no-constant-condition
   while (true) {
-    const cell: CellObject = sheet[`AG${i}`];
-    if (cellAsNumber(cell) === fiscalYear) {
-      return i;
+    const cell = row.cell('AG');
+    if (cell.asNumber === fiscalYear) {
+      return row;
     }
-    if (!cell || cell.t !== 'n') {
-      return null;
+    if (!cell.isNumber) {
+      throw new Error('Unable to find fiscal year in pnp file');
     }
-    i++;
+    row = row.next();
   }
 };
 
