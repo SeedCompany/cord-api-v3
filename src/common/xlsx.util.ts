@@ -27,8 +27,22 @@ export class WorkBook {
     return new WorkBook(book);
   }
 
-  sheet(name: string) {
-    return this.sheets[name] ?? (this.sheets[name] = new Sheet(this, name));
+  sheet<TSheet extends Sheet>(name: string): TSheet {
+    return (this.sheets[name] ??
+      (this.sheets[name] = new Sheet(this, name))) as TSheet;
+  }
+
+  registerCustomSheet(sheet: Sheet) {
+    this.sheets[sheet.name] = sheet;
+    if (!Object.getOwnPropertyDescriptor(this, 'namedRanges')) {
+      return;
+    }
+    for (const [rangeName, range] of Object.entries(this.namedRanges)) {
+      if (range.sheet.name === sheet.name) {
+        this.namedRanges[rangeName] = sheet.range(range);
+      }
+    }
+    return sheet;
   }
 
   namedRange(name: string): Range {
@@ -91,12 +105,12 @@ export class Sheet {
     if (range.sheet.name !== this.name) {
       throw new Error(`Named range references a different sheet: ${name}`);
     }
-    return range.sheet === this ? range : this.range(range);
+    return range.sheet === this ? (range as Range<this>) : this.range(range);
   }
 
-  range(a1range: string | Range | LibRange): Range;
+  range(a1range: string | Range | LibRange): Range<this>;
   // eslint-disable-next-line @typescript-eslint/unified-signatures
-  range(start: Cell | string, end: Cell | string): Range;
+  range(start: Cell | string, end: Cell | string): Range<this>;
   range(a1start: Cell | string | Range | LibRange, a1end?: Cell | string) {
     if (a1start instanceof Range) {
       return new Range(this, this.cell(a1start.start), this.cell(a1start.end));
@@ -125,24 +139,24 @@ export class Sheet {
    * Grab cell from decoded range. Note that both column & row are 0-indexed
    * here.
    */
-  cell(columnIndex: number, rowIndex: number): Cell;
+  cell(columnIndex: number, rowIndex: number): Cell<this>;
   /**
    * Grab cell from A1 column & A1 row (1-indexed).
    */
   // eslint-disable-next-line @typescript-eslint/unified-signatures
-  cell(column: string | Column, a1row: number | Row): Cell;
+  cell(column: string | Column, a1row: number | Row): Cell<this>;
   /**
    * Grab cell from an existing cell.
    * This cell could be from another sheet, but the one returned will be
    * for this sheet.
    */
   // eslint-disable-next-line @typescript-eslint/unified-signatures
-  cell(address: Cell): Cell;
+  cell(address: Cell): Cell<this>;
   /**
    * Grab cell from an encoded or decoded address.
    */
   // eslint-disable-next-line @typescript-eslint/unified-signatures
-  cell(address: string | CellAddress): Cell;
+  cell(address: string | CellAddress): Cell<this>;
   cell(
     column: string | number | CellAddress | Column | Cell,
     row?: number | Row
@@ -183,9 +197,9 @@ export class Sheet {
   }
 }
 
-export class Cell {
+export class Cell<TSheet extends Sheet = Sheet> {
   constructor(
-    readonly sheet: Sheet,
+    readonly sheet: TSheet,
     private readonly libSheet: WorkSheet,
     private readonly cell: CellObject | undefined,
     readonly address: CellAddress
@@ -232,19 +246,19 @@ export class Cell {
   }
 }
 
-abstract class Rangable {
-  constructor(readonly sheet: Sheet) {}
+abstract class Rangable<TSheet extends Sheet = Sheet> {
+  constructor(readonly sheet: TSheet) {}
 
-  abstract get start(): Cell;
-  abstract get end(): Cell;
+  abstract get start(): Cell<TSheet>;
+  abstract get end(): Cell<TSheet>;
 
   /**
    * Iterate through the rows in this range.
    * Cell column is always the starting column.
    */
-  walkDown(): IterableX<Cell> {
+  walkDown(): IterableX<Cell<TSheet>> {
     return iterableFrom(
-      function* (this: Rangable) {
+      function* (this: Rangable<TSheet>) {
         let current = this.start.row;
         while (current <= this.end.row) {
           const cell = current.cell(this.start.column);
@@ -261,9 +275,9 @@ abstract class Rangable {
    * Iterate through the columns in this range.
    * Cell row is always the starting row.
    */
-  walkRight(): IterableX<Cell> {
+  walkRight(): IterableX<Cell<TSheet>> {
     return iterableFrom(
-      function* (this: Rangable) {
+      function* (this: Rangable<TSheet>) {
         let current = this.start.column;
         while (current <= this.end.column) {
           const cell = current.cell(this.start.row);
@@ -281,29 +295,33 @@ abstract class Rangable {
   }
 }
 
-export class Range extends Rangable {
-  constructor(sheet: Sheet, readonly start: Cell, readonly end: Cell) {
+export class Range<TSheet extends Sheet = Sheet> extends Rangable<TSheet> {
+  constructor(
+    sheet: TSheet,
+    readonly start: Cell<TSheet>,
+    readonly end: Cell<TSheet>
+  ) {
     super(sheet);
   }
 }
 
-export class Row extends Rangable {
+export class Row<TSheet extends Sheet = Sheet> extends Rangable<TSheet> {
   /** A1 row number (1-indexed) */
   readonly a1: number;
   readonly index: number;
 
-  constructor(sheet: Sheet, row: number) {
+  constructor(sheet: TSheet, row: number) {
     super(sheet);
     this.a1 = row;
     this.index = row - 1;
   }
 
-  @Once() get start(): Cell {
+  @Once() get start(): Cell<TSheet> {
     const full = this.sheet.sheetRange;
     return this.sheet.cell(full.start.column, this.a1);
   }
 
-  @Once() get end(): Cell {
+  @Once() get end(): Cell<TSheet> {
     const full = this.sheet.sheetRange;
     return this.sheet.cell(full.start.column, this.a1);
   }
@@ -325,23 +343,23 @@ export class Row extends Rangable {
   }
 }
 
-export class Column extends Rangable {
+export class Column<TSheet extends Sheet = Sheet> extends Rangable<TSheet> {
   /** A1 column letter */
   readonly a1: string;
   readonly index: number;
 
-  constructor(sheet: Sheet, column: string) {
+  constructor(sheet: TSheet, column: string) {
     super(sheet);
     this.a1 = column;
     this.index = utils.decode_col(this.a1);
   }
 
-  @Once() get start(): Cell {
+  @Once() get start(): Cell<TSheet> {
     const full = this.sheet.sheetRange;
     return this.sheet.cell(this.a1, full.start.row);
   }
 
-  @Once() get end(): Cell {
+  @Once() get end(): Cell<TSheet> {
     const full = this.sheet.sheetRange;
     return this.sheet.cell(this.a1, full.start.row);
   }
