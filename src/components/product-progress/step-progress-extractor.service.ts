@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
+import { assert } from 'ts-essentials';
 import { MergeExclusive } from 'type-fest';
 import { entries } from '../../common';
-import { Column, Row, WorkBook } from '../../common/xlsx.util';
+import { Cell, Column } from '../../common/xlsx.util';
 import { Downloadable } from '../file';
+import { findStepColumns, isGoalRow, Pnp, ProgressSheet } from '../pnp';
 import { ProductStep as Step } from '../product';
-import { findStepColumns } from '../product/product-extractor.service';
-import { Book } from '../scripture/books';
 import { StepProgressInput } from './dto';
 
 type ExtractedRow = MergeExclusive<
@@ -32,53 +32,26 @@ type ExtractedRow = MergeExclusive<
 @Injectable()
 export class StepProgressExtractor {
   async extract(file: Downloadable<unknown>) {
-    const buffer = await file.download();
-    const pnp = WorkBook.fromBuffer(buffer);
+    const pnp = await Pnp.fromDownloadable(file);
+    const sheet = pnp.progress;
 
-    const sheet = pnp.sheet('Progress');
+    const stepColumns = findStepColumns(sheet);
 
-    const isOBS = sheet.cell('P19').asString === 'Stories';
-
-    const stepColumns = findStepColumns(sheet.range('R19:AB19'));
-
-    const startingRow = sheet.row(23);
-
-    return findProductProgressRows(startingRow, isOBS).map(
-      parseProgressRow(stepColumns, isOBS, startingRow)
-    );
+    return sheet.goals
+      .walkDown()
+      .filter(isGoalRow)
+      .map(parseProgressRow(stepColumns))
+      .toArray();
   }
 }
-
-function findProductProgressRows(startingRow: Row, isOBS: boolean) {
-  const lastRow = startingRow.sheet.sheetRange.end.row;
-  const matchedRows = [];
-  let row = startingRow;
-  while (
-    row < lastRow &&
-    row.cell('P').asString !== 'Other Goals and Milestones'
-  ) {
-    if (isProductRow(row, isOBS)) {
-      matchedRows.push(row);
-    }
-    row = row.next();
-  }
-  return matchedRows;
-}
-
-const isProductRow = (row: Row, isOBS: boolean) => {
-  if (isOBS) {
-    return !!row.cell('Q').asString;
-  }
-  const book = Book.tryFind(row.cell('P').asString);
-  const totalVerses = row.cell('Q').asNumber ?? 0;
-  return book && totalVerses > 0 && totalVerses <= book.totalVerses;
-};
 
 const parseProgressRow =
-  (stepColumns: Record<Step, Column>, isOBS: boolean, startingRow: Row) =>
-  (row: Row, index: number): ExtractedRow => {
+  (stepColumns: Record<Step, Column>) =>
+  (cell: Cell<ProgressSheet>, index: number): ExtractedRow => {
+    const sheet = cell.sheet;
+    const row = cell.row;
     const progress = (column: Column) => {
-      const cell = row.cell(column);
+      const cell = column.cell(row);
       if (cell.asString?.startsWith('Q')) {
         // Q# means completed that quarter
         return 100;
@@ -93,15 +66,16 @@ const parseProgressRow =
       })
     );
     const common = {
-      rowIndex: row.a1 - startingRow.a1 + 1,
+      rowIndex: row.a1 - sheet.goals.start.row.a1 + 1,
       order: index + 1,
       steps,
     };
-    if (isOBS) {
-      const story = row.cell('Q').asString!; // Asserting bc loop verified this
+    if (sheet.isOBS()) {
+      const story = sheet.storyName(row)!; // Asserting bc loop verified this
       return { ...common, story };
     }
-    const bookName = row.cell('P').asString!; // Asserting bc loop verified this
-    const totalVerses = row.cell('Q').asNumber!; // Asserting bc loop verified this
+    assert(sheet.isWritten());
+    const bookName = sheet.bookName(row)!; // Asserting bc loop verified this
+    const totalVerses = sheet.totalVerses(row)!; // Asserting bc loop verified this
     return { ...common, bookName, totalVerses };
   };
