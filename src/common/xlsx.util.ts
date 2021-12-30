@@ -10,6 +10,7 @@ import {
 } from 'xlsx';
 import type { CellObject, WorkSheet } from 'xlsx';
 import { CalendarDate } from './temporal';
+import { mapFromList } from './util';
 
 export class WorkBook {
   private readonly book: LibWorkBook;
@@ -28,6 +29,21 @@ export class WorkBook {
 
   sheet(name: string) {
     return this.sheets[name] ?? (this.sheets[name] = new Sheet(this, name));
+  }
+
+  namedRange(name: string): Range {
+    const found = this.namedRanges[name];
+    if (!found) {
+      throw new Error(`Could not find named range: ${name}`);
+    }
+    return found;
+  }
+  @Once() private get namedRanges() {
+    const rawList = this.book.Workbook?.Names ?? [];
+    return mapFromList(rawList, ({ Ref: ref, Name: name }) => {
+      const matched = /^'?([^']+)'?!([$\dA-Z]+(?::[$\dA-Z]+)?)$/.exec(ref);
+      return matched ? [name, this.sheet(matched[1]).range(matched[2])] : null;
+    });
   }
 }
 
@@ -68,6 +84,14 @@ export class Sheet {
     const ref = this.sheet['!ref'];
     assert(ref, 'Cannot find sheet range reference');
     return this.range(ref);
+  }
+
+  namedRange(name: string) {
+    const range = this.book.namedRange(name);
+    if (range.sheet.name !== this.name) {
+      throw new Error(`Named range references a different sheet: ${name}`);
+    }
+    return range.sheet === this ? range : this.range(range);
   }
 
   range(a1range: string | Range | LibRange): Range;
