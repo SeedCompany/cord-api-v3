@@ -1,13 +1,11 @@
 import { Injectable } from '@nestjs/common';
+import { assert } from 'ts-essentials';
 import { MergeExclusive } from 'type-fest';
-import { CellObject, read, WorkSheet } from 'xlsx';
 import { entries } from '../../common';
-import { cellAsNumber, cellAsString, sheetRange } from '../../common/xlsx.util';
-import { ILogger, Logger } from '../../core';
-import { Downloadable, FileNode } from '../file';
+import { Cell, Column } from '../../common/xlsx.util';
+import { Downloadable } from '../file';
+import { findStepColumns, isGoalRow, Pnp, ProgressSheet } from '../pnp';
 import { ProductStep as Step } from '../product';
-import { findStepColumns } from '../product/product-extractor.service';
-import { Book } from '../scripture/books';
 import { StepProgressInput } from './dto';
 
 type ExtractedRow = MergeExclusive<
@@ -33,79 +31,32 @@ type ExtractedRow = MergeExclusive<
 
 @Injectable()
 export class StepProgressExtractor {
-  constructor(
-    @Logger('step-progress:extractor') private readonly logger: ILogger
-  ) {}
+  async extract(file: Downloadable<unknown>) {
+    const pnp = await Pnp.fromDownloadable(file);
+    const sheet = pnp.progress;
 
-  async extract(file: Downloadable<FileNode>) {
-    const buffer = await file.download();
-    const pnp = read(buffer, { type: 'buffer' });
+    const stepColumns = findStepColumns(sheet);
 
-    const sheet = pnp.Sheets.Progress;
-    if (!sheet) {
-      this.logger.warning('Unable to find progress sheet in pnp file', {
-        name: file.name,
-        id: file.id,
-      });
-      return [];
-    }
-
-    const isOBS = cellAsString(sheet.P19) === 'Stories';
-
-    const stepColumns = findStepColumns(sheet, 'R19:AB19');
-
-    const startingRow = 23;
-
-    return findProductProgressRows(sheet, isOBS, startingRow).map(
-      parseProgressRow(sheet, stepColumns, isOBS, startingRow)
-    );
+    return sheet.goals
+      .walkDown()
+      .filter(isGoalRow)
+      .map(parseProgressRow(stepColumns))
+      .toArray();
   }
 }
-
-function findProductProgressRows(
-  sheet: WorkSheet,
-  isOBS: boolean,
-  startingRow: number
-) {
-  const lastRow = sheetRange(sheet)?.e.r ?? 200;
-  const matchedRows = [];
-  let row = startingRow;
-  while (
-    row < lastRow &&
-    cellAsString(sheet[`P${row}`]) !== 'Other Goals and Milestones'
-  ) {
-    if (isProductRow(sheet, isOBS, row)) {
-      matchedRows.push(row);
-    }
-    row++;
-  }
-  return matchedRows;
-}
-
-const isProductRow = (sheet: WorkSheet, isOBS: boolean, row: number) => {
-  if (isOBS) {
-    return !!cellAsString(sheet[`Q${row}`]);
-  }
-  const book = Book.tryFind(cellAsString(sheet[`P${row}`]));
-  const totalVerses = cellAsNumber(sheet[`Q${row}`]) ?? 0;
-  return book && totalVerses > 0 && totalVerses <= book.totalVerses;
-};
 
 const parseProgressRow =
-  (
-    sheet: WorkSheet,
-    stepColumns: Record<Step, string>,
-    isOBS: boolean,
-    startingRow: number
-  ) =>
-  (row: number, index: number): ExtractedRow => {
-    const progress = (column: string) => {
-      const cell: CellObject = sheet[`${column}${row}`];
-      if (cellAsString(cell)?.startsWith('Q')) {
+  (stepColumns: Record<Step, Column>) =>
+  (cell: Cell<ProgressSheet>, index: number): ExtractedRow => {
+    const sheet = cell.sheet;
+    const row = cell.row;
+    const progress = (column: Column) => {
+      const cell = column.cell(row);
+      if (cell.asString?.startsWith('Q')) {
         // Q# means completed that quarter
         return 100;
       }
-      const percentDecimal = cellAsNumber(cell);
+      const percentDecimal = cell.asNumber;
       return percentDecimal ? percentDecimal * 100 : undefined;
     };
     const steps = entries(stepColumns).map(
@@ -115,15 +66,16 @@ const parseProgressRow =
       })
     );
     const common = {
-      rowIndex: row - startingRow + 1,
+      rowIndex: row.a1 - sheet.goals.start.row.a1 + 1,
       order: index + 1,
       steps,
     };
-    if (isOBS) {
-      const story = cellAsString(sheet[`Q${row}`])!; // Asserting bc loop verified this
+    if (sheet.isOBS()) {
+      const story = sheet.storyName(row)!; // Asserting bc loop verified this
       return { ...common, story };
     }
-    const bookName = cellAsString(sheet[`P${row}`])!; // Asserting bc loop verified this
-    const totalVerses = cellAsNumber(sheet[`Q${row}`])!; // Asserting bc loop verified this
+    assert(sheet.isWritten());
+    const bookName = sheet.bookName(row)!; // Asserting bc loop verified this
+    const totalVerses = sheet.totalVerses(row)!; // Asserting bc loop verified this
     return { ...common, bookName, totalVerses };
   };
