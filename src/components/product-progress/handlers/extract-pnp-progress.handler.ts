@@ -20,7 +20,17 @@ export class ExtractPnpProgressHandler {
     }
 
     // parse progress data from pnp spreadsheet
-    const progressRows = await this.extractor.extract(event.file);
+    let progressRows;
+    try {
+      progressRows = await this.extractor.extract(event.file);
+    } catch (e) {
+      this.logger.warning(e.message, {
+        name: event.file.name,
+        id: event.file.id,
+        exception: e,
+      });
+      return;
+    }
     if (progressRows.length === 0) {
       return;
     }

@@ -3,8 +3,7 @@ import { MergeExclusive } from 'type-fest';
 import { CellObject, read, WorkSheet } from 'xlsx';
 import { entries } from '../../common';
 import { cellAsNumber, cellAsString, sheetRange } from '../../common/xlsx.util';
-import { ILogger, Logger } from '../../core';
-import { Downloadable, FileNode } from '../file';
+import { Downloadable } from '../file';
 import { ProductStep as Step } from '../product';
 import { findStepColumns } from '../product/product-extractor.service';
 import { Book } from '../scripture/books';
@@ -33,21 +32,13 @@ type ExtractedRow = MergeExclusive<
 
 @Injectable()
 export class StepProgressExtractor {
-  constructor(
-    @Logger('step-progress:extractor') private readonly logger: ILogger
-  ) {}
-
-  async extract(file: Downloadable<FileNode>) {
+  async extract(file: Downloadable<unknown>) {
     const buffer = await file.download();
     const pnp = read(buffer, { type: 'buffer' });
 
     const sheet = pnp.Sheets.Progress;
     if (!sheet) {
-      this.logger.warning('Unable to find progress sheet in pnp file', {
-        name: file.name,
-        id: file.id,
-      });
-      return [];
+      throw new Error('Unable to find progress sheet in pnp file');
     }
 
     const isOBS = cellAsString(sheet.P19) === 'Stories';

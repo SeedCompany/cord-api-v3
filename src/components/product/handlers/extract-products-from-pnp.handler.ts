@@ -64,7 +64,16 @@ export class ExtractProductsFromPnpHandler
     const availableSteps = getAvailableSteps({
       methodology,
     });
-    const productRows = await this.extractor.extract(file, availableSteps);
+    let productRows;
+    try {
+      productRows = await this.extractor.extract(file, availableSteps);
+    } catch (e) {
+      this.logger.warning(e.message, {
+        id: file.id,
+        exception: e,
+      });
+      return;
+    }
     if (productRows.length === 0) {
       return;
     }

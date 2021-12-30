@@ -23,13 +23,18 @@ export class ExtractPnpFileOnUploadHandler {
       userId: event.session.userId,
       fileId: event.file.id,
     });
-    const workbook = await this.extractor.readWorkbook(event.file);
 
-    const extracted = this.extractor.extract(
-      workbook,
-      event.file,
-      event.report.start
-    );
+    let extracted;
+    try {
+      extracted = await this.extractor.extract(event.file, event.report.start);
+    } catch (e) {
+      this.logger.warning(e.message, {
+        name: event.file.name,
+        id: event.file.id,
+        exception: e,
+      });
+      return;
+    }
     this.logger.info('Extracted progress summary', {
       ...extracted,
       report: event.report.id,

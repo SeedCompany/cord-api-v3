@@ -1,37 +1,26 @@
 import { Injectable } from '@nestjs/common';
 import { memoize } from 'lodash';
-import { CellObject, read, WorkBook, WorkSheet } from 'xlsx';
+import { CellObject, read, WorkSheet } from 'xlsx';
 import { CalendarDate, fiscalQuarter, fiscalYear } from '../../common';
 import { cellAsNumber, cellAsString } from '../../common/xlsx.util';
-import { ILogger, Logger } from '../../core';
-import { Downloadable, FileNode } from '../file';
+import { Downloadable } from '../file';
 import { ProgressSummary as Progress } from './dto';
 
 @Injectable()
 export class ProgressSummaryExtractor {
-  constructor(
-    @Logger('progress-summary:extractor') private readonly logger: ILogger
-  ) {}
-
-  extract(pnp: WorkBook, file: FileNode, date: CalendarDate) {
+  async extract(file: Downloadable<unknown>, date: CalendarDate) {
+    const buffer = await file.download();
+    const pnp = read(buffer, { type: 'buffer' });
     const sheet = pnp.Sheets.Progress;
     if (!sheet) {
-      this.logger.warning('Unable to find progress sheet in pnp file', {
-        name: file.name,
-        id: file.id,
-      });
-      return null;
+      throw new Error('Unable to find progress sheet in pnp file');
     }
 
     const isOBS = cellAsString(sheet.P19) === 'Stories';
 
     const yearRow = findFiscalYearRow(sheet, fiscalYear(date), isOBS);
     if (!yearRow) {
-      this.logger.warning('Unable to find fiscal year in pnp file', {
-        name: file.name,
-        id: file.id,
-      });
-      return null;
+      throw new Error('Unable to find fiscal year in pnp file');
     }
 
     const convertToPercent = percentConverter(() => {
@@ -39,14 +28,7 @@ export class ProgressSummaryExtractor {
       if (total) {
         return total;
       }
-      this.logger.warning(
-        'Unable to find total verse equivalents in pnp file',
-        {
-          name: file.name,
-          id: file.id,
-        }
-      );
-      return null;
+      throw new Error('Unable to find total verse equivalents in pnp file');
     });
 
     const quarterCol = ['AH', 'AI', 'AJ', 'AK'][fiscalQuarter(date) - 1];
@@ -61,11 +43,6 @@ export class ProgressSummaryExtractor {
         this.summaryFrom(sheet, yearRow, 'AN', 'AO')
       ),
     };
-  }
-
-  async readWorkbook(file: Downloadable<unknown>) {
-    const buffer = await file.download();
-    return read(buffer, { type: 'buffer' });
   }
 
   private summaryFrom(
@@ -103,7 +80,7 @@ const findFiscalYearRow = (
  * The PnP has the macro option to do calculations as percents or verse equivalents.
  * We need to standardize as percents here.
  */
-const percentConverter = (getTotalVerseEquivalents: () => number | null) => {
+const percentConverter = (getTotalVerseEquivalents: () => number) => {
   const memoTotalVerseEquivalents = memoize(getTotalVerseEquivalents);
   return (summary: Progress | null) => {
     if (!summary) {
@@ -114,10 +91,6 @@ const percentConverter = (getTotalVerseEquivalents: () => number | null) => {
       return summary;
     }
     const totalVerseEquivalents = memoTotalVerseEquivalents();
-    if (!totalVerseEquivalents) {
-      // Ignore parsed summary as we cannot convert it to a percent
-      return null;
-    }
     return {
       planned: summary.planned / totalVerseEquivalents,
       actual: summary.actual / totalVerseEquivalents,

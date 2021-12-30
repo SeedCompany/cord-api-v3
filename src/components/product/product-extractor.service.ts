@@ -16,8 +16,7 @@ import {
   cellAsString,
   sheetRange,
 } from '../../common/xlsx.util';
-import { ILogger, Logger } from '../../core';
-import { Downloadable, File } from '../file';
+import { Downloadable } from '../file';
 import { ScriptureRange } from '../scripture';
 import { Book } from '../scripture/books';
 import { parseScripture } from '../scripture/parser';
@@ -25,10 +24,8 @@ import { ProductStep as Step } from './dto';
 
 @Injectable()
 export class ProductExtractor {
-  constructor(@Logger('product:extractor') private readonly logger: ILogger) {}
-
   async extract(
-    file: Downloadable<Pick<File, 'id'>>,
+    file: Downloadable<unknown>,
     availableSteps: readonly Step[]
   ): Promise<readonly ExtractedRow[]> {
     const buffer = await file.download();
@@ -36,10 +33,7 @@ export class ProductExtractor {
 
     const sheet = pnp.Sheets.Planning;
     if (!sheet) {
-      this.logger.warning('Unable to find planning sheet', {
-        id: file.id,
-      });
-      return [] as const;
+      throw new Error('Unable to find planning sheet');
     }
 
     const isOBS = cellAsString(sheet.P19) === 'Stories';
@@ -48,10 +42,7 @@ export class ProductExtractor {
       ? DateInterval.tryFrom(cellAsDate(sheet.X16), cellAsDate(sheet.X17))
       : DateInterval.tryFrom(cellAsDate(sheet.Z14), cellAsDate(sheet.Z15));
     if (!interval) {
-      this.logger.warning('Unable to find project date range', {
-        id: file.id,
-      });
-      return [];
+      throw new Error('Unable to find project date range');
     }
 
     const stepColumns = findStepColumns(
