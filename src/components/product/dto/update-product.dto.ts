@@ -22,6 +22,7 @@ import { AnyProduct, Product } from './product.dto';
 export abstract class UpdateBaseProduct extends OmitType(CreateBaseProduct, [
   'engagementId',
   'createdAt',
+  'pnpIndex',
 ]) {
   @IdField()
   readonly id: ID;
@@ -66,6 +67,7 @@ export abstract class UpdateDerivativeScriptureProduct extends IntersectionType(
 export abstract class UpdateProduct extends OmitType(CreateProduct, [
   'engagementId',
   'produces',
+  'pnpIndex',
 ] as const) {
   @IdField()
   readonly id: ID;

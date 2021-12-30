@@ -70,6 +70,8 @@ export abstract class CreateBaseProduct {
   @Transform(({ value }) => (value === '' ? null : value))
   readonly placeholderDescription?: string | null;
 
+  readonly pnpIndex?: number | null;
+
   // Allow specifying this internally only.
   readonly createdAt?: DateTime;
 }

@@ -565,7 +565,7 @@ export class Book implements Iterable<Chapter> {
     return this.chapter(this.totalChapters);
   }
 
-  get chapters(): Chapter[] {
+  get chapters() {
     return iterate(this);
   }
 

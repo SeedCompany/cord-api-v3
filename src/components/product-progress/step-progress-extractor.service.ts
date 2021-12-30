@@ -17,6 +17,17 @@ type ExtractedRow = MergeExclusive<
   },
   { story: string }
 > & {
+  /**
+   * 1-indexed row for the order of the goal.
+   * This will not have jumps in numbers, blank rows are ignored.
+   */
+  order: number;
+  /**
+   * 1-indexed row number with the starting row normalized out.
+   * This could have jumps in numbers because blank rows are accounted for here.
+   * If those rows are filled in later the previously defined rows will be unaffected.
+   */
+  rowIndex: number;
   steps: ReadonlyArray<{ step: Step; completed?: number | null }>;
 };
 
@@ -43,16 +54,22 @@ export class StepProgressExtractor {
 
     const stepColumns = findStepColumns(sheet, 'R19:AB19');
 
-    return findProductProgressRows(sheet, isOBS).map(
-      parseProgressRow(sheet, stepColumns, isOBS)
+    const startingRow = 23;
+
+    return findProductProgressRows(sheet, isOBS, startingRow).map(
+      parseProgressRow(sheet, stepColumns, isOBS, startingRow)
     );
   }
 }
 
-function findProductProgressRows(sheet: WorkSheet, isOBS: boolean) {
+function findProductProgressRows(
+  sheet: WorkSheet,
+  isOBS: boolean,
+  startingRow: number
+) {
   const lastRow = sheetRange(sheet)?.e.r ?? 200;
   const matchedRows = [];
-  let row = 23;
+  let row = startingRow;
   while (
     row < lastRow &&
     cellAsString(sheet[`P${row}`]) !== 'Other Goals and Milestones'
@@ -75,8 +92,13 @@ const isProductRow = (sheet: WorkSheet, isOBS: boolean, row: number) => {
 };
 
 const parseProgressRow =
-  (sheet: WorkSheet, stepColumns: Record<Step, string>, isOBS: boolean) =>
-  (row: number): ExtractedRow => {
+  (
+    sheet: WorkSheet,
+    stepColumns: Record<Step, string>,
+    isOBS: boolean,
+    startingRow: number
+  ) =>
+  (row: number, index: number): ExtractedRow => {
     const progress = (column: string) => {
       const cell: CellObject = sheet[`${column}${row}`];
       if (cellAsString(cell)?.startsWith('Q')) {
@@ -92,11 +114,16 @@ const parseProgressRow =
         completed: progress(column),
       })
     );
+    const common = {
+      rowIndex: row - startingRow + 1,
+      order: index + 1,
+      steps,
+    };
     if (isOBS) {
       const story = cellAsString(sheet[`Q${row}`])!; // Asserting bc loop verified this
-      return { story, steps };
+      return { ...common, story };
     }
     const bookName = cellAsString(sheet[`P${row}`])!; // Asserting bc loop verified this
     const totalVerses = cellAsNumber(sheet[`Q${row}`])!; // Asserting bc loop verified this
-    return { bookName, totalVerses, steps };
+    return { ...common, bookName, totalVerses };
   };

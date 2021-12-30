@@ -4,6 +4,7 @@ import {
   has,
   ID,
   InputException,
+  mapFromList,
   NotFoundException,
   ObjectView,
   ServerException,
@@ -657,12 +658,7 @@ export class ProductService {
     logger: ILogger = this.logger
   ) {
     const productRefs = await this.repo.listIdsAndScriptureRefs(engagementId);
-
-    const productIds: {
-      [Book in string]?: Map<number, ID>;
-    } = {};
-
-    for (const productRef of productRefs) {
+    return productRefs.flatMap((productRef) => {
       const refs = productRef.scriptureRanges.map((raw) =>
         ScriptureRange.fromIds(raw)
       );
@@ -683,57 +679,26 @@ export class ProductService {
 
       if (books.length === 0) {
         warn('Product has not defined any scripture ranges');
-        continue;
+        return [];
       }
       if (books.length > 1) {
         warn('Product scripture range spans multiple books');
-        continue;
+        return [];
       }
       const book: string = books[0];
 
-      if (productIds[book]?.has(totalVerses)) {
-        warn(
-          'Product references a book & verse count that has already been assigned to another product'
-        );
-        continue;
-      }
-
-      (productIds[book] ?? (productIds[book] = new Map())).set(
+      return {
+        id: productRef.id,
+        pnpIndex: productRef.pnpIndex,
+        book,
         totalVerses,
-        productRef.id
-      );
-    }
-
-    return productIds;
+      };
+    });
   }
 
-  async loadProductIdsForStories(
-    engagementId: ID,
-    logger: ILogger = this.logger
-  ) {
-    const productRefs = await this.repo.listIdsWithProducibleNames(
-      engagementId
-    );
-
-    const productIds: {
-      [StoryName in string]?: ID;
-    } = {};
-
-    for (const { id, name } of productRefs) {
-      if (productIds[name]) {
-        logger.warning(
-          `Product references a producible name that has already been assigned to another product and is therefore ignored`,
-          {
-            product: id,
-          }
-        );
-        continue;
-      }
-
-      productIds[name] = id;
-    }
-
-    return productIds;
+  async loadProductIdsByPnpIndex(engagementId: ID) {
+    const productRefs = await this.repo.listIdsWithPnpIndexes(engagementId);
+    return mapFromList(productRefs, (ref) => [ref.pnpIndex, ref.id]);
   }
 
   protected getMethodologiesByApproach(

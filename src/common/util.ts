@@ -19,7 +19,7 @@ export const simpleSwitch = <T, K extends string = string>(
 ): T | undefined => (key ? options[key] : undefined);
 
 /** Converts list to map given a function that returns a [key, value] tuple. */
-export const mapFromList = <T, S = T, K extends string = string>(
+export const mapFromList = <T, S = T, K extends string | number = string>(
   list: readonly T[],
   mapper: (item: T) => readonly [K, S] | null
 ): Record<K, S> => {
@@ -49,7 +49,7 @@ export const keys: <K extends string>(o: Record<K, unknown>) => K[] =
 
 export const iterate = <T>(
   iterator: Iterable<T> | IterableIterator<T>
-): T[] => {
+): readonly T[] => {
   const res: T[] = [];
   for (const item of iterator) {
     res.push(item);

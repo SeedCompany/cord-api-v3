@@ -83,7 +83,7 @@ export class ExtractProductsFromPnpHandler
 
     // Create/update products 5 at a time.
     await asyncPool(5, actionableProductRows, async (row) => {
-      const { existingId, steps, note, index } = row;
+      const { existingId, steps, note, rowIndex: index } = row;
 
       if (row.bookName) {
         // Populate one of the two product props based on whether its a known verse range or not.
@@ -111,15 +111,16 @@ export class ExtractProductsFromPnpHandler
         };
         if (existingId) {
           const updates: UpdateDirectScriptureProduct = {
-            id: existingId,
             ...props,
+            id: existingId,
           };
           await this.products.updateDirect(updates, event.session);
         } else {
           const create: CreateDirectScriptureProduct = {
+            ...props,
             engagementId: engagement.id,
             progressStepMeasurement: ProgressMeasurement.Percent,
-            ...props,
+            pnpIndex: index,
             // Attempt to order products in the same order as specified in the PnP
             // The default sort prop is createdAt.
             // This doesn't account for row changes in subsequent PnP uploads
@@ -130,7 +131,9 @@ export class ExtractProductsFromPnpHandler
       } else if (row.story) {
         const props = {
           produces: storyIds[row.placeholder ? 'Unknown' : row.story]!,
-          placeholderDescription: row.placeholder ? row.story : null,
+          placeholderDescription: row.placeholder
+            ? `#${row.order} ${row.story}`
+            : null,
           methodology,
           steps: steps.map((s) => s.step),
           scriptureReferencesOverride: row.scripture,
@@ -145,9 +148,10 @@ export class ExtractProductsFromPnpHandler
           await this.products.updateDerivative(updates, event.session);
         } else {
           const create: CreateDerivativeScriptureProduct = {
+            ...props,
             engagementId: engagement.id,
             progressStepMeasurement: ProgressMeasurement.Percent,
-            ...props,
+            pnpIndex: index,
             createdAt: createdAt.plus({ milliseconds: index }),
           };
           await this.products.create(create, event.session);
@@ -164,50 +168,50 @@ export class ExtractProductsFromPnpHandler
     engagement: Engagement,
     rows: readonly ExtractedRow[]
   ) {
-    // Given that we have products to potentially create, load the existing ones
-    // and map them to a book and total verse count.
     const scriptureProducts = rows[0].bookName
       ? await this.products.loadProductIdsForBookAndVerse(
           engagement.id,
           this.logger
         )
-      : {};
+      : [];
+
     const storyProducts = rows[0].story
-      ? await this.products.loadProductIdsForStories(engagement.id, this.logger)
+      ? await this.products.loadProductIdsByPnpIndex(engagement.id)
       : {};
 
     if (rows[0].story) {
-      return rows.flatMap((row, index) => {
+      return rows.flatMap((row) => {
         if (!row.story) return [];
-        if (row.story in storyProducts) {
-          return { ...row, index, existingId: storyProducts[row.story]! };
-        }
-        return { ...row, index, existingId: undefined };
+        return { ...row, existingId: storyProducts[row.rowIndex] };
       });
     }
 
     const actionableProductRows = Object.values(
-      groupBy(
-        rows.map((row, index) => ({ ...row, index })), // save original indexes
-        (row) => row.bookName // group by book name
-      )
+      // group by book name
+      groupBy(rows, (row) => row.bookName)
     ).flatMap((rowsOfBook) => {
       const bookName = rowsOfBook[0].bookName;
       if (!bookName) return [];
-      const existing = scriptureProducts[bookName] ?? new Map<number, ID>();
+      let existingProductsForBook = scriptureProducts.filter(
+        (ref) => ref.book === bookName
+      );
 
-      const matches: Array<
-        ExtractedRow & { index: number; existingId: ID | undefined }
-      > = [];
-      let nonExactMatches: Array<ExtractedRow & { index: number }> = [];
+      const matches: Array<ExtractedRow & { existingId: ID | undefined }> = [];
+      let nonExactMatches: ExtractedRow[] = [];
 
       // Exact matches
       for (const row of rowsOfBook) {
         const totalVerses = row.totalVerses!;
-        const existingId = existing.get(totalVerses);
+        const withTotalVerses = existingProductsForBook.filter(
+          (ref) => ref.totalVerses === totalVerses
+        );
+        const existingId =
+          withTotalVerses.length === 1 ? withTotalVerses[0].id : undefined;
         if (existingId) {
           matches.push({ ...row, existingId });
-          existing.delete(totalVerses);
+          existingProductsForBook = existingProductsForBook.filter(
+            (ref) => ref.id !== existingId
+          );
         } else {
           nonExactMatches.push(row);
         }
@@ -215,26 +219,34 @@ export class ExtractProductsFromPnpHandler
 
       // If there's only one product left for this book that hasn't been matched
       // And there's only one row left that can't be matched to a book & verse count
-      if (existing.size === 1 && nonExactMatches.length === 1) {
+      if (
+        existingProductsForBook.length === 1 &&
+        nonExactMatches.length === 1
+      ) {
         // Assume that ID belongs to this row.
         // Use case: A single row changes total verse count while other rows
         // for this book remain the same or are new.
-        const oldVerseCount = [...existing.keys()][0];
+        const oldVerseCountRef = existingProductsForBook[0]!;
         matches.push({
           ...nonExactMatches[0],
-          existingId: existing.get(oldVerseCount)!,
+          existingId: oldVerseCountRef.id,
         });
-        existing.delete(oldVerseCount);
+        existingProductsForBook = [];
         nonExactMatches = [];
       }
 
-      if (existing.size === 0) {
+      if (existingProductsForBook.length === 0) {
         // All remaining are new
         return [
           ...matches,
           ...nonExactMatches.map((row) => ({ ...row, existingId: undefined })),
         ];
       }
+
+      // If multiple total cells changed without the rows changing,
+      // then rowIndex/pnpIndex could be used to correctly match them.
+      // If rows changed though like inserting a row pushing multiple down,
+      // this wouldn't work without more logic.
 
       // Not sure how to handle remaining so doing nothing with them
 

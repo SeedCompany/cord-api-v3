@@ -137,6 +137,8 @@ export class DirectScriptureProduct extends Product {
     `,
   })
   totalVerseEquivalents: number;
+
+  readonly pnpIndex?: number;
 }
 
 @ObjectType({
