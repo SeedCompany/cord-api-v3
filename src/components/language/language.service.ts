@@ -16,6 +16,9 @@ import {
   ServerException,
   Session,
   simpleSwitch,
+  transformEthnologueDtoToPayload,
+  transformEthnologuePayloadToDto,
+  transformLanguageDtoToPayload,
   transformLanguagePayloadToDto,
   UnauthorizedException,
   UnsecuredDto,
@@ -37,6 +40,7 @@ import {
   SecuredProjectList,
 } from '../project';
 import {
+  CreateEthnologueLanguage,
   CreateLanguage,
   EthnologueLanguage,
   Language,
@@ -44,6 +48,7 @@ import {
   LanguageListOutput,
   TablesLanguage,
   TablesLanguages,
+  TablesReadEthnologue,
   TablesReadLanguage,
   UpdateLanguage,
 } from './dto';
@@ -71,29 +76,15 @@ export class LanguageService {
     );
 
     try {
-      const ethnologueId = await this.ethnologueLanguageService.create(
-        input?.ethnologue,
-        session
-      );
+      const ethnologueId = (
+        await this.writeEthnologue(
+          input.ethnologue,
+          input.sensitivity ?? Sensitivity.High,
+          session
+        )
+      ).id;
 
-      // create language and connect ethnologueLanguage to language
-      const resultLanguage = await this.repo.create(
-        input,
-        ethnologueId,
-        session
-      );
-
-      if (!resultLanguage) {
-        throw new ServerException('failed to create language');
-      }
-
-      await this.authorizationService.processNewBaseNode(
-        Language,
-        resultLanguage.id,
-        session.userId
-      );
-
-      const result = await this.readOne(resultLanguage.id, session);
+      const result = await this.writeLanguage(input, session, ethnologueId);
 
       return result;
     } catch (e) {
@@ -113,6 +104,41 @@ export class LanguageService {
       this.logger.error(`Could not create`, { ...input, exception: e });
       throw new ServerException('Could not create language', e);
     }
+  }
+
+  async writeEthnologue(
+    eth: CreateEthnologueLanguage,
+    sensitivity: Sensitivity,
+    session: Session
+  ) {
+    const response = await getFromCordTables('sc-ethnologue/create-read', {
+      ethnologue: { ...transformEthnologueDtoToPayload(eth, sensitivity) },
+    });
+    const iLanguage: TablesReadEthnologue = JSON.parse(response.body);
+
+    const dto: UnsecuredDto<EthnologueLanguage> =
+      transformEthnologuePayloadToDto(iLanguage.ethnologue);
+    return await this.ethnologueLanguageService.secure(
+      dto,
+      iLanguage.ethnologue.sensitivity,
+      session
+    );
+  }
+
+  async writeLanguage(
+    language: CreateLanguage,
+    session: Session,
+    ethnologueId: ID
+  ) {
+    const response = await getFromCordTables('sc-languages/create-read', {
+      language: { ...transformLanguageDtoToPayload(language, ethnologueId) },
+    });
+    const iLanguage: TablesReadLanguage = JSON.parse(response.body);
+
+    const dto: UnsecuredDto<Language> = transformLanguagePayloadToDto(
+      iLanguage.language
+    );
+    return await this.secure(dto, session);
   }
 
   @HandleIdLookup(Language)
