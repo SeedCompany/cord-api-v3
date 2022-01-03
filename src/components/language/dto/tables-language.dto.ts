@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import { internal } from 'neo4j-driver-core';
 import { EthnologueLanguage } from '.';
 import { CalendarDate, Sensitivity, ID, UnsecuredDto } from '../../../common';
@@ -9,6 +10,10 @@ export interface TablesLanguages {
 
 export interface TablesReadLanguage {
   language: TablesLanguage;
+}
+
+export interface TablesReadEthnologue {
+  ethnologue: TablesEthnologueLanguage;
 }
 
 export interface TablesLanguage {
@@ -36,7 +41,7 @@ export interface TablesEthnologueLanguage {
   id: ID;
   code: string;
   provisional_code: string;
-  name: string;
+  language_name: string;
   population: number;
-  sensitivity?: Sensitivity;
+  sensitivity: Sensitivity;
 }
