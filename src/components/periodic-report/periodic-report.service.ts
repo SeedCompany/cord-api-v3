@@ -226,6 +226,10 @@ export class PeriodicReportService {
     const report = await this.repo.getFinalReport(parentId, type, session);
 
     if (report) {
+      if (+report.start === +at) {
+        // no change
+        return;
+      }
       await this.repo.updateProperties(report, {
         start: at,
         end: at,
