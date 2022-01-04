@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, Query, relation } from 'cypher-query-builder';
+import { inArray, node, not, Query, relation } from 'cypher-query-builder';
 import { Interval } from 'luxon';
 import {
   generateId,
@@ -18,7 +18,9 @@ import {
   matchPropsAndProjectSensAndScopedRoles,
   merge,
   paginate,
+  path,
   sorting,
+  variable,
   Variable,
 } from '../../core/database/query';
 import {
@@ -197,28 +199,39 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
   async delete(baseNodeId: ID, type: ReportType, intervals: Interval[]) {
     return await this.db
       .query()
-      .match([
-        node('node', 'BaseNode', { id: baseNodeId }),
-        relation('out', '', 'report', ACTIVE),
-        node('report', `${type}Report`),
-      ])
-      .optionalMatch([
-        node('report'),
-        relation('out', '', 'start', ACTIVE),
-        node('start', 'Property'),
-      ])
-      .with('report, start')
-      .raw(
-        `
-          WHERE NOT (report)-[:reportFileNode]->(:File)<-[:parent { active: true }]-(:FileVersion)
-            AND start.value IN $startDates
-        `,
-        {
-          startDates: intervals.map((interval) => interval.start),
-        }
+      .unwind(
+        intervals.map((i) => ({ start: i.start, end: i.end })),
+        'interval'
       )
+      .match([
+        [
+          node('node', 'BaseNode', { id: baseNodeId }),
+          relation('out', '', 'report', ACTIVE),
+          node('report', `${type}Report`),
+        ],
+        [
+          node('report'),
+          relation('out', '', 'start', ACTIVE),
+          node('start', 'Property', { value: variable('interval.start') }),
+        ],
+        [
+          node('report'),
+          relation('out', '', 'end', ACTIVE),
+          node('end', 'Property', { value: variable('interval.end') }),
+        ],
+      ])
+      .where({
+        uploaded: not(
+          path([
+            node('report'),
+            relation('out', '', 'reportFileNode'),
+            relation('in', '', 'parent', ACTIVE),
+            node('', 'FileVersion'),
+          ])
+        ),
+      })
       .apply(deleteBaseNode('report'))
-      .return<{ count: number }>('count(node) as count')
+      .return<{ count: number }>('count(report) as count')
       .first();
   }
 
