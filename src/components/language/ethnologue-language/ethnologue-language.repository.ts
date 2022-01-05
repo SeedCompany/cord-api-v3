@@ -1,20 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
 import {
-  getFromCordTables,
   ID,
   NotFoundException,
   Sensitivity,
   Session,
-  transformEthnologueDtoToPayload,
-  transformEthnologuePayloadToDto,
   UnsecuredDto,
 } from '../../../common';
+import { getFromCordTables } from '../../../common/cordtables';
 import { DtoRepository, matchRequestingUser } from '../../../core';
 import {
   CreateEthnologueLanguage,
   EthnologueLanguage,
   TablesReadEthnologue,
+  transformEthnologueDtoToPayload,
+  transformEthnologuePayloadToDto,
 } from '../dto';
 
 @Injectable()
