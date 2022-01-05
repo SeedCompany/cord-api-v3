@@ -1,7 +1,7 @@
 import { DateTimeUnit } from 'luxon';
-import { DateInterval } from '../../../common';
+import { DateInterval, UnsecuredDto } from '../../../common';
 import { EventsHandler, IEventHandler, ILogger, Logger } from '../../../core';
-import { projectRange } from '../../project';
+import { Project, projectRange } from '../../project';
 import { ProjectUpdatedEvent } from '../../project/events';
 import { ReportPeriod, ReportType } from '../dto';
 import { PeriodicReportService } from '../periodic-report.service';
@@ -28,42 +28,11 @@ export class SyncPeriodicReportsToProjectDateRange
   }
 
   private async syncFinancial(event: SubscribedEvent) {
+    const diff = this.diffFinancial(event);
+    if (!diff) {
+      return;
+    }
     const project = event.updated;
-    const previous = event.previous;
-
-    if (!project.financialReportPeriod) return;
-
-    const previousIntervalUnit =
-      previous.financialReportPeriod === ReportPeriod.Monthly
-        ? 'month'
-        : 'quarter';
-    const projectIntervalUnit =
-      project.financialReportPeriod === ReportPeriod.Monthly
-        ? 'month'
-        : 'quarter';
-
-    const diff =
-      project.financialReportPeriod !== previous.financialReportPeriod
-        ? {
-            additions:
-              projectRange(project)
-                ?.expandToFull(projectIntervalUnit)
-                .splitBy({
-                  [projectIntervalUnit]: 1,
-                }) || [],
-            removals:
-              projectRange(previous)
-                ?.expandToFull(previousIntervalUnit)
-                .splitBy({
-                  [previousIntervalUnit]: 1,
-                }) || [],
-          }
-        : this.diffBy(
-            event,
-            project.financialReportPeriod === ReportPeriod.Monthly
-              ? 'month'
-              : 'quarter'
-          );
 
     await this.periodicReports.delete(
       project.id,
@@ -89,7 +58,7 @@ export class SyncPeriodicReportsToProjectDateRange
       await this.periodicReports.mergeFinalReport(
         project.id,
         ReportType.Financial,
-        project.mouEnd.endOf(projectIntervalUnit),
+        project.mouEnd.endOf(diff.interval),
         event.session
       );
     }
@@ -125,6 +94,38 @@ export class SyncPeriodicReportsToProjectDateRange
         event.session
       );
     }
+  }
+
+  private diffFinancial(event: ProjectUpdatedEvent) {
+    const project = event.updated;
+    const previous = event.previous;
+
+    if (!project.financialReportPeriod) return null;
+
+    const newInterval: DateTimeUnit =
+      project.financialReportPeriod === ReportPeriod.Monthly
+        ? 'month'
+        : 'quarter';
+
+    if (project.financialReportPeriod === previous.financialReportPeriod) {
+      const diff = this.diffBy(event, newInterval);
+      return { interval: newInterval, ...diff };
+    }
+
+    const reportRanges = (proj: UnsecuredDto<Project>, unit: DateTimeUnit) =>
+      projectRange(proj)
+        ?.expandToFull(unit)
+        .splitBy({ [unit]: 1 }) || [];
+
+    const prevInterval: DateTimeUnit =
+      previous.financialReportPeriod === ReportPeriod.Monthly
+        ? 'month'
+        : 'quarter';
+    return {
+      interval: newInterval,
+      additions: reportRanges(project, newInterval),
+      removals: reportRanges(previous, prevInterval),
+    };
   }
 
   private diffBy(event: SubscribedEvent, unit: DateTimeUnit) {
