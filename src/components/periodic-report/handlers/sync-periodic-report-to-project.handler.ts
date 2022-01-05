@@ -5,17 +5,24 @@ import { projectRange } from '../../project';
 import { ProjectUpdatedEvent } from '../../project/events';
 import { ReportPeriod, ReportType } from '../dto';
 import { PeriodicReportService } from '../periodic-report.service';
+import {
+  AbstractPeriodicReportSync,
+  Intervals,
+} from './abstract-periodic-report-sync';
 
 type SubscribedEvent = ProjectUpdatedEvent;
 
 @EventsHandler(ProjectUpdatedEvent)
 export class SyncPeriodicReportsToProjectDateRange
+  extends AbstractPeriodicReportSync
   implements IEventHandler<SubscribedEvent>
 {
   constructor(
-    private readonly periodicReports: PeriodicReportService,
+    periodicReports: PeriodicReportService,
     @Logger('periodic-reports:project-sync') private readonly logger: ILogger
-  ) {}
+  ) {
+    super(periodicReports);
+  }
 
   async handle(event: SubscribedEvent) {
     this.logger.debug('Project mutation, syncing periodic reports', {
@@ -23,82 +30,48 @@ export class SyncPeriodicReportsToProjectDateRange
       event: event.constructor.name,
     });
 
-    await this.syncNarrative(event);
-    await this.syncFinancial(event);
-  }
+    const project = event.updated;
+    const intervals: Intervals = [
+      projectRange(project),
+      projectRange(event.previous),
+    ];
 
-  private async syncFinancial(event: SubscribedEvent) {
-    const diff = this.diffFinancial(event);
-    if (!diff) {
+    const narrativeDiff = this.diffBy(...intervals, 'quarter');
+    await this.sync(
+      event.session,
+      project.id,
+      ReportType.Narrative,
+      narrativeDiff,
+      project.mouEnd?.endOf('quarter')
+    );
+
+    if (!project.financialReportPeriod) {
       return;
     }
-    const project = event.updated;
-
-    await this.periodicReports.delete(
+    const financialDiff = this.diffFinancial(intervals, event);
+    await this.sync(
+      event.session,
       project.id,
       ReportType.Financial,
-      diff.removals
+      financialDiff,
+      project.mouEnd?.endOf(financialDiff.interval)
     );
-
-    await this.periodicReports.merge({
-      type: ReportType.Financial,
-      parent: project.id,
-      intervals: diff.additions,
-      session: event.session,
-    });
-
-    if (project.mouEnd) {
-      await this.periodicReports.mergeFinalReport(
-        project.id,
-        ReportType.Financial,
-        project.mouEnd.endOf(diff.interval),
-        event.session
-      );
-    }
   }
 
-  private async syncNarrative(event: SubscribedEvent) {
-    const diff = this.diffBy(event, 'quarter');
-    await this.periodicReports.delete(
-      event.updated.id,
-      ReportType.Narrative,
-      diff.removals
-    );
-
-    await this.periodicReports.merge({
-      type: ReportType.Narrative,
-      parent: event.updated.id,
-      intervals: diff.additions,
-      session: event.session,
-    });
-
-    if (event.updated.mouEnd) {
-      await this.periodicReports.mergeFinalReport(
-        event.updated.id,
-        ReportType.Narrative,
-        event.updated.mouEnd.endOf('quarter'),
-        event.session
-      );
-    }
-  }
-
-  private diffFinancial(event: ProjectUpdatedEvent) {
-    const project = event.updated;
-    const previous = event.previous;
-
-    if (!project.financialReportPeriod) return null;
+  private diffFinancial(intervals: Intervals, event: ProjectUpdatedEvent) {
+    const { updated, previous } = event;
 
     const newInterval: DateTimeUnit =
-      project.financialReportPeriod === ReportPeriod.Monthly
+      updated.financialReportPeriod === ReportPeriod.Monthly
         ? 'month'
         : 'quarter';
 
-    if (project.financialReportPeriod === previous.financialReportPeriod) {
-      const diff = this.diffBy(event, newInterval);
+    if (updated.financialReportPeriod === previous.financialReportPeriod) {
+      const diff = this.diffBy(...intervals, newInterval);
       return { interval: newInterval, ...diff };
     }
 
-    const projectMou = projectRange(project)?.expandToFull(newInterval) ?? null;
+    const projectMou = intervals[0]?.expandToFull(newInterval) ?? null;
 
     const reportRanges = (range: DateInterval | null, unit: DateTimeUnit) =>
       range?.expandToFull(unit).splitBy({ [unit]: 1 }) ?? [];
@@ -119,18 +92,6 @@ export class SyncPeriodicReportsToProjectDateRange
             ]
           : []),
       ],
-    };
-  }
-
-  private diffBy(event: SubscribedEvent, unit: DateTimeUnit) {
-    const diff = DateInterval.compare(
-      projectRange(event.previous)?.expandToFull(unit),
-      projectRange(event.updated)?.expandToFull(unit)
-    );
-    const splitByUnit = (range: DateInterval) => range.splitBy({ [unit]: 1 });
-    return {
-      additions: diff.additions.flatMap(splitByUnit),
-      removals: diff.removals.flatMap(splitByUnit),
     };
   }
 }

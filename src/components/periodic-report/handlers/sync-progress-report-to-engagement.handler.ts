@@ -1,5 +1,3 @@
-import { Interval } from 'luxon';
-import { DateInterval } from '../../../common';
 import { EventsHandler, IEventHandler, ILogger, Logger } from '../../../core';
 import { engagementRange, EngagementService } from '../../engagement';
 import {
@@ -10,6 +8,7 @@ import { projectRange } from '../../project';
 import { ProjectUpdatedEvent } from '../../project/events';
 import { ReportType } from '../dto';
 import { PeriodicReportService } from '../periodic-report.service';
+import { AbstractPeriodicReportSync } from './abstract-periodic-report-sync';
 
 type SubscribedEvent =
   | EngagementCreatedEvent
@@ -22,13 +21,16 @@ type SubscribedEvent =
   ProjectUpdatedEvent
 )
 export class SyncProgressReportToEngagementDateRange
+  extends AbstractPeriodicReportSync
   implements IEventHandler<SubscribedEvent>
 {
   constructor(
-    private readonly periodicReports: PeriodicReportService,
+    periodicReports: PeriodicReportService,
     private readonly engagements: EngagementService,
     @Logger('progress-report:engagement-sync') private readonly logger: ILogger
-  ) {}
+  ) {
+    super(periodicReports);
+  }
 
   async handle(event: SubscribedEvent) {
     this.logger.debug('Engagement mutation, syncing progress reports', {
@@ -45,7 +47,14 @@ export class SyncProgressReportToEngagementDateRange
       return;
     }
 
-    const diff = this.diff(event);
+    const [prev, updated] =
+      event instanceof ProjectUpdatedEvent
+        ? [projectRange(event.previous), projectRange(event.updated)]
+        : event instanceof EngagementCreatedEvent
+        ? [null, engagementRange(event.engagement)]
+        : [engagementRange(event.previous), engagementRange(event.updated)];
+
+    const diff = this.diffBy(updated, prev, 'quarter');
 
     const engagements =
       event instanceof ProjectUpdatedEvent
@@ -55,55 +64,14 @@ export class SyncProgressReportToEngagementDateRange
         : [event.engagement];
 
     for (const engagement of engagements) {
-      await this.periodicReports.delete(
+      await this.sync(
+        event.session,
         engagement.id,
         ReportType.Progress,
-        diff.removals
+        diff,
+        engagement.endDate.value?.endOf('quarter')
       );
-
-      await this.periodicReports.merge({
-        parent: engagement.id,
-        type: ReportType.Progress,
-        intervals: diff.additions,
-        session: event.session,
-      });
-
-      if (engagement.endDate.value) {
-        await this.periodicReports.mergeFinalReport(
-          engagement.id,
-          ReportType.Progress,
-          engagement.endDate.value.endOf('quarter'),
-          event.session
-        );
-      }
     }
-  }
-
-  private diff(event: SubscribedEvent) {
-    let prevRange;
-    let updatedRange;
-    if (event instanceof ProjectUpdatedEvent) {
-      prevRange = projectRange(event.previous);
-      updatedRange = projectRange(event.updated);
-    }
-    if (event instanceof EngagementCreatedEvent) {
-      prevRange = null;
-      updatedRange = engagementRange(event.engagement);
-    }
-    if (event instanceof EngagementUpdatedEvent) {
-      prevRange = engagementRange(event.previous);
-      updatedRange = engagementRange(event.updated);
-    }
-
-    const diff = DateInterval.compare(
-      prevRange?.expandToFull('quarter'),
-      updatedRange?.expandToFull('quarter')
-    );
-    const splitByUnit = (range: Interval) => range.splitBy({ quarters: 1 });
-    return {
-      additions: diff.additions.flatMap(splitByUnit),
-      removals: diff.removals.flatMap(splitByUnit),
-    };
   }
 
   private async getProjectEngagements(event: ProjectUpdatedEvent) {
