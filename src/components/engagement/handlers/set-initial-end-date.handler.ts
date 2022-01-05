@@ -2,7 +2,7 @@ import {
   CalendarDate,
   ID,
   ServerException,
-  UnauthorizedException,
+  UnsecuredDto,
 } from '../../../common';
 import { EventsHandler, IEventHandler, ILogger, Logger } from '../../../core';
 import {
@@ -35,29 +35,18 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
 
     if (
       event instanceof EngagementUpdatedEvent && // allow setting initial if creating with non-in-dev status
-      engagement.status.value !== EngagementStatus.InDevelopment
+      engagement.status !== EngagementStatus.InDevelopment
     ) {
       return;
     }
-    if (!engagement.endDate.canRead) {
-      throw new UnauthorizedException(
-        `Current user cannot read Engagement's end date thus initial end date cannot be set`
-      );
-    }
-    if (!engagement.initialEndDate.canRead) {
-      throw new UnauthorizedException(
-        `Current user cannot read Engagement's initial end date thus initial end date cannot be set`
-      );
-    }
     if (
-      engagement.initialEndDate.value?.toMillis() ===
-      engagement.endDate.value?.toMillis()
+      engagement.initialEndDate?.toMillis() === engagement.endDate?.toMillis()
     ) {
       return;
     }
 
     try {
-      const initialEndDate = engagement.endDate.value;
+      const initialEndDate = engagement.endDate;
 
       await this.updateEngagementInitialEndDate(
         engagement,
@@ -66,10 +55,7 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
       );
       const updatedEngagement = {
         ...engagement,
-        initialEndDate: {
-          ...engagement.initialEndDate,
-          value: initialEndDate,
-        },
+        initialEndDate,
       };
 
       if (event instanceof EngagementUpdatedEvent) {
@@ -90,7 +76,7 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
   }
 
   private async updateEngagementInitialEndDate(
-    engagement: Engagement,
+    engagement: UnsecuredDto<Engagement>,
     initialEndDate: CalendarDate | null | undefined,
     changeset?: ID
   ) {
@@ -99,13 +85,13 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
     };
     if (engagement.__typename === 'LanguageEngagement') {
       await this.engagementRepo.updateLanguageProperties(
-        engagement as LanguageEngagement,
+        engagement as UnsecuredDto<LanguageEngagement>,
         updateInput,
         changeset
       );
     } else {
       await this.engagementRepo.updateInternshipProperties(
-        engagement as InternshipEngagement,
+        engagement as UnsecuredDto<InternshipEngagement>,
         updateInput,
         changeset
       );

@@ -1,4 +1,4 @@
-import { DateInterval } from '../../../common';
+import { DateInterval, UnsecuredDto } from '../../../common';
 import { EventsHandler, IEventHandler, ILogger, Logger } from '../../../core';
 import {
   Engagement,
@@ -79,13 +79,13 @@ export class SyncProgressReportToEngagementDateRange
         engagement.id,
         ReportType.Progress,
         diff,
-        engagement.endDate.value?.endOf('quarter')
+        engagement.endDate?.endOf('quarter')
       );
     }
   }
 
   private intervalsFromProjectChange(
-    engagement: Engagement,
+    engagement: UnsecuredDto<Engagement>,
     event: ProjectUpdatedEvent
   ): Intervals {
     return [
@@ -94,8 +94,8 @@ export class SyncProgressReportToEngagementDateRange
       // For previous, there's no change if there was an override,
       // otherwise it's the project's previous
       DateInterval.tryFrom(
-        engagement.startDateOverride.value ?? event.previous.mouStart,
-        engagement.endDateOverride.value ?? event.previous.mouEnd
+        engagement.startDateOverride ?? event.previous.mouStart,
+        engagement.endDateOverride ?? event.previous.mouEnd
       ),
     ];
   }

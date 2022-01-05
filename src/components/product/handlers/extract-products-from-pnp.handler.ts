@@ -1,6 +1,12 @@
 import { difference, groupBy, uniq } from 'lodash';
 import { DateTime } from 'luxon';
-import { asyncPool, ID, mapFromList, Session } from '../../../common';
+import {
+  asyncPool,
+  ID,
+  mapFromList,
+  Session,
+  UnsecuredDto,
+} from '../../../common';
 import { EventsHandler, IEventHandler, ILogger, Logger } from '../../../core';
 import { Engagement } from '../../engagement';
 import {
@@ -174,7 +180,7 @@ export class ExtractProductsFromPnpHandler
    * or if they should create a new one or if they should be skipped.
    */
   private async matchRowsToProductChanges(
-    engagement: Engagement,
+    engagement: UnsecuredDto<Engagement>,
     rows: readonly ExtractedRow[]
   ) {
     const scriptureProducts = rows[0].bookName

@@ -24,7 +24,7 @@ export class SetLastStatusDate
 
   async handle(event: EngagementUpdatedEvent) {
     const { previous, updated, session } = event;
-    if (previous.status.value === updated.status.value) {
+    if (previous.status === updated.status) {
       return;
     }
 
@@ -32,13 +32,13 @@ export class SetLastStatusDate
       const modifiedAt = updated.modifiedAt;
       const changes = {
         statusModifiedAt: modifiedAt,
-        ...(updated.status.value === EngagementStatus.Suspended
+        ...(updated.status === EngagementStatus.Suspended
           ? {
               lastSuspendedAt: modifiedAt,
             }
           : {}),
-        ...(previous.status.value === EngagementStatus.Suspended &&
-        updated.status.value === EngagementStatus.Active
+        ...(previous.status === EngagementStatus.Suspended &&
+        updated.status === EngagementStatus.Active
           ? {
               lastReactivatedAt: modifiedAt,
             }

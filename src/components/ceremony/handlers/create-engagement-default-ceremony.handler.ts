@@ -52,10 +52,7 @@ export class CreateEngagementDefaultCeremonyHandler
 
     event.engagement = {
       ...engagement,
-      ceremony: {
-        ...engagement.ceremony, // permissions
-        value: ceremonyId,
-      },
+      ceremony: ceremonyId,
     };
   }
 }
