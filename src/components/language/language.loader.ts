@@ -11,6 +11,6 @@ export class LanguageLoader extends ObjectViewAwareLoader<Language> {
   }
 
   async loadManyByView(ids: readonly ID[], view: ObjectView) {
-    return await this.languages.readMany(ids, this.session, view);
+    return await this.languages.readMany(ids, this.session);
   }
 }
