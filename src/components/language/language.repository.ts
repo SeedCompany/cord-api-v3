@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, Query, relation } from 'cypher-query-builder';
 import {
+  getFromCordTables,
   ID,
-  labelForView,
-  NotFoundException,
   ObjectView,
   Session,
+  transformLanguageDtoToPayload,
+  transformLanguagePayloadToDto,
   UnsecuredDto,
 } from '../../common';
 import { DtoRepository, matchRequestingUser } from '../../core';
@@ -13,8 +14,6 @@ import {
   ACTIVE,
   any,
   collect,
-  createNode,
-  createRelationships,
   exp,
   matchChangesetAndChangedProps,
   matchProjectScopedRoles,
@@ -30,56 +29,39 @@ import {
 } from '../../core/database/query';
 import { AuthSensitivityMapping } from '../authorization/authorization.service';
 import { ProjectStatus } from '../project';
-import { CreateLanguage, Language, LanguageListInput } from './dto';
+import {
+  CreateLanguage,
+  Language,
+  LanguageListInput,
+  TablesReadLanguage,
+} from './dto';
 import { languageListFilter } from './query.helpers';
 
 @Injectable()
 export class LanguageRepository extends DtoRepository(Language) {
-  async create(input: CreateLanguage, ethnologueId: ID, session: Session) {
-    const initialProps = {
-      name: input.name,
-      displayName: input.displayName,
-      sensitivity: input.sensitivity,
-      isDialect: input.isDialect,
-      populationOverride: input.populationOverride,
-      registryOfDialectsCode: input.registryOfDialectsCode,
-      leastOfThese: input.leastOfThese,
-      leastOfTheseReason: input.leastOfTheseReason,
-      displayNamePronunciation: input.displayNamePronunciation,
-      isSignLanguage: input.isSignLanguage,
-      signLanguageCode: input.signLanguageCode,
-      sponsorEstimatedEndDate: input.sponsorEstimatedEndDate,
-      hasExternalFirstScripture: input.hasExternalFirstScripture,
-      tags: input.tags,
-      canDelete: true,
-    };
+  async create(language: CreateLanguage, session: Session, ethnologueId: ID) {
+    const response = await getFromCordTables('sc/languages/create-read', {
+      language: { ...transformLanguageDtoToPayload(language, ethnologueId) },
+    });
+    const iLanguage: TablesReadLanguage = JSON.parse(response.body);
 
-    const createLanguage = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .apply(await createNode(Language, { initialProps }))
-      .apply(
-        createRelationships(Language, 'out', {
-          ethnologue: ['EthnologueLanguage', ethnologueId],
-        })
-      )
-      .return<{ id: ID }>('node.id as id');
-
-    return await createLanguage.first();
+    const dto: UnsecuredDto<Language> = transformLanguagePayloadToDto(
+      iLanguage.language
+    );
+    return dto;
   }
 
-  async readOne(langId: ID, session: Session, view?: ObjectView) {
-    const query = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', labelForView('Language', view), { id: langId })])
-      .apply(this.hydrate(session, view));
+  async readOne(langId: ID): Promise<UnsecuredDto<Language>> {
+    const response = await getFromCordTables('sc/languages/read', {
+      id: langId,
+    });
+    const language = response.body;
+    const iLanguage: TablesReadLanguage = JSON.parse(language);
 
-    const result = await query.first();
-    if (!result) {
-      throw new NotFoundException('Could not find language', 'language.id');
-    }
-    return result.dto;
+    const dto: UnsecuredDto<Language> = transformLanguagePayloadToDto(
+      iLanguage.language
+    );
+    return dto;
   }
 
   async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {

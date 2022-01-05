@@ -1,6 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { getFromContainer } from 'class-validator';
-import got from 'got/dist/source';
 import { compact } from 'lodash';
 import {
   CalendarDate,
@@ -16,9 +14,6 @@ import {
   ServerException,
   Session,
   simpleSwitch,
-  transformEthnologueDtoToPayload,
-  transformEthnologuePayloadToDto,
-  transformLanguageDtoToPayload,
   transformLanguagePayloadToDto,
   UnauthorizedException,
   UnsecuredDto,
@@ -40,16 +35,11 @@ import {
   SecuredProjectList,
 } from '../project';
 import {
-  CreateEthnologueLanguage,
   CreateLanguage,
-  EthnologueLanguage,
   Language,
   LanguageListInput,
   LanguageListOutput,
-  TablesLanguage,
   TablesLanguages,
-  TablesReadEthnologue,
-  TablesReadLanguage,
   UpdateLanguage,
 } from './dto';
 import { EthnologueLanguageService } from './ethnologue-language';
@@ -76,17 +66,15 @@ export class LanguageService {
     );
 
     try {
-      const ethnologueId = (
-        await this.writeEthnologue(
-          input.ethnologue,
-          input.sensitivity ?? Sensitivity.High,
-          session
-        )
-      ).id;
+      const ethnologueId = await this.ethnologueLanguageService.create(
+        input.ethnologue,
+        session,
+        input.sensitivity ?? Sensitivity.High
+      );
 
-      const result = await this.writeLanguage(input, session, ethnologueId);
+      const result = await this.repo.create(input, session, ethnologueId);
 
-      return result;
+      return await this.secure(result, session);
     } catch (e) {
       if (e instanceof UniquenessError) {
         const prop =
@@ -106,76 +94,26 @@ export class LanguageService {
     }
   }
 
-  async writeEthnologue(
-    eth: CreateEthnologueLanguage,
-    sensitivity: Sensitivity,
-    session: Session
-  ) {
-    const response = await getFromCordTables('sc-ethnologue/create-read', {
-      ethnologue: { ...transformEthnologueDtoToPayload(eth, sensitivity) },
-    });
-    const iLanguage: TablesReadEthnologue = JSON.parse(response.body);
-
-    const dto: UnsecuredDto<EthnologueLanguage> =
-      transformEthnologuePayloadToDto(iLanguage.ethnologue);
-    return await this.ethnologueLanguageService.secure(
-      dto,
-      iLanguage.ethnologue.sensitivity,
-      session
-    );
-  }
-
-  async writeLanguage(
-    language: CreateLanguage,
-    session: Session,
-    ethnologueId: ID
-  ) {
-    const response = await getFromCordTables('sc-languages/create-read', {
-      language: { ...transformLanguageDtoToPayload(language, ethnologueId) },
-    });
-    const iLanguage: TablesReadLanguage = JSON.parse(response.body);
-
-    const dto: UnsecuredDto<Language> = transformLanguagePayloadToDto(
-      iLanguage.language
-    );
-    return await this.secure(dto, session);
-  }
-
   @HandleIdLookup(Language)
   async readOne(
     langId: ID,
-    session: Session,
-    view?: ObjectView
+    session: Session
+    // view?: ObjectView
   ): Promise<Language> {
-    //const dto = await this.repo.readOne(langId, session, view);
-    // return await this.secure(dto, session);
-    return await this.getLanguage(langId, session);
+    const dto = await this.repo.readOne(langId);
+    return await this.secure(dto, session);
   }
 
-  async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
-    const languages = await this.repo.readMany(ids, session, view);
-    // return await Promise.all(languages.map((dto) => this.secure(dto, session)));
+  async readMany(
+    ids: readonly ID[],
+    session: Session
+    // view?: ObjectView
+  ) {
     return await Promise.all(
       ids.map(async (id) => {
-        return await this.getLanguage(id, session);
+        return await this.secure(await this.repo.readOne(id), session);
       })
     );
-  }
-  async getLanguage(langId: ID, session: Session): Promise<Language> {
-    const response = await getFromCordTables('sc-languages/read', {
-      id: langId,
-    });
-    const language = response.body;
-    // console.log(response)
-    // console.log("\n\n\n\n\n")
-    // console.log(language)
-
-    const iLanguage: TablesReadLanguage = JSON.parse(language);
-
-    const dto: UnsecuredDto<Language> = transformLanguagePayloadToDto(
-      iLanguage.language
-    );
-    return await this.secure(dto, session);
   }
 
   private async secure(
@@ -221,7 +159,7 @@ export class LanguageService {
       await this.verifyExternalFirstScripture(input.id);
     }
 
-    const object = await this.readOne(input.id, session, view);
+    const object = await this.readOne(input.id, session);
     const changes = this.repo.getActualChanges(object, input);
     await this.authorizationService.verifyCanEditChanges(
       Language,
@@ -242,7 +180,7 @@ export class LanguageService {
 
     await this.repo.updateProperties(object, simpleChanges, view?.changeset);
 
-    return await this.readOne(input.id, session, view);
+    return await this.readOne(input.id, session);
   }
 
   async delete(id: ID, session: Session): Promise<void> {
@@ -283,7 +221,7 @@ export class LanguageService {
     session: Session,
     input: LanguageListInput
   ): Promise<LanguageListOutput> {
-    const response = await getFromCordTables('sc-languages/list', {
+    const response = await getFromCordTables('sc/languages/list', {
       sort: input.sort,
       order: input.order,
       page: input.page,
