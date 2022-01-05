@@ -156,7 +156,9 @@ export class ProductService {
           totalVerses,
           totalVerseEquivalents,
         });
-
+    if (input.stepList) {
+      await this.repo.createProductStepList(id, input.stepList);
+    }
     await this.authorizationService.processNewBaseNode(
       Product,
       id,
@@ -200,6 +202,7 @@ export class ProductService {
       session,
       { isOverriding: !!producible }
     );
+    const stepList = await this.repo.listProductStepList(id);
 
     if (title) {
       const dto: UnsecuredDto<OtherProduct> = {
@@ -207,6 +210,7 @@ export class ProductService {
         title,
         description,
         scriptureReferences: scriptureReferencesValue,
+        stepList: stepList,
       };
       return dto;
     }
@@ -215,6 +219,7 @@ export class ProductService {
       const dto: UnsecuredDto<DirectScriptureProduct> = {
         ...props,
         scriptureReferences: scriptureReferencesValue,
+        stepList: stepList,
       };
       return dto;
     }
@@ -228,6 +233,7 @@ export class ProductService {
       scriptureReferencesOverride: !isOverriding
         ? null
         : scriptureReferencesValue,
+      stepList: stepList,
     };
     return dto;
   }
@@ -356,7 +362,7 @@ export class ProductService {
   }
 
   async updateDirect(
-    input: UpdateDirectScriptureProduct,
+    { stepList, ...input }: UpdateDirectScriptureProduct,
     session: Session,
     currentProduct?: UnsecuredDto<DirectScriptureProduct>
   ): Promise<DirectScriptureProduct> {
@@ -415,6 +421,11 @@ export class ProductService {
       );
     }
 
+    // update step list
+    if (stepList) {
+      await this.repo.createProductStepList(input.id, stepList);
+    }
+
     await this.mergeCompletionDescription(changes, currentProduct);
 
     const productUpdatedScriptureReferences = asProductType(
@@ -428,7 +439,7 @@ export class ProductService {
   }
 
   async updateDerivative(
-    input: UpdateDerivativeScriptureProduct,
+    { stepList, ...input }: UpdateDerivativeScriptureProduct,
     session: Session,
     currentProduct?: UnsecuredDto<DerivativeScriptureProduct>
   ): Promise<DerivativeScriptureProduct> {
@@ -502,6 +513,11 @@ export class ProductService {
       { isOverriding: true }
     );
 
+    // update stepList
+    if (stepList) {
+      await this.repo.createProductStepList(input.id, stepList);
+    }
+
     const productUpdatedScriptureReferences = asProductType(
       DerivativeScriptureProduct
     )(await this.readOne(input.id, session));
@@ -512,7 +528,10 @@ export class ProductService {
     );
   }
 
-  async updateOther(input: UpdateOtherProduct, session: Session) {
+  async updateOther(
+    { stepList, ...input }: UpdateOtherProduct,
+    session: Session
+  ) {
     const currentProduct = await this.readOneUnsecured(input.id, session);
     if (!currentProduct.title) {
       throw new InputException('Product given is not an OtherProduct');
@@ -536,6 +555,11 @@ export class ProductService {
     );
 
     await this.mergeCompletionDescription(changes, currentProduct);
+
+    // update stepList
+    if (stepList) {
+      await this.repo.createProductStepList(input.id, stepList);
+    }
 
     const currentSecured = asProductType(OtherProduct)(
       await this.secure(currentProduct, session)

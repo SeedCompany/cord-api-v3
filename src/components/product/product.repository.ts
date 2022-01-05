@@ -55,6 +55,8 @@ import {
   Product,
   ProductCompletionDescriptionSuggestionsInput,
   ProductListInput,
+  ProductStepInfo,
+  ProductStepInfoInput,
   ProgressMeasurement,
   UpdateProduct,
 } from './dto';
@@ -506,6 +508,67 @@ export class ProductRepository extends CommonRepository {
       .apply(paginate(input, (q) => q.return<{ dto: string }>('node as dto')))
       .first();
     return result!;
+  }
+
+  async createProductStepList(id: ID, stepList: ProductStepInfoInput[]) {
+    await this.db
+      .query()
+      .match([
+        node('product', 'Product', { id }),
+        relation('out', 'productStepRel', 'productStep', { active: ACTIVE }),
+        node('productStepInfo', 'ProductStepInfo'),
+      ])
+      .setValues({
+        'productStepRel.active': false,
+      })
+      .run();
+
+    await Promise.all(
+      stepList.map(async (stepInfo) => {
+        await this.db
+          .query()
+          .apply(await createNode(ProductStepInfo, { initialProps: stepInfo }))
+          .apply(
+            createRelationships(ProductStepInfo, {
+              in: {
+                productStep: ['Product', id],
+              },
+            })
+          )
+          .return<{ id: ID }>('node.id as id')
+          .first();
+      })
+    );
+  }
+
+  async listProductStepList(id: ID) {
+    const query = this.db
+      .query()
+      .match([
+        node('product', 'Product', { id }),
+        relation('out', '', 'productStep', ACTIVE),
+        node('productStepInfo', 'ProductStepInfo'),
+      ])
+      .optionalMatch([
+        node('productStepInfo'),
+        relation('out', '', 'name', ACTIVE),
+        node('name', 'ProductStep'),
+      ])
+      .optionalMatch([
+        node('productStepInfo'),
+        relation('out', '', 'plannedCompleteDate', ACTIVE),
+        node('plannedCompleteDate', 'Property'),
+      ])
+      .return<{ stepList: ProductStepInfo[] }>([
+        'name.value as name',
+        'plannedCompleteDate',
+      ]);
+
+    const result = await query.first();
+    if (!result) {
+      throw new ServerException('Failed to read product step list');
+    }
+    return result.stepList;
   }
 
   @OnIndex('schema')
