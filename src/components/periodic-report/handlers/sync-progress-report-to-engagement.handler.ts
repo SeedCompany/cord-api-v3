@@ -1,11 +1,7 @@
 import { Interval } from 'luxon';
-import { DateInterval, ID, Session } from '../../../common';
+import { DateInterval } from '../../../common';
 import { EventsHandler, IEventHandler, ILogger, Logger } from '../../../core';
-import {
-  engagementRange,
-  EngagementService,
-  IEngagement,
-} from '../../engagement';
+import { engagementRange, EngagementService } from '../../engagement';
 import {
   EngagementCreatedEvent,
   EngagementUpdatedEvent,
@@ -49,46 +45,38 @@ export class SyncProgressReportToEngagementDateRange
       return;
     }
 
-    await this.syncProgress(event);
-  }
-
-  private async syncProgress(event: SubscribedEvent) {
     const diff = this.diff(event);
 
-    if (event instanceof ProjectUpdatedEvent) {
-      const projectEngagements = await this.getProjectEngagements(event);
+    const engagements =
+      event instanceof ProjectUpdatedEvent
+        ? await this.getProjectEngagements(event)
+        : event instanceof EngagementUpdatedEvent
+        ? [event.updated]
+        : [event.engagement];
 
-      for (const engagement of projectEngagements) {
-        await this.deleteReports(engagement.id, diff.removals);
-        await this.createReports(engagement.id, diff.additions, event.session);
-        await this.mergeFinalReport(engagement, event.session);
+    for (const engagement of engagements) {
+      await this.periodicReports.delete(
+        engagement.id,
+        ReportType.Progress,
+        diff.removals
+      );
+
+      await this.periodicReports.merge({
+        parent: engagement.id,
+        type: ReportType.Progress,
+        intervals: diff.additions,
+        session: event.session,
+      });
+
+      if (engagement.endDate.value) {
+        await this.periodicReports.mergeFinalReport(
+          engagement.id,
+          ReportType.Progress,
+          engagement.endDate.value.endOf('quarter'),
+          event.session
+        );
       }
-    } else {
-      const engagement =
-        event instanceof EngagementUpdatedEvent
-          ? event.updated
-          : event.engagement;
-      await this.deleteReports(engagement.id, diff.removals);
-      await this.createReports(engagement.id, diff.additions, event.session);
-      await this.mergeFinalReport(engagement, event.session);
     }
-  }
-
-  private async deleteReports(engagementId: ID, range: Interval[]) {
-    await this.periodicReports.delete(engagementId, ReportType.Progress, range);
-  }
-
-  private async createReports(
-    engagementId: ID,
-    intervals: Interval[],
-    session: Session
-  ) {
-    await this.periodicReports.merge({
-      type: ReportType.Progress,
-      parent: engagementId,
-      intervals,
-      session,
-    });
   }
 
   private diff(event: SubscribedEvent) {
@@ -127,17 +115,5 @@ export class SyncProgressReportToEngagementDateRange
       (engagement) =>
         !engagement.startDateOverride.value || !engagement.endDateOverride.value
     );
-  }
-
-  private async mergeFinalReport(engagement: IEngagement, session: Session) {
-    const dateRange = engagementRange(engagement);
-    if (dateRange) {
-      await this.periodicReports.mergeFinalReport(
-        engagement.id,
-        ReportType.Progress,
-        dateRange.end.endOf('quarter'),
-        session
-      );
-    }
   }
 }
