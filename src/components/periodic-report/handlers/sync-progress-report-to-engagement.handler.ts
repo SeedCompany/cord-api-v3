@@ -1,14 +1,21 @@
+import { DateInterval } from '../../../common';
 import { EventsHandler, IEventHandler, ILogger, Logger } from '../../../core';
-import { engagementRange, EngagementService } from '../../engagement';
+import {
+  Engagement,
+  engagementRange,
+  EngagementService,
+} from '../../engagement';
 import {
   EngagementCreatedEvent,
   EngagementUpdatedEvent,
 } from '../../engagement/events';
-import { projectRange } from '../../project';
 import { ProjectUpdatedEvent } from '../../project/events';
 import { ReportType } from '../dto';
 import { PeriodicReportService } from '../periodic-report.service';
-import { AbstractPeriodicReportSync } from './abstract-periodic-report-sync';
+import {
+  AbstractPeriodicReportSync,
+  Intervals,
+} from './abstract-periodic-report-sync';
 
 type SubscribedEvent =
   | EngagementCreatedEvent
@@ -47,23 +54,26 @@ export class SyncProgressReportToEngagementDateRange
       return;
     }
 
-    const [prev, updated] =
-      event instanceof ProjectUpdatedEvent
-        ? [projectRange(event.previous), projectRange(event.updated)]
-        : event instanceof EngagementCreatedEvent
-        ? [null, engagementRange(event.engagement)]
-        : [engagementRange(event.previous), engagementRange(event.updated)];
-
-    const diff = this.diffBy(updated, prev, 'quarter');
-
     const engagements =
       event instanceof ProjectUpdatedEvent
-        ? await this.getProjectEngagements(event)
+        ? await this.engagements.listAllByProjectId(
+            event.updated.id,
+            event.session
+          )
         : event instanceof EngagementUpdatedEvent
         ? [event.updated]
         : [event.engagement];
 
     for (const engagement of engagements) {
+      const [prev, updated] =
+        event instanceof ProjectUpdatedEvent
+          ? this.intervalsFromProjectChange(engagement, event)
+          : event instanceof EngagementCreatedEvent
+          ? [null, engagementRange(event.engagement)]
+          : [engagementRange(event.previous), engagementRange(event.updated)];
+
+      const diff = this.diffBy(updated, prev, 'quarter');
+
       await this.sync(
         event.session,
         engagement.id,
@@ -74,14 +84,19 @@ export class SyncProgressReportToEngagementDateRange
     }
   }
 
-  private async getProjectEngagements(event: ProjectUpdatedEvent) {
-    const projectEngagements = await this.engagements.listAllByProjectId(
-      event.updated.id,
-      event.session
-    );
-    return projectEngagements.filter(
-      (engagement) =>
-        !engagement.startDateOverride.value || !engagement.endDateOverride.value
-    );
+  private intervalsFromProjectChange(
+    engagement: Engagement,
+    event: ProjectUpdatedEvent
+  ): Intervals {
+    return [
+      // Engagement already has all the updated values calculated correctly.
+      engagementRange(engagement),
+      // For previous, there's no change if there was an override,
+      // otherwise it's the project's previous
+      DateInterval.tryFrom(
+        engagement.startDateOverride.value ?? event.previous.mouStart,
+        engagement.endDateOverride.value ?? event.previous.mouEnd
+      ),
+    ];
   }
 }
