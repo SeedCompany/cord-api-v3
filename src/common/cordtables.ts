@@ -4,7 +4,6 @@ import { ID, Sensitivity, UnsecuredDto } from '.';
 import {
   CreateEthnologueLanguage,
   CreateLanguage,
-  CreateLanguageInput,
   EthnologueLanguage,
   Language,
   TablesEthnologueLanguage,
@@ -13,7 +12,7 @@ import {
 
 const baseUrl = 'http://localhost:8080';
 const token =
-  'AQvNQRAYpBSLUGSYhax6BpfhQxuY4e97sSijfDfc5eoaASayZ3q5dXpsGQl6Ojih';
+  'KpZ3RxUcuoZ1euAr3kQJb1Bq7dfzQ2d4Z5qfHWcaHZxO4gfoj3kaQqW0eFao4Ja5';
 
 export async function getFromCordTables(
   cordTablesPath: string,
@@ -73,7 +72,7 @@ export function transformLanguageDtoToPayload(
     name: lang.name,
     population_override: lang.populationOverride,
     registry_of_dialects_code: lang.registryOfDialectsCode,
-    sensitivity: lang.sensitivity,
+    sensitivity: lang.sensitivity || Sensitivity.High,
     sign_language_code: lang.signLanguageCode,
     sponsor_estimated_end_date: lang.sponsorEstimatedEndDate,
     tags: lang.tags,
