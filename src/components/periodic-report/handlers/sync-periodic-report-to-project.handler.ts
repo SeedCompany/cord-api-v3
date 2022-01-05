@@ -117,10 +117,7 @@ export class SyncPeriodicReportsToProjectDateRange
         ?.expandToFull(unit)
         .splitBy({ [unit]: 1 }) || [];
 
-    const prevInterval: DateTimeUnit =
-      previous.financialReportPeriod === ReportPeriod.Monthly
-        ? 'month'
-        : 'quarter';
+    const prevInterval = newInterval !== 'month' ? 'month' : 'quarter';
     return {
       interval: newInterval,
       additions: reportRanges(project, newInterval),
