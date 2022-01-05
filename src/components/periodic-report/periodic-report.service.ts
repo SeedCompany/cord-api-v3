@@ -1,6 +1,7 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import {
   CalendarDate,
+  DateInterval,
   ID,
   NotFoundException,
   ObjectView,
@@ -15,9 +16,9 @@ import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { FileService } from '../file';
 import {
-  CreatePeriodicReport,
   FinancialReport,
   IPeriodicReport,
+  MergePeriodicReports,
   NarrativeReport,
   PeriodicReport,
   PeriodicReportListInput,
@@ -41,24 +42,22 @@ export class PeriodicReportService {
     private readonly repo: PeriodicReportRepository
   ) {}
 
-  async create(
-    input: CreatePeriodicReport,
-    session: Session
-  ): Promise<PeriodicReport> {
+  async merge(input: MergePeriodicReports) {
+    if (input.intervals.length === 0) {
+      return;
+    }
     try {
-      const { id, reportFileId } = await this.repo.create(input);
-
-      await this.files.createDefinedFile(
-        reportFileId,
-        input.end.toISODate(),
-        session,
-        id,
-        'reportFile'
-      );
-
-      return await this.readOne(id, session);
+      const result = await this.repo.merge(input);
+      this.logger.info(`Merged ${input.type.toLowerCase()} reports`, {
+        existing: input.intervals.length - result.length,
+        new: result.length,
+        parent: input.parent,
+        newIntervals: result.map(({ interval }) =>
+          DateInterval.fromObject(interval).toISO()
+        ),
+      });
     } catch (exception) {
-      throw new ServerException('Could not create periodic report', exception);
+      throw new ServerException('Could not create periodic reports', exception);
     }
   }
 
@@ -240,15 +239,12 @@ export class PeriodicReportService {
         end: at,
       });
     } else {
-      await this.create(
-        {
-          start: at,
-          end: at,
-          type,
-          projectOrEngagementId: parentId,
-        },
-        session
-      );
+      await this.merge({
+        intervals: [{ start: at, end: at }],
+        type,
+        parent: parentId,
+        session,
+      });
     }
   }
 }

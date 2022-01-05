@@ -6,7 +6,6 @@ import {
   ID,
   NotFoundException,
   Range,
-  ServerException,
   Session,
   UnsecuredDto,
 } from '../../common';
@@ -20,11 +19,13 @@ import {
   merge,
   paginate,
   sorting,
+  variable,
   Variable,
 } from '../../core/database/query';
+import { File } from '../file';
 import {
-  CreatePeriodicReport,
   IPeriodicReport,
+  MergePeriodicReports,
   PeriodicReport,
   PeriodicReportListInput,
   ReportType,
@@ -33,32 +34,102 @@ import {
 
 @Injectable()
 export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
-  async create(input: CreatePeriodicReport) {
-    const reportFileId = await generateId();
-
+  async merge(input: MergePeriodicReports) {
     const Report = resolveReportType(input);
-    const initialProps = {
-      type: input.type,
-      start: input.start,
-      end: input.end,
-      skippedReason: input.skippedReason,
-      receivedDate: null,
-      reportFile: reportFileId,
-    };
+
+    // Create IDs here that will feed into the reports that are new.
+    // If only neo4j had a nanoid generator natively.
+    const intervals = await Promise.all(
+      input.intervals.map(async (interval) => ({
+        tempId: await generateId(),
+        start: interval.start,
+        end: interval.end,
+        tempFileId: await generateId(),
+      }))
+    );
+
     const query = this.db
       .query()
-      .apply(await createNode(Report, { initialProps }))
+      // before interval list, so it's the same time across reports
+      .with('datetime() as now')
+      .matchNode('parent', 'BaseNode', { id: input.parent })
+      .unwind(intervals, 'interval')
+      .comment('Stop processing this row if the report already exists')
+      .subQuery('parent, interval', (sub) =>
+        sub
+          .match([
+            [
+              node('parent'),
+              relation('out', '', 'report', ACTIVE),
+              node('node', `${input.type}Report`),
+            ],
+            [
+              node('node'),
+              relation('out', '', 'start', ACTIVE),
+              node('', 'Property', { value: variable('interval.start') }),
+            ],
+            [
+              node('node'),
+              relation('out', '', 'end', ACTIVE),
+              node('', 'Property', { value: variable('interval.end') }),
+            ],
+          ])
+          // Invert zero rows into one row
+          // We want to continue out of this sub-query having 1 row when
+          // the report doesn't exist.
+          // However, the match above gives us zero rows in this case.
+          // Use count() to get us back to 1 row, and to create a temp list
+          // of how many rows we want (0 if report exists, 1 if it doesn't).
+          // Then use UNWIND to convert this list into rows.
+          .with('CASE WHEN count(node) = 0 THEN [true] ELSE [] END as rows')
+          .raw('UNWIND rows as row')
+          // nonsense value, the 1 row returned is what is important, not this column
+          .return('true as itIsNew')
+      )
       .apply(
-        createRelationships(Report, 'in', {
-          report: ['BaseNode', input.projectOrEngagementId],
+        await createNode(Report as typeof IPeriodicReport, {
+          baseNodeProps: {
+            id: variable('interval.tempId'),
+            createdAt: variable('now'),
+          },
+          initialProps: {
+            type: input.type,
+            start: variable('interval.start'),
+            end: variable('interval.end'),
+            skippedReason: null,
+            receivedDate: null,
+            reportFile: variable('interval.tempFileId'),
+          },
         })
       )
-      .return<{ id: ID }>('node.id as id');
-    const result = await query.first();
-    if (!result) {
-      throw new ServerException('Failed to create a periodic report');
-    }
-    return { id: result.id, reportFileId };
+      .apply(
+        createRelationships(Report, 'in', {
+          report: variable('parent'),
+        })
+      )
+      // rename node to report, so we can call create node again for the file
+      .with('now, interval, node as report')
+      .apply(
+        await createNode(File, {
+          initialProps: {
+            name: variable('apoc.temporal.format(interval.end, "date")'),
+          },
+          baseNodeProps: {
+            id: variable('interval.tempFileId'),
+            createdAt: variable('now'),
+          },
+        })
+      )
+      .apply(
+        createRelationships(File, {
+          in: { reportFileNode: variable('report') },
+          out: { createdBy: ['User', input.session.userId] },
+        })
+      )
+      .return<{ id: ID; interval: Range<CalendarDate> }>(
+        'report.id as id, interval'
+      );
+    return await query.run();
   }
 
   async readOne(id: ID, session: Session) {

@@ -80,22 +80,15 @@ export class SyncProgressReportToEngagementDateRange
 
   private async createReports(
     engagementId: ID,
-    range: Interval[],
+    intervals: Interval[],
     session: Session
   ) {
-    await Promise.all(
-      range.map((interval) =>
-        this.periodicReports.create(
-          {
-            start: interval.start,
-            end: interval.end,
-            type: ReportType.Progress,
-            projectOrEngagementId: engagementId,
-          },
-          session
-        )
-      )
-    );
+    await this.periodicReports.merge({
+      type: ReportType.Progress,
+      parent: engagementId,
+      intervals,
+      session,
+    });
   }
 
   private diff(event: SubscribedEvent) {

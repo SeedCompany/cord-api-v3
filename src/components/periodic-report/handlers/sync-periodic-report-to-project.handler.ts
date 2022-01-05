@@ -40,19 +40,12 @@ export class SyncPeriodicReportsToProjectDateRange
       diff.removals
     );
 
-    await Promise.all(
-      diff.additions.map((interval) =>
-        this.periodicReports.create(
-          {
-            start: interval.start,
-            end: interval.end,
-            type: ReportType.Financial,
-            projectOrEngagementId: project.id,
-          },
-          event.session
-        )
-      )
-    );
+    await this.periodicReports.merge({
+      type: ReportType.Financial,
+      parent: project.id,
+      intervals: diff.additions,
+      session: event.session,
+    });
 
     if (project.mouEnd) {
       await this.periodicReports.mergeFinalReport(
@@ -72,19 +65,12 @@ export class SyncPeriodicReportsToProjectDateRange
       diff.removals
     );
 
-    await Promise.all(
-      diff.additions.map((interval) =>
-        this.periodicReports.create(
-          {
-            start: interval.start,
-            end: interval.end,
-            type: ReportType.Narrative,
-            projectOrEngagementId: event.updated.id,
-          },
-          event.session
-        )
-      )
-    );
+    await this.periodicReports.merge({
+      type: ReportType.Narrative,
+      parent: event.updated.id,
+      intervals: diff.additions,
+      session: event.session,
+    });
 
     if (event.updated.mouEnd) {
       await this.periodicReports.mergeFinalReport(
