@@ -1,4 +1,5 @@
 import { node, Query, relation } from 'cypher-query-builder';
+import { uniq } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   // eslint-disable-next-line @seedcompany/no-unused-vars -- used in jsdoc
@@ -12,6 +13,8 @@ import {
   UnsecuredDto,
 } from '../../../common';
 import { FileId } from '../../../components/file';
+import { Variable } from '../query-augmentation/condition-variables';
+import { importVarFromVar } from './create-property';
 
 interface CreateNodeOptions<TResourceStatic extends ResourceShape<any>> {
   initialProps?: InitialPropsOf<UnsecuredDto<TResourceStatic['prototype']>>;
@@ -19,7 +22,7 @@ interface CreateNodeOptions<TResourceStatic extends ResourceShape<any>> {
 }
 
 type InitialPropsOf<T> = {
-  [K in keyof T]?: T[K] extends FileId ? ID : T[K];
+  [K in keyof T]?: Variable | (T[K] extends FileId ? ID : T[K]);
 };
 
 /**
@@ -55,8 +58,14 @@ export const createNode = async <TResourceStatic extends ResourceShape<any>>(
     ...restInitialProps
   } = initialProps;
 
+  const imports = uniq(
+    Object.values({ ...initialProps, ...baseNodeProps }).flatMap((val) =>
+      val instanceof Variable ? importVarFromVar(val.value) : []
+    )
+  );
+
   return (query: Query) =>
-    query.comment`createNode(${resource.name})`.subQuery((sub) =>
+    query.comment`createNode(${resource.name})`.subQuery(imports, (sub) =>
       sub
         .create([
           [
