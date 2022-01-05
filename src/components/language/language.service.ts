@@ -3,18 +3,15 @@ import { compact } from 'lodash';
 import {
   CalendarDate,
   DuplicateException,
-  getFromCordTables,
   ID,
   InputException,
   NotFoundException,
   ObjectView,
-  PaginatedListType,
   SecuredDate,
   Sensitivity,
   ServerException,
   Session,
   simpleSwitch,
-  transformLanguagePayloadToDto,
   UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
@@ -39,7 +36,6 @@ import {
   Language,
   LanguageListInput,
   LanguageListOutput,
-  TablesLanguages,
   UpdateLanguage,
 } from './dto';
 import { EthnologueLanguageService } from './ethnologue-language';
@@ -209,42 +205,8 @@ export class LanguageService {
     input: LanguageListInput,
     session: Session
   ): Promise<LanguageListOutput> {
-    // const limited = (await this.authorizationService.canList(Language, session))
-    //   ? undefined
-    //   : await this.authorizationService.getListRoleSensitivityMapping(Language);
-    // const results = await this.repo.list(input, session, limited);
-    // return await mapListResults(results, (dto) => this.secure(dto, session));
-    return await this.getLanguages(session, input);
-  }
-
-  async getLanguages(
-    session: Session,
-    input: LanguageListInput
-  ): Promise<LanguageListOutput> {
-    const response = await getFromCordTables('sc/languages/list', {
-      sort: input.sort,
-      order: input.order,
-      page: input.page,
-      resultsPerPage: input.count,
-      filter: { ...input.filter },
-    });
-    const languages = response.body;
-    const iLanguages: TablesLanguages = JSON.parse(languages);
-
-    const langArray: Array<UnsecuredDto<Language>> = iLanguages.languages.map(
-      (lang) => {
-        return transformLanguagePayloadToDto(lang);
-      }
-    );
-
-    const totalLoaded = input.count * (input.page - 1) + langArray.length;
-    const langList: PaginatedListType<UnsecuredDto<Language>> = {
-      items: langArray,
-      total: totalLoaded, // ui is wanting the total loaded, not total for this 'load' that has been loaded.
-      hasMore: totalLoaded < iLanguages.size,
-    };
-
-    return await mapListResults(langList, (dto) => this.secure(dto, session));
+    const results = await this.repo.list(input);
+    return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 
   async listLocations(

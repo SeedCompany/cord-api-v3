@@ -1,14 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, Query, relation } from 'cypher-query-builder';
 import {
-  getFromCordTables,
   ID,
   ObjectView,
+  PaginatedListType,
   Session,
-  transformLanguageDtoToPayload,
-  transformLanguagePayloadToDto,
   UnsecuredDto,
 } from '../../common';
+import { getFromCordTables } from '../../common/cordtables';
 import { DtoRepository, matchRequestingUser } from '../../core';
 import {
   ACTIVE,
@@ -18,24 +17,21 @@ import {
   matchChangesetAndChangedProps,
   matchProjectScopedRoles,
   matchProjectSens,
-  matchProjectSensToLimitedScopeMap,
   matchProps,
   merge,
-  paginate,
   rankSens,
-  requestingUser,
-  sorting,
   variable,
 } from '../../core/database/query';
-import { AuthSensitivityMapping } from '../authorization/authorization.service';
 import { ProjectStatus } from '../project';
 import {
   CreateLanguage,
   Language,
   LanguageListInput,
+  TablesLanguages,
   TablesReadLanguage,
+  transformLanguageDtoToPayload,
+  transformLanguagePayloadToDto,
 } from './dto';
-import { languageListFilter } from './query.helpers';
 
 @Injectable()
 export class LanguageRepository extends DtoRepository(Language) {
@@ -137,32 +133,30 @@ export class LanguageRepository extends DtoRepository(Language) {
         );
   }
 
-  async list(
-    input: LanguageListInput,
-    session: Session,
-    limitedScope?: AuthSensitivityMapping
-  ) {
-    const result = await this.db
-      .query()
-      .match([
-        ...(limitedScope
-          ? [
-              node('project', 'Project'),
-              relation('out', '', 'engagement', ACTIVE),
-              node('', 'LanguageEngagement'),
-              relation('out', '', 'engagement'),
-            ]
-          : []),
-        node('node', 'Language'),
-      ])
-      // match requesting user once (instead of once per row)
-      .match(requestingUser(session))
-      .apply(matchProjectSensToLimitedScopeMap(limitedScope))
-      .apply(languageListFilter(input.filter, this))
-      .apply(sorting(Language, input))
-      .apply(paginate(input, this.hydrate(session)))
-      .first();
-    return result!; // result from paginate() will always have 1 row.
+  async list(input: LanguageListInput) {
+    const response = await getFromCordTables('sc/languages/list', {
+      sort: input.sort,
+      order: input.order,
+      page: input.page,
+      resultsPerPage: input.count,
+      filter: { ...input.filter },
+    });
+    const languages = response.body;
+    const iLanguages: TablesLanguages = JSON.parse(languages);
+
+    const langArray: Array<UnsecuredDto<Language>> = iLanguages.languages.map(
+      (lang) => {
+        return transformLanguagePayloadToDto(lang);
+      }
+    );
+
+    const totalLoaded = input.count * (input.page - 1) + langArray.length;
+    const langList: PaginatedListType<UnsecuredDto<Language>> = {
+      items: langArray,
+      total: totalLoaded, // ui is wanting the total loaded, not total for this 'load' that has been loaded.
+      hasMore: totalLoaded < iLanguages.size,
+    };
+    return langList;
   }
 
   async listProjects(language: Language) {
