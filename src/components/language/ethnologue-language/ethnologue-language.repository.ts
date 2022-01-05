@@ -1,29 +1,35 @@
 import { Injectable } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
-import { ID, NotFoundException, Session } from '../../../common';
+import {
+  getFromCordTables,
+  ID,
+  NotFoundException,
+  Sensitivity,
+  Session,
+  transformEthnologueDtoToPayload,
+  transformEthnologuePayloadToDto,
+  UnsecuredDto,
+} from '../../../common';
 import { DtoRepository, matchRequestingUser } from '../../../core';
-import { createNode } from '../../../core/database/query';
-import { CreateEthnologueLanguage, EthnologueLanguage } from '../dto';
+import {
+  CreateEthnologueLanguage,
+  EthnologueLanguage,
+  TablesReadEthnologue,
+} from '../dto';
 
 @Injectable()
 export class EthnologueLanguageRepository extends DtoRepository(
   EthnologueLanguage
 ) {
-  async create(input: CreateEthnologueLanguage, session: Session) {
-    const initialProps = {
-      code: input.code,
-      provisionalCode: input.provisionalCode,
-      name: input.name,
-      population: input.population,
-    };
+  async create(eth: CreateEthnologueLanguage, sensitivity: Sensitivity) {
+    const response = await getFromCordTables('sc/ethnologue/create-read', {
+      ethnologue: { ...transformEthnologueDtoToPayload(eth, sensitivity) },
+    });
+    const iLanguage: TablesReadEthnologue = JSON.parse(response.body);
 
-    const query = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .apply(await createNode(EthnologueLanguage, { initialProps }))
-      .return<{ id: ID }>('node.id as id');
-
-    return await query.first();
+    const dto: UnsecuredDto<EthnologueLanguage> =
+      transformEthnologuePayloadToDto(iLanguage.ethnologue);
+    return dto.id;
   }
 
   async readOne(id: ID, session: Session) {

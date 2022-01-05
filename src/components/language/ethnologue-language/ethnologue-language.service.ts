@@ -24,23 +24,19 @@ export class EthnologueLanguageService {
     private readonly repo: EthnologueLanguageRepository
   ) {}
 
-  async create(input: CreateEthnologueLanguage, session: Session): Promise<ID> {
+  async create(
+    input: CreateEthnologueLanguage,
+    session: Session,
+    sensitivity: Sensitivity
+  ): Promise<ID> {
     await this.authorizationService.checkPower(Powers.CreateLanguage, session);
 
-    const result = await this.repo.create(input, session);
-    if (!result) {
+    const id = await this.repo.create(input, sensitivity);
+    if (!id) {
       throw new ServerException('Failed to create ethnologue language');
     }
 
-    await this.authorizationService.processNewBaseNode(
-      EthnologueLanguage,
-      result.id,
-      session.userId
-    );
-
-    const id = result.id;
-
-    this.logger.debug(`ethnologue language created`, { id });
+    this.logger.debug(`ethnologue language created`, { result: id });
 
     return id;
   }
