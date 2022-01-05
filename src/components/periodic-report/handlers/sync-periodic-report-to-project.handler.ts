@@ -82,15 +82,7 @@ export class SyncPeriodicReportsToProjectDateRange
       additions: reportRanges(projectMou, newInterval),
       removals: [
         ...reportRanges(projectRange(previous), prevInterval),
-        // If we have a complete date range also remove reports outside it.
-        // Since there could be a previous date change that wasn't accounted for
-        // due to the financial report period constraint not being met at the time.
-        ...(projectMou
-          ? [
-              { start: null, end: projectMou.start },
-              { start: projectMou.end, end: null },
-            ]
-          : []),
+        ...this.invertedRange(projectMou),
       ],
     };
   }

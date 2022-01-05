@@ -61,7 +61,28 @@ export abstract class AbstractPeriodicReportSync {
     const splitByUnit = (range: DateInterval) => range.splitBy({ [unit]: 1 });
     return {
       additions: diff.additions.flatMap(splitByUnit),
-      removals: diff.removals.flatMap(splitByUnit),
+      removals: [
+        ...diff.removals.flatMap(splitByUnit),
+        ...this.invertedRange(fullUpdated),
+      ],
     };
+  }
+
+  /**
+   * Return two partial ranges representing the inverse of the given range.
+   *
+   * Why:
+   * If we have a complete date range there shouldn't be reports outside it
+   * (unless delete excludes for reasons like having a file).
+   * There could be a previous sync that missed some removals due to whatever
+   * reasons, so this is a sanity check.
+   */
+  protected invertedRange(range: DateInterval | null | undefined) {
+    return range
+      ? [
+          { start: null, end: range.start },
+          { start: range.end, end: null },
+        ]
+      : [];
   }
 }
