@@ -1,7 +1,7 @@
 import { DateTimeUnit } from 'luxon';
-import { DateInterval, UnsecuredDto } from '../../../common';
+import { DateInterval } from '../../../common';
 import { EventsHandler, IEventHandler, ILogger, Logger } from '../../../core';
-import { Project, projectRange } from '../../project';
+import { projectRange } from '../../project';
 import { ProjectUpdatedEvent } from '../../project/events';
 import { ReportPeriod, ReportType } from '../dto';
 import { PeriodicReportService } from '../periodic-report.service';
@@ -112,16 +112,27 @@ export class SyncPeriodicReportsToProjectDateRange
       return { interval: newInterval, ...diff };
     }
 
-    const reportRanges = (proj: UnsecuredDto<Project>, unit: DateTimeUnit) =>
-      projectRange(proj)
-        ?.expandToFull(unit)
-        .splitBy({ [unit]: 1 }) || [];
+    const projectMou = projectRange(project)?.expandToFull(newInterval) ?? null;
+
+    const reportRanges = (range: DateInterval | null, unit: DateTimeUnit) =>
+      range?.expandToFull(unit).splitBy({ [unit]: 1 }) ?? [];
 
     const prevInterval = newInterval !== 'month' ? 'month' : 'quarter';
     return {
       interval: newInterval,
-      additions: reportRanges(project, newInterval),
-      removals: reportRanges(previous, prevInterval),
+      additions: reportRanges(projectMou, newInterval),
+      removals: [
+        ...reportRanges(projectRange(previous), prevInterval),
+        // If we have a complete date range also remove reports outside it.
+        // Since there could be a previous date change that wasn't accounted for
+        // due to the financial report period constraint not being met at the time.
+        ...(projectMou
+          ? [
+              { start: null, end: projectMou.start },
+              { start: projectMou.end, end: null },
+            ]
+          : []),
+      ],
     };
   }
 

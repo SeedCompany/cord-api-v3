@@ -1,10 +1,10 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { Interval } from 'luxon';
 import {
   CalendarDate,
   ID,
   NotFoundException,
   ObjectView,
+  Range,
   ServerException,
   Session,
   UnsecuredDto,
@@ -199,13 +199,18 @@ export class PeriodicReportService {
     return report ? await this.secure(report, session) : undefined;
   }
 
-  async delete(baseNodeId: ID, type: ReportType, intervals: Interval[]) {
+  async delete(
+    parent: ID,
+    type: ReportType,
+    intervals: ReadonlyArray<Range<CalendarDate | null>>
+  ) {
+    intervals = intervals.filter((i) => i.start || i.end);
     if (intervals.length === 0) {
       return;
     }
-    const result = await this.repo.delete(baseNodeId, type, intervals);
+    const result = await this.repo.delete(parent, type, intervals);
 
-    this.logger.debug('Deleted reports', { baseNodeId, type, ...result });
+    this.logger.info('Deleted reports', { parent, type, ...result });
   }
 
   async getFinalReport(

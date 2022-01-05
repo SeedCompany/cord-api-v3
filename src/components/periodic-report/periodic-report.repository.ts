@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, not, Query, relation } from 'cypher-query-builder';
-import { Interval } from 'luxon';
+import { inArray, node, Query, relation } from 'cypher-query-builder';
 import {
+  CalendarDate,
   generateId,
   ID,
   NotFoundException,
+  Range,
   ServerException,
   Session,
   UnsecuredDto,
@@ -18,9 +19,7 @@ import {
   matchPropsAndProjectSensAndScopedRoles,
   merge,
   paginate,
-  path,
   sorting,
-  variable,
   Variable,
 } from '../../core/database/query';
 import {
@@ -196,7 +195,17 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
     return res?.dto;
   }
 
-  async delete(baseNodeId: ID, type: ReportType, intervals: Interval[]) {
+  /**
+   * Deletes reports of type and under parent base node.
+   * If an interval specifies both start and end then reports are matched with those specified dates.
+   * If an interval omits start then all reports ending on or before given end are matched.
+   * If an interval omits end then all reports starting on or after given start are matched.
+   */
+  async delete(
+    baseNodeId: ID,
+    type: ReportType,
+    intervals: ReadonlyArray<Range<CalendarDate | null>>
+  ) {
     return await this.db
       .query()
       .unwind(
@@ -212,25 +221,32 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
         [
           node('report'),
           relation('out', '', 'start', ACTIVE),
-          node('start', 'Property', { value: variable('interval.start') }),
+          node('start', 'Property'),
         ],
         [
           node('report'),
           relation('out', '', 'end', ACTIVE),
-          node('end', 'Property', { value: variable('interval.end') }),
+          node('end', 'Property'),
         ],
       ])
-      .where({
-        uploaded: not(
-          path([
-            node('report'),
-            relation('out', '', 'reportFileNode'),
-            relation('in', '', 'parent', ACTIVE),
-            node('', 'FileVersion'),
-          ])
-        ),
-      })
-      .apply(deleteBaseNode('report'))
+      .raw(
+        `
+          WHERE NOT (report)-[:reportFileNode]->(:File)<-[:parent { active: true }]-(:FileVersion)
+            AND CASE
+              WHEN interval.start is null
+                  THEN end.value <= interval.end
+              WHEN interval.end is null
+                  THEN start.value >= interval.start
+              ELSE interval.start = start.value AND interval.end = end.value
+            END
+        `
+      )
+      .subQuery('report', (sub) =>
+        sub
+          .apply(deleteBaseNode('report'))
+          .return('node as somethingDeleted')
+          .raw('LIMIT 1')
+      )
       .return<{ count: number }>('count(report) as count')
       .first();
   }
