@@ -1,6 +1,14 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { DbLabel, ID, IdField, Secured, SecuredProps } from '../../../common';
+import {
+  DateTimeField,
+  DbLabel,
+  ID,
+  IdField,
+  Secured,
+  SecuredProps,
+} from '../../../common';
 import { User } from '../../user/dto';
 import { IProject, Project } from './project.dto';
 import { ProjectStep } from './step.enum';
@@ -41,6 +49,9 @@ export abstract class ProjectStepChange {
 
   @Field(() => String, { nullable: true })
   readonly comment?: string | null;
+
+  @DateTimeField()
+  readonly createdAt: DateTime;
 
   readonly user: Secured<ID | null>;
 }

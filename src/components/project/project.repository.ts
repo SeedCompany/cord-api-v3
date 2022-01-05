@@ -377,14 +377,17 @@ export class ProjectRepository extends CommonRepository {
   }
 
   async addProjectStep(input: ProjectStepChangeInput, session: Session) {
-    const { id, changeset, ...initialProps } = input;
+    const { id, changeset, ...initialProps } = {
+      ...input,
+      createdAt: DateTime.local(),
+    };
 
     // disable active project step
     await this.db
       .query()
       .match([
         node('project', 'Project', { id }),
-        relation('out', 'transitionRel', 'stepChange', { active: !changeset }),
+        relation('out', 'stepChangeRel', 'stepChange', { active: !changeset }),
         node('stepChange', 'ProjectStepChange'),
         ...(changeset
           ? [
@@ -394,7 +397,7 @@ export class ProjectRepository extends CommonRepository {
           : []),
       ])
       .setValues({
-        [`${changeset ? 'oldChange' : 'transitionRel'}.active`]: false,
+        [`${changeset ? 'oldChange' : 'stepChangeRel'}.active`]: false,
       })
       .run();
 
@@ -404,7 +407,7 @@ export class ProjectRepository extends CommonRepository {
       .apply(
         createRelationships(ProjectStepChange, {
           in: {
-            transition: ['Project', id],
+            stepChange: ['Project', id],
             changeset: ['Changeset', changeset],
           },
           out: {
@@ -415,14 +418,14 @@ export class ProjectRepository extends CommonRepository {
       .return<{ id: ID }>('node.id as id')
       .first();
     if (!result) {
-      throw new ServerException('Failed to create Project Transition');
+      throw new ServerException('Failed to create Project Step');
     }
     return result.id;
   }
 
   async listStepChangeHistory(
     id: ID,
-    _changeset?: ID
+    changeset?: ID
   ): Promise<ProjectStepChange[]> {
     const query = this.db
       .query()
@@ -430,6 +433,12 @@ export class ProjectRepository extends CommonRepository {
         node('project', 'Project', { id }),
         relation('out', '', 'stepChange', INACTIVE),
         node('stepChange', 'ProjectStepChange'),
+        ...(changeset
+          ? [
+              relation('in', 'changesetRel', 'changeset', INACTIVE),
+              node('changeNode', 'Changeset', { id: changeset }),
+            ]
+          : []),
       ])
       .optionalMatch([
         node('stepChange'),
@@ -446,18 +455,30 @@ export class ProjectRepository extends CommonRepository {
         relation('out', '', 'by', ACTIVE),
         node('user', 'User'),
       ])
+      .optionalMatch([
+        node('stepChange'),
+        relation('out', '', 'createdAt', ACTIVE),
+        node('createdAt', 'Property'),
+      ])
+      .apply((q) =>
+        !changeset
+          ? q.raw('WHERE NOT (:Changeset)-[:changeset]->(stepChange)')
+          : q
+      )
       .with('stepChange, step, comment, user')
       .orderBy('stepChange.createdAt', 'DESC')
-      .return<ProjectStepChange>([
+      .return<{ changes: ProjectStepChange[] }>([
         'step.value as step',
         'comment',
         'user.id as user',
+        'createdAt',
       ]);
 
-    const result = await query.run();
-    const changes: ProjectStepChange[] = [];
-    result.map((change) => changes.push(change));
-    return changes;
+    const result = await query.first();
+    if (!result) {
+      throw new ServerException('Failed to read project steps');
+    }
+    return result.changes;
   }
 
   @OnIndex()

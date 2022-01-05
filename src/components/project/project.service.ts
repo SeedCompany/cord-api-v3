@@ -296,8 +296,6 @@ export class ProjectService {
       primaryLocationId,
       marketingLocationId,
       fieldRegionId,
-      step, // skip step, use this.updateStep
-      status, // skip status, use this.updateStep
       ...simpleChanges
     } = changes;
 
