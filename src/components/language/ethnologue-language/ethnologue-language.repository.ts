@@ -7,14 +7,16 @@ import {
   Session,
   UnsecuredDto,
 } from '../../../common';
-import { getFromCordTables } from '../../../common/cordtables';
+import {
+  getFromCordTables,
+  transformToDto,
+  transformToPayload,
+} from '../../../common/cordtables';
 import { DtoRepository, matchRequestingUser } from '../../../core';
 import {
   CreateEthnologueLanguage,
   EthnologueLanguage,
   TablesReadEthnologue,
-  transformEthnologueDtoToPayload,
-  transformEthnologuePayloadToDto,
 } from '../dto';
 
 @Injectable()
@@ -23,12 +25,18 @@ export class EthnologueLanguageRepository extends DtoRepository(
 ) {
   async create(eth: CreateEthnologueLanguage, sensitivity: Sensitivity) {
     const response = await getFromCordTables('sc/ethnologue/create-read', {
-      ethnologue: { ...transformEthnologueDtoToPayload(eth, sensitivity) },
+      ethnologue: {
+        ...transformToPayload(eth, EthnologueLanguage.TablesToDto, {
+          sensitivity: sensitivity,
+        }),
+      },
     });
     const iLanguage: TablesReadEthnologue = JSON.parse(response.body);
 
-    const dto: UnsecuredDto<EthnologueLanguage> =
-      transformEthnologuePayloadToDto(iLanguage.ethnologue);
+    const dto: UnsecuredDto<EthnologueLanguage> = transformToDto(
+      iLanguage.ethnologue,
+      EthnologueLanguage.TablesToDto
+    );
     return dto.id;
   }
 

@@ -1,8 +1,9 @@
 import got from 'got/dist/source';
+import { invert, keys } from 'lodash';
 
 const baseUrl = 'http://localhost:8080';
 const token =
-  'KpZ3RxUcuoZ1euAr3kQJb1Bq7dfzQ2d4Z5qfHWcaHZxO4gfoj3kaQqW0eFao4Ja5';
+  '042pbHziHsaJYtM065qNHKxwyJ8zFdrzFnXxdVkOp9dASoRWld7mHx6WiDNn0dgq';
 
 export async function getFromCordTables(
   cordTablesPath: string,
@@ -15,4 +16,39 @@ export async function getFromCordTables(
       ...additionalParams,
     },
   });
+}
+
+// ------------------------------------------------------------------------------------------------
+// Transformation functions
+//      - Takes the payload from cordtables and maps the props to the cooresponding dto
+// ------------------------------------------------------------------------------------------------
+export function transformToDto(
+  payloadOrResponse: any,
+  tablesToDtoMap: any,
+  additionalKeyValPairs?: any
+) {
+  const dto: any = {};
+  for (const key of keys(payloadOrResponse)) {
+    dto[tablesToDtoMap[key]] = payloadOrResponse[key];
+  }
+  for (const key of keys(additionalKeyValPairs)) {
+    dto[key] = additionalKeyValPairs[key];
+  }
+  return dto;
+}
+
+export function transformToPayload(
+  dto: any,
+  tablesToDtoMap: any,
+  additionalKeyValPairs?: any
+) {
+  const payload: any = {};
+  const dtoToTables = invert(tablesToDtoMap);
+  for (const key of keys(dto)) {
+    payload[dtoToTables[key]] = dto[key];
+  }
+  for (const key of keys(additionalKeyValPairs)) {
+    payload[key] = additionalKeyValPairs[key];
+  }
+  return payload;
 }
