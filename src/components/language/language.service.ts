@@ -151,9 +151,10 @@ export class LanguageService {
     session: Session,
     view?: ObjectView
   ): Promise<Language> {
-    if (input.hasExternalFirstScripture) {
-      await this.verifyExternalFirstScripture(input.id);
-    }
+    // TODO: get to this after engagements
+    // if (input.hasExternalFirstScripture) {
+    //   await this.verifyExternalFirstScripture(input.id);
+    // }
 
     const object = await this.readOne(input.id, session);
     const changes = this.repo.getActualChanges(object, input);
@@ -165,16 +166,17 @@ export class LanguageService {
 
     const { ethnologue, ...simpleChanges } = changes;
 
-    if (ethnologue) {
-      await this.ethnologueLanguageService.update(
-        object.ethnologue.id,
-        ethnologue,
-        object.sensitivity,
-        session
-      );
-    }
+    // TODO: later
+    // if (ethnologue) {
+    //   await this.ethnologueLanguageService.update(
+    //     object.ethnologue.id,
+    //     ethnologue,
+    //     object.sensitivity,
+    //     session
+    //   );
+    // }
 
-    await this.repo.updateProperties(object, simpleChanges, view?.changeset);
+    await this.repo.update(object, simpleChanges);
 
     return await this.readOne(input.id, session);
   }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import { Type } from '@nestjs/common';
 import { Field, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
@@ -44,6 +45,15 @@ export abstract class SecuredTags extends SecuredPropertyList<string>(
 export class EthnologueLanguage {
   static readonly Props = keysOf<EthnologueLanguage>();
   static readonly SecuredProps = keysOf<SecuredProps<EthnologueLanguage>>();
+  static readonly TablesToDto = {
+    id: 'id',
+    created_at: 'createdAt',
+    code: 'code',
+    provisional_code: 'provisionalCode',
+    language_name: 'name',
+    population: 'population',
+    sensitivity: 'sensitivity',
+  };
 
   readonly id: ID;
 
@@ -85,6 +95,26 @@ export class Language extends Interfaces {
     ethnologue: EthnologueLanguage,
     locations: [Location],
     posts: [Post],
+  };
+
+  static readonly TablesToDto = {
+    id: 'id',
+    created_at: 'createdAt',
+    display_name: 'displayName',
+    display_name_pronunciation: 'displayNamePronunciation',
+    ethnologue: 'ethnologue',
+    has_external_first_scripture: 'hasExternalFirstScripture',
+    is_dialect: 'isDialect',
+    is_sign_language: 'isSignLanguage',
+    is_least_of_these: 'leastOfThese',
+    least_of_these_reason: 'leastOfTheseReason',
+    name: 'name',
+    population_override: 'populationOverride',
+    registry_of_dialects_code: 'registryOfDialectsCode',
+    sensitivity: 'sensitivity',
+    sign_language_code: 'signLanguageCode',
+    sponsor_estimated_end_date: 'sponsorEstimatedEndDate',
+    tags: 'tags',
   };
 
   @NameField({
