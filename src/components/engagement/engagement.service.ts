@@ -210,9 +210,7 @@ export class EngagementService {
       session,
       viewOfChangeset(changeset)
     )) as InternshipEngagement;
-    if (changeset) {
-      return internshipEngagement;
-    }
+
     const engagementCreatedEvent = new EngagementCreatedEvent(
       internshipEngagement,
       input,
@@ -444,10 +442,6 @@ export class EngagementService {
       input.id,
       session
     )) as InternshipEngagement;
-
-    if (changeset) {
-      return updated;
-    }
 
     const engagementUpdatedEvent = new EngagementUpdatedEvent(
       updated,
