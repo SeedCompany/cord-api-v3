@@ -1,153 +1,128 @@
 import { Injectable } from '@nestjs/common';
-import levenshtein from 'js-levenshtein-esm';
-import { sortBy, startCase, without } from 'lodash';
-import { read, utils, WorkSheet } from 'xlsx';
-import {
-  DateInterval,
-  entries,
-  expandToFullFiscalYears,
-  fullFiscalYear,
-} from '../../common';
-import {
-  cellAsDate,
-  cellAsNumber,
-  cellAsString,
-  sheetRange,
-} from '../../common/xlsx.util';
-import { ILogger, Logger } from '../../core';
-import { Downloadable, File } from '../file';
-import { Book } from '../scripture/books';
+import { assert } from 'ts-essentials';
+import { MergeExclusive } from 'type-fest';
+import { CalendarDate, entries, fullFiscalYear } from '../../common';
+import { Cell, Column } from '../../common/xlsx.util';
+import { Downloadable } from '../file';
+import { findStepColumns, isGoalRow, PlanningSheet, Pnp } from '../pnp';
+import { ScriptureRange } from '../scripture';
+import { parseScripture } from '../scripture/parser';
 import { ProductStep as Step } from './dto';
 
 @Injectable()
 export class ProductExtractor {
-  constructor(@Logger('product:extractor') private readonly logger: ILogger) {}
-
   async extract(
-    file: Downloadable<Pick<File, 'id'>>,
+    file: Downloadable<unknown>,
     availableSteps: readonly Step[]
   ): Promise<readonly ExtractedRow[]> {
-    const buffer = await file.download();
-    const pnp = read(buffer, { type: 'buffer', cellDates: true });
+    const pnp = await Pnp.fromDownloadable(file);
+    const sheet = pnp.planning;
 
-    const sheet = pnp.Sheets.Planning;
-    if (!sheet) {
-      this.logger.warning('Unable to find planning sheet', {
-        id: file.id,
-      });
-      return [] as const;
-    }
+    const stepColumns = findStepColumns(sheet, availableSteps);
 
-    const interval = DateInterval.tryFrom(
-      cellAsDate(sheet.Z14),
-      cellAsDate(sheet.Z15)
-    );
-    if (!interval) {
-      this.logger.warning('Unable to find project date range', {
-        id: file.id,
-      });
-      return [];
-    }
+    const productRows = sheet.goals
+      .walkDown()
+      .filter(isGoalRow)
+      .map(parseProductRow(stepColumns))
+      .filter((row) => row.steps.length > 0)
+      .toArray();
 
-    const stepColumns = findStepColumns(sheet, 'U18:Z18', availableSteps);
-    const noteFallback = cellAsString(sheet.AI16);
+    // Ignoring for now because not sure how to track progress
+    const _otherRows = sheet.isOBS()
+      ? sheet.sustainabilityGoals
+          .walkDown()
+          .map((cell) => ({
+            title: `Train ${
+              sheet.sustainabilityRole(cell.row)?.replace(/:$/, '') ?? ''
+            }`,
+            count: sheet.sustainabilityRoleCount(cell.row) ?? 0,
+          }))
+          .filter((row) => row.count > 0)
+      : [];
 
-    return findProductRows(sheet)
-      .map(
-        parseProductRow(
-          sheet,
-          expandToFullFiscalYears(interval),
-          stepColumns,
-          noteFallback
-        )
-      )
-      .filter((row) => row.steps.length > 0);
+    return productRows;
   }
-}
-
-function findProductRows(sheet: WorkSheet) {
-  const lastRow = sheetRange(sheet)?.e.r ?? 200;
-  const matchedRows = [];
-  let row = 23;
-  while (
-    row < lastRow &&
-    cellAsString(sheet[`Q${row}`]) !== 'Other Goals and Milestones'
-  ) {
-    const book = Book.tryFind(cellAsString(sheet[`Q${row}`]));
-    const totalVerses = cellAsNumber(sheet[`T${row}`]) ?? 0;
-    if (book && totalVerses > 0 && totalVerses <= book.totalVerses) {
-      matchedRows.push(row);
-    }
-    row++;
-  }
-  return matchedRows;
-}
-
-/**
- * Fuzzy match available steps to their column address.
- */
-export function findStepColumns(
-  sheet: WorkSheet,
-  fromRange: string,
-  availableSteps: readonly Step[] = Object.values(Step)
-) {
-  const matchedColumns: Partial<Record<Step, string>> = {};
-  let remainingSteps = availableSteps;
-  const range = utils.decode_range(fromRange);
-  for (let column = range.s.c; column <= range.e.c; ++column) {
-    const cellRef = utils.encode_cell({ r: range.s.r, c: column });
-    const label = cellAsString(sheet[cellRef]);
-    if (!label) {
-      continue;
-    }
-    const distances = remainingSteps.map((step) => {
-      const humanLabel = startCase(step).replace(' And ', ' & ');
-      const distance = levenshtein(label, humanLabel);
-      return [step, distance] as const;
-    });
-    // Pick the step that is the closest fuzzy match
-    const chosen = sortBy(
-      // 5 is too far ignore those
-      distances.filter(([_, distance]) => distance < 5),
-      ([_, distance]) => distance
-    )[0]?.[0];
-    if (!chosen) {
-      continue;
-    }
-    matchedColumns[chosen] = utils.encode_col(column);
-
-    remainingSteps = without(remainingSteps, chosen);
-  }
-  return matchedColumns as Record<Step, string>;
 }
 
 const parseProductRow =
-  (
-    sheet: WorkSheet,
-    projectRange: DateInterval,
-    stepColumns: Record<Step, string>,
-    noteFallback?: string
-  ) =>
-  (row: number): ExtractedRow => {
-    const bookName = cellAsString(sheet[`Q${row}`])!; // Asserting bc loop verified this
-    const totalVerses = cellAsNumber(sheet[`T${row}`])!;
-    // include step if it references a fiscal year within the project
-    const includeStep = (column: string) => {
-      const fiscalYear = cellAsNumber(sheet[`${column}${row}`]);
-      return (
-        fiscalYear && projectRange.intersection(fullFiscalYear(fiscalYear))
-      );
+  (stepColumns: Record<Step, Column>) =>
+  (cell: Cell<PlanningSheet>, index: number): ExtractedRow => {
+    const sheet = cell.sheet;
+    const row = cell.row;
+    const steps = entries(stepColumns).flatMap(([step, column]) => {
+      const fiscalYear = sheet.cell(column, row).asNumber;
+      const fullFY = fiscalYear ? fullFiscalYear(fiscalYear) : undefined;
+      // only include step if it references a fiscal year within the project
+      if (!fullFY || !sheet.projectFiscalYears.intersection(fullFY)) {
+        return [];
+      }
+      return { step, plannedCompleteDate: fullFY.end };
+    });
+
+    const common = {
+      rowIndex: row.a1 - sheet.goals.start.row.a1 + 1,
+      order: index + 1,
+      steps,
+      note: sheet.myNote(row),
     };
-    const steps: readonly Step[] = entries(stepColumns).flatMap(
-      ([step, column]) => (includeStep(column) ? step : [])
-    );
-    const note = cellAsString(sheet[`AI${row}`]) ?? noteFallback;
-    return { bookName, totalVerses, steps, note };
+
+    if (sheet.isOBS()) {
+      const story = sheet.storyName(row)!; // Asserting bc loop verified this
+      const scripture = (() => {
+        try {
+          return parseScripture(
+            sheet
+              .scriptureReference(row)
+              // Ignore these two strings that are meaningless here
+              ?.replace('Composite', '')
+              .replace('other portions', '') ?? ''
+          );
+        } catch (e) {
+          return [];
+        }
+      })();
+      const totalVerses = sheet.totalVerses(row);
+      return {
+        ...common,
+        story,
+        scripture,
+        totalVerses,
+        composite: sheet.composite(row)?.toUpperCase() === 'Y',
+        placeholder: scripture.length === 0 && !totalVerses,
+      };
+    }
+    assert(sheet.isWritten());
+    return {
+      ...common,
+      bookName: sheet.bookName(row)!, // Asserting bc loop verified this
+      totalVerses: sheet.totalVerses(row)!, // Asserting bc loop verified this
+    };
   };
 
-export interface ExtractedRow {
-  bookName: string;
-  totalVerses: number;
-  steps: readonly Step[];
+export type ExtractedRow = MergeExclusive<
+  {
+    story: string;
+    scripture: readonly ScriptureRange[];
+    totalVerses: number | undefined;
+    composite: boolean;
+    placeholder: boolean;
+  },
+  {
+    bookName: string;
+    totalVerses: number;
+  }
+> & {
+  /**
+   * 1-indexed row for the order of the goal.
+   * This will not have jumps in numbers, blank rows are ignored.
+   */
+  order: number;
+  /**
+   * 1-indexed row number with the starting row normalized out.
+   * This could have jumps in numbers because blank rows are accounted for here.
+   * If those rows are filled in later the previously defined rows will be unaffected.
+   */
+  rowIndex: number;
+  steps: ReadonlyArray<{ step: Step; plannedCompleteDate: CalendarDate }>;
   note: string | undefined;
-}
+};

@@ -122,20 +122,16 @@ export class EngagementService {
       session.userId
     );
 
-    const languageEngagement = (await this.readOne(
+    const engagement = await this.repo.readOne(
       id,
       session,
       viewOfChangeset(changeset)
-    )) as LanguageEngagement;
-
-    const event = new EngagementCreatedEvent(
-      languageEngagement,
-      input,
-      session
     );
+
+    const event = new EngagementCreatedEvent(engagement, input, session);
     await this.eventBus.publish(event);
 
-    return event.engagement as LanguageEngagement;
+    return (await this.secure(event.engagement, session)) as LanguageEngagement;
   }
 
   async createInternshipEngagement(
@@ -205,22 +201,19 @@ export class EngagementService {
       session.userId
     );
 
-    const internshipEngagement = (await this.readOne(
+    const engagement = await this.repo.readOne(
       id,
       session,
       viewOfChangeset(changeset)
-    )) as InternshipEngagement;
-    if (changeset) {
-      return internshipEngagement;
-    }
-    const engagementCreatedEvent = new EngagementCreatedEvent(
-      internshipEngagement,
-      input,
-      session
     );
-    await this.eventBus.publish(engagementCreatedEvent);
 
-    return engagementCreatedEvent.engagement as InternshipEngagement;
+    const event = new EngagementCreatedEvent(engagement, input, session);
+    await this.eventBus.publish(event);
+
+    return (await this.secure(
+      event.engagement,
+      session
+    )) as InternshipEngagement;
   }
 
   private verifyCreationStatus(status?: EngagementStatus) {
@@ -323,11 +316,8 @@ export class EngagementService {
       );
     }
 
-    const object = (await this.readOne(
-      input.id,
-      session,
-      view
-    )) as LanguageEngagement;
+    const previous = await this.repo.readOne(input.id, session, view);
+    const object = (await this.secure(previous, session)) as LanguageEngagement;
 
     const { methodology: _, ...maybeChanges } = input;
     const changes = this.repo.getActualLanguageChanges(object, maybeChanges);
@@ -360,21 +350,16 @@ export class EngagementService {
       );
     }
 
-    const updated = (await this.readOne(
+    const updated = (await this.repo.readOne(
       input.id,
       session,
       view
-    )) as LanguageEngagement;
+    )) as UnsecuredDto<LanguageEngagement>;
 
-    const engagementUpdatedEvent = new EngagementUpdatedEvent(
-      updated,
-      object,
-      input,
-      session
-    );
-    await this.eventBus.publish(engagementUpdatedEvent);
+    const event = new EngagementUpdatedEvent(updated, previous, input, session);
+    await this.eventBus.publish(event);
 
-    return engagementUpdatedEvent.updated as LanguageEngagement;
+    return (await this.secure(event.updated, session)) as LanguageEngagement;
   }
 
   async updateInternshipEngagement(
@@ -392,10 +377,10 @@ export class EngagementService {
       );
     }
 
-    const object = (await this.readOne(
-      input.id,
-      session,
-      view
+    const previous = await this.repo.readOne(input.id, session, view);
+    const object = (await this.secure(
+      previous,
+      session
     )) as InternshipEngagement;
 
     const changes = this.repo.getActualInternshipChanges(object, input);
@@ -440,24 +425,22 @@ export class EngagementService {
       );
     }
 
-    const updated = (await this.readOne(
+    const updated = (await this.repo.readOne(
       input.id,
-      session
-    )) as InternshipEngagement;
+      session,
+      view
+    )) as UnsecuredDto<InternshipEngagement>;
 
-    if (changeset) {
-      return updated;
-    }
+    const event = new EngagementUpdatedEvent(updated, previous, input, session);
+    await this.eventBus.publish(event);
 
-    const engagementUpdatedEvent = new EngagementUpdatedEvent(
-      updated,
-      object,
-      input,
-      session
-    );
-    await this.eventBus.publish(engagementUpdatedEvent);
+    return (await this.secure(event.updated, session)) as InternshipEngagement;
+  }
 
-    return engagementUpdatedEvent.updated as InternshipEngagement;
+  async triggerUpdateEvent(id: ID, session: Session) {
+    const object = await this.repo.readOne(id, session);
+    const event = new EngagementUpdatedEvent(object, object, { id }, session);
+    await this.eventBus.publish(event);
   }
 
   // DELETE /////////////////////////////////////////////////////////
@@ -501,10 +484,7 @@ export class EngagementService {
   }
 
   async listAllByProjectId(projectId: ID, session: Session) {
-    const engagements = await this.repo.listAllByProjectId(projectId, session);
-    return await Promise.all(
-      engagements.map((dto) => this.secure(dto, session))
-    );
+    return await this.repo.listAllByProjectId(projectId, session);
   }
 
   async listProducts(

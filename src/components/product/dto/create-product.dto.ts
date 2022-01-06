@@ -45,10 +45,10 @@ export abstract class CreateBaseProduct {
   readonly describeCompletion?: string;
 
   @Field(() => ProgressMeasurement, {
+    nullable: true,
     description: 'How will progress for each step be measured?',
   })
-  readonly progressStepMeasurement?: ProgressMeasurement =
-    ProgressMeasurement.Percent;
+  readonly progressStepMeasurement?: ProgressMeasurement;
 
   @Field(() => Float, {
     nullable: true,
@@ -59,6 +59,18 @@ export abstract class CreateBaseProduct {
   })
   @IsPositive()
   readonly progressTarget?: number;
+
+  @Field(() => String, {
+    nullable: true,
+    description: stripIndent`
+      Is this product a placeholder for a real product to be determined later?
+      If so, this is the description to show in the mean time.
+    `,
+  })
+  @Transform(({ value }) => (value === '' ? null : value))
+  readonly placeholderDescription?: string | null;
+
+  readonly pnpIndex?: number | null;
 
   // Allow specifying this internally only.
   readonly createdAt?: DateTime;
@@ -98,6 +110,15 @@ export abstract class CreateDerivativeScriptureProduct extends CreateBaseProduct
     `,
   })
   readonly scriptureReferencesOverride?: readonly ScriptureRangeInput[];
+
+  @Field({
+    description: stripIndent`
+      Represents whether the referenced \`Producible\` is a combination of
+      multiple individual producibles.
+    `,
+    nullable: true,
+  })
+  readonly composite?: boolean;
 }
 
 /**

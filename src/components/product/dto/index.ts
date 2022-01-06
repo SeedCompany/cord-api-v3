@@ -2,7 +2,6 @@ export * from './product-approach';
 export * from './product-medium';
 export * from './product-methodology';
 export * from './product-purpose';
-export * from './product-type';
 export * from './product-step.enum';
 export * from './producible.dto';
 export * from './create-product.dto';

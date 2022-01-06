@@ -265,7 +265,7 @@ export class EngagementRepository extends CommonRepository {
   getActualLanguageChanges = getChanges(LanguageEngagement);
 
   async updateLanguageProperties(
-    object: LanguageEngagement,
+    object: LanguageEngagement | UnsecuredDto<LanguageEngagement>,
     changes: DbChanges<LanguageEngagement>,
     changeset?: ID
   ): Promise<void> {
@@ -350,7 +350,7 @@ export class EngagementRepository extends CommonRepository {
   }
 
   async updateInternshipProperties(
-    object: InternshipEngagement,
+    object: InternshipEngagement | UnsecuredDto<InternshipEngagement>,
     changes: DbChanges<InternshipEngagement>,
     changeset?: ID
   ): Promise<void> {

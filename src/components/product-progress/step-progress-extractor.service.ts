@@ -1,70 +1,62 @@
 import { Injectable } from '@nestjs/common';
-import { CellObject, read, WorkSheet } from 'xlsx';
+import { assert } from 'ts-essentials';
+import { MergeExclusive } from 'type-fest';
 import { entries } from '../../common';
-import { cellAsNumber, cellAsString, sheetRange } from '../../common/xlsx.util';
-import { ILogger, Logger } from '../../core';
-import { Downloadable, FileNode } from '../file';
+import { Cell, Column } from '../../common/xlsx.util';
+import { Downloadable } from '../file';
+import { findStepColumns, isGoalRow, Pnp, ProgressSheet } from '../pnp';
 import { ProductStep as Step } from '../product';
-import { findStepColumns } from '../product/product-extractor.service';
-import { Book } from '../scripture/books';
 import { StepProgressInput } from './dto';
+
+type ExtractedRow = MergeExclusive<
+  {
+    bookName: string;
+    totalVerses: number;
+  },
+  { story: string }
+> & {
+  /**
+   * 1-indexed row for the order of the goal.
+   * This will not have jumps in numbers, blank rows are ignored.
+   */
+  order: number;
+  /**
+   * 1-indexed row number with the starting row normalized out.
+   * This could have jumps in numbers because blank rows are accounted for here.
+   * If those rows are filled in later the previously defined rows will be unaffected.
+   */
+  rowIndex: number;
+  steps: ReadonlyArray<{ step: Step; completed?: number | null }>;
+};
 
 @Injectable()
 export class StepProgressExtractor {
-  constructor(
-    @Logger('step-progress:extractor') private readonly logger: ILogger
-  ) {}
+  async extract(file: Downloadable<unknown>) {
+    const pnp = await Pnp.fromDownloadable(file);
+    const sheet = pnp.progress;
 
-  async extract(file: Downloadable<FileNode>) {
-    const buffer = await file.download();
-    const pnp = read(buffer, { type: 'buffer' });
+    const stepColumns = findStepColumns(sheet);
 
-    const sheet = pnp.Sheets.Progress;
-    if (!sheet) {
-      this.logger.warning('Unable to find progress sheet in pnp file', {
-        name: file.name,
-        id: file.id,
-      });
-      return [];
-    }
-
-    const stepColumns = findStepColumns(sheet, 'R19:AB19');
-
-    return findProductProgressRows(sheet).map(
-      parseProgressRow(sheet, stepColumns)
-    );
+    return sheet.goals
+      .walkDown()
+      .filter(isGoalRow)
+      .map(parseProgressRow(stepColumns))
+      .toArray();
   }
-}
-
-function findProductProgressRows(sheet: WorkSheet) {
-  const lastRow = sheetRange(sheet)?.e.r ?? 200;
-  const matchedRows = [];
-  let row = 23;
-  while (
-    row < lastRow &&
-    cellAsString(sheet[`P${row}`]) !== 'Other Goals and Milestones'
-  ) {
-    const book = Book.tryFind(cellAsString(sheet[`P${row}`]));
-    const totalVerses = cellAsNumber(sheet[`Q${row}`]) ?? 0;
-    if (book && totalVerses > 0 && totalVerses <= book.totalVerses) {
-      matchedRows.push(row);
-    }
-    row++;
-  }
-  return matchedRows;
 }
 
 const parseProgressRow =
-  (sheet: WorkSheet, stepColumns: Record<Step, string>) => (row: number) => {
-    const bookName = cellAsString(sheet[`P${row}`])!; // Asserting bc loop verified this
-    const totalVerses = cellAsNumber(sheet[`Q${row}`])!;
-    const progress = (column: string) => {
-      const cell: CellObject = sheet[`${column}${row}`];
-      if (cellAsString(cell)?.startsWith('Q')) {
+  (stepColumns: Record<Step, Column>) =>
+  (cell: Cell<ProgressSheet>, index: number): ExtractedRow => {
+    const sheet = cell.sheet;
+    const row = cell.row;
+    const progress = (column: Column) => {
+      const cell = column.cell(row);
+      if (cell.asString?.startsWith('Q')) {
         // Q# means completed that quarter
         return 100;
       }
-      const percentDecimal = cellAsNumber(cell);
+      const percentDecimal = cell.asNumber;
       return percentDecimal ? percentDecimal * 100 : undefined;
     };
     const steps = entries(stepColumns).map(
@@ -73,5 +65,17 @@ const parseProgressRow =
         completed: progress(column),
       })
     );
-    return { bookName, totalVerses, steps };
+    const common = {
+      rowIndex: row.a1 - sheet.goals.start.row.a1 + 1,
+      order: index + 1,
+      steps,
+    };
+    if (sheet.isOBS()) {
+      const story = sheet.storyName(row)!; // Asserting bc loop verified this
+      return { ...common, story };
+    }
+    assert(sheet.isWritten());
+    const bookName = sheet.bookName(row)!; // Asserting bc loop verified this
+    const totalVerses = sheet.totalVerses(row)!; // Asserting bc loop verified this
+    return { ...common, bookName, totalVerses };
   };

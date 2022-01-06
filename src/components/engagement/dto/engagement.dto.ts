@@ -19,6 +19,7 @@ import {
   SecuredString,
   Sensitivity,
   SensitivityField,
+  UnsecuredDto,
 } from '../../../common';
 import { ScopedRole } from '../../authorization';
 import { ChangesetAware } from '../../changeset/dto';
@@ -181,13 +182,5 @@ export class InternshipEngagement extends Engagement {
   readonly growthPlan: DefinedFile;
 }
 
-export const engagementRange = (engagement: Engagement) =>
-  engagement.startDateOverride.value
-    ? DateInterval.tryFrom(
-        engagement.startDateOverride.value,
-        engagement.endDateOverride.value
-      )
-    : DateInterval.tryFrom(
-        engagement.startDate.value,
-        engagement.endDate.value
-      );
+export const engagementRange = (engagement: UnsecuredDto<Engagement>) =>
+  DateInterval.tryFrom(engagement.startDate, engagement.endDate);

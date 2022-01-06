@@ -86,6 +86,10 @@ export abstract class ScriptureRange implements Range<ScriptureReference> {
     return mapRange(range, (p) => Verse.fromRef(p).id);
   }
 
+  static fromVerses(range: Range<Verse>) {
+    return mapRange(range, (p) => p.reference);
+  }
+
   static random() {
     const start = Verse.random();
     return {

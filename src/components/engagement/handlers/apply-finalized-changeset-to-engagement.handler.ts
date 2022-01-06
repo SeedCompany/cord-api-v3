@@ -4,7 +4,6 @@ import { asyncPool, ID, ServerException, Session } from '../../../common';
 import {
   DatabaseService,
   EventsHandler,
-  IEventBus,
   IEventHandler,
   ILogger,
   Logger,
@@ -15,7 +14,6 @@ import { rejectChangesetProps } from '../../changeset/reject-changeset-props.que
 import { ProjectChangeRequestStatus } from '../../project-change-request/dto';
 import { ProjectChangesetFinalizedEvent } from '../../project-change-request/events';
 import { EngagementService } from '../engagement.service';
-import { EngagementUpdatedEvent } from '../events';
 
 type SubscribedEvent = ProjectChangesetFinalizedEvent;
 
@@ -26,7 +24,6 @@ export class ApplyFinalizedChangesetToEngagement
   constructor(
     private readonly db: DatabaseService,
     private readonly engagementService: EngagementService,
-    private readonly eventBus: IEventBus,
     @Logger('engagement:change-request:finalized')
     private readonly logger: ILogger
   ) {}
@@ -165,9 +162,7 @@ export class ApplyFinalizedChangesetToEngagement
 
   async triggerUpdateEvent(ids: ID[], session: Session) {
     await asyncPool(1, ids, async (id) => {
-      const object = await this.engagementService.readOne(id, session);
-      const event = new EngagementUpdatedEvent(object, object, { id }, session);
-      await this.eventBus.publish(event);
+      await this.engagementService.triggerUpdateEvent(id, session);
     });
   }
 }

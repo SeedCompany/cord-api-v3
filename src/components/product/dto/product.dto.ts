@@ -6,6 +6,7 @@ import { MergeExclusive } from 'type-fest';
 import {
   DbLabel,
   ID,
+  SecuredBoolean,
   SecuredFloat,
   SecuredProps,
   SecuredString,
@@ -92,6 +93,14 @@ export class Product extends Producible {
     `,
   })
   readonly progressTarget: SecuredFloat;
+
+  @Field({
+    description: stripIndent`
+      Is this product a placeholder for a real product to be determined later?
+      If so, this is the description to show in the mean time.
+    `,
+  })
+  readonly placeholderDescription: SecuredStringNullable;
 }
 
 @ObjectType({
@@ -128,6 +137,8 @@ export class DirectScriptureProduct extends Product {
     `,
   })
   totalVerseEquivalents: number;
+
+  readonly pnpIndex?: number;
 }
 
 @ObjectType({
@@ -159,6 +170,13 @@ export class DerivativeScriptureProduct extends Product {
     `,
   })
   readonly scriptureReferencesOverride: SecuredScriptureRangesOverride;
+
+  @Field({
+    description: stripIndent`
+      Represents whether the \`Producible\` being referenced is multiple composite stories
+    `,
+  })
+  readonly composite: SecuredBoolean;
 
   @Field(() => Int, {
     description:

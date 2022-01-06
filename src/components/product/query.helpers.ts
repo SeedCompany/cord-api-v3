@@ -1,6 +1,6 @@
-import { inArray, Query } from 'cypher-query-builder';
+import { inArray, isNull, not, Query } from 'cypher-query-builder';
 import { AndConditions } from 'cypher-query-builder/src/clauses/where-utils';
-import { intersection } from 'lodash';
+import { identity, intersection } from 'lodash';
 import { propMatch } from '../project';
 import { ApproachToMethodologies, ProductFilters } from './dto';
 
@@ -23,7 +23,14 @@ export const productListFilter = (filter: ProductFilters) => (query: Query) => {
         : { value: inArray(ApproachToMethodologies[filter.approach!]) };
   }
 
-  if (conditions.methodology) {
+  if (filter.placeholder != null) {
+    query.match(propMatch('placeholderDescription'));
+    conditions.placeholderDescription = {
+      value: (filter.placeholder ? not : identity)(isNull()),
+    };
+  }
+
+  if (Object.keys(conditions).length > 0) {
     query.where(conditions);
   }
 };

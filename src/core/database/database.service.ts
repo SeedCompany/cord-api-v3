@@ -1,26 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { oneLine } from 'common-tags';
-import {
-  Connection,
-  equals,
-  node,
-  Query,
-  regexp,
-  relation,
-} from 'cypher-query-builder';
-import {
-  cloneDeep,
-  isEmpty,
-  last,
-  Many,
-  mapKeys,
-  pickBy,
-  startCase,
-  uniq,
-  upperFirst,
-} from 'lodash';
+import { Connection, node, Query, relation } from 'cypher-query-builder';
+import { isEmpty, last, Many, mapKeys, pickBy, startCase, uniq } from 'lodash';
 import { DateTime } from 'luxon';
-import { assert } from 'ts-essentials';
 import {
   entries,
   ID,
@@ -29,8 +11,6 @@ import {
   isSecured,
   many,
   MaybeUnsecuredInstance,
-  Order,
-  Resource,
   ResourceShape,
   ServerException,
   Session,
@@ -40,7 +20,6 @@ import { ILogger, Logger, ServiceUnavailableError, UniquenessError } from '..';
 import { AbortError, retry, RetryOptions } from '../../common/retry';
 import { DbChanges } from './changes';
 import { ACTIVE, deleteBaseNode, exp, updateProperty } from './query';
-import { hasMore } from './results';
 import { Transactional } from './transactional.decorator';
 
 export const property = (
@@ -342,201 +321,6 @@ export class DatabaseService {
     ) {
       throw new ServerException(`Could not find ${label}.${key} to update`);
     }
-  }
-
-  /**
-   * @deprecated Construct list query manually and use our helper methods for pagination
-   */
-  async list<TObject extends Resource>({
-    session,
-    props,
-    nodevar,
-    // eslint-disable-next-line @seedcompany/no-unused-vars
-    owningOrgId,
-    // eslint-disable-next-line @seedcompany/no-unused-vars
-    skipOwningOrgCheck,
-    aclReadProp,
-    aclEditProp,
-    input,
-  }: {
-    session: Session;
-    props: ReadonlyArray<
-      keyof TObject | { secure: boolean; name: keyof TObject; list?: boolean }
-    >;
-    nodevar: string;
-    owningOrgId?: ID;
-    skipOwningOrgCheck?: boolean;
-    aclReadProp?: string;
-    aclEditProp?: string;
-    input: {
-      page: number;
-      count: number;
-      sort: string;
-      order: Order;
-      filter: Record<string, any>;
-    };
-  }): Promise<{ hasMore: boolean; total: number; items: TObject[] }> {
-    const nodeName = upperFirst(nodevar);
-    const aclReadPropName = aclReadProp || `canRead${nodeName}`;
-    const aclEditPropName = aclEditProp || `canEdit${nodeName}`;
-    const idFilter = input.filter.id ? { id: input.filter.id } : {};
-    const userIdFilter = input.filter.userId ? { id: input.filter.userId } : {};
-
-    const query: Query<any> = this.db.query().match([
-      matchSession(session, {
-        withAclRead: aclReadPropName,
-      }),
-    ]);
-
-    if (Object.keys(userIdFilter).length) {
-      query.match([
-        [
-          node('user', 'User', {
-            ...userIdFilter,
-          }),
-          relation('out', '', nodevar, {
-            active: true,
-          }),
-          node('n', nodeName, {
-            ...idFilter,
-          }),
-        ],
-      ]);
-    } else {
-      query.match([
-        node('n', nodeName, {
-          ...idFilter,
-        }),
-      ]);
-    }
-    query.with('count(n) as total, requestingUser, n');
-
-    for (const prop of props) {
-      const propName = typeof prop === 'object' ? prop.name : prop;
-
-      query.optionalMatch([
-        node('n', nodeName),
-        relation('out', '', propName as string, ACTIVE),
-        node(propName as string, 'Property'),
-      ]);
-    }
-
-    query.with([
-      // with the ACL fields
-      'requestingUser',
-
-      // always with <node>
-      'n',
-
-      // with the rest of the requested properties
-      ...props.map((prop) => {
-        const propName = (
-          typeof prop === 'object' ? prop.name : prop
-        ) as string;
-        return propName;
-      }),
-    ]);
-
-    if (input.filter && Object.keys(input.filter).length) {
-      const where: Record<string, any> = {};
-      for (const [k, val] of Object.entries(input.filter)) {
-        if (k !== 'id' && k !== 'userId' && k !== 'mine') {
-          assert(
-            typeof val === 'string',
-            `Filter "${k}" must have a string value`
-          );
-          if (!Array.isArray(val)) {
-            where[k + '.value'] = regexp(`.*${val}.*`, true);
-          } else {
-            where[k + '.value'] = equals(val);
-          }
-        }
-      }
-      if (Object.keys(where).length) {
-        query.where(where);
-      }
-    }
-
-    // Clone the query here, before we apply limit/offsets, so that we can get an accurate aggregate of the total filtered result set
-    const countQuery =
-      cloneDeep(query).return<{ total: number }>('count(n) as total');
-
-    query
-      .returnDistinct<any>([
-        // return the ACL fields
-        {
-          requestingUser: [
-            { [aclReadPropName]: aclReadPropName },
-            { [aclEditPropName]: aclEditPropName },
-          ],
-        },
-
-        // always return the <node>.id and <node>.createdAt field
-        {
-          n: [{ id: 'id' }, { createdAt: 'createdAt' }],
-        },
-
-        // return the rest of the requested properties
-        ...props.map((prop) => {
-          const propName = (
-            typeof prop === 'object' ? prop.name : prop
-          ) as string;
-          return { [propName + '.value']: propName };
-        }),
-      ])
-      .orderBy([input.sort], input.order)
-      .skip((input.page - 1) * input.count)
-      .limit(input.count);
-
-    const result = await query.run();
-    const countResult = await countQuery.run();
-
-    const total = countResult[0]?.total || 0;
-
-    const items = result.map<TObject>((row) => {
-      const item: any = {
-        id: row.id,
-        createdAt: row.createdAt,
-      };
-
-      for (const prop of props) {
-        const propName = (
-          typeof prop === 'object' ? prop.name : prop
-        ) as string;
-        const secure = typeof prop === 'object' ? prop.secure : true;
-        const list = typeof prop === 'object' ? prop.list : false;
-
-        if (list) {
-          const value = row[propName] ?? [];
-
-          if (secure) {
-            item[propName] = {
-              value,
-              canRead: Boolean(row[aclReadPropName]) || false,
-              canEdit: Boolean(row[aclEditPropName]) || false,
-            };
-          } else {
-            item[propName] = value;
-          }
-        } else if (secure) {
-          item[propName] = {
-            value: row[propName],
-            canRead: Boolean(row[aclReadPropName]) || false,
-            canEdit: Boolean(row[aclEditPropName]) || false,
-          };
-        } else {
-          item[propName] = row[propName];
-        }
-      }
-
-      return item;
-    });
-
-    return {
-      hasMore: hasMore(input, total),
-      total,
-      items,
-    };
   }
 
   // eslint-disable-next-line @seedcompany/no-unused-vars

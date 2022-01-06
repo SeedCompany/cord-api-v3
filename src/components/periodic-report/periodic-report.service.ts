@@ -1,10 +1,11 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { Interval } from 'luxon';
 import {
   CalendarDate,
+  DateInterval,
   ID,
   NotFoundException,
   ObjectView,
+  Range,
   ServerException,
   Session,
   UnsecuredDto,
@@ -15,9 +16,9 @@ import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { FileService } from '../file';
 import {
-  CreatePeriodicReport,
   FinancialReport,
   IPeriodicReport,
+  MergePeriodicReports,
   NarrativeReport,
   PeriodicReport,
   PeriodicReportListInput,
@@ -41,24 +42,22 @@ export class PeriodicReportService {
     private readonly repo: PeriodicReportRepository
   ) {}
 
-  async create(
-    input: CreatePeriodicReport,
-    session: Session
-  ): Promise<PeriodicReport> {
+  async merge(input: MergePeriodicReports) {
+    if (input.intervals.length === 0) {
+      return;
+    }
     try {
-      const { id, reportFileId } = await this.repo.create(input);
-
-      await this.files.createDefinedFile(
-        reportFileId,
-        input.end.toISODate(),
-        session,
-        id,
-        'reportFile'
-      );
-
-      return await this.readOne(id, session);
+      const result = await this.repo.merge(input);
+      this.logger.info(`Merged ${input.type.toLowerCase()} reports`, {
+        existing: input.intervals.length - result.length,
+        new: result.length,
+        parent: input.parent,
+        newIntervals: result.map(({ interval }) =>
+          DateInterval.fromObject(interval).toISO()
+        ),
+      });
     } catch (exception) {
-      throw new ServerException('Could not create periodic report', exception);
+      throw new ServerException('Could not create periodic reports', exception);
     }
   }
 
@@ -199,13 +198,18 @@ export class PeriodicReportService {
     return report ? await this.secure(report, session) : undefined;
   }
 
-  async delete(baseNodeId: ID, type: ReportType, intervals: Interval[]) {
+  async delete(
+    parent: ID,
+    type: ReportType,
+    intervals: ReadonlyArray<Range<CalendarDate | null>>
+  ) {
+    intervals = intervals.filter((i) => i.start || i.end);
     if (intervals.length === 0) {
       return;
     }
-    const result = await this.repo.delete(baseNodeId, type, intervals);
+    const result = await this.repo.delete(parent, type, intervals);
 
-    this.logger.debug('Deleted reports', { baseNodeId, type, ...result });
+    this.logger.info('Deleted reports', { parent, type, ...result });
   }
 
   async getFinalReport(
@@ -226,20 +230,21 @@ export class PeriodicReportService {
     const report = await this.repo.getFinalReport(parentId, type, session);
 
     if (report) {
+      if (+report.start === +at) {
+        // no change
+        return;
+      }
       await this.repo.updateProperties(report, {
         start: at,
         end: at,
       });
     } else {
-      await this.create(
-        {
-          start: at,
-          end: at,
-          type,
-          projectOrEngagementId: parentId,
-        },
-        session
-      );
+      await this.merge({
+        intervals: [{ start: at, end: at }],
+        type,
+        parent: parentId,
+        session,
+      });
     }
   }
 }

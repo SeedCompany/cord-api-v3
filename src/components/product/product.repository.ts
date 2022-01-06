@@ -1,5 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import {
+  inArray,
+  isNull,
+  node,
+  not,
+  Query,
+  relation,
+} from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { Except, Merge } from 'type-fest';
 import {
@@ -44,9 +51,11 @@ import {
   DirectScriptureProduct,
   ProductMethodology as Methodology,
   OtherProduct,
+  ProducibleType,
   Product,
   ProductCompletionDescriptionSuggestionsInput,
   ProductListInput,
+  ProgressMeasurement,
   UpdateProduct,
 } from './dto';
 import { productListFilter } from './query.helpers';
@@ -98,14 +107,52 @@ export class ProductRepository extends CommonRepository {
       )
       .return<{
         id: ID;
+        pnpIndex?: number;
         scriptureRanges: ReadonlyArray<Range<number>>;
         unspecifiedScripture: UnspecifiedScripturePortion | null;
       }>([
         'node.id as id',
+        'node.pnpIndex as pnpIndex',
         'scriptureRanges',
         'unspecifiedScripture { .book, .totalVerses } as unspecifiedScripture',
       ])
       .run();
+  }
+
+  async listIdsWithPnpIndexes(engagementId: ID) {
+    return await this.db
+      .query()
+      .match([
+        node('engagement', 'Engagement', { id: engagementId }),
+        relation('out', '', 'product', ACTIVE),
+        node('node', 'Product'),
+      ])
+      .where({ 'node.pnpIndex': not(isNull()) })
+      .return<{ id: ID; pnpIndex: number }>([
+        'node.id as id',
+        'node.pnpIndex as pnpIndex',
+      ])
+      .run();
+  }
+
+  async getProducibleIdsByNames(
+    names: readonly string[],
+    type?: ProducibleType
+  ) {
+    const res = await this.db
+      .query()
+      .match([
+        node('producible', ['Producible', ...(type ? [type] : [])]),
+        relation('out', '', 'name', ACTIVE),
+        node('prop', 'Property'),
+      ])
+      .where({ 'prop.value': inArray([...names]) })
+      .return<{ id: ID; name: string }>([
+        'producible.id as id',
+        'prop.value as name',
+      ])
+      .run();
+    return res;
   }
 
   protected hydrate(session: Session) {
@@ -192,12 +239,15 @@ export class ProductRepository extends CommonRepository {
       methodology: input.methodology,
       steps: input.steps ?? [],
       describeCompletion: input.describeCompletion,
+      placeholderDescription: input.placeholderDescription,
       canDelete: true,
       progressTarget: input.progressTarget,
-      progressStepMeasurement: input.progressStepMeasurement,
+      progressStepMeasurement:
+        input.progressStepMeasurement ?? ProgressMeasurement.Percent,
       ...(isDerivative
         ? {
             isOverriding: !!input.scriptureReferencesOverride,
+            composite: input.composite ?? false,
           }
         : {}),
       totalVerses: input.totalVerses,
@@ -210,6 +260,7 @@ export class ProductRepository extends CommonRepository {
         await createNode(Product, {
           initialProps,
           baseNodeProps: {
+            pnpIndex: input.pnpIndex,
             createdAt: input.createdAt,
           },
         })
@@ -277,7 +328,9 @@ export class ProductRepository extends CommonRepository {
       description: input.description,
       canDelete: true,
       progressTarget: input.progressTarget,
-      progressStepMeasurement: input.progressStepMeasurement,
+      progressStepMeasurement:
+        input.progressStepMeasurement ?? ProgressMeasurement.Percent,
+      placeholderDescription: input.placeholderDescription,
     };
 
     const query = this.db

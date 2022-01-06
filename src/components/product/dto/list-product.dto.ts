@@ -1,6 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
+import { stripIndent } from 'common-tags';
 import {
   ID,
   PaginatedList,
@@ -24,6 +25,15 @@ export abstract class ProductFilters {
     nullable: true,
   })
   readonly methodology?: ProductMethodology;
+
+  @Field({
+    description: stripIndent`
+      Only products that are (or not) placeholders.
+      This is based on the \`placeholderDescription\` field.
+    `,
+    nullable: true,
+  })
+  readonly placeholder?: boolean;
 
   readonly engagementId?: ID;
 }
