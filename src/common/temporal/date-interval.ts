@@ -64,6 +64,10 @@ export class DateInterval extends Interval {
     const range = Interval.fromDateTimes(start, end);
     return new DateInterval({ start: range.start, end: range.end });
   }
+  static fromObject({ start, end }: { start: DateInput; end: DateInput }) {
+    const range = Interval.fromDateTimes(start, end);
+    return new DateInterval({ start: range.start, end: range.end });
+  }
   static fromISO(string: string, options?: DateTimeOptions) {
     return DateInterval.fromInterval(super.fromISO(string, options));
   }

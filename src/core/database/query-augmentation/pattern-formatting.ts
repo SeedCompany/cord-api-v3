@@ -6,6 +6,7 @@ import {
   Match,
   Merge,
   Raw,
+  Return,
   With,
 } from 'cypher-query-builder';
 import type { PatternClause as TSPatternClause } from 'cypher-query-builder/dist/typings/clauses/pattern-clause';
@@ -63,6 +64,17 @@ TermListClause.prototype.stringifyTerm = function stringifyTerm(term: Term) {
   }
   return origStringifyTerm.call(this, stripped);
 };
+
+// If the term list clause has no terms render empty string instead of broken cypher
+for (const Cls of [With, Return]) {
+  const origBuild = Cls.prototype.build;
+  Cls.prototype.build = function build(this: TSTermListClause) {
+    if (TermListClause.prototype.build.call(this) === '') {
+      return '';
+    }
+    return origBuild.call(this);
+  };
+}
 
 // Strip indents from `raw` clauses
 Raw.prototype.build = function build() {
