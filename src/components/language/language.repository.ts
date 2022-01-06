@@ -1,27 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, Query, relation } from 'cypher-query-builder';
+import { ID, PaginatedListType, Session, UnsecuredDto } from '../../common';
 import {
-  ID,
-  ObjectView,
-  PaginatedListType,
-  Session,
-  UnsecuredDto,
-} from '../../common';
-import { getFromCordTables } from '../../common/cordtables';
-import { DtoRepository, matchRequestingUser } from '../../core';
-import {
-  ACTIVE,
-  any,
-  collect,
-  exp,
-  matchChangesetAndChangedProps,
-  matchProjectScopedRoles,
-  matchProjectSens,
-  matchProps,
-  merge,
-  rankSens,
-  variable,
-} from '../../core/database/query';
+  getFromCordTables,
+  transformToDto,
+  transformToPayload,
+} from '../../common/cordtables';
+import { DtoRepository } from '../../core';
+import { ACTIVE, any, collect, exp, variable } from '../../core/database/query';
 import { ProjectStatus } from '../project';
 import {
   CreateLanguage,
@@ -29,20 +15,25 @@ import {
   LanguageListInput,
   TablesLanguages,
   TablesReadLanguage,
-  transformLanguageDtoToPayload,
-  transformLanguagePayloadToDto,
+  UpdateLanguage,
 } from './dto';
 
 @Injectable()
 export class LanguageRepository extends DtoRepository(Language) {
   async create(language: CreateLanguage, session: Session, ethnologueId: ID) {
     const response = await getFromCordTables('sc/languages/create-read', {
-      language: { ...transformLanguageDtoToPayload(language, ethnologueId) },
+      language: {
+        ...transformToPayload(language, Language.TablesToDto, {
+          ethnologue: ethnologueId,
+        }),
+      },
     });
     const iLanguage: TablesReadLanguage = JSON.parse(response.body);
 
-    const dto: UnsecuredDto<Language> = transformLanguagePayloadToDto(
-      iLanguage.language
+    const dto: UnsecuredDto<Language> = transformToDto(
+      iLanguage.language,
+      Language.TablesToDto,
+      { pinned: false }
     );
     return dto;
   }
@@ -54,83 +45,27 @@ export class LanguageRepository extends DtoRepository(Language) {
     const language = response.body;
     const iLanguage: TablesReadLanguage = JSON.parse(language);
 
-    const dto: UnsecuredDto<Language> = transformLanguagePayloadToDto(
-      iLanguage.language
+    const dto: UnsecuredDto<Language> = transformToDto(
+      iLanguage.language,
+      Language.TablesToDto,
+      { pinned: false }
     );
     return dto;
   }
 
-  async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
-    return await this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .matchNode('node', 'Language')
-      .where({ 'node.id': inArray(ids.slice()) })
-      .apply(this.hydrate(session, view))
-      .map('dto')
-      .run();
-  }
-
-  protected hydrate(session: Session, view?: ObjectView) {
-    return (query: Query) =>
-      query
-        .optionalMatch([
-          node('project', 'Project'),
-          relation('out', '', 'engagement', ACTIVE),
-          node('', 'LanguageEngagement'),
-          relation('out', '', 'engagement'),
-          node('node'),
-        ])
-        .apply(matchProjectScopedRoles({ session }))
-        .with([
-          'node',
-          'collect(project) as projList',
-          'keys(apoc.coll.frequenciesAsMap(apoc.coll.flatten(collect(scopedRoles)))) as scopedRoles',
-        ])
-        .apply(matchProps())
-        .apply(matchChangesetAndChangedProps(view?.changeset))
-        // get lowest sensitivity across all projects associated with each language.
-        .subQuery((sub) =>
-          sub
-            .with('projList')
-            .raw('UNWIND projList as project')
-            .apply(matchProjectSens())
-            .with('sensitivity')
-            .orderBy(rankSens('sensitivity'), 'ASC')
-            .raw('LIMIT 1')
-            .return('sensitivity as effectiveSensitivity')
-            .union()
-            .with('projList, props')
-            .with('projList, props')
-            .raw('WHERE size(projList) = 0')
-            .return(`props.sensitivity as effectiveSensitivity`)
-        )
-        .match([
-          node('node'),
-          relation('out', '', 'ethnologue'),
-          node('eth', 'EthnologueLanguage'),
-        ])
-        .apply(matchProps({ nodeName: 'eth', outputVar: 'ethProps' }))
-        .apply(this.isPresetInventory())
-        .optionalMatch([
-          node('node'),
-          relation('in', '', 'language', ACTIVE),
-          node('firstScriptureEngagement', 'LanguageEngagement'),
-          relation('out', '', 'firstScripture', ACTIVE),
-          node('', 'Property', { value: variable('true') }),
-        ])
-        .raw('', { requestingUserId: session.userId })
-        .return<{ dto: UnsecuredDto<Language> }>(
-          merge('props', 'changedProps', {
-            ethnologue: 'ethProps',
-            pinned:
-              'exists((:User { id: $requestingUserId })-[:pinned]->(node))',
-            presetInventory: 'presetInventory',
-            firstScriptureEngagement: 'firstScriptureEngagement.id',
-            scope: 'scopedRoles',
-            changeset: 'changeset.id',
-          }).as('dto')
-        );
+  async update(
+    langToUpdate: Language,
+    updates: Partial<Omit<UpdateLanguage, 'id'>>
+  ): Promise<void> {
+    const updatePayload = transformToPayload(updates, Language.TablesToDto);
+    Object.entries(updatePayload).forEach(([key, value]) => {
+      void getFromCordTables('sc/languages/update', {
+        id: langToUpdate.id,
+        column: key,
+        value: value,
+      });
+    });
+    return;
   }
 
   async list(input: LanguageListInput) {
@@ -146,7 +81,7 @@ export class LanguageRepository extends DtoRepository(Language) {
 
     const langArray: Array<UnsecuredDto<Language>> = iLanguages.languages.map(
       (lang) => {
-        return transformLanguagePayloadToDto(lang);
+        return transformToDto(lang, Language.TablesToDto, { pinned: false }); // todo: hacking pinned for now.
       }
     );
 
