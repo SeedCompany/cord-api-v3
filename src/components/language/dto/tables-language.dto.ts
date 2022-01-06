@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 
-import { CreateEthnologueLanguage } from '.';
 import { CalendarDate, ID, Sensitivity } from '../../../common';
 
 export interface TablesLanguages {
@@ -44,28 +43,4 @@ export interface TablesEthnologueLanguage {
   language_name: string;
   population: number;
   sensitivity: Sensitivity;
-}
-
-export function transformEthnologueDtoToPayload(
-  eth: CreateEthnologueLanguage,
-  sensitivity: Sensitivity
-) {
-  return {
-    code: eth.code,
-    language_name: eth.name,
-    population: eth.population,
-    provisional_code: eth.provisionalCode,
-    sensitivity: sensitivity,
-  };
-}
-
-export function transformEthnologuePayloadToDto(eth: TablesEthnologueLanguage) {
-  return {
-    id: eth.id,
-    sensitivity: undefined,
-    code: eth.code,
-    name: eth.language_name,
-    population: eth.population,
-    provisionalCode: eth.provisional_code,
-  };
 }
