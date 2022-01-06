@@ -1,4 +1,4 @@
-import { Session } from '../../../common';
+import { Session, UnsecuredDto } from '../../../common';
 import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,
@@ -9,20 +9,20 @@ import {
 
 export class EngagementCreatedEvent {
   constructor(
-    public engagement: Engagement,
+    public engagement: UnsecuredDto<Engagement>,
     readonly input: CreateLanguageEngagement | CreateInternshipEngagement,
     readonly session: Session
   ) {}
 
   isLanguageEngagement(): this is EngagementCreatedEvent & {
-    engagement: LanguageEngagement;
+    engagement: UnsecuredDto<LanguageEngagement>;
     input: CreateLanguageEngagement;
   } {
     return this.engagement.__typename === 'LanguageEngagement';
   }
 
   isInternshipEngagement(): this is EngagementCreatedEvent & {
-    engagement: InternshipEngagement;
+    engagement: UnsecuredDto<InternshipEngagement>;
     input: CreateInternshipEngagement;
   } {
     return this.engagement.__typename === 'InternshipEngagement';

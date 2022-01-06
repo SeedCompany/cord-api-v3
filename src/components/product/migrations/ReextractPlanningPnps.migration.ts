@@ -1,19 +1,16 @@
+import { ModuleRef } from '@nestjs/core';
 import { node, relation } from 'cypher-query-builder';
 import { asyncPool, ID } from '../../../common';
-import {
-  BaseMigration,
-  IEventBus,
-  Migration,
-  ResourceResolver,
-} from '../../../core';
+import { BaseMigration, IEventBus, Migration } from '../../../core';
 import { ACTIVE } from '../../../core/database/query';
+import { EngagementRepository } from '../../engagement/engagement.repository';
 import { EngagementUpdatedEvent } from '../../engagement/events';
 import { ProductMethodology as Methodology } from '../dto';
 
 @Migration('2021-11-26T18:13:01')
 export class ReextractPlanningPnpsMigration extends BaseMigration {
   constructor(
-    private readonly resources: ResourceResolver,
+    private readonly moduleRef: ModuleRef,
     private readonly eventBus: IEventBus
   ) {
     super();
@@ -25,16 +22,13 @@ export class ReextractPlanningPnpsMigration extends BaseMigration {
       `Found ${rows.length} eligible PnPs that can be re-extracted to create products`
     );
 
+    const engagementRepo = this.moduleRef.get(EngagementRepository);
     const session = this.fakeAdminSession;
     await asyncPool(2, rows, async (row, i) => {
       this.logger.info(`Re-extracting PnP ${i} / ${rows.length}`);
 
       try {
-        const engagement = await this.resources.lookup(
-          'LanguageEngagement',
-          row.engId,
-          session
-        );
+        const engagement = await engagementRepo.readOne(row.engId, session);
         const event = new EngagementUpdatedEvent(
           engagement,
           engagement,
