@@ -2873,6 +2873,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/validator@npm:^13.7.1":
+  version: 13.7.1
+  resolution: "@types/validator@npm:13.7.1"
+  checksum: 810649a23bc46928c85d933be73b106bacb651a412c4172e30a70e84c63cada595d391042274b16e1c05b391af3a4f157b360890fbc5462ee347275222d59b64
+  languageName: node
+  linkType: hard
+
 "@types/yargs-parser@npm:*":
   version: 15.0.0
   resolution: "@types/yargs-parser@npm:15.0.0"
@@ -5146,6 +5153,7 @@ __metadata:
     "@types/react": ^17.0.38
     "@types/stack-trace": ^0.0.29
     "@types/triple-beam": ^1.3.2
+    "@types/validator": ^13.7.1
     "@typescript-eslint/parser": ^5.9.0
     apollo-server-core: ^3.6.1
     apollo-server-express: ^3.6.1
