@@ -1,5 +1,5 @@
 # Base node stage that sets up common config for dev & prod
-FROM node:12-alpine as node
+FROM node:16-alpine as node
 
 LABEL org.opencontainers.image.title="CORD API"
 LABEL org.opencontainers.image.vendor="Seed Company"
