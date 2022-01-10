@@ -423,62 +423,37 @@ export class ProjectRepository extends CommonRepository {
     return result.id;
   }
 
-  async listStepChangeHistory(
-    id: ID,
-    changeset?: ID
-  ): Promise<ProjectStepChange[]> {
+  async listStepChangeHistory(id: ID, changeset?: ID) {
     const query = this.db
       .query()
       .match([
-        node('project', 'Project', { id }),
+        node('', 'Project', { id }),
         relation('out', '', 'stepChange', INACTIVE),
         node('stepChange', 'ProjectStepChange'),
         ...(changeset
           ? [
               relation('in', 'changesetRel', 'changeset', INACTIVE),
-              node('changeNode', 'Changeset', { id: changeset }),
+              node('', 'Changeset', { id: changeset }),
             ]
           : []),
-      ])
-      .optionalMatch([
-        node('stepChange'),
-        relation('out', '', 'step', ACTIVE),
-        node('step', 'ProjectStep'),
-      ])
-      .optionalMatch([
-        node('stepChange'),
-        relation('out', '', 'comment', ACTIVE),
-        node('comment', 'Property'),
-      ])
-      .optionalMatch([
-        node('stepChange'),
-        relation('out', '', 'by', ACTIVE),
-        node('user', 'User'),
-      ])
-      .optionalMatch([
-        node('stepChange'),
-        relation('out', '', 'createdAt', ACTIVE),
-        node('createdAt', 'Property'),
       ])
       .apply((q) =>
         !changeset
           ? q.raw('WHERE NOT (:Changeset)-[:changeset]->(stepChange)')
           : q
       )
-      .with('stepChange, step, comment, user')
+      .match([
+        node('stepChange'),
+        relation('out', '', 'by', ACTIVE),
+        node('user', 'User'),
+      ])
+      .apply(matchProps({ nodeName: 'stepChange' }))
       .orderBy('stepChange.createdAt', 'DESC')
-      .return<{ changes: ProjectStepChange[] }>([
-        'step.value as step',
-        'comment',
-        'user.id as user',
-        'createdAt',
-      ]);
-
-    const result = await query.first();
-    if (!result) {
-      throw new ServerException('Failed to read project steps');
-    }
-    return result.changes;
+      .return<{ change: ProjectStepChange }>(
+        merge('props', { user: 'user.id' }).as('change')
+      )
+      .map('change');
+    return await query.run();
   }
 
   @OnIndex()
