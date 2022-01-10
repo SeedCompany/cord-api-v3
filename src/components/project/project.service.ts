@@ -404,11 +404,11 @@ export class ProjectService {
         input.changeset
       );
     }
-    const result = await this.readOneUnsecured(
-      input.id,
-      session,
-      input.changeset
-    );
+    const result = {
+      ...currentProject,
+      step: changes.step,
+      status: changes.status ?? currentProject.status,
+    };
 
     const event = new ProjectUpdatedEvent(
       result,
