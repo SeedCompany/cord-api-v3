@@ -379,7 +379,7 @@ export class ProjectRepository extends CommonRepository {
   async addProjectStep(input: ProjectStepChangeInput, session: Session) {
     const { id, changeset, ...initialProps } = {
       ...input,
-      createdAt: DateTime.local(),
+      comment: input.comment ?? null,
     };
 
     // disable active project step
