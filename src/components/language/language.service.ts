@@ -12,7 +12,6 @@ import {
   ServerException,
   Session,
   simpleSwitch,
-  UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger, UniquenessError } from '../../core';
@@ -188,17 +187,15 @@ export class LanguageService {
       throw new NotFoundException('Could not find language', 'language.id');
     }
 
-    const canDelete = await this.repo.checkDeletePermission(id, session);
-
-    if (!canDelete)
-      throw new UnauthorizedException(
-        'You do not have the permission to delete this Language'
-      );
-
+    let response;
     try {
-      await this.repo.deleteNode(object);
+      response = await this.repo.delete(object);
+      return;
     } catch (exception) {
-      this.logger.error('Failed to delete', { id, exception });
+      this.logger.error(`Failed to delete: ${response?.body || 'unknown'}`, {
+        id,
+        exception,
+      });
       throw new ServerException('Failed to delete', exception);
     }
   }
