@@ -7,7 +7,7 @@ import { ProjectStepChange } from './dto';
 @Resolver(ProjectStepChange)
 export class ProjectStepChangeResolver {
   @ResolveField(() => SecuredUser)
-  async user(
+  async by(
     @Parent() stepChange: ProjectStepChange,
     @Loader(UserLoader) users: LoaderOf<UserLoader>
   ): Promise<SecuredUser> {
