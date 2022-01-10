@@ -40,7 +40,7 @@ export class ProjectStepResolver {
   async history(
     @Parent() step: SecuredProjectStep & { parentId: ID; changeset?: ID },
     @AnonSession() _session: Session
-  ): Promise<ProjectStepChange[]> {
+  ): Promise<readonly ProjectStepChange[]> {
     if (!step.canRead || !step.value) {
       return [];
     }
