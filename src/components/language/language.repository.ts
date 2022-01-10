@@ -94,6 +94,12 @@ export class LanguageRepository extends DtoRepository(Language) {
     return langList;
   }
 
+  async delete(language: Language) {
+    return await getFromCordTables('sc/languages/delete', {
+      id: language.id,
+    });
+  }
+
   async listProjects(language: Language) {
     const queryProject = this.db
       .query()
