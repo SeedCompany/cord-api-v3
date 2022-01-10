@@ -292,10 +292,21 @@ export class ProjectService {
       'project'
     );
 
+    // Support deprecated code path for now
+    if (changes.step) {
+      await this.projectRules.verifyStepChange(
+        input.id,
+        session,
+        changes.step,
+        changeset
+      );
+    }
+
     const {
       primaryLocationId,
       marketingLocationId,
       fieldRegionId,
+      step,
       ...simpleChanges
     } = changes;
 
@@ -304,6 +315,26 @@ export class ProjectService {
       simpleChanges,
       changeset
     );
+
+    // Support deprecated code path for now
+    if (changes.step) {
+      await this.repo.addProjectStep(
+        { id: input.id, changeset, step: changes.step },
+        session
+      );
+      if (changes.status) {
+        await this.repo.updateProperties(
+          currentProject,
+          { status: changes.status },
+          changeset
+        );
+      }
+      result = {
+        ...result,
+        step: changes.step,
+        status: changes.status ?? result.status,
+      };
+    }
 
     if (primaryLocationId) {
       try {
