@@ -274,13 +274,12 @@ export class ExtractProductsFromPnpHandler
     rows: readonly ExtractedRow[],
     session: Session
   ) {
-    const names = uniq([
-      'Unknown',
-      ...rows.flatMap((row) =>
-        row.story && !row.placeholder ? row.story : []
-      ),
-    ]);
-    if (names.length === 1) {
+    const names = uniq(
+      rows.flatMap((row) =>
+        !row.story ? [] : row.placeholder ? 'Unknown' : row.story
+      )
+    );
+    if (names.length === 0) {
       return {};
     }
     const existingList = await this.repo.getProducibleIdsByNames(
