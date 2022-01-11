@@ -12,7 +12,7 @@ import {
 } from '../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import { ACTIVE, INACTIVE } from '../../core/database/query';
-import { Role } from '../authorization';
+import { Role, withoutScope } from '../authorization';
 import { EngagementService } from '../engagement';
 import { User, UserService } from '../user';
 import {
@@ -825,7 +825,7 @@ export class ProjectRules {
     );
 
     // If current user is not an approver (based on roles) then don't allow any transitions
-    currentUserRoles ??= await this.getUserRoles(session.userId);
+    currentUserRoles ??= session.roles.map(withoutScope);
     if (intersection(approvers, currentUserRoles).length === 0) {
       return [];
     }
@@ -834,7 +834,7 @@ export class ProjectRules {
   }
 
   async canBypassWorkflow(session: Session) {
-    const roles = await this.getUserRoles(session.userId);
+    const roles = session.roles.map(withoutScope);
     return intersection(rolesThatCanBypassWorkflow, roles).length > 0;
   }
 
@@ -846,7 +846,7 @@ export class ProjectRules {
   ) {
     // If current user's roles include a role that can bypass workflow
     // stop the check here.
-    const currentUserRoles = await this.getUserRoles(session.userId);
+    const currentUserRoles = session.roles.map(withoutScope);
     if (intersection(rolesThatCanBypassWorkflow, currentUserRoles).length > 0) {
       return;
     }
@@ -905,21 +905,6 @@ export class ProjectRules {
     }
 
     return currentStep;
-  }
-
-  private async getUserRoles(id: ID) {
-    const userRolesQuery = await this.db
-      .query()
-      .match([
-        node('user', 'User', { id }),
-        relation('out', '', 'roles', ACTIVE),
-        node('roles', 'Property'),
-      ])
-      .raw('return collect(roles.value) as roles')
-      .asResult<{ roles: Role[] }>()
-      .first();
-
-    return userRolesQuery?.roles ?? [];
   }
 
   async getNotifications(

@@ -49,6 +49,9 @@ export const rolesForScope =
   (role: Role): ScopedRole =>
     `${scope}:${role}` as const;
 
+export const withoutScope = (role: ScopedRole): Role =>
+  role.split(':')[1] as Role;
+
 export type InternalRole =
   | 'AdministratorRole'
   | 'BetaTesterRole'
