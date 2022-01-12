@@ -43,6 +43,9 @@ export class EngagementRules {
     status: EngagementStatus,
     id: ID
   ): Promise<StatusRule> {
+    const mostRecentPreviousStatus = (steps: EngagementStatus[]) =>
+      this.getMostRecentPreviousStatus(id, steps);
+
     switch (status) {
       case EngagementStatus.InDevelopment:
         return {
@@ -189,7 +192,7 @@ export class EngagementRules {
               projectStepRequirements: [ProjectStep.DiscussingChangeToPlan],
             },
             {
-              to: await this.getMostRecentPreviousStatus(id, [
+              to: await mostRecentPreviousStatus([
                 EngagementStatus.Active,
                 EngagementStatus.ActiveChangedPlan,
               ]),
@@ -218,7 +221,7 @@ export class EngagementRules {
               ],
             },
             {
-              to: await this.getMostRecentPreviousStatus(id, [
+              to: await mostRecentPreviousStatus([
                 EngagementStatus.Active,
                 EngagementStatus.ActiveChangedPlan,
               ]),
@@ -293,11 +296,11 @@ export class EngagementRules {
           ],
           transitions: [
             {
-              to: await this.getMostRecentPreviousStatus(id, [
-                EngagementStatus.DiscussingReactivation,
-                EngagementStatus.Suspended,
+              to: await mostRecentPreviousStatus([
                 EngagementStatus.Active,
                 EngagementStatus.ActiveChangedPlan,
+                EngagementStatus.DiscussingReactivation,
+                EngagementStatus.Suspended,
               ]),
               type: EngagementTransitionType.Neutral,
               label: 'Will Not Terminate',
@@ -320,7 +323,7 @@ export class EngagementRules {
           ],
           transitions: [
             {
-              to: await this.getMostRecentPreviousStatus(id, [
+              to: await mostRecentPreviousStatus([
                 EngagementStatus.Active,
                 EngagementStatus.ActiveChangedPlan,
               ]),
@@ -528,18 +531,10 @@ export class EngagementRules {
   /** Of the given status which one was the most recent previous status */
   private async getMostRecentPreviousStatus(
     id: ID,
-    status: EngagementStatus[]
+    statuses: EngagementStatus[]
   ): Promise<EngagementStatus> {
     const prevStatus = await this.getPreviousStatus(id);
-    const mostRecentMatchedStatus = first(intersection(prevStatus, status));
-    if (!mostRecentMatchedStatus) {
-      throw new ServerException(
-        `The engagement ${id} has never been in any of these previous status: ${status.join(
-          ', '
-        )}`
-      );
-    }
-    return mostRecentMatchedStatus;
+    return first(intersection(prevStatus, statuses)) ?? statuses[0];
   }
 
   /** A list of the engagement's previous status ordered most recent to furthest in the past */
