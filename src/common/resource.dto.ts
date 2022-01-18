@@ -1,18 +1,27 @@
 import { Field, InterfaceType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
-import { assert } from 'ts-essentials';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { ScopedRole } from '../components/authorization';
+import { ServerException } from './exceptions';
 import { ID, IdField } from './id-field';
 import { DateTimeField } from './luxon.graphql';
 import { SecuredProps, UnsecuredDto } from './secured-property';
 import { AbstractClassType } from './types';
 import { has } from './util';
 
+const hasTypename = (value: unknown): value is { __typename: string } =>
+  value != null &&
+  typeof value === 'object' &&
+  has('__typename', value) &&
+  typeof value.__typename === 'string';
+
 @InterfaceType({
-  resolveType: (value) => {
-    assert(typeof value.__typename === 'string');
-    return value.__typename;
+  resolveType: (value: unknown) => {
+    if (hasTypename(value)) {
+      return value.__typename;
+    }
+
+    throw new ServerException('Cannot resolve Resource type');
   },
 })
 export abstract class Resource {

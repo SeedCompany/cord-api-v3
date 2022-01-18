@@ -697,10 +697,10 @@ export class ProjectRules {
             },
             {
               to: await mostRecentPreviousStep([
-                ProjectStep.DiscussingReactivation,
-                ProjectStep.Suspended,
                 ProjectStep.Active,
                 ProjectStep.ActiveChangedPlan,
+                ProjectStep.DiscussingReactivation,
+                ProjectStep.Suspended,
               ]),
               type: TransitionType.Neutral,
               label: 'Will Not Terminate',
@@ -731,10 +731,10 @@ export class ProjectRules {
             },
             {
               to: await mostRecentPreviousStep([
-                ProjectStep.DiscussingReactivation,
-                ProjectStep.Suspended,
                 ProjectStep.Active,
                 ProjectStep.ActiveChangedPlan,
+                ProjectStep.DiscussingReactivation,
+                ProjectStep.Suspended,
               ]),
               type: TransitionType.Neutral,
               label: 'Will Not Terminate',
@@ -994,15 +994,7 @@ export class ProjectRules {
     changeset?: ID
   ): Promise<ProjectStep> {
     const prevSteps = await this.getPreviousSteps(id, changeset);
-    const mostRecentMatchedStep = first(intersection(prevSteps, steps));
-    if (!mostRecentMatchedStep) {
-      throw new ServerException(
-        `The project ${id} has never been in any of these previous steps: ${steps.join(
-          ', '
-        )}`
-      );
-    }
-    return mostRecentMatchedStep;
+    return first(intersection(prevSteps, steps)) ?? steps[0];
   }
 
   /** A list of the project's previous steps ordered most recent to furthest in the past */
