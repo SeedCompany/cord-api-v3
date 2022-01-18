@@ -24,5 +24,5 @@ export const fullTextQuery =
 
 export const escapeLuceneSyntax = (query: string) =>
   query
-    .replace(/[![\]~)(+\-:?*"^&|{}\\]/g, (char) => `\\${char}`)
+    .replace(/[![\]~)(+\-:?*"^&|{}\\/]/g, (char) => `\\${char}`)
     .replace(/\b(OR|AND|NOT)\b/g, (char) => `"${char}"`);
