@@ -12,3 +12,4 @@ export * from './list-product.dto';
 export * from './available-steps';
 export * from './completion-description.dto';
 export * from './progress-measurement.enum';
+export * from './product-step-info.dto';

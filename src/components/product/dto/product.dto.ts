@@ -25,6 +25,7 @@ import { Producible, SecuredProducible } from './producible.dto';
 import { SecuredProductMediums } from './product-medium';
 import { SecuredMethodology } from './product-methodology';
 import { SecuredProductPurposes } from './product-purpose';
+import { SecuredProductStepList } from './product-step-info.dto';
 import { SecuredProductSteps } from './product-step.enum';
 import { SecuredProgressMeasurement } from './progress-measurement.enum';
 
@@ -69,6 +70,9 @@ export class Product extends Producible {
     `,
   })
   readonly steps: SecuredProductSteps;
+
+  @Field()
+  readonly stepList: SecuredProductStepList;
 
   @Field({
     description: stripIndent`

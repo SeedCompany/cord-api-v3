@@ -23,6 +23,7 @@ import {
   asProductType,
   CreateDirectScriptureProduct,
   DirectScriptureProduct,
+  ProductStepInfoInput,
   UpdateDirectScriptureProduct,
 } from '../dto';
 import { ProductService } from '../product.service';
@@ -148,13 +149,26 @@ export class SplitScriptureSpanningBooksMigration extends BaseMigration {
           };
           return update;
         }
-        const { id, scriptureReferences: _, engagement, ...rest } = product;
+        const {
+          id,
+          scriptureReferences: _,
+          engagement,
+          stepList,
+          ...rest
+        } = product;
         const create: CreateDirectScriptureProduct & { oldId: ID } = {
           oldId: id,
           ...rest,
           engagementId: engagement,
           scriptureReferences: refs,
           describeCompletion: undefined,
+          stepList: stepList.map((step) => {
+            const productStepInfoInput: ProductStepInfoInput = {
+              name: step.name,
+              plannedCompleteDate: step.plannedCompleteDate.value!,
+            };
+            return productStepInfoInput;
+          }),
         };
         return create;
       });

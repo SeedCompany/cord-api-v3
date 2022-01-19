@@ -2,7 +2,7 @@ import { Field, Float, InputType, ObjectType } from '@nestjs/graphql';
 import { Transform, Type } from 'class-transformer';
 import { IsPositive, ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
-import { uniq } from 'lodash';
+import { uniq, uniqBy } from 'lodash';
 import { DateTime } from 'luxon';
 import { ID, IdField, NameField } from '../../../common';
 import {
@@ -13,6 +13,7 @@ import {
 import { ProductMedium } from './product-medium';
 import { ProductMethodology } from './product-methodology';
 import { ProductPurpose } from './product-purpose';
+import { ProductStepInfoInput } from './product-step-info.dto';
 import { ProductStep as Step } from './product-step.enum';
 import { AnyProduct, Product } from './product.dto';
 import { ProgressMeasurement } from './progress-measurement.enum';
@@ -37,9 +38,16 @@ export abstract class CreateBaseProduct {
   @Field(() => ProductMethodology, { nullable: true })
   readonly methodology?: ProductMethodology;
 
-  @Field(() => [Step], { nullable: true })
+  @Field(() => [Step], {
+    nullable: true,
+    deprecationReason: 'Use stepList instead',
+  })
   @Transform(({ value }) => uniq(value))
   readonly steps?: readonly Step[];
+
+  @Field(() => [ProductStepInfoInput], { nullable: true })
+  @Transform(({ value }) => uniqBy(value, 'name'))
+  stepList?: ProductStepInfoInput[] = [];
 
   @Field({ nullable: true })
   readonly describeCompletion?: string;
