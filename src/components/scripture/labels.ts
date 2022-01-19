@@ -87,27 +87,14 @@ export const labelOfScriptureRanges = (refs: readonly ScriptureRange[]) => {
 
   const hasSame = (key: keyof ScriptureReference) =>
     uniq(refs.flatMap((ref) => [ref.start[key], ref.end[key]])).length === 1;
-  const same = hasSame('book')
-    ? hasSame('chapter')
-      ? 'chapter'
-      : 'book'
-    : undefined;
+  const same = hasSame('book') ? 'book' : undefined;
   const labels = refs.map((ref) => labelOfScriptureRange(ref, same)).join(', ');
-  let prefix = '';
-  if (same === 'book') {
-    prefix += refs[0].start.book;
-  }
-  if (same === 'chapter') {
-    prefix += ` ${refs[0].start.chapter}`;
-  }
-  if (prefix) {
-    prefix += ' ';
-  }
+  const prefix = same === 'book' ? `${refs[0].start.book} ` : '';
   return `${prefix}${labels}`;
 };
 
 /**
- * Merges ScriptureRanges into a equivalent minimal set of ScriptureRanges.
+ * Merges ScriptureRanges into an equivalent minimal set of ScriptureRanges.
  * Combines overlapping and adjacent ScriptureRanges.
  * Also sorts them.
  */
