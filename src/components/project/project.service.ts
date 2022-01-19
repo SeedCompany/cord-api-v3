@@ -246,10 +246,9 @@ export class ProjectService {
         ...securedProps.tags,
         value: securedProps.tags.canRead ? securedProps.tags.value : [],
       },
-      canDelete: await this.repo.checkDeletePermission(
-        project.id,
-        sessionOrUserId
-      ),
+      canDelete: isIdLike(sessionOrUserId)
+        ? false // Assume email workflow that doesn't need to know this. Skip lookup.
+        : sessionOrUserId.roles.includes('global:Administrator'),
     };
   }
 
@@ -386,7 +385,7 @@ export class ProjectService {
       throw new NotFoundException('Could not find project');
     }
 
-    const canDelete = await this.repo.checkDeletePermission(id, session);
+    const { canDelete } = await this.secure(object, session);
 
     if (!canDelete)
       throw new UnauthorizedException(
