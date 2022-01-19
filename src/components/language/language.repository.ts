@@ -168,15 +168,15 @@ export class LanguageRepository extends DtoRepository(Language) {
               node('project', 'Project'),
               relation('out', '', 'engagement', ACTIVE),
               node('', 'LanguageEngagement'),
-              relation('out', '', 'engagement'),
+              relation('out', '', 'language'),
             ]
           : []),
         node('node', 'Language'),
       ])
       // match requesting user once (instead of once per row)
       .match(requestingUser(session))
-      .apply(matchProjectSensToLimitedScopeMap(limitedScope))
       .apply(languageListFilter(input.filter, this))
+      .apply(matchProjectSensToLimitedScopeMap(limitedScope))
       .apply(sorting(Language, input))
       .apply(paginate(input, this.hydrate(session)))
       .first();
