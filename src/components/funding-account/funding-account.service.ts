@@ -1,13 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import {
-  DuplicateException,
   ID,
   NotFoundException,
   ObjectView,
-  SecuredList,
   ServerException,
   Session,
-  UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../core';
@@ -34,31 +31,9 @@ export class FundingAccountService {
     input: CreateFundingAccount,
     session: Session
   ): Promise<FundingAccount> {
-    const checkFundingAccount = await this.repo.checkFundingAccount(input.name);
-
-    if (checkFundingAccount) {
-      throw new DuplicateException(
-        'fundingAccount.name',
-        'FundingAccount with this name already exists.'
-      );
-    }
-
     try {
       const result = await this.repo.create(input, session);
-
-      if (!result) {
-        throw new ServerException('Failed to create funding account');
-      }
-
-      await this.authorizationService.processNewBaseNode(
-        FundingAccount,
-        result.id,
-        session.userId
-      );
-
-      this.logger.info(`funding account created`, { id: result.id });
-
-      return await this.readOne(result.id, session);
+      return await this.secure(result, session);
     } catch (err) {
       this.logger.error('Could not create funding account for user', {
         exception: err,
@@ -74,20 +49,15 @@ export class FundingAccountService {
     session: Session,
     _view?: ObjectView
   ): Promise<FundingAccount> {
-    this.logger.info('readOne', { id, userId: session.userId });
-
-    if (!id) {
-      throw new NotFoundException('Invalid: Blank ID');
-    }
-
-    const result = await this.repo.readOne(id, session);
-    return await this.secure(result, session);
+    const dto = await this.repo.readOne(id);
+    return await this.secure(dto, session);
   }
 
   async readMany(ids: readonly ID[], session: Session) {
-    const fundingAccounts = await this.repo.readMany(ids, session);
     return await Promise.all(
-      fundingAccounts.map((dto) => this.secure(dto, session))
+      ids.map(async (id) => {
+        return await this.secure(await this.repo.readOne(id), session);
+      })
     );
   }
 
@@ -119,7 +89,8 @@ export class FundingAccountService {
       fundingAccount,
       changes
     );
-    return await this.repo.updateProperties(fundingAccount, changes);
+    await this.repo.update(fundingAccount, changes);
+    return await this.readOne(input.id, session);
   }
 
   async delete(id: ID, session: Session): Promise<void> {
@@ -129,17 +100,14 @@ export class FundingAccountService {
       throw new NotFoundException('Could not find Funding Account');
     }
 
-    const canDelete = await this.repo.checkDeletePermission(id, session);
-
-    if (!canDelete)
-      throw new UnauthorizedException(
-        'You do not have the permission to delete this Funding Account'
-      );
-
+    let response;
     try {
-      await this.repo.deleteNode(object);
+      response = await this.repo.delete(object);
     } catch (exception) {
-      this.logger.error('Failed to delete', { id, exception });
+      this.logger.error(`Failed to delete: ${response?.body || 'unknown'}`, {
+        id,
+        exception,
+      });
       throw new ServerException('Failed to delete', exception);
     }
   }
@@ -148,11 +116,7 @@ export class FundingAccountService {
     input: FundingAccountListInput,
     session: Session
   ): Promise<FundingAccountListOutput> {
-    if (await this.authorizationService.canList(FundingAccount, session)) {
-      const results = await this.repo.list(input, session);
-      return await mapListResults(results, (dto) => this.secure(dto, session));
-    } else {
-      return SecuredList.Redacted;
-    }
+    const results = await this.repo.list(input);
+    return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 }

@@ -3,3 +3,4 @@ export * from './list-funding-account.dto';
 export * from './funding-account.dto';
 export * from './update-funding-account.dto';
 export * from './delete-funding-account.dto';
+export * from './tables-funding-accounts.dto';

@@ -1,77 +1,104 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node } from 'cypher-query-builder';
-import { ID, NotFoundException, Session } from '../../common';
-import { DtoRepository, matchRequestingUser } from '../../core';
 import {
-  createNode,
-  paginate,
-  requestingUser,
-  sorting,
-} from '../../core/database/query';
+  getFromCordTables,
+  ID,
+  PaginatedListType,
+  Session,
+  transformToDto,
+  transformToPayload,
+  UnsecuredDto,
+} from '../../common';
+import { DtoRepository } from '../../core';
 import {
   CreateFundingAccount,
   FundingAccount,
   FundingAccountListInput,
+  TablesFundingAccounts,
+  TablesReadFundingAccount,
+  UpdateFundingAccount,
 } from './dto';
 
 @Injectable()
 export class FundingAccountRepository extends DtoRepository(FundingAccount) {
-  async checkFundingAccount(name: string) {
-    return await this.db
-      .query()
-      .match([node('fundingAccount', 'FieldZoneName', { value: name })])
-      .return('fundingAccount')
-      .first();
+  async create(input: CreateFundingAccount, _session: Session) {
+    const response = await getFromCordTables(
+      'sc/funding-accounts/create-read',
+      {
+        fundingAccount: {
+          ...transformToPayload(input, FundingAccount.TablesToDto),
+        },
+      }
+    );
+    const iFundingAccount: TablesReadFundingAccount = JSON.parse(response.body);
+
+    const dto: UnsecuredDto<FundingAccount> = transformToDto(
+      iFundingAccount.fundingAccount,
+      FundingAccount.TablesToDto
+    );
+    return dto;
   }
 
-  async create(input: CreateFundingAccount, session: Session) {
-    const initialProps = {
-      name: input.name,
-      accountNumber: input.accountNumber,
-      canDelete: true,
-    };
-    const query = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .apply(await createNode(FundingAccount, { initialProps }))
-      .return<{ id: ID }>('node.id as id');
+  async readOne(id: ID): Promise<UnsecuredDto<FundingAccount>> {
+    const response = await getFromCordTables('sc/funding-accounts/read', {
+      id: id,
+    });
+    const fundingAccount = response.body;
+    const iFundingAccount: TablesReadFundingAccount =
+      JSON.parse(fundingAccount);
 
-    return await query.first();
+    const dto: UnsecuredDto<FundingAccount> = transformToDto(
+      iFundingAccount.fundingAccount,
+      FundingAccount.TablesToDto
+    );
+    return dto;
   }
 
-  async readOne(id: ID, session: Session) {
-    const query = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'FundingAccount', { id })])
-      .apply(this.hydrate());
-
-    const result = await query.first();
-    if (!result) {
-      throw new NotFoundException('Could not found funding account');
-    }
-    return result.dto;
+  async update(
+    fundingAccount: FundingAccount,
+    updates: Partial<Omit<UpdateFundingAccount, 'id'>>
+  ) {
+    const updatePayload = transformToPayload(
+      updates,
+      FundingAccount.TablesToDto
+    );
+    Object.entries(updatePayload).forEach(([key, value]) => {
+      void getFromCordTables('sc/funding-accounts/update', {
+        id: fundingAccount.id,
+        column: key,
+        value: value,
+      });
+    });
   }
 
-  async readMany(ids: readonly ID[], session: Session) {
-    return await this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .matchNode('node', 'FundingAccount')
-      .where({ 'node.id': inArray(ids.slice()) })
-      .apply(this.hydrate())
-      .map('dto')
-      .run();
+  async delete(fundingAccount: FundingAccount) {
+    return await getFromCordTables('sc/funding-accounts/delete', {
+      id: fundingAccount.id,
+    });
   }
 
-  async list(input: FundingAccountListInput, session: Session) {
-    const result = await this.db
-      .query()
-      .match(requestingUser(session))
-      .match(node('node', 'FundingAccount'))
-      .apply(sorting(FundingAccount, input))
-      .apply(paginate(input, this.hydrate()))
-      .first();
-    return result!; // result from paginate() will always have 1 row.
+  async list(input: FundingAccountListInput) {
+    const response = await getFromCordTables('sc/funding-accounts/list', {
+      sort: input.sort,
+      order: input.order,
+      page: input.page,
+      resultsPerPage: input.count,
+    });
+    const fundingAccounts = response.body;
+    const iFundingAccounts: TablesFundingAccounts = JSON.parse(fundingAccounts);
+
+    const fundingAccountArray: Array<UnsecuredDto<FundingAccount>> =
+      iFundingAccounts.fundingAccounts.map((fundingAccount) => {
+        return transformToDto(fundingAccount, FundingAccount.TablesToDto);
+      });
+
+    const totalLoaded =
+      input.count * (input.page - 1) + fundingAccountArray.length;
+    const fundingAccountList: PaginatedListType<UnsecuredDto<FundingAccount>> =
+      {
+        items: fundingAccountArray,
+        total: totalLoaded,
+        hasMore: totalLoaded < iFundingAccounts.size,
+      };
+    return fundingAccountList;
   }
 }
