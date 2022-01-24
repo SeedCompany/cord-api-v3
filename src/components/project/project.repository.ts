@@ -125,7 +125,7 @@ export class ProjectRepository extends CommonRepository {
           node('organization', 'Organization'),
         ])
         // match project transition step
-        .optionalMatch([
+        .match([
           node('node'),
           relation('out', '', 'stepChange', { active: !changeset }),
           node('stepChange', 'ProjectStepChange'),
@@ -136,7 +136,7 @@ export class ProjectRepository extends CommonRepository {
               ]
             : []),
         ])
-        .optionalMatch([
+        .match([
           node('stepChange'),
           relation('out', '', 'step', ACTIVE),
           node('step', 'ProjectStep'),
