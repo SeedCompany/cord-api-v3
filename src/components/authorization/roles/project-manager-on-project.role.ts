@@ -357,7 +357,7 @@ export const ProjectManagerOnProject = new DbRole({
         { propertyName: 'step', permission: { read, write, }, },
         { propertyName: 'name', permission: { read, write, }, },
         { propertyName: 'status', permission: { read, write, }, },
-        { propertyName: 'departmentId', permission: { read, write, }, },
+        { propertyName: 'departmentId', permission: { read, }, },
         { propertyName: 'mouStart', permission: { read, write, }, },
         { propertyName: 'mouEnd', permission: { read, write, }, },
         { propertyName: 'initialMouEnd', permission: { read, write, }, },
