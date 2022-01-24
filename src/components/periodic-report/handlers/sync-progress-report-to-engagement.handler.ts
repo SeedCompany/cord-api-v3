@@ -65,12 +65,12 @@ export class SyncProgressReportToEngagementDateRange
         : [event.engagement];
 
     for (const engagement of engagements) {
-      const [prev, updated] =
+      const [updated, prev] =
         event instanceof ProjectUpdatedEvent
           ? this.intervalsFromProjectChange(engagement, event)
           : event instanceof EngagementCreatedEvent
-          ? [null, engagementRange(event.engagement)]
-          : [engagementRange(event.previous), engagementRange(event.updated)];
+          ? [engagementRange(event.engagement), null]
+          : [engagementRange(event.updated), engagementRange(event.previous)];
 
       const diff = this.diffBy(updated, prev, 'quarter');
 

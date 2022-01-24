@@ -16,7 +16,7 @@ export class EngagementStatusResolver {
     status: SecuredEngagementStatus & { parentId: ID; changeset?: ID },
     @AnonSession() session: Session
   ): Promise<EngagementStatusTransition[]> {
-    if (!status.canRead || !status.value) {
+    if (!status.canRead || !status.canEdit || !status.value) {
       return [];
     }
     return await this.engagementRules.getAvailableTransitions(

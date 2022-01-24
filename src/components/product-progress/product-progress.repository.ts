@@ -286,11 +286,11 @@ export class ProductProgressRepository {
     return result.dto;
   }
 
-  async getScope(input: ProductProgressInput, session: Session) {
+  async getScope(productId: ID, session: Session) {
     const query = this.db
       .query()
       .match([
-        node('product', 'Product', { id: input.productId }),
+        node('product', 'Product', { id: productId }),
         relation('in', '', 'product'),
         node('engagement', 'Engagement'),
         relation('in', '', 'engagement'),

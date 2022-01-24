@@ -5,6 +5,7 @@ const baseUrl = 'http://localhost:8080';
 const token =
   'YtQanxWk4AtXbTMn09eDv0pHjPbj1VEmaKjXsaSHx0wQoEcPRc8Pvfh9URGowgHF';
 
+
 export async function getFromCordTables(
   cordTablesPath: string,
   additionalParams = {}

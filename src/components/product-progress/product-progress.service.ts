@@ -2,10 +2,14 @@ import { Injectable } from '@nestjs/common';
 import {
   ID,
   InputException,
+  isIdLike,
   Session,
   UnauthorizedException,
 } from '../../common';
+import { addScope } from '../../common/session';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { ProgressReport } from '../periodic-report';
+import { Product } from '../product';
 import {
   ProductProgress,
   ProductProgressInput,
@@ -22,40 +26,52 @@ export class ProductProgressService {
   ) {}
 
   async readAllByReport(
-    reportId: ID,
+    report: ProgressReport,
     session: Session
   ): Promise<readonly ProductProgress[]> {
-    const progress = await this.repo.readAllProgressReportsByReport(reportId);
-    return await this.secureAll(progress, session);
+    const progress = await this.repo.readAllProgressReportsByReport(report.id);
+    return await this.secureAll(progress, addScope(session, report.scope));
   }
 
   async readAllByProduct(
-    productId: ID,
+    product: Product,
     session: Session
   ): Promise<readonly ProductProgress[]> {
-    const progress = await this.repo.readAllProgressReportsByProduct(productId);
-    return await this.secureAll(progress, session);
+    const progress = await this.repo.readAllProgressReportsByProduct(
+      product.id
+    );
+    return await this.secureAll(progress, addScope(session, product.scope));
   }
 
   async readOne(
-    reportId: ID,
-    productId: ID,
+    report: ID | ProgressReport,
+    product: ID | Product,
     session: Session
   ): Promise<ProductProgress> {
+    const productId = isIdLike(product) ? product : product.id;
+    const reportId = isIdLike(report) ? report : report.id;
+    const scope = !isIdLike(product)
+      ? product.scope!
+      : !isIdLike(report)
+      ? report.scope
+      : (await this.repo.getScope(productId, session)).scopedRoles;
+
     const progress = await this.repo.readOne(productId, reportId);
-    return await this.secure(progress, session);
+    return await this.secure(progress, addScope(session, scope));
   }
 
   async readOneForCurrentReport(
-    productId: ID,
+    product: Product,
     session: Session
   ): Promise<ProductProgress | undefined> {
-    const progress = await this.repo.readOneForCurrentReport(productId);
-    return progress ? await this.secure(progress, session) : undefined;
+    const progress = await this.repo.readOneForCurrentReport(product.id);
+    return progress
+      ? await this.secure(progress, addScope(session, product.scope))
+      : undefined;
   }
 
   async update(input: ProductProgressInput, session: Session) {
-    const scope = await this.repo.getScope(input, session);
+    const scope = await this.repo.getScope(input.productId, session);
     const perms = await this.auth.getPermissions({
       resource: StepProgress,
       sensitivity: scope.sensitivity,

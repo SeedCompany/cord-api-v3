@@ -61,19 +61,24 @@ import {
 } from './utility/transition-project';
 
 const deleteProject =
-  (app: TestApp) => async (id: ID | string | { id: ID | string }) =>
-    await app.graphql.mutate(
-      gql`
-        mutation DeleteProject($id: ID!) {
-          deleteProject(id: $id) {
-            __typename
+  (app: TestApp, asAdmin = true) =>
+  async (id: ID | string | { id: ID | string }) => {
+    const doDelete = async () => {
+      await app.graphql.mutate(
+        gql`
+          mutation DeleteProject($id: ID!) {
+            deleteProject(id: $id) {
+              __typename
+            }
           }
+        `,
+        {
+          id: isIdLike(id) || typeof id === 'string' ? id : id.id,
         }
-      `,
-      {
-        id: isIdLike(id) || typeof id === 'string' ? id : id.id,
-      }
-    );
+      );
+    };
+    asAdmin ? await runAsAdmin(app, doDelete) : await doDelete();
+  };
 
 const listProjects = async (
   app: TestApp,
@@ -356,7 +361,7 @@ describe('Project e2e', () => {
     const project = await createProject(app);
     expect(project.id).toBeTruthy();
 
-    await deleteProject(app)(project.id);
+    await deleteProject(app, false)(project.id);
 
     await expectNotFound(
       app.graphql.query(
