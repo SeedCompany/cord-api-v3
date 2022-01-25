@@ -1,13 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import {
-  DuplicateException,
   ID,
   NotFoundException,
   ObjectView,
   SecuredList,
   ServerException,
   Session,
-  UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../core';
@@ -31,25 +29,11 @@ export class FieldZoneService {
   ) {}
 
   async create(input: CreateFieldZone, session: Session): Promise<FieldZone> {
-    const checkName = await this.repo.checkName(input.name);
-
-    if (checkName) {
-      throw new DuplicateException(
-        'fieldZone.name',
-        'FieldZone with this name already exists.'
-      );
-    }
     const result = await this.repo.create(input, session);
 
     if (!result) {
       throw new ServerException('failed to create field zone');
     }
-
-    await this.authorizationService.processNewBaseNode(
-      FieldZone,
-      result.id,
-      session.userId
-    );
 
     this.logger.debug(`field zone created`, { id: result.id });
     return await this.readOne(result.id, session);
@@ -61,19 +45,15 @@ export class FieldZoneService {
     session: Session,
     _view?: ObjectView
   ): Promise<FieldZone> {
-    this.logger.debug(`Read Field Zone`, {
-      id: id,
-      userId: session.userId,
-    });
-
-    const result = await this.repo.readOne(id, session);
+    const result = await this.repo.readOne(id);
     return await this.secure(result, session);
   }
 
   async readMany(ids: readonly ID[], session: Session) {
-    const fieldZones = await this.repo.readMany(ids, session);
     return await Promise.all(
-      fieldZones.map((dto) => this.secure(dto, session))
+      ids.map(async (id) => {
+        return await this.secure(await this.repo.readOne(id), session);
+      })
     );
   }
 
@@ -96,7 +76,7 @@ export class FieldZoneService {
 
   async update(input: UpdateFieldZone, session: Session): Promise<FieldZone> {
     const fieldZone = await this.readOne(input.id, session);
-
+    // @ts-expect-error this is a temporal fix
     const changes = this.repo.getActualChanges(fieldZone, input);
     await this.authorizationService.verifyCanEditChanges(
       FieldZone,
@@ -104,15 +84,7 @@ export class FieldZoneService {
       changes
     );
 
-    const { directorId, ...simpleChanges } = changes;
-
-    // update director
-    if (directorId) {
-      await this.repo.updateDirector(directorId, input.id);
-    }
-
-    await this.repo.updateProperties(fieldZone, simpleChanges);
-
+    await this.repo.update(fieldZone, changes);
     return await this.readOne(input.id, session);
   }
 
@@ -123,17 +95,14 @@ export class FieldZoneService {
       throw new NotFoundException('Could not find Field Zone');
     }
 
-    const canDelete = await this.repo.checkDeletePermission(id, session);
-
-    if (!canDelete)
-      throw new UnauthorizedException(
-        'You do not have the permission to delete this Field Zone'
-      );
-
+    let response;
     try {
-      await this.repo.deleteNode(object);
+      response = await this.repo.delete(object);
     } catch (exception) {
-      this.logger.error('Failed to delete', { id, exception });
+      this.logger.error(`Failed to delete: ${response?.body || 'unknown'}`, {
+        id,
+        exception,
+      });
       throw new ServerException('Failed to delete', exception);
     }
   }

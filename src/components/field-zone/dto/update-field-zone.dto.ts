@@ -16,7 +16,7 @@ export abstract class UpdateFieldZone {
     description: 'A user ID that will be the director of the zone',
     nullable: true,
   })
-  readonly directorId?: ID;
+  readonly director?: ID;
 }
 
 @InputType()
