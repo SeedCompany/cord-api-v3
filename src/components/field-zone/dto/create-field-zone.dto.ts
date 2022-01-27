@@ -12,7 +12,7 @@ export abstract class CreateFieldZone {
   @IdField({
     description: 'A user ID that will be the director of the field Zone',
   })
-  readonly directorId: ID;
+  readonly director: ID;
 }
 
 @InputType()

@@ -1,128 +1,96 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, Query, relation } from 'cypher-query-builder';
-import { DateTime } from 'luxon';
-import { ID, NotFoundException, Session, UnsecuredDto } from '../../common';
-import { DtoRepository, matchRequestingUser } from '../../core';
 import {
-  ACTIVE,
-  createNode,
-  createRelationships,
-  matchProps,
-  merge,
-  paginate,
-  requestingUser,
-  sorting,
-} from '../../core/database/query';
-import { CreateFieldZone, FieldZone, FieldZoneListInput } from './dto';
+  getFromCordTables,
+  ID,
+  PaginatedListType,
+  Session,
+  transformToDto,
+  transformToPayload,
+  UnsecuredDto,
+} from '../../common';
+import { DtoRepository } from '../../core';
+import {
+  CreateFieldZone,
+  FieldZone,
+  FieldZoneListInput,
+  UpdateFieldZone,
+} from './dto';
+import {
+  TablesFieldZones,
+  TablesReadFieldZone,
+} from './dto/tables-field-zones.dto';
 
 @Injectable()
 export class FieldZoneRepository extends DtoRepository(FieldZone) {
-  async checkName(name: string) {
-    return await this.db
-      .query()
-      .match([node('name', 'FieldZoneName', { value: name })])
-      .return('name')
-      .first();
+  async create(input: CreateFieldZone, _session: Session) {
+    const response = await getFromCordTables('sc/field-zones/create-read', {
+      fieldZone: {
+        ...transformToPayload(input, FieldZone.TablesToDto),
+      },
+    });
+    const iFieldZone: TablesReadFieldZone = JSON.parse(response.body);
+
+    const dto: UnsecuredDto<FieldZone> = transformToDto(
+      iFieldZone.fieldZone,
+      FieldZone.TablesToDto
+    );
+    return dto;
   }
 
-  async create(input: CreateFieldZone, session: Session) {
-    const initialProps = {
-      name: input.name,
-      canDelete: true,
+  async readOne(id: ID) {
+    const response = await getFromCordTables('sc/field-zones/read', {
+      id: id,
+    });
+    const fieldZone = response.body;
+    const iFieldZone: TablesReadFieldZone = JSON.parse(fieldZone);
+
+    const dto: UnsecuredDto<FieldZone> = transformToDto(
+      iFieldZone.fieldZone,
+      FieldZone.TablesToDto
+    );
+    return dto;
+  }
+
+  async update(
+    fieldZone: FieldZone,
+    updates: Partial<Omit<UpdateFieldZone, 'id'>>
+  ) {
+    const updatePayload = transformToPayload(updates, FieldZone.TablesToDto);
+    Object.entries(updatePayload).forEach(([key, value]) => {
+      void getFromCordTables('sc/field-zones/update-read', {
+        id: fieldZone.id,
+        column: key,
+        value: value,
+      });
+    });
+  }
+
+  async delete(fieldZone: FieldZone) {
+    return await getFromCordTables('sc/field-zones/delete', {
+      id: fieldZone.id,
+    });
+  }
+
+  async list({ filter, ...input }: FieldZoneListInput, _session: Session) {
+    const response = await getFromCordTables('sc/field-zones/list', {
+      sort: input.sort,
+      order: input.order,
+      page: input.page,
+      resultPerPage: input.count,
+    });
+    const fieldZones = response.body;
+    const iFieldZones: TablesFieldZones = JSON.parse(fieldZones);
+
+    const fieldZoneArray: Array<UnsecuredDto<FieldZone>> =
+      iFieldZones.fieldZones.map((fieldZone) => {
+        return transformToDto(fieldZone, FieldZone.TablesToDto);
+      });
+    const totalLoaded = input.count * (input.page - 1) + fieldZoneArray.length;
+    const fieldZoneList: PaginatedListType<UnsecuredDto<FieldZone>> = {
+      items: fieldZoneArray,
+      total: totalLoaded,
+      hasMore: totalLoaded < iFieldZones.size,
     };
-
-    // create field zone
-    const query = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .apply(await createNode(FieldZone, { initialProps }))
-      .apply(
-        createRelationships(FieldZone, 'out', {
-          director: ['User', input.directorId],
-        })
-      )
-      .return<{ id: ID }>('node.id as id');
-
-    return await query.first();
-  }
-
-  async readOne(id: ID, session: Session) {
-    const query = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'FieldZone', { id: id })])
-      .apply(this.hydrate());
-
-    const result = await query.first();
-    if (!result) {
-      throw new NotFoundException('Could not find field zone', 'fieldZone.id');
-    }
-    return result.dto;
-  }
-
-  async readMany(ids: readonly ID[], session: Session) {
-    return await this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .matchNode('node', 'FieldZone')
-      .where({ 'node.id': inArray(ids.slice()) })
-      .apply(this.hydrate())
-      .map('dto')
-      .run();
-  }
-
-  protected hydrate() {
-    return (query: Query) =>
-      query
-        .apply(matchProps())
-        .optionalMatch([
-          node('node'),
-          relation('out', '', 'director', ACTIVE),
-          node('director', 'User'),
-        ])
-        .return<{ dto: UnsecuredDto<FieldZone> }>(
-          merge('props', {
-            director: 'director.id',
-          }).as('dto')
-        );
-  }
-
-  async updateDirector(directorId: ID, id: ID) {
-    const createdAt = DateTime.local();
-    const query = this.db
-      .query()
-      .match(node('fieldZone', 'FieldZone', { id }))
-      .with('fieldZone')
-      .limit(1)
-      .match([node('director', 'User', { id: directorId })])
-      .optionalMatch([
-        node('fieldZone'),
-        relation('out', 'oldRel', 'director', ACTIVE),
-        node(''),
-      ])
-      .setValues({ 'oldRel.active': false })
-      .with('fieldZone, director')
-      .limit(1)
-      .create([
-        node('fieldZone'),
-        relation('out', '', 'director', {
-          active: true,
-          createdAt,
-        }),
-        node('director'),
-      ]);
-
-    await query.run();
-  }
-
-  async list({ filter, ...input }: FieldZoneListInput, session: Session) {
-    const result = await this.db
-      .query()
-      .match(requestingUser(session))
-      .match(node('node', 'FieldZone'))
-      .apply(sorting(FieldZone, input))
-      .apply(paginate(input, this.hydrate()))
-      .first();
-    return result!; // result from paginate() will always have 1 row.
+    return fieldZoneList;
   }
 }

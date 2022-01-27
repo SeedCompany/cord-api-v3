@@ -3,8 +3,7 @@ import { invert, keys } from 'lodash';
 
 const baseUrl = 'http://localhost:8080';
 const token =
-  'YtQanxWk4AtXbTMn09eDv0pHjPbj1VEmaKjXsaSHx0wQoEcPRc8Pvfh9URGowgHF';
-
+  'MRXRAQEBmUXmuK4qTU1S12ssYeEGIfkYoEK52Ksrm9S4jW0j56YTclMGU8qWQDVU';
 
 export async function getFromCordTables(
   cordTablesPath: string,
