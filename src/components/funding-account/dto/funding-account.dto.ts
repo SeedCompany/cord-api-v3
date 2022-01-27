@@ -22,6 +22,7 @@ export class FundingAccount extends Resource {
     id: 'id',
     name: 'name',
     account_number: 'accountNumber',
+    createdAt: 'createdAt',
   };
 
   @NameField()

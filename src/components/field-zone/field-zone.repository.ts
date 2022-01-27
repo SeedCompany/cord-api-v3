@@ -18,7 +18,7 @@ import {
 import {
   TablesFieldZones,
   TablesReadFieldZone,
-} from './dto/tables-field-zones.dto';
+} from './dto/tables-field-zone.dto';
 
 @Injectable()
 export class FieldZoneRepository extends DtoRepository(FieldZone) {
