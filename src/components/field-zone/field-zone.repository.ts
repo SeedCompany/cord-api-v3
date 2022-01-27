@@ -13,12 +13,10 @@ import {
   CreateFieldZone,
   FieldZone,
   FieldZoneListInput,
-  UpdateFieldZone,
-} from './dto';
-import {
   TablesFieldZones,
   TablesReadFieldZone,
-} from './dto/tables-field-zone.dto';
+  UpdateFieldZone,
+} from './dto';
 
 @Injectable()
 export class FieldZoneRepository extends DtoRepository(FieldZone) {
@@ -57,7 +55,7 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
   ) {
     const updatePayload = transformToPayload(updates, FieldZone.TablesToDto);
     Object.entries(updatePayload).forEach(([key, value]) => {
-      void getFromCordTables('sc/field-zones/update-read', {
+      void getFromCordTables('sc/field-zones/update', {
         id: fieldZone.id,
         column: key,
         value: value,

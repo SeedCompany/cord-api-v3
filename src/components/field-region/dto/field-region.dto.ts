@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import { ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
@@ -17,6 +18,13 @@ import {
 export class FieldRegion extends Resource {
   static readonly Props = keysOf<FieldRegion>();
   static readonly SecuredProps = keysOf<SecuredProps<FieldRegion>>();
+  static readonly TablesToDto = {
+    id: 'id',
+    name: 'name',
+    director: 'director',
+    field_zone: 'fieldZone',
+    created_at: 'createdAt',
+  };
 
   @NameField()
   @DbUnique()

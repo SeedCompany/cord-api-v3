@@ -13,12 +13,12 @@ export abstract class CreateFieldRegion {
     description:
       'The field zone ID that the field region will be associated with',
   })
-  readonly fieldZoneId: ID;
+  readonly fieldZone: ID;
 
   @IdField({
     description: 'A user ID that will be the director of the field region',
   })
-  readonly directorId: ID;
+  readonly director: ID;
 }
 
 @InputType()
