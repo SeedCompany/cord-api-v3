@@ -1,13 +1,11 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import {
-  DuplicateException,
   ID,
   NotFoundException,
   ObjectView,
   SecuredList,
   ServerException,
   Session,
-  UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../core';
@@ -35,26 +33,11 @@ export class FieldRegionService {
     input: CreateFieldRegion,
     session: Session
   ): Promise<FieldRegion> {
-    const checkName = await this.repo.checkName(input.name);
-
-    if (checkName) {
-      throw new DuplicateException(
-        'fieldRegion.name',
-        'FieldRegion with this name already exists.'
-      );
-    }
-
     const result = await this.repo.create(input, session);
 
     if (!result) {
       throw new ServerException('failed to create field region');
     }
-
-    await this.authorizationService.processNewBaseNode(
-      FieldRegion,
-      result.id,
-      session.userId
-    );
 
     this.logger.debug(`field region created`, { id: result.id });
     return await this.readOne(result.id, session);
@@ -71,14 +54,15 @@ export class FieldRegionService {
       userId: session.userId,
     });
 
-    const result = await this.repo.readOne(id, session);
+    const result = await this.repo.readOne(id);
     return await this.secure(result, session);
   }
 
   async readMany(ids: readonly ID[], session: Session) {
-    const fieldRegions = await this.repo.readMany(ids, session);
     return await Promise.all(
-      fieldRegions.map((dto) => this.secure(dto, session))
+      ids.map(async (id) => {
+        return await this.secure(await this.repo.readOne(id), session);
+      })
     );
   }
 
@@ -104,15 +88,14 @@ export class FieldRegionService {
     session: Session
   ): Promise<FieldRegion> {
     const fieldRegion = await this.readOne(input.id, session);
+    // @ts-expect-error this is a temporal fix
     const changes = this.repo.getActualChanges(fieldRegion, input);
     await this.authorizationService.verifyCanEditChanges(
       FieldRegion,
       fieldRegion,
       changes
     );
-    // update director
-
-    await this.repo.updateProperties(fieldRegion, changes);
+    await this.repo.update(fieldRegion, changes);
 
     return await this.readOne(input.id, session);
   }
@@ -124,17 +107,14 @@ export class FieldRegionService {
       throw new NotFoundException('Could not find Field Region');
     }
 
-    const canDelete = await this.repo.checkDeletePermission(id, session);
-
-    if (!canDelete)
-      throw new UnauthorizedException(
-        'You do not have the permission to delete this Field Region'
-      );
-
+    let response;
     try {
-      await this.repo.deleteNode(object);
+      response = await this.repo.delete(object);
     } catch (exception) {
-      this.logger.error('Failed to delete', { id, exception });
+      this.logger.error(`Failed to delete: ${response?.body || 'unknown'}`, {
+        id,
+        exception,
+      });
       throw new ServerException('Failed to delete', exception);
     }
   }

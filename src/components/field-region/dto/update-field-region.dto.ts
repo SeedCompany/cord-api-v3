@@ -16,13 +16,13 @@ export abstract class UpdateFieldRegion {
     description: 'The zone ID that the region will be associated with',
     nullable: true,
   })
-  readonly fieldZoneId?: ID;
+  readonly fieldZone?: ID;
 
   @IdField({
     description: 'A user ID that will be the director of the region',
     nullable: true,
   })
-  readonly directorId?: ID;
+  readonly director?: ID;
 }
 
 @InputType()

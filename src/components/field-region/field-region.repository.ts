@@ -1,109 +1,97 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, Query, relation } from 'cypher-query-builder';
-import { ID, NotFoundException, Session, UnsecuredDto } from '../../common';
-import { DtoRepository, matchRequestingUser } from '../../core';
 import {
-  ACTIVE,
-  createNode,
-  createRelationships,
-  matchProps,
-  merge,
-  paginate,
-  requestingUser,
-  sorting,
-} from '../../core/database/query';
-import { CreateFieldRegion, FieldRegion, FieldRegionListInput } from './dto';
+  getFromCordTables,
+  ID,
+  PaginatedListType,
+  Session,
+  transformToDto,
+  transformToPayload,
+  UnsecuredDto,
+} from '../../common';
+import { DtoRepository } from '../../core';
+import {
+  CreateFieldRegion,
+  FieldRegion,
+  FieldRegionListInput,
+  UpdateFieldRegion,
+} from './dto';
+import {
+  TablesFieldRegions,
+  TablesReadFieldRegion,
+} from './dto/tables-field-region.dto';
 
 @Injectable()
 export class FieldRegionRepository extends DtoRepository(FieldRegion) {
-  async checkName(name: string) {
-    return await this.db
-      .query()
-      .match([node('name', 'FieldRegionName', { value: name })])
-      .return('name')
-      .first();
+  async create(input: CreateFieldRegion, _session: Session) {
+    const response = await getFromCordTables('sc/field-regions/create-read', {
+      fieldRegion: {
+        ...transformToPayload(input, FieldRegion.TablesToDto),
+      },
+    });
+    const iFieldRegion: TablesReadFieldRegion = JSON.parse(response.body);
+
+    const dto: UnsecuredDto<FieldRegion> = transformToDto(
+      iFieldRegion.fieldRegion,
+      FieldRegion.TablesToDto
+    );
+    return dto;
   }
 
-  async create(input: CreateFieldRegion, session: Session) {
-    const initialProps = {
-      name: input.name,
-      canDelete: true,
+  async readOne(id: ID) {
+    const response = await getFromCordTables('sc/field-regions/read', {
+      id: id,
+    });
+    const fieldRegion = response.body;
+    const iFieldRegion: TablesReadFieldRegion = JSON.parse(fieldRegion);
+
+    const dto: UnsecuredDto<FieldRegion> = transformToDto(
+      iFieldRegion.fieldRegion,
+      FieldRegion.TablesToDto
+    );
+    return dto;
+  }
+
+  async update(
+    fieldRegion: FieldRegion,
+    updates: Partial<Omit<UpdateFieldRegion, 'id'>>
+  ) {
+    const updatePayload = transformToPayload(updates, FieldRegion.TablesToDto);
+    Object.entries(updatePayload).forEach(([key, value]) => {
+      void getFromCordTables('sc/field-regions/update', {
+        id: fieldRegion.id,
+        column: key,
+        value: value,
+      });
+    });
+  }
+
+  async delete(fieldRegion: FieldRegion) {
+    return await getFromCordTables('sc/field-regions/delete', {
+      id: fieldRegion.id,
+    });
+  }
+
+  async list({ filter, ...input }: FieldRegionListInput, _session: Session) {
+    const response = await getFromCordTables('sc/field-regions/list', {
+      sort: input.sort,
+      order: input.order,
+      page: input.page,
+      resultsPerPage: input.count,
+    });
+    const fieldRegions = response.body;
+    const iFieldRegions: TablesFieldRegions = JSON.parse(fieldRegions);
+
+    const fieldRegionArray: Array<UnsecuredDto<FieldRegion>> =
+      iFieldRegions.fieldRegions.map((fieldRegion) => {
+        return transformToDto(fieldRegion, FieldRegion.TablesToDto);
+      });
+    const totalLoaded =
+      input.count * (input.page - 1) + fieldRegionArray.length;
+    const fieldRegionList: PaginatedListType<UnsecuredDto<FieldRegion>> = {
+      items: fieldRegionArray,
+      total: totalLoaded,
+      hasMore: totalLoaded < iFieldRegions.size,
     };
-
-    // create field region
-    const query = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .apply(await createNode(FieldRegion, { initialProps }))
-      .apply(
-        createRelationships(FieldRegion, 'out', {
-          director: ['User', input.directorId],
-          zone: ['FieldZone', input.fieldZoneId],
-        })
-      )
-      .return<{ id: ID }>('node.id as id');
-
-    return await query.first();
-  }
-
-  async readOne(id: ID, session: Session) {
-    const query = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'FieldRegion', { id: id })])
-      .apply(this.hydrate());
-
-    const result = await query.first();
-    if (!result) {
-      throw new NotFoundException(
-        'Could not find field region',
-        'fieldRegion.id'
-      );
-    }
-    return result.dto;
-  }
-
-  async readMany(ids: readonly ID[], session: Session) {
-    return await this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .matchNode('node', 'FieldRegion')
-      .where({ 'node.id': inArray(ids.slice()) })
-      .apply(this.hydrate())
-      .map('dto')
-      .run();
-  }
-
-  protected hydrate() {
-    return (query: Query) =>
-      query
-        .apply(matchProps())
-        .optionalMatch([
-          node('node'),
-          relation('out', '', 'director', ACTIVE),
-          node('director', 'User'),
-        ])
-        .optionalMatch([
-          node('node'),
-          relation('out', '', 'zone', ACTIVE),
-          node('fieldZone', 'FieldZone'),
-        ])
-        .return<{ dto: UnsecuredDto<FieldRegion> }>(
-          merge('props', {
-            director: 'director.id',
-            fieldZone: 'fieldZone.id',
-          }).as('dto')
-        );
-  }
-
-  async list({ filter, ...input }: FieldRegionListInput, session: Session) {
-    const result = await this.db
-      .query()
-      .match(requestingUser(session))
-      .match(node('node', 'FieldRegion'))
-      .apply(sorting(FieldRegion, input))
-      .apply(paginate(input, this.hydrate()))
-      .first();
-    return result!; // result from paginate() will always have 1 row.
+    return fieldRegionList;
   }
 }
