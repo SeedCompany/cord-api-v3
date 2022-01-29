@@ -1,6 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import {
-  DuplicateException,
   ID,
   NotFoundException,
   ObjectView,
@@ -8,7 +7,6 @@ import {
   SecuredList,
   ServerException,
   Session,
-  UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../core';
@@ -34,24 +32,10 @@ export class LocationService {
   ) {}
 
   async create(input: CreateLocation, session: Session): Promise<Location> {
-    const checkName = await this.repo.doesNameExist(input.name);
-    if (checkName) {
-      throw new DuplicateException(
-        'location.name',
-        'Location with this name already exists.'
-      );
-    }
+    const location = await this.repo.create(input, session);
 
-    const id = await this.repo.create(input, session);
-
-    await this.authorizationService.processNewBaseNode(
-      Location,
-      id,
-      session.userId
-    );
-
-    this.logger.debug(`location created`, { id: id });
-    return await this.readOne(id, session);
+    this.logger.debug(`location created`, { id: location.id });
+    return await this.readOne(location.id, session);
   }
 
   @HandleIdLookup(Location)
@@ -65,13 +49,16 @@ export class LocationService {
       userId: session.userId,
     });
 
-    const result = await this.repo.readOne(id, session);
+    const result = await this.repo.readOne(id);
     return await this.secure(result, session);
   }
 
   async readMany(ids: readonly ID[], session: Session) {
-    const locations = await this.repo.readMany(ids, session);
-    return await Promise.all(locations.map((dto) => this.secure(dto, session)));
+    return await Promise.all(
+      ids.map(async (id) => {
+        return await this.secure(await this.repo.readOne(id), session);
+      })
+    );
   }
 
   private async secure(
@@ -101,28 +88,7 @@ export class LocationService {
       changes
     );
 
-    const { fundingAccountId, defaultFieldRegionId, ...simpleChanges } =
-      changes;
-
-    await this.repo.updateProperties(location, simpleChanges);
-
-    if (fundingAccountId !== undefined) {
-      await this.repo.updateRelation(
-        'fundingAccount',
-        'FundingAccount',
-        input.id,
-        fundingAccountId
-      );
-    }
-
-    if (defaultFieldRegionId !== undefined) {
-      await this.repo.updateRelation(
-        'defaultFieldRegion',
-        'FieldRegion',
-        input.id,
-        defaultFieldRegionId
-      );
-    }
+    await this.repo.update(location, changes);
 
     return await this.readOne(input.id, session);
   }
@@ -134,17 +100,14 @@ export class LocationService {
       throw new NotFoundException('Could not find Location');
     }
 
-    const canDelete = await this.repo.checkDeletePermission(id, session);
-
-    if (!canDelete)
-      throw new UnauthorizedException(
-        'You do not have the permission to delete this Location'
-      );
-
+    let response;
     try {
-      await this.repo.deleteNode(object);
+      response = await this.repo.delete(object);
     } catch (exception) {
-      this.logger.error('Failed to delete', { id, exception });
+      this.logger.error(`Failed to delete: ${response?.body || 'unknown'}`, {
+        id,
+        exception,
+      });
       throw new ServerException('Failed to delete', exception);
     }
   }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
@@ -8,6 +9,19 @@ import { Location } from './location.dto';
 
 @InputType()
 export abstract class CreateLocation {
+  static readonly TablesToDto = {
+    id: 'id',
+    name: 'name',
+    type: 'type',
+    iso_alpha_3: 'isoAlpha3',
+    funding_account: 'fundingAccountId',
+    default_region: 'defaultFieldRegionId',
+  };
+
+  // id from common.locations
+  @IdField()
+  readonly id: ID;
+
   @NameField()
   readonly name: string;
 

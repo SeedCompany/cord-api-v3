@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
@@ -26,6 +27,15 @@ export abstract class SecuredLocationType extends SecuredEnum(LocationType) {}
 export class Location extends Resource {
   static readonly Props = keysOf<Location>();
   static readonly SecuredProps = keysOf<SecuredProps<Location>>();
+  static readonly TablesToDto = {
+    id: 'id',
+    name: 'name',
+    type: 'type',
+    iso_alpha_3: 'isoAlpha3',
+    funding_account: 'fundingAccount',
+    default_region: 'defaultFieldRegion',
+    created_at: 'createdAt',
+  };
 
   @NameField()
   @DbUnique()
