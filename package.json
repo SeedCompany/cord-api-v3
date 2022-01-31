@@ -119,6 +119,7 @@
   },
   "resolutions": {
     "@nestjs/graphql/@nestjs/mapped-types": "^1.0.0",
+    "gonzales-pe/minimist": "^1.1.0",
     "request/http-signature": "^1.3.6"
   },
   "jest": {
