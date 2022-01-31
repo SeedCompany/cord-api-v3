@@ -284,7 +284,7 @@ export const FundraisingOnProject = new DbRole({
       sensitivityAccess: Sensitivity.Medium,
       properties: [
         { propertyName: 'organization', permission: { read, sensitivityAccess: Sensitivity.Medium }, },
-        { propertyName: 'pointOfContact', permission: { read, }, },
+        { propertyName: 'pointOfContact', permission: { }, },
         { propertyName: 'types', permission: { read, sensitivityAccess: Sensitivity.Medium }, },
         { propertyName: 'financialReportingTypes', permission: { read, sensitivityAccess: Sensitivity.Medium }, },
         { propertyName: 'pmcEntityCode', permission: { read, sensitivityAccess: Sensitivity.Medium }, },
