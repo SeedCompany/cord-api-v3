@@ -1,121 +1,107 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, Query, relation } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
+  getFromCordTables,
   ID,
-  NotFoundException,
-  ServerException,
+  PaginatedListType,
   Session,
+  transformToDto,
+  transformToPayload,
   UnsecuredDto,
 } from '../../common';
-import { DtoRepository, matchRequestingUser } from '../../core';
+import { DtoRepository } from '../../core';
 import {
   ACTIVE,
-  createNode,
-  createRelationships,
-  matchProps,
-  merge,
   paginate,
   permissionsOfNode,
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { CreateLocation, Location, LocationListInput } from './dto';
+import {
+  CreateLocation,
+  Location,
+  LocationListInput,
+  TablesLocations,
+  TablesReadLocation,
+  UpdateLocation,
+} from './dto';
 
 @Injectable()
 export class LocationRepository extends DtoRepository(Location) {
-  async doesNameExist(name: string) {
-    const result = await this.db
-      .query()
-      .match([node('name', 'LocationName', { value: name })])
-      .return('name')
-      .first();
-    return !!result;
+  async create(input: CreateLocation, _session: Session) {
+    const response = await getFromCordTables('sc/locations/create-read', {
+      location: {
+        ...transformToPayload(input, CreateLocation.TablesToDto),
+      },
+    });
+    const iLocation: TablesReadLocation = JSON.parse(response.body);
+
+    const dto: UnsecuredDto<Location> = transformToDto(
+      iLocation.location,
+      CreateLocation.TablesToDto
+    );
+    return dto;
   }
 
-  async create(input: CreateLocation, session: Session) {
-    const initialProps = {
-      name: input.name,
-      isoAlpha3: input.isoAlpha3,
-      type: input.type,
-      canDelete: true,
+  async readOne(id: ID) {
+    const response = await getFromCordTables('sc/locations/read', {
+      id: id,
+    });
+    const location = response.body;
+    const iLocation: TablesReadLocation = JSON.parse(location);
+
+    const dto: UnsecuredDto<Location> = transformToDto(
+      iLocation.location,
+      Location.TablesToDto
+    );
+    return dto;
+  }
+
+  async update(
+    location: Location,
+    updates: Partial<Omit<UpdateLocation, 'id'>>
+  ) {
+    const updatePayload = transformToPayload(
+      updates,
+      UpdateLocation.TablesToDto
+    );
+    Object.entries(updatePayload).forEach(([key, value]) => {
+      void getFromCordTables('sc/locations/update', {
+        id: location.id,
+        column: key,
+        value: value,
+      });
+    });
+  }
+
+  async list({ filter, ...input }: LocationListInput, _session: Session) {
+    const response = await getFromCordTables('sc/locations/list', {
+      sort: input.sort,
+      order: input.order,
+      page: input.page,
+      resultsPerPage: input.count,
+    });
+    const locations = response.body;
+    const iLocations: TablesLocations = JSON.parse(locations);
+
+    const locationArray: Array<UnsecuredDto<Location>> =
+      iLocations.locations.map((location) => {
+        return transformToDto(location, Location.TablesToDto);
+      });
+    const totalLoaded = input.count * (input.page - 1) + locationArray.length;
+    const locationList: PaginatedListType<UnsecuredDto<Location>> = {
+      items: locationArray,
+      total: totalLoaded,
+      hasMore: totalLoaded < iLocations.size,
     };
-
-    const query = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .apply(await createNode(Location, { initialProps }))
-      .apply(
-        createRelationships(Location, 'out', {
-          fundingAccount: ['FundingAccount', input.fundingAccountId],
-          defaultFieldRegion: ['FieldRegion', input.defaultFieldRegionId],
-        })
-      )
-      .return<{ id: ID }>('node.id as id');
-
-    const result = await query.first();
-    if (!result) {
-      throw new ServerException('Failed to create location');
-    }
-
-    return result.id;
+    return locationList;
   }
 
-  async readOne(id: ID, session: Session) {
-    const query = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'Location', { id: id })])
-      .apply(this.hydrate());
-
-    const result = await query.first();
-    if (!result) {
-      throw new NotFoundException('Could not find location');
-    }
-    return result.dto;
-  }
-
-  async readMany(ids: readonly ID[], session: Session) {
-    return await this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .matchNode('node', 'Location')
-      .where({ 'node.id': inArray(ids.slice()) })
-      .apply(this.hydrate())
-      .map('dto')
-      .run();
-  }
-
-  protected hydrate() {
-    return (query: Query) =>
-      query
-        .apply(matchProps())
-        .optionalMatch([
-          node('node'),
-          relation('out', '', 'fundingAccount', ACTIVE),
-          node('fundingAccount', 'FundingAccount'),
-        ])
-        .optionalMatch([
-          node('node'),
-          relation('out', '', 'defaultFieldRegion', ACTIVE),
-          node('defaultFieldRegion', 'FieldRegion'),
-        ])
-        .return<{ dto: UnsecuredDto<Location> }>(
-          merge('props', {
-            fundingAccount: 'fundingAccount.id',
-            defaultFieldRegion: 'defaultFieldRegion.id',
-          }).as('dto')
-        );
-  }
-
-  async list({ filter, ...input }: LocationListInput, session: Session) {
-    const result = await this.db
-      .query()
-      .match([requestingUser(session), ...permissionsOfNode('Location')])
-      .apply(sorting(Location, input))
-      .apply(paginate(input, this.hydrate()))
-      .first();
-    return result!; // result from paginate() will always have 1 row.
+  async delete(location: Location) {
+    return await getFromCordTables('sc/locations/delete', {
+      id: location.id,
+    });
   }
 
   async addLocationToNode(label: string, id: ID, rel: string, locationId: ID) {
