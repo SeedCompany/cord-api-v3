@@ -5191,7 +5191,7 @@ __metadata:
     lodash: ^4.17.21
     luxon: ^2.3.0
     madge: ^5.0.1
-    nanoid: ^3.1.30
+    nanoid: ^3.2.0
     neo4j-driver: ^4.4.1
     nestjs-console: ^7.0.1
     p-retry: ^4.6.1
@@ -10571,12 +10571,12 @@ cypher-query-builder@6.0.4:
   languageName: node
   linkType: hard
 
-"nanoid@npm:^3.1.23, nanoid@npm:^3.1.30":
-  version: 3.1.30
-  resolution: "nanoid@npm:3.1.30"
+"nanoid@npm:^3.1.23, nanoid@npm:^3.2.0":
+  version: 3.2.0
+  resolution: "nanoid@npm:3.2.0"
   bin:
     nanoid: bin/nanoid.cjs
-  checksum: 276d0d4b0c41c46aeefec5f09f093e4085a2352d06881c845db22b84f8ef72cc8defae6d76bfb1d8a2a128eb2dec42ab148d16582be4e7754c97905806ef57b6
+  checksum: 3d1d5a69fea84e538057cf64106e713931c4ef32af344068ecff153ff91252f39b0f2b472e09b0dfff43ac3cf520c92938d90e6455121fe93976e23660f4fccc
   languageName: node
   linkType: hard
 

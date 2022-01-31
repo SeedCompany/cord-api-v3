@@ -68,7 +68,7 @@
     "lazy-get-decorator": "^2.2.0",
     "lodash": "^4.17.21",
     "luxon": "^2.3.0",
-    "nanoid": "^3.1.30",
+    "nanoid": "^3.2.0",
     "neo4j-driver": "^4.4.1",
     "nestjs-console": "^7.0.1",
     "p-retry": "^4.6.1",
