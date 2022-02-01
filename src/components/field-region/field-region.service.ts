@@ -88,7 +88,7 @@ export class FieldRegionService {
     session: Session
   ): Promise<FieldRegion> {
     const fieldRegion = await this.readOne(input.id, session);
-    // @ts-expect-error this is a temporal fix
+
     const changes = this.repo.getActualChanges(fieldRegion, input);
     await this.authorizationService.verifyCanEditChanges(
       FieldRegion,
