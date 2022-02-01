@@ -23,7 +23,7 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
   async create(input: CreateFieldRegion, _session: Session) {
     const response = await getFromCordTables('sc/field-regions/create-read', {
       fieldRegion: {
-        ...transformToPayload(input, FieldRegion.TablesToDto),
+        ...transformToPayload(input, CreateFieldRegion.TablesToDto),
       },
     });
     const iFieldRegion: TablesReadFieldRegion = JSON.parse(response.body);
@@ -53,7 +53,10 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
     fieldRegion: FieldRegion,
     updates: Partial<Omit<UpdateFieldRegion, 'id'>>
   ) {
-    const updatePayload = transformToPayload(updates, FieldRegion.TablesToDto);
+    const updatePayload = transformToPayload(
+      updates,
+      UpdateFieldRegion.TablesToDto
+    );
     Object.entries(updatePayload).forEach(([key, value]) => {
       void getFromCordTables('sc/field-regions/update', {
         id: fieldRegion.id,

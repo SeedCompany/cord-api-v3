@@ -23,7 +23,7 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
   async create(input: CreateFieldZone, _session: Session) {
     const response = await getFromCordTables('sc/field-zones/create-read', {
       fieldZone: {
-        ...transformToPayload(input, FieldZone.TablesToDto),
+        ...transformToPayload(input, CreateFieldZone.TablesToDto),
       },
     });
     const iFieldZone: TablesReadFieldZone = JSON.parse(response.body);
@@ -53,7 +53,10 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
     fieldZone: FieldZone,
     updates: Partial<Omit<UpdateFieldZone, 'id'>>
   ) {
-    const updatePayload = transformToPayload(updates, FieldZone.TablesToDto);
+    const updatePayload = transformToPayload(
+      updates,
+      UpdateFieldZone.TablesToDto
+    );
     Object.entries(updatePayload).forEach(([key, value]) => {
       void getFromCordTables('sc/field-zones/update', {
         id: fieldZone.id,

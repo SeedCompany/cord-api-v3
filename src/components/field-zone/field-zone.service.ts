@@ -76,7 +76,7 @@ export class FieldZoneService {
 
   async update(input: UpdateFieldZone, session: Session): Promise<FieldZone> {
     const fieldZone = await this.readOne(input.id, session);
-    // @ts-expect-error this is a temporal fix
+
     const changes = this.repo.getActualChanges(fieldZone, input);
     await this.authorizationService.verifyCanEditChanges(
       FieldZone,

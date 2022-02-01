@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
@@ -6,6 +7,12 @@ import { FieldRegion } from './field-region.dto';
 
 @InputType()
 export abstract class UpdateFieldRegion {
+  static readonly TablesToDto = {
+    name: 'name',
+    field_zone: 'fieldZoneId',
+    director: 'directorId',
+  };
+
   @IdField()
   readonly id: ID;
 
@@ -16,13 +23,13 @@ export abstract class UpdateFieldRegion {
     description: 'The zone ID that the region will be associated with',
     nullable: true,
   })
-  readonly fieldZone?: ID;
+  readonly fieldZoneId?: ID;
 
   @IdField({
     description: 'A user ID that will be the director of the region',
     nullable: true,
   })
-  readonly director?: ID;
+  readonly directorId?: ID;
 }
 
 @InputType()

@@ -6,6 +6,11 @@ import { FieldZone } from './field-zone.dto';
 
 @InputType()
 export abstract class UpdateFieldZone {
+  static readonly TablesToDto = {
+    name: 'name',
+    director: 'directorId',
+  };
+
   @IdField()
   readonly id: ID;
 
@@ -16,7 +21,7 @@ export abstract class UpdateFieldZone {
     description: 'A user ID that will be the director of the zone',
     nullable: true,
   })
-  readonly director?: ID;
+  readonly directorId?: ID;
 }
 
 @InputType()
