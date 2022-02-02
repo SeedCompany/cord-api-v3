@@ -272,6 +272,7 @@ export const RegionalCommunicationsCoordinator = new DbRole({
     }),
     new DbBaseNodeGrant<DbOrganization>({
       __className: 'DbOrganization',
+      canList: false,
       properties: [
         { propertyName: 'name', permission: {}, },
         { propertyName: 'address', permission: {}, },

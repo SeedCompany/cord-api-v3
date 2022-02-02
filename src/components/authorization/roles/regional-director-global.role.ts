@@ -293,6 +293,7 @@ export const RegionalDirectorGlobal = new DbRole({
     }),
     new DbBaseNodeGrant<DbOrganization>({
       __className: 'DbOrganization',
+      canList: true,
       properties: [
         { propertyName: 'name', permission: { read, }, },
         { propertyName: 'address', permission: { read, }, },

@@ -266,6 +266,7 @@ export const Administrator = new DbRole({
     }),
     new DbBaseNodeGrant<DbOrganization>({
       __className: 'DbOrganization',
+      canList: true,
       properties: [
         { propertyName: 'name', permission: { read, write, }, },
         { propertyName: 'address', permission: { read, write, }, },

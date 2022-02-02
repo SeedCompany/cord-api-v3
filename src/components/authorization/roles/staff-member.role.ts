@@ -270,6 +270,8 @@ export const StaffMember = new DbRole({
     }),
     new DbBaseNodeGrant<DbOrganization>({
       __className: 'DbOrganization',
+      sensitivityAccess: Sensitivity.Low,
+      canList: true,
       properties: [
         { propertyName: 'name', permission: { read, sensitivityAccess: Sensitivity.Low }, },
         { propertyName: 'address', permission: { }, },

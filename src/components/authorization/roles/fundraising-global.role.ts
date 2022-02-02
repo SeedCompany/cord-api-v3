@@ -270,6 +270,8 @@ export const Fundraising = new DbRole({
     }),
     new DbBaseNodeGrant<DbOrganization>({
       __className: 'DbOrganization',
+      canList: true,
+      sensitivityAccess: Sensitivity.Medium,
       properties: [
         { propertyName: 'name', permission: { read, sensitivityAccess: Sensitivity.Medium}, },
         { propertyName: 'address', permission: {  }, },

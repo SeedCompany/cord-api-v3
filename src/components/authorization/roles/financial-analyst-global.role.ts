@@ -279,6 +279,8 @@ export const FinancialAnalyst = new DbRole({
     }),
     new DbBaseNodeGrant<DbOrganization>({
       __className: 'DbOrganization',
+      canList: true,
+      sensitivityAccess: Sensitivity.Medium,
       properties: [
         { propertyName: 'name', permission: { read, write, sensitivityAccess: Sensitivity.Medium }, },
         { propertyName: 'address', permission: { read, write, sensitivityAccess: Sensitivity.Medium }, },
