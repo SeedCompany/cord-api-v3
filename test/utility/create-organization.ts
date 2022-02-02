@@ -10,6 +10,24 @@ import {
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
 
+export async function listOrganizations(app: TestApp) {
+  const result = await app.graphql.mutate(
+    gql`
+      query {
+        organizations(input: {}) {
+          items {
+            ...org
+          }
+        }
+      }
+      ${fragments.org}
+    `
+  );
+  const orgs = result.organizations.items;
+  expect(orgs).toBeTruthy();
+  return orgs;
+}
+
 export async function readOneOrgLocations(app: TestApp, id: string) {
   const result = await app.graphql.query(
     gql`
