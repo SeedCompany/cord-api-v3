@@ -448,11 +448,11 @@ export class ProjectRepository extends CommonRepository {
         node('user', 'User'),
       ])
       .apply(matchProps({ nodeName: 'stepChange' }))
-      .orderBy('stepChange.createdAt', 'DESC')
       .return<{ change: ProjectStepChange }>(
         merge('props', { user: 'user.id' }).as('change')
       )
-      .map('change');
+      .map('change')
+      .orderBy('stepChange.createdAt', 'DESC');
     return await query.run();
   }
 
