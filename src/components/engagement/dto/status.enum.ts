@@ -19,10 +19,16 @@ export enum EngagementStatus {
 
   Terminated = 'Terminated',
   Completed = 'Completed',
+
+  /** @deprecated Legacy */
   Converted = 'Converted',
+  /** @deprecated Legacy */
   Unapproved = 'Unapproved',
+  /** @deprecated Legacy */
   Transferred = 'Transferred',
+  /** @deprecated Legacy */
   NotRenewed = 'NotRenewed',
+  /** @deprecated Legacy */
   Rejected = 'Rejected',
 }
 
@@ -54,6 +60,13 @@ export const [TerminalEngagementStatuses, OngoingEngagementStatuses] =
 
 registerEnumType(EngagementStatus, {
   name: 'EngagementStatus',
+  valuesMap: {
+    Converted: { deprecationReason: 'Legacy. Only used in historic data.' },
+    Unapproved: { deprecationReason: 'Legacy. Only used in historic data.' },
+    Transferred: { deprecationReason: 'Legacy. Only used in historic data.' },
+    NotRenewed: { deprecationReason: 'Legacy. Only used in historic data.' },
+    Rejected: { deprecationReason: 'Legacy. Only used in historic data.' },
+  },
 });
 
 @ObjectType({
