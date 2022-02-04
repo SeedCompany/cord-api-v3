@@ -701,6 +701,14 @@ export class ProductService {
     return mapFromList(productRefs, (ref) => [ref.pnpIndex, ref.id]);
   }
 
+  async loadProductIdsWithProducibleNames(
+    engagementId: ID,
+    type?: ProducibleType
+  ) {
+    const refs = await this.repo.listIdsWithProducibleNames(engagementId, type);
+    return mapFromList(refs, (ref) => [ref.name, ref.id]);
+  }
+
   protected getMethodologiesByApproach(
     approach: ProductApproach
   ): ProductMethodology[] {

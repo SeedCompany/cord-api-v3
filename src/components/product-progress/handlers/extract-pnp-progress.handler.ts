@@ -1,7 +1,7 @@
 import { EventsHandler, ILogger, Logger } from '../../../core';
 import { ReportType } from '../../periodic-report/dto';
 import { PeriodicReportUploadedEvent } from '../../periodic-report/events';
-import { ProductService } from '../../product';
+import { ProducibleType, ProductService } from '../../product';
 import { ProductProgressService } from '../product-progress.service';
 import { StepProgressExtractor } from '../step-progress-extractor.service';
 
@@ -37,14 +37,28 @@ export class ExtractPnpProgressHandler {
 
     // Fetch products for report mapped to a book/story name
     const engagementId = event.report.parent.properties.id;
-    const productIds = await this.products.loadProductIdsByPnpIndex(
-      engagementId
-    );
+    const storyProducts = progressRows[0].story
+      ? await this.products.loadProductIdsWithProducibleNames(
+          engagementId,
+          ProducibleType.Story
+        )
+      : {};
+    const scriptureProducts = progressRows[0].bookName
+      ? await this.products.loadProductIdsForBookAndVerse(
+          engagementId,
+          this.logger
+        )
+      : [];
 
     // Convert row to product ID
     const updates = progressRows.flatMap((row) => {
       const { steps, ...rest } = row;
-      const productId = productIds[row.rowIndex];
+      const productId = row.bookName
+        ? scriptureProducts.find(
+            (ref) =>
+              ref.book === row.bookName && ref.totalVerses === row.totalVerses
+          )?.id
+        : storyProducts[row.story!];
       if (productId) {
         return { productId, steps };
       }

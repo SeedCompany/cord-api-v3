@@ -135,6 +135,22 @@ export class ProductRepository extends CommonRepository {
       .run();
   }
 
+  async listIdsWithProducibleNames(engagementId: ID, type?: ProducibleType) {
+    return await this.db
+      .query()
+      .match([
+        node('engagement', 'Engagement', { id: engagementId }),
+        relation('out', '', 'product', ACTIVE),
+        node('node', 'DerivativeScriptureProduct'),
+        relation('out', '', 'produces', ACTIVE),
+        node('', ['Producible', ...(type ? [type] : [])]),
+        relation('out', '', 'name', ACTIVE),
+        node('name', 'Property'),
+      ])
+      .return<{ id: ID; name: string }>(['node.id as id', 'name.value as name'])
+      .run();
+  }
+
   async getProducibleIdsByNames(
     names: readonly string[],
     type?: ProducibleType
