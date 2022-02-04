@@ -39,9 +39,6 @@ export class GraphQLConfig implements GqlOptionsFactory {
     if (version.hash) {
       process.env.APOLLO_SERVER_USER_VERSION = version.hash;
     }
-    // This is old from v2, remove so Apollo doesn't complain.
-    // Once we finish roll out we can remove this.
-    delete process.env.APOLLO_GRAPH_VARIANT;
 
     return {
       autoSchemaFile: 'schema.graphql',
