@@ -24,6 +24,26 @@ const changes: Change[] = [
     newStatus: EngagementStatus.InDevelopment,
   },
   {
+    to: { step: ProjectStep.DiscussingChangeToPlan },
+    newStatus: EngagementStatus.DiscussingChangeToPlan,
+  },
+  {
+    to: { step: ProjectStep.ActiveChangedPlan },
+    newStatus: EngagementStatus.ActiveChangedPlan,
+  },
+  {
+    to: { step: ProjectStep.Suspended },
+    newStatus: EngagementStatus.Suspended,
+  },
+  {
+    to: { step: ProjectStep.DiscussingReactivation },
+    newStatus: EngagementStatus.DiscussingReactivation,
+  },
+  {
+    to: { step: ProjectStep.DiscussingTermination },
+    newStatus: EngagementStatus.DiscussingTermination,
+  },
+  {
     to: { step: ProjectStep.FinalizingCompletion },
     newStatus: EngagementStatus.FinalizingCompletion,
   },
