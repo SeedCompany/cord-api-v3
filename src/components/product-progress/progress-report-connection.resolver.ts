@@ -15,6 +15,6 @@ export class ProgressReportConnectionResolver {
     @Parent() report: ProgressReport,
     @AnonSession() session: Session
   ): Promise<readonly ProductProgress[]> {
-    return await this.service.readAllByReport(report.id, session);
+    return await this.service.readAllByReport(report, session);
   }
 }

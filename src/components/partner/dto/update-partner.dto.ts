@@ -2,7 +2,7 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Transform, Type } from 'class-transformer';
 import { Matches, ValidateNested } from 'class-validator';
 import { uniq } from 'lodash';
-import { ID, IdField } from '../../../common';
+import { ID, IdField, NameField } from '../../../common';
 import { FinancialReportingType } from '../../partnership/dto/financial-reporting-type';
 import { PartnerType } from './partner-type.enum';
 import { Partner } from './partner.dto';
@@ -33,7 +33,7 @@ export abstract class UpdatePartner {
   @Field({ nullable: true })
   readonly active?: boolean;
 
-  @Field({ nullable: true })
+  @NameField({ nullable: true })
   readonly address?: string;
 }
 

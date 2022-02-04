@@ -87,7 +87,7 @@ const activeProject = async (app: TestApp) => {
   return project;
 };
 
-describe('Partnership Changeset Aware e2e', () => {
+describe.skip('Partnership Changeset Aware e2e', () => {
   let app: TestApp;
   let db: Connection;
 

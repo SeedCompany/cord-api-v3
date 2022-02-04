@@ -15,7 +15,7 @@ export class ProductConnectionResolver {
     @Parent() product: Product,
     @AnonSession() session: Session
   ): Promise<readonly ProductProgress[]> {
-    return await this.service.readAllByProduct(product.id, session);
+    return await this.service.readAllByProduct(product, session);
   }
 
   @ResolveField(() => ProductProgress, {
@@ -26,7 +26,7 @@ export class ProductConnectionResolver {
     @Parent() product: Product,
     @AnonSession() session: Session
   ): Promise<ProductProgress> {
-    return await this.service.readOne(reportId, product.id, session);
+    return await this.service.readOne(reportId, product, session);
   }
 
   @ResolveField(() => ProductProgress, {
@@ -37,6 +37,6 @@ export class ProductConnectionResolver {
     @Parent() product: Product,
     @AnonSession() session: Session
   ): Promise<ProductProgress | undefined> {
-    return await this.service.readOneForCurrentReport(product.id, session);
+    return await this.service.readOneForCurrentReport(product, session);
   }
 }

@@ -5,6 +5,7 @@ import { SecuredEnum } from '../../../common';
 export enum EngagementStatus {
   InDevelopment = 'InDevelopment',
   DidNotDevelop = 'DidNotDevelop',
+  Rejected = 'Rejected',
 
   Active = 'Active',
 
@@ -19,11 +20,15 @@ export enum EngagementStatus {
 
   Terminated = 'Terminated',
   Completed = 'Completed',
+
+  /** @deprecated Legacy */
   Converted = 'Converted',
+  /** @deprecated Legacy */
   Unapproved = 'Unapproved',
+  /** @deprecated Legacy */
   Transferred = 'Transferred',
+  /** @deprecated Legacy */
   NotRenewed = 'NotRenewed',
-  Rejected = 'Rejected',
 }
 
 const EngagementStatusTerminalMap: Record<EngagementStatus, boolean> = {
@@ -54,6 +59,12 @@ export const [TerminalEngagementStatuses, OngoingEngagementStatuses] =
 
 registerEnumType(EngagementStatus, {
   name: 'EngagementStatus',
+  valuesMap: {
+    Converted: { deprecationReason: 'Legacy. Only used in historic data.' },
+    Unapproved: { deprecationReason: 'Legacy. Only used in historic data.' },
+    Transferred: { deprecationReason: 'Legacy. Only used in historic data.' },
+    NotRenewed: { deprecationReason: 'Legacy. Only used in historic data.' },
+  },
 });
 
 @ObjectType({

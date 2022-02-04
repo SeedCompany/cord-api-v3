@@ -1,4 +1,5 @@
 import { Context } from '@nestjs/graphql';
+import { uniq } from 'lodash';
 import { DateTime } from 'luxon';
 import { NoSessionException } from '../components/authentication/no-session.exception';
 import { ScopedRole } from '../components/authorization';
@@ -46,3 +47,8 @@ export const AnonSession = () =>
 
 export const LoggedInSession = () =>
   Context({ transform: sessionFromContext }, { transform: loggedInSession });
+
+export const addScope = (session: Session, scope?: ScopedRole[]) => ({
+  ...session,
+  roles: uniq([...session.roles, ...(scope ?? [])]),
+});
