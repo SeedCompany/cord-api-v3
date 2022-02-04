@@ -27,7 +27,7 @@ const mapping: Record<ProjectStep, ProjectStatus> = {
   [ProjectStep.PendingFinanceConfirmation]: ProjectStatus.InDevelopment,
   [ProjectStep.OnHoldFinanceConfirmation]: ProjectStatus.InDevelopment,
   [ProjectStep.DidNotDevelop]: ProjectStatus.DidNotDevelop,
-  [ProjectStep.Rejected]: ProjectStatus.Terminated,
+  [ProjectStep.Rejected]: ProjectStatus.DidNotDevelop,
   [ProjectStep.Active]: ProjectStatus.Active,
   [ProjectStep.ActiveChangedPlan]: ProjectStatus.Active,
   [ProjectStep.DiscussingChangeToPlan]: ProjectStatus.Active,
