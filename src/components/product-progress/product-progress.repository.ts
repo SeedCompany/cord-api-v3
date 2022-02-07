@@ -296,7 +296,7 @@ export class ProductProgressRepository {
         relation('in', '', 'engagement'),
         node('project', 'Project'),
       ])
-      .apply(matchProjectScopedRoles({ session }))
+      .apply(matchProjectScopedRoles({ session, outputVar: 'scope' }))
       .apply(matchProjectSens())
       .subQuery('product', (sub) =>
         sub
@@ -309,7 +309,7 @@ export class ProductProgressRepository {
             'progressTarget.value as progressTarget'
           )
       )
-      .return(['sensitivity', 'scopedRoles', 'progressTarget']);
+      .return(['sensitivity', 'scope', 'progressTarget']);
     const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find product');
