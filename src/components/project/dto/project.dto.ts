@@ -148,7 +148,7 @@ class Project extends PinnablePostableChangesetAwareResource {
   @Field({
     description: stripIndent`
       Whether or not this project and its associated languages (via engagements)
-      are apart of our "Preset Inventory".
+      are a part of our "Preset Inventory".
 
       This indicates the project/language(s) will be exposed to major investors to directly fund.
       It also means the project is committed to having quality, consistent reporting.

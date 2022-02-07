@@ -1,4 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { intersection } from 'lodash';
 import {
   DuplicateException,
   generateId,
@@ -22,6 +23,7 @@ import {
   AuthorizationService,
   PermissionsOf,
 } from '../authorization/authorization.service';
+import { ScopedRole } from '../authorization/dto';
 import { FileService } from '../file';
 import { ProjectChangeRequest } from '../project-change-request/dto';
 import { BudgetRecordRepository } from './budget-record.repository';
@@ -39,6 +41,12 @@ import {
   UpdateBudget,
   UpdateBudgetRecord,
 } from './dto';
+
+const canEditFinalizedBudgetRoles: readonly ScopedRole[] = [
+  'global:Administrator',
+  'project:FinancialAnalyst',
+  'project:LeadFinancialAnalyst',
+];
 
 @Injectable()
 export class BudgetService {
@@ -277,13 +285,13 @@ export class BudgetService {
   ): Promise<BudgetRecord> {
     this.logger.debug('Update budget record', { id, userId: session.userId });
 
-    await this.verifyCanEdit(id, session);
-
     const br = await this.readOneRecord(
       id,
       session,
       viewOfChangeset(changeset)
     );
+    await this.verifyCanEdit(id, session, br.scope);
+
     const changes = this.budgetRecordsRepo.getActualChanges(br, input);
     await this.authorizationService.verifyCanEditChanges(
       BudgetRecord,
@@ -307,8 +315,12 @@ export class BudgetService {
     }
   }
 
-  private async verifyCanEdit(recordId: ID, session: Session) {
-    if (session.roles.includes('global:Administrator')) {
+  private async verifyCanEdit(
+    recordId: ID,
+    session: Session,
+    scope: ScopedRole[]
+  ) {
+    if (this.canEditFinalized(session.roles.concat(scope))) {
       return;
     }
     const status = await this.budgetRepo.getStatusByRecord(recordId);
@@ -318,6 +330,10 @@ export class BudgetService {
         'budgetRecord.amount'
       );
     }
+  }
+
+  canEditFinalized(scopedRoles: ScopedRole[]) {
+    return intersection(scopedRoles, canEditFinalizedBudgetRoles).length > 0;
   }
 
   async delete(id: ID, session: Session): Promise<void> {
