@@ -3,6 +3,7 @@ import {
   ID,
   InputException,
   isIdLike,
+  Sensitivity,
   Session,
   UnauthorizedException,
 } from '../../common';
@@ -30,7 +31,11 @@ export class ProductProgressService {
     session: Session
   ): Promise<readonly ProductProgress[]> {
     const progress = await this.repo.readAllProgressReportsByReport(report.id);
-    return await this.secureAll(progress, addScope(session, report.scope));
+    return await this.secureAll(
+      progress,
+      addScope(session, report.scope),
+      report.sensitivity
+    );
   }
 
   async readAllByProduct(
@@ -40,7 +45,11 @@ export class ProductProgressService {
     const progress = await this.repo.readAllProgressReportsByProduct(
       product.id
     );
-    return await this.secureAll(progress, addScope(session, product.scope));
+    return await this.secureAll(
+      progress,
+      addScope(session, product.scope),
+      product.sensitivity
+    );
   }
 
   async readOne(
@@ -50,14 +59,14 @@ export class ProductProgressService {
   ): Promise<ProductProgress> {
     const productId = isIdLike(product) ? product : product.id;
     const reportId = isIdLike(report) ? report : report.id;
-    const scope = !isIdLike(product)
-      ? product.scope!
+    const { scope, sensitivity } = !isIdLike(product)
+      ? product
       : !isIdLike(report)
-      ? report.scope
-      : (await this.repo.getScope(productId, session)).scopedRoles;
+      ? report
+      : await this.repo.getScope(productId, session);
 
     const progress = await this.repo.readOne(productId, reportId);
-    return await this.secure(progress, addScope(session, scope));
+    return await this.secure(progress, addScope(session, scope), sensitivity);
   }
 
   async readOneForCurrentReport(
@@ -66,7 +75,11 @@ export class ProductProgressService {
   ): Promise<ProductProgress | undefined> {
     const progress = await this.repo.readOneForCurrentReport(product.id);
     return progress
-      ? await this.secure(progress, addScope(session, product.scope))
+      ? await this.secure(
+          progress,
+          addScope(session, product.scope),
+          product.sensitivity
+        )
       : undefined;
   }
 
@@ -75,7 +88,7 @@ export class ProductProgressService {
     const perms = await this.auth.getPermissions({
       resource: StepProgress,
       sensitivity: scope.sensitivity,
-      otherRoles: scope.scopedRoles,
+      otherRoles: scope.scope,
       sessionOrUserId: session,
     });
     if (!perms.completed.canEdit) {
@@ -102,26 +115,36 @@ export class ProductProgressService {
     });
 
     const progress = await this.repo.update(cleanedInput);
-    return await this.secure(progress, session);
+    return await this.secure(
+      progress,
+      addScope(session, scope.scope),
+      scope.sensitivity
+    );
   }
 
   async secureAll(
     progress: readonly UnsecuredProductProgress[],
-    session: Session
+    session: Session,
+    sensitivity: Sensitivity
   ): Promise<readonly ProductProgress[]> {
-    return await Promise.all(progress.map((p) => this.secure(p, session)));
+    return await Promise.all(
+      progress.map((p) => this.secure(p, session, sensitivity))
+    );
   }
 
   async secure(
     progress: UnsecuredProductProgress,
-    session: Session
+    session: Session,
+    sensitivity: Sensitivity
   ): Promise<ProductProgress> {
     const steps = await Promise.all(
       progress.steps.map(async (step): Promise<StepProgress> => {
         const secured = await this.auth.secureProperties(
           StepProgress,
           step,
-          session
+          session,
+          [],
+          sensitivity
         );
         return {
           ...step,

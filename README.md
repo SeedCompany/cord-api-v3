@@ -4,6 +4,12 @@
 
 Bible translation project management API.
 
+## Requirements
+
+1. Docker
+1. Node 16+
+1. yarn
+
 ## Setup
 
 ### Docker
