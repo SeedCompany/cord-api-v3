@@ -95,7 +95,7 @@ export const matchProjectScopedRoles =
           .with('project')
           .with('project')
           .raw('WHERE project IS NULL')
-          .return('[] as scopedRoles')
+          .return(`[] as ${outputVar}`)
     );
 
 export const matchProjectSens =
