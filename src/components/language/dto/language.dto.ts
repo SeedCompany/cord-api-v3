@@ -140,7 +140,7 @@ export class Language extends Interfaces {
   readonly leastOfThese: SecuredBoolean;
 
   @Field({
-    description: `Reason why this language is apart of the Least of These program.`,
+    description: `Reason why this language is a part of the Least of These program.`,
   })
   readonly leastOfTheseReason: SecuredString;
 
@@ -173,7 +173,7 @@ export class Language extends Interfaces {
 
   @Field({
     description: stripIndent`
-      Whether or not this language is apart of our "Preset Inventory".
+      Whether or not this language is a part of our "Preset Inventory".
 
       This is true if any engaged, non-closed, projects opt-in to this "Preset Inventory".
 

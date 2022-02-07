@@ -6,6 +6,7 @@ import { Cell, Column } from '../../common/xlsx.util';
 import { Downloadable } from '../file';
 import { findStepColumns, isGoalRow, Pnp, ProgressSheet } from '../pnp';
 import { ProductStep as Step } from '../product';
+import { Book } from '../scripture/books';
 import { StepProgressInput } from './dto';
 
 type ExtractedRow = MergeExclusive<
@@ -75,7 +76,9 @@ const parseProgressRow =
       return { ...common, story };
     }
     assert(sheet.isWritten());
-    const bookName = sheet.bookName(row)!; // Asserting bc loop verified this
+    const bookName = Book.find(
+      sheet.bookName(row)! // Asserting bc loop verified this
+    ).name;
     const totalVerses = sheet.totalVerses(row)!; // Asserting bc loop verified this
     return { ...common, bookName, totalVerses };
   };
