@@ -102,7 +102,7 @@ export class ProductProgressService {
     });
 
     const progress = await this.repo.update(cleanedInput);
-    return await this.secure(progress, session);
+    return await this.secure(progress, addScope(session, scope.scopedRoles));
   }
 
   async secureAll(
