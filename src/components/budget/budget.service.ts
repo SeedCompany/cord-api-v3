@@ -42,7 +42,7 @@ import {
   UpdateBudgetRecord,
 } from './dto';
 
-const budgetRecordEditors = [
+const canEditFinalizedBudgetRoles: readonly ScopedRole[] = [
   'global:Administrator',
   'project:FinancialAnalyst',
   'project:LeadFinancialAnalyst',
@@ -333,7 +333,7 @@ export class BudgetService {
   }
 
   canEditFinalized(scopedRoles: ScopedRole[]) {
-    return intersection(scopedRoles, budgetRecordEditors).length > 0;
+    return intersection(scopedRoles, canEditFinalizedBudgetRoles).length > 0;
   }
 
   async delete(id: ID, session: Session): Promise<void> {
