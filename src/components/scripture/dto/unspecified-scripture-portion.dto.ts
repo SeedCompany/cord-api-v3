@@ -3,6 +3,7 @@ import { IsPositive } from 'class-validator';
 import { SecuredProperty } from '../../../common';
 import {
   IsValidBook,
+  IsValidChapter,
   IsValidVerseTotal,
 } from './scripture-reference.validator';
 
@@ -28,6 +29,20 @@ export abstract class UnspecifiedScripturePortionInput {
   @IsPositive()
   @IsValidVerseTotal()
   totalVerses: number;
+
+  @Field(() => Int, {
+    description: 'The beginning chapter in the chapter range',
+  })
+  @IsPositive()
+  @IsValidChapter()
+  startChapter: number;
+
+  @Field(() => Int, {
+    description: 'The ending chapter in the chapter range',
+  })
+  @IsPositive()
+  @IsValidChapter()
+  endChapter: number;
 }
 
 @ObjectType()
