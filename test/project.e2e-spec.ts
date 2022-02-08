@@ -129,7 +129,7 @@ describe('Project e2e', () => {
         Powers.GrantRole,
       ],
       {
-        roles: [Role.ProjectManager],
+        roles: [Role.ProjectManager, Role.Administrator],
       }
     );
     fieldZone = await createZone(app, { directorId: director.id });
@@ -431,7 +431,7 @@ describe('Project e2e', () => {
       expect(filterNames(descProjects)).toEqual(sorted.slice().reverse());
     } finally {
       //delete all projects that Tammy has access to
-      await Promise.all(created.map(deleteProject(app)));
+      await Promise.all(created.map(deleteProject(app, false)));
     }
   });
 
@@ -468,7 +468,7 @@ describe('Project e2e', () => {
     expect(projects.items.length).toBeGreaterThanOrEqual(numProjects);
 
     //delete all projects
-    await Promise.all(projects.items.map(deleteProject(app)));
+    await Promise.all(projects.items.map(deleteProject(app, false)));
   });
 
   it('List of projects sorted by Sensitivity', async () => {
@@ -596,7 +596,7 @@ describe('Project e2e', () => {
 
     expect(projects.items.length).toBeGreaterThanOrEqual(numProjects);
     //delete all projects
-    await Promise.all(projects.items.map(deleteProject(app)));
+    await Promise.all(projects.items.map(deleteProject(app, false)));
   });
 
   it('List view of pinned/unpinned projects', async () => {
@@ -686,7 +686,7 @@ describe('Project e2e', () => {
 
     expect(projects.items.length).toBeGreaterThanOrEqual(numProjects);
     //delete all projects
-    await Promise.all(projects.items.map(deleteProject(app)));
+    await Promise.all(projects.items.map(deleteProject(app, false)));
   });
 
   it('Project engagement and sensitivity connected to language engagements', async () => {
@@ -779,7 +779,7 @@ describe('Project e2e', () => {
     );
 
     //clean up
-    await deleteProject(app)(project);
+    await deleteProject(app, false)(project);
   });
 
   it('List view of project members by projectId', async () => {

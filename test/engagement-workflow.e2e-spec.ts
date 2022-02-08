@@ -162,6 +162,11 @@ describe('Project-Workflow e2e', () => {
       await changeLanguageEngagementStatus(
         app,
         langEngagement.id,
+        EngagementStatus.Active
+      );
+      await changeLanguageEngagementStatus(
+        app,
+        langEngagement.id,
         EngagementStatus.DiscussingChangeToPlan
       );
       await changeLanguageEngagementStatus(
