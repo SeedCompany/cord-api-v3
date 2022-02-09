@@ -25,6 +25,7 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest -i --config ./test/jest-e2e.json",
     "test:security": "jest -i --config ./test/jest-security.json",
+    "test:changeset": "jest -i --config ./test/jest-changeset.json",
     "madge": "madge --extensions ts,tsx --ts-config=tsconfig.json src",
     "type-check": "tsc -p tsconfig.check.json"
   },

@@ -1,0 +1,16 @@
+{
+  "preset": "ts-jest",
+  "testTimeout": 100000,
+  "rootDir": "..",
+  "roots": ["<rootDir>/test/changeset"],
+  "testEnvironment": "node",
+  "testRegex": ".changeset.ts$",
+  "setupFiles": ["reflect-metadata", "./src/app.module.ts"],
+  "globals": {
+    "ts-jest": {
+      "astTransformers": {
+        "before": ["./tools/jest-ts-transformer-keys"]
+      }
+    }
+  }
+}

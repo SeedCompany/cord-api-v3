@@ -1,8 +1,8 @@
 import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
-import { Powers, Role } from '../src/components/authorization';
-import { PartnershipAgreementStatus } from '../src/components/partnership';
-import { ProjectStep } from '../src/components/project';
+import { Powers, Role } from '../../src/components/authorization';
+import { PartnershipAgreementStatus } from '../../src/components/partnership';
+import { ProjectStep } from '../../src/components/project';
 import {
   approveProjectChangeRequest,
   createFundingAccount,
@@ -18,13 +18,13 @@ import {
   runAsAdmin,
   TestApp,
   updateProject,
-} from './utility';
-import { fragments } from './utility/fragments';
-import { resetDatabase } from './utility/reset-database';
+} from '../utility';
+import { fragments } from '../utility/fragments';
+import { resetDatabase } from '../utility/reset-database';
 import {
   changeProjectStep,
   stepsFromEarlyConversationToBeforeActive,
-} from './utility/transition-project';
+} from '../utility/transition-project';
 
 const readPartnerships = (app: TestApp, id: string, changeset?: string) =>
   app.graphql.query(
@@ -87,7 +87,7 @@ const activeProject = async (app: TestApp) => {
   return project;
 };
 
-describe.skip('Partnership Changeset Aware e2e', () => {
+describe('Partnership Changeset Aware e2e', () => {
   let app: TestApp;
   let db: Connection;
 

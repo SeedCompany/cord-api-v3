@@ -1,10 +1,10 @@
 import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
-import { CalendarDate } from '../src/common';
-import { Powers, Role } from '../src/components/authorization';
-import { EngagementStatus } from '../src/components/engagement';
-import { Language } from '../src/components/language';
-import { ProjectStep } from '../src/components/project';
+import { CalendarDate } from '../../src/common';
+import { Powers, Role } from '../../src/components/authorization';
+import { EngagementStatus } from '../../src/components/engagement';
+import { Language } from '../../src/components/language';
+import { ProjectStep } from '../../src/components/project';
 import {
   approveProjectChangeRequest,
   createFundingAccount,
@@ -20,13 +20,13 @@ import {
   runAsAdmin,
   TestApp,
   updateProject,
-} from './utility';
-import { fragments } from './utility/fragments';
-import { resetDatabase } from './utility/reset-database';
+} from '../utility';
+import { fragments } from '../utility/fragments';
+import { resetDatabase } from '../utility/reset-database';
 import {
   changeProjectStep,
   stepsFromEarlyConversationToBeforeActive,
-} from './utility/transition-project';
+} from '../utility/transition-project';
 
 const readEngagements = (app: TestApp, id: string, changeset?: string) =>
   app.graphql.query(
