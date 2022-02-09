@@ -61,24 +61,19 @@ import {
 } from './utility/transition-project';
 
 const deleteProject =
-  (app: TestApp, asAdmin = true) =>
-  async (id: ID | string | { id: ID | string }) => {
-    const doDelete = async () => {
-      await app.graphql.mutate(
-        gql`
-          mutation DeleteProject($id: ID!) {
-            deleteProject(id: $id) {
-              __typename
-            }
+  (app: TestApp) => async (id: ID | string | { id: ID | string }) =>
+    await app.graphql.mutate(
+      gql`
+        mutation DeleteProject($id: ID!) {
+          deleteProject(id: $id) {
+            __typename
           }
-        `,
-        {
-          id: isIdLike(id) || typeof id === 'string' ? id : id.id,
         }
-      );
-    };
-    asAdmin ? await runAsAdmin(app, doDelete) : await doDelete();
-  };
+      `,
+      {
+        id: isIdLike(id) || typeof id === 'string' ? id : id.id,
+      }
+    );
 
 const listProjects = async (
   app: TestApp,
@@ -129,7 +124,11 @@ describe('Project e2e', () => {
         Powers.GrantRole,
       ],
       {
-        roles: [Role.ProjectManager],
+        roles: [
+          Role.ProjectManager,
+          // Give running user access to delete projects
+          Role.Administrator,
+        ],
       }
     );
     fieldZone = await createZone(app, { directorId: director.id });
@@ -361,7 +360,8 @@ describe('Project e2e', () => {
     const project = await createProject(app);
     expect(project.id).toBeTruthy();
 
-    await deleteProject(app, false)(project.id);
+    // Only for admins, but we'll just run it as one to test functionality.
+    await deleteProject(app)(project.id);
 
     await expectNotFound(
       app.graphql.query(
