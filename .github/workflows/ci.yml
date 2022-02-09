@@ -108,6 +108,9 @@ jobs:
         if: steps.yarn-cache.outputs.cache-hit != 'true'
 
       - name: Tests
+        run: yarn test
+
+      - name: E2E Tests
         run: yarn test:e2e --listTests | xargs -rn1 basename | xargs -rn5 yarn test:e2e
         env:
           NEO4J_URL: bolt://localhost:7687
