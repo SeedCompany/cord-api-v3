@@ -254,16 +254,12 @@ export class AuthenticationRepository {
       .query()
       .raw(
         `
-        MATCH(e:EmailToken {token: $token})
-        DELETE e
-        WITH *
         MATCH (:EmailAddress {value: $email})<-[:email {active: true}]-(user:User)
         OPTIONAL MATCH (user)-[oldPasswordRel:password]->(oldPassword)
         SET oldPasswordRel.active = false
         WITH user
         LIMIT 1
-        MERGE (user)-[:password {active: true, createdAt: $createdAt}]->(password:Property)
-        SET password.value = $password
+        CREATE (user)-[:password {active: true, createdAt: $createdAt }]->(password:Property { value: $password })
         RETURN password
       `,
         {
