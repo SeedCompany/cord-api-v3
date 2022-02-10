@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { assert } from 'ts-essentials';
 import { MergeExclusive } from 'type-fest';
-import { entries } from '../../common';
+import { entries, fullFiscalYear } from '../../common';
 import { Cell, Column } from '../../common/xlsx.util';
 import { Downloadable } from '../file';
-import { findStepColumns, isGoalRow, Pnp, ProgressSheet } from '../pnp';
+import { findStepColumns, isGoalRow, PlanningSheet, Pnp } from '../pnp';
 import { ProductStep as Step } from '../product';
 import { Book } from '../scripture/books';
 import { StepProgressInput } from './dto';
@@ -34,21 +34,26 @@ type ExtractedRow = MergeExclusive<
 export class StepProgressExtractor {
   async extract(file: Downloadable<unknown>) {
     const pnp = await Pnp.fromDownloadable(file);
-    const sheet = pnp.progress;
+    const progressSheet = pnp.progress;
+    const planningSheet = pnp.planning;
+    const planningStepColumns = findStepColumns(planningSheet);
+    const progressStepColumns = findStepColumns(progressSheet);
 
-    const stepColumns = findStepColumns(sheet);
-
-    return sheet.goals
+    return planningSheet.goals
       .walkDown()
       .filter(isGoalRow)
-      .map(parseProgressRow(stepColumns))
+      .map(parseProgressRow(planningStepColumns, progressStepColumns))
+      .filter((row) => row.steps.length > 0)
       .toArray();
   }
 }
 
 const parseProgressRow =
-  (stepColumns: Record<Step, Column>) =>
-  (cell: Cell<ProgressSheet>, index: number): ExtractedRow => {
+  (
+    stepColumns: Record<Step, Column>,
+    progressStepColumns: Record<Step, Column>
+  ) =>
+  (cell: Cell<PlanningSheet>, index: number): ExtractedRow => {
     const sheet = cell.sheet;
     const row = cell.row;
     const progress = (column: Column) => {
@@ -60,12 +65,18 @@ const parseProgressRow =
       const percentDecimal = cell.asNumber;
       return percentDecimal ? percentDecimal * 100 : undefined;
     };
-    const steps = entries(stepColumns).map(
-      ([step, column]): StepProgressInput => ({
-        step,
-        completed: progress(column),
-      })
+    const steps = entries(stepColumns).flatMap<StepProgressInput>(
+      ([step, column]) => {
+        const fiscalYear = sheet.cell(column, row).asNumber;
+        const fullFY = fiscalYear ? fullFiscalYear(fiscalYear) : undefined;
+        // Only include step if it references a fiscal year within the project
+        if (!fullFY || !sheet.projectFiscalYears.intersection(fullFY)) {
+          return [];
+        }
+        return { step, completed: progress(progressStepColumns[step]) };
+      }
     );
+
     const common = {
       rowIndex: row.a1 - sheet.goals.start.row.a1 + 1,
       order: index + 1,
