@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { difference } from 'lodash';
 import {
   asyncPool,
   ID,
@@ -136,7 +137,11 @@ export class ProductProgressService {
         completed: sp.completed ?? sp.percentDone ?? null,
       })),
     };
+
     cleanedInput.steps.forEach((step, index) => {
+      if (difference([step.step], scope.steps).length > 0) {
+        throw new InputException('Step is not planned', `steps.${index}.step`);
+      }
       if (step.completed && step.completed > scope.progressTarget) {
         throw new InputException(
           "Completed value cannot exceed product's progress target",
