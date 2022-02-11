@@ -38,7 +38,7 @@ import { Pg } from './pg.service';
   ],
 })
 export class PostgresModule implements OnModuleInit, OnModuleDestroy {
-  constructor(private readonly pool: Pool) {}
+  constructor(private readonly pool: Pool, private readonly pg: Pg) {}
 
   async onModuleInit() {
     const dateParser = (inner: (d: string) => any) => (val: any) => {
@@ -65,5 +65,8 @@ export class PostgresModule implements OnModuleInit, OnModuleDestroy {
 
   async onModuleDestroy() {
     await this.pool.end();
+    // @ts-expect-error I don't want this in the public API.
+    // This is easier than DI or private/public implementation/interface split.
+    this.pg.clientStore.disable();
   }
 }
