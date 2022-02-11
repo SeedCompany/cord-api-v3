@@ -109,9 +109,11 @@ export class ConfigService implements EmailOptionsFactory {
     /* eslint-disable @typescript-eslint/naming-convention */
     const config: PoolConfig = {
       application_name: this.env.string('PGAPPNAME').optional('cord_api'),
-      connectionString: this.env
-        .string('PGURL')
-        .optional('postgres://postgres:postgres@localhost/cord'),
+      connectionString:
+        this.env.string('PGURI').optional() ??
+        this.env
+          .string('PGURL')
+          .optional('postgres://postgres:postgres@localhost/cord'),
     };
     /* eslint-enable @typescript-eslint/naming-convention */
     return config;
