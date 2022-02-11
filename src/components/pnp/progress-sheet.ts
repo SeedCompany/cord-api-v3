@@ -25,8 +25,12 @@ export abstract class ProgressSheet extends Sheet {
   get goals(): Range<ProgressSheet> {
     return this.range(this.goalsStart, this.goalsEnd);
   }
+  protected abstract goalStartColumn: Column;
   @Once() protected get goalsStart() {
-    return this.book.namedRange('ProgDraft').start;
+    return this.cell(
+      this.goalStartColumn,
+      this.book.namedRange('ProgDraft').start.row
+    );
   }
   @Once() protected get goalsEnd() {
     return this.sheetRange.end;
@@ -58,6 +62,8 @@ export abstract class ProgressSheet extends Sheet {
 }
 
 export class WrittenScriptureProgressSheet extends ProgressSheet {
+  protected goalStartColumn = this.column('P');
+
   @Once() get goalsEnd() {
     const lastRow = super.goalsEnd.row;
     let row = this.goalsStart.row;
@@ -79,6 +85,8 @@ export class WrittenScriptureProgressSheet extends ProgressSheet {
 }
 
 export class OralStoryingProgressSheet extends ProgressSheet {
+  protected goalStartColumn = this.column('Q');
+
   storyName(goalRow: Row) {
     return this.cell('Q', goalRow).asString;
   }
