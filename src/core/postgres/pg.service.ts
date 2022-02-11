@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AsyncLocalStorage } from 'async_hooks';
-import { Client, ClientBase, Pool, PoolClient } from 'pg';
+import { dropRightWhile } from 'lodash';
+import { Client, ClientBase, DatabaseError, Pool, PoolClient } from 'pg';
 
 @Injectable()
 export class Pg {
@@ -18,10 +19,28 @@ export class Pg {
     values?: unknown[]
   ): Promise<readonly R[]> {
     // Grab transaction client creator & initialize it if needed.
-    const client = await this.clientStore.getStore()?.();
+    const txClient = await this.clientStore.getStore()?.();
     // Otherwise, just use implicit client from pool
-    const result = await (client ?? this.pool).query<R>(queryText, values);
-    return result.rows;
+    const client = txClient ?? this.pool;
+
+    try {
+      const result = await client.query<R>(queryText, values);
+      return result.rows;
+    } catch (e) {
+      if (e instanceof DatabaseError) {
+        // Stacktrace will always be relating to received remote data,
+        // completely unrelated to the callee of this method.
+        // Replace it with callee of this method, so it's actually tied
+        // to the code defining the query being executed.
+        e.stack = [
+          ...dropRightWhile(e.stack!.split('\n'), (line) =>
+            line.startsWith('    at')
+          ),
+          ...new Error('').stack!.split('\n').slice(2),
+        ].join('\n');
+      }
+      throw e;
+    }
   }
 
   /**
