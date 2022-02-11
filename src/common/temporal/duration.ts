@@ -4,7 +4,10 @@ import { Mutable } from 'type-fest';
 declare module 'luxon/src/duration' {
   // eslint-disable-next-line @typescript-eslint/no-namespace -- augmenting static class method
   namespace Duration {
-    export const from: (duration: DurationLike) => Duration;
+    /**
+     * Create from ISO, Human, ms number, std object, or other Duration.
+     */
+    export const from: (duration: string | DurationLike) => Duration;
     /**
      * Parse a humanized duration string.
      * @example
@@ -17,7 +20,12 @@ declare module 'luxon/src/duration' {
   }
 }
 const D = Duration as Mutable<typeof Duration>;
-D.from = Duration.fromDurationLike;
+D.from = (input: string | DurationLike) =>
+  typeof input === 'string'
+    ? input.startsWith('P')
+      ? D.fromISO(input)
+      : D.fromHuman(input)
+    : D.fromDurationLike(input);
 
 D.fromHuman = function (input: string) {
   // Adapted from https://github.com/jkroso/parse-duration
