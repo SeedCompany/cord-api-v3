@@ -22,3 +22,8 @@ declare module 'luxon/src/duration' {
     throw new Error();
   }
 };
+
+// @ts-expect-error Adding here, which will be called by pg client
+Duration.prototype.toPostgres = function (this: Duration) {
+  return this.toISO();
+};
