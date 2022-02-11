@@ -3,6 +3,7 @@ import { parse as parseEnv } from 'dotenv';
 import * as dotEnvExpand from 'dotenv-expand';
 import * as fs from 'fs';
 import { isString, mapKeys, pickBy } from 'lodash';
+import { Duration, DurationLike } from 'luxon';
 import { join } from 'path';
 import { ILogger, Logger } from '../logger';
 
@@ -64,6 +65,16 @@ export class EnvironmentService implements Iterable<[string, string]> {
     return this.wrap(key, (raw) => raw.toLowerCase() === 'true');
   }
 
+  duration(key: string) {
+    key = key.toUpperCase();
+    return new DurationConfigValue(
+      key in this.env,
+      key,
+      this.env[key],
+      Duration.from
+    );
+  }
+
   number(key: string) {
     return this.wrap(key, (raw) => {
       const val = raw.toLowerCase();
@@ -98,8 +109,8 @@ class ConfigValue<T> {
   constructor(
     readonly exists: boolean,
     readonly key: string,
-    private readonly rawValue: string,
-    private readonly parse: (raw: string) => T
+    protected readonly rawValue: string,
+    protected readonly parse: (raw: string) => T
   ) {}
 
   required() {
@@ -111,5 +122,17 @@ class ConfigValue<T> {
 
   optional<D = undefined>(defaultValue?: D): T | D {
     return this.exists ? this.parse(this.rawValue) : defaultValue!;
+  }
+}
+
+class DurationConfigValue extends ConfigValue<Duration> {
+  optional(): Duration | undefined;
+  optional(defaultValue: string | DurationLike): Duration;
+  optional(defaultValue?: string | DurationLike) {
+    return this.exists
+      ? this.parse(this.rawValue)
+      : defaultValue == null
+      ? undefined
+      : Duration.from(defaultValue);
   }
 }

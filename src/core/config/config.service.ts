@@ -5,6 +5,7 @@ import {
   EmailOptionsFactory,
 } from '@seedcompany/nestjs-email';
 import { CookieOptions } from 'express';
+import type { Server as HttpServer } from 'http';
 import { LazyGetter as Lazy } from 'lazy-get-decorator';
 import { Duration, DurationLike } from 'luxon';
 import { Config as Neo4JDriverConfig } from 'neo4j-driver';
@@ -15,6 +16,8 @@ import { ID, ServerException } from '../../common';
 import { FrontendUrlWrapper } from '../email/templates/frontend-url';
 import { LogLevel } from '../logger';
 import { EnvironmentService } from './environment.service';
+
+type HttpTimeoutOptions = typeof ConfigService.prototype.httpTimeouts;
 
 /**
  * Application configuration.
@@ -30,6 +33,33 @@ export class ConfigService implements EmailOptionsFactory {
     .string('host_url')
     .optional(`http://localhost:${this.publicPort}`);
   globalPrefix = '';
+
+  @Lazy() get httpTimeouts() {
+    return {
+      /** @see HttpServer.keepAliveTimeout */
+      keepAlive: this.env.duration('HTTP_KEEP_ALIVE_TIMEOUT').optional('5s'),
+      /** @see HttpServer.headersTimeout */
+      headers: this.env.duration('HTTP_HEADERS_TIMEOUT').optional('1m'),
+      /** @see HttpServer.timeout */
+      socket: this.env.duration('HTTP_SOCKET_TIMEOUT').optional(0),
+      /** @see HttpServer.requestTimeout */
+      request: this.env.duration('HTTP_REQUEST_TIMEOUT').optional(0),
+    };
+  }
+  applyTimeouts(http: HttpServer, timeouts: Partial<HttpTimeoutOptions>) {
+    if (timeouts.keepAlive != null) {
+      http.keepAliveTimeout = timeouts.keepAlive.toMillis();
+    }
+    if (timeouts.headers != null) {
+      http.headersTimeout = timeouts.headers.toMillis();
+    }
+    if (timeouts.socket != null) {
+      http.timeout = timeouts.socket.toMillis();
+    }
+    if (timeouts.request != null) {
+      http.requestTimeout = timeouts.request.toMillis();
+    }
+  }
 
   /** Is this a jest process? */
   jest = Boolean(this.env.string('JEST_WORKER_ID').optional());
