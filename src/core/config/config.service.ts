@@ -117,6 +117,10 @@ export class ConfigService implements EmailOptionsFactory {
     return config;
   }
 
+  // Control which database is prioritized, while we migrate to postgres
+  database = this.env.string('DATABASE').optional('neo4j');
+  usePostgres = this.database.toLowerCase() === 'postgres';
+
   dbIndexesCreate = this.env.boolean('DB_CREATE_INDEXES').optional(true);
   dbAutoMigrate = this.env
     .boolean('DB_AUTO_MIGRATE')
