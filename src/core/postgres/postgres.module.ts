@@ -1,5 +1,8 @@
-import { Module, OnModuleDestroy } from '@nestjs/common';
-import { Pool } from 'pg';
+import { Module, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { DateTime, Duration } from 'luxon';
+import { Pool, types } from 'pg';
+import { builtins as TypeId } from 'pg-types';
+import { CalendarDate } from '../../common';
 import { ConfigService } from '../config/config.service';
 import { ILogger, LoggerToken } from '../logger';
 import { Pg } from './pg.service';
@@ -21,6 +24,12 @@ import { Pg } from './pg.service';
           },
         });
 
+        pool.on('connect', (client) => {
+          void client
+            .query('SET DATESTYLE = iso; SET intervalstyle = iso_8601')
+            .then(() => logger.debug('set temporal styles'));
+        });
+
         return pool;
       },
       inject: [ConfigService, LoggerToken('postgres:driver')],
@@ -28,8 +37,31 @@ import { Pg } from './pg.service';
     Pg,
   ],
 })
-export class PostgresModule implements OnModuleDestroy {
+export class PostgresModule implements OnModuleInit, OnModuleDestroy {
   constructor(private readonly pool: Pool) {}
+
+  async onModuleInit() {
+    const dateParser = (inner: (d: string) => any) => (val: any) => {
+      if (val == null) {
+        return null;
+      }
+      if (val === 'infinity') {
+        return Infinity;
+      }
+      if (val === '-infinity') {
+        return -Infinity;
+      }
+      return inner(val);
+    };
+    types.setTypeParser(TypeId.DATE, dateParser(CalendarDate.fromSQL));
+    types.setTypeParser(TypeId.TIMESTAMP, dateParser(DateTime.fromSQL));
+    types.setTypeParser(TypeId.TIMESTAMPTZ, dateParser(DateTime.fromSQL));
+    types.setTypeParser(TypeId.TIMETZ, dateParser(DateTime.fromSQL));
+
+    types.setTypeParser(TypeId.INTERVAL, (val) =>
+      val == null ? val : Duration.fromISO(val)
+    );
+  }
 
   async onModuleDestroy() {
     await this.pool.end();
