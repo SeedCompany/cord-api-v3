@@ -12,7 +12,7 @@ import { ILogger, Logger } from '../logger';
  * Keys are case insensitive.
  */
 @Injectable()
-export class EnvironmentService {
+export class EnvironmentService implements Iterable<[string, string]> {
   private readonly env: Record<string, string>;
 
   constructor(
@@ -82,6 +82,10 @@ export class EnvironmentService {
 
       return parsed;
     });
+  }
+
+  *[Symbol.iterator]() {
+    yield* Object.entries<string>(this.env);
   }
 
   private wrap<T>(key: string, parse: (raw: string) => T) {
