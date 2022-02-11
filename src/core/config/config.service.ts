@@ -5,15 +5,19 @@ import {
   EmailOptionsFactory,
 } from '@seedcompany/nestjs-email';
 import { CookieOptions } from 'express';
+import type { Server as HttpServer } from 'http';
 import { LazyGetter as Lazy } from 'lazy-get-decorator';
 import { Duration, DurationLike } from 'luxon';
 import { Config as Neo4JDriverConfig } from 'neo4j-driver';
 import { join } from 'path';
+import { PoolConfig } from 'pg';
 import { Merge } from 'type-fest';
 import { ID, ServerException } from '../../common';
 import { FrontendUrlWrapper } from '../email/templates/frontend-url';
 import { LogLevel } from '../logger';
 import { EnvironmentService } from './environment.service';
+
+type HttpTimeoutOptions = typeof ConfigService.prototype.httpTimeouts;
 
 /**
  * Application configuration.
@@ -29,6 +33,33 @@ export class ConfigService implements EmailOptionsFactory {
     .string('host_url')
     .optional(`http://localhost:${this.publicPort}`);
   globalPrefix = '';
+
+  @Lazy() get httpTimeouts() {
+    return {
+      /** @see HttpServer.keepAliveTimeout */
+      keepAlive: this.env.duration('HTTP_KEEP_ALIVE_TIMEOUT').optional('5s'),
+      /** @see HttpServer.headersTimeout */
+      headers: this.env.duration('HTTP_HEADERS_TIMEOUT').optional('1m'),
+      /** @see HttpServer.timeout */
+      socket: this.env.duration('HTTP_SOCKET_TIMEOUT').optional(0),
+      /** @see HttpServer.requestTimeout */
+      request: this.env.duration('HTTP_REQUEST_TIMEOUT').optional(0),
+    };
+  }
+  applyTimeouts(http: HttpServer, timeouts: Partial<HttpTimeoutOptions>) {
+    if (timeouts.keepAlive != null) {
+      http.keepAliveTimeout = timeouts.keepAlive.toMillis();
+    }
+    if (timeouts.headers != null) {
+      http.headersTimeout = timeouts.headers.toMillis();
+    }
+    if (timeouts.socket != null) {
+      http.timeout = timeouts.socket.toMillis();
+    }
+    if (timeouts.request != null) {
+      http.requestTimeout = timeouts.request.toMillis();
+    }
+  }
 
   /** Is this a jest process? */
   jest = Boolean(this.env.string('JEST_WORKER_ID').optional());
@@ -96,6 +127,31 @@ export class ConfigService implements EmailOptionsFactory {
       driverConfig,
     };
   }
+
+  @Lazy() get postgres(): PoolConfig {
+    // Put the PG* env vars in the global env, so the library can use them.
+    // There's dozens of them, so we'll just pass them through implicitly.
+    for (const [key, value] of this.env) {
+      if (key.startsWith('PG')) {
+        process.env[key] = value;
+      }
+    }
+    /* eslint-disable @typescript-eslint/naming-convention */
+    const config: PoolConfig = {
+      application_name: this.env.string('PGAPPNAME').optional('cord_api'),
+      connectionString:
+        this.env.string('PGURI').optional() ??
+        this.env
+          .string('PGURL')
+          .optional('postgres://postgres:postgres@localhost/cord'),
+    };
+    /* eslint-enable @typescript-eslint/naming-convention */
+    return config;
+  }
+
+  // Control which database is prioritized, while we migrate to postgres
+  database = this.env.string('DATABASE').optional('neo4j');
+  usePostgres = this.database.toLowerCase() === 'postgres';
 
   dbIndexesCreate = this.env.boolean('DB_CREATE_INDEXES').optional(true);
   dbAutoMigrate = this.env

@@ -238,6 +238,10 @@ export class CalendarDate extends DateTime {
     return this; // noop
   }
 
+  toPostgres() {
+    return this.toSQLDate();
+  }
+
   [inspect.custom]() {
     const str = this.toLocaleString(DateTime.DATE_SHORT);
     return `[Date] ${str}`;

@@ -3,6 +3,7 @@ import { parse as parseEnv } from 'dotenv';
 import * as dotEnvExpand from 'dotenv-expand';
 import * as fs from 'fs';
 import { isString, mapKeys, pickBy } from 'lodash';
+import { Duration, DurationLike } from 'luxon';
 import { join } from 'path';
 import { ILogger, Logger } from '../logger';
 
@@ -12,7 +13,7 @@ import { ILogger, Logger } from '../logger';
  * Keys are case insensitive.
  */
 @Injectable()
-export class EnvironmentService {
+export class EnvironmentService implements Iterable<[string, string]> {
   private readonly env: Record<string, string>;
 
   constructor(
@@ -64,6 +65,16 @@ export class EnvironmentService {
     return this.wrap(key, (raw) => raw.toLowerCase() === 'true');
   }
 
+  duration(key: string) {
+    key = key.toUpperCase();
+    return new DurationConfigValue(
+      key in this.env,
+      key,
+      this.env[key],
+      Duration.from
+    );
+  }
+
   number(key: string) {
     return this.wrap(key, (raw) => {
       const val = raw.toLowerCase();
@@ -84,6 +95,10 @@ export class EnvironmentService {
     });
   }
 
+  *[Symbol.iterator]() {
+    yield* Object.entries<string>(this.env);
+  }
+
   private wrap<T>(key: string, parse: (raw: string) => T) {
     key = key.toUpperCase();
     return new ConfigValue(key in this.env, key, this.env[key], parse);
@@ -94,8 +109,8 @@ class ConfigValue<T> {
   constructor(
     readonly exists: boolean,
     readonly key: string,
-    private readonly rawValue: string,
-    private readonly parse: (raw: string) => T
+    protected readonly rawValue: string,
+    protected readonly parse: (raw: string) => T
   ) {}
 
   required() {
@@ -107,5 +122,17 @@ class ConfigValue<T> {
 
   optional<D = undefined>(defaultValue?: D): T | D {
     return this.exists ? this.parse(this.rawValue) : defaultValue!;
+  }
+}
+
+class DurationConfigValue extends ConfigValue<Duration> {
+  optional(): Duration | undefined;
+  optional(defaultValue: string | DurationLike): Duration;
+  optional(defaultValue?: string | DurationLike) {
+    return this.exists
+      ? this.parse(this.rawValue)
+      : defaultValue == null
+      ? undefined
+      : Duration.from(defaultValue);
   }
 }

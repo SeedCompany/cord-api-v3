@@ -16,6 +16,7 @@ import { DatabaseModule } from './database/database.module';
 import { EventsModule } from './events';
 import { ExceptionFilter } from './exception.filter';
 import { GraphqlModule } from './graphql';
+import { PostgresModule } from './postgres/postgres.module';
 import { ResourceResolver } from './resources';
 import { TracingModule } from './tracing';
 import { ValidationPipe } from './validation.pipe';
@@ -30,6 +31,7 @@ import { ValidationPipe } from './validation.pipe';
     GraphqlModule,
     EventsModule,
     TracingModule,
+    PostgresModule,
   ],
   providers: [
     AwsS3Factory,
