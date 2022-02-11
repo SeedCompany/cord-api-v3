@@ -30,6 +30,11 @@ export interface Range<T> {
 }
 
 /**
+ * Useful to _implement_ existing class, ignoring private/protected members.
+ */
+export type PublicOf<T> = { [P in keyof T]: T[P] };
+
+/**
  * The PartialType() function returns a type (class) with all the properties of
  * the input type set to optional.
  *

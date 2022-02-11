@@ -2,10 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { AsyncLocalStorage } from 'async_hooks';
 import { dropRightWhile } from 'lodash';
 import { Client, ClientBase, DatabaseError, Pool, PoolClient } from 'pg';
+import { TracingService } from '../tracing';
 
 @Injectable()
 export class Pg {
-  constructor(private readonly pool: Pool) {}
+  constructor(
+    private readonly pool: Pool,
+    private readonly tracing: TracingService
+  ) {}
 
   /**
    * Holds the lazy client for the transaction within this async scope.
@@ -24,8 +28,23 @@ export class Pg {
     const client = txClient ?? this.pool;
 
     try {
-      const result = await client.query<R>(queryText, values);
-      return result.rows;
+      // Hack to get the callee name, to identify the tracing segment.
+      const stack = new Error('').stack!.split('\n').slice(2);
+      const frame = stack[0]
+        ? /at (?:async )?(.+) \(/.exec(stack[0])
+        : undefined;
+      const calleeName =
+        frame?.[1].replace(/^Pg/, '').replace(/Repository\./, '.') ?? 'Query';
+
+      return await this.tracing.capture(calleeName, async (sub) => {
+        // Show this segment separately in service map
+        sub.namespace = 'remote';
+        // Help ID the segment as being for a database
+        sub.sql = {};
+
+        const result = await client.query<R>(queryText, values);
+        return result.rows;
+      });
     } catch (e) {
       if (e instanceof DatabaseError) {
         // Stacktrace will always be relating to received remote data,
