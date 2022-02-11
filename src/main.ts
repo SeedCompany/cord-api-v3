@@ -22,6 +22,8 @@ async function bootstrap() {
 
   app.setGlobalPrefix(config.globalPrefix);
 
+  config.applyTimeouts(app.getHttpServer(), config.httpTimeouts);
+
   app.enableShutdownHooks();
   await app.listen(config.port, () => {
     app
