@@ -397,6 +397,7 @@ export const Administrator = new DbRole({
     }),
     new DbBaseNodeGrant<DbUser>({
       __className: 'DbUser',
+      canList: true,
       properties: [
         { propertyName: 'about', permission: { read, write, }, },
         { propertyName: 'displayFirstName', permission: { read, write, }, },
@@ -411,6 +412,7 @@ export const Administrator = new DbRole({
         { propertyName: 'title', permission: { read, write, }, },
         { propertyName: 'education', permission: { read, write, }, },
         { propertyName: 'organization', permission: { read, write, }, },
+        { propertyName: 'partner', permission: { read, write, }, },
         { propertyName: 'unavailability', permission: { read, write, }, },
         { propertyName: 'locations', permission: { read, write, }, },
         { propertyName: 'knownLanguage', permission: { read, write, }, },

@@ -401,6 +401,7 @@ export const Liaison = new DbRole({
     }),
     new DbBaseNodeGrant<DbUser>({
       __className: 'DbUser',
+      canList: false,
       properties: [
         { propertyName: 'about', permission: {}, },
         { propertyName: 'displayFirstName', permission: {}, },
@@ -415,6 +416,7 @@ export const Liaison = new DbRole({
         { propertyName: 'title', permission: {}, },
         { propertyName: 'education', permission: {}, },
         { propertyName: 'organization', permission: {}, },
+        { propertyName: 'partner', permission: {}, },
         { propertyName: 'unavailability', permission: {}, },
         { propertyName: 'locations', permission: {}, },
         { propertyName: 'knownLanguage', permission: {}, },
