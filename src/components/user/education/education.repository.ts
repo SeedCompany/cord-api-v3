@@ -8,7 +8,6 @@ import {
   createRelationships,
   matchRequestingUser,
   paginate,
-  permissionsOfNode,
   requestingUser,
   sorting,
 } from '../../../core/database/query';
@@ -50,15 +49,13 @@ export class EducationRepository extends DtoRepository(Education) {
   }
 
   async list({ filter, ...input }: EducationListInput, session: Session) {
-    const label = 'Education';
-
     const result = await this.db
       .query()
+      .matchNode('node', 'Education')
       .match([
-        requestingUser(session),
-        ...permissionsOfNode(label),
         ...(filter.userId
           ? [
+              node('node'),
               relation('in', '', 'education', ACTIVE),
               node('user', 'User', {
                 id: filter.userId,
@@ -66,6 +63,7 @@ export class EducationRepository extends DtoRepository(Education) {
             ]
           : []),
       ])
+      .match(requestingUser(session))
       .apply(sorting(Education, input))
       .apply(paginate(input, this.hydrate()))
       .first();

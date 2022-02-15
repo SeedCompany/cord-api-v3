@@ -15,6 +15,7 @@ import {
 import { SecuredRoles } from '../../authorization';
 import { Location } from '../../location/dto';
 import { Organization } from '../../organization/dto';
+import { Partner } from '../../partner/dto';
 import { Pinnable } from '../../pin/dto';
 import { Education } from '../education/dto';
 import { Unavailability } from '../unavailability/dto';
@@ -40,6 +41,7 @@ export class User extends PinnableResource {
   static readonly Relations = {
     education: [Education],
     organization: Organization,
+    partner: Partner,
     unavailability: [Unavailability],
     locations: [Location],
     knownLanguage: [KnownLanguage],

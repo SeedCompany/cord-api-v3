@@ -160,6 +160,7 @@ export class ProjectChangeRequestService {
     input: ProjectChangeRequestListInput,
     session: Session
   ): Promise<ProjectChangeRequestListOutput> {
+    // no need to check if canList for now, all roles allow for listing.
     const results = await this.repo.list(input, session);
     return await mapListResults(results, (dto) => this.secure(dto, session));
   }

@@ -33,7 +33,6 @@ import {
   matchPropsAndProjectSensAndScopedRoles,
   merge,
   paginate,
-  permissionsOfNode,
   requestingUser,
   sorting,
 } from '../../core/database/query';
@@ -490,10 +489,21 @@ export class ProductRepository extends CommonRepository {
   }
 
   async list({ filter, ...input }: ProductListInput, session: Session) {
-    const label = 'Product';
     const result = await this.db
       .query()
-      .match([requestingUser(session), ...permissionsOfNode(label)])
+      .matchNode('node', 'Product')
+      .match([
+        ...(filter.engagementId
+          ? [
+              node('node'),
+              relation('in', '', 'product', ACTIVE),
+              node('engagement', 'Engagement', {
+                id: filter.engagementId,
+              }),
+            ]
+          : []),
+      ])
+      .match(requestingUser(session))
       .apply(productListFilter(filter))
       .apply(sorting(Product, input))
       .apply(paginate(input, this.hydrate(session)))

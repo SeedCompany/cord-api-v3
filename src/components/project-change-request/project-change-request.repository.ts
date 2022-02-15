@@ -69,8 +69,6 @@ export class ProjectChangeRequestRepository extends DtoRepository<
     const result = await this.db
       .query()
       .match([
-        // requestingUser(session),
-        // ...permissionsOfNode(label),
         node('node', 'ProjectChangeRequest'),
         ...(input.filter.projectId
           ? [

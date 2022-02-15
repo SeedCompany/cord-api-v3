@@ -8,7 +8,6 @@ import {
   matchRequestingUser,
   merge,
   paginate,
-  permissionsOfNode,
   requestingUser,
   sorting,
 } from '../../core/database/query';
@@ -40,7 +39,8 @@ export class StoryRepository extends DtoRepository(Story) {
   async list({ filter, ...input }: StoryListInput, session: Session) {
     const result = await this.db
       .query()
-      .match([requestingUser(session), ...permissionsOfNode('Story')])
+      .matchNode('node', 'Story')
+      .match(requestingUser(session))
       .apply(sorting(Story, input))
       .apply(paginate(input, this.hydrate()))
       .first();

@@ -97,6 +97,12 @@ export class EthnoArtService {
     return {
       ...dto,
       ...securedProps,
+      scriptureReferences: {
+        ...securedProps.scriptureReferences,
+        value: securedProps.scriptureReferences.canRead
+          ? securedProps.scriptureReferences.value
+          : [],
+      },
       canDelete: await this.repo.checkDeletePermission(dto.id, session),
     };
   }
@@ -152,6 +158,8 @@ export class EthnoArtService {
   }
 
   async list(input: EthnoArtListInput, session: Session) {
+    // -- don't need a check for canList. all roles are allowed to see at least one prop,
+    //    and this isn't a sensitive component.
     const results = await this.repo.list(input, session);
     return await mapListResults(results, (dto) => this.secure(dto, session));
   }

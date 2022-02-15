@@ -106,6 +106,7 @@ export class OrganizationRepository extends DtoRepository<
       .match([
         ...(filter.userId && session.userId
           ? [
+              node('node'),
               relation('in', '', 'organization', ACTIVE),
               node('user', 'User', { id: filter.userId }),
             ]
