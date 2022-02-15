@@ -11,7 +11,7 @@ import {
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import { ACTIVE, INACTIVE } from '../../core/database/query';
 import { Role, withoutScope } from '../authorization';
-import { ProjectService, ProjectStep } from '../project';
+import { ProjectStep } from '../project';
 import {
   EngagementStatus,
   EngagementStatusTransition,
@@ -34,7 +34,6 @@ export class EngagementRules {
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
-    private readonly projectService: ProjectService,
     // eslint-disable-next-line @seedcompany/no-unused-vars
     @Logger('engagement:rules') private readonly logger: ILogger
   ) {}
