@@ -1,4 +1,3 @@
-import { gql } from 'apollo-server-core';
 import { ID } from '../../src/common';
 import {
   ProjectStep,
@@ -6,6 +5,7 @@ import {
   SecuredProjectStep,
 } from '../../src/components/project/dto';
 import { TestApp } from './create-app';
+import { createProjectStepChange } from './create-project-step-change';
 
 export const stepsFromEarlyConversationToBeforeActive = [
   ProjectStep.PendingConceptApproval,
@@ -41,29 +41,9 @@ export const changeProjectStep = async (
   id: ID,
   to: ProjectStep
 ): Promise<SecuredStep> => {
-  const result = await app.graphql.mutate(
-    gql`
-      mutation updateProject($id: ID!, $step: ProjectStep!) {
-        updateProject(input: { project: { id: $id, step: $step } }) {
-          project {
-            step {
-              canRead
-              canEdit
-              value
-              transitions {
-                to
-                type
-                label
-              }
-            }
-          }
-        }
-      }
-    `,
-    {
-      id,
-      step: to,
-    }
-  );
-  return result.updateProject.project.step.transitions;
+  const project = await createProjectStepChange(app, {
+    id: id,
+    step: to,
+  });
+  return project.step.transitions;
 };

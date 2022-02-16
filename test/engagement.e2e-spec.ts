@@ -1039,8 +1039,8 @@ describe('Engagement e2e', () => {
     const updateProject = async () => {
       return await app.graphql.mutate(
         gql`
-          mutation updateProject($id: ID!, $step: ProjectStep) {
-            updateProject(input: { project: { id: $id, step: $step } }) {
+          mutation transitionProject($id: ID!, $step: ProjectStep!) {
+            transitionProject(input: { id: $id, step: $step }) {
               project {
                 id
                 engagements {
@@ -1098,8 +1098,8 @@ describe('Engagement e2e', () => {
 
         const result = await app.graphql.mutate(
           gql`
-            mutation updateProject($id: ID!, $step: ProjectStep) {
-              updateProject(input: { project: { id: $id, step: $step } }) {
+            mutation transitionProject($id: ID!, $step: ProjectStep!) {
+              transitionProject(input: { id: $id, step: $step }) {
                 project {
                   id
                   engagements {
@@ -1120,7 +1120,7 @@ describe('Engagement e2e', () => {
           }
         );
 
-        const actual = result.updateProject.project.engagements.items.find(
+        const actual = result.transitionProject.project.engagements.items.find(
           (e: { id: ID }) => e.id === engagement.id
         );
         expect(actual.status.value).toBe(EngagementStatus[newStatus]);

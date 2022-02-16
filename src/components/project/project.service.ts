@@ -56,6 +56,7 @@ import {
   ProjectListInput,
   ProjectListOutput,
   ProjectStatus,
+  ProjectStepChangeInput,
   ProjectType,
   TranslationProject,
   UpdateProject,
@@ -133,7 +134,7 @@ export class ProjectService {
     );
 
     try {
-      const id = await this.repo.create(input);
+      const id = await this.repo.create(input, session);
 
       // get the creating user's roles. Assign them on this project.
       // I'm going direct for performance reasons
@@ -268,8 +269,7 @@ export class ProjectService {
   async update(
     input: UpdateProject,
     session: Session,
-    changeset?: ID,
-    stepValidation = true
+    changeset?: ID
   ): Promise<UnsecuredDto<Project>> {
     const currentProject = await this.readOneUnsecured(
       input.id,
@@ -292,7 +292,8 @@ export class ProjectService {
       'project'
     );
 
-    if (changes.step && stepValidation) {
+    // Support deprecated code path for now
+    if (changes.step) {
       await this.projectRules.verifyStepChange(
         input.id,
         session,
@@ -305,6 +306,7 @@ export class ProjectService {
       primaryLocationId,
       marketingLocationId,
       fieldRegionId,
+      step,
       ...simpleChanges
     } = changes;
 
@@ -313,6 +315,26 @@ export class ProjectService {
       simpleChanges,
       changeset
     );
+
+    // Support deprecated code path for now
+    if (changes.step) {
+      await this.repo.addProjectStep(
+        { id: input.id, changeset, step: changes.step },
+        session
+      );
+      if (changes.status) {
+        await this.repo.updateProperties(
+          currentProject,
+          { status: changes.status },
+          changeset
+        );
+      }
+      result = {
+        ...result,
+        step: changes.step,
+        status: changes.status ?? result.status,
+      };
+    }
 
     if (primaryLocationId) {
       try {
@@ -368,6 +390,56 @@ export class ProjectService {
         fieldRegion: fieldRegionId,
       };
     }
+
+    const event = new ProjectUpdatedEvent(
+      result,
+      currentProject,
+      input,
+      session
+    );
+    await this.eventBus.publish(event);
+    return event.updated;
+  }
+
+  async updateStep(
+    input: ProjectStepChangeInput,
+    session: Session
+  ): Promise<UnsecuredDto<Project>> {
+    const currentProject = await this.readOneUnsecured(
+      input.id,
+      session,
+      input.changeset
+    );
+
+    const changes = this.repo.getActualChanges(currentProject, input);
+
+    if (!changes.step) {
+      return currentProject;
+    }
+
+    // verify new project step
+    await this.projectRules.verifyStepChange(
+      input.id,
+      session,
+      changes.step,
+      input.changeset
+    );
+
+    // update project step prop
+    await this.repo.addProjectStep(input, session);
+    // update project status
+    if (changes.status) {
+      await this.repo.updateProperties(
+        currentProject,
+        { status: changes.status },
+        input.changeset
+      );
+    }
+    const result = {
+      ...currentProject,
+      step: changes.step,
+      status: changes.status ?? currentProject.status,
+    };
 
     const event = new ProjectUpdatedEvent(
       result,
@@ -636,6 +708,10 @@ export class ProjectService {
           session.roles.concat(project.scope)
         ),
     };
+  }
+
+  async listStepChangeHistory(id: ID, changeset?: ID) {
+    return await this.repo.listStepChangeHistory(id, changeset);
   }
 
   protected async validateOtherResourceId(

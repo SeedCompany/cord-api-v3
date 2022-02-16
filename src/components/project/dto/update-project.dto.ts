@@ -54,7 +54,10 @@ export abstract class UpdateProject {
   @DateField({ nullable: true })
   readonly estimatedSubmission?: CalendarDate | null;
 
-  @Field(() => ProjectStep, { nullable: true })
+  @Field(() => ProjectStep, {
+    nullable: true,
+    deprecationReason: 'Use `transitionProject` mutation instead',
+  })
   readonly step?: ProjectStep;
 
   @SensitivityField({
