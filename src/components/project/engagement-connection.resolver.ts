@@ -16,6 +16,7 @@ export class ProjectEngagementConnectionResolver {
     if (onlyId) {
       return {
         id: engagement.project,
+        changeset: engagement.changeset,
         // Used in Project.resolveType to resolve the concrete type
         type:
           engagement.__typename === 'LanguageEngagement'

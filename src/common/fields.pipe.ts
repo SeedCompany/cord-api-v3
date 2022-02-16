@@ -9,6 +9,8 @@ import {
 } from 'graphql';
 import { parseResolveInfo, ResolveTree } from 'graphql-parse-resolve-info';
 import { difference, pick } from 'lodash';
+import type { ChangesetAware } from '../components/changeset/dto';
+import type { Resource } from './resource.dto';
 
 export type FieldInfo<T> = Partial<Record<keyof T, ResolveTree>>;
 
@@ -76,4 +78,4 @@ export const IsOnly = <T>(
  * @Info(Fields, IsOnlyId) onlyId: boolean
  * ```
  */
-export const IsOnlyId = IsOnly(['id']);
+export const IsOnlyId = IsOnly<Resource & ChangesetAware>(['id', 'changeset']);
