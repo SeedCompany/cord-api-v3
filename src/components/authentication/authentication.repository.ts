@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID, ServerException, Session } from '../../common';
-import { DatabaseService, matchRequestingUser } from '../../core';
+import { DatabaseService, matchRequestingUser, Pg } from '../../core';
 import { ACTIVE, variable } from '../../core/database/query';
 import { LoginInput } from './dto';
 
@@ -14,9 +14,15 @@ interface EmailToken {
 
 @Injectable()
 export class AuthenticationRepository {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(private readonly pg: Pg, private readonly db: DatabaseService) {}
 
   async saveSessionToken(token: string) {
+    //var asdf = await this.pg.query("SELECT * FROM admin.tokens")
+    //console.log(asdf)
+
+    //console.log(token)
+    //const res = await this.pg.query("INSERT INTO admin.tokens (token, created_at) values ('"+token+"', now())")
+
     const result = await this.db
       .query()
       .raw(
