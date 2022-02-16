@@ -1,5 +1,13 @@
-import { Args, Mutation, Resolver } from '@nestjs/graphql';
+import {
+  Args,
+  Mutation,
+  Parent,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
 import { ID, IdArg, LoggedInSession, Session } from '../../common';
+import { Loader, LoaderOf } from '../../core';
+import { IProject, Project, ProjectLoader } from '../project';
 import {
   CreateProjectChangeRequestInput,
   CreateProjectChangeRequestOutput,
@@ -13,6 +21,17 @@ import { ProjectChangeRequestService } from './project-change-request.service';
 @Resolver(ProjectChangeRequest)
 export class ProjectChangeRequestResolver {
   constructor(private readonly service: ProjectChangeRequestService) {}
+
+  @ResolveField(() => IProject)
+  async project(
+    @Parent() changeset: ProjectChangeRequest,
+    @Loader(() => ProjectLoader) projects: LoaderOf<ProjectLoader>
+  ): Promise<Project> {
+    return await projects.load({
+      id: changeset.project,
+      view: { changeset: changeset.id },
+    });
+  }
 
   @Mutation(() => CreateProjectChangeRequestOutput, {
     description: 'Create a project change request',

@@ -88,6 +88,7 @@ export class ProjectChangeRequestRepository extends DtoRepository(
         .return<{ dto: UnsecuredDto<ProjectChangeRequest> }>(
           merge('props', {
             canEdit: `props.status = "${Status.Pending}"`,
+            project: 'project.id',
           }).as('dto')
         );
   }
