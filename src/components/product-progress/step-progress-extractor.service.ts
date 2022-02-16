@@ -51,20 +51,11 @@ const parseProgressRow =
   (cell: Cell<ProgressSheet>, index: number): ExtractedRow => {
     const sheet = cell.sheet;
     const row = cell.row;
-    const progress = (column: Column) => {
-      const cell = column.cell(row);
-      if (cell.asString?.startsWith('Q')) {
-        // Q# means completed that quarter
-        return 100;
-      }
-      const percentDecimal = cell.asNumber;
-      return percentDecimal ? percentDecimal * 100 : undefined;
-    };
     const steps = entries(stepColumns).map(
-      ([step, column]): StepProgressInput => ({
-        step,
-        completed: progress(column),
-      })
+      ([step, column]): StepProgressInput => {
+        const cell = sheet.cell(column, row);
+        return { step, completed: progress(cell) };
+      }
     );
     const common = {
       rowIndex: row.a1 - sheet.goals.start.row.a1 + 1,
@@ -82,3 +73,12 @@ const parseProgressRow =
     const totalVerses = sheet.totalVerses(row)!; // Asserting bc loop verified this
     return { ...common, bookName, totalVerses };
   };
+
+const progress = (cell: Cell) => {
+  if (cell.asString?.startsWith('Q')) {
+    // Q# means completed that quarter
+    return 100;
+  }
+  const percentDecimal = cell.asNumber;
+  return percentDecimal ? percentDecimal * 100 : undefined;
+};
