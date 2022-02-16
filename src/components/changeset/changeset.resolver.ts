@@ -1,7 +1,8 @@
-import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { LoggedInSession, ObjectView, Session } from '../../common';
-import { ResourceResolver } from '../../core';
+import { Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
+import { ID, IdArg, LoggedInSession, ObjectView, Session } from '../../common';
+import { Loader, LoaderOf, ResourceResolver } from '../../core';
 import { BaseNode } from '../../core/database/results';
+import { ChangesetLoader } from './changeset.loader';
 import { ChangesetRepository } from './changeset.repository';
 import { Changeset, ChangesetDiff, ResourceChange } from './dto';
 
@@ -11,6 +12,15 @@ export class ChangesetResolver {
     private readonly repo: ChangesetRepository,
     private readonly resources: ResourceResolver
   ) {}
+
+  @Query(() => Changeset)
+  async changeset(
+    @Loader(() => ChangesetLoader)
+    changesets: LoaderOf<ChangesetLoader>,
+    @IdArg() id: ID
+  ): Promise<Changeset> {
+    return await changesets.load(id);
+  }
 
   @ResolveField(() => ChangesetDiff, {
     description: 'The changes that this changeset as made',
