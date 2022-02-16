@@ -56,14 +56,24 @@ const getInterfacesDeep = (
 ];
 
 /**
+ * Converts the field info to a boolean if the only fields asked for are in this list.
+ * @example
+ * ```
+ * @Info(Fields, IsOnly(['id'])) onlyId: boolean
+ * ```
+ */
+export const IsOnly = <T>(
+  fields: Array<keyof T & string>
+): PipeTransform<FieldInfo<T>, boolean> => ({
+  transform: (requested) =>
+    difference(Object.keys(requested), fields).length === 0,
+});
+
+/**
  * Converts the field info to a boolean if the only field asked for is the ID.
  * @example
  * ```
  * @Info(Fields, IsOnlyId) onlyId: boolean
  * ```
  */
-export const IsOnlyId: PipeTransform<FieldInfo<any>, boolean> = {
-  transform(fields: FieldInfo<any>, _metadata: ArgumentMetadata) {
-    return difference(Object.keys(fields), ['id']).length === 0;
-  },
-};
+export const IsOnlyId = IsOnly(['id']);
