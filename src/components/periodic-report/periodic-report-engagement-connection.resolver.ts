@@ -25,12 +25,11 @@ export class PeriodicReportEngagementConnectionResolver {
     @Loader(PeriodicReportLoader)
     periodicReports: LoaderOf<PeriodicReportLoader>
   ): Promise<SecuredPeriodicReportList> {
-    const list = await this.service.list(
-      engagement.id,
-      ReportType.Progress,
-      input,
-      session
-    );
+    const list = await this.service.list(session, {
+      ...input,
+      parent: engagement.id,
+      type: ReportType.Progress,
+    });
     periodicReports.primeAll(list.items);
     return list;
   }

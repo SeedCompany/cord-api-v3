@@ -1,10 +1,12 @@
 import { InputType, ObjectType } from '@nestjs/graphql';
 import {
+  ID,
   PaginatedList,
   SecuredList,
   SortablePaginationInput,
 } from '../../../common';
 import { IPeriodicReport, PeriodicReport } from './periodic-report.dto';
+import { ReportType } from './report-type.enum';
 
 @InputType()
 export class PeriodicReportListInput extends SortablePaginationInput<
@@ -12,6 +14,10 @@ export class PeriodicReportListInput extends SortablePaginationInput<
 >({
   defaultSort: 'end',
 }) {
+  readonly type?: ReportType;
+
+  readonly parent?: ID;
+
   static defaultVal = new PeriodicReportListInput();
 }
 
