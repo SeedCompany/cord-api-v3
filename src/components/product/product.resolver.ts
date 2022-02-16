@@ -12,6 +12,7 @@ import {
   AnonSession,
   ID,
   IdArg,
+  ListArg,
   LoggedInSession,
   SecuredString,
   Session,
@@ -67,12 +68,7 @@ export class ProductResolver {
   })
   async products(
     @AnonSession() session: Session,
-    @Args({
-      name: 'input',
-      type: () => ProductListInput,
-      defaultValue: ProductListInput.defaultVal,
-    })
-    input: ProductListInput,
+    @ListArg(ProductListInput) input: ProductListInput,
     @Loader(ProductLoader) products: LoaderOf<ProductLoader>
   ): Promise<ProductListOutput> {
     const list = await this.productService.list(input, session);

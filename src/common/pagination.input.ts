@@ -1,7 +1,9 @@
-import { Field, InputType, Int } from '@nestjs/graphql';
+import { PipeTransform, Type } from '@nestjs/common';
+import { Args, ArgsOptions, Field, InputType, Int } from '@nestjs/graphql';
 import { Max, Min } from 'class-validator';
 import { stripIndent } from 'common-tags';
 import { Order } from './order.enum';
+import { AbstractClassType } from './types';
 
 @InputType({
   isAbstract: true,
@@ -96,3 +98,22 @@ export const SortablePaginationInput = <SortKey extends string = string>({
 
   return SortablePaginationInputClass;
 };
+
+/**
+ * A GQL argument for paginated list input
+ */
+export const ListArg = <T extends PaginationInput>(
+  input: AbstractClassType<T> & { defaultVal: T },
+  opts: Partial<ArgsOptions> = {},
+  ...pipes: Array<Type<PipeTransform> | PipeTransform>
+) =>
+  Args(
+    {
+      name: 'input',
+      type: () => input,
+      nullable: true,
+      defaultValue: input.defaultVal,
+      ...opts,
+    },
+    ...pipes
+  );

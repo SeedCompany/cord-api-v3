@@ -13,6 +13,7 @@ import {
   ID,
   IdArg,
   IdField,
+  ListArg,
   LoggedInSession,
   mapSecuredValue,
   NotFoundException,
@@ -95,13 +96,7 @@ export class ProjectResolver {
     description: 'Look up projects',
   })
   async projects(
-    @Args({
-      name: 'input',
-      type: () => ProjectListInput,
-      nullable: true,
-      defaultValue: ProjectListInput.defaultVal,
-    })
-    input: ProjectListInput,
+    @ListArg(ProjectListInput) input: ProjectListInput,
     @Loader(ProjectLoader) projects: LoaderOf<ProjectLoader>,
     @AnonSession() session: Session
   ): Promise<ProjectListOutput> {
@@ -114,13 +109,7 @@ export class ProjectResolver {
     description: 'Look up translation projects',
   })
   async translationProjects(
-    @Args({
-      name: 'input',
-      type: () => ProjectListInput,
-      nullable: true,
-      defaultValue: ProjectListInput.defaultVal,
-    })
-    input: ProjectListInput,
+    @ListArg(ProjectListInput) input: ProjectListInput,
     @Loader(ProjectLoader) projects: LoaderOf<ProjectLoader>,
     @AnonSession() session: Session
   ): Promise<ProjectListOutput> {
@@ -142,13 +131,7 @@ export class ProjectResolver {
     description: 'Look up internship projects',
   })
   async internshipProjects(
-    @Args({
-      name: 'input',
-      type: () => ProjectListInput,
-      nullable: true,
-      defaultValue: ProjectListInput.defaultVal,
-    })
-    input: ProjectListInput,
+    @ListArg(ProjectListInput) input: ProjectListInput,
     @Loader(ProjectLoader) projects: LoaderOf<ProjectLoader>,
     @AnonSession() session: Session
   ): Promise<ProjectListOutput> {
@@ -177,12 +160,7 @@ export class ProjectResolver {
   async changeRequests(
     @AnonSession() session: Session,
     @Parent() project: Project,
-    @Args({
-      name: 'input',
-      type: () => ProjectChangeRequestListInput,
-      nullable: true,
-      defaultValue: ProjectChangeRequestListInput.defaultVal,
-    })
+    @ListArg(ProjectChangeRequestListInput)
     input: ProjectChangeRequestListInput,
     @Loader(ProjectChangeRequestLoader)
     projectChangeRequests: LoaderOf<ProjectChangeRequestLoader>
@@ -214,13 +192,7 @@ export class ProjectResolver {
   async engagements(
     @AnonSession() session: Session,
     @Parent() project: Project,
-    @Args({
-      name: 'input',
-      type: () => EngagementListInput,
-      nullable: true,
-      defaultValue: EngagementListInput.defaultVal,
-    })
-    input: EngagementListInput,
+    @ListArg(EngagementListInput) input: EngagementListInput,
     @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>
   ): Promise<SecuredEngagementList> {
     const list = await this.projectService.listEngagements(
@@ -239,12 +211,7 @@ export class ProjectResolver {
   async team(
     @AnonSession() session: Session,
     @Parent() { id, sensitivity, scope }: Project,
-    @Args({
-      name: 'input',
-      type: () => ProjectMemberListInput,
-      defaultValue: ProjectMemberListInput.defaultVal,
-    })
-    input: ProjectMemberListInput,
+    @ListArg(ProjectMemberListInput) input: ProjectMemberListInput,
     @Loader(ProjectMemberLoader) projectMembers: LoaderOf<ProjectMemberLoader>
   ): Promise<SecuredProjectMemberList> {
     const list = await this.projectService.listProjectMembers(
@@ -262,12 +229,7 @@ export class ProjectResolver {
   async partnerships(
     @AnonSession() session: Session,
     @Parent() project: Project,
-    @Args({
-      name: 'input',
-      type: () => PartnershipListInput,
-      defaultValue: PartnershipListInput.defaultVal,
-    })
-    input: PartnershipListInput,
+    @ListArg(PartnershipListInput) input: PartnershipListInput,
     @Loader(PartnershipLoader) partnerships: LoaderOf<PartnershipLoader>
   ): Promise<SecuredPartnershipList> {
     const list = await this.projectService.listPartnerships(
@@ -324,12 +286,7 @@ export class ProjectResolver {
   async otherLocations(
     @AnonSession() session: Session,
     @Parent() project: Project,
-    @Args({
-      name: 'input',
-      type: () => LocationListInput,
-      defaultValue: LocationListInput.defaultVal,
-    })
-    input: LocationListInput,
+    @ListArg(LocationListInput) input: LocationListInput,
     @Loader(LocationLoader) locations: LoaderOf<LocationLoader>
   ): Promise<SecuredLocationList> {
     const list = await this.projectService.listOtherLocations(

@@ -10,6 +10,7 @@ import {
   AnonSession,
   ID,
   IdArg,
+  ListArg,
   LoggedInSession,
   mapSecuredValue,
   Session,
@@ -53,12 +54,7 @@ export class PartnerResolver {
   })
   async partners(
     @AnonSession() session: Session,
-    @Args({
-      name: 'input',
-      type: () => PartnerListInput,
-      defaultValue: PartnerListInput.defaultVal,
-    })
-    input: PartnerListInput,
+    @ListArg(PartnerListInput) input: PartnerListInput,
     @Loader(PartnerLoader) partners: LoaderOf<PartnerLoader>
   ): Promise<PartnerListOutput> {
     const list = await this.partnerService.list(input, session);
@@ -92,12 +88,7 @@ export class PartnerResolver {
   async projects(
     @AnonSession() session: Session,
     @Parent() partner: Partner,
-    @Args({
-      name: 'input',
-      type: () => ProjectListInput,
-      defaultValue: ProjectListInput.defaultVal,
-    })
-    input: ProjectListInput,
+    @ListArg(ProjectListInput) input: ProjectListInput,
     @Loader(ProjectLoader) loader: LoaderOf<ProjectLoader>
   ): Promise<SecuredProjectList> {
     const list = await this.partnerService.listProjects(

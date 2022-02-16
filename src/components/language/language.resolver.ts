@@ -14,6 +14,7 @@ import {
   ID,
   IdArg,
   IdField,
+  ListArg,
   LoggedInSession,
   SecuredDate,
   SecuredInt,
@@ -105,12 +106,7 @@ export class LanguageResolver {
   async locations(
     @AnonSession() session: Session,
     @Parent() language: Language,
-    @Args({
-      name: 'input',
-      type: () => LocationListInput,
-      defaultValue: LocationListInput.defaultVal,
-    })
-    input: LocationListInput,
+    @ListArg(LocationListInput) input: LocationListInput,
     @Loader(LocationLoader) locations: LoaderOf<LocationLoader>
   ): Promise<SecuredLocationList> {
     const list = await this.langService.listLocations(language, input, session);
@@ -134,12 +130,7 @@ export class LanguageResolver {
   async projects(
     @AnonSession() session: Session,
     @Parent() language: Language,
-    @Args({
-      name: 'input',
-      type: () => ProjectListInput,
-      defaultValue: ProjectListInput.defaultVal,
-    })
-    input: ProjectListInput,
+    @ListArg(ProjectListInput) input: ProjectListInput,
     @Loader(ProjectLoader) loader: LoaderOf<ProjectLoader>
   ): Promise<SecuredProjectList> {
     const list = await this.langService.listProjects(language, input, session);
@@ -152,12 +143,7 @@ export class LanguageResolver {
   })
   async languages(
     @AnonSession() session: Session,
-    @Args({
-      name: 'input',
-      type: () => LanguageListInput,
-      defaultValue: LanguageListInput.defaultVal,
-    })
-    input: LanguageListInput,
+    @ListArg(LanguageListInput) input: LanguageListInput,
     @Loader(LanguageLoader) languages: LoaderOf<LanguageLoader>
   ): Promise<LanguageListOutput> {
     const list = await this.langService.list(input, session);

@@ -13,6 +13,7 @@ import {
   ID,
   IdArg,
   IdField,
+  ListArg,
   LoggedInSession,
   Session,
 } from '../../common';
@@ -122,12 +123,7 @@ export class UserResolver {
   })
   async users(
     @AnonSession() session: Session,
-    @Args({
-      name: 'input',
-      type: () => UserListInput,
-      defaultValue: UserListInput.defaultVal,
-    })
-    input: UserListInput,
+    @ListArg(UserListInput) input: UserListInput,
     @Loader(UserLoader) users: LoaderOf<UserLoader>
   ): Promise<UserListOutput> {
     const list = await this.userService.list(input, session);
@@ -146,12 +142,7 @@ export class UserResolver {
   async unavailabilities(
     @AnonSession() session: Session,
     @Parent() { id }: User,
-    @Args({
-      name: 'input',
-      type: () => UnavailabilityListInput,
-      defaultValue: UnavailabilityListInput.defaultVal,
-    })
-    input: UnavailabilityListInput,
+    @ListArg(UnavailabilityListInput) input: UnavailabilityListInput,
     @Loader(UnavailabilityLoader)
     unavailabilities: LoaderOf<UnavailabilityLoader>
   ): Promise<SecuredUnavailabilityList> {
@@ -168,12 +159,7 @@ export class UserResolver {
   async organizations(
     @AnonSession() session: Session,
     @Parent() { id }: User,
-    @Args({
-      name: 'input',
-      type: () => OrganizationListInput,
-      defaultValue: OrganizationListInput.defaultVal,
-    })
-    input: OrganizationListInput,
+    @ListArg(OrganizationListInput) input: OrganizationListInput,
     @Loader(OrganizationLoader) organizations: LoaderOf<OrganizationLoader>
   ): Promise<SecuredOrganizationList> {
     const list = await this.userService.listOrganizations(id, input, session);
@@ -185,12 +171,7 @@ export class UserResolver {
   async partners(
     @AnonSession() session: Session,
     @Parent() { id }: User,
-    @Args({
-      name: 'input',
-      type: () => PartnerListInput,
-      defaultValue: PartnerListInput.defaultVal,
-    })
-    input: PartnerListInput,
+    @ListArg(PartnerListInput) input: PartnerListInput,
     @Loader(PartnerLoader) partners: LoaderOf<PartnerLoader>
   ): Promise<SecuredPartnerList> {
     const list = await this.userService.listPartners(id, input, session);
@@ -202,12 +183,7 @@ export class UserResolver {
   async education(
     @AnonSession() session: Session,
     @Parent() { id }: User,
-    @Args({
-      name: 'input',
-      type: () => EducationListInput,
-      defaultValue: EducationListInput.defaultVal,
-    })
-    input: EducationListInput,
+    @ListArg(EducationListInput) input: EducationListInput,
     @Loader(EducationLoader) educations: LoaderOf<EducationLoader>
   ): Promise<SecuredEducationList> {
     const list = await this.userService.listEducations(id, input, session);
@@ -219,12 +195,7 @@ export class UserResolver {
   async locations(
     @AnonSession() session: Session,
     @Parent() user: User,
-    @Args({
-      name: 'input',
-      type: () => LocationListInput,
-      defaultValue: LocationListInput.defaultVal,
-    })
-    input: LocationListInput,
+    @ListArg(LocationListInput) input: LocationListInput,
     @Loader(LocationLoader) locations: LoaderOf<LocationLoader>
   ): Promise<SecuredLocationList> {
     const list = await this.userService.listLocations(user.id, input, session);
