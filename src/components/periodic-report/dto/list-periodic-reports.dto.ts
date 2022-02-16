@@ -1,4 +1,5 @@
-import { InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { stripIndent } from 'common-tags';
 import {
   ID,
   PaginatedList,
@@ -14,6 +15,13 @@ export class PeriodicReportListInput extends SortablePaginationInput<
 >({
   defaultSort: 'end',
 }) {
+  @Field(() => ReportType, {
+    description: stripIndent`
+      Limit reports to this type.
+      Not applicable in fields for concrete report types.
+    `,
+    nullable: true,
+  })
   readonly type?: ReportType;
 
   readonly parent?: ID;
