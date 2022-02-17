@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { stripIndent } from 'common-tags';
-import { node, Query, relation } from 'cypher-query-builder';
+import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   generateId,
@@ -96,22 +96,29 @@ export class ProductProgressRepository {
     return result;
   }
 
-  async readAllProgressReportsByReport(reportId: ID) {
+  async readAllProgressReportsForManyReports(reportIds: ID[]) {
     const result = await this.db
       .query()
       .match([
-        [
-          node('eng', 'Engagement'),
-          relation('out', '', 'report', ACTIVE),
-          node('report', 'ProgressReport', { id: reportId }),
-        ],
-        [
-          node('eng'),
-          relation('out', '', 'product', ACTIVE),
-          node('product', 'Product'),
-        ],
+        node('eng', 'Engagement'),
+        relation('out', '', 'report', ACTIVE),
+        node('report', 'ProgressReport'),
       ])
-      .apply(this.hydrateAll())
+      .where({ 'report.id': inArray(reportIds) })
+      .subQuery(['eng', 'report'], (sub) =>
+        sub
+          .match([
+            node('eng'),
+            relation('out', '', 'product', ACTIVE),
+            node('product', 'Product'),
+          ])
+          .subQuery(['report', 'product'], this.hydrateAll())
+          .return(collect('dto').as('progressList'))
+      )
+      .return<{ reportId: ID; progressList: UnsecuredProductProgress[] }>([
+        'report.id as reportId',
+        'progressList',
+      ])
       .run();
     return result;
   }

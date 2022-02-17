@@ -1,9 +1,6 @@
 import { Injectable, Scope } from '@nestjs/common';
 import { ID } from '../../common';
-import {
-  OrderedNestDataLoader,
-  OrderedNestDataLoaderOptions,
-} from '../../core';
+import { LoaderOptionsOf, OrderedNestDataLoader } from '../../core';
 import { FetchedSummaries } from './dto';
 import { ProgressSummaryRepository } from './progress-summary.repository';
 
@@ -13,7 +10,7 @@ export class ProgressSummaryLoader extends OrderedNestDataLoader<FetchedSummarie
     super();
   }
 
-  getOptions(): OrderedNestDataLoaderOptions<FetchedSummaries, ID, ID> {
+  getOptions(): LoaderOptionsOf<ProgressSummaryLoader> {
     return {
       ...super.getOptions(),
       propertyKey: 'reportId',

@@ -3,6 +3,7 @@ import {
   ID,
   InputException,
   isIdLike,
+  mapFromList,
   Sensitivity,
   Session,
   UnauthorizedException,
@@ -26,15 +27,32 @@ export class ProductProgressService {
     private readonly repo: ProductProgressRepository
   ) {}
 
-  async readAllByReport(
-    report: ProgressReport,
+  async readAllForManyReports(
+    reports: readonly ProgressReport[],
     session: Session
-  ): Promise<readonly ProductProgress[]> {
-    const progress = await this.repo.readAllProgressReportsByReport(report.id);
-    return await this.secureAll(
-      progress,
-      addScope(session, report.scope),
-      report.sensitivity
+  ) {
+    if (reports.length === 0) {
+      return [];
+    }
+    const reportMap = mapFromList(reports, (r) => [r.id, r]);
+    const progressForManyReports =
+      await this.repo.readAllProgressReportsForManyReports(
+        reports.map((report) => report.id)
+      );
+    return await Promise.all(
+      progressForManyReports.map(async ({ reportId, progressList }) => {
+        const report = reportMap[reportId];
+        const progress = await Promise.all(
+          progressList.map((progress) =>
+            this.secure(
+              progress,
+              addScope(session, report.scope),
+              report.sensitivity
+            )
+          )
+        );
+        return { report, progress };
+      })
     );
   }
 
