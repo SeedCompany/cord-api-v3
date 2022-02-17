@@ -1,5 +1,12 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
+import {
+  AnonSession,
+  ID,
+  IdArg,
+  ListArg,
+  LoggedInSession,
+  Session,
+} from '../../common';
 import { Loader, LoaderOf } from '../../core';
 import { EthnoArtLoader, EthnoArtService } from '../ethno-art';
 import {
@@ -34,12 +41,7 @@ export class SongResolver {
   })
   async songs(
     @AnonSession() session: Session,
-    @Args({
-      name: 'input',
-      type: () => SongListInput,
-      defaultValue: SongListInput.defaultVal,
-    })
-    input: SongListInput,
+    @ListArg(SongListInput) input: SongListInput,
     @Loader(EthnoArtLoader) arts: LoaderOf<EthnoArtLoader>
   ): Promise<SongListOutput> {
     const list = await this.ethnoArts.list(input, session);

@@ -8,7 +8,14 @@ import {
 } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { URL } from 'url';
-import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
+import {
+  AnonSession,
+  ID,
+  IdArg,
+  ListArg,
+  LoggedInSession,
+  Session,
+} from '../../common';
 import { Loader, LoaderOf } from '../../core';
 import { User, UserLoader } from '../user';
 import {
@@ -63,12 +70,7 @@ export class FileResolver {
   async children(
     @AnonSession() session: Session,
     @Parent() node: File,
-    @Args({
-      name: 'input',
-      type: () => FileListInput,
-      defaultValue: FileListInput.defaultVal,
-    })
-    input: FileListInput
+    @ListArg(FileListInput) input: FileListInput
   ): Promise<FileListOutput> {
     return await this.service.listChildren(node, input, session);
   }

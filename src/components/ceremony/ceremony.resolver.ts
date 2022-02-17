@@ -1,5 +1,12 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
+import {
+  AnonSession,
+  ID,
+  IdArg,
+  ListArg,
+  LoggedInSession,
+  Session,
+} from '../../common';
 import { Loader, LoaderOf } from '../../core';
 import { CeremonyLoader, CeremonyService } from '../ceremony';
 import {
@@ -29,12 +36,7 @@ export class CeremonyResolver {
   })
   async ceremonies(
     @AnonSession() session: Session,
-    @Args({
-      name: 'input',
-      type: () => CeremonyListInput,
-      defaultValue: CeremonyListInput.defaultVal,
-    })
-    input: CeremonyListInput,
+    @ListArg(CeremonyListInput) input: CeremonyListInput,
     @Loader(CeremonyLoader) ceremonies: LoaderOf<CeremonyLoader>
   ): Promise<CeremonyListOutput> {
     const list = await this.service.list(input, session);

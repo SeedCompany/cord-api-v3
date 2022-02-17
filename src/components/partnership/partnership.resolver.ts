@@ -8,6 +8,7 @@ import {
 } from '@nestjs/graphql';
 import {
   AnonSession,
+  ListArg,
   LoggedInSession,
   mapSecuredValue,
   SecuredDateRange,
@@ -103,12 +104,7 @@ export class PartnershipResolver {
   })
   async partnerships(
     @AnonSession() session: Session,
-    @Args({
-      name: 'input',
-      type: () => PartnershipListInput,
-      defaultValue: PartnershipListInput.defaultVal,
-    })
-    input: PartnershipListInput,
+    @ListArg(PartnershipListInput) input: PartnershipListInput,
     @Loader(PartnershipLoader) partnerships: LoaderOf<PartnershipLoader>
   ): Promise<PartnershipListOutput> {
     const list = await this.service.list(input, session);

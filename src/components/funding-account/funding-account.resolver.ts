@@ -1,5 +1,12 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
+import {
+  AnonSession,
+  ID,
+  IdArg,
+  ListArg,
+  LoggedInSession,
+  Session,
+} from '../../common';
 import { Loader, LoaderOf } from '../../core';
 import {
   CreateFundingAccountInput,
@@ -34,12 +41,7 @@ export class FundingAccountResolver {
   })
   async fundingAccounts(
     @AnonSession() session: Session,
-    @Args({
-      name: 'input',
-      type: () => FundingAccountListInput,
-      defaultValue: FundingAccountListInput.defaultVal,
-    })
-    input: FundingAccountListInput,
+    @ListArg(FundingAccountListInput) input: FundingAccountListInput,
     @Loader(FundingAccountLoader)
     fundingAccounts: LoaderOf<FundingAccountLoader>
   ): Promise<FundingAccountListOutput> {

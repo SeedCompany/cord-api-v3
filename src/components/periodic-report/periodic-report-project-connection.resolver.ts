@@ -1,5 +1,5 @@
-import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { AnonSession, Session } from '../../common';
+import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { AnonSession, ListArg, Session } from '../../common';
 import { Loader, LoaderOf } from '../../core';
 import {
   PeriodicReportLoader,
@@ -22,12 +22,7 @@ export class PeriodicReportProjectConnectionResolver {
     @AnonSession() session: Session,
     @Parent()
     project: Project,
-    @Args({
-      name: 'input',
-      type: () => PeriodicReportListInput,
-      defaultValue: PeriodicReportListInput.defaultVal,
-    })
-    input: PeriodicReportListInput,
+    @ListArg(PeriodicReportListInput) input: PeriodicReportListInput,
     @Loader(PeriodicReportLoader)
     periodicReports: LoaderOf<PeriodicReportLoader>
   ): Promise<SecuredPeriodicReportList> {
@@ -45,12 +40,7 @@ export class PeriodicReportProjectConnectionResolver {
   async narrativeReports(
     @AnonSession() session: Session,
     @Parent() project: Project,
-    @Args({
-      name: 'input',
-      type: () => PeriodicReportListInput,
-      defaultValue: PeriodicReportListInput.defaultVal,
-    })
-    input: PeriodicReportListInput,
+    @ListArg(PeriodicReportListInput) input: PeriodicReportListInput,
     @Loader(PeriodicReportLoader)
     periodicReports: LoaderOf<PeriodicReportLoader>
   ): Promise<SecuredPeriodicReportList> {

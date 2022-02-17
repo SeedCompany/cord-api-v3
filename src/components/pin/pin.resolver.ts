@@ -2,6 +2,7 @@ import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import {
   ID,
   IdArg,
+  ListArg,
   LoggedInSession,
   NotImplementedException,
   Session,
@@ -53,12 +54,7 @@ export class PinResolver {
   // })
   async list(
     @LoggedInSession() _session: Session,
-    @Args({
-      name: 'input',
-      type: () => PinnedListInput,
-      defaultValue: PinnedListInput.defaultVal,
-    })
-    _input: PinnedListInput
+    @ListArg(PinnedListInput) _input: PinnedListInput
   ): Promise<PinnedListOutput> {
     throw new NotImplementedException();
   }

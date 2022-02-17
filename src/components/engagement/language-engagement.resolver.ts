@@ -1,6 +1,7 @@
-import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import {
   AnonSession,
+  ListArg,
   mapSecuredValue,
   Session,
   viewOfChangeset,
@@ -33,16 +34,11 @@ export class LanguageEngagementResolver {
     @Parent() engagement: LanguageEngagement,
     @AnonSession() session: Session,
     @Loader(ProductLoader) products: LoaderOf<ProductLoader>,
-    @Args({
-      name: 'input',
-      type: () => ProductListInput,
-      nullable: true,
-    })
-    input?: ProductListInput
+    @ListArg(ProductListInput) input: ProductListInput
   ): Promise<SecuredProductList> {
     const list = await this.engagements.listProducts(
       engagement,
-      input || ProductListInput.defaultVal,
+      input,
       session
     );
     products.primeAll(list.items);

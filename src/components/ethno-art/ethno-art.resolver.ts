@@ -1,5 +1,12 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
+import {
+  AnonSession,
+  ID,
+  IdArg,
+  ListArg,
+  LoggedInSession,
+  Session,
+} from '../../common';
 import { Loader, LoaderOf } from '../../core';
 import {
   DeleteEthnoArtOutput,
@@ -35,12 +42,7 @@ export class EthnoArtResolver {
   })
   async ethnoArts(
     @AnonSession() session: Session,
-    @Args({
-      name: 'input',
-      type: () => EthnoArtListInput,
-      defaultValue: EthnoArtListInput.defaultVal,
-    })
-    input: EthnoArtListInput,
+    @ListArg(EthnoArtListInput) input: EthnoArtListInput,
     @Loader(EthnoArtLoader) ethnoArts: LoaderOf<EthnoArtLoader>
   ): Promise<EthnoArtListOutput> {
     const list = await this.ethnoArtService.list(input, session);

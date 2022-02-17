@@ -1,5 +1,12 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
+import {
+  AnonSession,
+  ID,
+  IdArg,
+  ListArg,
+  LoggedInSession,
+  Session,
+} from '../../common';
 import { Loader, LoaderOf } from '../../core';
 import {
   CreateFilmInput,
@@ -32,12 +39,7 @@ export class FilmResolver {
     description: 'Look up films',
   })
   async films(
-    @Args({
-      name: 'input',
-      type: () => FilmListInput,
-      defaultValue: FilmListInput.defaultVal,
-    })
-    input: FilmListInput,
+    @ListArg(FilmListInput) input: FilmListInput,
     @Loader(FilmLoader) films: LoaderOf<FilmLoader>,
     @AnonSession() session: Session
   ): Promise<FilmListOutput> {

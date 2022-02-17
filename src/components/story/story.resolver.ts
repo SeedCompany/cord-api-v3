@@ -1,5 +1,12 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
+import {
+  AnonSession,
+  ID,
+  IdArg,
+  ListArg,
+  LoggedInSession,
+  Session,
+} from '../../common';
 import { Loader, LoaderOf } from '../../core';
 import {
   CreateStoryInput,
@@ -33,12 +40,7 @@ export class StoryResolver {
   })
   async stories(
     @AnonSession() session: Session,
-    @Args({
-      name: 'input',
-      type: () => StoryListInput,
-      defaultValue: StoryListInput.defaultVal,
-    })
-    input: StoryListInput,
+    @ListArg(StoryListInput) input: StoryListInput,
     @Loader(StoryLoader) stories: LoaderOf<StoryLoader>
   ): Promise<StoryListOutput> {
     const list = await this.storyService.list(input, session);

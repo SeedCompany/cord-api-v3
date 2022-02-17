@@ -10,6 +10,7 @@ import {
   AnonSession,
   ID,
   IdArg,
+  ListArg,
   LoggedInSession,
   mapSecuredValue,
   Session,
@@ -49,12 +50,7 @@ export class FieldRegionResolver {
   })
   async fieldRegions(
     @AnonSession() session: Session,
-    @Args({
-      name: 'input',
-      type: () => FieldRegionListInput,
-      defaultValue: FieldRegionListInput.defaultVal,
-    })
-    input: FieldRegionListInput,
+    @ListArg(FieldRegionListInput) input: FieldRegionListInput,
     @Loader(FieldRegionLoader) fieldRegions: LoaderOf<FieldRegionLoader>
   ): Promise<FieldRegionListOutput> {
     const list = await this.fieldRegionService.list(input, session);
