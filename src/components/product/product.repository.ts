@@ -119,13 +119,13 @@ export class ProductRepository extends CommonRepository {
       .run();
   }
 
-  async listIdsWithPnpIndexes(engagementId: ID) {
+  async listIdsWithPnpIndexes(engagementId: ID, type?: string) {
     return await this.db
       .query()
       .match([
         node('engagement', 'Engagement', { id: engagementId }),
         relation('out', '', 'product', ACTIVE),
-        node('node', 'Product'),
+        node('node', ['Product', ...(type ? [type] : [])]),
       ])
       .where({ 'node.pnpIndex': not(isNull()) })
       .return<{ id: ID; pnpIndex: number }>([
