@@ -10,9 +10,11 @@ import {
   UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../core';
+import { ifDiff } from '../../core/database/changes';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
+import { isScriptureEqual } from '../scripture/books';
 import {
   CreateStory,
   Story,
@@ -112,7 +114,13 @@ export class StoryService {
 
   async update(input: UpdateStory, session: Session): Promise<Story> {
     const story = await this.readOne(input.id, session);
-    const changes = this.repo.getActualChanges(story, input);
+    const changes = {
+      ...this.repo.getActualChanges(story, input),
+      scriptureReferences: ifDiff(isScriptureEqual)(
+        input.scriptureReferences,
+        story.scriptureReferences.value
+      ),
+    };
     await this.authorizationService.verifyCanEditChanges(Story, story, changes);
     const { scriptureReferences, ...simpleChanges } = changes;
 

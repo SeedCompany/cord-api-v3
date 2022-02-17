@@ -10,10 +10,12 @@ import {
   UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../core';
+import { ifDiff } from '../../core/database/changes';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { LiteracyMaterial } from '../literacy-material/dto';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
+import { isScriptureEqual } from '../scripture/books';
 import { Song } from '../song/dto';
 import {
   CreateEthnoArt,
@@ -107,7 +109,14 @@ export class EthnoArtService {
   async update(input: UpdateEthnoArt, session: Session): Promise<EthnoArt> {
     const ethnoArt = await this.readOne(input.id, session);
 
-    const changes = this.repo.getActualChanges(ethnoArt, input);
+    const changes = {
+      ...this.repo.getActualChanges(ethnoArt, input),
+      scriptureReferences: ifDiff(isScriptureEqual)(
+        input.scriptureReferences,
+        ethnoArt.scriptureReferences.value
+      ),
+    };
+
     await this.authorizationService.verifyCanEditChanges(
       EthnoArt,
       ethnoArt,

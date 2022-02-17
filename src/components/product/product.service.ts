@@ -14,10 +14,11 @@ import {
   UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger, ResourceResolver } from '../../core';
-import { isSame } from '../../core/database/changes';
+import { compareNullable, ifDiff, isSame } from '../../core/database/changes';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { ScriptureRange } from '../scripture';
+import { isScriptureEqual } from '../scripture/books';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
   getTotalVerseEquivalents,
@@ -416,6 +417,10 @@ export class ProductService {
         })
           ? input.unspecifiedScripture
           : undefined,
+      scriptureReferences: ifDiff(isScriptureEqual)(
+        input.scriptureReferences,
+        current.scriptureReferences
+      ),
     };
     if (
       changes.unspecifiedScripture !== undefined ||
@@ -511,6 +516,14 @@ export class ProductService {
         input,
         partialChanges
       ),
+      scriptureReferencesOverride:
+        input.scriptureReferencesOverride !== undefined &&
+        !compareNullable(isScriptureEqual)(
+          input.scriptureReferencesOverride,
+          current.scriptureReferencesOverride
+        )
+          ? input.scriptureReferencesOverride
+          : undefined,
     };
     if (changes.scriptureReferencesOverride !== undefined) {
       const scripture =

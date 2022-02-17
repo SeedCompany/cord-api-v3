@@ -100,7 +100,12 @@ export const labelOfScriptureRanges = (refs: readonly ScriptureRange[]) => {
  */
 export const mergeScriptureRanges = (
   ranges: readonly ScriptureRange[]
-): readonly ScriptureRange[] => {
+): readonly ScriptureRange[] =>
+  mergeScriptureRangesToMinimalIds(ranges).map(ScriptureRange.fromIds);
+
+export const mergeScriptureRangesToMinimalIds = (
+  ranges: readonly ScriptureRange[]
+) => {
   // Adapted from Luxon's Interval.merge logic
   const [found, final] = ranges
     .map(ScriptureRange.fromReferences)
@@ -131,5 +136,5 @@ export const mergeScriptureRanges = (
   if (final) {
     found.push(final);
   }
-  return found.map(ScriptureRange.fromIds);
+  return found;
 };

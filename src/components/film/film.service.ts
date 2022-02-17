@@ -11,8 +11,10 @@ import {
   UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../core';
+import { ifDiff } from '../../core/database/changes';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { isScriptureEqual } from '../scripture/books';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
   CreateFilm,
@@ -114,7 +116,13 @@ export class FilmService {
 
   async update(input: UpdateFilm, session: Session): Promise<Film> {
     const film = await this.readOne(input.id, session);
-    const changes = this.repo.getActualChanges(film, input);
+    const changes = {
+      ...this.repo.getActualChanges(film, input),
+      scriptureReferences: ifDiff(isScriptureEqual)(
+        input.scriptureReferences,
+        film.scriptureReferences.value
+      ),
+    };
     await this.authorizationService.verifyCanEditChanges(Film, film, changes);
     const { scriptureReferences, ...simpleChanges } = changes;
 
