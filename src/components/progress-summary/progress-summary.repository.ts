@@ -1,24 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { inArray, node, relation } from 'cypher-query-builder';
 import { ID } from '../../common';
 import { DtoRepository } from '../../core';
 import { ACTIVE, merge } from '../../core/database/query';
 import { ProgressReport } from '../periodic-report/dto';
-import { ProgressSummary, SummaryPeriod } from './dto';
+import { FetchedSummaries, ProgressSummary, SummaryPeriod } from './dto';
 
 @Injectable()
 export class ProgressSummaryRepository extends DtoRepository(ProgressSummary) {
-  async readOne(
-    reportId: ID,
-    period: SummaryPeriod
-  ): Promise<ProgressSummary | undefined> {
-    const result = await this.db
+  async readMany(reportIds: readonly ID[]) {
+    const query = this.db
       .query()
-      .match([
-        node('report', 'ProgressReport', { id: reportId }),
-        relation('out', '', 'summary', ACTIVE),
-        node('ps', 'ProgressSummary', { period }),
-      ])
+      .matchNode('report', 'ProgressReport')
+      .where({ 'report.id': inArray(reportIds.slice()) })
       .subQuery('report', (sub) =>
         sub
           .match([
@@ -45,14 +39,20 @@ export class ProgressSummaryRepository extends DtoRepository(ProgressSummary) {
             'sum(tve.value) as totalVerseEquivalents',
           ])
       )
-      .return<{ dto: ProgressSummary }>(
+      .optionalMatch([
+        node('report'),
+        relation('out', '', 'summary', ACTIVE),
+        node('ps', 'ProgressSummary'),
+      ])
+      .return<{ dto: FetchedSummaries }>(
         merge('ps', {
+          reportId: 'report.id',
           totalVerses: 'totalVerses',
           totalVerseEquivalents: 'totalVerseEquivalents',
         }).as('dto')
       )
-      .first();
-    return result?.dto;
+      .map('dto');
+    return await query.run();
   }
 
   async save(

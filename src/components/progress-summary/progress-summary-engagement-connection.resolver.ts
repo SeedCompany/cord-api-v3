@@ -1,17 +1,14 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { AnonSession, fiscalQuarter, fiscalYear, Session } from '../../common';
+import { Loader, LoaderOf } from '../../core';
 import { LanguageEngagement } from '../engagement/dto';
 import { PeriodicReportService, ReportType } from '../periodic-report';
-import { SummaryPeriod } from './dto';
 import { PnpData } from './dto/pnp-data.dto';
-import { ProgressSummaryRepository } from './progress-summary.repository';
+import { ProgressSummaryLoader } from './progress-summary.loader';
 
 @Resolver(LanguageEngagement)
 export class ProgressSummaryEngagementConnectionResolver {
-  constructor(
-    private readonly repo: ProgressSummaryRepository,
-    private readonly reports: PeriodicReportService
-  ) {}
+  constructor(private readonly reports: PeriodicReportService) {}
 
   @ResolveField(() => PnpData, {
     nullable: true,
@@ -20,6 +17,7 @@ export class ProgressSummaryEngagementConnectionResolver {
   })
   async pnpData(
     @Parent() engagement: LanguageEngagement,
+    @Loader(ProgressSummaryLoader) summaries: LoaderOf<ProgressSummaryLoader>,
     @AnonSession() session: Session
   ): Promise<PnpData | undefined> {
     const report = await this.reports.getLatestReportSubmitted(
@@ -31,10 +29,7 @@ export class ProgressSummaryEngagementConnectionResolver {
       return undefined;
     }
 
-    const summary = await this.repo.readOne(
-      report.id,
-      SummaryPeriod.Cumulative
-    );
+    const summary = (await summaries.load(report.id)).Cumulative;
     if (!summary) {
       return undefined;
     }
