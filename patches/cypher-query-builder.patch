@@ -1,3 +1,23 @@
+diff --git a/dist/cjs5.js b/dist/cjs5.js
+index 2956424bcab153c6d7a6f24f80ae7aac6a82d62a..108858d5ac65801739a3f022b07113ebb0ef68d9 100644
+--- a/dist/cjs5.js
++++ b/dist/cjs5.js
+@@ -1006,10 +1006,13 @@ var comparisions = {
+ };
+ 
+ function compare(operator, value, variable, paramName) {
++  var applied = new Map();
+   return function (params, name) {
+     var baseParamName = paramName || _last(name.split('.'));
+-
+-    var parts = [name, operator, variable ? value : params.addParam(value, baseParamName)];
++    if (!variable && !applied.has(params)) {
++      applied.set(params, params.addParam(value, baseParamName));
++    }
++    var parts = [name, operator, variable ? value : applied.get(params)];
+     return parts.join(' ');
+   };
+ }
 diff --git a/dist/typings/builder.d.ts b/dist/typings/builder.d.ts
 index 1c17b5c3f0127cd5aaf03185120e7f72321e2805..b91875030036d20f47d4dda0d9e3eeb22bb9949d 100644
 --- a/dist/typings/builder.d.ts
