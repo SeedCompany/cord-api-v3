@@ -363,38 +363,7 @@ export class ProductService {
     currentProduct ??= asProductType(DirectScriptureProduct)(
       await this.readOneUnsecured(input.id, session)
     );
-
-    let changes = this.repo.getActualDirectChanges(currentProduct, input);
-    changes = {
-      ...changes,
-      steps: this.restrictStepsChange(currentProduct, changes),
-      progressTarget: this.restrictProgressTargetChange(
-        currentProduct,
-        input,
-        changes
-      ),
-      unspecifiedScripture:
-        input.unspecifiedScripture !== undefined &&
-        !isEqual(currentProduct.unspecifiedScripture, {
-          ...input.unspecifiedScripture, // spread to not compare class prototype
-        })
-          ? input.unspecifiedScripture
-          : undefined,
-    };
-    if (
-      changes.unspecifiedScripture !== undefined ||
-      changes.scriptureReferences !== undefined
-    ) {
-      changes = {
-        ...changes,
-        totalVerses: changes.unspecifiedScripture
-          ? changes.unspecifiedScripture.totalVerses
-          : getTotalVerses(...(changes.scriptureReferences ?? [])),
-        totalVerseEquivalents: changes.unspecifiedScripture
-          ? getVerseEquivalentsFromUnspecified(changes.unspecifiedScripture)
-          : getTotalVerseEquivalents(...(changes.scriptureReferences ?? [])),
-      };
-    }
+    const changes = this.getDirectProductChanges(input, currentProduct);
 
     await this.authorizationService.verifyCanEditChanges(
       Product,
@@ -427,6 +396,44 @@ export class ProductService {
     );
   }
 
+  private getDirectProductChanges(
+    input: UpdateDirectScriptureProduct,
+    current: UnsecuredDto<DirectScriptureProduct>
+  ) {
+    const partialChanges = this.repo.getActualDirectChanges(current, input);
+    let changes = {
+      ...partialChanges,
+      steps: this.restrictStepsChange(current, partialChanges),
+      progressTarget: this.restrictProgressTargetChange(
+        current,
+        input,
+        partialChanges
+      ),
+      unspecifiedScripture:
+        input.unspecifiedScripture !== undefined &&
+        !isEqual(current.unspecifiedScripture, {
+          ...input.unspecifiedScripture, // spread to not compare class prototype
+        })
+          ? input.unspecifiedScripture
+          : undefined,
+    };
+    if (
+      changes.unspecifiedScripture !== undefined ||
+      changes.scriptureReferences !== undefined
+    ) {
+      changes = {
+        ...changes,
+        totalVerses: changes.unspecifiedScripture
+          ? changes.unspecifiedScripture.totalVerses
+          : getTotalVerses(...(changes.scriptureReferences ?? [])),
+        totalVerseEquivalents: changes.unspecifiedScripture
+          ? getVerseEquivalentsFromUnspecified(changes.unspecifiedScripture)
+          : getTotalVerseEquivalents(...(changes.scriptureReferences ?? [])),
+      };
+    }
+    return changes;
+  }
+
   async updateDerivative(
     input: UpdateDerivativeScriptureProduct,
     session: Session,
@@ -436,37 +443,7 @@ export class ProductService {
       await this.readOneUnsecured(input.id, session)
     );
 
-    let changes = this.repo.getActualDerivativeChanges(
-      // getChanges doesn't care if current is secured or not.
-      // Applying this type so that the SetChangeType<> overrides still apply
-      currentProduct as unknown as DerivativeScriptureProduct,
-      input
-    );
-    changes = {
-      ...changes,
-      steps: this.restrictStepsChange(currentProduct, changes),
-      // This needs to be manually checked for changes as the existing value
-      // is the object not the ID.
-      produces:
-        currentProduct.produces.id !== input.produces
-          ? input.produces
-          : undefined,
-      progressTarget: this.restrictProgressTargetChange(
-        currentProduct,
-        input,
-        changes
-      ),
-    };
-    if (changes.scriptureReferencesOverride !== undefined) {
-      const scripture =
-        changes.scriptureReferencesOverride ??
-        currentProduct.produces.scriptureReferences.value;
-      changes = {
-        ...changes,
-        totalVerses: getTotalVerses(...scripture),
-        totalVerseEquivalents: getTotalVerseEquivalents(...scripture),
-      };
-    }
+    const changes = this.getDerivativeProductChanges(input, currentProduct);
 
     await this.authorizationService.verifyCanEditChanges(
       Product,
@@ -510,6 +487,42 @@ export class ProductService {
       productUpdatedScriptureReferences,
       simpleChanges
     );
+  }
+
+  private getDerivativeProductChanges(
+    input: UpdateDerivativeScriptureProduct,
+    current: UnsecuredDto<DerivativeScriptureProduct>
+  ) {
+    const partialChanges = this.repo.getActualDerivativeChanges(
+      // getChanges doesn't care if current is secured or not.
+      // Applying this type so that the SetChangeType<> overrides still apply
+      current as unknown as DerivativeScriptureProduct,
+      input
+    );
+    let changes = {
+      ...partialChanges,
+      steps: this.restrictStepsChange(current, partialChanges),
+      // This needs to be manually checked for changes as the existing value
+      // is the object not the ID.
+      produces:
+        current.produces.id !== input.produces ? input.produces : undefined,
+      progressTarget: this.restrictProgressTargetChange(
+        current,
+        input,
+        partialChanges
+      ),
+    };
+    if (changes.scriptureReferencesOverride !== undefined) {
+      const scripture =
+        changes.scriptureReferencesOverride ??
+        current.produces.scriptureReferences.value;
+      changes = {
+        ...changes,
+        totalVerses: getTotalVerses(...scripture),
+        totalVerseEquivalents: getTotalVerseEquivalents(...scripture),
+      };
+    }
+    return changes;
   }
 
   async updateOther(input: UpdateOtherProduct, session: Session) {
