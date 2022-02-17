@@ -76,22 +76,29 @@ export class ProductProgressRepository {
     return result;
   }
 
-  async readAllProgressReportsByProduct(productId: ID) {
+  async readAllProgressReportsForManyProducts(productIds: ID[]) {
     const result = await this.db
       .query()
       .match([
-        [
-          node('eng', 'Engagement'),
-          relation('out', '', 'product', ACTIVE),
-          node('product', 'Product', { id: productId }),
-        ],
-        [
-          node('eng'),
-          relation('out', '', 'report', ACTIVE),
-          node('report', 'ProgressReport'),
-        ],
+        node('eng'),
+        relation('out', '', 'product', ACTIVE),
+        node('product', 'Product'),
       ])
-      .apply(this.hydrateAll())
+      .where({ 'product.id': inArray(productIds) })
+      .subQuery(['eng', 'product'], (sub) =>
+        sub
+          .match([
+            node('eng', 'Engagement'),
+            relation('out', '', 'report', ACTIVE),
+            node('report', 'ProgressReport'),
+          ])
+          .subQuery(['report', 'product'], this.hydrateAll())
+          .return(collect('dto').as('progressList'))
+      )
+      .return<{ productId: ID; progressList: UnsecuredProductProgress[] }>([
+        'product.id as productId',
+        'progressList',
+      ])
       .run();
     return result;
   }

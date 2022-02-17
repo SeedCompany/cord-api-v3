@@ -56,17 +56,29 @@ export class ProductProgressService {
     );
   }
 
-  async readAllByProduct(
-    product: Product,
-    session: Session
-  ): Promise<readonly ProductProgress[]> {
-    const progress = await this.repo.readAllProgressReportsByProduct(
-      product.id
-    );
-    return await this.secureAll(
-      progress,
-      addScope(session, product.scope),
-      product.sensitivity
+  async readAllForManyProducts(products: readonly Product[], session: Session) {
+    if (products.length === 0) {
+      return [];
+    }
+    const productMap = mapFromList(products, (r) => [r.id, r]);
+    const progressForManyProducts =
+      await this.repo.readAllProgressReportsForManyProducts(
+        products.map((product) => product.id)
+      );
+    return await Promise.all(
+      progressForManyProducts.map(async ({ productId, progressList }) => {
+        const product = productMap[productId];
+        const progress = await Promise.all(
+          progressList.map((progress) =>
+            this.secure(
+              progress,
+              addScope(session, product.scope),
+              product.sensitivity
+            )
+          )
+        );
+        return { product, progress };
+      })
     );
   }
 
