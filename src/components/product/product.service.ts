@@ -712,7 +712,9 @@ export class ProductService {
     session: Session
   ): Promise<ProductListOutput> {
     const results = await this.repo.list(input, session);
-    return await mapListResults(results, (id) => this.readOne(id, session));
+    return await mapListResults(results, (row) =>
+      this.secure(this.mapDbRowToDto(row), session)
+    );
   }
 
   async loadProductIdsForBookAndVerse(

@@ -507,7 +507,7 @@ export class ProductRepository extends CommonRepository {
       ])
       .apply(productListFilter(filter))
       .apply(sorting(Product, input))
-      .apply(paginate(input))
+      .apply(paginate(input, this.hydrate(session)))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }
