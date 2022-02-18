@@ -65,7 +65,7 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
       .query()
       .apply(matchRequestingUser(session))
       .matchNode('node', 'FieldZone')
-      .where({ 'node.id': inArray(ids.slice()) })
+      .where({ 'node.id': inArray(ids) })
       .apply(this.hydrate())
       .map('dto')
       .run();

@@ -105,7 +105,7 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
     return await this.db
       .query()
       .matchNode('node', 'ProjectMember')
-      .where({ 'node.id': inArray(ids.slice()) })
+      .where({ 'node.id': inArray(ids) })
       .apply(this.hydrate(session))
       .map('dto')
       .run();

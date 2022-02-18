@@ -53,7 +53,7 @@ export class StoryRepository extends DtoRepository(Story) {
       .query()
       .apply(matchRequestingUser(session))
       .matchNode('node', 'Story')
-      .where({ 'node.id': inArray(ids.slice()) })
+      .where({ 'node.id': inArray(ids) })
       .apply(this.hydrate())
       .map('dto')
       .run();

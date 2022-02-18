@@ -162,7 +162,7 @@ export class ProductRepository extends CommonRepository {
         relation('out', '', 'name', ACTIVE),
         node('prop', 'Property'),
       ])
-      .where({ 'prop.value': inArray([...names]) })
+      .where({ 'prop.value': inArray(names) })
       .return<{ id: ID; name: string }>([
         'producible.id as id',
         'prop.value as name',

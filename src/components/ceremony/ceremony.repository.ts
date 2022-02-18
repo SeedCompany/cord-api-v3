@@ -50,7 +50,7 @@ export class CeremonyRepository extends DtoRepository(Ceremony) {
     return await this.db
       .query()
       .matchNode('node', 'Ceremony')
-      .where({ 'node.id': inArray(ids.slice()) })
+      .where({ 'node.id': inArray(ids) })
       .apply(this.hydrate(session))
       .map('dto')
       .run();

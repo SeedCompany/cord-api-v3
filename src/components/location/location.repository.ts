@@ -80,7 +80,7 @@ export class LocationRepository extends DtoRepository(Location) {
       .query()
       .apply(matchRequestingUser(session))
       .matchNode('node', 'Location')
-      .where({ 'node.id': inArray(ids.slice()) })
+      .where({ 'node.id': inArray(ids) })
       .apply(this.hydrate())
       .map('dto')
       .run();

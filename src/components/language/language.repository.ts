@@ -87,7 +87,7 @@ export class LanguageRepository extends DtoRepository(Language) {
       .query()
       .apply(matchRequestingUser(session))
       .matchNode('node', 'Language')
-      .where({ 'node.id': inArray(ids.slice()) })
+      .where({ 'node.id': inArray(ids) })
       .apply(this.hydrate(session, view))
       .map('dto')
       .run();
@@ -246,7 +246,7 @@ export class LanguageRepository extends DtoRepository(Language) {
           ])
           .where({
             'status.value': inArray(
-              `['${ProjectStatus.InDevelopment}', '${ProjectStatus.Active}']` as any,
+              `['${ProjectStatus.InDevelopment}', '${ProjectStatus.Active}']`,
               true
             ),
           })

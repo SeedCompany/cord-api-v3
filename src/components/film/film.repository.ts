@@ -52,7 +52,7 @@ export class FilmRepository extends DtoRepository(Film) {
       .query()
       .apply(matchRequestingUser(session))
       .matchNode('node', 'Film')
-      .where({ 'node.id': inArray(ids.slice()) })
+      .where({ 'node.id': inArray(ids) })
       .apply(this.hydrate())
       .map('dto')
       .run();

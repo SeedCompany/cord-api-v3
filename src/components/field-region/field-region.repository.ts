@@ -68,7 +68,7 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
       .query()
       .apply(matchRequestingUser(session))
       .matchNode('node', 'FieldRegion')
-      .where({ 'node.id': inArray(ids.slice()) })
+      .where({ 'node.id': inArray(ids) })
       .apply(this.hydrate())
       .map('dto')
       .run();

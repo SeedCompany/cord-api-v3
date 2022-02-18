@@ -121,7 +121,7 @@ export class BudgetRepository extends DtoRepository(Budget) {
         relation('out', '', 'budget', ACTIVE),
         node('node', label),
       ])
-      .where({ 'node.id': inArray(ids.slice()) })
+      .where({ 'node.id': inArray(ids) })
       .apply(matchPropsAndProjectSensAndScopedRoles(session, { view }))
       .apply(matchChangesetAndChangedProps(view?.changeset))
       .return<{ dto: UnsecuredDto<Budget> }>(

@@ -65,7 +65,7 @@ export class OrganizationRepository extends DtoRepository(Organization) {
       .query()
       .apply(matchRequestingUser(session))
       .matchNode('node', 'Organization')
-      .where({ 'node.id': inArray(ids.slice()) })
+      .where({ 'node.id': inArray(ids) })
       .apply(this.hydrate(session))
       .map('dto')
       .run();

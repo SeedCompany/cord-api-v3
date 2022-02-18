@@ -70,7 +70,7 @@ export class ProjectChangeRequestRepository extends DtoRepository(
     return await this.db
       .query()
       .matchNode('node', 'ProjectChangeRequest')
-      .where({ 'node.id': inArray(ids.slice()) })
+      .where({ 'node.id': inArray(ids) })
       .apply(this.hydrate(session))
       .map('dto')
       .run();

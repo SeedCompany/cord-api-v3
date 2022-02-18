@@ -75,7 +75,7 @@ export class FileRepository extends CommonRepository {
     return await this.db
       .query()
       .matchNode('node', 'FileNode')
-      .where({ 'node.id': inArray(ids.slice()) })
+      .where({ 'node.id': inArray(ids) })
       .apply(this.hydrate())
       .map('dto')
       .run();
