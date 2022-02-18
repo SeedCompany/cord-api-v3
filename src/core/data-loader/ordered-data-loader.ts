@@ -21,6 +21,18 @@ export interface OrderedNestDataLoaderOptions<T, Key = ID, CachedKey = Key>
   typeName?: string;
 }
 
+/**
+ * Shortcut to reference options of class name instead of having to duplicate
+ * these generic values.
+ */
+export type LoaderOptionsOf<Factory> = Factory extends NestDataLoader<
+  infer T,
+  infer Key,
+  infer CachedKey
+>
+  ? OrderedNestDataLoaderOptions<T, Key, CachedKey>
+  : never;
+
 export abstract class OrderedNestDataLoader<T, Key = ID, CachedKey = Key>
   implements NestDataLoader<T, Key, CachedKey>
 {

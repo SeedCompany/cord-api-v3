@@ -6,21 +6,26 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { PeriodicReportLoader } from '.';
 import {
+  AnonSession,
   CalendarDate,
   ID,
   IdArg,
+  ListArg,
   LoggedInSession,
   Session,
+  UnauthorizedException,
 } from '../../common';
 import { Loader, LoaderOf } from '../../core';
 import { FileNodeLoader, resolveDefinedFile, SecuredFile } from '../file';
 import {
   IPeriodicReport,
+  PeriodicReportListInput,
+  PeriodicReportListOutput,
   UpdatePeriodicReportInput,
   UploadPeriodicReportInput,
 } from './dto';
+import { PeriodicReportLoader } from './periodic-report.loader';
 import { PeriodicReportService } from './periodic-report.service';
 
 @Resolver(IPeriodicReport)
@@ -36,6 +41,23 @@ export class PeriodicReportResolver {
     @IdArg() id: ID
   ): Promise<IPeriodicReport> {
     return await periodicReports.load(id);
+  }
+
+  @Query(() => PeriodicReportListOutput, {
+    description: 'List of periodic reports',
+  })
+  async periodicReports(
+    @AnonSession() session: Session,
+    @ListArg(PeriodicReportListInput) input: PeriodicReportListInput,
+    @Loader(PeriodicReportLoader) loader: LoaderOf<PeriodicReportLoader>
+  ): Promise<PeriodicReportListOutput> {
+    // Only let admins do this for now.
+    if (!session.roles.includes('global:Administrator')) {
+      throw new UnauthorizedException();
+    }
+    const list = await this.service.list(session, input);
+    loader.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => CalendarDate, {

@@ -58,13 +58,25 @@ export const merge = (...expressions: ExpressionInput[]) => {
 
 export const apoc = {
   map: {
+    /**
+     * Creates an object/map from input list.
+     * @example
+     * fromValues([key1, value1, key2, value2, ...])
+     */
     fromValues: fn1('apoc.map.fromValues'),
   },
   coll: {
     flatten: fn1('apoc.coll.flatten'),
   },
+  convert: {
+    /** Converts Neo4j node to object/map of the node's properties */
+    toMap: fn1('apoc.convert.toMap'),
+  },
 };
 
+/**
+ * Joins each expression given with a `+` character.
+ */
 export const listConcat = (...items: ExpressionInput[]) =>
   exp(
     items

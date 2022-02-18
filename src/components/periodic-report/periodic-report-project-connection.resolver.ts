@@ -26,12 +26,11 @@ export class PeriodicReportProjectConnectionResolver {
     @Loader(PeriodicReportLoader)
     periodicReports: LoaderOf<PeriodicReportLoader>
   ): Promise<SecuredPeriodicReportList> {
-    const list = await this.service.list(
-      project.id,
-      ReportType.Financial,
-      input,
-      session
-    );
+    const list = await this.service.list(session, {
+      ...input,
+      parent: project.id,
+      type: ReportType.Financial,
+    });
     periodicReports.primeAll(list.items);
     return list;
   }
@@ -44,12 +43,11 @@ export class PeriodicReportProjectConnectionResolver {
     @Loader(PeriodicReportLoader)
     periodicReports: LoaderOf<PeriodicReportLoader>
   ): Promise<SecuredPeriodicReportList> {
-    const list = await this.service.list(
-      project.id,
-      ReportType.Narrative,
-      input,
-      session
-    );
+    const list = await this.service.list(session, {
+      ...input,
+      parent: project.id,
+      type: ReportType.Narrative,
+    });
     periodicReports.primeAll(list.items);
     return list;
   }
