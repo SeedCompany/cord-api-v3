@@ -696,8 +696,11 @@ export class ProductService {
     });
   }
 
-  async loadProductIdsByPnpIndex(engagementId: ID) {
-    const productRefs = await this.repo.listIdsWithPnpIndexes(engagementId);
+  async loadProductIdsByPnpIndex(engagementId: ID, typeFilter?: string) {
+    const productRefs = await this.repo.listIdsWithPnpIndexes(
+      engagementId,
+      typeFilter
+    );
     return mapFromList(productRefs, (ref) => [ref.pnpIndex, ref.id]);
   }
 
