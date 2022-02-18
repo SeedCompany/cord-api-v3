@@ -2,7 +2,10 @@ import { sortBy } from 'lodash';
 import { ID, Session } from '../../common';
 import { ILogger, Logger } from '../../core';
 import { ScriptureRange, ScriptureRangeInput } from './dto';
-import { ScriptureReferenceRepository } from './scripture-reference.repository';
+import {
+  DbScriptureReferences,
+  ScriptureReferenceRepository,
+} from './scripture-reference.repository';
 
 export class ScriptureReferenceService {
   constructor(
@@ -27,7 +30,7 @@ export class ScriptureReferenceService {
 
   async update(
     producibleId: ID,
-    scriptureRefs: readonly ScriptureRangeInput[] | undefined,
+    scriptureRefs: readonly ScriptureRangeInput[] | null | undefined,
     options: { isOverriding?: boolean } = {}
   ): Promise<void> {
     if (scriptureRefs === undefined) {
@@ -52,18 +55,9 @@ export class ScriptureReferenceService {
     }
   }
 
-  async list(
-    producibleId: ID,
-    session: Session,
-    options: { isOverriding?: boolean } = {}
-  ): Promise<ScriptureRange[]> {
-    const results = await this.repo.listScriptureRanges(
-      options.isOverriding,
-      producibleId
-    );
-
+  parseList(nodes: DbScriptureReferences) {
     return sortBy(
-      results.map((row) => row.scriptureRanges.properties),
+      nodes.map((row) => row.properties),
       [(range) => range.start, (range) => range.end]
     ).map(ScriptureRange.fromIds);
   }

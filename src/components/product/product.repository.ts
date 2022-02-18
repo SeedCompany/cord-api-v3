@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { oneLine } from 'common-tags';
 import {
   inArray,
   isNull,
@@ -19,7 +20,7 @@ import {
   Session,
   UnsecuredDto,
 } from '../../common';
-import { CommonRepository, OnIndex } from '../../core';
+import { CommonRepository, DatabaseService, OnIndex } from '../../core';
 import { DbChanges, getChanges } from '../../core/database/changes';
 import {
   ACTIVE,
@@ -38,8 +39,10 @@ import {
 } from '../../core/database/query';
 import { BaseNode } from '../../core/database/results';
 import {
+  DbScriptureReferences,
   ScriptureRange,
   ScriptureRangeInput,
+  ScriptureReferenceRepository,
   UnspecifiedScripturePortion,
   UnspecifiedScripturePortionInput,
 } from '../scripture';
@@ -62,6 +65,13 @@ import { productListFilter } from './query.helpers';
 
 @Injectable()
 export class ProductRepository extends CommonRepository {
+  constructor(
+    private readonly scriptureRefs: ScriptureReferenceRepository,
+    db: DatabaseService
+  ) {
+    super(db);
+  }
+
   async readOne(id: ID, session: Session) {
     const query = this.db
       .query()
@@ -185,6 +195,24 @@ export class ProductRepository extends CommonRepository {
           relation('out', '', 'unspecifiedScripture', ACTIVE),
           node('unspecifiedScripture', 'UnspecifiedScripturePortion'),
         ])
+        .subQuery(
+          ['node', 'produces'],
+          this.scriptureRefs.list({
+            relationName: oneLine`
+              CASE WHEN produces <> null
+                THEN "scriptureReferencesOverride"
+                ELSE "scriptureReferences"
+              END
+            `,
+          })
+        )
+        .subQuery(
+          'produces',
+          this.scriptureRefs.list({
+            nodeName: 'produces',
+            outVar: 'producibleScriptureRefs',
+          })
+        )
         .return<{
           dto: Merge<
             Omit<
@@ -193,12 +221,13 @@ export class ProductRepository extends CommonRepository {
                   DerivativeScriptureProduct &
                   OtherProduct
               >,
-              'scriptureReferences' | 'scriptureReferencesOverride'
+              'scriptureReferencesOverride'
             >,
             {
               isOverriding: boolean;
               produces: BaseNode | null;
               unspecifiedScripture: UnspecifiedScripturePortion | null;
+              producibleScriptureRefs: DbScriptureReferences;
             }
           >;
         }>(
@@ -207,6 +236,8 @@ export class ProductRepository extends CommonRepository {
             produces: 'produces',
             unspecifiedScripture:
               'unspecifiedScripture { .book, .totalVerses }',
+            scriptureReferences: 'scriptureReferences',
+            producibleScriptureRefs: 'producibleScriptureRefs',
           }).as('dto')
         );
   }

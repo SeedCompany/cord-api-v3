@@ -1,18 +1,29 @@
 import { Injectable } from '@nestjs/common';
-import { ID, Session } from '../../common';
-import { DtoRepository } from '../../core';
+import { Query } from 'cypher-query-builder';
+import { ID, Session, UnsecuredDto } from '../../common';
+import { DatabaseService, DtoRepository } from '../../core';
 import {
   createNode,
+  matchProps,
   matchRequestingUser,
+  merge,
   paginate,
   permissionsOfNode,
   requestingUser,
   sorting,
 } from '../../core/database/query';
+import { ScriptureReferenceRepository } from '../scripture';
 import { CreateStory, Story, StoryListInput } from './dto';
 
 @Injectable()
 export class StoryRepository extends DtoRepository(Story) {
+  constructor(
+    private readonly scriptureRefs: ScriptureReferenceRepository,
+    db: DatabaseService
+  ) {
+    super(db);
+  }
+
   async create(input: CreateStory, session: Session) {
     const initialProps = {
       name: input.name,
@@ -34,5 +45,17 @@ export class StoryRepository extends DtoRepository(Story) {
       .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
+  }
+
+  protected hydrate() {
+    return (query: Query) =>
+      query
+        .apply(matchProps())
+        .subQuery('node', this.scriptureRefs.list())
+        .return<{ dto: UnsecuredDto<Story> }>(
+          merge('props', {
+            scriptureReferences: 'scriptureReferences',
+          }).as('dto')
+        );
   }
 }

@@ -14,10 +14,13 @@ import {
   Sensitivity,
   SensitivityField,
   ServerException,
+  SetUnsecuredType,
   UnsecuredDto,
 } from '../../../common';
 import { SetChangeType } from '../../../core/database/changes';
 import {
+  DbScriptureReferences,
+  ScriptureRangeInput,
   SecuredScriptureRangesOverride,
   SecuredUnspecifiedScripturePortion,
 } from '../../scripture';
@@ -161,7 +164,7 @@ export class DerivativeScriptureProduct extends Product {
   })
   readonly produces: SecuredProducible & SetChangeType<'produces', ID>;
 
-  @Field({
+  @Field(() => SecuredScriptureRangesOverride, {
     description: stripIndent`
       The \`Producible\` defines a \`scriptureReferences\` list, and this is
       used by default in this product's \`scriptureReferences\` list.
@@ -169,7 +172,12 @@ export class DerivativeScriptureProduct extends Product {
       this property can be set (and read) to "override" the \`producible\`'s list.
     `,
   })
-  readonly scriptureReferencesOverride: SecuredScriptureRangesOverride;
+  readonly scriptureReferencesOverride: SecuredScriptureRangesOverride &
+    SetUnsecuredType<DbScriptureReferences | null> &
+    SetChangeType<
+      'scriptureReferencesOverride',
+      readonly ScriptureRangeInput[] | null
+    >;
 
   @Field({
     description: stripIndent`

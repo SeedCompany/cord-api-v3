@@ -5,8 +5,18 @@ import {
   registerEnumType,
 } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { Resource, SecuredProperty, SecuredProps } from '../../../common';
-import { SecuredScriptureRanges } from '../../scripture/dto';
+import {
+  Resource,
+  SecuredProperty,
+  SecuredProps,
+  SetUnsecuredType,
+} from '../../../common';
+import { SetChangeType } from '../../../core/database/changes';
+import {
+  DbScriptureReferences,
+  ScriptureRangeInput,
+  SecuredScriptureRanges,
+} from '../../scripture';
 
 @InterfaceType({
   description: 'Something that is _producible_ via a Product',
@@ -21,8 +31,10 @@ export abstract class Producible extends Resource {
   static readonly Props: string[] = keysOf<Producible>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Producible>>();
 
-  @Field()
-  readonly scriptureReferences: SecuredScriptureRanges;
+  @Field(() => SecuredScriptureRanges)
+  readonly scriptureReferences: SecuredScriptureRanges &
+    SetUnsecuredType<DbScriptureReferences> &
+    SetChangeType<'scriptureReferences', readonly ScriptureRangeInput[]>;
 }
 
 // Augment this enum with each implementation of Producible

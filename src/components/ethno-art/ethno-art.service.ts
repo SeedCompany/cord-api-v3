@@ -14,7 +14,7 @@ import { ifDiff } from '../../core/database/changes';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { LiteracyMaterial } from '../literacy-material/dto';
-import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
+import { ScriptureReferenceService } from '../scripture';
 import { isScriptureEqual } from '../scripture/books';
 import { Song } from '../song/dto';
 import {
@@ -29,7 +29,7 @@ import { EthnoArtRepository } from './ethno-art.repository';
 export class EthnoArtService {
   constructor(
     @Logger('ethno-art:service') private readonly logger: ILogger,
-    private readonly scriptureRefService: ScriptureReferenceService,
+    private readonly scriptureRefs: ScriptureReferenceService,
     private readonly authorizationService: AuthorizationService,
     private readonly repo: EthnoArtRepository
   ) {}
@@ -49,7 +49,7 @@ export class EthnoArtService {
         throw new ServerException('Failed to create ethno art');
       }
 
-      await this.scriptureRefService.create(
+      await this.scriptureRefs.create(
         result.id,
         input.scriptureReferences,
         session
@@ -86,22 +86,18 @@ export class EthnoArtService {
   ): Promise<EthnoArt> {
     const securedProps = await this.authorizationService.secureProperties(
       EthnoArt,
-      dto,
-      session
-    );
-
-    const scriptureReferences = await this.scriptureRefService.list(
-      dto.id,
+      {
+        ...dto,
+        scriptureReferences: this.scriptureRefs.parseList(
+          dto.scriptureReferences
+        ),
+      },
       session
     );
 
     return {
       ...dto,
       ...securedProps,
-      scriptureReferences: {
-        ...securedProps.scriptureReferences,
-        value: scriptureReferences,
-      },
       canDelete: await this.repo.checkDeletePermission(dto.id, session),
     };
   }
@@ -125,7 +121,7 @@ export class EthnoArtService {
 
     const { scriptureReferences, ...simpleChanges } = changes;
 
-    await this.scriptureRefService.update(input.id, scriptureReferences);
+    await this.scriptureRefs.update(input.id, scriptureReferences);
 
     await this.repo.updateProperties(ethnoArt, simpleChanges);
 
