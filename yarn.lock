@@ -6043,7 +6043,7 @@ cypher-query-builder@6.0.4:
 
 "cypher-query-builder@patch:cypher-query-builder@6.0.4#./patches/cypher-query-builder.patch::locator=cord-api-v3%40workspace%3A.":
   version: 6.0.4
-  resolution: "cypher-query-builder@patch:cypher-query-builder@npm%3A6.0.4#./patches/cypher-query-builder.patch::version=6.0.4&hash=ac6c9b&locator=cord-api-v3%40workspace%3A."
+  resolution: "cypher-query-builder@patch:cypher-query-builder@npm%3A6.0.4#./patches/cypher-query-builder.patch::version=6.0.4&hash=aa989e&locator=cord-api-v3%40workspace%3A."
   dependencies:
     "@types/lodash": ^4.14.136
     "@types/node": ^12.6.1
@@ -6052,7 +6052,7 @@ cypher-query-builder@6.0.4:
     node-cleanup: ^2.1.2
     rxjs: ^6.5.2
     tslib: ^1.10.0
-  checksum: 65c81e68cf8f72b8fdf8c2351ecea1b819df290f764dad3b08eb49c2c85999fdd0c7410ce2daaaa2e7fed8cb9be209e5476fd3e9770366dced15d67259e9300f
+  checksum: cdb9a571160ae533c14e8f418b515fec1ab8600f878304428f38764999fae62f74f490a1e91f60aa51fc67d86ebe0130036f7acbab4949c8e11dbbc29a6a4475
   languageName: node
   linkType: hard
 
