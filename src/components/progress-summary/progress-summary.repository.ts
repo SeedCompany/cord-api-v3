@@ -2,7 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { inArray, node, relation } from 'cypher-query-builder';
 import { ID } from '../../common';
 import { DtoRepository } from '../../core';
-import { ACTIVE, merge } from '../../core/database/query';
+import {
+  ACTIVE,
+  apoc,
+  collect,
+  listConcat,
+  merge,
+} from '../../core/database/query';
 import { ProgressReport } from '../periodic-report/dto';
 import { FetchedSummaries, ProgressSummary, SummaryPeriod } from './dto';
 
@@ -45,11 +51,19 @@ export class ProgressSummaryRepository extends DtoRepository(ProgressSummary) {
         node('ps', 'ProgressSummary'),
       ])
       .return<{ dto: FetchedSummaries }>(
-        merge('ps', {
-          reportId: 'report.id',
-          totalVerses: 'totalVerses',
-          totalVerseEquivalents: 'totalVerseEquivalents',
-        }).as('dto')
+        merge(
+          listConcat(
+            // Convert rows of `ps` summaries to mapping keyed by their period
+            collect(
+              apoc.map.fromValues(['ps.period', apoc.convert.toMap('ps')])
+            ),
+            {
+              reportId: 'report.id',
+              totalVerses: 'totalVerses',
+              totalVerseEquivalents: 'totalVerseEquivalents',
+            }
+          )
+        ).as('dto')
       )
       .map('dto');
     return await query.run();
