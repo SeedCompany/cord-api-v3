@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { intersection, isEqual, sumBy, uniq } from 'lodash';
+import { intersection, sumBy, uniq } from 'lodash';
 import {
   has,
   ID,
@@ -17,7 +17,7 @@ import { HandleIdLookup, ILogger, Logger, ResourceResolver } from '../../core';
 import { compareNullable, ifDiff, isSame } from '../../core/database/changes';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { ScriptureRange } from '../scripture';
+import { ScriptureRange, UnspecifiedScripturePortion } from '../scripture';
 import { isScriptureEqual } from '../scripture/books';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
@@ -410,13 +410,9 @@ export class ProductService {
         input,
         partialChanges
       ),
-      unspecifiedScripture:
-        input.unspecifiedScripture !== undefined &&
-        !isEqual(current.unspecifiedScripture, {
-          ...input.unspecifiedScripture, // spread to not compare class prototype
-        })
-          ? input.unspecifiedScripture
-          : undefined,
+      unspecifiedScripture: ifDiff(
+        compareNullable(UnspecifiedScripturePortion.isEqual)
+      )(input.unspecifiedScripture, current.unspecifiedScripture),
       scriptureReferences: ifDiff(isScriptureEqual)(
         input.scriptureReferences,
         current.scriptureReferences
