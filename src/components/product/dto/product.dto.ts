@@ -6,6 +6,7 @@ import { MergeExclusive } from 'type-fest';
 import {
   DbLabel,
   ID,
+  Secured,
   SecuredBoolean,
   SecuredFloat,
   SecuredProps,
@@ -24,7 +25,7 @@ import {
   SecuredScriptureRangesOverride,
   SecuredUnspecifiedScripturePortion,
 } from '../../scripture';
-import { Producible, SecuredProducible } from './producible.dto';
+import { Producible, ProducibleRef, SecuredProducible } from './producible.dto';
 import { SecuredProductMediums } from './product-medium';
 import { SecuredMethodology } from './product-methodology';
 import { SecuredProductPurposes } from './product-purpose';
@@ -162,7 +163,7 @@ export class DerivativeScriptureProduct extends Product {
       i.e. A film named "Jesus Film".
     `,
   })
-  readonly produces: SecuredProducible & SetChangeType<'produces', ID>;
+  readonly produces: Secured<ProducibleRef> & SetChangeType<'produces', ID>;
 
   @Field(() => SecuredScriptureRangesOverride, {
     description: stripIndent`

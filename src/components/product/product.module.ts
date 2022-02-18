@@ -5,6 +5,7 @@ import { ScriptureModule } from '../scripture/scripture.module';
 import { StoryModule } from '../story/story.module';
 import * as handlers from './handlers';
 import * as migrations from './migrations';
+import { ProducibleResolver } from './producible.resolver';
 import { ProductExtractor } from './product-extractor.service';
 import { ProductLoader } from './product.loader';
 import { ProductRepository } from './product.repository';
@@ -20,9 +21,10 @@ import { ProductService } from './product.service';
   ],
   providers: [
     ProductResolver,
+    ProducibleResolver,
+    ProductLoader,
     ProductService,
     ProductRepository,
-    ProductLoader,
     ProductExtractor,
     ...Object.values(handlers),
     ...Object.values(migrations),

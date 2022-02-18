@@ -10,6 +10,7 @@ import {
   SecuredProperty,
   SecuredProps,
   SetUnsecuredType,
+  UnsecuredDto,
 } from '../../../common';
 import { SetChangeType } from '../../../core/database/changes';
 import {
@@ -20,7 +21,7 @@ import {
 
 @InterfaceType({
   description: 'Something that is _producible_ via a Product',
-  resolveType: (p: ProducibleResult) => p.__typename,
+  resolveType: (p: ProducibleRef) => p.__typename,
   implements: [Resource],
 })
 @ObjectType({
@@ -49,14 +50,11 @@ registerEnumType(ProducibleType, {
   name: 'ProducibleType',
 });
 
-export type ProducibleResult = Producible & {
+export type ProducibleRef = UnsecuredDto<Producible> & {
   __typename: ProducibleType;
 };
 
 @ObjectType({
   description: SecuredProperty.descriptionFor('a producible'),
 })
-export class SecuredProducible extends SecuredProperty<
-  Producible,
-  ProducibleResult
->(Producible) {}
+export class SecuredProducible extends SecuredProperty(Producible) {}

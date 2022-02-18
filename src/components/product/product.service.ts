@@ -39,7 +39,6 @@ import {
   getAvailableSteps,
   MethodologyToApproach,
   OtherProduct,
-  ProducibleResult,
   Product,
   ProductApproach,
   ProductCompletionDescriptionSuggestionsInput,
@@ -191,19 +190,11 @@ export class ProductService {
   ): Promise<UnsecuredDto<AnyProduct>> {
     const {
       isOverriding,
-      producibleScriptureRefs,
-      produces,
+      produces: producible,
       title,
       description,
       ...props
     } = await this.repo.readOne(id, session);
-
-    const producible = produces
-      ? ((await this.resources.lookupByBaseNode(
-          produces,
-          session
-        )) as unknown as ProducibleResult)
-      : undefined;
 
     if (title) {
       const dto: UnsecuredDto<OtherProduct> = {
@@ -221,11 +212,15 @@ export class ProductService {
       return dto;
     }
 
+    const producibleType = this.resources.resolveType(
+      producible.__typename
+    ) as ProducibleType;
+
     const dto: UnsecuredDto<DerivativeScriptureProduct> = {
       ...props,
-      produces: producible,
+      produces: { ...producible, __typename: producibleType },
       scriptureReferences: !isOverriding
-        ? producibleScriptureRefs
+        ? producible.scriptureReferences
         : props.scriptureReferences,
       scriptureReferencesOverride: !isOverriding
         ? null
@@ -544,7 +539,7 @@ export class ProductService {
     if (changes.scriptureReferencesOverride !== undefined) {
       const scripture =
         changes.scriptureReferencesOverride ??
-        current.produces.scriptureReferences.value;
+        current.produces.scriptureReferences;
       changes = {
         ...changes,
         totalVerses: getTotalVerses(...scripture),

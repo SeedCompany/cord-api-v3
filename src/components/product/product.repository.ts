@@ -30,6 +30,7 @@ import {
   deactivateProperty,
   escapeLuceneSyntax,
   fullTextQuery,
+  matchProps,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
   paginate,
@@ -37,9 +38,7 @@ import {
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { BaseNode } from '../../core/database/results';
 import {
-  DbScriptureReferences,
   ScriptureRange,
   ScriptureRangeInput,
   ScriptureReferenceRepository,
@@ -54,6 +53,7 @@ import {
   DirectScriptureProduct,
   ProductMethodology as Methodology,
   OtherProduct,
+  ProducibleRef,
   ProducibleType,
   Product,
   ProductCompletionDescriptionSuggestionsInput,
@@ -187,14 +187,31 @@ export class ProductRepository extends CommonRepository {
         .apply(matchPropsAndProjectSensAndScopedRoles(session))
         .optionalMatch([
           node('node'),
-          relation('out', '', 'produces', ACTIVE),
-          node('produces', 'Producible'),
-        ])
-        .optionalMatch([
-          node('node'),
           relation('out', '', 'unspecifiedScripture', ACTIVE),
           node('unspecifiedScripture', 'UnspecifiedScripturePortion'),
         ])
+        .subQuery('node', (sub) =>
+          sub
+            .match([
+              node('node'),
+              relation('out', '', 'produces', ACTIVE),
+              node('produces', 'Producible'),
+            ])
+            .apply(matchProps({ nodeName: 'produces' }))
+            .subQuery(
+              'produces',
+              this.scriptureRefs.list({
+                nodeName: 'produces',
+              })
+            )
+            .with(
+              merge('produces', 'props', {
+                __typename: 'labels(produces)',
+                scriptureReferences: 'scriptureReferences',
+              }).as('produces')
+            )
+            .return('collect(produces)[0] as produces')
+        )
         .subQuery(
           ['node', 'produces'],
           this.scriptureRefs.list({
@@ -204,13 +221,6 @@ export class ProductRepository extends CommonRepository {
                 ELSE "scriptureReferences"
               END
             `,
-          })
-        )
-        .subQuery(
-          'produces',
-          this.scriptureRefs.list({
-            nodeName: 'produces',
-            outVar: 'producibleScriptureRefs',
           })
         )
         .return<{
@@ -225,9 +235,8 @@ export class ProductRepository extends CommonRepository {
             >,
             {
               isOverriding: boolean;
-              produces: BaseNode | null;
+              produces: Merge<ProducibleRef, { __typename: string[] }> | null;
               unspecifiedScripture: UnspecifiedScripturePortion | null;
-              producibleScriptureRefs: DbScriptureReferences;
             }
           >;
         }>(
@@ -237,7 +246,6 @@ export class ProductRepository extends CommonRepository {
             unspecifiedScripture:
               'unspecifiedScripture { .book, .totalVerses }',
             scriptureReferences: 'scriptureReferences',
-            producibleScriptureRefs: 'producibleScriptureRefs',
           }).as('dto')
         );
   }
