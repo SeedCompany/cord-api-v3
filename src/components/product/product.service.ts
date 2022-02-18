@@ -51,7 +51,7 @@ import {
   UpdateProduct,
 } from './dto';
 import { ProducibleType } from './dto/producible.dto';
-import { ProductRepository } from './product.repository';
+import { HydratedProductRow, ProductRepository } from './product.repository';
 
 @Injectable()
 export class ProductService {
@@ -188,13 +188,38 @@ export class ProductService {
     id: ID,
     session: Session
   ): Promise<UnsecuredDto<AnyProduct>> {
+    const rows = await this.readManyUnsecured([id], session);
+    const result = rows[0];
+    if (!result) {
+      throw new NotFoundException('Could not find product');
+    }
+    return result;
+  }
+
+  async readMany(
+    ids: readonly ID[],
+    session: Session
+  ): Promise<readonly AnyProduct[]> {
+    const rows = await this.readManyUnsecured(ids, session);
+    return await Promise.all(rows.map((row) => this.secure(row, session)));
+  }
+
+  async readManyUnsecured(
+    ids: readonly ID[],
+    session: Session
+  ): Promise<ReadonlyArray<UnsecuredDto<AnyProduct>>> {
+    const rows = await this.repo.readMany(ids, session);
+    return rows.map((row) => this.mapDbRowToDto(row));
+  }
+
+  private mapDbRowToDto(row: HydratedProductRow): UnsecuredDto<AnyProduct> {
     const {
       isOverriding,
       produces: producible,
       title,
       description,
       ...props
-    } = await this.repo.readOne(id, session);
+    } = row;
 
     if (title) {
       const dto: UnsecuredDto<OtherProduct> = {

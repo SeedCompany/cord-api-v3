@@ -14,7 +14,6 @@ import {
   getDbClassLabels,
   has,
   ID,
-  NotFoundException,
   Range,
   ServerException,
   Session,
@@ -63,6 +62,20 @@ import {
 } from './dto';
 import { productListFilter } from './query.helpers';
 
+export type HydratedProductRow = Merge<
+  Omit<
+    UnsecuredDto<
+      DirectScriptureProduct & DerivativeScriptureProduct & OtherProduct
+    >,
+    'scriptureReferencesOverride'
+  >,
+  {
+    isOverriding: boolean;
+    produces: Merge<ProducibleRef, { __typename: string[] }> | null;
+    unspecifiedScripture: UnspecifiedScripturePortion | null;
+  }
+>;
+
 @Injectable()
 export class ProductRepository extends CommonRepository {
   constructor(
@@ -72,22 +85,14 @@ export class ProductRepository extends CommonRepository {
     super(db);
   }
 
-  async readOne(id: ID, session: Session) {
+  async readMany(ids: readonly ID[], session: Session) {
     const query = this.db
       .query()
-      .match([
-        node('project', 'Project'),
-        relation('out', '', 'engagement', ACTIVE),
-        node('engagement', 'Engagement'),
-        relation('out', '', 'product', ACTIVE),
-        node('node', 'Product', { id }),
-      ])
-      .apply(this.hydrate(session));
-    const result = await query.first();
-    if (!result) {
-      throw new NotFoundException('Could not find product');
-    }
-    return result.dto;
+      .matchNode('node', 'Product')
+      .where({ 'node.id': inArray(ids) })
+      .apply(this.hydrate(session))
+      .map('dto');
+    return await query.run();
   }
 
   async listIdsAndScriptureRefs(engagementId: ID) {
@@ -184,6 +189,13 @@ export class ProductRepository extends CommonRepository {
   protected hydrate(session: Session) {
     return (query: Query) =>
       query
+        .match([
+          node('project', 'Project'),
+          relation('out', '', 'engagement', ACTIVE),
+          node('engagement', 'Engagement'),
+          relation('out', '', 'product', ACTIVE),
+          node('node'),
+        ])
         .apply(matchPropsAndProjectSensAndScopedRoles(session))
         .optionalMatch([
           node('node'),
@@ -223,23 +235,7 @@ export class ProductRepository extends CommonRepository {
             `,
           })
         )
-        .return<{
-          dto: Merge<
-            Omit<
-              UnsecuredDto<
-                DirectScriptureProduct &
-                  DerivativeScriptureProduct &
-                  OtherProduct
-              >,
-              'scriptureReferencesOverride'
-            >,
-            {
-              isOverriding: boolean;
-              produces: Merge<ProducibleRef, { __typename: string[] }> | null;
-              unspecifiedScripture: UnspecifiedScripturePortion | null;
-            }
-          >;
-        }>(
+        .return<{ dto: HydratedProductRow }>(
           merge('props', {
             engagement: 'engagement.id',
             produces: 'produces',
