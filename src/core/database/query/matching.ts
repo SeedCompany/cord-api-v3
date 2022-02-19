@@ -1,13 +1,20 @@
 import { node, Query, relation } from 'cypher-query-builder';
-import { labelForView, Many, ObjectView, Session } from '../../../common';
+import {
+  ID,
+  isIdLike,
+  labelForView,
+  Many,
+  ObjectView,
+  Session,
+} from '../../../common';
 import { variable } from '../query-augmentation/condition-variables';
 import { apoc, collect, listConcat, merge } from './cypher-functions';
 
-export const requestingUser = (session: Session) => {
+export const requestingUser = (session: Session | ID) => {
   const n = node('requestingUser', 'User', {
     id: variable('$requestingUser'),
   });
-  n.addParam(session.userId, 'requestingUser');
+  n.addParam(isIdLike(session) ? session : session.userId, 'requestingUser');
   return n;
 };
 
