@@ -5,6 +5,7 @@ import {
   Create,
   Match,
   Merge,
+  NodePattern,
   Raw,
   Return,
   With,
@@ -14,7 +15,8 @@ import type {
   Term,
   TermListClause as TSTermListClause,
 } from 'cypher-query-builder/dist/typings/clauses/term-list-clause';
-import { compact, map, reduce } from 'lodash';
+import type { Parameter } from 'cypher-query-builder/dist/typings/parameter-bag';
+import { camelCase, compact, isPlainObject, map, reduce } from 'lodash';
 import { Class } from 'type-fest';
 import { isExp } from '../query';
 
@@ -99,4 +101,20 @@ ClauseCollection.prototype.build = function build(this: ClauseCollection) {
     return '';
   }
   return `${clauses.join('\n')};`;
+};
+
+// Add rule to name "id" parameters like their node labels for better DX
+// (:User { id: "" }) -> $userId instead of $id
+// eslint-disable-next-line @typescript-eslint/unbound-method
+const origRebind = NodePattern.prototype.rebindConditionParams;
+NodePattern.prototype.rebindConditionParams = function rebindConditionParams(
+  this: NodePattern
+) {
+  origRebind.call(this);
+  const params = isPlainObject(this.conditionParams)
+    ? (this.conditionParams as Record<string, Parameter>)
+    : {};
+  if (params.id?.name.startsWith('id') && this.labels.length > 0) {
+    params.id.name = camelCase(`${this.labels[0]} ${params.id.name}`);
+  }
 };
