@@ -139,15 +139,13 @@ export class PartnerRepository extends DtoRepository(Partner) {
           relation('out', '', 'pointOfContact', ACTIVE),
           node('pointOfContact', 'User'),
         ])
-        .raw('', { requestingUserId: session.userId })
         .return<{ dto: UnsecuredDto<Partner> }>(
           merge('props', {
             sensitivity: 'sensitivity',
             organization: 'organization.id',
             pointOfContact: 'pointOfContact.id',
             scope: 'scopedRoles',
-            pinned:
-              'exists((:User { id: $requestingUserId })-[:pinned]->(node))',
+            pinned: 'exists((:User { id: $requestingUser })-[:pinned]->(node))',
           }).as('dto')
         );
   }

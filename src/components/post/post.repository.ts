@@ -99,10 +99,10 @@ export class PostRepository extends DtoRepository(Post) {
             ) OR (
               props.shareability = '${PostShareability.Membership}'
               AND
-              (node)<-[:post]-(:BaseNode)-[:member]-(:BaseNode)-[:user]->(:User { id: $requestingUserId })
+              (node)<-[:post]-(:BaseNode)-[:member]-(:BaseNode)-[:user]->(:User { id: $requestingUser })
             )
           `,
-        { requestingUserId: session.userId }
+        { requestingUser: session.userId }
       )
       .apply(sorting(Post, input))
       .apply(paginate(input, this.hydrate()))
