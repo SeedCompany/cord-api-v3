@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID, ServerException, Session, UnsecuredDto } from '../../common';
-import { DtoRepository, matchRequestingUser } from '../../core';
+import { DtoRepository } from '../../core';
 import {
   ACTIVE,
   createNode,
@@ -11,6 +11,7 @@ import {
   matchProjectSens,
   matchProjectSensToLimitedScopeMap,
   matchProps,
+  matchRequestingUser,
   merge,
   paginate,
   rankSens,

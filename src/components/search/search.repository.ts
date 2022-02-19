@@ -1,16 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { ID, Session } from '../../common';
-import {
-  DatabaseService,
-  matchRequestingUser,
-  OnIndex,
-  OnIndexParams,
-} from '../../core';
+import { DatabaseService, OnIndex, OnIndexParams } from '../../core';
 import {
   ACTIVE,
   escapeLuceneSyntax,
   fullTextQuery,
+  matchRequestingUser,
 } from '../../core/database/query';
 import { SearchInput, SearchResultMap } from './dto';
 

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ID, Session } from '../../../common';
-import { DtoRepository, matchRequestingUser } from '../../../core';
-import { createNode } from '../../../core/database/query';
+import { DtoRepository } from '../../../core';
+import { createNode, matchRequestingUser } from '../../../core/database/query';
 import { CreateEthnologueLanguage, EthnologueLanguage } from '../dto';
 
 @Injectable()

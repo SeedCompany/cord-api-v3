@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID, Session } from '../../common';
-import { DatabaseService, matchRequestingUser } from '../../core';
-import { requestingUser } from '../../core/database/query';
+import { DatabaseService } from '../../core';
+import { matchRequestingUser, requestingUser } from '../../core/database/query';
 
 @Injectable()
 export class PinRepository {

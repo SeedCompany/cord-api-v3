@@ -16,8 +16,6 @@ import {
   DtoRepository,
   ILogger,
   Logger,
-  matchSession,
-  property,
   UniquenessError,
 } from '../../core';
 import {
@@ -27,9 +25,11 @@ import {
   createProperty,
   deactivateProperty,
   matchProps,
+  matchSession,
   merge,
   paginate,
   permissionsOfNode,
+  property,
   requestingUser,
   sorting,
 } from '../../core/database/query';

@@ -17,10 +17,10 @@ import {
   HandleIdLookup,
   ILogger,
   Logger,
-  property,
   Transactional,
   UniquenessError,
 } from '../../core';
+import { property } from '../../core/database/query';
 import { mapListResults } from '../../core/database/results';
 import { Role } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';

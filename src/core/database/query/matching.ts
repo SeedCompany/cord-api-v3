@@ -1,8 +1,11 @@
 import { node, Query, relation } from 'cypher-query-builder';
+import { uniq } from 'lodash';
+import { DateTime } from 'luxon';
 import {
   ID,
   isIdLike,
   labelForView,
+  many,
   Many,
   ObjectView,
   Session,
@@ -17,6 +20,11 @@ export const requestingUser = (session: Session | ID) => {
   n.addParam(isIdLike(session) ? session : session.userId, 'requestingUser');
   return n;
 };
+
+export const matchRequestingUser =
+  ({ userId }: Pick<Session, 'userId'>) =>
+  (query: Query) =>
+    query.match(requestingUser(userId));
 
 /**
  * @deprecated DB SecurityGroups are deprecated
@@ -108,3 +116,49 @@ export const matchProps = (options: MatchPropsOptions = {}) => {
     );
   };
 };
+
+export const property = (
+  prop: string,
+  value: any | null,
+  baseNode: string,
+  propVar = prop,
+  extraPropLabel?: Many<string>
+) => [
+  [
+    node(baseNode),
+    relation('out', '', prop, {
+      active: true,
+      createdAt: DateTime.local(),
+    }),
+    node(propVar, uniq(['Property', ...many(extraPropLabel ?? [])]), {
+      value,
+    }),
+  ],
+];
+
+export const matchSession = (
+  session: Session,
+  {
+    // eslint-disable-next-line @seedcompany/no-unused-vars
+    withAclEdit,
+    // eslint-disable-next-line @seedcompany/no-unused-vars
+    withAclRead,
+    requestingUserConditions = {},
+  }: {
+    withAclEdit?: string;
+    withAclRead?: string;
+    requestingUserConditions?: Record<string, any>;
+  } = {}
+) => [
+  node('token', 'Token', {
+    active: true,
+    value: session.token,
+  }),
+  relation('in', '', 'token', {
+    active: true,
+  }),
+  node('requestingUser', 'User', {
+    id: session.userId,
+    ...requestingUserConditions,
+  }),
+];

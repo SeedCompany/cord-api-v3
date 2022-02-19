@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { ID, Session } from '../../../common';
-import { DtoRepository, matchRequestingUser } from '../../../core';
+import { DtoRepository } from '../../../core';
 import {
   ACTIVE,
   createNode,
   createRelationships,
+  matchRequestingUser,
   paginate,
   permissionsOfNode,
   requestingUser,

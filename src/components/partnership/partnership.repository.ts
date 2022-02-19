@@ -10,7 +10,7 @@ import {
   Session,
   UnsecuredDto,
 } from '../../common';
-import { DtoRepository, matchRequestingUser } from '../../core';
+import { DtoRepository } from '../../core';
 import {
   ACTIVE,
   coalesce,
@@ -21,6 +21,7 @@ import {
   matchProjectSensToLimitedScopeMap,
   matchProps,
   matchPropsAndProjectSensAndScopedRoles,
+  matchRequestingUser,
   merge,
   paginate,
   requestingUser,

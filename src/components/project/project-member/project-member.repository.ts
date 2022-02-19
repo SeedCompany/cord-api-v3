@@ -3,12 +3,13 @@ import { Node, node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { CreateProjectMember, ProjectMember, ProjectMemberListInput } from '.';
 import { ID, Session, UnsecuredDto } from '../../../common';
-import { DatabaseService, DtoRepository, property } from '../../../core';
+import { DatabaseService, DtoRepository } from '../../../core';
 import {
   ACTIVE,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
   paginate,
+  property,
   requestingUser,
   sorting,
 } from '../../../core/database/query';
