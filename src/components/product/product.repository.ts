@@ -493,18 +493,7 @@ export class ProductRepository extends CommonRepository {
     const label = 'Product';
     const result = await this.db
       .query()
-      .match([
-        requestingUser(session),
-        ...permissionsOfNode(label),
-        ...(filter.engagementId
-          ? [
-              relation('in', '', 'product', ACTIVE),
-              node('engagement', 'Engagement', {
-                id: filter.engagementId,
-              }),
-            ]
-          : []),
-      ])
+      .match([requestingUser(session), ...permissionsOfNode(label)])
       .apply(productListFilter(filter))
       .apply(sorting(Product, input))
       .apply(paginate(input, this.hydrate(session)))
