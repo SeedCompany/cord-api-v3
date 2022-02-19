@@ -240,10 +240,14 @@ const wrapQueryRun = (
       parameters?.interpolated
         ? { [AFTER_MESSAGE]: parameters.interpolated }
         : {
-            statement:
-              process.env.NODE_ENV !== 'production'
-                ? highlight(statement, { language: 'cypher' })
-                : statement,
+            ...(parameters?.logIt
+              ? {
+                  statement:
+                    process.env.NODE_ENV !== 'production'
+                      ? highlight(statement, { language: 'cypher' })
+                      : statement,
+                }
+              : {}),
             ...parameters,
           }
     );
