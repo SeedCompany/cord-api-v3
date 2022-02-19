@@ -55,7 +55,7 @@ export class EducationRepository extends DtoRepository(Education) {
       .query()
       .apply(matchRequestingUser(session))
       .matchNode('node', 'Education')
-      .where({ 'node.id': inArray(ids.slice()) })
+      .where({ 'node.id': inArray(ids) })
       .apply(this.hydrate())
       .map('dto')
       .run();

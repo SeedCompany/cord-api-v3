@@ -82,7 +82,7 @@ export class EngagementRepository extends CommonRepository {
     return await this.db
       .query()
       .matchNode('node', labelForView('Engagement', view))
-      .where({ 'node.id': inArray(ids.slice()) })
+      .where({ 'node.id': inArray(ids) })
       .apply(this.hydrate(session, view))
       .map('dto')
       .run();

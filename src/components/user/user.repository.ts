@@ -173,7 +173,7 @@ export class UserRepository extends DtoRepository(User) {
     return await this.db
       .query()
       .matchNode('node', 'User')
-      .where({ 'node.id': inArray(ids.slice()) })
+      .where({ 'node.id': inArray(ids) })
       .apply(this.hydrate(session.userId))
       .map('dto')
       .run();

@@ -18,7 +18,7 @@ export class ProgressSummaryRepository extends DtoRepository(ProgressSummary) {
     const query = this.db
       .query()
       .matchNode('report', 'ProgressReport')
-      .where({ 'report.id': inArray(reportIds.slice()) })
+      .where({ 'report.id': inArray(reportIds) })
       .subQuery('report', (sub) =>
         sub
           .match([

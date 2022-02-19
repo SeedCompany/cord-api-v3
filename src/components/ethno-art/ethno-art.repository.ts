@@ -39,7 +39,7 @@ export class EthnoArtRepository extends DtoRepository(EthnoArt) {
     return await this.db
       .query()
       .matchNode('node', 'EthnoArt')
-      .where({ 'node.id': inArray(ids.slice()) })
+      .where({ 'node.id': inArray(ids) })
       .apply(this.hydrate())
       .map('dto')
       .run();

@@ -58,7 +58,7 @@ export class FundingAccountRepository extends DtoRepository(FundingAccount) {
       .query()
       .apply(matchRequestingUser(session))
       .matchNode('node', 'FundingAccount')
-      .where({ 'node.id': inArray(ids.slice()) })
+      .where({ 'node.id': inArray(ids) })
       .apply(this.hydrate())
       .map('dto')
       .run();

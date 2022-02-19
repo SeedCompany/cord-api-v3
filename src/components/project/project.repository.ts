@@ -83,7 +83,7 @@ export class ProjectRepository extends CommonRepository {
     return await this.db
       .query()
       .matchNode('node', 'Project')
-      .where({ 'node.id': inArray(ids.slice()) })
+      .where({ 'node.id': inArray(ids) })
       .apply(this.hydrate(session.userId, changeset))
       .map('dto')
       .run();

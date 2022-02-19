@@ -68,7 +68,7 @@ export class UnavailabilityRepository extends DtoRepository(Unavailability) {
       .query()
       .apply(matchRequestingUser(session))
       .matchNode('node', 'Unavailability')
-      .where({ 'node.id': inArray(ids.slice()) })
+      .where({ 'node.id': inArray(ids) })
       .apply(this.hydrate())
       .map('dto')
       .run();

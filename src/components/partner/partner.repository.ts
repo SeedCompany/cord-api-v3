@@ -91,7 +91,7 @@ export class PartnerRepository extends DtoRepository(Partner) {
       .query()
       .apply(matchRequestingUser(session))
       .matchNode('node', 'Partner')
-      .where({ 'node.id': inArray(ids.slice()) })
+      .where({ 'node.id': inArray(ids) })
       .apply(this.hydrate(session))
       .map('dto')
       .run();

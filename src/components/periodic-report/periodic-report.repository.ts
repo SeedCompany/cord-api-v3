@@ -152,7 +152,7 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
     return await this.db
       .query()
       .matchNode('node', 'PeriodicReport')
-      .where({ 'node.id': inArray(ids.slice()) })
+      .where({ 'node.id': inArray(ids) })
       .apply(this.hydrate(session))
       .map('dto')
       .run();

@@ -67,7 +67,7 @@ export class PostRepository extends DtoRepository(Post) {
     return await this.db
       .query()
       .matchNode('node', 'Post')
-      .where({ 'node.id': inArray(ids.slice()) })
+      .where({ 'node.id': inArray(ids) })
       .apply(this.hydrate())
       .map('dto')
       .run();
