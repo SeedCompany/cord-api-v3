@@ -61,10 +61,9 @@ export const createProperty =
         // They'll get them when they are applied for real.
         ['Property'];
 
-    const imports = [nodeName, variable ? importVarFromVar(variable) : ''];
     return query.comment`
       createProperty(${nodeName}.${key})
-    `.subQuery(imports, (sub) =>
+    `.subQuery([nodeName, variable], (sub) =>
       sub
         .apply((q) =>
           changeset
@@ -97,7 +96,3 @@ export const createProperty =
         .return(`count(newPropNode) as ${numCreatedVar}`)
     );
   };
-
-// Try to pull the root variable referenced from expression https://regex101.com/r/atshF5
-export const importVarFromVar = (variable: string) =>
-  /(?:.+\()?([^.]+)\.?.*/.exec(variable)?.[1] ?? '';

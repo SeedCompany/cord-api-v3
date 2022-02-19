@@ -61,7 +61,7 @@ export const matchProjectScopedRoles =
   }) =>
   <R>(query: Query<R>) =>
     query.comment`matchProjectScopedRoles()`.subQuery(
-      [projectVar, ...(session instanceof Variable ? [session.name] : [])],
+      [projectVar, session instanceof Variable ? session : null],
       (sub) =>
         sub
           .match([
