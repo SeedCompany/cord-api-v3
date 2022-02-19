@@ -1,7 +1,7 @@
 import { oneLine } from 'common-tags';
 import { node, Query, relation } from 'cypher-query-builder';
-import { variable, Variable } from '.';
-import { ID, isIdLike, Sensitivity, Session } from '../../../common';
+import { requestingUser, variable, Variable } from '.';
+import { ID, Sensitivity, Session } from '../../../common';
 import {
   GlobalScopedRole,
   ScopedRole,
@@ -72,9 +72,7 @@ export const matchProjectScopedRoles =
               relation('out', '', 'user'),
               session instanceof Variable
                 ? node(session.name)
-                : node('user', 'User', {
-                    id: isIdLike(session) ? session : session.userId,
-                  }),
+                : requestingUser(session),
             ],
             [
               node('projectMember'),
