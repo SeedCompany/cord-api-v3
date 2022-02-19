@@ -170,11 +170,11 @@ export const CypherFactory: FactoryProvider<Connection> = {
 
       (q as any).__stacktrace = stack;
       const frame = stack?.[0] ? /at (.+) \(/.exec(stack[0]) : undefined;
-      const name = ((q as any).name = frame?.[1].replace('Repository', ''));
+      (q as any).name = frame?.[1].replace('Repository', '');
 
       const orig = q.run.bind(q);
       q.run = async () => {
-        return await tracing.capture(name ?? 'Query', (sub) => {
+        return await tracing.capture((q as any).name ?? 'Query', (sub) => {
           // Show this segment separately in service map
           sub.namespace = 'remote';
           // Help ID the segment as being for a database
@@ -192,6 +192,12 @@ export const CypherFactory: FactoryProvider<Connection> = {
         const result = origBuild();
         Object.defineProperty(result.params, '__stacktrace', {
           value: stack?.join('\n'),
+          enumerable: false,
+          configurable: true,
+          writable: true,
+        });
+        Object.defineProperty(result.params, '__origin', {
+          value: (q as any).name,
           enumerable: false,
           configurable: true,
           writable: true,
@@ -230,14 +236,18 @@ const wrapQueryRun = (
     const level = (parameters?.logIt as LogLevel | undefined) ?? LogLevel.DEBUG;
     logger.log(
       level,
-      `Executing ${(parameters?.__origin as string | undefined) ?? 'query'}`,
+      (parameters?.__origin as string | undefined) ?? 'Query',
       parameters?.interpolated
         ? { [AFTER_MESSAGE]: parameters.interpolated }
         : {
-            statement:
-              process.env.NODE_ENV !== 'production'
-                ? highlight(statement, { language: 'cypher' })
-                : statement,
+            ...(parameters?.logIt
+              ? {
+                  statement:
+                    process.env.NODE_ENV !== 'production'
+                      ? highlight(statement, { language: 'cypher' })
+                      : statement,
+                }
+              : {}),
             ...parameters,
           }
     );

@@ -80,7 +80,7 @@ export class IndexerModule implements OnModuleInit {
             )
           : statement
       );
-      for (const statement of statements) {
+      for (const [i, statement] of Object.entries(statements)) {
         if (
           serverInfo.edition === 'community' &&
           statement.toUpperCase().includes('IS UNIQUE')
@@ -93,7 +93,11 @@ export class IndexerModule implements OnModuleInit {
         }
 
         try {
-          await this.db.query().raw(statement).run();
+          const q = this.db.query();
+          (q as any).name = `${parentClass.name}.${methodName}${
+            Number(i) > 0 ? ` #${Number(i) + 1}` : ''
+          }`;
+          await q.raw(statement).run();
         } catch (e) {
           if (
             e instanceof Neo4jError &&
