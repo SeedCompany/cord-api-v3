@@ -16,14 +16,6 @@ import {
 
 @Injectable()
 export class FundingAccountRepository extends DtoRepository(FundingAccount) {
-  async checkFundingAccount(name: string) {
-    return await this.db
-      .query()
-      .match([node('fundingAccount', 'FieldZoneName', { value: name })])
-      .return('fundingAccount')
-      .first();
-  }
-
   async create(input: CreateFundingAccount, session: Session) {
     const initialProps = {
       name: input.name,

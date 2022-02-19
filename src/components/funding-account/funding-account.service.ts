@@ -34,9 +34,7 @@ export class FundingAccountService {
     input: CreateFundingAccount,
     session: Session
   ): Promise<FundingAccount> {
-    const checkFundingAccount = await this.repo.checkFundingAccount(input.name);
-
-    if (checkFundingAccount) {
+    if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
         'fundingAccount.name',
         'FundingAccount with this name already exists.'

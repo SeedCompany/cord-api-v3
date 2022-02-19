@@ -33,9 +33,7 @@ export class EthnoArtService {
   ) {}
 
   async create(input: CreateEthnoArt, session: Session): Promise<EthnoArt> {
-    const checkEthnoArt = await this.repo.checkEthnoArt(input.name);
-
-    if (checkEthnoArt) {
+    if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
         'ethnoArt.name',
         'Ethno art with this name already exists'

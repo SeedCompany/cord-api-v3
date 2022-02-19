@@ -32,9 +32,7 @@ export class StoryService {
   ) {}
 
   async create(input: CreateStory, session: Session): Promise<Story> {
-    const checkStory = await this.repo.checkStory(input.name);
-
-    if (checkStory) {
+    if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
         'story.name',
         'Story with this name already exists.'

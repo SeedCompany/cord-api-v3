@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
 import { ID, Session } from '../../common';
 import { DtoRepository, matchRequestingUser } from '../../core';
 import {
@@ -13,14 +12,6 @@ import { CreateStory, Story, StoryListInput } from './dto';
 
 @Injectable()
 export class StoryRepository extends DtoRepository(Story) {
-  async checkStory(name: string) {
-    return await this.db
-      .query()
-      .match([node('story', 'StoryName', { value: name })])
-      .return('story')
-      .first();
-  }
-
   async create(input: CreateStory, session: Session) {
     const initialProps = {
       name: input.name,

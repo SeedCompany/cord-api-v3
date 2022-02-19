@@ -35,9 +35,7 @@ export class FieldRegionService {
     input: CreateFieldRegion,
     session: Session
   ): Promise<FieldRegion> {
-    const checkName = await this.repo.checkName(input.name);
-
-    if (checkName) {
+    if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
         'fieldRegion.name',
         'FieldRegion with this name already exists.'

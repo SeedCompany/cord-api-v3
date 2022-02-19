@@ -22,6 +22,15 @@ import { BaseNode } from './results';
 export class CommonRepository {
   constructor(protected db: DatabaseService) {}
 
+  async isUnique(value: string, label: string) {
+    const exists = await this.db
+      .query()
+      .matchNode('node', label, { value })
+      .return('node')
+      .first();
+    return !exists;
+  }
+
   async getBaseNode(
     id: ID,
     label?: string | ResourceShape<any>

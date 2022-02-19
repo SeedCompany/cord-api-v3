@@ -31,9 +31,7 @@ export class FieldZoneService {
   ) {}
 
   async create(input: CreateFieldZone, session: Session): Promise<FieldZone> {
-    const checkName = await this.repo.checkName(input.name);
-
-    if (checkName) {
+    if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
         'fieldZone.name',
         'FieldZone with this name already exists.'

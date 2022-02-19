@@ -22,14 +22,6 @@ export class OrganizationRepository extends DtoRepository<
   typeof Organization,
   [session: Session]
 >(Organization) {
-  async checkOrg(name: string) {
-    return await this.db
-      .query()
-      .match([node('org', 'OrgName', { value: name })])
-      .return('org')
-      .first();
-  }
-
   async create(input: CreateOrganization, session: Session) {
     const initialProps = {
       name: input.name,

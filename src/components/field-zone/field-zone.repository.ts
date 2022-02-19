@@ -17,14 +17,6 @@ import { CreateFieldZone, FieldZone, FieldZoneListInput } from './dto';
 
 @Injectable()
 export class FieldZoneRepository extends DtoRepository(FieldZone) {
-  async checkName(name: string) {
-    return await this.db
-      .query()
-      .match([node('name', 'FieldZoneName', { value: name })])
-      .return('name')
-      .first();
-  }
-
   async create(input: CreateFieldZone, session: Session) {
     const initialProps = {
       name: input.name,

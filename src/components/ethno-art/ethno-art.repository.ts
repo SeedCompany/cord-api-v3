@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
 import { ID, Session } from '../../common';
 import { DtoRepository } from '../../core';
 import { createNode, paginate, sorting } from '../../core/database/query';
@@ -7,14 +6,6 @@ import { CreateEthnoArt, EthnoArt, EthnoArtListInput } from './dto';
 
 @Injectable()
 export class EthnoArtRepository extends DtoRepository(EthnoArt) {
-  async checkEthnoArt(name: string) {
-    return await this.db
-      .query()
-      .match([node('ethnoArt', 'EthnoArtName', { value: name })])
-      .return('ethnoArt')
-      .first();
-  }
-
   async create(input: CreateEthnoArt, _session: Session) {
     const initialProps = {
       name: input.name,

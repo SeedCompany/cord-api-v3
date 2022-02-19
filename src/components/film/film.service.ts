@@ -33,9 +33,7 @@ export class FilmService {
   ) {}
 
   async create(input: CreateFilm, session: Session): Promise<Film> {
-    const checkFm = await this.repo.checkFilm(input.name);
-
-    if (checkFm) {
+    if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
         'film.name',
         'Film with this name already exists'

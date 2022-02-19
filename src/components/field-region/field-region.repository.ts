@@ -16,14 +16,6 @@ import { CreateFieldRegion, FieldRegion, FieldRegionListInput } from './dto';
 
 @Injectable()
 export class FieldRegionRepository extends DtoRepository(FieldRegion) {
-  async checkName(name: string) {
-    return await this.db
-      .query()
-      .match([node('name', 'FieldRegionName', { value: name })])
-      .return('name')
-      .first();
-  }
-
   async create(input: CreateFieldRegion, session: Session) {
     const initialProps = {
       name: input.name,

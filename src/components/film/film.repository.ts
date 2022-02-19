@@ -12,14 +12,6 @@ import { CreateFilm, Film, FilmListInput } from './dto';
 
 @Injectable()
 export class FilmRepository extends DtoRepository(Film) {
-  async checkFilm(name: string) {
-    return await this.db
-      .query()
-      .match([node('film', 'FilmName', { value: name })])
-      .return('film')
-      .first();
-  }
-
   async createFilm(input: CreateFilm, session: Session) {
     const initialProps = {
       name: input.name,

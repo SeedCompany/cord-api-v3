@@ -1,12 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, Query } from 'cypher-query-builder';
+import { LazyGetter as Once } from 'lazy-get-decorator';
 import { lowerCase } from 'lodash';
 import {
   getDbClassLabels,
+  getDbPropertyUnique,
   ID,
   MaybeUnsecuredInstance,
   NotFoundException,
   ResourceShape,
+  ServerException,
   UnsecuredDto,
 } from '../../common';
 import { DbChanges, getChanges } from './changes';
@@ -26,6 +29,37 @@ export const DtoRepository = <
   @Injectable()
   class DtoRepositoryClass extends CommonRepository {
     getActualChanges = getChanges(resource);
+
+    /**
+     * Check if value is unique for this resource.
+     * Label can be omitted if there's a single @DbUnique() property on the resource.
+     */
+    async isUnique(value: string, label?: string) {
+      if (!label) {
+        const defaultLabel = this.uniqueLabel;
+        if (defaultLabel instanceof Error) {
+          throw defaultLabel;
+        }
+        label = defaultLabel;
+      }
+      return await super.isUnique(value, label);
+    }
+    @Once() private get uniqueLabel() {
+      const labels = resource.Props.flatMap(
+        (p) => getDbPropertyUnique(resource, p) ?? []
+      );
+      if (labels.length === 0) {
+        return new ServerException(
+          `No unique properties found in ${resource.name}`
+        );
+      }
+      if (labels.length > 1) {
+        return new ServerException(
+          `Multiple unique properties found in ${resource.name}, not sure which one to use.`
+        );
+      }
+      return labels[0];
+    }
 
     async getBaseNode(id: ID, label?: string | ResourceShape<any>) {
       return await super.getBaseNode(id, label ?? resource);
