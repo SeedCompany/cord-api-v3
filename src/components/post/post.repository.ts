@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, relation } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { ID, NotFoundException, Session, UnsecuredDto } from '../../common';
+import { ID, Session } from '../../common';
 import { DtoRepository, matchRequestingUser } from '../../core';
 import {
   ACTIVE,
@@ -36,41 +36,6 @@ export class PostRepository extends DtoRepository(Post) {
       )
       .return<{ id: ID }>('node.id as id')
       .first();
-  }
-
-  async checkParentIdValidity(parentId: string) {
-    return await this.db
-      .query()
-      .match([
-        node('baseNode', 'BaseNode', {
-          id: parentId,
-        }),
-      ])
-      .return('baseNode.id')
-      .first();
-  }
-
-  async readOne(postId: ID): Promise<UnsecuredDto<Post>> {
-    const query = this.db
-      .query()
-      .match([node('node', 'Post', { id: postId })])
-      .apply(this.hydrate());
-
-    const result = await query.first();
-    if (!result) {
-      throw new NotFoundException('Could not find post', 'post.id');
-    }
-    return result.dto;
-  }
-
-  async readMany(ids: readonly ID[]) {
-    return await this.db
-      .query()
-      .matchNode('node', 'Post')
-      .where({ 'node.id': inArray(ids) })
-      .apply(this.hydrate())
-      .map('dto')
-      .run();
   }
 
   async securedList({ filter, ...input }: PostListInput, session: Session) {

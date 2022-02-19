@@ -57,12 +57,12 @@ export class EducationService {
       userId: session.userId,
     });
 
-    const result = await this.repo.readOne(id, session);
+    const result = await this.repo.readOne(id);
     return await this.secure(result, session);
   }
 
   async readMany(ids: readonly ID[], session: Session) {
-    const educations = await this.repo.readMany(ids, session);
+    const educations = await this.repo.readMany(ids);
     return await Promise.all(
       educations.map((dto) => this.secure(dto, session))
     );

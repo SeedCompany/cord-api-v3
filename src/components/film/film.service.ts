@@ -79,12 +79,12 @@ export class FilmService {
       userId: session.userId,
     });
 
-    const result = await this.repo.readOne(id, session);
+    const result = await this.repo.readOne(id);
     return await this.secure(result, session);
   }
 
   async readMany(ids: readonly ID[], session: Session) {
-    const films = await this.repo.readMany(ids, session);
+    const films = await this.repo.readMany(ids);
     return await Promise.all(films.map((dto) => this.secure(dto, session)));
   }
 

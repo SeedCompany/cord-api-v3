@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, Query, relation } from 'cypher-query-builder';
-import { ID, NotFoundException, Session, UnsecuredDto } from '../../common';
+import { node, Query, relation } from 'cypher-query-builder';
+import { ID, Session, UnsecuredDto } from '../../common';
 import { DtoRepository, matchRequestingUser } from '../../core';
 import {
   ACTIVE,
@@ -18,7 +18,10 @@ import {
 import { CreateOrganization, Organization, OrganizationListInput } from './dto';
 
 @Injectable()
-export class OrganizationRepository extends DtoRepository(Organization) {
+export class OrganizationRepository extends DtoRepository<
+  typeof Organization,
+  [session: Session]
+>(Organization) {
   async checkOrg(name: string) {
     return await this.db
       .query()
@@ -41,34 +44,6 @@ export class OrganizationRepository extends DtoRepository(Organization) {
       .return<{ id: ID }>('node.id as id');
 
     return await query.first();
-  }
-
-  async readOne(orgId: ID, session: Session) {
-    const query = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'Organization', { id: orgId })])
-      .apply(this.hydrate(session));
-
-    const result = await query.first();
-    if (!result) {
-      throw new NotFoundException(
-        'Could not find organization',
-        'organization.id'
-      );
-    }
-    return result.dto;
-  }
-
-  async readMany(ids: readonly ID[], session: Session) {
-    return await this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .matchNode('node', 'Organization')
-      .where({ 'node.id': inArray(ids) })
-      .apply(this.hydrate(session))
-      .map('dto')
-      .run();
   }
 
   protected hydrate(session: Session) {

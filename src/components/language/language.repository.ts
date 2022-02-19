@@ -3,7 +3,6 @@ import { inArray, node, Query, relation } from 'cypher-query-builder';
 import {
   ID,
   labelForView,
-  NotFoundException,
   ObjectView,
   Session,
   UnsecuredDto,
@@ -34,7 +33,10 @@ import { CreateLanguage, Language, LanguageListInput } from './dto';
 import { languageListFilter } from './query.helpers';
 
 @Injectable()
-export class LanguageRepository extends DtoRepository(Language) {
+export class LanguageRepository extends DtoRepository<
+  typeof Language,
+  [session: Session, view?: ObjectView]
+>(Language) {
   async create(input: CreateLanguage, ethnologueId: ID, session: Session) {
     const initialProps = {
       name: input.name,
@@ -68,23 +70,10 @@ export class LanguageRepository extends DtoRepository(Language) {
     return await createLanguage.first();
   }
 
-  async readOne(langId: ID, session: Session, view?: ObjectView) {
-    const query = this.db
-      .query()
-      .match([node('node', labelForView('Language', view), { id: langId })])
-      .apply(this.hydrate(session, view));
-
-    const result = await query.first();
-    if (!result) {
-      throw new NotFoundException('Could not find language', 'language.id');
-    }
-    return result.dto;
-  }
-
   async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
     return await this.db
       .query()
-      .matchNode('node', 'Language')
+      .matchNode('node', labelForView('Language', view))
       .where({ 'node.id': inArray(ids) })
       .apply(this.hydrate(session, view))
       .map('dto')

@@ -80,12 +80,12 @@ export class FundingAccountService {
       throw new NotFoundException('Invalid: Blank ID');
     }
 
-    const result = await this.repo.readOne(id, session);
+    const result = await this.repo.readOne(id);
     return await this.secure(result, session);
   }
 
   async readMany(ids: readonly ID[], session: Session) {
-    const fundingAccounts = await this.repo.readMany(ids, session);
+    const fundingAccounts = await this.repo.readMany(ids);
     return await Promise.all(
       fundingAccounts.map((dto) => this.secure(dto, session))
     );

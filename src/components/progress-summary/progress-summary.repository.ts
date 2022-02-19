@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, relation } from 'cypher-query-builder';
 import { ID } from '../../common';
-import { DtoRepository } from '../../core';
+import { CommonRepository } from '../../core';
 import {
   ACTIVE,
   apoc,
@@ -13,7 +13,7 @@ import { ProgressReport } from '../periodic-report/dto';
 import { FetchedSummaries, ProgressSummary, SummaryPeriod } from './dto';
 
 @Injectable()
-export class ProgressSummaryRepository extends DtoRepository(ProgressSummary) {
+export class ProgressSummaryRepository extends CommonRepository {
   async readMany(reportIds: readonly ID[]) {
     const query = this.db
       .query()

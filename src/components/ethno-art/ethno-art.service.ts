@@ -71,12 +71,12 @@ export class EthnoArtService {
     session: Session,
     _view?: ObjectView
   ): Promise<EthnoArt> {
-    const result = await this.repo.readOne(id, session);
+    const result = await this.repo.readOne(id);
     return await this.secure(result, session);
   }
 
   async readMany(ids: readonly ID[], session: Session) {
-    const ethnoArt = await this.repo.readMany(ids, session);
+    const ethnoArt = await this.repo.readMany(ids);
     return await Promise.all(ethnoArt.map((dto) => this.secure(dto, session)));
   }
 

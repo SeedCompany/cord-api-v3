@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { Query } from 'cypher-query-builder';
+import { inArray, Query } from 'cypher-query-builder';
+import { lowerCase } from 'lodash';
 import {
   getDbClassLabels,
   ID,
   MaybeUnsecuredInstance,
+  NotFoundException,
   ResourceShape,
   UnsecuredDto,
 } from '../../common';
@@ -15,12 +17,39 @@ import { matchProps } from './query';
 /**
  * A repository for a simple DTO. This provides a few methods out of the box.
  */
-export const DtoRepository = <TResourceStatic extends ResourceShape<any>>(
+export const DtoRepository = <
+  TResourceStatic extends ResourceShape<any>,
+  HydrateArgs extends unknown[] = []
+>(
   resource: TResourceStatic
 ) => {
   @Injectable()
   class DtoRepositoryClass extends CommonRepository {
     getActualChanges = getChanges(resource);
+
+    async getBaseNode(id: ID, label?: string | ResourceShape<any>) {
+      return await super.getBaseNode(id, label ?? resource);
+    }
+
+    async readOne(id: ID, ...args: HydrateArgs) {
+      const rows = await this.readMany([id], ...args);
+      if (!rows[0]) {
+        throw new NotFoundException(
+          `Could not find ${lowerCase(resource.name)}`
+        );
+      }
+      return rows[0];
+    }
+
+    async readMany(ids: readonly ID[], ...args: HydrateArgs) {
+      return await this.db
+        .query()
+        .matchNode('node', getDbClassLabels(resource)[0])
+        .where({ 'node.id': inArray(ids) })
+        .apply(this.hydrate(...args))
+        .map('dto')
+        .run();
+    }
 
     async updateProperties<
       TObject extends Partial<MaybeUnsecuredInstance<TResourceStatic>> & {
@@ -59,11 +88,8 @@ export const DtoRepository = <TResourceStatic extends ResourceShape<any>>(
      *
      * This default implementation only pulls a BaseNode's own properties.
      * Override this method to query for anything else needed to fulfill the DTO.
-     *
-     * Note we allow any ars here so that sub-classes can add any args they want.
-     * This is just a default for them.
      */
-    protected hydrate(..._args: unknown[]) {
+    protected hydrate(..._args: HydrateArgs) {
       return (query: Query) =>
         query
           .apply(matchProps())

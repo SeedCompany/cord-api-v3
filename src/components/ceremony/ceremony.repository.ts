@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, Query, relation } from 'cypher-query-builder';
-import { ID, NotFoundException, Session, UnsecuredDto } from '../../common';
+import { node, Query, relation } from 'cypher-query-builder';
+import { ID, Session, UnsecuredDto } from '../../common';
 import { DtoRepository, matchRequestingUser } from '../../core';
 import {
   ACTIVE,
@@ -15,7 +15,10 @@ import { AuthSensitivityMapping } from '../authorization/authorization.service';
 import { Ceremony, CeremonyListInput, CreateCeremony } from './dto';
 
 @Injectable()
-export class CeremonyRepository extends DtoRepository(Ceremony) {
+export class CeremonyRepository extends DtoRepository<
+  typeof Ceremony,
+  [session: Session]
+>(Ceremony) {
   async create(input: CreateCeremony, session: Session) {
     const initialProps = {
       type: input.type,
@@ -30,30 +33,6 @@ export class CeremonyRepository extends DtoRepository(Ceremony) {
       .apply(await createNode(Ceremony, { initialProps }))
       .return<{ id: ID }>('node.id as id')
       .first();
-  }
-
-  async readOne(id: ID, session: Session) {
-    const query = this.db
-      .query()
-      .matchNode('node', 'Ceremony', { id })
-      .apply(this.hydrate(session));
-
-    const result = await query.first();
-    if (!result) {
-      throw new NotFoundException('Could not find ceremony', 'ceremony.id');
-    }
-
-    return result.dto;
-  }
-
-  async readMany(ids: readonly ID[], session: Session) {
-    return await this.db
-      .query()
-      .matchNode('node', 'Ceremony')
-      .where({ 'node.id': inArray(ids) })
-      .apply(this.hydrate(session))
-      .map('dto')
-      .run();
   }
 
   protected hydrate(session: Session) {

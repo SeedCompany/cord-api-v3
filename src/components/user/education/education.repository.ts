@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, relation } from 'cypher-query-builder';
-import { ID, NotFoundException, Session } from '../../../common';
+import { node, relation } from 'cypher-query-builder';
+import { ID, Session } from '../../../common';
 import { DtoRepository, matchRequestingUser } from '../../../core';
 import {
   ACTIVE,
@@ -34,31 +34,6 @@ export class EducationRepository extends DtoRepository(Education) {
       .return<{ id: ID }>('node.id as id');
 
     return await query.first();
-  }
-
-  async readOne(id: ID, session: Session) {
-    const query = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'Education', { id })])
-      .apply(this.hydrate());
-
-    const result = await query.first();
-    if (!result) {
-      throw new NotFoundException('Could not find education');
-    }
-    return result.dto;
-  }
-
-  async readMany(ids: readonly ID[], session: Session) {
-    return await this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .matchNode('node', 'Education')
-      .where({ 'node.id': inArray(ids) })
-      .apply(this.hydrate())
-      .map('dto')
-      .run();
   }
 
   async getUserIdByEducation(id: ID) {

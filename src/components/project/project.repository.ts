@@ -317,14 +317,6 @@ export class ProjectRepository extends CommonRepository {
     return await query.first();
   }
 
-  async validateOtherResourceId(id: string, label: string) {
-    return await this.db
-      .query()
-      .match([node('node', label, { id })])
-      .return('node')
-      .first();
-  }
-
   async getChangesetProps(changeset: ID) {
     const query = this.db
       .query()
