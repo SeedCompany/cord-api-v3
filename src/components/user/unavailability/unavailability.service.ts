@@ -96,7 +96,7 @@ export class UnavailabilityService {
   ): Promise<Unavailability> {
     const unavailability = await this.readOne(input.id, session);
 
-    const result = await this.repo.getUserIdByUnavailability(session, input);
+    const result = await this.repo.getUserIdByUnavailability(input.id);
     if (!result) {
       throw new NotFoundException(
         'Could not find user associated with unavailability',

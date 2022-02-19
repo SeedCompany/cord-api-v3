@@ -74,7 +74,6 @@ export class PartnerRepository extends DtoRepository(Partner) {
   async readOne(id: ID, session: Session) {
     const query = this.db
       .query()
-      .apply(matchRequestingUser(session))
       .match([node('node', 'Partner', { id: id })])
       .apply(this.hydrate(session));
 
@@ -89,7 +88,6 @@ export class PartnerRepository extends DtoRepository(Partner) {
   async readMany(ids: readonly ID[], session: Session) {
     return await this.db
       .query()
-      .apply(matchRequestingUser(session))
       .matchNode('node', 'Partner')
       .where({ 'node.id': inArray(ids) })
       .apply(this.hydrate(session))

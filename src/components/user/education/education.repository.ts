@@ -61,10 +61,9 @@ export class EducationRepository extends DtoRepository(Education) {
       .run();
   }
 
-  async getUserIdByEducation(session: Session, id: ID) {
+  async getUserIdByEducation(id: ID) {
     return await this.db
       .query()
-      .apply(matchRequestingUser(session))
       .match([
         node('user', 'User'),
         relation('out', '', 'education', ACTIVE),

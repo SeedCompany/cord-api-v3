@@ -71,7 +71,6 @@ export class LanguageRepository extends DtoRepository(Language) {
   async readOne(langId: ID, session: Session, view?: ObjectView) {
     const query = this.db
       .query()
-      .apply(matchRequestingUser(session))
       .match([node('node', labelForView('Language', view), { id: langId })])
       .apply(this.hydrate(session, view));
 
@@ -85,7 +84,6 @@ export class LanguageRepository extends DtoRepository(Language) {
   async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
     return await this.db
       .query()
-      .apply(matchRequestingUser(session))
       .matchNode('node', 'Language')
       .where({ 'node.id': inArray(ids) })
       .apply(this.hydrate(session, view))
