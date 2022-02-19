@@ -196,6 +196,12 @@ export const CypherFactory: FactoryProvider<Connection> = {
           configurable: true,
           writable: true,
         });
+        Object.defineProperty(result.params, '__origin', {
+          value: name,
+          enumerable: false,
+          configurable: true,
+          writable: true,
+        });
         return result;
       };
       return q;
@@ -230,7 +236,7 @@ const wrapQueryRun = (
     const level = (parameters?.logIt as LogLevel | undefined) ?? LogLevel.DEBUG;
     logger.log(
       level,
-      `Executing ${(parameters?.__origin as string | undefined) ?? 'query'}`,
+      (parameters?.__origin as string | undefined) ?? 'Query',
       parameters?.interpolated
         ? { [AFTER_MESSAGE]: parameters.interpolated }
         : {

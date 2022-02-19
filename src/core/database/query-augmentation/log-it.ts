@@ -38,13 +38,6 @@ Query.prototype.logIt = function logIt(
         enumerable: false,
       });
     }
-    const name = (this as any).name as string | undefined;
-    if (name) {
-      Object.defineProperty(result.params, '__origin', {
-        value: name,
-        enumerable: false,
-      });
-    }
 
     Object.defineProperty(result.params, 'logIt', {
       value: level,
